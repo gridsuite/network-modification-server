@@ -58,7 +58,7 @@ jobs:
         run: >
           mvn --batch-mode jib:build
           -Djib.httpTimeout=60000
-          -Djib.to.image=docker.io/powsybl/network-modification-server
+          -Djib.to.image=docker.io/gridsuite/network-modification-server
           -Djib.to.auth.username=powsyblci
           -Djib.to.auth.password=${{ secrets.DOCKERHUB_TOKEN }}
 
