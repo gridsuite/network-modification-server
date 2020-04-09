@@ -3,7 +3,7 @@ name: CI
 on:
   push:
   repository_dispatch:
-    types: network_store_updated
+    types: network_modification_server_updated
 
 jobs:
   build:
@@ -16,14 +16,14 @@ jobs:
         with:
           java-version: 1.8
 
-      - name: Checkout network store sources
+      - name: Checkout network modification server sources
         uses: actions/checkout@v1
         with:
-          repository: powsybl/powsybl-network-store
+          repository: gridsuite/network-modification-server
           ref: refs/heads/master
 
-      - name: Build and install network store client with Maven
-        run: mvn --batch-mode -Pclient -DskipTests=true --file ../powsybl-network-store/pom.xml install
+      - name: Build and install network modification server with Maven
+        run: mvn --batch-mode -Pclient -DskipTests=true --file ../network-modification-server/pom.xml install
 
       - name: Checkout sources
         uses: actions/checkout@v1
