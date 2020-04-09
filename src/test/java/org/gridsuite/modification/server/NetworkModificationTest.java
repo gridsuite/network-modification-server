@@ -79,8 +79,8 @@ public class NetworkModificationTest {
         createLoad(v1, "v1load", "v1load", "v1load", 1, ConnectablePosition.Direction.TOP, 2, 0., 0.);
 
         VoltageLevel v2 = createVoltageLevel(s1, "v2", "v2", TopologyKind.NODE_BREAKER, 225.0, 20);
-        createBusBarSection(v2, "1.1", "1.1", 0, 1, 1);
-        createBusBarSection(v2, "1.2", "1.2", 1, 1, 2);
+        createBusBarSection(v2, "1A", "1A", 0, 1, 1);
+        createBusBarSection(v2, "1B", "1B", 1, 1, 2);
         createSwitch(v2, "v2d1", "v2d1", SwitchKind.DISCONNECTOR, true, false, false, 0, 2);
         createSwitch(v2, "v2b1", "v2b1", SwitchKind.BREAKER, true, true, false, 2, 3);
         createSwitch(v2, "v2d2", "v2d2", SwitchKind.DISCONNECTOR, true, false, false, 3, 1);

@@ -65,6 +65,7 @@
 
         <powsybl-core.version>3.1.0</powsybl-core.version>
         <powsybl-network-store.version>1.0.0-SNAPSHOT</powsybl-network-store.version>
+        <powsyblcore.version>3.1.0</powsyblcore.version>
     </properties>
 
     <build>
@@ -236,11 +237,24 @@
             <version>${powsybl-network-store.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.powsybl</groupId>
+            <artifactId>powsybl-iidm-api</artifactId>
+            <version>${powsyblcore.version}</version>
+        </dependency>
+
         <!-- Runtime dependencies -->
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-config-classic</artifactId>
             <version>${powsybl-core.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.powsybl</groupId>
+            <artifactId>powsybl-iidm-impl</artifactId>
+            <version>${powsyblcore.version}</version>
             <scope>runtime</scope>
         </dependency>
 
