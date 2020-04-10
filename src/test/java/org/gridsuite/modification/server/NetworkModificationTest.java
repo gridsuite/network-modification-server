@@ -55,6 +55,10 @@ public class NetworkModificationTest {
         given(networkStoreService.getNetwork(testNetworkId)).willReturn(createNetwork());
         given(networkStoreService.getNetwork(notFoundNetworkId)).willThrow(new PowsyblException());
 
+        // network not existing
+        mvc.perform(put("/v1/switch/{networkUuid}/{switchId}/", notFoundNetworkId, "v1b1").param("open", "true"))
+                .andExpect(status().isNotFound());
+
         // switch not existing
         mvc.perform(put("/v1/switch/{networkUuid}/{switchId}", testNetworkId, "notFound").param("open", "true"))
                 .andExpect(status().isNotFound());

@@ -14,8 +14,6 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import javax.inject.Inject;
 import java.util.UUID;
 
@@ -29,7 +27,6 @@ import java.util.UUID;
 public class NetworkModificationController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NetworkModificationController.class);
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     @Inject
     private NetworkModificationService networkModificationService;
