@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: netork-modification-server
+
+server:
+  port: 5007
+
+network-store-server:
+  base-uri: http://localhost:8080
