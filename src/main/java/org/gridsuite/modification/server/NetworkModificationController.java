@@ -31,7 +31,7 @@ public class NetworkModificationController {
     @Inject
     private NetworkModificationService networkModificationService;
 
-    @PutMapping(value = "/switch/{networkUuid}/{switchId}")
+    @PutMapping(value = "/networks/{networkUuid}/switches/{switchId}")
     @ApiOperation(value = "change a switch state in the network")
     @ApiResponses(value = {@ApiResponse(code = 200, message = "The switch state has been changed")})
     public ResponseEntity<Void> changeSwitchState(

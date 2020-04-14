@@ -56,19 +56,19 @@ public class NetworkModificationTest {
         given(networkStoreService.getNetwork(notFoundNetworkId)).willThrow(new PowsyblException());
 
         // network not existing
-        mvc.perform(put("/v1/switch/{networkUuid}/{switchId}/", notFoundNetworkId, "v1b1").param("open", "true"))
+        mvc.perform(put("/v1/networks/{networkUuid}/switches/{switchId}/", notFoundNetworkId, "v1b1").param("open", "true"))
                 .andExpect(status().isNotFound());
 
         // switch not existing
-        mvc.perform(put("/v1/switch/{networkUuid}/{switchId}", testNetworkId, "notFound").param("open", "true"))
+        mvc.perform(put("/v1/networks/{networkUuid}/switches/{switchId}", testNetworkId, "notFound").param("open", "true"))
                 .andExpect(status().isNotFound());
 
         // switch opening
-        mvc.perform(put("/v1/switch/{networkUuid}/{switchId}", testNetworkId, "v1b1").param("open", "true"))
+        mvc.perform(put("/v1/networks/{networkUuid}/switches/{switchId}", testNetworkId, "v1b1").param("open", "true"))
                 .andExpect(status().isOk());
 
         // switch closing
-        mvc.perform(put("/v1/switch/{networkUuid}/{switchId}", testNetworkId, "v2b1").param("open", "false"))
+        mvc.perform(put("/v1/networks/{networkUuid}/switches/{switchId}", testNetworkId, "v2b1").param("open", "false"))
                 .andExpect(status().isOk());
     }
 
