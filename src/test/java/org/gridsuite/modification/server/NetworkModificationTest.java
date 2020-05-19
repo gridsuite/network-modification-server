@@ -76,13 +76,13 @@ public class NetworkModificationTest {
         Network network = Network.create("test", "test");
 
         Substation s1 = createSubstation(network, "s1", "s1", Country.FR);
-        VoltageLevel v1 = createVoltageLevel(s1, "v1", "v1", TopologyKind.NODE_BREAKER, 380.0, 20);
+        VoltageLevel v1 = createVoltageLevel(s1, "v1", "v1", TopologyKind.NODE_BREAKER, 380.0);
         createBusBarSection(v1, "1.1", "1.1", 0, 1, 1);
         createSwitch(v1, "v1d1", "v1d1", SwitchKind.DISCONNECTOR, true, false, false, 0, 1);
         createSwitch(v1, "v1b1", "v1b1", SwitchKind.BREAKER, true, false, false, 1, 2);
         createLoad(v1, "v1load", "v1load", "v1load", 1, ConnectablePosition.Direction.TOP, 2, 0., 0.);
 
-        VoltageLevel v2 = createVoltageLevel(s1, "v2", "v2", TopologyKind.NODE_BREAKER, 225.0, 20);
+        VoltageLevel v2 = createVoltageLevel(s1, "v2", "v2", TopologyKind.NODE_BREAKER, 225.0);
         createBusBarSection(v2, "1A", "1A", 0, 1, 1);
         createBusBarSection(v2, "1B", "1B", 1, 1, 2);
         createSwitch(v2, "v2d1", "v2d1", SwitchKind.DISCONNECTOR, true, false, false, 0, 2);
@@ -104,17 +104,13 @@ public class NetworkModificationTest {
     }
 
     private static VoltageLevel createVoltageLevel(Substation s, String id, String name,
-                                                     TopologyKind topology, double vNom, int nodeCount) {
-        VoltageLevel vl = s.newVoltageLevel()
+                                                     TopologyKind topology, double vNom) {
+        return s.newVoltageLevel()
                 .setId(id)
                 .setName(name)
                 .setTopologyKind(topology)
                 .setNominalV(vNom)
                 .add();
-        if (topology == TopologyKind.NODE_BREAKER) {
-            vl.getNodeBreakerView().setNodeCount(nodeCount);
-        }
-        return vl;
     }
 
     private static void createBusBarSection(VoltageLevel vl, String id, String name, int node, int busbarIndex, int sectionIndex) {
