@@ -52,7 +52,7 @@
         <springboot.version>2.1.5.RELEASE</springboot.version>
         <springfox.version>2.9.2</springfox.version>
 
-        <powsybl-core.version>3.3.0</powsybl-core.version>
+        <powsybl-core.version>3.4.0</powsybl-core.version>
         <powsybl-network-store.version>1.0.0-SNAPSHOT</powsybl-network-store.version>
     </properties>
 
