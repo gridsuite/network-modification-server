@@ -41,4 +41,15 @@ public class NetworkModificationController {
         networkModificationService.changeSwitchState(networkUuid, switchId, open);
         return ResponseEntity.ok().build();
     }
+
+    @PutMapping(value = "/networks/{networkUuid}/lines/{lineId}/switches")
+    @ApiOperation(value = "lockout a line or reconnect it back")
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "the line has been connected or disconnected")})
+    public ResponseEntity<Boolean> lockoutLine(
+            @ApiParam(value = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
+            @ApiParam(value = "Line ID") @PathVariable("lineId") String lineId,
+            @RequestParam("lockout") String lockout) {
+        boolean b = networkModificationService.lockoutLine(networkUuid, lineId, Boolean.parseBoolean(lockout));
+        return ResponseEntity.ok().body(b);
+    }
 }

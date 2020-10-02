@@ -7,6 +7,7 @@
 package org.gridsuite.modification.server;
 
 import com.powsybl.commons.PowsyblException;
+import com.powsybl.iidm.network.Line;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.Switch;
 import com.powsybl.network.store.client.NetworkStoreService;
@@ -46,5 +47,25 @@ class NetworkModificationService {
         sw.setOpen(Boolean.parseBoolean(open));
 
         networkStoreService.flush(network);
+    }
+
+    boolean lockoutLine(UUID networkUuid, String lineId, boolean lockout) {
+        Network network = networkStoreService.getNetwork(networkUuid);
+        Line line = network.getLine(lineId);
+        if (line == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Line " + lineId + " not found");
+        }
+
+        boolean b1;
+        boolean b2;
+        if (lockout) {
+            b1 = line.getTerminal1().disconnect();
+            b2 = line.getTerminal2().disconnect();
+        } else {
+            b1 = line.getTerminal1().connect();
+            b2 = line.getTerminal2().connect();
+        }
+        networkStoreService.flush(network);
+        return b1 || b2;
     }
 }

@@ -19,9 +19,11 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.UUID;
 
+import static org.junit.Assert.assertEquals;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -68,11 +70,26 @@ public class NetworkModificationTest {
         // switch closing
         mvc.perform(put("/v1/networks/{networkUuid}/switches/{switchId}", testNetworkId, "v2b1").param("open", "false"))
                 .andExpect(status().isOk());
+
+        // lockout a non-existing line
+        MvcResult mvcResult = mvc.perform(put("/v1/networks/{networkUuid}/lines/{lineId}/switches", testNetworkId, "nonExistingLineId").param("lockout", "true"))
+                .andExpect(status().isNotFound())
+                .andReturn();
+        assertEquals("Line nonExistingLineId not found", mvcResult.getResponse().getErrorMessage());
+
+        // lockout a line
+        mvc.perform(put("/v1/networks/{networkUuid}/lines/{lineId}/switches", testNetworkId, "lineId").param("lockout", "true"))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // lockout a line
+        mvc.perform(put("/v1/networks/{networkUuid}/lines/{lineId}/switches", testNetworkId, "lineId").param("lockout", "false"))
+                .andExpect(status().isOk())
+                .andReturn();
     }
 
     public static Network createNetwork() {
         Network network = Network.create("test", "test");
-
         Substation s1 = createSubstation(network, "s1", "s1", Country.FR);
         VoltageLevel v1 = createVoltageLevel(s1, "v1", "v1", TopologyKind.NODE_BREAKER, 380.0);
         createBusBarSection(v1, "1.1", "1.1", 0);
@@ -89,6 +106,10 @@ public class NetworkModificationTest {
         createSwitch(v2, "v2dload", "v2dload", SwitchKind.DISCONNECTOR, true, false, false, 1, 4);
         createSwitch(v2, "v2bload", "v2bload", SwitchKind.BREAKER, true, false, false, 4, 5);
         createLoad(v2, "v2load", "v2load", 5, 0., 0.);
+
+        VoltageLevel v3 = createVoltageLevel(s1, "v3", "v3", TopologyKind.NODE_BREAKER, 380.0);
+        VoltageLevel v4 = createVoltageLevel(s1, "v4", "v4", TopologyKind.NODE_BREAKER, 380.0);
+        createLine(network, "lineId", "lineName", v3.getId(), v4.getId(), 0, 1, 1, 1, 1, 1, 1, 1);
 
         return network;
     }
@@ -140,6 +161,26 @@ public class NetworkModificationTest {
                 .setNode(node)
                 .setP0(p0)
                 .setQ0(q0)
+                .add();
+    }
+
+    private static void createLine(Network network, String id, String name,
+                                   String v1, String v2, int node1, int node2,
+                                   double b1, double b2, double x, double r,
+                                   double g1, double g2) {
+        network.newLine()
+                .setId(id)
+                .setName(name)
+                .setVoltageLevel1(v1)
+                .setVoltageLevel2(v2)
+                .setNode1(node1)
+                .setNode2(node2)
+                .setB1(b1)
+                .setB2(b2)
+                .setX(x)
+                .setR(r)
+                .setG1(g1)
+                .setG2(g2)
                 .add();
     }
 }
