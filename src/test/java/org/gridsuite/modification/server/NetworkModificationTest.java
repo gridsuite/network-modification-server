@@ -16,14 +16,18 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.UUID;
 
 import static org.mockito.BDDMockito.given;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -68,6 +72,47 @@ public class NetworkModificationTest {
         // switch closing
         mvc.perform(put("/v1/networks/{networkUuid}/switches/{switchId}", testNetworkId, "v2b1").param("open", "false"))
                 .andExpect(status().isOk());
+
+        testEquipmentModification(testNetworkId, ModifiableEquipmentType.GENERATOR, "idGenerator", "targetP", "15", Boolean.TRUE);
+        testEquipmentModification(testNetworkId, ModifiableEquipmentType.GENERATOR, "idGenerator", "targetP", "65000", Boolean.FALSE);
+        testEquipmentModification(testNetworkId, ModifiableEquipmentType.GENERATOR, "idGenerator", "targetQ", "15.0", Boolean.TRUE);
+
+        testEquipmentModification(testNetworkId, ModifiableEquipmentType.THREE_WINDING_TRANSFORMER, "trfo3wP", "phaseTapChanger2Position", "9", Boolean.FALSE);
+        testEquipmentModification(testNetworkId, ModifiableEquipmentType.THREE_WINDING_TRANSFORMER, "trfo3wP", "phaseTapChanger2Position", "2", Boolean.TRUE);
+        testEquipmentModification(testNetworkId, ModifiableEquipmentType.THREE_WINDING_TRANSFORMER, "trfo3wP", "phaseTapChanger1Position", "9", Boolean.FALSE);
+        testEquipmentModification(testNetworkId, ModifiableEquipmentType.THREE_WINDING_TRANSFORMER, "trfo3wP", "phaseTapChanger3Position", "9", Boolean.FALSE);
+
+        testEquipmentModification(testNetworkId, ModifiableEquipmentType.THREE_WINDING_TRANSFORMER, "trfo3wR", "ratioTapChanger2Position", "9", Boolean.FALSE);
+        testEquipmentModification(testNetworkId, ModifiableEquipmentType.THREE_WINDING_TRANSFORMER, "trfo3wR", "ratioTapChanger1Position", "9", Boolean.FALSE);
+        testEquipmentModification(testNetworkId, ModifiableEquipmentType.THREE_WINDING_TRANSFORMER, "trfo3wR", "ratioTapChanger3Position", "9", Boolean.FALSE);
+        testEquipmentModification(testNetworkId, ModifiableEquipmentType.THREE_WINDING_TRANSFORMER, "trfo3wR", "ratioTapChanger3Position", "3", Boolean.TRUE);
+
+        testEquipmentModification(testNetworkId, ModifiableEquipmentType.TWO_WINDING_TRANSFORMER, "trfo2wP", "phaseTapChangerPosition", "9", Boolean.FALSE);
+        testEquipmentModification(testNetworkId, ModifiableEquipmentType.TWO_WINDING_TRANSFORMER, "trfo2wP", "phaseTapChangerPosition", "4", Boolean.TRUE);
+
+        testEquipmentModification(testNetworkId, ModifiableEquipmentType.TWO_WINDING_TRANSFORMER, "trfo2wR", "ratioTapChangerPosition", "99", Boolean.FALSE);
+        testEquipmentModification(testNetworkId, ModifiableEquipmentType.TWO_WINDING_TRANSFORMER, "trfo2wR", "ratioTapChangerPosition", "4", Boolean.TRUE);
+
+        testEquipmentModification(testNetworkId, ModifiableEquipmentType.TWO_WINDING_TRANSFORMER, "trfo2wR", "__no", "4", Boolean.FALSE);
+        testEquipmentModification(testNetworkId, ModifiableEquipmentType.THREE_WINDING_TRANSFORMER, "trfo2wR", "__exising", "4", Boolean.FALSE);
+        testEquipmentModification(testNetworkId, ModifiableEquipmentType.GENERATOR, "trfo2wR", "__command", "4", Boolean.FALSE);
+
+        mvc.perform(post("/v1/networks/{networkUuid}/GENERATOR/{generatorId}", testNetworkId, "generatorId")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{}")
+            .characterEncoding("utf-8")
+            .accept(MediaType.APPLICATION_JSON)
+        ).andExpect(status().isBadRequest());
+    }
+
+    private void testEquipmentModification(UUID testNetworkId, ModifiableEquipmentType equipmentType, String equipmentId, String cmd, String target, Boolean expectedResult) throws Exception {
+        mvc.perform(post("/v1/networks/{networkUuid}/{typeEq}/{generatorId}", testNetworkId, equipmentType, equipmentId)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{ \"" + cmd + "\": \"" +target +"\" }")
+            .characterEncoding("utf-8")
+            .accept(MediaType.APPLICATION_JSON)
+        ).andExpect(status().isOk())
+            .andExpect(jsonPath("$." + cmd).value(expectedResult));
     }
 
     public static Network createNetwork() {
@@ -90,7 +135,41 @@ public class NetworkModificationTest {
         createSwitch(v2, "v2bload", "v2bload", SwitchKind.BREAKER, true, false, false, 4, 5);
         createLoad(v2, "v2load", "v2load", 5, 0., 0.);
 
+        int node1=3, node2=6, node3=0;
+        VoltageLevel v3 = createVoltageLevel(s1, "v3", "v3", TopologyKind.NODE_BREAKER, 125.0);
+        createBusBarSection(v3, "b3", "b3", node3++);
+        addPhaseTapChanger( createThreeWindingTransformer(s1, "trfo3wP", "v1", "v2", "v3", node1++, node2++,node3++).getLeg2(), 0, 5);
+        addRatioTapChanger(createThreeWindingTransformer(s1, "trfo3wR", "v1", "v2", "v3", node1++, node2++, node3++).getLeg3(), 1, 5);
+        addPhaseTapChanger(createTwoWindingTransformer(s1, "trfo2wP", "v1", "v2", node1++, node2++), 0, 3);
+        addRatioTapChanger(createTwoWindingTransformer(s1, "trfo2wR", "v1", "v2", node1++, node2++), 3, 4);
+        createGenerator(v2, "idGenerator", node2++, 42.1, 1.0);
         return network;
+    }
+
+    private static void addPhaseTapChanger(PhaseTapChangerHolder transformer, int lowTap, int currentTap) {
+        transformer.newPhaseTapChanger()
+            .setLowTapPosition(lowTap)
+            .setTapPosition(currentTap)
+            .beginStep().setAlpha(1.1).setB(1.2).setG(1.3).setR(1.4).setRho(1.5).setX(1.6).endStep()
+            .beginStep().setAlpha(2.2).setB(2.2).setG(2.3).setR(2.4).setRho(2.5).setX(2.6).endStep()
+            .beginStep().setAlpha(3.3).setB(3.2).setG(3.3).setR(3.4).setRho(3.5).setX(3.6).endStep()
+            .beginStep().setAlpha(4.4).setB(4.2).setG(4.3).setR(4.4).setRho(4.5).setX(4.6).endStep()
+            .beginStep().setAlpha(5.5).setB(5.2).setG(5.3).setR(5.5).setRho(5.5).setX(5.6).endStep()
+            .beginStep().setAlpha(6.6).setB(6.2).setG(6.3).setR(6.6).setRho(6.5).setX(6.6).endStep()
+            .add();
+    }
+
+    private static void addRatioTapChanger(RatioTapChangerHolder transformer, int lowTap, int currentTap) {
+        transformer.newRatioTapChanger()
+            .setLowTapPosition(lowTap)
+            .setTapPosition(currentTap)
+            .beginStep().setB(1.2).setG(1.3).setR(1.4).setRho(1.5).setX(1.6).endStep()
+            .beginStep().setB(2.2).setG(2.3).setR(2.4).setRho(2.5).setX(2.6).endStep()
+            .beginStep().setB(3.2).setG(3.3).setR(3.4).setRho(3.5).setX(3.6).endStep()
+            .beginStep().setB(4.2).setG(4.3).setR(4.4).setRho(4.5).setX(4.6).endStep()
+            .beginStep().setB(5.2).setG(5.3).setR(5.5).setRho(5.5).setX(5.6).endStep()
+            .beginStep().setB(6.2).setG(6.3).setR(6.6).setRho(6.5).setX(6.6).endStep()
+            .add();
     }
 
     private static Substation createSubstation(Network n, String id, String name, Country country) {
@@ -142,4 +221,49 @@ public class NetworkModificationTest {
                 .setQ0(q0)
                 .add();
     }
+
+    @SuppressWarnings("SameParameterValue")
+    private static ThreeWindingsTransformer createThreeWindingTransformer(Substation sub, String id,
+                                                                          String vl1, String vl2, String vl3,
+                                                                          int node1, int node2, int node3
+    ){
+        return sub.newThreeWindingsTransformer()
+            .newLeg1().setVoltageLevel(vl1).setR(1.0).setX(2.0).setG(7.0).setB(10.).setRatedU(13.0).setNode(node1).add()
+            .newLeg2().setVoltageLevel(vl2).setR(3.0).setX(4.0).setG(8.0).setB(11.).setRatedU(14.0).setNode(node2).add()
+            .newLeg3().setVoltageLevel(vl3).setR(5.0).setX(6.0).setG(9.0).setB(12.).setRatedU(15.0).setNode(node3).add()
+            .setRatedU0(0.0)
+            .setId(id).add();
+    }
+
+    @SuppressWarnings("SameParameterValue")
+    private static TwoWindingsTransformer createTwoWindingTransformer(Substation sub, String id, String vl1, String vl2,
+                                                                    int node1, int node2){
+        return sub.newTwoWindingsTransformer()
+            .setId(id)
+            .setVoltageLevel1(vl1)
+            .setVoltageLevel2(vl2)
+            .setNode1(node1)
+            .setNode2(node2)
+            .setR(1.1)
+            .setB(2.2)
+            .setG(3.3)
+            .setX(4.4)
+            .setRatedU1(5.5)
+            .setRatedU2(6.6)
+            .add();
+    }
+
+    @SuppressWarnings("SameParameterValue")
+    private static void createGenerator(VoltageLevel vl, String id, int node, double targetP, double targetQ) {
+        vl.newGenerator()
+            .setId(id)
+            .setTargetP(targetP)
+            .setTargetQ(targetQ)
+            .setNode(node)
+            .setMinP(-1.1)
+            .setMaxP(1000.0)
+            .setVoltageRegulatorOn(false)
+            .add();
+    }
+
 }

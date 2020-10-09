@@ -6,15 +6,18 @@
  */
 package org.gridsuite.modification.server;
 
+//import org.springframework.web.reactive.function.BodyInserters;
 import io.swagger.annotations.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.inject.Inject;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -41,4 +44,20 @@ public class NetworkModificationController {
         networkModificationService.changeSwitchState(networkUuid, switchId, open);
         return ResponseEntity.ok().build();
     }
+
+    @PostMapping(value = "/networks/{networkUuid}/{equipmentType}/{equipmentId}")
+    @ApiOperation(value = "change a switch state in the network", produces = "application/json")
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "The equipment state has been changed")})
+    public ResponseEntity<Map<String, Boolean>> changeEquipmentState(
+        @ApiParam(value = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
+        @ApiParam(value = "Equipment Type") @PathVariable("equipmentType") ModifiableEquipmentType equipmentType,
+        @ApiParam(value = "Equipment Type") @PathVariable("equipmentId") String equipmentId,
+        @RequestBody() Map<String, String> changeRequest) {
+        Map<String, Boolean> changes = networkModificationService.changEquipmentState(networkUuid, equipmentType, equipmentId, changeRequest);
+        if (!changes.isEmpty()) {
+            return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(changes);
+        }
+        return ResponseEntity.badRequest().build();
+    }
+
 }
