@@ -137,8 +137,9 @@ class NetworkModificationService {
                 return setTargetP(generator, Double.valueOf(value));
             case "targetQ":
                 return setTargetQ(generator, Double.valueOf(value));
+            default:
+                return false;
         }
-        return false;
     }
 
     private boolean applyModification(TwoWindingsTransformer transformer, String change, String value) {
