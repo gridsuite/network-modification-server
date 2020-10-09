@@ -20,7 +20,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.UUID;
 
@@ -108,7 +107,7 @@ public class NetworkModificationTest {
     private void testEquipmentModification(UUID testNetworkId, ModifiableEquipmentType equipmentType, String equipmentId, String cmd, String target, Boolean expectedResult) throws Exception {
         mvc.perform(post("/v1/networks/{networkUuid}/{typeEq}/{generatorId}", testNetworkId, equipmentType, equipmentId)
             .contentType(MediaType.APPLICATION_JSON)
-            .content("{ \"" + cmd + "\": \"" +target +"\" }")
+            .content("{ \"" + cmd + "\": \"" + target + "\" }")
             .characterEncoding("utf-8")
             .accept(MediaType.APPLICATION_JSON)
         ).andExpect(status().isOk())
@@ -135,10 +134,12 @@ public class NetworkModificationTest {
         createSwitch(v2, "v2bload", "v2bload", SwitchKind.BREAKER, true, false, false, 4, 5);
         createLoad(v2, "v2load", "v2load", 5, 0., 0.);
 
-        int node1=3, node2=6, node3=0;
+        int node1 = 3;
+        int node2 = 6;
+        int node3 = 0;
         VoltageLevel v3 = createVoltageLevel(s1, "v3", "v3", TopologyKind.NODE_BREAKER, 125.0);
         createBusBarSection(v3, "b3", "b3", node3++);
-        addPhaseTapChanger( createThreeWindingTransformer(s1, "trfo3wP", "v1", "v2", "v3", node1++, node2++,node3++).getLeg2(), 0, 5);
+        addPhaseTapChanger(createThreeWindingTransformer(s1, "trfo3wP", "v1", "v2", "v3", node1++, node2++, node3++).getLeg2(), 0, 5);
         addRatioTapChanger(createThreeWindingTransformer(s1, "trfo3wR", "v1", "v2", "v3", node1++, node2++, node3++).getLeg3(), 1, 5);
         addPhaseTapChanger(createTwoWindingTransformer(s1, "trfo2wP", "v1", "v2", node1++, node2++), 0, 3);
         addRatioTapChanger(createTwoWindingTransformer(s1, "trfo2wR", "v1", "v2", node1++, node2++), 3, 4);
@@ -226,7 +227,7 @@ public class NetworkModificationTest {
     private static ThreeWindingsTransformer createThreeWindingTransformer(Substation sub, String id,
                                                                           String vl1, String vl2, String vl3,
                                                                           int node1, int node2, int node3
-    ){
+    ) {
         return sub.newThreeWindingsTransformer()
             .newLeg1().setVoltageLevel(vl1).setR(1.0).setX(2.0).setG(7.0).setB(10.).setRatedU(13.0).setNode(node1).add()
             .newLeg2().setVoltageLevel(vl2).setR(3.0).setX(4.0).setG(8.0).setB(11.).setRatedU(14.0).setNode(node2).add()
@@ -237,7 +238,7 @@ public class NetworkModificationTest {
 
     @SuppressWarnings("SameParameterValue")
     private static TwoWindingsTransformer createTwoWindingTransformer(Substation sub, String id, String vl1, String vl2,
-                                                                    int node1, int node2){
+                                                                    int node1, int node2) {
         return sub.newTwoWindingsTransformer()
             .setId(id)
             .setVoltageLevel1(vl1)
