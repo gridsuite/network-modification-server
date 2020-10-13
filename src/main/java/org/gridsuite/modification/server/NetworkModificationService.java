@@ -74,9 +74,9 @@ class NetworkModificationService {
         Network network = getNetwork(networkUuid);
         try {
             switch (equipmentType) {
-                case TWO_WINDING_TRANSFORMER:
+                case TWO_WINDINGS_TRANSFORMER:
                     return applyChanges(network.getTwoWindingsTransformer(id), changeRequest, this::applyModification);
-                case THREE_WINDING_TRANSFORMER:
+                case THREE_WINDINGS_TRANSFORMER:
                     return applyChanges(network.getThreeWindingsTransformer(id), changeRequest, this::applyModification);
                 case GENERATOR:
                     return applyChanges(network.getGenerator(id), changeRequest, this::applyModification);

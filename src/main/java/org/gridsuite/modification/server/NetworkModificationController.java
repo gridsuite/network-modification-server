@@ -50,7 +50,7 @@ public class NetworkModificationController {
     public ResponseEntity<Map<String, Boolean>> changeEquipmentState(
         @ApiParam(value = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
         @ApiParam(value = "Equipment Type") @PathVariable("equipmentType") ModifiableEquipmentType equipmentType,
-        @ApiParam(value = "Equipment Type") @PathVariable("equipmentId") String equipmentId,
+        @ApiParam(value = "Equipment ID") @PathVariable("equipmentId") String equipmentId,
         @RequestBody() Map<String, String> changeRequest) {
         Map<String, Boolean> changes = networkModificationService.changEquipmentState(networkUuid, equipmentType, equipmentId, changeRequest);
         if (!changes.isEmpty()) {

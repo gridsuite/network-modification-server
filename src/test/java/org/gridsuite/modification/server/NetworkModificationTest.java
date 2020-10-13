@@ -76,24 +76,24 @@ public class NetworkModificationTest {
         testEquipmentModification(testNetworkId, ModifiableEquipmentType.GENERATOR, "idGenerator", "targetP", "65000", Boolean.FALSE);
         testEquipmentModification(testNetworkId, ModifiableEquipmentType.GENERATOR, "idGenerator", "targetQ", "15.0", Boolean.TRUE);
 
-        testEquipmentModification(testNetworkId, ModifiableEquipmentType.THREE_WINDING_TRANSFORMER, "trfo3wP", "phaseTapChanger2Position", "9", Boolean.FALSE);
-        testEquipmentModification(testNetworkId, ModifiableEquipmentType.THREE_WINDING_TRANSFORMER, "trfo3wP", "phaseTapChanger2Position", "2", Boolean.TRUE);
-        testEquipmentModification(testNetworkId, ModifiableEquipmentType.THREE_WINDING_TRANSFORMER, "trfo3wP", "phaseTapChanger1Position", "9", Boolean.FALSE);
-        testEquipmentModification(testNetworkId, ModifiableEquipmentType.THREE_WINDING_TRANSFORMER, "trfo3wP", "phaseTapChanger3Position", "9", Boolean.FALSE);
+        testEquipmentModification(testNetworkId, ModifiableEquipmentType.THREE_WINDINGS_TRANSFORMER, "trfo3wP", "phaseTapChanger2Position", "9", Boolean.FALSE);
+        testEquipmentModification(testNetworkId, ModifiableEquipmentType.THREE_WINDINGS_TRANSFORMER, "trfo3wP", "phaseTapChanger2Position", "2", Boolean.TRUE);
+        testEquipmentModification(testNetworkId, ModifiableEquipmentType.THREE_WINDINGS_TRANSFORMER, "trfo3wP", "phaseTapChanger1Position", "9", Boolean.FALSE);
+        testEquipmentModification(testNetworkId, ModifiableEquipmentType.THREE_WINDINGS_TRANSFORMER, "trfo3wP", "phaseTapChanger3Position", "9", Boolean.FALSE);
 
-        testEquipmentModification(testNetworkId, ModifiableEquipmentType.THREE_WINDING_TRANSFORMER, "trfo3wR", "ratioTapChanger2Position", "9", Boolean.FALSE);
-        testEquipmentModification(testNetworkId, ModifiableEquipmentType.THREE_WINDING_TRANSFORMER, "trfo3wR", "ratioTapChanger1Position", "9", Boolean.FALSE);
-        testEquipmentModification(testNetworkId, ModifiableEquipmentType.THREE_WINDING_TRANSFORMER, "trfo3wR", "ratioTapChanger3Position", "9", Boolean.FALSE);
-        testEquipmentModification(testNetworkId, ModifiableEquipmentType.THREE_WINDING_TRANSFORMER, "trfo3wR", "ratioTapChanger3Position", "3", Boolean.TRUE);
+        testEquipmentModification(testNetworkId, ModifiableEquipmentType.THREE_WINDINGS_TRANSFORMER, "trfo3wR", "ratioTapChanger2Position", "9", Boolean.FALSE);
+        testEquipmentModification(testNetworkId, ModifiableEquipmentType.THREE_WINDINGS_TRANSFORMER, "trfo3wR", "ratioTapChanger1Position", "9", Boolean.FALSE);
+        testEquipmentModification(testNetworkId, ModifiableEquipmentType.THREE_WINDINGS_TRANSFORMER, "trfo3wR", "ratioTapChanger3Position", "9", Boolean.FALSE);
+        testEquipmentModification(testNetworkId, ModifiableEquipmentType.THREE_WINDINGS_TRANSFORMER, "trfo3wR", "ratioTapChanger3Position", "3", Boolean.TRUE);
 
-        testEquipmentModification(testNetworkId, ModifiableEquipmentType.TWO_WINDING_TRANSFORMER, "trfo2wP", "phaseTapChangerPosition", "9", Boolean.FALSE);
-        testEquipmentModification(testNetworkId, ModifiableEquipmentType.TWO_WINDING_TRANSFORMER, "trfo2wP", "phaseTapChangerPosition", "4", Boolean.TRUE);
+        testEquipmentModification(testNetworkId, ModifiableEquipmentType.TWO_WINDINGS_TRANSFORMER, "trfo2wP", "phaseTapChangerPosition", "9", Boolean.FALSE);
+        testEquipmentModification(testNetworkId, ModifiableEquipmentType.TWO_WINDINGS_TRANSFORMER, "trfo2wP", "phaseTapChangerPosition", "4", Boolean.TRUE);
 
-        testEquipmentModification(testNetworkId, ModifiableEquipmentType.TWO_WINDING_TRANSFORMER, "trfo2wR", "ratioTapChangerPosition", "99", Boolean.FALSE);
-        testEquipmentModification(testNetworkId, ModifiableEquipmentType.TWO_WINDING_TRANSFORMER, "trfo2wR", "ratioTapChangerPosition", "4", Boolean.TRUE);
+        testEquipmentModification(testNetworkId, ModifiableEquipmentType.TWO_WINDINGS_TRANSFORMER, "trfo2wR", "ratioTapChangerPosition", "99", Boolean.FALSE);
+        testEquipmentModification(testNetworkId, ModifiableEquipmentType.TWO_WINDINGS_TRANSFORMER, "trfo2wR", "ratioTapChangerPosition", "4", Boolean.TRUE);
 
-        testEquipmentModification(testNetworkId, ModifiableEquipmentType.TWO_WINDING_TRANSFORMER, "trfo2wR", "__no", "4", Boolean.FALSE);
-        testEquipmentModification(testNetworkId, ModifiableEquipmentType.THREE_WINDING_TRANSFORMER, "trfo2wR", "__exising", "4", Boolean.FALSE);
+        testEquipmentModification(testNetworkId, ModifiableEquipmentType.TWO_WINDINGS_TRANSFORMER, "trfo2wR", "__no", "4", Boolean.FALSE);
+        testEquipmentModification(testNetworkId, ModifiableEquipmentType.THREE_WINDINGS_TRANSFORMER, "trfo2wR", "__exising", "4", Boolean.FALSE);
         testEquipmentModification(testNetworkId, ModifiableEquipmentType.GENERATOR, "trfo2wR", "__command", "4", Boolean.FALSE);
 
         mvc.perform(post("/v1/networks/{networkUuid}/GENERATOR/{generatorId}", testNetworkId, "generatorId")

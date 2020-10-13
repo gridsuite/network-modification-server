@@ -1,8 +1,8 @@
 package org.gridsuite.modification.server;
 
 public enum ModifiableEquipmentType {
-    TWO_WINDING_TRANSFORMER,
-    THREE_WINDING_TRANSFORMER,
+    TWO_WINDINGS_TRANSFORMER,
+    THREE_WINDINGS_TRANSFORMER,
     GENERATOR,
 
 }
