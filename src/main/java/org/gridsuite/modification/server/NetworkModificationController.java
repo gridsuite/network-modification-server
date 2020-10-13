@@ -45,7 +45,7 @@ public class NetworkModificationController {
     }
 
     @PostMapping(value = "/networks/{networkUuid}/{equipmentType}/{equipmentId}")
-    @ApiOperation(value = "change a switch state in the network", produces = "application/json")
+    @ApiOperation(value = "change an equipment state in the network", produces = "application/json")
     @ApiResponses(value = {@ApiResponse(code = 200, message = "The equipment state has been changed")})
     public ResponseEntity<Map<String, Boolean>> changeEquipmentState(
         @ApiParam(value = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
