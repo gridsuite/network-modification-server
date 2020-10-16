@@ -47,6 +47,7 @@
         <java.version>11</java.version>
 
         <gridsuite-dependencies.version>1</gridsuite-dependencies.version>
+        <powsybl-single-line-diagram.version>1.7.0</powsybl-single-line-diagram.version>
     </properties>
 
     <build>
