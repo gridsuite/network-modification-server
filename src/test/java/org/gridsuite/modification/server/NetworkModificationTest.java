@@ -104,17 +104,7 @@ public class NetworkModificationTest {
         createSwitch(v2, "v2dload", "v2dload", SwitchKind.DISCONNECTOR, true, false, false, 1, 4);
         createSwitch(v2, "v2bload", "v2bload", SwitchKind.BREAKER, true, false, false, 4, 5);
         createLoad(v2, "v2load", "v2load", 5, 0., 0.);
-
-        int node1 = 3;
-        int node2 = 6;
-        int node3 = 0;
-        VoltageLevel v3 = createVoltageLevel(s1, "v3", "v3", TopologyKind.NODE_BREAKER, 125.0);
-        createBusBarSection(v3, "b3", "b3", node3++);
-        addPhaseTapChanger(createThreeWindingTransformer(s1, "trfo3wP", "v1", "v2", "v3", node1++, node2++, node3++).getLeg2(), 0, 5);
-        addRatioTapChanger(createThreeWindingTransformer(s1, "trfo3wR", "v1", "v2", "v3", node1++, node2++, node3++).getLeg3(), 1, 5);
-        addPhaseTapChanger(createTwoWindingTransformer(s1, "trfo2wP", "v1", "v2", node1++, node2++), 0, 3);
-        addRatioTapChanger(createTwoWindingTransformer(s1, "trfo2wR", "v1", "v2", node1++, node2++), 3, 4);
-        createGenerator(v2, "idGenerator", node2++, 42.1, 1.0);
+        createGenerator(v2, "idGenerator", 6, 42.1, 1.0);
 
         return network;
     }
@@ -193,37 +183,6 @@ public class NetworkModificationTest {
                 .setP0(p0)
                 .setQ0(q0)
                 .add();
-    }
-
-    @SuppressWarnings("SameParameterValue")
-    private static ThreeWindingsTransformer createThreeWindingTransformer(Substation sub, String id,
-                                                                          String vl1, String vl2, String vl3,
-                                                                          int node1, int node2, int node3
-    ) {
-        return sub.newThreeWindingsTransformer()
-            .newLeg1().setVoltageLevel(vl1).setR(1.0).setX(2.0).setG(7.0).setB(10.).setRatedU(13.0).setNode(node1).add()
-            .newLeg2().setVoltageLevel(vl2).setR(3.0).setX(4.0).setG(8.0).setB(11.).setRatedU(14.0).setNode(node2).add()
-            .newLeg3().setVoltageLevel(vl3).setR(5.0).setX(6.0).setG(9.0).setB(12.).setRatedU(15.0).setNode(node3).add()
-            .setRatedU0(0.0)
-            .setId(id).add();
-    }
-
-    @SuppressWarnings("SameParameterValue")
-    private static TwoWindingsTransformer createTwoWindingTransformer(Substation sub, String id, String vl1, String vl2,
-                                                                    int node1, int node2) {
-        return sub.newTwoWindingsTransformer()
-            .setId(id)
-            .setVoltageLevel1(vl1)
-            .setVoltageLevel2(vl2)
-            .setNode1(node1)
-            .setNode2(node2)
-            .setR(1.1)
-            .setB(2.2)
-            .setG(3.3)
-            .setX(4.4)
-            .setRatedU1(5.5)
-            .setRatedU2(6.6)
-            .add();
     }
 
     @SuppressWarnings("SameParameterValue")

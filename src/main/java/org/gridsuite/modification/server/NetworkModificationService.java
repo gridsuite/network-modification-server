@@ -56,7 +56,6 @@ class NetworkModificationService {
         Network network = getNetwork(networkUuid);
         Binding binding = new Binding();
         binding.setProperty("network", network);
-        binding.setProperty("generator", "generatorId");
         GroovyShell shell = new GroovyShell(binding, conf);
         try {
             shell.evaluate(groovyScript);
