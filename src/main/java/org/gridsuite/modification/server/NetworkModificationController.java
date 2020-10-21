@@ -11,12 +11,10 @@ import io.swagger.annotations.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.inject.Inject;
-import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -44,17 +42,14 @@ public class NetworkModificationController {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping(value = "/networks/{networkUuid}/{equipmentType}/{equipmentId}")
-    @ApiOperation(value = "change an equipment state in the network", produces = "application/json")
+    @PutMapping(value = "/networks/{networkUuid}/groovy/")
+    @ApiOperation(value = "change an equipment state in the network")
     @ApiResponses(value = {@ApiResponse(code = 200, message = "The equipment state has been changed")})
-    public ResponseEntity<Map<String, Boolean>> changeEquipmentState(
+    public ResponseEntity<Void> changeEquipmentState(
         @ApiParam(value = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
-        @ApiParam(value = "Equipment Type") @PathVariable("equipmentType") ModifiableEquipmentType equipmentType,
-        @ApiParam(value = "Equipment ID") @PathVariable("equipmentId") String equipmentId,
-        @RequestBody() Map<String, String> changeRequest) {
-        Map<String, Boolean> changes = networkModificationService.changEquipmentState(networkUuid, equipmentType, equipmentId, changeRequest);
-        if (!changes.isEmpty()) {
-            return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(changes);
+        @RequestBody() String changeRequest) {
+        if (networkModificationService.applyGroovyScript(networkUuid, changeRequest)) {
+            return ResponseEntity.ok().build();
         }
         return ResponseEntity.badRequest().build();
     }

@@ -16,7 +16,6 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
@@ -24,10 +23,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.UUID;
 
 import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -72,46 +69,20 @@ public class NetworkModificationTest {
         mvc.perform(put("/v1/networks/{networkUuid}/switches/{switchId}", testNetworkId, "v2b1").param("open", "false"))
                 .andExpect(status().isOk());
 
-        testEquipmentModification(testNetworkId, ModifiableEquipmentType.GENERATOR, "idGenerator", "targetP", "15", Boolean.TRUE);
-        testEquipmentModification(testNetworkId, ModifiableEquipmentType.GENERATOR, "idGenerator", "targetP", "65000", Boolean.FALSE);
-        testEquipmentModification(testNetworkId, ModifiableEquipmentType.GENERATOR, "idGenerator", "targetQ", "15.0", Boolean.TRUE);
-
-        testEquipmentModification(testNetworkId, ModifiableEquipmentType.THREE_WINDINGS_TRANSFORMER, "trfo3wP", "phaseTapChanger2Position", "9", Boolean.FALSE);
-        testEquipmentModification(testNetworkId, ModifiableEquipmentType.THREE_WINDINGS_TRANSFORMER, "trfo3wP", "phaseTapChanger2Position", "2", Boolean.TRUE);
-        testEquipmentModification(testNetworkId, ModifiableEquipmentType.THREE_WINDINGS_TRANSFORMER, "trfo3wP", "phaseTapChanger1Position", "9", Boolean.FALSE);
-        testEquipmentModification(testNetworkId, ModifiableEquipmentType.THREE_WINDINGS_TRANSFORMER, "trfo3wP", "phaseTapChanger3Position", "9", Boolean.FALSE);
-
-        testEquipmentModification(testNetworkId, ModifiableEquipmentType.THREE_WINDINGS_TRANSFORMER, "trfo3wR", "ratioTapChanger2Position", "9", Boolean.FALSE);
-        testEquipmentModification(testNetworkId, ModifiableEquipmentType.THREE_WINDINGS_TRANSFORMER, "trfo3wR", "ratioTapChanger1Position", "9", Boolean.FALSE);
-        testEquipmentModification(testNetworkId, ModifiableEquipmentType.THREE_WINDINGS_TRANSFORMER, "trfo3wR", "ratioTapChanger3Position", "9", Boolean.FALSE);
-        testEquipmentModification(testNetworkId, ModifiableEquipmentType.THREE_WINDINGS_TRANSFORMER, "trfo3wR", "ratioTapChanger3Position", "3", Boolean.TRUE);
-
-        testEquipmentModification(testNetworkId, ModifiableEquipmentType.TWO_WINDINGS_TRANSFORMER, "trfo2wP", "phaseTapChangerPosition", "9", Boolean.FALSE);
-        testEquipmentModification(testNetworkId, ModifiableEquipmentType.TWO_WINDINGS_TRANSFORMER, "trfo2wP", "phaseTapChangerPosition", "4", Boolean.TRUE);
-
-        testEquipmentModification(testNetworkId, ModifiableEquipmentType.TWO_WINDINGS_TRANSFORMER, "trfo2wR", "ratioTapChangerPosition", "99", Boolean.FALSE);
-        testEquipmentModification(testNetworkId, ModifiableEquipmentType.TWO_WINDINGS_TRANSFORMER, "trfo2wR", "ratioTapChangerPosition", "4", Boolean.TRUE);
-
-        testEquipmentModification(testNetworkId, ModifiableEquipmentType.TWO_WINDINGS_TRANSFORMER, "trfo2wR", "__no", "4", Boolean.FALSE);
-        testEquipmentModification(testNetworkId, ModifiableEquipmentType.THREE_WINDINGS_TRANSFORMER, "trfo2wR", "__exising", "4", Boolean.FALSE);
-        testEquipmentModification(testNetworkId, ModifiableEquipmentType.GENERATOR, "trfo2wR", "__command", "4", Boolean.FALSE);
-
-        mvc.perform(post("/v1/networks/{networkUuid}/GENERATOR/{generatorId}", testNetworkId, "generatorId")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content("{}")
+        mvc.perform((put("/v1/networks/{networkUuid}/groovy/", testNetworkId))
+            .content(
+                "network.getGenerator('idGenerator').targetP=12\n"
+            )
             .characterEncoding("utf-8")
-            .accept(MediaType.APPLICATION_JSON)
+        ).andExpect(status().isOk());
+
+        mvc.perform((put("/v1/networks/{networkUuid}/groovy/", testNetworkId))
+            .content(
+                "network.getGenerator('there is no generator').targetP=12\n"
+            )
+            .characterEncoding("utf-8")
         ).andExpect(status().isBadRequest());
-    }
 
-    private void testEquipmentModification(UUID testNetworkId, ModifiableEquipmentType equipmentType, String equipmentId, String cmd, String target, Boolean expectedResult) throws Exception {
-        mvc.perform(post("/v1/networks/{networkUuid}/{typeEq}/{generatorId}", testNetworkId, equipmentType, equipmentId)
-            .contentType(MediaType.APPLICATION_JSON)
-            .content("{ \"" + cmd + "\": \"" + target + "\" }")
-            .characterEncoding("utf-8")
-            .accept(MediaType.APPLICATION_JSON)
-        ).andExpect(status().isOk())
-            .andExpect(jsonPath("$." + cmd).value(expectedResult));
     }
 
     public static Network createNetwork() {
@@ -144,6 +115,7 @@ public class NetworkModificationTest {
         addPhaseTapChanger(createTwoWindingTransformer(s1, "trfo2wP", "v1", "v2", node1++, node2++), 0, 3);
         addRatioTapChanger(createTwoWindingTransformer(s1, "trfo2wR", "v1", "v2", node1++, node2++), 3, 4);
         createGenerator(v2, "idGenerator", node2++, 42.1, 1.0);
+
         return network;
     }
 
@@ -258,6 +230,7 @@ public class NetworkModificationTest {
     private static void createGenerator(VoltageLevel vl, String id, int node, double targetP, double targetQ) {
         vl.newGenerator()
             .setId(id)
+            .setName(id)
             .setTargetP(targetP)
             .setTargetQ(targetQ)
             .setNode(node)
