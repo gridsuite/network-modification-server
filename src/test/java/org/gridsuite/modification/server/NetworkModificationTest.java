@@ -109,32 +109,6 @@ public class NetworkModificationTest {
         return network;
     }
 
-    private static void addPhaseTapChanger(PhaseTapChangerHolder transformer, int lowTap, int currentTap) {
-        transformer.newPhaseTapChanger()
-            .setLowTapPosition(lowTap)
-            .setTapPosition(currentTap)
-            .beginStep().setAlpha(1.1).setB(1.2).setG(1.3).setR(1.4).setRho(1.5).setX(1.6).endStep()
-            .beginStep().setAlpha(2.2).setB(2.2).setG(2.3).setR(2.4).setRho(2.5).setX(2.6).endStep()
-            .beginStep().setAlpha(3.3).setB(3.2).setG(3.3).setR(3.4).setRho(3.5).setX(3.6).endStep()
-            .beginStep().setAlpha(4.4).setB(4.2).setG(4.3).setR(4.4).setRho(4.5).setX(4.6).endStep()
-            .beginStep().setAlpha(5.5).setB(5.2).setG(5.3).setR(5.5).setRho(5.5).setX(5.6).endStep()
-            .beginStep().setAlpha(6.6).setB(6.2).setG(6.3).setR(6.6).setRho(6.5).setX(6.6).endStep()
-            .add();
-    }
-
-    private static void addRatioTapChanger(RatioTapChangerHolder transformer, int lowTap, int currentTap) {
-        transformer.newRatioTapChanger()
-            .setLowTapPosition(lowTap)
-            .setTapPosition(currentTap)
-            .beginStep().setB(1.2).setG(1.3).setR(1.4).setRho(1.5).setX(1.6).endStep()
-            .beginStep().setB(2.2).setG(2.3).setR(2.4).setRho(2.5).setX(2.6).endStep()
-            .beginStep().setB(3.2).setG(3.3).setR(3.4).setRho(3.5).setX(3.6).endStep()
-            .beginStep().setB(4.2).setG(4.3).setR(4.4).setRho(4.5).setX(4.6).endStep()
-            .beginStep().setB(5.2).setG(5.3).setR(5.5).setRho(5.5).setX(5.6).endStep()
-            .beginStep().setB(6.2).setG(6.3).setR(6.6).setRho(6.5).setX(6.6).endStep()
-            .add();
-    }
-
     private static Substation createSubstation(Network n, String id, String name, Country country) {
         return n.newSubstation()
                 .setId(id)
