@@ -59,7 +59,7 @@ class NetworkModificationService {
         binding.setProperty("generator", "generatorId");
         GroovyShell shell = new GroovyShell(binding, conf);
         try {
-            var plop = shell.evaluate(groovyScript);
+            shell.evaluate(groovyScript);
             networkStoreService.flush(network);
             return true;
         } catch (Exception ignored) {
