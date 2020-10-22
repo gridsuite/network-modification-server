@@ -7,9 +7,6 @@
 package org.gridsuite.modification.server;
 
 import io.swagger.annotations.*;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -25,8 +22,6 @@ import java.util.UUID;
 @Api(tags = "network-modification-server")
 @ComponentScan(basePackageClasses = NetworkModificationService.class)
 public class NetworkModificationController {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(NetworkModificationController.class);
 
     @Inject
     private NetworkModificationService networkModificationService;
@@ -45,10 +40,9 @@ public class NetworkModificationController {
     @PutMapping(value = "/networks/{networkUuid}/groovy/")
     @ApiOperation(value = "change an equipment state in the network")
     @ApiResponses(value = {@ApiResponse(code = 200, message = "The equipment state has been changed")})
-    public ResponseEntity<Void> changeEquipmentState(
-        @ApiParam(value = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
-        @RequestBody() String changeRequest) {
-        if (networkModificationService.applyGroovyScript(networkUuid, changeRequest)) {
+    public ResponseEntity<Void> applyGroovyScript(@ApiParam(value = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
+                                                  @RequestBody String groovyScript) {
+        if (networkModificationService.applyGroovyScript(networkUuid, groovyScript)) {
             return ResponseEntity.ok().build();
         }
         return ResponseEntity.badRequest().build();
