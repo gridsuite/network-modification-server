@@ -10,6 +10,9 @@ import com.powsybl.commons.PowsyblException;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.Switch;
 import com.powsybl.network.store.client.NetworkStoreService;
+import groovy.lang.Binding;
+import groovy.lang.GroovyShell;
+import org.codehaus.groovy.control.CompilerConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.HttpStatus;
@@ -47,4 +50,20 @@ class NetworkModificationService {
 
         networkStoreService.flush(network);
     }
+
+    boolean applyGroovyScript(UUID networkUuid, String groovyScript) {
+        CompilerConfiguration conf = new CompilerConfiguration();
+        Network network = getNetwork(networkUuid);
+        Binding binding = new Binding();
+        binding.setProperty("network", network);
+        GroovyShell shell = new GroovyShell(binding, conf);
+        try {
+            shell.evaluate(groovyScript);
+            networkStoreService.flush(network);
+            return true;
+        } catch (Exception ignored) {
+            return false;
+        }
+    }
+
 }

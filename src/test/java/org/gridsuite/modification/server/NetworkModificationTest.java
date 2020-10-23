@@ -24,7 +24,7 @@ import java.util.UUID;
 
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -68,6 +68,21 @@ public class NetworkModificationTest {
         // switch closing
         mvc.perform(put("/v1/networks/{networkUuid}/switches/{switchId}", testNetworkId, "v2b1").param("open", "false"))
                 .andExpect(status().isOk());
+
+        mvc.perform((put("/v1/networks/{networkUuid}/groovy/", testNetworkId))
+            .content(
+                "network.getGenerator('idGenerator').targetP=12\n"
+            )
+            .characterEncoding("utf-8")
+        ).andExpect(status().isOk());
+
+        mvc.perform((put("/v1/networks/{networkUuid}/groovy/", testNetworkId))
+            .content(
+                "network.getGenerator('there is no generator').targetP=12\n"
+            )
+            .characterEncoding("utf-8")
+        ).andExpect(status().isBadRequest());
+
     }
 
     public static Network createNetwork() {
@@ -89,6 +104,7 @@ public class NetworkModificationTest {
         createSwitch(v2, "v2dload", "v2dload", SwitchKind.DISCONNECTOR, true, false, false, 1, 4);
         createSwitch(v2, "v2bload", "v2bload", SwitchKind.BREAKER, true, false, false, 4, 5);
         createLoad(v2, "v2load", "v2load", 5, 0., 0.);
+        createGenerator(v2, "idGenerator", 6, 42.1, 1.0);
 
         return network;
     }
@@ -142,4 +158,19 @@ public class NetworkModificationTest {
                 .setQ0(q0)
                 .add();
     }
+
+    @SuppressWarnings("SameParameterValue")
+    private static void createGenerator(VoltageLevel vl, String id, int node, double targetP, double targetQ) {
+        vl.newGenerator()
+            .setId(id)
+            .setName(id)
+            .setTargetP(targetP)
+            .setTargetQ(targetQ)
+            .setNode(node)
+            .setMinP(-1.1)
+            .setMaxP(1000.0)
+            .setVoltageRegulatorOn(false)
+            .add();
+    }
+
 }

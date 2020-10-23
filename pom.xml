@@ -47,6 +47,7 @@
         <java.version>11</java.version>
 
         <gridsuite-dependencies.version>3</gridsuite-dependencies.version>
+        <groovy.version>2.5.11</groovy.version>
     </properties>
 
     <build>
@@ -113,6 +114,11 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.codehaus.groovy</groupId>
+            <artifactId>groovy</artifactId>
+            <version>${groovy.version}</version>
         </dependency>
 
         <!-- Runtime dependencies -->
