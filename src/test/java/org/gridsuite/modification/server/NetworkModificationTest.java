@@ -23,6 +23,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.UUID;
 
 import static org.mockito.BDDMockito.given;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -63,18 +64,30 @@ public class NetworkModificationTest {
 
         // switch opening
         mvc.perform(put("/v1/networks/{networkUuid}/switches/{switchId}", testNetworkId, "v1b1").param("open", "true"))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(APPLICATION_JSON))
+                .andExpect(content().json("[\"s1\"]"));
 
         // switch closing
         mvc.perform(put("/v1/networks/{networkUuid}/switches/{switchId}", testNetworkId, "v2b1").param("open", "false"))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(APPLICATION_JSON))
+                .andExpect(content().json("[\"s1\"]"));
+
+        // switch opening on another substation
+        mvc.perform(put("/v1/networks/{networkUuid}/switches/{switchId}", testNetworkId, "v3b1").param("open", "true"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(APPLICATION_JSON))
+                .andExpect(content().json("[\"s2\"]"));
 
         mvc.perform((put("/v1/networks/{networkUuid}/groovy/", testNetworkId))
             .content(
                 "network.getGenerator('idGenerator').targetP=12\n"
             )
             .characterEncoding("utf-8")
-        ).andExpect(status().isOk());
+        ).andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(APPLICATION_JSON))
+                .andExpect(content().json("[\"s1\"]"));
 
         mvc.perform((put("/v1/networks/{networkUuid}/groovy/", testNetworkId))
             .content(
@@ -82,7 +95,6 @@ public class NetworkModificationTest {
             )
             .characterEncoding("utf-8")
         ).andExpect(status().isBadRequest());
-
     }
 
     public static Network createNetwork() {
@@ -105,6 +117,13 @@ public class NetworkModificationTest {
         createSwitch(v2, "v2bload", "v2bload", SwitchKind.BREAKER, true, false, false, 4, 5);
         createLoad(v2, "v2load", "v2load", 5, 0., 0.);
         createGenerator(v2, "idGenerator", 6, 42.1, 1.0);
+
+        Substation s2 = createSubstation(network, "s2", "s2", Country.FR);
+        VoltageLevel v3 = createVoltageLevel(s2, "v3", "v3", TopologyKind.NODE_BREAKER, 380.0);
+        createBusBarSection(v3, "3A", "3A", 0);
+        createSwitch(v3, "v3d1", "v3d1", SwitchKind.DISCONNECTOR, true, false, false, 0, 1);
+        createSwitch(v3, "v3b1", "v3b1", SwitchKind.BREAKER, true, false, false, 1, 2);
+        createLoad(v3, "v3load", "v3load", 2, 0., 0.);
 
         return network;
     }
