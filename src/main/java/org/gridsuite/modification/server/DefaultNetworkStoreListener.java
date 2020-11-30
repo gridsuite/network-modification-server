@@ -43,8 +43,4 @@ public class DefaultNetworkStoreListener implements NetworkListener {
     public Set<String> getModifications() {
         return substationsIds;
     }
-
-    public void clearModifications() {
-        substationsIds.clear();
-    }
 }

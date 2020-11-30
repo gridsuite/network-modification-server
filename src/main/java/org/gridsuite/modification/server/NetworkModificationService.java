@@ -71,9 +71,9 @@ class NetworkModificationService {
             shell.evaluate(groovyScript);
             networkStoreService.flush(network);
 
-            return Pair.of(true, listener.getModifications());
+            return Pair.of(Boolean.TRUE, listener.getModifications());
         } catch (Exception ignored) {
-            return Pair.of(false, listener.getModifications());
+            return Pair.of(Boolean.FALSE, listener.getModifications());
         }
     }
 

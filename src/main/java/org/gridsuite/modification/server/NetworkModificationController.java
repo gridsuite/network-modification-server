@@ -46,7 +46,7 @@ public class NetworkModificationController {
     public ResponseEntity<Set<String>> applyGroovyScript(@ApiParam(value = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
                                                          @RequestBody String groovyScript) {
         Pair<Boolean, Set<String>> modifications = networkModificationService.applyGroovyScript(networkUuid, groovyScript);
-        if (modifications.getLeft()) {
+        if (Boolean.TRUE.equals(modifications.getLeft())) {
             return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(modifications.getRight());
         }
         return ResponseEntity.badRequest().build();
