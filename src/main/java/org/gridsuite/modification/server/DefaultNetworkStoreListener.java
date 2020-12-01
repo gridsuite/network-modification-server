@@ -1,9 +1,11 @@
 package org.gridsuite.modification.server;
 
+import com.powsybl.iidm.network.Branch;
 import com.powsybl.iidm.network.Identifiable;
 import com.powsybl.iidm.network.Injection;
 import com.powsybl.iidm.network.NetworkListener;
 import com.powsybl.iidm.network.Switch;
+import com.powsybl.iidm.network.ThreeWindingsTransformer;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -17,6 +19,13 @@ public class DefaultNetworkStoreListener implements NetworkListener {
             substationsIds.add(((Switch) identifiable).getVoltageLevel().getSubstation().getId());
         } else if (identifiable instanceof Injection) {
             substationsIds.add(((Injection) identifiable).getTerminal().getVoltageLevel().getSubstation().getId());
+        } else if (identifiable instanceof Branch) {
+            substationsIds.add(((Branch) identifiable).getTerminal1().getVoltageLevel().getSubstation().getId());
+            substationsIds.add(((Branch) identifiable).getTerminal2().getVoltageLevel().getSubstation().getId());
+        } else if (identifiable instanceof ThreeWindingsTransformer) {
+            substationsIds.add(((ThreeWindingsTransformer) identifiable).getTerminal(ThreeWindingsTransformer.Side.ONE).getVoltageLevel().getSubstation().getId());
+            substationsIds.add(((ThreeWindingsTransformer) identifiable).getTerminal(ThreeWindingsTransformer.Side.TWO).getVoltageLevel().getSubstation().getId());
+            substationsIds.add(((ThreeWindingsTransformer) identifiable).getTerminal(ThreeWindingsTransformer.Side.THREE).getVoltageLevel().getSubstation().getId());
         }
     }
 
