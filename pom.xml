@@ -46,8 +46,7 @@
     <properties>
         <java.version>11</java.version>
 
-        <gridsuite-dependencies.version>3</gridsuite-dependencies.version>
-        <groovy.version>2.5.11</groovy.version>
+        <gridsuite-dependencies.version>4</gridsuite-dependencies.version>
     </properties>
 
     <build>
@@ -118,7 +117,6 @@
         <dependency>
             <groupId>org.codehaus.groovy</groupId>
             <artifactId>groovy</artifactId>
-            <version>${groovy.version}</version>
         </dependency>
 
         <!-- Runtime dependencies -->
