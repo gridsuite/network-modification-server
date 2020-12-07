@@ -12,8 +12,8 @@ import com.powsybl.iidm.network.Switch;
 import com.powsybl.network.store.client.NetworkStoreService;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
-import org.apache.commons.lang3.tuple.Pair;
 import org.codehaus.groovy.control.CompilerConfiguration;
+import org.gridsuite.modification.server.dto.GroovyScriptResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.HttpStatus;
@@ -58,7 +58,7 @@ class NetworkModificationService {
         return listener.getModifications();
     }
 
-    public Pair<Boolean, Set<String>> applyGroovyScript(UUID networkUuid, String groovyScript) {
+    public GroovyScriptResult applyGroovyScript(UUID networkUuid, String groovyScript) {
         CompilerConfiguration conf = new CompilerConfiguration();
         Network network = getNetwork(networkUuid);
         DefaultNetworkStoreListener listener = new DefaultNetworkStoreListener();
@@ -71,9 +71,9 @@ class NetworkModificationService {
             shell.evaluate(groovyScript);
             networkStoreService.flush(network);
 
-            return Pair.of(Boolean.TRUE, listener.getModifications());
+            return new GroovyScriptResult(true, listener.getModifications());
         } catch (Exception ignored) {
-            return Pair.of(Boolean.FALSE, listener.getModifications());
+            return new GroovyScriptResult(false, listener.getModifications());
         }
     }
 

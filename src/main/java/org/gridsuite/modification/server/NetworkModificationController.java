@@ -7,7 +7,7 @@
 package org.gridsuite.modification.server;
 
 import io.swagger.annotations.*;
-import org.apache.commons.lang3.tuple.Pair;
+import org.gridsuite.modification.server.dto.GroovyScriptResult;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -45,9 +45,9 @@ public class NetworkModificationController {
     @ApiResponses(value = {@ApiResponse(code = 200, message = "The equipment state has been changed")})
     public ResponseEntity<Set<String>> applyGroovyScript(@ApiParam(value = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
                                                          @RequestBody String groovyScript) {
-        Pair<Boolean, Set<String>> modifications = networkModificationService.applyGroovyScript(networkUuid, groovyScript);
-        if (Boolean.TRUE.equals(modifications.getLeft())) {
-            return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(modifications.getRight());
+        GroovyScriptResult result = networkModificationService.applyGroovyScript(networkUuid, groovyScript);
+        if (result.isOk()) {
+            return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(result.getModifications());
         }
         return ResponseEntity.badRequest().build();
     }
