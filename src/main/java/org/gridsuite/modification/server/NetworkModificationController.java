@@ -14,7 +14,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.inject.Inject;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -31,7 +30,7 @@ public class NetworkModificationController {
     private NetworkModificationService networkModificationService;
 
     @PutMapping(value = "/networks/{networkUuid}/switches/{switchId}", produces = MediaType.APPLICATION_JSON_VALUE)
-    @ApiOperation(value = "change a switch state in the network", response = List.class)
+    @ApiOperation(value = "change a switch state in the network", response = Set.class)
     @ApiResponses(value = {@ApiResponse(code = 200, message = "The switch state has been changed")})
     public ResponseEntity<Set<String>> changeSwitchState(
             @ApiParam(value = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,

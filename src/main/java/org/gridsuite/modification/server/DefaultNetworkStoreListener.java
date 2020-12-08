@@ -33,6 +33,8 @@ public class DefaultNetworkStoreListener implements NetworkListener {
             substationsIds.add(((Branch) identifiable).getTerminal2().getVoltageLevel().getSubstation().getId());
         } else if (identifiable instanceof ThreeWindingsTransformer) {
             substationsIds.add(((ThreeWindingsTransformer) identifiable).getTerminal(ThreeWindingsTransformer.Side.ONE).getVoltageLevel().getSubstation().getId());
+            substationsIds.add(((ThreeWindingsTransformer) identifiable).getTerminal(ThreeWindingsTransformer.Side.TWO).getVoltageLevel().getSubstation().getId());
+            substationsIds.add(((ThreeWindingsTransformer) identifiable).getTerminal(ThreeWindingsTransformer.Side.THREE).getVoltageLevel().getSubstation().getId());
         }
     }
 
