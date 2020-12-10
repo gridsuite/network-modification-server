@@ -43,19 +43,22 @@ class NetworkModificationService {
 
     public Set<String> changeSwitchState(UUID networkUuid, String switchId, String open) {
         Network network = getNetwork(networkUuid);
-        DefaultNetworkStoreListener listener = new DefaultNetworkStoreListener();
-        network.addListener(listener);
 
         Switch sw = network.getSwitch(switchId);
         if (sw == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Switch " + switchId + " not found");
         }
 
-        sw.setOpen(Boolean.parseBoolean(open));
+        boolean newOpen = Boolean.parseBoolean(open);
+        if (sw.isOpen() != newOpen) {
+            sw.setOpen(newOpen);
 
-        networkStoreService.flush(network);
+            networkStoreService.flush(network);
 
-        return listener.getModifications();
+            return Set.of(sw.getVoltageLevel().getSubstation().getId());
+        } else {
+            return Set.of();
+        }
     }
 
     public GroovyScriptResult applyGroovyScript(UUID networkUuid, String groovyScript) {
