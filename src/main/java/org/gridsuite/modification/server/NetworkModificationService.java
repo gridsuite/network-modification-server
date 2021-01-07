@@ -41,7 +41,7 @@ class NetworkModificationService {
         }
     }
 
-    public Set<String> changeSwitchState(UUID networkUuid, String switchId, String open) {
+    public Set<String> changeSwitchState(UUID networkUuid, String switchId, boolean open) {
         Network network = getNetwork(networkUuid);
 
         Switch sw = network.getSwitch(switchId);
@@ -49,9 +49,8 @@ class NetworkModificationService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Switch " + switchId + " not found");
         }
 
-        boolean newOpen = Boolean.parseBoolean(open);
-        if (sw.isOpen() != newOpen) {
-            sw.setOpen(newOpen);
+        if (sw.isOpen() != open) {
+            sw.setOpen(open);
 
             networkStoreService.flush(network);
 

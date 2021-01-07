@@ -36,7 +36,7 @@ public class NetworkModificationController {
             @ApiParam(value = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
             @ApiParam(value = "Switch ID") @PathVariable("switchId") String switchId,
             @RequestParam("open") String open) {
-        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(networkModificationService.changeSwitchState(networkUuid, switchId, open));
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(networkModificationService.changeSwitchState(networkUuid, switchId, Boolean.parseBoolean(open)));
     }
 
     @PutMapping(value = "/networks/{networkUuid}/groovy/", produces = MediaType.APPLICATION_JSON_VALUE)
