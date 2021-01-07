@@ -13,12 +13,14 @@ import com.powsybl.network.store.client.NetworkStoreService;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
 import org.codehaus.groovy.control.CompilerConfiguration;
+import org.gridsuite.modification.server.dto.GroovyScriptResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -39,30 +41,41 @@ class NetworkModificationService {
         }
     }
 
-    void changeSwitchState(UUID networkUuid, String switchId, String open) {
+    public Set<String> changeSwitchState(UUID networkUuid, String switchId, boolean open) {
         Network network = getNetwork(networkUuid);
+
         Switch sw = network.getSwitch(switchId);
         if (sw == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Switch " + switchId + " not found");
         }
 
-        sw.setOpen(Boolean.parseBoolean(open));
+        if (sw.isOpen() != open) {
+            sw.setOpen(open);
 
-        networkStoreService.flush(network);
+            networkStoreService.flush(network);
+
+            return Set.of(sw.getVoltageLevel().getSubstation().getId());
+        } else {
+            return Set.of();
+        }
     }
 
-    boolean applyGroovyScript(UUID networkUuid, String groovyScript) {
+    public GroovyScriptResult applyGroovyScript(UUID networkUuid, String groovyScript) {
         CompilerConfiguration conf = new CompilerConfiguration();
         Network network = getNetwork(networkUuid);
+        DefaultNetworkStoreListener listener = new DefaultNetworkStoreListener();
+        network.addListener(listener);
+
         Binding binding = new Binding();
         binding.setProperty("network", network);
         GroovyShell shell = new GroovyShell(binding, conf);
         try {
             shell.evaluate(groovyScript);
             networkStoreService.flush(network);
-            return true;
+
+            return new GroovyScriptResult(true, listener.getModifications());
         } catch (Exception ignored) {
-            return false;
+            return new GroovyScriptResult(false, listener.getModifications());
         }
     }
 
