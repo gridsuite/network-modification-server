@@ -7,11 +7,11 @@
 package org.gridsuite.modification.server;
 
 import io.swagger.annotations.*;
-import org.gridsuite.modification.server.dto.GroovyScriptResult;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Mono;
 
 import javax.inject.Inject;
 import java.util.Set;
@@ -32,22 +32,18 @@ public class NetworkModificationController {
     @PutMapping(value = "/networks/{networkUuid}/switches/{switchId}", produces = MediaType.APPLICATION_JSON_VALUE)
     @ApiOperation(value = "change a switch state in the network", response = Set.class)
     @ApiResponses(value = {@ApiResponse(code = 200, message = "The switch state has been changed")})
-    public ResponseEntity<Set<String>> changeSwitchState(
+    public ResponseEntity<Mono<Set<String>>> changeSwitchState(
             @ApiParam(value = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
             @ApiParam(value = "Switch ID") @PathVariable("switchId") String switchId,
             @RequestParam("open") String open) {
-        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(networkModificationService.changeSwitchState(networkUuid, switchId, Boolean.parseBoolean(open)));
+        return ResponseEntity.ok().body(networkModificationService.changeSwitchState(networkUuid, switchId, Boolean.parseBoolean(open)));
     }
 
-    @PutMapping(value = "/networks/{networkUuid}/groovy/", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/networks/{networkUuid}/groovy/", consumes = MediaType.TEXT_PLAIN_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @ApiOperation(value = "change an equipment state in the network", response = Set.class)
     @ApiResponses(value = {@ApiResponse(code = 200, message = "The equipment state has been changed")})
-    public ResponseEntity<Set<String>> applyGroovyScript(@ApiParam(value = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
-                                                         @RequestBody String groovyScript) {
-        GroovyScriptResult result = networkModificationService.applyGroovyScript(networkUuid, groovyScript);
-        if (result.isOk()) {
-            return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(result.getModifications());
-        }
-        return ResponseEntity.badRequest().build();
+    public ResponseEntity<Mono<Set<String>>> applyGroovyScript(@ApiParam(value = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
+                                                               @RequestBody String groovyScript) {
+        return ResponseEntity.ok().body(networkModificationService.applyGroovyScript(networkUuid, groovyScript));
     }
 }
