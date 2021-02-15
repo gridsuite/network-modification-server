@@ -14,110 +14,164 @@ import com.powsybl.sld.iidm.extensions.ConnectablePositionAdder;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.context.ContextConfiguration;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.web.reactive.config.EnableWebFlux;
 
+import java.util.List;
 import java.util.UUID;
 
-import static org.mockito.BDDMockito.given;
-import static org.springframework.http.MediaType.APPLICATION_JSON;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.when;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
+ * @author Slimane Amar <slimane.amar at rte-france.com>
  */
 @RunWith(SpringRunner.class)
-@WebMvcTest(NetworkModificationController.class)
-@ContextConfiguration(classes = {NetworkModificationApplication.class})
+@EnableWebFlux
+@AutoConfigureWebTestClient
+@SpringBootTest
 public class NetworkModificationTest {
 
+    private static final UUID TEST_NETWORK_ID = UUID.fromString("7928181c-7977-4592-ba19-88027e4254e4");
+    private static final UUID NOT_FOUND_NETWORK_ID = UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
+
+    private static final String ERROR_MESSAGE = "Error message";
+
     @Autowired
-    private MockMvc mvc;
+    private WebTestClient webTestClient;
 
     @MockBean
     private NetworkStoreService networkStoreService;
 
     @Before
     public void setUp() {
-        MockitoAnnotations.initMocks(this);
+        when(networkStoreService.getNetwork(TEST_NETWORK_ID)).thenReturn(createNetwork());
+        when(networkStoreService.getNetwork(NOT_FOUND_NETWORK_ID)).thenThrow(new PowsyblException());
     }
 
     @Test
-    public void test() throws Exception {
-        UUID testNetworkId = UUID.fromString("7928181c-7977-4592-ba19-88027e4254e4");
-        UUID notFoundNetworkId = UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
+    public void testModificationException() {
+        assertEquals(new NetworkModificationException(GROOVY_SCRIPT_EMPTY).getMessage(), GROOVY_SCRIPT_EMPTY.name() + " : " + NetworkModificationException.EMPTY_SCRIPT);
+        assertEquals(new NetworkModificationException(GROOVY_SCRIPT_EMPTY, ERROR_MESSAGE).getMessage(), GROOVY_SCRIPT_EMPTY.name() + " : " + ERROR_MESSAGE);
+        assertEquals(new NetworkModificationException(MODIFICATION_ERROR).getMessage(), MODIFICATION_ERROR.name());
+        assertEquals(new NetworkModificationException(MODIFICATION_ERROR, ERROR_MESSAGE).getMessage(), MODIFICATION_ERROR.name() + " : " + ERROR_MESSAGE);
+    }
 
-        given(networkStoreService.getNetwork(testNetworkId)).willReturn(createNetwork());
-        given(networkStoreService.getNetwork(notFoundNetworkId)).willThrow(new PowsyblException());
-
+    @Test
+    public void testSwitch() {
         // network not existing
-        mvc.perform(put("/v1/networks/{networkUuid}/switches/{switchId}/", notFoundNetworkId, "v1b1").param("open", "true"))
-                .andExpect(status().isNotFound());
+        webTestClient.put().uri("/v1/networks/{networkUuid}/switches/{switchId}?open=true", NOT_FOUND_NETWORK_ID, "v1b1")
+                .exchange()
+                .expectStatus().isNotFound()
+                .expectBody(String.class)
+                .isEqualTo(new NetworkModificationException(NETWORK_NOT_FOUND, NOT_FOUND_NETWORK_ID.toString()).getMessage());
 
         // switch not existing
-        mvc.perform(put("/v1/networks/{networkUuid}/switches/{switchId}", testNetworkId, "notFound").param("open", "true"))
-                .andExpect(status().isNotFound());
+        webTestClient.put().uri("/v1/networks/{networkUuid}/switches/{switchId}?open=true", TEST_NETWORK_ID, "notFound")
+                .exchange()
+                .expectStatus().isNotFound()
+                .expectBody(String.class)
+                .isEqualTo(new NetworkModificationException(SWITCH_NOT_FOUND, "notFound").getMessage());
 
         // switch opening
-        mvc.perform(put("/v1/networks/{networkUuid}/switches/{switchId}", testNetworkId, "v1b1").param("open", "true"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentTypeCompatibleWith(APPLICATION_JSON))
-                .andExpect(content().json("[\"s1\"]"));
+        webTestClient.put().uri("/v1/networks/{networkUuid}/switches/{switchId}?open=true", TEST_NETWORK_ID, "v1b1")
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBody(List.class)
+                .isEqualTo(List.of("s1"));
 
         // switch closing
-        mvc.perform(put("/v1/networks/{networkUuid}/switches/{switchId}", testNetworkId, "v2b1").param("open", "false"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentTypeCompatibleWith(APPLICATION_JSON))
-                .andExpect(content().json("[\"s1\"]"));
+        webTestClient.put().uri("/v1/networks/{networkUuid}/switches/{switchId}?open=false", TEST_NETWORK_ID, "v2b1")
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBody(List.class)
+                .isEqualTo(List.of("s1"));
+
+        // switch closing when already closed
+        webTestClient.put().uri("/v1/networks/{networkUuid}/switches/{switchId}?open=false", TEST_NETWORK_ID, "v2b1")
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBody(List.class)
+                .isEqualTo(List.of());
 
         // switch opening on another substation
-        mvc.perform(put("/v1/networks/{networkUuid}/switches/{switchId}", testNetworkId, "v3b1").param("open", "true"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentTypeCompatibleWith(APPLICATION_JSON))
-                .andExpect(content().json("[\"s2\"]"));
+        webTestClient.put().uri("/v1/networks/{networkUuid}/switches/{switchId}?open=true", TEST_NETWORK_ID, "v3b1")
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBody(List.class)
+                .isEqualTo(List.of("s2"));
+    }
+
+    @Test
+    public void testGroovy() {
+        // apply null groovy script
+        webTestClient.put().uri("/v1/networks/{networkUuid}/groovy/", TEST_NETWORK_ID)
+                .exchange()
+                .expectStatus().isEqualTo(HttpStatus.UNSUPPORTED_MEDIA_TYPE);
+
+        // apply empty groovy script
+        webTestClient.put().uri("/v1/networks/{networkUuid}/groovy/", TEST_NETWORK_ID)
+                .bodyValue("")
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody(String.class)
+                .isEqualTo(new NetworkModificationException(GROOVY_SCRIPT_EMPTY).getMessage());
+
+        // apply empty groovy script
+        webTestClient.put().uri("/v1/networks/{networkUuid}/groovy/", TEST_NETWORK_ID)
+                .bodyValue("      ")
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody(String.class)
+                .isEqualTo(new NetworkModificationException(GROOVY_SCRIPT_EMPTY).getMessage());
+
+        // apply groovy script with unknown generator
+        webTestClient.put().uri("/v1/networks/{networkUuid}/groovy/", TEST_NETWORK_ID)
+                .bodyValue("network.getGenerator('there is no generator').targetP=12\n")
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody(String.class)
+                .isEqualTo(new NetworkModificationException(GROOVY_SCRIPT_ERROR, "Cannot set property 'targetP' on null object").getMessage());
 
         // apply groovy script with generator target P modification
-        mvc.perform((put("/v1/networks/{networkUuid}/groovy/", testNetworkId))
-            .content(
-                "network.getGenerator('idGenerator').targetP=12\n"
-            )
-            .characterEncoding("utf-8")
-        ).andExpect(status().isOk())
-                .andExpect(content().contentTypeCompatibleWith(APPLICATION_JSON))
-                .andExpect(content().json("[\"s1\"]"));
-
-        mvc.perform((put("/v1/networks/{networkUuid}/groovy/", testNetworkId))
-            .content(
-                "network.getGenerator('there is no generator').targetP=12\n"
-            )
-            .characterEncoding("utf-8")
-        ).andExpect(status().isBadRequest());
+        webTestClient.put().uri("/v1/networks/{networkUuid}/groovy/", TEST_NETWORK_ID)
+                .bodyValue("network.getGenerator('idGenerator').targetP=12\n")
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBody(List.class)
+                .isEqualTo(List.of("s1"));
 
         // apply groovy script with two windings transformer ratio tap modification
-        mvc.perform((put("/v1/networks/{networkUuid}/groovy/", testNetworkId))
-                .content(
-                        "network.getTwoWindingsTransformer('trf1').getRatioTapChanger().tapPosition=2\n"
-                )
-                .characterEncoding("utf-8")
-        ).andExpect(status().isOk())
-                .andExpect(content().contentTypeCompatibleWith(APPLICATION_JSON))
-                .andExpect(content().json("[\"s1\"]"));
+        webTestClient.put().uri("/v1/networks/{networkUuid}/groovy/", TEST_NETWORK_ID)
+                .bodyValue("network.getTwoWindingsTransformer('trf1').getRatioTapChanger().tapPosition=2\n")
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBody(List.class)
+                .isEqualTo(List.of("s1"));
 
         // apply groovy script with three windings transformer phase tap modification
-        mvc.perform((put("/v1/networks/{networkUuid}/groovy/", testNetworkId))
-                .content(
-                        "network.getThreeWindingsTransformer('trf6').getLeg1().getPhaseTapChanger().tapPosition=0\n"
-                )
-                .characterEncoding("utf-8")
-        ).andExpect(status().isOk())
-                .andExpect(content().contentTypeCompatibleWith(APPLICATION_JSON))
-                .andExpect(content().json("[\"s1\"]"));
+        webTestClient.put().uri("/v1/networks/{networkUuid}/groovy/", TEST_NETWORK_ID)
+                .bodyValue("network.getThreeWindingsTransformer('trf6').getLeg1().getPhaseTapChanger().tapPosition=0\n")
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBody(List.class)
+                .isEqualTo(List.of("s1"));
     }
 
     public static Network createNetwork() {
@@ -222,6 +276,7 @@ public class NetworkModificationTest {
         return network;
     }
 
+    @SuppressWarnings("SameParameterValue")
     private static Substation createSubstation(Network n, String id, String name, Country country) {
         return n.newSubstation()
                 .setId(id)
@@ -230,8 +285,9 @@ public class NetworkModificationTest {
                 .add();
     }
 
+    @SuppressWarnings("SameParameterValue")
     private static VoltageLevel createVoltageLevel(Substation s, String id, String name,
-                                                     TopologyKind topology, double vNom) {
+                                                   TopologyKind topology, double vNom) {
         return s.newVoltageLevel()
                 .setId(id)
                 .setName(name)
@@ -241,13 +297,14 @@ public class NetworkModificationTest {
     }
 
     private static void createBusBarSection(VoltageLevel vl, String id, String name, int node) {
-        BusbarSection bbs = vl.getNodeBreakerView().newBusbarSection()
+        vl.getNodeBreakerView().newBusbarSection()
                 .setId(id)
                 .setName(name)
                 .setNode(node)
                 .add();
     }
 
+    @SuppressWarnings("SameParameterValue")
     private static void createSwitch(VoltageLevel vl, String id, String name, SwitchKind kind, boolean retained, boolean open, boolean fictitious, int node1, int node2) {
         vl.getNodeBreakerView().newSwitch()
                 .setId(id)
@@ -261,9 +318,10 @@ public class NetworkModificationTest {
                 .add();
     }
 
+    @SuppressWarnings("SameParameterValue")
     private static void createLoad(VoltageLevel vl, String id, String name,
                                    int node, double p0, double q0) {
-        Load load = vl.newLoad()
+        vl.newLoad()
                 .setId(id)
                 .setName(name)
                 .setNode(node)
@@ -275,24 +333,25 @@ public class NetworkModificationTest {
     @SuppressWarnings("SameParameterValue")
     private static void createGenerator(VoltageLevel vl, String id, int node, double targetP, double targetQ) {
         vl.newGenerator()
-            .setId(id)
-            .setName(id)
-            .setTargetP(targetP)
-            .setTargetQ(targetQ)
-            .setNode(node)
-            .setMinP(-1.1)
-            .setMaxP(1000.0)
-            .setVoltageRegulatorOn(false)
-            .add();
+                .setId(id)
+                .setName(id)
+                .setTargetP(targetP)
+                .setTargetQ(targetQ)
+                .setNode(node)
+                .setMinP(-1.1)
+                .setMaxP(1000.0)
+                .setVoltageRegulatorOn(false)
+                .add();
     }
 
+    @SuppressWarnings("SameParameterValue")
     protected static TwoWindingsTransformer createTwoWindingsTransformer(Substation s, String id, String name,
-                                                       double r, double x, double g, double b,
-                                                       double ratedU1, double ratedU2,
-                                                       int node1, int node2,
-                                                       String idVoltageLevel1, String idVoltageLevel2,
-                                                       String feederName1, int feederOrder1, ConnectablePosition.Direction direction1,
-                                                       String feederName2, int feederOrder2, ConnectablePosition.Direction direction2) {
+                                                                         double r, double x, double g, double b,
+                                                                         double ratedU1, double ratedU2,
+                                                                         int node1, int node2,
+                                                                         String idVoltageLevel1, String idVoltageLevel2,
+                                                                         String feederName1, int feederOrder1, ConnectablePosition.Direction direction1,
+                                                                         String feederName2, int feederOrder2, ConnectablePosition.Direction direction2) {
         TwoWindingsTransformer t = s.newTwoWindingsTransformer()
                 .setId(id)
                 .setName(name)
@@ -321,16 +380,17 @@ public class NetworkModificationTest {
         return t;
     }
 
+    @SuppressWarnings("SameParameterValue")
     protected static ThreeWindingsTransformer createThreeWindingsTransformer(Substation s, String id, String name,
-                                                         String vl1, String vl2, String vl3,
-                                                         double r1, double r2, double r3,
-                                                         double x1, double x2, double x3,
-                                                         double g1, double b1,
-                                                         double ratedU1, double ratedU2, double ratedU3,
-                                                         int node1, int node2, int node3,
-                                                         String feederName1, int feederOrder1, ConnectablePosition.Direction direction1,
-                                                         String feederName2, int feederOrder2, ConnectablePosition.Direction direction2,
-                                                         String feederName3, int feederOrder3, ConnectablePosition.Direction direction3) {
+                                                                             String vl1, String vl2, String vl3,
+                                                                             double r1, double r2, double r3,
+                                                                             double x1, double x2, double x3,
+                                                                             double g1, double b1,
+                                                                             double ratedU1, double ratedU2, double ratedU3,
+                                                                             int node1, int node2, int node3,
+                                                                             String feederName1, int feederOrder1, ConnectablePosition.Direction direction1,
+                                                                             String feederName2, int feederOrder2, ConnectablePosition.Direction direction2,
+                                                                             String feederName3, int feederOrder3, ConnectablePosition.Direction direction3) {
         ThreeWindingsTransformer t = s.newThreeWindingsTransformer()
                 .setId(id)
                 .setName(name)

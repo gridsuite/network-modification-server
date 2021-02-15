@@ -8,20 +8,23 @@ package org.gridsuite.modification.server;
 
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.iidm.network.Network;
-import com.powsybl.iidm.network.Switch;
 import com.powsybl.network.store.client.NetworkStoreService;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
+import org.apache.commons.lang3.StringUtils;
 import org.codehaus.groovy.control.CompilerConfiguration;
-import org.gridsuite.modification.server.dto.GroovyScriptResult;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.util.Set;
 import java.util.UUID;
+
+import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -30,53 +33,63 @@ import java.util.UUID;
 @Service
 class NetworkModificationService {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(NetworkModificationService.class);
+
     @Autowired
     private NetworkStoreService networkStoreService;
 
-    private Network getNetwork(UUID networkUuid) {
-        try {
-            return networkStoreService.getNetwork(networkUuid);
-        } catch (PowsyblException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Network '" + networkUuid + "' not found");
-        }
+    private Set<String> doModification(Network network, Runnable modification) {
+        return doModification(network, modification, MODIFICATION_ERROR);
     }
 
-    public Set<String> changeSwitchState(UUID networkUuid, String switchId, boolean open) {
-        Network network = getNetwork(networkUuid);
-
-        Switch sw = network.getSwitch(switchId);
-        if (sw == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Switch " + switchId + " not found");
-        }
-
-        if (sw.isOpen() != open) {
-            sw.setOpen(open);
+    private Set<String> doModification(Network network, Runnable modification, NetworkModificationException.Type typeIfError) {
+        try {
+            DefaultNetworkStoreListener listener = new DefaultNetworkStoreListener();
+            network.addListener(listener);
+            modification.run();
 
             networkStoreService.flush(network);
 
-            return Set.of(sw.getVoltageLevel().getSubstation().getId());
-        } else {
-            return Set.of();
+            return listener.getModifications();
+        } catch (Exception e) {
+            NetworkModificationException exc = new NetworkModificationException(typeIfError, e);
+            LOGGER.error(exc.getMessage());
+            throw exc;
         }
     }
 
-    public GroovyScriptResult applyGroovyScript(UUID networkUuid, String groovyScript) {
-        CompilerConfiguration conf = new CompilerConfiguration();
-        Network network = getNetwork(networkUuid);
-        DefaultNetworkStoreListener listener = new DefaultNetworkStoreListener();
-        network.addListener(listener);
-
-        Binding binding = new Binding();
-        binding.setProperty("network", network);
-        GroovyShell shell = new GroovyShell(binding, conf);
-        try {
-            shell.evaluate(groovyScript);
-            networkStoreService.flush(network);
-
-            return new GroovyScriptResult(true, listener.getModifications());
-        } catch (Exception ignored) {
-            return new GroovyScriptResult(false, listener.getModifications());
-        }
+    private Mono<Network> getNetwork(UUID networkUuid) {
+        return Mono.fromCallable(() -> {
+            try {
+                return networkStoreService.getNetwork(networkUuid);
+            } catch (PowsyblException e) {
+                throw new NetworkModificationException(NETWORK_NOT_FOUND, networkUuid.toString());
+            }
+        }).subscribeOn(Schedulers.boundedElastic());
     }
 
+    Mono<Set<String>> changeSwitchState(UUID networkUuid, String switchId, boolean open) {
+        return getNetwork(networkUuid)
+                .filter(network -> network.getSwitch(switchId) != null)
+                .switchIfEmpty(Mono.error(new NetworkModificationException(SWITCH_NOT_FOUND, switchId)))
+                .filter(network -> network.getSwitch(switchId).isOpen() != open)
+                .map(network -> doModification(network, () -> network.getSwitch(switchId).setOpen(open)))
+                .switchIfEmpty(Mono.just(Set.of()));
+    }
+
+    private Mono<Void> assertGroovyScriptNotEmpty(String groovyScript) {
+        return StringUtils.isBlank(groovyScript) ? Mono.error(new NetworkModificationException(GROOVY_SCRIPT_EMPTY)) : Mono.empty();
+    }
+
+    Mono<Set<String>> applyGroovyScript(UUID networkUuid, String groovyScript) {
+        return assertGroovyScriptNotEmpty(groovyScript).then(
+                getNetwork(networkUuid).map(network -> doModification(network, () -> {
+                    CompilerConfiguration conf = new CompilerConfiguration();
+                    Binding binding = new Binding();
+                    binding.setProperty("network", network);
+                    GroovyShell shell = new GroovyShell(binding, conf);
+                    shell.evaluate(groovyScript);
+                }, GROOVY_SCRIPT_ERROR))
+        );
+    }
 }
