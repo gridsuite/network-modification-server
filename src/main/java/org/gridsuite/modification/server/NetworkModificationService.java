@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.util.Set;
 import java.util.UUID;
@@ -51,18 +52,20 @@ class NetworkModificationService {
 
             return listener.getModifications();
         } catch (Exception e) {
-            NetworkModificationException exc = new NetworkModificationException(typeIfError, e.getMessage());
+            NetworkModificationException exc = new NetworkModificationException(typeIfError, e);
             LOGGER.error(exc.getMessage());
             throw exc;
         }
     }
 
     private Mono<Network> getNetwork(UUID networkUuid) {
-        try {
-            return Mono.just(networkStoreService.getNetwork(networkUuid));
-        } catch (PowsyblException e) {
-            return Mono.error(new NetworkModificationException(NETWORK_NOT_FOUND, networkUuid.toString()));
-        }
+        return Mono.fromCallable(() -> {
+            try {
+                return networkStoreService.getNetwork(networkUuid);
+            } catch (PowsyblException e) {
+                throw new NetworkModificationException(NETWORK_NOT_FOUND, networkUuid.toString());
+            }
+        }).subscribeOn(Schedulers.boundedElastic());
     }
 
     Mono<Set<String>> changeSwitchState(UUID networkUuid, String switchId, boolean open) {
@@ -79,7 +82,7 @@ class NetworkModificationService {
     }
 
     Mono<Set<String>> applyGroovyScript(UUID networkUuid, String groovyScript) {
-        return Mono.when(assertGroovyScriptNotEmpty(groovyScript)).then(
+        return assertGroovyScriptNotEmpty(groovyScript).then(
                 getNetwork(networkUuid).map(network -> doModification(network, () -> {
                     CompilerConfiguration conf = new CompilerConfiguration();
                     Binding binding = new Binding();

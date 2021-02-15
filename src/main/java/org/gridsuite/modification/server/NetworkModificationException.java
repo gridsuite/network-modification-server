@@ -48,6 +48,11 @@ class NetworkModificationException extends RuntimeException {
         this.type = type;
     }
 
+    NetworkModificationException(Type type, Exception cause) {
+        super(Objects.requireNonNull(type.name()) + " : " + Objects.requireNonNull(cause.getMessage()), cause);
+        this.type = type;
+    }
+
     NetworkModificationException(Type type, String message) {
         super(Objects.requireNonNull(type.name()) + " : " + Objects.requireNonNull(message));
         this.type = type;
