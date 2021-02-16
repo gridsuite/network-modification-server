@@ -11,6 +11,7 @@ import com.powsybl.iidm.network.*;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.sld.iidm.extensions.ConnectablePosition;
 import com.powsybl.sld.iidm.extensions.ConnectablePositionAdder;
+import org.gridsuite.modification.server.dto.ElementaryModificationInfos;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -24,9 +25,12 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.reactive.config.EnableWebFlux;
 
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import static org.gridsuite.modification.server.MatcherElementaryModificationInfos.createMatcherElementaryModificationInfos;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
@@ -67,6 +71,19 @@ public class NetworkModificationTest {
     }
 
     @Test
+    public void testElementaryModificationInfos() {
+        ElementaryModificationInfos modificationInfos = ElementaryModificationInfos.builder()
+                .id(UUID.fromString("7928181c-7977-4592-ba19-88027e4254e4"))
+                .date(ZonedDateTime.of(2021, 2, 19, 00, 00, 00, 00, ZoneOffset.UTC))
+                .equipmentId("equipmentId")
+                .equipmentName("equipmentName")
+                .equipmentAttributeName("equipmentAttributeName")
+                .equipmentAttributeValue("equipmentAttributeValue")
+                .build();
+        assertEquals(modificationInfos.toString(), "ElementaryModificationInfos(super=ModificationInfos(id=7928181c-7977-4592-ba19-88027e4254e4, date=2021-02-19T00:00Z), equipmentId=equipmentId, equipmentName=equipmentName, equipmentAttributeName=equipmentAttributeName, equipmentAttributeValue=equipmentAttributeValue)");
+    }
+
+    @Test
     public void testSwitch() {
         // network not existing
         webTestClient.put().uri("/v1/networks/{networkUuid}/switches/{switchId}?open=true", NOT_FOUND_NETWORK_ID, "v1b1")
@@ -87,23 +104,25 @@ public class NetworkModificationTest {
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
-                .expectBody(List.class)
-                .isEqualTo(List.of("s1"));
+                .expectBodyList(ElementaryModificationInfos.class)
+                .value(modifications -> modifications.get(0),
+                        createMatcherElementaryModificationInfos("v1b1", "v1b1", "open", "true"));
 
         // switch closing
         webTestClient.put().uri("/v1/networks/{networkUuid}/switches/{switchId}?open=false", TEST_NETWORK_ID, "v2b1")
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
-                .expectBody(List.class)
-                .isEqualTo(List.of("s1"));
+                .expectBodyList(ElementaryModificationInfos.class)
+                .value(modifications -> modifications.get(0),
+                        createMatcherElementaryModificationInfos("v2b1", "v2b1", "open", "false"));
 
         // switch closing when already closed
         webTestClient.put().uri("/v1/networks/{networkUuid}/switches/{switchId}?open=false", TEST_NETWORK_ID, "v2b1")
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
-                .expectBody(List.class)
+                .expectBodyList(ElementaryModificationInfos.class)
                 .isEqualTo(List.of());
 
         // switch opening on another substation
@@ -111,8 +130,9 @@ public class NetworkModificationTest {
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
-                .expectBody(List.class)
-                .isEqualTo(List.of("s2"));
+                .expectBodyList(ElementaryModificationInfos.class)
+                .value(modifications -> modifications.get(0),
+                        createMatcherElementaryModificationInfos("v3b1", "v3b1", "open", "true"));
     }
 
     @Test
@@ -152,8 +172,9 @@ public class NetworkModificationTest {
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
-                .expectBody(List.class)
-                .isEqualTo(List.of("s1"));
+                .expectBodyList(ElementaryModificationInfos.class)
+                .value(modifications -> modifications.get(0),
+                        createMatcherElementaryModificationInfos("idGenerator", "idGenerator", "targetP", "12.0"));
 
         // apply groovy script with two windings transformer ratio tap modification
         webTestClient.put().uri("/v1/networks/{networkUuid}/groovy/", TEST_NETWORK_ID)
@@ -161,8 +182,9 @@ public class NetworkModificationTest {
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
-                .expectBody(List.class)
-                .isEqualTo(List.of("s1"));
+                .expectBodyList(ElementaryModificationInfos.class)
+                .value(modifications -> modifications.get(0),
+                        createMatcherElementaryModificationInfos("trf1", "trf1", "ratioTapChanger.tapPosition", "2"));
 
         // apply groovy script with three windings transformer phase tap modification
         webTestClient.put().uri("/v1/networks/{networkUuid}/groovy/", TEST_NETWORK_ID)
@@ -170,11 +192,12 @@ public class NetworkModificationTest {
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
-                .expectBody(List.class)
-                .isEqualTo(List.of("s1"));
+                .expectBodyList(ElementaryModificationInfos.class)
+                .value(modifications -> modifications.get(0),
+                        createMatcherElementaryModificationInfos("trf6", "trf6", "phaseTapChanger1.tapPosition", "0"));
     }
 
-    public static Network createNetwork() {
+    private static Network createNetwork() {
         Network network = Network.create("test", "test");
 
         Substation s1 = createSubstation(network, "s1", "s1", Country.FR);
@@ -345,13 +368,13 @@ public class NetworkModificationTest {
     }
 
     @SuppressWarnings("SameParameterValue")
-    protected static TwoWindingsTransformer createTwoWindingsTransformer(Substation s, String id, String name,
-                                                                         double r, double x, double g, double b,
-                                                                         double ratedU1, double ratedU2,
-                                                                         int node1, int node2,
-                                                                         String idVoltageLevel1, String idVoltageLevel2,
-                                                                         String feederName1, int feederOrder1, ConnectablePosition.Direction direction1,
-                                                                         String feederName2, int feederOrder2, ConnectablePosition.Direction direction2) {
+    private static TwoWindingsTransformer createTwoWindingsTransformer(Substation s, String id, String name,
+                                                                       double r, double x, double g, double b,
+                                                                       double ratedU1, double ratedU2,
+                                                                       int node1, int node2,
+                                                                       String idVoltageLevel1, String idVoltageLevel2,
+                                                                       String feederName1, int feederOrder1, ConnectablePosition.Direction direction1,
+                                                                       String feederName2, int feederOrder2, ConnectablePosition.Direction direction2) {
         TwoWindingsTransformer t = s.newTwoWindingsTransformer()
                 .setId(id)
                 .setName(name)
@@ -381,16 +404,16 @@ public class NetworkModificationTest {
     }
 
     @SuppressWarnings("SameParameterValue")
-    protected static ThreeWindingsTransformer createThreeWindingsTransformer(Substation s, String id, String name,
-                                                                             String vl1, String vl2, String vl3,
-                                                                             double r1, double r2, double r3,
-                                                                             double x1, double x2, double x3,
-                                                                             double g1, double b1,
-                                                                             double ratedU1, double ratedU2, double ratedU3,
-                                                                             int node1, int node2, int node3,
-                                                                             String feederName1, int feederOrder1, ConnectablePosition.Direction direction1,
-                                                                             String feederName2, int feederOrder2, ConnectablePosition.Direction direction2,
-                                                                             String feederName3, int feederOrder3, ConnectablePosition.Direction direction3) {
+    private static ThreeWindingsTransformer createThreeWindingsTransformer(Substation s, String id, String name,
+                                                                           String vl1, String vl2, String vl3,
+                                                                           double r1, double r2, double r3,
+                                                                           double x1, double x2, double x3,
+                                                                           double g1, double b1,
+                                                                           double ratedU1, double ratedU2, double ratedU3,
+                                                                           int node1, int node2, int node3,
+                                                                           String feederName1, int feederOrder1, ConnectablePosition.Direction direction1,
+                                                                           String feederName2, int feederOrder2, ConnectablePosition.Direction direction2,
+                                                                           String feederName3, int feederOrder3, ConnectablePosition.Direction direction3) {
         ThreeWindingsTransformer t = s.newThreeWindingsTransformer()
                 .setId(id)
                 .setName(name)

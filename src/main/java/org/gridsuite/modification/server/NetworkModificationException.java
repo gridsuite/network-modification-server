@@ -14,7 +14,7 @@ import java.util.Objects;
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
-class NetworkModificationException extends RuntimeException {
+public class NetworkModificationException extends RuntimeException {
     static final String EMPTY_SCRIPT = "Empty script";
 
     public enum Type {
@@ -43,17 +43,17 @@ class NetworkModificationException extends RuntimeException {
 
     private final Type type;
 
-    NetworkModificationException(Type type) {
+    public NetworkModificationException(Type type) {
         super(Objects.requireNonNull(type.name()) + ((type.message == null) ? "" : " : " + type.message));
         this.type = type;
     }
 
-    NetworkModificationException(Type type, Exception cause) {
+    public NetworkModificationException(Type type, Exception cause) {
         super(Objects.requireNonNull(type.name()) + " : " + Objects.requireNonNull(cause.getMessage()), cause);
         this.type = type;
     }
 
-    NetworkModificationException(Type type, String message) {
+    public NetworkModificationException(Type type, String message) {
         super(Objects.requireNonNull(type.name()) + " : " + Objects.requireNonNull(message));
         this.type = type;
     }

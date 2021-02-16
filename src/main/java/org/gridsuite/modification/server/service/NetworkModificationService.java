@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package org.gridsuite.modification.server;
+package org.gridsuite.modification.server.service;
 
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.iidm.network.Network;
@@ -13,43 +13,48 @@ import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.groovy.control.CompilerConfiguration;
+import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.dto.ElementaryModificationInfos;
+import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
-import java.util.Set;
+import java.util.List;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
+ * @author Slimane Amar <slimane.amar at rte-france.com>
  */
-@ComponentScan(basePackageClasses = {NetworkStoreService.class})
 @Service
-class NetworkModificationService {
+public class NetworkModificationService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NetworkModificationService.class);
 
-    @Autowired
-    private NetworkStoreService networkStoreService;
+    private final NetworkStoreService networkStoreService;
 
-    private Set<String> doModification(Network network, Runnable modification) {
+    private final ModificationRepository modificationRepository;
+
+    public NetworkModificationService(NetworkStoreService networkStoreService, ModificationRepository modificationRepository) {
+        this.networkStoreService = networkStoreService;
+        this.modificationRepository = modificationRepository;
+    }
+
+    private List<ElementaryModificationInfos> doModification(Network network, Runnable modification) {
         return doModification(network, modification, MODIFICATION_ERROR);
     }
 
-    private Set<String> doModification(Network network, Runnable modification, NetworkModificationException.Type typeIfError) {
+    private List<ElementaryModificationInfos> doModification(Network network, Runnable modification, NetworkModificationException.Type typeIfError) {
         try {
-            DefaultNetworkStoreListener listener = new DefaultNetworkStoreListener();
-            network.addListener(listener);
+            NetworkStoreListener listener = NetworkStoreListener.create(network, modificationRepository);
             modification.run();
-
             networkStoreService.flush(network);
-
             return listener.getModifications();
         } catch (Exception e) {
             NetworkModificationException exc = new NetworkModificationException(typeIfError, e);
@@ -68,22 +73,22 @@ class NetworkModificationService {
         }).subscribeOn(Schedulers.boundedElastic());
     }
 
-    Mono<Set<String>> changeSwitchState(UUID networkUuid, String switchId, boolean open) {
+    public Flux<ElementaryModificationInfos> changeSwitchState(UUID networkUuid, String switchId, boolean open) {
         return getNetwork(networkUuid)
                 .filter(network -> network.getSwitch(switchId) != null)
                 .switchIfEmpty(Mono.error(new NetworkModificationException(SWITCH_NOT_FOUND, switchId)))
                 .filter(network -> network.getSwitch(switchId).isOpen() != open)
-                .map(network -> doModification(network, () -> network.getSwitch(switchId).setOpen(open)))
-                .switchIfEmpty(Mono.just(Set.of()));
+                .flatMapIterable(network -> doModification(network, () -> network.getSwitch(switchId).setOpen(open)))
+                .switchIfEmpty(Flux.empty());
     }
 
-    private Mono<Void> assertGroovyScriptNotEmpty(String groovyScript) {
-        return StringUtils.isBlank(groovyScript) ? Mono.error(new NetworkModificationException(GROOVY_SCRIPT_EMPTY)) : Mono.empty();
+    private Flux<Void> assertGroovyScriptNotEmpty(String groovyScript) {
+        return StringUtils.isBlank(groovyScript) ? Flux.error(new NetworkModificationException(GROOVY_SCRIPT_EMPTY)) : Flux.empty();
     }
 
-    Mono<Set<String>> applyGroovyScript(UUID networkUuid, String groovyScript) {
-        return assertGroovyScriptNotEmpty(groovyScript).then(
-                getNetwork(networkUuid).map(network -> doModification(network, () -> {
+    public Flux<ElementaryModificationInfos> applyGroovyScript(UUID networkUuid, String groovyScript) {
+        return assertGroovyScriptNotEmpty(groovyScript).thenMany(
+                getNetwork(networkUuid).flatMapIterable(network -> doModification(network, () -> {
                     CompilerConfiguration conf = new CompilerConfiguration();
                     Binding binding = new Binding();
                     binding.setProperty("network", network);
