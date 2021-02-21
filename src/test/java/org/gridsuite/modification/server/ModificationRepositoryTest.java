@@ -1,13 +1,15 @@
-/**
- * Copyright (c) 2021, RTE (http://www.rte-france.com)
- * This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/*
+  Copyright (c) 2021, RTE (http://www.rte-france.com)
+  This Source Code Form is subject to the terms of the Mozilla Public
+  License, v. 2.0. If a copy of the MPL was not distributed with this
+  file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package org.gridsuite.modification.server.repositories;
+package org.gridsuite.modification.server;
 
-import org.gridsuite.modification.server.MatcherElementaryModificationInfos;
+import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
 import org.gridsuite.modification.server.entities.ElementaryModificationEntity;
+import org.gridsuite.modification.server.repositories.ModificationRepository;
+import org.gridsuite.modification.server.utils.MatcherElementaryModificationInfos;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +27,7 @@ import static org.junit.Assert.assertEquals;
  */
 @RunWith(SpringRunner.class)
 @SpringBootTest
+@AutoConfigureEmbeddedDatabase(provider = AutoConfigureEmbeddedDatabase.DatabaseProvider.ZONKY)
 public class ModificationRepositoryTest {
 
     @Autowired

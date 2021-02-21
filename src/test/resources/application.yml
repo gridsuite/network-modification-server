@@ -1,6 +1,6 @@
 spring:
   jpa:
-    database: H2
+    database: POSTGRESQL
     show-sql: true
     hibernate:
       ddl-auto: create-drop
@@ -8,8 +8,7 @@ spring:
         physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
         implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl
     properties:
-      dialect: org.hibernate.dialect.H2Dialect
-      format_sql: true
+      dialect: org.hibernate.dialect.PostgreSQLDialect
 
 logging:
   level:

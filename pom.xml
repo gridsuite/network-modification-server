@@ -45,8 +45,10 @@
 
     <properties>
         <java.version>11</java.version>
-
         <gridsuite-dependencies.version>4</gridsuite-dependencies.version>
+        <postgres.version>13.1.0</postgres.version>
+        <zonky-embedded-database-test.version>2.0.0-beta1</zonky-embedded-database-test.version>
+        <embedded-postgres.version>1.2.10</embedded-postgres.version>
     </properties>
 
     <build>
@@ -93,12 +95,31 @@
             </dependency>
 
             <!-- project specific dependencies -->
+            <dependency>
+                <groupId>io.zonky.test</groupId>
+                <artifactId>embedded-database-spring-test</artifactId>
+                <version>${zonky-embedded-database-test.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.zonky.test</groupId>
+                <artifactId>embedded-postgres</artifactId>
+                <version>${embedded-postgres.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.zonky.test.postgres</groupId>
+                <artifactId>embedded-postgres-binaries-bom</artifactId>
+                <version>${postgres.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
 
         </dependencies>
     </dependencyManagement>
 
     <dependencies>
+
         <!-- Compilation dependencies -->
+
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-iidm-api</artifactId>
@@ -130,6 +151,7 @@
         </dependency>
 
         <!-- Runtime dependencies -->
+
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-config-classic</artifactId>
@@ -141,8 +163,14 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
             <scope>runtime</scope>
         </dependency>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
 
         <!-- Test dependencies -->
+
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-config-test</artifactId>
@@ -164,9 +192,15 @@
             <artifactId>junit</artifactId>
             <scope>test</scope>
         </dependency>
+
         <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
+            <groupId>io.zonky.test</groupId>
+            <artifactId>embedded-database-spring-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.zonky.test</groupId>
+            <artifactId>embedded-postgres</artifactId>
             <scope>test</scope>
         </dependency>
 
