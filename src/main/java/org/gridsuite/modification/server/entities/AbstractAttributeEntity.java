@@ -10,8 +10,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
-import java.time.ZonedDateTime;
-import java.util.UUID;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -20,19 +18,19 @@ import java.util.UUID;
 @Getter
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
-@Table(name = "modification")
-public abstract class AbstractModificationEntity {
-
-    public static final String DATE_COLUMN_NAME = "date";
-
+@Table(name = "attribute")
+public abstract class AbstractAttributeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "id")
-    protected UUID id;
+    private Long id;
 
-    @Column(name = DATE_COLUMN_NAME)
-    protected ZonedDateTime date;
+    @Column(name = "attributeName")
+    private String attributeName;
 
-    @Column(name = "type")
-    protected String type;
+    public abstract Object getAttributeValue();
+
+    protected AbstractAttributeEntity(String attributeName) {
+        this.attributeName = attributeName;
+    }
 }

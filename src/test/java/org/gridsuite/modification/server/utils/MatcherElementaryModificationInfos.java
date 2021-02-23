@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.utils;
 
+import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.ElementaryModificationInfos;
 import org.hamcrest.Description;
 
@@ -18,11 +19,13 @@ import java.time.ZonedDateTime;
 public class MatcherElementaryModificationInfos extends MatcherModificationInfos<ElementaryModificationInfos> {
 
     public static MatcherElementaryModificationInfos createMatcherElementaryModificationInfos(String equipmentId, String equipmentName,
-                                                                                       String equipmentAttributeName, String equipmentAttributeValue) {
+                                                                                       String equipmentAttributeName, Object equipmentAttributeValue) {
         return new MatcherElementaryModificationInfos(ElementaryModificationInfos.builder()
                 .date(ZonedDateTime.now(ZoneOffset.UTC))
-                .equipmentId(equipmentId).equipmentName(equipmentName)
-                .equipmentAttributeName(equipmentAttributeName).equipmentAttributeValue(equipmentAttributeValue)
+                .type(ModificationType.ELEMENTARY)
+                .equipmentId(equipmentId)
+                .equipmentAttributeName(equipmentAttributeName)
+                .equipmentAttributeValue(equipmentAttributeValue)
                 .build());
     }
 
@@ -38,7 +41,6 @@ public class MatcherElementaryModificationInfos extends MatcherModificationInfos
     public boolean matchesSafely(ElementaryModificationInfos m) {
         return super.matchesSafely(m)
                 && m.getEquipmentId().equals(reference.getEquipmentId())
-                && m.getEquipmentName().equals(reference.getEquipmentName())
                 && m.getEquipmentAttributeName().equals(reference.getEquipmentAttributeName())
                 && m.getEquipmentAttributeValue().equals(reference.getEquipmentAttributeValue());
     }

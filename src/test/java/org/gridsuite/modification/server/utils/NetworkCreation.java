@@ -17,6 +17,7 @@ public final class NetworkCreation {
         createSwitch(v1, "v1d1", "v1d1", SwitchKind.DISCONNECTOR, true, false, false, 0, 1);
         createSwitch(v1, "v1b1", "v1b1", SwitchKind.BREAKER, true, false, false, 1, 2);
         createLoad(v1, "v1load", "v1load", 2, 0., 0.);
+        createLccConverterStation(v1, "v1lcc", "v1lcc", 3, 0, 0);
 
         VoltageLevel v2 = createVoltageLevel(s1, "v2", "v2", TopologyKind.NODE_BREAKER, 225.0);
         createBusBarSection(v2, "1A", "1A", 0);
@@ -152,7 +153,7 @@ public final class NetworkCreation {
                 .add();
     }
 
-    @SuppressWarnings("SameParameterValue")
+    //@SuppressWarnings("SameParameterValue")
     private static void createLoad(VoltageLevel vl, String id, String name,
                                    int node, double p0, double q0) {
         vl.newLoad()
@@ -161,6 +162,17 @@ public final class NetworkCreation {
                 .setNode(node)
                 .setP0(p0)
                 .setQ0(q0)
+                .add();
+    }
+
+    private static void createLccConverterStation(VoltageLevel vl, String id, String name,
+                                                  int node, float powerFactor, float lossFactor) {
+        vl.newLccConverterStation()
+                .setId(id)
+                .setName(name)
+                .setNode(node)
+                .setLossFactor(lossFactor)
+                .setPowerFactor(powerFactor)
                 .add();
     }
 

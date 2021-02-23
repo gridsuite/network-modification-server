@@ -26,12 +26,9 @@ public class ElementaryModificationInfos extends ModificationInfos {
     @ApiModelProperty("Equipment ID")
     private String equipmentId;
 
-    @ApiModelProperty("Equipment name")
-    private String equipmentName;
-
     @ApiModelProperty("Equipment attribute name")
     private String equipmentAttributeName;
 
     @ApiModelProperty("Equipment attribute value")
-    private String equipmentAttributeValue;
+    private Object equipmentAttributeValue;
 }

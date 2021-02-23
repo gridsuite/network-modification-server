@@ -11,9 +11,7 @@ import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.ElementaryModificationInfos;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Table;
+import javax.persistence.*;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 
@@ -25,26 +23,18 @@ import java.time.ZonedDateTime;
 @Entity
 @Table(name = "elementaryModification")
 public class ElementaryModificationEntity extends AbstractModificationEntity {
-
     @Column(name = "equipmentId")
     private String equipmentId;
 
-    @Column(name = "equipmentName")
-    private String equipmentName;
+    @OneToOne(fetch = FetchType.EAGER, optional = false, orphanRemoval = true, cascade = {CascadeType.ALL})
+    @JoinColumn(name = "attribute_id")
+    private AbstractAttributeEntity attribute;
 
-    @Column(name = "equipmentAttributeName")
-    private String equipmentAttributeName;
-
-    @Column(name = "equipmentAttributeValue")
-    private String equipmentAttributeValue;
-
-    public ElementaryModificationEntity(String equipmentId, String equipmentName, String equipmentAttributeName, String equipmentAttributeValue) {
+    public ElementaryModificationEntity(String equipmentId, AbstractAttributeEntity attribute) {
         this.date = ZonedDateTime.now(ZoneOffset.UTC);
         this.type = ModificationType.ELEMENTARY.name();
         this.equipmentId = equipmentId;
-        this.equipmentName = equipmentName;
-        this.equipmentAttributeName = equipmentAttributeName;
-        this.equipmentAttributeValue = equipmentAttributeValue;
+        this.attribute = attribute;
     }
 
     public ElementaryModificationInfos toElementaryModificationInfos() {
@@ -53,9 +43,8 @@ public class ElementaryModificationEntity extends AbstractModificationEntity {
                 .date(this.date)
                 .type(ModificationType.valueOf(this.type))
                 .equipmentId(this.equipmentId)
-                .equipmentName(this.equipmentName)
-                .equipmentAttributeName(this.equipmentAttributeName)
-                .equipmentAttributeValue(this.equipmentAttributeValue)
+                .equipmentAttributeName(this.attribute.getAttributeName())
+                .equipmentAttributeValue(this.attribute.getAttributeValue())
                 .build();
     }
 }

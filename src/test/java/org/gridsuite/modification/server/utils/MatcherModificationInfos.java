@@ -22,7 +22,8 @@ class MatcherModificationInfos<T extends ModificationInfos> extends TypeSafeMatc
 
     @Override
     public boolean matchesSafely(T m) {
-        return m.getDate().toEpochSecond() - reference.getDate().toEpochSecond() < 2;
+        return m.getType() == reference.getType()
+                && m.getDate().toEpochSecond() - reference.getDate().toEpochSecond() < 2;
     }
 
     @Override

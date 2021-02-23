@@ -7,7 +7,7 @@
 package org.gridsuite.modification.server;
 
 import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
-import org.gridsuite.modification.server.entities.ElementaryModificationEntity;
+import org.gridsuite.modification.server.entities.*;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.utils.MatcherElementaryModificationInfos;
 import org.junit.Test;
@@ -35,22 +35,34 @@ public class ModificationRepositoryTest {
 
     @Test
     public void testElementaryModification() {
-        ElementaryModificationEntity modificationEntity1 = new ElementaryModificationEntity("id1", "name1", "attribute", "value");
-        ElementaryModificationEntity modificationEntity2 = new ElementaryModificationEntity("id2", "name2", "attribute", "value");
-        modificationRepository.insert(modificationEntity1);
-        modificationRepository.insert(modificationEntity2);
+        ElementaryModificationEntity stringModifEntity = new ElementaryModificationEntity("id5", new StringAttributeEntity("attribute", "foo"));
+        ElementaryModificationEntity boolModifEntity = new ElementaryModificationEntity("id1", new BooleanAttributeEntity("attribute", true));
+        ElementaryModificationEntity intModifEntity = new ElementaryModificationEntity("id2", new IntegerAttributeEntity("attribute", 1));
+        ElementaryModificationEntity floatModifEntity = new ElementaryModificationEntity("id3", new FloatAttributeEntity("attribute", 2));
+        ElementaryModificationEntity doubleModifEntity = new ElementaryModificationEntity("id4", new DoubleAttributeEntity("attribute", 3));
+        modificationRepository.insert(stringModifEntity);
+        modificationRepository.insert(boolModifEntity);
+        modificationRepository.insert(intModifEntity);
+        modificationRepository.insert(floatModifEntity);
+        modificationRepository.insert(doubleModifEntity);
 
         List<ElementaryModificationEntity> elementaryModificationEntities = modificationRepository.getElementaryModifications();
-        assertEquals(2, elementaryModificationEntities.size());
+        assertEquals(5, elementaryModificationEntities.size());
         assertThat(elementaryModificationEntities.get(0).toElementaryModificationInfos(),
-                MatcherElementaryModificationInfos.createMatcherElementaryModificationInfos(modificationEntity1.toElementaryModificationInfos()));
+                MatcherElementaryModificationInfos.createMatcherElementaryModificationInfos(stringModifEntity.toElementaryModificationInfos()));
         assertThat(elementaryModificationEntities.get(1).toElementaryModificationInfos(),
-                MatcherElementaryModificationInfos.createMatcherElementaryModificationInfos(modificationEntity2.toElementaryModificationInfos()));
+                MatcherElementaryModificationInfos.createMatcherElementaryModificationInfos(boolModifEntity.toElementaryModificationInfos()));
+        assertThat(elementaryModificationEntities.get(2).toElementaryModificationInfos(),
+                MatcherElementaryModificationInfos.createMatcherElementaryModificationInfos(intModifEntity.toElementaryModificationInfos()));
+        assertThat(elementaryModificationEntities.get(3).toElementaryModificationInfos(),
+                MatcherElementaryModificationInfos.createMatcherElementaryModificationInfos(floatModifEntity.toElementaryModificationInfos()));
+        assertThat(elementaryModificationEntities.get(4).toElementaryModificationInfos(),
+                MatcherElementaryModificationInfos.createMatcherElementaryModificationInfos(doubleModifEntity.toElementaryModificationInfos()));
 
         elementaryModificationEntities = modificationRepository.getElementaryModifications("id1");
         assertEquals(1, elementaryModificationEntities.size());
         assertThat(elementaryModificationEntities.get(0).toElementaryModificationInfos(),
-                MatcherElementaryModificationInfos.createMatcherElementaryModificationInfos(modificationEntity1.toElementaryModificationInfos()));
+                MatcherElementaryModificationInfos.createMatcherElementaryModificationInfos(boolModifEntity.toElementaryModificationInfos()));
     }
 
 }

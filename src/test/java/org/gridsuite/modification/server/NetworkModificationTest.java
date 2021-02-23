@@ -77,11 +77,10 @@ public class NetworkModificationTest {
                 .date(ZonedDateTime.of(2021, 2, 19, 0, 0, 0, 0, ZoneOffset.UTC))
                 .type(ModificationType.ELEMENTARY)
                 .equipmentId("equipmentId")
-                .equipmentName("equipmentName")
                 .equipmentAttributeName("equipmentAttributeName")
                 .equipmentAttributeValue("equipmentAttributeValue")
                 .build();
-        assertEquals("ElementaryModificationInfos(super=ModificationInfos(id=7928181c-7977-4592-ba19-88027e4254e4, date=2021-02-19T00:00Z, type=ELEMENTARY), equipmentId=equipmentId, equipmentName=equipmentName, equipmentAttributeName=equipmentAttributeName, equipmentAttributeValue=equipmentAttributeValue)",
+        assertEquals("ElementaryModificationInfos(super=ModificationInfos(id=7928181c-7977-4592-ba19-88027e4254e4, date=2021-02-19T00:00Z, type=ELEMENTARY), equipmentId=equipmentId, equipmentAttributeName=equipmentAttributeName, equipmentAttributeValue=equipmentAttributeValue)",
                 modificationInfos.toString());
     }
 
@@ -108,7 +107,7 @@ public class NetworkModificationTest {
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
                 .expectBodyList(ElementaryModificationInfos.class)
                 .value(modifications -> modifications.get(0),
-                        createMatcherElementaryModificationInfos("v1b1", "v1b1", "open", "true"));
+                        createMatcherElementaryModificationInfos("v1b1", "v1b1", "open", true));
 
         // switch closing
         webTestClient.put().uri("/v1/networks/{networkUuid}/switches/{switchId}?open=false", TEST_NETWORK_ID, "v2b1")
@@ -117,7 +116,7 @@ public class NetworkModificationTest {
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
                 .expectBodyList(ElementaryModificationInfos.class)
                 .value(modifications -> modifications.get(0),
-                        createMatcherElementaryModificationInfos("v2b1", "v2b1", "open", "false"));
+                        createMatcherElementaryModificationInfos("v2b1", "v2b1", "open", false));
 
         // switch closing when already closed
         webTestClient.put().uri("/v1/networks/{networkUuid}/switches/{switchId}?open=false", TEST_NETWORK_ID, "v2b1")
@@ -134,7 +133,7 @@ public class NetworkModificationTest {
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
                 .expectBodyList(ElementaryModificationInfos.class)
                 .value(modifications -> modifications.get(0),
-                        createMatcherElementaryModificationInfos("v3b1", "v3b1", "open", "true"));
+                        createMatcherElementaryModificationInfos("v3b1", "v3b1", "open", true));
     }
 
     @Test
@@ -176,7 +175,17 @@ public class NetworkModificationTest {
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
                 .expectBodyList(ElementaryModificationInfos.class)
                 .value(modifications -> modifications.get(0),
-                        createMatcherElementaryModificationInfos("idGenerator", "idGenerator", "targetP", "12.0"));
+                        createMatcherElementaryModificationInfos("idGenerator", "idGenerator", "targetP", 12.0));
+
+        // apply groovy script with lcc converter station power factor modification
+        webTestClient.put().uri("/v1/networks/{networkUuid}/groovy/", TEST_NETWORK_ID)
+                .bodyValue("network.getLccConverterStation('v1lcc').powerFactor=1\n")
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBodyList(ElementaryModificationInfos.class)
+                .value(modifications -> modifications.get(0),
+                        createMatcherElementaryModificationInfos("v1lcc", "v1lcc", "powerFactor", 1.0));
 
         // apply groovy script with two windings transformer ratio tap modification
         webTestClient.put().uri("/v1/networks/{networkUuid}/groovy/", TEST_NETWORK_ID)
@@ -186,7 +195,7 @@ public class NetworkModificationTest {
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
                 .expectBodyList(ElementaryModificationInfos.class)
                 .value(modifications -> modifications.get(0),
-                        createMatcherElementaryModificationInfos("trf1", "trf1", "ratioTapChanger.tapPosition", "2"));
+                        createMatcherElementaryModificationInfos("trf1", "trf1", "ratioTapChanger.tapPosition", 2));
 
         // apply groovy script with three windings transformer phase tap modification
         webTestClient.put().uri("/v1/networks/{networkUuid}/groovy/", TEST_NETWORK_ID)
@@ -196,6 +205,6 @@ public class NetworkModificationTest {
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
                 .expectBodyList(ElementaryModificationInfos.class)
                 .value(modifications -> modifications.get(0),
-                        createMatcherElementaryModificationInfos("trf6", "trf6", "phaseTapChanger1.tapPosition", "0"));
+                        createMatcherElementaryModificationInfos("trf6", "trf6", "phaseTapChanger1.tapPosition", 0));
     }
 }

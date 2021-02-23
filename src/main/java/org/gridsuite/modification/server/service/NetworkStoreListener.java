@@ -10,7 +10,7 @@ import com.powsybl.iidm.network.Identifiable;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.NetworkListener;
 import org.gridsuite.modification.server.dto.ElementaryModificationInfos;
-import org.gridsuite.modification.server.entities.ElementaryModificationEntity;
+import org.gridsuite.modification.server.entities.*;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 
 import java.util.LinkedList;
@@ -37,9 +37,25 @@ class NetworkStoreListener implements NetworkListener {
     private List<ElementaryModificationInfos> modifications = new LinkedList<>();
 
     private void storeModification(Identifiable<?> identifiable, String attributeName, Object attributeValue) {
-        ElementaryModificationEntity modificationEntity = new ElementaryModificationEntity(identifiable.getId(), identifiable.getNameOrId(),
-                attributeName, attributeValue.toString());
+        ElementaryModificationEntity modificationEntity = new ElementaryModificationEntity(identifiable.getId(), createAttributeEntity(attributeName, attributeValue));
         modifications.add(this.modificationRepository.insert(modificationEntity).toElementaryModificationInfos());
+    }
+
+    private AbstractAttributeEntity createAttributeEntity(String attributeName, Object attributeValue) {
+        switch (attributeValue.getClass().getSimpleName()) {
+            case "String":
+                return new StringAttributeEntity(attributeName, (String) attributeValue);
+            case "Boolean":
+                return new BooleanAttributeEntity(attributeName, (boolean) attributeValue);
+            case "Integer":
+                return new IntegerAttributeEntity(attributeName, (int) attributeValue);
+            case "Float":
+                return new FloatAttributeEntity(attributeName, (float) attributeValue);
+            case "Double":
+                return new DoubleAttributeEntity(attributeName, (double) attributeValue);
+            default:
+                return new BooleanAttributeEntity(attributeName, (boolean) attributeValue);
+        }
     }
 
     @Override
