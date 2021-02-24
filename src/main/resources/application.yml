@@ -1,6 +1,7 @@
 spring:
   application:
     name: netork-modification-server
+
   jpa:
     database: POSTGRESQL
     show-sql: false

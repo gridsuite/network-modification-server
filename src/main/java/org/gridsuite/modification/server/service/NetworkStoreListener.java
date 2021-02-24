@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.service;
 
+import com.powsybl.commons.PowsyblException;
 import com.powsybl.iidm.network.Identifiable;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.NetworkListener;
@@ -20,11 +21,11 @@ import java.util.List;
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
-class NetworkStoreListener implements NetworkListener {
+public class NetworkStoreListener implements NetworkListener {
 
     private final ModificationRepository modificationRepository;
 
-    static NetworkStoreListener create(Network network, ModificationRepository modificationRepository) {
+    public static NetworkStoreListener create(Network network, ModificationRepository modificationRepository) {
         NetworkStoreListener listener = new NetworkStoreListener(modificationRepository);
         network.addListener(listener);
         return listener;
@@ -42,19 +43,23 @@ class NetworkStoreListener implements NetworkListener {
     }
 
     private AbstractAttributeEntity createAttributeEntity(String attributeName, Object attributeValue) {
-        switch (attributeValue.getClass().getSimpleName()) {
-            case "String":
-                return new StringAttributeEntity(attributeName, (String) attributeValue);
-            case "Boolean":
-                return new BooleanAttributeEntity(attributeName, (boolean) attributeValue);
-            case "Integer":
-                return new IntegerAttributeEntity(attributeName, (int) attributeValue);
-            case "Float":
-                return new FloatAttributeEntity(attributeName, (float) attributeValue);
-            case "Double":
-                return new DoubleAttributeEntity(attributeName, (double) attributeValue);
-            default:
-                return new BooleanAttributeEntity(attributeName, (boolean) attributeValue);
+        if (attributeValue.getClass().isEnum()) {
+            return new StringAttributeEntity(attributeName, attributeValue.toString());
+        } else {
+            switch (attributeValue.getClass().getSimpleName()) {
+                case "String":
+                    return new StringAttributeEntity(attributeName, (String) attributeValue);
+                case "Boolean":
+                    return new BooleanAttributeEntity(attributeName, (boolean) attributeValue);
+                case "Integer":
+                    return new IntegerAttributeEntity(attributeName, (int) attributeValue);
+                case "Float":
+                    return new FloatAttributeEntity(attributeName, (float) attributeValue);
+                case "Double":
+                    return new DoubleAttributeEntity(attributeName, (double) attributeValue);
+                default:
+                    throw new PowsyblException("Value type invalid : " + attributeValue.getClass().getSimpleName());
+            }
         }
     }
 

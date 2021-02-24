@@ -1,6 +1,7 @@
 package org.gridsuite.modification.server.utils;
 
 import com.powsybl.iidm.network.*;
+import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
 import com.powsybl.sld.iidm.extensions.ConnectablePosition;
 import com.powsybl.sld.iidm.extensions.ConnectablePositionAdder;
 
@@ -9,7 +10,7 @@ public final class NetworkCreation {
     }
 
     public static Network create() {
-        Network network = Network.create("test", "test");
+        Network network = new NetworkFactoryImpl().createNetwork("test", "test");
 
         Substation s1 = createSubstation(network, "s1", "s1", Country.FR);
         VoltageLevel v1 = createVoltageLevel(s1, "v1", "v1", TopologyKind.NODE_BREAKER, 380.0);
@@ -153,7 +154,7 @@ public final class NetworkCreation {
                 .add();
     }
 
-    //@SuppressWarnings("SameParameterValue")
+    @SuppressWarnings("SameParameterValue")
     private static void createLoad(VoltageLevel vl, String id, String name,
                                    int node, double p0, double q0) {
         vl.newLoad()

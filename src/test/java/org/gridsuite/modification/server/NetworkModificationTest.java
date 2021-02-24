@@ -7,9 +7,12 @@
 package org.gridsuite.modification.server;
 
 import com.powsybl.commons.PowsyblException;
+import com.powsybl.iidm.network.Generator;
+import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.client.NetworkStoreService;
 import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
 import org.gridsuite.modification.server.dto.ElementaryModificationInfos;
+import org.gridsuite.modification.server.service.NetworkStoreListener;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Before;
 import org.junit.Test;
@@ -31,7 +34,7 @@ import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.utils.MatcherElementaryModificationInfos.createMatcherElementaryModificationInfos;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.when;
 
 /**
@@ -82,6 +85,17 @@ public class NetworkModificationTest {
                 .build();
         assertEquals("ElementaryModificationInfos(super=ModificationInfos(id=7928181c-7977-4592-ba19-88027e4254e4, date=2021-02-19T00:00Z, type=ELEMENTARY), equipmentId=equipmentId, equipmentAttributeName=equipmentAttributeName, equipmentAttributeValue=equipmentAttributeValue)",
                 modificationInfos.toString());
+    }
+
+    @Test
+    public void testNetworkListener() {
+        Network network = NetworkCreation.create();
+        NetworkStoreListener listener = NetworkStoreListener.create(network, null);
+        Generator generator = network.getGenerator("idGenerator");
+        Object invalidValue = new Object();
+        assertTrue(assertThrows(PowsyblException.class, () -> {
+            listener.onUpdate(generator, "targetP", 0, invalidValue);
+        }).getMessage().contains("Value type invalid : Object"));
     }
 
     @Test
@@ -176,6 +190,16 @@ public class NetworkModificationTest {
                 .expectBodyList(ElementaryModificationInfos.class)
                 .value(modifications -> modifications.get(0),
                         createMatcherElementaryModificationInfos("idGenerator", "idGenerator", "targetP", 12.0));
+
+        // apply groovy script with load type modification
+        webTestClient.put().uri("/v1/networks/{networkUuid}/groovy/", TEST_NETWORK_ID)
+                .bodyValue("network.getLoad('v1load').loadType=com.powsybl.iidm.network.LoadType.FICTITIOUS\n")
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBodyList(ElementaryModificationInfos.class)
+                .value(modifications -> modifications.get(0),
+                        createMatcherElementaryModificationInfos("v1load", "v1load", "loadType", "FICTITIOUS"));
 
         // apply groovy script with lcc converter station power factor modification
         webTestClient.put().uri("/v1/networks/{networkUuid}/groovy/", TEST_NETWORK_ID)
