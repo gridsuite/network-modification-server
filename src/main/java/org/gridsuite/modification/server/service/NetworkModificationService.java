@@ -15,16 +15,20 @@ import org.apache.commons.lang3.StringUtils;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ElementaryModificationInfos;
-import org.gridsuite.modification.server.repositories.ModificationRepository;
+import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.entities.AbstractModificationEntity;
+import org.gridsuite.modification.server.entities.ElementaryModificationEntity;
+import org.gridsuite.modification.server.entities.ModificationGroupEntity;
+import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 
@@ -39,20 +43,65 @@ public class NetworkModificationService {
 
     private final NetworkStoreService networkStoreService;
 
-    private final ModificationRepository modificationRepository;
+    private final NetworkModificationRepository modificationRepository;
 
-    public NetworkModificationService(NetworkStoreService networkStoreService, ModificationRepository modificationRepository) {
+    public NetworkModificationService(NetworkStoreService networkStoreService, NetworkModificationRepository modificationRepository) {
         this.networkStoreService = networkStoreService;
         this.modificationRepository = modificationRepository;
     }
 
-    private List<ElementaryModificationInfos> doModification(Network network, Runnable modification) {
-        return doModification(network, modification, MODIFICATION_ERROR);
+    public Mono<List<ElementaryModificationInfos>> applyGroovyScript(UUID networkUuid, String groovyScript) {
+        return assertGroovyScriptNotEmpty(groovyScript).then(
+                getNetwork(networkUuid).map(network -> doModification(network, networkUuid, () -> {
+                    CompilerConfiguration conf = new CompilerConfiguration();
+                    Binding binding = new Binding();
+                    binding.setProperty("network", network);
+                    GroovyShell shell = new GroovyShell(binding, conf);
+                    shell.evaluate(groovyScript);
+                }, GROOVY_SCRIPT_ERROR))
+        );
     }
 
-    private List<ElementaryModificationInfos> doModification(Network network, Runnable modification, NetworkModificationException.Type typeIfError) {
+    public Mono<List<ElementaryModificationInfos>> changeSwitchState(UUID networkUuid, String switchId, boolean open) {
+        return getNetwork(networkUuid)
+                .filter(network -> network.getSwitch(switchId) != null)
+                .switchIfEmpty(Mono.error(new NetworkModificationException(SWITCH_NOT_FOUND, switchId)))
+                .filter(network -> network.getSwitch(switchId).isOpen() != open)
+                .map(network -> doModification(network, networkUuid, () -> network.getSwitch(switchId).setOpen(open)));
+    }
+
+    public Mono<List<UUID>> getModificationGroups() {
+        return Mono.fromCallable(() ->
+                modificationRepository.getModificationGroups().stream().map(ModificationGroupEntity::getUuid).collect(Collectors.toList()));
+    }
+
+    public Mono<List<ModificationInfos>> getModifications(UUID groupUuid) {
+        return assertModificationGroupExist(groupUuid).then(Mono.fromCallable(() ->
+                modificationRepository.getModifications(groupUuid)
+                        .stream().map(AbstractModificationEntity::toModificationInfos)
+                        .collect(Collectors.toList())
+        ));
+    }
+
+    public Mono<List<ElementaryModificationInfos>> getElementaryModifications(UUID groupUuid) {
+        return assertModificationGroupExist(groupUuid).then(Mono.fromCallable(() ->
+                modificationRepository.getElementaryModifications(groupUuid)
+                        .stream().map(ElementaryModificationEntity::toElementaryModificationInfos)
+                        .collect(Collectors.toList())
+        ));
+    }
+
+    public Mono<Void> deleteModificationGroup(UUID groupUuid) {
+        return assertModificationGroupExist(groupUuid).then(Mono.fromRunnable(() -> modificationRepository.deleteModificationGroup(groupUuid)));
+    }
+
+    private List<ElementaryModificationInfos> doModification(Network network, UUID networkUuid, Runnable modification) {
+        return doModification(network, networkUuid, modification, MODIFICATION_ERROR);
+    }
+
+    private List<ElementaryModificationInfos> doModification(Network network, UUID networkUuid, Runnable modification, NetworkModificationException.Type typeIfError) {
         try {
-            NetworkStoreListener listener = NetworkStoreListener.create(network, modificationRepository);
+            NetworkStoreListener listener = NetworkStoreListener.create(network, networkUuid, modificationRepository);
             modification.run();
             networkStoreService.flush(network);
             return listener.getModifications();
@@ -73,28 +122,14 @@ public class NetworkModificationService {
         }).subscribeOn(Schedulers.boundedElastic());
     }
 
-    public Flux<ElementaryModificationInfos> changeSwitchState(UUID networkUuid, String switchId, boolean open) {
-        return getNetwork(networkUuid)
-                .filter(network -> network.getSwitch(switchId) != null)
-                .switchIfEmpty(Mono.error(new NetworkModificationException(SWITCH_NOT_FOUND, switchId)))
-                .filter(network -> network.getSwitch(switchId).isOpen() != open)
-                .flatMapIterable(network -> doModification(network, () -> network.getSwitch(switchId).setOpen(open)))
-                .switchIfEmpty(Flux.empty());
+    private Mono<Void> assertGroovyScriptNotEmpty(String groovyScript) {
+        return StringUtils.isBlank(groovyScript) ? Mono.error(new NetworkModificationException(GROOVY_SCRIPT_EMPTY)) : Mono.empty();
     }
 
-    private Flux<Void> assertGroovyScriptNotEmpty(String groovyScript) {
-        return StringUtils.isBlank(groovyScript) ? Flux.error(new NetworkModificationException(GROOVY_SCRIPT_EMPTY)) : Flux.empty();
+    private Mono<Void> assertModificationGroupExist(UUID groupUuid) {
+        return modificationRepository.getModificationGroup(groupUuid).isPresent() ?
+                Mono.empty() :
+                Mono.error(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, groupUuid.toString()));
     }
 
-    public Flux<ElementaryModificationInfos> applyGroovyScript(UUID networkUuid, String groovyScript) {
-        return assertGroovyScriptNotEmpty(groovyScript).thenMany(
-                getNetwork(networkUuid).flatMapIterable(network -> doModification(network, () -> {
-                    CompilerConfiguration conf = new CompilerConfiguration();
-                    Binding binding = new Binding();
-                    binding.setProperty("network", network);
-                    GroovyShell shell = new GroovyShell(binding, conf);
-                    shell.evaluate(groovyScript);
-                }, GROOVY_SCRIPT_ERROR))
-        );
-    }
 }

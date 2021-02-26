@@ -8,6 +8,8 @@ package org.gridsuite.modification.server.entities;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.gridsuite.modification.server.ModificationType;
+import org.gridsuite.modification.server.dto.ModificationInfos;
 
 import javax.persistence.*;
 import java.time.ZonedDateTime;
@@ -35,4 +37,12 @@ public abstract class AbstractModificationEntity {
 
     @Column(name = "type")
     protected String type;
+
+    public ModificationInfos toModificationInfos() {
+        return ModificationInfos.builder()
+                .uuid(this.uuid)
+                .date(this.date)
+                .type(ModificationType.valueOf(this.type))
+                .build();
+    }
 }

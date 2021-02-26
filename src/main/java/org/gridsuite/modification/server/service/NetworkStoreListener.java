@@ -10,12 +10,9 @@ import com.powsybl.commons.PowsyblException;
 import com.powsybl.iidm.network.*;
 import org.gridsuite.modification.server.dto.ElementaryModificationInfos;
 import org.gridsuite.modification.server.entities.*;
-import org.gridsuite.modification.server.repositories.ModificationRepository;
+import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -23,23 +20,26 @@ import java.util.Set;
  */
 public class NetworkStoreListener implements NetworkListener {
 
-    private final ModificationRepository modificationRepository;
+    private UUID networkUuid;
 
-    public static NetworkStoreListener create(Network network, ModificationRepository modificationRepository) {
-        NetworkStoreListener listener = new NetworkStoreListener(modificationRepository);
+    private final NetworkModificationRepository modificationRepository;
+
+    private List<ElementaryModificationInfos> modifications = new LinkedList<>();
+
+    public static NetworkStoreListener create(Network network, UUID networkUuid, NetworkModificationRepository modificationRepository) {
+        NetworkStoreListener listener = new NetworkStoreListener(networkUuid, modificationRepository);
         network.addListener(listener);
         return listener;
     }
 
-    protected NetworkStoreListener(ModificationRepository modificationRepository) {
+    protected NetworkStoreListener(UUID networkUuid, NetworkModificationRepository modificationRepository) {
+        this.networkUuid = networkUuid;
         this.modificationRepository = modificationRepository;
     }
 
-    private List<ElementaryModificationInfos> modifications = new LinkedList<>();
-
     private void storeModification(Identifiable<?> identifiable, String attributeName, Object attributeValue) {
         ElementaryModificationEntity modificationEntity = new ElementaryModificationEntity(identifiable.getId(), getSubstationIds(identifiable), createAttributeEntity(attributeName, attributeValue));
-        modifications.add(this.modificationRepository.insertModification(modificationEntity).toElementaryModificationInfos());
+        modifications.add(this.modificationRepository.insertElementaryModification(networkUuid, modificationEntity).toElementaryModificationInfos());
     }
 
     private Set<String> getSubstationIds(Identifiable<?> identifiable) {

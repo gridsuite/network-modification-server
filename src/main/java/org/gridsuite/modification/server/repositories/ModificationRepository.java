@@ -8,7 +8,8 @@ package org.gridsuite.modification.server.repositories;
 
 import org.gridsuite.modification.server.entities.AbstractModificationEntity;
 import org.gridsuite.modification.server.entities.ElementaryModificationEntity;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -18,27 +19,9 @@ import java.util.UUID;
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
 @Repository
-public class ModificationRepository {
+public interface ModificationRepository extends JpaRepository<AbstractModificationEntity, UUID> {
 
-    private ElementaryModificationRepository elementaryModificationRepository;
+    @Query(value = "SELECT * from modification INNER JOIN elementarymodification m on modification.id = m.id WHERE modification.type = 'ELEMENTARY'", nativeQuery = true)
+    List<ElementaryModificationEntity> getElementaryModifications();
 
-    public ModificationRepository(ElementaryModificationRepository elementaryModificationRepository) {
-        this.elementaryModificationRepository = elementaryModificationRepository;
-    }
-
-    public ElementaryModificationEntity insertModification(ElementaryModificationEntity elementaryModificationEntity) {
-        return this.elementaryModificationRepository.save(elementaryModificationEntity);
-    }
-
-    public List<ElementaryModificationEntity> getElementaryModifications() {
-        return this.elementaryModificationRepository.findAll(Sort.by(Sort.Direction.ASC, AbstractModificationEntity.DATE_COLUMN_NAME));
-    }
-
-    public List<ElementaryModificationEntity> getElementaryModifications(String equipmentId) {
-        return this.elementaryModificationRepository.findAllByEquipmentId(equipmentId);
-    }
-
-    public List<ElementaryModificationEntity> getElementaryModifications(List<UUID> ids) {
-        return this.elementaryModificationRepository.findAllById(ids);
-    }
 }

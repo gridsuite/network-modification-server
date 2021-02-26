@@ -21,17 +21,18 @@ import javax.sql.DataSource;
 @PropertySource(value = {"classpath:database.properties"})
 @PropertySource(value = {"file:/config/database.properties"}, ignoreResourceNotFound = true)
 public class DataSourceConfig {
-    // TODO, make this the default value and allow override via properties file
-    private static final String DATABASE_NAME = "networkmodifications";
 
-    // TODO find a better way to pass default database name to the url
     @Bean
     public DataSource getDataSource(Environment env) {
+        String url = env.getRequiredProperty("scheme") + "://" + env.getRequiredProperty("hostPort")
+                + "/" + env.getRequiredProperty("spring.jpa.database-name") + env.getProperty("query");
+
         DataSourceBuilder<?> dataSourceBuilder = DataSourceBuilder.create();
         dataSourceBuilder.driverClassName(env.getRequiredProperty("driverClassName"));
-        dataSourceBuilder.url(env.getRequiredProperty("url") + DATABASE_NAME + env.getRequiredProperty("urlOptions"));
+        dataSourceBuilder.url(url);
         dataSourceBuilder.username(env.getRequiredProperty("login"));
         dataSourceBuilder.password(env.getRequiredProperty("password"));
         return dataSourceBuilder.build();
     }
 }
+

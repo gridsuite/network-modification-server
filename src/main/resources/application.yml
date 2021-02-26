@@ -12,6 +12,7 @@ spring:
         implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl
     properties:
       dialect: org.hibernate.dialect.PostgreSQLDialect
+    database-name: networkmodifications
 
 server:
   port: 5007
