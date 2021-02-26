@@ -13,6 +13,8 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
+import java.util.Set;
+
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
@@ -25,6 +27,9 @@ public class ElementaryModificationInfos extends ModificationInfos {
 
     @ApiModelProperty("Equipment ID")
     private String equipmentId;
+
+    @ApiModelProperty("Substations ID")
+    private Set<String> substationIds;
 
     @ApiModelProperty("Equipment attribute name")
     private String equipmentAttributeName;

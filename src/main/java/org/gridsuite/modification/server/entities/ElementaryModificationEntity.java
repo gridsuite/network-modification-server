@@ -14,6 +14,7 @@ import org.gridsuite.modification.server.dto.ElementaryModificationInfos;
 import javax.persistence.*;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.util.Set;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -26,23 +27,28 @@ public class ElementaryModificationEntity extends AbstractModificationEntity {
     @Column(name = "equipmentId")
     private String equipmentId;
 
+    @Transient
+    private Set<String> substationIds = Set.of();
+
     @OneToOne(fetch = FetchType.EAGER, optional = false, orphanRemoval = true, cascade = {CascadeType.ALL})
     @JoinColumn(name = "attribute_id")
     private AbstractAttributeEntity attribute;
 
-    public ElementaryModificationEntity(String equipmentId, AbstractAttributeEntity attribute) {
+    public ElementaryModificationEntity(String equipmentId, Set<String> substationId, AbstractAttributeEntity attribute) {
         this.date = ZonedDateTime.now(ZoneOffset.UTC);
         this.type = ModificationType.ELEMENTARY.name();
         this.equipmentId = equipmentId;
+        this.substationIds = substationId;
         this.attribute = attribute;
     }
 
     public ElementaryModificationInfos toElementaryModificationInfos() {
         return ElementaryModificationInfos.builder()
-                .id(this.id)
+                .uuid(this.uuid)
                 .date(this.date)
                 .type(ModificationType.valueOf(this.type))
                 .equipmentId(this.equipmentId)
+                .substationIds(this.substationIds)
                 .equipmentAttributeName(this.attribute.getAttributeName())
                 .equipmentAttributeValue(this.attribute.getAttributeValue())
                 .build();

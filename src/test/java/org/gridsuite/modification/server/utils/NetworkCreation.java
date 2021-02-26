@@ -109,6 +109,20 @@ public final class NetworkCreation {
                 .endStep()
                 .add();
 
+        network.newLine()
+                .setId("line1")
+                .setVoltageLevel1(v3.getId())
+                .setNode1(10)
+                .setVoltageLevel2(v4.getId())
+                .setNode2(10)
+                .setR(1.0)
+                .setX(1.0)
+                .setG1(1.0)
+                .setB1(1.0)
+                .setG2(2.0)
+                .setB2(2.0)
+                .add();
+
         return network;
     }
 

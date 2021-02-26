@@ -12,6 +12,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -25,16 +26,19 @@ public class ModificationRepository {
         this.elementaryModificationRepository = elementaryModificationRepository;
     }
 
-    public List<ElementaryModificationEntity> getElementaryModifications() {
-        return this.elementaryModificationRepository.findAll(Sort.by(Sort.Direction.ASC, AbstractModificationEntity.DATE_COLUMN_NAME));
+    public ElementaryModificationEntity insertModification(ElementaryModificationEntity elementaryModificationEntity) {
+        return this.elementaryModificationRepository.save(elementaryModificationEntity);
     }
 
-    public ElementaryModificationEntity insert(ElementaryModificationEntity elementaryModificationEntity) {
-        return this.elementaryModificationRepository.save(elementaryModificationEntity);
+    public List<ElementaryModificationEntity> getElementaryModifications() {
+        return this.elementaryModificationRepository.findAll(Sort.by(Sort.Direction.ASC, AbstractModificationEntity.DATE_COLUMN_NAME));
     }
 
     public List<ElementaryModificationEntity> getElementaryModifications(String equipmentId) {
         return this.elementaryModificationRepository.findAllByEquipmentId(equipmentId);
     }
 
+    public List<ElementaryModificationEntity> getElementaryModifications(List<UUID> ids) {
+        return this.elementaryModificationRepository.findAllById(ids);
+    }
 }

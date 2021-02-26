@@ -27,7 +27,7 @@ import java.util.UUID;
 @ApiModel("Modification attributes")
 public class ModificationInfos {
     @ApiModelProperty("Modification id")
-    private UUID id;
+    private UUID uuid;
 
     @ApiModelProperty("Modification date")
     ZonedDateTime date;

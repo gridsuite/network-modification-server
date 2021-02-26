@@ -17,6 +17,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.List;
+import java.util.Set;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
@@ -35,19 +36,20 @@ public class ModificationRepositoryTest {
 
     @Test
     public void testElementaryModification() {
-        ElementaryModificationEntity stringModifEntity = new ElementaryModificationEntity("id5", new StringAttributeEntity("attribute", "foo"));
-        ElementaryModificationEntity boolModifEntity = new ElementaryModificationEntity("id1", new BooleanAttributeEntity("attribute", true));
-        ElementaryModificationEntity intModifEntity = new ElementaryModificationEntity("id2", new IntegerAttributeEntity("attribute", 1));
-        ElementaryModificationEntity floatModifEntity = new ElementaryModificationEntity("id3", new FloatAttributeEntity("attribute", 2));
-        ElementaryModificationEntity doubleModifEntity = new ElementaryModificationEntity("id4", new DoubleAttributeEntity("attribute", 3));
-        modificationRepository.insert(stringModifEntity);
-        modificationRepository.insert(boolModifEntity);
-        modificationRepository.insert(intModifEntity);
-        modificationRepository.insert(floatModifEntity);
-        modificationRepository.insert(doubleModifEntity);
+        ElementaryModificationEntity stringModifEntity = new ElementaryModificationEntity("id5", Set.of(), new StringAttributeEntity("attribute", "foo"));
+        ElementaryModificationEntity boolModifEntity = new ElementaryModificationEntity("id1", Set.of(), new BooleanAttributeEntity("attribute", true));
+        ElementaryModificationEntity intModifEntity = new ElementaryModificationEntity("id2", Set.of(), new IntegerAttributeEntity("attribute", 1));
+        ElementaryModificationEntity floatModifEntity = new ElementaryModificationEntity("id3", Set.of(), new FloatAttributeEntity("attribute", 2));
+        ElementaryModificationEntity doubleModifEntity = new ElementaryModificationEntity("id4", Set.of(), new DoubleAttributeEntity("attribute", 3));
+        modificationRepository.insertModification(stringModifEntity);
+        modificationRepository.insertModification(boolModifEntity);
+        modificationRepository.insertModification(intModifEntity);
+        modificationRepository.insertModification(floatModifEntity);
+        modificationRepository.insertModification(doubleModifEntity);
 
         List<ElementaryModificationEntity> elementaryModificationEntities = modificationRepository.getElementaryModifications();
         assertEquals(5, elementaryModificationEntities.size());
+        // Order is also checked
         assertThat(elementaryModificationEntities.get(0).toElementaryModificationInfos(),
                 MatcherElementaryModificationInfos.createMatcherElementaryModificationInfos(stringModifEntity.toElementaryModificationInfos()));
         assertThat(elementaryModificationEntities.get(1).toElementaryModificationInfos(),
@@ -63,6 +65,15 @@ public class ModificationRepositoryTest {
         assertEquals(1, elementaryModificationEntities.size());
         assertThat(elementaryModificationEntities.get(0).toElementaryModificationInfos(),
                 MatcherElementaryModificationInfos.createMatcherElementaryModificationInfos(boolModifEntity.toElementaryModificationInfos()));
+
+        assertEquals(0, modificationRepository.getElementaryModifications(List.of()).size());
+        assertEquals(1, modificationRepository.getElementaryModifications(List.of(stringModifEntity.getUuid())).size());
+        elementaryModificationEntities = modificationRepository.getElementaryModifications(
+                List.of(stringModifEntity.getUuid(),  boolModifEntity.getUuid(), intModifEntity.getUuid(),
+                        floatModifEntity.getUuid(), doubleModifEntity.getUuid()
+                )
+        );
+        assertEquals(5, elementaryModificationEntities.size());
     }
 
 }

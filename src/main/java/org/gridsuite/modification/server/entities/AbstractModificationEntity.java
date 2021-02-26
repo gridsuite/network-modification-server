@@ -28,7 +28,7 @@ public abstract class AbstractModificationEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "id")
-    protected UUID id;
+    protected UUID uuid;
 
     @Column(name = DATE_COLUMN_NAME)
     protected ZonedDateTime date;

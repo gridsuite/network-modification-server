@@ -7,15 +7,15 @@
 package org.gridsuite.modification.server.service;
 
 import com.powsybl.commons.PowsyblException;
-import com.powsybl.iidm.network.Identifiable;
-import com.powsybl.iidm.network.Network;
-import com.powsybl.iidm.network.NetworkListener;
+import com.powsybl.iidm.network.*;
 import org.gridsuite.modification.server.dto.ElementaryModificationInfos;
 import org.gridsuite.modification.server.entities.*;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -38,8 +38,26 @@ public class NetworkStoreListener implements NetworkListener {
     private List<ElementaryModificationInfos> modifications = new LinkedList<>();
 
     private void storeModification(Identifiable<?> identifiable, String attributeName, Object attributeValue) {
-        ElementaryModificationEntity modificationEntity = new ElementaryModificationEntity(identifiable.getId(), createAttributeEntity(attributeName, attributeValue));
-        modifications.add(this.modificationRepository.insert(modificationEntity).toElementaryModificationInfos());
+        ElementaryModificationEntity modificationEntity = new ElementaryModificationEntity(identifiable.getId(), getSubstationIds(identifiable), createAttributeEntity(attributeName, attributeValue));
+        modifications.add(this.modificationRepository.insertModification(modificationEntity).toElementaryModificationInfos());
+    }
+
+    private Set<String> getSubstationIds(Identifiable<?> identifiable) {
+        Set<String> substationsIds = new HashSet<>();
+        if (identifiable instanceof Switch) {
+            substationsIds.add(((Switch) identifiable).getVoltageLevel().getSubstation().getId());
+        } else if (identifiable instanceof Injection) {
+            substationsIds.add(((Injection<?>) identifiable).getTerminal().getVoltageLevel().getSubstation().getId());
+        } else if (identifiable instanceof Branch) {
+            substationsIds.add(((Branch<?>) identifiable).getTerminal1().getVoltageLevel().getSubstation().getId());
+            substationsIds.add(((Branch<?>) identifiable).getTerminal2().getVoltageLevel().getSubstation().getId());
+        } else if (identifiable instanceof ThreeWindingsTransformer) {
+            substationsIds.add(((ThreeWindingsTransformer) identifiable).getTerminal(ThreeWindingsTransformer.Side.ONE).getVoltageLevel().getSubstation().getId());
+            substationsIds.add(((ThreeWindingsTransformer) identifiable).getTerminal(ThreeWindingsTransformer.Side.TWO).getVoltageLevel().getSubstation().getId());
+            substationsIds.add(((ThreeWindingsTransformer) identifiable).getTerminal(ThreeWindingsTransformer.Side.THREE).getVoltageLevel().getSubstation().getId());
+        }
+
+        return substationsIds;
     }
 
     private AbstractAttributeEntity createAttributeEntity(String attributeName, Object attributeValue) {

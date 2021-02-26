@@ -12,18 +12,20 @@ import org.hamcrest.Description;
 
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.util.Set;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
 public class MatcherElementaryModificationInfos extends MatcherModificationInfos<ElementaryModificationInfos> {
 
-    public static MatcherElementaryModificationInfos createMatcherElementaryModificationInfos(String equipmentId, String equipmentName,
+    public static MatcherElementaryModificationInfos createMatcherElementaryModificationInfos(String equipmentId, Set<String> substationIds,
                                                                                        String equipmentAttributeName, Object equipmentAttributeValue) {
         return new MatcherElementaryModificationInfos(ElementaryModificationInfos.builder()
                 .date(ZonedDateTime.now(ZoneOffset.UTC))
                 .type(ModificationType.ELEMENTARY)
                 .equipmentId(equipmentId)
+                .substationIds(substationIds)
                 .equipmentAttributeName(equipmentAttributeName)
                 .equipmentAttributeValue(equipmentAttributeValue)
                 .build());
@@ -41,6 +43,7 @@ public class MatcherElementaryModificationInfos extends MatcherModificationInfos
     public boolean matchesSafely(ElementaryModificationInfos m) {
         return super.matchesSafely(m)
                 && m.getEquipmentId().equals(reference.getEquipmentId())
+                && m.getSubstationIds().equals(reference.getSubstationIds())
                 && m.getEquipmentAttributeName().equals(reference.getEquipmentAttributeName())
                 && m.getEquipmentAttributeValue().equals(reference.getEquipmentAttributeValue());
     }
