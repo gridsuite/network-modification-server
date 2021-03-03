@@ -60,13 +60,25 @@ create table if not exists integerattribute
 
 alter table integerattribute owner to postgres;
 
+create table if not exists modificationgroup
+(
+    id uuid not null
+        constraint modificationgroup_pkey
+            primary key
+);
+
+alter table modificationgroup owner to postgres;
+
 create table if not exists modification
 (
     id uuid not null
         constraint modification_pkey
             primary key,
     date timestamp,
-    type varchar(255)
+    type varchar(255),
+    groupuuid uuid
+        constraint fkoagcutli4rusr7rkumnmsu1jy
+            references modificationgroup
 );
 
 alter table modification owner to postgres;
