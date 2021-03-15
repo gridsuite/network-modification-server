@@ -15,7 +15,7 @@
     <parent>
         <groupId>com.powsybl</groupId>
         <artifactId>powsybl-parent-ws</artifactId>
-        <version>3</version>
+        <version>5</version>
         <relativePath/>
     </parent>
 
@@ -46,7 +46,9 @@
     <properties>
         <java.version>11</java.version>
 
-        <gridsuite-dependencies.version>4</gridsuite-dependencies.version>
+        <gridsuite-dependencies.version>5</gridsuite-dependencies.version>
+
+        <jib.to.image>gridsuite/network-modification-server</jib.to.image>
     </properties>
 
     <build>
