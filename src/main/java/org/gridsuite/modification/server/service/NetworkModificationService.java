@@ -10,8 +10,11 @@ import java.util.List;
 import java.util.UUID;
 
 import com.powsybl.commons.PowsyblException;
+import com.powsybl.iidm.network.Line;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.client.NetworkStoreService;
+import com.powsybl.sld.iidm.extensions.BranchStatus;
+import com.powsybl.sld.iidm.extensions.BranchStatusAdder;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
 import org.apache.commons.lang3.StringUtils;
@@ -73,6 +76,20 @@ public class NetworkModificationService {
 
     public Flux<ModificationInfos> getModifications(UUID groupUuid) {
         return Flux.fromStream(() -> modificationRepository.getModifications(groupUuid).stream());
+    }
+
+    public boolean lockoutLine(UUID networkUuid, String lineId) {
+        Network network = networkStoreService.getNetwork(networkUuid);
+        Line line = network.getLine(lineId);
+        if (line == null) {
+            throw new NetworkModificationException(LINE_NOT_FOUND, "Line " + lineId + " not found");
+        }
+
+        boolean b1 = line.getTerminal1().disconnect();
+        boolean b2 = line.getTerminal2().disconnect();
+        line.newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.PLANNED_OUTAGE).add();
+        networkStoreService.flush(network);
+        return b1 || b2;
     }
 
     public Mono<ElementaryModificationInfos> getElementaryModification(UUID groupUuid, UUID modificationUuid) {

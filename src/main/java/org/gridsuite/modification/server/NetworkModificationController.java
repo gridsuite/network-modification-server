@@ -77,4 +77,14 @@ public class NetworkModificationController {
     public ResponseEntity<Flux<UUID>> getModificationGroups() {
         return ResponseEntity.ok().body(networkModificationService.getModificationGroups());
     }
+
+    @PutMapping(value = "/networks/{networkUuid}/lines/{lineId}/lockout")
+    @ApiOperation(value = "lockout a line")
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "the line has been locked-out")})
+    public ResponseEntity<Boolean> lockoutLine(
+            @ApiParam(value = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
+            @ApiParam(value = "Line ID") @PathVariable("lineId") String lineId) {
+        boolean b = networkModificationService.lockoutLine(networkUuid, lineId);
+        return ResponseEntity.ok().body(b);
+    }
 }
