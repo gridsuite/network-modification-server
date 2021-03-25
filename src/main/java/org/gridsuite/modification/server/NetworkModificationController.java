@@ -87,4 +87,14 @@ public class NetworkModificationController {
         boolean b = networkModificationService.lockoutLine(networkUuid, lineId);
         return ResponseEntity.ok().body(b);
     }
+
+    @PutMapping(value = "/networks/{networkUuid}/lines/{lineId}/switchon")
+    @ApiOperation(value = "switch on a line")
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "the line has been locked-out")})
+    public ResponseEntity<Boolean> switchOnLine(
+            @ApiParam(value = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
+            @ApiParam(value = "Line ID") @PathVariable("lineId") String lineId) {
+        boolean b = networkModificationService.switchOnLine(networkUuid, lineId);
+        return ResponseEntity.ok().body(b);
+    }
 }

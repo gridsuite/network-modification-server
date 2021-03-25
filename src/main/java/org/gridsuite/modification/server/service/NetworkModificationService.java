@@ -92,6 +92,20 @@ public class NetworkModificationService {
         return b1 || b2;
     }
 
+    public boolean switchOnLine(UUID networkUuid, String lineId) {
+        Network network = networkStoreService.getNetwork(networkUuid);
+        Line line = network.getLine(lineId);
+        if (line == null) {
+            throw new NetworkModificationException(LINE_NOT_FOUND, "Line " + lineId + " not found");
+        }
+
+        boolean b1 = line.getTerminal1().connect();
+        boolean b2 = line.getTerminal2().connect();
+        line.newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.IN_OPERATION).add();
+        networkStoreService.flush(network);
+        return b1 || b2;
+    }
+
     public Mono<ElementaryModificationInfos> getElementaryModification(UUID groupUuid, UUID modificationUuid) {
         return Mono.fromCallable(() -> modificationRepository.getElementaryModification(groupUuid, modificationUuid));
     }
