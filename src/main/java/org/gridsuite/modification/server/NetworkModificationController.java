@@ -7,13 +7,13 @@
 package org.gridsuite.modification.server;
 
 import io.swagger.annotations.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
-import javax.inject.Inject;
 import java.util.Set;
 import java.util.UUID;
 
@@ -26,7 +26,7 @@ import java.util.UUID;
 @ComponentScan(basePackageClasses = NetworkModificationService.class)
 public class NetworkModificationController {
 
-    @Inject
+    @Autowired
     private NetworkModificationService networkModificationService;
 
     @PutMapping(value = "/networks/{networkUuid}/switches/{switchId}", produces = MediaType.APPLICATION_JSON_VALUE)

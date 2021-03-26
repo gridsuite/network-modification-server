@@ -10,7 +10,6 @@ import org.springframework.http.HttpStatus;
 
 import java.util.Objects;
 
-
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
