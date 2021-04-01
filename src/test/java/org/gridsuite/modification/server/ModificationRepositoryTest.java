@@ -6,7 +6,10 @@
  */
 package org.gridsuite.modification.server;
 
-import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+
 import org.gridsuite.modification.server.entities.*;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.utils.MatcherElementaryModificationInfos;
@@ -15,10 +18,6 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
-
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
@@ -30,7 +29,6 @@ import static org.junit.Assert.assertFalse;
  */
 @RunWith(SpringRunner.class)
 @SpringBootTest
-@AutoConfigureEmbeddedDatabase(provider = AutoConfigureEmbeddedDatabase.DatabaseProvider.ZONKY)
 public class ModificationRepositoryTest {
 
     private static final UUID TEST_NETWORK_ID = UUID.fromString("7928181c-7977-4592-ba19-88027e4254e4");
