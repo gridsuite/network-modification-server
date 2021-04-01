@@ -6,14 +6,14 @@
  */
 package org.gridsuite.modification.server.dto;
 
+import java.util.Set;
+
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
-
-import java.util.Set;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
