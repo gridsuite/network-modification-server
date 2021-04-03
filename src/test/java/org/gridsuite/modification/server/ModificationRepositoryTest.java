@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import org.gridsuite.modification.server.dto.ElementaryModificationInfos;
 import org.gridsuite.modification.server.entities.*;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.utils.MatcherElementaryModificationInfos;
@@ -49,18 +50,18 @@ public class ModificationRepositoryTest {
         modificationRepository.insertElementaryModification(TEST_NETWORK_ID, floatModifEntity);
         modificationRepository.insertElementaryModification(TEST_NETWORK_ID, doubleModifEntity);
 
-        List<ElementaryModificationEntity> elementaryModificationEntities = modificationRepository.getElementaryModifications(TEST_NETWORK_ID);
+        List<ElementaryModificationInfos> elementaryModificationEntities = modificationRepository.getElementaryModifications(TEST_NETWORK_ID);
         assertEquals(5, elementaryModificationEntities.size());
         // Order is also checked
-        assertThat(elementaryModificationEntities.get(0).toElementaryModificationInfos(),
+        assertThat(elementaryModificationEntities.get(0),
                 MatcherElementaryModificationInfos.createMatcherElementaryModificationInfos(stringModifEntity.toElementaryModificationInfos()));
-        assertThat(elementaryModificationEntities.get(1).toElementaryModificationInfos(),
+        assertThat(elementaryModificationEntities.get(1),
                 MatcherElementaryModificationInfos.createMatcherElementaryModificationInfos(boolModifEntity.toElementaryModificationInfos()));
-        assertThat(elementaryModificationEntities.get(2).toElementaryModificationInfos(),
+        assertThat(elementaryModificationEntities.get(2),
                 MatcherElementaryModificationInfos.createMatcherElementaryModificationInfos(intModifEntity.toElementaryModificationInfos()));
-        assertThat(elementaryModificationEntities.get(3).toElementaryModificationInfos(),
+        assertThat(elementaryModificationEntities.get(3),
                 MatcherElementaryModificationInfos.createMatcherElementaryModificationInfos(floatModifEntity.toElementaryModificationInfos()));
-        assertThat(elementaryModificationEntities.get(4).toElementaryModificationInfos(),
+        assertThat(elementaryModificationEntities.get(4),
                 MatcherElementaryModificationInfos.createMatcherElementaryModificationInfos(doubleModifEntity.toElementaryModificationInfos()));
 
         assertEquals(5, modificationRepository.getElementaryModifications(TEST_NETWORK_ID).size());

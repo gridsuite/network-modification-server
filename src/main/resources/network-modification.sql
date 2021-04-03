@@ -70,7 +70,7 @@ create sequence hibernate_sequence start 1 increment 1;
        references attribute;
 
     alter table if exists elementaryModification 
-       add constraint FKc3xgi6lsoaejnn84f40wlt9gk 
+       add constraint attribute_id_fk_constraint 
        foreign key (attribute_id) 
        references attribute;
 
@@ -90,7 +90,7 @@ create sequence hibernate_sequence start 1 increment 1;
        references attribute;
 
     alter table if exists modification 
-       add constraint FKoagcutli4rusr7rkumnmsu1jy 
+       add constraint groupUuid_fk_constraint 
        foreign key (groupUuid) 
        references modificationGroup;
 

@@ -6,18 +6,23 @@
  */
 package org.gridsuite.modification.server.repositories;
 
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
 import org.gridsuite.modification.server.ModificationType;
+import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.dto.ElementaryModificationInfos;
+import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.AbstractModificationEntity;
 import org.gridsuite.modification.server.entities.ElementaryModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationGroupEntity;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
-import java.util.stream.Collectors;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_GROUP_NOT_FOUND;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -33,6 +38,12 @@ public class NetworkModificationRepository {
         this.modificationRepository = modificationRepository;
     }
 
+    public void deleteAll() {
+        modificationGroupRepository.deleteAll();
+        modificationRepository.deleteAll();
+    }
+
+    @Transactional
     public ElementaryModificationEntity insertElementaryModification(UUID groupId, ElementaryModificationEntity elementaryModificationEntity) {
         ModificationGroupEntity modificationGroupEntity = modificationGroupRepository.findById(groupId).orElse(new ModificationGroupEntity(groupId));
         this.modificationRepository.save(elementaryModificationEntity);
@@ -41,8 +52,11 @@ public class NetworkModificationRepository {
         return elementaryModificationEntity;
     }
 
-    public List<ModificationGroupEntity> getModificationGroups() {
-        return this.modificationGroupRepository.findAll();
+    // No transactional because (no prefetch for lazy loading)
+    public List<UUID> getModificationGroupsUuids() {
+        return this.modificationGroupRepository.findAll().stream()
+                .map(ModificationGroupEntity::getUuid)
+                .collect(Collectors.toList());
     }
 
     public Optional<ModificationGroupEntity> getModificationGroup(UUID groupUuid) {
@@ -53,10 +67,23 @@ public class NetworkModificationRepository {
         return this.modificationRepository.getElementaryModifications();
     }
 
-    public List<ElementaryModificationEntity> getElementaryModifications(UUID groupUuid) {
-        return (this.modificationGroupRepository.findById(groupUuid).orElseThrow().getModifications().stream()
+    @Transactional(readOnly = true) // because (prefetch for lazy loading)
+    public List<ElementaryModificationInfos> getElementaryModifications(UUID groupUuid) {
+        return (this.modificationGroupRepository.findById(groupUuid).orElseThrow(() -> new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, groupUuid.toString()))
+                .getModifications()
+                .stream()
                 .filter(m -> m.getType().equals(ModificationType.ELEMENTARY.name())))
                 .map(ElementaryModificationEntity.class::cast)
+                .map(ElementaryModificationEntity::toElementaryModificationInfos)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<ModificationInfos> getModifications(UUID groupUuid) {
+        return this.modificationGroupRepository.findById(groupUuid).orElseThrow(() -> new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, groupUuid.toString()))
+                .getModifications()
+                .stream()
+                .map(AbstractModificationEntity::toModificationInfos)
                 .collect(Collectors.toList());
     }
 
@@ -69,9 +96,5 @@ public class NetworkModificationRepository {
         ModificationGroupEntity group = this.modificationGroupRepository.findById(groupUuid).orElseThrow();
         List<AbstractModificationEntity> modifications = group.getModifications().stream().filter(m -> uuids.contains(m.getUuid())).collect(Collectors.toList());
         group.getModifications().removeAll(modifications);
-    }
-
-    public List<AbstractModificationEntity> getModifications(UUID groupUuid) {
-        return this.modificationGroupRepository.findById(groupUuid).orElseThrow().getModifications();
     }
 }

@@ -12,6 +12,7 @@ import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.ElementaryModificationInfos;
 
 import javax.persistence.*;
+
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Set;
@@ -30,8 +31,12 @@ public class ElementaryModificationEntity extends AbstractModificationEntity {
     @Transient
     private Set<String> substationIds = Set.of();
 
-    @OneToOne(fetch = FetchType.EAGER, optional = false, orphanRemoval = true, cascade = {CascadeType.ALL})
-    @JoinColumn(name = "attribute_id")
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY, optional = false, orphanRemoval = true)
+    @JoinColumn(name = "attribute_id",
+            referencedColumnName = "id",
+            foreignKey = @ForeignKey(
+                    name = "attribute_id_fk_constraint"
+            ))
     private AbstractAttributeEntity attribute;
 
     public ElementaryModificationEntity(String equipmentId, Set<String> substationId, AbstractAttributeEntity attribute) {

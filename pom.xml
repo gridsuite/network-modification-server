@@ -46,6 +46,7 @@
     <properties>
         <java.version>11</java.version>
         <gridsuite-dependencies.version>4</gridsuite-dependencies.version>
+        <db-util.version>1.0.5</db-util.version>
     </properties>
 
     <build>
@@ -169,6 +170,13 @@
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.vladmihalcea</groupId>
+            <artifactId>db-util</artifactId>
+            <version>${db-util.version}</version>
             <scope>test</scope>
         </dependency>
 

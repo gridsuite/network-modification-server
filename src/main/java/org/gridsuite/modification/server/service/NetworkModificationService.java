@@ -19,9 +19,6 @@ import org.codehaus.groovy.control.CompilerConfiguration;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ElementaryModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.entities.AbstractModificationEntity;
-import org.gridsuite.modification.server.entities.ElementaryModificationEntity;
-import org.gridsuite.modification.server.entities.ModificationGroupEntity;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,27 +68,19 @@ public class NetworkModificationService {
     }
 
     public Flux<UUID> getModificationGroups() {
-        return Flux.fromStream(() ->
-                modificationRepository.getModificationGroups().stream().map(ModificationGroupEntity::getUuid));
+        return Flux.fromIterable(modificationRepository.getModificationGroupsUuids());
     }
 
     public Flux<ModificationInfos> getModifications(UUID groupUuid) {
-        return assertModificationGroupExist(groupUuid).thenMany(Flux.fromStream(() ->
-                modificationRepository.getModifications(groupUuid)
-                        .stream().map(AbstractModificationEntity::toModificationInfos)
-        ));
+        return Flux.fromIterable(modificationRepository.getModifications(groupUuid));
     }
 
     public Flux<ElementaryModificationInfos> getElementaryModifications(UUID groupUuid) {
-        return assertModificationGroupExist(groupUuid).thenMany(Flux.fromStream(() ->
-                modificationRepository.getElementaryModifications(groupUuid)
-                        .stream()
-                        .map(ElementaryModificationEntity::toElementaryModificationInfos))
-        );
+        return Flux.fromIterable(modificationRepository.getElementaryModifications(groupUuid));
     }
 
     public Mono<Void> deleteModificationGroup(UUID groupUuid) {
-        return assertModificationGroupExist(groupUuid).then(Mono.fromRunnable(() -> modificationRepository.deleteModificationGroup(groupUuid)));
+        return Mono.fromRunnable(() -> modificationRepository.deleteModificationGroup(groupUuid));
     }
 
     private List<ElementaryModificationInfos> doModification(Network network, UUID networkUuid, Runnable modification) {
@@ -121,14 +110,7 @@ public class NetworkModificationService {
         }).subscribeOn(Schedulers.boundedElastic());
     }
 
-    private Flux<Void> assertGroovyScriptNotEmpty(String groovyScript) {
-        return StringUtils.isBlank(groovyScript) ? Flux.error(new NetworkModificationException(GROOVY_SCRIPT_EMPTY)) : Flux.empty();
+    private Mono<Void> assertGroovyScriptNotEmpty(String groovyScript) {
+        return StringUtils.isBlank(groovyScript) ? Mono.error(new NetworkModificationException(GROOVY_SCRIPT_EMPTY)) : Mono.empty();
     }
-
-    private Flux<Void> assertModificationGroupExist(UUID groupUuid) {
-        return modificationRepository.getModificationGroup(groupUuid).isPresent() ?
-                Flux.empty() :
-                Flux.error(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, groupUuid.toString()));
-    }
-
 }

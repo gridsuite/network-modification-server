@@ -17,10 +17,11 @@ import com.powsybl.commons.PowsyblException;
 import com.powsybl.iidm.network.Generator;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.client.NetworkStoreService;
+import com.vladmihalcea.sql.SQLStatementCountValidator;
 import org.gridsuite.modification.server.dto.ElementaryModificationInfos;
+import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.NetworkStoreListener;
 import org.gridsuite.modification.server.utils.NetworkCreation;
-import org.json.JSONArray;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -48,7 +49,7 @@ import static org.mockito.Mockito.when;
 @EnableWebFlux
 @AutoConfigureWebTestClient
 @SpringBootTest
-public class NetworkModificationTest {
+public class ModificationControllerTest {
 
     private static final UUID TEST_NETWORK_ID = UUID.fromString("7928181c-7977-4592-ba19-88027e4254e4");
     private static final UUID NOT_FOUND_NETWORK_ID = UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
@@ -61,11 +62,17 @@ public class NetworkModificationTest {
     @MockBean
     private NetworkStoreService networkStoreService;
 
+    @Autowired
+    private NetworkModificationRepository modificationRepository;
+
     @Before
     public void setUp() {
         // /!\ create a new network for each invocation (answer)
         when(networkStoreService.getNetwork(TEST_NETWORK_ID)).then((Answer<Network>) invocation -> NetworkCreation.create());
         when(networkStoreService.getNetwork(NOT_FOUND_NETWORK_ID)).thenThrow(new PowsyblException());
+
+        // clean DB
+        modificationRepository.deleteAll();
     }
 
     @Test
@@ -99,6 +106,57 @@ public class NetworkModificationTest {
         Object invalidValue = new Object();
         assertTrue(assertThrows(PowsyblException.class, () ->
                 listener.onUpdate(generator, "targetP", 0, invalidValue)).getMessage().contains("Value type invalid : Object"));
+    }
+
+    @Test
+    public void testModificationGroups() {
+        // no groups
+        webTestClient.get().uri("/v1/networks/modificationgroups")
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBodyList(UUID.class)
+                .isEqualTo(List.of());
+
+        // switch opening to create the default group
+        webTestClient.put().uri("/v1/networks/{networkUuid}/switches/{switchId}?open=true", TEST_NETWORK_ID, "v1b1")
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBodyList(ElementaryModificationInfos.class)
+                .value(modifications -> modifications.get(0),
+                        createMatcherElementaryModificationInfos("v1b1", Set.of("s1"), "open", true));
+
+        System.out.println();
+        System.out.println("=====================================================");
+        System.out.println();
+
+        SQLStatementCountValidator.reset();
+
+        // get all modifications for the default group of a network
+        assertEquals(1, Objects.requireNonNull(webTestClient.get().uri("/v1/networks/{networkUuid}/elementarymodifications", TEST_NETWORK_ID)
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBodyList(ElementaryModificationInfos.class)
+                .returnResult().getResponseBody()).size());
+
+//        webTestClient.get().uri("/v1/networks/modificationgroups")
+//                .exchange()
+//                .expectStatus().isOk()
+//                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+//                .expectBodyList(UUID.class)
+//                .isEqualTo(List.of(TEST_NETWORK_ID));
+
+//        // delete the default modification group of a network
+//        webTestClient.delete().uri("/v1/networks/{networkUuid}/modifications", TEST_NETWORK_ID)
+//                .exchange()
+//                .expectStatus().isOk();
+//        webTestClient.get().uri("/v1/networks/{networkUuid}/modifications", TEST_NETWORK_ID)
+//                .exchange()
+//                .expectStatus().isNotFound()
+//                .expectBody(String.class)
+//                .isEqualTo(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_NETWORK_ID.toString()).getMessage());
     }
 
     @Test
@@ -189,7 +247,6 @@ public class NetworkModificationTest {
 
     @Test
     public void testGroovy() {
-
         // apply groovy script with generator target P modification
         webTestClient.put().uri("/v1/networks/{networkUuid}/groovy", TEST_NETWORK_ID)
                 .bodyValue("network.getGenerator('idGenerator').targetP=12\n")
@@ -254,13 +311,6 @@ public class NetworkModificationTest {
     }
 
     private void testDeleteNetwokModifications(UUID networkUuid, int actualSize) {
-        webTestClient.get().uri("/v1/networks/modificationgroups")
-                .exchange()
-                .expectStatus().isOk()
-                .expectHeader().contentType(MediaType.APPLICATION_JSON)
-                .expectBody(String.class)
-                .isEqualTo(new JSONArray(List.of(networkUuid)).toString());
-
         // get all modifications for the default group of a network
         assertEquals(actualSize, Objects.requireNonNull(webTestClient.get().uri("/v1/networks/{networkUuid}/modifications", networkUuid)
                 .exchange()
@@ -276,15 +326,5 @@ public class NetworkModificationTest {
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
                 .expectBodyList(ElementaryModificationInfos.class)
                 .returnResult().getResponseBody()).size());
-
-        // delete the default modification group of a network
-        webTestClient.delete().uri("/v1/networks/{networkUuid}/modifications", networkUuid)
-                .exchange()
-                .expectStatus().isOk();
-        webTestClient.get().uri("/v1/networks/{networkUuid}/modifications", networkUuid)
-                .exchange()
-                .expectStatus().isNotFound()
-                .expectBody(String.class)
-                .isEqualTo(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, networkUuid.toString()).getMessage());
     }
 }

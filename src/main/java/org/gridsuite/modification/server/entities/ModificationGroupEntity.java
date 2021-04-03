@@ -6,13 +6,14 @@
  */
 package org.gridsuite.modification.server.entities;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-
 import javax.persistence.*;
+
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
+
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -26,8 +27,12 @@ public class ModificationGroupEntity {
     @Column(name = "id")
     private UUID uuid;
 
-    @OneToMany(fetch = FetchType.EAGER, orphanRemoval = true, cascade = {CascadeType.ALL})
-    @JoinColumn(name = "groupUuid")
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    @JoinColumn(name = "groupUuid",
+            referencedColumnName = "id",
+            foreignKey = @ForeignKey(
+                    name = "groupUuid_fk_constraint"
+            ))
     private List<AbstractModificationEntity> modifications;
 
     public ModificationGroupEntity(UUID uuid) {
