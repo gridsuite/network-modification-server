@@ -6,6 +6,9 @@
  */
 package org.gridsuite.modification.server.dto;
 
+import java.time.ZonedDateTime;
+import java.util.UUID;
+
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
@@ -13,9 +16,6 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 import org.gridsuite.modification.server.ModificationType;
-
-import java.time.ZonedDateTime;
-import java.util.UUID;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>

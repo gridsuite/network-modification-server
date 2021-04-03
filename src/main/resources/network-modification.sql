@@ -20,9 +20,9 @@ create sequence hibernate_sequence start 1 increment 1;
 
     create table elementaryModification (
        equipmentId varchar(255),
-        id uuid not null,
+        uuid uuid not null,
         attribute_id int8 not null,
-        primary key (id)
+        primary key (uuid)
     );
 
     create table floatAttribute (
@@ -38,16 +38,16 @@ create sequence hibernate_sequence start 1 increment 1;
     );
 
     create table modification (
-       id uuid not null,
+       uuid uuid not null,
         date timestamp,
         type varchar(255),
-        groupUuid uuid,
-        primary key (id)
+        group_uuid uuid not null,
+        primary key (uuid)
     );
 
     create table modificationGroup (
-       id uuid not null,
-        primary key (id)
+       uuid uuid not null,
+        primary key (uuid)
     );
 
     create table stringAttribute (
@@ -75,8 +75,8 @@ create sequence hibernate_sequence start 1 increment 1;
        references attribute;
 
     alter table if exists elementaryModification 
-       add constraint FK2rn4rrsm6nkbiae0uote6yipn 
-       foreign key (id) 
+       add constraint FKl6dl2lad2w81g3umcypxw4uge 
+       foreign key (uuid) 
        references modification;
 
     alter table if exists floatAttribute 
@@ -90,8 +90,8 @@ create sequence hibernate_sequence start 1 increment 1;
        references attribute;
 
     alter table if exists modification 
-       add constraint groupUuid_fk_constraint 
-       foreign key (groupUuid) 
+       add constraint group_uuid_fk_constraint 
+       foreign key (group_uuid) 
        references modificationGroup;
 
     alter table if exists stringAttribute 

@@ -20,9 +20,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_GROUP_NOT_FOUND;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThrows;
 
 
 /**
@@ -65,17 +66,17 @@ public class ModificationRepositoryTest {
                 MatcherElementaryModificationInfos.createMatcherElementaryModificationInfos(doubleModifEntity.toElementaryModificationInfos()));
 
         assertEquals(5, modificationRepository.getElementaryModifications(TEST_NETWORK_ID).size());
-        assertEquals(5, modificationRepository.getElementaryModifications().size());
 
         modificationRepository.deleteModifications(TEST_NETWORK_ID, Set.of());
         assertEquals(5, modificationRepository.getElementaryModifications(TEST_NETWORK_ID).size());
         modificationRepository.deleteModifications(TEST_NETWORK_ID, Set.of(stringModifEntity.getUuid(), boolModifEntity.getUuid()));
         assertEquals(3, modificationRepository.getElementaryModifications(TEST_NETWORK_ID).size());
-        assertEquals(3, modificationRepository.getElementaryModifications().size());
 
         modificationRepository.deleteModificationGroup(TEST_NETWORK_ID);
-        assertFalse(modificationRepository.getModificationGroup(TEST_NETWORK_ID).isPresent());
-        assertEquals(0, modificationRepository.getElementaryModifications().size());
+        assertThrows(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_NETWORK_ID.toString()).getMessage(),
+                NetworkModificationException.class,
+                () -> modificationRepository.getElementaryModifications(TEST_NETWORK_ID)
+        );
     }
 
 }

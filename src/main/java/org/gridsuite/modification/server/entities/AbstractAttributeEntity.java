@@ -28,9 +28,20 @@ public abstract class AbstractAttributeEntity {
     @Column(name = "attributeName")
     private String attributeName;
 
+
+//    @OneToOne(fetch = FetchType.LAZY, optional = false)
+//    @MapsId
+//    @JoinColumn(name = "attribute_id",
+//            referencedColumnName = "id",
+//            foreignKey = @ForeignKey(
+//                    name = "attribute_id_fk_constraint"
+//            ))
+//    private ElementaryModificationEntity modification;
+
     public abstract Object getAttributeValue();
 
     protected AbstractAttributeEntity(String attributeName) {
+        this.id = null;
         this.attributeName = attributeName;
     }
 }

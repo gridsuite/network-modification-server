@@ -37,19 +37,20 @@ public class ModificationServiceTest {
 
     @Before
     public void setUp() {
-        modificationRepository.deleteAll();
+        //modificationRepository.deleteAll();
+
+        SQLStatementCountValidator.reset();
     }
 
     @Test
-    public void tesQueryCountFor() {
-        SQLStatementCountValidator.reset();
-
+    public void testCreateModificationQueryCount() {
         ElementaryModificationEntity entity = new ElementaryModificationEntity("id1", Set.of(), new StringAttributeEntity("attribute", "foo"));
+
         modificationRepository.insertElementaryModification(TEST_NETWORK_ID, entity);
 
         assertSelectCount(2);
         assertInsertCount(5);
-        assertUpdateCount(1);
+        assertUpdateCount(0);
         assertDeleteCount(0);
     }
 

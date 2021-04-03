@@ -24,19 +24,10 @@ import lombok.NoArgsConstructor;
 @Table(name = "modificationGroup")
 public class ModificationGroupEntity {
     @Id
-    @Column(name = "id")
+    @Column(name = "uuid")
     private UUID uuid;
-
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
-    @JoinColumn(name = "groupUuid",
-            referencedColumnName = "id",
-            foreignKey = @ForeignKey(
-                    name = "groupUuid_fk_constraint"
-            ))
-    private List<AbstractModificationEntity> modifications;
 
     public ModificationGroupEntity(UUID uuid) {
         this.uuid = uuid;
-        this.modifications = new LinkedList<>();
     }
 }

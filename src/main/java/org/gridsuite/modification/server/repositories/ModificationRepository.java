@@ -20,8 +20,5 @@ import java.util.UUID;
  */
 @Repository
 public interface ModificationRepository extends JpaRepository<AbstractModificationEntity, UUID> {
-
-    @Query(value = "SELECT * from modification INNER JOIN elementarymodification m on modification.id = m.id WHERE modification.type = 'ELEMENTARY'", nativeQuery = true)
-    List<ElementaryModificationEntity> getElementaryModifications();
-
+    List<AbstractModificationEntity> findAllByGroup_Uuid(UUID uuid);
 }

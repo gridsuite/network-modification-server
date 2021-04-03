@@ -6,14 +6,17 @@
  */
 package org.gridsuite.modification.server.entities;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import org.gridsuite.modification.server.ModificationType;
-import org.gridsuite.modification.server.dto.ModificationInfos;
-
 import javax.persistence.*;
+
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.UUID;
+
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.gridsuite.modification.server.ModificationType;
+import org.gridsuite.modification.server.dto.ModificationInfos;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -29,14 +32,27 @@ public abstract class AbstractModificationEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name = "id")
-    protected UUID uuid;
+    @Column(name = "uuid")
+    private UUID uuid;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(foreignKey = @ForeignKey(
+            name = "group_uuid_fk_constraint"
+    ))
+    @Setter
+    private ModificationGroupEntity group;
 
     @Column(name = DATE_COLUMN_NAME)
-    protected ZonedDateTime date;
+    private ZonedDateTime date;
 
     @Column(name = "type")
-    protected String type;
+    private String type;
+
+    protected AbstractModificationEntity(ModificationType type) {
+        this.uuid = null;
+        this.date = ZonedDateTime.now(ZoneOffset.UTC);
+        this.type = type.name();
+    }
 
     public ModificationInfos toModificationInfos() {
         return ModificationInfos.builder()

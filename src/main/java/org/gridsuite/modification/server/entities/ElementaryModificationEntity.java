@@ -10,6 +10,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.ElementaryModificationInfos;
+import org.gridsuite.modification.server.dto.ModificationInfos;
 
 import javax.persistence.*;
 
@@ -40,22 +41,22 @@ public class ElementaryModificationEntity extends AbstractModificationEntity {
     private AbstractAttributeEntity attribute;
 
     public ElementaryModificationEntity(String equipmentId, Set<String> substationId, AbstractAttributeEntity attribute) {
-        this.date = ZonedDateTime.now(ZoneOffset.UTC);
-        this.type = ModificationType.ELEMENTARY.name();
+        super(ModificationType.ELEMENTARY);
         this.equipmentId = equipmentId;
         this.substationIds = substationId;
         this.attribute = attribute;
     }
 
     public ElementaryModificationInfos toElementaryModificationInfos() {
-        return ElementaryModificationInfos.builder()
-                .uuid(this.uuid)
-                .date(this.date)
-                .type(ModificationType.valueOf(this.type))
-                .equipmentId(this.equipmentId)
-                .substationIds(this.substationIds)
-                .equipmentAttributeName(this.attribute.getAttributeName())
-                .equipmentAttributeValue(this.attribute.getAttributeValue())
+        return ElementaryModificationInfos
+                .builder()
+                .uuid(getUuid())
+                .date(getDate())
+                .type(ModificationType.valueOf(getType()))
+                .equipmentId(getEquipmentId())
+                .substationIds(getSubstationIds())
+                .equipmentAttributeName(getAttribute().getAttributeName())
+                .equipmentAttributeValue(getAttribute().getAttributeValue())
                 .build();
     }
 }
