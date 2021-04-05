@@ -6,10 +6,10 @@
  */
 package org.gridsuite.modification.server.entities;
 
+import javax.persistence.*;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import javax.persistence.*;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -27,16 +27,6 @@ public abstract class AbstractAttributeEntity {
 
     @Column(name = "attributeName")
     private String attributeName;
-
-
-//    @OneToOne(fetch = FetchType.LAZY, optional = false)
-//    @MapsId
-//    @JoinColumn(name = "attribute_id",
-//            referencedColumnName = "id",
-//            foreignKey = @ForeignKey(
-//                    name = "attribute_id_fk_constraint"
-//            ))
-//    private ElementaryModificationEntity modification;
 
     public abstract Object getAttributeValue();
 

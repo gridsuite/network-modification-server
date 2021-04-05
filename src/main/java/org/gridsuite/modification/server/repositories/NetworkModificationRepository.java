@@ -11,13 +11,12 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import com.powsybl.commons.PowsyblException;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ElementaryModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.entities.AbstractModificationEntity;
-import org.gridsuite.modification.server.entities.ElementaryModificationEntity;
-import org.gridsuite.modification.server.entities.ModificationGroupEntity;
+import org.gridsuite.modification.server.entities.*;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,7 +42,9 @@ public class NetworkModificationRepository {
     }
 
     @Transactional
-    public ElementaryModificationEntity insertElementaryModification(UUID groupUuid, ElementaryModificationEntity elementaryModificationEntity) {
+    public ElementaryModificationEntity createElementaryModification(UUID groupUuid, String equipmentId, Set<String> substationId,
+                                                                     String attributeName, Object attributeValue) {
+        ElementaryModificationEntity elementaryModificationEntity = new ElementaryModificationEntity(equipmentId, substationId, createAttributeEntity(attributeName, attributeValue));
         ModificationGroupEntity modificationGroupEntity = this.modificationGroupRepository.findById(groupUuid).orElse(createModificationGroup(groupUuid));
         elementaryModificationEntity.setGroup(modificationGroupEntity);
         this.modificationRepository.save(elementaryModificationEntity);
@@ -64,16 +65,16 @@ public class NetworkModificationRepository {
     @Transactional(readOnly = true) // because (prefetch for lazy loading)
     public List<ModificationInfos> getModifications(UUID groupUuid) {
         ModificationGroupEntity group = getModificationGroup(groupUuid);
-        return this.modificationRepository.findAllByGroup_Uuid(group.getUuid())
+        return this.modificationRepository.findAll(group.getUuid())
                 .stream()
-                .map(AbstractModificationEntity::toModificationInfos)
+                .map(ModificationEntity::toModificationInfos)
                 .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true) // because (prefetch for lazy loading)
     public List<ElementaryModificationInfos> getElementaryModifications(UUID groupUuid) {
         ModificationGroupEntity group = getModificationGroup(groupUuid);
-        return this.modificationRepository.findAllByGroup_Uuid(group.getUuid())
+        return this.modificationRepository.findAllByGroupUuid(group.getUuid())
                 .stream()
                 .filter(m -> m.getType().equals(ModificationType.ELEMENTARY.name()))
                 .map(ElementaryModificationEntity.class::cast)
@@ -82,13 +83,13 @@ public class NetworkModificationRepository {
     }
 
     public void deleteModificationGroup(UUID groupUuid) {
-        this.modificationRepository.deleteAll(this.modificationRepository.findAllByGroup_Uuid(groupUuid));
+        this.modificationRepository.deleteAll(this.modificationRepository.findAllByGroupUuid(groupUuid));
         this.modificationGroupRepository.deleteById(groupUuid);
     }
 
     @Transactional
     public void deleteModifications(UUID groupUuid, Set<UUID> uuids) {
-        List<AbstractModificationEntity> modifications = this.modificationRepository.findAllByGroup_Uuid(groupUuid)
+        List<ModificationEntity> modifications = this.modificationRepository.findAllByGroupUuid(groupUuid)
                 .stream()
                 .filter(m -> uuids.contains(m.getUuid()))
                 .collect(Collectors.toList());
@@ -97,5 +98,26 @@ public class NetworkModificationRepository {
 
     private ModificationGroupEntity getModificationGroup(UUID groupUuid) {
         return this.modificationGroupRepository.findById(groupUuid).orElseThrow(() -> new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, groupUuid.toString()));
+    }
+
+    private AbstractAttributeEntity createAttributeEntity(String attributeName, Object attributeValue) {
+        if (attributeValue.getClass().isEnum()) {
+            return new StringAttributeEntity(attributeName, attributeValue.toString());
+        } else {
+            switch (attributeValue.getClass().getSimpleName()) {
+                case "String":
+                    return new StringAttributeEntity(attributeName, (String) attributeValue);
+                case "Boolean":
+                    return new BooleanAttributeEntity(attributeName, (boolean) attributeValue);
+                case "Integer":
+                    return new IntegerAttributeEntity(attributeName, (int) attributeValue);
+                case "Float":
+                    return new FloatAttributeEntity(attributeName, (float) attributeValue);
+                case "Double":
+                    return new DoubleAttributeEntity(attributeName, (double) attributeValue);
+                default:
+                    throw new PowsyblException("Value type invalid : " + attributeValue.getClass().getSimpleName());
+            }
+        }
     }
 }

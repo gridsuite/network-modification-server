@@ -11,7 +11,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.gridsuite.modification.server.dto.ElementaryModificationInfos;
-import org.gridsuite.modification.server.entities.*;
+import org.gridsuite.modification.server.entities.ElementaryModificationEntity;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.utils.MatcherElementaryModificationInfos;
 import org.junit.Test;
@@ -40,16 +40,11 @@ public class ModificationRepositoryTest {
 
     @Test
     public void testElementaryModification() {
-        ElementaryModificationEntity stringModifEntity = new ElementaryModificationEntity("id1", Set.of(), new StringAttributeEntity("attribute", "foo"));
-        ElementaryModificationEntity boolModifEntity = new ElementaryModificationEntity("id2", Set.of(), new BooleanAttributeEntity("attribute", true));
-        ElementaryModificationEntity intModifEntity = new ElementaryModificationEntity("id3", Set.of(), new IntegerAttributeEntity("attribute", 1));
-        ElementaryModificationEntity floatModifEntity = new ElementaryModificationEntity("id4", Set.of(), new FloatAttributeEntity("attribute", 2));
-        ElementaryModificationEntity doubleModifEntity = new ElementaryModificationEntity("id5", Set.of(), new DoubleAttributeEntity("attribute", 3));
-        modificationRepository.insertElementaryModification(TEST_NETWORK_ID, stringModifEntity);
-        modificationRepository.insertElementaryModification(TEST_NETWORK_ID, boolModifEntity);
-        modificationRepository.insertElementaryModification(TEST_NETWORK_ID, intModifEntity);
-        modificationRepository.insertElementaryModification(TEST_NETWORK_ID, floatModifEntity);
-        modificationRepository.insertElementaryModification(TEST_NETWORK_ID, doubleModifEntity);
+        ElementaryModificationEntity stringModifEntity = this.modificationRepository.createElementaryModification(TEST_NETWORK_ID, "id1", Set.of(), "attribute", "foo");
+        ElementaryModificationEntity boolModifEntity = this.modificationRepository.createElementaryModification(TEST_NETWORK_ID, "id2", Set.of(), "attribute", true);
+        ElementaryModificationEntity intModifEntity = this.modificationRepository.createElementaryModification(TEST_NETWORK_ID, "id3", Set.of(), "attribute", 1);
+        ElementaryModificationEntity floatModifEntity = this.modificationRepository.createElementaryModification(TEST_NETWORK_ID, "id4", Set.of(), "attribute", 2F);
+        ElementaryModificationEntity doubleModifEntity = this.modificationRepository.createElementaryModification(TEST_NETWORK_ID, "id5", Set.of(), "attribute", 3D);
 
         List<ElementaryModificationInfos> elementaryModificationEntities = modificationRepository.getElementaryModifications(TEST_NETWORK_ID);
         assertEquals(5, elementaryModificationEntities.size());
@@ -74,8 +69,7 @@ public class ModificationRepositoryTest {
 
         modificationRepository.deleteModificationGroup(TEST_NETWORK_ID);
         assertThrows(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_NETWORK_ID.toString()).getMessage(),
-                NetworkModificationException.class,
-                () -> modificationRepository.getElementaryModifications(TEST_NETWORK_ID)
+                NetworkModificationException.class, () -> modificationRepository.getElementaryModifications(TEST_NETWORK_ID)
         );
     }
 

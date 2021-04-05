@@ -6,17 +6,14 @@
  */
 package org.gridsuite.modification.server.entities;
 
+import javax.persistence.*;
+
+import java.util.Set;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.ElementaryModificationInfos;
-import org.gridsuite.modification.server.dto.ModificationInfos;
-
-import javax.persistence.*;
-
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
-import java.util.Set;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -25,7 +22,7 @@ import java.util.Set;
 @Getter
 @Entity
 @Table(name = "elementaryModification")
-public class ElementaryModificationEntity extends AbstractModificationEntity {
+public class ElementaryModificationEntity extends ModificationEntity {
     @Column(name = "equipmentId")
     private String equipmentId;
 

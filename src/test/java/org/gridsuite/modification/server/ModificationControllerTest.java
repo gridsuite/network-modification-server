@@ -101,7 +101,7 @@ public class ModificationControllerTest {
     @Test
     public void testNetworkListener() {
         Network network = NetworkCreation.create();
-        NetworkStoreListener listener = NetworkStoreListener.create(network, TEST_NETWORK_ID, null);
+        NetworkStoreListener listener = NetworkStoreListener.create(network, TEST_NETWORK_ID, modificationRepository);
         Generator generator = network.getGenerator("idGenerator");
         Object invalidValue = new Object();
         assertTrue(assertThrows(PowsyblException.class, () ->

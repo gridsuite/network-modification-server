@@ -1,18 +1,16 @@
-/**
- * Copyright (c) 2020, RTE (http://www.rte-france.com)
- * This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/*
+  Copyright (c) 2020, RTE (http://www.rte-france.com)
+  This Source Code Form is subject to the terms of the Mozilla Public
+  License, v. 2.0. If a copy of the MPL was not distributed with this
+  file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 package org.gridsuite.modification.server.service;
 
-import com.powsybl.commons.PowsyblException;
+import java.util.*;
+
 import com.powsybl.iidm.network.*;
 import org.gridsuite.modification.server.dto.ElementaryModificationInfos;
-import org.gridsuite.modification.server.entities.*;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
-
-import java.util.*;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -38,8 +36,10 @@ public class NetworkStoreListener implements NetworkListener {
     }
 
     private void storeModification(Identifiable<?> identifiable, String attributeName, Object attributeValue) {
-        ElementaryModificationEntity modificationEntity = new ElementaryModificationEntity(identifiable.getId(), getSubstationIds(identifiable), createAttributeEntity(attributeName, attributeValue));
-        modifications.add(this.modificationRepository.insertElementaryModification(networkUuid, modificationEntity).toElementaryModificationInfos());
+        modifications.add(
+                this.modificationRepository.createElementaryModification(networkUuid, identifiable.getId(), getSubstationIds(identifiable), attributeName, attributeValue)
+                        .toElementaryModificationInfos()
+        );
     }
 
     private Set<String> getSubstationIds(Identifiable<?> identifiable) {
@@ -58,27 +58,6 @@ public class NetworkStoreListener implements NetworkListener {
         }
 
         return substationsIds;
-    }
-
-    private AbstractAttributeEntity createAttributeEntity(String attributeName, Object attributeValue) {
-        if (attributeValue.getClass().isEnum()) {
-            return new StringAttributeEntity(attributeName, attributeValue.toString());
-        } else {
-            switch (attributeValue.getClass().getSimpleName()) {
-                case "String":
-                    return new StringAttributeEntity(attributeName, (String) attributeValue);
-                case "Boolean":
-                    return new BooleanAttributeEntity(attributeName, (boolean) attributeValue);
-                case "Integer":
-                    return new IntegerAttributeEntity(attributeName, (int) attributeValue);
-                case "Float":
-                    return new FloatAttributeEntity(attributeName, (float) attributeValue);
-                case "Double":
-                    return new DoubleAttributeEntity(attributeName, (double) attributeValue);
-                default:
-                    throw new PowsyblException("Value type invalid : " + attributeValue.getClass().getSimpleName());
-            }
-        }
     }
 
     @Override

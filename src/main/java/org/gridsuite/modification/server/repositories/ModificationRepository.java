@@ -6,19 +6,21 @@
  */
 package org.gridsuite.modification.server.repositories;
 
-import org.gridsuite.modification.server.entities.AbstractModificationEntity;
-import org.gridsuite.modification.server.entities.ElementaryModificationEntity;
+import java.util.List;
+import java.util.UUID;
+
+import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
-
-import java.util.List;
-import java.util.UUID;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
 @Repository
-public interface ModificationRepository extends JpaRepository<AbstractModificationEntity, UUID> {
-    List<AbstractModificationEntity> findAllByGroup_Uuid(UUID uuid);
+public interface ModificationRepository extends JpaRepository<ModificationEntity, UUID> {
+    @Query(value = "SELECT *, 0 AS clazz_ FROM modification WHERE group_uuid = ?1", nativeQuery = true)
+    List<ModificationEntity> findAll(UUID uuid);
+
+    List<ModificationEntity> findAllByGroupUuid(UUID uuid);
 }

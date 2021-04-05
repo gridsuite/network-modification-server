@@ -26,7 +26,7 @@ import org.gridsuite.modification.server.dto.ModificationInfos;
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
 @Table(name = "modification")
-public abstract class AbstractModificationEntity {
+public class ModificationEntity {
 
     public static final String DATE_COLUMN_NAME = "date";
 
@@ -48,7 +48,7 @@ public abstract class AbstractModificationEntity {
     @Column(name = "type")
     private String type;
 
-    protected AbstractModificationEntity(ModificationType type) {
+    protected ModificationEntity(ModificationType type) {
         this.uuid = null;
         this.date = ZonedDateTime.now(ZoneOffset.UTC);
         this.type = type.name();

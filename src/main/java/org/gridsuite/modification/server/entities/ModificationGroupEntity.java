@@ -6,10 +6,11 @@
  */
 package org.gridsuite.modification.server.entities;
 
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
-import java.util.LinkedList;
-import java.util.List;
 import java.util.UUID;
 
 import lombok.Getter;

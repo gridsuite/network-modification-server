@@ -10,8 +10,6 @@ import java.util.Set;
 import java.util.UUID;
 
 import com.vladmihalcea.sql.SQLStatementCountValidator;
-import org.gridsuite.modification.server.entities.ElementaryModificationEntity;
-import org.gridsuite.modification.server.entities.StringAttributeEntity;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.junit.Before;
 import org.junit.Test;
@@ -44,14 +42,28 @@ public class ModificationServiceTest {
 
     @Test
     public void testCreateModificationQueryCount() {
-        ElementaryModificationEntity entity = new ElementaryModificationEntity("id1", Set.of(), new StringAttributeEntity("attribute", "foo"));
+        modificationRepository.createElementaryModification(TEST_NETWORK_ID, "id1", Set.of(), "attribute", "foo");
 
-        modificationRepository.insertElementaryModification(TEST_NETWORK_ID, entity);
+        assertRequestsCount(2, 5, 0, 0);
+    }
 
-        assertSelectCount(2);
-        assertInsertCount(5);
-        assertUpdateCount(0);
-        assertDeleteCount(0);
+    @Test
+    public void testGetModificationQueryCount() {
+        modificationRepository.createElementaryModification(TEST_NETWORK_ID, "id1", Set.of(), "attribute", "foo");
+        modificationRepository.createElementaryModification(TEST_NETWORK_ID, "id2", Set.of(), "attribute", "foo");
+
+        SQLStatementCountValidator.reset();
+
+        modificationRepository.getModifications(TEST_NETWORK_ID);
+
+        assertRequestsCount(2, 0, 0, 0);
+    }
+
+    private void assertRequestsCount(long select, long insert, long update, long delete) {
+        assertSelectCount(select);
+        assertInsertCount(insert);
+        assertUpdateCount(update);
+        assertDeleteCount(delete);
     }
 
 }
