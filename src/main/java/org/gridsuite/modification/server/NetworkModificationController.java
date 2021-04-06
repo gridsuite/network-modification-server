@@ -81,20 +81,27 @@ public class NetworkModificationController {
     @PutMapping(value = "/networks/{networkUuid}/lines/{lineId}/lockout")
     @ApiOperation(value = "lockout a line")
     @ApiResponses(value = {@ApiResponse(code = 200, message = "the line has been locked-out")})
-    public ResponseEntity<Boolean> lockoutLine(
+    public ResponseEntity<Flux<ElementaryModificationInfos>> lockoutLine(
             @ApiParam(value = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
             @ApiParam(value = "Line ID") @PathVariable("lineId") String lineId) {
-        boolean b = networkModificationService.lockoutLine(networkUuid, lineId);
-        return ResponseEntity.ok().body(b);
+        return ResponseEntity.ok().body(networkModificationService.lockoutLine(networkUuid, lineId));
+    }
+
+    @PutMapping(value = "/networks/{networkUuid}/lines/{lineId}/trip")
+    @ApiOperation(value = "trip a line")
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "the line has been tripped")})
+    public ResponseEntity<Flux<ElementaryModificationInfos>> tripLine(
+            @ApiParam(value = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
+            @ApiParam(value = "Line ID") @PathVariable("lineId") String lineId) {
+        return ResponseEntity.ok().body(networkModificationService.tripLine(networkUuid, lineId));
     }
 
     @PutMapping(value = "/networks/{networkUuid}/lines/{lineId}/switchOn")
     @ApiOperation(value = "switch on a line")
     @ApiResponses(value = {@ApiResponse(code = 200, message = "the line has been locked-out")})
-    public ResponseEntity<Boolean> switchOnLine(
+    public ResponseEntity<Flux<ElementaryModificationInfos>> switchOnLine(
             @ApiParam(value = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
             @ApiParam(value = "Line ID") @PathVariable("lineId") String lineId) {
-        boolean b = networkModificationService.switchOnLine(networkUuid, lineId);
-        return ResponseEntity.ok().body(b);
+        return ResponseEntity.ok().body(networkModificationService.switchOnLine(networkUuid, lineId));
     }
 }
