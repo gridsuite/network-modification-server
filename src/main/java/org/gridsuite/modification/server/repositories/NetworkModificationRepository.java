@@ -36,12 +36,13 @@ public class NetworkModificationRepository {
         this.modificationRepository = modificationRepository;
     }
 
+    @Transactional // To have the 2 delete in the same transaction (atomic)
     public void deleteAll() {
         modificationRepository.deleteAll();
         modificationGroupRepository.deleteAll();
     }
 
-    @Transactional
+    @Transactional // To have the 2 create in the same transaction (atomic)
     public ElementaryModificationEntity createElementaryModification(UUID groupUuid, String equipmentId, Set<String> substationId,
                                                                      String attributeName, Object attributeValue) {
         ElementaryModificationEntity elementaryModificationEntity = new ElementaryModificationEntity(equipmentId, substationId, createAttributeEntity(attributeName, attributeValue));
@@ -55,14 +56,12 @@ public class NetworkModificationRepository {
         return modificationGroupRepository.save(new ModificationGroupEntity(groupUuid));
     }
 
-    // No transactional because (no prefetch for lazy loading)
     public List<UUID> getModificationGroupsUuids() {
         return this.modificationGroupRepository.findAll().stream()
                 .map(ModificationGroupEntity::getUuid)
                 .collect(Collectors.toList());
     }
 
-    @Transactional(readOnly = true) // because (prefetch for lazy loading)
     public List<ModificationInfos> getModifications(UUID groupUuid) {
         ModificationGroupEntity group = getModificationGroup(groupUuid);
         return this.modificationRepository.findAll(group.getUuid())
@@ -71,7 +70,8 @@ public class NetworkModificationRepository {
                 .collect(Collectors.toList());
     }
 
-    @Transactional(readOnly = true) // because (prefetch for lazy loading)
+    @Transactional(readOnly = true)
+    // Due to the lazy loading done outside transaction (demarcation done in findAllByGroupUuid method)
     public List<ElementaryModificationInfos> getElementaryModifications(UUID groupUuid) {
         ModificationGroupEntity group = getModificationGroup(groupUuid);
         return this.modificationRepository.findAllByGroupUuid(group.getUuid())
@@ -82,12 +82,13 @@ public class NetworkModificationRepository {
                 .collect(Collectors.toList());
     }
 
+    @Transactional // To have the 2 delete in the same transaction (atomic)
     public void deleteModificationGroup(UUID groupUuid) {
         this.modificationRepository.deleteAll(this.modificationRepository.findAllByGroupUuid(groupUuid));
         this.modificationGroupRepository.deleteById(groupUuid);
     }
 
-    @Transactional
+    @Transactional // To have the find end delete in the same transaction (atomic)
     public void deleteModifications(UUID groupUuid, Set<UUID> uuids) {
         List<ModificationEntity> modifications = this.modificationRepository.findAllByGroupUuid(groupUuid)
                 .stream()
