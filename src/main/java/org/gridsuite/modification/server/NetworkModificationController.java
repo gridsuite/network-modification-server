@@ -96,6 +96,16 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.tripLine(networkUuid, lineId));
     }
 
+    @PutMapping(value = "/networks/{networkUuid}/lines/{lineId}/energiseEnd")
+    @ApiOperation(value = "energise one end of a line")
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "the line end has been energised")})
+    public ResponseEntity<Flux<ElementaryModificationInfos>> energiseLineEnd(
+            @ApiParam(value = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
+            @ApiParam(value = "Line ID") @PathVariable("lineId") String lineId,
+            @RequestParam("side") String side) {
+        return ResponseEntity.ok().body(networkModificationService.energiseLineEnd(networkUuid, lineId, side));
+    }
+
     @PutMapping(value = "/networks/{networkUuid}/lines/{lineId}/switchOn")
     @ApiOperation(value = "switch on a line")
     @ApiResponses(value = {@ApiResponse(code = 200, message = "the line has been locked-out")})

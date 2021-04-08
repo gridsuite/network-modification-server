@@ -7,6 +7,7 @@
 package org.gridsuite.modification.server.service;
 
 import com.powsybl.commons.PowsyblException;
+import com.powsybl.iidm.network.Branch;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.sld.iidm.extensions.BranchStatus;
@@ -97,6 +98,18 @@ public class NetworkModificationService {
                     network.getLine(lineId).getTerminal1().disconnect();
                     network.getLine(lineId).getTerminal2().disconnect();
                     network.getLine(lineId).newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.FORCED_OUTAGE).add();
+                }
+                ));
+    }
+
+    public Flux<ElementaryModificationInfos> energiseLineEnd(UUID networkUuid, String lineId, String side) {
+        return getNetwork(networkUuid)
+                .filter(network -> network.getLine(lineId) != null)
+                .switchIfEmpty(Mono.error(new NetworkModificationException(LINE_NOT_FOUND, lineId)))
+                .flatMapIterable(network -> doModification(network, networkUuid, () -> {
+                    network.getLine(lineId).getTerminal(Branch.Side.valueOf(side)).connect();
+                    network.getLine(lineId).getTerminal(Branch.Side.valueOf(side) == Branch.Side.ONE ? Branch.Side.TWO : Branch.Side.ONE).disconnect();
+                    network.getLine(lineId).newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.IN_OPERATION).add();
                 }
                 ));
     }
