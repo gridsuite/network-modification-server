@@ -65,7 +65,7 @@ public class NetworkModificationRepository {
 
     public List<ModificationInfos> getModifications(UUID groupUuid) {
         ModificationGroupEntity group = getModificationGroup(groupUuid);
-        return this.modificationRepository.findAllMetaByGroupUuid(group.getUuid())
+        return this.modificationRepository.findAllBaseByGroupUuid(group.getUuid())
                 .stream()
                 .map(ModificationEntity::toModificationInfos)
                 .collect(Collectors.toList());
@@ -73,9 +73,8 @@ public class NetworkModificationRepository {
 
     public List<ElementaryModificationInfos> getElementaryModifications(UUID groupUuid) {
         ModificationGroupEntity group = getModificationGroup(groupUuid);
-        return this.modificationRepository.findAllByGroupUuid(group.getUuid())
+        return this.modificationRepository.findAllByGroupUuidAndType(group.getUuid(), ModificationType.ELEMENTARY.name())
                 .stream()
-                .filter(m -> m.getType().equals(ModificationType.ELEMENTARY.name()))
                 .map(ElementaryModificationEntity.class::cast)
                 .map(ElementaryModificationEntity::toElementaryModificationInfos)
                 .collect(Collectors.toList());
