@@ -43,9 +43,9 @@ public class NetworkModificationRepository {
     }
 
     @Transactional // To have the 2 create in the same transaction (atomic)
-    public ElementaryModificationEntity createElementaryModification(UUID groupUuid, String equipmentId, Set<String> substationId,
-                                                                     String attributeName, Object attributeValue) {
-        ElementaryModificationEntity elementaryModificationEntity = new ElementaryModificationEntity(equipmentId, substationId, createAttributeEntity(attributeName, attributeValue));
+    public AbstractElementaryModificationEntity createElementaryModification(UUID groupUuid, String equipmentId, Set<String> substationId,
+                                                                             String attributeName, Object attributeValue) {
+        AbstractElementaryModificationEntity elementaryModificationEntity = createElementaryModificationEntity(equipmentId, substationId, attributeName, attributeValue);
         ModificationGroupEntity modificationGroupEntity = this.modificationGroupRepository.findById(groupUuid).orElse(createModificationGroup(groupUuid));
         elementaryModificationEntity.setGroup(modificationGroupEntity);
         this.modificationRepository.save(elementaryModificationEntity);
@@ -70,15 +70,13 @@ public class NetworkModificationRepository {
                 .collect(Collectors.toList());
     }
 
-    @Transactional(readOnly = true)
-    // Due to the lazy loading done outside transaction (demarcation done in findAllByGroupUuid method)
     public List<ElementaryModificationInfos> getElementaryModifications(UUID groupUuid) {
         ModificationGroupEntity group = getModificationGroup(groupUuid);
         return this.modificationRepository.findAllByGroupUuid(group.getUuid())
                 .stream()
                 .filter(m -> m.getType().equals(ModificationType.ELEMENTARY.name()))
-                .map(ElementaryModificationEntity.class::cast)
-                .map(ElementaryModificationEntity::toElementaryModificationInfos)
+                .map(AbstractElementaryModificationEntity.class::cast)
+                .map(AbstractElementaryModificationEntity::toElementaryModificationInfos)
                 .collect(Collectors.toList());
     }
 
@@ -88,7 +86,7 @@ public class NetworkModificationRepository {
         this.modificationGroupRepository.deleteById(groupUuid);
     }
 
-    @Transactional // To have the find end delete in the same transaction (atomic)
+    @Transactional // To have the find and delete in the same transaction (atomic)
     public void deleteModifications(UUID groupUuid, Set<UUID> uuids) {
         List<ModificationEntity> modifications = this.modificationRepository.findAllByGroupUuid(groupUuid)
                 .stream()
@@ -101,21 +99,21 @@ public class NetworkModificationRepository {
         return this.modificationGroupRepository.findById(groupUuid).orElseThrow(() -> new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, groupUuid.toString()));
     }
 
-    private AbstractAttributeEntity createAttributeEntity(String attributeName, Object attributeValue) {
+    private AbstractElementaryModificationEntity createElementaryModificationEntity(String equipmentId, Set<String> substationId, String attributeName, Object attributeValue) {
         if (attributeValue.getClass().isEnum()) {
-            return new StringAttributeEntity(attributeName, attributeValue.toString());
+            return new StringElementaryModificationEntity(equipmentId, substationId, attributeName, attributeValue.toString());
         } else {
             switch (attributeValue.getClass().getSimpleName()) {
                 case "String":
-                    return new StringAttributeEntity(attributeName, (String) attributeValue);
+                    return new StringElementaryModificationEntity(equipmentId, substationId, attributeName, (String) attributeValue);
                 case "Boolean":
-                    return new BooleanAttributeEntity(attributeName, (boolean) attributeValue);
+                    return new BooleanElementaryModificationEntity(equipmentId, substationId, attributeName, (boolean) attributeValue);
                 case "Integer":
-                    return new IntegerAttributeEntity(attributeName, (int) attributeValue);
+                    return new IntegerElementaryModificationEntity(equipmentId, substationId, attributeName, (int) attributeValue);
                 case "Float":
-                    return new FloatAttributeEntity(attributeName, (float) attributeValue);
+                    return new FloatElementaryModificationEntity(equipmentId, substationId, attributeName, (float) attributeValue);
                 case "Double":
-                    return new DoubleAttributeEntity(attributeName, (double) attributeValue);
+                    return new DoubleElementaryModificationEntity(equipmentId, substationId, attributeName, (double) attributeValue);
                 default:
                     throw new PowsyblException("Value type invalid : " + attributeValue.getClass().getSimpleName());
             }

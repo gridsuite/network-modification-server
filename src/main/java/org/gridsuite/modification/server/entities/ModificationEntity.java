@@ -25,10 +25,8 @@ import org.gridsuite.modification.server.dto.ModificationInfos;
 @Getter
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
-@Table(name = "modification")
+@Table(name = "modification", indexes = {@Index(name = "modificationEntity_group_uuid_index", columnList = "group_uuid")})
 public class ModificationEntity {
-
-    public static final String DATE_COLUMN_NAME = "date";
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -42,7 +40,7 @@ public class ModificationEntity {
     @Setter
     private ModificationGroupEntity group;
 
-    @Column(name = DATE_COLUMN_NAME)
+    @Column(name = "date")
     private ZonedDateTime date;
 
     @Column(name = "type")

@@ -6,7 +6,10 @@
  */
 package org.gridsuite.modification.server.entities;
 
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Table;
+import javax.persistence.Transient;
 
 import java.util.Set;
 
@@ -22,26 +25,23 @@ import org.gridsuite.modification.server.dto.ElementaryModificationInfos;
 @Getter
 @Entity
 @Table(name = "elementaryModification")
-public class ElementaryModificationEntity extends ModificationEntity {
+public abstract class AbstractElementaryModificationEntity extends ModificationEntity {
     @Column(name = "equipmentId")
     private String equipmentId;
+
+    @Column(name = "attributeName")
+    private String attributeName;
+
+    public abstract Object getAttributeValue();
 
     @Transient
     private Set<String> substationIds = Set.of();
 
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY, optional = false, orphanRemoval = true)
-    @JoinColumn(name = "attribute_id",
-            referencedColumnName = "id",
-            foreignKey = @ForeignKey(
-                    name = "attribute_id_fk_constraint"
-            ))
-    private AbstractAttributeEntity attribute;
-
-    public ElementaryModificationEntity(String equipmentId, Set<String> substationId, AbstractAttributeEntity attribute) {
+    public AbstractElementaryModificationEntity(String equipmentId, Set<String> substationId, String attributeName) {
         super(ModificationType.ELEMENTARY);
         this.equipmentId = equipmentId;
         this.substationIds = substationId;
-        this.attribute = attribute;
+        this.attributeName = attributeName;
     }
 
     public ElementaryModificationInfos toElementaryModificationInfos() {
@@ -52,8 +52,8 @@ public class ElementaryModificationEntity extends ModificationEntity {
                 .type(ModificationType.valueOf(getType()))
                 .equipmentId(getEquipmentId())
                 .substationIds(getSubstationIds())
-                .equipmentAttributeName(getAttribute().getAttributeName())
-                .equipmentAttributeValue(getAttribute().getAttributeValue())
+                .equipmentAttributeName(getAttributeName())
+                .equipmentAttributeValue(getAttributeValue())
                 .build();
     }
 }

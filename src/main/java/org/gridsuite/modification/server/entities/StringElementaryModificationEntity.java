@@ -6,13 +6,15 @@
  */
 package org.gridsuite.modification.server.entities;
 
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Table;
+
+import java.util.Set;
+
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -20,20 +22,20 @@ import javax.persistence.Table;
 @NoArgsConstructor
 @Getter
 @Entity
-@Table(name = "booleanattribute")
-public class BooleanAttributeEntity extends AbstractAttributeEntity {
+@Table(name = "stringelementaryModification")
+public class StringElementaryModificationEntity extends AbstractElementaryModificationEntity {
 
     @Column(name = "attributeValue")
     @Getter(AccessLevel.NONE)
-    private boolean attributeValue;
+    private String attributeValue;
 
     @Override
-    public Boolean getAttributeValue() {
+    public String getAttributeValue() {
         return attributeValue;
     }
 
-    public BooleanAttributeEntity(String attributeName, boolean attributeValue) {
-        super(attributeName);
+    public StringElementaryModificationEntity(String equipmentId, Set<String> substationId, String attributeName, String attributeValue) {
+        super(equipmentId, substationId, attributeName);
         this.attributeValue = attributeValue;
     }
 }

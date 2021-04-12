@@ -6,12 +6,15 @@
  */
 package org.gridsuite.modification.server.entities;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Table;
+
+import java.util.Set;
+
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -19,13 +22,20 @@ import javax.persistence.Table;
 @NoArgsConstructor
 @Getter
 @Entity
-@Table(name = "floatAttribute")
-public class FloatAttributeEntity extends AbstractAttributeEntity {
+@Table(name = "floatelementaryModification")
+public class FloatElementaryModificationEntity extends AbstractElementaryModificationEntity {
+
     @Column(name = "attributeValue")
+    @Getter(AccessLevel.NONE)
     private Float attributeValue;
 
-    public FloatAttributeEntity(String attributeName, float attributeValue) {
-        super(attributeName);
+    @Override
+    public Float getAttributeValue() {
+        return attributeValue;
+    }
+
+    public FloatElementaryModificationEntity(String equipmentId, Set<String> substationId, String attributeName, Float attributeValue) {
+        super(equipmentId, substationId, attributeName);
         this.attributeValue = attributeValue;
     }
 }
