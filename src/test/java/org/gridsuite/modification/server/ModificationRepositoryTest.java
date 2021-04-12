@@ -12,7 +12,7 @@ import java.util.UUID;
 
 import com.vladmihalcea.sql.SQLStatementCountValidator;
 import org.gridsuite.modification.server.dto.ElementaryModificationInfos;
-import org.gridsuite.modification.server.entities.AbstractElementaryModificationEntity;
+import org.gridsuite.modification.server.entities.elementary.ElementaryModificationEntity;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.utils.MatcherElementaryModificationInfos;
 import org.junit.Before;
@@ -58,11 +58,11 @@ public class ModificationRepositoryTest {
                 NetworkModificationException.class, () -> modificationRepository.getElementaryModifications(TEST_NETWORK_ID)
         );
 
-        AbstractElementaryModificationEntity stringModifEntity = this.modificationRepository.createElementaryModification(TEST_NETWORK_ID, "id1", Set.of(), "attribute", "foo");
-        AbstractElementaryModificationEntity boolModifEntity = this.modificationRepository.createElementaryModification(TEST_NETWORK_ID, "id2", Set.of(), "attribute", true);
-        AbstractElementaryModificationEntity intModifEntity = this.modificationRepository.createElementaryModification(TEST_NETWORK_ID, "id3", Set.of(), "attribute", 1);
-        AbstractElementaryModificationEntity floatModifEntity = this.modificationRepository.createElementaryModification(TEST_NETWORK_ID, "id4", Set.of(), "attribute", 2F);
-        AbstractElementaryModificationEntity doubleModifEntity = this.modificationRepository.createElementaryModification(TEST_NETWORK_ID, "id5", Set.of(), "attribute", 3D);
+        ElementaryModificationEntity<String> stringModifEntity = this.modificationRepository.createElementaryModification(TEST_NETWORK_ID, "id1", Set.of(), "attribute", "foo");
+        ElementaryModificationEntity<Boolean> boolModifEntity = this.modificationRepository.createElementaryModification(TEST_NETWORK_ID, "id2", Set.of(), "attribute", true);
+        ElementaryModificationEntity<Integer> intModifEntity = this.modificationRepository.createElementaryModification(TEST_NETWORK_ID, "id3", Set.of(), "attribute", 1);
+        ElementaryModificationEntity<Float> floatModifEntity = this.modificationRepository.createElementaryModification(TEST_NETWORK_ID, "id4", Set.of(), "attribute", 2F);
+        ElementaryModificationEntity<Double> doubleModifEntity = this.modificationRepository.createElementaryModification(TEST_NETWORK_ID, "id5", Set.of(), "attribute", 3D);
 
         List<ElementaryModificationInfos> elementaryModificationEntities = modificationRepository.getElementaryModifications(TEST_NETWORK_ID);
         assertEquals(5, elementaryModificationEntities.size());
@@ -97,7 +97,7 @@ public class ModificationRepositoryTest {
     public void testCreateModificationQueryCount() {
         modificationRepository.createElementaryModification(TEST_NETWORK_ID, "id1", Set.of(), "attribute", "foo");
 
-        assertRequestsCount(2, 4, 0, 0);
+        assertRequestsCount(2, 3, 0, 0);
     }
 
     @Test
@@ -121,16 +121,16 @@ public class ModificationRepositoryTest {
 
     @Test
     public void testDeleteModificationQueryCount() {
-        AbstractElementaryModificationEntity modifEntity1 = modificationRepository.createElementaryModification(TEST_NETWORK_ID, "id1", Set.of(), "attribute", "foo");
-        AbstractElementaryModificationEntity modifEntity2 = modificationRepository.createElementaryModification(TEST_NETWORK_ID, "id2", Set.of(), "attribute", "foo");
+        ElementaryModificationEntity<String> modifEntity1 = modificationRepository.createElementaryModification(TEST_NETWORK_ID, "id1", Set.of(), "attribute", "foo");
+        ElementaryModificationEntity<String> modifEntity2 = modificationRepository.createElementaryModification(TEST_NETWORK_ID, "id2", Set.of(), "attribute", "foo");
 
         SQLStatementCountValidator.reset();
         modificationRepository.deleteModifications(TEST_NETWORK_ID, Set.of(modifEntity1.getUuid()));
-        assertRequestsCount(1, 0, 0, 3);
+        assertRequestsCount(1, 0, 0, 2);
 
         SQLStatementCountValidator.reset();
         modificationRepository.deleteModificationGroup(TEST_NETWORK_ID);
-        assertRequestsCount(2, 0, 0, 4);
+        assertRequestsCount(2, 0, 0, 3);
 
         SQLStatementCountValidator.reset();
         modificationRepository.deleteModifications(TEST_NETWORK_ID, Set.of(modifEntity2.getUuid()));

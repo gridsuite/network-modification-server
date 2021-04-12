@@ -20,7 +20,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ModificationRepository extends JpaRepository<ModificationEntity, UUID> {
     @Query(value = "SELECT *, 0 AS clazz_ FROM modification WHERE group_uuid = ?1", nativeQuery = true)
-    List<ModificationEntity> findAll(UUID uuid);
+    List<ModificationEntity> findAllMetaByGroupUuid(UUID uuid);
 
     List<ModificationEntity> findAllByGroupUuid(UUID uuid);
 }

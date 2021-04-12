@@ -17,6 +17,7 @@ import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ElementaryModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.*;
+import org.gridsuite.modification.server.entities.elementary.*;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,9 +44,9 @@ public class NetworkModificationRepository {
     }
 
     @Transactional // To have the 2 create in the same transaction (atomic)
-    public AbstractElementaryModificationEntity createElementaryModification(UUID groupUuid, String equipmentId, Set<String> substationId,
-                                                                             String attributeName, Object attributeValue) {
-        AbstractElementaryModificationEntity elementaryModificationEntity = createElementaryModificationEntity(equipmentId, substationId, attributeName, attributeValue);
+    public <T> ElementaryModificationEntity<T> createElementaryModification(UUID groupUuid, String equipmentId, Set<String> substationId,
+                                                                     String attributeName, T attributeValue) {
+        ElementaryModificationEntity<T> elementaryModificationEntity = (ElementaryModificationEntity<T>) createElementaryModificationEntity(equipmentId, substationId, attributeName, attributeValue);
         ModificationGroupEntity modificationGroupEntity = this.modificationGroupRepository.findById(groupUuid).orElse(createModificationGroup(groupUuid));
         elementaryModificationEntity.setGroup(modificationGroupEntity);
         this.modificationRepository.save(elementaryModificationEntity);
@@ -64,7 +65,7 @@ public class NetworkModificationRepository {
 
     public List<ModificationInfos> getModifications(UUID groupUuid) {
         ModificationGroupEntity group = getModificationGroup(groupUuid);
-        return this.modificationRepository.findAll(group.getUuid())
+        return this.modificationRepository.findAllMetaByGroupUuid(group.getUuid())
                 .stream()
                 .map(ModificationEntity::toModificationInfos)
                 .collect(Collectors.toList());
@@ -75,8 +76,8 @@ public class NetworkModificationRepository {
         return this.modificationRepository.findAllByGroupUuid(group.getUuid())
                 .stream()
                 .filter(m -> m.getType().equals(ModificationType.ELEMENTARY.name()))
-                .map(AbstractElementaryModificationEntity.class::cast)
-                .map(AbstractElementaryModificationEntity::toElementaryModificationInfos)
+                .map(ElementaryModificationEntity.class::cast)
+                .map(ElementaryModificationEntity::toElementaryModificationInfos)
                 .collect(Collectors.toList());
     }
 
@@ -99,7 +100,7 @@ public class NetworkModificationRepository {
         return this.modificationGroupRepository.findById(groupUuid).orElseThrow(() -> new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, groupUuid.toString()));
     }
 
-    private AbstractElementaryModificationEntity createElementaryModificationEntity(String equipmentId, Set<String> substationId, String attributeName, Object attributeValue) {
+    private <T> ElementaryModificationEntity<?> createElementaryModificationEntity(String equipmentId, Set<String> substationId, String attributeName, T attributeValue) {
         if (attributeValue.getClass().isEnum()) {
             return new StringElementaryModificationEntity(equipmentId, substationId, attributeName, attributeValue.toString());
         } else {
