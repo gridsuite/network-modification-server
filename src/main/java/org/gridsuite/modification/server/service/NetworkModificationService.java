@@ -85,7 +85,7 @@ public class NetworkModificationService {
         if (!terminal1Disconnected) {
             terminal1Disconnected = terminal1.disconnect();
         }
-        Terminal terminal2 = network.getLine(lineId).getTerminal1();
+        Terminal terminal2 = network.getLine(lineId).getTerminal2();
         boolean terminal2Disconnected = !terminal2.isConnected();
         if (!terminal2Disconnected) {
             terminal2Disconnected = terminal2.disconnect();

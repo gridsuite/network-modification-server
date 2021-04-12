@@ -231,6 +231,68 @@ public class ModificationControllerTest {
     }
 
     @Test
+    public void testLine() {
+        // network not existing
+        webTestClient.put().uri("/v1/networks/{networkUuid}/lines/{lineId}/lockout", NOT_FOUND_NETWORK_ID, "line2")
+                .exchange()
+                .expectStatus().isNotFound()
+                .expectBody(String.class)
+                .isEqualTo(new NetworkModificationException(NETWORK_NOT_FOUND, NOT_FOUND_NETWORK_ID.toString()).getMessage());
+
+        // line not existing
+        webTestClient.put().uri("/v1/networks/{networkUuid}/lines/{lineId}/lockout", TEST_NETWORK_ID, "notFound")
+                .exchange()
+                .expectStatus().isNotFound()
+                .expectBody(String.class)
+                .isEqualTo(new NetworkModificationException(LINE_NOT_FOUND, "notFound").getMessage());
+
+        // line lockout
+        webTestClient.put().uri("/v1/networks/{networkUuid}/lines/{lineId}/lockout", TEST_NETWORK_ID, "line2")
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBodyList(ElementaryModificationInfos.class)
+                .value(modifications -> modifications.get(0),
+                        createMatcherElementaryModificationInfos("v1bl1", Set.of("s1"), "open", true));
+
+        // line switch on
+        webTestClient.put().uri("/v1/networks/{networkUuid}/lines/{lineId}/switchOn", TEST_NETWORK_ID, "line2")
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBodyList(ElementaryModificationInfos.class)
+                .isEqualTo(List.of());
+
+        // line trip
+        webTestClient.put().uri("/v1/networks/{networkUuid}/lines/{lineId}/trip", TEST_NETWORK_ID, "line2")
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBodyList(ElementaryModificationInfos.class)
+                .value(modifications -> modifications.get(0),
+                        createMatcherElementaryModificationInfos("v1bl1", Set.of("s1"), "open", true));
+
+        // line energise on one end
+        webTestClient.put().uri("/v1/networks/{networkUuid}/lines/{lineId}/energiseEnd?side=ONE", TEST_NETWORK_ID, "line2")
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBodyList(ElementaryModificationInfos.class)
+                .value(modifications -> modifications.get(0),
+                        createMatcherElementaryModificationInfos("v3bl1", Set.of("s2"), "open", true));
+
+        // line energise on other end
+        webTestClient.put().uri("/v1/networks/{networkUuid}/lines/{lineId}/energiseEnd?side=TWO", TEST_NETWORK_ID, "line2")
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBodyList(ElementaryModificationInfos.class)
+                .value(modifications -> modifications.get(0),
+                        createMatcherElementaryModificationInfos("v1bl1", Set.of("s1"), "open", true));
+
+    }
+
+    @Test
     public void testGroovyWithErrors() {
         // apply null groovy script
         webTestClient.put().uri("/v1/networks/{networkUuid}/groovy", TEST_NETWORK_ID)
