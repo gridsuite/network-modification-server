@@ -7,6 +7,8 @@
 package org.gridsuite.modification.server.entities.elementary;
 
 import javax.persistence.Entity;
+import javax.persistence.ForeignKey;
+import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
 
 import java.util.Set;
@@ -21,6 +23,9 @@ import lombok.NoArgsConstructor;
 @Getter
 @Entity
 @Table(name = "integerelementaryModification")
+@PrimaryKeyJoinColumn(foreignKey = @ForeignKey(
+        name = "integer_modification_uuid_fk_constraint"
+))
 public class IntegerElementaryModificationEntity extends ElementaryModificationEntity<Integer> {
     public IntegerElementaryModificationEntity(String equipmentId, Set<String> substationId, String attributeName, Integer attributeValue) {
         super(equipmentId, substationId, attributeName, attributeValue);
