@@ -8,7 +8,6 @@ package org.gridsuite.modification.server.entities.elementary;
 
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
-import javax.persistence.Transient;
 
 import java.util.Set;
 
@@ -34,27 +33,29 @@ public class ElementaryModificationEntity<T> extends ModificationEntity {
     @Column(name = "attributeValue")
     private T attributeValue;
 
-    @Transient
-    private Set<String> substationIds = Set.of();
-
-    protected ElementaryModificationEntity(String equipmentId, Set<String> substationId, String attributeName, T attributeValue) {
+    protected ElementaryModificationEntity(String equipmentId, String attributeName, T attributeValue) {
         super(ModificationType.ELEMENTARY);
         this.equipmentId = equipmentId;
-        this.substationIds = substationId;
         this.attributeName = attributeName;
         this.attributeValue = attributeValue;
     }
 
     public ElementaryModificationInfos toElementaryModificationInfos() {
+        return toModificationInfosBuilder().build();
+    }
+
+    public ElementaryModificationInfos toElementaryModificationInfos(Set<String> substationId) {
+        return toModificationInfosBuilder().substationIds(substationId).build();
+    }
+
+    private ElementaryModificationInfos.ElementaryModificationInfosBuilder<?, ?> toModificationInfosBuilder() {
         return ElementaryModificationInfos
                 .builder()
                 .uuid(getUuid())
                 .date(getDate())
                 .type(ModificationType.valueOf(getType()))
                 .equipmentId(getEquipmentId())
-                .substationIds(getSubstationIds())
                 .equipmentAttributeName(getAttributeName())
-                .equipmentAttributeValue(getAttributeValue())
-                .build();
+                .equipmentAttributeValue(getAttributeValue());
     }
 }

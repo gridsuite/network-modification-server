@@ -11,8 +11,6 @@ import javax.persistence.ForeignKey;
 import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
 
-import java.util.Set;
-
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -27,7 +25,7 @@ import lombok.NoArgsConstructor;
         name = "float_modification_uuid_fk_constraint"
 ))
 public class FloatElementaryModificationEntity extends ElementaryModificationEntity<Float> {
-    public FloatElementaryModificationEntity(String equipmentId, Set<String> substationId, String attributeName, Float attributeValue) {
-        super(equipmentId, substationId, attributeName, attributeValue);
+    public FloatElementaryModificationEntity(String equipmentId, String attributeName, Float attributeValue) {
+        super(equipmentId, attributeName, attributeValue);
     }
 }

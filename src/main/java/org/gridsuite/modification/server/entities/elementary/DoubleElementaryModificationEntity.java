@@ -11,8 +11,6 @@ import javax.persistence.ForeignKey;
 import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
 
-import java.util.Set;
-
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -27,7 +25,7 @@ import lombok.NoArgsConstructor;
         name = "double_modification_uuid_fk_constraint"
 ))
 public class DoubleElementaryModificationEntity extends ElementaryModificationEntity<Double> {
-    public DoubleElementaryModificationEntity(String equipmentId, Set<String> substationId, String attributeName, Double attributeValue) {
-        super(equipmentId, substationId, attributeName, attributeValue);
+    public DoubleElementaryModificationEntity(String equipmentId, String attributeName, Double attributeValue) {
+        super(equipmentId, attributeName, attributeValue);
     }
 }

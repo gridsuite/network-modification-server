@@ -37,8 +37,8 @@ public class NetworkStoreListener implements NetworkListener {
 
     private void storeModification(Identifiable<?> identifiable, String attributeName, Object attributeValue) {
         modifications.add(
-                this.modificationRepository.createElementaryModification(networkUuid, identifiable.getId(), getSubstationIds(identifiable), attributeName, attributeValue)
-                        .toElementaryModificationInfos()
+                this.modificationRepository.createElementaryModification(networkUuid, identifiable.getId(), attributeName, attributeValue)
+                        .toElementaryModificationInfos(getSubstationIds(identifiable))
         );
     }
 

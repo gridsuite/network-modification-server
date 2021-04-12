@@ -16,7 +16,8 @@ import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ElementaryModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.entities.*;
+import org.gridsuite.modification.server.entities.ModificationEntity;
+import org.gridsuite.modification.server.entities.ModificationGroupEntity;
 import org.gridsuite.modification.server.entities.elementary.*;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,9 +45,8 @@ public class NetworkModificationRepository {
     }
 
     @Transactional // To have the 2 create in the same transaction (atomic)
-    public <T> ElementaryModificationEntity<T> createElementaryModification(UUID groupUuid, String equipmentId, Set<String> substationId,
-                                                                     String attributeName, T attributeValue) {
-        ElementaryModificationEntity<T> elementaryModificationEntity = (ElementaryModificationEntity<T>) createElementaryModificationEntity(equipmentId, substationId, attributeName, attributeValue);
+    public <T> ElementaryModificationEntity<T> createElementaryModification(UUID groupUuid, String equipmentId, String attributeName, T attributeValue) {
+        ElementaryModificationEntity<T> elementaryModificationEntity = (ElementaryModificationEntity<T>) createElementaryModificationEntity(equipmentId, attributeName, attributeValue);
         ModificationGroupEntity modificationGroupEntity = this.modificationGroupRepository.findById(groupUuid).orElse(createModificationGroup(groupUuid));
         elementaryModificationEntity.setGroup(modificationGroupEntity);
         this.modificationRepository.save(elementaryModificationEntity);
@@ -99,21 +99,21 @@ public class NetworkModificationRepository {
         return this.modificationGroupRepository.findById(groupUuid).orElseThrow(() -> new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, groupUuid.toString()));
     }
 
-    private <T> ElementaryModificationEntity<?> createElementaryModificationEntity(String equipmentId, Set<String> substationId, String attributeName, T attributeValue) {
+    private <T> ElementaryModificationEntity<?> createElementaryModificationEntity(String equipmentId, String attributeName, T attributeValue) {
         if (attributeValue.getClass().isEnum()) {
-            return new StringElementaryModificationEntity(equipmentId, substationId, attributeName, attributeValue.toString());
+            return new StringElementaryModificationEntity(equipmentId, attributeName, attributeValue.toString());
         } else {
             switch (attributeValue.getClass().getSimpleName()) {
                 case "String":
-                    return new StringElementaryModificationEntity(equipmentId, substationId, attributeName, (String) attributeValue);
+                    return new StringElementaryModificationEntity(equipmentId, attributeName, (String) attributeValue);
                 case "Boolean":
-                    return new BooleanElementaryModificationEntity(equipmentId, substationId, attributeName, (boolean) attributeValue);
+                    return new BooleanElementaryModificationEntity(equipmentId, attributeName, (boolean) attributeValue);
                 case "Integer":
-                    return new IntegerElementaryModificationEntity(equipmentId, substationId, attributeName, (int) attributeValue);
+                    return new IntegerElementaryModificationEntity(equipmentId, attributeName, (int) attributeValue);
                 case "Float":
-                    return new FloatElementaryModificationEntity(equipmentId, substationId, attributeName, (float) attributeValue);
+                    return new FloatElementaryModificationEntity(equipmentId, attributeName, (float) attributeValue);
                 case "Double":
-                    return new DoubleElementaryModificationEntity(equipmentId, substationId, attributeName, (double) attributeValue);
+                    return new DoubleElementaryModificationEntity(equipmentId, attributeName, (double) attributeValue);
                 default:
                     throw new PowsyblException("Value type invalid : " + attributeValue.getClass().getSimpleName());
             }

@@ -11,8 +11,6 @@ import javax.persistence.ForeignKey;
 import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
 
-import java.util.Set;
-
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -27,7 +25,7 @@ import lombok.NoArgsConstructor;
         name = "boolean_modification_uuid_fk_constraint"
 ))
 public class BooleanElementaryModificationEntity extends ElementaryModificationEntity<Boolean> {
-    public BooleanElementaryModificationEntity(String equipmentId, Set<String> substationId, String attributeName, Boolean attributeValue) {
-        super(equipmentId, substationId, attributeName, attributeValue);
+    public BooleanElementaryModificationEntity(String equipmentId, String attributeName, Boolean attributeValue) {
+        super(equipmentId, attributeName, attributeValue);
     }
 }
