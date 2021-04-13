@@ -29,9 +29,9 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
  */
 @Repository
 public class NetworkModificationRepository {
-    private ModificationGroupRepository modificationGroupRepository;
+    private final ModificationGroupRepository modificationGroupRepository;
 
-    private ModificationRepository modificationRepository;
+    private final ModificationRepository modificationRepository;
 
     public NetworkModificationRepository(ModificationGroupRepository modificationGroupRepository, ModificationRepository modificationRepository) {
         this.modificationGroupRepository = modificationGroupRepository;
@@ -71,13 +71,10 @@ public class NetworkModificationRepository {
                 .collect(Collectors.toList());
     }
 
-    public List<ElementaryModificationInfos> getElementaryModifications(UUID groupUuid) {
+    public ElementaryModificationInfos getElementaryModification(UUID groupUuid, UUID modificationUuid) {
         ModificationGroupEntity group = getModificationGroup(groupUuid);
-        return this.modificationRepository.findAllByGroupUuidAndType(group.getUuid(), ModificationType.ELEMENTARY.name())
-                .stream()
-                .map(ElementaryModificationEntity.class::cast)
-                .map(ElementaryModificationEntity::toElementaryModificationInfos)
-                .collect(Collectors.toList());
+        return ((ElementaryModificationEntity<?>) this.modificationRepository.findByGroupUuidAndTypeAndUuid(group.getUuid(), ModificationType.ELEMENTARY.name(), modificationUuid))
+                .toElementaryModificationInfos();
     }
 
     @Transactional // To have the 2 delete in the same transaction (atomic)

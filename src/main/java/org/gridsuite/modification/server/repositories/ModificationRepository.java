@@ -24,5 +24,5 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
 
     List<ModificationEntity> findAllByGroupUuid(UUID uuid);
 
-    List<ModificationEntity> findAllByGroupUuidAndType(UUID uuid, String type);
+    ModificationEntity findByGroupUuidAndTypeAndUuid(UUID groupUuid, String type, UUID modificationUUID);
 }

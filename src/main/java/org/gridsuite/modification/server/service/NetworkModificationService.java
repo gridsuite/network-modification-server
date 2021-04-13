@@ -75,8 +75,8 @@ public class NetworkModificationService {
         return Flux.fromIterable(modificationRepository.getModifications(groupUuid));
     }
 
-    public Flux<ElementaryModificationInfos> getElementaryModifications(UUID groupUuid) {
-        return Flux.fromIterable(modificationRepository.getElementaryModifications(groupUuid));
+    public Mono<ElementaryModificationInfos> getElementaryModification(UUID groupUuid, UUID modificationUuid) {
+        return Mono.just(modificationRepository.getElementaryModification(groupUuid, modificationUuid));
     }
 
     public Mono<Void> deleteModificationGroup(UUID groupUuid) {

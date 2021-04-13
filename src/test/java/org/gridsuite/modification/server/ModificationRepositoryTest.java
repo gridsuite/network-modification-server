@@ -11,7 +11,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import com.vladmihalcea.sql.SQLStatementCountValidator;
-import org.gridsuite.modification.server.dto.ElementaryModificationInfos;
+import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.elementary.ElementaryModificationEntity;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.utils.MatcherElementaryModificationInfos;
@@ -54,9 +54,6 @@ public class ModificationRepositoryTest {
         assertThrows(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_NETWORK_ID.toString()).getMessage(),
                 NetworkModificationException.class, () -> modificationRepository.getModifications(TEST_NETWORK_ID)
         );
-        assertThrows(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_NETWORK_ID.toString()).getMessage(),
-                NetworkModificationException.class, () -> modificationRepository.getElementaryModifications(TEST_NETWORK_ID)
-        );
 
         ElementaryModificationEntity<String> stringModifEntity = this.modificationRepository.createElementaryModification(TEST_NETWORK_ID, "id1", "attribute", "foo");
         ElementaryModificationEntity<Boolean> boolModifEntity = this.modificationRepository.createElementaryModification(TEST_NETWORK_ID, "id2", "attribute", true);
@@ -64,32 +61,31 @@ public class ModificationRepositoryTest {
         ElementaryModificationEntity<Float> floatModifEntity = this.modificationRepository.createElementaryModification(TEST_NETWORK_ID, "id4", "attribute", 2F);
         ElementaryModificationEntity<Double> doubleModifEntity = this.modificationRepository.createElementaryModification(TEST_NETWORK_ID, "id5", "attribute", 3D);
 
-        List<ElementaryModificationInfos> elementaryModificationEntities = modificationRepository.getElementaryModifications(TEST_NETWORK_ID);
-        assertEquals(5, elementaryModificationEntities.size());
+        List<ModificationInfos> modificationEntities = modificationRepository.getModifications(TEST_NETWORK_ID);
+        assertEquals(5, modificationEntities.size());
         // Order is also checked
-        assertThat(elementaryModificationEntities.get(0),
+        assertThat(modificationRepository.getElementaryModification(TEST_NETWORK_ID, modificationEntities.get(0).getUuid()),
                 MatcherElementaryModificationInfos.createMatcherElementaryModificationInfos(stringModifEntity.toElementaryModificationInfos()));
-        assertThat(elementaryModificationEntities.get(1),
+        assertThat(modificationRepository.getElementaryModification(TEST_NETWORK_ID, modificationEntities.get(1).getUuid()),
                 MatcherElementaryModificationInfos.createMatcherElementaryModificationInfos(boolModifEntity.toElementaryModificationInfos()));
-        assertThat(elementaryModificationEntities.get(2),
+        assertThat(modificationRepository.getElementaryModification(TEST_NETWORK_ID, modificationEntities.get(2).getUuid()),
                 MatcherElementaryModificationInfos.createMatcherElementaryModificationInfos(intModifEntity.toElementaryModificationInfos()));
-        assertThat(elementaryModificationEntities.get(3),
+        assertThat(modificationRepository.getElementaryModification(TEST_NETWORK_ID, modificationEntities.get(3).getUuid()),
                 MatcherElementaryModificationInfos.createMatcherElementaryModificationInfos(floatModifEntity.toElementaryModificationInfos()));
-        assertThat(elementaryModificationEntities.get(4),
+        assertThat(modificationRepository.getElementaryModification(TEST_NETWORK_ID, modificationEntities.get(4).getUuid()),
                 MatcherElementaryModificationInfos.createMatcherElementaryModificationInfos(doubleModifEntity.toElementaryModificationInfos()));
 
         assertEquals(5, modificationRepository.getModifications(TEST_NETWORK_ID).size());
-        assertEquals(5, modificationRepository.getElementaryModifications(TEST_NETWORK_ID).size());
         assertEquals(List.of(TEST_NETWORK_ID), this.modificationRepository.getModificationGroupsUuids());
 
         modificationRepository.deleteModifications(TEST_NETWORK_ID, Set.of());
-        assertEquals(5, modificationRepository.getElementaryModifications(TEST_NETWORK_ID).size());
+        assertEquals(5, modificationRepository.getModifications(TEST_NETWORK_ID).size());
         modificationRepository.deleteModifications(TEST_NETWORK_ID, Set.of(stringModifEntity.getUuid(), boolModifEntity.getUuid()));
-        assertEquals(3, modificationRepository.getElementaryModifications(TEST_NETWORK_ID).size());
+        assertEquals(3, modificationRepository.getModifications(TEST_NETWORK_ID).size());
 
         modificationRepository.deleteModificationGroup(TEST_NETWORK_ID);
         assertThrows(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_NETWORK_ID.toString()).getMessage(),
-                NetworkModificationException.class, () -> modificationRepository.getElementaryModifications(TEST_NETWORK_ID)
+                NetworkModificationException.class, () -> modificationRepository.getModifications(TEST_NETWORK_ID)
         );
     }
 
@@ -102,7 +98,7 @@ public class ModificationRepositoryTest {
 
     @Test
     public void testGetModificationQueryCount() {
-        modificationRepository.createElementaryModification(TEST_NETWORK_ID, "id1", "attribute", "foo");
+        ElementaryModificationEntity<String> modifEntity = modificationRepository.createElementaryModification(TEST_NETWORK_ID, "id1", "attribute", "foo");
         modificationRepository.createElementaryModification(TEST_NETWORK_ID, "id2", "attribute", "foo");
         modificationRepository.createElementaryModification(TEST_NETWORK_ID, "id3", "attribute", "foo");
 
@@ -115,7 +111,7 @@ public class ModificationRepositoryTest {
         assertRequestsCount(2, 0, 0, 0);
 
         SQLStatementCountValidator.reset();
-        modificationRepository.getElementaryModifications(TEST_NETWORK_ID);
+        modificationRepository.getElementaryModification(TEST_NETWORK_ID, modifEntity.getUuid());
         assertRequestsCount(2, 0, 0, 0);
     }
 

@@ -58,11 +58,12 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.getModifications(groupUuid));
     }
 
-    @GetMapping(value = "/networks/{networkUuid}/elementarymodifications", produces = MediaType.APPLICATION_JSON_VALUE)
-    @ApiOperation(value = "Get elementary modifications list of the default group for a network")
-    @ApiResponse(code = 200, message = "List of elementary modifications of the default group for the network")
-    public ResponseEntity<Flux<ElementaryModificationInfos>> getElementaryModifications(@ApiParam(value = "Group UUID") @PathVariable("networkUuid") UUID groupUuid) {
-        return ResponseEntity.ok().body(networkModificationService.getElementaryModifications(groupUuid));
+    @GetMapping(value = "/networks/{networkUuid}/elementarymodifications/{modificationUuid}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ApiOperation(value = "Get an elementary modification of the default group for a network")
+    @ApiResponse(code = 200, message = "Elementary modification of the default group for the network")
+    public ResponseEntity<Mono<ElementaryModificationInfos>> getElementaryModifications(@ApiParam(value = "Group UUID") @PathVariable("networkUuid") UUID groupUuid,
+                                                                                        @ApiParam(value = "Modification UUID") @PathVariable("modificationUuid") UUID modificationUuid) {
+        return ResponseEntity.ok().body(networkModificationService.getElementaryModification(groupUuid, modificationUuid));
     }
 
     @DeleteMapping(value = "/networks/{networkUuid}/modifications")

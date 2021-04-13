@@ -95,6 +95,25 @@ public class ModificationControllerTest {
                 .build();
         assertEquals("ElementaryModificationInfos(super=ModificationInfos(uuid=7928181c-7977-4592-ba19-88027e4254e4, date=2021-02-19T00:00Z, type=ELEMENTARY), equipmentId=equipmentId, substationIds=[substationId], equipmentAttributeName=equipmentAttributeName, equipmentAttributeValue=equipmentAttributeValue)",
                 modificationInfos.toString());
+
+        // switch opening
+        ElementaryModificationInfos modificationSwitchInfos =
+                Objects.requireNonNull(webTestClient.put().uri("/v1/networks/{networkUuid}/switches/{switchId}?open=true", TEST_NETWORK_ID, "v1b1")
+                        .exchange()
+                        .expectStatus().isOk()
+                        .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                        .expectBodyList(ElementaryModificationInfos.class)
+                        .returnResult()
+                        .getResponseBody()).get(0);
+
+        assertTrue(createMatcherElementaryModificationInfos("v1b1", Set.of("s1"), "open", true).matchesSafely(modificationSwitchInfos));
+
+        webTestClient.get().uri("/v1/networks/{networkUuid}/elementarymodifications/{modificationUuid}", TEST_NETWORK_ID, modificationSwitchInfos.getUuid())
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBody(ElementaryModificationInfos.class)
+                .value(createMatcherElementaryModificationInfos("v1b1", Set.of(), "open", true));
     }
 
     @Test
@@ -299,14 +318,6 @@ public class ModificationControllerTest {
     private void testDeleteNetwokModifications(UUID networkUuid, int actualSize) {
         // get all modifications for the default group of a network
         assertEquals(actualSize, Objects.requireNonNull(webTestClient.get().uri("/v1/networks/{networkUuid}/modifications", networkUuid)
-                .exchange()
-                .expectStatus().isOk()
-                .expectHeader().contentType(MediaType.APPLICATION_JSON)
-                .expectBodyList(ElementaryModificationInfos.class)
-                .returnResult().getResponseBody()).size());
-
-        // get all elementary modifications for the default group of a network
-        assertEquals(actualSize, Objects.requireNonNull(webTestClient.get().uri("/v1/networks/{networkUuid}/elementarymodifications", networkUuid)
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
