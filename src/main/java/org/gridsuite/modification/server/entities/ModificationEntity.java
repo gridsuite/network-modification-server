@@ -25,17 +25,17 @@ import org.gridsuite.modification.server.dto.ModificationInfos;
 @Getter
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
-@Table(name = "modification", indexes = {@Index(name = "modificationEntity_group_uuid_index", columnList = "group_uuid")})
+@Table(name = "modification", indexes = {@Index(name = "modificationEntity_group_id_index", columnList = "group_id")})
 public class ModificationEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name = "uuid")
-    private UUID uuid;
+    @Column(name = "id")
+    private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(foreignKey = @ForeignKey(
-            name = "group_uuid_fk_constraint"
+            name = "group_id_fk_constraint"
     ))
     @Setter
     private ModificationGroupEntity group;
@@ -47,14 +47,14 @@ public class ModificationEntity {
     private String type;
 
     protected ModificationEntity(ModificationType type) {
-        this.uuid = null;
+        this.id = null;
         this.date = ZonedDateTime.now(ZoneOffset.UTC);
         this.type = type.name();
     }
 
     public ModificationInfos toModificationInfos() {
         return ModificationInfos.builder()
-                .uuid(this.uuid)
+                .uuid(this.id)
                 .date(this.date)
                 .type(ModificationType.valueOf(this.type))
                 .build();

@@ -51,7 +51,7 @@ public class ElementaryModificationEntity<T> extends ModificationEntity {
     private ElementaryModificationInfos.ElementaryModificationInfosBuilder<?, ?> toModificationInfosBuilder() {
         return ElementaryModificationInfos
                 .builder()
-                .uuid(getUuid())
+                .uuid(getId())
                 .date(getDate())
                 .type(ModificationType.valueOf(getType()))
                 .equipmentId(getEquipmentId())

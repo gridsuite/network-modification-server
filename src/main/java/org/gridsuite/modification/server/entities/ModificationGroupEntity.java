@@ -23,12 +23,12 @@ import lombok.NoArgsConstructor;
 @Getter
 @Entity
 @Table(name = "modificationGroup")
-public class ModificationGroupEntity {
+public class ModificationGroupEntity extends AbstractManuallyAssignedIdentifierEntity<UUID> {
     @Id
-    @Column(name = "uuid")
-    private UUID uuid;
+    @Column(name = "id")
+    private UUID id;
 
     public ModificationGroupEntity(UUID uuid) {
-        this.uuid = uuid;
+        this.id = uuid;
     }
 }

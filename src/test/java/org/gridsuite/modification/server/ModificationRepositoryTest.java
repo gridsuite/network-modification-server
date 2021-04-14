@@ -12,7 +12,10 @@ import java.util.UUID;
 
 import com.vladmihalcea.sql.SQLStatementCountValidator;
 import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.entities.ModificationGroupEntity;
 import org.gridsuite.modification.server.entities.elementary.ElementaryModificationEntity;
+import org.gridsuite.modification.server.repositories.ModificationGroupRepository;
+import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.utils.MatcherElementaryModificationInfos;
 import org.junit.Before;
@@ -37,6 +40,12 @@ import static org.junit.Assert.assertThrows;
 public class ModificationRepositoryTest {
 
     private static final UUID TEST_NETWORK_ID = UUID.fromString("7928181c-7977-4592-ba19-88027e4254e4");
+
+    @Autowired
+    private ModificationGroupRepository modificationGroupRepository;
+
+    @Autowired
+    private ModificationRepository modificationBaseRepository;
 
     @Autowired
     private NetworkModificationRepository modificationRepository;
@@ -80,7 +89,7 @@ public class ModificationRepositoryTest {
 
         modificationRepository.deleteModifications(TEST_NETWORK_ID, Set.of());
         assertEquals(5, modificationRepository.getModifications(TEST_NETWORK_ID).size());
-        modificationRepository.deleteModifications(TEST_NETWORK_ID, Set.of(stringModifEntity.getUuid(), boolModifEntity.getUuid()));
+        modificationRepository.deleteModifications(TEST_NETWORK_ID, Set.of(stringModifEntity.getId(), boolModifEntity.getId()));
         assertEquals(3, modificationRepository.getModifications(TEST_NETWORK_ID).size());
 
         modificationRepository.deleteModificationGroup(TEST_NETWORK_ID);
@@ -90,10 +99,18 @@ public class ModificationRepositoryTest {
     }
 
     @Test
+    public void testCreateModificationGroupQueryCount() {
+        modificationGroupRepository.save(new ModificationGroupEntity(TEST_NETWORK_ID));
+
+        // No select
+        assertRequestsCount(0, 1, 0, 0);
+    }
+
+    @Test
     public void testCreateModificationQueryCount() {
         modificationRepository.createElementaryModification(TEST_NETWORK_ID, "id1", "attribute", "foo");
 
-        assertRequestsCount(2, 3, 0, 0);
+        assertRequestsCount(1, 3, 0, 0);
     }
 
     @Test
@@ -111,7 +128,7 @@ public class ModificationRepositoryTest {
         assertRequestsCount(2, 0, 0, 0);
 
         SQLStatementCountValidator.reset();
-        modificationRepository.getElementaryModification(TEST_NETWORK_ID, modifEntity.getUuid());
+        modificationRepository.getElementaryModification(TEST_NETWORK_ID, modifEntity.getId());
         assertRequestsCount(2, 0, 0, 0);
     }
 
@@ -121,7 +138,7 @@ public class ModificationRepositoryTest {
         ElementaryModificationEntity<String> modifEntity2 = modificationRepository.createElementaryModification(TEST_NETWORK_ID, "id2", "attribute", "foo");
 
         SQLStatementCountValidator.reset();
-        modificationRepository.deleteModifications(TEST_NETWORK_ID, Set.of(modifEntity1.getUuid()));
+        modificationRepository.deleteModifications(TEST_NETWORK_ID, Set.of(modifEntity1.getId()));
         assertRequestsCount(1, 0, 0, 2);
 
         SQLStatementCountValidator.reset();
@@ -129,7 +146,7 @@ public class ModificationRepositoryTest {
         assertRequestsCount(2, 0, 0, 3);
 
         SQLStatementCountValidator.reset();
-        modificationRepository.deleteModifications(TEST_NETWORK_ID, Set.of(modifEntity2.getUuid()));
+        modificationRepository.deleteModifications(TEST_NETWORK_ID, Set.of(modifEntity2.getId()));
         assertRequestsCount(1, 0, 0, 0);
     }
 

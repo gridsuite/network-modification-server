@@ -22,7 +22,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "stringelementaryModification")
 @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(
-        name = "string_modification_uuid_fk_constraint"
+        name = "string_modification_id_fk_constraint"
 ))
 public class StringElementaryModificationEntity extends ElementaryModificationEntity<String> {
     public StringElementaryModificationEntity(String equipmentId, String attributeName, String attributeValue) {
