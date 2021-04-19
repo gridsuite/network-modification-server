@@ -15,7 +15,6 @@ import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationGroupEntity;
 import org.gridsuite.modification.server.entities.elementary.ElementaryModificationEntity;
 import org.gridsuite.modification.server.repositories.ModificationGroupRepository;
-import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.utils.MatcherElementaryModificationInfos;
 import org.junit.Before;
@@ -43,9 +42,6 @@ public class ModificationRepositoryTest {
 
     @Autowired
     private ModificationGroupRepository modificationGroupRepository;
-
-    @Autowired
-    private ModificationRepository modificationBaseRepository;
 
     @Autowired
     private NetworkModificationRepository modificationRepository;

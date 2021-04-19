@@ -25,7 +25,7 @@ public class NetworkStoreListener implements NetworkListener {
     private List<ElementaryModificationInfos> modifications = new LinkedList<>();
 
     public static NetworkStoreListener create(Network network, UUID networkUuid, NetworkModificationRepository modificationRepository) {
-        NetworkStoreListener listener = new NetworkStoreListener(networkUuid, modificationRepository);
+        var listener = new NetworkStoreListener(networkUuid, modificationRepository);
         network.addListener(listener);
         return listener;
     }

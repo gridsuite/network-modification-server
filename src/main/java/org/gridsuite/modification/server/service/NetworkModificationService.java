@@ -50,10 +50,10 @@ public class NetworkModificationService {
     public Flux<ElementaryModificationInfos> applyGroovyScript(UUID networkUuid, String groovyScript) {
         return assertGroovyScriptNotEmpty(groovyScript).thenMany(
                 getNetwork(networkUuid).flatMapIterable(network -> doModification(network, networkUuid, () -> {
-                    CompilerConfiguration conf = new CompilerConfiguration();
-                    Binding binding = new Binding();
+                    var conf = new CompilerConfiguration();
+                    var binding = new Binding();
                     binding.setProperty("network", network);
-                    GroovyShell shell = new GroovyShell(binding, conf);
+                    var shell = new GroovyShell(binding, conf);
                     shell.evaluate(groovyScript);
                 }, GROOVY_SCRIPT_ERROR))
         );
@@ -68,15 +68,15 @@ public class NetworkModificationService {
     }
 
     public Flux<UUID> getModificationGroups() {
-        return Flux.fromIterable(modificationRepository.getModificationGroupsUuids());
+        return Flux.fromStream(() -> modificationRepository.getModificationGroupsUuids().stream());
     }
 
     public Flux<ModificationInfos> getModifications(UUID groupUuid) {
-        return Flux.fromIterable(modificationRepository.getModifications(groupUuid));
+        return Flux.fromStream(() -> modificationRepository.getModifications(groupUuid).stream());
     }
 
     public Mono<ElementaryModificationInfos> getElementaryModification(UUID groupUuid, UUID modificationUuid) {
-        return Mono.just(modificationRepository.getElementaryModification(groupUuid, modificationUuid));
+        return Mono.fromCallable(() -> modificationRepository.getElementaryModification(groupUuid, modificationUuid));
     }
 
     public Mono<Void> deleteModificationGroup(UUID groupUuid) {
@@ -89,12 +89,12 @@ public class NetworkModificationService {
 
     private List<ElementaryModificationInfos> doModification(Network network, UUID networkUuid, Runnable modification, NetworkModificationException.Type typeIfError) {
         try {
-            NetworkStoreListener listener = NetworkStoreListener.create(network, networkUuid, modificationRepository);
+            var listener = NetworkStoreListener.create(network, networkUuid, modificationRepository);
             modification.run();
             networkStoreService.flush(network);
             return listener.getModifications();
         } catch (Exception e) {
-            NetworkModificationException exc = new NetworkModificationException(typeIfError, e);
+            var exc = new NetworkModificationException(typeIfError, e);
             LOGGER.error(exc.getMessage());
             throw exc;
         }
