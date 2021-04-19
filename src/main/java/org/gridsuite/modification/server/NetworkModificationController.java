@@ -13,6 +13,7 @@ import io.swagger.annotations.*;
 import org.gridsuite.modification.server.dto.ElementaryModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.service.NetworkModificationService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,11 +28,8 @@ import reactor.core.publisher.Mono;
 @Api(tags = "network-modification-server")
 public class NetworkModificationController {
 
-    private final NetworkModificationService networkModificationService;
-
-    public NetworkModificationController(NetworkModificationService networkModificationService) {
-        this.networkModificationService = networkModificationService;
-    }
+    @Autowired
+    private NetworkModificationService networkModificationService;
 
     @PutMapping(value = "/networks/{networkUuid}/switches/{switchId}", produces = MediaType.APPLICATION_JSON_VALUE)
     @ApiOperation(value = "change a switch state in the network", response = Set.class)
