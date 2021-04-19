@@ -5,7 +5,9 @@ spring:
       ddl-auto: create-drop
     properties:
       dialect: org.hibernate.dialect.H2Dialect
-      hibernate.format_sql: true
+      hibernate:
+        format_sql: true
+        generate_statistics: true
 
 logging:
   level:
@@ -13,6 +15,7 @@ logging:
     org.springframework.transaction: DEBUG
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    net.ttddyy.dsproxy.listener.logging.SLF4JQueryLoggingListener: DEBUG
 
 dbVendor: h2:mem
 query: ;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
