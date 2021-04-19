@@ -114,6 +114,12 @@ public class ModificationControllerTest {
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
                 .expectBody(ElementaryModificationInfos.class)
                 .value(createMatcherElementaryModificationInfos("v1b1", Set.of(), "open", true));
+
+        webTestClient.get().uri("/v1/networks/{networkUuid}/elementarymodifications/{modificationUuid}", TEST_NETWORK_ID, TEST_NETWORK_ID)
+                .exchange()
+                .expectStatus().isNotFound()
+                .expectBody(String.class)
+                .isEqualTo(new NetworkModificationException(MODIFICATION_NOT_FOUND, TEST_NETWORK_ID.toString()).getMessage());
     }
 
     @Test

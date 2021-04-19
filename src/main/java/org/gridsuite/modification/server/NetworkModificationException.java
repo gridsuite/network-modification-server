@@ -21,6 +21,7 @@ public class NetworkModificationException extends RuntimeException {
         GROOVY_SCRIPT_ERROR(HttpStatus.BAD_REQUEST),
         NETWORK_NOT_FOUND(HttpStatus.NOT_FOUND),
         MODIFICATION_GROUP_NOT_FOUND(HttpStatus.NOT_FOUND),
+        MODIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND),
         SWITCH_NOT_FOUND(HttpStatus.NOT_FOUND),
         MODIFICATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR);
 

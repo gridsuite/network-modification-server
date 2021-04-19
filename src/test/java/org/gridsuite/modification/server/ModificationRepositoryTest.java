@@ -26,6 +26,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import static com.vladmihalcea.sql.SQLStatementCountValidator.*;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_GROUP_NOT_FOUND;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_NOT_FOUND;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
@@ -60,11 +61,11 @@ public class ModificationRepositoryTest {
                 NetworkModificationException.class, () -> modificationRepository.getModifications(TEST_NETWORK_ID)
         );
 
-        ElementaryModificationEntity<String> stringModifEntity = this.modificationRepository.createElementaryModification(TEST_NETWORK_ID, "id1", "attribute", "foo");
-        ElementaryModificationEntity<Boolean> boolModifEntity = this.modificationRepository.createElementaryModification(TEST_NETWORK_ID, "id2", "attribute", true);
-        ElementaryModificationEntity<Integer> intModifEntity = this.modificationRepository.createElementaryModification(TEST_NETWORK_ID, "id3", "attribute", 1);
-        ElementaryModificationEntity<Float> floatModifEntity = this.modificationRepository.createElementaryModification(TEST_NETWORK_ID, "id4", "attribute", 2F);
-        ElementaryModificationEntity<Double> doubleModifEntity = this.modificationRepository.createElementaryModification(TEST_NETWORK_ID, "id5", "attribute", 3D);
+        var stringModifEntity = this.modificationRepository.createElementaryModification(TEST_NETWORK_ID, "id1", "attribute", "foo");
+        var boolModifEntity = this.modificationRepository.createElementaryModification(TEST_NETWORK_ID, "id2", "attribute", true);
+        var intModifEntity = this.modificationRepository.createElementaryModification(TEST_NETWORK_ID, "id3", "attribute", 1);
+        var floatModifEntity = this.modificationRepository.createElementaryModification(TEST_NETWORK_ID, "id4", "attribute", 2F);
+        var doubleModifEntity = this.modificationRepository.createElementaryModification(TEST_NETWORK_ID, "id5", "attribute", 3D);
 
         List<ModificationInfos> modificationEntities = modificationRepository.getModifications(TEST_NETWORK_ID);
         assertEquals(5, modificationEntities.size());
@@ -111,7 +112,7 @@ public class ModificationRepositoryTest {
 
     @Test
     public void testGetModificationQueryCount() {
-        ElementaryModificationEntity<String> modifEntity = modificationRepository.createElementaryModification(TEST_NETWORK_ID, "id1", "attribute", "foo");
+        var modifEntity = modificationRepository.createElementaryModification(TEST_NETWORK_ID, "id1", "attribute", "foo");
         modificationRepository.createElementaryModification(TEST_NETWORK_ID, "id2", "attribute", "foo");
         modificationRepository.createElementaryModification(TEST_NETWORK_ID, "id3", "attribute", "foo");
 
@@ -125,7 +126,12 @@ public class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         modificationRepository.getElementaryModification(TEST_NETWORK_ID, modifEntity.getId());
-        assertRequestsCount(2, 0, 0, 0);
+        assertRequestsCount(1, 0, 0, 0);
+
+        // Non-existent modification uuid
+        assertThrows(new NetworkModificationException(MODIFICATION_NOT_FOUND, TEST_NETWORK_ID.toString()).getMessage(),
+                NetworkModificationException.class, () -> modificationRepository.getElementaryModification(TEST_NETWORK_ID, TEST_NETWORK_ID)
+        );
     }
 
     @Test

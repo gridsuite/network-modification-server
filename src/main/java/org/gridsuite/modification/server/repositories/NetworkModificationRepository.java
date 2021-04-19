@@ -23,6 +23,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_GROUP_NOT_FOUND;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_NOT_FOUND;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -72,8 +73,11 @@ public class NetworkModificationRepository {
     }
 
     public ElementaryModificationInfos getElementaryModification(UUID groupUuid, UUID modificationUuid) {
-        ModificationGroupEntity group = getModificationGroup(groupUuid);
-        return ((ElementaryModificationEntity<?>) this.modificationRepository.findByGroupIdAndTypeAndId(group.getId(), ModificationType.ELEMENTARY.name(), modificationUuid))
+        return ((ElementaryModificationEntity<?>) this.modificationRepository
+                .findById(modificationUuid)
+                .filter(m -> ModificationType.ELEMENTARY.name().equals(m.getType()))
+                .filter(m -> groupUuid.equals(m.getGroup().getId()))
+                .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString())))
                 .toElementaryModificationInfos();
     }
 
