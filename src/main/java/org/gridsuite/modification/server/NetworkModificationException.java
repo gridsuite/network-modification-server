@@ -13,13 +13,15 @@ import java.util.Objects;
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
-class NetworkModificationException extends RuntimeException {
+public class NetworkModificationException extends RuntimeException {
     static final String EMPTY_SCRIPT = "Empty script";
 
     public enum Type {
         GROOVY_SCRIPT_EMPTY(HttpStatus.BAD_REQUEST, EMPTY_SCRIPT),
         GROOVY_SCRIPT_ERROR(HttpStatus.BAD_REQUEST),
         NETWORK_NOT_FOUND(HttpStatus.NOT_FOUND),
+        MODIFICATION_GROUP_NOT_FOUND(HttpStatus.NOT_FOUND),
+        MODIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND),
         SWITCH_NOT_FOUND(HttpStatus.NOT_FOUND),
         MODIFICATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR);
 
@@ -42,17 +44,17 @@ class NetworkModificationException extends RuntimeException {
 
     private final Type type;
 
-    NetworkModificationException(Type type) {
+    public NetworkModificationException(Type type) {
         super(Objects.requireNonNull(type.name()) + ((type.message == null) ? "" : " : " + type.message));
         this.type = type;
     }
 
-    NetworkModificationException(Type type, Exception cause) {
+    public NetworkModificationException(Type type, Exception cause) {
         super(Objects.requireNonNull(type.name()) + " : " + Objects.requireNonNull(cause.getMessage()), cause);
         this.type = type;
     }
 
-    NetworkModificationException(Type type, String message) {
+    public NetworkModificationException(Type type, String message) {
         super(Objects.requireNonNull(type.name()) + " : " + Objects.requireNonNull(message));
         this.type = type;
     }
