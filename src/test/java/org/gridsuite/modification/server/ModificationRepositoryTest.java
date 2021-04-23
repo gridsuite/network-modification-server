@@ -150,6 +150,11 @@ public class ModificationRepositoryTest {
         SQLStatementCountValidator.reset();
         modificationRepository.deleteModifications(TEST_NETWORK_ID, Set.of(modifEntity2.getId()));
         assertRequestsCount(1, 0, 0, 0);
+
+        // Non-existent group modification uuid
+        assertThrows(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_NETWORK_ID.toString()).getMessage(),
+                NetworkModificationException.class, () -> modificationRepository.deleteModificationGroup(TEST_NETWORK_ID)
+        );
     }
 
     private void assertRequestsCount(long select, long insert, long update, long delete) {
