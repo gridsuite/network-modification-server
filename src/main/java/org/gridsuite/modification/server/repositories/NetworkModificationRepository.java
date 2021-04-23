@@ -83,8 +83,9 @@ public class NetworkModificationRepository {
 
     @Transactional // To have the 2 delete in the same transaction (atomic)
     public void deleteModificationGroup(UUID groupUuid) {
+        ModificationGroupEntity groupEntity = getModificationGroup(groupUuid);
         this.modificationRepository.deleteAll(this.modificationRepository.findAllByGroupId(groupUuid));
-        this.modificationGroupRepository.deleteById(groupUuid);
+        this.modificationGroupRepository.delete(groupEntity);
     }
 
     @Transactional // To have the find and delete in the same transaction (atomic)
