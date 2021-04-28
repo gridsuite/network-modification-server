@@ -21,9 +21,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @Entity
 @Table(name = "floatelementaryModification")
-@PrimaryKeyJoinColumn(foreignKey = @ForeignKey(
-        name = "float_modification_id_fk_constraint"
-))
+@PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "float_modification_id_fk_constraint"))
 public class FloatElementaryModificationEntity extends ElementaryModificationEntity<Float> {
     public FloatElementaryModificationEntity(String equipmentId, String attributeName, Float attributeValue) {
         super(equipmentId, attributeName, attributeValue);
