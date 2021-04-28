@@ -34,9 +34,7 @@ public class ModificationEntity {
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(foreignKey = @ForeignKey(
-            name = "group_id_fk_constraint"
-    ))
+    @JoinColumn(foreignKey = @ForeignKey(name = "group_id_fk_constraint"))
     @Setter
     private ModificationGroupEntity group;
 
