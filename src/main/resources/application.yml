@@ -2,8 +2,39 @@ spring:
   application:
     name: netork-modification-server
 
+  datasource:
+    url: ${dbApi}:${dbVendor}://${hostPort}/${dbName}${query}
+    username: ${login}
+    password: ${password}
+
+  jpa:
+    database: POSTGRESQL
+    hibernate:
+      ddl-auto: validate
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+        implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl
+    properties:
+      dialect: org.hibernate.dialect.PostgreSQLDialect
+      hibernate:
+        format_sql: true
+        # Used when action: create is uncommented
+        hbm2ddl:
+          delimiter: ;
+      # Uncomment action to automatically generate the database sql schema file
+      javax:
+        persistence:
+          schema-generation:
+            scripts:
+              #action: create
+              create-target: src/main/resources/network-modification.sql
+              create-source: metadata
+
 server:
   port: 5007
 
 network-store-server:
   base-uri: http://localhost:8080
+
+dbName: networkmodifications
+dbApi: jdbc
