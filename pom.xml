@@ -82,11 +82,6 @@
     <dependencyManagement>
         <dependencies>
             <!-- overrides of imports -->
-            <dependency>
-                <groupId>com.powsybl</groupId>
-                <artifactId>powsybl-single-line-diagram-iidm-extensions</artifactId>
-                <version>2.1.0</version>
-            </dependency>
 
             <!-- imports -->
             <dependency>
