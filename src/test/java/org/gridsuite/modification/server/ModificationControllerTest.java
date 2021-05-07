@@ -260,6 +260,12 @@ public class ModificationControllerTest {
                 .value(modifications -> modifications.get(2),
                         createMatcherElementaryModificationInfos("line2", Set.of("s1", "s2"), "branchStatus", BranchStatus.Status.PLANNED_OUTAGE.name()));
 
+        webTestClient.put().uri("/v1/networks/{networkUuid}/lines/{lineId}/lockout", TEST_NETWORK_ID, "line3")
+                .exchange()
+                .expectStatus().is5xxServerError()
+                .expectBody(String.class)
+                .isEqualTo(new NetworkModificationException(MODIFICATION_ERROR, "MODIFICATION_ERROR : Unable to disconnect both line ends").getMessage());
+
         // line switch on
         webTestClient.put().uri("/v1/networks/{networkUuid}/lines/{lineId}/switchOn", TEST_NETWORK_ID, "line2")
                 .exchange()
@@ -281,6 +287,12 @@ public class ModificationControllerTest {
                 .value(modifications -> modifications.get(2),
                         createMatcherElementaryModificationInfos("line2", Set.of("s1", "s2"), "branchStatus", BranchStatus.Status.FORCED_OUTAGE.name()));
 
+        webTestClient.put().uri("/v1/networks/{networkUuid}/lines/{lineId}/trip", TEST_NETWORK_ID, "line3")
+                .exchange()
+                .expectStatus().is5xxServerError()
+                .expectBody(String.class)
+                .isEqualTo(new NetworkModificationException(MODIFICATION_ERROR, "MODIFICATION_ERROR : Unable to disconnect both line ends").getMessage());
+
         // line energise on one end
         webTestClient.put().uri("/v1/networks/{networkUuid}/lines/{lineId}/energiseEnd?side=ONE", TEST_NETWORK_ID, "line2")
                 .exchange()
@@ -290,6 +302,12 @@ public class ModificationControllerTest {
                 .value(modifications -> modifications.get(0),
                         createMatcherElementaryModificationInfos("v3bl1", Set.of("s2"), "open", true));
 
+        webTestClient.put().uri("/v1/networks/{networkUuid}/lines/{lineId}/energiseEnd?side=ONE", TEST_NETWORK_ID, "line3")
+                .exchange()
+                .expectStatus().is5xxServerError()
+                .expectBody(String.class)
+                .isEqualTo(new NetworkModificationException(MODIFICATION_ERROR, "MODIFICATION_ERROR : Unable to energise line end").getMessage());
+
         // line energise on other end
         webTestClient.put().uri("/v1/networks/{networkUuid}/lines/{lineId}/energiseEnd?side=TWO", TEST_NETWORK_ID, "line2")
                 .exchange()
@@ -298,6 +316,12 @@ public class ModificationControllerTest {
                 .expectBodyList(ElementaryModificationInfos.class)
                 .value(modifications -> modifications.get(0),
                         createMatcherElementaryModificationInfos("v1bl1", Set.of("s1"), "open", true));
+
+        webTestClient.put().uri("/v1/networks/{networkUuid}/lines/{lineId}/energiseEnd?side=TWO", TEST_NETWORK_ID, "line3")
+                .exchange()
+                .expectStatus().is5xxServerError()
+                .expectBody(String.class)
+                .isEqualTo(new NetworkModificationException(MODIFICATION_ERROR, "MODIFICATION_ERROR : Unable to energise line end").getMessage());
 
         testDeleteNetwokModifications(TEST_NETWORK_ID, 8);
     }

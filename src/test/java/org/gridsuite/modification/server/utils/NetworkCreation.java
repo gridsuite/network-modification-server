@@ -134,6 +134,11 @@ public final class NetworkCreation {
 
         createLine(network, "line2", "line2", "v1", "v3", 5, 4, 10.0, 5.0, 3.5, 5.5, 4.5, 6.5);
 
+        createSwitch(v1, "v1bl2", "v1bl2", SwitchKind.BREAKER, true, false, true, 0, 6);
+        createSwitch(v3, "v3bl2", "v3bl2", SwitchKind.BREAKER, true, false, true, 0, 5);
+
+        createLine(network, "line3", "line3", "v1", "v3", 6, 5, 12.0, 7.0, 5.5, 7.5, 6.5, 8.5);
+
         return network;
     }
 
