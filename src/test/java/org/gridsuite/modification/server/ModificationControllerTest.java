@@ -17,6 +17,7 @@ import com.powsybl.commons.PowsyblException;
 import com.powsybl.iidm.network.Generator;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.client.NetworkStoreService;
+import com.powsybl.sld.iidm.extensions.BranchStatus;
 import org.gridsuite.modification.server.dto.ElementaryModificationInfos;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.NetworkStoreListener;
@@ -253,7 +254,11 @@ public class ModificationControllerTest {
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
                 .expectBodyList(ElementaryModificationInfos.class)
                 .value(modifications -> modifications.get(0),
-                        createMatcherElementaryModificationInfos("v1bl1", Set.of("s1"), "open", true));
+                        createMatcherElementaryModificationInfos("v1bl1", Set.of("s1"), "open", true))
+                .value(modifications -> modifications.get(1),
+                        createMatcherElementaryModificationInfos("v3bl1", Set.of("s2"), "open", true))
+                .value(modifications -> modifications.get(2),
+                        createMatcherElementaryModificationInfos("line2", Set.of("s1", "s2"), "branchStatus", BranchStatus.Status.PLANNED_OUTAGE.name()));
 
         // line switch on
         webTestClient.put().uri("/v1/networks/{networkUuid}/lines/{lineId}/switchOn", TEST_NETWORK_ID, "line2")
@@ -270,7 +275,11 @@ public class ModificationControllerTest {
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
                 .expectBodyList(ElementaryModificationInfos.class)
                 .value(modifications -> modifications.get(0),
-                        createMatcherElementaryModificationInfos("v1bl1", Set.of("s1"), "open", true));
+                        createMatcherElementaryModificationInfos("v1bl1", Set.of("s1"), "open", true))
+                .value(modifications -> modifications.get(1),
+                        createMatcherElementaryModificationInfos("v3bl1", Set.of("s2"), "open", true))
+                .value(modifications -> modifications.get(2),
+                        createMatcherElementaryModificationInfos("line2", Set.of("s1", "s2"), "branchStatus", BranchStatus.Status.FORCED_OUTAGE.name()));
 
         // line energise on one end
         webTestClient.put().uri("/v1/networks/{networkUuid}/lines/{lineId}/energiseEnd?side=ONE", TEST_NETWORK_ID, "line2")
@@ -290,6 +299,7 @@ public class ModificationControllerTest {
                 .value(modifications -> modifications.get(0),
                         createMatcherElementaryModificationInfos("v1bl1", Set.of("s1"), "open", true));
 
+        testDeleteNetwokModifications(TEST_NETWORK_ID, 8);
     }
 
     @Test

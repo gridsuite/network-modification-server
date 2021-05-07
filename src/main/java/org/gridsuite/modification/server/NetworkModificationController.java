@@ -108,7 +108,7 @@ public class NetworkModificationController {
 
     @PutMapping(value = "/networks/{networkUuid}/lines/{lineId}/switchOn")
     @ApiOperation(value = "switch on a line")
-    @ApiResponses(value = {@ApiResponse(code = 200, message = "the line has been locked-out")})
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "the line has been switched on")})
     public ResponseEntity<Flux<ElementaryModificationInfos>> switchOnLine(
             @ApiParam(value = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
             @ApiParam(value = "Line ID") @PathVariable("lineId") String lineId) {

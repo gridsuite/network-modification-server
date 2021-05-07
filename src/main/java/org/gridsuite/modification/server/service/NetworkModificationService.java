@@ -81,15 +81,9 @@ public class NetworkModificationService {
 
     private boolean disconnectLineBothSides(Network network, String lineId) {
         Terminal terminal1 = network.getLine(lineId).getTerminal1();
-        boolean terminal1Disconnected = !terminal1.isConnected();
-        if (!terminal1Disconnected) {
-            terminal1Disconnected = terminal1.disconnect();
-        }
+        boolean terminal1Disconnected = !terminal1.isConnected() || terminal1.disconnect();
         Terminal terminal2 = network.getLine(lineId).getTerminal2();
-        boolean terminal2Disconnected = !terminal2.isConnected();
-        if (!terminal2Disconnected) {
-            terminal2Disconnected = terminal2.disconnect();
-        }
+        boolean terminal2Disconnected = !terminal2.isConnected() || terminal2.disconnect();
         return terminal1Disconnected && terminal2Disconnected;
     }
 
@@ -127,15 +121,9 @@ public class NetworkModificationService {
                 .switchIfEmpty(Mono.error(new NetworkModificationException(LINE_NOT_FOUND, lineId)))
                 .flatMapIterable(network -> doModification(network, networkUuid, () -> {
                     Terminal terminalToConnect = network.getLine(lineId).getTerminal(Branch.Side.valueOf(side));
-                    boolean isTerminalToConnectConnected = terminalToConnect.isConnected();
-                    if (!isTerminalToConnectConnected) {
-                        isTerminalToConnectConnected = terminalToConnect.connect();
-                    }
+                    boolean isTerminalToConnectConnected = terminalToConnect.isConnected() || terminalToConnect.connect();
                     Terminal terminalToDisconnect = network.getLine(lineId).getTerminal(Branch.Side.valueOf(side) == Branch.Side.ONE ? Branch.Side.TWO : Branch.Side.ONE);
-                    boolean isTerminalToDisconnectDisconnected = !terminalToDisconnect.isConnected();
-                    if (!isTerminalToDisconnectDisconnected) {
-                        isTerminalToDisconnectDisconnected = terminalToDisconnect.disconnect();
-                    }
+                    boolean isTerminalToDisconnectDisconnected = !terminalToDisconnect.isConnected() || terminalToDisconnect.disconnect();
                     if (isTerminalToConnectConnected && isTerminalToDisconnectDisconnected) {
                         network.getLine(lineId).newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.IN_OPERATION).add();
                     } else {
