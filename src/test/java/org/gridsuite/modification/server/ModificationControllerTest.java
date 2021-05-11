@@ -321,6 +321,28 @@ public class ModificationControllerTest {
         testDeleteNetwokModifications(TEST_NETWORK_ID, 6);
     }
 
+    @Test
+    public void testMultipleModificationsWithError() {
+        // apply groovy script with 2 modifications without error
+        webTestClient.put().uri("/v1/networks/{networkUuid}/groovy", TEST_NETWORK_ID)
+                .bodyValue("network.getGenerator('idGenerator').targetP=10\nnetwork.getGenerator('idGenerator').targetP=20\n")
+                .exchange()
+                .expectStatus().isOk();
+
+        assertEquals(2, modificationRepository.getModifications(TEST_NETWORK_ID).size());
+
+        // apply groovy script with 2 modifications with error ont the second
+        webTestClient.put().uri("/v1/networks/{networkUuid}/groovy", TEST_NETWORK_ID)
+                .bodyValue("network.getGenerator('idGenerator').targetP=30\nnetwork.getGenerator('there is no generator').targetP=40\n")
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody(String.class)
+                .isEqualTo(new NetworkModificationException(GROOVY_SCRIPT_ERROR, "Cannot set property 'targetP' on null object").getMessage());
+
+        // the last 2 modifications have not been saved
+        assertEquals(2, modificationRepository.getModifications(TEST_NETWORK_ID).size());
+    }
+
     private void testDeleteNetwokModifications(UUID networkUuid, int actualSize) {
         // get all modifications for the default group of a network
         assertEquals(actualSize, Objects.requireNonNull(webTestClient.get().uri("/v1/networks/{networkUuid}/modifications", networkUuid)

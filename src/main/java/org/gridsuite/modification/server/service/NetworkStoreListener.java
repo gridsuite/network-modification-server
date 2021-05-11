@@ -7,9 +7,12 @@
 package org.gridsuite.modification.server.service;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import com.powsybl.iidm.network.*;
 import org.gridsuite.modification.server.dto.ElementaryModificationInfos;
+import org.gridsuite.modification.server.entities.ModificationEntity;
+import org.gridsuite.modification.server.entities.elementary.ElementaryModificationEntity;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 
 /**
@@ -20,29 +23,44 @@ public class NetworkStoreListener implements NetworkListener {
 
     private UUID networkUuid;
 
+    private Network network;
+
     private final NetworkModificationRepository modificationRepository;
 
-    private List<ElementaryModificationInfos> modifications = new LinkedList<>();
+    private List<ElementaryModificationEntity<?>> modifications = new LinkedList<>();
 
     public static NetworkStoreListener create(Network network, UUID networkUuid, NetworkModificationRepository modificationRepository) {
-        var listener = new NetworkStoreListener(networkUuid, modificationRepository);
+        var listener = new NetworkStoreListener(network, networkUuid, modificationRepository);
         network.addListener(listener);
         return listener;
     }
 
-    protected NetworkStoreListener(UUID networkUuid, NetworkModificationRepository modificationRepository) {
+    protected NetworkStoreListener(Network network, UUID networkUuid, NetworkModificationRepository modificationRepository) {
+        this.network = network;
         this.networkUuid = networkUuid;
         this.modificationRepository = modificationRepository;
     }
 
-    private void storeModification(Identifiable<?> identifiable, String attributeName, Object attributeValue) {
-        modifications.add(
-                this.modificationRepository.createElementaryModification(networkUuid, identifiable.getId(), attributeName, attributeValue)
-                        .toElementaryModificationInfos(getSubstationIds(identifiable))
-        );
+    public List<ElementaryModificationInfos> getModifications() {
+        return modifications.stream()
+                .map(m -> m.toElementaryModificationInfos(getSubstationIds(m.getEquipmentId())))
+                .collect(Collectors.toList());
     }
 
-    private Set<String> getSubstationIds(Identifiable<?> identifiable) {
+    public void saveModifications() {
+        modificationRepository.saveModifications(networkUuid,
+                modifications
+                        .stream()
+                        .map(ModificationEntity.class::cast)
+                        .collect(Collectors.toList()));
+    }
+
+    private void storeModification(Identifiable<?> identifiable, String attributeName, Object attributeValue) {
+        modifications.add(this.modificationRepository.createElementaryModification(identifiable.getId(), attributeName, attributeValue));
+    }
+
+    private Set<String> getSubstationIds(String equipmentId) {
+        Identifiable<?> identifiable = network.getIdentifiable(equipmentId);
         Set<String> substationsIds = new HashSet<>();
         if (identifiable instanceof Switch) {
             substationsIds.add(((Switch) identifiable).getVoltageLevel().getSubstation().getId());
@@ -78,9 +96,5 @@ public class NetworkStoreListener implements NetworkListener {
     @Override
     public void onRemoval(Identifiable identifiable) {
         // empty default implementation
-    }
-
-    public List<ElementaryModificationInfos> getModifications() {
-        return modifications;
     }
 }
