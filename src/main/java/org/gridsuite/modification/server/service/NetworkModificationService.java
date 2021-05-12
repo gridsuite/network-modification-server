@@ -140,15 +140,9 @@ public class NetworkModificationService {
                 .switchIfEmpty(Mono.error(new NetworkModificationException(LINE_NOT_FOUND, lineId)))
                 .flatMapIterable(network -> doModification(network, networkUuid, () -> {
                     Terminal terminal1 = network.getLine(lineId).getTerminal1();
-                    boolean terminal1Connected = terminal1.isConnected();
-                    if (!terminal1Connected) {
-                        terminal1Connected = terminal1.connect();
-                    }
+                    boolean terminal1Connected = terminal1.isConnected() || terminal1.connect();
                     Terminal terminal2 = network.getLine(lineId).getTerminal2();
-                    boolean terminal2Connected = terminal2.isConnected();
-                    if (!terminal2Connected) {
-                        terminal2Connected = terminal2.connect();
-                    }
+                    boolean terminal2Connected = terminal2.isConnected() || terminal2.connect();
                     if (terminal1Connected && terminal2Connected) {
                         network.getLine(lineId).newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.IN_OPERATION).add();
                     } else {
@@ -176,6 +170,9 @@ public class NetworkModificationService {
             action.run();
             saveModifications(listener);
             return listener.getModifications();
+        } catch (NetworkModificationException e) {
+            LOGGER.error(e.getMessage());
+            throw e;
         } catch (Exception e) {
             var exc = new NetworkModificationException(typeIfError, e);
             LOGGER.error(exc.getMessage());

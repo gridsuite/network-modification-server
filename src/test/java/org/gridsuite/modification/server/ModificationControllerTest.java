@@ -264,7 +264,7 @@ public class ModificationControllerTest {
                 .exchange()
                 .expectStatus().is5xxServerError()
                 .expectBody(String.class)
-                .isEqualTo(new NetworkModificationException(MODIFICATION_ERROR, "MODIFICATION_ERROR : Unable to disconnect both line ends").getMessage());
+                .isEqualTo(new NetworkModificationException(MODIFICATION_ERROR, "Unable to disconnect both line ends").getMessage());
 
         // line switch on
         webTestClient.put().uri("/v1/networks/{networkUuid}/lines/{lineId}/switchOn", TEST_NETWORK_ID, "line2")
@@ -291,7 +291,7 @@ public class ModificationControllerTest {
                 .exchange()
                 .expectStatus().is5xxServerError()
                 .expectBody(String.class)
-                .isEqualTo(new NetworkModificationException(MODIFICATION_ERROR, "MODIFICATION_ERROR : Unable to disconnect both line ends").getMessage());
+                .isEqualTo(new NetworkModificationException(MODIFICATION_ERROR, "Unable to disconnect both line ends").getMessage());
 
         // line energise on one end
         webTestClient.put().uri("/v1/networks/{networkUuid}/lines/{lineId}/energiseEnd?side=ONE", TEST_NETWORK_ID, "line2")
@@ -306,7 +306,7 @@ public class ModificationControllerTest {
                 .exchange()
                 .expectStatus().is5xxServerError()
                 .expectBody(String.class)
-                .isEqualTo(new NetworkModificationException(MODIFICATION_ERROR, "MODIFICATION_ERROR : Unable to energise line end").getMessage());
+                .isEqualTo(new NetworkModificationException(MODIFICATION_ERROR, "Unable to energise line end").getMessage());
 
         // line energise on other end
         webTestClient.put().uri("/v1/networks/{networkUuid}/lines/{lineId}/energiseEnd?side=TWO", TEST_NETWORK_ID, "line2")
@@ -321,7 +321,7 @@ public class ModificationControllerTest {
                 .exchange()
                 .expectStatus().is5xxServerError()
                 .expectBody(String.class)
-                .isEqualTo(new NetworkModificationException(MODIFICATION_ERROR, "MODIFICATION_ERROR : Unable to energise line end").getMessage());
+                .isEqualTo(new NetworkModificationException(MODIFICATION_ERROR, "Unable to energise line end").getMessage());
 
         testDeleteNetwokModifications(TEST_NETWORK_ID, 8);
     }
