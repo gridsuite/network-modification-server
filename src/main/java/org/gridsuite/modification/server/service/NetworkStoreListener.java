@@ -29,6 +29,10 @@ public class NetworkStoreListener implements NetworkListener {
 
     private List<ElementaryModificationEntity<?>> modifications = new LinkedList<>();
 
+    Network getNetwork() {
+        return network;
+    }
+
     public static NetworkStoreListener create(Network network, UUID networkUuid, NetworkModificationRepository modificationRepository) {
         var listener = new NetworkStoreListener(network, networkUuid, modificationRepository);
         network.addListener(listener);
@@ -53,6 +57,14 @@ public class NetworkStoreListener implements NetworkListener {
                         .stream()
                         .map(ModificationEntity.class::cast)
                         .collect(Collectors.toList()));
+    }
+
+    public void deleteModifications() {
+        modificationRepository.deleteModifications(networkUuid,
+                modifications
+                        .stream()
+                        .map(ModificationEntity::getId)
+                        .collect(Collectors.toSet()));
     }
 
     private void storeModification(Identifiable<?> identifiable, String attributeName, Object attributeValue) {

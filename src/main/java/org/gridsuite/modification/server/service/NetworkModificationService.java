@@ -91,13 +91,22 @@ public class NetworkModificationService {
         try {
             var listener = NetworkStoreListener.create(network, networkUuid, modificationRepository);
             action.run();
-            networkStoreService.flush(network);
-            listener.saveModifications();
+            saveModifications(listener);
             return listener.getModifications();
         } catch (Exception e) {
             var exc = new NetworkModificationException(typeIfError, e);
             LOGGER.error(exc.getMessage());
             throw exc;
+        }
+    }
+
+    private void saveModifications(NetworkStoreListener listener) {
+        listener.saveModifications();
+        try {
+            networkStoreService.flush(listener.getNetwork());
+        } catch (Exception e) {
+            listener.deleteModifications();
+            throw e;
         }
     }
 
