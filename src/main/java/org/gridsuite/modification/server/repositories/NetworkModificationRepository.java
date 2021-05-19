@@ -45,17 +45,42 @@ public class NetworkModificationRepository {
         modificationGroupRepository.deleteAll();
     }
 
-    @Transactional // To have the 2 create in the same transaction (atomic)
-    public <T> ElementaryModificationEntity<T> createElementaryModification(UUID groupUuid, String equipmentId, String attributeName, T attributeValue) {
-        ElementaryModificationEntity<T> elementaryModificationEntity = (ElementaryModificationEntity<T>) createElementaryModificationEntity(equipmentId, attributeName, attributeValue);
-        ModificationGroupEntity modificationGroupEntity = this.modificationGroupRepository.findById(groupUuid).orElseGet(() -> createModificationGroup(groupUuid));
-        elementaryModificationEntity.setGroup(modificationGroupEntity);
-        this.modificationRepository.save(elementaryModificationEntity);
-        return elementaryModificationEntity;
+    public <T> ElementaryModificationEntity<T> createElementaryModification(String equipmentId, String attributeName, T attributeValue) {
+        ElementaryModificationEntity<?> modification;
+        if (attributeValue.getClass().isEnum()) {
+            modification = new StringElementaryModificationEntity(equipmentId, attributeName, attributeValue.toString());
+        } else {
+            switch (attributeValue.getClass().getSimpleName()) {
+                case "String":
+                    modification = new StringElementaryModificationEntity(equipmentId, attributeName, (String) attributeValue);
+                    break;
+                case "Boolean":
+                    modification = new BooleanElementaryModificationEntity(equipmentId, attributeName, (boolean) attributeValue);
+                    break;
+                case "Integer":
+                    modification = new IntegerElementaryModificationEntity(equipmentId, attributeName, (int) attributeValue);
+                    break;
+                case "Float":
+                    modification = new FloatElementaryModificationEntity(equipmentId, attributeName, (float) attributeValue);
+                    break;
+                case "Double":
+                    modification = new DoubleElementaryModificationEntity(equipmentId, attributeName, (double) attributeValue);
+                    break;
+                default:
+                    throw new PowsyblException("Value type invalid : " + attributeValue.getClass().getSimpleName());
+            }
+        }
+
+        return (ElementaryModificationEntity<T>) modification;
     }
 
-    private ModificationGroupEntity createModificationGroup(UUID groupUuid) {
-        return modificationGroupRepository.save(new ModificationGroupEntity(groupUuid));
+    @Transactional // To have all create in the same transaction (atomic)
+    public void saveModifications(UUID groupUuid, List<ModificationEntity> modifications) {
+        var modificationGroupEntity = this.modificationGroupRepository
+                .findById(groupUuid)
+                .orElseGet(() -> modificationGroupRepository.save(new ModificationGroupEntity(groupUuid)));
+        modifications.forEach(m -> m.setGroup(modificationGroupEntity));
+        this.modificationRepository.saveAll(modifications);
     }
 
     public List<UUID> getModificationGroupsUuids() {
@@ -99,26 +124,5 @@ public class NetworkModificationRepository {
 
     private ModificationGroupEntity getModificationGroup(UUID groupUuid) {
         return this.modificationGroupRepository.findById(groupUuid).orElseThrow(() -> new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, groupUuid.toString()));
-    }
-
-    private <T> ElementaryModificationEntity<?> createElementaryModificationEntity(String equipmentId, String attributeName, T attributeValue) {
-        if (attributeValue.getClass().isEnum()) {
-            return new StringElementaryModificationEntity(equipmentId, attributeName, attributeValue.toString());
-        } else {
-            switch (attributeValue.getClass().getSimpleName()) {
-                case "String":
-                    return new StringElementaryModificationEntity(equipmentId, attributeName, (String) attributeValue);
-                case "Boolean":
-                    return new BooleanElementaryModificationEntity(equipmentId, attributeName, (boolean) attributeValue);
-                case "Integer":
-                    return new IntegerElementaryModificationEntity(equipmentId, attributeName, (int) attributeValue);
-                case "Float":
-                    return new FloatElementaryModificationEntity(equipmentId, attributeName, (float) attributeValue);
-                case "Double":
-                    return new DoubleElementaryModificationEntity(equipmentId, attributeName, (double) attributeValue);
-                default:
-                    throw new PowsyblException("Value type invalid : " + attributeValue.getClass().getSimpleName());
-            }
-        }
     }
 }

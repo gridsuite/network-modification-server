@@ -6,9 +6,9 @@
  */
 package org.gridsuite.modification.server;
 
-import org.springframework.http.HttpStatus;
-
 import java.util.Objects;
+
+import org.springframework.http.HttpStatus;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -50,7 +50,7 @@ public class NetworkModificationException extends RuntimeException {
     }
 
     public NetworkModificationException(Type type, Exception cause) {
-        super(Objects.requireNonNull(type.name()) + " : " + Objects.requireNonNull(cause.getMessage()), cause);
+        super(Objects.requireNonNull(type.name()) + " : " + ((cause.getMessage() == null) ? cause.getClass().getName() : cause.getMessage()), cause);
         this.type = type;
     }
 

@@ -49,7 +49,7 @@ public class NetworkModificationService {
 
     public Flux<ElementaryModificationInfos> applyGroovyScript(UUID networkUuid, String groovyScript) {
         return assertGroovyScriptNotEmpty(groovyScript).thenMany(
-                getNetwork(networkUuid).flatMapIterable(network -> doModification(network, networkUuid, () -> {
+                getNetwork(networkUuid).flatMapIterable(network -> doAction(network, networkUuid, () -> {
                     var conf = new CompilerConfiguration();
                     var binding = new Binding();
                     binding.setProperty("network", network);
@@ -64,7 +64,7 @@ public class NetworkModificationService {
                 .filter(network -> network.getSwitch(switchId) != null)
                 .switchIfEmpty(Mono.error(new NetworkModificationException(SWITCH_NOT_FOUND, switchId)))
                 .filter(network -> network.getSwitch(switchId).isOpen() != open)
-                .flatMapIterable(network -> doModification(network, networkUuid, () -> network.getSwitch(switchId).setOpen(open)));
+                .flatMapIterable(network -> doAction(network, networkUuid, () -> network.getSwitch(switchId).setOpen(open)));
     }
 
     public Flux<UUID> getModificationGroups() {
@@ -83,20 +83,30 @@ public class NetworkModificationService {
         return Mono.fromRunnable(() -> modificationRepository.deleteModificationGroup(groupUuid));
     }
 
-    private List<ElementaryModificationInfos> doModification(Network network, UUID networkUuid, Runnable modification) {
-        return doModification(network, networkUuid, modification, MODIFICATION_ERROR);
+    private List<ElementaryModificationInfos> doAction(Network network, UUID networkUuid, Runnable modification) {
+        return doAction(network, networkUuid, modification, MODIFICATION_ERROR);
     }
 
-    private List<ElementaryModificationInfos> doModification(Network network, UUID networkUuid, Runnable modification, NetworkModificationException.Type typeIfError) {
+    private List<ElementaryModificationInfos> doAction(Network network, UUID networkUuid, Runnable action, NetworkModificationException.Type typeIfError) {
         try {
             var listener = NetworkStoreListener.create(network, networkUuid, modificationRepository);
-            modification.run();
-            networkStoreService.flush(network);
+            action.run();
+            saveModifications(listener);
             return listener.getModifications();
         } catch (Exception e) {
             var exc = new NetworkModificationException(typeIfError, e);
             LOGGER.error(exc.getMessage());
             throw exc;
+        }
+    }
+
+    private void saveModifications(NetworkStoreListener listener) {
+        listener.saveModifications();
+        try {
+            networkStoreService.flush(listener.getNetwork());
+        } catch (Exception e) {
+            listener.deleteModifications();
+            throw e;
         }
     }
 

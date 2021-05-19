@@ -38,6 +38,8 @@ import org.springframework.web.reactive.config.EnableWebFlux;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.utils.MatcherElementaryModificationInfos.createMatcherElementaryModificationInfos;
 import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
 /**
@@ -52,6 +54,7 @@ public class ModificationControllerTest {
 
     private static final UUID TEST_NETWORK_ID = UUID.fromString("7928181c-7977-4592-ba19-88027e4254e4");
     private static final UUID NOT_FOUND_NETWORK_ID = UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
+    private static final UUID TEST_NETWORK_WITH_FLUSH_ERROR_ID = UUID.fromString("eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee");
 
     private static final String ERROR_MESSAGE = "Error message";
 
@@ -67,8 +70,11 @@ public class ModificationControllerTest {
     @Before
     public void setUp() {
         // /!\ create a new network for each invocation (answer)
-        when(networkStoreService.getNetwork(TEST_NETWORK_ID)).then((Answer<Network>) invocation -> NetworkCreation.create());
+        when(networkStoreService.getNetwork(TEST_NETWORK_ID)).then((Answer<Network>) invocation -> NetworkCreation.create(TEST_NETWORK_ID));
         when(networkStoreService.getNetwork(NOT_FOUND_NETWORK_ID)).thenThrow(new PowsyblException());
+        when(networkStoreService.getNetwork(TEST_NETWORK_WITH_FLUSH_ERROR_ID)).then((Answer<Network>) invocation -> NetworkCreation.create(TEST_NETWORK_WITH_FLUSH_ERROR_ID));
+
+        doThrow(new PowsyblException()).when(networkStoreService).flush(argThat(n -> TEST_NETWORK_WITH_FLUSH_ERROR_ID.toString().equals(n.getId())));
 
         // clean DB
         modificationRepository.deleteAll();
@@ -124,7 +130,7 @@ public class ModificationControllerTest {
 
     @Test
     public void testNetworkListener() {
-        Network network = NetworkCreation.create();
+        Network network = NetworkCreation.create(TEST_NETWORK_ID);
         NetworkStoreListener listener = NetworkStoreListener.create(network, TEST_NETWORK_ID, modificationRepository);
         Generator generator = network.getGenerator("idGenerator");
         Object invalidValue = new Object();
@@ -319,6 +325,40 @@ public class ModificationControllerTest {
                         createMatcherElementaryModificationInfos("trf6", Set.of("s1"), "phaseTapChanger1.tapPosition", 0));
 
         testDeleteNetwokModifications(TEST_NETWORK_ID, 6);
+    }
+
+    @Test
+    public void testUndoModificationsOnNetworkFlushError() {
+        // apply groovy script with 2 modifications with network flush error
+        webTestClient.put().uri("/v1/networks/{networkUuid}/groovy", TEST_NETWORK_WITH_FLUSH_ERROR_ID)
+                .bodyValue("network.getGenerator('idGenerator').targetP=10\nnetwork.getGenerator('idGenerator').targetP=20\n")
+                .exchange()
+                .expectBody(String.class)
+                .isEqualTo(new NetworkModificationException(GROOVY_SCRIPT_ERROR, PowsyblException.class.getName()).getMessage());
+
+        assertEquals(0, modificationRepository.getModifications(TEST_NETWORK_WITH_FLUSH_ERROR_ID).size());
+    }
+
+    @Test
+    public void testMultipleModificationsWithError() {
+        // apply groovy script with 2 modifications without error
+        webTestClient.put().uri("/v1/networks/{networkUuid}/groovy", TEST_NETWORK_ID)
+                .bodyValue("network.getGenerator('idGenerator').targetP=10\nnetwork.getGenerator('idGenerator').targetP=20\n")
+                .exchange()
+                .expectStatus().isOk();
+
+        assertEquals(2, modificationRepository.getModifications(TEST_NETWORK_ID).size());
+
+        // apply groovy script with 2 modifications with error ont the second
+        webTestClient.put().uri("/v1/networks/{networkUuid}/groovy", TEST_NETWORK_ID)
+                .bodyValue("network.getGenerator('idGenerator').targetP=30\nnetwork.getGenerator('there is no generator').targetP=40\n")
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody(String.class)
+                .isEqualTo(new NetworkModificationException(GROOVY_SCRIPT_ERROR, "Cannot set property 'targetP' on null object").getMessage());
+
+        // the last 2 modifications have not been saved
+        assertEquals(2, modificationRepository.getModifications(TEST_NETWORK_ID).size());
     }
 
     private void testDeleteNetwokModifications(UUID networkUuid, int actualSize) {

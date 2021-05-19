@@ -1,5 +1,7 @@
 package org.gridsuite.modification.server.utils;
 
+import java.util.UUID;
+
 import com.powsybl.iidm.network.*;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
 import com.powsybl.sld.iidm.extensions.ConnectablePosition;
@@ -9,8 +11,8 @@ public final class NetworkCreation {
     private NetworkCreation() {
     }
 
-    public static Network create() {
-        Network network = new NetworkFactoryImpl().createNetwork("test", "test");
+    public static Network create(UUID uuid) {
+        Network network = new NetworkFactoryImpl().createNetwork(uuid.toString(), "test");
 
         Substation s1 = createSubstation(network, "s1", "s1", Country.FR);
         VoltageLevel v1 = createVoltageLevel(s1, "v1", "v1", TopologyKind.NODE_BREAKER, 380.0);
