@@ -91,7 +91,7 @@ public class NetworkModificationService {
         return getNetwork(networkUuid)
                 .filter(network -> network.getLine(lineId) != null)
                 .switchIfEmpty(Mono.error(new NetworkModificationException(LINE_NOT_FOUND, lineId)))
-                .flatMapIterable(network -> doModification(network, networkUuid, () -> {
+                .flatMapIterable(network -> doAction(network, networkUuid, () -> {
                     if (disconnectLineBothSides(network, lineId)) {
                         network.getLine(lineId).newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.PLANNED_OUTAGE).add();
                     } else {
@@ -105,7 +105,7 @@ public class NetworkModificationService {
         return getNetwork(networkUuid)
                 .filter(network -> network.getLine(lineId) != null)
                 .switchIfEmpty(Mono.error(new NetworkModificationException(LINE_NOT_FOUND, lineId)))
-                .flatMapIterable(network -> doModification(network, networkUuid, () -> {
+                .flatMapIterable(network -> doAction(network, networkUuid, () -> {
                     if (disconnectLineBothSides(network, lineId)) {
                         network.getLine(lineId).newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.FORCED_OUTAGE).add();
                     } else {
@@ -119,7 +119,7 @@ public class NetworkModificationService {
         return getNetwork(networkUuid)
                 .filter(network -> network.getLine(lineId) != null)
                 .switchIfEmpty(Mono.error(new NetworkModificationException(LINE_NOT_FOUND, lineId)))
-                .flatMapIterable(network -> doModification(network, networkUuid, () -> {
+                .flatMapIterable(network -> doAction(network, networkUuid, () -> {
                     Terminal terminalToConnect = network.getLine(lineId).getTerminal(Branch.Side.valueOf(side));
                     boolean isTerminalToConnectConnected = terminalToConnect.isConnected() || terminalToConnect.connect();
                     Terminal terminalToDisconnect = network.getLine(lineId).getTerminal(Branch.Side.valueOf(side) == Branch.Side.ONE ? Branch.Side.TWO : Branch.Side.ONE);
@@ -138,7 +138,7 @@ public class NetworkModificationService {
         return getNetwork(networkUuid)
                 .filter(network -> network.getLine(lineId) != null)
                 .switchIfEmpty(Mono.error(new NetworkModificationException(LINE_NOT_FOUND, lineId)))
-                .flatMapIterable(network -> doModification(network, networkUuid, () -> {
+                .flatMapIterable(network -> doAction(network, networkUuid, () -> {
                     Terminal terminal1 = network.getLine(lineId).getTerminal1();
                     boolean terminal1Connected = terminal1.isConnected() || terminal1.connect();
                     Terminal terminal2 = network.getLine(lineId).getTerminal2();
