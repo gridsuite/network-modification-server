@@ -78,40 +78,13 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.getModificationGroups());
     }
 
-    @PutMapping(value = "/networks/{networkUuid}/lines/{lineId}/lockout")
-    @ApiOperation(value = "lockout a line")
-    @ApiResponses(value = {@ApiResponse(code = 200, message = "the line has been locked-out")})
-    public ResponseEntity<Flux<ElementaryModificationInfos>> lockoutLine(
-            @ApiParam(value = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
-            @ApiParam(value = "Line ID") @PathVariable("lineId") String lineId) {
-        return ResponseEntity.ok().body(networkModificationService.lockoutLine(networkUuid, lineId));
-    }
-
-    @PutMapping(value = "/networks/{networkUuid}/lines/{lineId}/trip")
-    @ApiOperation(value = "trip a line")
-    @ApiResponses(value = {@ApiResponse(code = 200, message = "the line has been tripped")})
-    public ResponseEntity<Flux<ElementaryModificationInfos>> tripLine(
-            @ApiParam(value = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
-            @ApiParam(value = "Line ID") @PathVariable("lineId") String lineId) {
-        return ResponseEntity.ok().body(networkModificationService.tripLine(networkUuid, lineId));
-    }
-
-    @PutMapping(value = "/networks/{networkUuid}/lines/{lineId}/energiseEnd")
-    @ApiOperation(value = "energise one end of a line")
-    @ApiResponses(value = {@ApiResponse(code = 200, message = "the line end has been energised")})
-    public ResponseEntity<Flux<ElementaryModificationInfos>> energiseLineEnd(
+    @PutMapping(value = "/networks/{networkUuid}/lines/{lineId}/state", consumes = MediaType.TEXT_PLAIN_VALUE)
+    @ApiOperation(value = "Change the state of a line")
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "the line state has been changed")})
+    public ResponseEntity<Flux<ElementaryModificationInfos>> changeLineState(
             @ApiParam(value = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
             @ApiParam(value = "Line ID") @PathVariable("lineId") String lineId,
-            @RequestParam("side") String side) {
-        return ResponseEntity.ok().body(networkModificationService.energiseLineEnd(networkUuid, lineId, side));
-    }
-
-    @PutMapping(value = "/networks/{networkUuid}/lines/{lineId}/switchOn")
-    @ApiOperation(value = "switch on a line")
-    @ApiResponses(value = {@ApiResponse(code = 200, message = "the line has been switched on")})
-    public ResponseEntity<Flux<ElementaryModificationInfos>> switchOnLine(
-            @ApiParam(value = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
-            @ApiParam(value = "Line ID") @PathVariable("lineId") String lineId) {
-        return ResponseEntity.ok().body(networkModificationService.switchOnLine(networkUuid, lineId));
+            @RequestBody(required = true) String state) {
+        return ResponseEntity.ok().body(networkModificationService.changeLineState(networkUuid, lineId, state));
     }
 }

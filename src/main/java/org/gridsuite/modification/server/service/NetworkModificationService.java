@@ -87,6 +87,30 @@ public class NetworkModificationService {
         return terminal1Disconnected && terminal2Disconnected;
     }
 
+    public Flux<ElementaryModificationInfos> changeLineState(UUID networkUuid, String lineId, String lineState) {
+        Flux<ElementaryModificationInfos> modifications;
+        switch (lineState) {
+            case "lockout":
+                modifications = lockoutLine(networkUuid, lineId);
+                break;
+            case "trip":
+                modifications = tripLine(networkUuid, lineId);
+                break;
+            case "switchOn":
+                modifications = switchOnLine(networkUuid, lineId);
+                break;
+            case "energiseEndOne":
+                modifications = energiseLineEnd(networkUuid, lineId, Branch.Side.ONE);
+                break;
+            case "energiseEndTwo":
+                modifications = energiseLineEnd(networkUuid, lineId, Branch.Side.TWO);
+                break;
+            default:
+                throw new IllegalStateException("Unexpected value: " + lineState);
+        }
+        return modifications;
+    }
+
     public Flux<ElementaryModificationInfos> lockoutLine(UUID networkUuid, String lineId) {
         return getNetwork(networkUuid)
                 .filter(network -> network.getLine(lineId) != null)
@@ -115,14 +139,14 @@ public class NetworkModificationService {
                 ));
     }
 
-    public Flux<ElementaryModificationInfos> energiseLineEnd(UUID networkUuid, String lineId, String side) {
+    public Flux<ElementaryModificationInfos> energiseLineEnd(UUID networkUuid, String lineId, Branch.Side side) {
         return getNetwork(networkUuid)
                 .filter(network -> network.getLine(lineId) != null)
                 .switchIfEmpty(Mono.error(new NetworkModificationException(LINE_NOT_FOUND, lineId)))
                 .flatMapIterable(network -> doAction(network, networkUuid, () -> {
-                    Terminal terminalToConnect = network.getLine(lineId).getTerminal(Branch.Side.valueOf(side));
+                    Terminal terminalToConnect = network.getLine(lineId).getTerminal(side);
                     boolean isTerminalToConnectConnected = terminalToConnect.isConnected() || terminalToConnect.connect();
-                    Terminal terminalToDisconnect = network.getLine(lineId).getTerminal(Branch.Side.valueOf(side) == Branch.Side.ONE ? Branch.Side.TWO : Branch.Side.ONE);
+                    Terminal terminalToDisconnect = network.getLine(lineId).getTerminal(side == Branch.Side.ONE ? Branch.Side.TWO : Branch.Side.ONE);
                     boolean isTerminalToDisconnectDisconnected = !terminalToDisconnect.isConnected() || terminalToDisconnect.disconnect();
                     if (isTerminalToConnectConnected && isTerminalToDisconnectDisconnected) {
                         network.getLine(lineId).newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.IN_OPERATION).add();
