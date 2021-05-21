@@ -87,9 +87,9 @@ public class NetworkModificationService {
         return terminal1Disconnected && terminal2Disconnected;
     }
 
-    public Flux<ElementaryModificationInfos> changeLineState(UUID networkUuid, String lineId, String lineState) {
+    public Flux<ElementaryModificationInfos> changeLineStatus(UUID networkUuid, String lineId, String lineStatus) {
         Flux<ElementaryModificationInfos> modifications;
-        switch (lineState) {
+        switch (lineStatus) {
             case "lockout":
                 modifications = lockoutLine(networkUuid, lineId);
                 break;
@@ -106,7 +106,7 @@ public class NetworkModificationService {
                 modifications = energiseLineEnd(networkUuid, lineId, Branch.Side.TWO);
                 break;
             default:
-                throw new IllegalStateException("Unexpected value: " + lineState);
+                throw new IllegalStateException("Unexpected value: " + lineStatus);
         }
         return modifications;
     }

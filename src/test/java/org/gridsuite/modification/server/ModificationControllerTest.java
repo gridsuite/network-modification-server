@@ -234,7 +234,7 @@ public class ModificationControllerTest {
     @Test
     public void testLine() {
         // network not existing
-        webTestClient.put().uri("/v1/networks/{networkUuid}/lines/{lineId}/state", NOT_FOUND_NETWORK_ID, "line2")
+        webTestClient.put().uri("/v1/networks/{networkUuid}/lines/{lineId}/status", NOT_FOUND_NETWORK_ID, "line2")
                 .bodyValue("lockout")
                 .exchange()
                 .expectStatus().isNotFound()
@@ -242,7 +242,7 @@ public class ModificationControllerTest {
                 .isEqualTo(new NetworkModificationException(NETWORK_NOT_FOUND, NOT_FOUND_NETWORK_ID.toString()).getMessage());
 
         // line not existing
-        webTestClient.put().uri("/v1/networks/{networkUuid}/lines/{lineId}/state", TEST_NETWORK_ID, "notFound")
+        webTestClient.put().uri("/v1/networks/{networkUuid}/lines/{lineId}/status", TEST_NETWORK_ID, "notFound")
                 .bodyValue("lockout")
                 .exchange()
                 .expectStatus().isNotFound()
@@ -250,7 +250,7 @@ public class ModificationControllerTest {
                 .isEqualTo(new NetworkModificationException(LINE_NOT_FOUND, "notFound").getMessage());
 
         // line lockout
-        webTestClient.put().uri("/v1/networks/{networkUuid}/lines/{lineId}/state", TEST_NETWORK_ID, "line2")
+        webTestClient.put().uri("/v1/networks/{networkUuid}/lines/{lineId}/status", TEST_NETWORK_ID, "line2")
                 .bodyValue("lockout")
                 .exchange()
                 .expectStatus().isOk()
@@ -263,7 +263,7 @@ public class ModificationControllerTest {
                 .value(modifications -> modifications.get(2),
                         createMatcherElementaryModificationInfos("line2", Set.of("s1", "s2"), "branchStatus", BranchStatus.Status.PLANNED_OUTAGE.name()));
 
-        webTestClient.put().uri("/v1/networks/{networkUuid}/lines/{lineId}/state", TEST_NETWORK_ID, "line3")
+        webTestClient.put().uri("/v1/networks/{networkUuid}/lines/{lineId}/status", TEST_NETWORK_ID, "line3")
                 .bodyValue("lockout")
                 .exchange()
                 .expectStatus().is5xxServerError()
@@ -271,7 +271,7 @@ public class ModificationControllerTest {
                 .isEqualTo(new NetworkModificationException(MODIFICATION_ERROR, "Unable to disconnect both line ends").getMessage());
 
         // line switch on
-        webTestClient.put().uri("/v1/networks/{networkUuid}/lines/{lineId}/state", TEST_NETWORK_ID, "line2")
+        webTestClient.put().uri("/v1/networks/{networkUuid}/lines/{lineId}/status", TEST_NETWORK_ID, "line2")
                 .bodyValue("switchOn")
                 .exchange()
                 .expectStatus().isOk()
@@ -280,7 +280,7 @@ public class ModificationControllerTest {
                 .isEqualTo(List.of());
 
         // line trip
-        webTestClient.put().uri("/v1/networks/{networkUuid}/lines/{lineId}/state", TEST_NETWORK_ID, "line2")
+        webTestClient.put().uri("/v1/networks/{networkUuid}/lines/{lineId}/status", TEST_NETWORK_ID, "line2")
                 .bodyValue("trip")
                 .exchange()
                 .expectStatus().isOk()
@@ -293,7 +293,7 @@ public class ModificationControllerTest {
                 .value(modifications -> modifications.get(2),
                         createMatcherElementaryModificationInfos("line2", Set.of("s1", "s2"), "branchStatus", BranchStatus.Status.FORCED_OUTAGE.name()));
 
-        webTestClient.put().uri("/v1/networks/{networkUuid}/lines/{lineId}/state", TEST_NETWORK_ID, "line3")
+        webTestClient.put().uri("/v1/networks/{networkUuid}/lines/{lineId}/status", TEST_NETWORK_ID, "line3")
                 .bodyValue("trip")
                 .exchange()
                 .expectStatus().is5xxServerError()
@@ -301,7 +301,7 @@ public class ModificationControllerTest {
                 .isEqualTo(new NetworkModificationException(MODIFICATION_ERROR, "Unable to disconnect both line ends").getMessage());
 
         // line energise on one end
-        webTestClient.put().uri("/v1/networks/{networkUuid}/lines/{lineId}/state", TEST_NETWORK_ID, "line2")
+        webTestClient.put().uri("/v1/networks/{networkUuid}/lines/{lineId}/status", TEST_NETWORK_ID, "line2")
                 .bodyValue("energiseEndOne")
                 .exchange()
                 .expectStatus().isOk()
@@ -310,7 +310,7 @@ public class ModificationControllerTest {
                 .value(modifications -> modifications.get(0),
                         createMatcherElementaryModificationInfos("v3bl1", Set.of("s2"), "open", true));
 
-        webTestClient.put().uri("/v1/networks/{networkUuid}/lines/{lineId}/state", TEST_NETWORK_ID, "line3")
+        webTestClient.put().uri("/v1/networks/{networkUuid}/lines/{lineId}/status", TEST_NETWORK_ID, "line3")
                 .bodyValue("energiseEndOne")
                 .exchange()
                 .expectStatus().is5xxServerError()
@@ -318,7 +318,7 @@ public class ModificationControllerTest {
                 .isEqualTo(new NetworkModificationException(MODIFICATION_ERROR, "Unable to energise line end").getMessage());
 
         // line energise on other end
-        webTestClient.put().uri("/v1/networks/{networkUuid}/lines/{lineId}/state", TEST_NETWORK_ID, "line2")
+        webTestClient.put().uri("/v1/networks/{networkUuid}/lines/{lineId}/status", TEST_NETWORK_ID, "line2")
                 .bodyValue("energiseEndTwo")
                 .exchange()
                 .expectStatus().isOk()
@@ -327,7 +327,7 @@ public class ModificationControllerTest {
                 .value(modifications -> modifications.get(0),
                         createMatcherElementaryModificationInfos("v1bl1", Set.of("s1"), "open", true));
 
-        webTestClient.put().uri("/v1/networks/{networkUuid}/lines/{lineId}/state", TEST_NETWORK_ID, "line3")
+        webTestClient.put().uri("/v1/networks/{networkUuid}/lines/{lineId}/status", TEST_NETWORK_ID, "line3")
                 .bodyValue("energiseEndTwo")
                 .exchange()
                 .expectStatus().is5xxServerError()

@@ -78,13 +78,13 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.getModificationGroups());
     }
 
-    @PutMapping(value = "/networks/{networkUuid}/lines/{lineId}/state", consumes = MediaType.TEXT_PLAIN_VALUE)
-    @ApiOperation(value = "Change the state of a line")
-    @ApiResponses(value = {@ApiResponse(code = 200, message = "the line state has been changed")})
-    public ResponseEntity<Flux<ElementaryModificationInfos>> changeLineState(
+    @PutMapping(value = "/networks/{networkUuid}/lines/{lineId}/status", consumes = MediaType.TEXT_PLAIN_VALUE)
+    @ApiOperation(value = "Change the status of a line")
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "the line status has been changed")})
+    public ResponseEntity<Flux<ElementaryModificationInfos>> changeLineStatus(
             @ApiParam(value = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
             @ApiParam(value = "Line ID") @PathVariable("lineId") String lineId,
-            @RequestBody(required = true) String state) {
-        return ResponseEntity.ok().body(networkModificationService.changeLineState(networkUuid, lineId, state));
+            @RequestBody(required = true) String status) {
+        return ResponseEntity.ok().body(networkModificationService.changeLineStatus(networkUuid, lineId, status));
     }
 }
