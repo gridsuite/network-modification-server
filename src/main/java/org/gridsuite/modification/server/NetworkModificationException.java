@@ -23,6 +23,7 @@ public class NetworkModificationException extends RuntimeException {
         MODIFICATION_GROUP_NOT_FOUND(HttpStatus.NOT_FOUND),
         MODIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND),
         SWITCH_NOT_FOUND(HttpStatus.NOT_FOUND),
+        LINE_NOT_FOUND(HttpStatus.NOT_FOUND),
         MODIFICATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR);
 
         public final HttpStatus status;

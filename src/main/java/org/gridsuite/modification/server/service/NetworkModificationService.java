@@ -6,12 +6,13 @@
  */
 package org.gridsuite.modification.server.service;
 
-import java.util.List;
-import java.util.UUID;
-
 import com.powsybl.commons.PowsyblException;
+import com.powsybl.iidm.network.Branch;
 import com.powsybl.iidm.network.Network;
+import com.powsybl.iidm.network.Terminal;
 import com.powsybl.network.store.client.NetworkStoreService;
+import com.powsybl.sld.iidm.extensions.BranchStatus;
+import com.powsybl.sld.iidm.extensions.BranchStatusAdder;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
 import org.apache.commons.lang3.StringUtils;
@@ -26,6 +27,9 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
+
+import java.util.List;
+import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 
@@ -75,6 +79,103 @@ public class NetworkModificationService {
         return Flux.fromStream(() -> modificationRepository.getModifications(groupUuid).stream());
     }
 
+    private boolean disconnectLineBothSides(Network network, String lineId) {
+        Terminal terminal1 = network.getLine(lineId).getTerminal1();
+        boolean terminal1Disconnected = !terminal1.isConnected() || terminal1.disconnect();
+        Terminal terminal2 = network.getLine(lineId).getTerminal2();
+        boolean terminal2Disconnected = !terminal2.isConnected() || terminal2.disconnect();
+        return terminal1Disconnected && terminal2Disconnected;
+    }
+
+    public Flux<ElementaryModificationInfos> changeLineStatus(UUID networkUuid, String lineId, String lineStatus) {
+        Flux<ElementaryModificationInfos> modifications;
+        switch (lineStatus) {
+            case "lockout":
+                modifications = lockoutLine(networkUuid, lineId);
+                break;
+            case "trip":
+                modifications = tripLine(networkUuid, lineId);
+                break;
+            case "switchOn":
+                modifications = switchOnLine(networkUuid, lineId);
+                break;
+            case "energiseEndOne":
+                modifications = energiseLineEnd(networkUuid, lineId, Branch.Side.ONE);
+                break;
+            case "energiseEndTwo":
+                modifications = energiseLineEnd(networkUuid, lineId, Branch.Side.TWO);
+                break;
+            default:
+                throw new IllegalStateException("Unexpected value: " + lineStatus);
+        }
+        return modifications;
+    }
+
+    public Flux<ElementaryModificationInfos> lockoutLine(UUID networkUuid, String lineId) {
+        return getNetwork(networkUuid)
+                .filter(network -> network.getLine(lineId) != null)
+                .switchIfEmpty(Mono.error(new NetworkModificationException(LINE_NOT_FOUND, lineId)))
+                .flatMapIterable(network -> doAction(network, networkUuid, () -> {
+                    if (disconnectLineBothSides(network, lineId)) {
+                        network.getLine(lineId).newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.PLANNED_OUTAGE).add();
+                    } else {
+                        throw new NetworkModificationException(MODIFICATION_ERROR, "Unable to disconnect both line ends");
+                    }
+                }
+                ));
+    }
+
+    public Flux<ElementaryModificationInfos> tripLine(UUID networkUuid, String lineId) {
+        return getNetwork(networkUuid)
+                .filter(network -> network.getLine(lineId) != null)
+                .switchIfEmpty(Mono.error(new NetworkModificationException(LINE_NOT_FOUND, lineId)))
+                .flatMapIterable(network -> doAction(network, networkUuid, () -> {
+                    if (disconnectLineBothSides(network, lineId)) {
+                        network.getLine(lineId).newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.FORCED_OUTAGE).add();
+                    } else {
+                        throw new NetworkModificationException(MODIFICATION_ERROR, "Unable to disconnect both line ends");
+                    }
+                }
+                ));
+    }
+
+    public Flux<ElementaryModificationInfos> energiseLineEnd(UUID networkUuid, String lineId, Branch.Side side) {
+        return getNetwork(networkUuid)
+                .filter(network -> network.getLine(lineId) != null)
+                .switchIfEmpty(Mono.error(new NetworkModificationException(LINE_NOT_FOUND, lineId)))
+                .flatMapIterable(network -> doAction(network, networkUuid, () -> {
+                    Terminal terminalToConnect = network.getLine(lineId).getTerminal(side);
+                    boolean isTerminalToConnectConnected = terminalToConnect.isConnected() || terminalToConnect.connect();
+                    Terminal terminalToDisconnect = network.getLine(lineId).getTerminal(side == Branch.Side.ONE ? Branch.Side.TWO : Branch.Side.ONE);
+                    boolean isTerminalToDisconnectDisconnected = !terminalToDisconnect.isConnected() || terminalToDisconnect.disconnect();
+                    if (isTerminalToConnectConnected && isTerminalToDisconnectDisconnected) {
+                        network.getLine(lineId).newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.IN_OPERATION).add();
+                    } else {
+                        throw new NetworkModificationException(MODIFICATION_ERROR, "Unable to energise line end");
+                    }
+
+                }
+                ));
+    }
+
+    public Flux<ElementaryModificationInfos> switchOnLine(UUID networkUuid, String lineId) {
+        return getNetwork(networkUuid)
+                .filter(network -> network.getLine(lineId) != null)
+                .switchIfEmpty(Mono.error(new NetworkModificationException(LINE_NOT_FOUND, lineId)))
+                .flatMapIterable(network -> doAction(network, networkUuid, () -> {
+                    Terminal terminal1 = network.getLine(lineId).getTerminal1();
+                    boolean terminal1Connected = terminal1.isConnected() || terminal1.connect();
+                    Terminal terminal2 = network.getLine(lineId).getTerminal2();
+                    boolean terminal2Connected = terminal2.isConnected() || terminal2.connect();
+                    if (terminal1Connected && terminal2Connected) {
+                        network.getLine(lineId).newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.IN_OPERATION).add();
+                    } else {
+                        throw new NetworkModificationException(MODIFICATION_ERROR, "Unable to connect both line ends");
+                    }
+                }
+                ));
+    }
+
     public Mono<ElementaryModificationInfos> getElementaryModification(UUID groupUuid, UUID modificationUuid) {
         return Mono.fromCallable(() -> modificationRepository.getElementaryModification(groupUuid, modificationUuid));
     }
@@ -93,6 +194,9 @@ public class NetworkModificationService {
             action.run();
             saveModifications(listener);
             return listener.getModifications();
+        } catch (NetworkModificationException e) {
+            LOGGER.error(e.getMessage());
+            throw e;
         } catch (Exception e) {
             var exc = new NetworkModificationException(typeIfError, e);
             LOGGER.error(exc.getMessage());

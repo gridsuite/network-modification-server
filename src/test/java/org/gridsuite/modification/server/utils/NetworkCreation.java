@@ -111,6 +111,7 @@ public final class NetworkCreation {
                 .endStep()
                 .add();
 
+        // create lines
         network.newLine()
                 .setId("line1")
                 .setVoltageLevel1(v3.getId())
@@ -124,6 +125,19 @@ public final class NetworkCreation {
                 .setG2(2.0)
                 .setB2(2.0)
                 .add();
+
+        createSwitch(v1, "v1dl1", "v1dl1", SwitchKind.DISCONNECTOR, true, false, false, 0, 4);
+        createSwitch(v1, "v1bl1", "v1bl1", SwitchKind.BREAKER, true, false, false, 4, 5);
+
+        createSwitch(v3, "v3dl1", "v3dl1", SwitchKind.DISCONNECTOR, true, false, false, 0, 3);
+        createSwitch(v3, "v3bl1", "v3bl1", SwitchKind.BREAKER, true, false, false, 3, 4);
+
+        createLine(network, "line2", "line2", "v1", "v3", 5, 4, 10.0, 5.0, 3.5, 5.5, 4.5, 6.5);
+
+        createSwitch(v1, "v1bl2", "v1bl2", SwitchKind.BREAKER, true, false, true, 0, 6);
+        createSwitch(v3, "v3bl2", "v3bl2", SwitchKind.BREAKER, true, false, true, 0, 5);
+
+        createLine(network, "line3", "line3", "v1", "v3", 6, 5, 12.0, 7.0, 5.5, 7.5, 6.5, 8.5);
 
         return network;
     }
@@ -165,6 +179,24 @@ public final class NetworkCreation {
                 .setRetained(retained)
                 .setOpen(open)
                 .setFictitious(fictitious)
+                .setNode1(node1)
+                .setNode2(node2)
+                .add();
+    }
+
+    private static void createLine(Network network, String id, String name, String voltageLevel1, String voltageLevel2, int node1, int node2,
+                                   double r, double x, double g1, double g2, double b1, double b2) {
+        network.newLine()
+                .setId(id)
+                .setName(name)
+                .setR(r)
+                .setX(x)
+                .setG1(g1)
+                .setG2(g2)
+                .setB1(b1)
+                .setB2(b2)
+                .setVoltageLevel1(voltageLevel1)
+                .setVoltageLevel2(voltageLevel2)
                 .setNode1(node1)
                 .setNode2(node2)
                 .add();
