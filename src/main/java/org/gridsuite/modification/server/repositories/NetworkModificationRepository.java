@@ -6,11 +6,6 @@
  */
 package org.gridsuite.modification.server.repositories;
 
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
 import com.powsybl.commons.PowsyblException;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
@@ -21,6 +16,11 @@ import org.gridsuite.modification.server.entities.ModificationGroupEntity;
 import org.gridsuite.modification.server.entities.elementary.*;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_GROUP_NOT_FOUND;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_NOT_FOUND;
@@ -47,7 +47,9 @@ public class NetworkModificationRepository {
 
     public <T> ElementaryModificationEntity<T> createElementaryModification(String equipmentId, String attributeName, T attributeValue) {
         ElementaryModificationEntity<?> modification;
-        if (attributeValue.getClass().isEnum()) {
+        if (attributeValue == null) {
+            modification = new StringElementaryModificationEntity(equipmentId, attributeName, null);
+        } else if (attributeValue.getClass().isEnum()) {
             modification = new StringElementaryModificationEntity(equipmentId, attributeName, attributeValue.toString());
         } else {
             switch (attributeValue.getClass().getSimpleName()) {

@@ -61,35 +61,38 @@ public class ModificationRepositoryTest {
                 NetworkModificationException.class, () -> modificationRepository.getModifications(TEST_NETWORK_ID)
         );
 
+        var nullModifEntity = modificationRepository.createElementaryModification("id0", "attribute", null);
         var stringModifEntity = modificationRepository.createElementaryModification("id1", "attribute", "foo");
         var boolModifEntity = modificationRepository.createElementaryModification("id2", "attribute", true);
         var intModifEntity = modificationRepository.createElementaryModification("id3", "attribute", 1);
         var floatModifEntity = modificationRepository.createElementaryModification("id4", "attribute", 2F);
         var doubleModifEntity = modificationRepository.createElementaryModification("id5", "attribute", 3D);
 
-        modificationRepository.saveModifications(TEST_NETWORK_ID, List.of(stringModifEntity, boolModifEntity, intModifEntity, floatModifEntity, doubleModifEntity));
+        modificationRepository.saveModifications(TEST_NETWORK_ID, List.of(nullModifEntity, stringModifEntity, boolModifEntity, intModifEntity, floatModifEntity, doubleModifEntity));
 
         List<ModificationInfos> modificationEntities = modificationRepository.getModifications(TEST_NETWORK_ID);
-        assertEquals(5, modificationEntities.size());
+        assertEquals(6, modificationEntities.size());
         // Order is also checked
         assertThat(modificationRepository.getElementaryModification(TEST_NETWORK_ID, modificationEntities.get(0).getUuid()),
-                MatcherElementaryModificationInfos.createMatcherElementaryModificationInfos(stringModifEntity.toElementaryModificationInfos()));
+                MatcherElementaryModificationInfos.createMatcherElementaryModificationInfos(nullModifEntity.toElementaryModificationInfos()));
         assertThat(modificationRepository.getElementaryModification(TEST_NETWORK_ID, modificationEntities.get(1).getUuid()),
-                MatcherElementaryModificationInfos.createMatcherElementaryModificationInfos(boolModifEntity.toElementaryModificationInfos()));
+                MatcherElementaryModificationInfos.createMatcherElementaryModificationInfos(stringModifEntity.toElementaryModificationInfos()));
         assertThat(modificationRepository.getElementaryModification(TEST_NETWORK_ID, modificationEntities.get(2).getUuid()),
-                MatcherElementaryModificationInfos.createMatcherElementaryModificationInfos(intModifEntity.toElementaryModificationInfos()));
+                MatcherElementaryModificationInfos.createMatcherElementaryModificationInfos(boolModifEntity.toElementaryModificationInfos()));
         assertThat(modificationRepository.getElementaryModification(TEST_NETWORK_ID, modificationEntities.get(3).getUuid()),
-                MatcherElementaryModificationInfos.createMatcherElementaryModificationInfos(floatModifEntity.toElementaryModificationInfos()));
+                MatcherElementaryModificationInfos.createMatcherElementaryModificationInfos(intModifEntity.toElementaryModificationInfos()));
         assertThat(modificationRepository.getElementaryModification(TEST_NETWORK_ID, modificationEntities.get(4).getUuid()),
+                MatcherElementaryModificationInfos.createMatcherElementaryModificationInfos(floatModifEntity.toElementaryModificationInfos()));
+        assertThat(modificationRepository.getElementaryModification(TEST_NETWORK_ID, modificationEntities.get(5).getUuid()),
                 MatcherElementaryModificationInfos.createMatcherElementaryModificationInfos(doubleModifEntity.toElementaryModificationInfos()));
 
-        assertEquals(5, modificationRepository.getModifications(TEST_NETWORK_ID).size());
+        assertEquals(6, modificationRepository.getModifications(TEST_NETWORK_ID).size());
         assertEquals(List.of(TEST_NETWORK_ID), this.modificationRepository.getModificationGroupsUuids());
 
         modificationRepository.deleteModifications(TEST_NETWORK_ID, Set.of());
-        assertEquals(5, modificationRepository.getModifications(TEST_NETWORK_ID).size());
+        assertEquals(6, modificationRepository.getModifications(TEST_NETWORK_ID).size());
         modificationRepository.deleteModifications(TEST_NETWORK_ID, Set.of(stringModifEntity.getId(), boolModifEntity.getId()));
-        assertEquals(3, modificationRepository.getModifications(TEST_NETWORK_ID).size());
+        assertEquals(4, modificationRepository.getModifications(TEST_NETWORK_ID).size());
 
         modificationRepository.deleteModificationGroup(TEST_NETWORK_ID);
         assertThrows(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_NETWORK_ID.toString()).getMessage(),

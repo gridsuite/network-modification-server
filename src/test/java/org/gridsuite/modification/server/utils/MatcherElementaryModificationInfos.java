@@ -12,6 +12,7 @@ import org.hamcrest.Description;
 
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -45,7 +46,7 @@ public class MatcherElementaryModificationInfos extends MatcherModificationInfos
                 && m.getEquipmentId().equals(reference.getEquipmentId())
                 && m.getSubstationIds().equals(reference.getSubstationIds())
                 && m.getEquipmentAttributeName().equals(reference.getEquipmentAttributeName())
-                && m.getEquipmentAttributeValue().equals(reference.getEquipmentAttributeValue());
+                && Objects.equals(m.getEquipmentAttributeValue(), reference.getEquipmentAttributeValue());
     }
 
     @Override
