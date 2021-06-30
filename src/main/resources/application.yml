@@ -32,6 +32,7 @@ spring:
 
 server:
   port: 5007
+  forward-headers-strategy: framework
 
 network-store-server:
   base-uri: http://localhost:8080
