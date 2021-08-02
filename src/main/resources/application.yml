@@ -30,10 +30,6 @@ spring:
               create-target: src/main/resources/network-modification.sql
               create-source: metadata
 
-springdoc:
-  swagger-ui:
-    path: swagger-ui.html
-
 server:
   port: 5007
   forward-headers-strategy: framework
