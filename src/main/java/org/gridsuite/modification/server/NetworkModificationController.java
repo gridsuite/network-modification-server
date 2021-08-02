@@ -6,10 +6,13 @@
  */
 package org.gridsuite.modification.server;
 
-import java.util.Set;
 import java.util.UUID;
 
-import io.swagger.annotations.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.gridsuite.modification.server.dto.ElementaryModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.service.NetworkModificationService;
@@ -25,65 +28,65 @@ import reactor.core.publisher.Mono;
  */
 @RestController
 @RequestMapping(value = "/" + NetworkModificationApi.API_VERSION + "/")
-@Api(tags = "network-modification-server")
+@Tag(name = "network-modification-server")
 public class NetworkModificationController {
 
     @Autowired
     private NetworkModificationService networkModificationService;
 
     @PutMapping(value = "/networks/{networkUuid}/switches/{switchId}", produces = MediaType.APPLICATION_JSON_VALUE)
-    @ApiOperation(value = "change a switch state in the network", response = Set.class)
-    @ApiResponses(value = {@ApiResponse(code = 200, message = "The switch state has been changed")})
+    @Operation(summary = "change a switch state in the network")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The switch state has been changed")})
     public ResponseEntity<Flux<ElementaryModificationInfos>> changeSwitchState(
-            @ApiParam(value = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
-            @ApiParam(value = "Switch ID") @PathVariable("switchId") String switchId,
+            @Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
+            @Parameter(description = "Switch ID") @PathVariable("switchId") String switchId,
             @RequestParam("open") String open) {
         return ResponseEntity.ok().body(networkModificationService.changeSwitchState(networkUuid, switchId, Boolean.parseBoolean(open)));
     }
 
     @PutMapping(value = "/networks/{networkUuid}/groovy", consumes = MediaType.TEXT_PLAIN_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    @ApiOperation(value = "change an equipment state in the network", response = Set.class)
-    @ApiResponses(value = {@ApiResponse(code = 200, message = "The equipment state has been changed")})
-    public ResponseEntity<Flux<ElementaryModificationInfos>> applyGroovyScript(@ApiParam(value = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
+    @Operation(summary = "change an equipment state in the network")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The equipment state has been changed")})
+    public ResponseEntity<Flux<ElementaryModificationInfos>> applyGroovyScript(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
                                                                                @RequestBody String groovyScript) {
         return ResponseEntity.ok().body(networkModificationService.applyGroovyScript(networkUuid, groovyScript));
     }
 
     @GetMapping(value = "/networks/{networkUuid}/modifications", produces = MediaType.APPLICATION_JSON_VALUE)
-    @ApiOperation(value = "Get modifications list of the default group for a network")
-    @ApiResponse(code = 200, message = "List of modifications of the default group for the network")
-    public ResponseEntity<Flux<ModificationInfos>> getModifications(@ApiParam(value = "Group UUID") @PathVariable("networkUuid") UUID groupUuid) {
+    @Operation(summary = "Get modifications list of the default group for a network")
+    @ApiResponse(responseCode = "200", description = "List of modifications of the default group for the network")
+    public ResponseEntity<Flux<ModificationInfos>> getModifications(@Parameter(description = "Group UUID") @PathVariable("networkUuid") UUID groupUuid) {
         return ResponseEntity.ok().body(networkModificationService.getModifications(groupUuid));
     }
 
     @GetMapping(value = "/networks/{networkUuid}/elementarymodifications/{modificationUuid}", produces = MediaType.APPLICATION_JSON_VALUE)
-    @ApiOperation(value = "Get an elementary modification of the default group for a network")
-    @ApiResponse(code = 200, message = "Elementary modification of the default group for the network")
-    public ResponseEntity<Mono<ElementaryModificationInfos>> getElementaryModifications(@ApiParam(value = "Group UUID") @PathVariable("networkUuid") UUID groupUuid,
-                                                                                        @ApiParam(value = "Modification UUID") @PathVariable("modificationUuid") UUID modificationUuid) {
+    @Operation(summary = "Get an elementary modification of the default group for a network")
+    @ApiResponse(responseCode = "200", description = "Elementary modification of the default group for the network")
+    public ResponseEntity<Mono<ElementaryModificationInfos>> getElementaryModifications(@Parameter(description = "Group UUID") @PathVariable("networkUuid") UUID groupUuid,
+                                                                                        @Parameter(description = "Modification UUID") @PathVariable("modificationUuid") UUID modificationUuid) {
         return ResponseEntity.ok().body(networkModificationService.getElementaryModification(groupUuid, modificationUuid));
     }
 
     @DeleteMapping(value = "/networks/{networkUuid}/modifications")
-    @ApiOperation(value = "Delete the default modifications group for a network")
-    @ApiResponse(code = 200, message = "Default modifications group deleted for the network")
-    public ResponseEntity<Mono<Void>> deleteModificationGroup(@ApiParam(value = "Group UUID") @PathVariable("networkUuid") UUID groupUuid) {
+    @Operation(summary = "Delete the default modifications group for a network")
+    @ApiResponse(responseCode = "200", description = "Default modifications group deleted for the network")
+    public ResponseEntity<Mono<Void>> deleteModificationGroup(@Parameter(description = "Group UUID") @PathVariable("networkUuid") UUID groupUuid) {
         return ResponseEntity.ok().body(networkModificationService.deleteModificationGroup(groupUuid));
     }
 
     @GetMapping(value = "/networks/modificationgroups", produces = MediaType.APPLICATION_JSON_VALUE)
-    @ApiOperation(value = "Get list of modifications groups")
-    @ApiResponse(code = 200, message = "List of modifications groups")
+    @Operation(summary = "Get list of modifications groups")
+    @ApiResponse(responseCode = "200", description = "List of modifications groups")
     public ResponseEntity<Flux<UUID>> getModificationGroups() {
         return ResponseEntity.ok().body(networkModificationService.getModificationGroups());
     }
 
     @PutMapping(value = "/networks/{networkUuid}/lines/{lineId}/status", consumes = MediaType.TEXT_PLAIN_VALUE)
-    @ApiOperation(value = "Change the status of a line")
-    @ApiResponses(value = {@ApiResponse(code = 200, message = "the line status has been changed")})
+    @Operation(summary = "Change the status of a line")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "the line status has been changed")})
     public ResponseEntity<Flux<ElementaryModificationInfos>> changeLineStatus(
-            @ApiParam(value = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
-            @ApiParam(value = "Line ID") @PathVariable("lineId") String lineId,
+            @Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
+            @Parameter(description = "Line ID") @PathVariable("lineId") String lineId,
             @RequestBody(required = true) String status) {
         return ResponseEntity.ok().body(networkModificationService.changeLineStatus(networkUuid, lineId, status));
     }
