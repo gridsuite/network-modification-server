@@ -45,8 +45,9 @@
 
     <properties>
         <java.version>11</java.version>
-        <gridsuite-dependencies.version>9</gridsuite-dependencies.version>
+        <gridsuite-dependencies.version>10</gridsuite-dependencies.version>
         <db-util.version>1.0.5</db-util.version>
+        <commons-lang3.version>3.9</commons-lang3.version>
     </properties>
 
     <build>
@@ -93,7 +94,11 @@
             </dependency>
 
             <!-- project specific dependencies -->
-
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-lang3</artifactId>
+                <version>${commons-lang3.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
