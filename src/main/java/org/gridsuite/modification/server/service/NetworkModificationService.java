@@ -21,8 +21,6 @@ import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ElementaryModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -39,8 +37,6 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
  */
 @Service
 public class NetworkModificationService {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(NetworkModificationService.class);
 
     private final NetworkStoreService networkStoreService;
 
@@ -195,12 +191,9 @@ public class NetworkModificationService {
             saveModifications(listener);
             return listener.getModifications();
         } catch (NetworkModificationException e) {
-            LOGGER.error(e.getMessage());
             throw e;
         } catch (Exception e) {
-            var exc = new NetworkModificationException(typeIfError, e);
-            LOGGER.error(exc.getMessage());
-            throw exc;
+            throw new NetworkModificationException(typeIfError, e);
         }
     }
 

@@ -6,6 +6,8 @@
  */
 package org.gridsuite.modification.server;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -16,9 +18,14 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 @ControllerAdvice
 public class RestResponseEntityExceptionHandler {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(RestResponseEntityExceptionHandler.class);
+
     @ExceptionHandler(value = {NetworkModificationException.class})
     protected ResponseEntity<Object> handleException(RuntimeException exception) {
-        NetworkModificationException networkModificationException = (NetworkModificationException) exception;
+        if (LOGGER.isErrorEnabled()) {
+            LOGGER.error(exception.toString(), exception);
+        }
+        var networkModificationException = (NetworkModificationException) exception;
         return ResponseEntity
                 .status(networkModificationException.getType().getStatus())
                 .body(networkModificationException.getMessage());
