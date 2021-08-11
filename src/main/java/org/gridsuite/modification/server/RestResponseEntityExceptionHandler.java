@@ -23,7 +23,7 @@ public class RestResponseEntityExceptionHandler {
     @ExceptionHandler(value = {NetworkModificationException.class})
     protected ResponseEntity<Object> handleException(RuntimeException exception) {
         if (LOGGER.isErrorEnabled()) {
-            LOGGER.error(exception.toString(), exception);
+            LOGGER.error(exception.getMessage(), exception);
         }
         var networkModificationException = (NetworkModificationException) exception;
         return ResponseEntity
