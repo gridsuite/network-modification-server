@@ -37,5 +37,6 @@ server:
 network-store-server:
   base-uri: http://localhost:8080
 
-dbName: networkmodifications
+dbName: gridsuite
+query: ?currentSchema=networkmodifications
 dbApi: jdbc
