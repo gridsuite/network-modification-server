@@ -21,7 +21,7 @@ import org.gridsuite.modification.server.repositories.NetworkModificationReposit
  */
 public class NetworkStoreListener implements NetworkListener {
 
-    private UUID networkUuid;
+    private UUID groupUuid;
 
     private Network network;
 
@@ -33,15 +33,15 @@ public class NetworkStoreListener implements NetworkListener {
         return network;
     }
 
-    public static NetworkStoreListener create(Network network, UUID networkUuid, NetworkModificationRepository modificationRepository) {
-        var listener = new NetworkStoreListener(network, networkUuid, modificationRepository);
+    public static NetworkStoreListener create(Network network, UUID groupUuid, NetworkModificationRepository modificationRepository) {
+        var listener = new NetworkStoreListener(network, groupUuid, modificationRepository);
         network.addListener(listener);
         return listener;
     }
 
-    protected NetworkStoreListener(Network network, UUID networkUuid, NetworkModificationRepository modificationRepository) {
+    protected NetworkStoreListener(Network network, UUID groupUuid, NetworkModificationRepository modificationRepository) {
         this.network = network;
-        this.networkUuid = networkUuid;
+        this.groupUuid = groupUuid;
         this.modificationRepository = modificationRepository;
     }
 
@@ -52,7 +52,7 @@ public class NetworkStoreListener implements NetworkListener {
     }
 
     public void saveModifications() {
-        modificationRepository.saveModifications(networkUuid,
+        modificationRepository.saveModifications(groupUuid,
                 modifications
                         .stream()
                         .map(ModificationEntity.class::cast)
@@ -60,7 +60,7 @@ public class NetworkStoreListener implements NetworkListener {
     }
 
     public void deleteModifications() {
-        modificationRepository.deleteModifications(networkUuid,
+        modificationRepository.deleteModifications(groupUuid,
                 modifications
                         .stream()
                         .map(ModificationEntity::getId)
