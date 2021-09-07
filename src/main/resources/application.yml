@@ -29,6 +29,13 @@ spring:
               #action: create
               create-target: src/main/resources/network-modification.sql
               create-source: metadata
+  data:
+    elasticsearch:
+      enabled: true
+      host: localhost
+      port: 9200
+      index: network-modification-server
+      type: metadatas
 
 server:
   port: 5007

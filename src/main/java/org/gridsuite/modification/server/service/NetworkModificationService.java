@@ -8,6 +8,7 @@ package org.gridsuite.modification.server.service;
 
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.iidm.network.Branch;
+import com.powsybl.iidm.network.Connectable;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.Terminal;
 import com.powsybl.network.store.client.NetworkStoreService;
@@ -19,15 +20,24 @@ import org.apache.commons.lang3.StringUtils;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ElementaryModificationInfos;
+import org.gridsuite.modification.server.dto.EquipmentInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 
@@ -38,13 +48,50 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
 @Service
 public class NetworkModificationService {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(NetworkModificationService.class);
+
     private final NetworkStoreService networkStoreService;
 
     private final NetworkModificationRepository modificationRepository;
 
-    public NetworkModificationService(NetworkStoreService networkStoreService, NetworkModificationRepository modificationRepository) {
+    private final EquipmentInfosService equipmentInfosService;
+
+    public NetworkModificationService(NetworkStoreService networkStoreService, NetworkModificationRepository modificationRepository, EquipmentInfosService equipmentInfosService) {
         this.networkStoreService = networkStoreService;
         this.modificationRepository = modificationRepository;
+        this.equipmentInfosService = equipmentInfosService;
+    }
+
+    private static EquipmentInfos toEquipmentInfos(Connectable<?> c, UUID networkUuid) {
+        return EquipmentInfos.builder()
+                .networkUuid(networkUuid)
+                .equipmentId(c.getId())
+                .equipmentName(c.getNameOrId())
+                .equipmentType(c.getType().name())
+                .creationDate(ZonedDateTime.now(ZoneOffset.UTC))
+                .build();
+    }
+
+    public Mono<Void> insertEquipmentIndexes(UUID networkUuid) {
+        AtomicReference<Long> startTime = new AtomicReference<>();
+        return getNetwork(networkUuid)
+                .flatMapIterable(Network::getConnectables)
+                .map(c -> toEquipmentInfos(c, networkUuid))
+                //.parallel().runOn(Schedulers.parallel())
+                //.doOnNext(infos -> equipmentInfosService.add(infos))
+                .doOnSubscribe(x -> startTime.set(System.nanoTime()))
+                .collect(Collectors.toList())
+                .map(equipmentInfosService::addAll)
+                .then()
+                .doFinally(x -> LOGGER.info("Time taken for indexes creation : " + TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - startTime.get()) + " seconds"));
+    }
+
+    public Mono<Void> deleteEquipmentIndexes(UUID networkUuid) {
+        AtomicReference<Long> startTime = new AtomicReference<>();
+        return Mono.fromRunnable(() -> equipmentInfosService.deleteAll(networkUuid))
+                .doOnSubscribe(x -> startTime.set(System.nanoTime()))
+                .then()
+                .doFinally(x -> LOGGER.info("Time taken for indexes deletion : " + TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - startTime.get()) + " seconds"));
     }
 
     public Flux<ElementaryModificationInfos> applyGroovyScript(UUID networkUuid, String groovyScript) {

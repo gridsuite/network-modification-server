@@ -34,6 +34,20 @@ public class NetworkModificationController {
     @Autowired
     private NetworkModificationService networkModificationService;
 
+    @PutMapping(value = "/networks/{networkUuid}/indexes")
+    @Operation(summary = "Insert equipment indexes for the network")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Equipment indexes have been inserted for the network")})
+    public ResponseEntity<Mono<Void>> insertEquipmentIndexes(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid) {
+        return ResponseEntity.ok().body(networkModificationService.insertEquipmentIndexes(networkUuid));
+    }
+
+    @DeleteMapping(value = "/networks/{networkUuid}/indexes")
+    @Operation(summary = "Delete equipment indexes for the network")
+    @ApiResponse(responseCode = "200", description = "Equipment indexes have been deleted for the network")
+    public ResponseEntity<Mono<Void>> deleteEquipmentIndexes(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid) {
+        return ResponseEntity.ok().body(networkModificationService.deleteEquipmentIndexes(networkUuid));
+    }
+
     @PutMapping(value = "/networks/{networkUuid}/switches/{switchId}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "change a switch state in the network")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The switch state has been changed")})
