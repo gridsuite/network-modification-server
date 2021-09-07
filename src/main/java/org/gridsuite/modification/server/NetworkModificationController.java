@@ -6,8 +6,6 @@
  */
 package org.gridsuite.modification.server;
 
-import java.util.UUID;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -17,12 +15,13 @@ import org.gridsuite.modification.server.dto.LoadCreationInfos;
 import org.gridsuite.modification.server.dto.EquipmenModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.service.NetworkModificationService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.util.UUID;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -32,8 +31,11 @@ import reactor.core.publisher.Mono;
 @Tag(name = "network-modification-server")
 public class NetworkModificationController {
 
-    @Autowired
     private NetworkModificationService networkModificationService;
+
+    public NetworkModificationController(NetworkModificationService networkModificationService) {
+        this.networkModificationService = networkModificationService;
+    }
 
     @PutMapping(value = "/networks/{networkUuid}/switches/{switchId}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "change a switch state in the network")

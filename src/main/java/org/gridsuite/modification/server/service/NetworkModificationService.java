@@ -1,8 +1,8 @@
-/**
- * Copyright (c) 2020, RTE (http://www.rte-france.com)
- * This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/*
+  Copyright (c) 2021, RTE (http://www.rte-france.com)
+  This Source Code Form is subject to the terms of the Mozilla Public
+  License, v. 2.0. If a copy of the MPL was not distributed with this
+  file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 package org.gridsuite.modification.server.service;
 
@@ -10,20 +10,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.InjectableValues;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.commons.PowsyblException;
-import com.powsybl.commons.reporter.Report;
-import com.powsybl.commons.reporter.Reporter;
-import com.powsybl.commons.reporter.ReporterModel;
-import com.powsybl.commons.reporter.ReporterModelDeserializer;
-import com.powsybl.commons.reporter.ReporterModelJsonModule;
-import com.powsybl.commons.reporter.TypedValue;
-import com.powsybl.iidm.network.Branch;
-import com.powsybl.iidm.network.Bus;
-import com.powsybl.iidm.network.BusbarSection;
-import com.powsybl.iidm.network.Network;
-import com.powsybl.iidm.network.SwitchKind;
-import com.powsybl.iidm.network.Terminal;
-import com.powsybl.iidm.network.TopologyKind;
-import com.powsybl.iidm.network.VoltageLevel;
+import com.powsybl.commons.reporter.*;
+import com.powsybl.iidm.network.*;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.sld.iidm.extensions.BranchStatus;
 import com.powsybl.sld.iidm.extensions.BranchStatusAdder;
@@ -32,12 +20,11 @@ import groovy.lang.GroovyShell;
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.LoadCreationInfos;
 import org.gridsuite.modification.server.dto.EquipmenModificationInfos;
+import org.gridsuite.modification.server.dto.LoadCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpEntity;
@@ -66,11 +53,11 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
 @Service
 public class NetworkModificationService {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(NetworkModificationService.class);
-
     private final NetworkStoreService networkStoreService;
 
     private final NetworkModificationRepository modificationRepository;
+
+    private final EquipmentInfosService equipmentInfosService;
 
     private RestTemplate reportServerRest;
 
@@ -80,9 +67,11 @@ public class NetworkModificationService {
     private static final String DELIMITER = "/";
 
     public NetworkModificationService(@Value("${backing-services.report-server.base-uri:http://report-server}") String reportServerURI,
-                                      NetworkStoreService networkStoreService, NetworkModificationRepository modificationRepository) {
+                                      NetworkStoreService networkStoreService, NetworkModificationRepository modificationRepository,
+                                      EquipmentInfosService equipmentInfosService) {
         this.networkStoreService = networkStoreService;
         this.modificationRepository = modificationRepository;
+        this.equipmentInfosService = equipmentInfosService;
 
         RestTemplateBuilder restTemplateBuilder = new RestTemplateBuilder();
         reportServerRest = restTemplateBuilder.build();
@@ -95,22 +84,22 @@ public class NetworkModificationService {
 
     public Flux<EquipmenModificationInfos> applyGroovyScript(UUID networkUuid, UUID groupUuid, String groovyScript) {
         return assertGroovyScriptNotEmpty(groovyScript).thenMany(
-                getNetwork(networkUuid).flatMapIterable(network -> doAction(network, networkUuid, groupUuid, () -> {
-                    var conf = new CompilerConfiguration();
-                    var binding = new Binding();
-                    binding.setProperty("network", network);
-                    var shell = new GroovyShell(binding, conf);
-                    shell.evaluate(groovyScript);
-                }, GROOVY_SCRIPT_ERROR))
+            getNetwork(networkUuid).flatMapIterable(network -> doAction(network, networkUuid, groupUuid, () -> {
+                var conf = new CompilerConfiguration();
+                var binding = new Binding();
+                binding.setProperty("network", network);
+                var shell = new GroovyShell(binding, conf);
+                shell.evaluate(groovyScript);
+            }, GROOVY_SCRIPT_ERROR))
         );
     }
 
     public Flux<EquipmenModificationInfos> changeSwitchState(UUID networkUuid, UUID groupUuid, String switchId, boolean open) {
         return getNetwork(networkUuid)
-                .filter(network -> network.getSwitch(switchId) != null)
-                .switchIfEmpty(Mono.error(new NetworkModificationException(SWITCH_NOT_FOUND, switchId)))
-                .filter(network -> network.getSwitch(switchId).isOpen() != open)
-                .flatMapIterable(network -> doAction(network, networkUuid, groupUuid, () -> network.getSwitch(switchId).setOpen(open)));
+            .filter(network -> network.getSwitch(switchId) != null)
+            .switchIfEmpty(Mono.error(new NetworkModificationException(SWITCH_NOT_FOUND, switchId)))
+            .filter(network -> network.getSwitch(switchId).isOpen() != open)
+            .flatMapIterable(network -> doAction(network, networkUuid, groupUuid, () -> network.getSwitch(switchId).setOpen(open)));
     }
 
     public Flux<UUID> getModificationGroups() {
@@ -155,37 +144,37 @@ public class NetworkModificationService {
 
     public Flux<EquipmenModificationInfos> lockoutLine(UUID networkUuid, UUID groupUuid, String lineId) {
         return getNetwork(networkUuid)
-                .filter(network -> network.getLine(lineId) != null)
-                .switchIfEmpty(Mono.error(new NetworkModificationException(LINE_NOT_FOUND, lineId)))
-                .flatMapIterable(network -> doAction(network, networkUuid, groupUuid, () -> {
+            .filter(network -> network.getLine(lineId) != null)
+            .switchIfEmpty(Mono.error(new NetworkModificationException(LINE_NOT_FOUND, lineId)))
+            .flatMapIterable(network -> doAction(network, networkUuid, groupUuid, () -> {
                     if (disconnectLineBothSides(network, lineId)) {
                         network.getLine(lineId).newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.PLANNED_OUTAGE).add();
                     } else {
                         throw new NetworkModificationException(MODIFICATION_ERROR, "Unable to disconnect both line ends");
                     }
                 }
-                ));
+            ));
     }
 
     public Flux<EquipmenModificationInfos> tripLine(UUID networkUuid, UUID groupUuid, String lineId) {
         return getNetwork(networkUuid)
-                .filter(network -> network.getLine(lineId) != null)
-                .switchIfEmpty(Mono.error(new NetworkModificationException(LINE_NOT_FOUND, lineId)))
-                .flatMapIterable(network -> doAction(network, networkUuid, groupUuid, () -> {
+            .filter(network -> network.getLine(lineId) != null)
+            .switchIfEmpty(Mono.error(new NetworkModificationException(LINE_NOT_FOUND, lineId)))
+            .flatMapIterable(network -> doAction(network, networkUuid, groupUuid, () -> {
                     if (disconnectLineBothSides(network, lineId)) {
                         network.getLine(lineId).newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.FORCED_OUTAGE).add();
                     } else {
                         throw new NetworkModificationException(MODIFICATION_ERROR, "Unable to disconnect both line ends");
                     }
                 }
-                ));
+            ));
     }
 
     public Flux<EquipmenModificationInfos> energiseLineEnd(UUID networkUuid, UUID groupUuid, String lineId, Branch.Side side) {
         return getNetwork(networkUuid)
-                .filter(network -> network.getLine(lineId) != null)
-                .switchIfEmpty(Mono.error(new NetworkModificationException(LINE_NOT_FOUND, lineId)))
-                .flatMapIterable(network -> doAction(network, networkUuid, groupUuid, () -> {
+            .filter(network -> network.getLine(lineId) != null)
+            .switchIfEmpty(Mono.error(new NetworkModificationException(LINE_NOT_FOUND, lineId)))
+            .flatMapIterable(network -> doAction(network, networkUuid, groupUuid, () -> {
                     Terminal terminalToConnect = network.getLine(lineId).getTerminal(side);
                     boolean isTerminalToConnectConnected = terminalToConnect.isConnected() || terminalToConnect.connect();
                     Terminal terminalToDisconnect = network.getLine(lineId).getTerminal(side == Branch.Side.ONE ? Branch.Side.TWO : Branch.Side.ONE);
@@ -196,14 +185,14 @@ public class NetworkModificationService {
                         throw new NetworkModificationException(MODIFICATION_ERROR, "Unable to energise line end");
                     }
                 }
-                ));
+            ));
     }
 
     public Flux<EquipmenModificationInfos> switchOnLine(UUID networkUuid, UUID groupUuid, String lineId) {
         return getNetwork(networkUuid)
-                .filter(network -> network.getLine(lineId) != null)
-                .switchIfEmpty(Mono.error(new NetworkModificationException(LINE_NOT_FOUND, lineId)))
-                .flatMapIterable(network -> doAction(network, networkUuid, groupUuid, () -> {
+            .filter(network -> network.getLine(lineId) != null)
+            .switchIfEmpty(Mono.error(new NetworkModificationException(LINE_NOT_FOUND, lineId)))
+            .flatMapIterable(network -> doAction(network, networkUuid, groupUuid, () -> {
                     Terminal terminal1 = network.getLine(lineId).getTerminal1();
                     boolean terminal1Connected = terminal1.isConnected() || terminal1.connect();
                     Terminal terminal2 = network.getLine(lineId).getTerminal2();
@@ -214,7 +203,7 @@ public class NetworkModificationService {
                         throw new NetworkModificationException(MODIFICATION_ERROR, "Unable to connect both line ends");
                     }
                 }
-                ));
+            ));
     }
 
     public Mono<Void> deleteModificationGroup(UUID groupUuid) {
@@ -226,7 +215,7 @@ public class NetworkModificationService {
     }
 
     private List<EquipmenModificationInfos> doAction(Network network, UUID networkUuid, UUID groupUuid, Runnable modification, NetworkModificationException.Type typeIfError) {
-        NetworkStoreListener listener = NetworkStoreListener.create(network, groupUuid, modificationRepository);
+        NetworkStoreListener listener = NetworkStoreListener.create(network, networkUuid, groupUuid, modificationRepository, equipmentInfosService);
         ReporterModel reporter = new ReporterModel("NetworkModification", "Network modification");
         return doAction(listener, modification, typeIfError, networkUuid, reporter, reporter);
     }
@@ -343,7 +332,7 @@ public class NetworkModificationService {
     public Flux<EquipmenModificationInfos> createLoad(UUID networkUuid, UUID groupUuid, LoadCreationInfos loadCreationInfos) {
         return assertLoadCreationInfosNotEmpty(loadCreationInfos).thenMany(
                 getNetwork(networkUuid).flatMapIterable(network -> {
-                    NetworkStoreListener listener = NetworkStoreListener.create(network, groupUuid, modificationRepository);
+                    NetworkStoreListener listener = NetworkStoreListener.create(network, networkUuid, groupUuid, modificationRepository, equipmentInfosService);
                     ReporterModel reporter = new ReporterModel("NetworkModification", "Network modification");
                     Reporter subReporter = reporter.createSubReporter("LoadCreation", "Load creation");
 
