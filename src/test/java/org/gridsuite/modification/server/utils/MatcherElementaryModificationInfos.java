@@ -12,23 +12,19 @@ import org.hamcrest.Description;
 
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-import java.util.Objects;
 import java.util.Set;
 
 /**
- * @author Slimane Amar <slimane.amar at rte-france.com>
+ * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 public class MatcherElementaryModificationInfos extends MatcherModificationInfos<ElementaryModificationInfos> {
 
-    public static MatcherElementaryModificationInfos createMatcherElementaryModificationInfos(String equipmentId, Set<String> substationIds,
-                                                                                       String equipmentAttributeName, Object equipmentAttributeValue) {
+    public static MatcherElementaryModificationInfos createMatcherElementaryModificationInfos(ModificationType modificationType, String equipmentId, Set<String> substationIds) {
         return new MatcherElementaryModificationInfos(ElementaryModificationInfos.builder()
                 .date(ZonedDateTime.now(ZoneOffset.UTC))
-                .type(ModificationType.ELEMENTARY)
+                .type(modificationType)
                 .equipmentId(equipmentId)
                 .substationIds(substationIds)
-                .equipmentAttributeName(equipmentAttributeName)
-                .equipmentAttributeValue(equipmentAttributeValue)
                 .build());
     }
 
@@ -44,9 +40,7 @@ public class MatcherElementaryModificationInfos extends MatcherModificationInfos
     public boolean matchesSafely(ElementaryModificationInfos m) {
         return super.matchesSafely(m)
                 && m.getEquipmentId().equals(reference.getEquipmentId())
-                && m.getSubstationIds().equals(reference.getSubstationIds())
-                && m.getEquipmentAttributeName().equals(reference.getEquipmentAttributeName())
-                && Objects.equals(m.getEquipmentAttributeValue(), reference.getEquipmentAttributeValue());
+                && m.getSubstationIds().equals(reference.getSubstationIds());
     }
 
     @Override

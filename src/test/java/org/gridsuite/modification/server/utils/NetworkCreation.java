@@ -43,88 +43,88 @@ public final class NetworkCreation {
         createLoad(v3, "v3load", "v3load", 2, 0., 0.);
 
         TwoWindingsTransformer t2 = createTwoWindingsTransformer(s1, "trf1", "trf1", 2.0, 14.745, 0.0, 3.2E-5, 400.0, 225.0,
-                19, 9, v1.getId(), v2.getId(),
-                "trf1", 1, ConnectablePosition.Direction.TOP,
-                "trf1", 1, ConnectablePosition.Direction.TOP);
+            19, 9, v1.getId(), v2.getId(),
+            "trf1", 1, ConnectablePosition.Direction.TOP,
+            "trf1", 1, ConnectablePosition.Direction.TOP);
         t2.newRatioTapChanger()
-                .setLowTapPosition(0)
-                .setTapPosition(1)
-                .setLoadTapChangingCapabilities(false)
-                .setRegulating(true)
-                .setTargetDeadband(1.0)
-                .setTargetV(220.0)
-                .setRegulationTerminal(t2.getTerminal1())
-                .beginStep()
-                .setR(39.78473)
-                .setX(39.784725)
-                .setG(0.0)
-                .setB(0.0)
-                .setRho(1.0)
-                .endStep()
-                .beginStep()
-                .setR(39.78474)
-                .setX(39.784726)
-                .setG(0.0)
-                .setB(0.0)
-                .setRho(1.0)
-                .endStep()
-                .beginStep()
-                .setR(39.78475)
-                .setX(39.784727)
-                .setG(0.0)
-                .setB(0.0)
-                .setRho(1.0)
-                .endStep()
-                .add();
+            .setLowTapPosition(0)
+            .setTapPosition(1)
+            .setLoadTapChangingCapabilities(false)
+            .setRegulating(true)
+            .setTargetDeadband(1.0)
+            .setTargetV(220.0)
+            .setRegulationTerminal(t2.getTerminal1())
+            .beginStep()
+            .setR(39.78473)
+            .setX(39.784725)
+            .setG(0.0)
+            .setB(0.0)
+            .setRho(1.0)
+            .endStep()
+            .beginStep()
+            .setR(39.78474)
+            .setX(39.784726)
+            .setG(0.0)
+            .setB(0.0)
+            .setRho(1.0)
+            .endStep()
+            .beginStep()
+            .setR(39.78475)
+            .setX(39.784727)
+            .setG(0.0)
+            .setB(0.0)
+            .setRho(1.0)
+            .endStep()
+            .add();
 
         ThreeWindingsTransformer t3 = createThreeWindingsTransformer(s1, "trf6", "trf6", v1.getId(), v2.getId(), v4.getId(),
-                0.5, 0.5, 0.5, 1., 1., 1., 0.1, 0.1,
-                400., 225., 225.,
-                29, 17, 8,
-                "trf61", 5, ConnectablePosition.Direction.TOP,
-                "trf62", 5, ConnectablePosition.Direction.TOP,
-                "trf63", 3, ConnectablePosition.Direction.TOP);
+            0.5, 0.5, 0.5, 1., 1., 1., 0.1, 0.1,
+            400., 225., 225.,
+            29, 17, 8,
+            "trf61", 5, ConnectablePosition.Direction.TOP,
+            "trf62", 5, ConnectablePosition.Direction.TOP,
+            "trf63", 3, ConnectablePosition.Direction.TOP);
 
         t3.getLeg1().newPhaseTapChanger()
-                .setTapPosition(1)
-                .setLowTapPosition(0)
-                .setRegulating(false)
-                .setTargetDeadband(1.0)
-                .setRegulationMode(PhaseTapChanger.RegulationMode.ACTIVE_POWER_CONTROL)
-                .setRegulationValue(10.0)
-                .setRegulationTerminal(t3.getLeg1().getTerminal())
-                .beginStep()
-                .setR(1.0)
-                .setX(2.0)
-                .setG(3.0)
-                .setB(4.0)
-                .setAlpha(5.0)
-                .setRho(6.0)
-                .endStep()
-                .beginStep()
-                .setR(1.0)
-                .setX(2.0)
-                .setG(3.0)
-                .setB(4.0)
-                .setAlpha(5.0)
-                .setRho(6.0)
-                .endStep()
-                .add();
+            .setTapPosition(1)
+            .setLowTapPosition(0)
+            .setRegulating(false)
+            .setTargetDeadband(1.0)
+            .setRegulationMode(PhaseTapChanger.RegulationMode.ACTIVE_POWER_CONTROL)
+            .setRegulationValue(10.0)
+            .setRegulationTerminal(t3.getLeg1().getTerminal())
+            .beginStep()
+            .setR(1.0)
+            .setX(2.0)
+            .setG(3.0)
+            .setB(4.0)
+            .setAlpha(5.0)
+            .setRho(6.0)
+            .endStep()
+            .beginStep()
+            .setR(1.0)
+            .setX(2.0)
+            .setG(3.0)
+            .setB(4.0)
+            .setAlpha(5.0)
+            .setRho(6.0)
+            .endStep()
+            .add();
 
         // create lines
         network.newLine()
-                .setId("line1")
-                .setVoltageLevel1(v3.getId())
-                .setNode1(10)
-                .setVoltageLevel2(v4.getId())
-                .setNode2(10)
-                .setR(1.0)
-                .setX(1.0)
-                .setG1(1.0)
-                .setB1(1.0)
-                .setG2(2.0)
-                .setB2(2.0)
-                .add();
+            .setId("line1")
+            .setVoltageLevel1(v3.getId())
+            .setNode1(10)
+            .setVoltageLevel2(v4.getId())
+            .setNode2(10)
+            .setR(1.0)
+            .setX(1.0)
+            .setG1(1.0)
+            .setB1(1.0)
+            .setG2(2.0)
+            .setB2(2.0)
+            .add();
 
         createSwitch(v1, "v1dl1", "v1dl1", SwitchKind.DISCONNECTOR, true, false, false, 0, 4);
         createSwitch(v1, "v1bl1", "v1bl1", SwitchKind.BREAKER, true, false, false, 4, 5);
@@ -142,101 +142,133 @@ public final class NetworkCreation {
         return network;
     }
 
+    public static Network createBusBreaker(UUID uuid) {
+        Network network = new NetworkFactoryImpl().createNetwork(uuid.toString(), "test");
+
+        Substation s1 = createSubstation(network, "s1", "s1", Country.FR);
+        VoltageLevel v1 = createVoltageLevel(s1, "v1", "v1", TopologyKind.BUS_BREAKER, 380.0);
+        createBus(v1, "bus1", "bus1");
+        createGeneratorOnBus(v1, "idGenerator", "bus1", 42.1, 1.0);
+
+        return network;
+    }
+
     @SuppressWarnings("SameParameterValue")
     private static Substation createSubstation(Network n, String id, String name, Country country) {
         return n.newSubstation()
-                .setId(id)
-                .setName(name)
-                .setCountry(country)
-                .add();
+            .setId(id)
+            .setName(name)
+            .setCountry(country)
+            .add();
     }
 
     @SuppressWarnings("SameParameterValue")
     private static VoltageLevel createVoltageLevel(Substation s, String id, String name,
                                                    TopologyKind topology, double vNom) {
         return s.newVoltageLevel()
-                .setId(id)
-                .setName(name)
-                .setTopologyKind(topology)
-                .setNominalV(vNom)
-                .add();
+            .setId(id)
+            .setName(name)
+            .setTopologyKind(topology)
+            .setNominalV(vNom)
+            .add();
     }
 
     private static void createBusBarSection(VoltageLevel vl, String id, String name, int node) {
         vl.getNodeBreakerView().newBusbarSection()
-                .setId(id)
-                .setName(name)
-                .setNode(node)
-                .add();
+            .setId(id)
+            .setName(name)
+            .setNode(node)
+            .add();
+    }
+
+    private static void createBus(VoltageLevel vl, String id, String name) {
+        vl.getBusBreakerView().newBus()
+            .setId(id)
+            .setName(name)
+            .add();
     }
 
     @SuppressWarnings("SameParameterValue")
     private static void createSwitch(VoltageLevel vl, String id, String name, SwitchKind kind, boolean retained, boolean open, boolean fictitious, int node1, int node2) {
         vl.getNodeBreakerView().newSwitch()
-                .setId(id)
-                .setName(name)
-                .setKind(kind)
-                .setRetained(retained)
-                .setOpen(open)
-                .setFictitious(fictitious)
-                .setNode1(node1)
-                .setNode2(node2)
-                .add();
+            .setId(id)
+            .setName(name)
+            .setKind(kind)
+            .setRetained(retained)
+            .setOpen(open)
+            .setFictitious(fictitious)
+            .setNode1(node1)
+            .setNode2(node2)
+            .add();
     }
 
     private static void createLine(Network network, String id, String name, String voltageLevel1, String voltageLevel2, int node1, int node2,
                                    double r, double x, double g1, double g2, double b1, double b2) {
         network.newLine()
-                .setId(id)
-                .setName(name)
-                .setR(r)
-                .setX(x)
-                .setG1(g1)
-                .setG2(g2)
-                .setB1(b1)
-                .setB2(b2)
-                .setVoltageLevel1(voltageLevel1)
-                .setVoltageLevel2(voltageLevel2)
-                .setNode1(node1)
-                .setNode2(node2)
-                .add();
+            .setId(id)
+            .setName(name)
+            .setR(r)
+            .setX(x)
+            .setG1(g1)
+            .setG2(g2)
+            .setB1(b1)
+            .setB2(b2)
+            .setVoltageLevel1(voltageLevel1)
+            .setVoltageLevel2(voltageLevel2)
+            .setNode1(node1)
+            .setNode2(node2)
+            .add();
     }
 
     @SuppressWarnings("SameParameterValue")
     private static void createLoad(VoltageLevel vl, String id, String name,
                                    int node, double p0, double q0) {
         vl.newLoad()
-                .setId(id)
-                .setName(name)
-                .setNode(node)
-                .setP0(p0)
-                .setQ0(q0)
-                .add();
+            .setId(id)
+            .setName(name)
+            .setNode(node)
+            .setP0(p0)
+            .setQ0(q0)
+            .add();
     }
 
     private static void createLccConverterStation(VoltageLevel vl, String id, String name,
                                                   int node, float powerFactor, float lossFactor) {
         vl.newLccConverterStation()
-                .setId(id)
-                .setName(name)
-                .setNode(node)
-                .setLossFactor(lossFactor)
-                .setPowerFactor(powerFactor)
-                .add();
+            .setId(id)
+            .setName(name)
+            .setNode(node)
+            .setLossFactor(lossFactor)
+            .setPowerFactor(powerFactor)
+            .add();
     }
 
     @SuppressWarnings("SameParameterValue")
     private static void createGenerator(VoltageLevel vl, String id, int node, double targetP, double targetQ) {
         vl.newGenerator()
-                .setId(id)
-                .setName(id)
-                .setTargetP(targetP)
-                .setTargetQ(targetQ)
-                .setNode(node)
-                .setMinP(-1.1)
-                .setMaxP(1000.0)
-                .setVoltageRegulatorOn(false)
-                .add();
+            .setId(id)
+            .setName(id)
+            .setTargetP(targetP)
+            .setTargetQ(targetQ)
+            .setNode(node)
+            .setMinP(-1.1)
+            .setMaxP(1000.0)
+            .setVoltageRegulatorOn(false)
+            .add();
+    }
+
+    private static void createGeneratorOnBus(VoltageLevel vl, String id, String busId, double targetP, double targetQ) {
+        vl.newGenerator()
+            .setId(id)
+            .setName(id)
+            .setTargetP(targetP)
+            .setTargetQ(targetQ)
+            .setBus(busId)
+            .setConnectableBus(busId)
+            .setMinP(-1.1)
+            .setMaxP(1000.0)
+            .setVoltageRegulatorOn(false)
+            .add();
     }
 
     @SuppressWarnings("SameParameterValue")
@@ -248,29 +280,29 @@ public final class NetworkCreation {
                                                                        String feederName1, int feederOrder1, ConnectablePosition.Direction direction1,
                                                                        String feederName2, int feederOrder2, ConnectablePosition.Direction direction2) {
         TwoWindingsTransformer t = s.newTwoWindingsTransformer()
-                .setId(id)
-                .setName(name)
-                .setR(r)
-                .setX(x)
-                .setG(g)
-                .setB(b)
-                .setRatedU1(ratedU1)
-                .setRatedU2(ratedU2)
-                .setNode1(node1)
-                .setVoltageLevel1(idVoltageLevel1)
-                .setNode2(node2)
-                .setVoltageLevel2(idVoltageLevel2)
-                .add();
+            .setId(id)
+            .setName(name)
+            .setR(r)
+            .setX(x)
+            .setG(g)
+            .setB(b)
+            .setRatedU1(ratedU1)
+            .setRatedU2(ratedU2)
+            .setNode1(node1)
+            .setVoltageLevel1(idVoltageLevel1)
+            .setNode2(node2)
+            .setVoltageLevel2(idVoltageLevel2)
+            .add();
         t.newExtension(ConnectablePositionAdder.class)
-                .newFeeder1()
-                .withName(feederName1)
-                .withOrder(feederOrder1)
-                .withDirection(direction1).add()
-                .newFeeder2()
-                .withName(feederName2)
-                .withOrder(feederOrder2)
-                .withDirection(direction2).add()
-                .add();
+            .newFeeder1()
+            .withName(feederName1)
+            .withOrder(feederOrder1)
+            .withDirection(direction1).add()
+            .newFeeder2()
+            .withName(feederName2)
+            .withOrder(feederOrder2)
+            .withDirection(direction2).add()
+            .add();
 
         return t;
     }
@@ -287,47 +319,47 @@ public final class NetworkCreation {
                                                                            String feederName2, int feederOrder2, ConnectablePosition.Direction direction2,
                                                                            String feederName3, int feederOrder3, ConnectablePosition.Direction direction3) {
         ThreeWindingsTransformer t = s.newThreeWindingsTransformer()
-                .setId(id)
-                .setName(name)
-                .newLeg1()
-                .setR(r1)
-                .setX(x1)
-                .setG(g1)
-                .setB(b1)
-                .setRatedU(ratedU1)
-                .setVoltageLevel(vl1)
-                .setNode(node1)
-                .add()
-                .newLeg2()
-                .setR(r2)
-                .setX(x2)
-                .setRatedU(ratedU2)
-                .setVoltageLevel(vl2)
-                .setNode(node2)
-                .add()
-                .newLeg3()
-                .setR(r3)
-                .setX(x3)
-                .setRatedU(ratedU3)
-                .setVoltageLevel(vl3)
-                .setNode(node3)
-                .add()
-                .add();
+            .setId(id)
+            .setName(name)
+            .newLeg1()
+            .setR(r1)
+            .setX(x1)
+            .setG(g1)
+            .setB(b1)
+            .setRatedU(ratedU1)
+            .setVoltageLevel(vl1)
+            .setNode(node1)
+            .add()
+            .newLeg2()
+            .setR(r2)
+            .setX(x2)
+            .setRatedU(ratedU2)
+            .setVoltageLevel(vl2)
+            .setNode(node2)
+            .add()
+            .newLeg3()
+            .setR(r3)
+            .setX(x3)
+            .setRatedU(ratedU3)
+            .setVoltageLevel(vl3)
+            .setNode(node3)
+            .add()
+            .add();
 
         t.newExtension(ConnectablePositionAdder.class)
-                .newFeeder1()
-                .withName(feederName1)
-                .withOrder(feederOrder1)
-                .withDirection(direction1).add()
-                .newFeeder2()
-                .withName(feederName2)
-                .withOrder(feederOrder2)
-                .withDirection(direction2).add()
-                .newFeeder3()
-                .withName(feederName3)
-                .withOrder(feederOrder3)
-                .withDirection(direction3).add()
-                .add();
+            .newFeeder1()
+            .withName(feederName1)
+            .withOrder(feederOrder1)
+            .withDirection(direction1).add()
+            .newFeeder2()
+            .withName(feederName2)
+            .withOrder(feederOrder2)
+            .withDirection(direction2).add()
+            .newFeeder3()
+            .withName(feederName3)
+            .withOrder(feederOrder3)
+            .withDirection(direction3).add()
+            .add();
 
         return t;
     }

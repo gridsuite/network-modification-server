@@ -7,9 +7,11 @@
 package org.gridsuite.modification.server.repositories;
 
 import com.powsybl.commons.PowsyblException;
+import com.powsybl.iidm.network.LoadType;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.ElementaryModificationInfos;
+import org.gridsuite.modification.server.dto.ElementaryAttributeModificationInfos;
+import org.gridsuite.modification.server.dto.LoadCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationGroupEntity;
@@ -27,6 +29,7 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
+ * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 @Repository
 public class NetworkModificationRepository {
@@ -99,13 +102,22 @@ public class NetworkModificationRepository {
                 .collect(Collectors.toList());
     }
 
-    public ElementaryModificationInfos getElementaryModification(UUID groupUuid, UUID modificationUuid) {
+    public ElementaryAttributeModificationInfos getElementaryModification(UUID groupUuid, UUID modificationUuid) {
         return ((ElementaryModificationEntity<?>) this.modificationRepository
                 .findById(modificationUuid)
                 .filter(m -> ModificationType.ELEMENTARY.name().equals(m.getType()))
                 .filter(m -> groupUuid.equals(m.getGroup().getId()))
                 .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString())))
-                .toElementaryModificationInfos();
+                .toElementaryAttributeModificationInfos();
+    }
+
+    public LoadCreationInfos getLoadCreationModification(UUID groupUuid, UUID modificationUuid) {
+        return ((CreateLoadEntity) this.modificationRepository
+            .findById(modificationUuid)
+            .filter(m -> ModificationType.LOAD_CREATION.name().equals(m.getType()))
+            .filter(m -> groupUuid.equals(m.getGroup().getId()))
+            .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString())))
+            .toLoadCreationInfos();
     }
 
     @Transactional // To have the 2 delete in the same transaction (atomic)
@@ -126,5 +138,10 @@ public class NetworkModificationRepository {
 
     private ModificationGroupEntity getModificationGroup(UUID groupUuid) {
         return this.modificationGroupRepository.findById(groupUuid).orElseThrow(() -> new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, groupUuid.toString()));
+    }
+
+    public CreateEquipmentEntity createLoadEntity(String loadId, String loadName, LoadType loadType,
+                                                  String voltageLevelId, String busId, double activePower, double reactivePower) {
+        return new CreateLoadEntity(loadId, loadName, loadType, voltageLevelId, busId, activePower, reactivePower);
     }
 }
