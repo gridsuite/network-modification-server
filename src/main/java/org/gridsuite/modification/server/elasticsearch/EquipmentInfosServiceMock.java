@@ -32,5 +32,6 @@ public class EquipmentInfosServiceMock implements EquipmentInfosService {
 
     @Override
     public void deleteAll(@NonNull UUID networkUuid) {
+        // Nothing to delete
     }
 }

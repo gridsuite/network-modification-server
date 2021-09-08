@@ -1,8 +1,8 @@
-/**
- * Copyright (c) 2021, RTE (http://www.rte-france.com)
- * This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/*
+  Copyright (c) 2021, RTE (http://www.rte-france.com)
+  This Source Code Form is subject to the terms of the Mozilla Public
+  License, v. 2.0. If a copy of the MPL was not distributed with this
+  file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 package org.gridsuite.modification.server.elasticsearch;
 
@@ -18,6 +18,7 @@ import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
 import org.springframework.data.elasticsearch.client.RestClients;
 import org.springframework.data.elasticsearch.config.AbstractElasticsearchConfiguration;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchCustomConversions;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 
@@ -25,10 +26,9 @@ import java.net.InetSocketAddress;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
-import java.util.UUID;
 
 /**
- * A class to configure DB elasticsearch client for metadatas transfer
+ * A class to configure DB elasticsearch client for indexation
  *
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
@@ -46,8 +46,8 @@ public class ESConfig extends AbstractElasticsearchConfiguration {
 
     @Bean
     @ConditionalOnExpression("'${spring.data.elasticsearch.enabled:false}' == 'true'")
-    public EquipmentInfosService studyInfosServiceImpl() {
-        return new EquipmentInfosServiceImpl();
+    public EquipmentInfosService studyInfosServiceImpl(EquipmentInfosRepository equipmentInfosRepository, ElasticsearchOperations elasticsearchOperations) {
+        return new EquipmentInfosServiceImpl(equipmentInfosRepository, elasticsearchOperations);
     }
 
     @Bean
@@ -61,20 +61,11 @@ public class ESConfig extends AbstractElasticsearchConfiguration {
     public RestHighLevelClient elasticsearchClient() {
         ClientConfiguration clientConfiguration = ClientConfiguration.builder()
                 .connectedTo(InetSocketAddress.createUnresolved(esHost, esPort))
+                .withSocketTimeout(10000)
                 .build();
 
         return RestClients.create(clientConfiguration).rest();
     }
-
-//    @Bean
-//    @Override
-//    public ElasticsearchConverter elasticsearchEntityMapper(
-//            SimpleElasticsearchMappingContext elasticsearchMappingContext) {
-//        MappingElasticsearchConverter elasticsearchConverter = new MappingElasticsearchConverter(
-//                elasticsearchMappingContext);
-//        elasticsearchConverter.setConversions(elasticsearchCustomConversions());
-//        return elasticsearchConverter;
-//    }
 
     @Override
     public ElasticsearchCustomConversions elasticsearchCustomConversions() {

@@ -1,14 +1,14 @@
-/**
- * Copyright (c) 2020, RTE (http://www.rte-france.com)
- * This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/*
+  Copyright (c) 2021, RTE (http://www.rte-france.com)
+  This Source Code Form is subject to the terms of the Mozilla Public
+  License, v. 2.0. If a copy of the MPL was not distributed with this
+  file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 package org.gridsuite.modification.server.service;
 
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.iidm.network.Branch;
-import com.powsybl.iidm.network.Connectable;
+import com.powsybl.iidm.network.Identifiable;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.Terminal;
 import com.powsybl.network.store.client.NetworkStoreService;
@@ -21,6 +21,7 @@ import org.codehaus.groovy.control.CompilerConfiguration;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ElementaryModificationInfos;
 import org.gridsuite.modification.server.dto.EquipmentInfos;
+import org.gridsuite.modification.server.dto.EquipmentType;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
@@ -62,12 +63,12 @@ public class NetworkModificationService {
         this.equipmentInfosService = equipmentInfosService;
     }
 
-    private static EquipmentInfos toEquipmentInfos(Connectable<?> c, UUID networkUuid) {
+    private static EquipmentInfos toEquipmentInfos(Identifiable<?> i, UUID networkUuid) {
         return EquipmentInfos.builder()
                 .networkUuid(networkUuid)
-                .equipmentId(c.getId())
-                .equipmentName(c.getNameOrId())
-                .equipmentType(c.getType().name())
+                .equipmentId(i.getId())
+                .equipmentName(i.getNameOrId())
+                .equipmentType(EquipmentType.getType(i).name())
                 .creationDate(ZonedDateTime.now(ZoneOffset.UTC))
                 .build();
     }
@@ -75,15 +76,15 @@ public class NetworkModificationService {
     public Mono<Void> insertEquipmentIndexes(UUID networkUuid) {
         AtomicReference<Long> startTime = new AtomicReference<>();
         return getNetwork(networkUuid)
-                .flatMapIterable(Network::getConnectables)
+                .flatMapIterable(Network::getIdentifiables)
+                //.filter(Predicate.not(i -> i instanceof Switch))
                 .map(c -> toEquipmentInfos(c, networkUuid))
-                //.parallel().runOn(Schedulers.parallel())
-                //.doOnNext(infos -> equipmentInfosService.add(infos))
                 .doOnSubscribe(x -> startTime.set(System.nanoTime()))
-                .collect(Collectors.toList())
-                .map(equipmentInfosService::addAll)
+                .parallel().runOn(Schedulers.parallel())
+                .groups()
+                .flatMap(g -> g.collect(Collectors.toList()).map(equipmentInfosService::addAll))
                 .then()
-                .doFinally(x -> LOGGER.info("Time taken for indexes creation : " + TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - startTime.get()) + " seconds"));
+                .doFinally(x -> LOGGER.info("Indexes creation for network '{}' : {} seconds", networkUuid, TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - startTime.get())));
     }
 
     public Mono<Void> deleteEquipmentIndexes(UUID networkUuid) {
@@ -91,7 +92,7 @@ public class NetworkModificationService {
         return Mono.fromRunnable(() -> equipmentInfosService.deleteAll(networkUuid))
                 .doOnSubscribe(x -> startTime.set(System.nanoTime()))
                 .then()
-                .doFinally(x -> LOGGER.info("Time taken for indexes deletion : " + TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - startTime.get()) + " seconds"));
+                .doFinally(x -> LOGGER.info("Indexes deletion for network '{}' : {} seconds", networkUuid, TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - startTime.get())));
     }
 
     public Flux<ElementaryModificationInfos> applyGroovyScript(UUID networkUuid, String groovyScript) {
