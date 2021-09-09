@@ -285,12 +285,13 @@ public class NetworkModificationService {
 
         // creating the load
         voltageLevel.newLoad()
-                .setId(loadCreationInfos.getEquipmentId())
-                .setName(loadCreationInfos.getEquipmentName())
-                .setNode(newNode + 2)
-                .setP0(loadCreationInfos.getActivePower())
-                .setQ0(loadCreationInfos.getReactivePower())
-                .add();
+            .setId(loadCreationInfos.getEquipmentId())
+            .setName(loadCreationInfos.getEquipmentName())
+            .setLoadType(loadCreationInfos.getLoadType())
+            .setNode(newNode + 2)
+            .setP0(loadCreationInfos.getActivePower())
+            .setQ0(loadCreationInfos.getReactivePower())
+            .add();
     }
 
     private void createLoadInBusBreaker(VoltageLevel voltageLevel, LoadCreationInfos loadCreationInfos) {
@@ -305,6 +306,7 @@ public class NetworkModificationService {
         voltageLevel.newLoad()
             .setId(loadCreationInfos.getEquipmentId())
             .setName(loadCreationInfos.getEquipmentName())
+            .setLoadType(loadCreationInfos.getLoadType())
             .setBus(bus.getId())
             .setConnectableBus(bus.getId())
             .setP0(loadCreationInfos.getActivePower())
