@@ -113,7 +113,7 @@ public class ModificationControllerTest {
 
         // switch opening
         ElementaryAttributeModificationInfos modificationSwitchInfos =
-                Objects.requireNonNull(webTestClient.put().uri("/v1/networks/{networkUuid}/group/{groupUuid}/switches/{switchId}?open=true", TEST_NETWORK_ID, TEST_GROUP_ID, "v1b1")
+                Objects.requireNonNull(webTestClient.put().uri("/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID + "&open=true", TEST_NETWORK_ID, "v1b1")
                         .exchange()
                         .expectStatus().isOk()
                         .expectHeader().contentType(MediaType.APPLICATION_JSON)
@@ -158,7 +158,7 @@ public class ModificationControllerTest {
                 .isEqualTo(List.of());
 
         // switch opening to create the default group
-        webTestClient.put().uri("/v1/networks/{networkUuid}/group/{groupUuid}/switches/{switchId}?open=true", TEST_NETWORK_ID, TEST_GROUP_ID, "v1b1")
+        webTestClient.put().uri("/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID + "&open=true", TEST_NETWORK_ID, "v1b1")
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
@@ -187,22 +187,24 @@ public class ModificationControllerTest {
 
     @Test
     public void testSwitch() {
+        String uriString = "/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID;
+
         // network not existing
-        webTestClient.put().uri("/v1/networks/{networkUuid}/group/{groupUuid}/switches/{switchId}?open=true", NOT_FOUND_NETWORK_ID, TEST_GROUP_ID, "v1b1")
+        webTestClient.put().uri(uriString + "&open=true", NOT_FOUND_NETWORK_ID, "v1b1")
                 .exchange()
                 .expectStatus().isNotFound()
                 .expectBody(String.class)
                 .isEqualTo(new NetworkModificationException(NETWORK_NOT_FOUND, NOT_FOUND_NETWORK_ID.toString()).getMessage());
 
         // switch not existing
-        webTestClient.put().uri("/v1/networks/{networkUuid}/group/{groupUuid}/switches/{switchId}?open=true", TEST_NETWORK_ID, TEST_GROUP_ID, "notFound")
+        webTestClient.put().uri(uriString + "&open=true", TEST_NETWORK_ID, "notFound")
                 .exchange()
                 .expectStatus().isNotFound()
                 .expectBody(String.class)
                 .isEqualTo(new NetworkModificationException(SWITCH_NOT_FOUND, "notFound").getMessage());
 
         // switch closing when already closed
-        webTestClient.put().uri("/v1/networks/{networkUuid}/group/{groupUuid}/switches/{switchId}?open=false", TEST_NETWORK_ID, TEST_GROUP_ID, "v1b1")
+        webTestClient.put().uri(uriString + "&open=false", TEST_NETWORK_ID, "v1b1")
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
@@ -210,7 +212,7 @@ public class ModificationControllerTest {
                 .isEqualTo(List.of());
 
         // switch opening
-        webTestClient.put().uri("/v1/networks/{networkUuid}/group/{groupUuid}/switches/{switchId}?open=true", TEST_NETWORK_ID, TEST_GROUP_ID, "v1b1")
+        webTestClient.put().uri(uriString + "&open=true", TEST_NETWORK_ID, "v1b1")
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
@@ -219,7 +221,7 @@ public class ModificationControllerTest {
                         MatcherElementaryAttributeModificationInfos.createMatcherElementaryAttributeModificationInfos("v1b1", Set.of("s1"), "open", true));
 
         // switch closing
-        webTestClient.put().uri("/v1/networks/{networkUuid}/group/{groupUuid}/switches/{switchId}?open=false", TEST_NETWORK_ID, TEST_GROUP_ID, "v2b1")
+        webTestClient.put().uri(uriString + "&open=false", TEST_NETWORK_ID, "v2b1")
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
@@ -228,7 +230,7 @@ public class ModificationControllerTest {
                         MatcherElementaryAttributeModificationInfos.createMatcherElementaryAttributeModificationInfos("v2b1", Set.of("s1"), "open", false));
 
         // switch opening on another substation
-        webTestClient.put().uri("/v1/networks/{networkUuid}/group/{groupUuid}/switches/{switchId}?open=true", TEST_NETWORK_ID, TEST_GROUP_ID, "v3b1")
+        webTestClient.put().uri(uriString + "&open=true", TEST_NETWORK_ID, "v3b1")
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
@@ -241,8 +243,10 @@ public class ModificationControllerTest {
 
     @Test
     public void testLine() {
+        String uriString = "/v1/networks/{networkUuid}/lines/{lineId}/status?group=" + TEST_GROUP_ID;
+
         // network not existing
-        webTestClient.put().uri("/v1/networks/{networkUuid}/group/{groupUuid}/lines/{lineId}/status", NOT_FOUND_NETWORK_ID, TEST_GROUP_ID, "line2")
+        webTestClient.put().uri(uriString, NOT_FOUND_NETWORK_ID, "line2")
                 .bodyValue("lockout")
                 .exchange()
                 .expectStatus().isNotFound()
@@ -250,7 +254,7 @@ public class ModificationControllerTest {
                 .isEqualTo(new NetworkModificationException(NETWORK_NOT_FOUND, NOT_FOUND_NETWORK_ID.toString()).getMessage());
 
         // line not existing
-        webTestClient.put().uri("/v1/networks/{networkUuid}/group/{groupUuid}/lines/{lineId}/status", TEST_NETWORK_ID, TEST_GROUP_ID, "notFound")
+        webTestClient.put().uri(uriString, TEST_NETWORK_ID, "notFound")
                 .bodyValue("lockout")
                 .exchange()
                 .expectStatus().isNotFound()
@@ -258,7 +262,7 @@ public class ModificationControllerTest {
                 .isEqualTo(new NetworkModificationException(LINE_NOT_FOUND, "notFound").getMessage());
 
         // line lockout
-        webTestClient.put().uri("/v1/networks/{networkUuid}/group/{groupUuid}/lines/{lineId}/status", TEST_NETWORK_ID, TEST_GROUP_ID, "line2")
+        webTestClient.put().uri(uriString, TEST_NETWORK_ID, "line2")
                 .bodyValue("lockout")
                 .exchange()
                 .expectStatus().isOk()
@@ -271,7 +275,7 @@ public class ModificationControllerTest {
                 .value(modifications -> modifications.get(2),
                         MatcherElementaryAttributeModificationInfos.createMatcherElementaryAttributeModificationInfos("line2", Set.of("s1", "s2"), "branchStatus", BranchStatus.Status.PLANNED_OUTAGE.name()));
 
-        webTestClient.put().uri("/v1/networks/{networkUuid}/group/{groupUuid}/lines/{lineId}/status", TEST_NETWORK_ID, TEST_GROUP_ID, "line3")
+        webTestClient.put().uri(uriString, TEST_NETWORK_ID, "line3")
                 .bodyValue("lockout")
                 .exchange()
                 .expectStatus().is5xxServerError()
@@ -279,7 +283,7 @@ public class ModificationControllerTest {
                 .isEqualTo(new NetworkModificationException(MODIFICATION_ERROR, "Unable to disconnect both line ends").getMessage());
 
         // line switch on
-        webTestClient.put().uri("/v1/networks/{networkUuid}/group/{groupUuid}/lines/{lineId}/status", TEST_NETWORK_ID, TEST_GROUP_ID, "line2")
+        webTestClient.put().uri(uriString, TEST_NETWORK_ID, "line2")
                 .bodyValue("switchOn")
                 .exchange()
                 .expectStatus().isOk()
@@ -288,7 +292,7 @@ public class ModificationControllerTest {
                 .isEqualTo(List.of());
 
         // line trip
-        webTestClient.put().uri("/v1/networks/{networkUuid}/group/{groupUuid}/lines/{lineId}/status", TEST_NETWORK_ID, TEST_GROUP_ID, "line2")
+        webTestClient.put().uri(uriString, TEST_NETWORK_ID, "line2")
                 .bodyValue("trip")
                 .exchange()
                 .expectStatus().isOk()
@@ -301,7 +305,7 @@ public class ModificationControllerTest {
                 .value(modifications -> modifications.get(2),
                         MatcherElementaryAttributeModificationInfos.createMatcherElementaryAttributeModificationInfos("line2", Set.of("s1", "s2"), "branchStatus", BranchStatus.Status.FORCED_OUTAGE.name()));
 
-        webTestClient.put().uri("/v1/networks/{networkUuid}/group/{groupUuid}/lines/{lineId}/status", TEST_NETWORK_ID, TEST_GROUP_ID, "line3")
+        webTestClient.put().uri(uriString, TEST_NETWORK_ID, "line3")
                 .bodyValue("trip")
                 .exchange()
                 .expectStatus().is5xxServerError()
@@ -309,7 +313,7 @@ public class ModificationControllerTest {
                 .isEqualTo(new NetworkModificationException(MODIFICATION_ERROR, "Unable to disconnect both line ends").getMessage());
 
         // line energise on one end
-        webTestClient.put().uri("/v1/networks/{networkUuid}/group/{groupUuid}/lines/{lineId}/status", TEST_NETWORK_ID, TEST_GROUP_ID, "line2")
+        webTestClient.put().uri(uriString, TEST_NETWORK_ID, "line2")
                 .bodyValue("energiseEndOne")
                 .exchange()
                 .expectStatus().isOk()
@@ -318,7 +322,7 @@ public class ModificationControllerTest {
                 .value(modifications -> modifications.get(0),
                         MatcherElementaryAttributeModificationInfos.createMatcherElementaryAttributeModificationInfos("v3bl1", Set.of("s2"), "open", true));
 
-        webTestClient.put().uri("/v1/networks/{networkUuid}/group/{groupUuid}/lines/{lineId}/status", TEST_NETWORK_ID, TEST_GROUP_ID, "line3")
+        webTestClient.put().uri(uriString, TEST_NETWORK_ID, "line3")
                 .bodyValue("energiseEndOne")
                 .exchange()
                 .expectStatus().is5xxServerError()
@@ -326,7 +330,7 @@ public class ModificationControllerTest {
                 .isEqualTo(new NetworkModificationException(MODIFICATION_ERROR, "Unable to energise line end").getMessage());
 
         // line energise on other end
-        webTestClient.put().uri("/v1/networks/{networkUuid}/group/{groupUuid}/lines/{lineId}/status", TEST_NETWORK_ID, TEST_GROUP_ID, "line2")
+        webTestClient.put().uri(uriString, TEST_NETWORK_ID, "line2")
                 .bodyValue("energiseEndTwo")
                 .exchange()
                 .expectStatus().isOk()
@@ -335,7 +339,7 @@ public class ModificationControllerTest {
                 .value(modifications -> modifications.get(0),
                         MatcherElementaryAttributeModificationInfos.createMatcherElementaryAttributeModificationInfos("v1bl1", Set.of("s1"), "open", true));
 
-        webTestClient.put().uri("/v1/networks/{networkUuid}/group/{groupUuid}/lines/{lineId}/status", TEST_NETWORK_ID, TEST_GROUP_ID, "line3")
+        webTestClient.put().uri(uriString, TEST_NETWORK_ID, "line3")
                 .bodyValue("energiseEndTwo")
                 .exchange()
                 .expectStatus().is5xxServerError()
@@ -347,13 +351,15 @@ public class ModificationControllerTest {
 
     @Test
     public void testGroovyWithErrors() {
+        String uriString = "/v1/networks/{networkUuid}/groovy?group=" + TEST_GROUP_ID;
+
         // apply null groovy script
-        webTestClient.put().uri("/v1/networks/{networkUuid}/group/{groupUuid}/groovy", TEST_NETWORK_ID, TEST_GROUP_ID)
+        webTestClient.put().uri(uriString, TEST_NETWORK_ID)
                 .exchange()
                 .expectStatus().isEqualTo(HttpStatus.UNSUPPORTED_MEDIA_TYPE);
 
         // apply empty groovy script
-        webTestClient.put().uri("/v1/networks/{networkUuid}/group/{groupUuid}/groovy", TEST_NETWORK_ID, TEST_GROUP_ID)
+        webTestClient.put().uri(uriString, TEST_NETWORK_ID)
                 .bodyValue("")
                 .exchange()
                 .expectStatus().isBadRequest()
@@ -361,7 +367,7 @@ public class ModificationControllerTest {
                 .isEqualTo(new NetworkModificationException(GROOVY_SCRIPT_EMPTY).getMessage());
 
         // apply empty groovy script
-        webTestClient.put().uri("/v1/networks/{networkUuid}/group/{groupUuid}/groovy/", TEST_NETWORK_ID, TEST_GROUP_ID)
+        webTestClient.put().uri(uriString, TEST_NETWORK_ID)
                 .bodyValue("      ")
                 .exchange()
                 .expectStatus().isBadRequest()
@@ -369,7 +375,7 @@ public class ModificationControllerTest {
                 .isEqualTo(new NetworkModificationException(GROOVY_SCRIPT_EMPTY).getMessage());
 
         // apply groovy script with unknown generator
-        webTestClient.put().uri("/v1/networks/{networkUuid}/group/{groupUuid}/groovy", TEST_NETWORK_ID, TEST_GROUP_ID)
+        webTestClient.put().uri(uriString, TEST_NETWORK_ID)
                 .bodyValue("network.getGenerator('there is no generator').targetP=12\n")
                 .exchange()
                 .expectStatus().isBadRequest()
@@ -379,8 +385,10 @@ public class ModificationControllerTest {
 
     @Test
     public void testGroovy() {
+        String uriString = "/v1/networks/{networkUuid}/groovy?group=" + TEST_GROUP_ID;
+
         // apply groovy script with generator target P modification
-        webTestClient.put().uri("/v1/networks/{networkUuid}/group/{groupUuid}/groovy", TEST_NETWORK_ID, TEST_GROUP_ID)
+        webTestClient.put().uri(uriString, TEST_NETWORK_ID)
                 .bodyValue("network.getGenerator('idGenerator').targetP=12\n")
                 .exchange()
                 .expectStatus().isOk()
@@ -390,7 +398,7 @@ public class ModificationControllerTest {
                         MatcherElementaryAttributeModificationInfos.createMatcherElementaryAttributeModificationInfos("idGenerator", Set.of("s1"), "targetP", 12.0));
 
         // apply groovy script with load type modification
-        webTestClient.put().uri("/v1/networks/{networkUuid}/group/{groupUuid}/groovy", TEST_NETWORK_ID, TEST_GROUP_ID)
+        webTestClient.put().uri(uriString, TEST_NETWORK_ID)
                 .bodyValue("network.getLoad('v1load').loadType=com.powsybl.iidm.network.LoadType.FICTITIOUS\n")
                 .exchange()
                 .expectStatus().isOk()
@@ -400,7 +408,7 @@ public class ModificationControllerTest {
                         MatcherElementaryAttributeModificationInfos.createMatcherElementaryAttributeModificationInfos("v1load", Set.of("s1"), "loadType", "FICTITIOUS"));
 
         // apply groovy script with lcc converter station power factor modification
-        webTestClient.put().uri("/v1/networks/{networkUuid}/group/{groupUuid}/groovy", TEST_NETWORK_ID, TEST_GROUP_ID)
+        webTestClient.put().uri(uriString, TEST_NETWORK_ID)
                 .bodyValue("network.getLccConverterStation('v1lcc').powerFactor=1\n")
                 .exchange()
                 .expectStatus().isOk()
@@ -410,7 +418,7 @@ public class ModificationControllerTest {
                         MatcherElementaryAttributeModificationInfos.createMatcherElementaryAttributeModificationInfos("v1lcc", Set.of("s1"), "powerFactor", 1.0));
 
         // apply groovy script with line R modification
-        webTestClient.put().uri("/v1/networks/{networkUuid}/group/{groupUuid}/groovy", TEST_NETWORK_ID, TEST_GROUP_ID)
+        webTestClient.put().uri(uriString, TEST_NETWORK_ID)
                 .bodyValue("network.getLine('line1').r=2\n")
                 .exchange()
                 .expectStatus().isOk()
@@ -420,7 +428,7 @@ public class ModificationControllerTest {
                         MatcherElementaryAttributeModificationInfos.createMatcherElementaryAttributeModificationInfos("line1", Set.of("s1", "s2"), "r", 2.0));
 
         // apply groovy script with two windings transformer ratio tap modification
-        webTestClient.put().uri("/v1/networks/{networkUuid}/group/{groupUuid}/groovy", TEST_NETWORK_ID, TEST_GROUP_ID)
+        webTestClient.put().uri(uriString, TEST_NETWORK_ID)
                 .bodyValue("network.getTwoWindingsTransformer('trf1').getRatioTapChanger().tapPosition=2\n")
                 .exchange()
                 .expectStatus().isOk()
@@ -430,7 +438,7 @@ public class ModificationControllerTest {
                         MatcherElementaryAttributeModificationInfos.createMatcherElementaryAttributeModificationInfos("trf1", Set.of("s1"), "ratioTapChanger.tapPosition", 2));
 
         // apply groovy script with three windings transformer phase tap modification
-        webTestClient.put().uri("/v1/networks/{networkUuid}/group/{groupUuid}/groovy", TEST_NETWORK_ID, TEST_GROUP_ID)
+        webTestClient.put().uri(uriString, TEST_NETWORK_ID)
                 .bodyValue("network.getThreeWindingsTransformer('trf6').getLeg1().getPhaseTapChanger().tapPosition=0\n")
                 .exchange()
                 .expectStatus().isOk()
@@ -444,8 +452,10 @@ public class ModificationControllerTest {
 
     @Test
     public void testUndoModificationsOnNetworkFlushError() {
+        String uriString = "/v1/networks/{networkUuid}/groovy?group=" + TEST_GROUP_ID;
+
         // apply groovy script with 2 modifications with network flush error
-        webTestClient.put().uri("/v1/networks/{networkUuid}/group/{groupUuid}/groovy", TEST_NETWORK_WITH_FLUSH_ERROR_ID, TEST_GROUP_ID)
+        webTestClient.put().uri(uriString, TEST_NETWORK_WITH_FLUSH_ERROR_ID)
                 .bodyValue("network.getGenerator('idGenerator').targetP=10\nnetwork.getGenerator('idGenerator').targetP=20\n")
                 .exchange()
                 .expectBody(String.class)
@@ -456,8 +466,10 @@ public class ModificationControllerTest {
 
     @Test
     public void testMultipleModificationsWithError() {
+        String uriString = "/v1/networks/{networkUuid}/groovy?group=" + TEST_GROUP_ID;
+
         // apply groovy script with 2 modifications without error
-        webTestClient.put().uri("/v1/networks/{networkUuid}/group/{groupUuid}/groovy", TEST_NETWORK_ID, TEST_GROUP_ID)
+        webTestClient.put().uri(uriString, TEST_NETWORK_ID)
                 .bodyValue("network.getGenerator('idGenerator').targetP=10\nnetwork.getGenerator('idGenerator').targetP=20\n")
                 .exchange()
                 .expectStatus().isOk();
@@ -465,7 +477,7 @@ public class ModificationControllerTest {
         assertEquals(2, modificationRepository.getModifications(TEST_GROUP_ID).size());
 
         // apply groovy script with 2 modifications with error ont the second
-        webTestClient.put().uri("/v1/networks/{networkUuid}/group/{groupUuid}/groovy", TEST_NETWORK_ID, TEST_GROUP_ID)
+        webTestClient.put().uri(uriString, TEST_NETWORK_ID)
                 .bodyValue("network.getGenerator('idGenerator').targetP=30\nnetwork.getGenerator('there is no generator').targetP=40\n")
                 .exchange()
                 .expectStatus().isBadRequest()
@@ -478,6 +490,8 @@ public class ModificationControllerTest {
 
     @Test
     public void testCreateLoadInNodeBreaker() {
+        String uriString = "/v1/networks/{networkUuid}/createLoad?group=" + TEST_GROUP_ID;
+
         // create new load in voltage level with node/breaker topology (in voltage level "v2" and busbar section "1B")
         LoadCreationInfos loadCreationInfos = LoadCreationInfos.builder()
             .equipmentId("idLoad1")
@@ -489,7 +503,7 @@ public class ModificationControllerTest {
             .reactivePower(60.0)
             .build();
 
-        webTestClient.put().uri("/v1/networks/{networkUuid}/group/{groupUuid}/createLoad", TEST_NETWORK_ID, TEST_GROUP_ID)
+        webTestClient.put().uri(uriString, TEST_NETWORK_ID)
             .body(BodyInserters.fromValue(loadCreationInfos))
             .exchange()
             .expectStatus().isOk()
@@ -501,7 +515,7 @@ public class ModificationControllerTest {
         testNetwokModificationsCount(TEST_GROUP_ID, 1);
 
         // create load with errors
-        webTestClient.put().uri("/v1/networks/{networkUuid}/group/{groupUuid}/createLoad", NOT_FOUND_NETWORK_ID, TEST_GROUP_ID)
+        webTestClient.put().uri(uriString, NOT_FOUND_NETWORK_ID)
             .body(BodyInserters.fromValue(loadCreationInfos))
             .exchange()
             .expectStatus().isNotFound()
@@ -509,7 +523,7 @@ public class ModificationControllerTest {
             .isEqualTo(new NetworkModificationException(NETWORK_NOT_FOUND, NOT_FOUND_NETWORK_ID.toString()).getMessage());
 
         loadCreationInfos.setEquipmentId(null);
-        webTestClient.put().uri("/v1/networks/{networkUuid}/group/{groupUuid}/createLoad", TEST_NETWORK_ID, TEST_GROUP_ID)
+        webTestClient.put().uri(uriString, TEST_NETWORK_ID)
             .body(BodyInserters.fromValue(loadCreationInfos))
             .exchange()
             .expectStatus().is5xxServerError()
@@ -518,7 +532,7 @@ public class ModificationControllerTest {
 
         loadCreationInfos.setEquipmentId("idLoad1");
         loadCreationInfos.setVoltageLevelId("notFoundVoltageLevelId");
-        webTestClient.put().uri("/v1/networks/{networkUuid}/group/{groupUuid}/createLoad", TEST_NETWORK_ID, TEST_GROUP_ID)
+        webTestClient.put().uri(uriString, TEST_NETWORK_ID)
             .body(BodyInserters.fromValue(loadCreationInfos))
             .exchange()
             .expectStatus().is5xxServerError()
@@ -527,7 +541,7 @@ public class ModificationControllerTest {
 
         loadCreationInfos.setVoltageLevelId("v2");
         loadCreationInfos.setBusId("notFoundBusbarSection");
-        webTestClient.put().uri("/v1/networks/{networkUuid}/group/{groupUuid}/createLoad", TEST_NETWORK_ID, TEST_GROUP_ID)
+        webTestClient.put().uri(uriString, TEST_NETWORK_ID)
             .body(BodyInserters.fromValue(loadCreationInfos))
             .exchange()
             .expectStatus().is5xxServerError()
@@ -537,7 +551,7 @@ public class ModificationControllerTest {
         loadCreationInfos.setVoltageLevelId("v2");
         loadCreationInfos.setBusId("1B");
         loadCreationInfos.setActivePower(Double.NaN);
-        webTestClient.put().uri("/v1/networks/{networkUuid}/group/{groupUuid}/createLoad", TEST_NETWORK_ID, TEST_GROUP_ID)
+        webTestClient.put().uri(uriString, TEST_NETWORK_ID)
             .body(BodyInserters.fromValue(loadCreationInfos))
             .exchange()
             .expectStatus().is5xxServerError()
@@ -549,6 +563,8 @@ public class ModificationControllerTest {
 
     @Test
     public void testCreateLoadInBusBreaker() {
+        String uriString = "/v1/networks/{networkUuid}/createLoad?group=" + TEST_GROUP_ID;
+
         // create new load in voltage level with bus/breaker topology (in voltage level "VLGEN" and bus "NGEN")
         LoadCreationInfos loadCreationInfos = LoadCreationInfos.builder()
             .equipmentId("idLoad1")
@@ -560,7 +576,7 @@ public class ModificationControllerTest {
             .reactivePower(30.0)
             .build();
 
-        webTestClient.put().uri("/v1/networks/{networkUuid}/group/{groupUuid}/createLoad", TEST_NETWORK_BUS_BREAKER_ID, TEST_GROUP_ID)
+        webTestClient.put().uri(uriString, TEST_NETWORK_BUS_BREAKER_ID)
             .body(BodyInserters.fromValue(loadCreationInfos))
             .exchange()
             .expectStatus().isOk()
@@ -573,7 +589,7 @@ public class ModificationControllerTest {
 
         // create load with errors
         loadCreationInfos.setBusId("notFoundBus");
-        webTestClient.put().uri("/v1/networks/{networkUuid}/group/{groupUuid}/createLoad", TEST_NETWORK_BUS_BREAKER_ID, TEST_GROUP_ID)
+        webTestClient.put().uri(uriString, TEST_NETWORK_BUS_BREAKER_ID)
             .body(BodyInserters.fromValue(loadCreationInfos))
             .exchange()
             .expectStatus().is5xxServerError()

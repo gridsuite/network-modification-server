@@ -36,22 +36,22 @@ public class NetworkModificationController {
     @Autowired
     private NetworkModificationService networkModificationService;
 
-    @PutMapping(value = "/networks/{networkUuid}/group/{groupUuid}/switches/{switchId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/networks/{networkUuid}/switches/{switchId}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "change a switch state in the network")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The switch state has been changed")})
     public ResponseEntity<Flux<ElementaryAttributeModificationInfos>> changeSwitchState(
             @Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
-            @Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid,
             @Parameter(description = "Switch ID") @PathVariable("switchId") String switchId,
+            @RequestParam(value = "group", required = false) UUID groupUuid,
             @RequestParam("open") String open) {
         return ResponseEntity.ok().body(networkModificationService.changeSwitchState(networkUuid, groupUuid, switchId, Boolean.parseBoolean(open)));
     }
 
-    @PutMapping(value = "/networks/{networkUuid}/group/{groupUuid}/groovy", consumes = MediaType.TEXT_PLAIN_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/networks/{networkUuid}/groovy", consumes = MediaType.TEXT_PLAIN_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "change an equipment state in the network")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The equipment state has been changed")})
     public ResponseEntity<Flux<ElementaryAttributeModificationInfos>> applyGroovyScript(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
-                                                                                        @Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid,
+                                                                                        @RequestParam(value = "group", required = false) UUID groupUuid,
                                                                                         @RequestBody String groovyScript) {
         return ResponseEntity.ok().body(networkModificationService.applyGroovyScript(networkUuid, groupUuid, groovyScript));
     }
@@ -85,22 +85,22 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.getModificationGroups());
     }
 
-    @PutMapping(value = "/networks/{networkUuid}/group/{groupUuid}/lines/{lineId}/status", consumes = MediaType.TEXT_PLAIN_VALUE)
+    @PutMapping(value = "/networks/{networkUuid}/lines/{lineId}/status", consumes = MediaType.TEXT_PLAIN_VALUE)
     @Operation(summary = "Change the status of a line")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "the line status has been changed")})
     public ResponseEntity<Flux<ElementaryAttributeModificationInfos>> changeLineStatus(
             @Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
-            @Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid,
             @Parameter(description = "Line ID") @PathVariable("lineId") String lineId,
+            @RequestParam(value = "group", required = false) UUID groupUuid,
             @RequestBody(required = true) String status) {
         return ResponseEntity.ok().body(networkModificationService.changeLineStatus(networkUuid, groupUuid, lineId, status));
     }
 
-    @PutMapping(value = "/networks/{networkUuid}/group/{groupUuid}/createLoad", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/networks/{networkUuid}/createLoad", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "create a load in the network")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The load has been created")})
     public ResponseEntity<Flux<ElementaryModificationInfos>> createLoad(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
-                                                                        @Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid,
+                                                                        @RequestParam(value = "group", required = false) UUID groupUuid,
                                                                         @RequestBody LoadCreationInfos loadCreationInfos) {
         return ResponseEntity.ok().body(networkModificationService.createLoad(networkUuid, groupUuid, loadCreationInfos));
     }

@@ -63,35 +63,43 @@ public class NetworkStoreListener implements NetworkListener {
     }
 
     public void saveModifications() {
-        modificationRepository.saveModifications(groupUuid,
+        if (groupUuid != null) {
+            modificationRepository.saveModifications(groupUuid,
                 modifications
-                        .stream()
-                        .map(ModificationEntity.class::cast)
-                        .collect(Collectors.toList()));
+                    .stream()
+                    .map(ModificationEntity.class::cast)
+                    .collect(Collectors.toList()));
+        }
     }
 
     public void saveCreations() {
-        modificationRepository.saveModifications(groupUuid,
-            creations
-                .stream()
-                .map(ModificationEntity.class::cast)
-                .collect(Collectors.toList()));
+        if (groupUuid != null) {
+            modificationRepository.saveModifications(groupUuid,
+                creations
+                    .stream()
+                    .map(ModificationEntity.class::cast)
+                    .collect(Collectors.toList()));
+        }
     }
 
     public void deleteModifications() {
-        modificationRepository.deleteModifications(groupUuid,
+        if (groupUuid != null) {
+            modificationRepository.deleteModifications(groupUuid,
                 modifications
-                        .stream()
-                        .map(ModificationEntity::getId)
-                        .collect(Collectors.toSet()));
+                    .stream()
+                    .map(ModificationEntity::getId)
+                    .collect(Collectors.toSet()));
+        }
     }
 
     public void deleteCreations() {
-        modificationRepository.deleteModifications(groupUuid,
-            creations
-                .stream()
-                .map(ModificationEntity::getId)
-                .collect(Collectors.toSet()));
+        if (groupUuid != null) {
+            modificationRepository.deleteModifications(groupUuid,
+                creations
+                    .stream()
+                    .map(ModificationEntity::getId)
+                    .collect(Collectors.toSet()));
+        }
     }
 
     private void storeElementaryModification(Identifiable<?> identifiable, String attributeName, Object attributeValue) {
