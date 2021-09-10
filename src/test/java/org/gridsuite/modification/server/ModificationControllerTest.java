@@ -123,14 +123,14 @@ public class ModificationControllerTest {
 
         assertTrue(MatcherElementaryAttributeModificationInfos.createMatcherElementaryAttributeModificationInfos("v1b1", Set.of("s1"), "open", true).matchesSafely(modificationSwitchInfos));
 
-        webTestClient.get().uri("/v1/networks/modifications/group/{groupUuid}/elementarymodifications/{modificationUuid}", TEST_GROUP_ID, modificationSwitchInfos.getUuid())
+        webTestClient.get().uri("/v1/groups/{groupUuid}/elementarymodifications/{modificationUuid}", TEST_GROUP_ID, modificationSwitchInfos.getUuid())
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
                 .expectBody(ElementaryAttributeModificationInfos.class)
                 .value(MatcherElementaryAttributeModificationInfos.createMatcherElementaryAttributeModificationInfos("v1b1", Set.of(), "open", true));
 
-        webTestClient.get().uri("/v1/networks/modifications/group/{groupUuid}/elementarymodifications/{modificationUuid}", TEST_GROUP_ID, TEST_NETWORK_ID)
+        webTestClient.get().uri("/v1/groups/{groupUuid}/elementarymodifications/{modificationUuid}", TEST_GROUP_ID, TEST_NETWORK_ID)
                 .exchange()
                 .expectStatus().isNotFound()
                 .expectBody(String.class)
@@ -150,7 +150,7 @@ public class ModificationControllerTest {
     @Test
     public void testModificationGroups() {
         // no groups
-        webTestClient.get().uri("/v1/networks/modificationgroups")
+        webTestClient.get().uri("/v1/modificationgroups")
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
@@ -166,7 +166,7 @@ public class ModificationControllerTest {
                 .value(modifications -> modifications.get(0),
                         MatcherElementaryAttributeModificationInfos.createMatcherElementaryAttributeModificationInfos("v1b1", Set.of("s1"), "open", true));
 
-        webTestClient.get().uri("/v1/networks/modificationgroups")
+        webTestClient.get().uri("/v1/modificationgroups")
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
@@ -174,11 +174,11 @@ public class ModificationControllerTest {
                 .isEqualTo(List.of(TEST_GROUP_ID));
 
         // delete the default modification group of a network
-        webTestClient.delete().uri("/v1/networks/modifications/group/{groupUuid}", TEST_GROUP_ID)
+        webTestClient.delete().uri("/v1/groups/{groupUuid}", TEST_GROUP_ID)
                 .exchange()
                 .expectStatus().isOk();
 
-        webTestClient.get().uri("/v1/networks/modifications/group/{groupUuid}", TEST_GROUP_ID)
+        webTestClient.get().uri("/v1/groups/{groupUuid}", TEST_GROUP_ID)
                 .exchange()
                 .expectStatus().isNotFound()
                 .expectBody(String.class)
@@ -601,7 +601,7 @@ public class ModificationControllerTest {
 
     private void testNetwokModificationsCount(UUID groupUuid, int actualSize) {
         // get all modifications for the given group of a network
-        assertEquals(actualSize, Objects.requireNonNull(webTestClient.get().uri("/v1/networks/modifications/group/{groupUuid}", groupUuid)
+        assertEquals(actualSize, Objects.requireNonNull(webTestClient.get().uri("/v1/groups/{groupUuid}", groupUuid)
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)

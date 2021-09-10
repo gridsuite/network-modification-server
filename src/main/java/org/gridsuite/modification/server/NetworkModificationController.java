@@ -56,14 +56,14 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.applyGroovyScript(networkUuid, groupUuid, groovyScript));
     }
 
-    @GetMapping(value = "/networks/modifications/group/{groupUuid}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/groups/{groupUuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Get modifications list of a group for a network")
     @ApiResponse(responseCode = "200", description = "List of modifications of the group for the network")
     public ResponseEntity<Flux<ModificationInfos>> getModifications(@Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid) {
         return ResponseEntity.ok().body(networkModificationService.getModifications(groupUuid));
     }
 
-    @GetMapping(value = "/networks/modifications/group/{groupUuid}/elementarymodifications/{modificationUuid}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/groups/{groupUuid}/elementarymodifications/{modificationUuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Get an elementary modification of a group for a network")
     @ApiResponse(responseCode = "200", description = "Elementary modification of the group for the network")
     public ResponseEntity<Mono<ElementaryAttributeModificationInfos>> getElementaryModifications(@Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid,
@@ -71,14 +71,14 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.getElementaryModification(groupUuid, modificationUuid));
     }
 
-    @DeleteMapping(value = "/networks/modifications/group/{groupUuid}")
+    @DeleteMapping(value = "/groups/{groupUuid}")
     @Operation(summary = "Delete the modifications group for a network")
     @ApiResponse(responseCode = "200", description = "Modifications group deleted for the network")
     public ResponseEntity<Mono<Void>> deleteModificationGroup(@Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid) {
         return ResponseEntity.ok().body(networkModificationService.deleteModificationGroup(groupUuid));
     }
 
-    @GetMapping(value = "/networks/modificationgroups", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/modificationgroups", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Get list of modifications groups")
     @ApiResponse(responseCode = "200", description = "List of modifications groups")
     public ResponseEntity<Flux<UUID>> getModificationGroups() {
