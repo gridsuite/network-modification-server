@@ -535,7 +535,7 @@ public class ModificationControllerTest {
         webTestClient.put().uri(uriString, TEST_NETWORK_ID)
             .body(BodyInserters.fromValue(loadCreationInfos))
             .exchange()
-            .expectStatus().is5xxServerError()
+            .expectStatus().is4xxClientError()
             .expectBody(String.class)
             .isEqualTo(new NetworkModificationException(VOLTAGE_LEVEL_NOT_FOUND, "notFoundVoltageLevelId").getMessage());
 
@@ -544,7 +544,7 @@ public class ModificationControllerTest {
         webTestClient.put().uri(uriString, TEST_NETWORK_ID)
             .body(BodyInserters.fromValue(loadCreationInfos))
             .exchange()
-            .expectStatus().is5xxServerError()
+            .expectStatus().is4xxClientError()
             .expectBody(String.class)
             .isEqualTo(new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "notFoundBusbarSection").getMessage());
 
@@ -592,7 +592,7 @@ public class ModificationControllerTest {
         webTestClient.put().uri(uriString, TEST_NETWORK_BUS_BREAKER_ID)
             .body(BodyInserters.fromValue(loadCreationInfos))
             .exchange()
-            .expectStatus().is5xxServerError()
+            .expectStatus().is4xxClientError()
             .expectBody(String.class)
             .isEqualTo(new NetworkModificationException(BUS_NOT_FOUND, "notFoundBus").getMessage());
 

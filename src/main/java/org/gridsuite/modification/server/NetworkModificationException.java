@@ -26,10 +26,10 @@ public class NetworkModificationException extends RuntimeException {
         SWITCH_NOT_FOUND(HttpStatus.NOT_FOUND),
         LINE_NOT_FOUND(HttpStatus.NOT_FOUND),
         MODIFICATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
-        VOLTAGE_LEVEL_NOT_FOUND(HttpStatus.INTERNAL_SERVER_ERROR),
+        VOLTAGE_LEVEL_NOT_FOUND(HttpStatus.NOT_FOUND),
         CREATE_LOAD_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
-        BUSBAR_SECTION_NOT_FOUND(HttpStatus.INTERNAL_SERVER_ERROR),
-        BUS_NOT_FOUND(HttpStatus.INTERNAL_SERVER_ERROR);
+        BUSBAR_SECTION_NOT_FOUND(HttpStatus.NOT_FOUND),
+        BUS_NOT_FOUND(HttpStatus.NOT_FOUND);
 
         public final HttpStatus status;
         private final String message;
