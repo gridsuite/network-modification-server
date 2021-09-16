@@ -35,11 +35,6 @@ public class EquipmentInfosServiceImpl implements EquipmentInfosService {
     }
 
     @Override
-    public Iterable<EquipmentInfos> addAll(@NonNull final Iterable<EquipmentInfos> equipmentInfos) {
-        return equipmentInfosRepository.saveAll(equipmentInfos);
-    }
-
-    @Override
     public List<EquipmentInfos> search(@NonNull final String query) {
         SearchHits<EquipmentInfos> searchHits = elasticsearchOperations.search(new NativeSearchQuery(QueryBuilders.queryStringQuery(query)), EquipmentInfos.class);
         return searchHits.stream().map(SearchHit::getContent).collect(Collectors.toList());

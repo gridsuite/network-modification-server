@@ -21,8 +21,6 @@ import java.util.UUID;
 @Service
 public interface EquipmentInfosService {
 
-    Iterable<EquipmentInfos> addAll(@NonNull final Iterable<EquipmentInfos> equipmentInfos);
-
     List<EquipmentInfos> search(@NonNull final String query);
 
     void deleteAll(@NonNull UUID networkUuid);

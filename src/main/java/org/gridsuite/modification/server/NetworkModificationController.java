@@ -6,8 +6,6 @@
  */
 package org.gridsuite.modification.server;
 
-import java.util.UUID;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -16,12 +14,13 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.gridsuite.modification.server.dto.ElementaryModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.service.NetworkModificationService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.util.UUID;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -31,14 +30,10 @@ import reactor.core.publisher.Mono;
 @Tag(name = "network-modification-server")
 public class NetworkModificationController {
 
-    @Autowired
     private NetworkModificationService networkModificationService;
 
-    @PutMapping(value = "/networks/{networkUuid}/indexes")
-    @Operation(summary = "Insert equipment indexes for the network")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Equipment indexes have been inserted for the network")})
-    public ResponseEntity<Mono<Void>> insertEquipmentIndexes(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid) {
-        return ResponseEntity.ok().body(networkModificationService.insertEquipmentIndexes(networkUuid));
+    public NetworkModificationController(NetworkModificationService networkModificationService) {
+        this.networkModificationService = networkModificationService;
     }
 
     @DeleteMapping(value = "/networks/{networkUuid}/indexes")

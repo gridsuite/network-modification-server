@@ -14,7 +14,6 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.elasticsearch.annotations.Document;
 
-import java.time.ZonedDateTime;
 import java.util.UUID;
 
 /**
