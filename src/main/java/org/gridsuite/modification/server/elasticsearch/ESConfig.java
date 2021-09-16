@@ -12,20 +12,13 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.core.convert.converter.Converter;
-import org.springframework.data.convert.ReadingConverter;
-import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
 import org.springframework.data.elasticsearch.client.RestClients;
 import org.springframework.data.elasticsearch.config.AbstractElasticsearchConfiguration;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.convert.ElasticsearchCustomConversions;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 
 import java.net.InetSocketAddress;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
 
 /**
  * A class to configure DB elasticsearch client for indexation
@@ -65,30 +58,5 @@ public class ESConfig extends AbstractElasticsearchConfiguration {
                 .build();
 
         return RestClients.create(clientConfiguration).rest();
-    }
-
-    @Override
-    public ElasticsearchCustomConversions elasticsearchCustomConversions() {
-        return new ElasticsearchCustomConversions(Arrays.asList(DateToStringConverter.INSTANCE, StringToDateConverter.INSTANCE));
-    }
-
-    @WritingConverter
-    enum DateToStringConverter implements Converter<ZonedDateTime, String> {
-        INSTANCE;
-
-        @Override
-        public String convert(ZonedDateTime date) {
-            return date.format(DateTimeFormatter.ISO_DATE_TIME);
-        }
-    }
-
-    @ReadingConverter
-    enum StringToDateConverter implements Converter<String, ZonedDateTime> {
-        INSTANCE;
-
-        @Override
-        public ZonedDateTime convert(String s) {
-            return ZonedDateTime.parse(s, DateTimeFormatter.ISO_DATE_TIME);
-        }
     }
 }

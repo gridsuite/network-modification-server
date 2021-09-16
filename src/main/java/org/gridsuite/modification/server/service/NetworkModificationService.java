@@ -32,8 +32,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -69,17 +67,16 @@ public class NetworkModificationService {
                 .equipmentId(i.getId())
                 .equipmentName(i.getNameOrId())
                 .equipmentType(EquipmentType.getType(i).name())
-                .creationDate(ZonedDateTime.now(ZoneOffset.UTC))
                 .build();
     }
 
     public Mono<Void> insertEquipmentIndexes(UUID networkUuid) {
         AtomicReference<Long> startTime = new AtomicReference<>();
         return getNetwork(networkUuid)
+                .doOnSubscribe(x -> startTime.set(System.nanoTime()))
                 .flatMapIterable(Network::getIdentifiables)
                 //.filter(Predicate.not(i -> i instanceof Switch))
                 .map(c -> toEquipmentInfos(c, networkUuid))
-                .doOnSubscribe(x -> startTime.set(System.nanoTime()))
                 .parallel().runOn(Schedulers.parallel())
                 .groups()
                 .flatMap(g -> g.collect(Collectors.toList()).map(equipmentInfosService::addAll))

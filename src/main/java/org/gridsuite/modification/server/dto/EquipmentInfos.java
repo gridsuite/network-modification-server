@@ -37,6 +37,4 @@ public class EquipmentInfos {
     String equipmentType;
 
     UUID networkUuid;
-
-    ZonedDateTime creationDate;
 }

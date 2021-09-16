@@ -42,18 +42,21 @@ public enum EquipmentType {
 
     public static EquipmentType getType(Identifiable<?> identifiable) {
         Objects.requireNonNull(identifiable);
-        if (identifiable instanceof Switch) {
-            return EquipmentType.valueOf(((Switch) identifiable).getKind().name());
-        } else if (identifiable instanceof Connectable) {
-            return EquipmentType.valueOf(((Connectable) identifiable).getType().name());
-        } else if (identifiable instanceof HvdcLine) {
-            return EquipmentType.HVDC;
-        } else if (identifiable instanceof Substation) {
-            return EquipmentType.SUBSTATION;
-        } else if (identifiable instanceof VoltageLevel) {
-            return EquipmentType.VOLTAGE_LEVEL;
+        try {
+            if (identifiable instanceof Switch) {
+                return EquipmentType.valueOf(((Switch) identifiable).getKind().name());
+            } else if (identifiable instanceof Connectable) {
+                return EquipmentType.valueOf(((Connectable) identifiable).getType().name());
+            } else if (identifiable instanceof HvdcLine) {
+                return EquipmentType.HVDC;
+            } else if (identifiable instanceof Substation) {
+                return EquipmentType.SUBSTATION;
+            } else if (identifiable instanceof VoltageLevel) {
+                return EquipmentType.VOLTAGE_LEVEL;
+            }
+        } catch (IllegalArgumentException e) {
+            throw new NetworkModificationException(EQUIPMENT_TYPE_UNKNOWN, e);
         }
-
         throw new NetworkModificationException(EQUIPMENT_TYPE_UNKNOWN);
     }
 }
