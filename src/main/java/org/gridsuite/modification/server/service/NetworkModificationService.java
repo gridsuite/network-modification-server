@@ -20,10 +20,7 @@ import org.codehaus.groovy.control.CompilerConfiguration;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ElementaryModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -31,8 +28,6 @@ import reactor.core.scheduler.Schedulers;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 
@@ -43,26 +38,13 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
 @Service
 public class NetworkModificationService {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(NetworkModificationService.class);
-
     private final NetworkStoreService networkStoreService;
 
     private final NetworkModificationRepository modificationRepository;
 
-    private final EquipmentInfosService equipmentInfosService;
-
-    public NetworkModificationService(NetworkStoreService networkStoreService, NetworkModificationRepository modificationRepository, EquipmentInfosService equipmentInfosService) {
+    public NetworkModificationService(NetworkStoreService networkStoreService, NetworkModificationRepository modificationRepository) {
         this.networkStoreService = networkStoreService;
         this.modificationRepository = modificationRepository;
-        this.equipmentInfosService = equipmentInfosService;
-    }
-
-    public Mono<Void> deleteEquipmentIndexes(UUID networkUuid) {
-        AtomicReference<Long> startTime = new AtomicReference<>();
-        return Mono.fromRunnable(() -> equipmentInfosService.deleteAll(networkUuid))
-                .doOnSubscribe(x -> startTime.set(System.nanoTime()))
-                .then()
-                .doFinally(x -> LOGGER.info("Indexes deletion for network '{}' : {} seconds", networkUuid, TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - startTime.get())));
     }
 
     public Flux<ElementaryModificationInfos> applyGroovyScript(UUID networkUuid, String groovyScript) {

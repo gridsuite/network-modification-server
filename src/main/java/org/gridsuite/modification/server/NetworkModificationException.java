@@ -24,7 +24,7 @@ public class NetworkModificationException extends RuntimeException {
         MODIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND),
         SWITCH_NOT_FOUND(HttpStatus.NOT_FOUND),
         LINE_NOT_FOUND(HttpStatus.NOT_FOUND),
-        EQUIPMENT_TYPE_UNKNOWN(HttpStatus.INTERNAL_SERVER_ERROR),
+        UNKNOWN_EQUIPMENT_TYPE(HttpStatus.INTERNAL_SERVER_ERROR),
         MODIFICATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR);
 
         public final HttpStatus status;
@@ -63,5 +63,10 @@ public class NetworkModificationException extends RuntimeException {
 
     Type getType() {
         return type;
+    }
+
+    public static NetworkModificationException createEquipmentTypeUnknown(String type) {
+        Objects.requireNonNull(type);
+        return new NetworkModificationException(Type.UNKNOWN_EQUIPMENT_TYPE, "The equipment type : " + type + " is unknown");
     }
 }

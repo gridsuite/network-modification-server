@@ -31,11 +31,9 @@ spring:
               create-source: metadata
   data:
     elasticsearch:
-      enabled: true
+      enabled: false
       host: localhost
       port: 9200
-      index: network-modification-server
-      type: metadatas
 
 server:
   port: 5007

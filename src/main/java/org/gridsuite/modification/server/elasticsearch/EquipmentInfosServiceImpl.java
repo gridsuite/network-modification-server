@@ -6,17 +6,10 @@
  */
 package org.gridsuite.modification.server.elasticsearch;
 
-import org.elasticsearch.index.query.QueryBuilders;
 import org.gridsuite.modification.server.dto.EquipmentInfos;
-import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.SearchHit;
-import org.springframework.data.elasticsearch.core.SearchHits;
-import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.lang.NonNull;
 
-import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 /**
  * A class to implement elasticsearch indexing
@@ -27,21 +20,22 @@ public class EquipmentInfosServiceImpl implements EquipmentInfosService {
 
     private final EquipmentInfosRepository equipmentInfosRepository;
 
-    private final ElasticsearchOperations elasticsearchOperations;
-
-    public EquipmentInfosServiceImpl(EquipmentInfosRepository equipmentInfosRepository, ElasticsearchOperations elasticsearchOperations) {
+    public EquipmentInfosServiceImpl(EquipmentInfosRepository equipmentInfosRepository) {
         this.equipmentInfosRepository = equipmentInfosRepository;
-        this.elasticsearchOperations = elasticsearchOperations;
     }
 
     @Override
-    public List<EquipmentInfos> search(@NonNull final String query) {
-        SearchHits<EquipmentInfos> searchHits = elasticsearchOperations.search(new NativeSearchQuery(QueryBuilders.queryStringQuery(query)), EquipmentInfos.class);
-        return searchHits.stream().map(SearchHit::getContent).collect(Collectors.toList());
+    public EquipmentInfos add(@NonNull EquipmentInfos equipmentInfos) {
+        return equipmentInfosRepository.save(equipmentInfos);
     }
 
     @Override
-    public void deleteAll(@NonNull UUID networkUuid) {
-        equipmentInfosRepository.deleteAllByNetworkUuid(networkUuid);
+    public void delete(@NonNull String id) {
+        equipmentInfosRepository.deleteById(id);
+    }
+
+    @Override
+    public Iterable<EquipmentInfos> findAll(@NonNull UUID networkUuid) {
+        return equipmentInfosRepository.findAllByNetworkUuid(networkUuid);
     }
 }

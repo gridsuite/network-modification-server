@@ -11,8 +11,6 @@ import org.gridsuite.modification.server.NetworkModificationException;
 
 import java.util.Objects;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.EQUIPMENT_TYPE_UNKNOWN;
-
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
@@ -55,8 +53,9 @@ public enum EquipmentType {
                 return EquipmentType.VOLTAGE_LEVEL;
             }
         } catch (IllegalArgumentException e) {
-            throw new NetworkModificationException(EQUIPMENT_TYPE_UNKNOWN, e);
+            throw NetworkModificationException.createEquipmentTypeUnknown(identifiable.getClass().getSimpleName());
         }
-        throw new NetworkModificationException(EQUIPMENT_TYPE_UNKNOWN);
+
+        throw NetworkModificationException.createEquipmentTypeUnknown(identifiable.getClass().getSimpleName());
     }
 }

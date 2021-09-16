@@ -1,8 +1,8 @@
-/**
- * Copyright (c) 2021, RTE (http://www.rte-france.com)
- * This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/*
+  Copyright (c) 2021, RTE (http://www.rte-france.com)
+  This Source Code Form is subject to the terms of the Mozilla Public
+  License, v. 2.0. If a copy of the MPL was not distributed with this
+  file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 package org.gridsuite.modification.server.elasticsearch;
 
@@ -10,7 +10,6 @@ import org.gridsuite.modification.server.dto.EquipmentInfos;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.UUID;
 
 /**
@@ -20,8 +19,9 @@ import java.util.UUID;
  */
 @Service
 public interface EquipmentInfosService {
+    EquipmentInfos add(@NonNull EquipmentInfos equipmentInfos);
 
-    List<EquipmentInfos> search(@NonNull final String query);
+    void delete(@NonNull String id);
 
-    void deleteAll(@NonNull UUID networkUuid);
+    Iterable<EquipmentInfos> findAll(@NonNull UUID networkUuid);
 }

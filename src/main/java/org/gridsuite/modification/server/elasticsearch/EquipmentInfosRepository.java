@@ -10,6 +10,7 @@ import org.gridsuite.modification.server.dto.EquipmentInfos;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
+import org.springframework.lang.NonNull;
 
 import java.util.UUID;
 
@@ -19,5 +20,7 @@ import java.util.UUID;
 @ConditionalOnExpression("'${spring.data.elasticsearch.enabled:false}' == 'true'")
 @Lazy
 public interface EquipmentInfosRepository extends ElasticsearchRepository<EquipmentInfos, String> {
+    Iterable<EquipmentInfos> findAllByNetworkUuid(@NonNull UUID networkUuid);
+
     void deleteAllByNetworkUuid(UUID networkUuid);
 }
