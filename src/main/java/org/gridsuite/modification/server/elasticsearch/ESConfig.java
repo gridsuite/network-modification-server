@@ -54,7 +54,6 @@ public class ESConfig extends AbstractElasticsearchConfiguration {
     public RestHighLevelClient elasticsearchClient() {
         ClientConfiguration clientConfiguration = ClientConfiguration.builder()
                 .connectedTo(InetSocketAddress.createUnresolved(esHost, esPort))
-                .withSocketTimeout(10000)
                 .build();
 
         return RestClients.create(clientConfiguration).rest();

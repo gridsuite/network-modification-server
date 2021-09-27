@@ -20,6 +20,7 @@ import org.codehaus.groovy.control.CompilerConfiguration;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ElementaryModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -42,29 +43,33 @@ public class NetworkModificationService {
 
     private final NetworkModificationRepository modificationRepository;
 
-    public NetworkModificationService(NetworkStoreService networkStoreService, NetworkModificationRepository modificationRepository) {
+    private final EquipmentInfosService equipmentInfosService;
+
+    public NetworkModificationService(NetworkStoreService networkStoreService,
+                                      NetworkModificationRepository modificationRepository, EquipmentInfosService equipmentInfosService) {
         this.networkStoreService = networkStoreService;
         this.modificationRepository = modificationRepository;
+        this.equipmentInfosService = equipmentInfosService;
     }
 
     public Flux<ElementaryModificationInfos> applyGroovyScript(UUID networkUuid, String groovyScript) {
         return assertGroovyScriptNotEmpty(groovyScript).thenMany(
-                getNetwork(networkUuid).flatMapIterable(network -> doAction(network, networkUuid, () -> {
-                    var conf = new CompilerConfiguration();
-                    var binding = new Binding();
-                    binding.setProperty("network", network);
-                    var shell = new GroovyShell(binding, conf);
-                    shell.evaluate(groovyScript);
-                }, GROOVY_SCRIPT_ERROR))
+            getNetwork(networkUuid).flatMapIterable(network -> doAction(network, networkUuid, () -> {
+                var conf = new CompilerConfiguration();
+                var binding = new Binding();
+                binding.setProperty("network", network);
+                var shell = new GroovyShell(binding, conf);
+                shell.evaluate(groovyScript);
+            }, GROOVY_SCRIPT_ERROR))
         );
     }
 
     public Flux<ElementaryModificationInfos> changeSwitchState(UUID networkUuid, String switchId, boolean open) {
         return getNetwork(networkUuid)
-                .filter(network -> network.getSwitch(switchId) != null)
-                .switchIfEmpty(Mono.error(new NetworkModificationException(SWITCH_NOT_FOUND, switchId)))
-                .filter(network -> network.getSwitch(switchId).isOpen() != open)
-                .flatMapIterable(network -> doAction(network, networkUuid, () -> network.getSwitch(switchId).setOpen(open)));
+            .filter(network -> network.getSwitch(switchId) != null)
+            .switchIfEmpty(Mono.error(new NetworkModificationException(SWITCH_NOT_FOUND, switchId)))
+            .filter(network -> network.getSwitch(switchId).isOpen() != open)
+            .flatMapIterable(network -> doAction(network, networkUuid, () -> network.getSwitch(switchId).setOpen(open)));
     }
 
     public Flux<UUID> getModificationGroups() {
@@ -109,37 +114,37 @@ public class NetworkModificationService {
 
     public Flux<ElementaryModificationInfos> lockoutLine(UUID networkUuid, String lineId) {
         return getNetwork(networkUuid)
-                .filter(network -> network.getLine(lineId) != null)
-                .switchIfEmpty(Mono.error(new NetworkModificationException(LINE_NOT_FOUND, lineId)))
-                .flatMapIterable(network -> doAction(network, networkUuid, () -> {
+            .filter(network -> network.getLine(lineId) != null)
+            .switchIfEmpty(Mono.error(new NetworkModificationException(LINE_NOT_FOUND, lineId)))
+            .flatMapIterable(network -> doAction(network, networkUuid, () -> {
                     if (disconnectLineBothSides(network, lineId)) {
                         network.getLine(lineId).newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.PLANNED_OUTAGE).add();
                     } else {
                         throw new NetworkModificationException(MODIFICATION_ERROR, "Unable to disconnect both line ends");
                     }
                 }
-                ));
+            ));
     }
 
     public Flux<ElementaryModificationInfos> tripLine(UUID networkUuid, String lineId) {
         return getNetwork(networkUuid)
-                .filter(network -> network.getLine(lineId) != null)
-                .switchIfEmpty(Mono.error(new NetworkModificationException(LINE_NOT_FOUND, lineId)))
-                .flatMapIterable(network -> doAction(network, networkUuid, () -> {
+            .filter(network -> network.getLine(lineId) != null)
+            .switchIfEmpty(Mono.error(new NetworkModificationException(LINE_NOT_FOUND, lineId)))
+            .flatMapIterable(network -> doAction(network, networkUuid, () -> {
                     if (disconnectLineBothSides(network, lineId)) {
                         network.getLine(lineId).newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.FORCED_OUTAGE).add();
                     } else {
                         throw new NetworkModificationException(MODIFICATION_ERROR, "Unable to disconnect both line ends");
                     }
                 }
-                ));
+            ));
     }
 
     public Flux<ElementaryModificationInfos> energiseLineEnd(UUID networkUuid, String lineId, Branch.Side side) {
         return getNetwork(networkUuid)
-                .filter(network -> network.getLine(lineId) != null)
-                .switchIfEmpty(Mono.error(new NetworkModificationException(LINE_NOT_FOUND, lineId)))
-                .flatMapIterable(network -> doAction(network, networkUuid, () -> {
+            .filter(network -> network.getLine(lineId) != null)
+            .switchIfEmpty(Mono.error(new NetworkModificationException(LINE_NOT_FOUND, lineId)))
+            .flatMapIterable(network -> doAction(network, networkUuid, () -> {
                     Terminal terminalToConnect = network.getLine(lineId).getTerminal(side);
                     boolean isTerminalToConnectConnected = terminalToConnect.isConnected() || terminalToConnect.connect();
                     Terminal terminalToDisconnect = network.getLine(lineId).getTerminal(side == Branch.Side.ONE ? Branch.Side.TWO : Branch.Side.ONE);
@@ -151,14 +156,14 @@ public class NetworkModificationService {
                     }
 
                 }
-                ));
+            ));
     }
 
     public Flux<ElementaryModificationInfos> switchOnLine(UUID networkUuid, String lineId) {
         return getNetwork(networkUuid)
-                .filter(network -> network.getLine(lineId) != null)
-                .switchIfEmpty(Mono.error(new NetworkModificationException(LINE_NOT_FOUND, lineId)))
-                .flatMapIterable(network -> doAction(network, networkUuid, () -> {
+            .filter(network -> network.getLine(lineId) != null)
+            .switchIfEmpty(Mono.error(new NetworkModificationException(LINE_NOT_FOUND, lineId)))
+            .flatMapIterable(network -> doAction(network, networkUuid, () -> {
                     Terminal terminal1 = network.getLine(lineId).getTerminal1();
                     boolean terminal1Connected = terminal1.isConnected() || terminal1.connect();
                     Terminal terminal2 = network.getLine(lineId).getTerminal2();
@@ -169,7 +174,7 @@ public class NetworkModificationService {
                         throw new NetworkModificationException(MODIFICATION_ERROR, "Unable to connect both line ends");
                     }
                 }
-                ));
+            ));
     }
 
     public Mono<ElementaryModificationInfos> getElementaryModification(UUID groupUuid, UUID modificationUuid) {
@@ -186,7 +191,7 @@ public class NetworkModificationService {
 
     private List<ElementaryModificationInfos> doAction(Network network, UUID networkUuid, Runnable action, NetworkModificationException.Type typeIfError) {
         try {
-            var listener = NetworkStoreListener.create(network, networkUuid, modificationRepository);
+            var listener = NetworkStoreListener.create(network, networkUuid, modificationRepository, equipmentInfosService);
             action.run();
             saveModifications(listener);
             return listener.getModifications();

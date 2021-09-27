@@ -45,24 +45,24 @@ public class EquipmentInfosServiceTests {
         EquipmentInfos equipmentInfos = EquipmentInfos.builder().networkUuid(NETWORK_UUID).equipmentId("id1").equipmentName("name1").equipmentType(EquipmentType.LOAD.name()).build();
         assertThat(equipmentInfosService.add(equipmentInfos), new MatcherEquipmentInfos<>(equipmentInfos));
 
-        equipmentInfosService.delete(equipmentInfos.getId());
+        equipmentInfosService.delete(equipmentInfos.getEquipmentId(), NETWORK_UUID);
         assertEquals(0, Iterables.size(equipmentInfosService.findAll(NETWORK_UUID)));
 
-        Set<String> ids = new HashSet<>();
-        addEquipmentInfos(ids, EquipmentInfos.builder().networkUuid(NETWORK_UUID).equipmentId("id1").equipmentName("name1").equipmentType(EquipmentType.LOAD.name()).build());
-        addEquipmentInfos(ids, EquipmentInfos.builder().networkUuid(NETWORK_UUID).equipmentId("id2").equipmentName("name2").equipmentType(EquipmentType.GENERATOR.name()).build());
-        addEquipmentInfos(ids, EquipmentInfos.builder().networkUuid(NETWORK_UUID).equipmentId("id3").equipmentName("name3").equipmentType(EquipmentType.BREAKER.name()).build());
-        addEquipmentInfos(ids, EquipmentInfos.builder().networkUuid(NETWORK_UUID).equipmentId("id4").equipmentName("name4").equipmentType(EquipmentType.HVDC.name()).build());
-        addEquipmentInfos(ids, EquipmentInfos.builder().networkUuid(NETWORK_UUID).equipmentId("id5").equipmentName("name5").equipmentType(EquipmentType.SUBSTATION.name()).build());
-        addEquipmentInfos(ids, EquipmentInfos.builder().networkUuid(NETWORK_UUID).equipmentId("id6").equipmentName("name6").equipmentType(EquipmentType.VOLTAGE_LEVEL.name()).build());
+        Set<String> equipmentIds = new HashSet<>();
+        addEquipmentInfos(equipmentIds, EquipmentInfos.builder().networkUuid(NETWORK_UUID).equipmentId("id1").equipmentName("name1").equipmentType(EquipmentType.LOAD.name()).build());
+        addEquipmentInfos(equipmentIds, EquipmentInfos.builder().networkUuid(NETWORK_UUID).equipmentId("id2").equipmentName("name2").equipmentType(EquipmentType.GENERATOR.name()).build());
+        addEquipmentInfos(equipmentIds, EquipmentInfos.builder().networkUuid(NETWORK_UUID).equipmentId("id3").equipmentName("name3").equipmentType(EquipmentType.BREAKER.name()).build());
+        addEquipmentInfos(equipmentIds, EquipmentInfos.builder().networkUuid(NETWORK_UUID).equipmentId("id4").equipmentName("name4").equipmentType(EquipmentType.HVDC.name()).build());
+        addEquipmentInfos(equipmentIds, EquipmentInfos.builder().networkUuid(NETWORK_UUID).equipmentId("id5").equipmentName("name5").equipmentType(EquipmentType.SUBSTATION.name()).build());
+        addEquipmentInfos(equipmentIds, EquipmentInfos.builder().networkUuid(NETWORK_UUID).equipmentId("id6").equipmentName("name6").equipmentType(EquipmentType.VOLTAGE_LEVEL.name()).build());
         assertEquals(6, Iterables.size(equipmentInfosService.findAll(NETWORK_UUID)));
 
-        ids.forEach(id -> equipmentInfosService.delete(id));
+        equipmentIds.forEach(id -> equipmentInfosService.delete(id, NETWORK_UUID));
         assertEquals(0, Iterables.size(equipmentInfosService.findAll(NETWORK_UUID)));
     }
 
     private void addEquipmentInfos(Set<String> ids, EquipmentInfos equipmentInfos) {
-        ids.add(equipmentInfosService.add(equipmentInfos).getId());
+        ids.add(equipmentInfosService.add(equipmentInfos).getEquipmentId());
     }
 
     @Test

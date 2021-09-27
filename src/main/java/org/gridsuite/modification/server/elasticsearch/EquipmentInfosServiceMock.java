@@ -25,12 +25,12 @@ public class EquipmentInfosServiceMock implements EquipmentInfosService {
     }
 
     @Override
-    public Iterable<EquipmentInfos> findAll(@NonNull UUID networkUuid) {
-        return Collections.emptyList();
+    public void delete(@NonNull String equipmentId, @NonNull UUID networkUuid) {
+        // Nothing to delete
     }
 
     @Override
-    public void delete(@NonNull String id) {
-        // Nothing to delete
+    public Iterable<EquipmentInfos> findAll(@NonNull UUID networkUuid) {
+        return Collections.emptyList();
     }
 }

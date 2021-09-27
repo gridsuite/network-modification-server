@@ -19,6 +19,7 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.sld.iidm.extensions.BranchStatus;
 import org.gridsuite.modification.server.dto.ElementaryModificationInfos;
+import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.NetworkStoreListener;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -67,6 +68,9 @@ public class ModificationControllerTest {
 
     @Autowired
     private NetworkModificationRepository modificationRepository;
+
+    @Autowired
+    private EquipmentInfosService equipmentInfosService;
 
     @Before
     public void setUp() {
@@ -132,7 +136,7 @@ public class ModificationControllerTest {
     @Test
     public void testNetworkListener() {
         Network network = NetworkCreation.create(TEST_NETWORK_ID);
-        NetworkStoreListener listener = NetworkStoreListener.create(network, TEST_NETWORK_ID, modificationRepository);
+        NetworkStoreListener listener = NetworkStoreListener.create(network, TEST_NETWORK_ID, modificationRepository, equipmentInfosService);
         Generator generator = network.getGenerator("idGenerator");
         Object invalidValue = new Object();
         assertTrue(assertThrows(PowsyblException.class, () ->

@@ -6,14 +6,17 @@
  */
 package org.gridsuite.modification.server.service;
 
-import java.util.*;
-import java.util.stream.Collectors;
-
 import com.powsybl.iidm.network.*;
 import org.gridsuite.modification.server.dto.ElementaryModificationInfos;
+import org.gridsuite.modification.server.dto.EquipmentInfos;
+import org.gridsuite.modification.server.dto.EquipmentType;
+import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.elementary.ElementaryModificationEntity;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -27,44 +30,49 @@ public class NetworkStoreListener implements NetworkListener {
 
     private final NetworkModificationRepository modificationRepository;
 
+    private final EquipmentInfosService equipmentInfosService;
+
     private List<ElementaryModificationEntity<?>> modifications = new LinkedList<>();
 
     Network getNetwork() {
         return network;
     }
 
-    public static NetworkStoreListener create(Network network, UUID networkUuid, NetworkModificationRepository modificationRepository) {
-        var listener = new NetworkStoreListener(network, networkUuid, modificationRepository);
+    public static NetworkStoreListener create(Network network, UUID networkUuid,
+                                              NetworkModificationRepository modificationRepository, EquipmentInfosService equipmentInfosService) {
+        var listener = new NetworkStoreListener(network, networkUuid, modificationRepository, equipmentInfosService);
         network.addListener(listener);
         return listener;
     }
 
-    protected NetworkStoreListener(Network network, UUID networkUuid, NetworkModificationRepository modificationRepository) {
+    protected NetworkStoreListener(Network network, UUID networkUuid,
+                                   NetworkModificationRepository modificationRepository, EquipmentInfosService equipmentInfosService) {
         this.network = network;
         this.networkUuid = networkUuid;
         this.modificationRepository = modificationRepository;
+        this.equipmentInfosService = equipmentInfosService;
     }
 
     public List<ElementaryModificationInfos> getModifications() {
         return modifications.stream()
-                .map(m -> m.toElementaryModificationInfos(getSubstationIds(m.getEquipmentId())))
-                .collect(Collectors.toList());
+            .map(m -> m.toElementaryModificationInfos(getSubstationIds(m.getEquipmentId())))
+            .collect(Collectors.toList());
     }
 
     public void saveModifications() {
         modificationRepository.saveModifications(networkUuid,
-                modifications
-                        .stream()
-                        .map(ModificationEntity.class::cast)
-                        .collect(Collectors.toList()));
+            modifications
+                .stream()
+                .map(ModificationEntity.class::cast)
+                .collect(Collectors.toList()));
     }
 
     public void deleteModifications() {
         modificationRepository.deleteModifications(networkUuid,
-                modifications
-                        .stream()
-                        .map(ModificationEntity::getId)
-                        .collect(Collectors.toSet()));
+            modifications
+                .stream()
+                .map(ModificationEntity::getId)
+                .collect(Collectors.toSet()));
     }
 
     private void storeModification(Identifiable<?> identifiable, String attributeName, Object attributeValue) {
@@ -102,11 +110,18 @@ public class NetworkStoreListener implements NetworkListener {
 
     @Override
     public void onCreation(Identifiable identifiable) {
-        // empty default implementation
+        equipmentInfosService.add(
+            EquipmentInfos.builder()
+                .networkUuid(networkUuid)
+                .equipmentId(identifiable.getId())
+                .equipmentName(identifiable.getNameOrId())
+                .equipmentType(EquipmentType.LOAD.name())
+                .build()
+        );
     }
 
     @Override
     public void onRemoval(Identifiable identifiable) {
-        // empty default implementation
+        equipmentInfosService.delete(identifiable.getId(), networkUuid);
     }
 }
