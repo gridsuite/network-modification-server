@@ -159,13 +159,13 @@ public class NetworkStoreListener implements NetworkListener {
                 .networkUuid(networkUuid)
                 .equipmentId(identifiable.getId())
                 .equipmentName(identifiable.getNameOrId())
-                .equipmentType(EquipmentType.LOAD.name())
+                .equipmentType(EquipmentType.getType(identifiable).name())
                 .build()
         );
     }
 
     @Override
     public void onRemoval(Identifiable identifiable) {
-        equipmentInfosService.delete(identifiable.getId(), networkUuid);
+        // empty default implementation
     }
 }

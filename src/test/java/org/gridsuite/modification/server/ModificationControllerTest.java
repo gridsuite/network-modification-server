@@ -56,7 +56,7 @@ import static org.mockito.Mockito.when;
 @RunWith(SpringRunner.class)
 @EnableWebFlux
 @AutoConfigureWebTestClient
-@SpringBootTest(properties = {"spring.data.elasticsearch.enabled=true"})
+@SpringBootTest(properties = {"spring.data.elasticsearch.enabled=false"})
 public class ModificationControllerTest {
 
     private static final UUID TEST_NETWORK_ID = UUID.fromString("7928181c-7977-4592-ba19-88027e4254e4");
