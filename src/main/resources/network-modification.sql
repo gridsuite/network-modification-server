@@ -7,6 +7,18 @@
         primary key (id)
     );
 
+    create table createLoad (
+       busId varchar(255),
+        equipmentId varchar(255),
+        equipmentName varchar(255),
+        voltageLevelId varchar(255),
+        activePower float8,
+        loadType int4,
+        reactivePower float8,
+        id uuid not null,
+        primary key (id)
+    );
+
     create table doubleelementaryModification (
        attributeName varchar(255),
         attributeValue float8,
@@ -55,6 +67,11 @@ create index modificationEntity_group_id_index on modification (group_id);
 
     alter table if exists booleanelementaryModification 
        add constraint boolean_modification_id_fk_constraint 
+       foreign key (id) 
+       references modification;
+
+    alter table if exists createLoad 
+       add constraint createLoad_id_fk_constraint 
        foreign key (id) 
        references modification;
 

@@ -7,11 +7,10 @@
 package org.gridsuite.modification.server.service;
 
 import com.powsybl.iidm.network.*;
-import org.gridsuite.modification.server.dto.ElementaryModificationInfos;
-import org.gridsuite.modification.server.dto.EquipmentInfos;
-import org.gridsuite.modification.server.dto.EquipmentType;
+import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
+import org.gridsuite.modification.server.entities.elementary.CreateEquipmentEntity;
 import org.gridsuite.modification.server.entities.elementary.ElementaryModificationEntity;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 
@@ -24,6 +23,8 @@ import java.util.stream.Collectors;
  */
 public class NetworkStoreListener implements NetworkListener {
 
+    private UUID groupUuid;
+
     private UUID networkUuid;
 
     private Network network;
@@ -34,49 +35,92 @@ public class NetworkStoreListener implements NetworkListener {
 
     private List<ElementaryModificationEntity<?>> modifications = new LinkedList<>();
 
+    private List<CreateEquipmentEntity> creations = new LinkedList<>();
+
     Network getNetwork() {
         return network;
     }
 
-    public static NetworkStoreListener create(Network network, UUID networkUuid,
+    public static NetworkStoreListener create(Network network, UUID networkUuid, UUID groupUuid,
                                               NetworkModificationRepository modificationRepository, EquipmentInfosService equipmentInfosService) {
-        var listener = new NetworkStoreListener(network, networkUuid, modificationRepository, equipmentInfosService);
+        var listener = new NetworkStoreListener(network, networkUuid, groupUuid, modificationRepository, equipmentInfosService);
         network.addListener(listener);
         return listener;
     }
 
-    protected NetworkStoreListener(Network network, UUID networkUuid,
+    protected NetworkStoreListener(Network network, UUID networkUuid, UUID groupUuid,
                                    NetworkModificationRepository modificationRepository, EquipmentInfosService equipmentInfosService) {
         this.network = network;
         this.networkUuid = networkUuid;
+        this.groupUuid = groupUuid;
         this.modificationRepository = modificationRepository;
         this.equipmentInfosService = equipmentInfosService;
     }
 
-    public List<ElementaryModificationInfos> getModifications() {
+    public List<ElementaryAttributeModificationInfos> getModifications() {
         return modifications.stream()
-            .map(m -> m.toElementaryModificationInfos(getSubstationIds(m.getEquipmentId())))
+            .map(m -> m.toElementaryAttributeModificationInfos(getSubstationIds(m.getEquipmentId())))
+            .collect(Collectors.toList());
+    }
+
+    public List<ElementaryModificationInfos> getCreations() {
+        return creations.stream()
+            .map(m -> m.toEquipmentCreationInfos(getSubstationIds(m.getEquipmentId())))
             .collect(Collectors.toList());
     }
 
     public void saveModifications() {
-        modificationRepository.saveModifications(networkUuid,
-            modifications
-                .stream()
-                .map(ModificationEntity.class::cast)
-                .collect(Collectors.toList()));
+        if (groupUuid != null) {
+            modificationRepository.saveModifications(groupUuid,
+                modifications
+                    .stream()
+                    .map(ModificationEntity.class::cast)
+                    .collect(Collectors.toList()));
+        }
+    }
+
+    public void saveCreations() {
+        if (groupUuid != null) {
+            modificationRepository.saveModifications(groupUuid,
+                creations
+                    .stream()
+                    .map(ModificationEntity.class::cast)
+                    .collect(Collectors.toList()));
+        }
     }
 
     public void deleteModifications() {
-        modificationRepository.deleteModifications(networkUuid,
-            modifications
-                .stream()
-                .map(ModificationEntity::getId)
-                .collect(Collectors.toSet()));
+        if (groupUuid != null) {
+            modificationRepository.deleteModifications(groupUuid,
+                modifications
+                    .stream()
+                    .map(ModificationEntity::getId)
+                    .collect(Collectors.toSet()));
+        }
     }
 
-    private void storeModification(Identifiable<?> identifiable, String attributeName, Object attributeValue) {
+    public void deleteCreations() {
+        if (groupUuid != null) {
+            modificationRepository.deleteModifications(groupUuid,
+                creations
+                    .stream()
+                    .map(ModificationEntity::getId)
+                    .collect(Collectors.toSet()));
+        }
+    }
+
+    private void storeElementaryModification(Identifiable<?> identifiable, String attributeName, Object attributeValue) {
         modifications.add(this.modificationRepository.createElementaryModification(identifiable.getId(), attributeName, attributeValue));
+    }
+
+    public void storeLoadCreation(LoadCreationInfos loadCreationInfos) {
+        creations.add(this.modificationRepository.createLoadEntity(loadCreationInfos.getEquipmentId(),
+            loadCreationInfos.getEquipmentName(),
+            loadCreationInfos.getLoadType(),
+            loadCreationInfos.getVoltageLevelId(),
+            loadCreationInfos.getBusId(),
+            loadCreationInfos.getActivePower(),
+            loadCreationInfos.getReactivePower()));
     }
 
     private Set<String> getSubstationIds(String equipmentId) {
@@ -100,12 +144,12 @@ public class NetworkStoreListener implements NetworkListener {
 
     @Override
     public void onUpdate(Identifiable identifiable, String attribute, Object oldValue, Object newValue) {
-        storeModification(identifiable, attribute, newValue);
+        storeElementaryModification(identifiable, attribute, newValue);
     }
 
     @Override
     public void onUpdate(Identifiable identifiable, String attribute, String variantId, Object oldValue, Object newValue) {
-        storeModification(identifiable, attribute, newValue);
+        storeElementaryModification(identifiable, attribute, newValue);
     }
 
     @Override

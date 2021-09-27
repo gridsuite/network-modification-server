@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
+ * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 public class NetworkModificationException extends RuntimeException {
     static final String EMPTY_SCRIPT = "Empty script";
@@ -25,7 +26,11 @@ public class NetworkModificationException extends RuntimeException {
         SWITCH_NOT_FOUND(HttpStatus.NOT_FOUND),
         LINE_NOT_FOUND(HttpStatus.NOT_FOUND),
         UNKNOWN_EQUIPMENT_TYPE(HttpStatus.INTERNAL_SERVER_ERROR),
-        MODIFICATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR);
+        MODIFICATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
+        VOLTAGE_LEVEL_NOT_FOUND(HttpStatus.NOT_FOUND),
+        CREATE_LOAD_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
+        BUSBAR_SECTION_NOT_FOUND(HttpStatus.NOT_FOUND),
+        BUS_NOT_FOUND(HttpStatus.NOT_FOUND);
 
         public final HttpStatus status;
         private final String message;

@@ -7,9 +7,7 @@
 package org.gridsuite.modification.server.service;
 
 import com.powsybl.commons.PowsyblException;
-import com.powsybl.iidm.network.Branch;
-import com.powsybl.iidm.network.Network;
-import com.powsybl.iidm.network.Terminal;
+import com.powsybl.iidm.network.*;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.sld.iidm.extensions.BranchStatus;
 import com.powsybl.sld.iidm.extensions.BranchStatusAdder;
@@ -18,7 +16,9 @@ import groovy.lang.GroovyShell;
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.dto.ElementaryAttributeModificationInfos;
 import org.gridsuite.modification.server.dto.ElementaryModificationInfos;
+import org.gridsuite.modification.server.dto.LoadCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
@@ -52,9 +52,9 @@ public class NetworkModificationService {
         this.equipmentInfosService = equipmentInfosService;
     }
 
-    public Flux<ElementaryModificationInfos> applyGroovyScript(UUID networkUuid, String groovyScript) {
+    public Flux<ElementaryAttributeModificationInfos> applyGroovyScript(UUID networkUuid, UUID groupUuid, String groovyScript) {
         return assertGroovyScriptNotEmpty(groovyScript).thenMany(
-            getNetwork(networkUuid).flatMapIterable(network -> doAction(network, networkUuid, () -> {
+            getNetwork(networkUuid).flatMapIterable(network -> doAction(network, networkUuid, groupUuid, () -> {
                 var conf = new CompilerConfiguration();
                 var binding = new Binding();
                 binding.setProperty("network", network);
@@ -64,12 +64,12 @@ public class NetworkModificationService {
         );
     }
 
-    public Flux<ElementaryModificationInfos> changeSwitchState(UUID networkUuid, String switchId, boolean open) {
+    public Flux<ElementaryAttributeModificationInfos> changeSwitchState(UUID networkUuid, UUID groupUuid, String switchId, boolean open) {
         return getNetwork(networkUuid)
             .filter(network -> network.getSwitch(switchId) != null)
             .switchIfEmpty(Mono.error(new NetworkModificationException(SWITCH_NOT_FOUND, switchId)))
             .filter(network -> network.getSwitch(switchId).isOpen() != open)
-            .flatMapIterable(network -> doAction(network, networkUuid, () -> network.getSwitch(switchId).setOpen(open)));
+            .flatMapIterable(network -> doAction(network, networkUuid, groupUuid, () -> network.getSwitch(switchId).setOpen(open)));
     }
 
     public Flux<UUID> getModificationGroups() {
@@ -88,23 +88,23 @@ public class NetworkModificationService {
         return terminal1Disconnected && terminal2Disconnected;
     }
 
-    public Flux<ElementaryModificationInfos> changeLineStatus(UUID networkUuid, String lineId, String lineStatus) {
-        Flux<ElementaryModificationInfos> modifications;
+    public Flux<ElementaryAttributeModificationInfos> changeLineStatus(UUID networkUuid, UUID groupUuid, String lineId, String lineStatus) {
+        Flux<ElementaryAttributeModificationInfos> modifications;
         switch (lineStatus) {
             case "lockout":
-                modifications = lockoutLine(networkUuid, lineId);
+                modifications = lockoutLine(networkUuid, groupUuid, lineId);
                 break;
             case "trip":
-                modifications = tripLine(networkUuid, lineId);
+                modifications = tripLine(networkUuid, groupUuid, lineId);
                 break;
             case "switchOn":
-                modifications = switchOnLine(networkUuid, lineId);
+                modifications = switchOnLine(networkUuid, groupUuid, lineId);
                 break;
             case "energiseEndOne":
-                modifications = energiseLineEnd(networkUuid, lineId, Branch.Side.ONE);
+                modifications = energiseLineEnd(networkUuid, groupUuid, lineId, Branch.Side.ONE);
                 break;
             case "energiseEndTwo":
-                modifications = energiseLineEnd(networkUuid, lineId, Branch.Side.TWO);
+                modifications = energiseLineEnd(networkUuid, groupUuid, lineId, Branch.Side.TWO);
                 break;
             default:
                 throw new IllegalStateException("Unexpected value: " + lineStatus);
@@ -112,11 +112,11 @@ public class NetworkModificationService {
         return modifications;
     }
 
-    public Flux<ElementaryModificationInfos> lockoutLine(UUID networkUuid, String lineId) {
+    public Flux<ElementaryAttributeModificationInfos> lockoutLine(UUID networkUuid, UUID groupUuid, String lineId) {
         return getNetwork(networkUuid)
             .filter(network -> network.getLine(lineId) != null)
             .switchIfEmpty(Mono.error(new NetworkModificationException(LINE_NOT_FOUND, lineId)))
-            .flatMapIterable(network -> doAction(network, networkUuid, () -> {
+            .flatMapIterable(network -> doAction(network, networkUuid, groupUuid, () -> {
                     if (disconnectLineBothSides(network, lineId)) {
                         network.getLine(lineId).newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.PLANNED_OUTAGE).add();
                     } else {
@@ -126,11 +126,11 @@ public class NetworkModificationService {
             ));
     }
 
-    public Flux<ElementaryModificationInfos> tripLine(UUID networkUuid, String lineId) {
+    public Flux<ElementaryAttributeModificationInfos> tripLine(UUID networkUuid, UUID groupUuid, String lineId) {
         return getNetwork(networkUuid)
             .filter(network -> network.getLine(lineId) != null)
             .switchIfEmpty(Mono.error(new NetworkModificationException(LINE_NOT_FOUND, lineId)))
-            .flatMapIterable(network -> doAction(network, networkUuid, () -> {
+            .flatMapIterable(network -> doAction(network, networkUuid, groupUuid, () -> {
                     if (disconnectLineBothSides(network, lineId)) {
                         network.getLine(lineId).newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.FORCED_OUTAGE).add();
                     } else {
@@ -140,11 +140,11 @@ public class NetworkModificationService {
             ));
     }
 
-    public Flux<ElementaryModificationInfos> energiseLineEnd(UUID networkUuid, String lineId, Branch.Side side) {
+    public Flux<ElementaryAttributeModificationInfos> energiseLineEnd(UUID networkUuid, UUID groupUuid, String lineId, Branch.Side side) {
         return getNetwork(networkUuid)
             .filter(network -> network.getLine(lineId) != null)
             .switchIfEmpty(Mono.error(new NetworkModificationException(LINE_NOT_FOUND, lineId)))
-            .flatMapIterable(network -> doAction(network, networkUuid, () -> {
+            .flatMapIterable(network -> doAction(network, networkUuid, groupUuid, () -> {
                     Terminal terminalToConnect = network.getLine(lineId).getTerminal(side);
                     boolean isTerminalToConnectConnected = terminalToConnect.isConnected() || terminalToConnect.connect();
                     Terminal terminalToDisconnect = network.getLine(lineId).getTerminal(side == Branch.Side.ONE ? Branch.Side.TWO : Branch.Side.ONE);
@@ -159,11 +159,11 @@ public class NetworkModificationService {
             ));
     }
 
-    public Flux<ElementaryModificationInfos> switchOnLine(UUID networkUuid, String lineId) {
+    public Flux<ElementaryAttributeModificationInfos> switchOnLine(UUID networkUuid, UUID groupUuid, String lineId) {
         return getNetwork(networkUuid)
             .filter(network -> network.getLine(lineId) != null)
             .switchIfEmpty(Mono.error(new NetworkModificationException(LINE_NOT_FOUND, lineId)))
-            .flatMapIterable(network -> doAction(network, networkUuid, () -> {
+            .flatMapIterable(network -> doAction(network, networkUuid, groupUuid, () -> {
                     Terminal terminal1 = network.getLine(lineId).getTerminal1();
                     boolean terminal1Connected = terminal1.isConnected() || terminal1.connect();
                     Terminal terminal2 = network.getLine(lineId).getTerminal2();
@@ -177,7 +177,7 @@ public class NetworkModificationService {
             ));
     }
 
-    public Mono<ElementaryModificationInfos> getElementaryModification(UUID groupUuid, UUID modificationUuid) {
+    public Mono<ElementaryAttributeModificationInfos> getElementaryModification(UUID groupUuid, UUID modificationUuid) {
         return Mono.fromCallable(() -> modificationRepository.getElementaryModification(groupUuid, modificationUuid));
     }
 
@@ -185,16 +185,28 @@ public class NetworkModificationService {
         return Mono.fromRunnable(() -> modificationRepository.deleteModificationGroup(groupUuid));
     }
 
-    private List<ElementaryModificationInfos> doAction(Network network, UUID networkUuid, Runnable modification) {
-        return doAction(network, networkUuid, modification, MODIFICATION_ERROR);
+    private List<ElementaryAttributeModificationInfos> doAction(Network network, UUID networkUuid, UUID groupUuid, Runnable modification) {
+        return doAction(network, networkUuid, groupUuid, modification, MODIFICATION_ERROR);
     }
 
-    private List<ElementaryModificationInfos> doAction(Network network, UUID networkUuid, Runnable action, NetworkModificationException.Type typeIfError) {
+    private List<ElementaryAttributeModificationInfos> doAction(Network network, UUID networkUuid, UUID groupUuid, Runnable action, NetworkModificationException.Type typeIfError) {
         try {
-            var listener = NetworkStoreListener.create(network, networkUuid, modificationRepository, equipmentInfosService);
+            var listener = NetworkStoreListener.create(network, networkUuid, groupUuid, modificationRepository, equipmentInfosService);
             action.run();
             saveModifications(listener);
             return listener.getModifications();
+        } catch (NetworkModificationException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new NetworkModificationException(typeIfError, e);
+        }
+    }
+
+    private List<ElementaryModificationInfos> doActionCreation(NetworkStoreListener listener, Runnable action, NetworkModificationException.Type typeIfError) {
+        try {
+            action.run();
+            saveCreations(listener);
+            return listener.getCreations();
         } catch (NetworkModificationException e) {
             throw e;
         } catch (Exception e) {
@@ -212,6 +224,16 @@ public class NetworkModificationService {
         }
     }
 
+    private void saveCreations(NetworkStoreListener listener) {
+        listener.saveCreations();
+        try {
+            networkStoreService.flush(listener.getNetwork());
+        } catch (Exception e) {
+            listener.deleteCreations();
+            throw e;
+        }
+    }
+
     private Mono<Network> getNetwork(UUID networkUuid) {
         return Mono.fromCallable(() -> {
             try {
@@ -224,5 +246,95 @@ public class NetworkModificationService {
 
     private Mono<Void> assertGroovyScriptNotEmpty(String groovyScript) {
         return StringUtils.isBlank(groovyScript) ? Mono.error(new NetworkModificationException(GROOVY_SCRIPT_EMPTY)) : Mono.empty();
+    }
+
+    private void createLoadInNodeBreaker(VoltageLevel voltageLevel, LoadCreationInfos loadCreationInfos) {
+        // busId is a busbar section id
+        VoltageLevel.NodeBreakerView nodeBreakerView = voltageLevel.getNodeBreakerView();
+        BusbarSection busbarSection = nodeBreakerView.getBusbarSection(loadCreationInfos.getBusId());
+        if (busbarSection == null) {
+            throw new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, loadCreationInfos.getBusId());
+        }
+
+        // creating the disconnector
+        int newNode = nodeBreakerView.getMaximumNodeIndex();
+        nodeBreakerView.newSwitch()
+            .setId("disconnector_" + loadCreationInfos.getEquipmentId())
+            .setName("disconnector_" + loadCreationInfos.getEquipmentName())
+            .setKind(SwitchKind.DISCONNECTOR)
+            .setRetained(false)
+            .setOpen(false)
+            .setFictitious(false)
+            .setNode1(busbarSection.getTerminal().getNodeBreakerView().getNode())
+            .setNode2(newNode + 1)
+            .add();
+
+        // creating the breaker
+        nodeBreakerView.newSwitch()
+            .setId("breaker_" + loadCreationInfos.getEquipmentId())
+            .setName("breaker_" + loadCreationInfos.getEquipmentName())
+            .setKind(SwitchKind.BREAKER)
+            .setRetained(false)
+            .setOpen(false)
+            .setFictitious(false)
+            .setNode1(newNode + 1)
+            .setNode2(newNode + 2)
+            .add();
+
+        // creating the load
+        voltageLevel.newLoad()
+            .setId(loadCreationInfos.getEquipmentId())
+            .setName(loadCreationInfos.getEquipmentName())
+            .setLoadType(loadCreationInfos.getLoadType())
+            .setNode(newNode + 2)
+            .setP0(loadCreationInfos.getActivePower())
+            .setQ0(loadCreationInfos.getReactivePower())
+            .add();
+    }
+
+    private void createLoadInBusBreaker(VoltageLevel voltageLevel, LoadCreationInfos loadCreationInfos) {
+        // busId is a bus id
+        VoltageLevel.BusBreakerView busBreakerView = voltageLevel.getBusBreakerView();
+        Bus bus = busBreakerView.getBus(loadCreationInfos.getBusId());
+        if (bus == null) {
+            throw new NetworkModificationException(BUS_NOT_FOUND, loadCreationInfos.getBusId());
+        }
+
+        // creating the load
+        voltageLevel.newLoad()
+            .setId(loadCreationInfos.getEquipmentId())
+            .setName(loadCreationInfos.getEquipmentName())
+            .setLoadType(loadCreationInfos.getLoadType())
+            .setBus(bus.getId())
+            .setConnectableBus(bus.getId())
+            .setP0(loadCreationInfos.getActivePower())
+            .setQ0(loadCreationInfos.getReactivePower())
+            .add();
+    }
+
+    public Flux<ElementaryModificationInfos> createLoad(UUID networkUuid, UUID groupUuid, LoadCreationInfos loadCreationInfos) {
+        return assertLoadCreationInfosNotEmpty(loadCreationInfos).thenMany(
+            getNetwork(networkUuid).flatMapIterable(network -> {
+                NetworkStoreListener listener = NetworkStoreListener.create(network, networkUuid, groupUuid, modificationRepository, equipmentInfosService);
+                return doActionCreation(listener, () -> {
+                    // create the load in the network
+                    VoltageLevel voltageLevel = network.getVoltageLevel(loadCreationInfos.getVoltageLevelId());
+                    if (voltageLevel == null) {
+                        throw new NetworkModificationException(VOLTAGE_LEVEL_NOT_FOUND, loadCreationInfos.getVoltageLevelId());
+                    }
+                    if (voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER) {
+                        createLoadInNodeBreaker(voltageLevel, loadCreationInfos);
+                    } else {
+                        createLoadInBusBreaker(voltageLevel, loadCreationInfos);
+                    }
+
+                    // add the load creation entity to the listener
+                    listener.storeLoadCreation(loadCreationInfos);
+                }, CREATE_LOAD_ERROR);
+            }));
+    }
+
+    private Mono<Void> assertLoadCreationInfosNotEmpty(LoadCreationInfos loadCreationInfos) {
+        return loadCreationInfos == null ? Mono.error(new NetworkModificationException(CREATE_LOAD_ERROR, "Missing required attributes to create the load")) : Mono.empty();
     }
 }

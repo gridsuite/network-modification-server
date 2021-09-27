@@ -14,11 +14,12 @@ import java.util.Set;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.ModificationType;
-import org.gridsuite.modification.server.dto.ElementaryModificationInfos;
+import org.gridsuite.modification.server.dto.ElementaryAttributeModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
+ * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 @NoArgsConstructor
 @Getter
@@ -40,16 +41,16 @@ public class ElementaryModificationEntity<T> extends ModificationEntity {
         this.attributeValue = attributeValue;
     }
 
-    public ElementaryModificationInfos toElementaryModificationInfos() {
+    public ElementaryAttributeModificationInfos toElementaryAttributeModificationInfos() {
         return toModificationInfosBuilder().build();
     }
 
-    public ElementaryModificationInfos toElementaryModificationInfos(Set<String> substationId) {
+    public ElementaryAttributeModificationInfos toElementaryAttributeModificationInfos(Set<String> substationId) {
         return toModificationInfosBuilder().substationIds(substationId).build();
     }
 
-    private ElementaryModificationInfos.ElementaryModificationInfosBuilder<?, ?> toModificationInfosBuilder() {
-        return ElementaryModificationInfos
+    private ElementaryAttributeModificationInfos.ElementaryAttributeModificationInfosBuilder<?, ?> toModificationInfosBuilder() {
+        return ElementaryAttributeModificationInfos
                 .builder()
                 .uuid(getId())
                 .date(getDate())
