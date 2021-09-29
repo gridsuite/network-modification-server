@@ -19,8 +19,8 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @Getter
 @ToString(callSuper = true)
-@Schema(description = "Elementary attribute modification")
-public class ElementaryAttributeModificationInfos extends ElementaryModificationInfos {
+@Schema(description = "Equipment attribute modification")
+public class EquipmenAttributeModificationInfos extends EquipmenModificationInfos {
     @Schema(description = "Equipment attribute name")
     private String equipmentAttributeName;
 

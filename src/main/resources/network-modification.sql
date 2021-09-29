@@ -1,44 +1,44 @@
 
     create table booleanelementaryModification (
-       attributeName varchar(255),
+       equipmentId varchar(255),
+        attributeName varchar(255),
         attributeValue boolean,
-        equipmentId varchar(255),
-        id uuid not null,
-        primary key (id)
-    );
-
-    create table createLoad (
-       busId varchar(255),
-        equipmentId varchar(255),
-        equipmentName varchar(255),
-        voltageLevelId varchar(255),
-        activePower float8,
-        loadType int4,
-        reactivePower float8,
         id uuid not null,
         primary key (id)
     );
 
     create table doubleelementaryModification (
-       attributeName varchar(255),
+       equipmentId varchar(255),
+        attributeName varchar(255),
         attributeValue float8,
-        equipmentId varchar(255),
         id uuid not null,
         primary key (id)
     );
 
     create table floatelementaryModification (
-       attributeName varchar(255),
+       equipmentId varchar(255),
+        attributeName varchar(255),
         attributeValue float4,
-        equipmentId varchar(255),
         id uuid not null,
         primary key (id)
     );
 
     create table integerelementaryModification (
-       attributeName varchar(255),
+       equipmentId varchar(255),
+        attributeName varchar(255),
         attributeValue int4,
-        equipmentId varchar(255),
+        id uuid not null,
+        primary key (id)
+    );
+
+    create table loadCreation (
+       equipmentId varchar(255),
+        busId varchar(255),
+        equipmentName varchar(255),
+        voltageLevelId varchar(255),
+        activePower float8,
+        loadType int4,
+        reactivePower float8,
         id uuid not null,
         primary key (id)
     );
@@ -57,9 +57,9 @@
     );
 
     create table stringelementaryModification (
-       attributeName varchar(255),
+       equipmentId varchar(255),
+        attributeName varchar(255),
         attributeValue varchar(255),
-        equipmentId varchar(255),
         id uuid not null,
         primary key (id)
     );
@@ -67,11 +67,6 @@ create index modificationEntity_group_id_index on modification (group_id);
 
     alter table if exists booleanelementaryModification 
        add constraint boolean_modification_id_fk_constraint 
-       foreign key (id) 
-       references modification;
-
-    alter table if exists createLoad 
-       add constraint createLoad_id_fk_constraint 
        foreign key (id) 
        references modification;
 
@@ -87,6 +82,11 @@ create index modificationEntity_group_id_index on modification (group_id);
 
     alter table if exists integerelementaryModification 
        add constraint integer_modification_id_fk_constraint 
+       foreign key (id) 
+       references modification;
+
+    alter table if exists loadCreation 
+       add constraint loadCreation_id_fk_constraint 
        foreign key (id) 
        references modification;
 

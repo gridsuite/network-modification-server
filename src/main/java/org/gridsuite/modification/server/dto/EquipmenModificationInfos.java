@@ -25,8 +25,8 @@ import java.util.Set;
 @Getter
 @Setter
 @ToString(callSuper = true)
-@Schema(description = "Elementary modification")
-public class ElementaryModificationInfos extends ModificationInfos {
+@Schema(description = "Equipment modification")
+public class EquipmenModificationInfos extends ModificationInfos {
     @Schema(description = "Equipment ID")
     private String equipmentId;
 
