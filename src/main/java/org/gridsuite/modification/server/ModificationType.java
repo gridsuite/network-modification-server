@@ -11,6 +11,6 @@ package org.gridsuite.modification.server;
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 public enum ModificationType {
-    ELEMENTARY,
+    EQUIPMENT_ATTRIBUTE_MODIFICATION,
     LOAD_CREATION
 }

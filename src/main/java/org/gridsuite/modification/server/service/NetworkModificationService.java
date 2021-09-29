@@ -6,7 +6,16 @@
  */
 package org.gridsuite.modification.server.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.InjectableValues;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.commons.PowsyblException;
+import com.powsybl.commons.reporter.Report;
+import com.powsybl.commons.reporter.Reporter;
+import com.powsybl.commons.reporter.ReporterModel;
+import com.powsybl.commons.reporter.ReporterModelDeserializer;
+import com.powsybl.commons.reporter.ReporterModelJsonModule;
+import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.iidm.network.Branch;
 import com.powsybl.iidm.network.Bus;
 import com.powsybl.iidm.network.BusbarSection;
@@ -24,17 +33,31 @@ import org.apache.commons.lang3.StringUtils;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.LoadCreationInfos;
-import org.gridsuite.modification.server.dto.ElementaryAttributeModificationInfos;
-import org.gridsuite.modification.server.dto.ElementaryModificationInfos;
+import org.gridsuite.modification.server.dto.EquipmenModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.DefaultUriBuilderFactory;
+import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 
@@ -45,16 +68,34 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
 @Service
 public class NetworkModificationService {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(NetworkModificationService.class);
+
     private final NetworkStoreService networkStoreService;
 
     private final NetworkModificationRepository modificationRepository;
 
-    public NetworkModificationService(NetworkStoreService networkStoreService, NetworkModificationRepository modificationRepository) {
+    private RestTemplate reportServerRest;
+
+    private final ObjectMapper objectMapper;
+
+    private static final String REPORT_API_VERSION = "v1";
+    private static final String DELIMITER = "/";
+
+    public NetworkModificationService(@Value("${backing-services.report-server.base-uri:http://report-server}") String reportServerURI,
+                                      NetworkStoreService networkStoreService, NetworkModificationRepository modificationRepository) {
         this.networkStoreService = networkStoreService;
         this.modificationRepository = modificationRepository;
+
+        RestTemplateBuilder restTemplateBuilder = new RestTemplateBuilder();
+        reportServerRest = restTemplateBuilder.build();
+        reportServerRest.setUriTemplateHandler(new DefaultUriBuilderFactory(reportServerURI));
+
+        objectMapper = Jackson2ObjectMapperBuilder.json().build();
+        objectMapper.registerModule(new ReporterModelJsonModule());
+        objectMapper.setInjectableValues(new InjectableValues.Std().addValue(ReporterModelDeserializer.DICTIONARY_VALUE_ID, null));
     }
 
-    public Flux<ElementaryAttributeModificationInfos> applyGroovyScript(UUID networkUuid, UUID groupUuid, String groovyScript) {
+    public Flux<EquipmenModificationInfos> applyGroovyScript(UUID networkUuid, UUID groupUuid, String groovyScript) {
         return assertGroovyScriptNotEmpty(groovyScript).thenMany(
                 getNetwork(networkUuid).flatMapIterable(network -> doAction(network, groupUuid, () -> {
                     var conf = new CompilerConfiguration();
@@ -66,7 +107,7 @@ public class NetworkModificationService {
         );
     }
 
-    public Flux<ElementaryAttributeModificationInfos> changeSwitchState(UUID networkUuid, UUID groupUuid, String switchId, boolean open) {
+    public Flux<EquipmenModificationInfos> changeSwitchState(UUID networkUuid, UUID groupUuid, String switchId, boolean open) {
         return getNetwork(networkUuid)
                 .filter(network -> network.getSwitch(switchId) != null)
                 .switchIfEmpty(Mono.error(new NetworkModificationException(SWITCH_NOT_FOUND, switchId)))
@@ -90,8 +131,8 @@ public class NetworkModificationService {
         return terminal1Disconnected && terminal2Disconnected;
     }
 
-    public Flux<ElementaryAttributeModificationInfos> changeLineStatus(UUID networkUuid, UUID groupUuid, String lineId, String lineStatus) {
-        Flux<ElementaryAttributeModificationInfos> modifications;
+    public Flux<EquipmenModificationInfos> changeLineStatus(UUID networkUuid, UUID groupUuid, String lineId, String lineStatus) {
+        Flux<EquipmenModificationInfos> modifications;
         switch (lineStatus) {
             case "lockout":
                 modifications = lockoutLine(networkUuid, groupUuid, lineId);
@@ -114,7 +155,7 @@ public class NetworkModificationService {
         return modifications;
     }
 
-    public Flux<ElementaryAttributeModificationInfos> lockoutLine(UUID networkUuid, UUID groupUuid, String lineId) {
+    public Flux<EquipmenModificationInfos> lockoutLine(UUID networkUuid, UUID groupUuid, String lineId) {
         return getNetwork(networkUuid)
                 .filter(network -> network.getLine(lineId) != null)
                 .switchIfEmpty(Mono.error(new NetworkModificationException(LINE_NOT_FOUND, lineId)))
@@ -128,7 +169,7 @@ public class NetworkModificationService {
                 ));
     }
 
-    public Flux<ElementaryAttributeModificationInfos> tripLine(UUID networkUuid, UUID groupUuid, String lineId) {
+    public Flux<EquipmenModificationInfos> tripLine(UUID networkUuid, UUID groupUuid, String lineId) {
         return getNetwork(networkUuid)
                 .filter(network -> network.getLine(lineId) != null)
                 .switchIfEmpty(Mono.error(new NetworkModificationException(LINE_NOT_FOUND, lineId)))
@@ -142,7 +183,7 @@ public class NetworkModificationService {
                 ));
     }
 
-    public Flux<ElementaryAttributeModificationInfos> energiseLineEnd(UUID networkUuid, UUID groupUuid, String lineId, Branch.Side side) {
+    public Flux<EquipmenModificationInfos> energiseLineEnd(UUID networkUuid, UUID groupUuid, String lineId, Branch.Side side) {
         return getNetwork(networkUuid)
                 .filter(network -> network.getLine(lineId) != null)
                 .switchIfEmpty(Mono.error(new NetworkModificationException(LINE_NOT_FOUND, lineId)))
@@ -156,12 +197,11 @@ public class NetworkModificationService {
                     } else {
                         throw new NetworkModificationException(MODIFICATION_ERROR, "Unable to energise line end");
                     }
-
                 }
                 ));
     }
 
-    public Flux<ElementaryAttributeModificationInfos> switchOnLine(UUID networkUuid, UUID groupUuid, String lineId) {
+    public Flux<EquipmenModificationInfos> switchOnLine(UUID networkUuid, UUID groupUuid, String lineId) {
         return getNetwork(networkUuid)
                 .filter(network -> network.getLine(lineId) != null)
                 .switchIfEmpty(Mono.error(new NetworkModificationException(LINE_NOT_FOUND, lineId)))
@@ -179,37 +219,31 @@ public class NetworkModificationService {
                 ));
     }
 
-    public Mono<ElementaryAttributeModificationInfos> getElementaryModification(UUID groupUuid, UUID modificationUuid) {
-        return Mono.fromCallable(() -> modificationRepository.getElementaryModification(groupUuid, modificationUuid));
-    }
-
     public Mono<Void> deleteModificationGroup(UUID groupUuid) {
         return Mono.fromRunnable(() -> modificationRepository.deleteModificationGroup(groupUuid));
     }
 
-    private List<ElementaryAttributeModificationInfos> doAction(Network network, UUID groupUuid, Runnable modification) {
+    private List<EquipmenModificationInfos> doAction(Network network, UUID groupUuid, Runnable modification) {
         return doAction(network, groupUuid, modification, MODIFICATION_ERROR);
     }
 
-    private List<ElementaryAttributeModificationInfos> doAction(Network network, UUID groupUuid, Runnable action, NetworkModificationException.Type typeIfError) {
+    private List<EquipmenModificationInfos> doAction(Network network, UUID groupUuid, Runnable modification, NetworkModificationException.Type typeIfError) {
+        NetworkStoreListener listener = NetworkStoreListener.create(network, groupUuid, modificationRepository);
+        ReporterModel reporter = new ReporterModel("NetworkModification", "Network modification");
+        return doAction(listener, modification, typeIfError, reporter);
+    }
+
+    private List<EquipmenModificationInfos> doAction(NetworkStoreListener listener, Runnable action, NetworkModificationException.Type typeIfError, Reporter reporter) {
         try {
-            var listener = NetworkStoreListener.create(network, groupUuid, modificationRepository);
             action.run();
             saveModifications(listener);
             return listener.getModifications();
         } catch (NetworkModificationException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new NetworkModificationException(typeIfError, e);
-        }
-    }
-
-    private List<ElementaryModificationInfos> doActionCreation(NetworkStoreListener listener, Runnable action, NetworkModificationException.Type typeIfError) {
-        try {
-            action.run();
-            saveCreations(listener);
-            return listener.getCreations();
-        } catch (NetworkModificationException e) {
+            reporter.report(Report.builder()
+                .withKey(typeIfError.name())
+                .withDefaultMessage(e.getMessage())
+                .withSeverity(new TypedValue("NETWORK_MODIFICATION_ERROR", TypedValue.ERROR_LOGLEVEL))
+                .build());
             throw e;
         } catch (Exception e) {
             throw new NetworkModificationException(typeIfError, e);
@@ -222,16 +256,6 @@ public class NetworkModificationService {
             networkStoreService.flush(listener.getNetwork());
         } catch (Exception e) {
             listener.deleteModifications();
-            throw e;
-        }
-    }
-
-    private void saveCreations(NetworkStoreListener listener) {
-        listener.saveCreations();
-        try {
-            networkStoreService.flush(listener.getNetwork());
-        } catch (Exception e) {
-            listener.deleteCreations();
             throw e;
         }
     }
@@ -314,11 +338,14 @@ public class NetworkModificationService {
             .add();
     }
 
-    public Flux<ElementaryModificationInfos> createLoad(UUID networkUuid, UUID groupUuid, LoadCreationInfos loadCreationInfos) {
+    public Flux<EquipmenModificationInfos> createLoad(UUID networkUuid, UUID groupUuid, LoadCreationInfos loadCreationInfos) {
         return assertLoadCreationInfosNotEmpty(loadCreationInfos).thenMany(
                 getNetwork(networkUuid).flatMapIterable(network -> {
                     NetworkStoreListener listener = NetworkStoreListener.create(network, groupUuid, modificationRepository);
-                    return doActionCreation(listener, () -> {
+                    ReporterModel reporter = new ReporterModel("NetworkModification", "Network modification");
+                    Reporter subReporter = reporter.createSubReporter("LoadCreation", "Load creation");
+
+                    List<EquipmenModificationInfos> modificationInfos = doAction(listener, () -> {
                         // create the load in the network
                         VoltageLevel voltageLevel = network.getVoltageLevel(loadCreationInfos.getVoltageLevelId());
                         if (voltageLevel == null) {
@@ -329,14 +356,45 @@ public class NetworkModificationService {
                         } else {
                             createLoadInBusBreaker(voltageLevel, loadCreationInfos);
                         }
+                        subReporter.report(Report.builder()
+                            .withKey("loadCreated")
+                            .withDefaultMessage("New load with id=${id} and name=${name} created")
+                            .withValue("id", loadCreationInfos.getEquipmentId())
+                            .withValue("name", loadCreationInfos.getEquipmentName())
+                            .withSeverity(new TypedValue("LOAD_CREATION_INFO", TypedValue.INFO_LOGLEVEL))
+                            .build());
 
                         // add the load creation entity to the listener
                         listener.storeLoadCreation(loadCreationInfos);
-                    }, CREATE_LOAD_ERROR);
+                    }, CREATE_LOAD_ERROR, subReporter);
+
+                    // send report
+                    sendReport(networkUuid, reporter);
+
+                    return modificationInfos;
                 }));
     }
 
     private Mono<Void> assertLoadCreationInfosNotEmpty(LoadCreationInfos loadCreationInfos) {
         return loadCreationInfos == null ? Mono.error(new NetworkModificationException(CREATE_LOAD_ERROR, "Missing required attributes to create the load")) : Mono.empty();
+    }
+
+    private void sendReport(UUID networkUuid, ReporterModel reporter) {
+        AtomicReference<Long> startTime = new AtomicReference<>(System.nanoTime());
+        var headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        var resourceUrl = DELIMITER + REPORT_API_VERSION + DELIMITER + "reports" + DELIMITER + networkUuid.toString();
+        var uriBuilder = UriComponentsBuilder.fromPath(resourceUrl);
+        try {
+            reportServerRest.exchange(uriBuilder.toUriString(), HttpMethod.PUT, new HttpEntity<>(objectMapper.writeValueAsString(reporter), headers), ReporterModel.class);
+        } catch (JsonProcessingException error) {
+            throw new PowsyblException("error creating report", error);
+        } finally {
+            LOGGER.trace("Save reports for network '{}' in parallel : {} seconds", networkUuid, TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - startTime.get()));
+        }
+    }
+
+    public void setReportServerRest(RestTemplate reportServerRest) {
+        this.reportServerRest = Objects.requireNonNull(reportServerRest, "reportServerRest can't be null");
     }
 }

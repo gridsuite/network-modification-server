@@ -14,11 +14,11 @@ import com.powsybl.iidm.network.LoadType;
 import com.vladmihalcea.sql.SQLStatementCountValidator;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationGroupEntity;
-import org.gridsuite.modification.server.entities.elementary.CreateLoadEntity;
-import org.gridsuite.modification.server.entities.elementary.ElementaryModificationEntity;
+import org.gridsuite.modification.server.entities.elementary.LoadCreationEntity;
+import org.gridsuite.modification.server.entities.elementary.EquipmentAttributeModificationEntity;
 import org.gridsuite.modification.server.repositories.ModificationGroupRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
-import org.gridsuite.modification.server.utils.MatcherElementaryAttributeModificationInfos;
+import org.gridsuite.modification.server.utils.MatcheEquipmentAttributeModificationInfos;
 import org.gridsuite.modification.server.utils.MatcherLoadCreationInfos;
 import org.junit.Before;
 import org.junit.Test;
@@ -64,30 +64,30 @@ public class ModificationRepositoryTest {
                 NetworkModificationException.class, () -> modificationRepository.getModifications(TEST_GROUP_ID)
         );
 
-        var nullModifEntity = modificationRepository.createElementaryModification("id0", "attribute", null);
-        var stringModifEntity = modificationRepository.createElementaryModification("id1", "attribute", "foo");
-        var boolModifEntity = modificationRepository.createElementaryModification("id2", "attribute", true);
-        var intModifEntity = modificationRepository.createElementaryModification("id3", "attribute", 1);
-        var floatModifEntity = modificationRepository.createElementaryModification("id4", "attribute", 2F);
-        var doubleModifEntity = modificationRepository.createElementaryModification("id5", "attribute", 3D);
+        var nullModifEntity = modificationRepository.createEquipmentAttributeModification("id0", "attribute", null);
+        var stringModifEntity = modificationRepository.createEquipmentAttributeModification("id1", "attribute", "foo");
+        var boolModifEntity = modificationRepository.createEquipmentAttributeModification("id2", "attribute", true);
+        var intModifEntity = modificationRepository.createEquipmentAttributeModification("id3", "attribute", 1);
+        var floatModifEntity = modificationRepository.createEquipmentAttributeModification("id4", "attribute", 2F);
+        var doubleModifEntity = modificationRepository.createEquipmentAttributeModification("id5", "attribute", 3D);
 
         modificationRepository.saveModifications(TEST_GROUP_ID, List.of(nullModifEntity, stringModifEntity, boolModifEntity, intModifEntity, floatModifEntity, doubleModifEntity));
 
         List<ModificationInfos> modificationEntities = modificationRepository.getModifications(TEST_GROUP_ID);
         assertEquals(6, modificationEntities.size());
         // Order is also checked
-        assertThat(modificationRepository.getElementaryModification(TEST_GROUP_ID, modificationEntities.get(0).getUuid()),
-                MatcherElementaryAttributeModificationInfos.createMatcherElementaryAttributeModificationInfos(nullModifEntity.toElementaryAttributeModificationInfos()));
-        assertThat(modificationRepository.getElementaryModification(TEST_GROUP_ID, modificationEntities.get(1).getUuid()),
-                MatcherElementaryAttributeModificationInfos.createMatcherElementaryAttributeModificationInfos(stringModifEntity.toElementaryAttributeModificationInfos()));
-        assertThat(modificationRepository.getElementaryModification(TEST_GROUP_ID, modificationEntities.get(2).getUuid()),
-                MatcherElementaryAttributeModificationInfos.createMatcherElementaryAttributeModificationInfos(boolModifEntity.toElementaryAttributeModificationInfos()));
-        assertThat(modificationRepository.getElementaryModification(TEST_GROUP_ID, modificationEntities.get(3).getUuid()),
-                MatcherElementaryAttributeModificationInfos.createMatcherElementaryAttributeModificationInfos(intModifEntity.toElementaryAttributeModificationInfos()));
-        assertThat(modificationRepository.getElementaryModification(TEST_GROUP_ID, modificationEntities.get(4).getUuid()),
-                MatcherElementaryAttributeModificationInfos.createMatcherElementaryAttributeModificationInfos(floatModifEntity.toElementaryAttributeModificationInfos()));
-        assertThat(modificationRepository.getElementaryModification(TEST_GROUP_ID, modificationEntities.get(5).getUuid()),
-                MatcherElementaryAttributeModificationInfos.createMatcherElementaryAttributeModificationInfos(doubleModifEntity.toElementaryAttributeModificationInfos()));
+        assertThat(modificationRepository.getEquipmentAttributeModification(TEST_GROUP_ID, modificationEntities.get(0).getUuid()),
+                MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos(nullModifEntity.toEquipmentAttributeModificationInfos()));
+        assertThat(modificationRepository.getEquipmentAttributeModification(TEST_GROUP_ID, modificationEntities.get(1).getUuid()),
+                MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos(stringModifEntity.toEquipmentAttributeModificationInfos()));
+        assertThat(modificationRepository.getEquipmentAttributeModification(TEST_GROUP_ID, modificationEntities.get(2).getUuid()),
+                MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos(boolModifEntity.toEquipmentAttributeModificationInfos()));
+        assertThat(modificationRepository.getEquipmentAttributeModification(TEST_GROUP_ID, modificationEntities.get(3).getUuid()),
+                MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos(intModifEntity.toEquipmentAttributeModificationInfos()));
+        assertThat(modificationRepository.getEquipmentAttributeModification(TEST_GROUP_ID, modificationEntities.get(4).getUuid()),
+                MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos(floatModifEntity.toEquipmentAttributeModificationInfos()));
+        assertThat(modificationRepository.getEquipmentAttributeModification(TEST_GROUP_ID, modificationEntities.get(5).getUuid()),
+                MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos(doubleModifEntity.toEquipmentAttributeModificationInfos()));
 
         assertEquals(6, modificationRepository.getModifications(TEST_GROUP_ID).size());
         assertEquals(List.of(TEST_GROUP_ID), this.modificationRepository.getModificationGroupsUuids());
@@ -113,8 +113,8 @@ public class ModificationRepositoryTest {
 
     @Test
     public void testCreateModificationQueryCount() {
-        var modifEntity1 = modificationRepository.createElementaryModification("id1", "attribute", "foo");
-        var modifEntity2 = modificationRepository.createElementaryModification("id2", "attribute", "foo");
+        var modifEntity1 = modificationRepository.createEquipmentAttributeModification("id1", "attribute", "foo");
+        var modifEntity2 = modificationRepository.createEquipmentAttributeModification("id2", "attribute", "foo");
         modificationRepository.saveModifications(TEST_GROUP_ID, List.of(modifEntity1, modifEntity2));
 
         assertRequestsCount(1, 5, 0, 0);
@@ -122,9 +122,9 @@ public class ModificationRepositoryTest {
 
     @Test
     public void testGetModificationQueryCount() {
-        var modifEntity1 = modificationRepository.createElementaryModification("id1", "attribute", "foo");
-        var modifEntity2 = modificationRepository.createElementaryModification("id2", "attribute", "foo");
-        var modifEntity3 = modificationRepository.createElementaryModification("id3", "attribute", "foo");
+        var modifEntity1 = modificationRepository.createEquipmentAttributeModification("id1", "attribute", "foo");
+        var modifEntity2 = modificationRepository.createEquipmentAttributeModification("id2", "attribute", "foo");
+        var modifEntity3 = modificationRepository.createEquipmentAttributeModification("id3", "attribute", "foo");
         modificationRepository.saveModifications(TEST_GROUP_ID, List.of(modifEntity1, modifEntity2, modifEntity3));
 
         SQLStatementCountValidator.reset();
@@ -136,19 +136,19 @@ public class ModificationRepositoryTest {
         assertRequestsCount(2, 0, 0, 0);
 
         SQLStatementCountValidator.reset();
-        modificationRepository.getElementaryModification(TEST_GROUP_ID, modifEntity1.getId());
+        modificationRepository.getEquipmentAttributeModification(TEST_GROUP_ID, modifEntity1.getId());
         assertRequestsCount(1, 0, 0, 0);
 
         // Non-existent modification uuid
         assertThrows(new NetworkModificationException(MODIFICATION_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage(),
-                NetworkModificationException.class, () -> modificationRepository.getElementaryModification(TEST_GROUP_ID, TEST_GROUP_ID)
+                NetworkModificationException.class, () -> modificationRepository.getEquipmentAttributeModification(TEST_GROUP_ID, TEST_GROUP_ID)
         );
     }
 
     @Test
     public void testDeleteModificationQueryCount() {
-        ElementaryModificationEntity<String> modifEntity1 = modificationRepository.createElementaryModification("id1", "attribute", "foo");
-        ElementaryModificationEntity<String> modifEntity2 = modificationRepository.createElementaryModification("id2", "attribute", "foo");
+        EquipmentAttributeModificationEntity<String> modifEntity1 = modificationRepository.createEquipmentAttributeModification("id1", "attribute", "foo");
+        EquipmentAttributeModificationEntity<String> modifEntity2 = modificationRepository.createEquipmentAttributeModification("id2", "attribute", "foo");
         modificationRepository.saveModifications(TEST_GROUP_ID, List.of(modifEntity1, modifEntity2));
 
         SQLStatementCountValidator.reset();
@@ -182,11 +182,11 @@ public class ModificationRepositoryTest {
         assertEquals(3, modificationInfos.size());
 
         assertThat(modificationRepository.getLoadCreationModification(TEST_GROUP_ID, modificationInfos.get(0).getUuid()),
-                MatcherLoadCreationInfos.createMatcherLoadCreationInfos(((CreateLoadEntity) createLoadEntity1).toLoadCreationInfos()));
+                MatcherLoadCreationInfos.createMatcherLoadCreationInfos(((LoadCreationEntity) createLoadEntity1).toLoadCreationInfos()));
         assertThat(modificationRepository.getLoadCreationModification(TEST_GROUP_ID, modificationInfos.get(1).getUuid()),
-            MatcherLoadCreationInfos.createMatcherLoadCreationInfos(((CreateLoadEntity) createLoadEntity2).toLoadCreationInfos()));
+            MatcherLoadCreationInfos.createMatcherLoadCreationInfos(((LoadCreationEntity) createLoadEntity2).toLoadCreationInfos()));
         assertThat(modificationRepository.getLoadCreationModification(TEST_GROUP_ID, modificationInfos.get(2).getUuid()),
-            MatcherLoadCreationInfos.createMatcherLoadCreationInfos(((CreateLoadEntity) createLoadEntity3).toLoadCreationInfos()));
+            MatcherLoadCreationInfos.createMatcherLoadCreationInfos(((LoadCreationEntity) createLoadEntity3).toLoadCreationInfos()));
 
         assertEquals(3, modificationRepository.getModifications(TEST_GROUP_ID).size());
         assertEquals(List.of(TEST_GROUP_ID), this.modificationRepository.getModificationGroupsUuids());

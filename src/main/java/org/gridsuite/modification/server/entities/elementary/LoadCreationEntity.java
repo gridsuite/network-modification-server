@@ -10,6 +10,7 @@ import com.powsybl.iidm.network.LoadType;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.ModificationType;
+import org.gridsuite.modification.server.dto.EquipmenModificationInfos;
 import org.gridsuite.modification.server.dto.LoadCreationInfos;
 
 import javax.persistence.Column;
@@ -25,9 +26,9 @@ import java.util.Set;
 @NoArgsConstructor
 @Getter
 @Entity
-@Table(name = "createLoad")
-@PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "createLoad_id_fk_constraint"))
-public class CreateLoadEntity extends CreateEquipmentEntity {
+@Table(name = "loadCreation")
+@PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "loadCreation_id_fk_constraint"))
+public class LoadCreationEntity extends EquipmentCreationEntity {
     @Column(name = "loadType")
     private LoadType loadType;
 
@@ -37,8 +38,8 @@ public class CreateLoadEntity extends CreateEquipmentEntity {
     @Column(name = "reactivePower")
     private double reactivePower;
 
-    public CreateLoadEntity(String equipmentId, String equipmentName, LoadType loadType, String voltageLevelId, String busId,
-                            double activePower, double reactivePower) {
+    public LoadCreationEntity(String equipmentId, String equipmentName, LoadType loadType, String voltageLevelId, String busId,
+                              double activePower, double reactivePower) {
         super(ModificationType.LOAD_CREATION, equipmentId, equipmentName, voltageLevelId, busId);
         this.loadType = loadType;
         this.activePower = activePower;
@@ -49,8 +50,9 @@ public class CreateLoadEntity extends CreateEquipmentEntity {
         return toLoadCreationInfosBuilder().build();
     }
 
-    public LoadCreationInfos toLoadCreationInfos(Set<String> substationIds) {
-        return (LoadCreationInfos) toLoadCreationInfosBuilder().substationIds(substationIds).build();
+    @Override
+    public EquipmenModificationInfos toEquipmentModificationInfos(Set<String> uuids) {
+        return toLoadCreationInfosBuilder().substationIds(uuids).build();
     }
 
     private LoadCreationInfos.LoadCreationInfosBuilder toLoadCreationInfosBuilder() {

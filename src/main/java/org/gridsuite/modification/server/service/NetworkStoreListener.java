@@ -10,12 +10,10 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import com.powsybl.iidm.network.*;
-import org.gridsuite.modification.server.dto.ElementaryAttributeModificationInfos;
-import org.gridsuite.modification.server.dto.ElementaryModificationInfos;
+import org.gridsuite.modification.server.dto.EquipmenModificationInfos;
 import org.gridsuite.modification.server.dto.LoadCreationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
-import org.gridsuite.modification.server.entities.elementary.CreateEquipmentEntity;
-import org.gridsuite.modification.server.entities.elementary.ElementaryModificationEntity;
+import org.gridsuite.modification.server.entities.elementary.EquipmentModificationEntity;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 
 /**
@@ -30,9 +28,7 @@ public class NetworkStoreListener implements NetworkListener {
 
     private final NetworkModificationRepository modificationRepository;
 
-    private List<ElementaryModificationEntity<?>> modifications = new LinkedList<>();
-
-    private List<CreateEquipmentEntity> creations = new LinkedList<>();
+    private List<EquipmentModificationEntity> modifications = new LinkedList<>();
 
     Network getNetwork() {
         return network;
@@ -50,32 +46,16 @@ public class NetworkStoreListener implements NetworkListener {
         this.modificationRepository = modificationRepository;
     }
 
-    public List<ElementaryAttributeModificationInfos> getModifications() {
+    public List<EquipmenModificationInfos> getModifications() {
         return modifications.stream()
-                .map(m -> m.toElementaryAttributeModificationInfos(getSubstationIds(m.getEquipmentId())))
+                .map(m -> m.toEquipmentModificationInfos(getSubstationIds(m.getEquipmentId())))
                 .collect(Collectors.toList());
-    }
-
-    public List<ElementaryModificationInfos> getCreations() {
-        return creations.stream()
-            .map(m -> m.toEquipmentCreationInfos(getSubstationIds(m.getEquipmentId())))
-            .collect(Collectors.toList());
     }
 
     public void saveModifications() {
         if (groupUuid != null) {
             modificationRepository.saveModifications(groupUuid,
                 modifications
-                    .stream()
-                    .map(ModificationEntity.class::cast)
-                    .collect(Collectors.toList()));
-        }
-    }
-
-    public void saveCreations() {
-        if (groupUuid != null) {
-            modificationRepository.saveModifications(groupUuid,
-                creations
                     .stream()
                     .map(ModificationEntity.class::cast)
                     .collect(Collectors.toList()));
@@ -92,22 +72,12 @@ public class NetworkStoreListener implements NetworkListener {
         }
     }
 
-    public void deleteCreations() {
-        if (groupUuid != null) {
-            modificationRepository.deleteModifications(groupUuid,
-                creations
-                    .stream()
-                    .map(ModificationEntity::getId)
-                    .collect(Collectors.toSet()));
-        }
-    }
-
-    private void storeElementaryModification(Identifiable<?> identifiable, String attributeName, Object attributeValue) {
-        modifications.add(this.modificationRepository.createElementaryModification(identifiable.getId(), attributeName, attributeValue));
+    private void storeEquipmentAttributeModification(Identifiable<?> identifiable, String attributeName, Object attributeValue) {
+        modifications.add(this.modificationRepository.createEquipmentAttributeModification(identifiable.getId(), attributeName, attributeValue));
     }
 
     public void storeLoadCreation(LoadCreationInfos loadCreationInfos) {
-        creations.add(this.modificationRepository.createLoadEntity(loadCreationInfos.getEquipmentId(),
+        modifications.add(this.modificationRepository.createLoadEntity(loadCreationInfos.getEquipmentId(),
             loadCreationInfos.getEquipmentName(),
             loadCreationInfos.getLoadType(),
             loadCreationInfos.getVoltageLevelId(),
@@ -137,12 +107,12 @@ public class NetworkStoreListener implements NetworkListener {
 
     @Override
     public void onUpdate(Identifiable identifiable, String attribute, Object oldValue, Object newValue) {
-        storeElementaryModification(identifiable, attribute, newValue);
+        storeEquipmentAttributeModification(identifiable, attribute, newValue);
     }
 
     @Override
     public void onUpdate(Identifiable identifiable, String attribute, String variantId, Object oldValue, Object newValue) {
-        storeElementaryModification(identifiable, attribute, newValue);
+        storeEquipmentAttributeModification(identifiable, attribute, newValue);
     }
 
     @Override

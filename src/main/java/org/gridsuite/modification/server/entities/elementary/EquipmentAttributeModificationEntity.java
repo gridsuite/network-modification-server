@@ -9,13 +9,13 @@ package org.gridsuite.modification.server.entities.elementary;
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
 
-import java.util.Set;
-
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.ModificationType;
-import org.gridsuite.modification.server.dto.ElementaryAttributeModificationInfos;
-import org.gridsuite.modification.server.entities.ModificationEntity;
+import org.gridsuite.modification.server.dto.EquipmenAttributeModificationInfos;
+import org.gridsuite.modification.server.dto.EquipmenModificationInfos;
+
+import java.util.Set;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -24,33 +24,30 @@ import org.gridsuite.modification.server.entities.ModificationEntity;
 @NoArgsConstructor
 @Getter
 @MappedSuperclass
-public class ElementaryModificationEntity<T> extends ModificationEntity {
-    @Column(name = "equipmentId")
-    private String equipmentId;
-
+public class EquipmentAttributeModificationEntity<T> extends EquipmentModificationEntity {
     @Column(name = "attributeName")
     private String attributeName;
 
     @Column(name = "attributeValue")
     private T attributeValue;
 
-    protected ElementaryModificationEntity(String equipmentId, String attributeName, T attributeValue) {
-        super(ModificationType.ELEMENTARY);
-        this.equipmentId = equipmentId;
+    protected EquipmentAttributeModificationEntity(String equipmentId, String attributeName, T attributeValue) {
+        super(equipmentId, ModificationType.EQUIPMENT_ATTRIBUTE_MODIFICATION);
         this.attributeName = attributeName;
         this.attributeValue = attributeValue;
     }
 
-    public ElementaryAttributeModificationInfos toElementaryAttributeModificationInfos() {
+    public EquipmenAttributeModificationInfos toEquipmentAttributeModificationInfos() {
         return toModificationInfosBuilder().build();
     }
 
-    public ElementaryAttributeModificationInfos toElementaryAttributeModificationInfos(Set<String> substationId) {
-        return toModificationInfosBuilder().substationIds(substationId).build();
+    @Override
+    public EquipmenModificationInfos toEquipmentModificationInfos(Set<String> uuids) {
+        return toModificationInfosBuilder().substationIds(uuids).build();
     }
 
-    private ElementaryAttributeModificationInfos.ElementaryAttributeModificationInfosBuilder<?, ?> toModificationInfosBuilder() {
-        return ElementaryAttributeModificationInfos
+    private EquipmenAttributeModificationInfos.EquipmenAttributeModificationInfosBuilder<?, ?> toModificationInfosBuilder() {
+        return EquipmenAttributeModificationInfos
                 .builder()
                 .uuid(getId())
                 .date(getDate())

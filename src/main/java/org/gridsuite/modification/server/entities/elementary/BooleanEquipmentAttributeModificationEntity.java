@@ -20,10 +20,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Getter
 @Entity
-@Table(name = "doubleelementaryModification")
-@PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "double_modification_id_fk_constraint"))
-public class DoubleElementaryModificationEntity extends ElementaryModificationEntity<Double> {
-    public DoubleElementaryModificationEntity(String equipmentId, String attributeName, Double attributeValue) {
+@Table(name = "booleanelementaryModification")
+@PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "boolean_modification_id_fk_constraint"))
+public class BooleanEquipmentAttributeModificationEntity extends EquipmentAttributeModificationEntity<Boolean> {
+    public BooleanEquipmentAttributeModificationEntity(String equipmentId, String attributeName, Boolean attributeValue) {
         super(equipmentId, attributeName, attributeValue);
     }
 }
