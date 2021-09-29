@@ -13,7 +13,7 @@ import com.powsybl.iidm.network.*;
 import org.gridsuite.modification.server.dto.EquipmenModificationInfos;
 import org.gridsuite.modification.server.dto.LoadCreationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
-import org.gridsuite.modification.server.entities.elementary.EquipmentModificationEntity;
+import org.gridsuite.modification.server.entities.EquipmentModificationEntity;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 
 /**

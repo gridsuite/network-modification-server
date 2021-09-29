@@ -97,7 +97,7 @@ public class NetworkModificationService {
 
     public Flux<EquipmenModificationInfos> applyGroovyScript(UUID networkUuid, UUID groupUuid, String groovyScript) {
         return assertGroovyScriptNotEmpty(groovyScript).thenMany(
-                getNetwork(networkUuid).flatMapIterable(network -> doAction(network, groupUuid, () -> {
+                getNetwork(networkUuid).flatMapIterable(network -> doAction(network, networkUuid, groupUuid, () -> {
                     var conf = new CompilerConfiguration();
                     var binding = new Binding();
                     binding.setProperty("network", network);
@@ -112,7 +112,7 @@ public class NetworkModificationService {
                 .filter(network -> network.getSwitch(switchId) != null)
                 .switchIfEmpty(Mono.error(new NetworkModificationException(SWITCH_NOT_FOUND, switchId)))
                 .filter(network -> network.getSwitch(switchId).isOpen() != open)
-                .flatMapIterable(network -> doAction(network, groupUuid, () -> network.getSwitch(switchId).setOpen(open)));
+                .flatMapIterable(network -> doAction(network, networkUuid, groupUuid, () -> network.getSwitch(switchId).setOpen(open)));
     }
 
     public Flux<UUID> getModificationGroups() {
@@ -159,7 +159,7 @@ public class NetworkModificationService {
         return getNetwork(networkUuid)
                 .filter(network -> network.getLine(lineId) != null)
                 .switchIfEmpty(Mono.error(new NetworkModificationException(LINE_NOT_FOUND, lineId)))
-                .flatMapIterable(network -> doAction(network, groupUuid, () -> {
+                .flatMapIterable(network -> doAction(network, networkUuid, groupUuid, () -> {
                     if (disconnectLineBothSides(network, lineId)) {
                         network.getLine(lineId).newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.PLANNED_OUTAGE).add();
                     } else {
@@ -173,7 +173,7 @@ public class NetworkModificationService {
         return getNetwork(networkUuid)
                 .filter(network -> network.getLine(lineId) != null)
                 .switchIfEmpty(Mono.error(new NetworkModificationException(LINE_NOT_FOUND, lineId)))
-                .flatMapIterable(network -> doAction(network, groupUuid, () -> {
+                .flatMapIterable(network -> doAction(network, networkUuid, groupUuid, () -> {
                     if (disconnectLineBothSides(network, lineId)) {
                         network.getLine(lineId).newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.FORCED_OUTAGE).add();
                     } else {
@@ -187,7 +187,7 @@ public class NetworkModificationService {
         return getNetwork(networkUuid)
                 .filter(network -> network.getLine(lineId) != null)
                 .switchIfEmpty(Mono.error(new NetworkModificationException(LINE_NOT_FOUND, lineId)))
-                .flatMapIterable(network -> doAction(network, groupUuid, () -> {
+                .flatMapIterable(network -> doAction(network, networkUuid, groupUuid, () -> {
                     Terminal terminalToConnect = network.getLine(lineId).getTerminal(side);
                     boolean isTerminalToConnectConnected = terminalToConnect.isConnected() || terminalToConnect.connect();
                     Terminal terminalToDisconnect = network.getLine(lineId).getTerminal(side == Branch.Side.ONE ? Branch.Side.TWO : Branch.Side.ONE);
@@ -205,7 +205,7 @@ public class NetworkModificationService {
         return getNetwork(networkUuid)
                 .filter(network -> network.getLine(lineId) != null)
                 .switchIfEmpty(Mono.error(new NetworkModificationException(LINE_NOT_FOUND, lineId)))
-                .flatMapIterable(network -> doAction(network, groupUuid, () -> {
+                .flatMapIterable(network -> doAction(network, networkUuid, groupUuid, () -> {
                     Terminal terminal1 = network.getLine(lineId).getTerminal1();
                     boolean terminal1Connected = terminal1.isConnected() || terminal1.connect();
                     Terminal terminal2 = network.getLine(lineId).getTerminal2();
@@ -223,30 +223,34 @@ public class NetworkModificationService {
         return Mono.fromRunnable(() -> modificationRepository.deleteModificationGroup(groupUuid));
     }
 
-    private List<EquipmenModificationInfos> doAction(Network network, UUID groupUuid, Runnable modification) {
-        return doAction(network, groupUuid, modification, MODIFICATION_ERROR);
+    private List<EquipmenModificationInfos> doAction(Network network, UUID networkUuid, UUID groupUuid, Runnable modification) {
+        return doAction(network, networkUuid, groupUuid, modification, MODIFICATION_ERROR);
     }
 
-    private List<EquipmenModificationInfos> doAction(Network network, UUID groupUuid, Runnable modification, NetworkModificationException.Type typeIfError) {
+    private List<EquipmenModificationInfos> doAction(Network network, UUID networkUuid, UUID groupUuid, Runnable modification, NetworkModificationException.Type typeIfError) {
         NetworkStoreListener listener = NetworkStoreListener.create(network, groupUuid, modificationRepository);
         ReporterModel reporter = new ReporterModel("NetworkModification", "Network modification");
-        return doAction(listener, modification, typeIfError, reporter);
+        return doAction(listener, modification, typeIfError, networkUuid, reporter, reporter);
     }
 
-    private List<EquipmenModificationInfos> doAction(NetworkStoreListener listener, Runnable action, NetworkModificationException.Type typeIfError, Reporter reporter) {
+    private List<EquipmenModificationInfos> doAction(NetworkStoreListener listener, Runnable action,
+                                                     NetworkModificationException.Type typeIfError,
+                                                     UUID networkUuid, ReporterModel reporter, Reporter subReporter) {
         try {
             action.run();
             saveModifications(listener);
             return listener.getModifications();
-        } catch (NetworkModificationException e) {
-            reporter.report(Report.builder()
+        } catch (Exception e) {
+            NetworkModificationException exc = e instanceof NetworkModificationException ? (NetworkModificationException) e : new NetworkModificationException(typeIfError, e);
+            subReporter.report(Report.builder()
                 .withKey(typeIfError.name())
-                .withDefaultMessage(e.getMessage())
+                .withDefaultMessage(exc.getMessage())
                 .withSeverity(new TypedValue("NETWORK_MODIFICATION_ERROR", TypedValue.ERROR_LOGLEVEL))
                 .build());
-            throw e;
-        } catch (Exception e) {
-            throw new NetworkModificationException(typeIfError, e);
+            throw exc;
+        } finally {
+            // send report
+            sendReport(networkUuid, reporter);
         }
     }
 
@@ -345,7 +349,7 @@ public class NetworkModificationService {
                     ReporterModel reporter = new ReporterModel("NetworkModification", "Network modification");
                     Reporter subReporter = reporter.createSubReporter("LoadCreation", "Load creation");
 
-                    List<EquipmenModificationInfos> modificationInfos = doAction(listener, () -> {
+                    return doAction(listener, () -> {
                         // create the load in the network
                         VoltageLevel voltageLevel = network.getVoltageLevel(loadCreationInfos.getVoltageLevelId());
                         if (voltageLevel == null) {
@@ -366,12 +370,7 @@ public class NetworkModificationService {
 
                         // add the load creation entity to the listener
                         listener.storeLoadCreation(loadCreationInfos);
-                    }, CREATE_LOAD_ERROR, subReporter);
-
-                    // send report
-                    sendReport(networkUuid, reporter);
-
-                    return modificationInfos;
+                    }, CREATE_LOAD_ERROR, networkUuid, reporter, subReporter);
                 }));
     }
 
