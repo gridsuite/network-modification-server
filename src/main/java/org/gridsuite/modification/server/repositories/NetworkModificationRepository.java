@@ -15,7 +15,14 @@ import org.gridsuite.modification.server.dto.LoadCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationGroupEntity;
-import org.gridsuite.modification.server.entities.elementary.*;
+import org.gridsuite.modification.server.entities.equipment.attribute.modification.BooleanEquipmentAttributeModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.attribute.modification.DoubleEquipmentAttributeModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.attribute.modification.EquipmentAttributeModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.attribute.modification.FloatEquipmentAttributeModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.attribute.modification.IntegerEquipmentAttributeModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.attribute.modification.StringEquipmentAttributeModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.creation.EquipmentCreationEntity;
+import org.gridsuite.modification.server.entities.equipment.creation.LoadCreationEntity;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 

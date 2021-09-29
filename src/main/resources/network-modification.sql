@@ -1,5 +1,5 @@
 
-    create table booleanelementaryModification (
+    create table booleanEquipmentAttributeModification (
        equipmentId varchar(255),
         attributeName varchar(255),
         attributeValue boolean,
@@ -7,7 +7,7 @@
         primary key (id)
     );
 
-    create table doubleelementaryModification (
+    create table doubleEquipmentAttributeModification (
        equipmentId varchar(255),
         attributeName varchar(255),
         attributeValue float8,
@@ -15,7 +15,7 @@
         primary key (id)
     );
 
-    create table floatelementaryModification (
+    create table floatEquipmentAttributeModification (
        equipmentId varchar(255),
         attributeName varchar(255),
         attributeValue float4,
@@ -23,7 +23,7 @@
         primary key (id)
     );
 
-    create table integerelementaryModification (
+    create table integerEquipmentAttributeModification (
        equipmentId varchar(255),
         attributeName varchar(255),
         attributeValue int4,
@@ -56,7 +56,7 @@
         primary key (id)
     );
 
-    create table stringelementaryModification (
+    create table stringEquipmentAttributeModification (
        equipmentId varchar(255),
         attributeName varchar(255),
         attributeValue varchar(255),
@@ -65,23 +65,23 @@
     );
 create index modificationEntity_group_id_index on modification (group_id);
 
-    alter table if exists booleanelementaryModification 
-       add constraint boolean_modification_id_fk_constraint 
+    alter table if exists booleanEquipmentAttributeModification 
+       add constraint boolean_equipment_attribute_modification_id_fk_constraint 
        foreign key (id) 
        references modification;
 
-    alter table if exists doubleelementaryModification 
-       add constraint double_modification_id_fk_constraint 
+    alter table if exists doubleEquipmentAttributeModification 
+       add constraint double_equipment_attribute_modification_id_fk_constraint 
        foreign key (id) 
        references modification;
 
-    alter table if exists floatelementaryModification 
-       add constraint float_modification_id_fk_constraint 
+    alter table if exists floatEquipmentAttributeModification 
+       add constraint float_equipment_attribute_modification_id_fk_constraint 
        foreign key (id) 
        references modification;
 
-    alter table if exists integerelementaryModification 
-       add constraint integer_modification_id_fk_constraint 
+    alter table if exists integerEquipmentAttributeModification 
+       add constraint integer_equipment_attribute_modification_id_fk_constraint 
        foreign key (id) 
        references modification;
 
@@ -95,7 +95,7 @@ create index modificationEntity_group_id_index on modification (group_id);
        foreign key (group_id) 
        references modificationGroup;
 
-    alter table if exists stringelementaryModification 
-       add constraint string_modification_id_fk_constraint 
+    alter table if exists stringEquipmentAttributeModification 
+       add constraint string_equipment_attribute_modification_id_fk_constraint 
        foreign key (id) 
        references modification;

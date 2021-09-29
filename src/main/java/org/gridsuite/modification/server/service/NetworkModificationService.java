@@ -223,23 +223,27 @@ public class NetworkModificationService {
     private List<EquipmenModificationInfos> doAction(Network network, UUID networkUuid, UUID groupUuid, Runnable modification, NetworkModificationException.Type typeIfError) {
         NetworkStoreListener listener = NetworkStoreListener.create(network, networkUuid, groupUuid, modificationRepository, equipmentInfosService);
         ReporterModel reporter = new ReporterModel("NetworkModification", "Network modification");
-        return doAction(listener, modification, typeIfError, reporter);
+        return doAction(listener, modification, typeIfError, networkUuid, reporter, reporter);
     }
 
-    private List<EquipmenModificationInfos> doAction(NetworkStoreListener listener, Runnable action, NetworkModificationException.Type typeIfError, Reporter reporter) {
+    private List<EquipmenModificationInfos> doAction(NetworkStoreListener listener, Runnable action,
+                                                     NetworkModificationException.Type typeIfError,
+                                                     UUID networkUuid, ReporterModel reporter, Reporter subReporter) {
         try {
             action.run();
             saveModifications(listener);
             return listener.getModifications();
-        } catch (NetworkModificationException e) {
-            reporter.report(Report.builder()
+        } catch (Exception e) {
+            NetworkModificationException exc = e instanceof NetworkModificationException ? (NetworkModificationException) e : new NetworkModificationException(typeIfError, e);
+            subReporter.report(Report.builder()
                 .withKey(typeIfError.name())
-                .withDefaultMessage(e.getMessage())
+                .withDefaultMessage(exc.getMessage())
                 .withSeverity(new TypedValue("NETWORK_MODIFICATION_ERROR", TypedValue.ERROR_LOGLEVEL))
                 .build());
-            throw e;
-        } catch (Exception e) {
-            throw new NetworkModificationException(typeIfError, e);
+            throw exc;
+        } finally {
+            // send report
+            sendReport(networkUuid, reporter);
         }
     }
 
@@ -338,7 +342,7 @@ public class NetworkModificationService {
                 ReporterModel reporter = new ReporterModel("NetworkModification", "Network modification");
                 Reporter subReporter = reporter.createSubReporter("LoadCreation", "Load creation");
 
-                List<EquipmenModificationInfos> modificationInfos = doAction(listener, () -> {
+                return doAction(listener, () -> {
                     // create the load in the network
                     VoltageLevel voltageLevel = network.getVoltageLevel(loadCreationInfos.getVoltageLevelId());
                     if (voltageLevel == null) {
@@ -359,12 +363,7 @@ public class NetworkModificationService {
 
                     // add the load creation entity to the listener
                     listener.storeLoadCreation(loadCreationInfos);
-                }, CREATE_LOAD_ERROR, subReporter);
-
-                // send report
-                sendReport(networkUuid, reporter);
-
-                return modificationInfos;
+                }, CREATE_LOAD_ERROR, networkUuid, reporter, subReporter);
             }));
     }
 
