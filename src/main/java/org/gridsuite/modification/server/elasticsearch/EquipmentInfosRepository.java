@@ -22,5 +22,5 @@ import java.util.UUID;
 public interface EquipmentInfosRepository extends ElasticsearchRepository<EquipmentInfos, String> {
     Iterable<EquipmentInfos> findAllByNetworkUuid(@NonNull UUID networkUuid);
 
-    void deleteByEquipmentIdAndNetworkUuid(String equipmentId, UUID networkUuid);
+    void deleteByEquipmentIdAndNetworkUuid(@NonNull String equipmentId, @NonNull UUID networkUuid);
 }
