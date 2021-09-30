@@ -7,10 +7,6 @@
 package org.gridsuite.modification.server;
 
 import com.google.common.collect.Iterables;
-import com.powsybl.iidm.network.Identifiable;
-import com.powsybl.iidm.network.Network;
-import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
-import com.powsybl.network.store.iidm.impl.NetworkImpl;
 import org.gridsuite.modification.server.dto.EquipmentInfos;
 import org.gridsuite.modification.server.dto.EquipmentType;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
@@ -22,7 +18,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -43,12 +39,5 @@ public class EquipmentInfosServiceMockTests {
 
         equipmentInfosService.delete("foo", NETWORK_UUID);
         assertEquals(0, Iterables.size(equipmentInfosService.findAll(NETWORK_UUID)));
-    }
-
-    @Test
-    public void testBadEquipmentType() {
-        Identifiable<Network> network = new NetworkFactoryImpl().createNetwork("test", "test");
-        String errorMessage = assertThrows(NetworkModificationException.class, () -> EquipmentType.getType(network)).getMessage();
-        assertTrue(errorMessage.contains(String.format("The equipment type : %s is unknown", NetworkImpl.class.getSimpleName())));
     }
 }

@@ -17,6 +17,7 @@ import org.springframework.data.elasticsearch.client.RestClients;
 import org.springframework.data.elasticsearch.config.AbstractElasticsearchConfiguration;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 
+import javax.annotation.Nonnull;
 import java.net.InetSocketAddress;
 
 /**
@@ -38,23 +39,24 @@ public class ESConfig extends AbstractElasticsearchConfiguration {
 
     @Bean
     @ConditionalOnExpression("'${spring.data.elasticsearch.enabled:false}' == 'true'")
-    public EquipmentInfosService studyInfosServiceImpl(EquipmentInfosRepository equipmentInfosRepository) {
+    public EquipmentInfosService equipmentInfosServiceImpl(EquipmentInfosRepository equipmentInfosRepository) {
         return new EquipmentInfosServiceImpl(equipmentInfosRepository);
     }
 
     @Bean
     @ConditionalOnExpression("'${spring.data.elasticsearch.enabled:false}' == 'false'")
-    public EquipmentInfosService studyInfosServiceMock() {
+    public EquipmentInfosService equipmentInfosServiceMock() {
         return new EquipmentInfosServiceMock();
     }
 
     @Bean
     @Override
     @SuppressWarnings("squid:S2095")
+    @Nonnull
     public RestHighLevelClient elasticsearchClient() {
         ClientConfiguration clientConfiguration = ClientConfiguration.builder()
-                .connectedTo(InetSocketAddress.createUnresolved(esHost, esPort))
-                .build();
+            .connectedTo(InetSocketAddress.createUnresolved(esHost, esPort))
+            .build();
 
         return RestClients.create(clientConfiguration).rest();
     }

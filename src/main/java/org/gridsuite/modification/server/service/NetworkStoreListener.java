@@ -25,17 +25,17 @@ import java.util.stream.Collectors;
  */
 public class NetworkStoreListener implements NetworkListener {
 
-    private UUID groupUuid;
+    private final UUID groupUuid;
 
-    private UUID networkUuid;
+    private final UUID networkUuid;
 
-    private Network network;
+    private final Network network;
 
     private final NetworkModificationRepository modificationRepository;
 
     private final EquipmentInfosService equipmentInfosService;
 
-    private List<EquipmentModificationEntity> modifications = new LinkedList<>();
+    private final List<EquipmentModificationEntity> modifications = new LinkedList<>();
 
     Network getNetwork() {
         return network;
