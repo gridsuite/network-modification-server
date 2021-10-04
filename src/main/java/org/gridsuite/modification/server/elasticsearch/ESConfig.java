@@ -37,6 +37,9 @@ public class ESConfig extends AbstractElasticsearchConfiguration {
     @Value("#{'${spring.data.elasticsearch.embedded:false}' ? '${spring.data.elasticsearch.embedded.port:}' : '${spring.data.elasticsearch.port}'}")
     private int esPort;
 
+    @Value("${spring.data.elasticsearch.client.timeout:60}")
+    int timeout;
+
     @Bean
     @ConditionalOnExpression("'${spring.data.elasticsearch.enabled:false}' == 'true'")
     public EquipmentInfosService equipmentInfosServiceImpl(EquipmentInfosRepository equipmentInfosRepository) {
@@ -56,6 +59,7 @@ public class ESConfig extends AbstractElasticsearchConfiguration {
     public RestHighLevelClient elasticsearchClient() {
         ClientConfiguration clientConfiguration = ClientConfiguration.builder()
             .connectedTo(InetSocketAddress.createUnresolved(esHost, esPort))
+            .withConnectTimeout(timeout * 1000L).withSocketTimeout(timeout * 1000L)
             .build();
 
         return RestClients.create(clientConfiguration).rest();

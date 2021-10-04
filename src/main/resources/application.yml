@@ -34,6 +34,8 @@ spring:
       enabled: false
       host: localhost
       port: 9200
+      client:
+        timeout: 60  # Seconds
 
 server:
   port: 5007
