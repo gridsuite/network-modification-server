@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.gridsuite.modification.server.dto.EquipmentDeletionInfos;
 import org.gridsuite.modification.server.dto.LoadCreationInfos;
 import org.gridsuite.modification.server.dto.EquipmenModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
@@ -101,10 +102,10 @@ public class NetworkModificationController {
     @DeleteMapping(value = "/networks/{networkUuid}/equipments/type/{equipmentType}/id/{equipmentId}")
     @Operation(summary = "Delete an equipment in a network")
     @ApiResponse(responseCode = "200", description = "Equipment deleted in the network")
-    public ResponseEntity<Flux<EquipmenModificationInfos>> deleteEquipment(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
-                                                      @Parameter(description = "Equipment type") @PathVariable("equipmentType") String equipmentType,
-                                                      @Parameter(description = "Equipment id") @PathVariable("equipmentId") String equipmentId,
-                                                      @RequestParam(value = "group", required = false) UUID groupUuid) {
+    public ResponseEntity<Flux<EquipmentDeletionInfos>> deleteEquipment(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
+                                                                        @Parameter(description = "Equipment type") @PathVariable("equipmentType") String equipmentType,
+                                                                        @Parameter(description = "Equipment id") @PathVariable("equipmentId") String equipmentId,
+                                                                        @RequestParam(value = "group", required = false) UUID groupUuid) {
         return ResponseEntity.ok().body(networkModificationService.deleteEquipment(networkUuid, groupUuid, equipmentType, equipmentId));
     }
 }

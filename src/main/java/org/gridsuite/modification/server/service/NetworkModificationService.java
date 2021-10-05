@@ -21,6 +21,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.EquipmenModificationInfos;
+import org.gridsuite.modification.server.dto.EquipmentDeletionInfos;
 import org.gridsuite.modification.server.dto.EquipmentType;
 import org.gridsuite.modification.server.dto.LoadCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
@@ -48,6 +49,7 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 
@@ -377,7 +379,7 @@ public class NetworkModificationService {
         return loadCreationInfos == null ? Mono.error(new NetworkModificationException(CREATE_LOAD_ERROR, "Missing required attributes to create the load")) : Mono.empty();
     }
 
-    public Flux<EquipmenModificationInfos> deleteEquipment(UUID networkUuid, UUID groupUuid, String equipmentType, String equipmentId) {
+    public Flux<EquipmentDeletionInfos> deleteEquipment(UUID networkUuid, UUID groupUuid, String equipmentType, String equipmentId) {
         return getNetwork(networkUuid).flatMapIterable(network -> {
             NetworkStoreListener listener = NetworkStoreListener.create(network, networkUuid, groupUuid, modificationRepository, equipmentInfosService);
             ReporterModel reporter = new ReporterModel("NetworkModification", "Network modification");
@@ -457,7 +459,8 @@ public class NetworkModificationService {
 
                 // add the equipment deletion entity to the listener
                 listener.storeEquipmentDeletion(equipmentId, equipmentType);
-            }, DELETE_EQUIPMENT_ERROR, networkUuid, reporter, subReporter);
+            }, DELETE_EQUIPMENT_ERROR, networkUuid, reporter, subReporter).stream().map(info -> (EquipmentDeletionInfos) info)
+                .collect(Collectors.toList());
         });
     }
 

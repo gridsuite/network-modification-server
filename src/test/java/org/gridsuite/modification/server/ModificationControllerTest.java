@@ -15,12 +15,14 @@ import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.sld.iidm.extensions.BranchStatus;
 import org.gridsuite.modification.server.dto.EquipmenAttributeModificationInfos;
 import org.gridsuite.modification.server.dto.EquipmenModificationInfos;
+import org.gridsuite.modification.server.dto.EquipmentDeletionInfos;
 import org.gridsuite.modification.server.dto.LoadCreationInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.NetworkModificationService;
 import org.gridsuite.modification.server.service.NetworkStoreListener;
 import org.gridsuite.modification.server.utils.MatcheEquipmentAttributeModificationInfos;
+import org.gridsuite.modification.server.utils.MatcherEquipmentDeletionInfos;
 import org.gridsuite.modification.server.utils.MatcherEquipmentModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Before;
@@ -620,9 +622,9 @@ public class ModificationControllerTest {
             .exchange()
             .expectStatus().isOk()
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
-            .expectBodyList(EquipmenModificationInfos.class)
+            .expectBodyList(EquipmentDeletionInfos.class)
             .value(modifications -> modifications.get(0),
-                MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.EQUIPMENT_DELETION, "v1load", Set.of("s1")));
+                MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "v1load", "LOAD", Set.of("s1")));
 
         testNetwokModificationsCount(TEST_GROUP_ID, 1);
 
