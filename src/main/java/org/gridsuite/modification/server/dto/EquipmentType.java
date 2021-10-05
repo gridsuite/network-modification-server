@@ -34,7 +34,7 @@ public enum EquipmentType {
     HVDC_CONVERTER_STATION,
 
     // Other
-    HVDC,
+    HVDC_LINE,
     SUBSTATION,
     VOLTAGE_LEVEL;
 
@@ -46,7 +46,7 @@ public enum EquipmentType {
             } else if (identifiable instanceof Connectable) {
                 return EquipmentType.valueOf(((Connectable) identifiable).getType().name());
             } else if (identifiable instanceof HvdcLine) {
-                return EquipmentType.HVDC;
+                return EquipmentType.HVDC_LINE;
             } else if (identifiable instanceof Substation) {
                 return EquipmentType.SUBSTATION;
             } else if (identifiable instanceof VoltageLevel) {

@@ -37,6 +37,8 @@ public class NetworkStoreListener implements NetworkListener {
 
     private final List<EquipmentModificationEntity> modifications = new LinkedList<>();
 
+    private Set<String> substationsIds = new HashSet<>();
+
     Network getNetwork() {
         return network;
     }
@@ -59,7 +61,8 @@ public class NetworkStoreListener implements NetworkListener {
 
     public List<EquipmenModificationInfos> getModifications() {
         return modifications.stream()
-            .map(m -> m.toEquipmentModificationInfos(getSubstationIds(m.getEquipmentId())))
+            .map(m -> m.toEquipmentModificationInfos(substationsIds.isEmpty() ? getSubstationsIds(m.getEquipmentId())
+                : substationsIds))
                 .collect(Collectors.toList());
     }
 
@@ -97,7 +100,11 @@ public class NetworkStoreListener implements NetworkListener {
             loadCreationInfos.getReactivePower()));
     }
 
-    private Set<String> getSubstationIds(String equipmentId) {
+    public void storeEquipmentDeletion(String equipmentId, String equipmentType) {
+        modifications.add(this.modificationRepository.createEquipmentDeletionEntity(equipmentId, equipmentType));
+    }
+
+    private Set<String> getSubstationsIds(String equipmentId) {
         Identifiable<?> identifiable = network.getIdentifiable(equipmentId);
         Set<String> substationsIds = new HashSet<>();
         if (identifiable instanceof Switch) {
@@ -113,6 +120,23 @@ public class NetworkStoreListener implements NetworkListener {
             substationsIds.add(((ThreeWindingsTransformer) identifiable).getTerminal(ThreeWindingsTransformer.Side.THREE).getVoltageLevel().getSubstation().getId());
         }
 
+        return substationsIds;
+    }
+
+    public static Set<String> getSubstationIds(Identifiable identifiable) {
+        Set<String> substationsIds = new HashSet<>();
+        if (identifiable instanceof Switch) {
+            substationsIds.add(((Switch) identifiable).getVoltageLevel().getSubstation().getId());
+        } else if (identifiable instanceof Injection) {
+            substationsIds.add(((Injection<?>) identifiable).getTerminal().getVoltageLevel().getSubstation().getId());
+        } else if (identifiable instanceof Branch) {
+            substationsIds.add(((Branch<?>) identifiable).getTerminal1().getVoltageLevel().getSubstation().getId());
+            substationsIds.add(((Branch<?>) identifiable).getTerminal2().getVoltageLevel().getSubstation().getId());
+        } else if (identifiable instanceof ThreeWindingsTransformer) {
+            substationsIds.add(((ThreeWindingsTransformer) identifiable).getTerminal(ThreeWindingsTransformer.Side.ONE).getVoltageLevel().getSubstation().getId());
+            substationsIds.add(((ThreeWindingsTransformer) identifiable).getTerminal(ThreeWindingsTransformer.Side.TWO).getVoltageLevel().getSubstation().getId());
+            substationsIds.add(((ThreeWindingsTransformer) identifiable).getTerminal(ThreeWindingsTransformer.Side.THREE).getVoltageLevel().getSubstation().getId());
+        }
         return substationsIds;
     }
 
@@ -140,6 +164,17 @@ public class NetworkStoreListener implements NetworkListener {
 
     @Override
     public void onRemoval(Identifiable identifiable) {
-        // empty default implementation
+        // PB
+        // identifiable.getId() call throws PowsyblException("Object has been removed in current variant");
+        // because the identifiable resource is null
+        //equipmentInfosService.delete(identifiable.getId(), networkUuid);
+    }
+
+    public void setSubstationsIds(Set<String> substationsIds) {
+        this.substationsIds = substationsIds;
+    }
+
+    public void deleteEquipmentInfos(String equipmentId) {
+        equipmentInfosService.delete(equipmentId, networkUuid);
     }
 }

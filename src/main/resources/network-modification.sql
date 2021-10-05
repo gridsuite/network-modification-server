@@ -15,6 +15,13 @@
         primary key (id)
     );
 
+    create table equipmentDeletion (
+       equipmentId varchar(255),
+        equipmentType varchar(255),
+        id uuid not null,
+        primary key (id)
+    );
+
     create table floatEquipmentAttributeModification (
        equipmentId varchar(255),
         attributeName varchar(255),
@@ -72,6 +79,11 @@ create index modificationEntity_group_id_index on modification (group_id);
 
     alter table if exists doubleEquipmentAttributeModification 
        add constraint double_equipment_attribute_modification_id_fk_constraint 
+       foreign key (id) 
+       references modification;
+
+    alter table if exists equipmentDeletion 
+       add constraint equipmentDeletion_id_fk_constraint 
        foreign key (id) 
        references modification;
 

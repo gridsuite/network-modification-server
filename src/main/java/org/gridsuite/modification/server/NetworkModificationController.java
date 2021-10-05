@@ -97,4 +97,14 @@ public class NetworkModificationController {
                                                                       @RequestBody LoadCreationInfos loadCreationInfos) {
         return ResponseEntity.ok().body(networkModificationService.createLoad(networkUuid, groupUuid, loadCreationInfos));
     }
+
+    @DeleteMapping(value = "/networks/{networkUuid}/equipments/type/{equipmentType}/id/{equipmentId}")
+    @Operation(summary = "Delete an equipment in a network")
+    @ApiResponse(responseCode = "200", description = "Equipment deleted in the network")
+    public ResponseEntity<Flux<EquipmenModificationInfos>> deleteEquipment(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
+                                                      @Parameter(description = "Equipment type") @PathVariable("equipmentType") String equipmentType,
+                                                      @Parameter(description = "Equipment id") @PathVariable("equipmentId") String equipmentId,
+                                                      @RequestParam(value = "group", required = false) UUID groupUuid) {
+        return ResponseEntity.ok().body(networkModificationService.deleteEquipment(networkUuid, groupUuid, equipmentType, equipmentId));
+    }
 }

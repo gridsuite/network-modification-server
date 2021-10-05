@@ -611,6 +611,37 @@ public class ModificationControllerTest {
         testNetwokModificationsCount(TEST_GROUP_ID, 1);
     }
 
+    @Test
+    public void testDeleteEquipment() {
+        // delete equipment
+        String uriString = "/v1/networks/{networkUuid}/equipments/type/{equipmentType}/id/{equipmentId}?group=" + TEST_GROUP_ID;
+
+        webTestClient.delete().uri(uriString, TEST_NETWORK_ID, "LOAD", "v1load")
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBodyList(EquipmenModificationInfos.class)
+            .value(modifications -> modifications.get(0),
+                MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.EQUIPMENT_DELETION, "v1load", Set.of("s1")));
+
+        testNetwokModificationsCount(TEST_GROUP_ID, 1);
+
+        // delete equipment with errors
+        webTestClient.delete().uri(uriString, NOT_FOUND_NETWORK_ID, "LOAD", "v1load")
+            .exchange()
+            .expectStatus().isNotFound()
+            .expectBody(String.class)
+            .isEqualTo(new NetworkModificationException(NETWORK_NOT_FOUND, NOT_FOUND_NETWORK_ID.toString()).getMessage());
+
+        webTestClient.delete().uri(uriString, TEST_NETWORK_ID, "LOAD", "notFoundLoad")
+            .exchange()
+            .expectStatus().isNotFound()
+            .expectBody(String.class)
+            .isEqualTo(new NetworkModificationException(EQUIPMENT_NOT_FOUND, "Equipment with id=notFoundLoad not found or of bad type").getMessage());
+
+        testNetwokModificationsCount(TEST_GROUP_ID, 1);
+    }
+
     private void testNetwokModificationsCount(UUID groupUuid, int actualSize) {
         // get all modifications for the given group of a network
         assertEquals(actualSize, Objects.requireNonNull(webTestClient.get().uri("/v1/groups/{groupUuid}", groupUuid)
