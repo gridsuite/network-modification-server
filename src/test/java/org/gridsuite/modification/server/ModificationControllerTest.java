@@ -498,7 +498,7 @@ public class ModificationControllerTest {
 
     @Test
     public void testCreateLoadInNodeBreaker() {
-        String uriString = "/v1/networks/{networkUuid}/createLoad?group=" + TEST_GROUP_ID;
+        String uriString = "/v1/networks/{networkUuid}/loads?group=" + TEST_GROUP_ID;
 
         // create new load in voltage level with node/breaker topology (in voltage level "v2" and busbar section "1B")
         LoadCreationInfos loadCreationInfos = LoadCreationInfos.builder()
@@ -571,7 +571,7 @@ public class ModificationControllerTest {
 
     @Test
     public void testCreateLoadInBusBreaker() {
-        String uriString = "/v1/networks/{networkUuid}/createLoad?group=" + TEST_GROUP_ID;
+        String uriString = "/v1/networks/{networkUuid}/loads?group=" + TEST_GROUP_ID;
 
         // create new load in voltage level with bus/breaker topology (in voltage level "VLGEN" and bus "NGEN")
         LoadCreationInfos loadCreationInfos = LoadCreationInfos.builder()
