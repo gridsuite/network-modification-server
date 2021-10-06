@@ -158,7 +158,7 @@ public class ModificationControllerTest {
     @Test
     public void testModificationGroups() {
         // no groups
-        webTestClient.get().uri("/v1/modificationgroups")
+        webTestClient.get().uri("/v1/groups")
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
@@ -174,7 +174,7 @@ public class ModificationControllerTest {
                 .value(modifications -> modifications.get(0),
                         MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v1b1", Set.of("s1"), "open", true));
 
-        webTestClient.get().uri("/v1/modificationgroups")
+        webTestClient.get().uri("/v1/groups")
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)

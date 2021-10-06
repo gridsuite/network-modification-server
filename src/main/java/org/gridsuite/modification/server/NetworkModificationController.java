@@ -56,20 +56,20 @@ public class NetworkModificationController {
     }
 
     @GetMapping(value = "/groups/{groupUuid}", produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Get modifications list of a group for a network")
-    @ApiResponse(responseCode = "200", description = "List of modifications of the group for the network")
+    @Operation(summary = "Get modifications list of a group")
+    @ApiResponse(responseCode = "200", description = "List of modifications of the group")
     public ResponseEntity<Flux<ModificationInfos>> getModifications(@Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid) {
         return ResponseEntity.ok().body(networkModificationService.getModifications(groupUuid));
     }
 
     @DeleteMapping(value = "/groups/{groupUuid}")
-    @Operation(summary = "Delete the modifications group for a network")
-    @ApiResponse(responseCode = "200", description = "Modifications group deleted for the network")
+    @Operation(summary = "Delete the modifications group")
+    @ApiResponse(responseCode = "200", description = "Modifications group deleted")
     public ResponseEntity<Mono<Void>> deleteModificationGroup(@Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid) {
         return ResponseEntity.ok().body(networkModificationService.deleteModificationGroup(groupUuid));
     }
 
-    @GetMapping(value = "/modificationgroups", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/groups", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Get list of modifications groups")
     @ApiResponse(responseCode = "200", description = "List of modifications groups")
     public ResponseEntity<Flux<UUID>> getModificationGroups() {

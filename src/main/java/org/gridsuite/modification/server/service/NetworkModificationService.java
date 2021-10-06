@@ -56,8 +56,6 @@ import reactor.core.scheduler.Schedulers;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 
@@ -290,7 +288,7 @@ public class NetworkModificationService {
         int newNode = nodeBreakerView.getMaximumNodeIndex();
         nodeBreakerView.newSwitch()
                 .setId("disconnector_" + loadCreationInfos.getEquipmentId())
-                .setName("disconnector_" + loadCreationInfos.getEquipmentName())
+                .setName(loadCreationInfos.getEquipmentName() != null ? "disconnector_" + loadCreationInfos.getEquipmentName() : null)
                 .setKind(SwitchKind.DISCONNECTOR)
                 .setRetained(false)
                 .setOpen(false)
@@ -302,7 +300,7 @@ public class NetworkModificationService {
         // creating the breaker
         nodeBreakerView.newSwitch()
             .setId("breaker_" + loadCreationInfos.getEquipmentId())
-            .setName("breaker_" + loadCreationInfos.getEquipmentName())
+            .setName(loadCreationInfos.getEquipmentName() != null ? "breaker_" + loadCreationInfos.getEquipmentName() : null)
             .setKind(SwitchKind.BREAKER)
             .setRetained(false)
             .setOpen(false)
@@ -379,7 +377,6 @@ public class NetworkModificationService {
     }
 
     private void sendReport(UUID networkUuid, ReporterModel reporter) {
-        AtomicReference<Long> startTime = new AtomicReference<>(System.nanoTime());
         var headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         var resourceUrl = DELIMITER + REPORT_API_VERSION + DELIMITER + "reports" + DELIMITER + networkUuid.toString();
@@ -388,8 +385,6 @@ public class NetworkModificationService {
             reportServerRest.exchange(uriBuilder.toUriString(), HttpMethod.PUT, new HttpEntity<>(objectMapper.writeValueAsString(reporter), headers), ReporterModel.class);
         } catch (JsonProcessingException error) {
             throw new PowsyblException("error creating report", error);
-        } finally {
-            LOGGER.trace("Save reports for network '{}' in parallel : {} seconds", networkUuid, TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - startTime.get()));
         }
     }
 

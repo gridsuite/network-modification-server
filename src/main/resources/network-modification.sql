@@ -33,8 +33,8 @@
 
     create table loadCreation (
        equipmentId varchar(255),
-        busId varchar(255),
         equipmentName varchar(255),
+        busId varchar(255),
         voltageLevelId varchar(255),
         activePower float8,
         loadType int4,

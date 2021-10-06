@@ -9,7 +9,6 @@ package org.gridsuite.modification.server.entities.equipment.creation;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.ModificationType;
-import org.gridsuite.modification.server.entities.EquipmentModificationEntity;
 
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
@@ -20,12 +19,16 @@ import javax.persistence.MappedSuperclass;
 @NoArgsConstructor
 @Getter
 @MappedSuperclass
-public class EquipmentCreationEntity extends EquipmentModificationEntity {
-    @Column(name = "equipmentName")
-    private String equipmentName;
+public class InjectionCreationEntity extends EquipmentCreationEntity {
+    @Column(name = "voltageLevelId")
+    private String voltageLevelId;
 
-    protected EquipmentCreationEntity(ModificationType modificationType, String equipmentId, String equipmentName) {
-        super(equipmentId, modificationType);
-        this.equipmentName = equipmentName;
+    @Column(name = "busId")
+    private String busId;
+
+    protected InjectionCreationEntity(ModificationType modificationType, String equipmentId, String equipmentName, String voltageLevelId, String busId) {
+        super(modificationType, equipmentId, equipmentName);
+        this.voltageLevelId = voltageLevelId;
+        this.busId = busId;
     }
 }

@@ -28,7 +28,7 @@ import java.util.Set;
 @Entity
 @Table(name = "loadCreation")
 @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "loadCreation_id_fk_constraint"))
-public class LoadCreationEntity extends EquipmentCreationEntity {
+public class LoadCreationEntity extends InjectionCreationEntity {
     @Column(name = "loadType")
     private LoadType loadType;
 
