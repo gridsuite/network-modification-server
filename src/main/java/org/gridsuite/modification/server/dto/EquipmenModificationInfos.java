@@ -6,33 +6,31 @@
  */
 package org.gridsuite.modification.server.dto;
 
-import java.time.ZonedDateTime;
-import java.util.UUID;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
-import org.gridsuite.modification.server.ModificationType;
+
+import java.util.Set;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
+ * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 @SuperBuilder
 @NoArgsConstructor
 @Getter
 @Setter
-@ToString
-@Schema(description = "Modification attributes")
-public class ModificationInfos {
-    @Schema(description = "Modification id")
-    private UUID uuid;
+@ToString(callSuper = true)
+@Schema(description = "Equipment modification")
+public class EquipmenModificationInfos extends ModificationInfos {
+    @Schema(description = "Equipment ID")
+    private String equipmentId;
 
-    @Schema(description = "Modification date")
-    ZonedDateTime date;
-
-    @Schema(description = "Modification type")
-    ModificationType type;
+    @Schema(description = "Substations ID")
+    @Builder.Default
+    private Set<String> substationIds = Set.of();
 }

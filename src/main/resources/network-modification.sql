@@ -1,32 +1,44 @@
 
-    create table booleanelementaryModification (
-       attributeName varchar(255),
+    create table booleanEquipmentAttributeModification (
+       equipmentId varchar(255),
+        attributeName varchar(255),
         attributeValue boolean,
-        equipmentId varchar(255),
         id uuid not null,
         primary key (id)
     );
 
-    create table doubleelementaryModification (
-       attributeName varchar(255),
+    create table doubleEquipmentAttributeModification (
+       equipmentId varchar(255),
+        attributeName varchar(255),
         attributeValue float8,
-        equipmentId varchar(255),
         id uuid not null,
         primary key (id)
     );
 
-    create table floatelementaryModification (
-       attributeName varchar(255),
+    create table floatEquipmentAttributeModification (
+       equipmentId varchar(255),
+        attributeName varchar(255),
         attributeValue float4,
-        equipmentId varchar(255),
         id uuid not null,
         primary key (id)
     );
 
-    create table integerelementaryModification (
-       attributeName varchar(255),
+    create table integerEquipmentAttributeModification (
+       equipmentId varchar(255),
+        attributeName varchar(255),
         attributeValue int4,
-        equipmentId varchar(255),
+        id uuid not null,
+        primary key (id)
+    );
+
+    create table loadCreation (
+       equipmentId varchar(255),
+        equipmentName varchar(255),
+        busId varchar(255),
+        voltageLevelId varchar(255),
+        activePower float8,
+        loadType int4,
+        reactivePower float8,
         id uuid not null,
         primary key (id)
     );
@@ -44,32 +56,37 @@
         primary key (id)
     );
 
-    create table stringelementaryModification (
-       attributeName varchar(255),
+    create table stringEquipmentAttributeModification (
+       equipmentId varchar(255),
+        attributeName varchar(255),
         attributeValue varchar(255),
-        equipmentId varchar(255),
         id uuid not null,
         primary key (id)
     );
 create index modificationEntity_group_id_index on modification (group_id);
 
-    alter table if exists booleanelementaryModification 
-       add constraint boolean_modification_id_fk_constraint 
+    alter table if exists booleanEquipmentAttributeModification 
+       add constraint boolean_equipment_attribute_modification_id_fk_constraint 
        foreign key (id) 
        references modification;
 
-    alter table if exists doubleelementaryModification 
-       add constraint double_modification_id_fk_constraint 
+    alter table if exists doubleEquipmentAttributeModification 
+       add constraint double_equipment_attribute_modification_id_fk_constraint 
        foreign key (id) 
        references modification;
 
-    alter table if exists floatelementaryModification 
-       add constraint float_modification_id_fk_constraint 
+    alter table if exists floatEquipmentAttributeModification 
+       add constraint float_equipment_attribute_modification_id_fk_constraint 
        foreign key (id) 
        references modification;
 
-    alter table if exists integerelementaryModification 
-       add constraint integer_modification_id_fk_constraint 
+    alter table if exists integerEquipmentAttributeModification 
+       add constraint integer_equipment_attribute_modification_id_fk_constraint 
+       foreign key (id) 
+       references modification;
+
+    alter table if exists loadCreation 
+       add constraint loadCreation_id_fk_constraint 
        foreign key (id) 
        references modification;
 
@@ -78,7 +95,7 @@ create index modificationEntity_group_id_index on modification (group_id);
        foreign key (group_id) 
        references modificationGroup;
 
-    alter table if exists stringelementaryModification 
-       add constraint string_modification_id_fk_constraint 
+    alter table if exists stringEquipmentAttributeModification 
+       add constraint string_equipment_attribute_modification_id_fk_constraint 
        foreign key (id) 
        references modification;

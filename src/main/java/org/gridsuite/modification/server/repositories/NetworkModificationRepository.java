@@ -7,13 +7,22 @@
 package org.gridsuite.modification.server.repositories;
 
 import com.powsybl.commons.PowsyblException;
+import com.powsybl.iidm.network.LoadType;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.ElementaryModificationInfos;
+import org.gridsuite.modification.server.dto.EquipmenAttributeModificationInfos;
+import org.gridsuite.modification.server.dto.LoadCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationGroupEntity;
-import org.gridsuite.modification.server.entities.elementary.*;
+import org.gridsuite.modification.server.entities.equipment.attribute.modification.BooleanEquipmentAttributeModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.attribute.modification.DoubleEquipmentAttributeModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.attribute.modification.EquipmentAttributeModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.attribute.modification.FloatEquipmentAttributeModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.attribute.modification.IntegerEquipmentAttributeModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.attribute.modification.StringEquipmentAttributeModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.creation.EquipmentCreationEntity;
+import org.gridsuite.modification.server.entities.equipment.creation.LoadCreationEntity;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +36,7 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
+ * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 @Repository
 public class NetworkModificationRepository {
@@ -45,35 +55,35 @@ public class NetworkModificationRepository {
         modificationGroupRepository.deleteAll();
     }
 
-    public <T> ElementaryModificationEntity<T> createElementaryModification(String equipmentId, String attributeName, T attributeValue) {
-        ElementaryModificationEntity<?> modification;
+    public <T> EquipmentAttributeModificationEntity<T> createEquipmentAttributeModification(String equipmentId, String attributeName, T attributeValue) {
+        EquipmentAttributeModificationEntity<?> modification;
         if (attributeValue == null) {
-            modification = new StringElementaryModificationEntity(equipmentId, attributeName, null);
+            modification = new StringEquipmentAttributeModificationEntity(equipmentId, attributeName, null);
         } else if (attributeValue.getClass().isEnum()) {
-            modification = new StringElementaryModificationEntity(equipmentId, attributeName, attributeValue.toString());
+            modification = new StringEquipmentAttributeModificationEntity(equipmentId, attributeName, attributeValue.toString());
         } else {
             switch (attributeValue.getClass().getSimpleName()) {
                 case "String":
-                    modification = new StringElementaryModificationEntity(equipmentId, attributeName, (String) attributeValue);
+                    modification = new StringEquipmentAttributeModificationEntity(equipmentId, attributeName, (String) attributeValue);
                     break;
                 case "Boolean":
-                    modification = new BooleanElementaryModificationEntity(equipmentId, attributeName, (boolean) attributeValue);
+                    modification = new BooleanEquipmentAttributeModificationEntity(equipmentId, attributeName, (boolean) attributeValue);
                     break;
                 case "Integer":
-                    modification = new IntegerElementaryModificationEntity(equipmentId, attributeName, (int) attributeValue);
+                    modification = new IntegerEquipmentAttributeModificationEntity(equipmentId, attributeName, (int) attributeValue);
                     break;
                 case "Float":
-                    modification = new FloatElementaryModificationEntity(equipmentId, attributeName, (float) attributeValue);
+                    modification = new FloatEquipmentAttributeModificationEntity(equipmentId, attributeName, (float) attributeValue);
                     break;
                 case "Double":
-                    modification = new DoubleElementaryModificationEntity(equipmentId, attributeName, (double) attributeValue);
+                    modification = new DoubleEquipmentAttributeModificationEntity(equipmentId, attributeName, (double) attributeValue);
                     break;
                 default:
                     throw new PowsyblException("Value type invalid : " + attributeValue.getClass().getSimpleName());
             }
         }
 
-        return (ElementaryModificationEntity<T>) modification;
+        return (EquipmentAttributeModificationEntity<T>) modification;
     }
 
     @Transactional // To have all create in the same transaction (atomic)
@@ -99,13 +109,22 @@ public class NetworkModificationRepository {
                 .collect(Collectors.toList());
     }
 
-    public ElementaryModificationInfos getElementaryModification(UUID groupUuid, UUID modificationUuid) {
-        return ((ElementaryModificationEntity<?>) this.modificationRepository
+    public EquipmenAttributeModificationInfos getEquipmentAttributeModification(UUID groupUuid, UUID modificationUuid) {
+        return ((EquipmentAttributeModificationEntity<?>) this.modificationRepository
                 .findById(modificationUuid)
-                .filter(m -> ModificationType.ELEMENTARY.name().equals(m.getType()))
+                .filter(m -> ModificationType.EQUIPMENT_ATTRIBUTE_MODIFICATION.name().equals(m.getType()))
                 .filter(m -> groupUuid.equals(m.getGroup().getId()))
                 .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString())))
-                .toElementaryModificationInfos();
+                .toEquipmentAttributeModificationInfos();
+    }
+
+    public LoadCreationInfos getLoadCreationModification(UUID groupUuid, UUID modificationUuid) {
+        return ((LoadCreationEntity) this.modificationRepository
+            .findById(modificationUuid)
+            .filter(m -> ModificationType.LOAD_CREATION.name().equals(m.getType()))
+            .filter(m -> groupUuid.equals(m.getGroup().getId()))
+            .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString())))
+            .toLoadCreationInfos();
     }
 
     @Transactional // To have the 2 delete in the same transaction (atomic)
@@ -126,5 +145,10 @@ public class NetworkModificationRepository {
 
     private ModificationGroupEntity getModificationGroup(UUID groupUuid) {
         return this.modificationGroupRepository.findById(groupUuid).orElseThrow(() -> new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, groupUuid.toString()));
+    }
+
+    public EquipmentCreationEntity createLoadEntity(String loadId, String loadName, LoadType loadType,
+                                                    String voltageLevelId, String busId, double activePower, double reactivePower) {
+        return new LoadCreationEntity(loadId, loadName, loadType, voltageLevelId, busId, activePower, reactivePower);
     }
 }

@@ -7,7 +7,7 @@
 package org.gridsuite.modification.server.utils;
 
 import org.gridsuite.modification.server.ModificationType;
-import org.gridsuite.modification.server.dto.ElementaryModificationInfos;
+import org.gridsuite.modification.server.dto.EquipmenAttributeModificationInfos;
 import org.hamcrest.Description;
 
 import java.time.ZoneOffset;
@@ -18,13 +18,13 @@ import java.util.Set;
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
-public class MatcherElementaryModificationInfos extends MatcherModificationInfos<ElementaryModificationInfos> {
+public class MatcheEquipmentAttributeModificationInfos extends MatcherModificationInfos<EquipmenAttributeModificationInfos> {
 
-    public static MatcherElementaryModificationInfos createMatcherElementaryModificationInfos(String equipmentId, Set<String> substationIds,
-                                                                                       String equipmentAttributeName, Object equipmentAttributeValue) {
-        return new MatcherElementaryModificationInfos(ElementaryModificationInfos.builder()
+    public static MatcheEquipmentAttributeModificationInfos createMatcherEquipmentAttributeModificationInfos(String equipmentId, Set<String> substationIds,
+                                                                                                             String equipmentAttributeName, Object equipmentAttributeValue) {
+        return new MatcheEquipmentAttributeModificationInfos(EquipmenAttributeModificationInfos.builder()
                 .date(ZonedDateTime.now(ZoneOffset.UTC))
-                .type(ModificationType.ELEMENTARY)
+                .type(ModificationType.EQUIPMENT_ATTRIBUTE_MODIFICATION)
                 .equipmentId(equipmentId)
                 .substationIds(substationIds)
                 .equipmentAttributeName(equipmentAttributeName)
@@ -32,16 +32,16 @@ public class MatcherElementaryModificationInfos extends MatcherModificationInfos
                 .build());
     }
 
-    public static MatcherElementaryModificationInfos createMatcherElementaryModificationInfos(ElementaryModificationInfos modificationInfos) {
-        return new MatcherElementaryModificationInfos(modificationInfos);
+    public static MatcheEquipmentAttributeModificationInfos createMatcherEquipmentAttributeModificationInfos(EquipmenAttributeModificationInfos modificationInfos) {
+        return new MatcheEquipmentAttributeModificationInfos(modificationInfos);
     }
 
-    protected MatcherElementaryModificationInfos(ElementaryModificationInfos ref) {
+    protected MatcheEquipmentAttributeModificationInfos(EquipmenAttributeModificationInfos ref) {
         super(ref);
     }
 
     @Override
-    public boolean matchesSafely(ElementaryModificationInfos m) {
+    public boolean matchesSafely(EquipmenAttributeModificationInfos m) {
         return super.matchesSafely(m)
                 && m.getEquipmentId().equals(reference.getEquipmentId())
                 && m.getSubstationIds().equals(reference.getSubstationIds())

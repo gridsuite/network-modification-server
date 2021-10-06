@@ -4,52 +4,51 @@
   License, v. 2.0. If a copy of the MPL was not distributed with this
   file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package org.gridsuite.modification.server.entities.elementary;
+package org.gridsuite.modification.server.entities.equipment.attribute.modification;
 
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
 
-import java.util.Set;
-
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.ModificationType;
-import org.gridsuite.modification.server.dto.ElementaryModificationInfos;
-import org.gridsuite.modification.server.entities.ModificationEntity;
+import org.gridsuite.modification.server.dto.EquipmenAttributeModificationInfos;
+import org.gridsuite.modification.server.dto.EquipmenModificationInfos;
+import org.gridsuite.modification.server.entities.EquipmentModificationEntity;
+
+import java.util.Set;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
+ * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 @NoArgsConstructor
 @Getter
 @MappedSuperclass
-public class ElementaryModificationEntity<T> extends ModificationEntity {
-    @Column(name = "equipmentId")
-    private String equipmentId;
-
+public class EquipmentAttributeModificationEntity<T> extends EquipmentModificationEntity {
     @Column(name = "attributeName")
     private String attributeName;
 
     @Column(name = "attributeValue")
     private T attributeValue;
 
-    protected ElementaryModificationEntity(String equipmentId, String attributeName, T attributeValue) {
-        super(ModificationType.ELEMENTARY);
-        this.equipmentId = equipmentId;
+    protected EquipmentAttributeModificationEntity(String equipmentId, String attributeName, T attributeValue) {
+        super(equipmentId, ModificationType.EQUIPMENT_ATTRIBUTE_MODIFICATION);
         this.attributeName = attributeName;
         this.attributeValue = attributeValue;
     }
 
-    public ElementaryModificationInfos toElementaryModificationInfos() {
+    public EquipmenAttributeModificationInfos toEquipmentAttributeModificationInfos() {
         return toModificationInfosBuilder().build();
     }
 
-    public ElementaryModificationInfos toElementaryModificationInfos(Set<String> substationId) {
-        return toModificationInfosBuilder().substationIds(substationId).build();
+    @Override
+    public EquipmenModificationInfos toEquipmentModificationInfos(Set<String> uuids) {
+        return toModificationInfosBuilder().substationIds(uuids).build();
     }
 
-    private ElementaryModificationInfos.ElementaryModificationInfosBuilder<?, ?> toModificationInfosBuilder() {
-        return ElementaryModificationInfos
+    private EquipmenAttributeModificationInfos.EquipmenAttributeModificationInfosBuilder<?, ?> toModificationInfosBuilder() {
+        return EquipmenAttributeModificationInfos
                 .builder()
                 .uuid(getId())
                 .date(getDate())

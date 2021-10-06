@@ -4,7 +4,7 @@
   License, v. 2.0. If a copy of the MPL was not distributed with this
   file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package org.gridsuite.modification.server.entities.elementary;
+package org.gridsuite.modification.server.entities.equipment.attribute.modification;
 
 import javax.persistence.Entity;
 import javax.persistence.ForeignKey;
@@ -20,10 +20,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Getter
 @Entity
-@Table(name = "stringelementaryModification")
-@PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "string_modification_id_fk_constraint"))
-public class StringElementaryModificationEntity extends ElementaryModificationEntity<String> {
-    public StringElementaryModificationEntity(String equipmentId, String attributeName, String attributeValue) {
+@Table(name = "floatEquipmentAttributeModification")
+@PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "float_equipment_attribute_modification_id_fk_constraint"))
+public class FloatEquipmentAttributeModificationEntity extends EquipmentAttributeModificationEntity<Float> {
+    public FloatEquipmentAttributeModificationEntity(String equipmentId, String attributeName, Float attributeValue) {
         super(equipmentId, attributeName, attributeValue);
     }
 }
