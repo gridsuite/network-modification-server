@@ -6,32 +6,21 @@
  */
 package org.gridsuite.modification.server.dto;
 
-import java.util.Set;
-
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
 /**
- * @author Slimane Amar <slimane.amar at rte-france.com>
+ * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 @SuperBuilder
 @NoArgsConstructor
 @Getter
 @ToString(callSuper = true)
-@Schema(description = "Elementary modification attributes")
-public class ElementaryModificationInfos extends ModificationInfos {
-
-    @Schema(description = "Equipment ID")
-    private String equipmentId;
-
-    @Schema(description = "Substations ID")
-    @Builder.Default
-    private Set<String> substationIds = Set.of();
-
+@Schema(description = "Equipment attribute modification")
+public class EquipmenAttributeModificationInfos extends EquipmenModificationInfos {
     @Schema(description = "Equipment attribute name")
     private String equipmentAttributeName;
 

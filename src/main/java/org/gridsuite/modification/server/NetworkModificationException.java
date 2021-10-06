@@ -1,8 +1,8 @@
-/**
- * Copyright (c) 2021, RTE (http://www.rte-france.com)
- * This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/*
+  Copyright (c) 2021, RTE (http://www.rte-france.com)
+  This Source Code Form is subject to the terms of the Mozilla Public
+  License, v. 2.0. If a copy of the MPL was not distributed with this
+  file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 package org.gridsuite.modification.server;
 
@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
+ * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 public class NetworkModificationException extends RuntimeException {
     static final String EMPTY_SCRIPT = "Empty script";
@@ -24,7 +25,12 @@ public class NetworkModificationException extends RuntimeException {
         MODIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND),
         SWITCH_NOT_FOUND(HttpStatus.NOT_FOUND),
         LINE_NOT_FOUND(HttpStatus.NOT_FOUND),
-        MODIFICATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR);
+        UNKNOWN_EQUIPMENT_TYPE(HttpStatus.INTERNAL_SERVER_ERROR),
+        MODIFICATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
+        VOLTAGE_LEVEL_NOT_FOUND(HttpStatus.NOT_FOUND),
+        CREATE_LOAD_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
+        BUSBAR_SECTION_NOT_FOUND(HttpStatus.NOT_FOUND),
+        BUS_NOT_FOUND(HttpStatus.NOT_FOUND);
 
         public final HttpStatus status;
         private final String message;
@@ -62,5 +68,10 @@ public class NetworkModificationException extends RuntimeException {
 
     Type getType() {
         return type;
+    }
+
+    public static NetworkModificationException createEquipmentTypeUnknown(String type) {
+        Objects.requireNonNull(type);
+        return new NetworkModificationException(Type.UNKNOWN_EQUIPMENT_TYPE, "The equipment type : " + type + " is unknown");
     }
 }

@@ -8,7 +8,9 @@ package org.gridsuite.modification.server;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
+ * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 public enum ModificationType {
-    ELEMENTARY,
+    EQUIPMENT_ATTRIBUTE_MODIFICATION,
+    LOAD_CREATION
 }
