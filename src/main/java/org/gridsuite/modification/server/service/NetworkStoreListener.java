@@ -164,9 +164,11 @@ public class NetworkStoreListener implements NetworkListener {
 
     @Override
     public void onRemoval(Identifiable identifiable) {
-        // PB
-        // identifiable.getId() call throws PowsyblException("Object has been removed in current variant");
-        // because the identifiable resource is null
+        // We cannot delete equipments infos here yet :
+        // identifiable.getId() throws PowsyblException("Object has been removed in current variant");
+        // because the identifiable resource was set to null in remove method, before calling onRemoval method
+        //
+        // onRemoval must be changed in powsybl core (maybe passing only a String as argument)
         //equipmentInfosService.delete(identifiable.getId(), networkUuid);
     }
 

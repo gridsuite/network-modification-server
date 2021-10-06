@@ -450,6 +450,8 @@ public class NetworkModificationService {
                     ((Substation) identifiable).remove();
                 }
 
+                // Done here, and not in the network listener onRemoval method
+                // because onRemoval must be refactored in powsybl core
                 listener.deleteEquipmentInfos(equipmentId);
 
                 subReporter.report(Report.builder()
