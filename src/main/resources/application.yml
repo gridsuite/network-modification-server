@@ -3,7 +3,7 @@ spring:
     name: netork-modification-server
 
   datasource:
-    url: ${dbApi}:${dbVendor}://${hostPort}/${dbName}${query}
+    url: ${dbUrl}
     username: ${login}
     password: ${password}
 
@@ -48,5 +48,13 @@ backing-services:
   report-server:
     base-uri: http://localhost:5028
 
+# this structure is shared among all microservices, if you change it, change it everywhere
+# customQuery allows a microservice to set query parameters specific to itself
+# if customQuery is empty, set queryBegin to "?", otherwise set it to "&"
+# this allow the user to add additional query elements common to all microservices
+# and using the appropriate leading character depending on whether the microsevice
+# uses custom query parameters
+queryBegin: '?'
+customQuery:
 dbName: networkmodifications
 dbApi: jdbc

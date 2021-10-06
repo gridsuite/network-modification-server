@@ -89,7 +89,7 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.changeLineStatus(networkUuid, groupUuid, lineId, status));
     }
 
-    @PutMapping(value = "/networks/{networkUuid}/createLoad", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/networks/{networkUuid}/loads", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "create a load in the network")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The load has been created")})
     public ResponseEntity<Flux<EquipmenModificationInfos>> createLoad(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
