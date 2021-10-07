@@ -19,7 +19,6 @@ import java.util.UUID;
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
 public class EquipmentInfosServiceImpl implements EquipmentInfosService {
-
     private static final Logger LOGGER = LoggerFactory.getLogger(EquipmentInfosServiceImpl.class);
 
     private final EquipmentInfosRepository equipmentInfosRepository;

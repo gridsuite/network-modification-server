@@ -128,25 +128,25 @@ public class ModificationControllerTest {
     @Test
     public void testEquipmentAttributeModificationInfos() {
         EquipmenAttributeModificationInfos modificationInfos = EquipmenAttributeModificationInfos.builder()
-            .uuid(TEST_NETWORK_ID)
-            .date(ZonedDateTime.of(2021, 2, 19, 0, 0, 0, 0, ZoneOffset.UTC))
-            .type(ModificationType.EQUIPMENT_ATTRIBUTE_MODIFICATION)
-            .equipmentId("equipmentId")
-            .substationIds(Set.of("substationId"))
-            .equipmentAttributeName("equipmentAttributeName")
-            .equipmentAttributeValue("equipmentAttributeValue")
-            .build();
+                .uuid(TEST_NETWORK_ID)
+                .date(ZonedDateTime.of(2021, 2, 19, 0, 0, 0, 0, ZoneOffset.UTC))
+                .type(ModificationType.EQUIPMENT_ATTRIBUTE_MODIFICATION)
+                .equipmentId("equipmentId")
+                .substationIds(Set.of("substationId"))
+                .equipmentAttributeName("equipmentAttributeName")
+                .equipmentAttributeValue("equipmentAttributeValue")
+                .build();
         assertEquals("EquipmenAttributeModificationInfos(super=EquipmenModificationInfos(super=ModificationInfos(uuid=7928181c-7977-4592-ba19-88027e4254e4, date=2021-02-19T00:00Z, type=EQUIPMENT_ATTRIBUTE_MODIFICATION), equipmentId=equipmentId, substationIds=[substationId]), equipmentAttributeName=equipmentAttributeName, equipmentAttributeValue=equipmentAttributeValue)", modificationInfos.toString());
 
         // switch opening
         EquipmenAttributeModificationInfos modificationSwitchInfos =
-            Objects.requireNonNull(webTestClient.put().uri("/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID + "&open=true", TEST_NETWORK_ID, "v1b1")
-                .exchange()
-                .expectStatus().isOk()
-                .expectHeader().contentType(MediaType.APPLICATION_JSON)
-                .expectBodyList(EquipmenAttributeModificationInfos.class)
-                .returnResult()
-                .getResponseBody()).get(0);
+                Objects.requireNonNull(webTestClient.put().uri("/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID + "&open=true", TEST_NETWORK_ID, "v1b1")
+                        .exchange()
+                        .expectStatus().isOk()
+                        .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                        .expectBodyList(EquipmenAttributeModificationInfos.class)
+                        .returnResult()
+                        .getResponseBody()).get(0);
 
         assertTrue(MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v1b1", Set.of("s1"), "open", true).matchesSafely(modificationSwitchInfos));
     }
@@ -164,39 +164,39 @@ public class ModificationControllerTest {
     @Test
     public void testModificationGroups() {
         // no groups
-        webTestClient.get().uri("/v1/modificationgroups")
-            .exchange()
-            .expectStatus().isOk()
-            .expectHeader().contentType(MediaType.APPLICATION_JSON)
-            .expectBodyList(UUID.class)
-            .isEqualTo(List.of());
+        webTestClient.get().uri("/v1/groups")
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBodyList(UUID.class)
+                .isEqualTo(List.of());
 
         // switch opening to create the default group
         webTestClient.put().uri("/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID + "&open=true", TEST_NETWORK_ID, "v1b1")
-            .exchange()
-            .expectStatus().isOk()
-            .expectHeader().contentType(MediaType.APPLICATION_JSON)
-            .expectBodyList(EquipmenAttributeModificationInfos.class)
-            .value(modifications -> modifications.get(0),
-                MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v1b1", Set.of("s1"), "open", true));
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBodyList(EquipmenAttributeModificationInfos.class)
+                .value(modifications -> modifications.get(0),
+                        MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v1b1", Set.of("s1"), "open", true));
 
-        webTestClient.get().uri("/v1/modificationgroups")
-            .exchange()
-            .expectStatus().isOk()
-            .expectHeader().contentType(MediaType.APPLICATION_JSON)
-            .expectBodyList(UUID.class)
-            .isEqualTo(List.of(TEST_GROUP_ID));
+        webTestClient.get().uri("/v1/groups")
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBodyList(UUID.class)
+                .isEqualTo(List.of(TEST_GROUP_ID));
 
         // delete the default modification group of a network
         webTestClient.delete().uri("/v1/groups/{groupUuid}", TEST_GROUP_ID)
-            .exchange()
-            .expectStatus().isOk();
+                .exchange()
+                .expectStatus().isOk();
 
         webTestClient.get().uri("/v1/groups/{groupUuid}", TEST_GROUP_ID)
-            .exchange()
-            .expectStatus().isNotFound()
-            .expectBody(String.class)
-            .isEqualTo(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
+                .exchange()
+                .expectStatus().isNotFound()
+                .expectBody(String.class)
+                .isEqualTo(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
     }
 
     @Test
@@ -205,52 +205,52 @@ public class ModificationControllerTest {
 
         // network not existing
         webTestClient.put().uri(uriString + "&open=true", NOT_FOUND_NETWORK_ID, "v1b1")
-            .exchange()
-            .expectStatus().isNotFound()
-            .expectBody(String.class)
-            .isEqualTo(new NetworkModificationException(NETWORK_NOT_FOUND, NOT_FOUND_NETWORK_ID.toString()).getMessage());
+                .exchange()
+                .expectStatus().isNotFound()
+                .expectBody(String.class)
+                .isEqualTo(new NetworkModificationException(NETWORK_NOT_FOUND, NOT_FOUND_NETWORK_ID.toString()).getMessage());
 
         // switch not existing
         webTestClient.put().uri(uriString + "&open=true", TEST_NETWORK_ID, "notFound")
-            .exchange()
-            .expectStatus().isNotFound()
-            .expectBody(String.class)
-            .isEqualTo(new NetworkModificationException(SWITCH_NOT_FOUND, "notFound").getMessage());
+                .exchange()
+                .expectStatus().isNotFound()
+                .expectBody(String.class)
+                .isEqualTo(new NetworkModificationException(SWITCH_NOT_FOUND, "notFound").getMessage());
 
         // switch closing when already closed
         webTestClient.put().uri(uriString + "&open=false", TEST_NETWORK_ID, "v1b1")
-            .exchange()
-            .expectStatus().isOk()
-            .expectHeader().contentType(MediaType.APPLICATION_JSON)
-            .expectBodyList(EquipmenAttributeModificationInfos.class)
-            .isEqualTo(List.of());
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBodyList(EquipmenAttributeModificationInfos.class)
+                .isEqualTo(List.of());
 
         // switch opening
         webTestClient.put().uri(uriString + "&open=true", TEST_NETWORK_ID, "v1b1")
-            .exchange()
-            .expectStatus().isOk()
-            .expectHeader().contentType(MediaType.APPLICATION_JSON)
-            .expectBodyList(EquipmenAttributeModificationInfos.class)
-            .value(modifications -> modifications.get(0),
-                MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v1b1", Set.of("s1"), "open", true));
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBodyList(EquipmenAttributeModificationInfos.class)
+                .value(modifications -> modifications.get(0),
+                        MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v1b1", Set.of("s1"), "open", true));
 
         // switch closing
         webTestClient.put().uri(uriString + "&open=false", TEST_NETWORK_ID, "v2b1")
-            .exchange()
-            .expectStatus().isOk()
-            .expectHeader().contentType(MediaType.APPLICATION_JSON)
-            .expectBodyList(EquipmenAttributeModificationInfos.class)
-            .value(modifications -> modifications.get(0),
-                MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v2b1", Set.of("s1"), "open", false));
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBodyList(EquipmenAttributeModificationInfos.class)
+                .value(modifications -> modifications.get(0),
+                        MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v2b1", Set.of("s1"), "open", false));
 
         // switch opening on another substation
         webTestClient.put().uri(uriString + "&open=true", TEST_NETWORK_ID, "v3b1")
-            .exchange()
-            .expectStatus().isOk()
-            .expectHeader().contentType(MediaType.APPLICATION_JSON)
-            .expectBodyList(EquipmenAttributeModificationInfos.class)
-            .value(modifications -> modifications.get(0),
-                MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v3b1", Set.of("s2"), "open", true));
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBodyList(EquipmenAttributeModificationInfos.class)
+                .value(modifications -> modifications.get(0),
+                        MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v3b1", Set.of("s2"), "open", true));
 
         testNetwokModificationsCount(TEST_GROUP_ID, 3);
     }
@@ -261,104 +261,104 @@ public class ModificationControllerTest {
 
         // network not existing
         webTestClient.put().uri(uriString, NOT_FOUND_NETWORK_ID, "line2")
-            .bodyValue("lockout")
-            .exchange()
-            .expectStatus().isNotFound()
-            .expectBody(String.class)
-            .isEqualTo(new NetworkModificationException(NETWORK_NOT_FOUND, NOT_FOUND_NETWORK_ID.toString()).getMessage());
+                .bodyValue("lockout")
+                .exchange()
+                .expectStatus().isNotFound()
+                .expectBody(String.class)
+                .isEqualTo(new NetworkModificationException(NETWORK_NOT_FOUND, NOT_FOUND_NETWORK_ID.toString()).getMessage());
 
         // line not existing
         webTestClient.put().uri(uriString, TEST_NETWORK_ID, "notFound")
-            .bodyValue("lockout")
-            .exchange()
-            .expectStatus().isNotFound()
-            .expectBody(String.class)
-            .isEqualTo(new NetworkModificationException(LINE_NOT_FOUND, "notFound").getMessage());
+                .bodyValue("lockout")
+                .exchange()
+                .expectStatus().isNotFound()
+                .expectBody(String.class)
+                .isEqualTo(new NetworkModificationException(LINE_NOT_FOUND, "notFound").getMessage());
 
         // line lockout
         webTestClient.put().uri(uriString, TEST_NETWORK_ID, "line2")
-            .bodyValue("lockout")
-            .exchange()
-            .expectStatus().isOk()
-            .expectHeader().contentType(MediaType.APPLICATION_JSON)
-            .expectBodyList(EquipmenAttributeModificationInfos.class)
-            .value(modifications -> modifications.get(0),
-                MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v1bl1", Set.of("s1"), "open", true))
-            .value(modifications -> modifications.get(1),
-                MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v3bl1", Set.of("s2"), "open", true))
-            .value(modifications -> modifications.get(2),
-                MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("line2", Set.of("s1", "s2"), "branchStatus", BranchStatus.Status.PLANNED_OUTAGE.name()));
+                .bodyValue("lockout")
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBodyList(EquipmenAttributeModificationInfos.class)
+                .value(modifications -> modifications.get(0),
+                        MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v1bl1", Set.of("s1"), "open", true))
+                .value(modifications -> modifications.get(1),
+                        MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v3bl1", Set.of("s2"), "open", true))
+                .value(modifications -> modifications.get(2),
+                        MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("line2", Set.of("s1", "s2"), "branchStatus", BranchStatus.Status.PLANNED_OUTAGE.name()));
 
         webTestClient.put().uri(uriString, TEST_NETWORK_ID, "line3")
-            .bodyValue("lockout")
-            .exchange()
-            .expectStatus().is5xxServerError()
-            .expectBody(String.class)
-            .isEqualTo(new NetworkModificationException(MODIFICATION_ERROR, "Unable to disconnect both line ends").getMessage());
+                .bodyValue("lockout")
+                .exchange()
+                .expectStatus().is5xxServerError()
+                .expectBody(String.class)
+                .isEqualTo(new NetworkModificationException(MODIFICATION_ERROR, "Unable to disconnect both line ends").getMessage());
 
         // line switch on
         webTestClient.put().uri(uriString, TEST_NETWORK_ID, "line2")
-            .bodyValue("switchOn")
-            .exchange()
-            .expectStatus().isOk()
-            .expectHeader().contentType(MediaType.APPLICATION_JSON)
-            .expectBodyList(EquipmenAttributeModificationInfos.class)
-            .isEqualTo(List.of());
+                .bodyValue("switchOn")
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBodyList(EquipmenAttributeModificationInfos.class)
+                .isEqualTo(List.of());
 
         // line trip
         webTestClient.put().uri(uriString, TEST_NETWORK_ID, "line2")
-            .bodyValue("trip")
-            .exchange()
-            .expectStatus().isOk()
-            .expectHeader().contentType(MediaType.APPLICATION_JSON)
-            .expectBodyList(EquipmenAttributeModificationInfos.class)
-            .value(modifications -> modifications.get(0),
-                MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v1bl1", Set.of("s1"), "open", true))
-            .value(modifications -> modifications.get(1),
-                MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v3bl1", Set.of("s2"), "open", true))
-            .value(modifications -> modifications.get(2),
-                MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("line2", Set.of("s1", "s2"), "branchStatus", BranchStatus.Status.FORCED_OUTAGE.name()));
+                .bodyValue("trip")
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBodyList(EquipmenAttributeModificationInfos.class)
+                .value(modifications -> modifications.get(0),
+                        MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v1bl1", Set.of("s1"), "open", true))
+                .value(modifications -> modifications.get(1),
+                        MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v3bl1", Set.of("s2"), "open", true))
+                .value(modifications -> modifications.get(2),
+                        MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("line2", Set.of("s1", "s2"), "branchStatus", BranchStatus.Status.FORCED_OUTAGE.name()));
 
         webTestClient.put().uri(uriString, TEST_NETWORK_ID, "line3")
-            .bodyValue("trip")
-            .exchange()
-            .expectStatus().is5xxServerError()
-            .expectBody(String.class)
-            .isEqualTo(new NetworkModificationException(MODIFICATION_ERROR, "Unable to disconnect both line ends").getMessage());
+                .bodyValue("trip")
+                .exchange()
+                .expectStatus().is5xxServerError()
+                .expectBody(String.class)
+                .isEqualTo(new NetworkModificationException(MODIFICATION_ERROR, "Unable to disconnect both line ends").getMessage());
 
         // line energise on one end
         webTestClient.put().uri(uriString, TEST_NETWORK_ID, "line2")
-            .bodyValue("energiseEndOne")
-            .exchange()
-            .expectStatus().isOk()
-            .expectHeader().contentType(MediaType.APPLICATION_JSON)
-            .expectBodyList(EquipmenAttributeModificationInfos.class)
-            .value(modifications -> modifications.get(0),
-                MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v3bl1", Set.of("s2"), "open", true));
+                .bodyValue("energiseEndOne")
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBodyList(EquipmenAttributeModificationInfos.class)
+                .value(modifications -> modifications.get(0),
+                        MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v3bl1", Set.of("s2"), "open", true));
 
         webTestClient.put().uri(uriString, TEST_NETWORK_ID, "line3")
-            .bodyValue("energiseEndOne")
-            .exchange()
-            .expectStatus().is5xxServerError()
-            .expectBody(String.class)
-            .isEqualTo(new NetworkModificationException(MODIFICATION_ERROR, "Unable to energise line end").getMessage());
+                .bodyValue("energiseEndOne")
+                .exchange()
+                .expectStatus().is5xxServerError()
+                .expectBody(String.class)
+                .isEqualTo(new NetworkModificationException(MODIFICATION_ERROR, "Unable to energise line end").getMessage());
 
         // line energise on other end
         webTestClient.put().uri(uriString, TEST_NETWORK_ID, "line2")
-            .bodyValue("energiseEndTwo")
-            .exchange()
-            .expectStatus().isOk()
-            .expectHeader().contentType(MediaType.APPLICATION_JSON)
-            .expectBodyList(EquipmenAttributeModificationInfos.class)
-            .value(modifications -> modifications.get(0),
-                MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v1bl1", Set.of("s1"), "open", true));
+                .bodyValue("energiseEndTwo")
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBodyList(EquipmenAttributeModificationInfos.class)
+                .value(modifications -> modifications.get(0),
+                        MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v1bl1", Set.of("s1"), "open", true));
 
         webTestClient.put().uri(uriString, TEST_NETWORK_ID, "line3")
-            .bodyValue("energiseEndTwo")
-            .exchange()
-            .expectStatus().is5xxServerError()
-            .expectBody(String.class)
-            .isEqualTo(new NetworkModificationException(MODIFICATION_ERROR, "Unable to energise line end").getMessage());
+                .bodyValue("energiseEndTwo")
+                .exchange()
+                .expectStatus().is5xxServerError()
+                .expectBody(String.class)
+                .isEqualTo(new NetworkModificationException(MODIFICATION_ERROR, "Unable to energise line end").getMessage());
 
         testNetwokModificationsCount(TEST_GROUP_ID, 8);
     }
@@ -369,32 +369,32 @@ public class ModificationControllerTest {
 
         // apply null groovy script
         webTestClient.put().uri(uriString, TEST_NETWORK_ID)
-            .exchange()
-            .expectStatus().isEqualTo(HttpStatus.UNSUPPORTED_MEDIA_TYPE);
+                .exchange()
+                .expectStatus().isEqualTo(HttpStatus.UNSUPPORTED_MEDIA_TYPE);
 
         // apply empty groovy script
         webTestClient.put().uri(uriString, TEST_NETWORK_ID)
-            .bodyValue("")
-            .exchange()
-            .expectStatus().isBadRequest()
-            .expectBody(String.class)
-            .isEqualTo(new NetworkModificationException(GROOVY_SCRIPT_EMPTY).getMessage());
+                .bodyValue("")
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody(String.class)
+                .isEqualTo(new NetworkModificationException(GROOVY_SCRIPT_EMPTY).getMessage());
 
         // apply empty groovy script
         webTestClient.put().uri(uriString, TEST_NETWORK_ID)
-            .bodyValue("      ")
-            .exchange()
-            .expectStatus().isBadRequest()
-            .expectBody(String.class)
-            .isEqualTo(new NetworkModificationException(GROOVY_SCRIPT_EMPTY).getMessage());
+                .bodyValue("      ")
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody(String.class)
+                .isEqualTo(new NetworkModificationException(GROOVY_SCRIPT_EMPTY).getMessage());
 
         // apply groovy script with unknown generator
         webTestClient.put().uri(uriString, TEST_NETWORK_ID)
-            .bodyValue("network.getGenerator('there is no generator').targetP=12\n")
-            .exchange()
-            .expectStatus().isBadRequest()
-            .expectBody(String.class)
-            .isEqualTo(new NetworkModificationException(GROOVY_SCRIPT_ERROR, "Cannot set property 'targetP' on null object").getMessage());
+                .bodyValue("network.getGenerator('there is no generator').targetP=12\n")
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody(String.class)
+                .isEqualTo(new NetworkModificationException(GROOVY_SCRIPT_ERROR, "Cannot set property 'targetP' on null object").getMessage());
     }
 
     @Test
@@ -403,63 +403,63 @@ public class ModificationControllerTest {
 
         // apply groovy script with generator target P modification
         webTestClient.put().uri(uriString, TEST_NETWORK_ID)
-            .bodyValue("network.getGenerator('idGenerator').targetP=12\n")
-            .exchange()
-            .expectStatus().isOk()
-            .expectHeader().contentType(MediaType.APPLICATION_JSON)
-            .expectBodyList(EquipmenAttributeModificationInfos.class)
-            .value(modifications -> modifications.get(0),
-                MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("idGenerator", Set.of("s1"), "targetP", 12.0));
+                .bodyValue("network.getGenerator('idGenerator').targetP=12\n")
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBodyList(EquipmenAttributeModificationInfos.class)
+                .value(modifications -> modifications.get(0),
+                        MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("idGenerator", Set.of("s1"), "targetP", 12.0));
 
         // apply groovy script with load type modification
         webTestClient.put().uri(uriString, TEST_NETWORK_ID)
-            .bodyValue("network.getLoad('v1load').loadType=com.powsybl.iidm.network.LoadType.FICTITIOUS\n")
-            .exchange()
-            .expectStatus().isOk()
-            .expectHeader().contentType(MediaType.APPLICATION_JSON)
-            .expectBodyList(EquipmenAttributeModificationInfos.class)
-            .value(modifications -> modifications.get(0),
-                MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v1load", Set.of("s1"), "loadType", "FICTITIOUS"));
+                .bodyValue("network.getLoad('v1load').loadType=com.powsybl.iidm.network.LoadType.FICTITIOUS\n")
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBodyList(EquipmenAttributeModificationInfos.class)
+                .value(modifications -> modifications.get(0),
+                        MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v1load", Set.of("s1"), "loadType", "FICTITIOUS"));
 
         // apply groovy script with lcc converter station power factor modification
         webTestClient.put().uri(uriString, TEST_NETWORK_ID)
-            .bodyValue("network.getLccConverterStation('v1lcc').powerFactor=1\n")
-            .exchange()
-            .expectStatus().isOk()
-            .expectHeader().contentType(MediaType.APPLICATION_JSON)
-            .expectBodyList(EquipmenAttributeModificationInfos.class)
-            .value(modifications -> modifications.get(0),
-                MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v1lcc", Set.of("s1"), "powerFactor", 1.0));
+                .bodyValue("network.getLccConverterStation('v1lcc').powerFactor=1\n")
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBodyList(EquipmenAttributeModificationInfos.class)
+                .value(modifications -> modifications.get(0),
+                        MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v1lcc", Set.of("s1"), "powerFactor", 1.0));
 
         // apply groovy script with line R modification
         webTestClient.put().uri(uriString, TEST_NETWORK_ID)
-            .bodyValue("network.getLine('line1').r=2\n")
-            .exchange()
-            .expectStatus().isOk()
-            .expectHeader().contentType(MediaType.APPLICATION_JSON)
-            .expectBodyList(EquipmenAttributeModificationInfos.class)
-            .value(modifications -> modifications.get(0),
-                MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("line1", Set.of("s1", "s2"), "r", 2.0));
+                .bodyValue("network.getLine('line1').r=2\n")
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBodyList(EquipmenAttributeModificationInfos.class)
+                .value(modifications -> modifications.get(0),
+                        MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("line1", Set.of("s1", "s2"), "r", 2.0));
 
         // apply groovy script with two windings transformer ratio tap modification
         webTestClient.put().uri(uriString, TEST_NETWORK_ID)
-            .bodyValue("network.getTwoWindingsTransformer('trf1').getRatioTapChanger().tapPosition=2\n")
-            .exchange()
-            .expectStatus().isOk()
-            .expectHeader().contentType(MediaType.APPLICATION_JSON)
-            .expectBodyList(EquipmenAttributeModificationInfos.class)
-            .value(modifications -> modifications.get(0),
-                MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("trf1", Set.of("s1"), "ratioTapChanger.tapPosition", 2));
+                .bodyValue("network.getTwoWindingsTransformer('trf1').getRatioTapChanger().tapPosition=2\n")
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBodyList(EquipmenAttributeModificationInfos.class)
+                .value(modifications -> modifications.get(0),
+                        MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("trf1", Set.of("s1"), "ratioTapChanger.tapPosition", 2));
 
         // apply groovy script with three windings transformer phase tap modification
         webTestClient.put().uri(uriString, TEST_NETWORK_ID)
-            .bodyValue("network.getThreeWindingsTransformer('trf6').getLeg1().getPhaseTapChanger().tapPosition=0\n")
-            .exchange()
-            .expectStatus().isOk()
-            .expectHeader().contentType(MediaType.APPLICATION_JSON)
-            .expectBodyList(EquipmenAttributeModificationInfos.class)
-            .value(modifications -> modifications.get(0),
-                MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("trf6", Set.of("s1"), "phaseTapChanger1.tapPosition", 0));
+                .bodyValue("network.getThreeWindingsTransformer('trf6').getLeg1().getPhaseTapChanger().tapPosition=0\n")
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBodyList(EquipmenAttributeModificationInfos.class)
+                .value(modifications -> modifications.get(0),
+                        MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("trf6", Set.of("s1"), "phaseTapChanger1.tapPosition", 0));
 
         testNetwokModificationsCount(TEST_GROUP_ID, 6);
     }
@@ -470,10 +470,10 @@ public class ModificationControllerTest {
 
         // apply groovy script with 2 modifications with network flush error
         webTestClient.put().uri(uriString, TEST_NETWORK_WITH_FLUSH_ERROR_ID)
-            .bodyValue("network.getGenerator('idGenerator').targetP=10\nnetwork.getGenerator('idGenerator').targetP=20\n")
-            .exchange()
-            .expectBody(String.class)
-            .isEqualTo(new NetworkModificationException(GROOVY_SCRIPT_ERROR, PowsyblException.class.getName()).getMessage());
+                .bodyValue("network.getGenerator('idGenerator').targetP=10\nnetwork.getGenerator('idGenerator').targetP=20\n")
+                .exchange()
+                .expectBody(String.class)
+                .isEqualTo(new NetworkModificationException(GROOVY_SCRIPT_ERROR, PowsyblException.class.getName()).getMessage());
 
         assertEquals(0, modificationRepository.getModifications(TEST_GROUP_ID).size());
     }
@@ -484,9 +484,9 @@ public class ModificationControllerTest {
 
         // apply groovy script with 2 modifications without error
         webTestClient.put().uri(uriString, TEST_NETWORK_ID)
-            .bodyValue("network.getGenerator('idGenerator').targetP=10\nnetwork.getGenerator('idGenerator').targetP=20\n")
-            .exchange()
-            .expectStatus().isOk();
+                .bodyValue("network.getGenerator('idGenerator').targetP=10\nnetwork.getGenerator('idGenerator').targetP=20\n")
+                .exchange()
+                .expectStatus().isOk();
 
         assertEquals(2, modificationRepository.getModifications(TEST_GROUP_ID).size());
 

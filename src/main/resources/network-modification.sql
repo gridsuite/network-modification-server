@@ -40,8 +40,8 @@
 
     create table loadCreation (
        equipmentId varchar(255),
-        busId varchar(255),
         equipmentName varchar(255),
+        busId varchar(255),
         voltageLevelId varchar(255),
         activePower float8,
         loadType int4,
@@ -79,12 +79,12 @@ create index modificationEntity_group_id_index on modification (group_id);
 
     alter table if exists doubleEquipmentAttributeModification 
        add constraint double_equipment_attribute_modification_id_fk_constraint 
-       foreign key (id) 
+       foreign key (id)
        references modification;
 
     alter table if exists equipmentDeletion 
        add constraint equipmentDeletion_id_fk_constraint 
-       foreign key (id) 
+       foreign key (id)
        references modification;
 
     alter table if exists floatEquipmentAttributeModification 

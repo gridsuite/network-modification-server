@@ -24,7 +24,7 @@ import lombok.experimental.SuperBuilder;
 @Setter
 @ToString(callSuper = true)
 @Schema(description = "Load creation")
-public class LoadCreationInfos extends EquipmentCreationInfos {
+public class LoadCreationInfos extends InjectionCreationInfos {
     @Schema(description = "Load type")
     private LoadType loadType;
 

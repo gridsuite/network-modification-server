@@ -156,5 +156,4 @@ public class NetworkModificationRepository {
     public EquipmentDeletionEntity createEquipmentDeletionEntity(String equipmentId, String equipmentType) {
         return new EquipmentDeletionEntity(equipmentId, equipmentType);
     }
-
 }
