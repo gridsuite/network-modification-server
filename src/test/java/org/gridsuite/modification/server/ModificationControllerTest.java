@@ -23,6 +23,7 @@ import com.powsybl.sld.iidm.extensions.BranchStatus;
 import org.gridsuite.modification.server.dto.EquipmenAttributeModificationInfos;
 import org.gridsuite.modification.server.dto.EquipmenModificationInfos;
 import org.gridsuite.modification.server.dto.LoadCreationInfos;
+import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.NetworkModificationService;
 import org.gridsuite.modification.server.service.NetworkStoreListener;
@@ -65,7 +66,7 @@ import static org.mockito.Mockito.when;
 @RunWith(SpringRunner.class)
 @EnableWebFlux
 @AutoConfigureWebTestClient
-@SpringBootTest
+@SpringBootTest(properties = {"spring.data.elasticsearch.enabled=false"})
 public class ModificationControllerTest {
 
     private static final UUID TEST_NETWORK_ID = UUID.fromString("7928181c-7977-4592-ba19-88027e4254e4");
@@ -91,6 +92,9 @@ public class ModificationControllerTest {
 
     @Autowired
     private NetworkModificationService networkModificationService;
+
+    @Autowired
+    private EquipmentInfosService equipmentInfosService;
 
     @Before
     public void setUp() {
@@ -148,7 +152,7 @@ public class ModificationControllerTest {
     @Test
     public void testNetworkListener() {
         Network network = NetworkCreation.create(TEST_NETWORK_ID);
-        NetworkStoreListener listener = NetworkStoreListener.create(network, TEST_GROUP_ID, modificationRepository);
+        NetworkStoreListener listener = NetworkStoreListener.create(network, TEST_NETWORK_ID, TEST_GROUP_ID, modificationRepository, equipmentInfosService);
         Generator generator = network.getGenerator("idGenerator");
         Object invalidValue = new Object();
         assertTrue(assertThrows(PowsyblException.class, () ->

@@ -6,15 +6,18 @@
  */
 package org.gridsuite.modification.server.service;
 
-import java.util.*;
-import java.util.stream.Collectors;
-
 import com.powsybl.iidm.network.*;
 import org.gridsuite.modification.server.dto.EquipmenModificationInfos;
+import org.gridsuite.modification.server.dto.EquipmentInfos;
+import org.gridsuite.modification.server.dto.EquipmentType;
 import org.gridsuite.modification.server.dto.LoadCreationInfos;
-import org.gridsuite.modification.server.entities.ModificationEntity;
+import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.EquipmentModificationEntity;
+import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -22,34 +25,42 @@ import org.gridsuite.modification.server.repositories.NetworkModificationReposit
  */
 public class NetworkStoreListener implements NetworkListener {
 
-    private UUID groupUuid;
+    private final UUID groupUuid;
 
-    private Network network;
+    private final UUID networkUuid;
+
+    private final Network network;
 
     private final NetworkModificationRepository modificationRepository;
 
-    private List<EquipmentModificationEntity> modifications = new LinkedList<>();
+    private final EquipmentInfosService equipmentInfosService;
+
+    private final List<EquipmentModificationEntity> modifications = new LinkedList<>();
 
     Network getNetwork() {
         return network;
     }
 
-    public static NetworkStoreListener create(Network network, UUID groupUuid, NetworkModificationRepository modificationRepository) {
-        var listener = new NetworkStoreListener(network, groupUuid, modificationRepository);
+    public static NetworkStoreListener create(Network network, UUID networkUuid, UUID groupUuid,
+                                              NetworkModificationRepository modificationRepository, EquipmentInfosService equipmentInfosService) {
+        var listener = new NetworkStoreListener(network, networkUuid, groupUuid, modificationRepository, equipmentInfosService);
         network.addListener(listener);
         return listener;
     }
 
-    protected NetworkStoreListener(Network network, UUID groupUuid, NetworkModificationRepository modificationRepository) {
+    protected NetworkStoreListener(Network network, UUID networkUuid, UUID groupUuid,
+                                   NetworkModificationRepository modificationRepository, EquipmentInfosService equipmentInfosService) {
         this.network = network;
+        this.networkUuid = networkUuid;
         this.groupUuid = groupUuid;
         this.modificationRepository = modificationRepository;
+        this.equipmentInfosService = equipmentInfosService;
     }
 
     public List<EquipmenModificationInfos> getModifications() {
         return modifications.stream()
-                .map(m -> m.toEquipmentModificationInfos(getSubstationIds(m.getEquipmentId())))
-                .collect(Collectors.toList());
+            .map(m -> m.toEquipmentModificationInfos(getSubstationIds(m.getEquipmentId())))
+            .collect(Collectors.toList());
     }
 
     public void saveModifications() {
@@ -117,7 +128,14 @@ public class NetworkStoreListener implements NetworkListener {
 
     @Override
     public void onCreation(Identifiable identifiable) {
-        // empty default implementation
+        equipmentInfosService.add(
+            EquipmentInfos.builder()
+                .networkUuid(networkUuid)
+                .equipmentId(identifiable.getId())
+                .equipmentName(identifiable.getNameOrId())
+                .equipmentType(EquipmentType.getType(identifiable).name())
+                .build()
+        );
     }
 
     @Override
