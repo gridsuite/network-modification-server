@@ -1,4 +1,7 @@
 spring:
+  profiles:
+    active: default,local
+
   application:
     name: netork-modification-server
 
@@ -38,15 +41,7 @@ spring:
         timeout: 60  # Seconds
 
 server:
-  port: 5007
   forward-headers-strategy: framework
-
-network-store-server:
-  base-uri: http://localhost:8080
-
-backing-services:
-  report-server:
-    base-uri: http://localhost:5028
 
 # this structure is shared among all microservices, if you change it, change it everywhere.
 # customQuery allows a microservice to set query parameters specific to itself.
