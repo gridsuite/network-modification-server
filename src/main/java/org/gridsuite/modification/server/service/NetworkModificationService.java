@@ -27,8 +27,6 @@ import org.gridsuite.modification.server.dto.LoadCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpEntity;
@@ -57,9 +55,6 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
  */
 @Service
 public class NetworkModificationService {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(NetworkModificationService.class);
-
     private final NetworkStoreService networkStoreService;
 
     private final NetworkModificationRepository modificationRepository;
@@ -386,12 +381,6 @@ public class NetworkModificationService {
             return doAction(listener, () -> {
                 Identifiable identifiable = null;
                 switch (EquipmentType.valueOf(equipmentType)) {
-                    case SUBSTATION:
-                        identifiable = network.getSubstation(equipmentId);
-                        break;
-                    case VOLTAGE_LEVEL:
-                        identifiable = network.getVoltageLevel(equipmentId);
-                        break;
                     case HVDC_LINE:
                         identifiable = network.getHvdcLine(equipmentId);
                         break;
@@ -442,10 +431,6 @@ public class NetworkModificationService {
                     ((Connectable) identifiable).remove();
                 } else if (identifiable instanceof HvdcLine) {
                     ((HvdcLine) identifiable).remove();
-                } else if (identifiable instanceof VoltageLevel) {
-                    ((VoltageLevel) identifiable).remove();
-                } else if (identifiable instanceof Substation) {
-                    ((Substation) identifiable).remove();
                 }
 
                 // Done here, and not in the network listener onRemoval method
@@ -462,7 +447,7 @@ public class NetworkModificationService {
 
                 // add the equipment deletion entity to the listener
                 listener.storeEquipmentDeletion(equipmentId, equipmentType);
-            }, DELETE_EQUIPMENT_ERROR, networkUuid, reporter, subReporter).stream().map(info -> (EquipmentDeletionInfos) info)
+            }, DELETE_EQUIPMENT_ERROR, networkUuid, reporter, subReporter).stream().map(EquipmentDeletionInfos.class::cast)
                 .collect(Collectors.toList());
         });
     }

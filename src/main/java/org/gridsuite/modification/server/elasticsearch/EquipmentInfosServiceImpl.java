@@ -37,7 +37,7 @@ public class EquipmentInfosServiceImpl implements EquipmentInfosService {
         try {
             equipmentInfosRepository.deleteByEquipmentIdAndNetworkUuid(equipmentId, networkUuid);
         } catch (Exception e) {
-            LOGGER.warn("Unable to remove elasticsearch index for equipment id " + equipmentId + " in network " + networkUuid);
+            LOGGER.warn("Unable to remove elasticsearch index for equipment id '{}' in network '{}'", equipmentId, networkUuid);
         }
     }
 

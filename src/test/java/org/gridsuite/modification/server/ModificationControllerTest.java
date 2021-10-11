@@ -72,6 +72,7 @@ import static org.mockito.Mockito.when;
 public class ModificationControllerTest {
 
     private static final UUID TEST_NETWORK_ID = UUID.fromString("7928181c-7977-4592-ba19-88027e4254e4");
+    private static final UUID TEST_NETWORK_ID_2 = UUID.fromString("7928181e-7977-4592-ba19-88027e4254e4");
     private static final UUID NOT_FOUND_NETWORK_ID = UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
     private static final UUID TEST_NETWORK_WITH_FLUSH_ERROR_ID = UUID.fromString("eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee");
     private static final UUID TEST_GROUP_ID = UUID.randomUUID();
@@ -101,10 +102,10 @@ public class ModificationControllerTest {
     @Before
     public void setUp() {
         // /!\ create a new network for each invocation (answer)
-        when(networkStoreService.getNetwork(TEST_NETWORK_ID)).then((Answer<Network>) invocation -> NetworkCreation.create(TEST_NETWORK_ID));
+        when(networkStoreService.getNetwork(TEST_NETWORK_ID)).then((Answer<Network>) invocation -> NetworkCreation.create(TEST_NETWORK_ID, true));
+        when(networkStoreService.getNetwork(TEST_NETWORK_ID_2)).then((Answer<Network>) invocation -> NetworkCreation.create(TEST_NETWORK_ID_2, false));
         when(networkStoreService.getNetwork(NOT_FOUND_NETWORK_ID)).thenThrow(new PowsyblException());
-        when(networkStoreService.getNetwork(TEST_NETWORK_WITH_FLUSH_ERROR_ID)).then((Answer<Network>) invocation -> NetworkCreation.create(TEST_NETWORK_WITH_FLUSH_ERROR_ID));
-        when(networkStoreService.getNetwork(TEST_NETWORK_ID)).then((Answer<Network>) invocation -> NetworkCreation.create(TEST_NETWORK_ID));
+        when(networkStoreService.getNetwork(TEST_NETWORK_WITH_FLUSH_ERROR_ID)).then((Answer<Network>) invocation -> NetworkCreation.create(TEST_NETWORK_WITH_FLUSH_ERROR_ID, true));
         when(networkStoreService.getNetwork(TEST_NETWORK_BUS_BREAKER_ID)).then((Answer<Network>) invocation -> NetworkCreation.createBusBreaker(TEST_NETWORK_BUS_BREAKER_ID));
 
         doThrow(new PowsyblException()).when(networkStoreService).flush(argThat(n -> TEST_NETWORK_WITH_FLUSH_ERROR_ID.toString().equals(n.getId())));
@@ -153,7 +154,7 @@ public class ModificationControllerTest {
 
     @Test
     public void testNetworkListener() {
-        Network network = NetworkCreation.create(TEST_NETWORK_ID);
+        Network network = NetworkCreation.create(TEST_NETWORK_ID, true);
         NetworkStoreListener listener = NetworkStoreListener.create(network, TEST_NETWORK_ID, TEST_GROUP_ID, modificationRepository, equipmentInfosService);
         Generator generator = network.getGenerator("idGenerator");
         Object invalidValue = new Object();
@@ -615,9 +616,9 @@ public class ModificationControllerTest {
 
     @Test
     public void testDeleteEquipment() {
-        // delete equipment
         String uriString = "/v1/networks/{networkUuid}/equipments/type/{equipmentType}/id/{equipmentId}?group=" + TEST_GROUP_ID;
 
+        // delete load
         webTestClient.delete().uri(uriString, TEST_NETWORK_ID, "LOAD", "v1load")
             .exchange()
             .expectStatus().isOk()
@@ -642,6 +643,127 @@ public class ModificationControllerTest {
             .isEqualTo(new NetworkModificationException(EQUIPMENT_NOT_FOUND, "Equipment with id=notFoundLoad not found or of bad type").getMessage());
 
         testNetwokModificationsCount(TEST_GROUP_ID, 1);
+
+        // delete shunt compensator
+        webTestClient.delete().uri(uriString, TEST_NETWORK_ID, "SHUNT_COMPENSATOR", "v2shunt")
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBodyList(EquipmentDeletionInfos.class)
+            .value(modifications -> modifications.get(0),
+                MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "v2shunt", "SHUNT_COMPENSATOR", Set.of("s1")));
+
+        testNetwokModificationsCount(TEST_GROUP_ID, 2);
+
+        // delete generator
+        webTestClient.delete().uri(uriString, TEST_NETWORK_ID, "GENERATOR", "idGenerator")
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBodyList(EquipmentDeletionInfos.class)
+            .value(modifications -> modifications.get(0),
+                MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "idGenerator", "GENERATOR", Set.of("s1")));
+
+        testNetwokModificationsCount(TEST_GROUP_ID, 3);
+
+        // delete line
+        webTestClient.delete().uri(uriString, TEST_NETWORK_ID, "LINE", "line2")
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBodyList(EquipmentDeletionInfos.class)
+            .value(modifications -> modifications.get(0),
+                MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "line2", "LINE", Set.of("s1", "s2")));
+
+        testNetwokModificationsCount(TEST_GROUP_ID, 4);
+
+        // delete two windings transformer
+        webTestClient.delete().uri(uriString, TEST_NETWORK_ID, "TWO_WINDINGS_TRANSFORMER", "trf1")
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBodyList(EquipmentDeletionInfos.class)
+            .value(modifications -> modifications.get(0),
+                MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "trf1", "TWO_WINDINGS_TRANSFORMER", Set.of("s1")));
+
+        testNetwokModificationsCount(TEST_GROUP_ID, 5);
+
+        // delete three windings transformer
+        webTestClient.delete().uri(uriString, TEST_NETWORK_ID, "THREE_WINDINGS_TRANSFORMER", "trf6")
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBodyList(EquipmentDeletionInfos.class)
+            .value(modifications -> modifications.get(0),
+                MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "trf6", "THREE_WINDINGS_TRANSFORMER", Set.of("s1")));
+
+        testNetwokModificationsCount(TEST_GROUP_ID, 6);
+
+        // delete static var compensator
+        webTestClient.delete().uri(uriString, TEST_NETWORK_ID, "STATIC_VAR_COMPENSATOR", "v3Compensator")
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBodyList(EquipmentDeletionInfos.class)
+            .value(modifications -> modifications.get(0),
+                MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "v3Compensator", "STATIC_VAR_COMPENSATOR", Set.of("s2")));
+
+        testNetwokModificationsCount(TEST_GROUP_ID, 7);
+
+        // delete battery
+        webTestClient.delete().uri(uriString, TEST_NETWORK_ID, "BATTERY", "v3Battery")
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBodyList(EquipmentDeletionInfos.class)
+            .value(modifications -> modifications.get(0),
+                MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "v3Battery", "BATTERY", Set.of("s2")));
+
+        testNetwokModificationsCount(TEST_GROUP_ID, 8);
+
+        // delete dangling line
+        webTestClient.delete().uri(uriString, TEST_NETWORK_ID, "DANGLING_LINE", "v2Dangling")
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBodyList(EquipmentDeletionInfos.class)
+            .value(modifications -> modifications.get(0),
+                MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "v2Dangling", "DANGLING_LINE", Set.of("s1")));
+
+        testNetwokModificationsCount(TEST_GROUP_ID, 9);
+
+        // delete hvdc line
+        webTestClient.delete().uri(uriString, TEST_NETWORK_ID, "HVDC_LINE", "hvdcLine")
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBodyList(EquipmentDeletionInfos.class)
+            .value(modifications -> modifications.get(0),
+                MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "hvdcLine", "HVDC_LINE", Set.of("s1")));
+
+        testNetwokModificationsCount(TEST_GROUP_ID, 10);
+
+        // delete vsc converter station
+        webTestClient.delete().uri(uriString, TEST_NETWORK_ID_2, "VSC_CONVERTER_STATION", "v2vsc")
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBodyList(EquipmentDeletionInfos.class)
+            .value(modifications -> modifications.get(0),
+                MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "v2vsc", "VSC_CONVERTER_STATION", Set.of("s1")));
+
+        testNetwokModificationsCount(TEST_GROUP_ID, 11);
+
+        // delete lcc converter station
+        webTestClient.delete().uri(uriString, TEST_NETWORK_ID_2, "LCC_CONVERTER_STATION", "v1lcc")
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBodyList(EquipmentDeletionInfos.class)
+            .value(modifications -> modifications.get(0),
+                MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "v1lcc", "LCC_CONVERTER_STATION", Set.of("s1")));
+
+        testNetwokModificationsCount(TEST_GROUP_ID, 12);
     }
 
     private void testNetwokModificationsCount(UUID groupUuid, int actualSize) {

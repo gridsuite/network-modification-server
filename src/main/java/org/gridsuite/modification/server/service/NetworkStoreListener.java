@@ -106,38 +106,27 @@ public class NetworkStoreListener implements NetworkListener {
 
     private Set<String> getSubstationsIds(String equipmentId) {
         Identifiable<?> identifiable = network.getIdentifiable(equipmentId);
-        Set<String> substationsIds = new HashSet<>();
-        if (identifiable instanceof Switch) {
-            substationsIds.add(((Switch) identifiable).getVoltageLevel().getSubstation().getId());
-        } else if (identifiable instanceof Injection) {
-            substationsIds.add(((Injection<?>) identifiable).getTerminal().getVoltageLevel().getSubstation().getId());
-        } else if (identifiable instanceof Branch) {
-            substationsIds.add(((Branch<?>) identifiable).getTerminal1().getVoltageLevel().getSubstation().getId());
-            substationsIds.add(((Branch<?>) identifiable).getTerminal2().getVoltageLevel().getSubstation().getId());
-        } else if (identifiable instanceof ThreeWindingsTransformer) {
-            substationsIds.add(((ThreeWindingsTransformer) identifiable).getTerminal(ThreeWindingsTransformer.Side.ONE).getVoltageLevel().getSubstation().getId());
-            substationsIds.add(((ThreeWindingsTransformer) identifiable).getTerminal(ThreeWindingsTransformer.Side.TWO).getVoltageLevel().getSubstation().getId());
-            substationsIds.add(((ThreeWindingsTransformer) identifiable).getTerminal(ThreeWindingsTransformer.Side.THREE).getVoltageLevel().getSubstation().getId());
-        }
-
-        return substationsIds;
+        return getSubstationIds(identifiable);
     }
 
     public static Set<String> getSubstationIds(Identifiable identifiable) {
-        Set<String> substationsIds = new HashSet<>();
+        Set<String> ids = new HashSet<>();
         if (identifiable instanceof Switch) {
-            substationsIds.add(((Switch) identifiable).getVoltageLevel().getSubstation().getId());
+            ids.add(((Switch) identifiable).getVoltageLevel().getSubstation().getId());
         } else if (identifiable instanceof Injection) {
-            substationsIds.add(((Injection<?>) identifiable).getTerminal().getVoltageLevel().getSubstation().getId());
+            ids.add(((Injection<?>) identifiable).getTerminal().getVoltageLevel().getSubstation().getId());
         } else if (identifiable instanceof Branch) {
-            substationsIds.add(((Branch<?>) identifiable).getTerminal1().getVoltageLevel().getSubstation().getId());
-            substationsIds.add(((Branch<?>) identifiable).getTerminal2().getVoltageLevel().getSubstation().getId());
+            ids.add(((Branch<?>) identifiable).getTerminal1().getVoltageLevel().getSubstation().getId());
+            ids.add(((Branch<?>) identifiable).getTerminal2().getVoltageLevel().getSubstation().getId());
         } else if (identifiable instanceof ThreeWindingsTransformer) {
-            substationsIds.add(((ThreeWindingsTransformer) identifiable).getTerminal(ThreeWindingsTransformer.Side.ONE).getVoltageLevel().getSubstation().getId());
-            substationsIds.add(((ThreeWindingsTransformer) identifiable).getTerminal(ThreeWindingsTransformer.Side.TWO).getVoltageLevel().getSubstation().getId());
-            substationsIds.add(((ThreeWindingsTransformer) identifiable).getTerminal(ThreeWindingsTransformer.Side.THREE).getVoltageLevel().getSubstation().getId());
+            ids.add(((ThreeWindingsTransformer) identifiable).getTerminal(ThreeWindingsTransformer.Side.ONE).getVoltageLevel().getSubstation().getId());
+            ids.add(((ThreeWindingsTransformer) identifiable).getTerminal(ThreeWindingsTransformer.Side.TWO).getVoltageLevel().getSubstation().getId());
+            ids.add(((ThreeWindingsTransformer) identifiable).getTerminal(ThreeWindingsTransformer.Side.THREE).getVoltageLevel().getSubstation().getId());
+        } else if (identifiable instanceof HvdcLine) {
+            ids.add(((HvdcLine) identifiable).getConverterStation1().getTerminal().getVoltageLevel().getSubstation().getId());
+            ids.add(((HvdcLine) identifiable).getConverterStation2().getTerminal().getVoltageLevel().getSubstation().getId());
         }
-        return substationsIds;
+        return ids;
     }
 
     @Override
@@ -164,11 +153,10 @@ public class NetworkStoreListener implements NetworkListener {
 
     @Override
     public void onRemoval(Identifiable identifiable) {
-        // We cannot delete equipments infos here yet :
+        // At the moment, we cannot delete equipments infos in elasticsearch here :
         // identifiable.getId() throws PowsyblException("Object has been removed in current variant");
         // because the identifiable resource was set to null in remove method, before calling onRemoval method
-        //
-        // onRemoval must be changed in powsybl core (maybe passing only a String as argument)
+        // onRemoval must be changed in powsybl core (maybe passing only the id as string argument)
         //equipmentInfosService.delete(identifiable.getId(), networkUuid);
     }
 
