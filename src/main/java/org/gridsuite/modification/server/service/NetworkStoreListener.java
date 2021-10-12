@@ -10,6 +10,7 @@ import com.powsybl.iidm.network.*;
 import org.gridsuite.modification.server.dto.EquipmenModificationInfos;
 import org.gridsuite.modification.server.dto.EquipmentInfos;
 import org.gridsuite.modification.server.dto.EquipmentType;
+import org.gridsuite.modification.server.dto.GeneratorCreationInfos;
 import org.gridsuite.modification.server.dto.LoadCreationInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.EquipmentModificationEntity;
@@ -92,9 +93,24 @@ public class NetworkStoreListener implements NetworkListener {
             loadCreationInfos.getEquipmentName(),
             loadCreationInfos.getLoadType(),
             loadCreationInfos.getVoltageLevelId(),
-            loadCreationInfos.getBusId(),
+            loadCreationInfos.getBusOrBusbarSectionId(),
             loadCreationInfos.getActivePower(),
             loadCreationInfos.getReactivePower()));
+    }
+
+    public void storeGeneratorCreation(GeneratorCreationInfos generatorCreationInfos) {
+        modifications.add(this.modificationRepository.createGeneratorEntity(generatorCreationInfos.getEquipmentId(),
+            generatorCreationInfos.getEquipmentName(),
+            generatorCreationInfos.getEnergySource(),
+            generatorCreationInfos.getVoltageLevelId(),
+            generatorCreationInfos.getBusOrBusbarSectionId(),
+            generatorCreationInfos.getMinActivePower(),
+            generatorCreationInfos.getMaxActivePower(),
+            generatorCreationInfos.getRatedNominalPower(),
+            generatorCreationInfos.getActivePowerSetpoint(),
+            generatorCreationInfos.getReactivePowerSetpoint(),
+            generatorCreationInfos.isVoltageRegulationOn(),
+            generatorCreationInfos.getVoltageSetpoint()));
     }
 
     private Set<String> getSubstationIds(String equipmentId) {

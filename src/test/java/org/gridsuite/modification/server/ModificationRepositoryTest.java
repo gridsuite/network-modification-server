@@ -10,15 +10,18 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import com.powsybl.iidm.network.EnergySource;
 import com.powsybl.iidm.network.LoadType;
 import com.vladmihalcea.sql.SQLStatementCountValidator;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationGroupEntity;
+import org.gridsuite.modification.server.entities.equipment.creation.GeneratorCreationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.LoadCreationEntity;
 import org.gridsuite.modification.server.entities.equipment.attribute.modification.EquipmentAttributeModificationEntity;
 import org.gridsuite.modification.server.repositories.ModificationGroupRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.utils.MatcheEquipmentAttributeModificationInfos;
+import org.gridsuite.modification.server.utils.MatcherGeneratorCreationInfos;
 import org.gridsuite.modification.server.utils.MatcherLoadCreationInfos;
 import org.junit.Before;
 import org.junit.Test;
@@ -193,6 +196,45 @@ public class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         modificationRepository.deleteModifications(TEST_GROUP_ID, Set.of(createLoadEntity2.getId(), createLoadEntity3.getId()));
+        assertRequestsCount(1, 0, 0, 4);
+
+        SQLStatementCountValidator.reset();
+        assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID).size());
+        assertRequestsCount(2, 0, 0, 0);
+
+        SQLStatementCountValidator.reset();
+        modificationRepository.deleteModificationGroup(TEST_GROUP_ID);
+        assertRequestsCount(2, 0, 0, 3);
+
+        assertThrows(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage(),
+            NetworkModificationException.class, () -> modificationRepository.getModifications(TEST_GROUP_ID)
+        );
+    }
+
+    @Test
+    public void testGeneratorCreation() {
+        var createGeneratorEntity1 = modificationRepository.createGeneratorEntity("idGenerator1", "nameGenerator1", EnergySource.HYDRO, "vlId1", "busId1", 100.0, 800.0, 10., 500., 50., true, 225.);
+        var createGeneratorEntity2 = modificationRepository.createGeneratorEntity("idGenerator2", "nameGenerator2", EnergySource.SOLAR, "vlId2", "busId2", 0., 300., 5., 150., 30., false, 380.0);
+        var createGeneratorEntity3 = modificationRepository.createGeneratorEntity("idGenerator3", "nameGenerator3", EnergySource.OTHER, "vlId3", "busId3", 10., 900., 5., 250., 20., true, 150.0);
+
+        modificationRepository.saveModifications(TEST_GROUP_ID, List.of(createGeneratorEntity1, createGeneratorEntity2, createGeneratorEntity3));
+        assertRequestsCount(1, 7, 0, 0);
+
+        List<ModificationInfos> modificationInfos = modificationRepository.getModifications(TEST_GROUP_ID);
+        assertEquals(3, modificationInfos.size());
+
+        assertThat(modificationRepository.getGeneratorCreationModification(TEST_GROUP_ID, modificationInfos.get(0).getUuid()),
+            MatcherGeneratorCreationInfos.createMatcherGeneratorCreationInfos(((GeneratorCreationEntity) createGeneratorEntity1).toGeneratorCreationInfos()));
+        assertThat(modificationRepository.getGeneratorCreationModification(TEST_GROUP_ID, modificationInfos.get(1).getUuid()),
+            MatcherGeneratorCreationInfos.createMatcherGeneratorCreationInfos(((GeneratorCreationEntity) createGeneratorEntity2).toGeneratorCreationInfos()));
+        assertThat(modificationRepository.getGeneratorCreationModification(TEST_GROUP_ID, modificationInfos.get(2).getUuid()),
+            MatcherGeneratorCreationInfos.createMatcherGeneratorCreationInfos(((GeneratorCreationEntity) createGeneratorEntity3).toGeneratorCreationInfos()));
+
+        assertEquals(3, modificationRepository.getModifications(TEST_GROUP_ID).size());
+        assertEquals(List.of(TEST_GROUP_ID), this.modificationRepository.getModificationGroupsUuids());
+
+        SQLStatementCountValidator.reset();
+        modificationRepository.deleteModifications(TEST_GROUP_ID, Set.of(createGeneratorEntity2.getId(), createGeneratorEntity3.getId()));
         assertRequestsCount(1, 0, 0, 4);
 
         SQLStatementCountValidator.reset();

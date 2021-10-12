@@ -38,9 +38,9 @@ public class LoadCreationEntity extends InjectionCreationEntity {
     @Column(name = "reactivePower")
     private double reactivePower;
 
-    public LoadCreationEntity(String equipmentId, String equipmentName, LoadType loadType, String voltageLevelId, String busId,
+    public LoadCreationEntity(String equipmentId, String equipmentName, LoadType loadType, String voltageLevelId, String busOrBusbarSectionId,
                               double activePower, double reactivePower) {
-        super(ModificationType.LOAD_CREATION, equipmentId, equipmentName, voltageLevelId, busId);
+        super(ModificationType.LOAD_CREATION, equipmentId, equipmentName, voltageLevelId, busOrBusbarSectionId);
         this.loadType = loadType;
         this.activePower = activePower;
         this.reactivePower = reactivePower;
@@ -64,7 +64,7 @@ public class LoadCreationEntity extends InjectionCreationEntity {
             .equipmentId(getEquipmentId())
             .equipmentName(getEquipmentName())
             .voltageLevelId(getVoltageLevelId())
-            .busId(getBusId())
+            .busOrBusbarSectionId(getBusOrBusbarSectionId())
             .loadType(getLoadType())
             .activePower(getActivePower())
             .reactivePower(getReactivePower());

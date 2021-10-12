@@ -27,5 +27,5 @@ public class InjectionCreationInfos extends EquipmentCreationInfos {
     private String voltageLevelId;
 
     @Schema(description = "Bus id")
-    private String busId;
+    private String busOrBusbarSectionId;
 }

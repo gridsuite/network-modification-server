@@ -24,7 +24,7 @@ public class MatcherLoadCreationInfos extends MatcherModificationInfos<LoadCreat
                                                                                String equipmentName,
                                                                                Set<String> substationIds,
                                                                                String voltageLevelId,
-                                                                               String busId,
+                                                                               String busOrBusbarSectionId,
                                                                           LoadType loadType,
                                                                           double activePower,
                                                                           double reactivePower) {
@@ -35,7 +35,7 @@ public class MatcherLoadCreationInfos extends MatcherModificationInfos<LoadCreat
                 .substationIds(substationIds)
                 .equipmentName(equipmentName)
                 .voltageLevelId(voltageLevelId)
-            .busId(busId)
+            .busOrBusbarSectionId(busOrBusbarSectionId)
             .loadType(loadType)
             .activePower(activePower)
                 .reactivePower(reactivePower)
@@ -57,7 +57,7 @@ public class MatcherLoadCreationInfos extends MatcherModificationInfos<LoadCreat
             && m.getSubstationIds().equals(reference.getSubstationIds())
             && m.getEquipmentName().equals(reference.getEquipmentName())
             && m.getVoltageLevelId().equals(reference.getVoltageLevelId())
-            && m.getBusId().equals(reference.getBusId())
+            && m.getBusOrBusbarSectionId().equals(reference.getBusOrBusbarSectionId())
             && m.getLoadType() == reference.getLoadType()
             && m.getActivePower() == reference.getActivePower()
             && m.getReactivePower() == reference.getReactivePower();
