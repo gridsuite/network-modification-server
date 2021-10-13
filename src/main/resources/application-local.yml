@@ -7,3 +7,8 @@ network-store-server:
 backing-services:
   report-server:
     base-uri: http://localhost:5028
+
+spring:
+  data:
+    elasticsearch:
+      host: localhost
