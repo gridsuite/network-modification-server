@@ -35,7 +35,7 @@ spring:
   data:
     elasticsearch:
       enabled: false
-      host: localhost
+      host: elasticsearch
       port: 9200
       client:
         timeout: 60  # Seconds
