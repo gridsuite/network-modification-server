@@ -330,7 +330,7 @@ public class NetworkModificationService {
             .setId(loadCreationInfos.getEquipmentId())
             .setName(loadCreationInfos.getEquipmentName())
             .setLoadType(loadCreationInfos.getLoadType())
-            .setNode(nodeNum + 2)
+            .setNode(nodeNum)
             .setP0(loadCreationInfos.getActivePower())
             .setQ0(loadCreationInfos.getReactivePower())
             .add();
@@ -411,7 +411,7 @@ public class NetworkModificationService {
             .setId(generatorCreationInfos.getEquipmentId())
             .setName(generatorCreationInfos.getEquipmentName())
             .setEnergySource(generatorCreationInfos.getEnergySource())
-            .setNode(nodeNum + 2)
+            .setNode(nodeNum)
             .setMinP(generatorCreationInfos.getMinActivePower())
             .setMaxP(generatorCreationInfos.getMaxActivePower())
             .setRatedS(generatorCreationInfos.getRatedNominalPower())
