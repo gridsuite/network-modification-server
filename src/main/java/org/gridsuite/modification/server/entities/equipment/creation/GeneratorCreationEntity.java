@@ -39,23 +39,23 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
     private double maxActivePower;
 
     @Column(name = "ratedNominalPower")
-    private double ratedNominalPower;
+    private Double ratedNominalPower;
 
     @Column(name = "activePowerSetpoint")
     private double activePowerSetpoint;
 
     @Column(name = "reactivePowerSetpoint")
-    private double reactivePowerSetpoint;
+    private Double reactivePowerSetpoint;
 
     @Column(name = "voltageRegulationOn")
     private boolean voltageRegulationOn;
 
     @Column(name = "voltageSetpoint")
-    private double voltageSetpoint;
+    private Double voltageSetpoint;
 
     public GeneratorCreationEntity(String equipmentId, String equipmentName, EnergySource energySource, String voltageLevelId, String busOrBusbarSectionId,
-                                   double minActivePower, double maxActivePower, double ratedNominalPower, double activePowerSetpoint,
-                                   double reactivePowerSetpoint, boolean voltageRegulationOn, double voltageSetpoint) {
+                                   double minActivePower, double maxActivePower, Double ratedNominalPower, double activePowerSetpoint,
+                                   Double reactivePowerSetpoint, boolean voltageRegulationOn, Double voltageSetpoint) {
         super(ModificationType.GENERATOR_CREATION, equipmentId, equipmentName, voltageLevelId, busOrBusbarSectionId);
         this.energySource = energySource;
         this.minActivePower = minActivePower;

@@ -167,8 +167,8 @@ public class NetworkModificationRepository {
     public EquipmentCreationEntity createGeneratorEntity(String generatorId, String generatorName, EnergySource energySource,
                                                          String voltageLevelId, String busOrBusbarSectionId,
                                                          double minActivePower, double maxActivePower,
-                                                         double ratedNominalPower, double activePowerSetpoint,
-                                                         double reactivePowerSetpoint, boolean voltageRegulationOn, double voltageSetpoint) {
+                                                         Double ratedNominalPower, double activePowerSetpoint,
+                                                         Double reactivePowerSetpoint, boolean voltageRegulationOn, Double voltageSetpoint) {
         return new GeneratorCreationEntity(generatorId, generatorName, energySource, voltageLevelId, busOrBusbarSectionId, minActivePower,
             maxActivePower, ratedNominalPower, activePowerSetpoint, reactivePowerSetpoint, voltageRegulationOn, voltageSetpoint);
     }

@@ -630,7 +630,7 @@ public class ModificationControllerTest {
             .activePowerSetpoint(400.)
             .reactivePowerSetpoint(50.)
             .voltageRegulationOn(true)
-            .voltageSetpoint(225)
+            .voltageSetpoint(225.)
             .build();
 
         webTestClient.put().uri(uriString, TEST_NETWORK_ID)
@@ -708,7 +708,7 @@ public class ModificationControllerTest {
             .activePowerSetpoint(400.)
             .reactivePowerSetpoint(50.)
             .voltageRegulationOn(true)
-            .voltageSetpoint(225)
+            .voltageSetpoint(225.)
             .build();
 
         webTestClient.put().uri(uriString, TEST_NETWORK_BUS_BREAKER_ID)

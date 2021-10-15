@@ -368,9 +368,8 @@ public class NetworkModificationService {
                         }
                         subReporter.report(Report.builder()
                             .withKey("loadCreated")
-                            .withDefaultMessage("New load with id=${id} and name=${name} created")
+                            .withDefaultMessage("New load with id=${id} created")
                             .withValue("id", loadCreationInfos.getEquipmentId())
-                            .withValue("name", loadCreationInfos.getEquipmentName())
                             .withSeverity(new TypedValue("LOAD_CREATION_INFO", TypedValue.INFO_LOGLEVEL))
                             .build());
 
@@ -414,11 +413,11 @@ public class NetworkModificationService {
             .setNode(nodeNum)
             .setMinP(generatorCreationInfos.getMinActivePower())
             .setMaxP(generatorCreationInfos.getMaxActivePower())
-            .setRatedS(generatorCreationInfos.getRatedNominalPower())
+            .setRatedS(generatorCreationInfos.getRatedNominalPower() != null ? generatorCreationInfos.getRatedNominalPower() : Double.NaN)
             .setTargetP(generatorCreationInfos.getActivePowerSetpoint())
-            .setTargetQ(generatorCreationInfos.getReactivePowerSetpoint())
+            .setTargetQ(generatorCreationInfos.getReactivePowerSetpoint() != null ? generatorCreationInfos.getReactivePowerSetpoint() : Double.NaN)
             .setVoltageRegulatorOn(generatorCreationInfos.isVoltageRegulationOn())
-            .setTargetV(generatorCreationInfos.getVoltageSetpoint())
+            .setTargetV(generatorCreationInfos.getVoltageSetpoint() != null ? generatorCreationInfos.getVoltageSetpoint() : Double.NaN)
             .add();
     }
 
@@ -434,11 +433,11 @@ public class NetworkModificationService {
             .setConnectableBus(bus.getId())
             .setMinP(generatorCreationInfos.getMinActivePower())
             .setMaxP(generatorCreationInfos.getMaxActivePower())
-            .setRatedS(generatorCreationInfos.getRatedNominalPower())
+            .setRatedS(generatorCreationInfos.getRatedNominalPower() != null ? generatorCreationInfos.getRatedNominalPower() : Double.NaN)
             .setTargetP(generatorCreationInfos.getActivePowerSetpoint())
-            .setTargetQ(generatorCreationInfos.getReactivePowerSetpoint())
+            .setTargetQ(generatorCreationInfos.getReactivePowerSetpoint() != null ? generatorCreationInfos.getReactivePowerSetpoint() : Double.NaN)
             .setVoltageRegulatorOn(generatorCreationInfos.isVoltageRegulationOn())
-            .setTargetV(generatorCreationInfos.getVoltageSetpoint())
+            .setTargetV(generatorCreationInfos.getVoltageSetpoint() != null ? generatorCreationInfos.getVoltageSetpoint() : Double.NaN)
             .add();
     }
 
@@ -459,9 +458,8 @@ public class NetworkModificationService {
                     }
                     subReporter.report(Report.builder()
                         .withKey("generatorCreated")
-                        .withDefaultMessage("New generator with id=${id} and name=${name} created")
+                        .withDefaultMessage("New generator with id=${id} created")
                         .withValue("id", generatorCreationInfos.getEquipmentId())
-                        .withValue("name", generatorCreationInfos.getEquipmentName())
                         .withSeverity(new TypedValue("GENERATOR_CREATION_INFO", TypedValue.INFO_LOGLEVEL))
                         .build());
 
