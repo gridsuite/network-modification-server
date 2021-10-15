@@ -7,6 +7,7 @@
 package org.gridsuite.modification.server.utils;
 
 import com.powsybl.iidm.network.EnergySource;
+import org.apache.commons.lang3.StringUtils;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.GeneratorCreationInfos;
 import org.hamcrest.Description;
@@ -31,9 +32,9 @@ public class MatcherGeneratorCreationInfos extends MatcherModificationInfos<Gene
                                                                                     String busOrBusbarSectionId,
                                                                                     EnergySource energySource,
                                                                                     double minActivePower, double maxActivePower,
-                                                                                    double ratedNominalPower, double activePowerSetpoint,
-                                                                                    double reactivePowerSetpoint, boolean voltageRegulationOn,
-                                                                                    double voltageSetpoint) {
+                                                                                    Double ratedNominalPower, double activePowerSetpoint,
+                                                                                    Double reactivePowerSetpoint, boolean voltageRegulationOn,
+                                                                                    Double voltageSetpoint) {
         return new MatcherGeneratorCreationInfos(GeneratorCreationInfos.builder()
             .date(ZonedDateTime.now(ZoneOffset.UTC))
             .type(ModificationType.GENERATOR_CREATION)
@@ -62,17 +63,20 @@ public class MatcherGeneratorCreationInfos extends MatcherModificationInfos<Gene
         return super.matchesSafely(m)
             && m.getEquipmentId().equals(reference.getEquipmentId())
             && m.getSubstationIds().equals(reference.getSubstationIds())
-            && m.getEquipmentName().equals(reference.getEquipmentName())
+            && StringUtils.equals(m.getEquipmentName(), reference.getEquipmentName())
             && m.getVoltageLevelId().equals(reference.getVoltageLevelId())
             && m.getBusOrBusbarSectionId().equals(reference.getBusOrBusbarSectionId())
             && m.getEnergySource() == reference.getEnergySource()
             && m.getMinActivePower() == reference.getMinActivePower()
             && m.getMaxActivePower() == reference.getMaxActivePower()
-            && m.getRatedNominalPower() == reference.getRatedNominalPower()
+            && ((m.getRatedNominalPower() != null && m.getRatedNominalPower().equals(reference.getRatedNominalPower()))
+            || (m.getRatedNominalPower() == null && reference.getRatedNominalPower() == null))
             && m.getActivePowerSetpoint() == reference.getActivePowerSetpoint()
-            && m.getReactivePowerSetpoint() == reference.getReactivePowerSetpoint()
+            && ((m.getReactivePowerSetpoint() != null && m.getReactivePowerSetpoint().equals(reference.getReactivePowerSetpoint()))
+            || (m.getReactivePowerSetpoint() == null && reference.getReactivePowerSetpoint() == null))
             && m.isVoltageRegulationOn() == reference.isVoltageRegulationOn()
-            && m.getVoltageSetpoint() == reference.getVoltageSetpoint();
+            && ((m.getVoltageSetpoint() != null && m.getVoltageSetpoint().equals(reference.getVoltageSetpoint()))
+            || (m.getVoltageSetpoint() == null && reference.getVoltageSetpoint() == null));
     }
 
     @Override
