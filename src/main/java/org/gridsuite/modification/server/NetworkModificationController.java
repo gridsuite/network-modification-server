@@ -22,6 +22,8 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
 /**
@@ -106,6 +108,6 @@ public class NetworkModificationController {
                                                                         @Parameter(description = "Equipment type") @PathVariable("equipmentType") String equipmentType,
                                                                         @Parameter(description = "Equipment id") @PathVariable("equipmentId") String equipmentId,
                                                                         @RequestParam(value = "group", required = false) UUID groupUuid) {
-        return ResponseEntity.ok().body(networkModificationService.deleteEquipment(networkUuid, groupUuid, equipmentType, equipmentId));
+        return ResponseEntity.ok().body(networkModificationService.deleteEquipment(networkUuid, groupUuid, equipmentType, URLDecoder.decode(equipmentId, StandardCharsets.UTF_8)));
     }
 }

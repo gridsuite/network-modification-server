@@ -7,8 +7,6 @@
 package org.gridsuite.modification.server.elasticsearch;
 
 import org.gridsuite.modification.server.dto.EquipmentInfos;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.lang.NonNull;
 
 import java.util.UUID;
@@ -19,8 +17,6 @@ import java.util.UUID;
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
 public class EquipmentInfosServiceImpl implements EquipmentInfosService {
-    private static final Logger LOGGER = LoggerFactory.getLogger(EquipmentInfosServiceImpl.class);
-
     private final EquipmentInfosRepository equipmentInfosRepository;
 
     public EquipmentInfosServiceImpl(EquipmentInfosRepository equipmentInfosRepository) {
@@ -34,11 +30,7 @@ public class EquipmentInfosServiceImpl implements EquipmentInfosService {
 
     @Override
     public void delete(@NonNull String equipmentId, @NonNull UUID networkUuid) {
-        try {
-            equipmentInfosRepository.deleteByEquipmentIdAndNetworkUuid(equipmentId, networkUuid);
-        } catch (Exception e) {
-            LOGGER.warn("Unable to remove elasticsearch index for equipment id '{}' in network '{}'", equipmentId, networkUuid);
-        }
+        equipmentInfosRepository.deleteByEquipmentIdAndNetworkUuid(equipmentId, networkUuid);
     }
 
     @Override
