@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
@@ -34,7 +35,7 @@ public class EquipmentInfosServiceMockTests {
 
     @Test
     public void testAddDeleteEquipmentInfos() {
-        equipmentInfosService.add(EquipmentInfos.builder().networkUuid(NETWORK_UUID).equipmentId("id1").equipmentName("name1").equipmentType(EquipmentType.LOAD.name()).build());
+        equipmentInfosService.add(EquipmentInfos.builder().networkUuid(NETWORK_UUID).id("id1").name("name1").type(EquipmentType.LOAD.name()).voltageLevelsIds(Set.of("vl1")).build());
         assertEquals(0, Iterables.size(equipmentInfosService.findAll(NETWORK_UUID)));
 
         equipmentInfosService.delete("foo", NETWORK_UUID);

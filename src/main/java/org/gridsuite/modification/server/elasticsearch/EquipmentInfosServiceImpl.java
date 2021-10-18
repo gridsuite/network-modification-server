@@ -31,7 +31,7 @@ public class EquipmentInfosServiceImpl implements EquipmentInfosService {
 
     @Override
     public void delete(@NonNull String equipmentId, @NonNull UUID networkUuid) {
-        equipmentInfosRepository.deleteByEquipmentIdAndNetworkUuid(equipmentId, networkUuid);
+        equipmentInfosRepository.deleteByIdAndNetworkUuid(equipmentId, networkUuid);
     }
 
     @Override

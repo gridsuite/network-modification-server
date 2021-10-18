@@ -8,8 +8,7 @@ package org.gridsuite.modification.server.dto;
 
 import com.powsybl.iidm.network.*;
 import org.gridsuite.modification.server.NetworkModificationException;
-
-import java.util.Objects;
+import org.springframework.lang.NonNull;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -38,13 +37,12 @@ public enum EquipmentType {
     SUBSTATION,
     VOLTAGE_LEVEL;
 
-    public static EquipmentType getType(Identifiable<?> identifiable) {
-        Objects.requireNonNull(identifiable);
+    public static EquipmentType getType(@NonNull Identifiable<?> identifiable) {
         try {
             if (identifiable instanceof Switch) {
                 return EquipmentType.valueOf(((Switch) identifiable).getKind().name());
             } else if (identifiable instanceof Connectable) {
-                return EquipmentType.valueOf(((Connectable) identifiable).getType().name());
+                return EquipmentType.valueOf(((Connectable<?>) identifiable).getType().name());
             } else if (identifiable instanceof HvdcLine) {
                 return EquipmentType.HVDC;
             } else if (identifiable instanceof Substation) {
