@@ -7,10 +7,12 @@
 package org.gridsuite.modification.server.repositories;
 
 import com.powsybl.commons.PowsyblException;
+import com.powsybl.iidm.network.EnergySource;
 import com.powsybl.iidm.network.LoadType;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.EquipmenAttributeModificationInfos;
+import org.gridsuite.modification.server.dto.GeneratorCreationInfos;
 import org.gridsuite.modification.server.dto.LoadCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
@@ -22,6 +24,7 @@ import org.gridsuite.modification.server.entities.equipment.attribute.modificati
 import org.gridsuite.modification.server.entities.equipment.attribute.modification.IntegerEquipmentAttributeModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.attribute.modification.StringEquipmentAttributeModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.EquipmentCreationEntity;
+import org.gridsuite.modification.server.entities.equipment.creation.GeneratorCreationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.LoadCreationEntity;
 import org.gridsuite.modification.server.entities.equipment.deletion.EquipmentDeletionEntity;
 import org.springframework.stereotype.Repository;
@@ -128,6 +131,15 @@ public class NetworkModificationRepository {
             .toLoadCreationInfos();
     }
 
+    public GeneratorCreationInfos getGeneratorCreationModification(UUID groupUuid, UUID modificationUuid) {
+        return ((GeneratorCreationEntity) this.modificationRepository
+            .findById(modificationUuid)
+            .filter(m -> ModificationType.GENERATOR_CREATION.name().equals(m.getType()))
+            .filter(m -> groupUuid.equals(m.getGroup().getId()))
+            .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString())))
+            .toGeneratorCreationInfos();
+    }
+
     @Transactional // To have the 2 delete in the same transaction (atomic)
     public void deleteModificationGroup(UUID groupUuid) {
         ModificationGroupEntity groupEntity = getModificationGroup(groupUuid);
@@ -149,8 +161,17 @@ public class NetworkModificationRepository {
     }
 
     public EquipmentCreationEntity createLoadEntity(String loadId, String loadName, LoadType loadType,
-                                                    String voltageLevelId, String busId, double activePower, double reactivePower) {
-        return new LoadCreationEntity(loadId, loadName, loadType, voltageLevelId, busId, activePower, reactivePower);
+                                                    String voltageLevelId, String busOrBusbarSectionId, double activePower, double reactivePower) {
+        return new LoadCreationEntity(loadId, loadName, loadType, voltageLevelId, busOrBusbarSectionId, activePower, reactivePower);
+    }
+
+    public EquipmentCreationEntity createGeneratorEntity(String generatorId, String generatorName, EnergySource energySource,
+                                                         String voltageLevelId, String busOrBusbarSectionId,
+                                                         double minActivePower, double maxActivePower,
+                                                         Double ratedNominalPower, double activePowerSetpoint,
+                                                         Double reactivePowerSetpoint, boolean voltageRegulationOn, Double voltageSetpoint) {
+        return new GeneratorCreationEntity(generatorId, generatorName, energySource, voltageLevelId, busOrBusbarSectionId, minActivePower,
+            maxActivePower, ratedNominalPower, activePowerSetpoint, reactivePowerSetpoint, voltageRegulationOn, voltageSetpoint);
     }
 
     public EquipmentDeletionEntity createEquipmentDeletionEntity(String equipmentId, String equipmentType) {
