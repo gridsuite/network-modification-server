@@ -26,6 +26,7 @@ import org.gridsuite.modification.server.entities.equipment.attribute.modificati
 import org.gridsuite.modification.server.entities.equipment.creation.EquipmentCreationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.GeneratorCreationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.LoadCreationEntity;
+import org.gridsuite.modification.server.entities.equipment.deletion.EquipmentDeletionEntity;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -171,5 +172,9 @@ public class NetworkModificationRepository {
                                                          Double reactivePowerSetpoint, boolean voltageRegulationOn, Double voltageSetpoint) {
         return new GeneratorCreationEntity(generatorId, generatorName, energySource, voltageLevelId, busOrBusbarSectionId, minActivePower,
             maxActivePower, ratedNominalPower, activePowerSetpoint, reactivePowerSetpoint, voltageRegulationOn, voltageSetpoint);
+    }
+
+    public EquipmentDeletionEntity createEquipmentDeletionEntity(String equipmentId, String equipmentType) {
+        return new EquipmentDeletionEntity(equipmentId, equipmentType);
     }
 }

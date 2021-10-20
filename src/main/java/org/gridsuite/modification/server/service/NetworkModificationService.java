@@ -22,6 +22,8 @@ import org.codehaus.groovy.control.CompilerConfiguration;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.EquipmenModificationInfos;
 import org.gridsuite.modification.server.dto.GeneratorCreationInfos;
+import org.gridsuite.modification.server.dto.EquipmentDeletionInfos;
+import org.gridsuite.modification.server.dto.EquipmentType;
 import org.gridsuite.modification.server.dto.LoadCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
@@ -44,6 +46,7 @@ import reactor.core.scheduler.Schedulers;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 
@@ -53,7 +56,6 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
  */
 @Service
 public class NetworkModificationService {
-
     private final NetworkStoreService networkStoreService;
 
     private final NetworkModificationRepository modificationRepository;
@@ -319,14 +321,14 @@ public class NetworkModificationService {
         return newNode + 2;
     }
 
-    private void createLoadInNodeBreaker(VoltageLevel voltageLevel, LoadCreationInfos loadCreationInfos) {
+    private Load createLoadInNodeBreaker(VoltageLevel voltageLevel, LoadCreationInfos loadCreationInfos) {
         // create cell switches
         int nodeNum = createNodeBreakerCellSwitches(voltageLevel, loadCreationInfos.getBusOrBusbarSectionId(),
             loadCreationInfos.getEquipmentId(),
             loadCreationInfos.getEquipmentName());
 
         // creating the load
-        voltageLevel.newLoad()
+        return voltageLevel.newLoad()
             .setId(loadCreationInfos.getEquipmentId())
             .setName(loadCreationInfos.getEquipmentName())
             .setLoadType(loadCreationInfos.getLoadType())
@@ -336,11 +338,11 @@ public class NetworkModificationService {
             .add();
     }
 
-    private void createLoadInBusBreaker(VoltageLevel voltageLevel, LoadCreationInfos loadCreationInfos) {
+    private Load createLoadInBusBreaker(VoltageLevel voltageLevel, LoadCreationInfos loadCreationInfos) {
         Bus bus = getBusBreakerBus(voltageLevel, loadCreationInfos.getBusOrBusbarSectionId());
 
         // creating the load
-        voltageLevel.newLoad()
+        return voltageLevel.newLoad()
             .setId(loadCreationInfos.getEquipmentId())
             .setName(loadCreationInfos.getEquipmentName())
             .setLoadType(loadCreationInfos.getLoadType())
@@ -361,11 +363,16 @@ public class NetworkModificationService {
                     return doAction(listener, () -> {
                         // create the load in the network
                         VoltageLevel voltageLevel = getVoltageLevel(network, loadCreationInfos.getVoltageLevelId());
+                        Load load;
                         if (voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER) {
-                            createLoadInNodeBreaker(voltageLevel, loadCreationInfos);
+                            load = createLoadInNodeBreaker(voltageLevel, loadCreationInfos);
                         } else {
-                            createLoadInBusBreaker(voltageLevel, loadCreationInfos);
+                            load = createLoadInBusBreaker(voltageLevel, loadCreationInfos);
                         }
+
+                        // store the substations ids in the listener
+                        listener.setSubstationsIds(NetworkStoreListener.getSubstationIds(load));
+
                         subReporter.report(Report.builder()
                             .withKey("loadCreated")
                             .withDefaultMessage("New load with id=${id} created")
@@ -381,6 +388,86 @@ public class NetworkModificationService {
 
     private Mono<Void> assertLoadCreationInfosNotEmpty(LoadCreationInfos loadCreationInfos) {
         return loadCreationInfos == null ? Mono.error(new NetworkModificationException(CREATE_LOAD_ERROR, "Missing required attributes to create the load")) : Mono.empty();
+    }
+
+    public Flux<EquipmentDeletionInfos> deleteEquipment(UUID networkUuid, UUID groupUuid, String equipmentType, String equipmentId) {
+        return getNetwork(networkUuid).flatMapIterable(network -> {
+            NetworkStoreListener listener = NetworkStoreListener.create(network, networkUuid, groupUuid, modificationRepository, equipmentInfosService);
+            ReporterModel reporter = new ReporterModel("NetworkModification", "Network modification");
+            Reporter subReporter = reporter.createSubReporter("EquipmentDeletion", "Equipment deletion");
+
+            return doAction(listener, () -> {
+                Identifiable identifiable = null;
+                switch (EquipmentType.valueOf(equipmentType)) {
+                    case HVDC_LINE:
+                        identifiable = network.getHvdcLine(equipmentId);
+                        break;
+                    case LINE:
+                        identifiable = network.getLine(equipmentId);
+                        break;
+                    case TWO_WINDINGS_TRANSFORMER:
+                        identifiable = network.getTwoWindingsTransformer(equipmentId);
+                        break;
+                    case THREE_WINDINGS_TRANSFORMER:
+                        identifiable = network.getThreeWindingsTransformer(equipmentId);
+                        break;
+                    case GENERATOR:
+                        identifiable = network.getGenerator(equipmentId);
+                        break;
+                    case LOAD:
+                        identifiable = network.getLoad(equipmentId);
+                        break;
+                    case BATTERY:
+                        identifiable = network.getBattery(equipmentId);
+                        break;
+                    case SHUNT_COMPENSATOR:
+                        identifiable = network.getShuntCompensator(equipmentId);
+                        break;
+                    case STATIC_VAR_COMPENSATOR:
+                        identifiable = network.getStaticVarCompensator(equipmentId);
+                        break;
+                    case DANGLING_LINE:
+                        identifiable = network.getDanglingLine(equipmentId);
+                        break;
+                    case LCC_CONVERTER_STATION:
+                        identifiable = network.getLccConverterStation(equipmentId);
+                        break;
+                    case VSC_CONVERTER_STATION:
+                        identifiable = network.getVscConverterStation(equipmentId);
+                        break;
+                    default:
+                        break;
+                }
+                if (identifiable == null) {
+                    throw new NetworkModificationException(EQUIPMENT_NOT_FOUND, "Equipment with id=" + equipmentId + " not found or of bad type");
+                }
+
+                // store the substations ids in the listener
+                listener.setSubstationsIds(NetworkStoreListener.getSubstationIds(identifiable));
+
+                if (identifiable instanceof Connectable) {
+                    ((Connectable) identifiable).remove();
+                } else if (identifiable instanceof HvdcLine) {
+                    ((HvdcLine) identifiable).remove();
+                }
+
+                // Done here, and not in the network listener onRemoval method
+                // because onRemoval must be refactored in powsybl core
+                listener.deleteEquipmentInfos(equipmentId);
+
+                subReporter.report(Report.builder()
+                    .withKey("equipmentDeleted")
+                    .withDefaultMessage("equipment of type=${type} and id=${id} deleted")
+                    .withValue("type", equipmentType)
+                    .withValue("id", equipmentId)
+                    .withSeverity(new TypedValue("EQUIPMENT_DELETION_INFO", TypedValue.INFO_LOGLEVEL))
+                    .build());
+
+                // add the equipment deletion entity to the listener
+                listener.storeEquipmentDeletion(equipmentId, equipmentType);
+            }, DELETE_EQUIPMENT_ERROR, networkUuid, reporter, subReporter).stream().map(EquipmentDeletionInfos.class::cast)
+                .collect(Collectors.toList());
+        });
     }
 
     private void sendReport(UUID networkUuid, ReporterModel reporter) {
@@ -399,14 +486,14 @@ public class NetworkModificationService {
         this.reportServerRest = Objects.requireNonNull(reportServerRest, "reportServerRest can't be null");
     }
 
-    private void createGeneratorInNodeBreaker(VoltageLevel voltageLevel, GeneratorCreationInfos generatorCreationInfos) {
+    private Generator createGeneratorInNodeBreaker(VoltageLevel voltageLevel, GeneratorCreationInfos generatorCreationInfos) {
         // create cell switches
         int nodeNum = createNodeBreakerCellSwitches(voltageLevel, generatorCreationInfos.getBusOrBusbarSectionId(),
             generatorCreationInfos.getEquipmentId(),
             generatorCreationInfos.getEquipmentName());
 
         // creating the generator
-        voltageLevel.newGenerator()
+        return voltageLevel.newGenerator()
             .setId(generatorCreationInfos.getEquipmentId())
             .setName(generatorCreationInfos.getEquipmentName())
             .setEnergySource(generatorCreationInfos.getEnergySource())
@@ -421,11 +508,11 @@ public class NetworkModificationService {
             .add();
     }
 
-    private void createGeneratorInBusBreaker(VoltageLevel voltageLevel, GeneratorCreationInfos generatorCreationInfos) {
+    private Generator createGeneratorInBusBreaker(VoltageLevel voltageLevel, GeneratorCreationInfos generatorCreationInfos) {
         Bus bus = getBusBreakerBus(voltageLevel, generatorCreationInfos.getBusOrBusbarSectionId());
 
         // creating the generator
-        voltageLevel.newGenerator()
+        return voltageLevel.newGenerator()
             .setId(generatorCreationInfos.getEquipmentId())
             .setName(generatorCreationInfos.getEquipmentName())
             .setEnergySource(generatorCreationInfos.getEnergySource())
@@ -451,11 +538,16 @@ public class NetworkModificationService {
                 return doAction(listener, () -> {
                     // create the generator in the network
                     VoltageLevel voltageLevel = getVoltageLevel(network, generatorCreationInfos.getVoltageLevelId());
+                    Generator generator;
                     if (voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER) {
-                        createGeneratorInNodeBreaker(voltageLevel, generatorCreationInfos);
+                        generator = createGeneratorInNodeBreaker(voltageLevel, generatorCreationInfos);
                     } else {
-                        createGeneratorInBusBreaker(voltageLevel, generatorCreationInfos);
+                        generator = createGeneratorInBusBreaker(voltageLevel, generatorCreationInfos);
                     }
+
+                    // store the substations ids in the listener
+                    listener.setSubstationsIds(NetworkStoreListener.getSubstationIds(generator));
+
                     subReporter.report(Report.builder()
                         .withKey("generatorCreated")
                         .withDefaultMessage("New generator with id=${id} created")

@@ -31,7 +31,9 @@ public class NetworkModificationException extends RuntimeException {
         CREATE_LOAD_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         BUSBAR_SECTION_NOT_FOUND(HttpStatus.NOT_FOUND),
         BUS_NOT_FOUND(HttpStatus.NOT_FOUND),
-        CREATE_GENERATOR_ERROR(HttpStatus.INTERNAL_SERVER_ERROR);
+        CREATE_GENERATOR_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
+        DELETE_EQUIPMENT_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
+        EQUIPMENT_NOT_FOUND(HttpStatus.NOT_FOUND);
 
         public final HttpStatus status;
         private final String message;
