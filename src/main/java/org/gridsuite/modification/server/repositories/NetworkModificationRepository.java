@@ -23,6 +23,7 @@ import org.gridsuite.modification.server.entities.equipment.attribute.modificati
 import org.gridsuite.modification.server.entities.equipment.attribute.modification.StringEquipmentAttributeModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.EquipmentCreationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.LoadCreationEntity;
+import org.gridsuite.modification.server.entities.equipment.deletion.EquipmentDeletionEntity;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -150,5 +151,9 @@ public class NetworkModificationRepository {
     public EquipmentCreationEntity createLoadEntity(String loadId, String loadName, LoadType loadType,
                                                     String voltageLevelId, String busId, double activePower, double reactivePower) {
         return new LoadCreationEntity(loadId, loadName, loadType, voltageLevelId, busId, activePower, reactivePower);
+    }
+
+    public EquipmentDeletionEntity createEquipmentDeletionEntity(String equipmentId, String equipmentType) {
+        return new EquipmentDeletionEntity(equipmentId, equipmentType);
     }
 }

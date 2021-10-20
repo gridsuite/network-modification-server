@@ -11,7 +11,7 @@ public final class NetworkCreation {
     private NetworkCreation() {
     }
 
-    public static Network create(UUID uuid) {
+    public static Network create(UUID uuid, boolean createHvdcLine) {
         Network network = new NetworkFactoryImpl().createNetwork(uuid.toString(), "test");
 
         Substation s1 = createSubstation(network, "s1", "s1", Country.FR);
@@ -32,6 +32,9 @@ public final class NetworkCreation {
         createSwitch(v2, "v2bload", "v2bload", SwitchKind.BREAKER, true, false, false, 4, 5);
         createLoad(v2, "v2load", "v2load", 5, 0., 0.);
         createGenerator(v2, "idGenerator", 6, 42.1, 1.0);
+        createShuntCompensator(v2, "v2shunt", "v2shunt", 7, 225., 10, true, 3, 1, 2, 2);
+        createDanglingLine(v2, "v2Dangling", "v2Dangling", 8, 1, 2, 3, 4, 50, 30, "xnode1");
+        createVscConverterStation(v2, "v2vsc", "v2vsc", 9, 1, 40, true, 150);
 
         VoltageLevel v4 = createVoltageLevel(s1, "v4", "v4", TopologyKind.NODE_BREAKER, 380.0);
 
@@ -41,6 +44,8 @@ public final class NetworkCreation {
         createSwitch(v3, "v3d1", "v3d1", SwitchKind.DISCONNECTOR, true, false, false, 0, 1);
         createSwitch(v3, "v3b1", "v3b1", SwitchKind.BREAKER, true, false, false, 1, 2);
         createLoad(v3, "v3load", "v3load", 2, 0., 0.);
+        createStaticVarCompensator(v3, "v3Compensator", "v3Compensator", 11, StaticVarCompensator.RegulationMode.VOLTAGE, 380., 100, 2, 30);
+        createBattery(v3, "v3Battery", "v3Battery", 12, 0, 10, 1, 1);
 
         TwoWindingsTransformer t2 = createTwoWindingsTransformer(s1, "trf1", "trf1", 2.0, 14.745, 0.0, 3.2E-5, 400.0, 225.0,
             19, 9, v1.getId(), v2.getId(),
@@ -138,6 +143,10 @@ public final class NetworkCreation {
         createSwitch(v3, "v3bl2", "v3bl2", SwitchKind.BREAKER, true, false, true, 0, 5);
 
         createLine(network, "line3", "line3", "v1", "v3", 6, 5, 12.0, 7.0, 5.5, 7.5, 6.5, 8.5);
+
+        if (createHvdcLine) {
+            createHvdcLine(network, "hvdcLine", "hvdcLine", 1, 100, HvdcLine.ConvertersMode.SIDE_1_INVERTER_SIDE_2_RECTIFIER, 225, 500, "v1lcc", "v2vsc");
+        }
 
         return network;
     }
@@ -362,5 +371,99 @@ public final class NetworkCreation {
             .add();
 
         return t;
+    }
+
+    private static void createShuntCompensator(VoltageLevel vl, String id, String name,
+                                               int node, double targetV, double targetDeadband, boolean voltageRegulatorOn,
+                                               int maximumSectionCount, double bPerSection, double gPerSection, int sectionCount) {
+        vl.newShuntCompensator()
+            .setId(id)
+            .setName(name)
+            .setNode(node)
+            .setTargetV(targetV)
+            .setTargetDeadband(targetDeadband)
+            .setVoltageRegulatorOn(voltageRegulatorOn)
+            .newLinearModel()
+            .setMaximumSectionCount(maximumSectionCount)
+            .setBPerSection(bPerSection)
+            .setGPerSection(gPerSection)
+            .add()
+            .setSectionCount(sectionCount)
+            .add();
+    }
+
+    private static void createStaticVarCompensator(VoltageLevel vl, String id, String name,
+                                                   int node, StaticVarCompensator.RegulationMode regulationMode, double voltageSetpoint,
+                                                   double reactivePowerSetpoint, double bMin, double bMax) {
+        vl.newStaticVarCompensator()
+            .setId(id)
+            .setName(name)
+            .setRegulationMode(regulationMode)
+            .setVoltageSetpoint(voltageSetpoint)
+            .setReactivePowerSetpoint(reactivePowerSetpoint)
+            .setBmin(bMin)
+            .setBmax(bMax)
+            .setNode(node)
+            .add();
+    }
+
+    private static void createBattery(VoltageLevel vl, String id, String name,
+                                      int node, double minP, double maxP, double p0, double q0) {
+        vl.newBattery()
+            .setId(id)
+            .setName(name)
+            .setMinP(minP)
+            .setMaxP(maxP)
+            .setP0(p0)
+            .setQ0(q0)
+            .setNode(node)
+            .add();
+    }
+
+    private static void createDanglingLine(VoltageLevel vl, String id, String name,
+                                           int node, double r, double x, double b, double g, double p0, double q0, String ucteXnodeCode) {
+        vl.newDanglingLine()
+            .setId(id)
+            .setName(name)
+            .setR(r)
+            .setX(x)
+            .setB(b)
+            .setG(g)
+            .setP0(p0)
+            .setQ0(q0)
+            .setUcteXnodeCode(ucteXnodeCode)
+            .setNode(node)
+            .add();
+    }
+
+    private static void createVscConverterStation(VoltageLevel vl, String id, String name,
+                                                  int node, float lossFactor,
+                                                  double reactivePowerSetpoint, boolean voltageRegulatorOn, double voltageSetpoint) {
+        vl.newVscConverterStation()
+            .setId(id)
+            .setName(name)
+            .setNode(node)
+            .setLossFactor(lossFactor)
+            .setReactivePowerSetpoint(reactivePowerSetpoint)
+            .setVoltageRegulatorOn(voltageRegulatorOn)
+            .setVoltageSetpoint(voltageSetpoint)
+            .add();
+    }
+
+    private static void createHvdcLine(Network network, String id, String name,
+                                       double r, double maxP, HvdcLine.ConvertersMode hvdcLineConvertersMode,
+                                       double nominalV, double activePowerSetpoint,
+                                       String converterStationId1, String converterStationId2) {
+        network.newHvdcLine()
+            .setId(id)
+            .setName(name)
+            .setR(r)
+            .setMaxP(maxP)
+            .setConvertersMode(hvdcLineConvertersMode)
+            .setNominalV(nominalV)
+            .setActivePowerSetpoint(activePowerSetpoint)
+            .setConverterStationId1(converterStationId1)
+            .setConverterStationId2(converterStationId2)
+            .add();
     }
 }
