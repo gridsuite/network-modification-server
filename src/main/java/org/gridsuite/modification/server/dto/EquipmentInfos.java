@@ -69,12 +69,7 @@ public class EquipmentInfos {
             Branch<?> branch = (Branch<?>) identifiable;
             String vlId1 = branch.getTerminal1().getVoltageLevel().getId();
             String vlId2 = branch.getTerminal2().getVoltageLevel().getId();
-            return vlId1.equals(vlId2) ? // Internal line ?
-                Set.of(branch.getTerminal1().getVoltageLevel().getId()) :
-                Set.of(
-                    branch.getTerminal1().getVoltageLevel().getId(),
-                    branch.getTerminal2().getVoltageLevel().getId()
-                );
+            return vlId1.equals(vlId2) ? Set.of(vlId1) : Set.of(vlId1, vlId2); // Internal line
         } else if (identifiable instanceof ThreeWindingsTransformer) {
             ThreeWindingsTransformer w3t = (ThreeWindingsTransformer) identifiable;
             return Set.of(
