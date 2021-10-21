@@ -23,12 +23,12 @@ public class InjectionCreationEntity extends EquipmentCreationEntity {
     @Column(name = "voltageLevelId")
     private String voltageLevelId;
 
-    @Column(name = "busId")
-    private String busId;
+    @Column(name = "busOrBusbarSectionId")
+    private String busOrBusbarSectionId;
 
-    protected InjectionCreationEntity(ModificationType modificationType, String equipmentId, String equipmentName, String voltageLevelId, String busId) {
+    protected InjectionCreationEntity(ModificationType modificationType, String equipmentId, String equipmentName, String voltageLevelId, String busOrBusbarSectionId) {
         super(modificationType, equipmentId, equipmentName);
         this.voltageLevelId = voltageLevelId;
-        this.busId = busId;
+        this.busOrBusbarSectionId = busOrBusbarSectionId;
     }
 }
