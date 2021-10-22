@@ -17,12 +17,14 @@ import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationGroupEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.GeneratorCreationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.LoadCreationEntity;
+import org.gridsuite.modification.server.entities.equipment.creation.LineCreationEntity;
 import org.gridsuite.modification.server.entities.equipment.attribute.modification.EquipmentAttributeModificationEntity;
 import org.gridsuite.modification.server.repositories.ModificationGroupRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.utils.MatcheEquipmentAttributeModificationInfos;
 import org.gridsuite.modification.server.utils.MatcherGeneratorCreationInfos;
 import org.gridsuite.modification.server.utils.MatcherLoadCreationInfos;
+import org.gridsuite.modification.server.utils.MatcherLineCreationInfos;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -244,6 +246,49 @@ public class ModificationRepositoryTest {
         SQLStatementCountValidator.reset();
         modificationRepository.deleteModificationGroup(TEST_GROUP_ID);
         assertRequestsCount(2, 0, 0, 3);
+
+        assertThrows(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage(),
+            NetworkModificationException.class, () -> modificationRepository.getModifications(TEST_GROUP_ID)
+        );
+    }
+
+    @Test
+    public void testLineCreation() {
+        var createLineEntity1 = modificationRepository.createLineEntity("idLine1", "nameLine1", 1.0, 1.1, 10.0, 11.0, 100.0, 100.1, "vlId11", "busId11", "vlId12", "busId12");
+        var createLineEntity2 = modificationRepository.createLineEntity("idLine2", "nameLine2", 2.0, 2.2, 20.0, 22.0, 200.0, 200.2, "vlId21", "busId21", "vlId22", "busId22");
+        var createLineEntity3 = modificationRepository.createLineEntity("idLine3", "nameLine3", 3.0, 3.3, 30.0, 33.0, 300.0, 300.3, "vlId31", "busId31", "vlId32", "busId32");
+        var createLineEntity4 = modificationRepository.createLineEntity("idLine4", "nameLine4", 3.0, 3.3, null, null, null, null, "vlId41", "busId41", "vlId42", "busId42");
+
+
+        modificationRepository.saveModifications(TEST_GROUP_ID, List.of(createLineEntity1, createLineEntity2, createLineEntity3, createLineEntity4));
+        assertRequestsCount(1, 9, 0, 0);
+
+        List<ModificationInfos> modificationInfos = modificationRepository.getModifications(TEST_GROUP_ID);
+        assertEquals(4, modificationInfos.size());
+
+        assertThat(modificationRepository.getLineCreationModification(TEST_GROUP_ID, modificationInfos.get(0).getUuid()),
+                MatcherLineCreationInfos.createMatcherLineCreationInfos(((LineCreationEntity) createLineEntity1).toLineCreationInfos()));
+        assertThat(modificationRepository.getLineCreationModification(TEST_GROUP_ID, modificationInfos.get(1).getUuid()),
+            MatcherLineCreationInfos.createMatcherLineCreationInfos(((LineCreationEntity) createLineEntity2).toLineCreationInfos()));
+        assertThat(modificationRepository.getLineCreationModification(TEST_GROUP_ID, modificationInfos.get(2).getUuid()),
+            MatcherLineCreationInfos.createMatcherLineCreationInfos(((LineCreationEntity) createLineEntity3).toLineCreationInfos()));
+        assertThat(modificationRepository.getLineCreationModification(TEST_GROUP_ID, modificationInfos.get(3).getUuid()),
+            MatcherLineCreationInfos.createMatcherLineCreationInfos(((LineCreationEntity) createLineEntity4).toLineCreationInfos()));
+
+        assertEquals(4, modificationRepository.getModifications(TEST_GROUP_ID).size());
+        assertEquals(List.of(TEST_GROUP_ID), this.modificationRepository.getModificationGroupsUuids());
+
+        SQLStatementCountValidator.reset();
+        modificationRepository.deleteModifications(TEST_GROUP_ID, Set.of(createLineEntity2.getId(), createLineEntity3.getId()));
+        assertRequestsCount(1, 0, 0, 4);
+
+        SQLStatementCountValidator.reset();
+        assertEquals(2, modificationRepository.getModifications(TEST_GROUP_ID).size());
+        assertRequestsCount(2, 0, 0, 0);
+
+        SQLStatementCountValidator.reset();
+        modificationRepository.deleteModificationGroup(TEST_GROUP_ID);
+        assertRequestsCount(2, 0, 0, 5);
 
         assertThrows(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage(),
             NetworkModificationException.class, () -> modificationRepository.getModifications(TEST_GROUP_ID)

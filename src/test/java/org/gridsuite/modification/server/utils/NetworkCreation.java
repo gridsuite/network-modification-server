@@ -157,7 +157,29 @@ public final class NetworkCreation {
         Substation s1 = createSubstation(network, "s1", "s1", Country.FR);
         VoltageLevel v1 = createVoltageLevel(s1, "v1", "v1", TopologyKind.BUS_BREAKER, 380.0);
         createBus(v1, "bus1", "bus1");
-        createGeneratorOnBus(v1, "idGenerator", "bus1", 42.1, 1.0);
+        createGeneratorOnBus(v1, "idGenerator1", "bus1", 42.1, 1.0);
+
+        Substation s2 = createSubstation(network, "s2", "s2", Country.FR);
+        VoltageLevel v2 = createVoltageLevel(s2, "v2", "v2", TopologyKind.BUS_BREAKER, 225.0);
+        createBus(v2, "bus2", "bus2");
+
+        return network;
+    }
+
+    public static Network createMixedTopology(UUID uuid) {
+        Network network = new NetworkFactoryImpl().createNetwork(uuid.toString(), "test");
+
+        Substation s1 = createSubstation(network, "s1", "s1", Country.FR);
+        VoltageLevel v1 = createVoltageLevel(s1, "v1", "v1", TopologyKind.NODE_BREAKER, 380.0);
+        createBusBarSection(v1, "1.1", "1.1", 0);
+        createSwitch(v1, "v1d1", "v1d1", SwitchKind.DISCONNECTOR, true, false, false, 0, 1);
+        createSwitch(v1, "v1b1", "v1b1", SwitchKind.BREAKER, true, false, false, 1, 2);
+        createLoad(v1, "v1load", "v1load", 2, 0., 0.);
+        createLccConverterStation(v1, "v1lcc", "v1lcc", 3, 0, 0);
+
+        Substation s2 = createSubstation(network, "s2", "s2", Country.FR);
+        VoltageLevel v2 = createVoltageLevel(s2, "v2", "v2", TopologyKind.BUS_BREAKER, 225.0);
+        createBus(v2, "bus2", "bus2");
 
         return network;
     }

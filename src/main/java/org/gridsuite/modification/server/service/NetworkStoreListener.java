@@ -12,6 +12,7 @@ import org.gridsuite.modification.server.dto.EquipmentInfos;
 import org.gridsuite.modification.server.dto.EquipmentType;
 import org.gridsuite.modification.server.dto.GeneratorCreationInfos;
 import org.gridsuite.modification.server.dto.LoadCreationInfos;
+import org.gridsuite.modification.server.dto.LineCreationInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.EquipmentModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationEntity;
@@ -118,6 +119,22 @@ public class NetworkStoreListener implements NetworkListener {
 
     public void storeEquipmentDeletion(String equipmentId, String equipmentType) {
         modifications.add(this.modificationRepository.createEquipmentDeletionEntity(equipmentId, equipmentType));
+    }
+
+    public void storeLineCreation(LineCreationInfos lineCreationInfos) {
+        modifications.add(this.modificationRepository.createLineEntity(lineCreationInfos.getEquipmentId(),
+            lineCreationInfos.getEquipmentName(),
+            lineCreationInfos.getSeriesResistance(),
+            lineCreationInfos.getSeriesReactance(),
+            lineCreationInfos.getShuntConductance1(),
+            lineCreationInfos.getShuntSusceptance1(),
+            lineCreationInfos.getShuntConductance2(),
+            lineCreationInfos.getShuntSusceptance2(),
+            lineCreationInfos.getVoltageLevelId1(),
+            lineCreationInfos.getBusOrBusbarSectionId1(),
+            lineCreationInfos.getVoltageLevelId2(),
+            lineCreationInfos.getBusOrBusbarSectionId2())
+        );
     }
 
     private Set<String> getSubstationsIds(String equipmentId) {

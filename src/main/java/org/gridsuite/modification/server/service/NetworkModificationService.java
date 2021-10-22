@@ -15,6 +15,7 @@ import com.powsybl.iidm.network.*;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.sld.iidm.extensions.BranchStatus;
 import com.powsybl.sld.iidm.extensions.BranchStatusAdder;
+import com.powsybl.iidm.network.Branch.Side;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
 import org.apache.commons.lang3.StringUtils;
@@ -25,6 +26,7 @@ import org.gridsuite.modification.server.dto.GeneratorCreationInfos;
 import org.gridsuite.modification.server.dto.EquipmentDeletionInfos;
 import org.gridsuite.modification.server.dto.EquipmentType;
 import org.gridsuite.modification.server.dto.LoadCreationInfos;
+import org.gridsuite.modification.server.dto.LineCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
@@ -286,7 +288,7 @@ public class NetworkModificationService {
     }
 
     private int createNodeBreakerCellSwitches(VoltageLevel voltageLevel, String busBarSectionId, String equipmentId,
-                                               String equipmentName) {
+                                               String equipmentName, Side side) {
         VoltageLevel.NodeBreakerView nodeBreakerView = voltageLevel.getNodeBreakerView();
         BusbarSection busbarSection = nodeBreakerView.getBusbarSection(busBarSectionId);
         if (busbarSection == null) {
@@ -296,8 +298,8 @@ public class NetworkModificationService {
         // creating the disconnector
         int newNode = nodeBreakerView.getMaximumNodeIndex();
         nodeBreakerView.newSwitch()
-                .setId("disconnector_" + equipmentId)
-                .setName(equipmentName != null ? "disconnector_" + equipmentName : null)
+                .setId("disconnector_" + equipmentId + (side != null ? "_" + side.name() : ""))
+                .setName((equipmentName != null ? "disconnector_" + equipmentName : null) + (side != null ? "_" + side.name() : ""))
                 .setKind(SwitchKind.DISCONNECTOR)
                 .setRetained(false)
                 .setOpen(false)
@@ -308,8 +310,8 @@ public class NetworkModificationService {
 
         // creating the breaker
         nodeBreakerView.newSwitch()
-            .setId("breaker_" + equipmentId)
-            .setName(equipmentName != null ? "breaker_" + equipmentName : null)
+            .setId("breaker_" + equipmentId + (side != null ? "_" + side.name() : ""))
+            .setName((equipmentName != null ? "breaker_" + equipmentName : null) + (side != null ? "_" + side.name() : ""))
             .setKind(SwitchKind.BREAKER)
             .setRetained(false)
             .setOpen(false)
@@ -325,7 +327,8 @@ public class NetworkModificationService {
         // create cell switches
         int nodeNum = createNodeBreakerCellSwitches(voltageLevel, loadCreationInfos.getBusOrBusbarSectionId(),
             loadCreationInfos.getEquipmentId(),
-            loadCreationInfos.getEquipmentName());
+            loadCreationInfos.getEquipmentName(),
+            null);
 
         // creating the load
         return voltageLevel.newLoad()
@@ -490,7 +493,8 @@ public class NetworkModificationService {
         // create cell switches
         int nodeNum = createNodeBreakerCellSwitches(voltageLevel, generatorCreationInfos.getBusOrBusbarSectionId(),
             generatorCreationInfos.getEquipmentId(),
-            generatorCreationInfos.getEquipmentName());
+            generatorCreationInfos.getEquipmentName(),
+            null);
 
         // creating the generator
         return voltageLevel.newGenerator()
@@ -563,5 +567,176 @@ public class NetworkModificationService {
 
     private Mono<Void> assertGeneratorCreationInfosNotEmpty(GeneratorCreationInfos generatorCreationInfos) {
         return generatorCreationInfos == null ? Mono.error(new NetworkModificationException(CREATE_GENERATOR_ERROR, "Missing required attributes to create the generator")) : Mono.empty();
+    }
+
+    private void createLineInNodeBreaker(Network network, VoltageLevel voltageLevel1, VoltageLevel voltageLevel2, LineCreationInfos lineCreationInfos) {
+        VoltageLevel.NodeBreakerView nodeBreakerView1 = voltageLevel1.getNodeBreakerView();
+        VoltageLevel.NodeBreakerView nodeBreakerView2 = voltageLevel2.getNodeBreakerView();
+
+        // busId is a busbar section id
+        BusbarSection busbarSection1 = nodeBreakerView1.getBusbarSection(lineCreationInfos.getBusOrBusbarSectionId1());
+        if (busbarSection1 == null) {
+            throw new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, lineCreationInfos.getBusOrBusbarSectionId1());
+        }
+        BusbarSection busbarSection2 = nodeBreakerView2.getBusbarSection(lineCreationInfos.getBusOrBusbarSectionId2());
+        if (busbarSection2 == null) {
+            throw new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, lineCreationInfos.getBusOrBusbarSectionId2());
+        }
+
+        // create cell switches
+        int nodeNum1 = createNodeBreakerCellSwitches(voltageLevel1, lineCreationInfos.getBusOrBusbarSectionId1(),
+            lineCreationInfos.getEquipmentId(),
+            lineCreationInfos.getEquipmentName(),
+            Side.ONE);
+
+        int nodeNum2 = createNodeBreakerCellSwitches(voltageLevel2, lineCreationInfos.getBusOrBusbarSectionId2(),
+            lineCreationInfos.getEquipmentId(),
+            lineCreationInfos.getEquipmentName(),
+            Side.TWO);
+
+        // creating the line
+        network.newLine()
+            .setId(lineCreationInfos.getEquipmentId())
+            .setVoltageLevel1(lineCreationInfos.getVoltageLevelId1())
+            .setNode1(nodeNum1)
+            .setVoltageLevel2(lineCreationInfos.getVoltageLevelId2())
+            .setNode2(nodeNum2)
+            .setR(lineCreationInfos.getSeriesResistance())
+            .setX(lineCreationInfos.getSeriesReactance())
+            .setG1(lineCreationInfos.getShuntConductance1() != null ? lineCreationInfos.getShuntConductance1() : 0.0)
+            .setB1(lineCreationInfos.getShuntSusceptance1() != null ? lineCreationInfos.getShuntSusceptance1() : 0.0)
+            .setG2(lineCreationInfos.getShuntConductance2() != null ? lineCreationInfos.getShuntConductance2() : 0.0)
+            .setB2(lineCreationInfos.getShuntSusceptance2() != null ? lineCreationInfos.getShuntSusceptance2() : 0.0)
+            .add();
+    }
+
+    private void createLineInBusBreaker(Network network, VoltageLevel voltageLevel1, VoltageLevel voltageLevel2, LineCreationInfos lineCreationInfos) {
+        // busId is a bus id
+        Bus bus1 = getBusBreakerBus(voltageLevel1, lineCreationInfos.getBusOrBusbarSectionId1());
+        Bus bus2 = getBusBreakerBus(voltageLevel2, lineCreationInfos.getBusOrBusbarSectionId2());
+
+        // creating the line
+        network.newLine()
+            .setId(lineCreationInfos.getEquipmentId())
+            .setVoltageLevel1(lineCreationInfos.getVoltageLevelId1())
+            .setBus1(bus1.getId())
+            .setConnectableBus1(bus1.getId())
+            .setVoltageLevel2(lineCreationInfos.getVoltageLevelId2())
+            .setBus2(bus2.getId())
+            .setConnectableBus2(bus2.getId())
+            .setR(lineCreationInfos.getSeriesResistance())
+            .setX(lineCreationInfos.getSeriesReactance())
+            .setG1(lineCreationInfos.getShuntConductance1() != null ? lineCreationInfos.getShuntConductance1() : 0.0)
+            .setB1(lineCreationInfos.getShuntSusceptance1() != null ? lineCreationInfos.getShuntSusceptance1() : 0.0)
+            .setG2(lineCreationInfos.getShuntConductance2() != null ? lineCreationInfos.getShuntConductance2() : 0.0)
+            .setB2(lineCreationInfos.getShuntSusceptance2() != null ? lineCreationInfos.getShuntSusceptance2() : 0.0)
+            .add();
+    }
+
+    private void createLineInMixedTopology(Network network, VoltageLevel voltageLevel1, VoltageLevel voltageLevel2, LineCreationInfos lineCreationInfos) {
+
+        // common settings
+        LineAdder lineAdder = network.newLine()
+                                .setId(lineCreationInfos.getEquipmentId())
+                                .setVoltageLevel1(lineCreationInfos.getVoltageLevelId1())
+                                .setVoltageLevel2(lineCreationInfos.getVoltageLevelId2())
+                                .setR(lineCreationInfos.getSeriesResistance())
+                                .setX(lineCreationInfos.getSeriesReactance())
+                                .setG1(lineCreationInfos.getShuntConductance1() != null ? lineCreationInfos.getShuntConductance1() : 0.0)
+                                .setB1(lineCreationInfos.getShuntSusceptance1() != null ? lineCreationInfos.getShuntSusceptance1() : 0.0)
+                                .setG2(lineCreationInfos.getShuntConductance2() != null ? lineCreationInfos.getShuntConductance2() : 0.0)
+                                .setB2(lineCreationInfos.getShuntSusceptance2() != null ? lineCreationInfos.getShuntSusceptance2() : 0.0);
+
+        if (voltageLevel1.getTopologyKind() == TopologyKind.NODE_BREAKER) {
+            // then voltageLevel2.getTopologyKind() == TopologyKind.BUS_BREAKER
+            // BusOrBusbarSectionId1 is a busbar section id
+            VoltageLevel.NodeBreakerView nodeBreakerView1 = voltageLevel1.getNodeBreakerView();
+            BusbarSection busbarSection1 = nodeBreakerView1.getBusbarSection(lineCreationInfos.getBusOrBusbarSectionId1());
+            if (busbarSection1 == null) {
+                throw new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, lineCreationInfos.getBusOrBusbarSectionId1());
+            }
+            // create cell switches
+            int nodeNum1 = createNodeBreakerCellSwitches(voltageLevel1, lineCreationInfos.getBusOrBusbarSectionId1(),
+                lineCreationInfos.getEquipmentId(),
+                lineCreationInfos.getEquipmentName(),
+                Side.ONE);
+            // BusOrBusbarSectionId2 is a bus id
+            Bus bus2 = getBusBreakerBus(voltageLevel2, lineCreationInfos.getBusOrBusbarSectionId2());
+
+            // creating the line
+            lineAdder.setNode1(nodeNum1)
+                .setBus2(bus2.getId())
+                .setConnectableBus2(bus2.getId())
+                .add();
+
+        } else {
+            // then voltageLevel2.getTopologyKind() == TopologyKind.NODE_BREAKER
+            // BusOrBusbarSectionId1 is a bus id
+            Bus bus1 = getBusBreakerBus(voltageLevel1, lineCreationInfos.getBusOrBusbarSectionId1());
+            // BusOrBusbarSectionId2 is a busbar section id
+            VoltageLevel.NodeBreakerView nodeBreakerView2 = voltageLevel2.getNodeBreakerView();
+            BusbarSection busbarSection2 = nodeBreakerView2.getBusbarSection(lineCreationInfos.getBusOrBusbarSectionId2());
+            if (busbarSection2 == null) {
+                throw new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, lineCreationInfos.getBusOrBusbarSectionId2());
+            }
+            // create cell switches
+            int nodeNum2 = createNodeBreakerCellSwitches(voltageLevel2, lineCreationInfos.getBusOrBusbarSectionId2(),
+                lineCreationInfos.getEquipmentId(),
+                lineCreationInfos.getEquipmentName(),
+                Side.TWO);
+
+            // creating the line
+            lineAdder.setBus1(bus1.getId())
+                .setConnectableBus1(bus1.getId())
+                .setNode2(nodeNum2)
+                .add();
+        }
+    }
+
+    public Flux<EquipmenModificationInfos> createLine(UUID networkUuid, UUID groupUuid, LineCreationInfos lineCreationInfos) {
+        return assertLineCreationInfosNotEmpty(lineCreationInfos).thenMany(
+                getNetwork(networkUuid).flatMapIterable(network -> {
+                    NetworkStoreListener listener = NetworkStoreListener.create(network, networkUuid, groupUuid, modificationRepository, equipmentInfosService);
+                    ReporterModel reporter = new ReporterModel("NetworkModification", "Network modification");
+                    Reporter subReporter = reporter.createSubReporter("LineCreation", "Line creation");
+
+                    return doAction(listener, () -> {
+                        // create the line in the network
+                        VoltageLevel voltageLevel1 = network.getVoltageLevel(lineCreationInfos.getVoltageLevelId1());
+                        VoltageLevel voltageLevel2 = network.getVoltageLevel(lineCreationInfos.getVoltageLevelId2());
+
+                        if (voltageLevel1 == null) {
+                            throw new NetworkModificationException(VOLTAGE_LEVEL_NOT_FOUND, lineCreationInfos.getVoltageLevelId1());
+                        }
+                        if (voltageLevel2 == null) {
+                            throw new NetworkModificationException(VOLTAGE_LEVEL_NOT_FOUND, lineCreationInfos.getVoltageLevelId2());
+                        }
+
+                        if (voltageLevel1.getTopologyKind() == TopologyKind.NODE_BREAKER &&
+                            voltageLevel2.getTopologyKind() == TopologyKind.NODE_BREAKER) {
+                            createLineInNodeBreaker(network, voltageLevel1, voltageLevel2, lineCreationInfos);
+                        } else if (voltageLevel1.getTopologyKind() == TopologyKind.BUS_BREAKER &&
+                                    voltageLevel2.getTopologyKind() == TopologyKind.BUS_BREAKER) {
+                            createLineInBusBreaker(network, voltageLevel1, voltageLevel2, lineCreationInfos);
+                        } else {
+                            createLineInMixedTopology(network, voltageLevel1, voltageLevel2, lineCreationInfos);
+                        }
+
+                        subReporter.report(Report.builder()
+                            .withKey("lineCreated")
+                            .withDefaultMessage("New line with id=${id} and name=${name} created")
+                            .withValue("id", lineCreationInfos.getEquipmentId())
+                            .withValue("name", lineCreationInfos.getEquipmentName())
+                            .withSeverity(new TypedValue("LINE_CREATION_INFO", TypedValue.INFO_LOGLEVEL))
+                            .build());
+
+                        // add the line creation entity to the listener
+                        listener.storeLineCreation(lineCreationInfos);
+                    }, CREATE_LINE_ERROR, networkUuid, reporter, subReporter);
+                }));
+    }
+
+    private Mono<Void> assertLineCreationInfosNotEmpty(LineCreationInfos lineCreationInfos) {
+        return lineCreationInfos == null ? Mono.error(new NetworkModificationException(CREATE_LINE_ERROR, "Missing required attributes to create the line")) : Mono.empty();
     }
 }
