@@ -52,7 +52,7 @@ public class EquipmentInfosServiceTests {
         addEquipmentInfos(equipmentIds, EquipmentInfos.builder().networkUuid(NETWORK_UUID).equipmentId("id1").equipmentName("name1").equipmentType(EquipmentType.LOAD.name()).build());
         addEquipmentInfos(equipmentIds, EquipmentInfos.builder().networkUuid(NETWORK_UUID).equipmentId("id2").equipmentName("name2").equipmentType(EquipmentType.GENERATOR.name()).build());
         addEquipmentInfos(equipmentIds, EquipmentInfos.builder().networkUuid(NETWORK_UUID).equipmentId("id3").equipmentName("name3").equipmentType(EquipmentType.BREAKER.name()).build());
-        addEquipmentInfos(equipmentIds, EquipmentInfos.builder().networkUuid(NETWORK_UUID).equipmentId("id4").equipmentName("name4").equipmentType(EquipmentType.HVDC.name()).build());
+        addEquipmentInfos(equipmentIds, EquipmentInfos.builder().networkUuid(NETWORK_UUID).equipmentId("id4").equipmentName("name4").equipmentType(EquipmentType.HVDC_LINE.name()).build());
         addEquipmentInfos(equipmentIds, EquipmentInfos.builder().networkUuid(NETWORK_UUID).equipmentId("id5").equipmentName("name5").equipmentType(EquipmentType.SUBSTATION.name()).build());
         addEquipmentInfos(equipmentIds, EquipmentInfos.builder().networkUuid(NETWORK_UUID).equipmentId("id6").equipmentName("name6").equipmentType(EquipmentType.VOLTAGE_LEVEL.name()).build());
         assertEquals(6, Iterables.size(equipmentInfosService.findAll(NETWORK_UUID)));

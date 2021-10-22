@@ -12,5 +12,7 @@ package org.gridsuite.modification.server;
  */
 public enum ModificationType {
     EQUIPMENT_ATTRIBUTE_MODIFICATION,
-    LOAD_CREATION
+    LOAD_CREATION,
+    GENERATOR_CREATION,
+    EQUIPMENT_DELETION
 }

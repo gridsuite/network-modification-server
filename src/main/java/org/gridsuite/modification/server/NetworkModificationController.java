@@ -11,6 +11,8 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.gridsuite.modification.server.dto.GeneratorCreationInfos;
+import org.gridsuite.modification.server.dto.EquipmentDeletionInfos;
 import org.gridsuite.modification.server.dto.LoadCreationInfos;
 import org.gridsuite.modification.server.dto.EquipmenModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
@@ -96,5 +98,24 @@ public class NetworkModificationController {
                                                                       @RequestParam(value = "group", required = false) UUID groupUuid,
                                                                       @RequestBody LoadCreationInfos loadCreationInfos) {
         return ResponseEntity.ok().body(networkModificationService.createLoad(networkUuid, groupUuid, loadCreationInfos));
+    }
+
+    @PutMapping(value = "/networks/{networkUuid}/generators", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "create a generator in the network")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The generator has been created")})
+    public ResponseEntity<Flux<EquipmenModificationInfos>> createGenerator(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
+                                                                      @RequestParam(value = "group", required = false) UUID groupUuid,
+                                                                      @RequestBody GeneratorCreationInfos generatorCreationInfos) {
+        return ResponseEntity.ok().body(networkModificationService.createGenerator(networkUuid, groupUuid, generatorCreationInfos));
+    }
+
+    @DeleteMapping(value = "/networks/{networkUuid}/equipments/type/{equipmentType}/id/{equipmentId}")
+    @Operation(summary = "Delete an equipment in a network")
+    @ApiResponse(responseCode = "200", description = "Equipment deleted in the network")
+    public ResponseEntity<Flux<EquipmentDeletionInfos>> deleteEquipment(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
+                                                                        @Parameter(description = "Equipment type") @PathVariable("equipmentType") String equipmentType,
+                                                                        @Parameter(description = "Equipment id") @PathVariable("equipmentId") String equipmentId,
+                                                                        @RequestParam(value = "group", required = false) UUID groupUuid) {
+        return ResponseEntity.ok().body(networkModificationService.deleteEquipment(networkUuid, groupUuid, equipmentType, equipmentId));
     }
 }

@@ -21,11 +21,8 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @Setter
 @ToString(callSuper = true)
-@Schema(description = "Injection creation")
-public class InjectionCreationInfos extends EquipmentCreationInfos {
-    @Schema(description = "Voltage level id")
-    private String voltageLevelId;
-
-    @Schema(description = "Bus id")
-    private String busOrBusbarSectionId;
+@Schema(description = "Equipment deletion")
+public class EquipmentDeletionInfos extends EquipmenModificationInfos {
+    @Schema(description = "Equipment type")
+    private String equipmentType;
 }

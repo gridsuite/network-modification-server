@@ -15,10 +15,34 @@
         primary key (id)
     );
 
+    create table equipmentDeletion (
+       equipmentId varchar(255),
+        equipmentType varchar(255),
+        id uuid not null,
+        primary key (id)
+    );
+
     create table floatEquipmentAttributeModification (
        equipmentId varchar(255),
         attributeName varchar(255),
         attributeValue float4,
+        id uuid not null,
+        primary key (id)
+    );
+
+    create table generatorCreation (
+       equipmentId varchar(255),
+        equipmentName varchar(255),
+        busOrBusbarSectionId varchar(255),
+        voltageLevelId varchar(255),
+        activePowerSetpoint float8,
+        energySource int4,
+        maxActivePower float8,
+        minActivePower float8,
+        ratedNominalPower float8,
+        reactivePowerSetpoint float8,
+        voltageRegulationOn boolean,
+        voltageSetpoint float8,
         id uuid not null,
         primary key (id)
     );
@@ -34,7 +58,7 @@
     create table loadCreation (
        equipmentId varchar(255),
         equipmentName varchar(255),
-        busId varchar(255),
+        busOrBusbarSectionId varchar(255),
         voltageLevelId varchar(255),
         activePower float8,
         loadType int4,
@@ -72,11 +96,21 @@ create index modificationEntity_group_id_index on modification (group_id);
 
     alter table if exists doubleEquipmentAttributeModification 
        add constraint double_equipment_attribute_modification_id_fk_constraint 
-       foreign key (id) 
+       foreign key (id)
+       references modification;
+
+    alter table if exists equipmentDeletion 
+       add constraint equipmentDeletion_id_fk_constraint 
+       foreign key (id)
        references modification;
 
     alter table if exists floatEquipmentAttributeModification 
        add constraint float_equipment_attribute_modification_id_fk_constraint 
+       foreign key (id) 
+       references modification;
+
+    alter table if exists generatorCreation 
+       add constraint generatorCreation_id_fk_constraint 
        foreign key (id) 
        references modification;
 
