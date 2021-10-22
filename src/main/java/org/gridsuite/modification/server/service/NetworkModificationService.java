@@ -569,40 +569,41 @@ public class NetworkModificationService {
         return generatorCreationInfos == null ? Mono.error(new NetworkModificationException(CREATE_GENERATOR_ERROR, "Missing required attributes to create the generator")) : Mono.empty();
     }
 
-    private void completeLineByTypology(LineAdder lineAdder, VoltageLevel voltageLevel, LineCreationInfos lineCreationInfos, Side side)
-    {
-        if (voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER ) {
+    private void completeLineByTypology(LineAdder lineAdder, VoltageLevel voltageLevel, LineCreationInfos lineCreationInfos, Side side) {
+        if (voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER) {
             VoltageLevel.NodeBreakerView nodeBreakerView = voltageLevel.getNodeBreakerView();
             // busId is a busbar section id
             BusbarSection busbarSection = nodeBreakerView.getBusbarSection(
-                side == Side.ONE ? lineCreationInfos.getBusOrBusbarSectionId1(): lineCreationInfos.getBusOrBusbarSectionId2());
+                side == Side.ONE ? lineCreationInfos.getBusOrBusbarSectionId1() : lineCreationInfos.getBusOrBusbarSectionId2());
             if (busbarSection == null) {
-                throw new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, 
-                    side == Side.ONE ? lineCreationInfos.getBusOrBusbarSectionId1(): lineCreationInfos.getBusOrBusbarSectionId2());
+                throw new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND,
+                    side == Side.ONE ? lineCreationInfos.getBusOrBusbarSectionId1() : lineCreationInfos.getBusOrBusbarSectionId2());
             }
 
             // create cell switches
-            int nodeNum = createNodeBreakerCellSwitches(voltageLevel, 
+            int nodeNum = createNodeBreakerCellSwitches(voltageLevel,
                 side == Side.ONE ? lineCreationInfos.getBusOrBusbarSectionId1() : lineCreationInfos.getBusOrBusbarSectionId2(),
                 lineCreationInfos.getEquipmentId(),
                 lineCreationInfos.getEquipmentName(),
                 side);
 
             // complete the line
-            if( side == Side.ONE )
+            if (side == Side.ONE) {
                 lineAdder.setNode1(nodeNum);
-            else
+            } else {
                 lineAdder.setNode2(nodeNum);
+            }
         } else { // BUS BREAKER
             // busId is a bus id
-            Bus bus = getBusBreakerBus(voltageLevel, 
+            Bus bus = getBusBreakerBus(voltageLevel,
                 side == Side.ONE ? lineCreationInfos.getBusOrBusbarSectionId1() : lineCreationInfos.getBusOrBusbarSectionId2());
 
             // complete the line
-            if( side == Side.ONE )
+            if (side == Side.ONE) {
                 lineAdder.setBus1(bus.getId()).setConnectableBus1(bus.getId());
-            else
+            } else {
                 lineAdder.setBus2(bus.getId()).setConnectableBus2(bus.getId());
+            }
         }
 
     }
