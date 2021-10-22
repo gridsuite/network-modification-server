@@ -299,7 +299,7 @@ public class NetworkModificationService {
         int newNode = nodeBreakerView.getMaximumNodeIndex();
         nodeBreakerView.newSwitch()
                 .setId("disconnector_" + equipmentId + (side != null ? "_" + side.name() : ""))
-                .setName((equipmentName != null ? "disconnector_" + equipmentName : null) + (side != null ? "_" + side.name() : ""))
+                .setName(equipmentName != null ? "disconnector_" + equipmentName + (side != null ? "_" + side.name() : "") : "")
                 .setKind(SwitchKind.DISCONNECTOR)
                 .setRetained(false)
                 .setOpen(false)
@@ -311,7 +311,7 @@ public class NetworkModificationService {
         // creating the breaker
         nodeBreakerView.newSwitch()
             .setId("breaker_" + equipmentId + (side != null ? "_" + side.name() : ""))
-            .setName((equipmentName != null ? "breaker_" + equipmentName : null) + (side != null ? "_" + side.name() : ""))
+            .setName(equipmentName != null ? "breaker_" + equipmentName + (side != null ? "_" + side.name() : "") : "")
             .setKind(SwitchKind.BREAKER)
             .setRetained(false)
             .setOpen(false)
@@ -726,7 +726,6 @@ public class NetworkModificationService {
                             .withKey("lineCreated")
                             .withDefaultMessage("New line with id=${id} and name=${name} created")
                             .withValue("id", lineCreationInfos.getEquipmentId())
-                            .withValue("name", lineCreationInfos.getEquipmentName())
                             .withSeverity(new TypedValue("LINE_CREATION_INFO", TypedValue.INFO_LOGLEVEL))
                             .build());
 
