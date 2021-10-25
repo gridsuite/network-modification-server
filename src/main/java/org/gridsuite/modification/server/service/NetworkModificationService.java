@@ -295,11 +295,14 @@ public class NetworkModificationService {
             throw new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, busBarSectionId);
         }
 
+        String sideSuffix = side != null ? "_" + side.name() : "";
         // creating the disconnector
         int newNode = nodeBreakerView.getMaximumNodeIndex();
+        String disconnectorId = "disconnector_" + equipmentId + sideSuffix;
+        String disconnectorName = equipmentName != null ? "disconnector_" + equipmentName + sideSuffix : null;
         nodeBreakerView.newSwitch()
-                .setId("disconnector_" + equipmentId + (side != null ? "_" + side.name() : ""))
-                .setName(equipmentName != null ? "disconnector_" + equipmentName + (side != null ? "_" + side.name() : "") : null)
+                .setId(disconnectorId)
+                .setName(disconnectorName)
                 .setKind(SwitchKind.DISCONNECTOR)
                 .setRetained(false)
                 .setOpen(false)
@@ -309,9 +312,11 @@ public class NetworkModificationService {
                 .add();
 
         // creating the breaker
+        String breakerId = "breaker_" + equipmentId + sideSuffix;
+        String breakerName = equipmentName != null ? "breaker_" + equipmentName + sideSuffix : null;
         nodeBreakerView.newSwitch()
-            .setId("breaker_" + equipmentId + (side != null ? "_" + side.name() : ""))
-            .setName(equipmentName != null ? "breaker_" + equipmentName + (side != null ? "_" + side.name() : "") : null)
+            .setId(breakerId)
+            .setName(breakerName)
             .setKind(SwitchKind.BREAKER)
             .setRetained(false)
             .setOpen(false)
