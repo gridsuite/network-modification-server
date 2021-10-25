@@ -55,6 +55,23 @@
         primary key (id)
     );
 
+    create table lineCreation (
+       equipmentId varchar(255),
+        equipmentName varchar(255),
+        busOrBusbarSectionId1 varchar(255),
+        busOrBusbarSectionId2 varchar(255),
+        voltageLevelId1 varchar(255),
+        voltageLevelId2 varchar(255),
+        seriesReactance float8,
+        seriesResistance float8,
+        shuntConductance1 float8,
+        shuntConductance2 float8,
+        shuntSusceptance1 float8,
+        shuntSusceptance2 float8,
+        id uuid not null,
+        primary key (id)
+    );
+
     create table loadCreation (
        equipmentId varchar(255),
         equipmentName varchar(255),
@@ -63,23 +80,6 @@
         activePower float8,
         loadType int4,
         reactivePower float8,
-        id uuid not null,
-        primary key (id)
-    );
-
-    create table lineCreation (
-       equipmentId varchar(255),
-        equipmentName varchar(255),
-        seriesResistance float8,
-        seriesReactance float8,
-        shuntConductance1 float8,
-        shuntSusceptance1 float8,
-        shuntConductance2 float8,
-        shuntSusceptance2 float8,
-        voltageLevelId1 varchar(255),
-        busOrBusbarSectionId1 varchar(255),
-        voltageLevelId2 varchar(255),
-        busOrBusbarSectionId2 varchar(255),
         id uuid not null,
         primary key (id)
     );
@@ -113,12 +113,12 @@ create index modificationEntity_group_id_index on modification (group_id);
 
     alter table if exists doubleEquipmentAttributeModification 
        add constraint double_equipment_attribute_modification_id_fk_constraint 
-       foreign key (id)
+       foreign key (id) 
        references modification;
 
     alter table if exists equipmentDeletion 
        add constraint equipmentDeletion_id_fk_constraint 
-       foreign key (id)
+       foreign key (id) 
        references modification;
 
     alter table if exists floatEquipmentAttributeModification 
@@ -136,13 +136,13 @@ create index modificationEntity_group_id_index on modification (group_id);
        foreign key (id) 
        references modification;
 
-    alter table if exists loadCreation 
-       add constraint loadCreation_id_fk_constraint 
+    alter table if exists lineCreation 
+       add constraint lineCreation_id_fk_constraint 
        foreign key (id) 
        references modification;
 
-    alter table if exists lineCreation 
-       add constraint lineCreation_id_fk_constraint 
+    alter table if exists loadCreation 
+       add constraint loadCreation_id_fk_constraint 
        foreign key (id) 
        references modification;
 
