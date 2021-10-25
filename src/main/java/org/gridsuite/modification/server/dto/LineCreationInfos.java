@@ -25,6 +25,12 @@ import lombok.experimental.SuperBuilder;
 @Schema(description = "Line creation")
 public class LineCreationInfos extends BranchCreationInfos {
 
+    @Schema(description = "Series resistance")
+    private double seriesResistance;
+
+    @Schema(description = "Series reactance")
+    private double seriesReactance;
+
     @Schema(description = "Shunt conductance Side 1")
     private Double shuntConductance1;
 

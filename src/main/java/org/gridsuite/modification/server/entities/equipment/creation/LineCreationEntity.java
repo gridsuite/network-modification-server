@@ -29,6 +29,12 @@ import java.util.Set;
 @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "lineCreation_id_fk_constraint"))
 public class LineCreationEntity extends BranchCreationEntity {
 
+    @Column(name = "seriesResistance")
+    private double seriesResistance;
+
+    @Column(name = "seriesReactance")
+    private double seriesReactance;
+
     @Column(name = "shuntConductance1")
     private Double shuntConductance1;
 
@@ -54,7 +60,9 @@ public class LineCreationEntity extends BranchCreationEntity {
                                 String voltageLevelId2,
                                 String busOrBusbarSectionId2
     ) {
-        super(ModificationType.LINE_CREATION, equipmentId, equipmentName, seriesResistance, seriesReactance, voltageLevelId1, voltageLevelId2, busOrBusbarSectionId1, busOrBusbarSectionId2);
+        super(ModificationType.LINE_CREATION, equipmentId, equipmentName, voltageLevelId1, voltageLevelId2, busOrBusbarSectionId1, busOrBusbarSectionId2);
+        this.seriesResistance = seriesResistance;
+        this.seriesReactance = seriesReactance;
         this.shuntConductance1 = shuntConductance1;
         this.shuntSusceptance1 = shuntSusceptance1;
         this.shuntConductance2 = shuntConductance2;

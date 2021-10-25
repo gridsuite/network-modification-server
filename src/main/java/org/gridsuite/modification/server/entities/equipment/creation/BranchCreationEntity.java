@@ -21,12 +21,6 @@ import javax.persistence.MappedSuperclass;
 @MappedSuperclass
 public class BranchCreationEntity extends EquipmentCreationEntity {
 
-    @Column(name = "seriesResistance")
-    private double seriesResistance;
-
-    @Column(name = "seriesReactance")
-    private double seriesReactance;
-
     @Column(name = "voltageLevelId1")
     private String voltageLevelId1;
 
@@ -39,10 +33,8 @@ public class BranchCreationEntity extends EquipmentCreationEntity {
     @Column(name = "busOrBusbarSectionId2")
     private String busOrBusbarSectionId2;
 
-    protected BranchCreationEntity(ModificationType modificationType, String equipmentId, String equipmentName, double seriesResistance, double seriesReactance, String voltageLevelId1, String voltageLevelId2, String busOrBusbarSectionId1, String busOrBusbarSectionId2) {
+    protected BranchCreationEntity(ModificationType modificationType, String equipmentId, String equipmentName, String voltageLevelId1, String voltageLevelId2, String busOrBusbarSectionId1, String busOrBusbarSectionId2) {
         super(modificationType, equipmentId, equipmentName);
-        this.seriesResistance = seriesResistance;
-        this.seriesReactance = seriesReactance;
         this.voltageLevelId1 = voltageLevelId1;
         this.voltageLevelId2 = voltageLevelId2;
         this.busOrBusbarSectionId1 = busOrBusbarSectionId1;

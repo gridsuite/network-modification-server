@@ -24,12 +24,6 @@ import lombok.experimental.SuperBuilder;
 @Schema(description = "Branch creation")
 public class BranchCreationInfos extends EquipmentCreationInfos {
 
-    @Schema(description = "Series resistance")
-    private double seriesResistance;
-
-    @Schema(description = "Series reactance")
-    private double seriesReactance;
-
     @Schema(description = "Voltage level id Side 1")
     private String voltageLevelId1;
 
