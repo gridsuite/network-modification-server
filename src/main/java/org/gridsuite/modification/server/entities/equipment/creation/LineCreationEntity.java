@@ -78,7 +78,7 @@ public class LineCreationEntity extends BranchCreationEntity {
         return toLineCreationInfosBuilder().substationIds(uuids).build();
     }
 
-    private LineCreationInfos.LineCreationInfosBuilder toLineCreationInfosBuilder() {
+    private LineCreationInfos.LineCreationInfosBuilder<?, ?> toLineCreationInfosBuilder() {
         return LineCreationInfos
             .builder()
             .uuid(getId())
