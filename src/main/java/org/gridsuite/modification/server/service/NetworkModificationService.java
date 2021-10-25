@@ -299,7 +299,7 @@ public class NetworkModificationService {
         int newNode = nodeBreakerView.getMaximumNodeIndex();
         nodeBreakerView.newSwitch()
                 .setId("disconnector_" + equipmentId + (side != null ? "_" + side.name() : ""))
-                .setName(equipmentName != null ? "disconnector_" + equipmentName + (side != null ? "_" + side.name() : "") : "")
+                .setName(equipmentName != null ? "disconnector_" + equipmentName + (side != null ? "_" + side.name() : "") : null)
                 .setKind(SwitchKind.DISCONNECTOR)
                 .setRetained(false)
                 .setOpen(false)
@@ -311,7 +311,7 @@ public class NetworkModificationService {
         // creating the breaker
         nodeBreakerView.newSwitch()
             .setId("breaker_" + equipmentId + (side != null ? "_" + side.name() : ""))
-            .setName(equipmentName != null ? "breaker_" + equipmentName + (side != null ? "_" + side.name() : "") : "")
+            .setName(equipmentName != null ? "breaker_" + equipmentName + (side != null ? "_" + side.name() : "") : null)
             .setKind(SwitchKind.BREAKER)
             .setRetained(false)
             .setOpen(false)
@@ -570,19 +570,19 @@ public class NetworkModificationService {
     }
 
     private void completeLineByTypology(LineAdder lineAdder, VoltageLevel voltageLevel, LineCreationInfos lineCreationInfos, Side side) {
+        String currentBusBarSectionId = (side == Side.ONE) ? lineCreationInfos.getBusOrBusbarSectionId1() : lineCreationInfos.getBusOrBusbarSectionId2();
+
         if (voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER) {
             VoltageLevel.NodeBreakerView nodeBreakerView = voltageLevel.getNodeBreakerView();
             // busId is a busbar section id
-            BusbarSection busbarSection = nodeBreakerView.getBusbarSection(
-                side == Side.ONE ? lineCreationInfos.getBusOrBusbarSectionId1() : lineCreationInfos.getBusOrBusbarSectionId2());
+            BusbarSection busbarSection = nodeBreakerView.getBusbarSection(currentBusBarSectionId);
             if (busbarSection == null) {
-                throw new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND,
-                    side == Side.ONE ? lineCreationInfos.getBusOrBusbarSectionId1() : lineCreationInfos.getBusOrBusbarSectionId2());
+                throw new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, currentBusBarSectionId);
             }
 
             // create cell switches
             int nodeNum = createNodeBreakerCellSwitches(voltageLevel,
-                side == Side.ONE ? lineCreationInfos.getBusOrBusbarSectionId1() : lineCreationInfos.getBusOrBusbarSectionId2(),
+                currentBusBarSectionId,
                 lineCreationInfos.getEquipmentId(),
                 lineCreationInfos.getEquipmentName(),
                 side);
@@ -595,8 +595,7 @@ public class NetworkModificationService {
             }
         } else { // BUS BREAKER
             // busId is a bus id
-            Bus bus = getBusBreakerBus(voltageLevel,
-                side == Side.ONE ? lineCreationInfos.getBusOrBusbarSectionId1() : lineCreationInfos.getBusOrBusbarSectionId2());
+            Bus bus = getBusBreakerBus(voltageLevel, currentBusBarSectionId);
 
             // complete the line
             if (side == Side.ONE) {
@@ -613,6 +612,7 @@ public class NetworkModificationService {
         // common settings
         LineAdder lineAdder = network.newLine()
                                 .setId(lineCreationInfos.getEquipmentId())
+                                .setName(lineCreationInfos.getEquipmentName())
                                 .setVoltageLevel1(lineCreationInfos.getVoltageLevelId1())
                                 .setVoltageLevel2(lineCreationInfos.getVoltageLevelId2())
                                 .setR(lineCreationInfos.getSeriesResistance())
@@ -638,21 +638,14 @@ public class NetworkModificationService {
 
                     return doAction(listener, () -> {
                         // create the line in the network
-                        VoltageLevel voltageLevel1 = network.getVoltageLevel(lineCreationInfos.getVoltageLevelId1());
-                        VoltageLevel voltageLevel2 = network.getVoltageLevel(lineCreationInfos.getVoltageLevelId2());
-
-                        if (voltageLevel1 == null) {
-                            throw new NetworkModificationException(VOLTAGE_LEVEL_NOT_FOUND, lineCreationInfos.getVoltageLevelId1());
-                        }
-                        if (voltageLevel2 == null) {
-                            throw new NetworkModificationException(VOLTAGE_LEVEL_NOT_FOUND, lineCreationInfos.getVoltageLevelId2());
-                        }
+                        VoltageLevel voltageLevel1 = getVoltageLevel(network, lineCreationInfos.getVoltageLevelId1());
+                        VoltageLevel voltageLevel2 = getVoltageLevel(network, lineCreationInfos.getVoltageLevelId2());
 
                         createLineSet(network, voltageLevel1, voltageLevel2, lineCreationInfos);
 
                         subReporter.report(Report.builder()
                             .withKey("lineCreated")
-                            .withDefaultMessage("New line with id=${id} and name=${name} created")
+                            .withDefaultMessage("New line with id=${id} created")
                             .withValue("id", lineCreationInfos.getEquipmentId())
                             .withSeverity(new TypedValue("LINE_CREATION_INFO", TypedValue.INFO_LOGLEVEL))
                             .build());
