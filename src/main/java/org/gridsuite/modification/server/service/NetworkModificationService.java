@@ -574,7 +574,7 @@ public class NetworkModificationService {
         return generatorCreationInfos == null ? Mono.error(new NetworkModificationException(CREATE_GENERATOR_ERROR, "Missing required attributes to create the generator")) : Mono.empty();
     }
 
-    private void completeLineByTypology(LineAdder lineAdder, VoltageLevel voltageLevel, LineCreationInfos lineCreationInfos, Side side) {
+    private void setLineAdderNodeOrBus(LineAdder lineAdder, VoltageLevel voltageLevel, LineCreationInfos lineCreationInfos, Side side) {
         String currentBusBarSectionId = (side == Side.ONE) ? lineCreationInfos.getBusOrBusbarSectionId1() : lineCreationInfos.getBusOrBusbarSectionId2();
 
         if (voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER) {
@@ -592,7 +592,7 @@ public class NetworkModificationService {
                 lineCreationInfos.getEquipmentName(),
                 side);
 
-            // complete the line
+            // complete the lineAdder
             if (side == Side.ONE) {
                 lineAdder.setNode1(nodeNum);
             } else {
@@ -602,7 +602,7 @@ public class NetworkModificationService {
             // busId is a bus id
             Bus bus = getBusBreakerBus(voltageLevel, currentBusBarSectionId);
 
-            // complete the line
+            // complete the lineAdder
             if (side == Side.ONE) {
                 lineAdder.setBus1(bus.getId()).setConnectableBus1(bus.getId());
             } else {
@@ -612,7 +612,7 @@ public class NetworkModificationService {
 
     }
 
-    private void createLineSet(Network network, VoltageLevel voltageLevel1, VoltageLevel voltageLevel2, LineCreationInfos lineCreationInfos) {
+    private void createLine(Network network, VoltageLevel voltageLevel1, VoltageLevel voltageLevel2, LineCreationInfos lineCreationInfos) {
 
         // common settings
         LineAdder lineAdder = network.newLine()
@@ -627,9 +627,9 @@ public class NetworkModificationService {
                                 .setG2(lineCreationInfos.getShuntConductance2() != null ? lineCreationInfos.getShuntConductance2() : 0.0)
                                 .setB2(lineCreationInfos.getShuntSusceptance2() != null ? lineCreationInfos.getShuntSusceptance2() : 0.0);
 
-        // completion by typology
-        completeLineByTypology(lineAdder, voltageLevel1, lineCreationInfos, Side.ONE);
-        completeLineByTypology(lineAdder, voltageLevel2, lineCreationInfos, Side.TWO);
+        // lineAdder completion by topology
+        setLineAdderNodeOrBus(lineAdder, voltageLevel1, lineCreationInfos, Side.ONE);
+        setLineAdderNodeOrBus(lineAdder, voltageLevel2, lineCreationInfos, Side.TWO);
 
         lineAdder.add();
     }
@@ -646,7 +646,7 @@ public class NetworkModificationService {
                         VoltageLevel voltageLevel1 = getVoltageLevel(network, lineCreationInfos.getVoltageLevelId1());
                         VoltageLevel voltageLevel2 = getVoltageLevel(network, lineCreationInfos.getVoltageLevelId2());
 
-                        createLineSet(network, voltageLevel1, voltageLevel2, lineCreationInfos);
+                        createLine(network, voltageLevel1, voltageLevel2, lineCreationInfos);
 
                         subReporter.report(Report.builder()
                             .withKey("lineCreated")
