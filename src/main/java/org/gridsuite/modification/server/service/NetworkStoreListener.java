@@ -145,19 +145,19 @@ public class NetworkStoreListener implements NetworkListener {
     public static Set<String> getSubstationIds(Identifiable identifiable) {
         Set<String> ids = new HashSet<>();
         if (identifiable instanceof Switch) {
-            ids.add(((Switch) identifiable).getVoltageLevel().getSubstation().getId());
+            ids.add(((Switch) identifiable).getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
         } else if (identifiable instanceof Injection) {
-            ids.add(((Injection<?>) identifiable).getTerminal().getVoltageLevel().getSubstation().getId());
+            ids.add(((Injection<?>) identifiable).getTerminal().getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
         } else if (identifiable instanceof Branch) {
-            ids.add(((Branch<?>) identifiable).getTerminal1().getVoltageLevel().getSubstation().getId());
-            ids.add(((Branch<?>) identifiable).getTerminal2().getVoltageLevel().getSubstation().getId());
+            ids.add(((Branch<?>) identifiable).getTerminal1().getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
+            ids.add(((Branch<?>) identifiable).getTerminal2().getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
         } else if (identifiable instanceof ThreeWindingsTransformer) {
-            ids.add(((ThreeWindingsTransformer) identifiable).getTerminal(ThreeWindingsTransformer.Side.ONE).getVoltageLevel().getSubstation().getId());
-            ids.add(((ThreeWindingsTransformer) identifiable).getTerminal(ThreeWindingsTransformer.Side.TWO).getVoltageLevel().getSubstation().getId());
-            ids.add(((ThreeWindingsTransformer) identifiable).getTerminal(ThreeWindingsTransformer.Side.THREE).getVoltageLevel().getSubstation().getId());
+            ids.add(((ThreeWindingsTransformer) identifiable).getTerminal(ThreeWindingsTransformer.Side.ONE).getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
+            ids.add(((ThreeWindingsTransformer) identifiable).getTerminal(ThreeWindingsTransformer.Side.TWO).getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
+            ids.add(((ThreeWindingsTransformer) identifiable).getTerminal(ThreeWindingsTransformer.Side.THREE).getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
         } else if (identifiable instanceof HvdcLine) {
-            ids.add(((HvdcLine) identifiable).getConverterStation1().getTerminal().getVoltageLevel().getSubstation().getId());
-            ids.add(((HvdcLine) identifiable).getConverterStation2().getTerminal().getVoltageLevel().getSubstation().getId());
+            ids.add(((HvdcLine) identifiable).getConverterStation1().getTerminal().getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
+            ids.add(((HvdcLine) identifiable).getConverterStation2().getTerminal().getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
         }
         return ids;
     }
