@@ -288,14 +288,18 @@ public class NetworkModificationService {
     }
 
     private int createNodeBreakerCellSwitches(VoltageLevel voltageLevel, String busBarSectionId, String equipmentId,
-                                               String equipmentName, Side side) {
+                                               String equipmentName) {
+        return createNodeBreakerCellSwitches(voltageLevel, busBarSectionId, equipmentId, equipmentName, "");
+    }
+
+    private int createNodeBreakerCellSwitches(VoltageLevel voltageLevel, String busBarSectionId, String equipmentId,
+                                               String equipmentName, String sideSuffix) {
         VoltageLevel.NodeBreakerView nodeBreakerView = voltageLevel.getNodeBreakerView();
         BusbarSection busbarSection = nodeBreakerView.getBusbarSection(busBarSectionId);
         if (busbarSection == null) {
             throw new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, busBarSectionId);
         }
 
-        String sideSuffix = side != null ? "_" + side.name() : "";
         // creating the disconnector
         int newNode = nodeBreakerView.getMaximumNodeIndex();
         String disconnectorId = "disconnector_" + equipmentId + sideSuffix;
@@ -332,8 +336,7 @@ public class NetworkModificationService {
         // create cell switches
         int nodeNum = createNodeBreakerCellSwitches(voltageLevel, loadCreationInfos.getBusOrBusbarSectionId(),
             loadCreationInfos.getEquipmentId(),
-            loadCreationInfos.getEquipmentName(),
-            null);
+            loadCreationInfos.getEquipmentName());
 
         // creating the load
         return voltageLevel.newLoad()
@@ -498,8 +501,7 @@ public class NetworkModificationService {
         // create cell switches
         int nodeNum = createNodeBreakerCellSwitches(voltageLevel, generatorCreationInfos.getBusOrBusbarSectionId(),
             generatorCreationInfos.getEquipmentId(),
-            generatorCreationInfos.getEquipmentName(),
-            null);
+            generatorCreationInfos.getEquipmentName());
 
         // creating the generator
         return voltageLevel.newGenerator()
@@ -586,11 +588,12 @@ public class NetworkModificationService {
             }
 
             // create cell switches
+            String sideSuffix = side != null ? "_" + side.name() : "";
             int nodeNum = createNodeBreakerCellSwitches(voltageLevel,
                 currentBusBarSectionId,
                 lineCreationInfos.getEquipmentId(),
                 lineCreationInfos.getEquipmentName(),
-                side);
+                sideSuffix);
 
             // complete the lineAdder
             if (side == Side.ONE) {
