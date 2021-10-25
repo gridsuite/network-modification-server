@@ -49,7 +49,7 @@ public class EquipmentDeletionEntity extends EquipmentModificationEntity {
         return toEquipmentDeletionInfosBuilder().substationIds(uuids).build();
     }
 
-    private EquipmentDeletionInfos.EquipmentDeletionInfosBuilder toEquipmentDeletionInfosBuilder() {
+    private EquipmentDeletionInfos.EquipmentDeletionInfosBuilder<?, ?> toEquipmentDeletionInfosBuilder() {
         return EquipmentDeletionInfos
             .builder()
             .uuid(getId())
