@@ -76,7 +76,7 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
         return toGeneratorCreationInfosBuilder().substationIds(uuids).build();
     }
 
-    private GeneratorCreationInfos.GeneratorCreationInfosBuilder toGeneratorCreationInfosBuilder() {
+    private GeneratorCreationInfos.GeneratorCreationInfosBuilder<?, ?> toGeneratorCreationInfosBuilder() {
         return GeneratorCreationInfos
             .builder()
             .uuid(getId())

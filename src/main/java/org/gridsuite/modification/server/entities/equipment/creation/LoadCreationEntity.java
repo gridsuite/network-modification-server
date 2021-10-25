@@ -55,7 +55,7 @@ public class LoadCreationEntity extends InjectionCreationEntity {
         return toLoadCreationInfosBuilder().substationIds(uuids).build();
     }
 
-    private LoadCreationInfos.LoadCreationInfosBuilder toLoadCreationInfosBuilder() {
+    private LoadCreationInfos.LoadCreationInfosBuilder<?, ?> toLoadCreationInfosBuilder() {
         return LoadCreationInfos
             .builder()
             .uuid(getId())
