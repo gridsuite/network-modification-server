@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.gridsuite.modification.server.dto.GeneratorCreationInfos;
 import org.gridsuite.modification.server.dto.EquipmentDeletionInfos;
 import org.gridsuite.modification.server.dto.LoadCreationInfos;
+import org.gridsuite.modification.server.dto.LineCreationInfos;
 import org.gridsuite.modification.server.dto.EquipmenModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.service.NetworkModificationService;
@@ -107,6 +108,15 @@ public class NetworkModificationController {
                                                                       @RequestParam(value = "group", required = false) UUID groupUuid,
                                                                       @RequestBody GeneratorCreationInfos generatorCreationInfos) {
         return ResponseEntity.ok().body(networkModificationService.createGenerator(networkUuid, groupUuid, generatorCreationInfos));
+    }
+
+    @PutMapping(value = "/networks/{networkUuid}/lines", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "create a line in the network")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The line has been created")})
+    public ResponseEntity<Flux<EquipmenModificationInfos>> createLine(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
+                                                                      @RequestParam(value = "group", required = false) UUID groupUuid,
+                                                                      @RequestBody LineCreationInfos lineCreationInfos) {
+        return ResponseEntity.ok().body(networkModificationService.createLine(networkUuid, groupUuid, lineCreationInfos));
     }
 
     @DeleteMapping(value = "/networks/{networkUuid}/equipments/type/{equipmentType}/id/{equipmentId}")

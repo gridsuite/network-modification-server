@@ -14,6 +14,7 @@ import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.EquipmenAttributeModificationInfos;
 import org.gridsuite.modification.server.dto.GeneratorCreationInfos;
 import org.gridsuite.modification.server.dto.LoadCreationInfos;
+import org.gridsuite.modification.server.dto.LineCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationGroupEntity;
@@ -27,6 +28,7 @@ import org.gridsuite.modification.server.entities.equipment.creation.EquipmentCr
 import org.gridsuite.modification.server.entities.equipment.creation.GeneratorCreationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.LoadCreationEntity;
 import org.gridsuite.modification.server.entities.equipment.deletion.EquipmentDeletionEntity;
+import org.gridsuite.modification.server.entities.equipment.creation.LineCreationEntity;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -140,6 +142,15 @@ public class NetworkModificationRepository {
             .toGeneratorCreationInfos();
     }
 
+    public LineCreationInfos getLineCreationModification(UUID groupUuid, UUID modificationUuid) {
+        return ((LineCreationEntity) this.modificationRepository
+            .findById(modificationUuid)
+            .filter(m -> ModificationType.LINE_CREATION.name().equals(m.getType()))
+            .filter(m -> groupUuid.equals(m.getGroup().getId()))
+            .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString())))
+            .toLineCreationInfos();
+    }
+
     @Transactional // To have the 2 delete in the same transaction (atomic)
     public void deleteModificationGroup(UUID groupUuid) {
         ModificationGroupEntity groupEntity = getModificationGroup(groupUuid);
@@ -172,6 +183,14 @@ public class NetworkModificationRepository {
                                                          Double reactivePowerSetpoint, boolean voltageRegulationOn, Double voltageSetpoint) {
         return new GeneratorCreationEntity(generatorId, generatorName, energySource, voltageLevelId, busOrBusbarSectionId, minActivePower,
             maxActivePower, ratedNominalPower, activePowerSetpoint, reactivePowerSetpoint, voltageRegulationOn, voltageSetpoint);
+    }
+
+    public EquipmentCreationEntity createLineEntity(String lineId, String lineName, double seriesResistance, double seriesReactance,
+                                                    Double shuntConductance1, Double shuntSusceptance1, Double shuntConductance2, Double shuntSusceptance2,
+                                                    String voltageLevelId1, String busOrBusbarSectionId1, String voltageLevelId2, String busOrBusbarSectionId2) {
+        return new LineCreationEntity(lineId, lineName, seriesResistance, seriesReactance,
+                                        shuntConductance1, shuntSusceptance1, shuntConductance2, shuntSusceptance2,
+                                        voltageLevelId1, busOrBusbarSectionId1, voltageLevelId2, busOrBusbarSectionId2);
     }
 
     public EquipmentDeletionEntity createEquipmentDeletionEntity(String equipmentId, String equipmentType) {
