@@ -12,6 +12,7 @@ import org.gridsuite.modification.server.dto.EquipmentInfos;
 import org.gridsuite.modification.server.dto.EquipmentType;
 import org.gridsuite.modification.server.dto.GeneratorCreationInfos;
 import org.gridsuite.modification.server.dto.LoadCreationInfos;
+import org.gridsuite.modification.server.dto.LineCreationInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.EquipmentModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationEntity;
@@ -120,6 +121,22 @@ public class NetworkStoreListener implements NetworkListener {
         modifications.add(this.modificationRepository.createEquipmentDeletionEntity(equipmentId, equipmentType));
     }
 
+    public void storeLineCreation(LineCreationInfos lineCreationInfos) {
+        modifications.add(this.modificationRepository.createLineEntity(lineCreationInfos.getEquipmentId(),
+            lineCreationInfos.getEquipmentName(),
+            lineCreationInfos.getSeriesResistance(),
+            lineCreationInfos.getSeriesReactance(),
+            lineCreationInfos.getShuntConductance1(),
+            lineCreationInfos.getShuntSusceptance1(),
+            lineCreationInfos.getShuntConductance2(),
+            lineCreationInfos.getShuntSusceptance2(),
+            lineCreationInfos.getVoltageLevelId1(),
+            lineCreationInfos.getBusOrBusbarSectionId1(),
+            lineCreationInfos.getVoltageLevelId2(),
+            lineCreationInfos.getBusOrBusbarSectionId2())
+        );
+    }
+
     private Set<String> getSubstationsIds(String equipmentId) {
         Identifiable<?> identifiable = network.getIdentifiable(equipmentId);
         return getSubstationIds(identifiable);
@@ -128,19 +145,19 @@ public class NetworkStoreListener implements NetworkListener {
     public static Set<String> getSubstationIds(Identifiable identifiable) {
         Set<String> ids = new HashSet<>();
         if (identifiable instanceof Switch) {
-            ids.add(((Switch) identifiable).getVoltageLevel().getSubstation().getId());
+            ids.add(((Switch) identifiable).getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
         } else if (identifiable instanceof Injection) {
-            ids.add(((Injection<?>) identifiable).getTerminal().getVoltageLevel().getSubstation().getId());
+            ids.add(((Injection<?>) identifiable).getTerminal().getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
         } else if (identifiable instanceof Branch) {
-            ids.add(((Branch<?>) identifiable).getTerminal1().getVoltageLevel().getSubstation().getId());
-            ids.add(((Branch<?>) identifiable).getTerminal2().getVoltageLevel().getSubstation().getId());
+            ids.add(((Branch<?>) identifiable).getTerminal1().getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
+            ids.add(((Branch<?>) identifiable).getTerminal2().getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
         } else if (identifiable instanceof ThreeWindingsTransformer) {
-            ids.add(((ThreeWindingsTransformer) identifiable).getTerminal(ThreeWindingsTransformer.Side.ONE).getVoltageLevel().getSubstation().getId());
-            ids.add(((ThreeWindingsTransformer) identifiable).getTerminal(ThreeWindingsTransformer.Side.TWO).getVoltageLevel().getSubstation().getId());
-            ids.add(((ThreeWindingsTransformer) identifiable).getTerminal(ThreeWindingsTransformer.Side.THREE).getVoltageLevel().getSubstation().getId());
+            ids.add(((ThreeWindingsTransformer) identifiable).getTerminal(ThreeWindingsTransformer.Side.ONE).getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
+            ids.add(((ThreeWindingsTransformer) identifiable).getTerminal(ThreeWindingsTransformer.Side.TWO).getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
+            ids.add(((ThreeWindingsTransformer) identifiable).getTerminal(ThreeWindingsTransformer.Side.THREE).getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
         } else if (identifiable instanceof HvdcLine) {
-            ids.add(((HvdcLine) identifiable).getConverterStation1().getTerminal().getVoltageLevel().getSubstation().getId());
-            ids.add(((HvdcLine) identifiable).getConverterStation2().getTerminal().getVoltageLevel().getSubstation().getId());
+            ids.add(((HvdcLine) identifiable).getConverterStation1().getTerminal().getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
+            ids.add(((HvdcLine) identifiable).getConverterStation2().getTerminal().getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
         }
         return ids;
     }
