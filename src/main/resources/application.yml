@@ -16,8 +16,6 @@ spring:
       ddl-auto: validate
     properties:
       dialect: org.hibernate.dialect.PostgreSQLDialect
-      hibernate:
-        format_sql: true
         # Used when action: create is uncommented
         hbm2ddl:
           delimiter: ;
