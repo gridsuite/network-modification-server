@@ -1,0 +1,168 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-3.10.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.10.xsd">
+    <changeSet author="borsenbergerjac (generated)" id="1635323002870-1">
+        <createTable tableName="boolean_equipment_attribute_modification">
+            <column name="equipment_id" type="VARCHAR(255)"/>
+            <column name="attribute_name" type="VARCHAR(255)"/>
+            <column name="attribute_value" type="BOOLEAN"/>
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="boolean_equipment_attribute_modificationPK"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="borsenbergerjac (generated)" id="1635323002870-2">
+        <createTable tableName="double_equipment_attribute_modification">
+            <column name="equipment_id" type="VARCHAR(255)"/>
+            <column name="attribute_name" type="VARCHAR(255)"/>
+            <column name="attribute_value" type="FLOAT8"/>
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="double_equipment_attribute_modificationPK"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="borsenbergerjac (generated)" id="1635323002870-3">
+        <createTable tableName="equipment_deletion">
+            <column name="equipment_id" type="VARCHAR(255)"/>
+            <column name="equipment_type" type="VARCHAR(255)"/>
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="equipment_deletionPK"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="borsenbergerjac (generated)" id="1635323002870-4">
+        <createTable tableName="float_equipment_attribute_modification">
+            <column name="equipment_id" type="VARCHAR(255)"/>
+            <column name="attribute_name" type="VARCHAR(255)"/>
+            <column name="attribute_value" type="FLOAT4"/>
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="float_equipment_attribute_modificationPK"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="borsenbergerjac (generated)" id="1635323002870-5">
+        <createTable tableName="generator_creation">
+            <column name="equipment_id" type="VARCHAR(255)"/>
+            <column name="equipment_name" type="VARCHAR(255)"/>
+            <column name="bus_or_busbar_section_id" type="VARCHAR(255)"/>
+            <column name="voltage_level_id" type="VARCHAR(255)"/>
+            <column name="active_power_setpoint" type="FLOAT8"/>
+            <column name="energy_source" type="INT"/>
+            <column name="max_active_power" type="FLOAT8"/>
+            <column name="min_active_power" type="FLOAT8"/>
+            <column name="rated_nominal_power" type="FLOAT8"/>
+            <column name="reactive_power_setpoint" type="FLOAT8"/>
+            <column name="voltage_regulation_on" type="BOOLEAN"/>
+            <column name="voltage_setpoint" type="FLOAT8"/>
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="generator_creationPK"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="borsenbergerjac (generated)" id="1635323002870-6">
+        <createTable tableName="integer_equipment_attribute_modification">
+            <column name="equipment_id" type="VARCHAR(255)"/>
+            <column name="attribute_name" type="VARCHAR(255)"/>
+            <column name="attribute_value" type="INT"/>
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="integer_equipment_attribute_modificationPK"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="borsenbergerjac (generated)" id="1635323002870-7">
+        <createTable tableName="line_creation">
+            <column name="equipment_id" type="VARCHAR(255)"/>
+            <column name="equipment_name" type="VARCHAR(255)"/>
+            <column name="bus_or_busbar_section_id1" type="VARCHAR(255)"/>
+            <column name="bus_or_busbar_section_id2" type="VARCHAR(255)"/>
+            <column name="voltage_level_id1" type="VARCHAR(255)"/>
+            <column name="voltage_level_id2" type="VARCHAR(255)"/>
+            <column name="series_reactance" type="FLOAT8"/>
+            <column name="series_resistance" type="FLOAT8"/>
+            <column name="shunt_conductance1" type="FLOAT8"/>
+            <column name="shunt_conductance2" type="FLOAT8"/>
+            <column name="shunt_susceptance1" type="FLOAT8"/>
+            <column name="shunt_susceptance2" type="FLOAT8"/>
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="line_creationPK"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="borsenbergerjac (generated)" id="1635323002870-8">
+        <createTable tableName="load_creation">
+            <column name="equipment_id" type="VARCHAR(255)"/>
+            <column name="equipment_name" type="VARCHAR(255)"/>
+            <column name="bus_or_busbar_section_id" type="VARCHAR(255)"/>
+            <column name="voltage_level_id" type="VARCHAR(255)"/>
+            <column name="active_power" type="FLOAT8"/>
+            <column name="load_type" type="INT"/>
+            <column name="reactive_power" type="FLOAT8"/>
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="load_creationPK"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="borsenbergerjac (generated)" id="1635323002870-9">
+        <createTable tableName="modification">
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="modificationPK"/>
+            </column>
+            <column name="date" type="TIMESTAMP"/>
+            <column name="type" type="VARCHAR(255)"/>
+            <column name="group_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="borsenbergerjac (generated)" id="1635323002870-10">
+        <createTable tableName="modification_group">
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="modification_groupPK"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="borsenbergerjac (generated)" id="1635323002870-11">
+        <createTable tableName="string_equipment_attribute_modification">
+            <column name="equipment_id" type="VARCHAR(255)"/>
+            <column name="attribute_name" type="VARCHAR(255)"/>
+            <column name="attribute_value" type="VARCHAR(255)"/>
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="string_equipment_attribute_modificationPK"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="borsenbergerjac (generated)" id="1635323002870-12">
+        <createIndex indexName="modificationEntity_group_id_index" tableName="modification">
+            <column name="group_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="borsenbergerjac (generated)" id="1635323002870-13">
+        <addForeignKeyConstraint baseColumnNames="id" baseTableName="boolean_equipment_attribute_modification" constraintName="boolean_equipment_attribute_modification_id_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
+    </changeSet>
+    <changeSet author="borsenbergerjac (generated)" id="1635323002870-14">
+        <addForeignKeyConstraint baseColumnNames="id" baseTableName="double_equipment_attribute_modification" constraintName="double_equipment_attribute_modification_id_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
+    </changeSet>
+    <changeSet author="borsenbergerjac (generated)" id="1635323002870-15">
+        <addForeignKeyConstraint baseColumnNames="id" baseTableName="equipment_deletion" constraintName="equipmentDeletion_id_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
+    </changeSet>
+    <changeSet author="borsenbergerjac (generated)" id="1635323002870-16">
+        <addForeignKeyConstraint baseColumnNames="id" baseTableName="float_equipment_attribute_modification" constraintName="float_equipment_attribute_modification_id_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
+    </changeSet>
+    <changeSet author="borsenbergerjac (generated)" id="1635323002870-17">
+        <addForeignKeyConstraint baseColumnNames="id" baseTableName="generator_creation" constraintName="generatorCreation_id_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
+    </changeSet>
+    <changeSet author="borsenbergerjac (generated)" id="1635323002870-18">
+        <addForeignKeyConstraint baseColumnNames="group_id" baseTableName="modification" constraintName="group_id_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification_group" validate="true"/>
+    </changeSet>
+    <changeSet author="borsenbergerjac (generated)" id="1635323002870-19">
+        <addForeignKeyConstraint baseColumnNames="id" baseTableName="integer_equipment_attribute_modification" constraintName="integer_equipment_attribute_modification_id_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
+    </changeSet>
+    <changeSet author="borsenbergerjac (generated)" id="1635323002870-20">
+        <addForeignKeyConstraint baseColumnNames="id" baseTableName="line_creation" constraintName="lineCreation_id_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
+    </changeSet>
+    <changeSet author="borsenbergerjac (generated)" id="1635323002870-21">
+        <addForeignKeyConstraint baseColumnNames="id" baseTableName="load_creation" constraintName="loadCreation_id_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
+    </changeSet>
+    <changeSet author="borsenbergerjac (generated)" id="1635323002870-22">
+        <addForeignKeyConstraint baseColumnNames="id" baseTableName="string_equipment_attribute_modification" constraintName="string_equipment_attribute_modification_id_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
+    </changeSet>
+</databaseChangeLog>
