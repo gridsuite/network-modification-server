@@ -177,9 +177,10 @@ public class NetworkStoreListener implements NetworkListener {
         equipmentInfosService.add(
             EquipmentInfos.builder()
                 .networkUuid(networkUuid)
-                .equipmentId(identifiable.getId())
-                .equipmentName(identifiable.getNameOrId())
-                .equipmentType(EquipmentType.getType(identifiable).name())
+                .id(identifiable.getId())
+                .name(identifiable.getNameOrId())
+                .type(EquipmentType.getType(identifiable).name())
+                .voltageLevelsIds(EquipmentInfos.getVoltageLevelsIds(identifiable))
                 .build()
         );
     }

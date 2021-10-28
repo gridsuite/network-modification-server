@@ -11,10 +11,11 @@ import com.powsybl.iidm.network.Identifiable;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
 import com.powsybl.network.store.iidm.impl.NetworkImpl;
+import nl.jqno.equalsverifier.EqualsVerifier;
 import org.gridsuite.modification.server.dto.EquipmentInfos;
 import org.gridsuite.modification.server.dto.EquipmentType;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
-import org.gridsuite.modification.server.utils.MatcherEquipmentInfos;
+import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +26,6 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.*;
 
 /**
@@ -42,33 +42,51 @@ public class EquipmentInfosServiceTests {
 
     @Test
     public void testAddDeleteEquipmentInfos() {
-        EquipmentInfos equipmentInfos = EquipmentInfos.builder().networkUuid(NETWORK_UUID).equipmentId("id1").equipmentName("name1").equipmentType(EquipmentType.LOAD.name()).build();
-        assertThat(equipmentInfosService.add(equipmentInfos), new MatcherEquipmentInfos<>(equipmentInfos));
+        EqualsVerifier.simple().forClass(EquipmentInfos.class).verify();
 
-        equipmentInfosService.delete(equipmentInfos.getEquipmentId(), NETWORK_UUID);
+        EquipmentInfos equipmentInfos = EquipmentInfos.builder().networkUuid(NETWORK_UUID).id("id1").name("name1").type(EquipmentType.LOAD.name()).voltageLevelsIds(Set.of("vl1")).build();
+        assertEquals(equipmentInfosService.add(equipmentInfos), equipmentInfos);
+
+        equipmentInfosService.delete(equipmentInfos.getId(), NETWORK_UUID);
         assertEquals(0, Iterables.size(equipmentInfosService.findAll(NETWORK_UUID)));
 
-        Set<String> equipmentIds = new HashSet<>();
-        addEquipmentInfos(equipmentIds, EquipmentInfos.builder().networkUuid(NETWORK_UUID).equipmentId("id1").equipmentName("name1").equipmentType(EquipmentType.LOAD.name()).build());
-        addEquipmentInfos(equipmentIds, EquipmentInfos.builder().networkUuid(NETWORK_UUID).equipmentId("id2").equipmentName("name2").equipmentType(EquipmentType.GENERATOR.name()).build());
-        addEquipmentInfos(equipmentIds, EquipmentInfos.builder().networkUuid(NETWORK_UUID).equipmentId("id3").equipmentName("name3").equipmentType(EquipmentType.BREAKER.name()).build());
-        addEquipmentInfos(equipmentIds, EquipmentInfos.builder().networkUuid(NETWORK_UUID).equipmentId("id4").equipmentName("name4").equipmentType(EquipmentType.HVDC_LINE.name()).build());
-        addEquipmentInfos(equipmentIds, EquipmentInfos.builder().networkUuid(NETWORK_UUID).equipmentId("id5").equipmentName("name5").equipmentType(EquipmentType.SUBSTATION.name()).build());
-        addEquipmentInfos(equipmentIds, EquipmentInfos.builder().networkUuid(NETWORK_UUID).equipmentId("id6").equipmentName("name6").equipmentType(EquipmentType.VOLTAGE_LEVEL.name()).build());
+        Set<String> ids = new HashSet<>();
+        addEquipmentInfos(ids, EquipmentInfos.builder().networkUuid(NETWORK_UUID).id("id1").name("name1").type(EquipmentType.LOAD.name()).voltageLevelsIds(Set.of("vl1")).build());
+        addEquipmentInfos(ids, EquipmentInfos.builder().networkUuid(NETWORK_UUID).id("id2").name("name2").type(EquipmentType.GENERATOR.name()).voltageLevelsIds(Set.of("vl2")).build());
+        addEquipmentInfos(ids, EquipmentInfos.builder().networkUuid(NETWORK_UUID).id("id3").name("name3").type(EquipmentType.BREAKER.name()).voltageLevelsIds(Set.of("vl3")).build());
+        addEquipmentInfos(ids, EquipmentInfos.builder().networkUuid(NETWORK_UUID).id("id4").name("name4").type(EquipmentType.HVDC_LINE.name()).voltageLevelsIds(Set.of("vl4")).build());
+        addEquipmentInfos(ids, EquipmentInfos.builder().networkUuid(NETWORK_UUID).id("id5").name("name5").type(EquipmentType.SUBSTATION.name()).voltageLevelsIds(Set.of("vl5")).build());
+        addEquipmentInfos(ids, EquipmentInfos.builder().networkUuid(NETWORK_UUID).id("id6").name("name6").type(EquipmentType.VOLTAGE_LEVEL.name()).voltageLevelsIds(Set.of("vl6")).build());
         assertEquals(6, Iterables.size(equipmentInfosService.findAll(NETWORK_UUID)));
 
-        equipmentIds.forEach(id -> equipmentInfosService.delete(id, NETWORK_UUID));
+        ids.forEach(id -> equipmentInfosService.delete(id, NETWORK_UUID));
         assertEquals(0, Iterables.size(equipmentInfosService.findAll(NETWORK_UUID)));
     }
 
     private void addEquipmentInfos(Set<String> ids, EquipmentInfos equipmentInfos) {
-        ids.add(equipmentInfosService.add(equipmentInfos).getEquipmentId());
+        ids.add(equipmentInfosService.add(equipmentInfos).getId());
     }
 
     @Test
-    public void testBadEquipmentType() {
+    public void testVoltageLevelsIds() {
+        Network network = NetworkCreation.create(NETWORK_UUID, true);
+        assertEquals(Set.of("v1", "v2", "v4"), EquipmentInfos.getVoltageLevelsIds(network.getSubstation("s1")));
+        assertEquals(Set.of("v1"), EquipmentInfos.getVoltageLevelsIds(network.getVoltageLevel("v1")));
+        assertEquals(Set.of("v1"), EquipmentInfos.getVoltageLevelsIds(network.getSwitch("v1b1")));
+        assertEquals(Set.of("v1"), EquipmentInfos.getVoltageLevelsIds(network.getLoad("v1load")));
+        assertEquals(Set.of("v1", "v2"), EquipmentInfos.getVoltageLevelsIds(network.getHvdcLine("hvdcLine")));
+        assertEquals(Set.of("v3", "v4"), EquipmentInfos.getVoltageLevelsIds(network.getLine("line1")));
+        assertEquals(Set.of("v1", "v2"), EquipmentInfos.getVoltageLevelsIds(network.getTwoWindingsTransformer("trf1")));
+        assertEquals(Set.of("v4", "v2", "v1"), EquipmentInfos.getVoltageLevelsIds(network.getThreeWindingsTransformer("trf6")));
+    }
+
+    @Test
+    public void testBadType() {
         Identifiable<Network> network = new NetworkFactoryImpl().createNetwork("test", "test");
         String errorMessage = assertThrows(NetworkModificationException.class, () -> EquipmentType.getType(network)).getMessage();
+        assertTrue(errorMessage.contains(String.format("The equipment type : %s is unknown", NetworkImpl.class.getSimpleName())));
+
+        errorMessage = assertThrows(NetworkModificationException.class, () -> EquipmentInfos.getVoltageLevelsIds(network)).getMessage();
         assertTrue(errorMessage.contains(String.format("The equipment type : %s is unknown", NetworkImpl.class.getSimpleName())));
     }
 }
