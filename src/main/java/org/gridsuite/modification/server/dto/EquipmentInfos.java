@@ -22,6 +22,7 @@ import org.springframework.lang.NonNull;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -67,16 +68,19 @@ public class EquipmentInfos {
             );
         } else if (identifiable instanceof Branch) {
             Branch<?> branch = (Branch<?>) identifiable;
-            String vlId1 = branch.getTerminal1().getVoltageLevel().getId();
-            String vlId2 = branch.getTerminal2().getVoltageLevel().getId();
-            return vlId1.equals(vlId2) ? Set.of(vlId1) : Set.of(vlId1, vlId2); // Internal line
+            return Stream.of(// Same Vls ?
+                    branch.getTerminal1().getVoltageLevel().getId(),
+                    branch.getTerminal2().getVoltageLevel().getId()
+                )
+                .collect(Collectors.toSet());
         } else if (identifiable instanceof ThreeWindingsTransformer) {
             ThreeWindingsTransformer w3t = (ThreeWindingsTransformer) identifiable;
-            return Set.of(
-                w3t.getTerminal(ThreeWindingsTransformer.Side.ONE).getVoltageLevel().getId(),
-                w3t.getTerminal(ThreeWindingsTransformer.Side.TWO).getVoltageLevel().getId(),
-                w3t.getTerminal(ThreeWindingsTransformer.Side.THREE).getVoltageLevel().getId()
-            );
+            return Stream.of(// Same Vls ?
+                    w3t.getTerminal(ThreeWindingsTransformer.Side.ONE).getVoltageLevel().getId(),
+                    w3t.getTerminal(ThreeWindingsTransformer.Side.TWO).getVoltageLevel().getId(),
+                    w3t.getTerminal(ThreeWindingsTransformer.Side.THREE).getVoltageLevel().getId()
+                )
+                .collect(Collectors.toSet());
         }
 
         throw NetworkModificationException.createEquipmentTypeUnknown(identifiable.getClass().getSimpleName());
