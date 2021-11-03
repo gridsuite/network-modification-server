@@ -37,10 +37,16 @@ public class LineCreationInfos extends BranchCreationInfos {
     @Schema(description = "Shunt susceptance Side 1")
     private Double shuntSusceptance1;
 
+    @Schema(description = "Permanent current limit Side 1")
+    private Double permanentCurrentLimit1;
+
     @Schema(description = "Shunt conductance Side 2")
     private Double shuntConductance2;
 
     @Schema(description = "Shunt susceptance Side 2")
     private Double shuntSusceptance2;
+
+    @Schema(description = "Permanent current limit Side 2")
+    private Double permanentCurrentLimit2;
 
 }

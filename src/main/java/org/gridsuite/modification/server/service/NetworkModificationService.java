@@ -615,7 +615,7 @@ public class NetworkModificationService {
 
     }
 
-    private void createLine(Network network, VoltageLevel voltageLevel1, VoltageLevel voltageLevel2, LineCreationInfos lineCreationInfos) {
+    private Line createLine(Network network, VoltageLevel voltageLevel1, VoltageLevel voltageLevel2, LineCreationInfos lineCreationInfos) {
 
         // common settings
         LineAdder lineAdder = network.newLine()
@@ -634,7 +634,7 @@ public class NetworkModificationService {
         setLineAdderNodeOrBus(lineAdder, voltageLevel1, lineCreationInfos, Side.ONE);
         setLineAdderNodeOrBus(lineAdder, voltageLevel2, lineCreationInfos, Side.TWO);
 
-        lineAdder.add();
+        return lineAdder.add();
     }
 
     public Flux<EquipmenModificationInfos> createLine(UUID networkUuid, UUID groupUuid, LineCreationInfos lineCreationInfos) {
@@ -649,7 +649,15 @@ public class NetworkModificationService {
                         VoltageLevel voltageLevel1 = getVoltageLevel(network, lineCreationInfos.getVoltageLevelId1());
                         VoltageLevel voltageLevel2 = getVoltageLevel(network, lineCreationInfos.getVoltageLevelId2());
 
-                        createLine(network, voltageLevel1, voltageLevel2, lineCreationInfos);
+                        Line myLine = createLine(network, voltageLevel1, voltageLevel2, lineCreationInfos);
+
+                        // Set Permanent Current Limits if exist
+                        if (lineCreationInfos.getPermanentCurrentLimit1() != null) {
+                            myLine.newCurrentLimits1().setPermanentLimit(lineCreationInfos.getPermanentCurrentLimit1()).add();
+                        }
+                        if (lineCreationInfos.getPermanentCurrentLimit2() != null) {
+                            myLine.newCurrentLimits2().setPermanentLimit(lineCreationInfos.getPermanentCurrentLimit2()).add();
+                        }
 
                         subReporter.report(Report.builder()
                             .withKey("lineCreated")

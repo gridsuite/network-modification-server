@@ -31,7 +31,9 @@ public class MatcherLineCreationInfos extends MatcherModificationInfos<LineCreat
                                                                                 String voltageLevelId1,
                                                                                 String busOrBusbarSectionId1,
                                                                                 String voltageLevelId2,
-                                                                                String busOrBusbarSectionId2
+                                                                                String busOrBusbarSectionId2,
+                                                                                Double permanentCurrentLimit1,
+                                                                                Double permanentCurrentLimit2
                                                                           ) {
         return new MatcherLineCreationInfos(LineCreationInfos.builder()
                 .date(ZonedDateTime.now(ZoneOffset.UTC))
@@ -49,6 +51,8 @@ public class MatcherLineCreationInfos extends MatcherModificationInfos<LineCreat
                 .busOrBusbarSectionId1(busOrBusbarSectionId1)
                 .voltageLevelId2(voltageLevelId2)
                 .busOrBusbarSectionId2(busOrBusbarSectionId2)
+                .permanentCurrentLimit1(permanentCurrentLimit1)
+                .permanentCurrentLimit2(permanentCurrentLimit2)
                 .build());
     }
 
@@ -79,7 +83,11 @@ public class MatcherLineCreationInfos extends MatcherModificationInfos<LineCreat
             && m.getVoltageLevelId1().equals(reference.getVoltageLevelId1())
             && m.getBusOrBusbarSectionId1().equals(reference.getBusOrBusbarSectionId1())
             && m.getVoltageLevelId2().equals(reference.getVoltageLevelId2())
-            && m.getBusOrBusbarSectionId2().equals(reference.getBusOrBusbarSectionId2());
+            && m.getBusOrBusbarSectionId2().equals(reference.getBusOrBusbarSectionId2())
+            && m.getPermanentCurrentLimit1() != null && m.getPermanentCurrentLimit1().equals(reference.getPermanentCurrentLimit1())
+            || m.getPermanentCurrentLimit1() == null && reference.getPermanentCurrentLimit1() == null
+            && m.getPermanentCurrentLimit2() != null && m.getPermanentCurrentLimit2().equals(reference.getPermanentCurrentLimit2())
+            || m.getPermanentCurrentLimit2() == null && reference.getPermanentCurrentLimit2() == null;
     }
 
     @Override
