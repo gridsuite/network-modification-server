@@ -134,8 +134,8 @@ public class NetworkStoreListener implements NetworkListener {
             lineCreationInfos.getBusOrBusbarSectionId1(),
             lineCreationInfos.getVoltageLevelId2(),
             lineCreationInfos.getBusOrBusbarSectionId2(),
-            lineCreationInfos.getPermanentCurrentLimit1(),
-            lineCreationInfos.getPermanentCurrentLimit2()
+            lineCreationInfos.getCurrentLimits1() != null ? lineCreationInfos.getCurrentLimits1().getPermanentCurrentLimit() : null,
+            lineCreationInfos.getCurrentLimits2() != null ? lineCreationInfos.getCurrentLimits2().getPermanentCurrentLimit() : null
         ));
     }
 

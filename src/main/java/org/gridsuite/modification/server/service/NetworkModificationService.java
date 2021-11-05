@@ -21,6 +21,7 @@ import groovy.lang.GroovyShell;
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.dto.CurrentLimitsInfos;
 import org.gridsuite.modification.server.dto.EquipmenModificationInfos;
 import org.gridsuite.modification.server.dto.GeneratorCreationInfos;
 import org.gridsuite.modification.server.dto.EquipmentDeletionInfos;
@@ -652,11 +653,14 @@ public class NetworkModificationService {
                         Line myLine = createLine(network, voltageLevel1, voltageLevel2, lineCreationInfos);
 
                         // Set Permanent Current Limits if exist
-                        if (lineCreationInfos.getPermanentCurrentLimit1() != null) {
-                            myLine.newCurrentLimits1().setPermanentLimit(lineCreationInfos.getPermanentCurrentLimit1()).add();
+                        CurrentLimitsInfos currentLimitsInfos1 = lineCreationInfos.getCurrentLimits1();
+                        CurrentLimitsInfos currentLimitsInfos2 = lineCreationInfos.getCurrentLimits2();
+
+                        if (currentLimitsInfos1 != null && currentLimitsInfos1.getPermanentCurrentLimit() != null) {
+                            myLine.newCurrentLimits1().setPermanentLimit(currentLimitsInfos1.getPermanentCurrentLimit()).add();
                         }
-                        if (lineCreationInfos.getPermanentCurrentLimit2() != null) {
-                            myLine.newCurrentLimits2().setPermanentLimit(lineCreationInfos.getPermanentCurrentLimit2()).add();
+                        if (currentLimitsInfos2 != null && currentLimitsInfos2.getPermanentCurrentLimit() != null) {
+                            myLine.newCurrentLimits2().setPermanentLimit(currentLimitsInfos2.getPermanentCurrentLimit()).add();
                         }
 
                         subReporter.report(Report.builder()

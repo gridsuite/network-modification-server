@@ -7,6 +7,7 @@
 package org.gridsuite.modification.server.utils;
 
 import org.gridsuite.modification.server.ModificationType;
+import org.gridsuite.modification.server.dto.CurrentLimitsInfos;
 import org.gridsuite.modification.server.dto.LineCreationInfos;
 import org.hamcrest.Description;
 
@@ -51,8 +52,8 @@ public class MatcherLineCreationInfos extends MatcherModificationInfos<LineCreat
                 .busOrBusbarSectionId1(busOrBusbarSectionId1)
                 .voltageLevelId2(voltageLevelId2)
                 .busOrBusbarSectionId2(busOrBusbarSectionId2)
-                .permanentCurrentLimit1(permanentCurrentLimit1)
-                .permanentCurrentLimit2(permanentCurrentLimit2)
+                .currentLimits1(CurrentLimitsInfos.builder().permanentCurrentLimit(permanentCurrentLimit1).build())
+                .currentLimits2(CurrentLimitsInfos.builder().permanentCurrentLimit(permanentCurrentLimit2).build())
                 .build());
     }
 
@@ -62,6 +63,12 @@ public class MatcherLineCreationInfos extends MatcherModificationInfos<LineCreat
 
     protected MatcherLineCreationInfos(LineCreationInfos ref) {
         super(ref);
+    }
+
+    public boolean matchesCurrentLimitsInfos(CurrentLimitsInfos cl1, CurrentLimitsInfos cl2) {
+        return cl1 == null && cl2 == null
+            || cl1 != null && cl2 != null && cl1.getPermanentCurrentLimit().equals(cl2.getPermanentCurrentLimit())
+            || cl1 != null && cl2 != null && cl1.getPermanentCurrentLimit() == null && cl2.getPermanentCurrentLimit() == null;
     }
 
     @Override
@@ -84,10 +91,8 @@ public class MatcherLineCreationInfos extends MatcherModificationInfos<LineCreat
             && m.getBusOrBusbarSectionId1().equals(reference.getBusOrBusbarSectionId1())
             && m.getVoltageLevelId2().equals(reference.getVoltageLevelId2())
             && m.getBusOrBusbarSectionId2().equals(reference.getBusOrBusbarSectionId2())
-            && m.getPermanentCurrentLimit1() != null && m.getPermanentCurrentLimit1().equals(reference.getPermanentCurrentLimit1())
-            || m.getPermanentCurrentLimit1() == null && reference.getPermanentCurrentLimit1() == null
-            && m.getPermanentCurrentLimit2() != null && m.getPermanentCurrentLimit2().equals(reference.getPermanentCurrentLimit2())
-            || m.getPermanentCurrentLimit2() == null && reference.getPermanentCurrentLimit2() == null;
+            && matchesCurrentLimitsInfos(m.getCurrentLimits1(), reference.getCurrentLimits1())
+            && matchesCurrentLimitsInfos(m.getCurrentLimits2(), reference.getCurrentLimits2());
     }
 
     @Override

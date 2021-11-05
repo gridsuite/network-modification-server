@@ -41,17 +41,11 @@ public class LineCreationEntity extends BranchCreationEntity {
     @Column(name = "shuntSusceptance1")
     private Double shuntSusceptance1;
 
-    @Column(name = "permanentCurrentLimit1")
-    private Double permanentCurrentLimit1;
-
     @Column(name = "shuntConductance2")
     private Double shuntConductance2;
 
     @Column(name = "shuntSusceptance2")
     private Double shuntSusceptance2;
-
-    @Column(name = "permanentCurrentLimit2")
-    private Double permanentCurrentLimit2;
 
     public LineCreationEntity(String equipmentId,
                                 String equipmentName,
@@ -68,15 +62,22 @@ public class LineCreationEntity extends BranchCreationEntity {
                                 Double permanentCurrentLimit1,
                                 Double permanentCurrentLimit2
     ) {
-        super(ModificationType.LINE_CREATION, equipmentId, equipmentName, voltageLevelId1, voltageLevelId2, busOrBusbarSectionId1, busOrBusbarSectionId2);
+        super(ModificationType.LINE_CREATION,
+                equipmentId,
+                equipmentName,
+                voltageLevelId1,
+                voltageLevelId2,
+                busOrBusbarSectionId1,
+                busOrBusbarSectionId2,
+                permanentCurrentLimit1 != null ? new CurrentLimitsEntity(null, permanentCurrentLimit1) : null,
+                permanentCurrentLimit2 != null ? new CurrentLimitsEntity(null, permanentCurrentLimit2) : null
+        );
         this.seriesResistance = seriesResistance;
         this.seriesReactance = seriesReactance;
         this.shuntConductance1 = shuntConductance1;
         this.shuntSusceptance1 = shuntSusceptance1;
         this.shuntConductance2 = shuntConductance2;
         this.shuntSusceptance2 = shuntSusceptance2;
-        this.permanentCurrentLimit1 = permanentCurrentLimit1;
-        this.permanentCurrentLimit2 = permanentCurrentLimit2;
     }
 
     public LineCreationInfos toLineCreationInfos() {
@@ -89,7 +90,7 @@ public class LineCreationEntity extends BranchCreationEntity {
     }
 
     private LineCreationInfos.LineCreationInfosBuilder<?, ?> toLineCreationInfosBuilder() {
-        return LineCreationInfos
+        LineCreationInfos.LineCreationInfosBuilder<?, ?> builder = LineCreationInfos
             .builder()
             .uuid(getId())
             .date(getDate())
@@ -105,8 +106,14 @@ public class LineCreationEntity extends BranchCreationEntity {
             .voltageLevelId1(getVoltageLevelId1())
             .busOrBusbarSectionId1(getBusOrBusbarSectionId1())
             .voltageLevelId2(getVoltageLevelId2())
-            .busOrBusbarSectionId2(getBusOrBusbarSectionId2())
-            .permanentCurrentLimit1(getPermanentCurrentLimit1())
-            .permanentCurrentLimit2(getPermanentCurrentLimit2());
+            .busOrBusbarSectionId2(getBusOrBusbarSectionId2());
+
+        if (getCurrentLimits1() != null) {
+            builder.currentLimits1(getCurrentLimits1().toCurrentLimitsInfos());
+        }
+        if (getCurrentLimits2() != null) {
+            builder.currentLimits2(getCurrentLimits2().toCurrentLimitsInfos());
+        }
+        return builder;
     }
 }

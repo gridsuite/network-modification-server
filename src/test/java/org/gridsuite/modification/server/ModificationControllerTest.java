@@ -14,6 +14,8 @@ import com.powsybl.iidm.network.LoadType;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.sld.iidm.extensions.BranchStatus;
+
+import org.gridsuite.modification.server.dto.CurrentLimitsInfos;
 import org.gridsuite.modification.server.dto.EquipmenAttributeModificationInfos;
 import org.gridsuite.modification.server.dto.EquipmenModificationInfos;
 import org.gridsuite.modification.server.dto.GeneratorCreationInfos;
@@ -914,7 +916,7 @@ public class ModificationControllerTest {
             .busOrBusbarSectionId2("1A")
             .build();
 
-        assertEquals("LineCreationInfos(super=BranchCreationInfos(super=EquipmentCreationInfos(super=EquipmenModificationInfos(super=ModificationInfos(uuid=null, date=null, type=null), equipmentId=idLine4, substationIds=[]), equipmentName=nameLine4), voltageLevelId1=v1, voltageLevelId2=v2, busOrBusbarSectionId1=1.1, busOrBusbarSectionId2=1A), seriesResistance=100.0, seriesReactance=100.0, shuntConductance1=10.0, shuntSusceptance1=10.0, permanentCurrentLimit1=null, shuntConductance2=20.0, shuntSusceptance2=20.0, permanentCurrentLimit2=null)", lineCreationInfos.toString());
+        assertEquals("LineCreationInfos(super=BranchCreationInfos(super=EquipmentCreationInfos(super=EquipmenModificationInfos(super=ModificationInfos(uuid=null, date=null, type=null), equipmentId=idLine4, substationIds=[]), equipmentName=nameLine4), voltageLevelId1=v1, voltageLevelId2=v2, busOrBusbarSectionId1=1.1, busOrBusbarSectionId2=1A, currentLimits1=null, currentLimits2=null), seriesResistance=100.0, seriesReactance=100.0, shuntConductance1=10.0, shuntSusceptance1=10.0, shuntConductance2=20.0, shuntSusceptance2=20.0)", lineCreationInfos.toString());
 
         webTestClient.put().uri(uriString, TEST_NETWORK_ID)
             .body(BodyInserters.fromValue(lineCreationInfos))
@@ -1081,8 +1083,8 @@ public class ModificationControllerTest {
             .busOrBusbarSectionId1("bus1")
             .voltageLevelId2("v2")
             .busOrBusbarSectionId2("bus2")
-            .permanentCurrentLimit1(5.0)
-            .permanentCurrentLimit2(1.0)
+            .currentLimits1(CurrentLimitsInfos.builder().permanentCurrentLimit(5.0).build())
+            .currentLimits2(CurrentLimitsInfos.builder().permanentCurrentLimit(1.0).build())
             .build();
 
         webTestClient.put().uri(uriString, TEST_NETWORK_BUS_BREAKER_ID)
@@ -1096,7 +1098,7 @@ public class ModificationControllerTest {
 
         testNetworkModificationsCount(TEST_GROUP_ID, 3);
 
-        lineCreationInfosPermanentLimitOK.setPermanentCurrentLimit1(null);
+        lineCreationInfosPermanentLimitOK.setCurrentLimits1(null);
 
         webTestClient.put().uri(uriString, TEST_NETWORK_BUS_BREAKER_ID)
             .body(BodyInserters.fromValue(lineCreationInfosPermanentLimitOK))
@@ -1109,8 +1111,8 @@ public class ModificationControllerTest {
 
         testNetworkModificationsCount(TEST_GROUP_ID, 4);
 
-        lineCreationInfosPermanentLimitOK.setPermanentCurrentLimit1(5.0);
-        lineCreationInfosPermanentLimitOK.setPermanentCurrentLimit2(null);
+        lineCreationInfosPermanentLimitOK.setCurrentLimits1(CurrentLimitsInfos.builder().permanentCurrentLimit(5.0).build());
+        lineCreationInfosPermanentLimitOK.setCurrentLimits2(CurrentLimitsInfos.builder().permanentCurrentLimit(null).build());
 
         webTestClient.put().uri(uriString, TEST_NETWORK_BUS_BREAKER_ID)
             .body(BodyInserters.fromValue(lineCreationInfosPermanentLimitOK))
@@ -1132,8 +1134,8 @@ public class ModificationControllerTest {
             .busOrBusbarSectionId1("bus1")
             .voltageLevelId2("v2")
             .busOrBusbarSectionId2("bus2")
-            .permanentCurrentLimit1(5.0)
-            .permanentCurrentLimit2(0.0)
+            .currentLimits1(CurrentLimitsInfos.builder().permanentCurrentLimit(5.0).build())
+            .currentLimits2(CurrentLimitsInfos.builder().permanentCurrentLimit(0.0).build())
             .build();
 
         webTestClient.put().uri(uriString, TEST_NETWORK_BUS_BREAKER_ID)

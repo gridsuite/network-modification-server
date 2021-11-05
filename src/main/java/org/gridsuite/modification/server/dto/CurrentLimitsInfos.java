@@ -22,24 +22,9 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @Setter
 @ToString(callSuper = true)
-@Schema(description = "Line creation")
-public class LineCreationInfos extends BranchCreationInfos {
+@Schema(description = "Current Limits")
+public class CurrentLimitsInfos {
 
-    @Schema(description = "Series resistance")
-    private double seriesResistance;
-
-    @Schema(description = "Series reactance")
-    private double seriesReactance;
-
-    @Schema(description = "Shunt conductance Side 1")
-    private Double shuntConductance1;
-
-    @Schema(description = "Shunt susceptance Side 1")
-    private Double shuntSusceptance1;
-
-    @Schema(description = "Shunt conductance Side 2")
-    private Double shuntConductance2;
-
-    @Schema(description = "Shunt susceptance Side 2")
-    private Double shuntSusceptance2;
+    @Schema(description = "Permanent current limit")
+    private Double permanentCurrentLimit;
 }
