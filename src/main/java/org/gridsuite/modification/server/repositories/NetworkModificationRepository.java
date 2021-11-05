@@ -142,6 +142,7 @@ public class NetworkModificationRepository {
             .toGeneratorCreationInfos();
     }
 
+    @Transactional
     public LineCreationInfos getLineCreationModification(UUID groupUuid, UUID modificationUuid) {
         return ((LineCreationEntity) this.modificationRepository
             .findById(modificationUuid)

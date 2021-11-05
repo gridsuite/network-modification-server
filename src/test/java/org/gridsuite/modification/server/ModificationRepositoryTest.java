@@ -279,7 +279,7 @@ public class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         modificationRepository.deleteModifications(TEST_GROUP_ID, Set.of(createLineEntity2.getId(), createLineEntity3.getId()));
-        assertRequestsCount(3, 0, 0, 5);
+        assertRequestsCount(2, 0, 0, 5);
 
         SQLStatementCountValidator.reset();
         assertEquals(2, modificationRepository.getModifications(TEST_GROUP_ID).size());

@@ -39,7 +39,7 @@ public class BranchCreationEntity extends EquipmentCreationEntity {
     @Column(name = "busOrBusbarSectionId2")
     private String busOrBusbarSectionId2;
 
-    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JoinColumn(name  =  "current_limits_id1",
         referencedColumnName  =  "id",
         foreignKey = @ForeignKey(
@@ -47,7 +47,7 @@ public class BranchCreationEntity extends EquipmentCreationEntity {
         ), nullable = true)
     private CurrentLimitsEntity currentLimits1;
 
-    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JoinColumn(name  =  "current_limits_id2",
         referencedColumnName  =  "id",
         foreignKey = @ForeignKey(
