@@ -83,6 +83,7 @@ public class ModificationControllerTest {
     private static final UUID TEST_GROUP_ID = UUID.randomUUID();
     private static final UUID TEST_NETWORK_BUS_BREAKER_ID = UUID.fromString("11111111-7977-4592-ba19-88027e4254e4");
     private static final UUID TEST_NETWORK_MIXED_TOPOLOGY_ID = UUID.fromString("22222222-7977-4592-ba19-88027e4254e4");
+    private static final String VARIANT_NOT_FOUND_ID = "variantNotFound";
 
     private static final String ERROR_MESSAGE = "Error message";
 
@@ -157,12 +158,24 @@ public class ModificationControllerTest {
                         .getResponseBody()).get(0);
 
         assertTrue(MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v1b1", Set.of("s1"), "open", true).matchesSafely(modificationSwitchInfos));
+
+        // switch in variant VARIANT_ID opening
+        modificationSwitchInfos =
+            Objects.requireNonNull(webTestClient.put().uri("/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID + "&open=true" + "&variantId=" + NetworkCreation.VARIANT_ID, TEST_NETWORK_ID, "break1Variant")
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBodyList(EquipmenAttributeModificationInfos.class)
+                .returnResult()
+                .getResponseBody()).get(0);
+
+        assertTrue(MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("break1Variant", Set.of("s1Variant"), "open", true).matchesSafely(modificationSwitchInfos));
     }
 
     @Test
     public void testNetworkListener() {
         Network network = NetworkCreation.create(TEST_NETWORK_ID, true);
-        NetworkStoreListener listener = NetworkStoreListener.create(network, TEST_NETWORK_ID, TEST_GROUP_ID, modificationRepository, equipmentInfosService);
+        NetworkStoreListener listener = NetworkStoreListener.create(network, TEST_NETWORK_ID, null, TEST_GROUP_ID, modificationRepository, equipmentInfosService);
         Generator generator = network.getGenerator("idGenerator");
         Object invalidValue = new Object();
         assertTrue(assertThrows(PowsyblException.class, () ->
@@ -207,60 +220,89 @@ public class ModificationControllerTest {
                 .isEqualTo(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
     }
 
+    private void switchModifications(String uriString, String switchId1, String switchNotFoundId, String switchId2, String switchId3,
+                                     Set<String> substationsIds, Set<String> otherSubstationsIds,
+                                     int modificationsCount) {
+        // network not existing
+        webTestClient.put().uri(uriString + "&open=true", NOT_FOUND_NETWORK_ID, switchId1)
+            .exchange()
+            .expectStatus().isNotFound()
+            .expectBody(String.class)
+            .isEqualTo(new NetworkModificationException(NETWORK_NOT_FOUND, NOT_FOUND_NETWORK_ID.toString()).getMessage());
+
+        // switch not existing
+        webTestClient.put().uri(uriString + "&open=true", TEST_NETWORK_ID, switchNotFoundId)
+            .exchange()
+            .expectStatus().isNotFound()
+            .expectBody(String.class)
+            .isEqualTo(new NetworkModificationException(SWITCH_NOT_FOUND, switchNotFoundId).getMessage());
+
+        // switch closing when already closed
+        webTestClient.put().uri(uriString + "&open=false", TEST_NETWORK_ID, switchId1)
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBodyList(EquipmenAttributeModificationInfos.class)
+            .isEqualTo(List.of());
+
+        // switch opening
+        webTestClient.put().uri(uriString + "&open=true", TEST_NETWORK_ID, switchId1)
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBodyList(EquipmenAttributeModificationInfos.class)
+            .value(modifications -> modifications.get(0),
+                MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos(switchId1, substationsIds, "open", true));
+
+        // switch closing
+        webTestClient.put().uri(uriString + "&open=false", TEST_NETWORK_ID, switchId2)
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBodyList(EquipmenAttributeModificationInfos.class)
+            .value(modifications -> modifications.get(0),
+                MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos(switchId2, substationsIds, "open", false));
+
+        // switch opening on another substation
+        webTestClient.put().uri(uriString + "&open=true", TEST_NETWORK_ID, switchId3)
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBodyList(EquipmenAttributeModificationInfos.class)
+            .value(modifications -> modifications.get(0),
+                MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos(switchId3, otherSubstationsIds, "open", true));
+
+        testNetworkModificationsCount(TEST_GROUP_ID, modificationsCount);
+    }
+
     @Test
     public void testSwitch() {
         String uriString = "/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID;
 
+        // switches modifications on initial variant
+        switchModifications(uriString, "v1b1", "disc1Variant", "v2b1", "v3b1", Set.of("s1"), Set.of("s2"), 3);
+
+        // switches modifications on variant VARIANT_ID
+        switchModifications(uriString + "&variantId=" + NetworkCreation.VARIANT_ID, "break1Variant", "notFound", "disc1Variant", "break2Variant", Set.of("s1Variant"), Set.of("s2Variant"), 6);
+    }
+
+    @Test
+    public void testNetworkOrVariantNotFound() {
+        String uriString = "/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID;
+
         // network not existing
         webTestClient.put().uri(uriString + "&open=true", NOT_FOUND_NETWORK_ID, "v1b1")
-                .exchange()
-                .expectStatus().isNotFound()
-                .expectBody(String.class)
-                .isEqualTo(new NetworkModificationException(NETWORK_NOT_FOUND, NOT_FOUND_NETWORK_ID.toString()).getMessage());
+            .exchange()
+            .expectStatus().isNotFound()
+            .expectBody(String.class)
+            .isEqualTo(new NetworkModificationException(NETWORK_NOT_FOUND, NOT_FOUND_NETWORK_ID.toString()).getMessage());
 
-        // switch not existing
-        webTestClient.put().uri(uriString + "&open=true", TEST_NETWORK_ID, "notFound")
-                .exchange()
-                .expectStatus().isNotFound()
-                .expectBody(String.class)
-                .isEqualTo(new NetworkModificationException(SWITCH_NOT_FOUND, "notFound").getMessage());
-
-        // switch closing when already closed
-        webTestClient.put().uri(uriString + "&open=false", TEST_NETWORK_ID, "v1b1")
-                .exchange()
-                .expectStatus().isOk()
-                .expectHeader().contentType(MediaType.APPLICATION_JSON)
-                .expectBodyList(EquipmenAttributeModificationInfos.class)
-                .isEqualTo(List.of());
-
-        // switch opening
-        webTestClient.put().uri(uriString + "&open=true", TEST_NETWORK_ID, "v1b1")
-                .exchange()
-                .expectStatus().isOk()
-                .expectHeader().contentType(MediaType.APPLICATION_JSON)
-                .expectBodyList(EquipmenAttributeModificationInfos.class)
-                .value(modifications -> modifications.get(0),
-                        MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v1b1", Set.of("s1"), "open", true));
-
-        // switch closing
-        webTestClient.put().uri(uriString + "&open=false", TEST_NETWORK_ID, "v2b1")
-                .exchange()
-                .expectStatus().isOk()
-                .expectHeader().contentType(MediaType.APPLICATION_JSON)
-                .expectBodyList(EquipmenAttributeModificationInfos.class)
-                .value(modifications -> modifications.get(0),
-                        MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v2b1", Set.of("s1"), "open", false));
-
-        // switch opening on another substation
-        webTestClient.put().uri(uriString + "&open=true", TEST_NETWORK_ID, "v3b1")
-                .exchange()
-                .expectStatus().isOk()
-                .expectHeader().contentType(MediaType.APPLICATION_JSON)
-                .expectBodyList(EquipmenAttributeModificationInfos.class)
-                .value(modifications -> modifications.get(0),
-                        MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v3b1", Set.of("s2"), "open", true));
-
-        testNetworkModificationsCount(TEST_GROUP_ID, 3);
+        // variant not existing
+        webTestClient.put().uri(uriString + "&open=true" + "&variantId=" + VARIANT_NOT_FOUND_ID, TEST_NETWORK_ID, "v1b1")
+            .exchange()
+            .expectStatus().isNotFound()
+            .expectBody(String.class)
+            .isEqualTo(new NetworkModificationException(VARIANT_NOT_FOUND, VARIANT_NOT_FOUND_ID.toString()).getMessage());
     }
 
     @Test
