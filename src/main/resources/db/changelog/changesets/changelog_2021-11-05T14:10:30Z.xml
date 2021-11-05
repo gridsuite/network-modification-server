@@ -1,0 +1,27 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-3.10.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.10.xsd">
+    <changeSet author="bouzolssyl (generated)" id="1636121439443-1">
+        <createTable tableName="current_limit">
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="current_limitPK"/>
+            </column>
+            <column name="permanent_current_limit" type="FLOAT8"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="bouzolssyl (generated)" id="1636121439443-2">
+        <addColumn tableName="line_creation">
+            <column name="current_limits_id1" type="uuid"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="bouzolssyl (generated)" id="1636121439443-3">
+        <addColumn tableName="line_creation">
+            <column name="current_limits_id2" type="uuid"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="bouzolssyl (generated)" id="1636121439443-4">
+        <addForeignKeyConstraint baseColumnNames="current_limits_id1" baseTableName="line_creation" constraintName="current_limits_id1_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="current_limit" validate="true"/>
+    </changeSet>
+    <changeSet author="bouzolssyl (generated)" id="1636121439443-5">
+        <addForeignKeyConstraint baseColumnNames="current_limits_id2" baseTableName="line_creation" constraintName="current_limits_id2_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="current_limit" validate="true"/>
+    </changeSet>
+</databaseChangeLog>
