@@ -28,7 +28,7 @@ import javax.persistence.Table;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "currentLimit")
+@Table(name = "currentLimits")
 public class CurrentLimitsEntity {
 
     @Id
@@ -36,12 +36,8 @@ public class CurrentLimitsEntity {
     @Column(name = "id")
     private UUID id;
 
-    @Column(name = "permanentCurrentLimit")
-    private Double permanentCurrentLimit;
-
-    // public CurrentLimitEntity(CurrentLimitEntity that) {
-    //     this.permanentCurrentLimit = that.permanentCurrentLimit;
-    // }
+    @Column(name = "permanentLimit")
+    private Double permanentLimit;
 
     public CurrentLimitsInfos toCurrentLimitsInfos() {
         return toCurrentLimitsInfosBuilder().build();
@@ -50,6 +46,6 @@ public class CurrentLimitsEntity {
     private CurrentLimitsInfos.CurrentLimitsInfosBuilder<?, ?> toCurrentLimitsInfosBuilder() {
         return CurrentLimitsInfos
             .builder()
-            .permanentCurrentLimit(getPermanentCurrentLimit());
+            .permanentLimit(getPermanentLimit());
     }
 }

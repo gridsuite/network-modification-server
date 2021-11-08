@@ -656,11 +656,11 @@ public class NetworkModificationService {
                         CurrentLimitsInfos currentLimitsInfos1 = lineCreationInfos.getCurrentLimits1();
                         CurrentLimitsInfos currentLimitsInfos2 = lineCreationInfos.getCurrentLimits2();
 
-                        if (currentLimitsInfos1 != null && currentLimitsInfos1.getPermanentCurrentLimit() != null) {
-                            myLine.newCurrentLimits1().setPermanentLimit(currentLimitsInfos1.getPermanentCurrentLimit()).add();
+                        if (currentLimitsInfos1 != null && currentLimitsInfos1.getPermanentLimit() != null) {
+                            myLine.newCurrentLimits1().setPermanentLimit(currentLimitsInfos1.getPermanentLimit()).add();
                         }
-                        if (currentLimitsInfos2 != null && currentLimitsInfos2.getPermanentCurrentLimit() != null) {
-                            myLine.newCurrentLimits2().setPermanentLimit(currentLimitsInfos2.getPermanentCurrentLimit()).add();
+                        if (currentLimitsInfos2 != null && currentLimitsInfos2.getPermanentLimit() != null) {
+                            myLine.newCurrentLimits2().setPermanentLimit(currentLimitsInfos2.getPermanentLimit()).add();
                         }
 
                         subReporter.report(Report.builder()

@@ -984,28 +984,6 @@ public class ModificationControllerTest {
         lineCreationInfos.setSeriesReactance(100.0);
 
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
-
-        LineCreationInfos lineCreationInfosNoShunt = LineCreationInfos.builder()
-            .equipmentId("idLine4.1")
-            .equipmentName("nameLine4.1")
-            .seriesResistance(100.0)
-            .seriesReactance(100.0)
-            .voltageLevelId1("v1")
-            .busOrBusbarSectionId1("1.1")
-            .voltageLevelId2("v2")
-            .busOrBusbarSectionId2("1A")
-            .build();
-
-        webTestClient.put().uri(uriString, TEST_NETWORK_ID)
-            .body(BodyInserters.fromValue(lineCreationInfosNoShunt))
-            .exchange()
-            .expectStatus().isOk()
-            .expectHeader().contentType(MediaType.APPLICATION_JSON)
-            .expectBodyList(EquipmenModificationInfos.class)
-            .value(modifications -> modifications.get(0),
-                MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.LINE_CREATION, "idLine4.1", Set.of("s1")));
-
-        testNetworkModificationsCount(TEST_GROUP_ID, 2);
     }
 
     @Test
@@ -1051,101 +1029,6 @@ public class ModificationControllerTest {
             .isEqualTo(new NetworkModificationException(BUS_NOT_FOUND, "notFoundBus").getMessage());
 
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
-
-        LineCreationInfos lineCreationInfosNoShunt = LineCreationInfos.builder()
-            .equipmentId("idLine2")
-            .equipmentName("nameLine2")
-            .seriesResistance(100.0)
-            .seriesReactance(100.0)
-            .voltageLevelId1("v1")
-            .busOrBusbarSectionId1("bus1")
-            .voltageLevelId2("v2")
-            .busOrBusbarSectionId2("bus2")
-            .build();
-
-        webTestClient.put().uri(uriString, TEST_NETWORK_BUS_BREAKER_ID)
-            .body(BodyInserters.fromValue(lineCreationInfosNoShunt))
-            .exchange()
-            .expectStatus().isOk()
-            .expectHeader().contentType(MediaType.APPLICATION_JSON)
-            .expectBodyList(EquipmenModificationInfos.class)
-            .value(modifications -> modifications.get(0),
-                MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.LINE_CREATION, "idLine2", Set.of("s1", "s2")));
-
-        testNetworkModificationsCount(TEST_GROUP_ID, 2);
-
-        LineCreationInfos lineCreationInfosPermanentLimitOK = LineCreationInfos.builder()
-            .equipmentId("idLine3")
-            .equipmentName("nameLine3")
-            .seriesResistance(100.0)
-            .seriesReactance(100.0)
-            .voltageLevelId1("v1")
-            .busOrBusbarSectionId1("bus1")
-            .voltageLevelId2("v2")
-            .busOrBusbarSectionId2("bus2")
-            .currentLimits1(CurrentLimitsInfos.builder().permanentCurrentLimit(5.0).build())
-            .currentLimits2(CurrentLimitsInfos.builder().permanentCurrentLimit(1.0).build())
-            .build();
-
-        webTestClient.put().uri(uriString, TEST_NETWORK_BUS_BREAKER_ID)
-            .body(BodyInserters.fromValue(lineCreationInfosPermanentLimitOK))
-            .exchange()
-            .expectStatus().isOk()
-            .expectHeader().contentType(MediaType.APPLICATION_JSON)
-            .expectBodyList(EquipmenModificationInfos.class)
-            .value(modifications -> modifications.get(0),
-                MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.LINE_CREATION, "idLine3", Set.of("s1", "s2")));
-
-        testNetworkModificationsCount(TEST_GROUP_ID, 3);
-
-        lineCreationInfosPermanentLimitOK.setCurrentLimits1(null);
-
-        webTestClient.put().uri(uriString, TEST_NETWORK_BUS_BREAKER_ID)
-            .body(BodyInserters.fromValue(lineCreationInfosPermanentLimitOK))
-            .exchange()
-            .expectStatus().isOk()
-            .expectHeader().contentType(MediaType.APPLICATION_JSON)
-            .expectBodyList(EquipmenModificationInfos.class)
-            .value(modifications -> modifications.get(0),
-                MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.LINE_CREATION, "idLine3", Set.of("s1", "s2")));
-
-        testNetworkModificationsCount(TEST_GROUP_ID, 4);
-
-        lineCreationInfosPermanentLimitOK.setCurrentLimits1(CurrentLimitsInfos.builder().permanentCurrentLimit(5.0).build());
-        lineCreationInfosPermanentLimitOK.setCurrentLimits2(CurrentLimitsInfos.builder().permanentCurrentLimit(null).build());
-
-        webTestClient.put().uri(uriString, TEST_NETWORK_BUS_BREAKER_ID)
-            .body(BodyInserters.fromValue(lineCreationInfosPermanentLimitOK))
-            .exchange()
-            .expectStatus().isOk()
-            .expectHeader().contentType(MediaType.APPLICATION_JSON)
-            .expectBodyList(EquipmenModificationInfos.class)
-            .value(modifications -> modifications.get(0),
-                MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.LINE_CREATION, "idLine3", Set.of("s1", "s2")));
-
-        testNetworkModificationsCount(TEST_GROUP_ID, 5);
-
-        LineCreationInfos lineCreationInfosPermanentLimitNOK = LineCreationInfos.builder()
-            .equipmentId("idLine3")
-            .equipmentName("nameLine3")
-            .seriesResistance(100.0)
-            .seriesReactance(100.0)
-            .voltageLevelId1("v1")
-            .busOrBusbarSectionId1("bus1")
-            .voltageLevelId2("v2")
-            .busOrBusbarSectionId2("bus2")
-            .currentLimits1(CurrentLimitsInfos.builder().permanentCurrentLimit(5.0).build())
-            .currentLimits2(CurrentLimitsInfos.builder().permanentCurrentLimit(0.0).build())
-            .build();
-
-        webTestClient.put().uri(uriString, TEST_NETWORK_BUS_BREAKER_ID)
-            .body(BodyInserters.fromValue(lineCreationInfosPermanentLimitNOK))
-            .exchange()
-            .expectStatus().is5xxServerError()
-            .expectBody(String.class)
-            .isEqualTo(new NetworkModificationException(CREATE_LINE_ERROR, "AC Line 'idLine3': permanent limit must be defined and be > 0").getMessage());
-
-        testNetworkModificationsCount(TEST_GROUP_ID, 5);
     }
 
     @Test
@@ -1202,20 +1085,65 @@ public class ModificationControllerTest {
             .isEqualTo(new NetworkModificationException(BUS_NOT_FOUND, "notFoundBus").getMessage());
 
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
+    }
 
+    @Test
+    public void testCreateLineOptionalParameters() {
+        String uriString = "/v1/networks/{networkUuid}/lines?group=" + TEST_GROUP_ID;
+
+        // create new line without shunt conductance or reactance
         LineCreationInfos lineCreationInfosNoShunt = LineCreationInfos.builder()
+            .equipmentId("idLine1")
+            .equipmentName("nameLine1")
+            .seriesResistance(100.0)
+            .seriesReactance(100.0)
+            .voltageLevelId1("v1")
+            .busOrBusbarSectionId1("bus1")
+            .voltageLevelId2("v2")
+            .busOrBusbarSectionId2("bus2")
+            .build();
+
+        webTestClient.put().uri(uriString, TEST_NETWORK_BUS_BREAKER_ID)
+            .body(BodyInserters.fromValue(lineCreationInfosNoShunt))
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBodyList(EquipmenModificationInfos.class)
+            .value(modifications -> modifications.get(0),
+                MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.LINE_CREATION, "idLine1", Set.of("s1", "s2")));
+
+        testNetworkModificationsCount(TEST_GROUP_ID, 1);
+
+        lineCreationInfosNoShunt.setShuntConductance1(50.0);
+        lineCreationInfosNoShunt.setShuntConductance2(null);
+        lineCreationInfosNoShunt.setShuntSusceptance1(null);
+        lineCreationInfosNoShunt.setShuntSusceptance2(60.0);
+
+        webTestClient.put().uri(uriString, TEST_NETWORK_BUS_BREAKER_ID)
+            .body(BodyInserters.fromValue(lineCreationInfosNoShunt))
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBodyList(EquipmenModificationInfos.class)
+            .value(modifications -> modifications.get(0),
+                MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.LINE_CREATION, "idLine1", Set.of("s1", "s2")));
+
+        testNetworkModificationsCount(TEST_GROUP_ID, 2);
+
+        LineCreationInfos lineCreationInfosPermanentLimitOK = LineCreationInfos.builder()
             .equipmentId("idLine2")
             .equipmentName("nameLine2")
             .seriesResistance(100.0)
             .seriesReactance(100.0)
             .voltageLevelId1("v1")
-            .busOrBusbarSectionId1("1.1")
+            .busOrBusbarSectionId1("bus1")
             .voltageLevelId2("v2")
             .busOrBusbarSectionId2("bus2")
+            .currentLimits2(CurrentLimitsInfos.builder().permanentLimit(1.0).build())
             .build();
 
-        webTestClient.put().uri(uriString, TEST_NETWORK_MIXED_TOPOLOGY_ID)
-            .body(BodyInserters.fromValue(lineCreationInfosNoShunt))
+        webTestClient.put().uri(uriString, TEST_NETWORK_BUS_BREAKER_ID)
+            .body(BodyInserters.fromValue(lineCreationInfosPermanentLimitOK))
             .exchange()
             .expectStatus().isOk()
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
@@ -1223,7 +1151,42 @@ public class ModificationControllerTest {
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.LINE_CREATION, "idLine2", Set.of("s1", "s2")));
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 2);
+        testNetworkModificationsCount(TEST_GROUP_ID, 3);
+
+        lineCreationInfosPermanentLimitOK.setCurrentLimits1(CurrentLimitsInfos.builder().permanentLimit(5.0).build());
+        lineCreationInfosPermanentLimitOK.setCurrentLimits2(CurrentLimitsInfos.builder().permanentLimit(null).build());
+
+        webTestClient.put().uri(uriString, TEST_NETWORK_BUS_BREAKER_ID)
+            .body(BodyInserters.fromValue(lineCreationInfosPermanentLimitOK))
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBodyList(EquipmenModificationInfos.class)
+            .value(modifications -> modifications.get(0),
+                MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.LINE_CREATION, "idLine2", Set.of("s1", "s2")));
+
+        testNetworkModificationsCount(TEST_GROUP_ID, 4);
+
+        LineCreationInfos lineCreationInfosPermanentLimitNOK = LineCreationInfos.builder()
+            .equipmentId("idLine2")
+            .equipmentName("nameLine2")
+            .seriesResistance(100.0)
+            .seriesReactance(100.0)
+            .voltageLevelId1("v1")
+            .busOrBusbarSectionId1("bus1")
+            .voltageLevelId2("v2")
+            .busOrBusbarSectionId2("bus2")
+            .currentLimits1(CurrentLimitsInfos.builder().permanentLimit(0.0).build())
+            .build();
+
+        webTestClient.put().uri(uriString, TEST_NETWORK_BUS_BREAKER_ID)
+            .body(BodyInserters.fromValue(lineCreationInfosPermanentLimitNOK))
+            .exchange()
+            .expectStatus().is5xxServerError()
+            .expectBody(String.class)
+            .isEqualTo(new NetworkModificationException(CREATE_LINE_ERROR, "AC Line 'idLine2': permanent limit must be defined and be > 0").getMessage());
+
+        testNetworkModificationsCount(TEST_GROUP_ID, 4);
     }
 
     private void testNetworkModificationsCount(UUID groupUuid, int actualSize) {

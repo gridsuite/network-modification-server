@@ -52,8 +52,8 @@ public class MatcherLineCreationInfos extends MatcherModificationInfos<LineCreat
                 .busOrBusbarSectionId1(busOrBusbarSectionId1)
                 .voltageLevelId2(voltageLevelId2)
                 .busOrBusbarSectionId2(busOrBusbarSectionId2)
-                .currentLimits1(CurrentLimitsInfos.builder().permanentCurrentLimit(permanentCurrentLimit1).build())
-                .currentLimits2(CurrentLimitsInfos.builder().permanentCurrentLimit(permanentCurrentLimit2).build())
+                .currentLimits1(CurrentLimitsInfos.builder().permanentLimit(permanentCurrentLimit1).build())
+                .currentLimits2(CurrentLimitsInfos.builder().permanentLimit(permanentCurrentLimit2).build())
                 .build());
     }
 
@@ -66,9 +66,9 @@ public class MatcherLineCreationInfos extends MatcherModificationInfos<LineCreat
     }
 
     public boolean matchesCurrentLimitsInfos(CurrentLimitsInfos cl1, CurrentLimitsInfos cl2) {
-        return cl1 == null && cl2 == null
-            || cl1 != null && cl2 != null && cl1.getPermanentCurrentLimit().equals(cl2.getPermanentCurrentLimit())
-            || cl1 != null && cl2 != null && cl1.getPermanentCurrentLimit() == null && cl2.getPermanentCurrentLimit() == null;
+        return (cl1 == null && cl2 == null)
+            || (cl1 != null && cl2 != null && cl1.getPermanentLimit() != null && cl2.getPermanentLimit() != null && cl1.getPermanentLimit().equals(cl2.getPermanentLimit()))
+            || (cl1 != null && cl2 != null && cl1.getPermanentLimit() == null && cl2.getPermanentLimit() == null);
     }
 
     @Override

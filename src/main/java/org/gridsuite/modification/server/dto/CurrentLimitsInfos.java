@@ -26,5 +26,5 @@ import lombok.experimental.SuperBuilder;
 public class CurrentLimitsInfos {
 
     @Schema(description = "Permanent current limit")
-    private Double permanentCurrentLimit;
+    private Double permanentLimit;
 }
