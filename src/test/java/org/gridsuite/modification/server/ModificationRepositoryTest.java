@@ -19,12 +19,10 @@ import org.gridsuite.modification.server.entities.equipment.creation.GeneratorCr
 import org.gridsuite.modification.server.entities.equipment.creation.LoadCreationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.LineCreationEntity;
 import org.gridsuite.modification.server.entities.equipment.attribute.modification.EquipmentAttributeModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.creation.TwoWindingsTransformerCreationEntity;
 import org.gridsuite.modification.server.repositories.ModificationGroupRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
-import org.gridsuite.modification.server.utils.MatcheEquipmentAttributeModificationInfos;
-import org.gridsuite.modification.server.utils.MatcherGeneratorCreationInfos;
-import org.gridsuite.modification.server.utils.MatcherLoadCreationInfos;
-import org.gridsuite.modification.server.utils.MatcherLineCreationInfos;
+import org.gridsuite.modification.server.utils.*;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -291,6 +289,46 @@ public class ModificationRepositoryTest {
 
         assertThrows(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage(),
             NetworkModificationException.class, () -> modificationRepository.getModifications(TEST_GROUP_ID)
+        );
+    }
+
+    @Test
+    public void testTwoWindingsTransformerCreation() {
+        var createTwoWindingsTransformerEntity1 = modificationRepository.createTwoWindingsTransformerEntity("id2wt1", "name2wt1", 1.0, 1.1, 10.0, 11.0, 100.0, 100.1, "vlId11", "busId11", "vlId12", "busId12");
+        var createTwoWindingsTransformerEntity2 = modificationRepository.createTwoWindingsTransformerEntity("id2wt2", "name2wt2", 2.0, 1.2, 11.0, 12.0, 101.0, 100.2, "vlId11", "busId11", "vlId12", "busId12");
+        var createTwoWindingsTransformerEntity3 = modificationRepository.createTwoWindingsTransformerEntity("id2wt3", "name2wt3", 1.0, 1.1, 10.0, 11.0, 100.0, 100.1, "vlId11", "busId11", "vlId12", "busId12");
+        var createTwoWindingsTransformerEntity4 = modificationRepository.createTwoWindingsTransformerEntity("id2wt4", "name2wt4", 2.0, 1.2, 11.0, 12.0, 101.0, 100.2, "vlId11", "busId11", "vlId12", "busId12");
+        modificationRepository.saveModifications(TEST_GROUP_ID, List.of(createTwoWindingsTransformerEntity1, createTwoWindingsTransformerEntity2, createTwoWindingsTransformerEntity3, createTwoWindingsTransformerEntity4));
+        assertRequestsCount(1, 9, 0, 0);
+
+        List<ModificationInfos> modificationInfos = modificationRepository.getModifications(TEST_GROUP_ID);
+        assertEquals(4, modificationInfos.size());
+
+        assertThat(modificationRepository.getTwoWindingsTransformerCreationModification(TEST_GROUP_ID, modificationInfos.get(0).getUuid()),
+                MatcherTwoWindingsTransformerCreationInfos.createMatcherTwoWindingsTransformerCreationInfos(((TwoWindingsTransformerCreationEntity) createTwoWindingsTransformerEntity1).toTwoWindingsTransformerCreationInfos()));
+        assertThat(modificationRepository.getTwoWindingsTransformerCreationModification(TEST_GROUP_ID, modificationInfos.get(1).getUuid()),
+                MatcherTwoWindingsTransformerCreationInfos.createMatcherTwoWindingsTransformerCreationInfos(((TwoWindingsTransformerCreationEntity) createTwoWindingsTransformerEntity2).toTwoWindingsTransformerCreationInfos()));
+        assertThat(modificationRepository.getTwoWindingsTransformerCreationModification(TEST_GROUP_ID, modificationInfos.get(2).getUuid()),
+                MatcherTwoWindingsTransformerCreationInfos.createMatcherTwoWindingsTransformerCreationInfos(((TwoWindingsTransformerCreationEntity) createTwoWindingsTransformerEntity3).toTwoWindingsTransformerCreationInfos()));
+        assertThat(modificationRepository.getTwoWindingsTransformerCreationModification(TEST_GROUP_ID, modificationInfos.get(3).getUuid()),
+                MatcherTwoWindingsTransformerCreationInfos.createMatcherTwoWindingsTransformerCreationInfos(((TwoWindingsTransformerCreationEntity) createTwoWindingsTransformerEntity4).toTwoWindingsTransformerCreationInfos()));
+        assertEquals(4, modificationRepository.getModifications(TEST_GROUP_ID).size());
+        assertEquals(List.of(TEST_GROUP_ID), this.modificationRepository.getModificationGroupsUuids());
+
+        SQLStatementCountValidator.reset();
+        modificationRepository.deleteModifications(TEST_GROUP_ID, Set.of(createTwoWindingsTransformerEntity1.getId(), createTwoWindingsTransformerEntity2.getId()));
+        assertRequestsCount(1, 0, 0, 4);
+
+        SQLStatementCountValidator.reset();
+        assertEquals(2, modificationRepository.getModifications(TEST_GROUP_ID).size());
+        assertRequestsCount(2, 0, 0, 0);
+
+        SQLStatementCountValidator.reset();
+        modificationRepository.deleteModificationGroup(TEST_GROUP_ID);
+        assertRequestsCount(2, 0, 0, 5);
+
+        assertThrows(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage(),
+                NetworkModificationException.class, () -> modificationRepository.getModifications(TEST_GROUP_ID)
         );
     }
 

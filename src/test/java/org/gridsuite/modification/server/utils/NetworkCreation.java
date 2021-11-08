@@ -156,7 +156,9 @@ public final class NetworkCreation {
 
         Substation s1 = createSubstation(network, "s1", "s1", Country.FR);
         VoltageLevel v1 = createVoltageLevel(s1, "v1", "v1", TopologyKind.BUS_BREAKER, 380.0);
+        VoltageLevel v12 = createVoltageLevel(s1, "v12", "v12", TopologyKind.BUS_BREAKER, 90.0);
         createBus(v1, "bus1", "bus1");
+        createBus(v12, "bus12", "bus12");
         createGeneratorOnBus(v1, "idGenerator1", "bus1", 42.1, 1.0);
 
         Substation s2 = createSubstation(network, "s2", "s2", Country.FR);

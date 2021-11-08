@@ -14,12 +14,7 @@ import com.powsybl.iidm.network.LoadType;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.sld.iidm.extensions.BranchStatus;
-import org.gridsuite.modification.server.dto.EquipmenAttributeModificationInfos;
-import org.gridsuite.modification.server.dto.EquipmenModificationInfos;
-import org.gridsuite.modification.server.dto.GeneratorCreationInfos;
-import org.gridsuite.modification.server.dto.EquipmentDeletionInfos;
-import org.gridsuite.modification.server.dto.LoadCreationInfos;
-import org.gridsuite.modification.server.dto.LineCreationInfos;
+import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.NetworkModificationService;
@@ -736,6 +731,81 @@ public class ModificationControllerTest {
             .expectStatus().is4xxClientError()
             .expectBody(String.class)
             .isEqualTo(new NetworkModificationException(BUS_NOT_FOUND, "notFoundBus").getMessage());
+
+        testNetworkModificationsCount(TEST_GROUP_ID, 1);
+    }
+
+    @Test
+    public void testCreateTwoWindingsTransformerInBusBreaker() {
+        String uriString = "/v1/networks/{networkUuid}/two-windings-transformer?group=" + TEST_GROUP_ID;
+
+        // create new 2wt in voltage level with bus/breaker topology
+        TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos = TwoWindingsTransformerCreationInfos.builder()
+                .equipmentId("id2wt1")
+                .equipmentName("2wtName")
+                .voltageLevelId1("v1")
+                .busOrBusbarSectionId1("bus1")
+                .voltageLevelId2("v12")
+                .busOrBusbarSectionId2("bus12")
+                .magnetizingConductance(100.0)
+                .magnetizingSusceptance(200.0)
+                .ratedVoltage1(1000)
+                .ratedVoltage2(1010)
+                .seriesReactance(300)
+                .seriesResistance(400)
+                .build();
+
+        webTestClient.put().uri(uriString, TEST_NETWORK_BUS_BREAKER_ID)
+                .body(BodyInserters.fromValue(twoWindingsTransformerCreationInfos))
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBodyList(EquipmenModificationInfos.class)
+                .value(modifications -> modifications.get(0),
+                        MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.TWO_WINDINGS_TRANSFORMER_CREATION, "id2wt1", Set.of("s1")));
+
+        testNetworkModificationsCount(TEST_GROUP_ID, 1);
+
+        // create 2wt with errors
+        twoWindingsTransformerCreationInfos.setBusOrBusbarSectionId1("notFoundBus");
+        webTestClient.put().uri(uriString, TEST_NETWORK_BUS_BREAKER_ID)
+                .body(BodyInserters.fromValue(twoWindingsTransformerCreationInfos))
+                .exchange()
+                .expectStatus().is4xxClientError()
+                .expectBody(String.class)
+                .isEqualTo(new NetworkModificationException(BUS_NOT_FOUND, "notFoundBus").getMessage());
+
+        testNetworkModificationsCount(TEST_GROUP_ID, 1);
+    }
+
+    @Test
+    public void testCreateTwoWindingsTransformerInNodeBreaker() {
+        String uriString = "/v1/networks/{networkUuid}/two-windings-transformer?group=" + TEST_GROUP_ID;
+
+        // create new 2wt in voltage level with Node/breaker topology
+        TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos = TwoWindingsTransformerCreationInfos.builder()
+                .equipmentId("id2wt1")
+                .equipmentName("2wtName")
+                .voltageLevelId1("v1")
+                .busOrBusbarSectionId1("1.1")
+                .voltageLevelId2("v2")
+                .busOrBusbarSectionId2("1A")
+                .magnetizingConductance(100.0)
+                .magnetizingSusceptance(200.0)
+                .ratedVoltage1(1000)
+                .ratedVoltage2(1010)
+                .seriesReactance(300)
+                .seriesResistance(400)
+                .build();
+
+        webTestClient.put().uri(uriString, TEST_NETWORK_ID)
+                .body(BodyInserters.fromValue(twoWindingsTransformerCreationInfos))
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBodyList(EquipmenModificationInfos.class)
+                .value(modifications -> modifications.get(0),
+                        MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.TWO_WINDINGS_TRANSFORMER_CREATION, "id2wt1", Set.of("s1")));
 
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
     }

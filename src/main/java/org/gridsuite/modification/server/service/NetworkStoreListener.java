@@ -7,12 +7,7 @@
 package org.gridsuite.modification.server.service;
 
 import com.powsybl.iidm.network.*;
-import org.gridsuite.modification.server.dto.EquipmenModificationInfos;
-import org.gridsuite.modification.server.dto.EquipmentInfos;
-import org.gridsuite.modification.server.dto.EquipmentType;
-import org.gridsuite.modification.server.dto.GeneratorCreationInfos;
-import org.gridsuite.modification.server.dto.LoadCreationInfos;
-import org.gridsuite.modification.server.dto.LineCreationInfos;
+import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.EquipmentModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationEntity;
@@ -134,6 +129,22 @@ public class NetworkStoreListener implements NetworkListener {
             lineCreationInfos.getBusOrBusbarSectionId1(),
             lineCreationInfos.getVoltageLevelId2(),
             lineCreationInfos.getBusOrBusbarSectionId2())
+        );
+    }
+
+    public void storeTwoWindingsTransformerCreation(TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
+        modifications.add(this.modificationRepository.createTwoWindingsTransformerEntity(twoWindingsTransformerCreationInfos.getEquipmentId(),
+                twoWindingsTransformerCreationInfos.getEquipmentName(),
+                twoWindingsTransformerCreationInfos.getSeriesResistance(),
+                twoWindingsTransformerCreationInfos.getSeriesReactance(),
+                twoWindingsTransformerCreationInfos.getMagnetizingConductance(),
+                twoWindingsTransformerCreationInfos.getMagnetizingSusceptance(),
+                twoWindingsTransformerCreationInfos.getRatedVoltage1(),
+                twoWindingsTransformerCreationInfos.getRatedVoltage2(),
+                twoWindingsTransformerCreationInfos.getVoltageLevelId1(),
+                twoWindingsTransformerCreationInfos.getBusOrBusbarSectionId1(),
+                twoWindingsTransformerCreationInfos.getVoltageLevelId2(),
+                twoWindingsTransformerCreationInfos.getBusOrBusbarSectionId2())
         );
     }
 
