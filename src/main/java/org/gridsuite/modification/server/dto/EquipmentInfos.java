@@ -68,14 +68,14 @@ public class EquipmentInfos {
             );
         } else if (identifiable instanceof Branch) {
             Branch<?> branch = (Branch<?>) identifiable;
-            return Stream.of(// Same Vls ?
+            return Stream.of(
                     branch.getTerminal1().getVoltageLevel().getId(),
                     branch.getTerminal2().getVoltageLevel().getId()
                 )
                 .collect(Collectors.toSet());
         } else if (identifiable instanceof ThreeWindingsTransformer) {
             ThreeWindingsTransformer w3t = (ThreeWindingsTransformer) identifiable;
-            return Stream.of(// Same Vls ?
+            return Stream.of(
                     w3t.getTerminal(ThreeWindingsTransformer.Side.ONE).getVoltageLevel().getId(),
                     w3t.getTerminal(ThreeWindingsTransformer.Side.TWO).getVoltageLevel().getId(),
                     w3t.getTerminal(ThreeWindingsTransformer.Side.THREE).getVoltageLevel().getId()
