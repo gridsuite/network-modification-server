@@ -58,9 +58,20 @@ public class LineCreationEntity extends BranchCreationEntity {
                                 String voltageLevelId1,
                                 String busOrBusbarSectionId1,
                                 String voltageLevelId2,
-                                String busOrBusbarSectionId2
+                                String busOrBusbarSectionId2,
+                                Double permanentCurrentLimit1,
+                                Double permanentCurrentLimit2
     ) {
-        super(ModificationType.LINE_CREATION, equipmentId, equipmentName, voltageLevelId1, voltageLevelId2, busOrBusbarSectionId1, busOrBusbarSectionId2);
+        super(ModificationType.LINE_CREATION,
+                equipmentId,
+                equipmentName,
+                voltageLevelId1,
+                voltageLevelId2,
+                busOrBusbarSectionId1,
+                busOrBusbarSectionId2,
+                permanentCurrentLimit1 != null ? new CurrentLimitsEntity(null, permanentCurrentLimit1) : null,
+                permanentCurrentLimit2 != null ? new CurrentLimitsEntity(null, permanentCurrentLimit2) : null
+        );
         this.seriesResistance = seriesResistance;
         this.seriesReactance = seriesReactance;
         this.shuntConductance1 = shuntConductance1;
@@ -79,7 +90,7 @@ public class LineCreationEntity extends BranchCreationEntity {
     }
 
     private LineCreationInfos.LineCreationInfosBuilder<?, ?> toLineCreationInfosBuilder() {
-        return LineCreationInfos
+        LineCreationInfos.LineCreationInfosBuilder<?, ?> builder = LineCreationInfos
             .builder()
             .uuid(getId())
             .date(getDate())
@@ -96,5 +107,13 @@ public class LineCreationEntity extends BranchCreationEntity {
             .busOrBusbarSectionId1(getBusOrBusbarSectionId1())
             .voltageLevelId2(getVoltageLevelId2())
             .busOrBusbarSectionId2(getBusOrBusbarSectionId2());
+
+        if (getCurrentLimits1() != null) {
+            builder.currentLimits1(getCurrentLimits1().toCurrentLimitsInfos());
+        }
+        if (getCurrentLimits2() != null) {
+            builder.currentLimits2(getCurrentLimits2().toCurrentLimitsInfos());
+        }
+        return builder;
     }
 }

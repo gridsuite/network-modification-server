@@ -142,6 +142,7 @@ public class NetworkModificationRepository {
             .toGeneratorCreationInfos();
     }
 
+    @Transactional
     public LineCreationInfos getLineCreationModification(UUID groupUuid, UUID modificationUuid) {
         return ((LineCreationEntity) this.modificationRepository
             .findById(modificationUuid)
@@ -187,10 +188,12 @@ public class NetworkModificationRepository {
 
     public EquipmentCreationEntity createLineEntity(String lineId, String lineName, double seriesResistance, double seriesReactance,
                                                     Double shuntConductance1, Double shuntSusceptance1, Double shuntConductance2, Double shuntSusceptance2,
-                                                    String voltageLevelId1, String busOrBusbarSectionId1, String voltageLevelId2, String busOrBusbarSectionId2) {
+                                                    String voltageLevelId1, String busOrBusbarSectionId1, String voltageLevelId2, String busOrBusbarSectionId2,
+                                                    Double permanentCurrentLimit1, Double permanentCurrentLimit2) {
         return new LineCreationEntity(lineId, lineName, seriesResistance, seriesReactance,
                                         shuntConductance1, shuntSusceptance1, shuntConductance2, shuntSusceptance2,
-                                        voltageLevelId1, busOrBusbarSectionId1, voltageLevelId2, busOrBusbarSectionId2);
+                                        voltageLevelId1, busOrBusbarSectionId1, voltageLevelId2, busOrBusbarSectionId2,
+                                        permanentCurrentLimit1, permanentCurrentLimit2);
     }
 
     public EquipmentDeletionEntity createEquipmentDeletionEntity(String equipmentId, String equipmentType) {
