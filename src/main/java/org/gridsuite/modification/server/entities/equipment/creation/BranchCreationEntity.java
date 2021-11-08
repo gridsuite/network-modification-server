@@ -8,10 +8,16 @@ package org.gridsuite.modification.server.entities.equipment.creation;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
 import org.gridsuite.modification.server.ModificationType;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
+import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
+import javax.persistence.ForeignKey;
 import javax.persistence.MappedSuperclass;
+import javax.persistence.OneToOne;
 
 /**
  * @author Sylvain Bouzols <sylvain.bouzols at rte-france.com>
@@ -33,11 +39,37 @@ public class BranchCreationEntity extends EquipmentCreationEntity {
     @Column(name = "busOrBusbarSectionId2")
     private String busOrBusbarSectionId2;
 
-    protected BranchCreationEntity(ModificationType modificationType, String equipmentId, String equipmentName, String voltageLevelId1, String voltageLevelId2, String busOrBusbarSectionId1, String busOrBusbarSectionId2) {
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JoinColumn(name  =  "current_limits_id1",
+        referencedColumnName  =  "id",
+        foreignKey = @ForeignKey(
+            name = "current_limits_id1_fk"
+        ), nullable = true)
+    private CurrentLimitsEntity currentLimits1;
+
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JoinColumn(name  =  "current_limits_id2",
+        referencedColumnName  =  "id",
+        foreignKey = @ForeignKey(
+            name = "current_limits_id2_fk"
+        ), nullable = true)
+    private CurrentLimitsEntity currentLimits2;
+
+    protected BranchCreationEntity(ModificationType modificationType,
+                                    String equipmentId,
+                                    String equipmentName,
+                                    String voltageLevelId1,
+                                    String voltageLevelId2,
+                                    String busOrBusbarSectionId1,
+                                    String busOrBusbarSectionId2,
+                                    CurrentLimitsEntity currentLimits1,
+                                    CurrentLimitsEntity currentLimits2) {
         super(modificationType, equipmentId, equipmentName);
         this.voltageLevelId1 = voltageLevelId1;
         this.voltageLevelId2 = voltageLevelId2;
         this.busOrBusbarSectionId1 = busOrBusbarSectionId1;
         this.busOrBusbarSectionId2 = busOrBusbarSectionId2;
+        this.currentLimits1 = currentLimits1;
+        this.currentLimits2 = currentLimits2;
     }
 }

@@ -35,4 +35,10 @@ public class BranchCreationInfos extends EquipmentCreationInfos {
 
     @Schema(description = "Bus or Busbar section id Side 2")
     private String busOrBusbarSectionId2;
+
+    @Schema(description = "Current limits Side 1")
+    private CurrentLimitsInfos currentLimits1;
+
+    @Schema(description = "Current limits Side 2")
+    private CurrentLimitsInfos currentLimits2;
 }
