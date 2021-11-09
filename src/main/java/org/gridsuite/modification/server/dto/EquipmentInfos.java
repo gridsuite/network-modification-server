@@ -7,10 +7,7 @@
 package org.gridsuite.modification.server.dto;
 
 import com.powsybl.iidm.network.*;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.springframework.data.annotation.Id;
@@ -62,6 +59,8 @@ public class EquipmentInfos {
             return Set.of(new VoltageLevelInfos(((Switch) identifiable).getVoltageLevel().getId(), ((Switch) identifiable).getVoltageLevel().getNameOrId()));
         } else if (identifiable instanceof Injection) {
             return Set.of(new VoltageLevelInfos(((Injection<?>) identifiable).getTerminal().getVoltageLevel().getId(), ((Injection<?>) identifiable).getTerminal().getVoltageLevel().getNameOrId()));
+        } else if (identifiable instanceof Bus) {
+            return Set.of(new VoltageLevelInfos(((Bus) identifiable).getVoltageLevel().getId(), ((Bus) identifiable).getVoltageLevel().getNameOrId()));
         } else if (identifiable instanceof HvdcLine) {
             HvdcLine hvdcLine = (HvdcLine) identifiable;
             return Set.of(
