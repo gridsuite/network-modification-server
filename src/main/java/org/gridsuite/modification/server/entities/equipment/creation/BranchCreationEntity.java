@@ -27,6 +27,12 @@ import javax.persistence.OneToOne;
 @MappedSuperclass
 public class BranchCreationEntity extends EquipmentCreationEntity {
 
+    @Column(name = "seriesResistance")
+    private double seriesResistance;
+
+    @Column(name = "seriesReactance")
+    private double seriesReactance;
+
     @Column(name = "voltageLevelId1")
     private String voltageLevelId1;
 
@@ -58,6 +64,8 @@ public class BranchCreationEntity extends EquipmentCreationEntity {
     protected BranchCreationEntity(ModificationType modificationType,
                                     String equipmentId,
                                     String equipmentName,
+                                    double seriesResistance,
+                                    double seriesReactance,
                                     String voltageLevelId1,
                                     String voltageLevelId2,
                                     String busOrBusbarSectionId1,
@@ -65,6 +73,8 @@ public class BranchCreationEntity extends EquipmentCreationEntity {
                                     CurrentLimitsEntity currentLimits1,
                                     CurrentLimitsEntity currentLimits2) {
         super(modificationType, equipmentId, equipmentName);
+        this.seriesReactance = seriesReactance;
+        this.seriesResistance = seriesResistance;
         this.voltageLevelId1 = voltageLevelId1;
         this.voltageLevelId2 = voltageLevelId2;
         this.busOrBusbarSectionId1 = busOrBusbarSectionId1;

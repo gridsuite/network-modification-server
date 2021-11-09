@@ -29,12 +29,6 @@ import java.util.Set;
 @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "twoWindingsTransformerCreation_id_fk_constraint"))
 public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
 
-    @Column(name = "seriesResistance")
-    private double seriesResistance;
-
-    @Column(name = "seriesReactance")
-    private double seriesReactance;
-
     @Column(name = "magnetizingConductance")
     private double magnetizingConductance;
 
@@ -65,14 +59,14 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
         super(ModificationType.TWO_WINDINGS_TRANSFORMER_CREATION,
                 equipmentId,
                 equipmentName,
+                seriesResistance,
+                seriesReactance,
                 voltageLevelId1,
                 voltageLevelId2,
                 busOrBusbarSectionId1,
                 busOrBusbarSectionId2,
                 permanentCurrentLimit1 != null ? new CurrentLimitsEntity(null, permanentCurrentLimit1) : null,
                 permanentCurrentLimit2 != null ? new CurrentLimitsEntity(null, permanentCurrentLimit2) : null);
-        this.seriesResistance = seriesResistance;
-        this.seriesReactance = seriesReactance;
         this.magnetizingConductance = magnetizingConductance;
         this.magnetizingSusceptance = magnetizingSusceptance;
         this.ratedVoltage1 = ratedVoltage1;
