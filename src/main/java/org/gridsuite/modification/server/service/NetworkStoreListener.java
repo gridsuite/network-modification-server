@@ -133,8 +133,10 @@ public class NetworkStoreListener implements NetworkListener {
             lineCreationInfos.getVoltageLevelId1(),
             lineCreationInfos.getBusOrBusbarSectionId1(),
             lineCreationInfos.getVoltageLevelId2(),
-            lineCreationInfos.getBusOrBusbarSectionId2())
-        );
+            lineCreationInfos.getBusOrBusbarSectionId2(),
+            lineCreationInfos.getCurrentLimits1() != null ? lineCreationInfos.getCurrentLimits1().getPermanentLimit() : null,
+            lineCreationInfos.getCurrentLimits2() != null ? lineCreationInfos.getCurrentLimits2().getPermanentLimit() : null
+        ));
     }
 
     private Set<String> getSubstationsIds(String equipmentId) {
