@@ -146,7 +146,9 @@ public class NetworkStoreListener implements NetworkListener {
                 twoWindingsTransformerCreationInfos.getVoltageLevelId1(),
                 twoWindingsTransformerCreationInfos.getBusOrBusbarSectionId1(),
                 twoWindingsTransformerCreationInfos.getVoltageLevelId2(),
-                twoWindingsTransformerCreationInfos.getBusOrBusbarSectionId2())
+                twoWindingsTransformerCreationInfos.getBusOrBusbarSectionId2(),
+                twoWindingsTransformerCreationInfos.getCurrentLimits1() != null ? twoWindingsTransformerCreationInfos.getCurrentLimits1().getPermanentLimit() : null,
+                twoWindingsTransformerCreationInfos.getCurrentLimits2() != null ? twoWindingsTransformerCreationInfos.getCurrentLimits2().getPermanentLimit() : null)
         );
     }
 

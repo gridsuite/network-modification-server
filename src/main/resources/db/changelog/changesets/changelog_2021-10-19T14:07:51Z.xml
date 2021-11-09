@@ -58,25 +58,6 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="hedhiliabd (generated)" id="1635932750630-1">
-        <createTable tableName="two_windings_transformer_creation">
-            <column name="equipment_id" type="VARCHAR(255)"/>
-            <column name="equipment_name" type="VARCHAR(255)"/>
-            <column name="bus_or_busbar_section_id1" type="VARCHAR(255)"/>
-            <column name="bus_or_busbar_section_id2" type="VARCHAR(255)"/>
-            <column name="voltage_level_id1" type="VARCHAR(255)"/>
-            <column name="voltage_level_id2" type="VARCHAR(255)"/>
-            <column name="magnetizing_conductance" type="FLOAT8"/>
-            <column name="magnetizing_susceptance" type="FLOAT8"/>
-            <column name="rated_voltage1" type="FLOAT8"/>
-            <column name="rated_voltage2" type="FLOAT8"/>
-            <column name="series_reactance" type="FLOAT8"/>
-            <column name="series_resistance" type="FLOAT8"/>
-            <column name="id" type="UUID">
-                <constraints nullable="false" primaryKey="true" primaryKeyName="two_windings_transformer_creationPK"/>
-            </column>
-        </createTable>
-    </changeSet>
     <changeSet author="borsenbergerjac (generated)" id="1635323002870-6">
         <createTable tableName="integer_equipment_attribute_modification">
             <column name="equipment_id" type="VARCHAR(255)"/>
@@ -183,8 +164,5 @@
     </changeSet>
     <changeSet author="borsenbergerjac (generated)" id="1635323002870-22">
         <addForeignKeyConstraint baseColumnNames="id" baseTableName="string_equipment_attribute_modification" constraintName="string_equipment_attribute_modification_id_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
-    </changeSet>
-    <changeSet author="hedhiliabd (generated)" id="1635932750630-2">
-        <addForeignKeyConstraint baseColumnNames="id" baseTableName="two_windings_transformer_creation" constraintName="twoWindingsTransformerCreation_id_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
     </changeSet>
 </databaseChangeLog>
