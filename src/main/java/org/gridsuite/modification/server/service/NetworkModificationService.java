@@ -610,7 +610,7 @@ public class NetworkModificationService {
 
     }
 
-    private void createLine(Network network, VoltageLevel voltageLevel1, VoltageLevel voltageLevel2, LineCreationInfos lineCreationInfos) {
+    private Line createLine(Network network, VoltageLevel voltageLevel1, VoltageLevel voltageLevel2, LineCreationInfos lineCreationInfos) {
 
         // common settings
         LineAdder lineAdder = network.newLine()
@@ -629,7 +629,7 @@ public class NetworkModificationService {
         setBranchAdderNodeOrBus(lineAdder, voltageLevel1, lineCreationInfos, Side.ONE);
         setBranchAdderNodeOrBus(lineAdder, voltageLevel2, lineCreationInfos, Side.TWO);
 
-        lineAdder.add();
+        return lineAdder.add();
     }
 
     public Flux<EquipmenModificationInfos> createLine(UUID networkUuid, UUID groupUuid, LineCreationInfos lineCreationInfos) {
@@ -644,7 +644,18 @@ public class NetworkModificationService {
                         VoltageLevel voltageLevel1 = getVoltageLevel(network, lineCreationInfos.getVoltageLevelId1());
                         VoltageLevel voltageLevel2 = getVoltageLevel(network, lineCreationInfos.getVoltageLevelId2());
 
-                        createLine(network, voltageLevel1, voltageLevel2, lineCreationInfos);
+                        Line myLine = createLine(network, voltageLevel1, voltageLevel2, lineCreationInfos);
+
+                        // Set Permanent Current Limits if exist
+                        CurrentLimitsInfos currentLimitsInfos1 = lineCreationInfos.getCurrentLimits1();
+                        CurrentLimitsInfos currentLimitsInfos2 = lineCreationInfos.getCurrentLimits2();
+
+                        if (currentLimitsInfos1 != null && currentLimitsInfos1.getPermanentLimit() != null) {
+                            myLine.newCurrentLimits1().setPermanentLimit(currentLimitsInfos1.getPermanentLimit()).add();
+                        }
+                        if (currentLimitsInfos2 != null && currentLimitsInfos2.getPermanentLimit() != null) {
+                            myLine.newCurrentLimits2().setPermanentLimit(currentLimitsInfos2.getPermanentLimit()).add();
+                        }
 
                         subReporter.report(Report.builder()
                             .withKey("lineCreated")
