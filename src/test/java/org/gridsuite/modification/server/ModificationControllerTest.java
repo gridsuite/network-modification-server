@@ -811,6 +811,38 @@ public class ModificationControllerTest {
     }
 
     @Test
+    public void testCreateTwoWindingsTransformerInMixedTopology() {
+        String uriString = "/v1/networks/{networkUuid}/two-windings-transformer?group=" + TEST_NETWORK_MIXED_TOPOLOGY_ID;
+
+        // create new 2wt in voltage level with mixed topology
+        TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos = TwoWindingsTransformerCreationInfos.builder()
+                .equipmentId("id2wt1")
+                .equipmentName("2wtName")
+                .voltageLevelId1("v1")
+                .busOrBusbarSectionId1("1.1")
+                .voltageLevelId2("v3")
+                .busOrBusbarSectionId2("bus3")
+                .magnetizingConductance(100.0)
+                .magnetizingSusceptance(200.0)
+                .ratedVoltage1(1000)
+                .ratedVoltage2(1010)
+                .seriesReactance(300)
+                .seriesResistance(400)
+                .build();
+
+        webTestClient.put().uri(uriString, TEST_NETWORK_MIXED_TOPOLOGY_ID)
+                .body(BodyInserters.fromValue(twoWindingsTransformerCreationInfos))
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBodyList(EquipmenModificationInfos.class)
+                .value(modifications -> modifications.get(0),
+                        MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.TWO_WINDINGS_TRANSFORMER_CREATION, "id2wt1", Set.of("s1")));
+
+        testNetworkModificationsCount(TEST_NETWORK_MIXED_TOPOLOGY_ID, 1);
+    }
+
+    @Test
     public void testDeleteEquipment() {
         String uriString = "/v1/networks/{networkUuid}/equipments/type/{equipmentType}/id/{equipmentId}?group=" + TEST_GROUP_ID;
 

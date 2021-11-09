@@ -47,23 +47,6 @@
         primary key (id)
     );
 
-    create table two_windings_transformer_creation (
-       equipmentId varchar(255),
-       equipmentName varchar(255),
-       busOrBusbarSectionId1 varchar(255),
-       busOrBusbarSectionId2 varchar(255),
-       voltageLevelId1 varchar(255),
-       voltageLevelId2 varchar(255),
-       seriesReactance float8,
-       seriesResistance float8,
-       magnetizingConductance float8,
-       magnetizingSusceptance float8,
-       ratedVoltage1 float8,
-       ratedVoltage2 float8,
-       id uuid not null,
-       primary key (id)
-    );
-
     create table integerEquipmentAttributeModification (
        equipmentId varchar(255),
         attributeName varchar(255),
@@ -147,11 +130,6 @@ create index modificationEntity_group_id_index on modification (group_id);
        add constraint generatorCreation_id_fk_constraint 
        foreign key (id) 
        references modification;
-
-    alter table if exists two_windings_transformer_creation
-        add constraint twoWindingsTransformerCreation_id_fk_constraint
-        foreign key (id)
-        references modification;
 
     alter table if exists integerEquipmentAttributeModification 
        add constraint integer_equipment_attribute_modification_id_fk_constraint 

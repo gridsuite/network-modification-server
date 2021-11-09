@@ -689,10 +689,10 @@ public class NetworkModificationService {
                         createTwoWindingsTransformer(network, voltageLevel1, voltageLevel2, twoWindingsTransformerCreationInfos);
 
                         subReporter.report(Report.builder()
-                                .withKey("lineCreated")
-                                .withDefaultMessage("New line with id=${id} created")
+                                .withKey("twoWindingsTransformerCreated")
+                                .withDefaultMessage("New two windings transformer with id=${id} created")
                                 .withValue("id", twoWindingsTransformerCreationInfos.getEquipmentId())
-                                .withSeverity(new TypedValue("LINE_CREATION_INFO", TypedValue.INFO_LOGLEVEL))
+                                .withSeverity(new TypedValue("TWO_WINDINGS_TRANSFORMER_CREATION_INFO", TypedValue.INFO_LOGLEVEL))
                                 .build());
 
                         // add the 2wt creation entity to the listener
@@ -756,6 +756,6 @@ public class NetworkModificationService {
     }
 
     private Mono<Void> assertTwoWindingsTransformerCreationInfosNotEmpty(TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
-        return twoWindingsTransformerCreationInfos == null ? Mono.error(new NetworkModificationException(CREATE_TWO_WINDINGS_TRANSFORMER_ERROR, "Missing required attributes to create the line")) : Mono.empty();
+        return twoWindingsTransformerCreationInfos == null ? Mono.error(new NetworkModificationException(CREATE_TWO_WINDINGS_TRANSFORMER_ERROR, "Missing required attributes to create the two windings transformer")) : Mono.empty();
     }
 }
