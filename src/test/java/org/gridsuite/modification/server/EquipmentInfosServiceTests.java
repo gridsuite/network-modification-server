@@ -44,6 +44,7 @@ public class EquipmentInfosServiceTests {
     @Test
     public void testAddDeleteEquipmentInfos() {
         EqualsVerifier.simple().forClass(EquipmentInfos.class).verify();
+        EqualsVerifier.simple().forClass(VoltageLevelInfos.class).verify();
 
         EquipmentInfos equipmentInfos = EquipmentInfos.builder().networkUuid(NETWORK_UUID).id("id1").name("name1").type(EquipmentType.LOAD.name()).voltageLevels(Set.of(VoltageLevelInfos.builder().id("vl1").name("vl1").build())).build();
         assertEquals(equipmentInfosService.add(equipmentInfos), equipmentInfos);
