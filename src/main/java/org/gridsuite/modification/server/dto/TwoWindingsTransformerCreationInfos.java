@@ -14,7 +14,7 @@ import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
 /**
- * @author Sylvain Bouzols <sylvain.bouzols at rte-france.com>
+ * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
  */
 
 @SuperBuilder
@@ -22,18 +22,18 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @Setter
 @ToString(callSuper = true)
-@Schema(description = "Line creation")
-public class LineCreationInfos extends BranchCreationInfos {
+@Schema(description = "Two windings transformer creation")
+public class TwoWindingsTransformerCreationInfos extends BranchCreationInfos {
 
-    @Schema(description = "Shunt conductance Side 1")
-    private Double shuntConductance1;
+    @Schema(description = "Magnetizing conductance")
+    private double magnetizingConductance;
 
-    @Schema(description = "Shunt susceptance Side 1")
-    private Double shuntSusceptance1;
+    @Schema(description = "Magnetizing susceptance")
+    private double magnetizingSusceptance;
 
-    @Schema(description = "Shunt conductance Side 2")
-    private Double shuntConductance2;
+    @Schema(description = "side 1 rated voltage")
+    private double ratedVoltage1;
 
-    @Schema(description = "Shunt susceptance Side 2")
-    private Double shuntSusceptance2;
+    @Schema(description = "side 2 rated voltage")
+    private double ratedVoltage2;
 }
