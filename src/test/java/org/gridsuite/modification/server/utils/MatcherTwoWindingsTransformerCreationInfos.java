@@ -7,6 +7,7 @@
 package org.gridsuite.modification.server.utils;
 
 import org.gridsuite.modification.server.ModificationType;
+import org.gridsuite.modification.server.dto.CurrentLimitsInfos;
 import org.gridsuite.modification.server.dto.TwoWindingsTransformerCreationInfos;
 import org.hamcrest.Description;
 
@@ -32,7 +33,9 @@ public class MatcherTwoWindingsTransformerCreationInfos extends MatcherModificat
             double magnetizingSusceptance,
             double magnetizingConductance,
             double seriesReactance,
-            double seriesResistance) {
+            double seriesResistance,
+            Double permanentCurrentLimit1,
+            Double permanentCurrentLimit2) {
         return new MatcherTwoWindingsTransformerCreationInfos(TwoWindingsTransformerCreationInfos.builder()
                 .date(ZonedDateTime.now(ZoneOffset.UTC))
                 .type(ModificationType.TWO_WINDINGS_TRANSFORMER_CREATION)
@@ -49,6 +52,8 @@ public class MatcherTwoWindingsTransformerCreationInfos extends MatcherModificat
                 .magnetizingConductance(magnetizingConductance)
                 .seriesReactance(seriesReactance)
                 .seriesResistance(seriesResistance)
+                .currentLimits1(CurrentLimitsInfos.builder().permanentLimit(permanentCurrentLimit1).build())
+                .currentLimits2(CurrentLimitsInfos.builder().permanentLimit(permanentCurrentLimit2).build())
                 .build());
     }
 
@@ -58,6 +63,12 @@ public class MatcherTwoWindingsTransformerCreationInfos extends MatcherModificat
 
     protected MatcherTwoWindingsTransformerCreationInfos(TwoWindingsTransformerCreationInfos ref) {
         super(ref);
+    }
+
+    public boolean matchesCurrentLimitsInfos(CurrentLimitsInfos cl1, CurrentLimitsInfos cl2) {
+        return (cl1 == null && cl2 == null)
+                || (cl1 != null && cl2 != null && cl1.getPermanentLimit() != null && cl2.getPermanentLimit() != null && cl1.getPermanentLimit().equals(cl2.getPermanentLimit()))
+                || (cl1 != null && cl2 != null && cl1.getPermanentLimit() == null && cl2.getPermanentLimit() == null);
     }
 
     @Override
@@ -75,7 +86,9 @@ public class MatcherTwoWindingsTransformerCreationInfos extends MatcherModificat
                 && m.getMagnetizingSusceptance() == reference.getMagnetizingSusceptance()
                 && m.getMagnetizingConductance() == reference.getMagnetizingConductance()
                 && m.getSeriesReactance() == reference.getSeriesReactance()
-                && m.getSeriesResistance() == reference.getSeriesResistance();
+                && m.getSeriesResistance() == reference.getSeriesResistance()
+                && matchesCurrentLimitsInfos(m.getCurrentLimits1(), reference.getCurrentLimits1())
+                && matchesCurrentLimitsInfos(m.getCurrentLimits2(), reference.getCurrentLimits2());
     }
 
     @Override

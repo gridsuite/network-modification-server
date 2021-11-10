@@ -25,12 +25,6 @@ import lombok.experimental.SuperBuilder;
 @Schema(description = "Two windings transformer creation")
 public class TwoWindingsTransformerCreationInfos extends BranchCreationInfos {
 
-    @Schema(description = "Series resistance")
-    private double seriesResistance;
-
-    @Schema(description = "Series reactance")
-    private double seriesReactance;
-
     @Schema(description = "Magnetizing conductance")
     private double magnetizingConductance;
 
