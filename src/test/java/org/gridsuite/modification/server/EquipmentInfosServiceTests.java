@@ -101,7 +101,7 @@ public class EquipmentInfosServiceTests {
         assertEquals(Set.of("v4", "v2", "v1"), EquipmentInfos.getVoltageLevelsIds(network.getThreeWindingsTransformer("trf6")));
 
         network = NetworkCreation.createBusBreaker(NETWORK_UUID);
-        assertEquals(Set.of("v1"), EquipmentInfos.getVoltageLevelsIds(network.getSubstation("s1")));
+        assertEquals(Set.of("v1", "v12"), EquipmentInfos.getVoltageLevelsIds(network.getSubstation("s1")));
         assertEquals(Set.of("v1"), EquipmentInfos.getVoltageLevelsIds(network.getVoltageLevel("v1")));
         assertEquals(Set.of("v1"), EquipmentInfos.getVoltageLevelsIds(network.getBusBreakerView().getBus("bus1")));
         assertEquals(Set.of("v1"), EquipmentInfos.getVoltageLevelsIds(network.getGenerator("idGenerator1")));

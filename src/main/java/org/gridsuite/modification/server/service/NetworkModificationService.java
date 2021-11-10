@@ -21,14 +21,7 @@ import groovy.lang.GroovyShell;
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.CurrentLimitsInfos;
-import org.gridsuite.modification.server.dto.EquipmenModificationInfos;
-import org.gridsuite.modification.server.dto.GeneratorCreationInfos;
-import org.gridsuite.modification.server.dto.EquipmentDeletionInfos;
-import org.gridsuite.modification.server.dto.EquipmentType;
-import org.gridsuite.modification.server.dto.LoadCreationInfos;
-import org.gridsuite.modification.server.dto.LineCreationInfos;
-import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.springframework.beans.factory.annotation.Value;
@@ -48,6 +41,7 @@ import reactor.core.scheduler.Schedulers;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -587,8 +581,8 @@ public class NetworkModificationService {
         return generatorCreationInfos == null ? Mono.error(new NetworkModificationException(CREATE_GENERATOR_ERROR, "Missing required attributes to create the generator")) : Mono.empty();
     }
 
-    private void setLineAdderNodeOrBus(LineAdder lineAdder, VoltageLevel voltageLevel, LineCreationInfos lineCreationInfos, Side side) {
-        String currentBusBarSectionId = (side == Side.ONE) ? lineCreationInfos.getBusOrBusbarSectionId1() : lineCreationInfos.getBusOrBusbarSectionId2();
+    private void setBranchAdderNodeOrBus(BranchAdder<?> branchAdder, VoltageLevel voltageLevel, BranchCreationInfos branchCreationInfos, Side side) {
+        String currentBusBarSectionId = (side == Side.ONE) ? branchCreationInfos.getBusOrBusbarSectionId1() : branchCreationInfos.getBusOrBusbarSectionId2();
 
         if (voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER) {
             VoltageLevel.NodeBreakerView nodeBreakerView = voltageLevel.getNodeBreakerView();
@@ -602,15 +596,15 @@ public class NetworkModificationService {
             String sideSuffix = side != null ? "_" + side.name() : "";
             int nodeNum = createNodeBreakerCellSwitches(voltageLevel,
                 currentBusBarSectionId,
-                lineCreationInfos.getEquipmentId(),
-                lineCreationInfos.getEquipmentName(),
+                    branchCreationInfos.getEquipmentId(),
+                    branchCreationInfos.getEquipmentName(),
                 sideSuffix);
 
             // complete the lineAdder
             if (side == Side.ONE) {
-                lineAdder.setNode1(nodeNum);
+                branchAdder.setNode1(nodeNum);
             } else {
-                lineAdder.setNode2(nodeNum);
+                branchAdder.setNode2(nodeNum);
             }
         } else { // BUS BREAKER
             // busId is a bus id
@@ -618,9 +612,9 @@ public class NetworkModificationService {
 
             // complete the lineAdder
             if (side == Side.ONE) {
-                lineAdder.setBus1(bus.getId()).setConnectableBus1(bus.getId());
+                branchAdder.setBus1(bus.getId()).setConnectableBus1(bus.getId());
             } else {
-                lineAdder.setBus2(bus.getId()).setConnectableBus2(bus.getId());
+                branchAdder.setBus2(bus.getId()).setConnectableBus2(bus.getId());
             }
         }
 
@@ -642,8 +636,8 @@ public class NetworkModificationService {
                                 .setB2(lineCreationInfos.getShuntSusceptance2() != null ? lineCreationInfos.getShuntSusceptance2() : 0.0);
 
         // lineAdder completion by topology
-        setLineAdderNodeOrBus(lineAdder, voltageLevel1, lineCreationInfos, Side.ONE);
-        setLineAdderNodeOrBus(lineAdder, voltageLevel2, lineCreationInfos, Side.TWO);
+        setBranchAdderNodeOrBus(lineAdder, voltageLevel1, lineCreationInfos, Side.ONE);
+        setBranchAdderNodeOrBus(lineAdder, voltageLevel2, lineCreationInfos, Side.TWO);
 
         return lineAdder.add();
     }
@@ -688,5 +682,70 @@ public class NetworkModificationService {
 
     private Mono<Void> assertLineCreationInfosNotEmpty(LineCreationInfos lineCreationInfos) {
         return lineCreationInfos == null ? Mono.error(new NetworkModificationException(CREATE_LINE_ERROR, "Missing required attributes to create the line")) : Mono.empty();
+    }
+
+    public Flux<EquipmenModificationInfos> createTwoWindingsTransformer(UUID networkUuid, UUID groupUuid, TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
+        return assertTwoWindingsTransformerCreationInfosNotEmpty(twoWindingsTransformerCreationInfos).thenMany(
+                getNetwork(networkUuid).flatMapIterable(network -> {
+                    NetworkStoreListener listener = NetworkStoreListener.create(network, networkUuid, groupUuid, modificationRepository, equipmentInfosService);
+                    ReporterModel reporter = new ReporterModel("NetworkModification", "Network modification");
+                    Reporter subReporter = reporter.createSubReporter("TwoWindingsTransformerCreation", "Two windings transformer creation");
+
+                    return doAction(listener, () -> {
+                        // create the 2wt in the network
+                        VoltageLevel voltageLevel1 = getVoltageLevel(network, twoWindingsTransformerCreationInfos.getVoltageLevelId1());
+                        VoltageLevel voltageLevel2 = getVoltageLevel(network, twoWindingsTransformerCreationInfos.getVoltageLevelId2());
+
+                        createTwoWindingsTransformer(network, voltageLevel1, voltageLevel2, twoWindingsTransformerCreationInfos);
+
+                        subReporter.report(Report.builder()
+                                .withKey("twoWindingsTransformerCreated")
+                                .withDefaultMessage("New two windings transformer with id=${id} created")
+                                .withValue("id", twoWindingsTransformerCreationInfos.getEquipmentId())
+                                .withSeverity(new TypedValue("TWO_WINDINGS_TRANSFORMER_CREATION_INFO", TypedValue.INFO_LOGLEVEL))
+                                .build());
+
+                        // add the 2wt creation entity to the listener
+                        listener.storeTwoWindingsTransformerCreation(twoWindingsTransformerCreationInfos);
+                    }, CREATE_TWO_WINDINGS_TRANSFORMER_ERROR, networkUuid, reporter, subReporter);
+                }));
+    }
+
+    private void createTwoWindingsTransformer(Network network, VoltageLevel voltageLevel1, VoltageLevel voltageLevel2, TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
+        TwoWindingsTransformerAdder twoWindingsTransformerAdder;
+        Optional<Substation> optS1 = voltageLevel1.getSubstation();
+        Optional<Substation> optS2 = voltageLevel2.getSubstation();
+        Substation s1 = optS1.orElse(null);
+        Substation s2 = optS2.orElse(null);
+        BranchAdder<TwoWindingsTransformerAdder> branchAdder;
+
+        if (s1 != null) {
+            branchAdder = s1.newTwoWindingsTransformer();
+        } else if (s2 != null) {
+            branchAdder = s2.newTwoWindingsTransformer();
+        } else {
+            branchAdder = network.newTwoWindingsTransformer();
+        }
+        // common settings
+        twoWindingsTransformerAdder = branchAdder.setId(twoWindingsTransformerCreationInfos.getEquipmentId())
+                .setName(twoWindingsTransformerCreationInfos.getEquipmentName())
+                .setVoltageLevel1(twoWindingsTransformerCreationInfos.getVoltageLevelId1())
+                .setVoltageLevel2(twoWindingsTransformerCreationInfos.getVoltageLevelId2())
+                .setG(twoWindingsTransformerCreationInfos.getMagnetizingConductance())
+                .setB(twoWindingsTransformerCreationInfos.getMagnetizingSusceptance())
+                .setR(twoWindingsTransformerCreationInfos.getSeriesResistance())
+                .setX(twoWindingsTransformerCreationInfos.getSeriesReactance())
+                .setRatedU1(twoWindingsTransformerCreationInfos.getRatedVoltage1())
+                .setRatedU2(twoWindingsTransformerCreationInfos.getRatedVoltage2());
+
+        // BranchAdder completion by topology
+        setBranchAdderNodeOrBus(branchAdder, voltageLevel1, twoWindingsTransformerCreationInfos, Side.ONE);
+        setBranchAdderNodeOrBus(branchAdder, voltageLevel2, twoWindingsTransformerCreationInfos, Side.TWO);
+
+        twoWindingsTransformerAdder.add();
+    }
+
+    private Mono<Void> assertTwoWindingsTransformerCreationInfosNotEmpty(TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
+        return twoWindingsTransformerCreationInfos == null ? Mono.error(new NetworkModificationException(CREATE_TWO_WINDINGS_TRANSFORMER_ERROR, "Missing required attributes to create the two windings transformer")) : Mono.empty();
     }
 }
