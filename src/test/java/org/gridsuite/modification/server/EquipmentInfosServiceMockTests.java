@@ -9,6 +9,7 @@ package org.gridsuite.modification.server;
 import com.google.common.collect.Iterables;
 import org.gridsuite.modification.server.dto.EquipmentInfos;
 import org.gridsuite.modification.server.dto.EquipmentType;
+import org.gridsuite.modification.server.dto.VoltageLevelInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -35,7 +36,7 @@ public class EquipmentInfosServiceMockTests {
 
     @Test
     public void testAddDeleteEquipmentInfos() {
-        equipmentInfosService.add(EquipmentInfos.builder().networkUuid(NETWORK_UUID).id("id1").name("name1").type(EquipmentType.LOAD.name()).voltageLevelsIds(Set.of("vl1")).build());
+        equipmentInfosService.add(EquipmentInfos.builder().networkUuid(NETWORK_UUID).id("id1").name("name1").type(EquipmentType.LOAD.name()).voltageLevels(Set.of(VoltageLevelInfos.builder().id("vl1").name("vl1").build())).build());
         assertEquals(0, Iterables.size(equipmentInfosService.findAll(NETWORK_UUID)));
 
         equipmentInfosService.delete("foo", NETWORK_UUID);
