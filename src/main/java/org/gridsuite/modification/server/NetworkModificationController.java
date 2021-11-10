@@ -11,12 +11,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.gridsuite.modification.server.dto.GeneratorCreationInfos;
-import org.gridsuite.modification.server.dto.EquipmentDeletionInfos;
-import org.gridsuite.modification.server.dto.LoadCreationInfos;
-import org.gridsuite.modification.server.dto.LineCreationInfos;
-import org.gridsuite.modification.server.dto.EquipmenModificationInfos;
-import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.service.NetworkModificationService;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -117,6 +112,15 @@ public class NetworkModificationController {
                                                                       @RequestParam(value = "group", required = false) UUID groupUuid,
                                                                       @RequestBody LineCreationInfos lineCreationInfos) {
         return ResponseEntity.ok().body(networkModificationService.createLine(networkUuid, groupUuid, lineCreationInfos));
+    }
+
+    @PutMapping(value = "/networks/{networkUuid}/two-windings-transformer", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "create a two windings transformer in the network")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The two windings transformer has been created")})
+    public ResponseEntity<Flux<EquipmenModificationInfos>> createTwoWindingsTransformer(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
+                                                                      @RequestParam(value = "group", required = false) UUID groupUuid,
+                                                                      @RequestBody TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
+        return ResponseEntity.ok().body(networkModificationService.createTwoWindingsTransformer(networkUuid, groupUuid, twoWindingsTransformerCreationInfos));
     }
 
     @DeleteMapping(value = "/networks/{networkUuid}/equipments/type/{equipmentType}/id/{equipmentId}")

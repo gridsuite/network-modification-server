@@ -156,7 +156,9 @@ public final class NetworkCreation {
 
         Substation s1 = createSubstation(network, "s1", "s1", Country.FR);
         VoltageLevel v1 = createVoltageLevel(s1, "v1", "v1", TopologyKind.BUS_BREAKER, 380.0);
+        VoltageLevel v12 = createVoltageLevel(s1, "v12", "v12", TopologyKind.BUS_BREAKER, 90.0);
         createBus(v1, "bus1", "bus1");
+        createBus(v12, "bus12", "bus12");
         createGeneratorOnBus(v1, "idGenerator1", "bus1", 42.1, 1.0);
 
         Substation s2 = createSubstation(network, "s2", "s2", Country.FR);
@@ -176,6 +178,8 @@ public final class NetworkCreation {
         createSwitch(v1, "v1b1", "v1b1", SwitchKind.BREAKER, true, false, false, 1, 2);
         createLoad(v1, "v1load", "v1load", 2, 0., 0.);
         createLccConverterStation(v1, "v1lcc", "v1lcc", 3, 0, 0);
+        VoltageLevel v3 = createVoltageLevel(s1, "v3", "v3", TopologyKind.BUS_BREAKER, 450.0);
+        createBus(v3, "bus3", "bus3");
 
         Substation s2 = createSubstation(network, "s2", "s2", Country.FR);
         VoltageLevel v2 = createVoltageLevel(s2, "v2", "v2", TopologyKind.BUS_BREAKER, 225.0);
