@@ -707,50 +707,30 @@ public class NetworkModificationService {
         Optional<Substation> optS2 = voltageLevel2.getSubstation();
         Substation s1 = optS1.orElse(null);
         Substation s2 = optS2.orElse(null);
+        BranchAdder<TwoWindingsTransformerAdder> branchAdder;
 
         if (s1 != null) {
-            // common settings
-            twoWindingsTransformerAdder = s1.newTwoWindingsTransformer()
-                    .setId(twoWindingsTransformerCreationInfos.getEquipmentId())
-                    .setName(twoWindingsTransformerCreationInfos.getEquipmentName())
-                    .setVoltageLevel1(twoWindingsTransformerCreationInfos.getVoltageLevelId1())
-                    .setVoltageLevel2(twoWindingsTransformerCreationInfos.getVoltageLevelId2())
-                    .setG(twoWindingsTransformerCreationInfos.getMagnetizingConductance())
-                    .setB(twoWindingsTransformerCreationInfos.getMagnetizingSusceptance())
-                    .setR(twoWindingsTransformerCreationInfos.getSeriesResistance())
-                    .setX(twoWindingsTransformerCreationInfos.getSeriesReactance())
-                    .setRatedU1(twoWindingsTransformerCreationInfos.getRatedVoltage1())
-                    .setRatedU2(twoWindingsTransformerCreationInfos.getRatedVoltage2());
+            branchAdder = s1.newTwoWindingsTransformer();
         } else if (s2 != null) {
-            // common settings
-            twoWindingsTransformerAdder = s2.newTwoWindingsTransformer()
-                    .setId(twoWindingsTransformerCreationInfos.getEquipmentId())
-                    .setName(twoWindingsTransformerCreationInfos.getEquipmentName())
-                    .setVoltageLevel1(twoWindingsTransformerCreationInfos.getVoltageLevelId1())
-                    .setVoltageLevel2(twoWindingsTransformerCreationInfos.getVoltageLevelId2())
-                    .setG(twoWindingsTransformerCreationInfos.getMagnetizingConductance())
-                    .setB(twoWindingsTransformerCreationInfos.getMagnetizingSusceptance())
-                    .setR(twoWindingsTransformerCreationInfos.getSeriesResistance())
-                    .setX(twoWindingsTransformerCreationInfos.getSeriesReactance())
-                    .setRatedU1(twoWindingsTransformerCreationInfos.getRatedVoltage1())
-                    .setRatedU2(twoWindingsTransformerCreationInfos.getRatedVoltage2());
+            branchAdder = s2.newTwoWindingsTransformer();
         } else {
-            // common settings
-            twoWindingsTransformerAdder = network.newTwoWindingsTransformer()
-                    .setId(twoWindingsTransformerCreationInfos.getEquipmentId())
-                    .setName(twoWindingsTransformerCreationInfos.getEquipmentName())
-                    .setVoltageLevel1(twoWindingsTransformerCreationInfos.getVoltageLevelId1())
-                    .setVoltageLevel2(twoWindingsTransformerCreationInfos.getVoltageLevelId2())
-                    .setG(twoWindingsTransformerCreationInfos.getMagnetizingConductance())
-                    .setB(twoWindingsTransformerCreationInfos.getMagnetizingSusceptance())
-                    .setR(twoWindingsTransformerCreationInfos.getSeriesResistance())
-                    .setX(twoWindingsTransformerCreationInfos.getSeriesReactance())
-                    .setRatedU1(twoWindingsTransformerCreationInfos.getRatedVoltage1())
-                    .setRatedU2(twoWindingsTransformerCreationInfos.getRatedVoltage2());
+            branchAdder = network.newTwoWindingsTransformer();
         }
+        // common settings
+        twoWindingsTransformerAdder = branchAdder.setId(twoWindingsTransformerCreationInfos.getEquipmentId())
+                .setName(twoWindingsTransformerCreationInfos.getEquipmentName())
+                .setVoltageLevel1(twoWindingsTransformerCreationInfos.getVoltageLevelId1())
+                .setVoltageLevel2(twoWindingsTransformerCreationInfos.getVoltageLevelId2())
+                .setG(twoWindingsTransformerCreationInfos.getMagnetizingConductance())
+                .setB(twoWindingsTransformerCreationInfos.getMagnetizingSusceptance())
+                .setR(twoWindingsTransformerCreationInfos.getSeriesResistance())
+                .setX(twoWindingsTransformerCreationInfos.getSeriesReactance())
+                .setRatedU1(twoWindingsTransformerCreationInfos.getRatedVoltage1())
+                .setRatedU2(twoWindingsTransformerCreationInfos.getRatedVoltage2());
+
         // BranchAdder completion by topology
-        setBranchAdderNodeOrBus(twoWindingsTransformerAdder, voltageLevel1, twoWindingsTransformerCreationInfos, Side.ONE);
-        setBranchAdderNodeOrBus(twoWindingsTransformerAdder, voltageLevel2, twoWindingsTransformerCreationInfos, Side.TWO);
+        setBranchAdderNodeOrBus(branchAdder, voltageLevel1, twoWindingsTransformerCreationInfos, Side.ONE);
+        setBranchAdderNodeOrBus(branchAdder, voltageLevel2, twoWindingsTransformerCreationInfos, Side.TWO);
 
         twoWindingsTransformerAdder.add();
     }
