@@ -15,7 +15,6 @@ import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
-import org.springframework.lang.NonNull;
 
 import java.util.Set;
 import java.util.UUID;
@@ -52,36 +51,36 @@ public class EquipmentInfos {
 
     public static Set<VoltageLevelInfos> getVoltageLevels(@NonNull Identifiable<?> identifiable) {
         if (identifiable instanceof Substation) {
-            return ((Substation) identifiable).getVoltageLevelStream().map(vl -> new VoltageLevelInfos(vl.getId(), vl.getNameOrId())).collect(Collectors.toSet());
+            return ((Substation) identifiable).getVoltageLevelStream().map(vl -> VoltageLevelInfos.builder().id(vl.getId()).name(vl.getNameOrId()).build()).collect(Collectors.toSet());
         } else if (identifiable instanceof VoltageLevel) {
-            return Set.of(new VoltageLevelInfos(identifiable.getId(), identifiable.getNameOrId()));
+            return Set.of(VoltageLevelInfos.builder().id(identifiable.getId()).name(identifiable.getNameOrId()).build());
         } else if (identifiable instanceof Switch) {
-            return Set.of(new VoltageLevelInfos(((Switch) identifiable).getVoltageLevel().getId(), ((Switch) identifiable).getVoltageLevel().getNameOrId()));
+            return Set.of(VoltageLevelInfos.builder().id(((Switch) identifiable).getVoltageLevel().getId()).name(((Switch) identifiable).getVoltageLevel().getNameOrId()).build());
         } else if (identifiable instanceof Injection) {
-            return Set.of(new VoltageLevelInfos(((Injection<?>) identifiable).getTerminal().getVoltageLevel().getId(), ((Injection<?>) identifiable).getTerminal().getVoltageLevel().getNameOrId()));
+            return Set.of(VoltageLevelInfos.builder().id(((Injection<?>) identifiable).getTerminal().getVoltageLevel().getId()).name(((Injection<?>) identifiable).getTerminal().getVoltageLevel().getNameOrId()).build());
         } else if (identifiable instanceof Bus) {
-            return Set.of(new VoltageLevelInfos(((Bus) identifiable).getVoltageLevel().getId(), ((Bus) identifiable).getVoltageLevel().getNameOrId()));
+            return Set.of(VoltageLevelInfos.builder().id(((Bus) identifiable).getVoltageLevel().getId()).name(((Bus) identifiable).getVoltageLevel().getNameOrId()).build());
         } else if (identifiable instanceof HvdcLine) {
             HvdcLine hvdcLine = (HvdcLine) identifiable;
             return Set.of(
-                    new VoltageLevelInfos(hvdcLine.getConverterStation1().getTerminal().getVoltageLevel().getId(), hvdcLine.getConverterStation1().getTerminal().getVoltageLevel().getNameOrId()),
-                    new VoltageLevelInfos(hvdcLine.getConverterStation2().getTerminal().getVoltageLevel().getId(), hvdcLine.getConverterStation2().getTerminal().getVoltageLevel().getNameOrId())
+                VoltageLevelInfos.builder().id(hvdcLine.getConverterStation1().getTerminal().getVoltageLevel().getId()).name(hvdcLine.getConverterStation1().getTerminal().getVoltageLevel().getNameOrId()).build(),
+                VoltageLevelInfos.builder().id(hvdcLine.getConverterStation2().getTerminal().getVoltageLevel().getId()).name(hvdcLine.getConverterStation2().getTerminal().getVoltageLevel().getNameOrId()).build()
             );
         } else if (identifiable instanceof Branch) {
             Branch<?> branch = (Branch<?>) identifiable;
             return Stream.of(
-                    new VoltageLevelInfos(branch.getTerminal1().getVoltageLevel().getId(), branch.getTerminal1().getVoltageLevel().getNameOrId()),
-                    new VoltageLevelInfos(branch.getTerminal2().getVoltageLevel().getId(), branch.getTerminal2().getVoltageLevel().getNameOrId())
-            )
-            .collect(Collectors.toSet());
+                    VoltageLevelInfos.builder().id(branch.getTerminal1().getVoltageLevel().getId()).name(branch.getTerminal1().getVoltageLevel().getNameOrId()).build(),
+                    VoltageLevelInfos.builder().id(branch.getTerminal2().getVoltageLevel().getId()).name(branch.getTerminal2().getVoltageLevel().getNameOrId()).build()
+                )
+                .collect(Collectors.toSet());
         } else if (identifiable instanceof ThreeWindingsTransformer) {
             ThreeWindingsTransformer w3t = (ThreeWindingsTransformer) identifiable;
             return Stream.of(
-                    new VoltageLevelInfos(w3t.getTerminal(ThreeWindingsTransformer.Side.ONE).getVoltageLevel().getId(), w3t.getTerminal(ThreeWindingsTransformer.Side.ONE).getVoltageLevel().getNameOrId()),
-                    new VoltageLevelInfos(w3t.getTerminal(ThreeWindingsTransformer.Side.TWO).getVoltageLevel().getId(), w3t.getTerminal(ThreeWindingsTransformer.Side.TWO).getVoltageLevel().getNameOrId()),
-                    new VoltageLevelInfos(w3t.getTerminal(ThreeWindingsTransformer.Side.THREE).getVoltageLevel().getId(), w3t.getTerminal(ThreeWindingsTransformer.Side.THREE).getVoltageLevel().getNameOrId())
-            )
-            .collect(Collectors.toSet());
+                    VoltageLevelInfos.builder().id(w3t.getTerminal(ThreeWindingsTransformer.Side.ONE).getVoltageLevel().getId()).name(w3t.getTerminal(ThreeWindingsTransformer.Side.ONE).getVoltageLevel().getNameOrId()).build(),
+                    VoltageLevelInfos.builder().id(w3t.getTerminal(ThreeWindingsTransformer.Side.TWO).getVoltageLevel().getId()).name(w3t.getTerminal(ThreeWindingsTransformer.Side.TWO).getVoltageLevel().getNameOrId()).build(),
+                    VoltageLevelInfos.builder().id(w3t.getTerminal(ThreeWindingsTransformer.Side.THREE).getVoltageLevel().getId()).name(w3t.getTerminal(ThreeWindingsTransformer.Side.THREE).getVoltageLevel().getNameOrId()).build()
+                )
+                .collect(Collectors.toSet());
         }
 
         throw NetworkModificationException.createEquipmentTypeUnknown(identifiable.getClass().getSimpleName());
