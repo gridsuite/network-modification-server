@@ -124,9 +124,10 @@ public class NetworkModificationController {
     @Operation(summary = "create a two windings transformer in the network")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The two windings transformer has been created")})
     public ResponseEntity<Flux<EquipmenModificationInfos>> createTwoWindingsTransformer(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
-                                                                      @RequestParam(value = "group", required = false) UUID groupUuid,
+                                                                                        @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
+                                                                                        @RequestParam(value = "group", required = false) UUID groupUuid,
                                                                       @RequestBody TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
-        return ResponseEntity.ok().body(networkModificationService.createTwoWindingsTransformer(networkUuid, groupUuid, twoWindingsTransformerCreationInfos));
+        return ResponseEntity.ok().body(networkModificationService.createTwoWindingsTransformer(networkUuid, variantId, groupUuid, twoWindingsTransformerCreationInfos));
     }
 
     @DeleteMapping(value = "/networks/{networkUuid}/equipments/type/{equipmentType}/id/{equipmentId}")

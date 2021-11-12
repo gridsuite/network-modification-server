@@ -684,10 +684,10 @@ public class NetworkModificationService {
         return lineCreationInfos == null ? Mono.error(new NetworkModificationException(CREATE_LINE_ERROR, "Missing required attributes to create the line")) : Mono.empty();
     }
 
-    public Flux<EquipmenModificationInfos> createTwoWindingsTransformer(UUID networkUuid, UUID groupUuid, TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
+    public Flux<EquipmenModificationInfos> createTwoWindingsTransformer(UUID networkUuid, String variantId, UUID groupUuid, TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
         return assertTwoWindingsTransformerCreationInfosNotEmpty(twoWindingsTransformerCreationInfos).thenMany(
-                getNetwork(networkUuid).flatMapIterable(network -> {
-                    NetworkStoreListener listener = NetworkStoreListener.create(network, networkUuid, groupUuid, modificationRepository, equipmentInfosService);
+                getNetwork(networkUuid, variantId).flatMapIterable(network -> {
+                    NetworkStoreListener listener = NetworkStoreListener.create(network, networkUuid, variantId, groupUuid, modificationRepository, equipmentInfosService);
                     ReporterModel reporter = new ReporterModel("NetworkModification", "Network modification");
                     Reporter subReporter = reporter.createSubReporter("TwoWindingsTransformerCreation", "Two windings transformer creation");
 
