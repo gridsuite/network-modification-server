@@ -8,6 +8,8 @@ import com.powsybl.sld.iidm.extensions.ConnectablePosition;
 import com.powsybl.sld.iidm.extensions.ConnectablePositionAdder;
 
 public final class NetworkCreation {
+    public static final String VARIANT_ID = "variant_1";
+
     private NetworkCreation() {
     }
 
@@ -147,6 +149,33 @@ public final class NetworkCreation {
         if (createHvdcLine) {
             createHvdcLine(network, "hvdcLine", "hvdcLine", 1, 100, HvdcLine.ConvertersMode.SIDE_1_INVERTER_SIDE_2_RECTIFIER, 225, 500, "v1lcc", "v2vsc");
         }
+
+        // Creating new variant with new equipments
+        network.getVariantManager().cloneVariant(VariantManagerConstants.INITIAL_VARIANT_ID, VARIANT_ID);
+        network.getVariantManager().setWorkingVariant(VARIANT_ID);
+
+        Substation s1Variant = createSubstation(network, "s1Variant", "s1Variant", Country.FR);
+        VoltageLevel v1Variant = createVoltageLevel(s1Variant, "v1Variant", "v1Variant", TopologyKind.NODE_BREAKER, 380.0);
+        createBusBarSection(v1Variant, "bbs1Variant", "bbs1Variant", 0);
+        createSwitch(v1Variant, "disc1Variant", "disc1Variant", SwitchKind.DISCONNECTOR, true, true, false, 0, 1);
+        createSwitch(v1Variant, "break1Variant", "break1Variant", SwitchKind.BREAKER, true, false, false, 1, 2);
+        createLoad(v1Variant, "load1Variant", "load1Variant", 2, 0., 0.);
+
+        Substation s2Variant = createSubstation(network, "s2Variant", "s2Variant", Country.FR);
+        VoltageLevel v2Variant = createVoltageLevel(s2Variant, "v2Variant", "v2Variant", TopologyKind.NODE_BREAKER, 380.0);
+        createBusBarSection(v2Variant, "bbs2Variant", "bbs2Variant", 0);
+        createSwitch(v2Variant, "disc2Variant", "disc2Variant", SwitchKind.DISCONNECTOR, true, true, false, 0, 1);
+        createSwitch(v2Variant, "break2Variant", "break2Variant", SwitchKind.BREAKER, true, false, false, 1, 2);
+        createLoad(v2Variant, "load2Variant", "load2Variant", 2, 0., 0.);
+
+        createSwitch(v1Variant, "disc11Variant", "disc11Variant", SwitchKind.DISCONNECTOR, true, false, false, 0, 3);
+        createSwitch(v1Variant, "break11Variant", "break11Variant", SwitchKind.BREAKER, true, false, false, 3, 4);
+        createSwitch(v2Variant, "dsc21Variant", "disc21Variant", SwitchKind.DISCONNECTOR, true, false, false, 0, 3);
+        createSwitch(v2Variant, "break21Variant", "break21Variant", SwitchKind.BREAKER, true, false, false, 3, 4);
+
+        createLine(network, "line1Variant", "line1Variant", "v1Variant", "v2Variant", 4, 4, 10.0, 5.0, 3.5, 5.5, 4.5, 6.5);
+
+        network.getVariantManager().setWorkingVariant(VariantManagerConstants.INITIAL_VARIANT_ID);
 
         return network;
     }

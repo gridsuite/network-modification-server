@@ -26,6 +26,8 @@ public class NetworkStoreListener implements NetworkListener {
 
     private final UUID networkUuid;
 
+    private final String variantId;
+
     private final Network network;
 
     private final NetworkModificationRepository modificationRepository;
@@ -40,17 +42,18 @@ public class NetworkStoreListener implements NetworkListener {
         return network;
     }
 
-    public static NetworkStoreListener create(Network network, UUID networkUuid, UUID groupUuid,
+    public static NetworkStoreListener create(Network network, UUID networkUuid, String variantId, UUID groupUuid,
                                               NetworkModificationRepository modificationRepository, EquipmentInfosService equipmentInfosService) {
-        var listener = new NetworkStoreListener(network, networkUuid, groupUuid, modificationRepository, equipmentInfosService);
+        var listener = new NetworkStoreListener(network, networkUuid, variantId, groupUuid, modificationRepository, equipmentInfosService);
         network.addListener(listener);
         return listener;
     }
 
-    protected NetworkStoreListener(Network network, UUID networkUuid, UUID groupUuid,
+    protected NetworkStoreListener(Network network, UUID networkUuid, String variantId, UUID groupUuid,
                                    NetworkModificationRepository modificationRepository, EquipmentInfosService equipmentInfosService) {
         this.network = network;
         this.networkUuid = networkUuid;
+        this.variantId = variantId;
         this.groupUuid = groupUuid;
         this.modificationRepository = modificationRepository;
         this.equipmentInfosService = equipmentInfosService;

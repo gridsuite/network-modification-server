@@ -82,9 +82,9 @@ public class NetworkModificationService {
         objectMapper.setInjectableValues(new InjectableValues.Std().addValue(ReporterModelDeserializer.DICTIONARY_VALUE_ID, null));
     }
 
-    public Flux<EquipmenModificationInfos> applyGroovyScript(UUID networkUuid, UUID groupUuid, String groovyScript) {
+    public Flux<EquipmenModificationInfos> applyGroovyScript(UUID networkUuid, String variantId, UUID groupUuid, String groovyScript) {
         return assertGroovyScriptNotEmpty(groovyScript).thenMany(
-            getNetwork(networkUuid).flatMapIterable(network -> doAction(network, networkUuid, groupUuid, () -> {
+            getNetwork(networkUuid, variantId).flatMapIterable(network -> doAction(network, networkUuid, variantId, groupUuid, () -> {
                 var conf = new CompilerConfiguration();
                 var binding = new Binding();
                 binding.setProperty("network", network);
@@ -94,12 +94,12 @@ public class NetworkModificationService {
         );
     }
 
-    public Flux<EquipmenModificationInfos> changeSwitchState(UUID networkUuid, UUID groupUuid, String switchId, boolean open) {
-        return getNetwork(networkUuid)
+    public Flux<EquipmenModificationInfos> changeSwitchState(UUID networkUuid, String variantId, UUID groupUuid, String switchId, boolean open) {
+        return getNetwork(networkUuid, variantId)
             .filter(network -> network.getSwitch(switchId) != null)
             .switchIfEmpty(Mono.error(new NetworkModificationException(SWITCH_NOT_FOUND, switchId)))
             .filter(network -> network.getSwitch(switchId).isOpen() != open)
-            .flatMapIterable(network -> doAction(network, networkUuid, groupUuid, () -> network.getSwitch(switchId).setOpen(open)));
+            .flatMapIterable(network -> doAction(network, networkUuid, variantId, groupUuid, () -> network.getSwitch(switchId).setOpen(open)));
     }
 
     public Flux<UUID> getModificationGroups() {
@@ -118,23 +118,23 @@ public class NetworkModificationService {
         return terminal1Disconnected && terminal2Disconnected;
     }
 
-    public Flux<EquipmenModificationInfos> changeLineStatus(UUID networkUuid, UUID groupUuid, String lineId, String lineStatus) {
+    public Flux<EquipmenModificationInfos> changeLineStatus(UUID networkUuid, String variantId, UUID groupUuid, String lineId, String lineStatus) {
         Flux<EquipmenModificationInfos> modifications;
         switch (lineStatus) {
             case "lockout":
-                modifications = lockoutLine(networkUuid, groupUuid, lineId);
+                modifications = lockoutLine(networkUuid, variantId, groupUuid, lineId);
                 break;
             case "trip":
-                modifications = tripLine(networkUuid, groupUuid, lineId);
+                modifications = tripLine(networkUuid, variantId, groupUuid, lineId);
                 break;
             case "switchOn":
-                modifications = switchOnLine(networkUuid, groupUuid, lineId);
+                modifications = switchOnLine(networkUuid, variantId, groupUuid, lineId);
                 break;
             case "energiseEndOne":
-                modifications = energiseLineEnd(networkUuid, groupUuid, lineId, Branch.Side.ONE);
+                modifications = energiseLineEnd(networkUuid, variantId, groupUuid, lineId, Branch.Side.ONE);
                 break;
             case "energiseEndTwo":
-                modifications = energiseLineEnd(networkUuid, groupUuid, lineId, Branch.Side.TWO);
+                modifications = energiseLineEnd(networkUuid, variantId, groupUuid, lineId, Branch.Side.TWO);
                 break;
             default:
                 throw new IllegalStateException("Unexpected value: " + lineStatus);
@@ -142,11 +142,11 @@ public class NetworkModificationService {
         return modifications;
     }
 
-    public Flux<EquipmenModificationInfos> lockoutLine(UUID networkUuid, UUID groupUuid, String lineId) {
-        return getNetwork(networkUuid)
+    public Flux<EquipmenModificationInfos> lockoutLine(UUID networkUuid, String variantId, UUID groupUuid, String lineId) {
+        return getNetwork(networkUuid, variantId)
             .filter(network -> network.getLine(lineId) != null)
             .switchIfEmpty(Mono.error(new NetworkModificationException(LINE_NOT_FOUND, lineId)))
-            .flatMapIterable(network -> doAction(network, networkUuid, groupUuid, () -> {
+            .flatMapIterable(network -> doAction(network, networkUuid, variantId, groupUuid, () -> {
                     if (disconnectLineBothSides(network, lineId)) {
                         network.getLine(lineId).newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.PLANNED_OUTAGE).add();
                     } else {
@@ -156,11 +156,11 @@ public class NetworkModificationService {
             ));
     }
 
-    public Flux<EquipmenModificationInfos> tripLine(UUID networkUuid, UUID groupUuid, String lineId) {
-        return getNetwork(networkUuid)
+    public Flux<EquipmenModificationInfos> tripLine(UUID networkUuid, String variantId, UUID groupUuid, String lineId) {
+        return getNetwork(networkUuid, variantId)
             .filter(network -> network.getLine(lineId) != null)
             .switchIfEmpty(Mono.error(new NetworkModificationException(LINE_NOT_FOUND, lineId)))
-            .flatMapIterable(network -> doAction(network, networkUuid, groupUuid, () -> {
+            .flatMapIterable(network -> doAction(network, networkUuid, variantId, groupUuid, () -> {
                     if (disconnectLineBothSides(network, lineId)) {
                         network.getLine(lineId).newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.FORCED_OUTAGE).add();
                     } else {
@@ -170,11 +170,11 @@ public class NetworkModificationService {
             ));
     }
 
-    public Flux<EquipmenModificationInfos> energiseLineEnd(UUID networkUuid, UUID groupUuid, String lineId, Branch.Side side) {
-        return getNetwork(networkUuid)
+    public Flux<EquipmenModificationInfos> energiseLineEnd(UUID networkUuid, String variantId, UUID groupUuid, String lineId, Branch.Side side) {
+        return getNetwork(networkUuid, variantId)
             .filter(network -> network.getLine(lineId) != null)
             .switchIfEmpty(Mono.error(new NetworkModificationException(LINE_NOT_FOUND, lineId)))
-            .flatMapIterable(network -> doAction(network, networkUuid, groupUuid, () -> {
+            .flatMapIterable(network -> doAction(network, networkUuid, variantId, groupUuid, () -> {
                     Terminal terminalToConnect = network.getLine(lineId).getTerminal(side);
                     boolean isTerminalToConnectConnected = terminalToConnect.isConnected() || terminalToConnect.connect();
                     Terminal terminalToDisconnect = network.getLine(lineId).getTerminal(side == Branch.Side.ONE ? Branch.Side.TWO : Branch.Side.ONE);
@@ -188,11 +188,11 @@ public class NetworkModificationService {
             ));
     }
 
-    public Flux<EquipmenModificationInfos> switchOnLine(UUID networkUuid, UUID groupUuid, String lineId) {
-        return getNetwork(networkUuid)
+    public Flux<EquipmenModificationInfos> switchOnLine(UUID networkUuid, String variantId, UUID groupUuid, String lineId) {
+        return getNetwork(networkUuid, variantId)
             .filter(network -> network.getLine(lineId) != null)
             .switchIfEmpty(Mono.error(new NetworkModificationException(LINE_NOT_FOUND, lineId)))
-            .flatMapIterable(network -> doAction(network, networkUuid, groupUuid, () -> {
+            .flatMapIterable(network -> doAction(network, networkUuid, variantId, groupUuid, () -> {
                     Terminal terminal1 = network.getLine(lineId).getTerminal1();
                     boolean terminal1Connected = terminal1.isConnected() || terminal1.connect();
                     Terminal terminal2 = network.getLine(lineId).getTerminal2();
@@ -210,19 +210,20 @@ public class NetworkModificationService {
         return Mono.fromRunnable(() -> modificationRepository.deleteModificationGroup(groupUuid));
     }
 
-    private List<EquipmenModificationInfos> doAction(Network network, UUID networkUuid, UUID groupUuid, Runnable modification) {
-        return doAction(network, networkUuid, groupUuid, modification, MODIFICATION_ERROR);
+    private List<EquipmenModificationInfos> doAction(Network network, UUID networkUuid, String variantId, UUID groupUuid, Runnable modification) {
+        return doAction(network, networkUuid, variantId, groupUuid, modification, MODIFICATION_ERROR);
     }
 
-    private List<EquipmenModificationInfos> doAction(Network network, UUID networkUuid, UUID groupUuid, Runnable modification, NetworkModificationException.Type typeIfError) {
-        NetworkStoreListener listener = NetworkStoreListener.create(network, networkUuid, groupUuid, modificationRepository, equipmentInfosService);
+    private List<EquipmenModificationInfos> doAction(Network network, UUID networkUuid, String variantId, UUID groupUuid, Runnable modification, NetworkModificationException.Type typeIfError) {
+        NetworkStoreListener listener = NetworkStoreListener.create(network, networkUuid, variantId, groupUuid, modificationRepository, equipmentInfosService);
         ReporterModel reporter = new ReporterModel("NetworkModification", "Network modification");
         return doAction(listener, modification, typeIfError, networkUuid, reporter, reporter);
     }
 
     private List<EquipmenModificationInfos> doAction(NetworkStoreListener listener, Runnable action,
                                                      NetworkModificationException.Type typeIfError,
-                                                     UUID networkUuid, ReporterModel reporter, Reporter subReporter) {
+                                                     UUID networkUuid, ReporterModel reporter,
+                                                     Reporter subReporter) {
         try {
             action.run();
             saveModifications(listener);
@@ -251,13 +252,22 @@ public class NetworkModificationService {
         }
     }
 
-    private Mono<Network> getNetwork(UUID networkUuid) {
+    private Mono<Network> getNetwork(UUID networkUuid, String variantId) {
         return Mono.fromCallable(() -> {
+            Network network;
             try {
-                return networkStoreService.getNetwork(networkUuid);
+                network = networkStoreService.getNetwork(networkUuid);
             } catch (PowsyblException e) {
                 throw new NetworkModificationException(NETWORK_NOT_FOUND, networkUuid.toString());
             }
+            if (variantId != null) {
+                try {
+                    network.getVariantManager().setWorkingVariant(variantId);
+                } catch (PowsyblException e) {
+                    throw new NetworkModificationException(VARIANT_NOT_FOUND, variantId);
+                }
+            }
+            return network;
         }).subscribeOn(Schedulers.boundedElastic());
     }
 
@@ -359,10 +369,10 @@ public class NetworkModificationService {
             .add();
     }
 
-    public Flux<EquipmenModificationInfos> createLoad(UUID networkUuid, UUID groupUuid, LoadCreationInfos loadCreationInfos) {
+    public Flux<EquipmenModificationInfos> createLoad(UUID networkUuid, String variantId, UUID groupUuid, LoadCreationInfos loadCreationInfos) {
         return assertLoadCreationInfosNotEmpty(loadCreationInfos).thenMany(
-                getNetwork(networkUuid).flatMapIterable(network -> {
-                    NetworkStoreListener listener = NetworkStoreListener.create(network, networkUuid, groupUuid, modificationRepository, equipmentInfosService);
+                getNetwork(networkUuid, variantId).flatMapIterable(network -> {
+                    NetworkStoreListener listener = NetworkStoreListener.create(network, networkUuid, variantId, groupUuid, modificationRepository, equipmentInfosService);
                     ReporterModel reporter = new ReporterModel("NetworkModification", "Network modification");
                     Reporter subReporter = reporter.createSubReporter("LoadCreation", "Load creation");
 
@@ -396,9 +406,9 @@ public class NetworkModificationService {
         return loadCreationInfos == null ? Mono.error(new NetworkModificationException(CREATE_LOAD_ERROR, "Missing required attributes to create the load")) : Mono.empty();
     }
 
-    public Flux<EquipmentDeletionInfos> deleteEquipment(UUID networkUuid, UUID groupUuid, String equipmentType, String equipmentId) {
-        return getNetwork(networkUuid).flatMapIterable(network -> {
-            NetworkStoreListener listener = NetworkStoreListener.create(network, networkUuid, groupUuid, modificationRepository, equipmentInfosService);
+    public Flux<EquipmentDeletionInfos> deleteEquipment(UUID networkUuid, String variantId, UUID groupUuid, String equipmentType, String equipmentId) {
+        return getNetwork(networkUuid, variantId).flatMapIterable(network -> {
+            NetworkStoreListener listener = NetworkStoreListener.create(network, networkUuid, variantId, groupUuid, modificationRepository, equipmentInfosService);
             ReporterModel reporter = new ReporterModel("NetworkModification", "Network modification");
             Reporter subReporter = reporter.createSubReporter("EquipmentDeletion", "Equipment deletion");
 
@@ -534,10 +544,10 @@ public class NetworkModificationService {
             .add();
     }
 
-    public Flux<EquipmenModificationInfos> createGenerator(UUID networkUuid, UUID groupUuid, GeneratorCreationInfos generatorCreationInfos) {
+    public Flux<EquipmenModificationInfos> createGenerator(UUID networkUuid, String variantId, UUID groupUuid, GeneratorCreationInfos generatorCreationInfos) {
         return assertGeneratorCreationInfosNotEmpty(generatorCreationInfos).thenMany(
-            getNetwork(networkUuid).flatMapIterable(network -> {
-                NetworkStoreListener listener = NetworkStoreListener.create(network, networkUuid, groupUuid, modificationRepository, equipmentInfosService);
+            getNetwork(networkUuid, variantId).flatMapIterable(network -> {
+                NetworkStoreListener listener = NetworkStoreListener.create(network, networkUuid, variantId, groupUuid, modificationRepository, equipmentInfosService);
                 ReporterModel reporter = new ReporterModel("NetworkModification", "Network modification");
                 Reporter subReporter = reporter.createSubReporter("GeneratorCreation", "Generator creation");
 
@@ -632,10 +642,10 @@ public class NetworkModificationService {
         return lineAdder.add();
     }
 
-    public Flux<EquipmenModificationInfos> createLine(UUID networkUuid, UUID groupUuid, LineCreationInfos lineCreationInfos) {
+    public Flux<EquipmenModificationInfos> createLine(UUID networkUuid, String variantId, UUID groupUuid, LineCreationInfos lineCreationInfos) {
         return assertLineCreationInfosNotEmpty(lineCreationInfos).thenMany(
-                getNetwork(networkUuid).flatMapIterable(network -> {
-                    NetworkStoreListener listener = NetworkStoreListener.create(network, networkUuid, groupUuid, modificationRepository, equipmentInfosService);
+                getNetwork(networkUuid, variantId).flatMapIterable(network -> {
+                    NetworkStoreListener listener = NetworkStoreListener.create(network, networkUuid, variantId, groupUuid, modificationRepository, equipmentInfosService);
                     ReporterModel reporter = new ReporterModel("NetworkModification", "Network modification");
                     Reporter subReporter = reporter.createSubReporter("LineCreation", "Line creation");
 
@@ -674,10 +684,10 @@ public class NetworkModificationService {
         return lineCreationInfos == null ? Mono.error(new NetworkModificationException(CREATE_LINE_ERROR, "Missing required attributes to create the line")) : Mono.empty();
     }
 
-    public Flux<EquipmenModificationInfos> createTwoWindingsTransformer(UUID networkUuid, UUID groupUuid, TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
+    public Flux<EquipmenModificationInfos> createTwoWindingsTransformer(UUID networkUuid, String variantId, UUID groupUuid, TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
         return assertTwoWindingsTransformerCreationInfosNotEmpty(twoWindingsTransformerCreationInfos).thenMany(
-                getNetwork(networkUuid).flatMapIterable(network -> {
-                    NetworkStoreListener listener = NetworkStoreListener.create(network, networkUuid, groupUuid, modificationRepository, equipmentInfosService);
+                getNetwork(networkUuid, variantId).flatMapIterable(network -> {
+                    NetworkStoreListener listener = NetworkStoreListener.create(network, networkUuid, variantId, groupUuid, modificationRepository, equipmentInfosService);
                     ReporterModel reporter = new ReporterModel("NetworkModification", "Network modification");
                     Reporter subReporter = reporter.createSubReporter("TwoWindingsTransformerCreation", "Two windings transformer creation");
 
