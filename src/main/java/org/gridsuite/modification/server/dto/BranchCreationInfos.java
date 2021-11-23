@@ -24,6 +24,12 @@ import lombok.experimental.SuperBuilder;
 @Schema(description = "Branch creation")
 public class BranchCreationInfos extends EquipmentCreationInfos {
 
+    @Schema(description = "Series resistance")
+    private double seriesResistance;
+
+    @Schema(description = "Series reactance")
+    private double seriesReactance;
+
     @Schema(description = "Voltage level id Side 1")
     private String voltageLevelId1;
 
@@ -35,4 +41,10 @@ public class BranchCreationInfos extends EquipmentCreationInfos {
 
     @Schema(description = "Bus or Busbar section id Side 2")
     private String busOrBusbarSectionId2;
+
+    @Schema(description = "Current limits Side 1")
+    private CurrentLimitsInfos currentLimits1;
+
+    @Schema(description = "Current limits Side 2")
+    private CurrentLimitsInfos currentLimits2;
 }

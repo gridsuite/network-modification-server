@@ -7,12 +7,7 @@
 package org.gridsuite.modification.server.service;
 
 import com.powsybl.iidm.network.*;
-import org.gridsuite.modification.server.dto.EquipmenModificationInfos;
-import org.gridsuite.modification.server.dto.EquipmentInfos;
-import org.gridsuite.modification.server.dto.EquipmentType;
-import org.gridsuite.modification.server.dto.GeneratorCreationInfos;
-import org.gridsuite.modification.server.dto.LoadCreationInfos;
-import org.gridsuite.modification.server.dto.LineCreationInfos;
+import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.EquipmentModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationEntity;
@@ -31,6 +26,8 @@ public class NetworkStoreListener implements NetworkListener {
 
     private final UUID networkUuid;
 
+    private final String variantId;
+
     private final Network network;
 
     private final NetworkModificationRepository modificationRepository;
@@ -45,17 +42,18 @@ public class NetworkStoreListener implements NetworkListener {
         return network;
     }
 
-    public static NetworkStoreListener create(Network network, UUID networkUuid, UUID groupUuid,
+    public static NetworkStoreListener create(Network network, UUID networkUuid, String variantId, UUID groupUuid,
                                               NetworkModificationRepository modificationRepository, EquipmentInfosService equipmentInfosService) {
-        var listener = new NetworkStoreListener(network, networkUuid, groupUuid, modificationRepository, equipmentInfosService);
+        var listener = new NetworkStoreListener(network, networkUuid, variantId, groupUuid, modificationRepository, equipmentInfosService);
         network.addListener(listener);
         return listener;
     }
 
-    protected NetworkStoreListener(Network network, UUID networkUuid, UUID groupUuid,
+    protected NetworkStoreListener(Network network, UUID networkUuid, String variantId, UUID groupUuid,
                                    NetworkModificationRepository modificationRepository, EquipmentInfosService equipmentInfosService) {
         this.network = network;
         this.networkUuid = networkUuid;
+        this.variantId = variantId;
         this.groupUuid = groupUuid;
         this.modificationRepository = modificationRepository;
         this.equipmentInfosService = equipmentInfosService;
@@ -133,7 +131,27 @@ public class NetworkStoreListener implements NetworkListener {
             lineCreationInfos.getVoltageLevelId1(),
             lineCreationInfos.getBusOrBusbarSectionId1(),
             lineCreationInfos.getVoltageLevelId2(),
-            lineCreationInfos.getBusOrBusbarSectionId2())
+            lineCreationInfos.getBusOrBusbarSectionId2(),
+            lineCreationInfos.getCurrentLimits1() != null ? lineCreationInfos.getCurrentLimits1().getPermanentLimit() : null,
+            lineCreationInfos.getCurrentLimits2() != null ? lineCreationInfos.getCurrentLimits2().getPermanentLimit() : null
+        ));
+    }
+
+    public void storeTwoWindingsTransformerCreation(TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
+        modifications.add(this.modificationRepository.createTwoWindingsTransformerEntity(twoWindingsTransformerCreationInfos.getEquipmentId(),
+                twoWindingsTransformerCreationInfos.getEquipmentName(),
+                twoWindingsTransformerCreationInfos.getSeriesResistance(),
+                twoWindingsTransformerCreationInfos.getSeriesReactance(),
+                twoWindingsTransformerCreationInfos.getMagnetizingConductance(),
+                twoWindingsTransformerCreationInfos.getMagnetizingSusceptance(),
+                twoWindingsTransformerCreationInfos.getRatedVoltage1(),
+                twoWindingsTransformerCreationInfos.getRatedVoltage2(),
+                twoWindingsTransformerCreationInfos.getVoltageLevelId1(),
+                twoWindingsTransformerCreationInfos.getBusOrBusbarSectionId1(),
+                twoWindingsTransformerCreationInfos.getVoltageLevelId2(),
+                twoWindingsTransformerCreationInfos.getBusOrBusbarSectionId2(),
+                twoWindingsTransformerCreationInfos.getCurrentLimits1() != null ? twoWindingsTransformerCreationInfos.getCurrentLimits1().getPermanentLimit() : null,
+                twoWindingsTransformerCreationInfos.getCurrentLimits2() != null ? twoWindingsTransformerCreationInfos.getCurrentLimits2().getPermanentLimit() : null)
         );
     }
 
@@ -180,7 +198,7 @@ public class NetworkStoreListener implements NetworkListener {
                 .id(identifiable.getId())
                 .name(identifiable.getNameOrId())
                 .type(EquipmentType.getType(identifiable).name())
-                .voltageLevelsIds(EquipmentInfos.getVoltageLevelsIds(identifiable))
+                .voltageLevels(EquipmentInfos.getVoltageLevels(identifiable))
                 .build()
         );
     }

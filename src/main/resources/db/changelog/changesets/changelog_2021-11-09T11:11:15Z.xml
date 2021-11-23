@@ -1,0 +1,33 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-3.10.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.10.xsd">
+    <changeSet author="hedhiliabd (generated)" id="1636456286613-5">
+        <createTable tableName="two_windings_transformer_creation">
+            <column name="equipment_id" type="VARCHAR(255)"/>
+            <column name="equipment_name" type="VARCHAR(255)"/>
+            <column name="bus_or_busbar_section_id1" type="VARCHAR(255)"/>
+            <column name="bus_or_busbar_section_id2" type="VARCHAR(255)"/>
+            <column name="voltage_level_id1" type="VARCHAR(255)"/>
+            <column name="voltage_level_id2" type="VARCHAR(255)"/>
+            <column name="magnetizing_conductance" type="FLOAT8"/>
+            <column name="magnetizing_susceptance" type="FLOAT8"/>
+            <column name="rated_voltage1" type="FLOAT8"/>
+            <column name="rated_voltage2" type="FLOAT8"/>
+            <column name="series_reactance" type="FLOAT8"/>
+            <column name="series_resistance" type="FLOAT8"/>
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="two_windings_transformer_creationPK"/>
+            </column>
+            <column name="current_limits_id1" type="UUID"/>
+            <column name="current_limits_id2" type="UUID"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="hedhiliabd (generated)" id="1636456286613-6">
+        <addForeignKeyConstraint baseColumnNames="id" baseTableName="two_windings_transformer_creation" constraintName="twoWindingsTransformerCreation_id_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
+    </changeSet>
+    <changeSet author="hedhiliabd (generated)" id="1636456286613-2">
+        <addForeignKeyConstraint baseColumnNames="current_limits_id1" baseTableName="two_windings_transformer_creation" constraintName="current_limits_id1_2wt_fk" referencedColumnNames="id" referencedTableName="current_limits"/>
+    </changeSet>
+    <changeSet author="hedhiliabd (generated)" id="1636456286613-4">
+        <addForeignKeyConstraint baseColumnNames="current_limits_id2" baseTableName="two_windings_transformer_creation" constraintName="current_limits_id2__2wt_fk" referencedColumnNames="id" referencedTableName="current_limits"/>
+    </changeSet>
+</databaseChangeLog>

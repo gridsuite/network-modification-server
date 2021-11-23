@@ -7,6 +7,7 @@
 package org.gridsuite.modification.server.utils;
 
 import org.gridsuite.modification.server.ModificationType;
+import org.gridsuite.modification.server.dto.CurrentLimitsInfos;
 import org.gridsuite.modification.server.dto.LineCreationInfos;
 import org.hamcrest.Description;
 
@@ -31,7 +32,9 @@ public class MatcherLineCreationInfos extends MatcherModificationInfos<LineCreat
                                                                                 String voltageLevelId1,
                                                                                 String busOrBusbarSectionId1,
                                                                                 String voltageLevelId2,
-                                                                                String busOrBusbarSectionId2
+                                                                                String busOrBusbarSectionId2,
+                                                                                Double permanentCurrentLimit1,
+                                                                                Double permanentCurrentLimit2
                                                                           ) {
         return new MatcherLineCreationInfos(LineCreationInfos.builder()
                 .date(ZonedDateTime.now(ZoneOffset.UTC))
@@ -49,6 +52,8 @@ public class MatcherLineCreationInfos extends MatcherModificationInfos<LineCreat
                 .busOrBusbarSectionId1(busOrBusbarSectionId1)
                 .voltageLevelId2(voltageLevelId2)
                 .busOrBusbarSectionId2(busOrBusbarSectionId2)
+                .currentLimits1(CurrentLimitsInfos.builder().permanentLimit(permanentCurrentLimit1).build())
+                .currentLimits2(CurrentLimitsInfos.builder().permanentLimit(permanentCurrentLimit2).build())
                 .build());
     }
 
@@ -58,6 +63,12 @@ public class MatcherLineCreationInfos extends MatcherModificationInfos<LineCreat
 
     protected MatcherLineCreationInfos(LineCreationInfos ref) {
         super(ref);
+    }
+
+    public boolean matchesCurrentLimitsInfos(CurrentLimitsInfos cl1, CurrentLimitsInfos cl2) {
+        return (cl1 == null && cl2 == null)
+            || (cl1 != null && cl2 != null && cl1.getPermanentLimit() != null && cl2.getPermanentLimit() != null && cl1.getPermanentLimit().equals(cl2.getPermanentLimit()))
+            || (cl1 != null && cl2 != null && cl1.getPermanentLimit() == null && cl2.getPermanentLimit() == null);
     }
 
     @Override
@@ -79,7 +90,9 @@ public class MatcherLineCreationInfos extends MatcherModificationInfos<LineCreat
             && m.getVoltageLevelId1().equals(reference.getVoltageLevelId1())
             && m.getBusOrBusbarSectionId1().equals(reference.getBusOrBusbarSectionId1())
             && m.getVoltageLevelId2().equals(reference.getVoltageLevelId2())
-            && m.getBusOrBusbarSectionId2().equals(reference.getBusOrBusbarSectionId2());
+            && m.getBusOrBusbarSectionId2().equals(reference.getBusOrBusbarSectionId2())
+            && matchesCurrentLimitsInfos(m.getCurrentLimits1(), reference.getCurrentLimits1())
+            && matchesCurrentLimitsInfos(m.getCurrentLimits2(), reference.getCurrentLimits2());
     }
 
     @Override

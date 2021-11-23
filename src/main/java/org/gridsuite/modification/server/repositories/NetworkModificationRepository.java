@@ -11,11 +11,7 @@ import com.powsybl.iidm.network.EnergySource;
 import com.powsybl.iidm.network.LoadType;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.EquipmenAttributeModificationInfos;
-import org.gridsuite.modification.server.dto.GeneratorCreationInfos;
-import org.gridsuite.modification.server.dto.LoadCreationInfos;
-import org.gridsuite.modification.server.dto.LineCreationInfos;
-import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationGroupEntity;
 import org.gridsuite.modification.server.entities.equipment.attribute.modification.BooleanEquipmentAttributeModificationEntity;
@@ -24,11 +20,8 @@ import org.gridsuite.modification.server.entities.equipment.attribute.modificati
 import org.gridsuite.modification.server.entities.equipment.attribute.modification.FloatEquipmentAttributeModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.attribute.modification.IntegerEquipmentAttributeModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.attribute.modification.StringEquipmentAttributeModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.creation.EquipmentCreationEntity;
-import org.gridsuite.modification.server.entities.equipment.creation.GeneratorCreationEntity;
-import org.gridsuite.modification.server.entities.equipment.creation.LoadCreationEntity;
+import org.gridsuite.modification.server.entities.equipment.creation.*;
 import org.gridsuite.modification.server.entities.equipment.deletion.EquipmentDeletionEntity;
-import org.gridsuite.modification.server.entities.equipment.creation.LineCreationEntity;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -142,6 +135,7 @@ public class NetworkModificationRepository {
             .toGeneratorCreationInfos();
     }
 
+    @Transactional
     public LineCreationInfos getLineCreationModification(UUID groupUuid, UUID modificationUuid) {
         return ((LineCreationEntity) this.modificationRepository
             .findById(modificationUuid)
@@ -149,6 +143,16 @@ public class NetworkModificationRepository {
             .filter(m -> groupUuid.equals(m.getGroup().getId()))
             .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString())))
             .toLineCreationInfos();
+    }
+
+    @Transactional
+    public TwoWindingsTransformerCreationInfos getTwoWindingsTransformerCreationModification(UUID groupUuid, UUID modificationUuid) {
+        return ((TwoWindingsTransformerCreationEntity) this.modificationRepository
+                .findById(modificationUuid)
+                .filter(m -> ModificationType.TWO_WINDINGS_TRANSFORMER_CREATION.name().equals(m.getType()))
+                .filter(m -> groupUuid.equals(m.getGroup().getId()))
+                .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString())))
+                .toTwoWindingsTransformerCreationInfos();
     }
 
     @Transactional // To have the 2 delete in the same transaction (atomic)
@@ -187,10 +191,22 @@ public class NetworkModificationRepository {
 
     public EquipmentCreationEntity createLineEntity(String lineId, String lineName, double seriesResistance, double seriesReactance,
                                                     Double shuntConductance1, Double shuntSusceptance1, Double shuntConductance2, Double shuntSusceptance2,
-                                                    String voltageLevelId1, String busOrBusbarSectionId1, String voltageLevelId2, String busOrBusbarSectionId2) {
+                                                    String voltageLevelId1, String busOrBusbarSectionId1, String voltageLevelId2, String busOrBusbarSectionId2,
+                                                    Double permanentCurrentLimit1, Double permanentCurrentLimit2) {
         return new LineCreationEntity(lineId, lineName, seriesResistance, seriesReactance,
                                         shuntConductance1, shuntSusceptance1, shuntConductance2, shuntSusceptance2,
-                                        voltageLevelId1, busOrBusbarSectionId1, voltageLevelId2, busOrBusbarSectionId2);
+                                        voltageLevelId1, busOrBusbarSectionId1, voltageLevelId2, busOrBusbarSectionId2,
+                                        permanentCurrentLimit1, permanentCurrentLimit2);
+    }
+
+    public EquipmentCreationEntity createTwoWindingsTransformerEntity(String id, String name, double seriesResistance, double seriesReactance,
+                                                    double magnetizingConductance, double magnetizingSusceptance, double ratedVoltage1, double ratedVoltage2,
+                                                    String voltageLevelId1, String busOrBusbarSectionId1, String voltageLevelId2, String busOrBusbarSectionId2,
+                                                    Double permanentCurrentLimit1, Double permanentCurrentLimit2) {
+        return new TwoWindingsTransformerCreationEntity(id, name, seriesResistance, seriesReactance,
+                magnetizingConductance, magnetizingSusceptance, ratedVoltage1, ratedVoltage2,
+                voltageLevelId1, busOrBusbarSectionId1, voltageLevelId2, busOrBusbarSectionId2,
+                permanentCurrentLimit1, permanentCurrentLimit2);
     }
 
     public EquipmentDeletionEntity createEquipmentDeletionEntity(String equipmentId, String equipmentType) {

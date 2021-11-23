@@ -21,6 +21,7 @@ public class NetworkModificationException extends RuntimeException {
         GROOVY_SCRIPT_EMPTY(HttpStatus.BAD_REQUEST, EMPTY_SCRIPT),
         GROOVY_SCRIPT_ERROR(HttpStatus.BAD_REQUEST),
         NETWORK_NOT_FOUND(HttpStatus.NOT_FOUND),
+        VARIANT_NOT_FOUND(HttpStatus.NOT_FOUND),
         MODIFICATION_GROUP_NOT_FOUND(HttpStatus.NOT_FOUND),
         MODIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND),
         SWITCH_NOT_FOUND(HttpStatus.NOT_FOUND),
@@ -34,7 +35,8 @@ public class NetworkModificationException extends RuntimeException {
         CREATE_GENERATOR_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         DELETE_EQUIPMENT_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         EQUIPMENT_NOT_FOUND(HttpStatus.NOT_FOUND),
-        CREATE_LINE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR);
+        CREATE_LINE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
+        CREATE_TWO_WINDINGS_TRANSFORMER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR);
 
         public final HttpStatus status;
         private final String message;
