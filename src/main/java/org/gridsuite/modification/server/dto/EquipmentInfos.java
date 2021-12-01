@@ -29,7 +29,7 @@ import java.util.stream.Stream;
 @Getter
 @ToString
 @EqualsAndHashCode
-@Document(indexName = "#{@environment.getProperty('index.prefix')}equipments")
+@Document(indexName = "#{@environment.getProperty('powsybl-ws.elasticsearch.index.prefix')}equipments")
 @TypeAlias(value = "EquipmentInfos")
 public class EquipmentInfos {
     @Id
