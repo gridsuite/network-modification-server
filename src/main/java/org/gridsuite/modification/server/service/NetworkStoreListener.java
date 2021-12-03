@@ -219,6 +219,7 @@ public class NetworkStoreListener implements NetworkListener {
         equipmentInfosService.add(
             EquipmentInfos.builder()
                 .networkUuid(networkUuid)
+                .variantId(variantId)
                 .id(identifiable.getId())
                 .name(identifiable.getNameOrId())
                 .type(EquipmentType.getType(identifiable).name())
@@ -241,6 +242,13 @@ public class NetworkStoreListener implements NetworkListener {
     }
 
     public void deleteEquipmentInfos(String equipmentId) {
-        equipmentInfosService.delete(equipmentId, networkUuid);
+        equipmentInfosService.add(
+                EquipmentInfos.builder()
+                        .networkUuid(networkUuid)
+                        .variantId(variantId)
+                        .id(equipmentId)
+                        .tombstoned(true)
+                        .build()
+        );
     }
 }
