@@ -19,7 +19,7 @@ import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.NetworkModificationService;
 import org.gridsuite.modification.server.service.NetworkStoreListener;
-import org.gridsuite.modification.server.utils.MatcheEquipmentAttributeModificationInfos;
+import org.gridsuite.modification.server.utils.MatcherEquipmentAttributeModificationInfos;
 import org.gridsuite.modification.server.utils.MatcherEquipmentDeletionInfos;
 import org.gridsuite.modification.server.utils.MatcherEquipmentModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -150,7 +150,7 @@ public class ModificationControllerTest {
                         .returnResult()
                         .getResponseBody()).get(0);
 
-        assertTrue(MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v1b1", Set.of("s1"), "open", true).matchesSafely(modificationSwitchInfos));
+        assertTrue(MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v1b1", Set.of("s1"), "open", true).matchesSafely(modificationSwitchInfos));
 
         // switch in variant VARIANT_ID opening
         modificationSwitchInfos =
@@ -162,7 +162,7 @@ public class ModificationControllerTest {
                 .returnResult()
                 .getResponseBody()).get(0);
 
-        assertTrue(MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("break1Variant", Set.of("s1Variant"), "open", true).matchesSafely(modificationSwitchInfos));
+        assertTrue(MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("break1Variant", Set.of("s1Variant"), "open", true).matchesSafely(modificationSwitchInfos));
     }
 
     @Test
@@ -192,7 +192,7 @@ public class ModificationControllerTest {
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
                 .expectBodyList(EquipmenAttributeModificationInfos.class)
                 .value(modifications -> modifications.get(0),
-                        MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v1b1", Set.of("s1"), "open", true));
+                        MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v1b1", Set.of("s1"), "open", true));
 
         webTestClient.get().uri("/v1/groups")
                 .exchange()
@@ -245,7 +245,7 @@ public class ModificationControllerTest {
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
             .expectBodyList(EquipmenAttributeModificationInfos.class)
             .value(modifications -> modifications.get(0),
-                MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos(switchId1, substationsIds, "open", true));
+                MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos(switchId1, substationsIds, "open", true));
 
         // switch closing
         webTestClient.put().uri(uriString + "&open=false", TEST_NETWORK_ID, switchId2)
@@ -254,7 +254,7 @@ public class ModificationControllerTest {
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
             .expectBodyList(EquipmenAttributeModificationInfos.class)
             .value(modifications -> modifications.get(0),
-                MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos(switchId2, substationsIds, "open", false));
+                MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos(switchId2, substationsIds, "open", false));
 
         // switch opening on another substation
         webTestClient.put().uri(uriString + "&open=true", TEST_NETWORK_ID, switchId3)
@@ -263,7 +263,7 @@ public class ModificationControllerTest {
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
             .expectBodyList(EquipmenAttributeModificationInfos.class)
             .value(modifications -> modifications.get(0),
-                MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos(switchId3, otherSubstationsIds, "open", true));
+                MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos(switchId3, otherSubstationsIds, "open", true));
 
         testNetworkModificationsCount(TEST_GROUP_ID, modificationsCount);
     }
@@ -326,11 +326,11 @@ public class ModificationControllerTest {
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
                 .expectBodyList(EquipmenAttributeModificationInfos.class)
                 .value(modifications -> modifications.get(0),
-                        MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v1bl1", Set.of("s1"), "open", true))
+                        MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v1bl1", Set.of("s1"), "open", true))
                 .value(modifications -> modifications.get(1),
-                        MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v3bl1", Set.of("s2"), "open", true))
+                        MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v3bl1", Set.of("s2"), "open", true))
                 .value(modifications -> modifications.get(2),
-                        MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("line2", Set.of("s1", "s2"), "branchStatus", BranchStatus.Status.PLANNED_OUTAGE.name()));
+                        MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("line2", Set.of("s1", "s2"), "branchStatus", BranchStatus.Status.PLANNED_OUTAGE.name()));
 
         webTestClient.put().uri(uriString, TEST_NETWORK_ID, "line3")
                 .bodyValue("lockout")
@@ -356,11 +356,11 @@ public class ModificationControllerTest {
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
                 .expectBodyList(EquipmenAttributeModificationInfos.class)
                 .value(modifications -> modifications.get(0),
-                        MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v1bl1", Set.of("s1"), "open", true))
+                        MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v1bl1", Set.of("s1"), "open", true))
                 .value(modifications -> modifications.get(1),
-                        MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v3bl1", Set.of("s2"), "open", true))
+                        MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v3bl1", Set.of("s2"), "open", true))
                 .value(modifications -> modifications.get(2),
-                        MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("line2", Set.of("s1", "s2"), "branchStatus", BranchStatus.Status.FORCED_OUTAGE.name()));
+                        MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("line2", Set.of("s1", "s2"), "branchStatus", BranchStatus.Status.FORCED_OUTAGE.name()));
 
         webTestClient.put().uri(uriString, TEST_NETWORK_ID, "line3")
                 .bodyValue("trip")
@@ -377,7 +377,7 @@ public class ModificationControllerTest {
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
                 .expectBodyList(EquipmenAttributeModificationInfos.class)
                 .value(modifications -> modifications.get(0),
-                        MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v3bl1", Set.of("s2"), "open", true));
+                        MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v3bl1", Set.of("s2"), "open", true));
 
         webTestClient.put().uri(uriString, TEST_NETWORK_ID, "line3")
                 .bodyValue("energiseEndOne")
@@ -394,7 +394,7 @@ public class ModificationControllerTest {
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
                 .expectBodyList(EquipmenAttributeModificationInfos.class)
                 .value(modifications -> modifications.get(0),
-                        MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v1bl1", Set.of("s1"), "open", true));
+                        MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v1bl1", Set.of("s1"), "open", true));
 
         webTestClient.put().uri(uriString, TEST_NETWORK_ID, "line3")
                 .bodyValue("energiseEndTwo")
@@ -452,7 +452,7 @@ public class ModificationControllerTest {
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
                 .expectBodyList(EquipmenAttributeModificationInfos.class)
                 .value(modifications -> modifications.get(0),
-                        MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("idGenerator", Set.of("s1"), "targetP", 12.0));
+                        MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("idGenerator", Set.of("s1"), "targetP", 12.0));
 
         // apply groovy script with load type modification
         webTestClient.put().uri(uriString, TEST_NETWORK_ID)
@@ -462,7 +462,7 @@ public class ModificationControllerTest {
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
                 .expectBodyList(EquipmenAttributeModificationInfos.class)
                 .value(modifications -> modifications.get(0),
-                        MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v1load", Set.of("s1"), "loadType", "FICTITIOUS"));
+                        MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v1load", Set.of("s1"), "loadType", "FICTITIOUS"));
 
         // apply groovy script with lcc converter station power factor modification
         webTestClient.put().uri(uriString, TEST_NETWORK_ID)
@@ -472,7 +472,7 @@ public class ModificationControllerTest {
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
                 .expectBodyList(EquipmenAttributeModificationInfos.class)
                 .value(modifications -> modifications.get(0),
-                        MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v1lcc", Set.of("s1"), "powerFactor", 1.0));
+                        MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v1lcc", Set.of("s1"), "powerFactor", 1.0));
 
         // apply groovy script with line R modification
         webTestClient.put().uri(uriString, TEST_NETWORK_ID)
@@ -482,7 +482,7 @@ public class ModificationControllerTest {
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
                 .expectBodyList(EquipmenAttributeModificationInfos.class)
                 .value(modifications -> modifications.get(0),
-                        MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("line1", Set.of("s1", "s2"), "r", 2.0));
+                        MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("line1", Set.of("s1", "s2"), "r", 2.0));
 
         // apply groovy script with two windings transformer ratio tap modification
         webTestClient.put().uri(uriString, TEST_NETWORK_ID)
@@ -492,7 +492,7 @@ public class ModificationControllerTest {
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
                 .expectBodyList(EquipmenAttributeModificationInfos.class)
                 .value(modifications -> modifications.get(0),
-                        MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("trf1", Set.of("s1"), "ratioTapChanger.tapPosition", 2));
+                        MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("trf1", Set.of("s1"), "ratioTapChanger.tapPosition", 2));
 
         // apply groovy script with three windings transformer phase tap modification
         webTestClient.put().uri(uriString, TEST_NETWORK_ID)
@@ -502,7 +502,7 @@ public class ModificationControllerTest {
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
                 .expectBodyList(EquipmenAttributeModificationInfos.class)
                 .value(modifications -> modifications.get(0),
-                        MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("trf6", Set.of("s1"), "phaseTapChanger1.tapPosition", 0));
+                        MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("trf6", Set.of("s1"), "phaseTapChanger1.tapPosition", 0));
 
         testNetworkModificationsCount(TEST_GROUP_ID, 6);
     }
@@ -1337,7 +1337,7 @@ public class ModificationControllerTest {
             .exchange()
             .expectStatus().isOk()
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
-            .expectBodyList(EquipmenAttributeModificationInfos.class)
+            .expectBodyList(ModificationInfos.class)
             .returnResult().getResponseBody()).size());
     }
 }

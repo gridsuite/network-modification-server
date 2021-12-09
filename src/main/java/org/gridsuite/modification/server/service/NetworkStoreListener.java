@@ -42,6 +42,10 @@ public class NetworkStoreListener implements NetworkListener {
         return network;
     }
 
+    UUID getNetworkUuid() {
+        return networkUuid;
+    }
+
     public static NetworkStoreListener create(Network network, UUID networkUuid, String variantId, UUID groupUuid,
                                               NetworkModificationRepository modificationRepository, EquipmentInfosService equipmentInfosService) {
         var listener = new NetworkStoreListener(network, networkUuid, variantId, groupUuid, modificationRepository, equipmentInfosService);
@@ -60,10 +64,12 @@ public class NetworkStoreListener implements NetworkListener {
     }
 
     public List<EquipmenModificationInfos> getModifications() {
-        return modifications.stream()
+        List<EquipmenModificationInfos> modificationInfos = modifications.stream()
             .map(m -> m.toEquipmentModificationInfos(substationsIds.isEmpty() ? getSubstationsIds(m.getEquipmentId())
                 : substationsIds))
                 .collect(Collectors.toList());
+        modifications.clear();
+        return modificationInfos;
     }
 
     public void saveModifications() {

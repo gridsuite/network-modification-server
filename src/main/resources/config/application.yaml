@@ -2,4 +2,24 @@ spring:
   application:
     name: netork-modification-server
 
+  cloud:
+    function:
+      definition: consumeRealize;consumeCancelRealization
+    stream:
+      bindings:
+        consumeRealize-in-0:
+          destination: ${powsybl-ws.rabbitmq.destination.prefix:}realize.run
+          group: realizeGroup
+        publishRealize-out-0:
+          destination: ${powsybl-ws.rabbitmq.destination.prefix:}realize.run
+        publishResultRealization-out-0:
+          destination: ${powsybl-ws.rabbitmq.destination.prefix:}realize.result
+        consumeCancelRealization-in-0:
+          destination: ${powsybl-ws.rabbitmq.destination.prefix:}realize.cancel
+        publishCancelRealization-out-0:
+          destination: ${powsybl-ws.rabbitmq.destination.prefix:}realize.cancel
+        publishStoppedRealization-out-0:
+          destination: ${powsybl-ws.rabbitmq.destination.prefix:}realize.stopped
+      source: publishRealize;publishResultRealization;publishCancelRealization;publishStoppedRealization
+
 dbName: networkmodifications

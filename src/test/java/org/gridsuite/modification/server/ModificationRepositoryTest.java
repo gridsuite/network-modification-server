@@ -80,17 +80,17 @@ public class ModificationRepositoryTest {
         assertEquals(6, modificationEntities.size());
         // Order is also checked
         assertThat(modificationRepository.getEquipmentAttributeModification(TEST_GROUP_ID, modificationEntities.get(0).getUuid()),
-                MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos(nullModifEntity.toEquipmentAttributeModificationInfos()));
+                MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos(nullModifEntity.toEquipmentAttributeModificationInfos()));
         assertThat(modificationRepository.getEquipmentAttributeModification(TEST_GROUP_ID, modificationEntities.get(1).getUuid()),
-                MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos(stringModifEntity.toEquipmentAttributeModificationInfos()));
+                MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos(stringModifEntity.toEquipmentAttributeModificationInfos()));
         assertThat(modificationRepository.getEquipmentAttributeModification(TEST_GROUP_ID, modificationEntities.get(2).getUuid()),
-                MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos(boolModifEntity.toEquipmentAttributeModificationInfos()));
+                MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos(boolModifEntity.toEquipmentAttributeModificationInfos()));
         assertThat(modificationRepository.getEquipmentAttributeModification(TEST_GROUP_ID, modificationEntities.get(3).getUuid()),
-                MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos(intModifEntity.toEquipmentAttributeModificationInfos()));
+                MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos(intModifEntity.toEquipmentAttributeModificationInfos()));
         assertThat(modificationRepository.getEquipmentAttributeModification(TEST_GROUP_ID, modificationEntities.get(4).getUuid()),
-                MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos(floatModifEntity.toEquipmentAttributeModificationInfos()));
+                MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos(floatModifEntity.toEquipmentAttributeModificationInfos()));
         assertThat(modificationRepository.getEquipmentAttributeModification(TEST_GROUP_ID, modificationEntities.get(5).getUuid()),
-                MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos(doubleModifEntity.toEquipmentAttributeModificationInfos()));
+                MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos(doubleModifEntity.toEquipmentAttributeModificationInfos()));
 
         assertEquals(6, modificationRepository.getModifications(TEST_GROUP_ID).size());
         assertEquals(List.of(TEST_GROUP_ID), this.modificationRepository.getModificationGroupsUuids());
