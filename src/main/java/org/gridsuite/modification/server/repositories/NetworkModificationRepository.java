@@ -227,4 +227,9 @@ public class NetworkModificationRepository {
     public EquipmentDeletionEntity createEquipmentDeletionEntity(String equipmentId, String equipmentType) {
         return new EquipmentDeletionEntity(equipmentId, equipmentType);
     }
+
+    @Transactional(readOnly = true)
+    public List<ModificationEntity> getModificationsEntities(List<UUID> groupUuids) {
+        return this.modificationRepository.findAllByGroupIdInOrderByDate(groupUuids);
+    }
 }
