@@ -106,8 +106,8 @@ public class NetworkModificationService {
         return Flux.fromStream(() -> modificationRepository.getModificationGroupsUuids().stream());
     }
 
-    public Flux<ModificationInfos> getModifications(UUID groupUuid) {
-        return Flux.fromStream(() -> modificationRepository.getModifications(groupUuid).stream());
+    public Flux<ModificationInfos> getModifications(UUID groupUuid, boolean onlyMetadata) {
+        return Flux.fromStream(() -> modificationRepository.getModifications(groupUuid, onlyMetadata).stream());
     }
 
     private boolean disconnectLineBothSides(Network network, String lineId) {

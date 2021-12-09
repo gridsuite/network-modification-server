@@ -101,12 +101,13 @@ public class NetworkModificationRepository {
     }
 
     @Transactional
-    public List<ModificationInfos> getModifications(UUID groupUuid) {
+    public List<ModificationInfos> getModifications(UUID groupUuid, boolean onlyMetadata) {
         ModificationGroupEntity group = getModificationGroup(groupUuid);
-        return this.modificationRepository.findAllByGroupId(group.getId())
-                .stream()
-                .map(ModificationEntity::toModificationInfos)
-                .collect(Collectors.toList());
+        var modificationInfos = onlyMetadata ? this.modificationRepository.findAllBaseByGroupId(group.getId())
+            : this.modificationRepository.findAllByGroupId(group.getId());
+        return modificationInfos.stream()
+            .map(ModificationEntity::toModificationInfos)
+            .collect(Collectors.toList());
     }
 
     public EquipmenAttributeModificationInfos getEquipmentAttributeModification(UUID groupUuid, UUID modificationUuid) {
