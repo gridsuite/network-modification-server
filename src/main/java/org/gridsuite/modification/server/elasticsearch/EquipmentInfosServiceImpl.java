@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.elasticsearch;
 
+import com.google.common.collect.Iterables;
 import org.gridsuite.modification.server.dto.EquipmentInfos;
 import org.springframework.lang.NonNull;
 
@@ -35,7 +36,7 @@ public class EquipmentInfosServiceImpl implements EquipmentInfosService {
 
     @Override
     public boolean existEquipmentInVariant(String equipmentId, UUID networkUuid, String variantId) {
-        return equipmentInfosRepository.existsByIdAndNetworkUuidAndVariantIdAndTombstoned(equipmentId, networkUuid, variantId, null);
+        return Iterables.size(equipmentInfosRepository.findByIdAndNetworkUuidAndVariantIdAndTombstoned(equipmentId, networkUuid, variantId, null)) > 0;
     }
 
     @Override

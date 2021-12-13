@@ -64,6 +64,15 @@ public class EquipmentInfosServiceTests {
 
         ids.forEach(id -> equipmentInfosService.delete(id, NETWORK_UUID, "variant2"));
         assertEquals(0, Iterables.size(equipmentInfosService.findAll(NETWORK_UUID)));
+
+        ids.clear();
+        addEquipmentInfos(ids, EquipmentInfos.builder().networkUuid(NETWORK_UUID).variantId("variant1").id("idOk").name("name1").type(EquipmentType.LOAD.name()).build());
+        addEquipmentInfos(ids, EquipmentInfos.builder().networkUuid(NETWORK_UUID).variantId("variant1").id("idTombstoned").name("name2").type(EquipmentType.GENERATOR.name()).tombstoned(true).build());
+        assertTrue(equipmentInfosService.existEquipmentInVariant("idOk", NETWORK_UUID, "variant1"));
+        assertFalse(equipmentInfosService.existEquipmentInVariant("idTombstoned", NETWORK_UUID, "variant1"));
+
+        ids.forEach(id -> equipmentInfosService.delete(id, NETWORK_UUID, "variant1"));
+        assertEquals(0, Iterables.size(equipmentInfosService.findAll(NETWORK_UUID)));
     }
 
     private void addEquipmentInfos(Set<String> ids, EquipmentInfos equipmentInfos) {
