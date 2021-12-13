@@ -29,8 +29,13 @@ public class EquipmentInfosServiceImpl implements EquipmentInfosService {
     }
 
     @Override
-    public void delete(@NonNull String equipmentId, @NonNull UUID networkUuid) {
-        equipmentInfosRepository.deleteByIdAndNetworkUuid(equipmentId, networkUuid);
+    public void delete(@NonNull String equipmentId, @NonNull UUID networkUuid, @NonNull String variantId) {
+        equipmentInfosRepository.deleteByIdAndNetworkUuidAndVariantId(equipmentId, networkUuid, variantId);
+    }
+
+    @Override
+    public boolean existEquipmentInVariant(String equipmentId, UUID networkUuid, String variantId) {
+        return equipmentInfosRepository.existsByIdAndNetworkUuidAndVariantIdAndTombstoned(equipmentId, networkUuid, variantId, null);
     }
 
     @Override

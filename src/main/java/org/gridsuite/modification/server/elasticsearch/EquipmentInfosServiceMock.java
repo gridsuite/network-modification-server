@@ -25,8 +25,13 @@ public class EquipmentInfosServiceMock implements EquipmentInfosService {
     }
 
     @Override
-    public void delete(@NonNull String equipmentId, @NonNull UUID networkUuid) {
+    public void delete(@NonNull String equipmentId, @NonNull UUID networkUuid, @NonNull String variantId) {
         // Nothing to delete
+    }
+
+    @Override
+    public boolean existEquipmentInVariant(String equipmentId, UUID networkUuid, String variantId) {
+        return false;
     }
 
     @Override

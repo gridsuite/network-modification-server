@@ -217,14 +217,14 @@ public class NetworkStoreListener implements NetworkListener {
     @Override
     public void onCreation(Identifiable identifiable) {
         equipmentInfosService.add(
-            EquipmentInfos.builder()
-                .networkUuid(networkUuid)
-                .variantId(variantId)
-                .id(identifiable.getId())
-                .name(identifiable.getNameOrId())
-                .type(EquipmentType.getType(identifiable).name())
-                .voltageLevels(EquipmentInfos.getVoltageLevels(identifiable))
-                .build()
+                EquipmentInfos.builder()
+                        .networkUuid(networkUuid)
+                        .variantId(variantId)
+                        .id(identifiable.getId())
+                        .name(identifiable.getNameOrId())
+                        .type(EquipmentType.getType(identifiable).name())
+                        .voltageLevels(EquipmentInfos.getVoltageLevels(identifiable))
+                        .build()
         );
     }
 
@@ -242,13 +242,17 @@ public class NetworkStoreListener implements NetworkListener {
     }
 
     public void deleteEquipmentInfos(String equipmentId) {
-        equipmentInfosService.add(
-                EquipmentInfos.builder()
-                        .networkUuid(networkUuid)
-                        .variantId(variantId)
-                        .id(equipmentId)
-                        .tombstoned(true)
-                        .build()
-        );
+        if (equipmentInfosService.existEquipmentInVariant(equipmentId, networkUuid, variantId)) {
+            equipmentInfosService.delete(equipmentId, networkUuid, variantId);
+        } else {
+            equipmentInfosService.add(
+                    EquipmentInfos.builder()
+                            .networkUuid(networkUuid)
+                            .variantId(variantId)
+                            .id(equipmentId)
+                            .tombstoned(true)
+                            .build()
+            );
+        }
     }
 }

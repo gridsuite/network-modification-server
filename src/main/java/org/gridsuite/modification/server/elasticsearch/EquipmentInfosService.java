@@ -21,7 +21,9 @@ import java.util.UUID;
 public interface EquipmentInfosService {
     EquipmentInfos add(@NonNull EquipmentInfos equipmentInfos);
 
-    void delete(@NonNull String equipmentId, @NonNull UUID networkUuid);
+    void delete(@NonNull String equipmentId, @NonNull UUID networkUuid, @NonNull String variantId);
+
+    boolean existEquipmentInVariant(String equipmentId, UUID networkUuid, String variantId);
 
     Iterable<EquipmentInfos> findAll(@NonNull UUID networkUuid); // Only for tests
 }
