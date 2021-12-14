@@ -10,6 +10,7 @@ import org.gridsuite.modification.server.dto.EquipmentInfos;
 import org.springframework.lang.NonNull;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -25,8 +26,23 @@ public class EquipmentInfosServiceMock implements EquipmentInfosService {
     }
 
     @Override
+    public void addAll(@NonNull final List<EquipmentInfos> equipmentInfos) {
+        // Nothing to insert
+    }
+
+    @Override
     public void delete(@NonNull String equipmentId, @NonNull UUID networkUuid, @NonNull String variantId) {
         // Nothing to delete
+    }
+
+    @Override
+    public void deleteVariants(@NonNull UUID networkUuid, List<String> variantIds) {
+        // Nothing to delete
+    }
+
+    @Override
+    public void cloneVariantModifications(@NonNull UUID networkUuid, @NonNull String variantToCloneId, @NonNull String variantId) {
+        // Do nothing
     }
 
     @Override

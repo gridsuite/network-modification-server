@@ -10,6 +10,7 @@ import org.gridsuite.modification.server.dto.EquipmentInfos;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -21,7 +22,13 @@ import java.util.UUID;
 public interface EquipmentInfosService {
     EquipmentInfos add(@NonNull EquipmentInfos equipmentInfos);
 
+    void addAll(@NonNull final List<EquipmentInfos> equipmentsInfos);
+
     void delete(@NonNull String equipmentId, @NonNull UUID networkUuid, @NonNull String variantId);
+
+    void deleteVariants(@NonNull UUID networkUuid, List<String> variantIds);
+
+    void cloneVariantModifications(@NonNull UUID networkUuid, @NonNull String variantToCloneId, @NonNull String variantId);
 
     boolean existEquipmentInVariant(String equipmentId, UUID networkUuid, String variantId);
 
