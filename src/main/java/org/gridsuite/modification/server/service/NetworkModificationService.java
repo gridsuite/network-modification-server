@@ -1046,7 +1046,7 @@ public class NetworkModificationService {
         UUID networkUuid = listener.getNetworkUuid();
 
         return doAction(listener, () -> {
-            Identifiable identifiable = network.getIdentifiable(equipmentId);
+            Identifiable<?> identifiable = network.getIdentifiable(equipmentId);
             if (identifiable == null) {
                 throw new NetworkModificationException(EQUIPMENT_NOT_FOUND, equipmentId);
             }
@@ -1085,7 +1085,7 @@ public class NetworkModificationService {
             ModificationType type = ModificationType.valueOf(modificationEntity.getType());
             switch (type) {
                 case EQUIPMENT_ATTRIBUTE_MODIFICATION: {
-                    EquipmentAttributeModificationEntity attributeModificationEntity = (EquipmentAttributeModificationEntity) modificationEntity;
+                    EquipmentAttributeModificationEntity<?> attributeModificationEntity = (EquipmentAttributeModificationEntity<?>) modificationEntity;
                     Reporter subReporter = reporter.createSubReporter("AttributeModification", "Attribute modification");
                     List<EquipmenModificationInfos> modificationInfos = execChangeEquipmentAttribute(listener, attributeModificationEntity.getEquipmentId(), attributeModificationEntity.getAttributeName(), attributeModificationEntity.getAttributeValue(), reporter, subReporter, true);
                     allModificationsInfos.addAll(modificationInfos);
