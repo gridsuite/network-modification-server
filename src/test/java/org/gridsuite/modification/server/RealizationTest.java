@@ -72,6 +72,7 @@ public class RealizationTest {
     private static final UUID TEST_NETWORK_ID = UUID.fromString("7928181c-7977-4592-ba19-88027e4254e4");
     private static final UUID TEST_NETWORK_STOP_REALIZATION_ID = UUID.fromString("11111111-7977-4592-ba19-88027e4254e4");
     private static final UUID TEST_GROUP_ID = UUID.randomUUID();
+    private static final UUID TEST_GROUP_ID_2 = UUID.randomUUID();
 
     @Autowired
     private OutputDestination output;
@@ -132,26 +133,31 @@ public class RealizationTest {
     @Test
     public void runRealizationTest() {
         // create modification entities in the database
-        List<ModificationEntity> entities = new ArrayList<>();
-        entities.add(modificationRepository.createEquipmentAttributeModification("v1d1", "open", true));
-        entities.add(modificationRepository.createEquipmentAttributeModification("line1", "branchStatus", "PLANNED_OUTAGE"));
-        entities.add(modificationRepository.createEquipmentAttributeModification("idGenerator", "targetP", 50.));
-        entities.add(modificationRepository.createEquipmentAttributeModification("trf1", "ratioTapChanger.tapPosition", 2));
-        entities.add(modificationRepository.createEquipmentAttributeModification("trf6", "phaseTapChanger1.tapPosition", 0));
-        entities.add(modificationRepository.createLoadEntity("newLoad", "newLoad", LoadType.AUXILIARY, "v1", "1.1", 10., 20.));
-        entities.add(modificationRepository.createGeneratorEntity("newGenerator", "newGenerator", EnergySource.HYDRO, "v2", "1A", 0., 500., 1., 100., 50., true, 225.));
-        entities.add(modificationRepository.createLineEntity("newLine", "newLine", 1., 2., 3., 4., 5., 6., "v1", "1.1", "v2", "1B", null, null));
-        entities.add(modificationRepository.createTwoWindingsTransformerEntity("new2wt", "new2wt", 1., 2., 3., 4., 5., 6., "v1", "1.1", "v2", "1A", null, null));
-        entities.add(modificationRepository.createEquipmentDeletionEntity("v2shunt", "SHUNT_COMPENSATOR"));
+        List<ModificationEntity> entities1 = new ArrayList<>();
+        entities1.add(modificationRepository.createEquipmentAttributeModification("v1d1", "open", true));
+        entities1.add(modificationRepository.createEquipmentAttributeModification("line1", "branchStatus", "PLANNED_OUTAGE"));
+        entities1.add(modificationRepository.createEquipmentAttributeModification("idGenerator", "targetP", 50.));
+        entities1.add(modificationRepository.createEquipmentAttributeModification("trf1", "ratioTapChanger.tapPosition", 2));
+        entities1.add(modificationRepository.createEquipmentAttributeModification("trf6", "phaseTapChanger1.tapPosition", 0));
+        entities1.add(modificationRepository.createLoadEntity("newLoad", "newLoad", LoadType.AUXILIARY, "v1", "1.1", 10., 20.));
 
-        modificationRepository.saveModifications(TEST_GROUP_ID, entities);  // save all modification entities in group TEST_GROUP_ID
-        testNetworkModificationsCount(TEST_GROUP_ID, 10);
+        List<ModificationEntity> entities2 = new ArrayList<>();
+        entities2.add(modificationRepository.createGeneratorEntity("newGenerator", "newGenerator", EnergySource.HYDRO, "v2", "1A", 0., 500., 1., 100., 50., true, 225.));
+        entities2.add(modificationRepository.createLineEntity("newLine", "newLine", 1., 2., 3., 4., 5., 6., "v1", "1.1", "v2", "1B", null, null));
+        entities2.add(modificationRepository.createTwoWindingsTransformerEntity("new2wt", "new2wt", 1., 2., 3., 4., 5., 6., "v1", "1.1", "v2", "1A", null, null));
+        entities2.add(modificationRepository.createEquipmentDeletionEntity("v2shunt", "SHUNT_COMPENSATOR"));
 
-        // realize VARIANT_ID by cloning network initial variant and applying all modifications in group uuid TEST_GROUP_ID
+        modificationRepository.saveModifications(TEST_GROUP_ID, entities1);
+        modificationRepository.saveModifications(TEST_GROUP_ID_2, entities2);
+
+        testNetworkModificationsCount(TEST_GROUP_ID, 6);
+        testNetworkModificationsCount(TEST_GROUP_ID_2, 4);
+
+        // realize VARIANT_ID by cloning network initial variant and applying all modifications in all groups
         String uriString = "/v1/networks/{networkUuid}/realization?receiver=me";
         RealizationInfos realizationInfos = new RealizationInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
                                                                  NetworkCreation.VARIANT_ID,
-                                                                 List.of(TEST_GROUP_ID));
+                                                                 List.of(TEST_GROUP_ID, TEST_GROUP_ID_2));
         webTestClient.post().uri(uriString, TEST_NETWORK_ID)
             .bodyValue(realizationInfos)
             .exchange()
@@ -203,7 +209,8 @@ public class RealizationTest {
         assertNotNull(network.getShuntCompensator("v2shunt"));
 
         // No new modification entity should have been added to the database
-        testNetworkModificationsCount(TEST_GROUP_ID, 10);
+        testNetworkModificationsCount(TEST_GROUP_ID, 6);
+        testNetworkModificationsCount(TEST_GROUP_ID_2, 4);
     }
 
     @Test
