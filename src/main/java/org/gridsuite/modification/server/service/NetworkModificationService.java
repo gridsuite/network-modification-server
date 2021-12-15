@@ -1145,12 +1145,7 @@ public class NetworkModificationService {
         });
 
         // flushing network (only once at the end)
-        try {
-            networkStoreService.flush(listener.getNetwork());
-        } catch (Exception e) {
-            listener.deleteModifications();
-            throw e;
-        }
+        networkStoreService.flush(listener.getNetwork());
 
         // send report (only once at the end)
         sendReport(networkUuid, reporter);
