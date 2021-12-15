@@ -76,7 +76,7 @@ public class ModificationControllerTest {
     private static final UUID TEST_GROUP_ID = UUID.randomUUID();
     private static final UUID TEST_NETWORK_BUS_BREAKER_ID = UUID.fromString("11111111-7977-4592-ba19-88027e4254e4");
     private static final UUID TEST_NETWORK_MIXED_TOPOLOGY_ID = UUID.fromString("22222222-7977-4592-ba19-88027e4254e4");
-    private static final String VARIANT_NOT_FOUND_ID = "variantNotFound";
+    public static final String VARIANT_NOT_EXISTING_ID = "variant_not_existing";
 
     private static final String ERROR_MESSAGE = "Error message";
 
@@ -99,10 +99,15 @@ public class ModificationControllerTest {
     @Autowired
     private EquipmentInfosService equipmentInfosService;
 
+    private Network network;
+
     @Before
     public void setUp() {
         // /!\ create a new network for each invocation (answer)
-        when(networkStoreService.getNetwork(TEST_NETWORK_ID)).then((Answer<Network>) invocation -> NetworkCreation.create(TEST_NETWORK_ID, true));
+        when(networkStoreService.getNetwork(TEST_NETWORK_ID)).then((Answer<Network>) invocation -> {
+            network = NetworkCreation.create(TEST_NETWORK_ID, true);
+            return network;
+        });
         when(networkStoreService.getNetwork(TEST_NETWORK_ID_2)).then((Answer<Network>) invocation -> NetworkCreation.create(TEST_NETWORK_ID_2, false));
         when(networkStoreService.getNetwork(NOT_FOUND_NETWORK_ID)).thenThrow(new PowsyblException());
         when(networkStoreService.getNetwork(TEST_NETWORK_WITH_FLUSH_ERROR_ID)).then((Answer<Network>) invocation -> NetworkCreation.create(TEST_NETWORK_WITH_FLUSH_ERROR_ID, true));
@@ -168,7 +173,7 @@ public class ModificationControllerTest {
     @Test
     public void testNetworkListener() {
         Network network = NetworkCreation.create(TEST_NETWORK_ID, true);
-        NetworkStoreListener listener = NetworkStoreListener.create(network, TEST_NETWORK_ID, null, TEST_GROUP_ID, modificationRepository, equipmentInfosService);
+        NetworkStoreListener listener = NetworkStoreListener.create(network, TEST_NETWORK_ID, null, TEST_GROUP_ID, modificationRepository, equipmentInfosService, false, true);
         Generator generator = network.getGenerator("idGenerator");
         Object invalidValue = new Object();
         assertTrue(assertThrows(PowsyblException.class, () ->
@@ -289,13 +294,6 @@ public class ModificationControllerTest {
             .expectStatus().isNotFound()
             .expectBody(String.class)
             .isEqualTo(new NetworkModificationException(NETWORK_NOT_FOUND, NOT_FOUND_NETWORK_ID.toString()).getMessage());
-
-        // variant not existing
-        webTestClient.put().uri(uriString + "&open=true" + "&variantId=" + VARIANT_NOT_FOUND_ID, TEST_NETWORK_ID, "v1b1")
-            .exchange()
-            .expectStatus().isNotFound()
-            .expectBody(String.class)
-            .isEqualTo(new NetworkModificationException(VARIANT_NOT_FOUND, VARIANT_NOT_FOUND_ID.toString()).getMessage());
     }
 
     @Test
@@ -569,7 +567,8 @@ public class ModificationControllerTest {
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.LOAD_CREATION, "idLoad1", Set.of("s1")));
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 1);
+        assertNotNull(network.getLoad("idLoad1"));  // load was created
+        testNetworkModificationsCount(TEST_GROUP_ID, 1);  // new modification stored in the database
 
         // create load with errors
         webTestClient.put().uri(uriString, NOT_FOUND_NETWORK_ID)
@@ -616,6 +615,25 @@ public class ModificationControllerTest {
             .isEqualTo(new NetworkModificationException(CREATE_LOAD_ERROR, "Load 'idLoad1': p0 is invalid").getMessage());
 
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
+
+        // Test create load on not yet existing variant VARIANT_NOT_EXISTING_ID :
+        // Only the modification should be added in the database but the load cannot be created
+        uriString = "/v1/networks/{networkUuid}/loads?variantId=" + VARIANT_NOT_EXISTING_ID + "&group=" + TEST_GROUP_ID;
+        loadCreationInfos.setEquipmentId("idLoad3");
+        loadCreationInfos.setEquipmentName("nameLoad3");
+        loadCreationInfos.setVoltageLevelId("v2");
+        loadCreationInfos.setBusOrBusbarSectionId("1B");
+        List<EquipmenModificationInfos> modifications = webTestClient.put().uri(uriString, TEST_NETWORK_ID)
+            .body(BodyInserters.fromValue(loadCreationInfos))
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBodyList(EquipmenModificationInfos.class)
+            .returnResult().getResponseBody();
+
+        assertTrue(modifications.isEmpty());  // no modifications returned
+        assertNull(network.getLoad("idLoad3"));  // load was not created
+        testNetworkModificationsCount(TEST_GROUP_ID, 2);  // new modification stored in the database
     }
 
     @Test

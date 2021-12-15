@@ -38,6 +38,10 @@ public class NetworkStoreListener implements NetworkListener {
 
     private Set<String> substationsIds = new HashSet<>();
 
+    private boolean isRealization;
+
+    private boolean isApplyModifications;
+
     Network getNetwork() {
         return network;
     }
@@ -46,21 +50,35 @@ public class NetworkStoreListener implements NetworkListener {
         return networkUuid;
     }
 
+    boolean isRealization() {
+        return isRealization;
+    }
+
+    boolean isApplyModifications() {
+        return isApplyModifications;
+    }
+
     public static NetworkStoreListener create(Network network, UUID networkUuid, String variantId, UUID groupUuid,
-                                              NetworkModificationRepository modificationRepository, EquipmentInfosService equipmentInfosService) {
-        var listener = new NetworkStoreListener(network, networkUuid, variantId, groupUuid, modificationRepository, equipmentInfosService);
+                                              NetworkModificationRepository modificationRepository,
+                                              EquipmentInfosService equipmentInfosService,
+                                              boolean isRealization, boolean isApplyModifications) {
+        var listener = new NetworkStoreListener(network, networkUuid, variantId, groupUuid, modificationRepository, equipmentInfosService,
+                                                isRealization, isApplyModifications);
         network.addListener(listener);
         return listener;
     }
 
     protected NetworkStoreListener(Network network, UUID networkUuid, String variantId, UUID groupUuid,
-                                   NetworkModificationRepository modificationRepository, EquipmentInfosService equipmentInfosService) {
+                                   NetworkModificationRepository modificationRepository, EquipmentInfosService equipmentInfosService,
+                                   boolean isRealization, boolean isApplyModifications) {
         this.network = network;
         this.networkUuid = networkUuid;
         this.variantId = variantId;
         this.groupUuid = groupUuid;
         this.modificationRepository = modificationRepository;
         this.equipmentInfosService = equipmentInfosService;
+        this.isRealization = isRealization;
+        this.isApplyModifications = isApplyModifications;
     }
 
     public List<EquipmenModificationInfos> getModifications() {
