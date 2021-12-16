@@ -697,6 +697,7 @@ public class ModificationControllerTest {
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.GENERATOR_CREATION, "idGenerator1", Set.of("s1")));
 
+        assertNotNull(network.getGenerator("idGenerator1"));  // generator was created
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
 
         // create generator with errors
@@ -744,6 +745,25 @@ public class ModificationControllerTest {
             .isEqualTo(new NetworkModificationException(CREATE_GENERATOR_ERROR, "Generator 'idGenerator1': invalid value (NaN) for minimum P").getMessage());
 
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
+
+        // Test create generator on not yet existing variant VARIANT_NOT_EXISTING_ID :
+        // Only the modification should be added in the database but the generator cannot be created
+        uriString = "/v1/networks/{networkUuid}/generators?variantId=" + VARIANT_NOT_EXISTING_ID + "&group=" + TEST_GROUP_ID;
+        generatorCreationInfos.setEquipmentId("idGenerator3");
+        generatorCreationInfos.setEquipmentName("nameGenerator3");
+        generatorCreationInfos.setVoltageLevelId("v2");
+        generatorCreationInfos.setBusOrBusbarSectionId("1B");
+        List<EquipmenModificationInfos> modifications = webTestClient.put().uri(uriString, TEST_NETWORK_ID)
+            .body(BodyInserters.fromValue(generatorCreationInfos))
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBodyList(EquipmenModificationInfos.class)
+            .returnResult().getResponseBody();
+
+        assertTrue(modifications.isEmpty());  // no modifications returned
+        assertNull(network.getGenerator("idGenerator3"));  // generator was not created
+        testNetworkModificationsCount(TEST_GROUP_ID, 2);  // new modification stored in the database
     }
 
     @Test
@@ -861,7 +881,25 @@ public class ModificationControllerTest {
                 .value(modifications -> modifications.get(0),
                         MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.TWO_WINDINGS_TRANSFORMER_CREATION, "id2wt1", Set.of("s1")));
 
+        assertNotNull(network.getTwoWindingsTransformer("id2wt1"));  // transformer was created
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
+
+        // Test create transformer on not yet existing variant VARIANT_NOT_EXISTING_ID :
+        // Only the modification should be added in the database but the transformer cannot be created
+        uriString = "/v1/networks/{networkUuid}/two-windings-transformer?variantId=" + VARIANT_NOT_EXISTING_ID + "&group=" + TEST_GROUP_ID;
+        twoWindingsTransformerCreationInfos.setEquipmentId("id2wt3");
+        twoWindingsTransformerCreationInfos.setEquipmentName("name2wt3");
+        List<EquipmenModificationInfos> modifications = webTestClient.put().uri(uriString, TEST_NETWORK_ID)
+            .body(BodyInserters.fromValue(twoWindingsTransformerCreationInfos))
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBodyList(EquipmenModificationInfos.class)
+            .returnResult().getResponseBody();
+
+        assertTrue(modifications.isEmpty());  // no modifications returned
+        assertNull(network.getTwoWindingsTransformer("id2wt3"));  // transformer was not created
+        testNetworkModificationsCount(TEST_GROUP_ID, 2);  // new modification stored in the database
     }
 
     @Test
@@ -909,7 +947,24 @@ public class ModificationControllerTest {
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "v1load", "LOAD", Set.of("s1")));
 
+        assertNull(network.getLoad("v1load"));  // load was removed
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
+
+        // Test delete load on not yet existing variant VARIANT_NOT_EXISTING_ID :
+        // Only the modification should be added in the database but the load cannot be deleted
+        uriString = "/v1/networks/{networkUuid}/equipments/type/{equipmentType}/id/{equipmentId}?variantId=" + VARIANT_NOT_EXISTING_ID + "&group=" + TEST_GROUP_ID;
+        List<EquipmentDeletionInfos> deletions = webTestClient.delete().uri(uriString, TEST_NETWORK_ID, "LOAD", "v3load")
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBodyList(EquipmentDeletionInfos.class)
+            .returnResult().getResponseBody();
+
+        assertTrue(deletions.isEmpty());  // no modifications returned
+        assertNotNull(network.getLoad("v3load"));  // load was not deleted
+        testNetworkModificationsCount(TEST_GROUP_ID, 2);  // new modification stored in the database
+
+        uriString = "/v1/networks/{networkUuid}/equipments/type/{equipmentType}/id/{equipmentId}?group=" + TEST_GROUP_ID;
 
         // delete equipment with errors
         webTestClient.delete().uri(uriString, NOT_FOUND_NETWORK_ID, "LOAD", "v1load")
@@ -924,7 +979,7 @@ public class ModificationControllerTest {
             .expectBody(String.class)
             .isEqualTo(new NetworkModificationException(EQUIPMENT_NOT_FOUND, "Equipment with id=notFoundLoad not found or of bad type").getMessage());
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 1);
+        testNetworkModificationsCount(TEST_GROUP_ID, 2);
 
         // delete shunt compensator
         webTestClient.delete().uri(uriString, TEST_NETWORK_ID, "SHUNT_COMPENSATOR", "v2shunt")
@@ -935,7 +990,8 @@ public class ModificationControllerTest {
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "v2shunt", "SHUNT_COMPENSATOR", Set.of("s1")));
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 2);
+        assertNull(network.getShuntCompensator("v2shunt"));  // shunt compensator was removed
+        testNetworkModificationsCount(TEST_GROUP_ID, 3);
 
         // delete generator
         webTestClient.delete().uri(uriString, TEST_NETWORK_ID, "GENERATOR", "idGenerator")
@@ -946,7 +1002,8 @@ public class ModificationControllerTest {
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "idGenerator", "GENERATOR", Set.of("s1")));
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 3);
+        assertNull(network.getGenerator("idGenerator"));  // generator was removed
+        testNetworkModificationsCount(TEST_GROUP_ID, 4);
 
         // delete line
         webTestClient.delete().uri(uriString, TEST_NETWORK_ID, "LINE", "line2")
@@ -957,7 +1014,8 @@ public class ModificationControllerTest {
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "line2", "LINE", Set.of("s1", "s2")));
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 4);
+        assertNull(network.getLine("line2"));  // line was removed
+        testNetworkModificationsCount(TEST_GROUP_ID, 5);
 
         // delete two windings transformer
         webTestClient.delete().uri(uriString, TEST_NETWORK_ID, "TWO_WINDINGS_TRANSFORMER", "trf1")
@@ -968,7 +1026,8 @@ public class ModificationControllerTest {
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "trf1", "TWO_WINDINGS_TRANSFORMER", Set.of("s1")));
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 5);
+        assertNull(network.getTwoWindingsTransformer("trf1"));  // two windings transformer was removed
+        testNetworkModificationsCount(TEST_GROUP_ID, 6);
 
         // delete three windings transformer
         webTestClient.delete().uri(uriString, TEST_NETWORK_ID, "THREE_WINDINGS_TRANSFORMER", "trf6")
@@ -979,7 +1038,8 @@ public class ModificationControllerTest {
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "trf6", "THREE_WINDINGS_TRANSFORMER", Set.of("s1")));
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 6);
+        assertNull(network.getThreeWindingsTransformer("trf6"));  // three windings transformer was removed
+        testNetworkModificationsCount(TEST_GROUP_ID, 7);
 
         // delete static var compensator
         webTestClient.delete().uri(uriString, TEST_NETWORK_ID, "STATIC_VAR_COMPENSATOR", "v3Compensator")
@@ -990,7 +1050,8 @@ public class ModificationControllerTest {
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "v3Compensator", "STATIC_VAR_COMPENSATOR", Set.of("s2")));
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 7);
+        assertNull(network.getStaticVarCompensator("v3Compensator"));  // static var compensator was removed
+        testNetworkModificationsCount(TEST_GROUP_ID, 8);
 
         // delete battery
         webTestClient.delete().uri(uriString, TEST_NETWORK_ID, "BATTERY", "v3Battery")
@@ -1001,7 +1062,8 @@ public class ModificationControllerTest {
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "v3Battery", "BATTERY", Set.of("s2")));
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 8);
+        assertNull(network.getBattery("v3Battery"));  // battery was removed
+        testNetworkModificationsCount(TEST_GROUP_ID, 9);
 
         // delete dangling line
         webTestClient.delete().uri(uriString, TEST_NETWORK_ID, "DANGLING_LINE", "v2Dangling")
@@ -1012,7 +1074,8 @@ public class ModificationControllerTest {
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "v2Dangling", "DANGLING_LINE", Set.of("s1")));
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 9);
+        assertNull(network.getDanglingLine("v2Dangling"));  // dangling line was removed
+        testNetworkModificationsCount(TEST_GROUP_ID, 10);
 
         // delete hvdc line
         webTestClient.delete().uri(uriString, TEST_NETWORK_ID, "HVDC_LINE", "hvdcLine")
@@ -1023,7 +1086,8 @@ public class ModificationControllerTest {
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "hvdcLine", "HVDC_LINE", Set.of("s1")));
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 10);
+        assertNull(network.getHvdcLine("hvdcLine"));  // hvdc line was removed
+        testNetworkModificationsCount(TEST_GROUP_ID, 11);
 
         // delete vsc converter station
         webTestClient.delete().uri(uriString, TEST_NETWORK_ID_2, "HVDC_CONVERTER_STATION", "v2vsc")
@@ -1034,7 +1098,7 @@ public class ModificationControllerTest {
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "v2vsc", "HVDC_CONVERTER_STATION", Set.of("s1")));
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 11);
+        testNetworkModificationsCount(TEST_GROUP_ID, 12);
 
         // delete lcc converter station
         webTestClient.delete().uri(uriString, TEST_NETWORK_ID_2, "HVDC_CONVERTER_STATION", "v1lcc")
@@ -1045,7 +1109,7 @@ public class ModificationControllerTest {
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "v1lcc", "HVDC_CONVERTER_STATION", Set.of("s1")));
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 12);
+        testNetworkModificationsCount(TEST_GROUP_ID, 13);
     }
 
     @Test
@@ -1081,6 +1145,7 @@ public class ModificationControllerTest {
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.LINE_CREATION, "idLine4", Set.of("s1")));
 
+        assertNotNull(network.getLine("idLine4"));  // line was created
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
 
         // create line with errors
@@ -1138,6 +1203,23 @@ public class ModificationControllerTest {
         lineCreationInfos.setSeriesReactance(100.0);
 
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
+
+        // Test create line on not yet existing variant VARIANT_NOT_EXISTING_ID :
+        // Only the modification should be added in the database but the line cannot be created
+        uriString = "/v1/networks/{networkUuid}/lines?variantId=" + VARIANT_NOT_EXISTING_ID + "&group=" + TEST_GROUP_ID;
+        lineCreationInfos.setEquipmentId("idLine5");
+        lineCreationInfos.setEquipmentName("nameLine5");
+        List<EquipmenModificationInfos> modifications = webTestClient.put().uri(uriString, TEST_NETWORK_ID)
+            .body(BodyInserters.fromValue(lineCreationInfos))
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBodyList(EquipmenModificationInfos.class)
+            .returnResult().getResponseBody();
+
+        assertTrue(modifications.isEmpty());  // no modifications returned
+        assertNull(network.getLine("idLine5"));  // line was not created
+        testNetworkModificationsCount(TEST_GROUP_ID, 2);  // new modification stored in the database
     }
 
     @Test
