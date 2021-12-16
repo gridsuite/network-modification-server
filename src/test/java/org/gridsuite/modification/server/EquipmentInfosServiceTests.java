@@ -50,7 +50,7 @@ public class EquipmentInfosServiceTests {
         EquipmentInfos equipmentInfos = EquipmentInfos.builder().networkUuid(NETWORK_UUID).variantId("variant1").id("id1").name("name1").type(EquipmentType.LOAD.name()).voltageLevels(Set.of(VoltageLevelInfos.builder().id("vl1").name("vl1").build())).build();
         assertEquals(equipmentInfosService.add(equipmentInfos), equipmentInfos);
 
-        equipmentInfosService.delete(equipmentInfos.getId(), NETWORK_UUID, "variant1");
+        equipmentInfosService.deleteEquipmentInVariant(equipmentInfos.getId(), NETWORK_UUID, "variant1");
         assertEquals(0, Iterables.size(equipmentInfosService.findAll(NETWORK_UUID)));
 
         Set<String> ids = new HashSet<>();
@@ -63,7 +63,7 @@ public class EquipmentInfosServiceTests {
         addEquipmentInfos(ids, EquipmentInfos.builder().networkUuid(NETWORK_UUID).variantId("variant2").id("id7").name("name6").type(EquipmentType.CONFIGURED_BUS.name()).voltageLevels(Set.of(VoltageLevelInfos.builder().id("vl7").name("vl7").build())).build());
         assertEquals(7, Iterables.size(equipmentInfosService.findAll(NETWORK_UUID)));
 
-        ids.forEach(id -> equipmentInfosService.delete(id, NETWORK_UUID, "variant2"));
+        ids.forEach(id -> equipmentInfosService.deleteEquipmentInVariant(id, NETWORK_UUID, "variant2"));
         assertEquals(0, Iterables.size(equipmentInfosService.findAll(NETWORK_UUID)));
 
         ids.clear();
@@ -72,8 +72,10 @@ public class EquipmentInfosServiceTests {
         assertTrue(equipmentInfosService.existEquipmentInVariant("idOk", NETWORK_UUID, "variant1"));
         assertFalse(equipmentInfosService.existEquipmentInVariant("idTombstoned", NETWORK_UUID, "variant1"));
 
-        ids.forEach(id -> equipmentInfosService.delete(id, NETWORK_UUID, "variant1"));
-        assertEquals(0, Iterables.size(equipmentInfosService.findAll(NETWORK_UUID)));
+        ids.forEach(id -> equipmentInfosService.deleteEquipmentInVariant(id, NETWORK_UUID, "variant1"));
+        assertEquals(1, Iterables.size(equipmentInfosService.findAll(NETWORK_UUID)));
+
+        equipmentInfosService.deleteVariants(NETWORK_UUID, List.of("variant1"));
     }
 
     private void addEquipmentInfos(Set<String> ids, EquipmentInfos equipmentInfos) {

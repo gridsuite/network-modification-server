@@ -243,7 +243,7 @@ public class NetworkStoreListener implements NetworkListener {
 
     public void deleteEquipmentInfos(String equipmentId) {
         if (equipmentInfosService.existEquipmentInVariant(equipmentId, networkUuid, variantId)) {
-            equipmentInfosService.delete(equipmentId, networkUuid, variantId);
+            equipmentInfosService.deleteEquipmentInVariant(equipmentId, networkUuid, variantId);
         } else {
             equipmentInfosService.add(
                     EquipmentInfos.builder()

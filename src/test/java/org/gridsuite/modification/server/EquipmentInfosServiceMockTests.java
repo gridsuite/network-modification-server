@@ -39,7 +39,7 @@ public class EquipmentInfosServiceMockTests {
         equipmentInfosService.add(EquipmentInfos.builder().networkUuid(NETWORK_UUID).id("id1").variantId("variant1").name("name1").type(EquipmentType.LOAD.name()).voltageLevels(Set.of(VoltageLevelInfos.builder().id("vl1").name("vl1").build())).build());
         assertEquals(0, Iterables.size(equipmentInfosService.findAll(NETWORK_UUID)));
 
-        equipmentInfosService.delete("foo", NETWORK_UUID, "variant1");
+        equipmentInfosService.deleteEquipmentInVariant("foo", NETWORK_UUID, "variant1");
         assertEquals(0, Iterables.size(equipmentInfosService.findAll(NETWORK_UUID)));
     }
 }

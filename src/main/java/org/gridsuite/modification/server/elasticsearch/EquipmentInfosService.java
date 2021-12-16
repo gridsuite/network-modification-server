@@ -24,7 +24,7 @@ public interface EquipmentInfosService {
 
     void addAll(@NonNull final List<EquipmentInfos> equipmentsInfos);
 
-    void delete(@NonNull String equipmentId, @NonNull UUID networkUuid, @NonNull String variantId);
+    void deleteEquipmentInVariant(@NonNull String equipmentId, @NonNull UUID networkUuid, @NonNull String variantId);
 
     void deleteVariants(@NonNull UUID networkUuid, List<String> variantIds);
 
