@@ -1014,24 +1014,24 @@ public class ModificationControllerTest {
         testNetworkModificationsCount(TEST_GROUP_ID, 10);
 
         // delete vsc converter station
-        webTestClient.delete().uri(uriString, TEST_NETWORK_ID_2, "VSC_CONVERTER_STATION", "v2vsc")
+        webTestClient.delete().uri(uriString, TEST_NETWORK_ID_2, "HVDC_CONVERTER_STATION", "v2vsc")
             .exchange()
             .expectStatus().isOk()
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
             .expectBodyList(EquipmentDeletionInfos.class)
             .value(modifications -> modifications.get(0),
-                MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "v2vsc", "VSC_CONVERTER_STATION", Set.of("s1")));
+                MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "v2vsc", "HVDC_CONVERTER_STATION", Set.of("s1")));
 
         testNetworkModificationsCount(TEST_GROUP_ID, 11);
 
         // delete lcc converter station
-        webTestClient.delete().uri(uriString, TEST_NETWORK_ID_2, "LCC_CONVERTER_STATION", "v1lcc")
+        webTestClient.delete().uri(uriString, TEST_NETWORK_ID_2, "HVDC_CONVERTER_STATION", "v1lcc")
             .exchange()
             .expectStatus().isOk()
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
             .expectBodyList(EquipmentDeletionInfos.class)
             .value(modifications -> modifications.get(0),
-                MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "v1lcc", "LCC_CONVERTER_STATION", Set.of("s1")));
+                MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "v1lcc", "HVDC_CONVERTER_STATION", Set.of("s1")));
 
         testNetworkModificationsCount(TEST_GROUP_ID, 12);
     }

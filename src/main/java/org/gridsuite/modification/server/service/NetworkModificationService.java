@@ -445,11 +445,8 @@ public class NetworkModificationService {
                     case DANGLING_LINE:
                         identifiable = network.getDanglingLine(equipmentId);
                         break;
-                    case LCC_CONVERTER_STATION:
-                        identifiable = network.getLccConverterStation(equipmentId);
-                        break;
-                    case VSC_CONVERTER_STATION:
-                        identifiable = network.getVscConverterStation(equipmentId);
+                    case HVDC_CONVERTER_STATION:
+                        identifiable = network.getHvdcConverterStation(equipmentId);
                         break;
                     default:
                         break;
