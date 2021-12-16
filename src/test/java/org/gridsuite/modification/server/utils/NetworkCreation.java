@@ -40,6 +40,10 @@ public final class NetworkCreation {
 
         VoltageLevel v4 = createVoltageLevel(s1, "v4", "v4", TopologyKind.NODE_BREAKER, 380.0);
 
+        Substation s3 = createSubstation(network, "s3", "s3", Country.FR);
+        VoltageLevel v5 = createVoltageLevel(s3, "v5", "v5", TopologyKind.NODE_BREAKER, 380.0);
+        createLoad(v5, "v5load", "v5load", 2, 0., 0.);
+
         Substation s2 = createSubstation(network, "s2", "s2", Country.FR);
         VoltageLevel v3 = createVoltageLevel(s2, "v3", "v3", TopologyKind.NODE_BREAKER, 380.0);
         createBusBarSection(v3, "3A", "3A", 0);

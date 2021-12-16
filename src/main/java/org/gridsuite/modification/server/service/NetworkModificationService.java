@@ -451,6 +451,12 @@ public class NetworkModificationService {
                     case VSC_CONVERTER_STATION:
                         identifiable = network.getVscConverterStation(equipmentId);
                         break;
+                    case SUBSTATION:
+                        identifiable = network.getSubstation(equipmentId);
+                        break;
+                    case VOLTAGE_LEVEL:
+                        identifiable = network.getVoltageLevel(equipmentId);
+                        break;
                     default:
                         break;
                 }
@@ -465,6 +471,10 @@ public class NetworkModificationService {
                     ((Connectable) identifiable).remove();
                 } else if (identifiable instanceof HvdcLine) {
                     ((HvdcLine) identifiable).remove();
+                } else if (identifiable instanceof VoltageLevel) {
+                    ((VoltageLevel) identifiable).remove();
+                } else if (identifiable instanceof Substation) {
+                    ((Substation) identifiable).remove();
                 }
 
                 // Done here, and not in the network listener onRemoval method

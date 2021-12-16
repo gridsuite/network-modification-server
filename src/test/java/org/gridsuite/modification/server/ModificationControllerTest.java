@@ -1034,6 +1034,28 @@ public class ModificationControllerTest {
                 MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "v1lcc", "LCC_CONVERTER_STATION", Set.of("s1")));
 
         testNetworkModificationsCount(TEST_GROUP_ID, 12);
+
+        // delete voltage level
+        webTestClient.delete().uri(uriString, TEST_NETWORK_ID, "VOLTAGE_LEVEL", "v5")
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBodyList(EquipmentDeletionInfos.class)
+                .value(modifications -> modifications.get(0),
+                        MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "v5", "VOLTAGE_LEVEL", Set.of("s3")));
+
+        testNetworkModificationsCount(TEST_GROUP_ID, 13);
+
+        // delete substation
+        webTestClient.delete().uri(uriString, TEST_NETWORK_ID, "SUBSTATION", "s3")
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBodyList(EquipmentDeletionInfos.class)
+                .value(modifications -> modifications.get(0),
+                        MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "s3", "SUBSTATION", Set.of("s3")));
+
+        testNetworkModificationsCount(TEST_GROUP_ID, 14);
     }
 
     @Test
