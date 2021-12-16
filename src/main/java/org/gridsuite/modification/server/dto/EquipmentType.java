@@ -19,7 +19,7 @@ public enum EquipmentType {
     DISCONNECTOR,
     LOAD_BREAK_SWITCH,
 
-    // Same as com.powsybl.iidm.network.ConnectableType
+    // Same as com.powsybl.iidm.network.IdentifiableType
     BUSBAR_SECTION,
     LINE,
     TWO_WINDINGS_TRANSFORMER,
@@ -30,8 +30,7 @@ public enum EquipmentType {
     SHUNT_COMPENSATOR,
     DANGLING_LINE,
     STATIC_VAR_COMPENSATOR,
-    LCC_CONVERTER_STATION,
-    VSC_CONVERTER_STATION,
+    HVDC_CONVERTER_STATION,
 
     // Other
     CONFIGURED_BUS,
