@@ -50,9 +50,9 @@ public class NetworkStoreListenerTests {
     public void testAddDeleteEquipmentInfosInVariants() {
         Network network = NetworkCreation.create(NETWORK_UUID, true);
 
-        NetworkStoreListener listenerInitialVariant = NetworkStoreListener.create(network, NETWORK_UUID, VariantManagerConstants.INITIAL_VARIANT_ID, GROUP_UUID, modificationRepository, equipmentInfosService);
-        NetworkStoreListener listenerDeltaVariantOne = NetworkStoreListener.create(network, NETWORK_UUID, NetworkCreation.VARIANT_ID, GROUP_UUID, modificationRepository, equipmentInfosService);
-        NetworkStoreListener listenerDeltaVariantTwo = NetworkStoreListener.create(network, NETWORK_UUID, VARIANT_TWO_ID, GROUP_UUID, modificationRepository, equipmentInfosService);
+        NetworkStoreListener listenerInitialVariant = NetworkStoreListener.create(network, NETWORK_UUID, VariantManagerConstants.INITIAL_VARIANT_ID, GROUP_UUID, modificationRepository, equipmentInfosService, false, true);
+        NetworkStoreListener listenerDeltaVariantOne = NetworkStoreListener.create(network, NETWORK_UUID, NetworkCreation.VARIANT_ID, GROUP_UUID, modificationRepository, equipmentInfosService, false, true);
+        NetworkStoreListener listenerDeltaVariantTwo = NetworkStoreListener.create(network, NETWORK_UUID, VARIANT_TWO_ID, GROUP_UUID, modificationRepository, equipmentInfosService, false, true);
 
         // Get equipments in network initial variant
         Collection<Identifiable<?>> equipmentsInInitialVariant = network.getIdentifiables();
