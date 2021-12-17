@@ -40,6 +40,7 @@ public class GroovyScriptModificationEntity extends ModificationEntity {
         return toGroovyScriptModificationInfosBuilder().build();
     }
 
+    @Override
     public GroovyScriptModificationInfos toModificationInfos(Set<String> uuids) {
         return toGroovyScriptModificationInfosBuilder().substationIds(uuids).build();
     }
