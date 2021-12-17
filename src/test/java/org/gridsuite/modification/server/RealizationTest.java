@@ -131,7 +131,7 @@ public class RealizationTest {
     }
 
     @Test
-    public void runRealizationTest() {
+    public void runRealizationTest() throws InterruptedException {
         // create modification entities in the database
         List<ModificationEntity> entities1 = new ArrayList<>();
         entities1.add(modificationRepository.createEquipmentAttributeModification("v1d1", "open", true));
@@ -146,12 +146,13 @@ public class RealizationTest {
         entities2.add(modificationRepository.createLineEntity("newLine", "newLine", 1., 2., 3., 4., 5., 6., "v1", "1.1", "v2", "1B", null, null));
         entities2.add(modificationRepository.createTwoWindingsTransformerEntity("new2wt", "new2wt", 1., 2., 3., 4., 5., 6., "v1", "1.1", "v2", "1A", null, null));
         entities2.add(modificationRepository.createEquipmentDeletionEntity("v2shunt", "SHUNT_COMPENSATOR"));
+        entities2.add(modificationRepository.createGroovyScriptModificationEntity("network.getGenerator('idGenerator').targetP=55\n"));
 
         modificationRepository.saveModifications(TEST_GROUP_ID, entities1);
         modificationRepository.saveModifications(TEST_GROUP_ID_2, entities2);
 
         testNetworkModificationsCount(TEST_GROUP_ID, 6);
-        testNetworkModificationsCount(TEST_GROUP_ID_2, 4);
+        testNetworkModificationsCount(TEST_GROUP_ID_2, 5);
 
         // realize VARIANT_ID by cloning network initial variant and applying all modifications in all groups
         String uriString = "/v1/networks/{networkUuid}/realization?receiver=me";
@@ -163,6 +164,7 @@ public class RealizationTest {
             .exchange()
             .expectStatus().isOk();
 
+        Thread.sleep(3000);  // Needed to be sure that result realization message has been sent
         Message<byte[]> resultMessage = output.receive(1000, "realize.result");
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
         assertEquals("s1,s2", new String(resultMessage.getPayload()));
@@ -174,7 +176,7 @@ public class RealizationTest {
         if (branchStatus != null) {
             assertEquals("PLANNED_OUTAGE", branchStatus.getStatus().name());
         }
-        assertEquals(50., network.getGenerator("idGenerator").getTargetP(), 0.1);
+        assertEquals(55., network.getGenerator("idGenerator").getTargetP(), 0.1);
         assertEquals(2, network.getTwoWindingsTransformer("trf1").getRatioTapChanger().getTapPosition());
         assertEquals(0, network.getThreeWindingsTransformer("trf6").getLeg1().getPhaseTapChanger().getTapPosition());
         assertEquals(LoadType.AUXILIARY, network.getLoad("newLoad").getLoadType());
@@ -210,7 +212,7 @@ public class RealizationTest {
 
         // No new modification entity should have been added to the database
         testNetworkModificationsCount(TEST_GROUP_ID, 6);
-        testNetworkModificationsCount(TEST_GROUP_ID_2, 4);
+        testNetworkModificationsCount(TEST_GROUP_ID_2, 5);
     }
 
     @Test

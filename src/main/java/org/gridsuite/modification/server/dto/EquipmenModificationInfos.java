@@ -7,14 +7,11 @@
 package org.gridsuite.modification.server.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
-
-import java.util.Set;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -29,8 +26,4 @@ import java.util.Set;
 public class EquipmenModificationInfos extends ModificationInfos {
     @Schema(description = "Equipment ID")
     private String equipmentId;
-
-    @Schema(description = "Substations ID")
-    @Builder.Default
-    private Set<String> substationIds = Set.of();
 }

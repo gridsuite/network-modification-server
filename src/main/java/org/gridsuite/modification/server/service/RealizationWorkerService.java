@@ -11,7 +11,7 @@ import com.google.common.collect.Sets;
 import com.powsybl.iidm.network.Network;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
-import org.gridsuite.modification.server.dto.EquipmenModificationInfos;
+import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.RealizationInfos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,7 +58,7 @@ public class RealizationWorkerService {
 
     private RealizationStoppedPublisherService stoppedPublisherService;
 
-    private Map<String, CompletableFuture<List<EquipmenModificationInfos>>> futures = new ConcurrentHashMap<>();
+    private Map<String, CompletableFuture<List<ModificationInfos>>> futures = new ConcurrentHashMap<>();
 
     private Map<String, RealizationCancelContext> cancelRealizationRequests = new ConcurrentHashMap<>();
 
@@ -75,7 +75,7 @@ public class RealizationWorkerService {
         this.stoppedPublisherService = stoppedPublisherService;
     }
 
-    private Mono<List<EquipmenModificationInfos>> execRealizeVariant(Network network, RealizationExecContext execContext, RealizationInfos realizationInfos) {
+    private Mono<List<ModificationInfos>> execRealizeVariant(Network network, RealizationExecContext execContext, RealizationInfos realizationInfos) {
         UUID networkUuid = execContext.getNetworkUuid();
         String receiver = execContext.getReceiver();
 
@@ -83,7 +83,7 @@ public class RealizationWorkerService {
             return Mono.empty();
         }
 
-        CompletableFuture<List<EquipmenModificationInfos>> future = CompletableFuture.supplyAsync(() ->
+        CompletableFuture<List<ModificationInfos>> future = CompletableFuture.supplyAsync(() ->
             networkModificationService.applyModifications(network, networkUuid, realizationInfos)
         );
 
@@ -158,7 +158,7 @@ public class RealizationWorkerService {
                 }
 
                 // find the completableFuture associated with receiver
-                CompletableFuture<List<EquipmenModificationInfos>> future = futures.get(cancelContext.getReceiver());
+                CompletableFuture<List<ModificationInfos>> future = futures.get(cancelContext.getReceiver());
                 if (future != null) {
                     future.cancel(true);  // cancel realization in progress
 

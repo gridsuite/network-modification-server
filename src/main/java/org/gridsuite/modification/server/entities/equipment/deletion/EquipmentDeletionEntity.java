@@ -40,7 +40,8 @@ public class EquipmentDeletionEntity extends EquipmentModificationEntity {
         this.equipmentType = equipmentType;
     }
 
-    public EquipmentDeletionInfos toEquipmentDeletionInfos() {
+    @Override
+    public EquipmentDeletionInfos toModificationInfos() {
         return toEquipmentDeletionInfosBuilder().build();
     }
 

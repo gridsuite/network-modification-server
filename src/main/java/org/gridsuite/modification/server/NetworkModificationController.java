@@ -50,7 +50,7 @@ public class NetworkModificationController {
     @PutMapping(value = "/networks/{networkUuid}/groovy", consumes = MediaType.TEXT_PLAIN_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "change an equipment state in a network variant")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The equipment state has been changed")})
-    public ResponseEntity<Flux<EquipmenModificationInfos>> applyGroovyScript(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
+    public ResponseEntity<Flux<ModificationInfos>> applyGroovyScript(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
                                                                              @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
                                                                              @RequestParam(value = "group", required = false) UUID groupUuid,
                                                                              @RequestBody String groovyScript) {

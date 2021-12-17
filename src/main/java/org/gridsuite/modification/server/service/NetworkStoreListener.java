@@ -9,7 +9,6 @@ package org.gridsuite.modification.server.service;
 import com.powsybl.iidm.network.*;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
-import org.gridsuite.modification.server.entities.EquipmentModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 
@@ -34,7 +33,7 @@ public class NetworkStoreListener implements NetworkListener {
 
     private final EquipmentInfosService equipmentInfosService;
 
-    private final List<EquipmentModificationEntity> modifications = new LinkedList<>();
+    private final List<ModificationEntity> modifications = new LinkedList<>();
 
     private Set<String> substationsIds = new HashSet<>();
 
@@ -81,11 +80,14 @@ public class NetworkStoreListener implements NetworkListener {
         this.isApplyModifications = isApplyModifications;
     }
 
-    public List<EquipmenModificationInfos> getModifications() {
-        List<EquipmenModificationInfos> modificationInfos = modifications.stream()
-            .map(m -> m.toEquipmentModificationInfos(substationsIds.isEmpty() ? getSubstationsIds(m.getEquipmentId())
-                : substationsIds))
-                .collect(Collectors.toList());
+    public List<ModificationInfos> getModifications() {
+        List<ModificationInfos> modificationInfos = modifications.stream()
+            .map(m -> {
+                ModificationInfos infos = m.toModificationInfos();
+                infos.setSubstationIds(substationsIds);
+                return infos;
+            })
+            .collect(Collectors.toList());
         modifications.clear();
         return modificationInfos;
     }
@@ -110,8 +112,12 @@ public class NetworkStoreListener implements NetworkListener {
         }
     }
 
-    private void storeEquipmentAttributeModification(Identifiable<?> identifiable, String attributeName, Object attributeValue) {
+    public void storeEquipmentAttributeModification(Identifiable<?> identifiable, String attributeName, Object attributeValue) {
         modifications.add(this.modificationRepository.createEquipmentAttributeModification(identifiable.getId(), attributeName, attributeValue));
+    }
+
+    public void storeEquipmentAttributeModification(String equipmentId, String attributeName, Object attributeValue) {
+        modifications.add(this.modificationRepository.createEquipmentAttributeModification(equipmentId, attributeName, attributeValue));
     }
 
     public void storeLoadCreation(LoadCreationInfos loadCreationInfos) {
@@ -179,6 +185,10 @@ public class NetworkStoreListener implements NetworkListener {
         );
     }
 
+    public void storeGroovyScriptModification(String script) {
+        modifications.add(this.modificationRepository.createGroovyScriptModificationEntity(script));
+    }
+
     private Set<String> getSubstationsIds(String equipmentId) {
         Identifiable<?> identifiable = network.getIdentifiable(equipmentId);
         return getSubstationIds(identifiable);
@@ -206,12 +216,12 @@ public class NetworkStoreListener implements NetworkListener {
 
     @Override
     public void onUpdate(Identifiable identifiable, String attribute, Object oldValue, Object newValue) {
-        storeEquipmentAttributeModification(identifiable, attribute, newValue);
+        substationsIds.addAll(getSubstationIds(identifiable));
     }
 
     @Override
     public void onUpdate(Identifiable identifiable, String attribute, String variantId, Object oldValue, Object newValue) {
-        storeEquipmentAttributeModification(identifiable, attribute, newValue);
+        substationsIds.addAll(getSubstationIds(identifiable));
     }
 
     @Override
@@ -236,8 +246,8 @@ public class NetworkStoreListener implements NetworkListener {
         //equipmentInfosService.delete(identifiable.getId(), networkUuid);
     }
 
-    public void setSubstationsIds(Set<String> substationsIds) {
-        this.substationsIds = substationsIds;
+    public void addSubstationsIds(Set<String> substationsIds) {
+        this.substationsIds.addAll(substationsIds);
     }
 
     public void deleteEquipmentInfos(String equipmentId) {
