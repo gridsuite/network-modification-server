@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
 
@@ -24,9 +25,12 @@ public class EmbeddedElasticsearch {
 
     private static ElasticsearchContainer elasticsearchContainer;
 
+    @Value("${spring.data.elasticsearch.enabled:false}")
+    boolean elasticsearchEnabled;
+
     @PostConstruct
     public void postConstruct() {
-        if (elasticsearchContainer != null) {
+        if (elasticsearchContainer != null || !elasticsearchEnabled) {
             return;
         }
 
