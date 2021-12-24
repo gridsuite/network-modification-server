@@ -1331,21 +1331,20 @@ public class ModificationControllerTest {
 
         // create new substation
         SubstationCreationInfos substationCreationInfos = SubstationCreationInfos.builder()
-                .substationId("SubstationId")
-                .substationName("SubstationName")
+                .equipmentId("SubstationId")
+                .equipmentName("SubstationName")
                 .substationCountry(Country.AF)
                 .build();
-
-        assertEquals("SubstationCreationInfos(super=ModificationInfos(uuid=null, date=null, type=null), substationId=SubstationId, substationName=SubstationName, substationCountry=AF)", substationCreationInfos.toString());
+        assertEquals("SubstationCreationInfos(super=EquipmentCreationInfos(super=EquipmenModificationInfos(super=ModificationInfos(uuid=null, date=null, type=null), equipmentId=SubstationId, substationIds=[]), equipmentName=SubstationName), substationCountry=AF)", substationCreationInfos.toString());
 
         webTestClient.put().uri(uriString, TEST_NETWORK_ID)
                 .body(BodyInserters.fromValue(substationCreationInfos))
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
-                .expectBodyList(ModificationInfos.class)
+                .expectBodyList(EquipmenModificationInfos.class)
                 .value(modifications -> modifications.get(0),
-                        MatcherModificationInfos.createMatcherModificationInfos(ModificationType.SUBSTATION_CREATION));
+                        MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.SUBSTATION_CREATION, "SubstationId", Set.of("SubstationId")));
 
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
 
@@ -1357,7 +1356,7 @@ public class ModificationControllerTest {
                 .expectBody(String.class)
                 .isEqualTo(new NetworkModificationException(NETWORK_NOT_FOUND, NOT_FOUND_NETWORK_ID.toString()).getMessage());
 
-        substationCreationInfos.setSubstationId(null);
+        substationCreationInfos.setEquipmentId(null);
         webTestClient.put().uri(uriString, TEST_NETWORK_ID)
                 .body(BodyInserters.fromValue(substationCreationInfos))
                 .exchange()

@@ -6,26 +6,15 @@
  */
 package org.gridsuite.modification.server.utils;
 
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.hamcrest.Description;
 import org.hamcrest.TypeSafeMatcher;
 
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
-
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
-public class MatcherModificationInfos<T extends ModificationInfos> extends TypeSafeMatcher<T> {
+class MatcherModificationInfos<T extends ModificationInfos> extends TypeSafeMatcher<T> {
     T reference;
-
-    public static MatcherModificationInfos createMatcherModificationInfos(ModificationType modificationType) {
-        return new MatcherModificationInfos(ModificationInfos.builder()
-                .date(ZonedDateTime.now(ZoneOffset.UTC))
-                .type(modificationType)
-                .build());
-    }
 
     protected MatcherModificationInfos(T ref) {
         this.reference = ref;

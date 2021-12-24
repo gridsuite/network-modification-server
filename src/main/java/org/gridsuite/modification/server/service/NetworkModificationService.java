@@ -750,26 +750,26 @@ public class NetworkModificationService {
                     ReporterModel reporter = new ReporterModel("NetworkModification", "Network modification");
                     Reporter subReporter = reporter.createSubReporter("SubstationCreation", "Substation creation");
 
-                    doAction(listener, () -> {
+                    return doAction(listener, () -> {
                         network.newSubstation()
-                                .setId(substationCreationInfos.getSubstationId())
-                                .setName(substationCreationInfos.getSubstationName())
+                                .setId(substationCreationInfos.getEquipmentId())
+                                .setName(substationCreationInfos.getEquipmentName())
                                 .setCountry(substationCreationInfos.getSubstationCountry())
                                 .add();
+
+                        // store the substation id in the listener
+                        listener.setSubstationsIds(Set.of(substationCreationInfos.getEquipmentId()));
 
                         subReporter.report(Report.builder()
                                 .withKey("substationCreated")
                                 .withDefaultMessage("New substation with id=${id} created")
-                                .withValue("id", substationCreationInfos.getSubstationId())
+                                .withValue("id", substationCreationInfos.getEquipmentId())
                                 .withSeverity(new TypedValue("SUBSTATION_CREATION_INFO", TypedValue.INFO_LOGLEVEL))
                                 .build());
 
                         // add the substation creation entity to the listener
                         listener.storeSubstationCreation(substationCreationInfos);
                     }, CREATE_SUBSTATION_ERROR, networkUuid, reporter, subReporter);
-                    EquipmenModificationInfos substationModificationInfos = new EquipmenModificationInfos();
-                    substationModificationInfos.setSubstationIds(Set.of(substationCreationInfos.getSubstationId()));
-                    return List.of(substationModificationInfos);
                 }));
     }
 

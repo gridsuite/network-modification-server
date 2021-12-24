@@ -25,8 +25,8 @@ public class MatcherSubstationCreationInfos extends MatcherModificationInfos<Sub
         return new MatcherSubstationCreationInfos(SubstationCreationInfos.builder()
                 .date(ZonedDateTime.now(ZoneOffset.UTC))
                 .type(ModificationType.LOAD_CREATION)
-                .substationId(equipmentId)
-                .substationName(equipmentName)
+                .equipmentId(equipmentId)
+                .equipmentName(equipmentName)
                 .substationCountry(country)
                 .build());
     }
@@ -42,8 +42,8 @@ public class MatcherSubstationCreationInfos extends MatcherModificationInfos<Sub
     @Override
     public boolean matchesSafely(SubstationCreationInfos m) {
         return super.matchesSafely(m)
-                && m.getSubstationId().equals(reference.getSubstationId())
-                && m.getSubstationName().equals(reference.getSubstationName())
+                && m.getEquipmentId().equals(reference.getEquipmentId())
+                && m.getEquipmentName().equals(reference.getEquipmentName())
                 && m.getSubstationCountry().equals(reference.getSubstationCountry());
     }
 

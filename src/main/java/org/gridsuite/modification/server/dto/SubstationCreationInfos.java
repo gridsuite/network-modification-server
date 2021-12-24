@@ -24,13 +24,7 @@ import lombok.experimental.SuperBuilder;
 @Setter
 @ToString(callSuper = true)
 @Schema(description = "Substation creation")
-public class SubstationCreationInfos extends ModificationInfos {
-
-    @Schema(description = "Substation ID")
-    private String substationId;
-
-    @Schema(description = "Substation name")
-    private String substationName;
+public class SubstationCreationInfos extends EquipmentCreationInfos {
 
     @Schema(description = "Substation country")
     private Country substationCountry;
