@@ -540,15 +540,11 @@ public class NetworkModificationService {
             if (listener.isApplyModifications()) {
                 // create the load in the network
                 VoltageLevel voltageLevel = getVoltageLevel(network, loadCreationInfos.getVoltageLevelId());
-                Load load;
                 if (voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER) {
-                    load = createLoadInNodeBreaker(voltageLevel, loadCreationInfos);
+                    createLoadInNodeBreaker(voltageLevel, loadCreationInfos);
                 } else {
-                    load = createLoadInBusBreaker(voltageLevel, loadCreationInfos);
+                    createLoadInBusBreaker(voltageLevel, loadCreationInfos);
                 }
-
-                // store the substations ids in the listener
-                listener.addSubstationsIds(NetworkStoreListener.getSubstationIds(load));
 
                 subReporter.report(Report.builder()
                     .withKey("loadCreated")
@@ -632,7 +628,7 @@ public class NetworkModificationService {
                 }
 
                 // store the substations ids in the listener
-                listener.addSubstationsIds(NetworkStoreListener.getSubstationIds(identifiable));
+                Set<String> substationIds = NetworkStoreListener.getSubstationIds(identifiable);
 
                 if (identifiable instanceof Connectable) {
                     ((Connectable) identifiable).remove();
@@ -642,7 +638,7 @@ public class NetworkModificationService {
 
                 // Done here, and not in the network listener onRemoval method
                 // because onRemoval must be refactored in powsybl core
-                listener.deleteEquipmentInfos(equipmentId);
+                listener.onTemporaryRemoval(equipmentId, substationIds);
 
                 subReporter.report(Report.builder()
                     .withKey("equipmentDeleted")
@@ -738,15 +734,11 @@ public class NetworkModificationService {
             if (listener.isApplyModifications()) {
                 // create the generator in the network
                 VoltageLevel voltageLevel = getVoltageLevel(network, generatorCreationInfos.getVoltageLevelId());
-                Generator generator;
                 if (voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER) {
-                    generator = createGeneratorInNodeBreaker(voltageLevel, generatorCreationInfos);
+                    createGeneratorInNodeBreaker(voltageLevel, generatorCreationInfos);
                 } else {
-                    generator = createGeneratorInBusBreaker(voltageLevel, generatorCreationInfos);
+                    createGeneratorInBusBreaker(voltageLevel, generatorCreationInfos);
                 }
-
-                // store the substations ids in the listener
-                listener.addSubstationsIds(NetworkStoreListener.getSubstationIds(generator));
 
                 subReporter.report(Report.builder()
                     .withKey("generatorCreated")
@@ -864,9 +856,6 @@ public class NetworkModificationService {
                     myLine.newCurrentLimits2().setPermanentLimit(currentLimitsInfos2.getPermanentLimit()).add();
                 }
 
-                // store the substations ids in the listener
-                listener.addSubstationsIds(NetworkStoreListener.getSubstationIds(myLine));
-
                 subReporter.report(Report.builder()
                     .withKey("lineCreated")
                     .withDefaultMessage("New line with id=${id} created")
@@ -909,10 +898,7 @@ public class NetworkModificationService {
                 VoltageLevel voltageLevel1 = getVoltageLevel(network, twoWindingsTransformerCreationInfos.getVoltageLevelId1());
                 VoltageLevel voltageLevel2 = getVoltageLevel(network, twoWindingsTransformerCreationInfos.getVoltageLevelId2());
 
-                TwoWindingsTransformer transformer = createTwoWindingsTransformer(network, voltageLevel1, voltageLevel2, twoWindingsTransformerCreationInfos);
-
-                // store the substations ids in the listener
-                listener.addSubstationsIds(NetworkStoreListener.getSubstationIds(transformer));
+                createTwoWindingsTransformer(network, voltageLevel1, voltageLevel2, twoWindingsTransformerCreationInfos);
 
                 subReporter.report(Report.builder()
                     .withKey("twoWindingsTransformerCreated")

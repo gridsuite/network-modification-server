@@ -230,6 +230,7 @@ public class NetworkStoreListener implements NetworkListener {
 
     @Override
     public void onCreation(Identifiable identifiable) {
+        substationsIds.addAll(getSubstationIds(identifiable));
         equipmentInfosService.add(
             EquipmentInfos.builder()
                 .networkUuid(networkUuid)
@@ -250,11 +251,8 @@ public class NetworkStoreListener implements NetworkListener {
         //equipmentInfosService.delete(identifiable.getId(), networkUuid);
     }
 
-    public void addSubstationsIds(Set<String> substationsIds) {
+    public void onTemporaryRemoval(String equipmentId, Set<String> substationsIds) {
         this.substationsIds.addAll(substationsIds);
-    }
-
-    public void deleteEquipmentInfos(String equipmentId) {
         equipmentInfosService.delete(equipmentId, networkUuid);
     }
 }
