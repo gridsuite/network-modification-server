@@ -6,9 +6,9 @@
  */
 package org.gridsuite.modification.server;
 
-import java.util.Objects;
-
 import org.springframework.http.HttpStatus;
+
+import java.util.Objects;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -16,6 +16,8 @@ import org.springframework.http.HttpStatus;
  */
 public class NetworkModificationException extends RuntimeException {
     static final String EMPTY_SCRIPT = "Empty script";
+    static final String EMPTY_BRANCH_ACTION = "Empty branch action";
+    static final String BAD_BRANCH_ACTION = "Bad branch action";
 
     public enum Type {
         GROOVY_SCRIPT_EMPTY(HttpStatus.BAD_REQUEST, EMPTY_SCRIPT),
@@ -37,7 +39,11 @@ public class NetworkModificationException extends RuntimeException {
         EQUIPMENT_NOT_FOUND(HttpStatus.NOT_FOUND),
         CREATE_LINE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         CREATE_TWO_WINDINGS_TRANSFORMER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
-        CREATE_SUBSTATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR);
+        CREATE_SUBSTATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
+        BRANCH_ACTION_EMPTY(HttpStatus.BAD_REQUEST, EMPTY_BRANCH_ACTION),
+        BRANCH_ACTION_BAD(HttpStatus.BAD_REQUEST, BAD_BRANCH_ACTION),
+        BRANCH_ACTION_ERROR(HttpStatus.BAD_REQUEST),
+        UNKNOWN_BRANCH_ACTION_TYPE(HttpStatus.INTERNAL_SERVER_ERROR);
 
         public final HttpStatus status;
         private final String message;
@@ -80,5 +86,10 @@ public class NetworkModificationException extends RuntimeException {
     public static NetworkModificationException createEquipmentTypeUnknown(String type) {
         Objects.requireNonNull(type);
         return new NetworkModificationException(Type.UNKNOWN_EQUIPMENT_TYPE, "The equipment type : " + type + " is unknown");
+    }
+
+    public static NetworkModificationException createBranchActionTypeUnknown(String type) {
+        Objects.requireNonNull(type);
+        return new NetworkModificationException(Type.UNKNOWN_BRANCH_ACTION_TYPE, "The branch action type : " + type + " is unknown");
     }
 }

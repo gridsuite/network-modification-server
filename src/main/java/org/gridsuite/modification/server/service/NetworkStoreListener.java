@@ -186,11 +186,15 @@ public class NetworkStoreListener implements NetworkListener {
         modifications.add(this.modificationRepository.createGroovyScriptModificationEntity(script));
     }
 
+    public void storeBranchStatusModification(BranchStatusModificationInfos.ActionType action) {
+        modifications.add(this.modificationRepository.createBranchStatusModificationEntity(action));
+    }
+
     public void storeSubstationCreation(SubstationCreationInfos substationCreationInfos) {
         modifications.add(this.modificationRepository.createSubstationEntity(
-                substationCreationInfos.getEquipmentId(),
-                substationCreationInfos.getEquipmentName(),
-                substationCreationInfos.getSubstationCountry()
+            substationCreationInfos.getEquipmentId(),
+            substationCreationInfos.getEquipmentName(),
+            substationCreationInfos.getSubstationCountry()
         ));
     }
 

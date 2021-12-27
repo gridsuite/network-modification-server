@@ -12,10 +12,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.reporter.*;
 import com.powsybl.iidm.network.*;
+import com.powsybl.iidm.network.Branch.Side;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.sld.iidm.extensions.BranchStatus;
 import com.powsybl.sld.iidm.extensions.BranchStatusAdder;
-import com.powsybl.iidm.network.Branch.Side;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
 import org.apache.commons.lang3.StringUtils;
@@ -26,11 +26,7 @@ import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.GroovyScriptModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.attribute.modification.EquipmentAttributeModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.creation.GeneratorCreationEntity;
-import org.gridsuite.modification.server.entities.equipment.creation.LineCreationEntity;
-import org.gridsuite.modification.server.entities.equipment.creation.LoadCreationEntity;
-import org.gridsuite.modification.server.entities.equipment.creation.SubstationCreationEntity;
-import org.gridsuite.modification.server.entities.equipment.creation.TwoWindingsTransformerCreationEntity;
+import org.gridsuite.modification.server.entities.equipment.creation.*;
 import org.gridsuite.modification.server.entities.equipment.deletion.EquipmentDeletionEntity;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.slf4j.Logger;
@@ -203,169 +199,160 @@ public class NetworkModificationService {
         return terminal1Disconnected && terminal2Disconnected;
     }
 
-    public Flux<EquipmenModificationInfos> changeLineStatus(UUID networkUuid, String variantId, UUID groupUuid, String lineId, String lineStatus) {
-        Flux<EquipmenModificationInfos> modifications;
-        switch (lineStatus) {
-            case "lockout":
-                modifications = lockoutLine(networkUuid, variantId, groupUuid, lineId);
-                break;
-            case "trip":
-                modifications = tripLine(networkUuid, variantId, groupUuid, lineId);
-                break;
-            case "switchOn":
-                modifications = switchOnLine(networkUuid, variantId, groupUuid, lineId);
-                break;
-            case "energiseEndOne":
-                modifications = energiseLineEnd(networkUuid, variantId, groupUuid, lineId, Branch.Side.ONE);
-                break;
-            case "energiseEndTwo":
-                modifications = energiseLineEnd(networkUuid, variantId, groupUuid, lineId, Branch.Side.TWO);
-                break;
-            default:
-                throw new IllegalStateException("Unexpected value: " + lineStatus);
-        }
-        return modifications;
+    public Flux<BranchStatusModificationInfos> changeLineStatus(UUID networkUuid, String variantId, UUID groupUuid, String lineId, String action) {
+        return assertBranchActionValid(action).thenMany(
+            getNetworkModificationInfos(networkUuid, variantId).flatMapIterable(networkInfos -> {
+                NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, modificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
+                switch (BranchStatusModificationInfos.ActionType.valueOf(action.toUpperCase())) {
+                    case LOCKOUT:
+                        return execLockoutLine(listener, lineId);
+                    case TRIP:
+                        return execTripLine(listener, lineId);
+                    case SWITCH_ON:
+                        return execSwitchOnLine(listener, lineId);
+                    case ENERGISE_END_ONE:
+                        return execEnergiseLineEnd(listener, lineId, Branch.Side.ONE);
+                    case ENERGISE_END_TWO:
+                        return execEnergiseLineEnd(listener, lineId, Side.TWO);
+                    default:
+                        throw NetworkModificationException.createBranchActionTypeUnknown(action);
+                }
+            })
+        );
     }
 
-    private List<EquipmenModificationInfos> execLockoutLine(NetworkStoreListener listener,
-                                                            String lineId,
-                                                            ReporterModel reporter,
-                                                            Reporter subReporter) {
+    private List<BranchStatusModificationInfos> execLockoutLine(NetworkStoreListener listener, String lineId) {
         Network network = listener.getNetwork();
         UUID networkUuid = listener.getNetworkUuid();
 
+        ReporterModel reporter = new ReporterModel(REPORT_KEY, REPORT_NAME);
+        Reporter subReporter = reporter.createSubReporter("LineLockout", "Lockout line");
+
         return doAction(listener, () -> {
-            if (listener.isApplyModifications()) {
-                if (network.getLine(lineId) == null) {
-                    throw new NetworkModificationException(LINE_NOT_FOUND, lineId);
+                if (listener.isApplyModifications()) {
+                    if (network.getLine(lineId) == null) {
+                        throw new NetworkModificationException(LINE_NOT_FOUND, lineId);
+                    }
+                    if (disconnectLineBothSides(network, lineId)) {
+                        network.getLine(lineId).newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.PLANNED_OUTAGE).add();
+                    } else {
+                        throw new NetworkModificationException(BRANCH_ACTION_ERROR, "Unable to disconnect both line ends");
+                    }
+
+                    subReporter.report(Report.builder()
+                        .withKey("lockoutLineApplied")
+                        .withDefaultMessage("Lockout line applied")
+                        .withSeverity(new TypedValue("LINE_STATUS_INFO", TypedValue.INFO_LOGLEVEL))
+                        .build());
                 }
-                if (disconnectLineBothSides(network, lineId)) {
-                    network.getLine(lineId).newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.PLANNED_OUTAGE).add();
-                } else {
-                    throw new NetworkModificationException(MODIFICATION_ERROR, "Unable to disconnect both line ends");
-                }
-            }
-        }, MODIFICATION_ERROR, networkUuid, reporter, subReporter).stream().map(EquipmenModificationInfos.class::cast)
-            .collect(Collectors.toList());
+
+                // add the branch status modification entity to the listener
+                listener.storeBranchStatusModification(BranchStatusModificationInfos.ActionType.LOCKOUT);
+            }, MODIFICATION_ERROR, networkUuid, reporter, subReporter
+        ).stream().map(BranchStatusModificationInfos.class::cast).collect(Collectors.toList());
     }
 
-    public Flux<EquipmenModificationInfos> lockoutLine(UUID networkUuid, String variantId, UUID groupUuid, String lineId) {
-        return getNetworkModificationInfos(networkUuid, variantId)
-            .flatMapIterable(networkInfos -> {
-                NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, modificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
-                ReporterModel reporter = new ReporterModel(REPORT_KEY, REPORT_NAME);
-                Reporter subReporter = reporter.createSubReporter("LineLockout", "Lockout line");
-
-                return execLockoutLine(listener, lineId, reporter, subReporter);
-            });
-    }
-
-    private List<EquipmenModificationInfos> execTripLine(NetworkStoreListener listener,
-                                                         String lineId,
-                                                         ReporterModel reporter,
-                                                         Reporter subReporter) {
+    private List<BranchStatusModificationInfos> execTripLine(NetworkStoreListener listener, String lineId) {
         Network network = listener.getNetwork();
         UUID networkUuid = listener.getNetworkUuid();
 
+        ReporterModel reporter = new ReporterModel(REPORT_KEY, REPORT_NAME);
+        Reporter subReporter = reporter.createSubReporter("LineTrip", "Trip line");
+
         return doAction(listener, () -> {
-            if (listener.isApplyModifications()) {
-                if (network.getLine(lineId) == null) {
-                    throw new NetworkModificationException(LINE_NOT_FOUND, lineId);
+                if (listener.isApplyModifications()) {
+                    if (network.getLine(lineId) == null) {
+                        throw new NetworkModificationException(LINE_NOT_FOUND, lineId);
+                    }
+                    if (disconnectLineBothSides(network, lineId)) {
+                        network.getLine(lineId).newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.FORCED_OUTAGE).add();
+                    } else {
+                        throw new NetworkModificationException(BRANCH_ACTION_ERROR, "Unable to disconnect both line ends");
+                    }
+
+                    subReporter.report(Report.builder()
+                        .withKey("tripLineApplied")
+                        .withDefaultMessage("Trip line applied")
+                        .withSeverity(new TypedValue("LINE_STATUS_INFO", TypedValue.INFO_LOGLEVEL))
+                        .build());
                 }
-                if (disconnectLineBothSides(network, lineId)) {
-                    network.getLine(lineId).newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.FORCED_OUTAGE).add();
-                } else {
-                    throw new NetworkModificationException(MODIFICATION_ERROR, "Unable to disconnect both line ends");
-                }
-            }
-        }, MODIFICATION_ERROR, networkUuid, reporter, subReporter).stream().map(EquipmenModificationInfos.class::cast)
-            .collect(Collectors.toList());
+
+                // add the branch status modification entity to the listener
+                listener.storeBranchStatusModification(BranchStatusModificationInfos.ActionType.TRIP);
+            }, MODIFICATION_ERROR, networkUuid, reporter, subReporter
+        ).stream().map(BranchStatusModificationInfos.class::cast).collect(Collectors.toList());
     }
 
-    public Flux<EquipmenModificationInfos> tripLine(UUID networkUuid, String variantId, UUID groupUuid, String lineId) {
-        return getNetworkModificationInfos(networkUuid, variantId)
-            .flatMapIterable(networkInfos -> {
-                NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, modificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
-                ReporterModel reporter = new ReporterModel(REPORT_KEY, REPORT_NAME);
-                Reporter subReporter = reporter.createSubReporter("LineTrip", "Trip line");
-
-                return execTripLine(listener, lineId, reporter, subReporter);
-            });
-    }
-
-    private List<EquipmenModificationInfos> execEnergiseLineEnd(NetworkStoreListener listener,
+    private List<BranchStatusModificationInfos> execEnergiseLineEnd(NetworkStoreListener listener,
                                                                 String lineId,
-                                                                Branch.Side side,
-                                                                ReporterModel reporter,
-                                                                Reporter subReporter) {
+                                                                Branch.Side side) {
         Network network = listener.getNetwork();
         UUID networkUuid = listener.getNetworkUuid();
 
+        ReporterModel reporter = new ReporterModel(REPORT_KEY, REPORT_NAME);
+        Reporter subReporter = reporter.createSubReporter("LineEnergise", "Energise line");
+
         return doAction(listener, () -> {
-            if (listener.isApplyModifications()) {
-                if (network.getLine(lineId) == null) {
-                    throw new NetworkModificationException(LINE_NOT_FOUND, lineId);
+                if (listener.isApplyModifications()) {
+                    if (network.getLine(lineId) == null) {
+                        throw new NetworkModificationException(LINE_NOT_FOUND, lineId);
+                    }
+                    Terminal terminalToConnect = network.getLine(lineId).getTerminal(side);
+                    boolean isTerminalToConnectConnected = terminalToConnect.isConnected() || terminalToConnect.connect();
+                    Terminal terminalToDisconnect = network.getLine(lineId).getTerminal(side == Branch.Side.ONE ? Branch.Side.TWO : Branch.Side.ONE);
+                    boolean isTerminalToDisconnectDisconnected = !terminalToDisconnect.isConnected() || terminalToDisconnect.disconnect();
+                    if (isTerminalToConnectConnected && isTerminalToDisconnectDisconnected) {
+                        network.getLine(lineId).newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.IN_OPERATION).add();
+                    } else {
+                        throw new NetworkModificationException(BRANCH_ACTION_ERROR, "Unable to energise line end");
+                    }
+
+                    subReporter.report(Report.builder()
+                        .withKey("energiseLineEndApplied")
+                        .withDefaultMessage(String.format("Energise line end at the side %s applied", side.name()))
+                        .withSeverity(new TypedValue("LINE_STATUS_INFO", TypedValue.INFO_LOGLEVEL))
+                        .build());
                 }
-                Terminal terminalToConnect = network.getLine(lineId).getTerminal(side);
-                boolean isTerminalToConnectConnected = terminalToConnect.isConnected() || terminalToConnect.connect();
-                Terminal terminalToDisconnect = network.getLine(lineId).getTerminal(side == Branch.Side.ONE ? Branch.Side.TWO : Branch.Side.ONE);
-                boolean isTerminalToDisconnectDisconnected = !terminalToDisconnect.isConnected() || terminalToDisconnect.disconnect();
-                if (isTerminalToConnectConnected && isTerminalToDisconnectDisconnected) {
-                    network.getLine(lineId).newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.IN_OPERATION).add();
-                } else {
-                    throw new NetworkModificationException(MODIFICATION_ERROR, "Unable to energise line end");
-                }
-            }
-        }, MODIFICATION_ERROR, networkUuid, reporter, subReporter).stream().map(EquipmenModificationInfos.class::cast)
-            .collect(Collectors.toList());
+
+                // add the branch status modification entity to the listener
+                listener.storeBranchStatusModification(side == Branch.Side.ONE ? BranchStatusModificationInfos.ActionType.ENERGISE_END_ONE : BranchStatusModificationInfos.ActionType.ENERGISE_END_TWO);
+            }, MODIFICATION_ERROR, networkUuid, reporter, subReporter
+        ).stream().map(BranchStatusModificationInfos.class::cast).collect(Collectors.toList());
     }
 
-    public Flux<EquipmenModificationInfos> energiseLineEnd(UUID networkUuid, String variantId, UUID groupUuid, String lineId, Branch.Side side) {
-        return getNetworkModificationInfos(networkUuid, variantId)
-            .flatMapIterable(networkInfos -> {
-                NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, modificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
-                ReporterModel reporter = new ReporterModel(REPORT_KEY, REPORT_NAME);
-                Reporter subReporter = reporter.createSubReporter("LineEnergise", "Energise line");
-
-                return execEnergiseLineEnd(listener, lineId, side, reporter, subReporter);
-            });
-    }
-
-    private List<EquipmenModificationInfos> execSwitchOnLine(NetworkStoreListener listener,
-                                                             String lineId,
-                                                             ReporterModel reporter,
-                                                             Reporter subReporter) {
+    private List<BranchStatusModificationInfos> execSwitchOnLine(NetworkStoreListener listener, String lineId) {
         Network network = listener.getNetwork();
         UUID networkUuid = listener.getNetworkUuid();
 
+        ReporterModel reporter = new ReporterModel(REPORT_KEY, REPORT_NAME);
+        Reporter subReporter = reporter.createSubReporter("LineSwitchOn", "Switch on line");
+
         return doAction(listener, () -> {
-            if (listener.isApplyModifications()) {
-                if (network.getLine(lineId) == null) {
-                    throw new NetworkModificationException(LINE_NOT_FOUND, lineId);
-                }
-                Terminal terminal1 = network.getLine(lineId).getTerminal1();
-                boolean terminal1Connected = terminal1.isConnected() || terminal1.connect();
-                Terminal terminal2 = network.getLine(lineId).getTerminal2();
-                boolean terminal2Connected = terminal2.isConnected() || terminal2.connect();
-                if (terminal1Connected && terminal2Connected) {
-                    network.getLine(lineId).newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.IN_OPERATION).add();
-                } else {
-                    throw new NetworkModificationException(MODIFICATION_ERROR, "Unable to connect both line ends");
-                }
-            }
-        }, MODIFICATION_ERROR, networkUuid, reporter, subReporter).stream().map(EquipmenModificationInfos.class::cast)
-            .collect(Collectors.toList());
-    }
+                if (listener.isApplyModifications()) {
+                    if (network.getLine(lineId) == null) {
+                        throw new NetworkModificationException(LINE_NOT_FOUND, lineId);
+                    }
+                    Terminal terminal1 = network.getLine(lineId).getTerminal1();
+                    boolean terminal1Connected = terminal1.isConnected() || terminal1.connect();
+                    Terminal terminal2 = network.getLine(lineId).getTerminal2();
+                    boolean terminal2Connected = terminal2.isConnected() || terminal2.connect();
+                    if (terminal1Connected && terminal2Connected) {
+                        network.getLine(lineId).newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.IN_OPERATION).add();
+                    } else {
+                        throw new NetworkModificationException(BRANCH_ACTION_ERROR, "Unable to connect both line ends");
+                    }
 
-    public Flux<EquipmenModificationInfos> switchOnLine(UUID networkUuid, String variantId, UUID groupUuid, String lineId) {
-        return getNetworkModificationInfos(networkUuid, variantId)
-            .flatMapIterable(networkInfos -> {
-                NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, modificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
-                ReporterModel reporter = new ReporterModel(REPORT_KEY, REPORT_NAME);
-                Reporter subReporter = reporter.createSubReporter("LineSwitchOn", "Switch on line");
+                    subReporter.report(Report.builder()
+                        .withKey("switchOnLineApplied")
+                        .withDefaultMessage("Switch on line applied")
+                        .withSeverity(new TypedValue("LINE_STATUS_INFO", TypedValue.INFO_LOGLEVEL))
+                        .build());
+                }
 
-                return execSwitchOnLine(listener, lineId, reporter, subReporter);
-            });
+                // add the branch status modification entity to the listener
+                listener.storeBranchStatusModification(BranchStatusModificationInfos.ActionType.SWITCH_ON);
+            }, MODIFICATION_ERROR, networkUuid, reporter, subReporter
+        ).stream().map(BranchStatusModificationInfos.class::cast).collect(Collectors.toList());
     }
 
     public Mono<Void> deleteModificationGroup(UUID groupUuid) {
@@ -434,6 +421,18 @@ public class NetworkModificationService {
 
     private Mono<Void> assertGroovyScriptNotEmpty(String groovyScript) {
         return StringUtils.isBlank(groovyScript) ? Mono.error(new NetworkModificationException(GROOVY_SCRIPT_EMPTY)) : Mono.empty();
+    }
+
+    private Mono<Void> assertBranchActionValid(String action) {
+        if (StringUtils.isBlank(action)) {
+            return Mono.error(new NetworkModificationException(BRANCH_ACTION_EMPTY));
+        }
+        try {
+            BranchStatusModificationInfos.ActionType.valueOf(action.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return Mono.error(new NetworkModificationException(BRANCH_ACTION_BAD));
+        }
+        return Mono.empty();
     }
 
     private VoltageLevel getVoltageLevel(Network network, String voltageLevelId) {

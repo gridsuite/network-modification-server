@@ -88,14 +88,18 @@ public class NetworkModificationController {
 
     @PutMapping(value = "/networks/{networkUuid}/lines/{lineId}/status", consumes = MediaType.TEXT_PLAIN_VALUE)
     @Operation(summary = "Change the status of a line in a network variant")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "the line status has been changed")})
-    public ResponseEntity<Flux<EquipmenModificationInfos>> changeLineStatus(
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "the line status has been changed"),
+        @ApiResponse(responseCode = "404", description = "the network or line not found"),
+        @ApiResponse(responseCode = "400", description = "the modification action is  incorrect")
+    })
+    public ResponseEntity<Flux<BranchStatusModificationInfos>> changeLineStatus(
             @Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
             @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
             @Parameter(description = "Line ID") @PathVariable("lineId") String lineId,
             @RequestParam(value = "group", required = false) UUID groupUuid,
-            @RequestBody(required = true) String status) {
-        return ResponseEntity.ok().body(networkModificationService.changeLineStatus(networkUuid, variantId, groupUuid, lineId, status));
+            @RequestBody String action) {
+        return ResponseEntity.ok().body(networkModificationService.changeLineStatus(networkUuid, variantId, groupUuid, lineId, action));
     }
 
     @PutMapping(value = "/networks/{networkUuid}/loads", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)

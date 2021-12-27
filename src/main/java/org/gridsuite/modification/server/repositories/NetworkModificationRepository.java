@@ -13,6 +13,7 @@ import com.powsybl.iidm.network.LoadType;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.server.entities.BranchStatusModificationEntity;
 import org.gridsuite.modification.server.entities.GroovyScriptModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationGroupEntity;
@@ -233,6 +234,10 @@ public class NetworkModificationRepository {
 
     public GroovyScriptModificationEntity createGroovyScriptModificationEntity(String script) {
         return new GroovyScriptModificationEntity(script);
+    }
+
+    public BranchStatusModificationEntity createBranchStatusModificationEntity(BranchStatusModificationInfos.ActionType action) {
+        return new BranchStatusModificationEntity(action);
     }
 
     public GroovyScriptModificationInfos getGroovyScriptModification(UUID groupUuid, UUID modificationUuid) {
