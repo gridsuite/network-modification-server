@@ -40,6 +40,7 @@ public class BranchStatusModificationEntity extends EquipmentModificationEntity 
             .date(getDate())
             .type(ModificationType.valueOf(getType()))
             .substationIds(vlUuids)
+            .equipmentId(getEquipmentId())
             .action(BranchStatusModificationInfos.ActionType.valueOf(getAction()))
             .build();
     }

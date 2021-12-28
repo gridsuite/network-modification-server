@@ -241,7 +241,8 @@ public class NetworkModificationService {
 
                     subReporter.report(Report.builder()
                         .withKey("lockoutLineApplied")
-                        .withDefaultMessage("Lockout line applied")
+                        .withDefaultMessage("Line ${id} (id) : lockout applied")
+                        .withValue("id", lineId)
                         .withSeverity(new TypedValue("LINE_STATUS_INFO", TypedValue.INFO_LOGLEVEL))
                         .build());
                 }
@@ -272,7 +273,8 @@ public class NetworkModificationService {
 
                     subReporter.report(Report.builder()
                         .withKey("tripLineApplied")
-                        .withDefaultMessage("Trip line applied")
+                        .withDefaultMessage("Line ${id} (id) : trip applied")
+                        .withValue("id", lineId)
                         .withSeverity(new TypedValue("LINE_STATUS_INFO", TypedValue.INFO_LOGLEVEL))
                         .build());
                 }
@@ -309,7 +311,9 @@ public class NetworkModificationService {
 
                     subReporter.report(Report.builder()
                         .withKey("energiseLineEndApplied")
-                        .withDefaultMessage(String.format("Energise line end at the side %s applied", side.name()))
+                        .withDefaultMessage("Line ${id} (id) : energise the side ${side} applied")
+                        .withValue("id", lineId)
+                        .withValue("side", side.name())
                         .withSeverity(new TypedValue("LINE_STATUS_INFO", TypedValue.INFO_LOGLEVEL))
                         .build());
                 }
@@ -344,7 +348,8 @@ public class NetworkModificationService {
 
                     subReporter.report(Report.builder()
                         .withKey("switchOnLineApplied")
-                        .withDefaultMessage("Switch on line applied")
+                        .withDefaultMessage("Line ${id} (id) : switch on applied")
+                        .withValue("id", lineId)
                         .withSeverity(new TypedValue("LINE_STATUS_INFO", TypedValue.INFO_LOGLEVEL))
                         .build());
                 }

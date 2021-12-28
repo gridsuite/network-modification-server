@@ -299,7 +299,7 @@ public class ModificationControllerTest {
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
             .expectBodyList(BranchStatusModificationInfos.class)
             .value(modifications -> modifications.get(0),
-                MatcherBranchStatusModificationInfos.createMatcherBranchStatusModificationInfos(BranchStatusModificationInfos.ActionType.LOCKOUT, Set.of("s1", "s2")));
+                MatcherBranchStatusModificationInfos.createMatcherBranchStatusModificationInfos("line2", BranchStatusModificationInfos.ActionType.LOCKOUT, Set.of("s1", "s2")));
 
         // line switch on (already switched on)
         webTestClient.put().uri(uriString, TEST_NETWORK_ID, "line2")
@@ -309,7 +309,7 @@ public class ModificationControllerTest {
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
             .expectBodyList(BranchStatusModificationInfos.class)
             .value(modifications -> modifications.get(0),
-                MatcherBranchStatusModificationInfos.createMatcherBranchStatusModificationInfos(BranchStatusModificationInfos.ActionType.SWITCH_ON, Set.of()));
+                MatcherBranchStatusModificationInfos.createMatcherBranchStatusModificationInfos("line2", BranchStatusModificationInfos.ActionType.SWITCH_ON, Set.of()));
 
         // line trip
         webTestClient.put().uri(uriString, TEST_NETWORK_ID, "line2")
@@ -319,7 +319,7 @@ public class ModificationControllerTest {
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
             .expectBodyList(BranchStatusModificationInfos.class)
             .value(modifications -> modifications.get(0),
-                MatcherBranchStatusModificationInfos.createMatcherBranchStatusModificationInfos(BranchStatusModificationInfos.ActionType.TRIP, Set.of("s1", "s2")));
+                MatcherBranchStatusModificationInfos.createMatcherBranchStatusModificationInfos("line2", BranchStatusModificationInfos.ActionType.TRIP, Set.of("s1", "s2")));
 
         // line energise on one end
         webTestClient.put().uri(uriString, TEST_NETWORK_ID, "line2")
@@ -329,7 +329,7 @@ public class ModificationControllerTest {
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
             .expectBodyList(BranchStatusModificationInfos.class)
             .value(modifications -> modifications.get(0),
-                MatcherBranchStatusModificationInfos.createMatcherBranchStatusModificationInfos(BranchStatusModificationInfos.ActionType.ENERGISE_END_ONE, Set.of("s2")));
+                MatcherBranchStatusModificationInfos.createMatcherBranchStatusModificationInfos("line2", BranchStatusModificationInfos.ActionType.ENERGISE_END_ONE, Set.of("s2")));
 
         // line energise on other end
         webTestClient.put().uri(uriString, TEST_NETWORK_ID, "line2")
@@ -339,7 +339,7 @@ public class ModificationControllerTest {
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
             .expectBodyList(BranchStatusModificationInfos.class)
             .value(modifications -> modifications.get(0),
-                MatcherBranchStatusModificationInfos.createMatcherBranchStatusModificationInfos(BranchStatusModificationInfos.ActionType.ENERGISE_END_TWO, Set.of("s1")));
+                MatcherBranchStatusModificationInfos.createMatcherBranchStatusModificationInfos("line2", BranchStatusModificationInfos.ActionType.ENERGISE_END_TWO, Set.of("s1")));
 
         testNetworkModificationsCount(TEST_GROUP_ID, 5);
     }

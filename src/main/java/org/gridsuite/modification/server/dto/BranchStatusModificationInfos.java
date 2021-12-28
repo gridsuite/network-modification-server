@@ -22,7 +22,7 @@ import lombok.experimental.SuperBuilder;
 @Setter
 @ToString(callSuper = true)
 @Schema(description = "Branch status modification")
-public class BranchStatusModificationInfos extends ModificationInfos {
+public class BranchStatusModificationInfos extends EquipmenModificationInfos {
 
     @Schema(description = "Action type")
     ActionType action;

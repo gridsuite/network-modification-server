@@ -89,7 +89,7 @@ public class NetworkModificationRepository {
     }
 
     @Transactional // To have all create in the same transaction (atomic)
-    public void saveModifications(UUID groupUuid, List<ModificationEntity> modifications) {
+    public void saveModifications(UUID groupUuid, List<? extends ModificationEntity> modifications) {
         var modificationGroupEntity = this.modificationGroupRepository
                 .findById(groupUuid)
                 .orElseGet(() -> modificationGroupRepository.save(new ModificationGroupEntity(groupUuid)));
@@ -101,6 +101,12 @@ public class NetworkModificationRepository {
         return this.modificationGroupRepository.findAll().stream()
                 .map(ModificationGroupEntity::getId)
                 .collect(Collectors.toList());
+    }
+
+    public List<ModificationInfos> getModifications(List<UUID> uuids) {
+        return this.modificationRepository.findAllById(uuids).stream()
+            .map(ModificationEntity::toModificationInfos)
+            .collect(Collectors.toList());
     }
 
     @Transactional
