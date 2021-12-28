@@ -4,7 +4,7 @@
   License, v. 2.0. If a copy of the MPL was not distributed with this
   file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package org.gridsuite.modification.server.entities;
+package org.gridsuite.modification.server.entities.equipment.modification;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -22,13 +22,13 @@ import java.util.Set;
 @Entity
 @Table(name = "branchStatusModification")
 @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "branchStatusModification_id_fk_constraint"))
-public class BranchStatusModificationEntity extends ModificationEntity {
+public class BranchStatusModificationEntity extends EquipmentModificationEntity {
 
     @Column(name = "action")
     private String action;
 
-    public BranchStatusModificationEntity(BranchStatusModificationInfos.ActionType status) {
-        super(ModificationType.BRANCH_STATUS);
+    public BranchStatusModificationEntity(String lineId, BranchStatusModificationInfos.ActionType status) {
+        super(lineId, ModificationType.BRANCH_STATUS);
         this.action = status.name();
     }
 

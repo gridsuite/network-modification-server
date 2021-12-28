@@ -39,6 +39,50 @@ public class NetworkStoreListener implements NetworkListener {
 
     private boolean isApplyModifications;
 
+    protected NetworkStoreListener(Network network, UUID networkUuid, UUID groupUuid,
+                                   NetworkModificationRepository modificationRepository, EquipmentInfosService equipmentInfosService,
+                                   boolean isBuild, boolean isApplyModifications) {
+        this.network = network;
+        this.networkUuid = networkUuid;
+        this.groupUuid = groupUuid;
+        this.modificationRepository = modificationRepository;
+        this.equipmentInfosService = equipmentInfosService;
+        this.isBuild = isBuild;
+        this.isApplyModifications = isApplyModifications;
+    }
+
+    public static NetworkStoreListener create(Network network, UUID networkUuid, UUID groupUuid,
+                                              NetworkModificationRepository modificationRepository,
+                                              EquipmentInfosService equipmentInfosService,
+                                              boolean isBuild, boolean isApplyModifications) {
+        var listener = new NetworkStoreListener(network, networkUuid, groupUuid, modificationRepository, equipmentInfosService,
+            isBuild, isApplyModifications);
+        network.addListener(listener);
+        return listener;
+    }
+
+    public static Set<String> getSubstationIds(Identifiable identifiable) {
+        Set<String> ids = new HashSet<>();
+        if (identifiable instanceof Switch) {
+            ids.add(((Switch) identifiable).getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
+        } else if (identifiable instanceof Injection) {
+            ids.add(((Injection<?>) identifiable).getTerminal().getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
+        } else if (identifiable instanceof Branch) {
+            ids.add(((Branch<?>) identifiable).getTerminal1().getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
+            ids.add(((Branch<?>) identifiable).getTerminal2().getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
+        } else if (identifiable instanceof ThreeWindingsTransformer) {
+            ids.add(((ThreeWindingsTransformer) identifiable).getTerminal(ThreeWindingsTransformer.Side.ONE).getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
+            ids.add(((ThreeWindingsTransformer) identifiable).getTerminal(ThreeWindingsTransformer.Side.TWO).getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
+            ids.add(((ThreeWindingsTransformer) identifiable).getTerminal(ThreeWindingsTransformer.Side.THREE).getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
+        } else if (identifiable instanceof HvdcLine) {
+            ids.add(((HvdcLine) identifiable).getConverterStation1().getTerminal().getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
+            ids.add(((HvdcLine) identifiable).getConverterStation2().getTerminal().getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
+        } else if (identifiable instanceof Substation) {
+            ids.add(identifiable.getId());
+        }
+        return ids;
+    }
+
     Network getNetwork() {
         return network;
     }
@@ -53,28 +97,6 @@ public class NetworkStoreListener implements NetworkListener {
 
     boolean isApplyModifications() {
         return isApplyModifications;
-    }
-
-    public static NetworkStoreListener create(Network network, UUID networkUuid, UUID groupUuid,
-                                              NetworkModificationRepository modificationRepository,
-                                              EquipmentInfosService equipmentInfosService,
-                                              boolean isBuild, boolean isApplyModifications) {
-        var listener = new NetworkStoreListener(network, networkUuid, groupUuid, modificationRepository, equipmentInfosService,
-                                                isBuild, isApplyModifications);
-        network.addListener(listener);
-        return listener;
-    }
-
-    protected NetworkStoreListener(Network network, UUID networkUuid, UUID groupUuid,
-                                   NetworkModificationRepository modificationRepository, EquipmentInfosService equipmentInfosService,
-                                   boolean isBuild, boolean isApplyModifications) {
-        this.network = network;
-        this.networkUuid = networkUuid;
-        this.groupUuid = groupUuid;
-        this.modificationRepository = modificationRepository;
-        this.equipmentInfosService = equipmentInfosService;
-        this.isBuild = isBuild;
-        this.isApplyModifications = isApplyModifications;
     }
 
     public List<ModificationInfos> getModifications() {
@@ -166,19 +188,19 @@ public class NetworkStoreListener implements NetworkListener {
 
     public void storeTwoWindingsTransformerCreation(TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
         modifications.add(this.modificationRepository.createTwoWindingsTransformerEntity(twoWindingsTransformerCreationInfos.getEquipmentId(),
-                twoWindingsTransformerCreationInfos.getEquipmentName(),
-                twoWindingsTransformerCreationInfos.getSeriesResistance(),
-                twoWindingsTransformerCreationInfos.getSeriesReactance(),
-                twoWindingsTransformerCreationInfos.getMagnetizingConductance(),
-                twoWindingsTransformerCreationInfos.getMagnetizingSusceptance(),
-                twoWindingsTransformerCreationInfos.getRatedVoltage1(),
-                twoWindingsTransformerCreationInfos.getRatedVoltage2(),
-                twoWindingsTransformerCreationInfos.getVoltageLevelId1(),
-                twoWindingsTransformerCreationInfos.getBusOrBusbarSectionId1(),
-                twoWindingsTransformerCreationInfos.getVoltageLevelId2(),
-                twoWindingsTransformerCreationInfos.getBusOrBusbarSectionId2(),
-                twoWindingsTransformerCreationInfos.getCurrentLimits1() != null ? twoWindingsTransformerCreationInfos.getCurrentLimits1().getPermanentLimit() : null,
-                twoWindingsTransformerCreationInfos.getCurrentLimits2() != null ? twoWindingsTransformerCreationInfos.getCurrentLimits2().getPermanentLimit() : null)
+            twoWindingsTransformerCreationInfos.getEquipmentName(),
+            twoWindingsTransformerCreationInfos.getSeriesResistance(),
+            twoWindingsTransformerCreationInfos.getSeriesReactance(),
+            twoWindingsTransformerCreationInfos.getMagnetizingConductance(),
+            twoWindingsTransformerCreationInfos.getMagnetizingSusceptance(),
+            twoWindingsTransformerCreationInfos.getRatedVoltage1(),
+            twoWindingsTransformerCreationInfos.getRatedVoltage2(),
+            twoWindingsTransformerCreationInfos.getVoltageLevelId1(),
+            twoWindingsTransformerCreationInfos.getBusOrBusbarSectionId1(),
+            twoWindingsTransformerCreationInfos.getVoltageLevelId2(),
+            twoWindingsTransformerCreationInfos.getBusOrBusbarSectionId2(),
+            twoWindingsTransformerCreationInfos.getCurrentLimits1() != null ? twoWindingsTransformerCreationInfos.getCurrentLimits1().getPermanentLimit() : null,
+            twoWindingsTransformerCreationInfos.getCurrentLimits2() != null ? twoWindingsTransformerCreationInfos.getCurrentLimits2().getPermanentLimit() : null)
         );
     }
 
@@ -186,8 +208,8 @@ public class NetworkStoreListener implements NetworkListener {
         modifications.add(this.modificationRepository.createGroovyScriptModificationEntity(script));
     }
 
-    public void storeBranchStatusModification(BranchStatusModificationInfos.ActionType action) {
-        modifications.add(this.modificationRepository.createBranchStatusModificationEntity(action));
+    public void storeBranchStatusModification(String lineId, BranchStatusModificationInfos.ActionType action) {
+        modifications.add(this.modificationRepository.createBranchStatusModificationEntity(lineId, action));
     }
 
     public void storeSubstationCreation(SubstationCreationInfos substationCreationInfos) {
@@ -196,26 +218,6 @@ public class NetworkStoreListener implements NetworkListener {
             substationCreationInfos.getEquipmentName(),
             substationCreationInfos.getSubstationCountry()
         ));
-    }
-
-    public static Set<String> getSubstationIds(Identifiable identifiable) {
-        Set<String> ids = new HashSet<>();
-        if (identifiable instanceof Switch) {
-            ids.add(((Switch) identifiable).getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
-        } else if (identifiable instanceof Injection) {
-            ids.add(((Injection<?>) identifiable).getTerminal().getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
-        } else if (identifiable instanceof Branch) {
-            ids.add(((Branch<?>) identifiable).getTerminal1().getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
-            ids.add(((Branch<?>) identifiable).getTerminal2().getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
-        } else if (identifiable instanceof ThreeWindingsTransformer) {
-            ids.add(((ThreeWindingsTransformer) identifiable).getTerminal(ThreeWindingsTransformer.Side.ONE).getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
-            ids.add(((ThreeWindingsTransformer) identifiable).getTerminal(ThreeWindingsTransformer.Side.TWO).getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
-            ids.add(((ThreeWindingsTransformer) identifiable).getTerminal(ThreeWindingsTransformer.Side.THREE).getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
-        } else if (identifiable instanceof HvdcLine) {
-            ids.add(((HvdcLine) identifiable).getConverterStation1().getTerminal().getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
-            ids.add(((HvdcLine) identifiable).getConverterStation2().getTerminal().getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
-        }
-        return ids;
     }
 
     @Override

@@ -25,7 +25,7 @@ import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.GroovyScriptModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.attribute.modification.EquipmentAttributeModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.attribute.EquipmentAttributeModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.*;
 import org.gridsuite.modification.server.entities.equipment.deletion.EquipmentDeletionEntity;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
@@ -247,7 +247,7 @@ public class NetworkModificationService {
                 }
 
                 // add the branch status modification entity to the listener
-                listener.storeBranchStatusModification(BranchStatusModificationInfos.ActionType.LOCKOUT);
+                listener.storeBranchStatusModification(lineId, BranchStatusModificationInfos.ActionType.LOCKOUT);
             }, MODIFICATION_ERROR, networkUuid, reporter, subReporter
         ).stream().map(BranchStatusModificationInfos.class::cast).collect(Collectors.toList());
     }
@@ -278,7 +278,7 @@ public class NetworkModificationService {
                 }
 
                 // add the branch status modification entity to the listener
-                listener.storeBranchStatusModification(BranchStatusModificationInfos.ActionType.TRIP);
+                listener.storeBranchStatusModification(lineId, BranchStatusModificationInfos.ActionType.TRIP);
             }, MODIFICATION_ERROR, networkUuid, reporter, subReporter
         ).stream().map(BranchStatusModificationInfos.class::cast).collect(Collectors.toList());
     }
@@ -315,7 +315,7 @@ public class NetworkModificationService {
                 }
 
                 // add the branch status modification entity to the listener
-                listener.storeBranchStatusModification(side == Branch.Side.ONE ? BranchStatusModificationInfos.ActionType.ENERGISE_END_ONE : BranchStatusModificationInfos.ActionType.ENERGISE_END_TWO);
+                listener.storeBranchStatusModification(lineId, side == Branch.Side.ONE ? BranchStatusModificationInfos.ActionType.ENERGISE_END_ONE : BranchStatusModificationInfos.ActionType.ENERGISE_END_TWO);
             }, MODIFICATION_ERROR, networkUuid, reporter, subReporter
         ).stream().map(BranchStatusModificationInfos.class::cast).collect(Collectors.toList());
     }
@@ -350,7 +350,7 @@ public class NetworkModificationService {
                 }
 
                 // add the branch status modification entity to the listener
-                listener.storeBranchStatusModification(BranchStatusModificationInfos.ActionType.SWITCH_ON);
+                listener.storeBranchStatusModification(lineId, BranchStatusModificationInfos.ActionType.SWITCH_ON);
             }, MODIFICATION_ERROR, networkUuid, reporter, subReporter
         ).stream().map(BranchStatusModificationInfos.class::cast).collect(Collectors.toList());
     }
@@ -977,9 +977,6 @@ public class NetworkModificationService {
                     .setName(substationCreationInfos.getEquipmentName())
                     .setCountry(substationCreationInfos.getSubstationCountry())
                     .add();
-
-                // store the substation id in the listener
-                listener.addSubstationsIds(Set.of(substationCreationInfos.getEquipmentId()));
 
                 subReporter.report(Report.builder()
                     .withKey("substationCreated")
