@@ -58,7 +58,7 @@ public class RealizationExecContext {
     public static RealizationExecContext fromMessage(@NotNull Message<String> message, ObjectMapper objectMapper) {
         MessageHeaders headers = message.getHeaders();
         UUID networkUuid = UUID.fromString(getNonNullHeader(headers, "networkUuid"));
-        String receiver = (String) headers.get("receiver");
+        String receiver = getNonNullHeader(headers, "receiver");
         RealizationInfos infos;
         try {
             infos = objectMapper.readValue(message.getPayload(), RealizationInfos.class);

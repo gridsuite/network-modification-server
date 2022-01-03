@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.service;
 
+import com.powsybl.commons.PowsyblException;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.support.MessageBuilder;
@@ -19,7 +20,7 @@ public class RealizationCancelContext {
 
     private final String receiver;
 
-    public RealizationCancelContext(@NotNull String receiver) {
+    public RealizationCancelContext(String receiver) {
         this.receiver = receiver;
     }
 
@@ -27,9 +28,17 @@ public class RealizationCancelContext {
         return receiver;
     }
 
+    private static String getNonNullHeader(MessageHeaders headers, String name) {
+        String header = (String) headers.get(name);
+        if (header == null) {
+            throw new PowsyblException("Header '" + name + "' not found");
+        }
+        return header;
+    }
+
     public static RealizationCancelContext fromMessage(@NotNull Message<String> message) {
         MessageHeaders headers = message.getHeaders();
-        String receiver = (String) headers.get("receiver");
+        String receiver = getNonNullHeader(headers, "receiver");
         return new RealizationCancelContext(receiver);
     }
 
