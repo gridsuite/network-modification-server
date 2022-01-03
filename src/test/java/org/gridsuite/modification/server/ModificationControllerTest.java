@@ -46,6 +46,7 @@ import org.springframework.web.reactive.function.BodyInserters;
 
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -172,7 +173,7 @@ public class ModificationControllerTest {
     @Test
     public void testNetworkListener() {
         Network network = NetworkCreation.create(TEST_NETWORK_ID, true);
-        NetworkStoreListener listener = NetworkStoreListener.create(network, TEST_NETWORK_ID, null, TEST_GROUP_ID, modificationRepository, equipmentInfosService, false, true);
+        NetworkStoreListener listener = NetworkStoreListener.create(network, TEST_NETWORK_ID, TEST_GROUP_ID, modificationRepository, equipmentInfosService, false, true);
         Generator generator = network.getGenerator("idGenerator");
         Object invalidValue = new Object();
         assertTrue(assertThrows(PowsyblException.class, () ->
@@ -241,7 +242,7 @@ public class ModificationControllerTest {
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
             .expectBodyList(EquipmenAttributeModificationInfos.class)
             .value(modifications -> modifications.get(0),
-                MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos(switchId1, substationsIds, "open", false));
+                MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos(switchId1, Collections.emptySet(), "open", false));
 
         // switch opening
         webTestClient.put().uri(uriString + "&open=true", TEST_NETWORK_ID, switchId1)

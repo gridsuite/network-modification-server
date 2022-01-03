@@ -7,14 +7,11 @@
 package org.gridsuite.modification.server.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
-
-import java.util.Set;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -28,8 +25,4 @@ import java.util.Set;
 public class GroovyScriptModificationInfos extends ModificationInfos {
     @Schema(description = "Groovy script")
     private String script;
-
-    @Schema(description = "Substations ID")
-    @Builder.Default
-    private Set<String> substationIds = Set.of();
 }

@@ -139,7 +139,7 @@ public class NetworkModificationService {
     public Flux<ModificationInfos> applyGroovyScript(UUID networkUuid, String variantId, UUID groupUuid, String groovyScript) {
         return assertGroovyScriptNotEmpty(groovyScript).thenMany(
             getNetworkModificationInfos(networkUuid, variantId).flatMapIterable(networkInfos -> {
-                NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, variantId, groupUuid, modificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
+                NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, modificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
                 ReporterModel reporter = new ReporterModel(REPORT_KEY, REPORT_NAME);
                 Reporter subReporter = reporter.createSubReporter("GroovyScript", "Apply groovy script");
 
@@ -166,9 +166,6 @@ public class NetworkModificationService {
                     aSwitch.setOpen(open);
                 }
 
-                // store the substations ids in the listener
-                listener.addSubstationsIds(NetworkStoreListener.getSubstationIds(aSwitch));
-
                 subReporter.report(Report.builder()
                     .withKey("switchChanged")
                     .withDefaultMessage("Switch with id=${id} open state changed")
@@ -186,7 +183,7 @@ public class NetworkModificationService {
     public Flux<EquipmenModificationInfos> changeSwitchState(UUID networkUuid, String variantId, UUID groupUuid, String switchId, boolean open) {
         return getNetworkModificationInfos(networkUuid, variantId)
             .flatMapIterable(networkInfos -> {
-                NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, variantId, groupUuid, modificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
+                NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, modificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
                 ReporterModel reporter = new ReporterModel(REPORT_KEY, REPORT_NAME);
                 Reporter subReporter = reporter.createSubReporter("SwitchChange", "Switch state change");
 
@@ -259,7 +256,7 @@ public class NetworkModificationService {
     public Flux<EquipmenModificationInfos> lockoutLine(UUID networkUuid, String variantId, UUID groupUuid, String lineId) {
         return getNetworkModificationInfos(networkUuid, variantId)
             .flatMapIterable(networkInfos -> {
-                NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, variantId, groupUuid, modificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
+                NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, modificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
                 ReporterModel reporter = new ReporterModel(REPORT_KEY, REPORT_NAME);
                 Reporter subReporter = reporter.createSubReporter("LineLockout", "Lockout line");
 
@@ -292,7 +289,7 @@ public class NetworkModificationService {
     public Flux<EquipmenModificationInfos> tripLine(UUID networkUuid, String variantId, UUID groupUuid, String lineId) {
         return getNetworkModificationInfos(networkUuid, variantId)
             .flatMapIterable(networkInfos -> {
-                NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, variantId, groupUuid, modificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
+                NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, modificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
                 ReporterModel reporter = new ReporterModel(REPORT_KEY, REPORT_NAME);
                 Reporter subReporter = reporter.createSubReporter("LineTrip", "Trip line");
 
@@ -330,7 +327,7 @@ public class NetworkModificationService {
     public Flux<EquipmenModificationInfos> energiseLineEnd(UUID networkUuid, String variantId, UUID groupUuid, String lineId, Branch.Side side) {
         return getNetworkModificationInfos(networkUuid, variantId)
             .flatMapIterable(networkInfos -> {
-                NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, variantId, groupUuid, modificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
+                NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, modificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
                 ReporterModel reporter = new ReporterModel(REPORT_KEY, REPORT_NAME);
                 Reporter subReporter = reporter.createSubReporter("LineEnergise", "Energise line");
 
@@ -367,7 +364,7 @@ public class NetworkModificationService {
     public Flux<EquipmenModificationInfos> switchOnLine(UUID networkUuid, String variantId, UUID groupUuid, String lineId) {
         return getNetworkModificationInfos(networkUuid, variantId)
             .flatMapIterable(networkInfos -> {
-                NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, variantId, groupUuid, modificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
+                NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, modificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
                 ReporterModel reporter = new ReporterModel(REPORT_KEY, REPORT_NAME);
                 Reporter subReporter = reporter.createSubReporter("LineSwitchOn", "Switch on line");
 
@@ -575,7 +572,7 @@ public class NetworkModificationService {
     public Flux<EquipmenModificationInfos> createLoad(UUID networkUuid, String variantId, UUID groupUuid, LoadCreationInfos loadCreationInfos) {
         return assertLoadCreationInfosNotEmpty(loadCreationInfos).thenMany(
             getNetworkModificationInfos(networkUuid, variantId).flatMapIterable(networkInfos -> {
-                NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, variantId, groupUuid, modificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
+                NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, modificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
                 ReporterModel reporter = new ReporterModel(REPORT_KEY, REPORT_NAME);
                 Reporter subReporter = reporter.createSubReporter("LoadCreation", "Load creation");
 
@@ -669,7 +666,7 @@ public class NetworkModificationService {
 
     public Flux<EquipmentDeletionInfos> deleteEquipment(UUID networkUuid, String variantId, UUID groupUuid, String equipmentType, String equipmentId) {
         return getNetworkModificationInfos(networkUuid, variantId).flatMapIterable(networkInfos -> {
-            NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, variantId, groupUuid, modificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
+            NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, modificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
             ReporterModel reporter = new ReporterModel(REPORT_KEY, REPORT_NAME);
             Reporter subReporter = reporter.createSubReporter("EquipmentDeletion", "Equipment deletion");
 
@@ -773,7 +770,7 @@ public class NetworkModificationService {
     public Flux<EquipmenModificationInfos> createGenerator(UUID networkUuid, String variantId, UUID groupUuid, GeneratorCreationInfos generatorCreationInfos) {
         return assertGeneratorCreationInfosNotEmpty(generatorCreationInfos).thenMany(
             getNetworkModificationInfos(networkUuid, variantId).flatMapIterable(networkInfos -> {
-                NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, variantId, groupUuid, modificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
+                NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, modificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
                 ReporterModel reporter = new ReporterModel(REPORT_KEY, REPORT_NAME);
                 Reporter subReporter = reporter.createSubReporter("GeneratorCreation", "Generator creation");
 
@@ -892,7 +889,7 @@ public class NetworkModificationService {
     public Flux<EquipmenModificationInfos> createLine(UUID networkUuid, String variantId, UUID groupUuid, LineCreationInfos lineCreationInfos) {
         return assertLineCreationInfosNotEmpty(lineCreationInfos).thenMany(
             getNetworkModificationInfos(networkUuid, variantId).flatMapIterable(networkInfos -> {
-                NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, variantId, groupUuid, modificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
+                NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, modificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
                 ReporterModel reporter = new ReporterModel(REPORT_KEY, REPORT_NAME);
                 Reporter subReporter = reporter.createSubReporter("LineCreation", "Line creation");
 
@@ -939,7 +936,7 @@ public class NetworkModificationService {
     public Flux<EquipmenModificationInfos> createTwoWindingsTransformer(UUID networkUuid, String variantId, UUID groupUuid, TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
         return assertTwoWindingsTransformerCreationInfosNotEmpty(twoWindingsTransformerCreationInfos).thenMany(
             getNetworkModificationInfos(networkUuid, variantId).flatMapIterable(networkInfos -> {
-                NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, variantId, groupUuid, modificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
+                NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, modificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
                 ReporterModel reporter = new ReporterModel(REPORT_KEY, REPORT_NAME);
                 Reporter subReporter = reporter.createSubReporter("TwoWindingsTransformerCreation", "Two windings transformer creation");
 
@@ -1088,7 +1085,6 @@ public class NetworkModificationService {
         List<ModificationInfos> allModificationsInfos = new ArrayList<>();
         NetworkStoreListener listener = NetworkStoreListener.create(network,
             networkUuid,
-            realizationInfos.getDestinationVariantId(),
             null,
             modificationRepository,
             equipmentInfosService,

@@ -25,8 +25,6 @@ public class NetworkStoreListener implements NetworkListener {
 
     private final UUID networkUuid;
 
-    private final String variantId;
-
     private final Network network;
 
     private final NetworkModificationRepository modificationRepository;
@@ -57,22 +55,21 @@ public class NetworkStoreListener implements NetworkListener {
         return isApplyModifications;
     }
 
-    public static NetworkStoreListener create(Network network, UUID networkUuid, String variantId, UUID groupUuid,
+    public static NetworkStoreListener create(Network network, UUID networkUuid, UUID groupUuid,
                                               NetworkModificationRepository modificationRepository,
                                               EquipmentInfosService equipmentInfosService,
                                               boolean isRealization, boolean isApplyModifications) {
-        var listener = new NetworkStoreListener(network, networkUuid, variantId, groupUuid, modificationRepository, equipmentInfosService,
+        var listener = new NetworkStoreListener(network, networkUuid, groupUuid, modificationRepository, equipmentInfosService,
                                                 isRealization, isApplyModifications);
         network.addListener(listener);
         return listener;
     }
 
-    protected NetworkStoreListener(Network network, UUID networkUuid, String variantId, UUID groupUuid,
+    protected NetworkStoreListener(Network network, UUID networkUuid, UUID groupUuid,
                                    NetworkModificationRepository modificationRepository, EquipmentInfosService equipmentInfosService,
                                    boolean isRealization, boolean isApplyModifications) {
         this.network = network;
         this.networkUuid = networkUuid;
-        this.variantId = variantId;
         this.groupUuid = groupUuid;
         this.modificationRepository = modificationRepository;
         this.equipmentInfosService = equipmentInfosService;
@@ -187,11 +184,6 @@ public class NetworkStoreListener implements NetworkListener {
 
     public void storeGroovyScriptModification(String script) {
         modifications.add(this.modificationRepository.createGroovyScriptModificationEntity(script));
-    }
-
-    private Set<String> getSubstationsIds(String equipmentId) {
-        Identifiable<?> identifiable = network.getIdentifiable(equipmentId);
-        return getSubstationIds(identifiable);
     }
 
     public static Set<String> getSubstationIds(Identifiable identifiable) {
