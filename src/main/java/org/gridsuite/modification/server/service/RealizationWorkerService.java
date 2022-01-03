@@ -9,6 +9,7 @@ package org.gridsuite.modification.server.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Sets;
 import com.powsybl.iidm.network.Network;
+import org.apache.commons.lang3.StringUtils;
 import org.gridsuite.modification.server.dto.EquipmenModificationInfos;
 import org.gridsuite.modification.server.dto.RealizationInfos;
 import org.slf4j.Logger;
@@ -22,10 +23,10 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import javax.validation.constraints.NotNull;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CancellationException;
@@ -66,16 +67,19 @@ public class RealizationWorkerService {
     @Autowired
     private StreamBridge resultRealizationMessagePublisher;
 
-    public RealizationWorkerService(NetworkModificationService networkModificationService,
-                                    ObjectMapper objectMapper,
-                                    RealizationStoppedPublisherService stoppedPublisherService) {
-        this.networkModificationService = Objects.requireNonNull(networkModificationService);
-        this.objectMapper = Objects.requireNonNull(objectMapper);
-        this.stoppedPublisherService = Objects.requireNonNull(stoppedPublisherService);
+    public RealizationWorkerService(@NotNull NetworkModificationService networkModificationService,
+                                    @NotNull ObjectMapper objectMapper,
+                                    @NotNull RealizationStoppedPublisherService stoppedPublisherService) {
+        this.networkModificationService = networkModificationService;
+        this.objectMapper = objectMapper;
+        this.stoppedPublisherService = stoppedPublisherService;
     }
 
-    private Mono<List<EquipmenModificationInfos>> execRealizeVariant(Network network, UUID networkUuid, String receiver, RealizationInfos realizationInfos) {
-        if (receiver != null && cancelRealizationRequests.get(receiver) != null) {
+    private Mono<List<EquipmenModificationInfos>> execRealizeVariant(Network network, RealizationExecContext execContext, RealizationInfos realizationInfos) {
+        UUID networkUuid = execContext.getNetworkUuid();
+        String receiver = execContext.getReceiver();
+
+        if (cancelRealizationRequests.get(receiver) != null) {
             return Mono.empty();
         }
 
@@ -83,18 +87,13 @@ public class RealizationWorkerService {
             networkModificationService.applyModifications(network, networkUuid, realizationInfos)
         );
 
-        if (receiver != null) {
-            futures.put(receiver, future);
-        }
-        if (receiver != null && cancelRealizationRequests.get(receiver) != null) {
+        futures.put(receiver, future);
+
+        if (cancelRealizationRequests.get(receiver) != null) {
             return Mono.empty();
         } else {
             LOGGER.info("Starting realization on variant : {}", realizationInfos.getDestinationVariantId());
-            try {
-                return Mono.fromCompletionStage(future);
-            } catch (Exception exc) {
-                return Mono.empty();
-            }
+            return Mono.fromCompletionStage(future);
         }
     }
 
@@ -103,6 +102,9 @@ public class RealizationWorkerService {
         return f -> f.log(CATEGORY_BROKER_INPUT, Level.FINE)
             .flatMap(message -> {
                 RealizationExecContext execContext = RealizationExecContext.fromMessage(message, objectMapper);
+                if (StringUtils.isBlank(execContext.getReceiver())) {
+                    return Mono.empty();
+                }
                 realizationRequests.add(execContext.getReceiver()); // receiver is the node uuid to realize
 
                 RealizationInfos realizationInfos = execContext.getRealizationInfos();
@@ -110,7 +112,7 @@ public class RealizationWorkerService {
                 return networkModificationService.cloneNetworkVariant(execContext.getNetworkUuid(),
                                                                       realizationInfos.getOriginVariantId(),
                                                                       realizationInfos.getDestinationVariantId())
-                    .flatMap(network -> execRealizeVariant(network, execContext.getNetworkUuid(), execContext.getReceiver(), realizationInfos))
+                    .flatMap(network -> execRealizeVariant(network, execContext, realizationInfos))
                     .doOnSuccess(result -> {
                         if (result != null) {  // result available
                             Set<String> allSubstationsIds = new HashSet<>();
