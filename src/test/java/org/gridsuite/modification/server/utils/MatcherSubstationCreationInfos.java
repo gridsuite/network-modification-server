@@ -24,7 +24,7 @@ public class MatcherSubstationCreationInfos extends MatcherModificationInfos<Sub
                                                                           Country country) {
         return new MatcherSubstationCreationInfos(SubstationCreationInfos.builder()
                 .date(ZonedDateTime.now(ZoneOffset.UTC))
-                .type(ModificationType.LOAD_CREATION)
+                .type(ModificationType.SUBSTATION_CREATION)
                 .equipmentId(equipmentId)
                 .equipmentName(equipmentName)
                 .substationCountry(country)
