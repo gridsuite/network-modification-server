@@ -10,7 +10,7 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.support.MessageBuilder;
 
-import java.util.Objects;
+import javax.validation.constraints.NotNull;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -19,16 +19,15 @@ public class RealizationCancelContext {
 
     private final String receiver;
 
-    public RealizationCancelContext(String receiver) {
-        this.receiver = Objects.requireNonNull(receiver);
+    public RealizationCancelContext(@NotNull String receiver) {
+        this.receiver = receiver;
     }
 
     public String getReceiver() {
         return receiver;
     }
 
-    public static RealizationCancelContext fromMessage(Message<String> message) {
-        Objects.requireNonNull(message);
+    public static RealizationCancelContext fromMessage(@NotNull Message<String> message) {
         MessageHeaders headers = message.getHeaders();
         String receiver = (String) headers.get("receiver");
         return new RealizationCancelContext(receiver);

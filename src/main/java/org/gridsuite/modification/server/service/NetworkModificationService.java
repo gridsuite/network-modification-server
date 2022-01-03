@@ -955,7 +955,7 @@ public class NetworkModificationService {
             } catch (PowsyblException e) {
                 throw new NetworkModificationException(NETWORK_NOT_FOUND, networkUuid.toString());
             }
-            String startingVariant = StringUtils.isEmpty(originVariantId) ? VariantManagerConstants.INITIAL_VARIANT_ID : originVariantId;
+            String startingVariant = StringUtils.isBlank(originVariantId) ? VariantManagerConstants.INITIAL_VARIANT_ID : originVariantId;
             try {
                 network.getVariantManager().cloneVariant(startingVariant, destinationVariantId, true);  // cloning variant
                 network.getVariantManager().setWorkingVariant(destinationVariantId);  // set current variant to destination variant
@@ -1055,7 +1055,7 @@ public class NetworkModificationService {
             equipmentInfosService,
             true,
             true);
-        ReporterModel reporter = new ReporterModel("Realizaton", "Realization");
+        ReporterModel reporter = new ReporterModel("Realization", "Realization");
 
         modificationRepository.getModificationsEntities(realizationInfos.getModifications()).forEach(modificationEntity -> {
             ModificationType type = ModificationType.valueOf(modificationEntity.getType());

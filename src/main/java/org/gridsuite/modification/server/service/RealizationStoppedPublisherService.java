@@ -38,7 +38,7 @@ public class RealizationStoppedPublisherService {
         publish(receiver, FAIL_MESSAGE + " : " + causeMessage);
     }
 
-    public void publish(String receiver, String stopMessage) {
+    private void publish(String receiver, String stopMessage) {
         Message<String> message = MessageBuilder
                 .withPayload("")
                 .setHeader("receiver", receiver)

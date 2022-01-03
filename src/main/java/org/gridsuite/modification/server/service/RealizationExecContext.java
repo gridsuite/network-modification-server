@@ -14,8 +14,8 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.support.MessageBuilder;
 
+import javax.validation.constraints.NotNull;
 import java.io.UncheckedIOException;
-import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -29,10 +29,10 @@ public class RealizationExecContext {
 
     private String receiver;
 
-    public RealizationExecContext(UUID networkUuid, RealizationInfos realizationInfos, String receiver) {
-        this.networkUuid = Objects.requireNonNull(networkUuid);
-        this.realizationInfos = Objects.requireNonNull(realizationInfos);
-        this.receiver = Objects.requireNonNull(receiver);
+    public RealizationExecContext(@NotNull UUID networkUuid, @NotNull RealizationInfos realizationInfos, @NotNull String receiver) {
+        this.networkUuid = networkUuid;
+        this.realizationInfos = realizationInfos;
+        this.receiver = receiver;
     }
 
     public UUID getNetworkUuid() {
@@ -55,8 +55,7 @@ public class RealizationExecContext {
         return header;
     }
 
-    public static RealizationExecContext fromMessage(Message<String> message, ObjectMapper objectMapper) {
-        Objects.requireNonNull(message);
+    public static RealizationExecContext fromMessage(@NotNull Message<String> message, ObjectMapper objectMapper) {
         MessageHeaders headers = message.getHeaders();
         UUID networkUuid = UUID.fromString(getNonNullHeader(headers, "networkUuid"));
         String receiver = (String) headers.get("receiver");

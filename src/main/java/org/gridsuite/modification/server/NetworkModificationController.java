@@ -21,8 +21,6 @@ import reactor.core.publisher.Mono;
 
 import java.util.UUID;
 
-import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
-
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
@@ -143,7 +141,7 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.deleteEquipment(networkUuid, variantId, groupUuid, equipmentType, equipmentId));
     }
 
-    @PostMapping(value = "/networks/{networkUuid}/realization", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/networks/{networkUuid}/realization")
     @Operation(summary = "Realize a network variant")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The realization has been done")})
     public ResponseEntity<Mono<Void>> realizeVariant(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
@@ -152,7 +150,7 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.realizeVariant(networkUuid, realizationInfos, receiver));
     }
 
-    @PutMapping(value = "/realization/stop", produces = APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/realization/stop")
     @Operation(summary = "Stop a realization")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The realization has been stopped")})
     public ResponseEntity<Mono<Void>> stopRealization(@Parameter(description = "Realization receiver") @RequestParam(name = "receiver", required = false) String receiver) {
