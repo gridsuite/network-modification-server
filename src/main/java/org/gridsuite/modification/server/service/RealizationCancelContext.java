@@ -7,11 +7,10 @@
 package org.gridsuite.modification.server.service;
 
 import com.powsybl.commons.PowsyblException;
+import lombok.NonNull;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.support.MessageBuilder;
-
-import javax.validation.constraints.NotNull;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -36,7 +35,7 @@ public class RealizationCancelContext {
         return header;
     }
 
-    public static RealizationCancelContext fromMessage(@NotNull Message<String> message) {
+    public static RealizationCancelContext fromMessage(@NonNull Message<String> message) {
         MessageHeaders headers = message.getHeaders();
         String receiver = getNonNullHeader(headers, "receiver");
         return new RealizationCancelContext(receiver);

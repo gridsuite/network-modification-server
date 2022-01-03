@@ -9,12 +9,12 @@ package org.gridsuite.modification.server.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.commons.PowsyblException;
+import lombok.NonNull;
 import org.gridsuite.modification.server.dto.RealizationInfos;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.support.MessageBuilder;
 
-import javax.validation.constraints.NotNull;
 import java.io.UncheckedIOException;
 import java.util.UUID;
 
@@ -29,7 +29,7 @@ public class RealizationExecContext {
 
     private String receiver;
 
-    public RealizationExecContext(@NotNull UUID networkUuid, @NotNull RealizationInfos realizationInfos, @NotNull String receiver) {
+    public RealizationExecContext(@NonNull UUID networkUuid, @NonNull RealizationInfos realizationInfos, @NonNull String receiver) {
         this.networkUuid = networkUuid;
         this.realizationInfos = realizationInfos;
         this.receiver = receiver;
@@ -55,7 +55,7 @@ public class RealizationExecContext {
         return header;
     }
 
-    public static RealizationExecContext fromMessage(@NotNull Message<String> message, ObjectMapper objectMapper) {
+    public static RealizationExecContext fromMessage(@NonNull Message<String> message, ObjectMapper objectMapper) {
         MessageHeaders headers = message.getHeaders();
         UUID networkUuid = UUID.fromString(getNonNullHeader(headers, "networkUuid"));
         String receiver = getNonNullHeader(headers, "receiver");

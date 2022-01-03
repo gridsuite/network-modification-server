@@ -9,6 +9,7 @@ package org.gridsuite.modification.server.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Sets;
 import com.powsybl.iidm.network.Network;
+import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.gridsuite.modification.server.dto.EquipmenModificationInfos;
 import org.gridsuite.modification.server.dto.RealizationInfos;
@@ -23,7 +24,6 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import javax.validation.constraints.NotNull;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -67,9 +67,9 @@ public class RealizationWorkerService {
     @Autowired
     private StreamBridge resultRealizationMessagePublisher;
 
-    public RealizationWorkerService(@NotNull NetworkModificationService networkModificationService,
-                                    @NotNull ObjectMapper objectMapper,
-                                    @NotNull RealizationStoppedPublisherService stoppedPublisherService) {
+    public RealizationWorkerService(@NonNull NetworkModificationService networkModificationService,
+                                    @NonNull ObjectMapper objectMapper,
+                                    @NonNull RealizationStoppedPublisherService stoppedPublisherService) {
         this.networkModificationService = networkModificationService;
         this.objectMapper = objectMapper;
         this.stoppedPublisherService = stoppedPublisherService;
