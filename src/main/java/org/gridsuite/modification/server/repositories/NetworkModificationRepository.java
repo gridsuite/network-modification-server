@@ -7,6 +7,7 @@
 package org.gridsuite.modification.server.repositories;
 
 import com.powsybl.commons.PowsyblException;
+import com.powsybl.iidm.network.Country;
 import com.powsybl.iidm.network.EnergySource;
 import com.powsybl.iidm.network.LoadType;
 import org.gridsuite.modification.server.ModificationType;
@@ -155,6 +156,16 @@ public class NetworkModificationRepository {
                 .toTwoWindingsTransformerCreationInfos();
     }
 
+    @Transactional
+    public SubstationCreationInfos getSubstationCreationModification(UUID groupUuid, UUID modificationUuid) {
+        return ((SubstationCreationEntity) this.modificationRepository
+                .findById(modificationUuid)
+                .filter(m -> ModificationType.SUBSTATION_CREATION.name().equals(m.getType()))
+                .filter(m -> groupUuid.equals(m.getGroup().getId()))
+                .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString())))
+                .toSubstationCreationInfos();
+    }
+
     @Transactional // To have the 2 delete in the same transaction (atomic)
     public void deleteModificationGroup(UUID groupUuid) {
         ModificationGroupEntity groupEntity = getModificationGroup(groupUuid);
@@ -207,6 +218,10 @@ public class NetworkModificationRepository {
                 magnetizingConductance, magnetizingSusceptance, ratedVoltage1, ratedVoltage2,
                 voltageLevelId1, busOrBusbarSectionId1, voltageLevelId2, busOrBusbarSectionId2,
                 permanentCurrentLimit1, permanentCurrentLimit2);
+    }
+
+    public EquipmentCreationEntity createSubstationEntity(String id, String name, Country country) {
+        return new SubstationCreationEntity(id, name, country);
     }
 
     public EquipmentDeletionEntity createEquipmentDeletionEntity(String equipmentId, String equipmentType) {

@@ -155,6 +155,14 @@ public class NetworkStoreListener implements NetworkListener {
         );
     }
 
+    public void storeSubstationCreation(SubstationCreationInfos substationCreationInfos) {
+        modifications.add(this.modificationRepository.createSubstationEntity(
+                substationCreationInfos.getEquipmentId(),
+                substationCreationInfos.getEquipmentName(),
+                substationCreationInfos.getSubstationCountry()
+        ));
+    }
+
     private Set<String> getSubstationsIds(String equipmentId) {
         Identifiable<?> identifiable = network.getIdentifiable(equipmentId);
         return getSubstationIds(identifiable);

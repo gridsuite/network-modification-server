@@ -10,16 +10,14 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import com.powsybl.iidm.network.Country;
 import com.powsybl.iidm.network.EnergySource;
 import com.powsybl.iidm.network.LoadType;
 import com.vladmihalcea.sql.SQLStatementCountValidator;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationGroupEntity;
-import org.gridsuite.modification.server.entities.equipment.creation.GeneratorCreationEntity;
-import org.gridsuite.modification.server.entities.equipment.creation.LoadCreationEntity;
-import org.gridsuite.modification.server.entities.equipment.creation.LineCreationEntity;
+import org.gridsuite.modification.server.entities.equipment.creation.*;
 import org.gridsuite.modification.server.entities.equipment.attribute.modification.EquipmentAttributeModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.creation.TwoWindingsTransformerCreationEntity;
 import org.gridsuite.modification.server.repositories.ModificationGroupRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.utils.*;
@@ -326,6 +324,45 @@ public class ModificationRepositoryTest {
         SQLStatementCountValidator.reset();
         modificationRepository.deleteModificationGroup(TEST_GROUP_ID);
         assertRequestsCount(5, 0, 0, 8);
+
+        assertThrows(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage(),
+                NetworkModificationException.class, () -> modificationRepository.getModifications(TEST_GROUP_ID)
+        );
+    }
+
+    @Test
+    public void testSubstationCreation() {
+        var createSubstationEntity1 = modificationRepository.createSubstationEntity("idSubstation1", "nameSubstation1", Country.AR);
+        var createSubstationEntity2 = modificationRepository.createSubstationEntity("idSubstation2", "nameSubstation2", Country.TD);
+        var createSubstationEntity3 = modificationRepository.createSubstationEntity("idSubstation3", "nameSubstation3", Country.KG);
+
+        modificationRepository.saveModifications(TEST_GROUP_ID, List.of(createSubstationEntity1, createSubstationEntity2, createSubstationEntity3));
+        assertRequestsCount(1, 7, 0, 0);
+
+        List<ModificationInfos> modificationInfos = modificationRepository.getModifications(TEST_GROUP_ID);
+        assertEquals(3, modificationInfos.size());
+
+        assertThat(modificationRepository.getSubstationCreationModification(TEST_GROUP_ID, modificationInfos.get(0).getUuid()),
+                MatcherSubstationCreationInfos.createMatcherSubstationCreationInfos(((SubstationCreationEntity) createSubstationEntity1).toSubstationCreationInfos()));
+        assertThat(modificationRepository.getSubstationCreationModification(TEST_GROUP_ID, modificationInfos.get(1).getUuid()),
+                MatcherSubstationCreationInfos.createMatcherSubstationCreationInfos(((SubstationCreationEntity) createSubstationEntity2).toSubstationCreationInfos()));
+        assertThat(modificationRepository.getSubstationCreationModification(TEST_GROUP_ID, modificationInfos.get(2).getUuid()),
+                MatcherSubstationCreationInfos.createMatcherSubstationCreationInfos(((SubstationCreationEntity) createSubstationEntity3).toSubstationCreationInfos()));
+
+        assertEquals(3, modificationRepository.getModifications(TEST_GROUP_ID).size());
+        assertEquals(List.of(TEST_GROUP_ID), this.modificationRepository.getModificationGroupsUuids());
+
+        SQLStatementCountValidator.reset();
+        modificationRepository.deleteModifications(TEST_GROUP_ID, Set.of(createSubstationEntity2.getId(), createSubstationEntity3.getId()));
+        assertRequestsCount(1, 0, 0, 4);
+
+        SQLStatementCountValidator.reset();
+        assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID).size());
+        assertRequestsCount(2, 0, 0, 0);
+
+        SQLStatementCountValidator.reset();
+        modificationRepository.deleteModificationGroup(TEST_GROUP_ID);
+        assertRequestsCount(2, 0, 0, 3);
 
         assertThrows(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage(),
                 NetworkModificationException.class, () -> modificationRepository.getModifications(TEST_GROUP_ID)

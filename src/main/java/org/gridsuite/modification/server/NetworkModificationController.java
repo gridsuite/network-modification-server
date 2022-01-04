@@ -130,6 +130,16 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.createTwoWindingsTransformer(networkUuid, variantId, groupUuid, twoWindingsTransformerCreationInfos));
     }
 
+    @PutMapping(value = "/networks/{networkUuid}/substations", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "create a substation in the network")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The substation has been created")})
+    public ResponseEntity<Flux<EquipmenModificationInfos>> createSubstation(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
+                                                                                        @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
+                                                                                        @RequestParam(value = "group", required = false) UUID groupUuid,
+                                                                                        @RequestBody SubstationCreationInfos substationCreationInfos) {
+        return ResponseEntity.ok().body(networkModificationService.createSubstation(networkUuid, variantId, groupUuid, substationCreationInfos));
+    }
+
     @DeleteMapping(value = "/networks/{networkUuid}/equipments/type/{equipmentType}/id/{equipmentId}")
     @Operation(summary = "Delete an equipment in a network variant")
     @ApiResponse(responseCode = "200", description = "The equipment has been deleted")
