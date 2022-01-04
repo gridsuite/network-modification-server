@@ -186,6 +186,14 @@ public class NetworkStoreListener implements NetworkListener {
         modifications.add(this.modificationRepository.createGroovyScriptModificationEntity(script));
     }
 
+    public void storeSubstationCreation(SubstationCreationInfos substationCreationInfos) {
+        modifications.add(this.modificationRepository.createSubstationEntity(
+                substationCreationInfos.getEquipmentId(),
+                substationCreationInfos.getEquipmentName(),
+                substationCreationInfos.getSubstationCountry()
+        ));
+    }
+
     public static Set<String> getSubstationIds(Identifiable identifiable) {
         Set<String> ids = new HashSet<>();
         if (identifiable instanceof Switch) {
