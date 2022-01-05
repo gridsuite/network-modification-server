@@ -279,6 +279,29 @@ public class ModificationControllerTest {
     }
 
     @Test
+    public void testDeleteModification() {
+        // switch opening to create the default group
+        var res = webTestClient.put().uri("/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID + "&open=true", TEST_NETWORK_ID, "v1b1")
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBodyList(EquipmenAttributeModificationInfos.class)
+            .returnResult().getResponseBody();
+        assertNotNull(res);
+        assertEquals(1, res.size());
+
+        assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID).size());
+        String deleteStr = "/v1/groups/" + TEST_GROUP_ID + "/modifications/" + res.get(0).getUuid();
+
+        webTestClient.delete().uri(deleteStr)
+            .exchange()
+            .expectStatus().isOk();
+
+        assertEquals(0, modificationRepository.getModifications(TEST_GROUP_ID).size());
+
+    }
+
+    @Test
     public void testNetworkOrVariantNotFound() {
         String uriString = "/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID;
 

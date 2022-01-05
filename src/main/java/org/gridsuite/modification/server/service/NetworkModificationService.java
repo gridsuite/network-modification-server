@@ -1237,4 +1237,8 @@ public class NetworkModificationService {
         CANCEL_MESSAGE_LOGGER.debug("Sending message : {}", message);
         publisher.send("publishCancelBuild-out-0", message);
     }
+
+    public Mono<Void> deleteModification(UUID groupUuid, UUID modificationUuid) {
+        return Mono.fromRunnable(() -> modificationRepository.deleteModifications(groupUuid, Set.of(modificationUuid)));
+    }
 }
