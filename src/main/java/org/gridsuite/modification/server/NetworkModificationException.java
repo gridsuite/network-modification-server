@@ -36,7 +36,8 @@ public class NetworkModificationException extends RuntimeException {
         DELETE_EQUIPMENT_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         EQUIPMENT_NOT_FOUND(HttpStatus.NOT_FOUND),
         CREATE_LINE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
-        CREATE_TWO_WINDINGS_TRANSFORMER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR);
+        CREATE_TWO_WINDINGS_TRANSFORMER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
+        CREATE_SUBSTATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR);
 
         public final HttpStatus status;
         private final String message;

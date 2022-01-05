@@ -8,10 +8,7 @@ package org.gridsuite.modification.server;
 
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.reporter.ReporterModel;
-import com.powsybl.iidm.network.EnergySource;
-import com.powsybl.iidm.network.Generator;
-import com.powsybl.iidm.network.LoadType;
-import com.powsybl.iidm.network.Network;
+import com.powsybl.iidm.network.*;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.sld.iidm.extensions.BranchStatus;
 import org.gridsuite.modification.server.dto.*;
@@ -19,10 +16,7 @@ import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.NetworkModificationService;
 import org.gridsuite.modification.server.service.NetworkStoreListener;
-import org.gridsuite.modification.server.utils.MatcheEquipmentAttributeModificationInfos;
-import org.gridsuite.modification.server.utils.MatcherEquipmentDeletionInfos;
-import org.gridsuite.modification.server.utils.MatcherEquipmentModificationInfos;
-import org.gridsuite.modification.server.utils.NetworkCreation;
+import org.gridsuite.modification.server.utils.*;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -1329,6 +1323,48 @@ public class ModificationControllerTest {
             .isEqualTo(new NetworkModificationException(CREATE_LINE_ERROR, "AC Line 'idLine2': permanent limit must be defined and be > 0").getMessage());
 
         testNetworkModificationsCount(TEST_GROUP_ID, 4);
+    }
+
+    @Test
+    public void testCreateSubstation() {
+        String uriString = "/v1/networks/{networkUuid}/substations?group=" + TEST_GROUP_ID;
+
+        // create new substation
+        SubstationCreationInfos substationCreationInfos = SubstationCreationInfos.builder()
+                .equipmentId("SubstationId")
+                .equipmentName("SubstationName")
+                .substationCountry(Country.AF)
+                .build();
+        assertEquals("SubstationCreationInfos(super=EquipmentCreationInfos(super=EquipmenModificationInfos(super=ModificationInfos(uuid=null, date=null, type=null), equipmentId=SubstationId, substationIds=[]), equipmentName=SubstationName), substationCountry=AF)", substationCreationInfos.toString());
+
+        webTestClient.put().uri(uriString, TEST_NETWORK_ID)
+                .body(BodyInserters.fromValue(substationCreationInfos))
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBodyList(EquipmenModificationInfos.class)
+                .value(modifications -> modifications.get(0),
+                        MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.SUBSTATION_CREATION, "SubstationId", Set.of("SubstationId")));
+
+        testNetworkModificationsCount(TEST_GROUP_ID, 1);
+
+        // create substation with errors
+        webTestClient.put().uri(uriString, NOT_FOUND_NETWORK_ID)
+                .body(BodyInserters.fromValue(substationCreationInfos))
+                .exchange()
+                .expectStatus().isNotFound()
+                .expectBody(String.class)
+                .isEqualTo(new NetworkModificationException(NETWORK_NOT_FOUND, NOT_FOUND_NETWORK_ID.toString()).getMessage());
+
+        substationCreationInfos.setEquipmentId(null);
+        webTestClient.put().uri(uriString, TEST_NETWORK_ID)
+                .body(BodyInserters.fromValue(substationCreationInfos))
+                .exchange()
+                .expectStatus().is5xxServerError()
+                .expectBody(String.class)
+                .isEqualTo(new NetworkModificationException(CREATE_SUBSTATION_ERROR, "Substation id is not set").getMessage());
+
+        testNetworkModificationsCount(TEST_GROUP_ID, 1);
     }
 
     private void testNetworkModificationsCount(UUID groupUuid, int actualSize) {

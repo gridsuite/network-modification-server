@@ -39,10 +39,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
@@ -745,4 +742,39 @@ public class NetworkModificationService {
     private Mono<Void> assertTwoWindingsTransformerCreationInfosNotEmpty(TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
         return twoWindingsTransformerCreationInfos == null ? Mono.error(new NetworkModificationException(CREATE_TWO_WINDINGS_TRANSFORMER_ERROR, "Missing required attributes to create the two windings transformer")) : Mono.empty();
     }
+
+    public Flux<EquipmenModificationInfos> createSubstation(UUID networkUuid, String variantId, UUID groupUuid, SubstationCreationInfos substationCreationInfos) {
+        return assertSubstationCreationInfosNotEmpty(substationCreationInfos).thenMany(
+                getNetwork(networkUuid, variantId).flatMapIterable(network -> {
+                    NetworkStoreListener listener = NetworkStoreListener.create(network, networkUuid, variantId, groupUuid, modificationRepository, equipmentInfosService);
+                    ReporterModel reporter = new ReporterModel("NetworkModification", "Network modification");
+                    Reporter subReporter = reporter.createSubReporter("SubstationCreation", "Substation creation");
+
+                    return doAction(listener, () -> {
+                        network.newSubstation()
+                                .setId(substationCreationInfos.getEquipmentId())
+                                .setName(substationCreationInfos.getEquipmentName())
+                                .setCountry(substationCreationInfos.getSubstationCountry())
+                                .add();
+
+                        // store the substation id in the listener
+                        listener.setSubstationsIds(Set.of(substationCreationInfos.getEquipmentId()));
+
+                        subReporter.report(Report.builder()
+                                .withKey("substationCreated")
+                                .withDefaultMessage("New substation with id=${id} created")
+                                .withValue("id", substationCreationInfos.getEquipmentId())
+                                .withSeverity(new TypedValue("SUBSTATION_CREATION_INFO", TypedValue.INFO_LOGLEVEL))
+                                .build());
+
+                        // add the substation creation entity to the listener
+                        listener.storeSubstationCreation(substationCreationInfos);
+                    }, CREATE_SUBSTATION_ERROR, networkUuid, reporter, subReporter);
+                }));
+    }
+
+    private Mono<Void> assertSubstationCreationInfosNotEmpty(SubstationCreationInfos substationCreationInfos) {
+        return substationCreationInfos == null ? Mono.error(new NetworkModificationException(CREATE_SUBSTATION_ERROR, "Missing required attributes to create the substation")) : Mono.empty();
+    }
+
 }
