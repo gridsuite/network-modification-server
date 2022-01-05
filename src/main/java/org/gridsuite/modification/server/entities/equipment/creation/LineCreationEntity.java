@@ -74,7 +74,8 @@ public class LineCreationEntity extends BranchCreationEntity {
         this.shuntSusceptance2 = shuntSusceptance2;
     }
 
-    public LineCreationInfos toLineCreationInfos() {
+    @Override
+    public LineCreationInfos toModificationInfos() {
         return toLineCreationInfosBuilder().build();
     }
 

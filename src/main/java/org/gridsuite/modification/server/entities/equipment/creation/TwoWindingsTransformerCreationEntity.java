@@ -73,7 +73,8 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
         this.ratedVoltage2 = ratedVoltage2;
     }
 
-    public TwoWindingsTransformerCreationInfos toTwoWindingsTransformerCreationInfos() {
+    @Override
+    public TwoWindingsTransformerCreationInfos toModificationInfos() {
         return toTwoWindingsTransformerCreationInfosBuilder().build();
     }
 

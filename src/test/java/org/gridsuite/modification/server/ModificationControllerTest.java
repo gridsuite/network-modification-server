@@ -205,7 +205,7 @@ public class ModificationControllerTest {
                 .exchange()
                 .expectStatus().isOk();
 
-        webTestClient.get().uri("/v1/groups/{groupUuid}", TEST_GROUP_ID)
+        webTestClient.get().uri("/v1/groups/{groupUuid}/modifications/metadata", TEST_GROUP_ID)
                 .exchange()
                 .expectStatus().isNotFound()
                 .expectBody(String.class)
@@ -510,7 +510,7 @@ public class ModificationControllerTest {
                 .expectBody(String.class)
                 .isEqualTo(new NetworkModificationException(GROOVY_SCRIPT_ERROR, PowsyblException.class.getName()).getMessage());
 
-        assertEquals(0, modificationRepository.getModifications(TEST_GROUP_ID).size());
+        assertEquals(0, modificationRepository.getModifications(TEST_GROUP_ID, true).size());
     }
 
     @Test
@@ -523,7 +523,7 @@ public class ModificationControllerTest {
                 .exchange()
                 .expectStatus().isOk();
 
-        assertEquals(2, modificationRepository.getModifications(TEST_GROUP_ID).size());
+        assertEquals(2, modificationRepository.getModifications(TEST_GROUP_ID, true).size());
 
         // apply groovy script with 2 modifications with error ont the second
         webTestClient.put().uri(uriString, TEST_NETWORK_ID)
@@ -534,7 +534,7 @@ public class ModificationControllerTest {
             .isEqualTo(new NetworkModificationException(GROOVY_SCRIPT_ERROR, "Cannot set property 'targetP' on null object").getMessage());
 
         // the last 2 modifications have not been saved
-        assertEquals(2, modificationRepository.getModifications(TEST_GROUP_ID).size());
+        assertEquals(2, modificationRepository.getModifications(TEST_GROUP_ID, true).size());
     }
 
     @Test
@@ -1469,7 +1469,7 @@ public class ModificationControllerTest {
 
     private void testNetworkModificationsCount(UUID groupUuid, int actualSize) {
         // get all modifications for the given group of a network
-        assertEquals(actualSize, Objects.requireNonNull(webTestClient.get().uri("/v1/groups/{groupUuid}", groupUuid)
+        assertEquals(actualSize, Objects.requireNonNull(webTestClient.get().uri("/v1/groups/{groupUuid}/modifications/metadata", groupUuid)
             .exchange()
             .expectStatus().isOk()
             .expectHeader().contentType(MediaType.APPLICATION_JSON)

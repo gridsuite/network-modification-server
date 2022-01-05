@@ -46,7 +46,8 @@ public class LoadCreationEntity extends InjectionCreationEntity {
         this.reactivePower = reactivePower;
     }
 
-    public LoadCreationInfos toLoadCreationInfos() {
+    @Override
+    public LoadCreationInfos toModificationInfos() {
         return toLoadCreationInfosBuilder().build();
     }
 
