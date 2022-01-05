@@ -131,12 +131,11 @@ public class RealizationWorkerService {
                             }
                         }
                     })
-                    .onErrorResume(throwable -> {
-                        if (!(throwable instanceof CancellationException)) {
-                            LOGGER.error(FAIL_MESSAGE, throwable);
-                            stoppedPublisherService.publishFail(execContext.getReceiver(), throwable.getMessage());
+                    .onErrorContinue((t, r) -> {
+                        if (!(t instanceof CancellationException)) {
+                            LOGGER.error(FAIL_MESSAGE, t);
+                            stoppedPublisherService.publishFail(execContext.getReceiver(), t.getMessage());
                         }
-                        return Mono.empty();
                     })
                     .doFinally(s -> {
                         futures.remove(execContext.getReceiver());

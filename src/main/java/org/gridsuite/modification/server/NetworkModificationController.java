@@ -58,11 +58,18 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.applyGroovyScript(networkUuid, variantId, groupUuid, groovyScript));
     }
 
-    @GetMapping(value = "/groups/{groupUuid}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/groups/{groupUuid}/modifications", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Get modifications list of a group")
     @ApiResponse(responseCode = "200", description = "List of modifications of the group")
     public ResponseEntity<Flux<ModificationInfos>> getModifications(@Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid) {
-        return ResponseEntity.ok().body(networkModificationService.getModifications(groupUuid));
+        return ResponseEntity.ok().body(networkModificationService.getModifications(groupUuid, false));
+    }
+
+    @GetMapping(value = "/groups/{groupUuid}/modifications/metadata", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Get list of modifications metadata of a group")
+    @ApiResponse(responseCode = "200", description = "List of modifications of the group")
+    public ResponseEntity<Flux<ModificationInfos>> getModificationsMetadata(@Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid) {
+        return ResponseEntity.ok().body(networkModificationService.getModifications(groupUuid, true));
     }
 
     @DeleteMapping(value = "/groups/{groupUuid}")
