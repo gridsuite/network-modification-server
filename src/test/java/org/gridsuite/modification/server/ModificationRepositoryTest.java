@@ -339,7 +339,7 @@ public class ModificationRepositoryTest {
         modificationRepository.saveModifications(TEST_GROUP_ID, List.of(createSubstationEntity1, createSubstationEntity2, createSubstationEntity3));
         assertRequestsCount(1, 7, 0, 0);
 
-        List<ModificationInfos> modificationInfos = modificationRepository.getModifications(TEST_GROUP_ID);
+        List<ModificationInfos> modificationInfos = modificationRepository.getModifications(TEST_GROUP_ID, false);
         assertEquals(3, modificationInfos.size());
 
         assertThat(modificationRepository.getSubstationCreationModification(TEST_GROUP_ID, modificationInfos.get(0).getUuid()),
@@ -349,7 +349,7 @@ public class ModificationRepositoryTest {
         assertThat(modificationRepository.getSubstationCreationModification(TEST_GROUP_ID, modificationInfos.get(2).getUuid()),
                 MatcherSubstationCreationInfos.createMatcherSubstationCreationInfos(((SubstationCreationEntity) createSubstationEntity3).toSubstationCreationInfos()));
 
-        assertEquals(3, modificationRepository.getModifications(TEST_GROUP_ID).size());
+        assertEquals(3, modificationRepository.getModifications(TEST_GROUP_ID, false).size());
         assertEquals(List.of(TEST_GROUP_ID), this.modificationRepository.getModificationGroupsUuids());
 
         SQLStatementCountValidator.reset();
@@ -357,7 +357,7 @@ public class ModificationRepositoryTest {
         assertRequestsCount(1, 0, 0, 4);
 
         SQLStatementCountValidator.reset();
-        assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID).size());
+        assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID, false).size());
         assertRequestsCount(2, 0, 0, 0);
 
         SQLStatementCountValidator.reset();
@@ -365,7 +365,7 @@ public class ModificationRepositoryTest {
         assertRequestsCount(2, 0, 0, 3);
 
         assertThrows(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage(),
-                NetworkModificationException.class, () -> modificationRepository.getModifications(TEST_GROUP_ID)
+                NetworkModificationException.class, () -> modificationRepository.getModifications(TEST_GROUP_ID, false)
         );
     }
 
