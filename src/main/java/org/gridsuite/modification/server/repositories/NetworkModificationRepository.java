@@ -101,12 +101,14 @@ public class NetworkModificationRepository {
                 .collect(Collectors.toList());
     }
 
-    public List<ModificationInfos> getModifications(UUID groupUuid) {
+    @Transactional
+    public List<ModificationInfos> getModifications(UUID groupUuid, boolean onlyMetadata) {
         ModificationGroupEntity group = getModificationGroup(groupUuid);
-        return this.modificationRepository.findAllBaseByGroupId(group.getId())
-                .stream()
-                .map(ModificationEntity::toModificationInfos)
-                .collect(Collectors.toList());
+        var modificationInfos = onlyMetadata ? this.modificationRepository.findAllBaseByGroupId(group.getId())
+            : this.modificationRepository.findAllByGroupId(group.getId());
+        return modificationInfos.stream()
+            .map(ModificationEntity::toModificationInfos)
+            .collect(Collectors.toList());
     }
 
     public EquipmenAttributeModificationInfos getEquipmentAttributeModification(UUID groupUuid, UUID modificationUuid) {
@@ -124,7 +126,7 @@ public class NetworkModificationRepository {
             .filter(m -> ModificationType.LOAD_CREATION.name().equals(m.getType()))
             .filter(m -> groupUuid.equals(m.getGroup().getId()))
             .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString())))
-            .toLoadCreationInfos();
+            .toModificationInfos();
     }
 
     public GeneratorCreationInfos getGeneratorCreationModification(UUID groupUuid, UUID modificationUuid) {
@@ -133,7 +135,7 @@ public class NetworkModificationRepository {
             .filter(m -> ModificationType.GENERATOR_CREATION.name().equals(m.getType()))
             .filter(m -> groupUuid.equals(m.getGroup().getId()))
             .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString())))
-            .toGeneratorCreationInfos();
+            .toModificationInfos();
     }
 
     @Transactional
@@ -143,7 +145,7 @@ public class NetworkModificationRepository {
             .filter(m -> ModificationType.LINE_CREATION.name().equals(m.getType()))
             .filter(m -> groupUuid.equals(m.getGroup().getId()))
             .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString())))
-            .toLineCreationInfos();
+            .toModificationInfos();
     }
 
     @Transactional
@@ -153,7 +155,7 @@ public class NetworkModificationRepository {
                 .filter(m -> ModificationType.TWO_WINDINGS_TRANSFORMER_CREATION.name().equals(m.getType()))
                 .filter(m -> groupUuid.equals(m.getGroup().getId()))
                 .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString())))
-                .toTwoWindingsTransformerCreationInfos();
+                .toModificationInfos();
     }
 
     @Transactional
