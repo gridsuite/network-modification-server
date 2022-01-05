@@ -1113,7 +1113,7 @@ public class NetworkModificationService {
                 case LOAD_CREATION: {
                     LoadCreationEntity loadCreationEntity = (LoadCreationEntity) modificationEntity;
                     Reporter subReporter = reporter.createSubReporter("LoadCreation", "Load creation");
-                    List<EquipmenModificationInfos> modificationInfos = execCreateLoad(listener, loadCreationEntity.toLoadCreationInfos(), reporter, subReporter);
+                    List<EquipmenModificationInfos> modificationInfos = execCreateLoad(listener, loadCreationEntity.toModificationInfos(), reporter, subReporter);
                     allModificationsInfos.addAll(modificationInfos);
                 }
                 break;
@@ -1121,7 +1121,7 @@ public class NetworkModificationService {
                 case GENERATOR_CREATION: {
                     GeneratorCreationEntity generatorCreationEntity = (GeneratorCreationEntity) modificationEntity;
                     Reporter subReporter = reporter.createSubReporter("GeneratorCreation", "Generator creation");
-                    List<EquipmenModificationInfos> modificationInfos = execCreateGenerator(listener, generatorCreationEntity.toGeneratorCreationInfos(), reporter, subReporter);
+                    List<EquipmenModificationInfos> modificationInfos = execCreateGenerator(listener, generatorCreationEntity.toModificationInfos(), reporter, subReporter);
                     allModificationsInfos.addAll(modificationInfos);
                 }
                 break;
@@ -1129,7 +1129,7 @@ public class NetworkModificationService {
                 case LINE_CREATION: {
                     LineCreationEntity lineCreationEntity = (LineCreationEntity) modificationEntity;
                     Reporter subReporter = reporter.createSubReporter("LineCreation", "Line creation");
-                    List<EquipmenModificationInfos> modificationInfos = execCreateLine(listener, lineCreationEntity.toLineCreationInfos(), reporter, subReporter);
+                    List<EquipmenModificationInfos> modificationInfos = execCreateLine(listener, lineCreationEntity.toModificationInfos(), reporter, subReporter);
                     allModificationsInfos.addAll(modificationInfos);
                 }
                 break;
@@ -1137,7 +1137,7 @@ public class NetworkModificationService {
                 case TWO_WINDINGS_TRANSFORMER_CREATION: {
                     TwoWindingsTransformerCreationEntity twoWindingsTransformerCreationEntity = (TwoWindingsTransformerCreationEntity) modificationEntity;
                     Reporter subReporter = reporter.createSubReporter("TwoWindingsTransformerCreation", "Two windings transformer creation");
-                    List<EquipmenModificationInfos> modificationInfos = execCreateTwoWindingsTransformer(listener, twoWindingsTransformerCreationEntity.toTwoWindingsTransformerCreationInfos(), reporter, subReporter);
+                    List<EquipmenModificationInfos> modificationInfos = execCreateTwoWindingsTransformer(listener, twoWindingsTransformerCreationEntity.toModificationInfos(), reporter, subReporter);
                     allModificationsInfos.addAll(modificationInfos);
                 }
                 break;
