@@ -15,11 +15,11 @@ import org.springframework.messaging.support.MessageBuilder;
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
-public class RealizationCancelContext {
+public class BuildCancelContext {
 
     private final String receiver;
 
-    public RealizationCancelContext(String receiver) {
+    public BuildCancelContext(String receiver) {
         this.receiver = receiver;
     }
 
@@ -35,10 +35,10 @@ public class RealizationCancelContext {
         return header;
     }
 
-    public static RealizationCancelContext fromMessage(@NonNull Message<String> message) {
+    public static BuildCancelContext fromMessage(@NonNull Message<String> message) {
         MessageHeaders headers = message.getHeaders();
         String receiver = getNonNullHeader(headers, "receiver");
-        return new RealizationCancelContext(receiver);
+        return new BuildCancelContext(receiver);
     }
 
     public Message<String> toMessage() {

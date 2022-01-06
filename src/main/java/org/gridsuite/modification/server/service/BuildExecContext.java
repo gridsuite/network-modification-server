@@ -10,7 +10,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.commons.PowsyblException;
 import lombok.NonNull;
-import org.gridsuite.modification.server.dto.RealizationInfos;
+import org.gridsuite.modification.server.dto.BuildInfos;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.support.MessageBuilder;
@@ -21,17 +21,17 @@ import java.util.UUID;
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
-public class RealizationExecContext {
+public class BuildExecContext {
 
     private UUID networkUuid;
 
-    private RealizationInfos realizationInfos;
+    private BuildInfos buildInfos;
 
     private String receiver;
 
-    public RealizationExecContext(@NonNull UUID networkUuid, @NonNull RealizationInfos realizationInfos, @NonNull String receiver) {
+    public BuildExecContext(@NonNull UUID networkUuid, @NonNull BuildInfos buildInfos, @NonNull String receiver) {
         this.networkUuid = networkUuid;
-        this.realizationInfos = realizationInfos;
+        this.buildInfos = buildInfos;
         this.receiver = receiver;
     }
 
@@ -39,8 +39,8 @@ public class RealizationExecContext {
         return networkUuid;
     }
 
-    public RealizationInfos getRealizationInfos() {
-        return realizationInfos;
+    public BuildInfos getBuildInfos() {
+        return buildInfos;
     }
 
     public String getReceiver() {
@@ -55,27 +55,27 @@ public class RealizationExecContext {
         return header;
     }
 
-    public static RealizationExecContext fromMessage(@NonNull Message<String> message, ObjectMapper objectMapper) {
+    public static BuildExecContext fromMessage(@NonNull Message<String> message, ObjectMapper objectMapper) {
         MessageHeaders headers = message.getHeaders();
         UUID networkUuid = UUID.fromString(getNonNullHeader(headers, "networkUuid"));
         String receiver = getNonNullHeader(headers, "receiver");
-        RealizationInfos infos;
+        BuildInfos infos;
         try {
-            infos = objectMapper.readValue(message.getPayload(), RealizationInfos.class);
+            infos = objectMapper.readValue(message.getPayload(), BuildInfos.class);
         } catch (JsonProcessingException e) {
             throw new UncheckedIOException(e);
         }
-        return new RealizationExecContext(networkUuid, infos, receiver);
+        return new BuildExecContext(networkUuid, infos, receiver);
     }
 
     public Message<String> toMessage(ObjectMapper objectMapper) {
-        String realizationInfosJson;
+        String buildInfosJson;
         try {
-            realizationInfosJson = objectMapper.writeValueAsString(realizationInfos);
+            buildInfosJson = objectMapper.writeValueAsString(buildInfos);
         } catch (JsonProcessingException e) {
             throw new UncheckedIOException(e);
         }
-        return MessageBuilder.withPayload(realizationInfosJson)
+        return MessageBuilder.withPayload(buildInfosJson)
             .setHeader("networkUuid", networkUuid.toString())
             .setHeader("receiver", receiver)
             .build();

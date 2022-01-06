@@ -18,12 +18,12 @@ import org.springframework.stereotype.Service;
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 @Service
-public class RealizationStoppedPublisherService {
+public class BuildStoppedPublisherService {
 
-    public static final String CANCEL_MESSAGE = "Realization was canceled";
-    public static final String FAIL_MESSAGE = "Realization has failed";
+    public static final String CANCEL_MESSAGE = "Build was canceled";
+    public static final String FAIL_MESSAGE = "Build has failed";
 
-    private static final String CATEGORY_BROKER_OUTPUT = RealizationStoppedPublisherService.class.getName() + ".output-broker-messages";
+    private static final String CATEGORY_BROKER_OUTPUT = BuildStoppedPublisherService.class.getName() + ".output-broker-messages";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CATEGORY_BROKER_OUTPUT);
 
@@ -45,6 +45,6 @@ public class RealizationStoppedPublisherService {
                 .setHeader("message", stopMessage)
                 .build();
         LOGGER.debug("Sending message : {}", message);
-        stoppedMessagePublisher.send("publishStoppedRealization-out-0", message);
+        stoppedMessagePublisher.send("publishStoppedBuild-out-0", message);
     }
 }
