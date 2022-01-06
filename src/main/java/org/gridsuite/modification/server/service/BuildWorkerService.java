@@ -12,7 +12,7 @@ import com.powsybl.iidm.network.Network;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.dto.RealizationInfos;
+import org.gridsuite.modification.server.dto.BuildInfos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,20 +35,20 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 
-import static org.gridsuite.modification.server.service.RealizationStoppedPublisherService.CANCEL_MESSAGE;
-import static org.gridsuite.modification.server.service.RealizationStoppedPublisherService.FAIL_MESSAGE;
+import static org.gridsuite.modification.server.service.BuildStoppedPublisherService.CANCEL_MESSAGE;
+import static org.gridsuite.modification.server.service.BuildStoppedPublisherService.FAIL_MESSAGE;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 @Service
-public class RealizationWorkerService {
+public class BuildWorkerService {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(RealizationWorkerService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(BuildWorkerService.class);
 
-    private static final String CATEGORY_BROKER_INPUT = RealizationWorkerService.class.getName() + ".input-broker-messages";
+    private static final String CATEGORY_BROKER_INPUT = BuildWorkerService.class.getName() + ".input-broker-messages";
 
-    private static final String CATEGORY_BROKER_OUTPUT = RealizationWorkerService.class.getName() + ".output-broker-messages";
+    private static final String CATEGORY_BROKER_OUTPUT = BuildWorkerService.class.getName() + ".output-broker-messages";
 
     private static final Logger OUTPUT_MESSAGE_LOGGER = LoggerFactory.getLogger(CATEGORY_BROKER_OUTPUT);
 
@@ -56,63 +56,63 @@ public class RealizationWorkerService {
 
     private ObjectMapper objectMapper;
 
-    private RealizationStoppedPublisherService stoppedPublisherService;
+    private BuildStoppedPublisherService stoppedPublisherService;
 
     private Map<String, CompletableFuture<List<ModificationInfos>>> futures = new ConcurrentHashMap<>();
 
-    private Map<String, RealizationCancelContext> cancelRealizationRequests = new ConcurrentHashMap<>();
+    private Map<String, BuildCancelContext> cancelBuildRequests = new ConcurrentHashMap<>();
 
-    private Set<String> realizationRequests = Sets.newConcurrentHashSet();
+    private Set<String> buildRequests = Sets.newConcurrentHashSet();
 
     @Autowired
-    private StreamBridge resultRealizationMessagePublisher;
+    private StreamBridge resultBuildMessagePublisher;
 
-    public RealizationWorkerService(@NonNull NetworkModificationService networkModificationService,
-                                    @NonNull ObjectMapper objectMapper,
-                                    @NonNull RealizationStoppedPublisherService stoppedPublisherService) {
+    public BuildWorkerService(@NonNull NetworkModificationService networkModificationService,
+                              @NonNull ObjectMapper objectMapper,
+                              @NonNull BuildStoppedPublisherService stoppedPublisherService) {
         this.networkModificationService = networkModificationService;
         this.objectMapper = objectMapper;
         this.stoppedPublisherService = stoppedPublisherService;
     }
 
-    private Mono<List<ModificationInfos>> execRealizeVariant(Network network, RealizationExecContext execContext, RealizationInfos realizationInfos) {
+    private Mono<List<ModificationInfos>> execBuildVariant(Network network, BuildExecContext execContext, BuildInfos buildInfos) {
         UUID networkUuid = execContext.getNetworkUuid();
         String receiver = execContext.getReceiver();
 
-        if (cancelRealizationRequests.get(receiver) != null) {
+        if (cancelBuildRequests.get(receiver) != null) {
             return Mono.empty();
         }
 
         CompletableFuture<List<ModificationInfos>> future = CompletableFuture.supplyAsync(() ->
-            networkModificationService.applyModifications(network, networkUuid, realizationInfos)
+            networkModificationService.applyModifications(network, networkUuid, buildInfos)
         );
 
         futures.put(receiver, future);
 
-        if (cancelRealizationRequests.get(receiver) != null) {
+        if (cancelBuildRequests.get(receiver) != null) {
             return Mono.empty();
         } else {
-            LOGGER.info("Starting realization on variant : {}", realizationInfos.getDestinationVariantId());
+            LOGGER.info("Starting build on variant : {}", buildInfos.getDestinationVariantId());
             return Mono.fromCompletionStage(future);
         }
     }
 
     @Bean
-    public Consumer<Flux<Message<String>>> consumeRealize() {
+    public Consumer<Flux<Message<String>>> consumeBuild() {
         return f -> f.log(CATEGORY_BROKER_INPUT, Level.FINE)
             .flatMap(message -> {
-                RealizationExecContext execContext = RealizationExecContext.fromMessage(message, objectMapper);
+                BuildExecContext execContext = BuildExecContext.fromMessage(message, objectMapper);
                 if (StringUtils.isBlank(execContext.getReceiver())) {
                     return Mono.empty();
                 }
-                realizationRequests.add(execContext.getReceiver()); // receiver is the node uuid to realize
+                buildRequests.add(execContext.getReceiver()); // receiver is the node uuid to build
 
-                RealizationInfos realizationInfos = execContext.getRealizationInfos();
+                BuildInfos buildInfos = execContext.getBuildInfos();
 
                 return networkModificationService.cloneNetworkVariant(execContext.getNetworkUuid(),
-                                                                      realizationInfos.getOriginVariantId(),
-                                                                      realizationInfos.getDestinationVariantId())
-                    .flatMap(network -> execRealizeVariant(network, execContext, realizationInfos))
+                                                                      buildInfos.getOriginVariantId(),
+                                                                      buildInfos.getDestinationVariantId())
+                    .flatMap(network -> execBuildVariant(network, execContext, buildInfos))
                     .doOnSuccess(result -> {
                         if (result != null) {  // result available
                             Set<String> allSubstationsIds = new HashSet<>();
@@ -123,10 +123,10 @@ public class RealizationWorkerService {
                                 .setHeader("receiver", execContext.getReceiver())
                                 .build();
 
-                            sendResultRealizationMessage(sendMessage);
-                            LOGGER.info("Realization complete on node '{}'", execContext.getReceiver());
-                        } else {  // result not available : stop realization request
-                            if (cancelRealizationRequests.get(execContext.getReceiver()) != null) {
+                            sendResultBuildMessage(sendMessage);
+                            LOGGER.info("Build complete on node '{}'", execContext.getReceiver());
+                        } else {  // result not available : stop build request
+                            if (cancelBuildRequests.get(execContext.getReceiver()) != null) {
                                 stoppedPublisherService.publishCancel(execContext.getReceiver());
                             }
                         }
@@ -139,27 +139,27 @@ public class RealizationWorkerService {
                     })
                     .doFinally(s -> {
                         futures.remove(execContext.getReceiver());
-                        cancelRealizationRequests.remove(execContext.getReceiver());
-                        realizationRequests.remove(execContext.getReceiver());
+                        cancelBuildRequests.remove(execContext.getReceiver());
+                        buildRequests.remove(execContext.getReceiver());
                     });
             })
             .subscribe();
     }
 
     @Bean
-    public Consumer<Flux<Message<String>>> consumeCancelRealization() {
+    public Consumer<Flux<Message<String>>> consumeCancelBuild() {
         return f -> f.log(CATEGORY_BROKER_INPUT, Level.FINE)
             .flatMap(message -> {
-                RealizationCancelContext cancelContext = RealizationCancelContext.fromMessage(message);
+                BuildCancelContext cancelContext = BuildCancelContext.fromMessage(message);
 
-                if (realizationRequests.contains(cancelContext.getReceiver())) {
-                    cancelRealizationRequests.put(cancelContext.getReceiver(), cancelContext);
+                if (buildRequests.contains(cancelContext.getReceiver())) {
+                    cancelBuildRequests.put(cancelContext.getReceiver(), cancelContext);
                 }
 
                 // find the completableFuture associated with receiver
                 CompletableFuture<List<ModificationInfos>> future = futures.get(cancelContext.getReceiver());
                 if (future != null) {
-                    future.cancel(true);  // cancel realization in progress
+                    future.cancel(true);  // cancel build in progress
 
                     return Mono.fromRunnable(() -> {
                         stoppedPublisherService.publishCancel(cancelContext.getReceiver());
@@ -168,12 +168,12 @@ public class RealizationWorkerService {
                 }
                 return Mono.empty();
             })
-            .onErrorContinue((t, r) -> LOGGER.error("Exception in consumeCancelRealization", t))
+            .onErrorContinue((t, r) -> LOGGER.error("Exception in consumeCancelBuild", t))
             .subscribe();
     }
 
-    private void sendResultRealizationMessage(Message<String> message) {
+    private void sendResultBuildMessage(Message<String> message) {
         OUTPUT_MESSAGE_LOGGER.debug("Sending message : {}", message);
-        resultRealizationMessagePublisher.send("publishResultRealization-out-0", message);
+        resultBuildMessagePublisher.send("publishResultBuild-out-0", message);
     }
 }

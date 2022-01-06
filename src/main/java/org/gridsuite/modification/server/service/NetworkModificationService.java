@@ -378,7 +378,7 @@ public class NetworkModificationService {
                                              Reporter subReporter) {
         try {
             action.run();
-            if (!listener.isRealization()) {
+            if (!listener.isBuild()) {
                 saveModifications(listener);
             }
             return listener.isApplyModifications() ? listener.getModifications() : Collections.emptyList();
@@ -389,13 +389,13 @@ public class NetworkModificationService {
                 .withDefaultMessage(exc.getMessage())
                 .withSeverity(new TypedValue("NETWORK_MODIFICATION_ERROR", TypedValue.ERROR_LOGLEVEL))
                 .build());
-            if (!listener.isRealization()) {
+            if (!listener.isBuild()) {
                 throw exc;
             } else {
                 return Collections.emptyList();
             }
         } finally {
-            if (!listener.isRealization()) {
+            if (!listener.isBuild()) {
                 // send report
                 sendReport(networkUuid, reporter);
             }
@@ -1123,8 +1123,8 @@ public class NetworkModificationService {
             .collect(Collectors.toList());
     }
 
-    public List<ModificationInfos> applyModifications(Network network, UUID networkUuid, RealizationInfos realizationInfos) {
-        // Apply all modifications belonging to the modification groups uuids in realizationInfos
+    public List<ModificationInfos> applyModifications(Network network, UUID networkUuid, BuildInfos buildInfos) {
+        // Apply all modifications belonging to the modification groups uuids in buildInfos
         List<ModificationInfos> allModificationsInfos = new ArrayList<>();
         NetworkStoreListener listener = NetworkStoreListener.create(network,
             networkUuid,
@@ -1133,9 +1133,9 @@ public class NetworkModificationService {
             equipmentInfosService,
             true,
             true);
-        ReporterModel reporter = new ReporterModel("Realization", "Realization");
+        ReporterModel reporter = new ReporterModel("Build", "Build");
 
-        modificationRepository.getModificationsEntities(realizationInfos.getModifications()).forEach(modificationEntity -> {
+        modificationRepository.getModificationsEntities(buildInfos.getModifications()).forEach(modificationEntity -> {
             ModificationType type = ModificationType.valueOf(modificationEntity.getType());
             switch (type) {
                 case EQUIPMENT_ATTRIBUTE_MODIFICATION: {
@@ -1216,25 +1216,25 @@ public class NetworkModificationService {
     }
 
     /*
-    ** Realize variant : sending message to rabbitmq
+    ** Build variant : sending message to rabbitmq
      */
-    public Mono<Void> realizeVariant(UUID networkUuid, RealizationInfos realizationInfos, String receiver) {
+    public Mono<Void> buildVariant(UUID networkUuid, BuildInfos buildInfos, String receiver) {
         return Mono.fromRunnable(() ->
-            sendRunRealizationMessage(new RealizationExecContext(networkUuid, realizationInfos, receiver).toMessage(objectMapper)));
+            sendRunBuildMessage(new BuildExecContext(networkUuid, buildInfos, receiver).toMessage(objectMapper)));
     }
 
-    private void sendRunRealizationMessage(Message<String> message) {
+    private void sendRunBuildMessage(Message<String> message) {
         RUN_MESSAGE_LOGGER.debug("Sending message : {}", message);
-        publisher.send("publishRealize-out-0", message);
+        publisher.send("publishBuild-out-0", message);
     }
 
-    public Mono<Void> stopRealization(String receiver) {
+    public Mono<Void> stopBuild(String receiver) {
         return Mono.fromRunnable(() ->
-            sendCancelRealizationMessage(new RealizationCancelContext(receiver).toMessage())).then();
+            sendCancelBuildMessage(new BuildCancelContext(receiver).toMessage())).then();
     }
 
-    private void sendCancelRealizationMessage(Message<String> message) {
+    private void sendCancelBuildMessage(Message<String> message) {
         CANCEL_MESSAGE_LOGGER.debug("Sending message : {}", message);
-        publisher.send("publishCancelRealization-out-0", message);
+        publisher.send("publishCancelBuild-out-0", message);
     }
 }

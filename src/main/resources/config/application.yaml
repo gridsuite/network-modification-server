@@ -4,22 +4,22 @@ spring:
 
   cloud:
     function:
-      definition: consumeRealize;consumeCancelRealization
+      definition: consumeBuild;consumeCancelBuild
     stream:
       bindings:
-        consumeRealize-in-0:
-          destination: ${powsybl-ws.rabbitmq.destination.prefix:}realize.run
-          group: realizeGroup
-        publishRealize-out-0:
-          destination: ${powsybl-ws.rabbitmq.destination.prefix:}realize.run
-        publishResultRealization-out-0:
-          destination: ${powsybl-ws.rabbitmq.destination.prefix:}realize.result
-        consumeCancelRealization-in-0:
-          destination: ${powsybl-ws.rabbitmq.destination.prefix:}realize.cancel
-        publishCancelRealization-out-0:
-          destination: ${powsybl-ws.rabbitmq.destination.prefix:}realize.cancel
-        publishStoppedRealization-out-0:
-          destination: ${powsybl-ws.rabbitmq.destination.prefix:}realize.stopped
-      source: publishRealize;publishResultRealization;publishCancelRealization;publishStoppedRealization
+        consumeBuild-in-0:
+          destination: ${powsybl-ws.rabbitmq.destination.prefix:}build.run
+          group: buildGroup
+        publishBuild-out-0:
+          destination: ${powsybl-ws.rabbitmq.destination.prefix:}build.run
+        publishResultBuild-out-0:
+          destination: ${powsybl-ws.rabbitmq.destination.prefix:}build.result
+        consumeCancelBuild-in-0:
+          destination: ${powsybl-ws.rabbitmq.destination.prefix:}build.cancel
+        publishCancelBuild-out-0:
+          destination: ${powsybl-ws.rabbitmq.destination.prefix:}build.cancel
+        publishStoppedBuild-out-0:
+          destination: ${powsybl-ws.rabbitmq.destination.prefix:}build.stopped
+      source: publishBuild;publishResultBuild;publishCancelBuild;publishStoppedBuild
 
 dbName: networkmodifications

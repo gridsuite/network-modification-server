@@ -35,7 +35,7 @@ public class NetworkStoreListener implements NetworkListener {
 
     private Set<String> substationsIds = new HashSet<>();
 
-    private boolean isRealization;
+    private boolean isBuild;
 
     private boolean isApplyModifications;
 
@@ -47,8 +47,8 @@ public class NetworkStoreListener implements NetworkListener {
         return networkUuid;
     }
 
-    boolean isRealization() {
-        return isRealization;
+    boolean isBuild() {
+        return isBuild;
     }
 
     boolean isApplyModifications() {
@@ -58,22 +58,22 @@ public class NetworkStoreListener implements NetworkListener {
     public static NetworkStoreListener create(Network network, UUID networkUuid, UUID groupUuid,
                                               NetworkModificationRepository modificationRepository,
                                               EquipmentInfosService equipmentInfosService,
-                                              boolean isRealization, boolean isApplyModifications) {
+                                              boolean isBuild, boolean isApplyModifications) {
         var listener = new NetworkStoreListener(network, networkUuid, groupUuid, modificationRepository, equipmentInfosService,
-                                                isRealization, isApplyModifications);
+                                                isBuild, isApplyModifications);
         network.addListener(listener);
         return listener;
     }
 
     protected NetworkStoreListener(Network network, UUID networkUuid, UUID groupUuid,
                                    NetworkModificationRepository modificationRepository, EquipmentInfosService equipmentInfosService,
-                                   boolean isRealization, boolean isApplyModifications) {
+                                   boolean isBuild, boolean isApplyModifications) {
         this.network = network;
         this.networkUuid = networkUuid;
         this.groupUuid = groupUuid;
         this.modificationRepository = modificationRepository;
         this.equipmentInfosService = equipmentInfosService;
-        this.isRealization = isRealization;
+        this.isBuild = isBuild;
         this.isApplyModifications = isApplyModifications;
     }
 
