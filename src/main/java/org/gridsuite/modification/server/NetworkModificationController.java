@@ -157,4 +157,21 @@ public class NetworkModificationController {
                                                                         @RequestParam(value = "group", required = false) UUID groupUuid) {
         return ResponseEntity.ok().body(networkModificationService.deleteEquipment(networkUuid, variantId, groupUuid, equipmentType, equipmentId));
     }
+
+    @PostMapping(value = "/networks/{networkUuid}/build")
+    @Operation(summary = "Build a network variant")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The build has been done")})
+    public ResponseEntity<Mono<Void>> buildVariant(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
+                                                     @Parameter(description = "Receiver") @RequestParam(name = "receiver", required = false) String receiver,
+                                                     @RequestBody BuildInfos buildInfos) {
+        return ResponseEntity.ok().body(networkModificationService.buildVariant(networkUuid, buildInfos, receiver));
+    }
+
+    @PutMapping(value = "/build/stop")
+    @Operation(summary = "Stop a build")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The build has been stopped")})
+    public ResponseEntity<Mono<Void>> stopBuild(@Parameter(description = "Build receiver") @RequestParam(name = "receiver", required = false) String receiver) {
+        Mono<Void> result = networkModificationService.stopBuild(receiver);
+        return ResponseEntity.ok().body(result);
+    }
 }

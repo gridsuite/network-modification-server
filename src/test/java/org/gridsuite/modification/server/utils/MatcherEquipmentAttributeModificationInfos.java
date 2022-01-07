@@ -18,11 +18,11 @@ import java.util.Set;
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
-public class MatcheEquipmentAttributeModificationInfos extends MatcherModificationInfos<EquipmenAttributeModificationInfos> {
+public class MatcherEquipmentAttributeModificationInfos extends MatcherModificationInfos<EquipmenAttributeModificationInfos> {
 
-    public static MatcheEquipmentAttributeModificationInfos createMatcherEquipmentAttributeModificationInfos(String equipmentId, Set<String> substationIds,
-                                                                                                             String equipmentAttributeName, Object equipmentAttributeValue) {
-        return new MatcheEquipmentAttributeModificationInfos(EquipmenAttributeModificationInfos.builder()
+    public static MatcherEquipmentAttributeModificationInfos createMatcherEquipmentAttributeModificationInfos(String equipmentId, Set<String> substationIds,
+                                                                                                              String equipmentAttributeName, Object equipmentAttributeValue) {
+        return new MatcherEquipmentAttributeModificationInfos(EquipmenAttributeModificationInfos.builder()
                 .date(ZonedDateTime.now(ZoneOffset.UTC))
                 .type(ModificationType.EQUIPMENT_ATTRIBUTE_MODIFICATION)
                 .equipmentId(equipmentId)
@@ -32,11 +32,11 @@ public class MatcheEquipmentAttributeModificationInfos extends MatcherModificati
                 .build());
     }
 
-    public static MatcheEquipmentAttributeModificationInfos createMatcherEquipmentAttributeModificationInfos(EquipmenAttributeModificationInfos modificationInfos) {
-        return new MatcheEquipmentAttributeModificationInfos(modificationInfos);
+    public static MatcherEquipmentAttributeModificationInfos createMatcherEquipmentAttributeModificationInfos(EquipmenAttributeModificationInfos modificationInfos) {
+        return new MatcherEquipmentAttributeModificationInfos(modificationInfos);
     }
 
-    protected MatcheEquipmentAttributeModificationInfos(EquipmenAttributeModificationInfos ref) {
+    protected MatcherEquipmentAttributeModificationInfos(EquipmenAttributeModificationInfos ref) {
         super(ref);
     }
 
