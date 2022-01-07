@@ -10,9 +10,11 @@ import com.powsybl.iidm.network.Country;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.ModificationType;
+import org.gridsuite.modification.server.dto.EquipmenModificationInfos;
 import org.gridsuite.modification.server.dto.SubstationCreationInfos;
 
 import javax.persistence.*;
+import java.util.Set;
 
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
@@ -32,6 +34,16 @@ public class SubstationCreationEntity extends EquipmentCreationEntity {
                 equipmentId,
                 equipmentName);
         this.country = country;
+    }
+
+    @Override
+    public SubstationCreationInfos toModificationInfos() {
+        return toSubstationCreationInfosBuilder().build();
+    }
+
+    @Override
+    public EquipmenModificationInfos toEquipmentModificationInfos(Set<String> uuids) {
+        return toSubstationCreationInfosBuilder().substationIds(uuids).build();
     }
 
     public SubstationCreationInfos toSubstationCreationInfos() {

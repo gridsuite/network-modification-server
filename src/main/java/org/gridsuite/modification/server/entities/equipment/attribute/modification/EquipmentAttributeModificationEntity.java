@@ -38,6 +38,11 @@ public class EquipmentAttributeModificationEntity<T> extends EquipmentModificati
         this.attributeValue = attributeValue;
     }
 
+    @Override
+    public EquipmenAttributeModificationInfos toModificationInfos() {
+        return toModificationInfosBuilder().build();
+    }
+
     public EquipmenAttributeModificationInfos toEquipmentAttributeModificationInfos() {
         return toModificationInfosBuilder().build();
     }

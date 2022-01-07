@@ -331,6 +331,45 @@ public class ModificationRepositoryTest {
     }
 
     @Test
+    public void testGroovyScript() {
+        var groovyScriptModificationEntity1 = modificationRepository.createGroovyScriptModificationEntity("script1");
+        var groovyScriptModificationEntity2 = modificationRepository.createGroovyScriptModificationEntity("script2");
+        var groovyScriptModificationEntity3 = modificationRepository.createGroovyScriptModificationEntity("script3");
+
+        modificationRepository.saveModifications(TEST_GROUP_ID, List.of(groovyScriptModificationEntity1, groovyScriptModificationEntity2, groovyScriptModificationEntity3));
+        assertRequestsCount(1, 7, 0, 0);
+
+        List<ModificationInfos> modificationInfos = modificationRepository.getModifications(TEST_GROUP_ID, false);
+        assertEquals(3, modificationInfos.size());
+
+        assertThat(modificationRepository.getGroovyScriptModification(TEST_GROUP_ID, modificationInfos.get(0).getUuid()),
+            MatcherGroovyScriptModificationInfos.createMatcherGroovyScriptModificationInfos(groovyScriptModificationEntity1.toModificationInfos()));
+        assertThat(modificationRepository.getGroovyScriptModification(TEST_GROUP_ID, modificationInfos.get(1).getUuid()),
+            MatcherGroovyScriptModificationInfos.createMatcherGroovyScriptModificationInfos(groovyScriptModificationEntity2.toModificationInfos()));
+        assertThat(modificationRepository.getGroovyScriptModification(TEST_GROUP_ID, modificationInfos.get(2).getUuid()),
+            MatcherGroovyScriptModificationInfos.createMatcherGroovyScriptModificationInfos(groovyScriptModificationEntity3.toModificationInfos()));
+
+        assertEquals(3, modificationRepository.getModifications(TEST_GROUP_ID, false).size());
+        assertEquals(List.of(TEST_GROUP_ID), this.modificationRepository.getModificationGroupsUuids());
+
+        SQLStatementCountValidator.reset();
+        modificationRepository.deleteModifications(TEST_GROUP_ID, Set.of(groovyScriptModificationEntity2.getId(), groovyScriptModificationEntity3.getId()));
+        assertRequestsCount(1, 0, 0, 4);
+
+        SQLStatementCountValidator.reset();
+        assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID, false).size());
+        assertRequestsCount(2, 0, 0, 0);
+
+        SQLStatementCountValidator.reset();
+        modificationRepository.deleteModificationGroup(TEST_GROUP_ID);
+        assertRequestsCount(2, 0, 0, 3);
+
+        assertThrows(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage(),
+            NetworkModificationException.class, () -> modificationRepository.getModifications(TEST_GROUP_ID, false)
+        );
+    }
+
+    @Test
     public void testSubstationCreation() {
         var createSubstationEntity1 = modificationRepository.createSubstationEntity("idSubstation1", "nameSubstation1", Country.AR);
         var createSubstationEntity2 = modificationRepository.createSubstationEntity("idSubstation2", "nameSubstation2", Country.TD);
@@ -343,11 +382,11 @@ public class ModificationRepositoryTest {
         assertEquals(3, modificationInfos.size());
 
         assertThat(modificationRepository.getSubstationCreationModification(TEST_GROUP_ID, modificationInfos.get(0).getUuid()),
-                MatcherSubstationCreationInfos.createMatcherSubstationCreationInfos(((SubstationCreationEntity) createSubstationEntity1).toSubstationCreationInfos()));
+            MatcherSubstationCreationInfos.createMatcherSubstationCreationInfos(((SubstationCreationEntity) createSubstationEntity1).toSubstationCreationInfos()));
         assertThat(modificationRepository.getSubstationCreationModification(TEST_GROUP_ID, modificationInfos.get(1).getUuid()),
-                MatcherSubstationCreationInfos.createMatcherSubstationCreationInfos(((SubstationCreationEntity) createSubstationEntity2).toSubstationCreationInfos()));
+            MatcherSubstationCreationInfos.createMatcherSubstationCreationInfos(((SubstationCreationEntity) createSubstationEntity2).toSubstationCreationInfos()));
         assertThat(modificationRepository.getSubstationCreationModification(TEST_GROUP_ID, modificationInfos.get(2).getUuid()),
-                MatcherSubstationCreationInfos.createMatcherSubstationCreationInfos(((SubstationCreationEntity) createSubstationEntity3).toSubstationCreationInfos()));
+            MatcherSubstationCreationInfos.createMatcherSubstationCreationInfos(((SubstationCreationEntity) createSubstationEntity3).toSubstationCreationInfos()));
 
         assertEquals(3, modificationRepository.getModifications(TEST_GROUP_ID, false).size());
         assertEquals(List.of(TEST_GROUP_ID), this.modificationRepository.getModificationGroupsUuids());
@@ -365,7 +404,7 @@ public class ModificationRepositoryTest {
         assertRequestsCount(2, 0, 0, 3);
 
         assertThrows(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage(),
-                NetworkModificationException.class, () -> modificationRepository.getModifications(TEST_GROUP_ID, false)
+            NetworkModificationException.class, () -> modificationRepository.getModifications(TEST_GROUP_ID, false)
         );
     }
 

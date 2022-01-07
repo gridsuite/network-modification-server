@@ -10,6 +10,8 @@ import javax.persistence.*;
 
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.util.Collections;
+import java.util.Set;
 import java.util.UUID;
 
 import lombok.Getter;
@@ -51,10 +53,15 @@ public class ModificationEntity {
     }
 
     public ModificationInfos toModificationInfos() {
+        return toModificationInfos(Collections.emptySet());
+    }
+
+    public ModificationInfos toModificationInfos(Set<String> substationsIds) {
         return ModificationInfos.builder()
                 .uuid(this.id)
                 .date(this.date)
                 .type(ModificationType.valueOf(this.type))
+                .substationIds(substationsIds)
                 .build();
     }
 }

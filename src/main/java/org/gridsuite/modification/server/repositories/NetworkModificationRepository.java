@@ -13,6 +13,7 @@ import com.powsybl.iidm.network.LoadType;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.server.entities.GroovyScriptModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationGroupEntity;
 import org.gridsuite.modification.server.entities.equipment.attribute.modification.BooleanEquipmentAttributeModificationEntity;
@@ -228,6 +229,19 @@ public class NetworkModificationRepository {
 
     public EquipmentDeletionEntity createEquipmentDeletionEntity(String equipmentId, String equipmentType) {
         return new EquipmentDeletionEntity(equipmentId, equipmentType);
+    }
+
+    public GroovyScriptModificationEntity createGroovyScriptModificationEntity(String script) {
+        return new GroovyScriptModificationEntity(script);
+    }
+
+    public GroovyScriptModificationInfos getGroovyScriptModification(UUID groupUuid, UUID modificationUuid) {
+        return ((GroovyScriptModificationEntity) this.modificationRepository
+            .findById(modificationUuid)
+            .filter(m -> ModificationType.GROOVY_SCRIPT.name().equals(m.getType()))
+            .filter(m -> groupUuid.equals(m.getGroup().getId()))
+            .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString())))
+            .toModificationInfos();
     }
 
     public List<ModificationEntity> getModificationsEntities(List<UUID> groupUuids) {
