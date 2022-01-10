@@ -14,7 +14,6 @@ import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
 /**
- * @author Slimane Amar <slimane.amar at rte-france.com>
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 @SuperBuilder
@@ -22,8 +21,8 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @Setter
 @ToString(callSuper = true)
-@Schema(description = "Equipment modification")
-public class EquipmenModificationInfos extends ModificationInfos {
-    @Schema(description = "Equipment ID")
-    private String equipmentId;
+@Schema(description = "Groovy script modification")
+public class GroovyScriptModificationInfos extends ModificationInfos {
+    @Schema(description = "Groovy script")
+    private String script;
 }

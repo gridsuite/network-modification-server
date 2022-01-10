@@ -50,6 +50,7 @@
         <commons-lang3.version>3.9</commons-lang3.version>
         <log4j2-mock-version>0.0.2</log4j2-mock-version>
         <equalsverifier-version>3.7.1</equalsverifier-version>
+        <testcontainers.version>1.16.2</testcontainers.version>
         <liquibase-hibernate-package>org.gridsuite.modification.server</liquibase-hibernate-package>
     </properties>
 
@@ -112,7 +113,12 @@
                 <artifactId>equalsverifier</artifactId>
                 <version>${equalsverifier-version}</version>
             </dependency>
-
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>elasticsearch</artifactId>
+                <version>${testcontainers.version}</version>
+                <scope>test</scope>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -153,6 +159,10 @@
             <groupId>org.codehaus.groovy</groupId>
             <artifactId>groovy</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-stream</artifactId>
+        </dependency>
 
         <!-- elasticsearch -->
         <dependency>
@@ -187,6 +197,12 @@
             <artifactId>liquibase-core</artifactId>
             <scope>runtime</scope>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-stream-binder-rabbit</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
         <!-- Test dependencies -->
 
         <dependency>
@@ -226,6 +242,12 @@
         </dependency>
 
         <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>elasticsearch</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
             <groupId>de.dentrassi.elasticsearch</groupId>
             <artifactId>log4j2-mock</artifactId>
             <scope>test</scope>
@@ -236,6 +258,12 @@
             <artifactId>equalsverifier</artifactId>
             <scope>test</scope>
         </dependency>
-
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-stream</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+            <classifier>test-binder</classifier>
+        </dependency>
     </dependencies>
 </project>

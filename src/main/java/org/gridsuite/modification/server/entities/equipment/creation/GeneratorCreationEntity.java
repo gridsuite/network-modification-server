@@ -67,7 +67,8 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
         this.voltageSetpoint = voltageSetpoint;
     }
 
-    public GeneratorCreationInfos toGeneratorCreationInfos() {
+    @Override
+    public GeneratorCreationInfos toModificationInfos() {
         return toGeneratorCreationInfosBuilder().build();
     }
 

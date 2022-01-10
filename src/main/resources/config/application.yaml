@@ -2,4 +2,24 @@ spring:
   application:
     name: netork-modification-server
 
+  cloud:
+    function:
+      definition: consumeBuild;consumeCancelBuild
+    stream:
+      bindings:
+        consumeBuild-in-0:
+          destination: ${powsybl-ws.rabbitmq.destination.prefix:}build.run
+          group: buildGroup
+        publishBuild-out-0:
+          destination: ${powsybl-ws.rabbitmq.destination.prefix:}build.run
+        publishResultBuild-out-0:
+          destination: ${powsybl-ws.rabbitmq.destination.prefix:}build.result
+        consumeCancelBuild-in-0:
+          destination: ${powsybl-ws.rabbitmq.destination.prefix:}build.cancel
+        publishCancelBuild-out-0:
+          destination: ${powsybl-ws.rabbitmq.destination.prefix:}build.cancel
+        publishStoppedBuild-out-0:
+          destination: ${powsybl-ws.rabbitmq.destination.prefix:}build.stopped
+      source: publishBuild;publishResultBuild;publishCancelBuild;publishStoppedBuild
+
 dbName: networkmodifications

@@ -9,6 +9,8 @@ backing-services:
     base-uri: http://localhost:5028
 
 spring:
+  rabbitmq:
+    addresses: localhost
   data:
     elasticsearch:
       host: localhost
