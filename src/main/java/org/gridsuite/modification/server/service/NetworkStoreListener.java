@@ -178,8 +178,6 @@ public class NetworkStoreListener implements NetworkListener {
             ids.add(((HvdcLine) identifiable).getConverterStation2().getTerminal().getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
         } else if (identifiable instanceof VoltageLevel) {
             ids.add(((VoltageLevel) identifiable).getSubstation().orElseThrow().getId());
-        } else if (identifiable instanceof Substation) {
-            ids.add(identifiable.getId());
         }
         return ids;
     }

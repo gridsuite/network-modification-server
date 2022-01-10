@@ -1053,7 +1053,7 @@ public class ModificationControllerTest {
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
                 .expectBodyList(EquipmentDeletionInfos.class)
                 .value(modifications -> modifications.get(0),
-                        MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "s3", "SUBSTATION", Set.of("s3")));
+                        MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "s3", "SUBSTATION", Set.of()));
 
         testNetworkModificationsCount(TEST_GROUP_ID, 14);
     }
