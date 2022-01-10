@@ -10,6 +10,7 @@ import com.powsybl.commons.PowsyblException;
 import com.powsybl.iidm.network.Country;
 import com.powsybl.iidm.network.EnergySource;
 import com.powsybl.iidm.network.LoadType;
+import lombok.NonNull;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
@@ -257,5 +258,13 @@ public class NetworkModificationRepository {
 
     public List<ModificationEntity> getModificationsEntities(List<UUID> groupUuids) {
         return this.modificationRepository.findAllByGroupIdInOrderByDate(groupUuids);
+    }
+
+    @Transactional
+    public void changeModificationActiveState(@NonNull UUID groupUuid, @NonNull UUID modificationUuid, boolean active) {
+        var modificationEntity = this.modificationRepository
+            .findById(modificationUuid)
+            .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString()));
+        modificationEntity.setActive(active);
     }
 }

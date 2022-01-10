@@ -25,6 +25,7 @@ import org.gridsuite.modification.server.dto.ModificationInfos;
  */
 @NoArgsConstructor
 @Getter
+@Setter
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
 @Table(name = "modification", indexes = {@Index(name = "modificationEntity_group_id_index", columnList = "group_id")})
@@ -46,10 +47,14 @@ public class ModificationEntity {
     @Column(name = "type")
     private String type;
 
+    @Column(name = "active", nullable = false)
+    private boolean active;
+
     protected ModificationEntity(ModificationType type) {
         this.id = null;
         this.date = ZonedDateTime.now(ZoneOffset.UTC);
         this.type = type.name();
+        this.active = true;
     }
 
     public ModificationInfos toModificationInfos() {
@@ -62,6 +67,7 @@ public class ModificationEntity {
                 .date(this.date)
                 .type(ModificationType.valueOf(this.type))
                 .substationIds(substationsIds)
+                .active(this.active)
                 .build();
     }
 }

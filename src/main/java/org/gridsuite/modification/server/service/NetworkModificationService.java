@@ -18,6 +18,7 @@ import com.powsybl.sld.iidm.extensions.BranchStatus;
 import com.powsybl.sld.iidm.extensions.BranchStatusAdder;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
+import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.gridsuite.modification.server.ModificationType;
@@ -589,7 +590,7 @@ public class NetworkModificationService {
 
         return doAction(listener, () -> {
             if (listener.isApplyModifications()) {
-                Identifiable identifiable = null;
+                Identifiable<?> identifiable = null;
                 switch (EquipmentType.valueOf(equipmentType)) {
                     case HVDC_LINE:
                         identifiable = network.getHvdcLine(equipmentId);
@@ -1122,6 +1123,9 @@ public class NetworkModificationService {
         ReporterModel reporter = new ReporterModel(NETWORK_BUILD_REPORT_KEY, NETWORK_BUILD_REPORT_NAME);
 
         modificationRepository.getModificationsEntities(buildInfos.getModifications()).forEach(modificationEntity -> {
+            if (!modificationEntity.isActive()) {
+                return;
+            }
             ModificationType type = ModificationType.valueOf(modificationEntity.getType());
             switch (type) {
                 case EQUIPMENT_ATTRIBUTE_MODIFICATION: {
@@ -1229,5 +1233,11 @@ public class NetworkModificationService {
     private void sendCancelBuildMessage(Message<String> message) {
         CANCEL_MESSAGE_LOGGER.debug("Sending message : {}", message);
         publisher.send("publishCancelBuild-out-0", message);
+    }
+
+    public Mono<Void> changeModificationActiveState(@NonNull UUID groupUuid, @NonNull UUID modificationUuid, boolean active) {
+        return Mono.fromRunnable(() ->
+            modificationRepository.changeModificationActiveState(groupUuid, modificationUuid, active)
+        );
     }
 }

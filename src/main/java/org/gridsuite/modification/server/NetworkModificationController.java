@@ -179,4 +179,14 @@ public class NetworkModificationController {
         Mono<Void> result = networkModificationService.stopBuild(receiver);
         return ResponseEntity.ok().body(result);
     }
+
+    @PutMapping(value = "/groups/{groupUuid}/modifications/{modificationUuid}")
+    @Operation(summary = "Activate/Deactivate a modification in a modification group")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The modification has been activated/deactivated"),
+                           @ApiResponse(responseCode = "404", description = "The group/modification doesn't exist")})
+    public ResponseEntity<Mono<Void>> changeModificationActiveState(@Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid,
+                                                                    @Parameter(description = "Modification UUID") @PathVariable("modificationUuid") UUID modificationUuid,
+                                                                    @Parameter(description = "active") @RequestParam("active") boolean active) {
+        return ResponseEntity.ok().body(networkModificationService.changeModificationActiveState(groupUuid, modificationUuid, active));
+    }
 }

@@ -23,7 +23,8 @@ public class MatcherEquipmentDeletionInfos extends MatcherModificationInfos<Equi
         return new MatcherEquipmentDeletionInfos(EquipmentDeletionInfos.builder()
                 .date(ZonedDateTime.now(ZoneOffset.UTC))
                 .type(modificationType)
-            .equipmentType(equipmentType)
+                .active(true)
+                .equipmentType(equipmentType)
                 .equipmentId(equipmentId)
                 .substationIds(substationIds)
                 .build());

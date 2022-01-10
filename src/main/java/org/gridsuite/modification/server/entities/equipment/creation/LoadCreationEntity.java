@@ -62,6 +62,7 @@ public class LoadCreationEntity extends InjectionCreationEntity {
             .uuid(getId())
             .date(getDate())
             .type(ModificationType.valueOf(getType()))
+            .active(isActive())
             .equipmentId(getEquipmentId())
             .equipmentName(getEquipmentName())
             .voltageLevelId(getVoltageLevelId())

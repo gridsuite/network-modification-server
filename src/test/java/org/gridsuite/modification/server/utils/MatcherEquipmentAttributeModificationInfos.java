@@ -25,6 +25,7 @@ public class MatcherEquipmentAttributeModificationInfos extends MatcherModificat
         return new MatcherEquipmentAttributeModificationInfos(EquipmenAttributeModificationInfos.builder()
                 .date(ZonedDateTime.now(ZoneOffset.UTC))
                 .type(ModificationType.EQUIPMENT_ATTRIBUTE_MODIFICATION)
+                .active(true)
                 .equipmentId(equipmentId)
                 .substationIds(substationIds)
                 .equipmentAttributeName(equipmentAttributeName)

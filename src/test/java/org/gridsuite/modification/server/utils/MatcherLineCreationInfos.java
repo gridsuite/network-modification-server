@@ -6,56 +6,14 @@
  */
 package org.gridsuite.modification.server.utils;
 
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.CurrentLimitsInfos;
 import org.gridsuite.modification.server.dto.LineCreationInfos;
 import org.hamcrest.Description;
-
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
-import java.util.Set;
 
 /**
  * @author Sylvain Bouzols <sylvain.bouzols at rte-france.com>
  */
 public class MatcherLineCreationInfos extends MatcherModificationInfos<LineCreationInfos> {
-
-    public static MatcherLineCreationInfos createMatcherLineCreationInfos(String equipmentId,
-                                                                                String equipmentName,
-                                                                                Set<String> substationIds,
-                                                                                double seriesResistance,
-                                                                                double seriesReactance,
-                                                                                Double shuntConductance1,
-                                                                                Double shuntSusceptance1,
-                                                                                Double shuntConductance2,
-                                                                                Double shuntSusceptance2,
-                                                                                String voltageLevelId1,
-                                                                                String busOrBusbarSectionId1,
-                                                                                String voltageLevelId2,
-                                                                                String busOrBusbarSectionId2,
-                                                                                Double permanentCurrentLimit1,
-                                                                                Double permanentCurrentLimit2
-                                                                          ) {
-        return new MatcherLineCreationInfos(LineCreationInfos.builder()
-                .date(ZonedDateTime.now(ZoneOffset.UTC))
-                .type(ModificationType.LINE_CREATION)
-                .equipmentId(equipmentId)
-                .substationIds(substationIds)
-                .equipmentName(equipmentName)
-                .seriesResistance(seriesResistance)
-                .seriesReactance(seriesReactance)
-                .shuntConductance1(shuntConductance1)
-                .shuntSusceptance1(shuntSusceptance1)
-                .shuntConductance2(shuntConductance2)
-                .shuntSusceptance2(shuntSusceptance2)
-                .voltageLevelId1(voltageLevelId1)
-                .busOrBusbarSectionId1(busOrBusbarSectionId1)
-                .voltageLevelId2(voltageLevelId2)
-                .busOrBusbarSectionId2(busOrBusbarSectionId2)
-                .currentLimits1(CurrentLimitsInfos.builder().permanentLimit(permanentCurrentLimit1).build())
-                .currentLimits2(CurrentLimitsInfos.builder().permanentLimit(permanentCurrentLimit2).build())
-                .build());
-    }
 
     public static MatcherLineCreationInfos createMatcherLineCreationInfos(LineCreationInfos lineCreationInfos) {
         return new MatcherLineCreationInfos(lineCreationInfos);
