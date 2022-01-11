@@ -89,9 +89,9 @@ public class NetworkModificationController {
     @PutMapping(value = "/networks/{networkUuid}/lines/{lineId}/status", consumes = MediaType.TEXT_PLAIN_VALUE)
     @Operation(summary = "Change the status of a line in a network variant")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "the line status has been changed"),
-        @ApiResponse(responseCode = "404", description = "the network or line not found"),
-        @ApiResponse(responseCode = "400", description = "the modification action is  incorrect")
+        @ApiResponse(responseCode = "200", description = "The line status has been changed"),
+        @ApiResponse(responseCode = "404", description = "The network or line is not found"),
+        @ApiResponse(responseCode = "400", description = "The modification action is incorrect")
     })
     public ResponseEntity<Flux<ModificationInfos>> changeLineStatus(
             @Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,

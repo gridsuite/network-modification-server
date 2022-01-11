@@ -283,7 +283,7 @@ public class ModificationControllerTest {
     }
 
     @Test
-    public void testLineStatusMofification() {
+    public void testLineStatusModification() {
         String uriString = "/v1/networks/{networkUuid}/lines/{lineId}/status?group=" + TEST_GROUP_ID;
 
         // line lockout
@@ -340,7 +340,7 @@ public class ModificationControllerTest {
     }
 
     @Test
-    public void testLineStatusMofificationWithErrors() {
+    public void testLineStatusModificationWithErrors() {
         String uriString = "/v1/networks/{networkUuid}/lines/{lineId}/status?group=" + TEST_GROUP_ID;
 
         // network not existing
@@ -373,7 +373,7 @@ public class ModificationControllerTest {
             .exchange()
             .expectStatus().isBadRequest()
             .expectBody(String.class)
-            .isEqualTo(NetworkModificationException.createBranchActionTypeBad("foo").getMessage());
+            .isEqualTo(NetworkModificationException.createBranchActionTypeUnknown("foo").getMessage());
 
         webTestClient.put().uri(uriString, TEST_NETWORK_ID, "line3")
             .bodyValue("lockout")

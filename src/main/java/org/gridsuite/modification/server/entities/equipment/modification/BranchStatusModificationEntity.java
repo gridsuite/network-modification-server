@@ -25,11 +25,12 @@ import java.util.Set;
 public class BranchStatusModificationEntity extends EquipmentModificationEntity {
 
     @Column(name = "action")
-    private String action;
+    @Enumerated(EnumType.STRING)
+    private BranchStatusModificationInfos.ActionType action;
 
     public BranchStatusModificationEntity(String lineId, BranchStatusModificationInfos.ActionType status) {
         super(lineId, ModificationType.BRANCH_STATUS);
-        this.action = status.name();
+        this.action = status;
     }
 
     @Override
@@ -41,7 +42,7 @@ public class BranchStatusModificationEntity extends EquipmentModificationEntity 
             .type(ModificationType.valueOf(getType()))
             .substationIds(vlUuids)
             .equipmentId(getEquipmentId())
-            .action(BranchStatusModificationInfos.ActionType.valueOf(getAction()))
+            .action(getAction())
             .build();
     }
 }

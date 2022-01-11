@@ -6,6 +6,8 @@
  */
 package org.gridsuite.modification.server;
 
+import lombok.NonNull;
+import org.gridsuite.modification.server.dto.BranchStatusModificationInfos;
 import org.springframework.http.HttpStatus;
 
 import java.util.Objects;
@@ -38,8 +40,8 @@ public class NetworkModificationException extends RuntimeException {
         CREATE_SUBSTATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         BRANCH_ACTION_ERROR(HttpStatus.BAD_REQUEST),
         BRANCH_ACTION_TYPE_EMPTY(HttpStatus.BAD_REQUEST, "Empty branch action type"),
-        BRANCH_ACTION_TYPE_BAD(HttpStatus.BAD_REQUEST),
-        BRANCH_ACTION_TYPE_UNKNOWN(HttpStatus.INTERNAL_SERVER_ERROR);
+        BRANCH_ACTION_TYPE_UNKNOWN(HttpStatus.BAD_REQUEST),
+        BRANCH_ACTION_TYPE_UNSUPPORTED(HttpStatus.INTERNAL_SERVER_ERROR);
 
         public final HttpStatus status;
         private final String message;
@@ -79,19 +81,15 @@ public class NetworkModificationException extends RuntimeException {
         return type;
     }
 
-    public static NetworkModificationException createEquipmentTypeUnknown(String type) {
-        Objects.requireNonNull(type);
+    public static NetworkModificationException createEquipmentTypeUnknown(@NonNull String type) {
         return new NetworkModificationException(Type.UNKNOWN_EQUIPMENT_TYPE, "The equipment type : " + type + " is unknown");
     }
 
-    public static NetworkModificationException createBranchActionTypeUnknown(String type) {
-        Objects.requireNonNull(type);
+    public static NetworkModificationException createBranchActionTypeUnsupported(@NonNull BranchStatusModificationInfos.ActionType type) {
+        return new NetworkModificationException(Type.BRANCH_ACTION_TYPE_UNSUPPORTED, "The branch action type : " + type + " is unsupported");
+    }
+
+    public static NetworkModificationException createBranchActionTypeUnknown(@NonNull String type) {
         return new NetworkModificationException(Type.BRANCH_ACTION_TYPE_UNKNOWN, "The branch action type : " + type + " is unknown");
     }
-
-    public static NetworkModificationException createBranchActionTypeBad(String type) {
-        Objects.requireNonNull(type);
-        return new NetworkModificationException(Type.BRANCH_ACTION_TYPE_BAD, "The branch action type : " + type + " is bad");
-    }
-
 }

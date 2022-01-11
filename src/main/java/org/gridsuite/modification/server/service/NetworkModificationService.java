@@ -86,6 +86,8 @@ public class NetworkModificationService {
     private static final String NETWORK_BUILD_REPORT_KEY = "NetworkBuilding";
     private static final String NETWORK_BUILD_REPORT_NAME = "Network building";
 
+    private static final String LINE_STATUS_INFO_REPORT_SEVERITY = "LINE_STATUS_INFO";
+
     @Autowired
     private StreamBridge publisher;
 
@@ -208,13 +210,16 @@ public class NetworkModificationService {
             getNetworkModificationInfos(networkUuid, variantId).flatMapIterable(networkInfos -> {
                 NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, modificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
                 ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
-                return execChangeLineStatus(listener, lineId, action, reporter);
+                return execChangeLineStatus(listener, lineId, BranchStatusModificationInfos.ActionType.valueOf(action.toUpperCase()), reporter);
             })
         );
     }
 
-    private List<ModificationInfos> execChangeLineStatus(NetworkStoreListener listener, String lineId, String action, ReporterModel reporter) {
-        switch (BranchStatusModificationInfos.ActionType.valueOf(action.toUpperCase())) {
+    private List<ModificationInfos> execChangeLineStatus(NetworkStoreListener listener, String lineId, BranchStatusModificationInfos.ActionType action, ReporterModel reporter) {
+        if (listener.getNetwork().getLine(lineId) == null) {
+            throw new NetworkModificationException(LINE_NOT_FOUND, lineId);
+        }
+        switch (action) {
             case LOCKOUT:
                 return execLockoutLine(listener, lineId, reporter);
             case TRIP:
@@ -226,7 +231,7 @@ public class NetworkModificationService {
             case ENERGISE_END_TWO:
                 return execEnergiseLineEnd(listener, lineId, Side.TWO, reporter);
             default:
-                throw NetworkModificationException.createBranchActionTypeUnknown(action);
+                throw NetworkModificationException.createBranchActionTypeUnsupported(action);
         }
     }
 
@@ -238,9 +243,6 @@ public class NetworkModificationService {
 
         return doAction(listener, () -> {
                 if (listener.isApplyModifications()) {
-                    if (network.getLine(lineId) == null) {
-                        throw new NetworkModificationException(LINE_NOT_FOUND, lineId);
-                    }
                     if (disconnectLineBothSides(network, lineId)) {
                         network.getLine(lineId).newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.PLANNED_OUTAGE).add();
                     } else {
@@ -251,14 +253,14 @@ public class NetworkModificationService {
                         .withKey("lockoutLineApplied")
                         .withDefaultMessage("Line ${id} (id) : lockout applied")
                         .withValue("id", lineId)
-                        .withSeverity(new TypedValue("LINE_STATUS_INFO", TypedValue.INFO_LOGLEVEL))
+                        .withSeverity(new TypedValue(LINE_STATUS_INFO_REPORT_SEVERITY, TypedValue.INFO_LOGLEVEL))
                         .build());
                 }
 
                 // add the branch status modification entity to the listener
                 listener.storeBranchStatusModification(lineId, BranchStatusModificationInfos.ActionType.LOCKOUT);
             }, MODIFICATION_ERROR, networkUuid, reporter, subReporter
-        ).stream().collect(Collectors.toList());
+        );
     }
 
     private List<ModificationInfos> execTripLine(NetworkStoreListener listener, String lineId, ReporterModel reporter) {
@@ -269,9 +271,6 @@ public class NetworkModificationService {
 
         return doAction(listener, () -> {
                 if (listener.isApplyModifications()) {
-                    if (network.getLine(lineId) == null) {
-                        throw new NetworkModificationException(LINE_NOT_FOUND, lineId);
-                    }
                     if (disconnectLineBothSides(network, lineId)) {
                         network.getLine(lineId).newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.FORCED_OUTAGE).add();
                     } else {
@@ -282,14 +281,14 @@ public class NetworkModificationService {
                         .withKey("tripLineApplied")
                         .withDefaultMessage("Line ${id} (id) : trip applied")
                         .withValue("id", lineId)
-                        .withSeverity(new TypedValue("LINE_STATUS_INFO", TypedValue.INFO_LOGLEVEL))
+                        .withSeverity(new TypedValue(LINE_STATUS_INFO_REPORT_SEVERITY, TypedValue.INFO_LOGLEVEL))
                         .build());
                 }
 
                 // add the branch status modification entity to the listener
                 listener.storeBranchStatusModification(lineId, BranchStatusModificationInfos.ActionType.TRIP);
             }, MODIFICATION_ERROR, networkUuid, reporter, subReporter
-        ).stream().collect(Collectors.toList());
+        );
     }
 
     private List<ModificationInfos> execEnergiseLineEnd(NetworkStoreListener listener,
@@ -303,9 +302,6 @@ public class NetworkModificationService {
 
         return doAction(listener, () -> {
                 if (listener.isApplyModifications()) {
-                    if (network.getLine(lineId) == null) {
-                        throw new NetworkModificationException(LINE_NOT_FOUND, lineId);
-                    }
                     Terminal terminalToConnect = network.getLine(lineId).getTerminal(side);
                     boolean isTerminalToConnectConnected = terminalToConnect.isConnected() || terminalToConnect.connect();
                     Terminal terminalToDisconnect = network.getLine(lineId).getTerminal(side == Branch.Side.ONE ? Branch.Side.TWO : Branch.Side.ONE);
@@ -321,14 +317,14 @@ public class NetworkModificationService {
                         .withDefaultMessage("Line ${id} (id) : energise the side ${side} applied")
                         .withValue("id", lineId)
                         .withValue("side", side.name())
-                        .withSeverity(new TypedValue("LINE_STATUS_INFO", TypedValue.INFO_LOGLEVEL))
+                        .withSeverity(new TypedValue(LINE_STATUS_INFO_REPORT_SEVERITY, TypedValue.INFO_LOGLEVEL))
                         .build());
                 }
 
                 // add the branch status modification entity to the listener
                 listener.storeBranchStatusModification(lineId, side == Branch.Side.ONE ? BranchStatusModificationInfos.ActionType.ENERGISE_END_ONE : BranchStatusModificationInfos.ActionType.ENERGISE_END_TWO);
             }, MODIFICATION_ERROR, networkUuid, reporter, subReporter
-        ).stream().collect(Collectors.toList());
+        );
     }
 
     private List<ModificationInfos> execSwitchOnLine(NetworkStoreListener listener, String lineId, ReporterModel reporter) {
@@ -339,9 +335,6 @@ public class NetworkModificationService {
 
         return doAction(listener, () -> {
                 if (listener.isApplyModifications()) {
-                    if (network.getLine(lineId) == null) {
-                        throw new NetworkModificationException(LINE_NOT_FOUND, lineId);
-                    }
                     Terminal terminal1 = network.getLine(lineId).getTerminal1();
                     boolean terminal1Connected = terminal1.isConnected() || terminal1.connect();
                     Terminal terminal2 = network.getLine(lineId).getTerminal2();
@@ -356,14 +349,14 @@ public class NetworkModificationService {
                         .withKey("switchOnLineApplied")
                         .withDefaultMessage("Line ${id} (id) : switch on applied")
                         .withValue("id", lineId)
-                        .withSeverity(new TypedValue("LINE_STATUS_INFO", TypedValue.INFO_LOGLEVEL))
+                        .withSeverity(new TypedValue(LINE_STATUS_INFO_REPORT_SEVERITY, TypedValue.INFO_LOGLEVEL))
                         .build());
                 }
 
                 // add the branch status modification entity to the listener
                 listener.storeBranchStatusModification(lineId, BranchStatusModificationInfos.ActionType.SWITCH_ON);
             }, MODIFICATION_ERROR, networkUuid, reporter, subReporter
-        ).stream().collect(Collectors.toList());
+        );
     }
 
     public Mono<Void> deleteModificationGroup(UUID groupUuid) {
@@ -441,7 +434,7 @@ public class NetworkModificationService {
         try {
             BranchStatusModificationInfos.ActionType.valueOf(action.toUpperCase());
         } catch (IllegalArgumentException e) {
-            return Mono.error(NetworkModificationException.createBranchActionTypeBad(action));
+            return Mono.error(NetworkModificationException.createBranchActionTypeUnknown(action));
         }
         return Mono.empty();
     }
