@@ -25,6 +25,7 @@ import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.GroovyScriptModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.BranchStatusModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.EquipmentAttributeModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.*;
 import org.gridsuite.modification.server.entities.equipment.deletion.EquipmentDeletionEntity;
@@ -79,8 +80,11 @@ public class NetworkModificationService {
     private static final String RUN_CATEGORY_BROKER_OUTPUT = NetworkModificationService.class.getName() + ".output-broker-messages.run";
     private static final Logger RUN_MESSAGE_LOGGER = LoggerFactory.getLogger(RUN_CATEGORY_BROKER_OUTPUT);
 
-    private static final String REPORT_KEY = "NetworkModification";
-    private static final String REPORT_NAME = "Network modification";
+    private static final String NETWORK_MODIFICATION_REPORT_KEY = "NetworkModification";
+    private static final String NETWORK_MODIFICATION_REPORT_NAME = "Network modification";
+
+    private static final String NETWORK_BUILD_REPORT_KEY = "NetworkBuilding";
+    private static final String NETWORK_BUILD_REPORT_NAME = "Network building";
 
     @Autowired
     private StreamBridge publisher;
@@ -132,7 +136,7 @@ public class NetworkModificationService {
         return assertGroovyScriptNotEmpty(groovyScript).thenMany(
             getNetworkModificationInfos(networkUuid, variantId).flatMapIterable(networkInfos -> {
                 NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, modificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
-                ReporterModel reporter = new ReporterModel(REPORT_KEY, REPORT_NAME);
+                ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
                 Reporter subReporter = reporter.createSubReporter("GroovyScript", "Apply groovy script");
 
                 return execApplyGroovyScript(listener, groovyScript, reporter, subReporter);
@@ -176,7 +180,7 @@ public class NetworkModificationService {
         return getNetworkModificationInfos(networkUuid, variantId)
             .flatMapIterable(networkInfos -> {
                 NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, modificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
-                ReporterModel reporter = new ReporterModel(REPORT_KEY, REPORT_NAME);
+                ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
                 Reporter subReporter = reporter.createSubReporter("SwitchChange", "Switch state change");
 
                 return execChangeSwitchState(listener, switchId, open, reporter, subReporter);
@@ -199,33 +203,37 @@ public class NetworkModificationService {
         return terminal1Disconnected && terminal2Disconnected;
     }
 
-    public Flux<BranchStatusModificationInfos> changeLineStatus(UUID networkUuid, String variantId, UUID groupUuid, String lineId, String action) {
+    public Flux<ModificationInfos> changeLineStatus(UUID networkUuid, String variantId, UUID groupUuid, String lineId, String action) {
         return assertBranchActionValid(action).thenMany(
             getNetworkModificationInfos(networkUuid, variantId).flatMapIterable(networkInfos -> {
                 NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, modificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
-                switch (BranchStatusModificationInfos.ActionType.valueOf(action.toUpperCase())) {
-                    case LOCKOUT:
-                        return execLockoutLine(listener, lineId);
-                    case TRIP:
-                        return execTripLine(listener, lineId);
-                    case SWITCH_ON:
-                        return execSwitchOnLine(listener, lineId);
-                    case ENERGISE_END_ONE:
-                        return execEnergiseLineEnd(listener, lineId, Branch.Side.ONE);
-                    case ENERGISE_END_TWO:
-                        return execEnergiseLineEnd(listener, lineId, Side.TWO);
-                    default:
-                        throw NetworkModificationException.createBranchActionTypeUnknown(action);
-                }
+                ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
+                return execChangeLineStatus(listener, lineId, action, reporter);
             })
         );
     }
 
-    private List<BranchStatusModificationInfos> execLockoutLine(NetworkStoreListener listener, String lineId) {
+    private List<ModificationInfos> execChangeLineStatus(NetworkStoreListener listener, String lineId, String action, ReporterModel reporter) {
+        switch (BranchStatusModificationInfos.ActionType.valueOf(action.toUpperCase())) {
+            case LOCKOUT:
+                return execLockoutLine(listener, lineId, reporter);
+            case TRIP:
+                return execTripLine(listener, lineId, reporter);
+            case SWITCH_ON:
+                return execSwitchOnLine(listener, lineId, reporter);
+            case ENERGISE_END_ONE:
+                return execEnergiseLineEnd(listener, lineId, Branch.Side.ONE, reporter);
+            case ENERGISE_END_TWO:
+                return execEnergiseLineEnd(listener, lineId, Side.TWO, reporter);
+            default:
+                throw NetworkModificationException.createBranchActionTypeUnknown(action);
+        }
+    }
+
+    private List<ModificationInfos> execLockoutLine(NetworkStoreListener listener, String lineId, ReporterModel reporter) {
         Network network = listener.getNetwork();
         UUID networkUuid = listener.getNetworkUuid();
 
-        ReporterModel reporter = new ReporterModel(REPORT_KEY, REPORT_NAME);
         Reporter subReporter = reporter.createSubReporter("LineLockout", "Lockout line");
 
         return doAction(listener, () -> {
@@ -250,14 +258,13 @@ public class NetworkModificationService {
                 // add the branch status modification entity to the listener
                 listener.storeBranchStatusModification(lineId, BranchStatusModificationInfos.ActionType.LOCKOUT);
             }, MODIFICATION_ERROR, networkUuid, reporter, subReporter
-        ).stream().map(BranchStatusModificationInfos.class::cast).collect(Collectors.toList());
+        ).stream().collect(Collectors.toList());
     }
 
-    private List<BranchStatusModificationInfos> execTripLine(NetworkStoreListener listener, String lineId) {
+    private List<ModificationInfos> execTripLine(NetworkStoreListener listener, String lineId, ReporterModel reporter) {
         Network network = listener.getNetwork();
         UUID networkUuid = listener.getNetworkUuid();
 
-        ReporterModel reporter = new ReporterModel(REPORT_KEY, REPORT_NAME);
         Reporter subReporter = reporter.createSubReporter("LineTrip", "Trip line");
 
         return doAction(listener, () -> {
@@ -282,16 +289,16 @@ public class NetworkModificationService {
                 // add the branch status modification entity to the listener
                 listener.storeBranchStatusModification(lineId, BranchStatusModificationInfos.ActionType.TRIP);
             }, MODIFICATION_ERROR, networkUuid, reporter, subReporter
-        ).stream().map(BranchStatusModificationInfos.class::cast).collect(Collectors.toList());
+        ).stream().collect(Collectors.toList());
     }
 
-    private List<BranchStatusModificationInfos> execEnergiseLineEnd(NetworkStoreListener listener,
-                                                                String lineId,
-                                                                Branch.Side side) {
+    private List<ModificationInfos> execEnergiseLineEnd(NetworkStoreListener listener,
+                                                                    String lineId,
+                                                                    Branch.Side side,
+                                                                    ReporterModel reporter) {
         Network network = listener.getNetwork();
         UUID networkUuid = listener.getNetworkUuid();
 
-        ReporterModel reporter = new ReporterModel(REPORT_KEY, REPORT_NAME);
         Reporter subReporter = reporter.createSubReporter("LineEnergise", "Energise line");
 
         return doAction(listener, () -> {
@@ -321,14 +328,13 @@ public class NetworkModificationService {
                 // add the branch status modification entity to the listener
                 listener.storeBranchStatusModification(lineId, side == Branch.Side.ONE ? BranchStatusModificationInfos.ActionType.ENERGISE_END_ONE : BranchStatusModificationInfos.ActionType.ENERGISE_END_TWO);
             }, MODIFICATION_ERROR, networkUuid, reporter, subReporter
-        ).stream().map(BranchStatusModificationInfos.class::cast).collect(Collectors.toList());
+        ).stream().collect(Collectors.toList());
     }
 
-    private List<BranchStatusModificationInfos> execSwitchOnLine(NetworkStoreListener listener, String lineId) {
+    private List<ModificationInfos> execSwitchOnLine(NetworkStoreListener listener, String lineId, ReporterModel reporter) {
         Network network = listener.getNetwork();
         UUID networkUuid = listener.getNetworkUuid();
 
-        ReporterModel reporter = new ReporterModel(REPORT_KEY, REPORT_NAME);
         Reporter subReporter = reporter.createSubReporter("LineSwitchOn", "Switch on line");
 
         return doAction(listener, () -> {
@@ -357,7 +363,7 @@ public class NetworkModificationService {
                 // add the branch status modification entity to the listener
                 listener.storeBranchStatusModification(lineId, BranchStatusModificationInfos.ActionType.SWITCH_ON);
             }, MODIFICATION_ERROR, networkUuid, reporter, subReporter
-        ).stream().map(BranchStatusModificationInfos.class::cast).collect(Collectors.toList());
+        ).stream().collect(Collectors.toList());
     }
 
     public Mono<Void> deleteModificationGroup(UUID groupUuid) {
@@ -430,12 +436,12 @@ public class NetworkModificationService {
 
     private Mono<Void> assertBranchActionValid(String action) {
         if (StringUtils.isBlank(action)) {
-            return Mono.error(new NetworkModificationException(BRANCH_ACTION_EMPTY));
+            return Mono.error(new NetworkModificationException(BRANCH_ACTION_TYPE_EMPTY));
         }
         try {
             BranchStatusModificationInfos.ActionType.valueOf(action.toUpperCase());
         } catch (IllegalArgumentException e) {
-            return Mono.error(new NetworkModificationException(BRANCH_ACTION_BAD));
+            return Mono.error(NetworkModificationException.createBranchActionTypeBad(action));
         }
         return Mono.empty();
     }
@@ -569,7 +575,7 @@ public class NetworkModificationService {
         return assertLoadCreationInfosNotEmpty(loadCreationInfos).thenMany(
             getNetworkModificationInfos(networkUuid, variantId).flatMapIterable(networkInfos -> {
                 NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, modificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
-                ReporterModel reporter = new ReporterModel(REPORT_KEY, REPORT_NAME);
+                ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
                 Reporter subReporter = reporter.createSubReporter("LoadCreation", "Load creation");
 
                 return execCreateLoad(listener, loadCreationInfos, reporter, subReporter);
@@ -663,7 +669,7 @@ public class NetworkModificationService {
     public Flux<EquipmentDeletionInfos> deleteEquipment(UUID networkUuid, String variantId, UUID groupUuid, String equipmentType, String equipmentId) {
         return getNetworkModificationInfos(networkUuid, variantId).flatMapIterable(networkInfos -> {
             NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, modificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
-            ReporterModel reporter = new ReporterModel(REPORT_KEY, REPORT_NAME);
+            ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
             Reporter subReporter = reporter.createSubReporter("EquipmentDeletion", "Equipment deletion");
 
             return execDeleteEquipment(listener, equipmentType, equipmentId, reporter, subReporter);
@@ -763,7 +769,7 @@ public class NetworkModificationService {
         return assertGeneratorCreationInfosNotEmpty(generatorCreationInfos).thenMany(
             getNetworkModificationInfos(networkUuid, variantId).flatMapIterable(networkInfos -> {
                 NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, modificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
-                ReporterModel reporter = new ReporterModel(REPORT_KEY, REPORT_NAME);
+                ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
                 Reporter subReporter = reporter.createSubReporter("GeneratorCreation", "Generator creation");
 
                 return execCreateGenerator(listener, generatorCreationInfos, reporter, subReporter);
@@ -879,7 +885,7 @@ public class NetworkModificationService {
         return assertLineCreationInfosNotEmpty(lineCreationInfos).thenMany(
             getNetworkModificationInfos(networkUuid, variantId).flatMapIterable(networkInfos -> {
                 NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, modificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
-                ReporterModel reporter = new ReporterModel(REPORT_KEY, REPORT_NAME);
+                ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
                 Reporter subReporter = reporter.createSubReporter("LineCreation", "Line creation");
 
                 return execCreateLine(listener, lineCreationInfos, reporter, subReporter);
@@ -923,7 +929,7 @@ public class NetworkModificationService {
         return assertTwoWindingsTransformerCreationInfosNotEmpty(twoWindingsTransformerCreationInfos).thenMany(
             getNetworkModificationInfos(networkUuid, variantId).flatMapIterable(networkInfos -> {
                 NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, modificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
-                ReporterModel reporter = new ReporterModel(REPORT_KEY, REPORT_NAME);
+                ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
                 Reporter subReporter = reporter.createSubReporter("TwoWindingsTransformerCreation", "Two windings transformer creation");
 
                 return execCreateTwoWindingsTransformer(listener, twoWindingsTransformerCreationInfos, reporter, subReporter);
@@ -1001,7 +1007,7 @@ public class NetworkModificationService {
         return assertSubstationCreationInfosNotEmpty(substationCreationInfos).thenMany(
                 getNetworkModificationInfos(networkUuid, variantId).flatMapIterable(networkInfos -> {
                     NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, modificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
-                    ReporterModel reporter = new ReporterModel(REPORT_KEY, REPORT_NAME);
+                    ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
                     Reporter subReporter = reporter.createSubReporter("SubstationCreation", "Substation creation");
 
                     return execCreateSubstation(listener, substationCreationInfos, reporter, subReporter);
@@ -1120,7 +1126,7 @@ public class NetworkModificationService {
             equipmentInfosService,
             true,
             true);
-        ReporterModel reporter = new ReporterModel("Build", "Build");
+        ReporterModel reporter = new ReporterModel(NETWORK_BUILD_REPORT_KEY, NETWORK_BUILD_REPORT_NAME);
 
         modificationRepository.getModificationsEntities(buildInfos.getModifications()).forEach(modificationEntity -> {
             ModificationType type = ModificationType.valueOf(modificationEntity.getType());
@@ -1185,6 +1191,13 @@ public class NetworkModificationService {
                     SubstationCreationEntity substationCreationEntity = (SubstationCreationEntity) modificationEntity;
                     Reporter subReporter = reporter.createSubReporter("SubstationCreation", "Substation creation");
                     List<EquipmenModificationInfos> modificationInfos = execCreateSubstation(listener, substationCreationEntity.toSubstationCreationInfos(), reporter, subReporter);
+                    allModificationsInfos.addAll(modificationInfos);
+                }
+                break;
+
+                case BRANCH_STATUS: {
+                    BranchStatusModificationEntity branchStatusModificationEntity = (BranchStatusModificationEntity) modificationEntity;
+                    List<ModificationInfos> modificationInfos = execChangeLineStatus(listener,  branchStatusModificationEntity.getEquipmentId(),  branchStatusModificationEntity.getAction(),  reporter);
                     allModificationsInfos.addAll(modificationInfos);
                 }
                 break;

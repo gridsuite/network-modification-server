@@ -93,7 +93,7 @@ public class NetworkModificationController {
         @ApiResponse(responseCode = "404", description = "the network or line not found"),
         @ApiResponse(responseCode = "400", description = "the modification action is  incorrect")
     })
-    public ResponseEntity<Flux<BranchStatusModificationInfos>> changeLineStatus(
+    public ResponseEntity<Flux<ModificationInfos>> changeLineStatus(
             @Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
             @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
             @Parameter(description = "Line ID") @PathVariable("lineId") String lineId,

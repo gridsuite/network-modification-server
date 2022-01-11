@@ -40,8 +40,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.NetworkModificationException.BAD_BRANCH_ACTION;
-import static org.gridsuite.modification.server.NetworkModificationException.EMPTY_BRANCH_ACTION;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.argThat;
@@ -68,8 +66,6 @@ public class ModificationControllerTest {
     private static final UUID TEST_NETWORK_BUS_BREAKER_ID = UUID.fromString("11111111-7977-4592-ba19-88027e4254e4");
     private static final UUID TEST_NETWORK_MIXED_TOPOLOGY_ID = UUID.fromString("22222222-7977-4592-ba19-88027e4254e4");
     public static final String VARIANT_NOT_EXISTING_ID = "variant_not_existing";
-
-    private static final String ERROR_MESSAGE = "Error message";
 
     @Autowired
     private WebTestClient webTestClient;
@@ -117,10 +113,9 @@ public class ModificationControllerTest {
 
     @Test
     public void testModificationException() {
-        assertEquals(new NetworkModificationException(GROOVY_SCRIPT_EMPTY).getMessage(), GROOVY_SCRIPT_EMPTY.name() + " : " + NetworkModificationException.EMPTY_SCRIPT);
-        assertEquals(new NetworkModificationException(GROOVY_SCRIPT_EMPTY, ERROR_MESSAGE).getMessage(), GROOVY_SCRIPT_EMPTY.name() + " : " + ERROR_MESSAGE);
         assertEquals(new NetworkModificationException(MODIFICATION_ERROR).getMessage(), MODIFICATION_ERROR.name());
-        assertEquals(new NetworkModificationException(MODIFICATION_ERROR, ERROR_MESSAGE).getMessage(), MODIFICATION_ERROR.name() + " : " + ERROR_MESSAGE);
+        assertEquals(new NetworkModificationException(MODIFICATION_ERROR, "Error message").getMessage(), MODIFICATION_ERROR.name() + " : Error message");
+        assertEquals(new NetworkModificationException(MODIFICATION_ERROR, new IllegalArgumentException("Error message")).getMessage(), MODIFICATION_ERROR.name() +  " : Error message");
     }
 
     @Test
@@ -370,7 +365,7 @@ public class ModificationControllerTest {
             .exchange()
             .expectStatus().isBadRequest()
             .expectBody(String.class)
-            .isEqualTo(new NetworkModificationException(BRANCH_ACTION_EMPTY, EMPTY_BRANCH_ACTION).getMessage());
+            .isEqualTo(new NetworkModificationException(BRANCH_ACTION_TYPE_EMPTY).getMessage());
 
         // modification action not existing
         webTestClient.put().uri(uriString, TEST_NETWORK_ID, "line2")
@@ -378,7 +373,7 @@ public class ModificationControllerTest {
             .exchange()
             .expectStatus().isBadRequest()
             .expectBody(String.class)
-            .isEqualTo(new NetworkModificationException(BRANCH_ACTION_BAD, BAD_BRANCH_ACTION).getMessage());
+            .isEqualTo(NetworkModificationException.createBranchActionTypeBad("foo").getMessage());
 
         webTestClient.put().uri(uriString, TEST_NETWORK_ID, "line3")
             .bodyValue("lockout")

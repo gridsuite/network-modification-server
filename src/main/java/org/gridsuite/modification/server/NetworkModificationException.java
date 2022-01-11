@@ -15,12 +15,8 @@ import java.util.Objects;
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 public class NetworkModificationException extends RuntimeException {
-    static final String EMPTY_SCRIPT = "Empty script";
-    static final String EMPTY_BRANCH_ACTION = "Empty branch action";
-    static final String BAD_BRANCH_ACTION = "Bad branch action";
-
     public enum Type {
-        GROOVY_SCRIPT_EMPTY(HttpStatus.BAD_REQUEST, EMPTY_SCRIPT),
+        GROOVY_SCRIPT_EMPTY(HttpStatus.BAD_REQUEST, "Empty script"),
         GROOVY_SCRIPT_ERROR(HttpStatus.BAD_REQUEST),
         NETWORK_NOT_FOUND(HttpStatus.NOT_FOUND),
         VARIANT_NOT_FOUND(HttpStatus.NOT_FOUND),
@@ -40,10 +36,10 @@ public class NetworkModificationException extends RuntimeException {
         CREATE_LINE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         CREATE_TWO_WINDINGS_TRANSFORMER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         CREATE_SUBSTATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
-        BRANCH_ACTION_EMPTY(HttpStatus.BAD_REQUEST, EMPTY_BRANCH_ACTION),
-        BRANCH_ACTION_BAD(HttpStatus.BAD_REQUEST, BAD_BRANCH_ACTION),
         BRANCH_ACTION_ERROR(HttpStatus.BAD_REQUEST),
-        UNKNOWN_BRANCH_ACTION_TYPE(HttpStatus.INTERNAL_SERVER_ERROR);
+        BRANCH_ACTION_TYPE_EMPTY(HttpStatus.BAD_REQUEST, "Empty branch action type"),
+        BRANCH_ACTION_TYPE_BAD(HttpStatus.BAD_REQUEST),
+        BRANCH_ACTION_TYPE_UNKNOWN(HttpStatus.INTERNAL_SERVER_ERROR);
 
         public final HttpStatus status;
         private final String message;
@@ -90,6 +86,12 @@ public class NetworkModificationException extends RuntimeException {
 
     public static NetworkModificationException createBranchActionTypeUnknown(String type) {
         Objects.requireNonNull(type);
-        return new NetworkModificationException(Type.UNKNOWN_BRANCH_ACTION_TYPE, "The branch action type : " + type + " is unknown");
+        return new NetworkModificationException(Type.BRANCH_ACTION_TYPE_UNKNOWN, "The branch action type : " + type + " is unknown");
     }
+
+    public static NetworkModificationException createBranchActionTypeBad(String type) {
+        Objects.requireNonNull(type);
+        return new NetworkModificationException(Type.BRANCH_ACTION_TYPE_BAD, "The branch action type : " + type + " is bad");
+    }
+
 }
