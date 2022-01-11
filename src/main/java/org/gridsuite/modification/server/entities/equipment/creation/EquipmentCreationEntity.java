@@ -9,7 +9,7 @@ package org.gridsuite.modification.server.entities.equipment.creation;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.ModificationType;
-import org.gridsuite.modification.server.entities.EquipmentModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
 
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;

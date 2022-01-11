@@ -13,6 +13,7 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.sld.iidm.extensions.BranchStatus;
+import org.gridsuite.modification.server.dto.BranchStatusModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.BuildInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
@@ -135,7 +136,7 @@ public class BuildTest {
         // create modification entities in the database
         List<ModificationEntity> entities1 = new ArrayList<>();
         entities1.add(modificationRepository.createEquipmentAttributeModification("v1d1", "open", true));
-        entities1.add(modificationRepository.createEquipmentAttributeModification("line1", "branchStatus", "PLANNED_OUTAGE"));
+        entities1.add(modificationRepository.createEquipmentAttributeModification("line1", "branchStatus", BranchStatus.Status.PLANNED_OUTAGE));
         entities1.add(modificationRepository.createEquipmentAttributeModification("idGenerator", "targetP", 50.));
         entities1.add(modificationRepository.createEquipmentAttributeModification("trf1", "ratioTapChanger.tapPosition", 2));
         entities1.add(modificationRepository.createEquipmentAttributeModification("trf6", "phaseTapChanger1.tapPosition", 0));
@@ -147,12 +148,13 @@ public class BuildTest {
         entities2.add(modificationRepository.createTwoWindingsTransformerEntity("new2wt", "new2wt", 1., 2., 3., 4., 5., 6., "v1", "1.1", "v2", "1A", null, null));
         entities2.add(modificationRepository.createEquipmentDeletionEntity("v2shunt", "SHUNT_COMPENSATOR"));
         entities2.add(modificationRepository.createGroovyScriptModificationEntity("network.getGenerator('idGenerator').targetP=55\n"));
+        entities2.add(modificationRepository.createBranchStatusModificationEntity("line2", BranchStatusModificationInfos.ActionType.TRIP));
 
         modificationRepository.saveModifications(TEST_GROUP_ID, entities1);
         modificationRepository.saveModifications(TEST_GROUP_ID_2, entities2);
 
         testNetworkModificationsCount(TEST_GROUP_ID, 6);
-        testNetworkModificationsCount(TEST_GROUP_ID_2, 5);
+        testNetworkModificationsCount(TEST_GROUP_ID_2, 6);
 
         // build VARIANT_ID by cloning network initial variant and applying all modifications in all groups
         String uriString = "/v1/networks/{networkUuid}/build?receiver=me";
@@ -173,9 +175,12 @@ public class BuildTest {
         network.getVariantManager().setWorkingVariant(NetworkCreation.VARIANT_ID);
         assertTrue(network.getSwitch("v1d1").isOpen());
         BranchStatus branchStatus = network.getLine("line1").getExtension(BranchStatus.class);
-        if (branchStatus != null) {
-            assertEquals("PLANNED_OUTAGE", branchStatus.getStatus().name());
-        }
+        assertNotNull(branchStatus);
+        assertEquals(BranchStatus.Status.PLANNED_OUTAGE, branchStatus.getStatus());
+        branchStatus = network.getLine("line2").getExtension(BranchStatus.class);
+        assertNotNull(branchStatus);
+        assertEquals(BranchStatus.Status.FORCED_OUTAGE, branchStatus.getStatus());
+
         assertEquals(55., network.getGenerator("idGenerator").getTargetP(), 0.1);
         assertEquals(2, network.getTwoWindingsTransformer("trf1").getRatioTapChanger().getTapPosition());
         assertEquals(0, network.getThreeWindingsTransformer("trf6").getLeg1().getPhaseTapChanger().getTapPosition());
@@ -201,6 +206,7 @@ public class BuildTest {
         network.getVariantManager().setWorkingVariant(VariantManagerConstants.INITIAL_VARIANT_ID);
         assertFalse(network.getSwitch("v1d1").isOpen());
         assertNull(network.getLine("line1").getExtension(BranchStatus.class));
+        assertNull(network.getLine("line2").getExtension(BranchStatus.class));
         assertEquals(42.1, network.getGenerator("idGenerator").getTargetP(), 0.1);
         assertEquals(1, network.getTwoWindingsTransformer("trf1").getRatioTapChanger().getTapPosition());
         assertEquals(0, network.getThreeWindingsTransformer("trf6").getLeg1().getPhaseTapChanger().getTapPosition());
@@ -212,14 +218,14 @@ public class BuildTest {
 
         // No new modification entity should have been added to the database
         testNetworkModificationsCount(TEST_GROUP_ID, 6);
-        testNetworkModificationsCount(TEST_GROUP_ID_2, 5);
+        testNetworkModificationsCount(TEST_GROUP_ID_2, 6);
     }
 
     @Test
     public void stopBuildTest() {
         List<ModificationEntity> entities = new ArrayList<>();
         entities.add(modificationRepository.createEquipmentAttributeModification("v1d1", "open", true));
-        entities.add(modificationRepository.createEquipmentAttributeModification("line1", "branchStatus", "PLANNED_OUTAGE"));
+        entities.add(modificationRepository.createEquipmentAttributeModification("line1", "branchStatus", BranchStatus.Status.PLANNED_OUTAGE));
 
         modificationRepository.saveModifications(TEST_GROUP_ID, entities);  // save all modification entities in group TEST_GROUP_ID
         testNetworkModificationsCount(TEST_GROUP_ID, 2);
