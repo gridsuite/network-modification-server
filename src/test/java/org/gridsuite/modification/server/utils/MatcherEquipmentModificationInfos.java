@@ -8,7 +8,6 @@ package org.gridsuite.modification.server.utils;
 
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.EquipmenModificationInfos;
-import org.hamcrest.Description;
 
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -17,10 +16,10 @@ import java.util.Set;
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
-public class MatcherEquipmentModificationInfos extends MatcherModificationInfos<EquipmenModificationInfos> {
+public class MatcherEquipmentModificationInfos<T extends EquipmenModificationInfos> extends MatcherModificationInfos<T> {
 
-    public static MatcherEquipmentModificationInfos createMatcherEquipmentModificationInfos(ModificationType modificationType, String equipmentId, Set<String> substationIds) {
-        return new MatcherEquipmentModificationInfos(EquipmenModificationInfos.builder()
+    public static MatcherEquipmentModificationInfos<EquipmenModificationInfos> createMatcherEquipmentModificationInfos(ModificationType modificationType, String equipmentId, Set<String> substationIds) {
+        return new MatcherEquipmentModificationInfos<>(EquipmenModificationInfos.builder()
                 .date(ZonedDateTime.now(ZoneOffset.UTC))
                 .type(modificationType)
                 .equipmentId(equipmentId)
@@ -28,23 +27,17 @@ public class MatcherEquipmentModificationInfos extends MatcherModificationInfos<
                 .build());
     }
 
-    public static MatcherEquipmentModificationInfos createMatcherEquipmentModificationInfos(EquipmenModificationInfos modificationInfos) {
-        return new MatcherEquipmentModificationInfos(modificationInfos);
+    public static MatcherEquipmentModificationInfos<EquipmenModificationInfos> createMatcherEquipmentModificationInfos(EquipmenModificationInfos modificationInfos) {
+        return new MatcherEquipmentModificationInfos<>(modificationInfos);
     }
 
-    protected MatcherEquipmentModificationInfos(EquipmenModificationInfos ref) {
+    protected MatcherEquipmentModificationInfos(T ref) {
         super(ref);
     }
 
     @Override
-    public boolean matchesSafely(EquipmenModificationInfos m) {
+    public boolean matchesSafely(T m) {
         return super.matchesSafely(m)
-                && m.getEquipmentId().equals(reference.getEquipmentId())
-                && m.getSubstationIds().equals(reference.getSubstationIds());
-    }
-
-    @Override
-    public void describeTo(Description description) {
-        description.appendValue(reference);
+                && m.getEquipmentId().equals(reference.getEquipmentId());
     }
 }
