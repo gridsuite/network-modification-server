@@ -41,6 +41,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
@@ -1116,6 +1117,44 @@ public class ModificationControllerTest {
                 MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "v1lcc", "HVDC_CONVERTER_STATION", Set.of("s1")));
 
         testNetworkModificationsCount(TEST_GROUP_ID, 13);
+
+        // delete voltage level
+        webTestClient.delete().uri(uriString, TEST_NETWORK_ID, "VOLTAGE_LEVEL", "v5")
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBodyList(EquipmentDeletionInfos.class)
+            .value(modifications -> modifications.get(0),
+                MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "v5", "VOLTAGE_LEVEL", Set.of("s3")));
+        assertNull(network.getVoltageLevel("v5"));
+        testNetworkModificationsCount(TEST_GROUP_ID, 14);
+
+        // delete voltage level (fail because the vl is connected)
+        webTestClient.delete().uri(uriString, TEST_NETWORK_ID, "VOLTAGE_LEVEL", "v4")
+            .exchange()
+            .expectStatus().is5xxServerError()
+            .expectBody(String.class)
+            .value(exception -> exception, containsString("\"status\":500,\"error\":\"Internal Server Error\",\"message\":\"The voltage level 'v4' cannot be removed because of a remaining THREE_WINDINGS_TRANSFORMER"));
+        assertNotNull(network.getVoltageLevel("v4"));
+
+        // delete substation
+        webTestClient.delete().uri(uriString, TEST_NETWORK_ID, "SUBSTATION", "s3")
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBodyList(EquipmentDeletionInfos.class)
+            .value(modifications -> modifications.get(0),
+                MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "s3", "SUBSTATION", Set.of()));
+        assertNull(network.getSubstation("s3"));
+        testNetworkModificationsCount(TEST_GROUP_ID, 15);
+
+        // delete substation (fail because the substations is connected)
+        webTestClient.delete().uri(uriString, TEST_NETWORK_ID, "SUBSTATION", "s2")
+            .exchange()
+            .expectStatus().is5xxServerError()
+            .expectBody(String.class)
+            .value(exception -> exception, containsString("DELETE_EQUIPMENT_ERROR : The substation s2 is still connected to another substation"));
+        assertNotNull(network.getSubstation("s2"));
     }
 
     @Test
