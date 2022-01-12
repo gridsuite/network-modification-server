@@ -625,6 +625,12 @@ public class NetworkModificationService {
                     case HVDC_CONVERTER_STATION:
                         identifiable = network.getHvdcConverterStation(equipmentId);
                         break;
+                    case SUBSTATION:
+                        identifiable = network.getSubstation(equipmentId);
+                        break;
+                    case VOLTAGE_LEVEL:
+                        identifiable = network.getVoltageLevel(equipmentId);
+                        break;
                     default:
                         break;
                 }
@@ -633,12 +639,23 @@ public class NetworkModificationService {
                 }
 
                 // store the substations ids in the listener
-                Set<String> substationIds = NetworkStoreListener.getSubstationIds(identifiable);
+
+                Set<String> substationIds = Set.of();
+                // On substation deletion, the substation id isn't set in the substations to be updated.
+                // If later we handle automatic lines deletion (i.e. on substation deletion, we remove all the lines connected to the substation), we'll have to set
+                // the adjacent substations in the substations to be updated.
+                if (!(identifiable instanceof Substation)) {
+                    substationIds = NetworkStoreListener.getSubstationIds(identifiable);
+                }
 
                 if (identifiable instanceof Connectable) {
                     ((Connectable) identifiable).remove();
                 } else if (identifiable instanceof HvdcLine) {
                     ((HvdcLine) identifiable).remove();
+                } else if (identifiable instanceof VoltageLevel) {
+                    ((VoltageLevel) identifiable).remove();
+                } else if (identifiable instanceof Substation) {
+                    ((Substation) identifiable).remove();
                 }
 
                 // Done here, and not in the network listener onRemoval method
