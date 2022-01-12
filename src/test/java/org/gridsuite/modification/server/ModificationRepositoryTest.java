@@ -6,18 +6,17 @@
  */
 package org.gridsuite.modification.server;
 
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-
 import com.powsybl.iidm.network.Country;
 import com.powsybl.iidm.network.EnergySource;
 import com.powsybl.iidm.network.LoadType;
 import com.vladmihalcea.sql.SQLStatementCountValidator;
+import org.gridsuite.modification.server.dto.BranchStatusModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationGroupEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.*;
-import org.gridsuite.modification.server.entities.equipment.attribute.modification.EquipmentAttributeModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.BranchStatusModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.attribute.EquipmentAttributeModificationEntity;
 import org.gridsuite.modification.server.repositories.ModificationGroupRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.utils.*;
@@ -27,6 +26,12 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
+
+import java.util.Comparator;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static com.vladmihalcea.sql.SQLStatementCountValidator.*;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_GROUP_NOT_FOUND;
@@ -406,6 +411,44 @@ public class ModificationRepositoryTest {
         assertThrows(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage(),
             NetworkModificationException.class, () -> modificationRepository.getModifications(TEST_GROUP_ID, false)
         );
+    }
+
+    @Test
+    public void testStatusLineModification() {
+        List<BranchStatusModificationEntity> entities = List.of(
+            modificationRepository.createBranchStatusModificationEntity("idLine1", BranchStatusModificationInfos.ActionType.LOCKOUT),
+            modificationRepository.createBranchStatusModificationEntity("idLine2", BranchStatusModificationInfos.ActionType.TRIP),
+            modificationRepository.createBranchStatusModificationEntity("idLine3", BranchStatusModificationInfos.ActionType.SWITCH_ON),
+            modificationRepository.createBranchStatusModificationEntity("idLine4", BranchStatusModificationInfos.ActionType.ENERGISE_END_ONE),
+            modificationRepository.createBranchStatusModificationEntity("idLine5", BranchStatusModificationInfos.ActionType.ENERGISE_END_TWO)
+        );
+
+        modificationRepository.saveModifications(TEST_GROUP_ID, entities);
+        assertRequestsCount(1, 11, 0, 0);
+
+        List<BranchStatusModificationInfos> modificationInfos = modificationRepository.getModifications(
+                entities.stream().map(ModificationEntity::getId).collect(Collectors.toList())
+            )
+            .stream()
+            .map(BranchStatusModificationInfos.class::cast)
+            .sorted(Comparator.comparing(BranchStatusModificationInfos::getEquipmentId))
+            .collect(Collectors.toList());
+        assertEquals(5, modificationInfos.size());
+
+        assertThat(modificationInfos.get(0),
+            MatcherBranchStatusModificationInfos.createMatcherBranchStatusModificationInfos((BranchStatusModificationInfos) entities.get(0).toModificationInfos()));
+        assertThat(modificationInfos.get(1),
+            MatcherBranchStatusModificationInfos.createMatcherBranchStatusModificationInfos((BranchStatusModificationInfos) entities.get(1).toModificationInfos()));
+        assertThat(modificationInfos.get(2),
+            MatcherBranchStatusModificationInfos.createMatcherBranchStatusModificationInfos((BranchStatusModificationInfos) entities.get(2).toModificationInfos()));
+        assertThat(modificationInfos.get(3),
+            MatcherBranchStatusModificationInfos.createMatcherBranchStatusModificationInfos((BranchStatusModificationInfos) entities.get(3).toModificationInfos()));
+        assertThat(modificationInfos.get(4),
+            MatcherBranchStatusModificationInfos.createMatcherBranchStatusModificationInfos((BranchStatusModificationInfos) entities.get(4).toModificationInfos()));
+
+        SQLStatementCountValidator.reset();
+        modificationRepository.deleteModificationGroup(TEST_GROUP_ID);
+        assertRequestsCount(2, 0, 0, 11);
     }
 
     private void assertRequestsCount(long select, long insert, long update, long delete) {

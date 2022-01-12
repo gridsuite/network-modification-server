@@ -6,19 +6,19 @@
  */
 package org.gridsuite.modification.server;
 
-import java.util.Objects;
-
+import lombok.NonNull;
+import org.gridsuite.modification.server.dto.BranchStatusModificationInfos;
 import org.springframework.http.HttpStatus;
+
+import java.util.Objects;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 public class NetworkModificationException extends RuntimeException {
-    static final String EMPTY_SCRIPT = "Empty script";
-
     public enum Type {
-        GROOVY_SCRIPT_EMPTY(HttpStatus.BAD_REQUEST, EMPTY_SCRIPT),
+        GROOVY_SCRIPT_EMPTY(HttpStatus.BAD_REQUEST, "Empty script"),
         GROOVY_SCRIPT_ERROR(HttpStatus.BAD_REQUEST),
         NETWORK_NOT_FOUND(HttpStatus.NOT_FOUND),
         VARIANT_NOT_FOUND(HttpStatus.NOT_FOUND),
@@ -37,7 +37,11 @@ public class NetworkModificationException extends RuntimeException {
         EQUIPMENT_NOT_FOUND(HttpStatus.NOT_FOUND),
         CREATE_LINE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         CREATE_TWO_WINDINGS_TRANSFORMER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
-        CREATE_SUBSTATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR);
+        CREATE_SUBSTATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
+        BRANCH_ACTION_ERROR(HttpStatus.BAD_REQUEST),
+        BRANCH_ACTION_TYPE_EMPTY(HttpStatus.BAD_REQUEST, "Empty branch action type"),
+        BRANCH_ACTION_TYPE_UNKNOWN(HttpStatus.BAD_REQUEST),
+        BRANCH_ACTION_TYPE_UNSUPPORTED(HttpStatus.INTERNAL_SERVER_ERROR);
 
         public final HttpStatus status;
         private final String message;
@@ -77,8 +81,15 @@ public class NetworkModificationException extends RuntimeException {
         return type;
     }
 
-    public static NetworkModificationException createEquipmentTypeUnknown(String type) {
-        Objects.requireNonNull(type);
+    public static NetworkModificationException createEquipmentTypeUnknown(@NonNull String type) {
         return new NetworkModificationException(Type.UNKNOWN_EQUIPMENT_TYPE, "The equipment type : " + type + " is unknown");
+    }
+
+    public static NetworkModificationException createBranchActionTypeUnsupported(@NonNull BranchStatusModificationInfos.ActionType type) {
+        return new NetworkModificationException(Type.BRANCH_ACTION_TYPE_UNSUPPORTED, "The branch action type : " + type + " is unsupported");
+    }
+
+    public static NetworkModificationException createBranchActionTypeUnknown(@NonNull String type) {
+        return new NetworkModificationException(Type.BRANCH_ACTION_TYPE_UNKNOWN, "The branch action type : " + type + " is unknown");
     }
 }
