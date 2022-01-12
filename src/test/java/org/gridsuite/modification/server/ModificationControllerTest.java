@@ -290,13 +290,23 @@ public class ModificationControllerTest {
         assertEquals(1, res.size());
 
         assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID, false).size());
+        String deleteStrWrongGroup = "/v1/groups/" + UUID.randomUUID() + "/modifications/" + res.get(0).getUuid();
         String deleteStr = "/v1/groups/" + TEST_GROUP_ID + "/modifications/" + res.get(0).getUuid();
+
+        webTestClient.delete().uri(deleteStrWrongGroup)
+            .exchange()
+            .expectStatus().isNotFound();
 
         webTestClient.delete().uri(deleteStr)
             .exchange()
             .expectStatus().isOk();
 
         assertEquals(0, modificationRepository.getModifications(TEST_GROUP_ID, false).size());
+
+        /* non existing modification */
+        webTestClient.delete().uri(deleteStr)
+            .exchange()
+            .expectStatus().isNotFound();
 
     }
 

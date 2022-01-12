@@ -1239,6 +1239,10 @@ public class NetworkModificationService {
     }
 
     public Mono<Void> deleteModification(UUID groupUuid, UUID modificationUuid) {
-        return Mono.fromRunnable(() -> modificationRepository.deleteModifications(groupUuid, Set.of(modificationUuid)));
+        return Mono.fromRunnable(() -> {
+            if (modificationRepository.deleteModifications(groupUuid, Set.of(modificationUuid)) == 0) {
+                throw new NetworkModificationException(MODIFICATION_NOT_FOUND);
+            }
+        });
     }
 }

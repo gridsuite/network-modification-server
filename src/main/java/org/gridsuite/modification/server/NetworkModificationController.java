@@ -73,9 +73,9 @@ public class NetworkModificationController {
     }
 
     @DeleteMapping(value = "/groups/{groupUuid}/modifications/{modificationUuid}")
-    @Operation(summary = "Get modifications list of a group")
+    @Operation(summary = "Delete a modification from a group")
     @ApiResponse(responseCode = "200", description = "Modification deleted")
-    public ResponseEntity<Mono<Void>> deleteModifications(@Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid, @PathVariable("modificationUuid") UUID modificationUuid) {
+    public ResponseEntity<Mono<Void>> deleteModifications(@Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid, @Parameter(description = "Modification UUID") @PathVariable("modificationUuid") UUID modificationUuid) {
         return ResponseEntity.ok().body(networkModificationService.deleteModification(groupUuid, modificationUuid));
     }
 
