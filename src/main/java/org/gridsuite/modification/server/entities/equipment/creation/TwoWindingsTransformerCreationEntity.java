@@ -9,7 +9,6 @@ package org.gridsuite.modification.server.entities.equipment.creation;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.ModificationType;
-import org.gridsuite.modification.server.dto.EquipmenModificationInfos;
 import org.gridsuite.modification.server.dto.TwoWindingsTransformerCreationInfos;
 
 import javax.persistence.Column;
@@ -17,7 +16,6 @@ import javax.persistence.Entity;
 import javax.persistence.ForeignKey;
 import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
-import java.util.Set;
 
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
@@ -76,11 +74,6 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
     @Override
     public TwoWindingsTransformerCreationInfos toModificationInfos() {
         return toTwoWindingsTransformerCreationInfosBuilder().build();
-    }
-
-    @Override
-    public EquipmenModificationInfos toEquipmentModificationInfos(Set<String> uuids) {
-        return toTwoWindingsTransformerCreationInfosBuilder().substationIds(uuids).build();
     }
 
     private TwoWindingsTransformerCreationInfos.TwoWindingsTransformerCreationInfosBuilder<?, ?> toTwoWindingsTransformerCreationInfosBuilder() {

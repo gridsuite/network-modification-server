@@ -10,7 +10,6 @@ import com.powsybl.iidm.network.EnergySource;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.ModificationType;
-import org.gridsuite.modification.server.dto.EquipmenModificationInfos;
 import org.gridsuite.modification.server.dto.GeneratorCreationInfos;
 
 import javax.persistence.Column;
@@ -18,7 +17,6 @@ import javax.persistence.Entity;
 import javax.persistence.ForeignKey;
 import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
-import java.util.Set;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -70,11 +68,6 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
     @Override
     public GeneratorCreationInfos toModificationInfos() {
         return toGeneratorCreationInfosBuilder().build();
-    }
-
-    @Override
-    public EquipmenModificationInfos toEquipmentModificationInfos(Set<String> uuids) {
-        return toGeneratorCreationInfosBuilder().substationIds(uuids).build();
     }
 
     private GeneratorCreationInfos.GeneratorCreationInfosBuilder<?, ?> toGeneratorCreationInfosBuilder() {
