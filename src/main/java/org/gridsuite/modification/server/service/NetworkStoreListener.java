@@ -256,11 +256,25 @@ public class NetworkStoreListener implements NetworkListener {
     }
 
     @Override
+    public void onVariantCreated(String sourceVariantId, String targetVariantId) {
+        // Initial variant modifications are not cloned
+        if (sourceVariantId != VariantManagerConstants.INITIAL_VARIANT_ID) {
+            equipmentInfosService.cloneVariantModifications(networkUuid, sourceVariantId, targetVariantId);
+        }
+    }
+
+    @Override
+    public void onVariantRemoved(String variantId) {
+        equipmentInfosService.deleteVariants(networkUuid, List.of(variantId));
+    }
+
+    @Override
     public void onCreation(Identifiable identifiable) {
         substationsIds.addAll(getSubstationIds(identifiable));
         equipmentInfosService.add(
             EquipmentInfos.builder()
                 .networkUuid(networkUuid)
+                .variantId(network.getVariantManager().getWorkingVariantId())
                 .id(identifiable.getId())
                 .name(identifiable.getNameOrId())
                 .type(identifiable.getType().name())
@@ -285,7 +299,19 @@ public class NetworkStoreListener implements NetworkListener {
 
     public void onTemporaryRemoval(String equipmentId, Set<String> substationsIds) {
         this.substationsIds.addAll(substationsIds);
-        equipmentInfosService.delete(equipmentId, networkUuid);
+        String variantId = network.getVariantManager().getWorkingVariantId();
+        if (equipmentInfosService.existEquipmentInVariant(equipmentId, networkUuid, variantId)) {
+            equipmentInfosService.delete(equipmentId, networkUuid, variantId);
+        } else {
+            equipmentInfosService.add(
+                    EquipmentInfos.builder()
+                            .networkUuid(networkUuid)
+                            .variantId(variantId)
+                            .id(equipmentId)
+                            .tombstoned(true)
+                            .build()
+            );
+        }
     }
 
 }

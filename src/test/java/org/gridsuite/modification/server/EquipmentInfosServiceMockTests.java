@@ -31,15 +31,17 @@ public class EquipmentInfosServiceMockTests {
 
     private static final UUID NETWORK_UUID = UUID.fromString("38400000-8cf0-11bd-b23e-10b96e4ef00d");
 
+    private static final String VARIANT_ID = "variant1";
+
     @Autowired
     private EquipmentInfosService equipmentInfosService;
 
     @Test
     public void testAddDeleteEquipmentInfos() {
-        equipmentInfosService.add(EquipmentInfos.builder().networkUuid(NETWORK_UUID).id("id1").name("name1").type(IdentifiableType.LOAD.name()).voltageLevels(Set.of(VoltageLevelInfos.builder().id("vl1").name("vl1").build())).build());
+        equipmentInfosService.add(EquipmentInfos.builder().networkUuid(NETWORK_UUID).id("id1").variantId(VARIANT_ID).name("name1").type(IdentifiableType.LOAD.name()).voltageLevels(Set.of(VoltageLevelInfos.builder().id("vl1").name("vl1").build())).build());
         assertEquals(0, Iterables.size(equipmentInfosService.findAll(NETWORK_UUID)));
 
-        equipmentInfosService.delete("foo", NETWORK_UUID);
+        equipmentInfosService.delete("foo", NETWORK_UUID, VARIANT_ID);
         assertEquals(0, Iterables.size(equipmentInfosService.findAll(NETWORK_UUID)));
     }
 }

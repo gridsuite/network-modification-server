@@ -31,6 +31,7 @@ import java.util.stream.Stream;
 @SuperBuilder
 @NoArgsConstructor
 @Getter
+@Setter
 @ToString
 @EqualsAndHashCode
 @Document(indexName = "#{@environment.getProperty('powsybl-ws.elasticsearch.index.prefix')}equipments")
@@ -65,6 +66,10 @@ public class EquipmentInfos {
     Set<VoltageLevelInfos> voltageLevels;
 
     UUID networkUuid;
+
+    String variantId;
+
+    Boolean tombstoned;
 
     public static Set<VoltageLevelInfos> getVoltageLevels(@NonNull Identifiable<?> identifiable) {
         if (identifiable instanceof Substation) {
