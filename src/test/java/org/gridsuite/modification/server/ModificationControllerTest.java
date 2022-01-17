@@ -125,13 +125,12 @@ public class ModificationControllerTest {
                 .uuid(TEST_NETWORK_ID)
                 .date(ZonedDateTime.of(2021, 2, 19, 0, 0, 0, 0, ZoneOffset.UTC))
                 .type(ModificationType.EQUIPMENT_ATTRIBUTE_MODIFICATION)
-                .active(true)
                 .equipmentId("equipmentId")
                 .substationIds(Set.of("substationId"))
                 .equipmentAttributeName("equipmentAttributeName")
                 .equipmentAttributeValue("equipmentAttributeValue")
                 .build();
-        assertEquals("EquipmenAttributeModificationInfos(super=EquipmenModificationInfos(super=ModificationInfos(uuid=7928181c-7977-4592-ba19-88027e4254e4, date=2021-02-19T00:00Z, type=EQUIPMENT_ATTRIBUTE_MODIFICATION, substationIds=[substationId], active=true), equipmentId=equipmentId), equipmentAttributeName=equipmentAttributeName, equipmentAttributeValue=equipmentAttributeValue)", modificationInfos.toString());
+        assertEquals("EquipmenAttributeModificationInfos(super=EquipmenModificationInfos(super=ModificationInfos(uuid=7928181c-7977-4592-ba19-88027e4254e4, date=2021-02-19T00:00Z, type=EQUIPMENT_ATTRIBUTE_MODIFICATION, substationIds=[substationId]), equipmentId=equipmentId), equipmentAttributeName=equipmentAttributeName, equipmentAttributeValue=equipmentAttributeValue)", modificationInfos.toString());
 
         // switch opening
         EquipmenAttributeModificationInfos modificationSwitchInfos =
@@ -1167,7 +1166,6 @@ public class ModificationControllerTest {
         // between voltage level "v1" and busbar section "1.1" and
         //         voltage level "v2" and busbar section "1.1"
         LineCreationInfos lineCreationInfos = LineCreationInfos.builder()
-            .active(true)
             .equipmentId("idLine4")
             .equipmentName("nameLine4")
             .seriesResistance(100.0)
@@ -1182,7 +1180,7 @@ public class ModificationControllerTest {
             .busOrBusbarSectionId2("1A")
             .build();
 
-        assertEquals("LineCreationInfos(super=BranchCreationInfos(super=EquipmentCreationInfos(super=EquipmenModificationInfos(super=ModificationInfos(uuid=null, date=null, type=null, substationIds=[], active=true), equipmentId=idLine4), equipmentName=nameLine4), seriesResistance=100.0, seriesReactance=100.0, voltageLevelId1=v1, voltageLevelId2=v2, busOrBusbarSectionId1=1.1, busOrBusbarSectionId2=1A, currentLimits1=null, currentLimits2=null), shuntConductance1=10.0, shuntSusceptance1=10.0, shuntConductance2=20.0, shuntSusceptance2=20.0)", lineCreationInfos.toString());
+        assertEquals("LineCreationInfos(super=BranchCreationInfos(super=EquipmentCreationInfos(super=EquipmenModificationInfos(super=ModificationInfos(uuid=null, date=null, type=null, substationIds=[]), equipmentId=idLine4), equipmentName=nameLine4), seriesResistance=100.0, seriesReactance=100.0, voltageLevelId1=v1, voltageLevelId2=v2, busOrBusbarSectionId1=1.1, busOrBusbarSectionId2=1A, currentLimits1=null, currentLimits2=null), shuntConductance1=10.0, shuntSusceptance1=10.0, shuntConductance2=20.0, shuntSusceptance2=20.0)", lineCreationInfos.toString());
 
         webTestClient.put().uri(uriString, TEST_NETWORK_ID)
             .body(BodyInserters.fromValue(lineCreationInfos))
@@ -1479,12 +1477,11 @@ public class ModificationControllerTest {
 
         // create new substation
         SubstationCreationInfos substationCreationInfos = SubstationCreationInfos.builder()
-                .active(true)
                 .equipmentId("SubstationId")
                 .equipmentName("SubstationName")
                 .substationCountry(Country.AF)
                 .build();
-        assertEquals("SubstationCreationInfos(super=EquipmentCreationInfos(super=EquipmenModificationInfos(super=ModificationInfos(uuid=null, date=null, type=null, substationIds=[], active=true), equipmentId=SubstationId), equipmentName=SubstationName), substationCountry=AF)", substationCreationInfos.toString());
+        assertEquals("SubstationCreationInfos(super=EquipmentCreationInfos(super=EquipmenModificationInfos(super=ModificationInfos(uuid=null, date=null, type=null, substationIds=[]), equipmentId=SubstationId), equipmentName=SubstationName), substationCountry=AF)", substationCreationInfos.toString());
 
         webTestClient.put().uri(uriString, TEST_NETWORK_ID)
                 .body(BodyInserters.fromValue(substationCreationInfos))
@@ -1514,40 +1511,6 @@ public class ModificationControllerTest {
                 .isEqualTo(new NetworkModificationException(CREATE_SUBSTATION_ERROR, "Substation id is not set").getMessage());
 
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
-    }
-
-    @Test
-    public void testChangeModificationActiveState() {
-        // switch opening
-        webTestClient.put().uri("/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID + "&open=true", TEST_NETWORK_ID, "v1b1")
-                .exchange()
-                .expectStatus().isOk();
-
-        List<ModificationInfos> listModificationInfos = modificationRepository.getModifications(TEST_GROUP_ID, true);
-        assertEquals(1, listModificationInfos.size());
-        ModificationInfos modificationInfos = listModificationInfos.get(0);
-        assertTrue(modificationInfos.isActive());  // modification is active
-        UUID modificationUuid = modificationInfos.getUuid();
-
-        // deactivate modification
-        webTestClient.put().uri("/v1/groups/{groupUuid}/modifications/{modificationUuid}?active=false", TEST_GROUP_ID, modificationUuid)
-            .exchange()
-            .expectStatus().isOk();
-
-        listModificationInfos = modificationRepository.getModifications(TEST_GROUP_ID, true);
-        assertEquals(1, listModificationInfos.size());
-        modificationInfos = listModificationInfos.get(0);
-        assertFalse(modificationInfos.isActive());  // modification is inactive
-
-        // reactivate modification
-        webTestClient.put().uri("/v1/groups/{groupUuid}/modifications/{modificationUuid}?active=true", TEST_GROUP_ID, modificationUuid)
-            .exchange()
-            .expectStatus().isOk();
-
-        listModificationInfos = modificationRepository.getModifications(TEST_GROUP_ID, true);
-        assertEquals(1, listModificationInfos.size());
-        modificationInfos = listModificationInfos.get(0);
-        assertTrue(modificationInfos.isActive()); // modification is active
     }
 
     private void testNetworkModificationsCount(UUID groupUuid, int actualSize) {

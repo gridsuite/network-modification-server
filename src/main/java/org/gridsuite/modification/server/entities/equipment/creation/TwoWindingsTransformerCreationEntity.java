@@ -82,7 +82,6 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
                 .uuid(getId())
                 .date(getDate())
                 .type(ModificationType.valueOf(getType()))
-                .active(isActive())
                 .equipmentId(getEquipmentId())
                 .equipmentName(getEquipmentName())
                 .seriesResistance(getSeriesResistance())

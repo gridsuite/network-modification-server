@@ -37,8 +37,7 @@ public class MatcherModificationInfos<T extends ModificationInfos> extends TypeS
     public boolean matchesSafely(T m) {
         return m.getType() == reference.getType()
                 && m.getSubstationIds().equals(reference.getSubstationIds())
-                && m.getDate().toEpochSecond() - reference.getDate().toEpochSecond() < 2
-                && m.isActive() == reference.isActive();
+                && m.getDate().toEpochSecond() - reference.getDate().toEpochSecond() < 2;
     }
 
     @Override

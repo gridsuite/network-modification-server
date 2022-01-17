@@ -47,14 +47,10 @@ public class ModificationEntity {
     @Column(name = "type")
     private String type;
 
-    @Column(name = "active", nullable = false)
-    private boolean active;
-
     protected ModificationEntity(ModificationType type) {
         this.id = null;
         this.date = ZonedDateTime.now(ZoneOffset.UTC);
         this.type = type.name();
-        this.active = true;
     }
 
     public ModificationInfos toModificationInfos() {
@@ -67,7 +63,6 @@ public class ModificationEntity {
                 .date(this.date)
                 .type(ModificationType.valueOf(this.type))
                 .substationIds(substationsIds)
-                .active(this.active)
                 .build();
     }
 }

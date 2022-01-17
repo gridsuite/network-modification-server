@@ -51,6 +51,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.config.EnableWebFlux;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -166,7 +167,8 @@ public class BuildTest {
         String uriString = "/v1/networks/{networkUuid}/build?receiver=me";
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
                                                                  NetworkCreation.VARIANT_ID,
-                                                                 List.of(TEST_GROUP_ID, TEST_GROUP_ID_2));
+                                                                 List.of(TEST_GROUP_ID, TEST_GROUP_ID_2),
+                                                                 new HashSet<>());
         webTestClient.post().uri(uriString, TEST_NETWORK_ID)
             .bodyValue(buildInfos)
             .exchange()
@@ -250,15 +252,9 @@ public class BuildTest {
             }
         });
 
-        webTestClient.put().uri("/v1/groups/{groupUuid}/modifications/{modificationUuid}?active=false", TEST_GROUP_ID, lineModificationEntityUuid.get())
-            .exchange()
-            .expectStatus().isOk();
-        webTestClient.put().uri("/v1/groups/{groupUuid}/modifications/{modificationUuid}?active=false", TEST_GROUP_ID, loadCreationEntityUuid.get())
-            .exchange()
-            .expectStatus().isOk();
-        webTestClient.put().uri("/v1/groups/{groupUuid}/modifications/{modificationUuid}?active=false", TEST_GROUP_ID_2, equipmentDeletionEntityUuid.get())
-            .exchange()
-            .expectStatus().isOk();
+        buildInfos.addModificationToExclude(lineModificationEntityUuid.get());
+        buildInfos.addModificationToExclude(loadCreationEntityUuid.get());
+        buildInfos.addModificationToExclude(equipmentDeletionEntityUuid.get());
 
         webTestClient.post().uri(uriString, TEST_NETWORK_ID)
             .bodyValue(buildInfos)
@@ -308,7 +304,8 @@ public class BuildTest {
         String uriString = "/v1/networks/{networkUuid}/build?receiver=me";
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
             NetworkCreation.VARIANT_ID,
-            List.of(TEST_GROUP_ID));
+            List.of(TEST_GROUP_ID),
+            new HashSet<>());
         webTestClient.post().uri(uriString, TEST_NETWORK_STOP_BUILD_ID)
             .bodyValue(buildInfos)
             .exchange()

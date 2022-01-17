@@ -50,7 +50,6 @@ public class EquipmentAttributeModificationEntity<T> extends EquipmentModificati
                 .uuid(getId())
                 .date(getDate())
                 .type(ModificationType.valueOf(getType()))
-                .active(isActive())
                 .equipmentId(getEquipmentId())
                 .equipmentAttributeName(getAttributeName())
                 .equipmentAttributeValue(getAttributeValue());

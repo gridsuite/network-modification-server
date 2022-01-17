@@ -22,7 +22,6 @@ public class MatcherEquipmentModificationInfos<T extends EquipmenModificationInf
         return new MatcherEquipmentModificationInfos<>(EquipmenModificationInfos.builder()
                 .date(ZonedDateTime.now(ZoneOffset.UTC))
                 .type(modificationType)
-                .active(true)
                 .equipmentId(equipmentId)
                 .substationIds(substationIds)
                 .build());
