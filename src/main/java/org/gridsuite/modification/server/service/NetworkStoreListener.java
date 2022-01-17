@@ -258,7 +258,7 @@ public class NetworkStoreListener implements NetworkListener {
     @Override
     public void onVariantCreated(String sourceVariantId, String targetVariantId) {
         // Initial variant modifications are not cloned
-        if (sourceVariantId != VariantManagerConstants.INITIAL_VARIANT_ID) {
+        if (!sourceVariantId.equals(VariantManagerConstants.INITIAL_VARIANT_ID)) {
             equipmentInfosService.cloneVariantModifications(networkUuid, sourceVariantId, targetVariantId);
         }
     }
