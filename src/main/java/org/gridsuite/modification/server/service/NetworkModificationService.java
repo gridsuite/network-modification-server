@@ -16,6 +16,7 @@ import com.powsybl.iidm.network.Branch.Side;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.sld.iidm.extensions.BranchStatus;
 import com.powsybl.sld.iidm.extensions.BranchStatusAdder;
+import com.powsybl.sld.iidm.extensions.BusbarSectionPositionAdder;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
 import org.apache.commons.lang3.StringUtils;
@@ -1026,6 +1027,122 @@ public class NetworkModificationService {
 
     private Mono<Void> assertSubstationCreationInfosNotEmpty(SubstationCreationInfos substationCreationInfos) {
         return substationCreationInfos == null ? Mono.error(new NetworkModificationException(CREATE_SUBSTATION_ERROR, "Missing required attributes to create the substation")) : Mono.empty();
+    }
+
+    public Flux<EquipmenModificationInfos> createVoltageLevel(UUID networkUuid, String variantId, UUID groupUuid,
+        VoltageLevelCreationInfos voltageLevelCreationInfos) {
+
+        return assertVoltageLevelCreationInfosNotEmpty(voltageLevelCreationInfos).thenMany(
+            getNetworkModificationInfos(networkUuid, variantId).flatMapIterable(networkInfos -> {
+                Substation substation = networkInfos.getNetwork().getSubstation(voltageLevelCreationInfos.getSubstationId());
+                NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid,
+                    modificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
+                ReporterModel reporter = new ReporterModel("NetworkModification", "Network modification");
+                Reporter subReporter = reporter.createSubReporter("VoltageLevelCreation", "VoltageLevel creation");
+
+                return doAction(listener, () -> {
+                    VoltageLevel voltageLevel = substation.newVoltageLevel()
+                        .setId(voltageLevelCreationInfos.getEquipmentId())
+                        .setName(voltageLevelCreationInfos.getEquipmentName())
+                        .setTopologyKind(TopologyKind.NODE_BREAKER)
+                        .setNominalV(voltageLevelCreationInfos.getNominalVoltage())
+                        .add();
+
+                    int newNode = voltageLevel.getNodeBreakerView().getMaximumNodeIndex();
+                    int nodeRank = newNode;
+                    Map<String, Integer> idToNodeRank = new TreeMap<>();
+                    for (BusbarSectionCreateInfos bbs : voltageLevelCreationInfos.getBusbarSections()) {
+                        BusbarSection sjb = voltageLevel.getNodeBreakerView().newBusbarSection()
+                            .setId(bbs.getId())
+                            .setName(bbs.getName())
+                            .setNode(nodeRank)
+                            .add();
+                        sjb.newExtension(BusbarSectionPositionAdder.class)
+                            .withBusbarIndex(bbs.getVertPos())
+                            .withSectionIndex(bbs.getHorizPos())
+                            .add();
+                        idToNodeRank.put(bbs.getId(), nodeRank);
+                        nodeRank += 1;
+                    }
+
+                    int cnxRank = 1;
+                    for (BusbarConnectionCreateInfos bbsci : voltageLevelCreationInfos.getBusbarConnections()) {
+                        String fromBBSId = bbsci.getFromBBS();
+                        Integer rank1 = idToNodeRank.get(fromBBSId);
+                        if (rank1 == null) {
+                            throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "From side '" + fromBBSId + "' unknown");
+                        }
+
+                        String toBBSId = bbsci.getToBBS();
+                        Integer rank2 = idToNodeRank.get(toBBSId);
+                        if (rank2 == null) {
+                            throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "To side '" + toBBSId + "' unknown");
+                        }
+
+                        SwitchKind switchKind = bbsci.getSwitchKind();
+                        if (switchKind == SwitchKind.BREAKER) {
+                            voltageLevel.getNodeBreakerView().newDisconnector()
+                                .setKind(SwitchKind.DISCONNECTOR)
+                                .setId("switch_" + voltageLevelCreationInfos.getEquipmentId() + "_" + fromBBSId + "_" + toBBSId
+                                    + "_" + cnxRank++)
+                                .setNode1(rank1)
+                                .setNode2(rank2)
+                                .setFictitious(false)
+                                .setRetained(false)
+                                .setOpen(false)
+                                .add();
+
+                            int breakerRank = nodeRank++;
+                            voltageLevel.getNodeBreakerView().newDisconnector()
+                                .setKind(switchKind)
+                                .setId("switch_" + voltageLevelCreationInfos.getEquipmentId() + "_" + cnxRank++)
+                                .setNode1(rank1)
+                                .setNode2(breakerRank)
+                                .setFictitious(false)
+                                .setRetained(false)
+                                .setOpen(false)
+                                .add();
+
+                            voltageLevel.getNodeBreakerView().newDisconnector()
+                                .setKind(SwitchKind.DISCONNECTOR)
+                                .setId("switch_" + voltageLevelCreationInfos.getEquipmentId() + "_" + toBBSId + "_" + fromBBSId
+                                    + "_" + cnxRank++)
+                                .setNode1(breakerRank)
+                                .setNode2(rank2)
+                                .setFictitious(false)
+                                .setRetained(false)
+                                .setOpen(false)
+                                .add();
+                        } else {
+                            voltageLevel.getNodeBreakerView().newDisconnector()
+                                .setKind(switchKind)
+                                .setId("switch_" + voltageLevelCreationInfos.getEquipmentId() + "_" + fromBBSId + "_" + toBBSId
+                                    + "_" + cnxRank++)
+                                .setNode1(rank1)
+                                .setNode2(rank2)
+                                .setFictitious(false)
+                                .setRetained(false)
+                                .setOpen(false)
+                                .add();
+                        }
+                    }
+
+                    subReporter.report(Report.builder()
+                        .withKey("voltageLevelCreated")
+                        .withDefaultMessage("New voltage level with id=${id} created")
+                        .withValue("id", voltageLevelCreationInfos.getEquipmentId())
+                        .withSeverity(new TypedValue("VOLTAGE_LEVEL_CREATION_INFO", TypedValue.INFO_LOGLEVEL))
+                        .build());
+
+                    // add the voltage level creation entity to the listener
+                    listener.storeVoltageLevelCreation(voltageLevelCreationInfos);
+                }, CREATE_VOLTAGE_LEVEL_ERROR, networkUuid, reporter, subReporter).stream().map(EquipmenModificationInfos.class::cast)
+                    .collect(Collectors.toList());
+            }));
+    }
+
+    private Mono<Void> assertVoltageLevelCreationInfosNotEmpty(VoltageLevelCreationInfos voltageLevelCreationInfos) {
+        return voltageLevelCreationInfos == null ? Mono.error(new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "Missing required attributes to create the voltage level")) : Mono.empty();
     }
 
     public Mono<Network> cloneNetworkVariant(UUID networkUuid, String originVariantId, String destinationVariantId) {

@@ -169,11 +169,21 @@ public class NetworkModificationRepository {
     @Transactional
     public SubstationCreationInfos getSubstationCreationModification(UUID groupUuid, UUID modificationUuid) {
         return ((SubstationCreationEntity) this.modificationRepository
-                .findById(modificationUuid)
-                .filter(m -> ModificationType.SUBSTATION_CREATION.name().equals(m.getType()))
-                .filter(m -> groupUuid.equals(m.getGroup().getId()))
-                .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString())))
-                .toSubstationCreationInfos();
+            .findById(modificationUuid)
+            .filter(m -> ModificationType.SUBSTATION_CREATION.name().equals(m.getType()))
+            .filter(m -> groupUuid.equals(m.getGroup().getId()))
+            .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString())))
+            .toSubstationCreationInfos();
+    }
+
+    @Transactional
+    public SubstationCreationInfos getVoltageLevelCreationModification(UUID groupUuid, UUID modificationUuid) {
+        return ((SubstationCreationEntity) this.modificationRepository
+            .findById(modificationUuid)
+            .filter(m -> ModificationType.SUBSTATION_CREATION.name().equals(m.getType()))
+            .filter(m -> groupUuid.equals(m.getGroup().getId()))
+            .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString())))
+            .toSubstationCreationInfos();
     }
 
     @Transactional // To have the 2 delete in the same transaction (atomic)
@@ -234,6 +244,10 @@ public class NetworkModificationRepository {
 
     public EquipmentCreationEntity createSubstationEntity(String id, String name, Country country) {
         return new SubstationCreationEntity(id, name, country);
+    }
+
+    public EquipmentCreationEntity createVoltageLevelEntity(String id, String name, double nominalVoltage, String substationId) {
+        return new VoltageLevelCreationEntity(id, name, nominalVoltage, substationId);
     }
 
     public EquipmentDeletionEntity createEquipmentDeletionEntity(String equipmentId, String equipmentType) {
