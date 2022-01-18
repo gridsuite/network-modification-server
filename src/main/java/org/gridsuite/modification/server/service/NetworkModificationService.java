@@ -414,7 +414,7 @@ public class NetworkModificationService {
 
             return doAction(listener, () -> {
                 Identifiable identifiable = null;
-                switch (EquipmentType.valueOf(equipmentType)) {
+                switch (IdentifiableType.valueOf(equipmentType)) {
                     case HVDC_LINE:
                         identifiable = network.getHvdcLine(equipmentId);
                         break;

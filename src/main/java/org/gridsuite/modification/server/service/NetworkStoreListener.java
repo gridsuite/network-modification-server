@@ -197,19 +197,24 @@ public class NetworkStoreListener implements NetworkListener {
                 .networkUuid(networkUuid)
                 .id(identifiable.getId())
                 .name(identifiable.getNameOrId())
-                .type(EquipmentType.getType(identifiable).name())
+                .type(identifiable.getType().name())
                 .voltageLevels(EquipmentInfos.getVoltageLevels(identifiable))
                 .build()
         );
     }
 
     @Override
-    public void onRemoval(Identifiable identifiable) {
+    public void beforeRemoval(Identifiable identifiable) {
         // At the moment, we cannot delete equipments infos in elasticsearch here :
         // identifiable.getId() throws PowsyblException("Object has been removed in current variant");
         // because the identifiable resource was set to null in remove method, before calling onRemoval method
         // onRemoval must be changed in powsybl core (maybe passing only the id as string argument)
         //equipmentInfosService.delete(identifiable.getId(), networkUuid);
+    }
+
+    @Override
+    public void afterRemoval(String id) {
+        // nothing to do
     }
 
     public void setSubstationsIds(Set<String> substationsIds) {
