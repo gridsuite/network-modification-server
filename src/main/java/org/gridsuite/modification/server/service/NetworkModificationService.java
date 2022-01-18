@@ -1250,4 +1250,12 @@ public class NetworkModificationService {
         CANCEL_MESSAGE_LOGGER.debug("Sending message : {}", message);
         publisher.send("publishCancelBuild-out-0", message);
     }
+
+    public Mono<Void> deleteModification(UUID groupUuid, UUID modificationUuid) {
+        return Mono.fromRunnable(() -> {
+            if (modificationRepository.deleteModifications(groupUuid, Set.of(modificationUuid)) == 0) {
+                throw new NetworkModificationException(MODIFICATION_NOT_FOUND);
+            }
+        });
+    }
 }

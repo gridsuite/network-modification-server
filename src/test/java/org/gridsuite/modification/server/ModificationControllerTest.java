@@ -273,6 +273,38 @@ public class ModificationControllerTest {
     }
 
     @Test
+    public void testDeleteModification() {
+        var res = webTestClient.put().uri("/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID + "&open=true", TEST_NETWORK_ID, "v1b1")
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBodyList(EquipmenAttributeModificationInfos.class)
+            .returnResult().getResponseBody();
+        assertNotNull(res);
+        assertEquals(1, res.size());
+
+        assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID, false).size());
+        String deleteStrWrongGroup = "/v1/groups/" + UUID.randomUUID() + "/modifications/" + res.get(0).getUuid();
+        String deleteStr = "/v1/groups/" + TEST_GROUP_ID + "/modifications/" + res.get(0).getUuid();
+
+        webTestClient.delete().uri(deleteStrWrongGroup)
+            .exchange()
+            .expectStatus().isNotFound();
+
+        webTestClient.delete().uri(deleteStr)
+            .exchange()
+            .expectStatus().isOk();
+
+        assertEquals(0, modificationRepository.getModifications(TEST_GROUP_ID, false).size());
+
+        /* non existing modification */
+        webTestClient.delete().uri(deleteStr)
+            .exchange()
+            .expectStatus().isNotFound();
+
+    }
+
+    @Test
     public void testNetworkOrVariantNotFound() {
         String uriString = "/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID;
 
