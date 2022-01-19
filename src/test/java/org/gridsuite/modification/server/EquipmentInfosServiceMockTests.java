@@ -38,10 +38,10 @@ public class EquipmentInfosServiceMockTests {
 
     @Test
     public void testAddDeleteEquipmentInfos() {
-        equipmentInfosService.add(EquipmentInfos.builder().networkUuid(NETWORK_UUID).id("id1").variantId(VARIANT_ID).name("name1").type(IdentifiableType.LOAD.name()).voltageLevels(Set.of(VoltageLevelInfos.builder().id("vl1").name("vl1").build())).build());
+        equipmentInfosService.addEquipmentInfos(EquipmentInfos.builder().networkUuid(NETWORK_UUID).id("id1").variantId(VARIANT_ID).name("name1").type(IdentifiableType.LOAD.name()).voltageLevels(Set.of(VoltageLevelInfos.builder().id("vl1").name("vl1").build())).build());
         assertEquals(0, Iterables.size(equipmentInfosService.findAll(NETWORK_UUID)));
 
-        equipmentInfosService.delete("foo", NETWORK_UUID, VARIANT_ID);
+        equipmentInfosService.deleteEquipmentInfos("foo", NETWORK_UUID, VARIANT_ID);
         assertEquals(0, Iterables.size(equipmentInfosService.findAll(NETWORK_UUID)));
     }
 }

@@ -7,6 +7,7 @@
 package org.gridsuite.modification.server.elasticsearch;
 
 import org.gridsuite.modification.server.dto.EquipmentInfos;
+import org.gridsuite.modification.server.dto.TombstonedEquipmentInfos;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
@@ -20,17 +21,21 @@ import java.util.UUID;
  */
 @Service
 public interface EquipmentInfosService {
-    EquipmentInfos add(@NonNull EquipmentInfos equipmentInfos);
+    EquipmentInfos addEquipmentInfos(@NonNull EquipmentInfos equipmentInfos);
 
-    void addAll(@NonNull final List<EquipmentInfos> equipmentsInfos);
+    TombstonedEquipmentInfos addTombstonedEquipmentInfos(@NonNull TombstonedEquipmentInfos tombstonedEquipmentInfos);
 
-    void delete(@NonNull String equipmentId, @NonNull UUID networkUuid, @NonNull String variantId);
+    void addAllEquipmentInfos(@NonNull final List<EquipmentInfos> equipmentsInfos);
+
+    void addAllTombstonedEquipmentInfos(@NonNull final List<TombstonedEquipmentInfos> tombstonedEquipmentsInfos);
+
+    void deleteEquipmentInfos(@NonNull String equipmentId, @NonNull UUID networkUuid, @NonNull String variantId);
 
     void deleteVariants(@NonNull UUID networkUuid, List<String> variantIds);
 
     void cloneVariantModifications(@NonNull UUID networkUuid, @NonNull String variantToCloneId, @NonNull String variantId);
 
-    boolean existEquipmentInVariant(String equipmentId, UUID networkUuid, String variantId);
+    boolean existEquipmentInfos(String equipmentId, UUID networkUuid, String variantId);
 
     Iterable<EquipmentInfos> findAll(@NonNull UUID networkUuid); // Only for tests
 }

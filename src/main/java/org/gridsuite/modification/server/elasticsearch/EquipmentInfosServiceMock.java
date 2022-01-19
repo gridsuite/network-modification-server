@@ -7,6 +7,7 @@
 package org.gridsuite.modification.server.elasticsearch;
 
 import org.gridsuite.modification.server.dto.EquipmentInfos;
+import org.gridsuite.modification.server.dto.TombstonedEquipmentInfos;
 import org.springframework.lang.NonNull;
 
 import java.util.Collections;
@@ -21,17 +22,27 @@ import java.util.UUID;
 public class EquipmentInfosServiceMock implements EquipmentInfosService {
 
     @Override
-    public EquipmentInfos add(@NonNull EquipmentInfos equipmentInfos) {
+    public EquipmentInfos addEquipmentInfos(@NonNull EquipmentInfos equipmentInfos) {
         return null;
     }
 
     @Override
-    public void addAll(@NonNull final List<EquipmentInfos> equipmentInfos) {
+    public TombstonedEquipmentInfos addTombstonedEquipmentInfos(TombstonedEquipmentInfos tombstonedEquipmentInfos) {
+        return null;
+    }
+
+    @Override
+    public void addAllEquipmentInfos(@NonNull final List<EquipmentInfos> equipmentInfos) {
         // Nothing to insert
     }
 
     @Override
-    public void delete(@NonNull String equipmentId, @NonNull UUID networkUuid, @NonNull String variantId) {
+    public void addAllTombstonedEquipmentInfos(List<TombstonedEquipmentInfos> tombstonedEquipmentsInfos) {
+        // Nothing to insert
+    }
+
+    @Override
+    public void deleteEquipmentInfos(@NonNull String equipmentId, @NonNull UUID networkUuid, @NonNull String variantId) {
         // Nothing to delete
     }
 
@@ -46,7 +57,7 @@ public class EquipmentInfosServiceMock implements EquipmentInfosService {
     }
 
     @Override
-    public boolean existEquipmentInVariant(String equipmentId, UUID networkUuid, String variantId) {
+    public boolean existEquipmentInfos(String equipmentId, UUID networkUuid, String variantId) {
         return false;
     }
 
