@@ -115,7 +115,7 @@ public class EquipmentInfosServiceTests {
         equipmentInfosService.deleteVariants(NETWORK_UUID, List.of("variant1", "variant3"));
         Iterable<EquipmentInfos> equipments = equipmentInfosService.findAllEquipmentInfos(NETWORK_UUID);
         assertEquals(1, Iterables.size(equipments));
-        assertTrue(Iterables.get(equipments, 0).getVariantId().equals("variant2"));
+        assertEquals("variant2", Iterables.get(equipments, 0).getVariantId());
 
         equipmentInfosService.deleteVariants(NETWORK_UUID, List.of("variant2"));
         assertEquals(0, Iterables.size(equipmentInfosService.findAllEquipmentInfos(NETWORK_UUID)));

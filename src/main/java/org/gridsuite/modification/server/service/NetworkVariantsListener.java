@@ -11,7 +11,6 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.NetworkListener;
 import com.powsybl.iidm.network.VariantManagerConstants;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
-import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 
 import java.util.List;
 import java.util.UUID;
@@ -31,15 +30,6 @@ public class NetworkVariantsListener implements NetworkListener {
         this.network = network;
         this.networkUuid = networkUuid;
         this.equipmentInfosService = equipmentInfosService;
-    }
-
-    public static NetworkVariantsListener create(Network network, UUID networkUuid, UUID groupUuid,
-                                                 NetworkModificationRepository modificationRepository,
-                                                 EquipmentInfosService equipmentInfosService,
-                                                 boolean isBuild, boolean isApplyModifications) {
-        var listener = new NetworkVariantsListener(network, networkUuid, equipmentInfosService);
-        network.addListener(listener);
-        return listener;
     }
 
     @Override
