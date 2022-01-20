@@ -18,6 +18,7 @@ import org.gridsuite.modification.server.dto.TombstonedEquipmentInfos;
 import org.gridsuite.modification.server.dto.VoltageLevelInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.utils.NetworkCreation;
+import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -146,5 +147,10 @@ public class EquipmentInfosServiceTests {
 
         String errorMessage = assertThrows(NetworkModificationException.class, () -> EquipmentInfos.getVoltageLevels(network)).getMessage();
         assertTrue(errorMessage.contains(String.format("The equipment type : %s is unknown", NetworkImpl.class.getSimpleName())));
+    }
+
+    @After
+    public void tearDown() {
+        equipmentInfosService.deleteVariants(NETWORK_UUID, List.of("variant1", "variant2", "variant3"));
     }
 }

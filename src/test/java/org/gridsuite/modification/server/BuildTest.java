@@ -20,6 +20,7 @@ import org.gridsuite.modification.server.repositories.NetworkModificationReposit
 import org.gridsuite.modification.server.service.NetworkModificationService;
 import org.gridsuite.modification.server.service.BuildStoppedPublisherService;
 import org.gridsuite.modification.server.utils.NetworkCreation;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -286,5 +287,12 @@ public class BuildTest {
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
             .expectBodyList(ModificationInfos.class)
             .returnResult().getResponseBody()).size());
+    }
+
+    @After
+    public void tearDown() {
+        // clean DB
+        modificationRepository.deleteAll();
+        equipmentInfosService.deleteVariants(TEST_NETWORK_ID, List.of(VariantManagerConstants.INITIAL_VARIANT_ID, NetworkCreation.VARIANT_ID, VARIANT_ID_2));
     }
 }
