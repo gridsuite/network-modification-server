@@ -9,6 +9,7 @@ package org.gridsuite.modification.server;
 import com.google.common.collect.Iterables;
 import com.powsybl.iidm.network.IdentifiableType;
 import org.gridsuite.modification.server.dto.EquipmentInfos;
+import org.gridsuite.modification.server.dto.TombstonedEquipmentInfos;
 import org.gridsuite.modification.server.dto.VoltageLevelInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.junit.Test;
@@ -39,9 +40,12 @@ public class EquipmentInfosServiceMockTests {
     @Test
     public void testAddDeleteEquipmentInfos() {
         equipmentInfosService.addEquipmentInfos(EquipmentInfos.builder().networkUuid(NETWORK_UUID).id("id1").variantId(VARIANT_ID).name("name1").type(IdentifiableType.LOAD.name()).voltageLevels(Set.of(VoltageLevelInfos.builder().id("vl1").name("vl1").build())).build());
-        assertEquals(0, Iterables.size(equipmentInfosService.findAll(NETWORK_UUID)));
+        assertEquals(0, Iterables.size(equipmentInfosService.findAllEquipmentInfos(NETWORK_UUID)));
 
         equipmentInfosService.deleteEquipmentInfos("foo", NETWORK_UUID, VARIANT_ID);
-        assertEquals(0, Iterables.size(equipmentInfosService.findAll(NETWORK_UUID)));
+        assertEquals(0, Iterables.size(equipmentInfosService.findAllEquipmentInfos(NETWORK_UUID)));
+
+        equipmentInfosService.addTombstonedEquipmentInfos(TombstonedEquipmentInfos.builder().networkUuid(NETWORK_UUID).id("id_ts_1").variantId(VARIANT_ID).build());
+        assertEquals(0, Iterables.size(equipmentInfosService.findAllTombstonedEquipmentInfos(NETWORK_UUID)));
     }
 }

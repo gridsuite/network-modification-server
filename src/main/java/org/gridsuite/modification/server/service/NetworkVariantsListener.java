@@ -44,6 +44,7 @@ public class NetworkVariantsListener implements NetworkListener {
 
     @Override
     public void onCreation(Identifiable identifiable) {
+        // Nothing to do in this listener
     }
 
     @Override

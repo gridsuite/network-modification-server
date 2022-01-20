@@ -46,13 +46,14 @@ public class EquipmentInfosServiceTests {
     @Test
     public void testAddDeleteEquipmentInfos() {
         EqualsVerifier.simple().forClass(EquipmentInfos.class).verify();
+        EqualsVerifier.simple().forClass(TombstonedEquipmentInfos.class).verify();
         EqualsVerifier.simple().forClass(VoltageLevelInfos.class).verify();
 
         EquipmentInfos equipmentInfos = EquipmentInfos.builder().networkUuid(NETWORK_UUID).id("id1").variantId("variant1").name("name1").type(IdentifiableType.LOAD.name()).voltageLevels(Set.of(VoltageLevelInfos.builder().id("vl1").name("vl1").build())).build();
         assertEquals(equipmentInfosService.addEquipmentInfos(equipmentInfos), equipmentInfos);
 
         equipmentInfosService.deleteEquipmentInfos(equipmentInfos.getId(), NETWORK_UUID, "variant1");
-        assertEquals(0, Iterables.size(equipmentInfosService.findAll(NETWORK_UUID)));
+        assertEquals(0, Iterables.size(equipmentInfosService.findAllEquipmentInfos(NETWORK_UUID)));
 
         Set<String> ids = new HashSet<>();
         addEquipmentInfos(ids, EquipmentInfos.builder().networkUuid(NETWORK_UUID).id("id1").variantId("variant2").name("name1").type(IdentifiableType.LOAD.name()).voltageLevels(Set.of(VoltageLevelInfos.builder().id("vl1").name("vl1").build())).build());
@@ -62,10 +63,10 @@ public class EquipmentInfosServiceTests {
         addEquipmentInfos(ids, EquipmentInfos.builder().networkUuid(NETWORK_UUID).id("id5").variantId("variant2").name("name5").type(IdentifiableType.SUBSTATION.name()).voltageLevels(Set.of(VoltageLevelInfos.builder().id("vl5").name("vl5").build())).build());
         addEquipmentInfos(ids, EquipmentInfos.builder().networkUuid(NETWORK_UUID).id("id6").variantId("variant2").name("name6").type(IdentifiableType.VOLTAGE_LEVEL.name()).voltageLevels(Set.of(VoltageLevelInfos.builder().id("vl6").name("vl6").build())).build());
         addEquipmentInfos(ids, EquipmentInfos.builder().networkUuid(NETWORK_UUID).id("id7").variantId("variant2").name("name6").type(IdentifiableType.BUS.name()).voltageLevels(Set.of(VoltageLevelInfos.builder().id("vl7").name("vl7").build())).build());
-        assertEquals(7, Iterables.size(equipmentInfosService.findAll(NETWORK_UUID)));
+        assertEquals(7, Iterables.size(equipmentInfosService.findAllEquipmentInfos(NETWORK_UUID)));
 
         ids.forEach(id -> equipmentInfosService.deleteEquipmentInfos(id, NETWORK_UUID, "variant2"));
-        assertEquals(0, Iterables.size(equipmentInfosService.findAll(NETWORK_UUID)));
+        assertEquals(0, Iterables.size(equipmentInfosService.findAllEquipmentInfos(NETWORK_UUID)));
 
         Set<String> idsTombstoned = new HashSet<>();
         ids.clear();
@@ -73,9 +74,11 @@ public class EquipmentInfosServiceTests {
         addTombstonedEquipmentInfos(idsTombstoned, TombstonedEquipmentInfos.builder().networkUuid(NETWORK_UUID).variantId("variant1").id("idTombstoned").build());
         assertTrue(equipmentInfosService.existEquipmentInfos("idOk", NETWORK_UUID, "variant1"));
         assertFalse(equipmentInfosService.existEquipmentInfos("idTombstoned", NETWORK_UUID, "variant1"));
+        assertEquals(1, Iterables.size(equipmentInfosService.findAllTombstonedEquipmentInfos(NETWORK_UUID)));
 
-        ids.forEach(id -> equipmentInfosService.deleteEquipmentInfos(id, NETWORK_UUID, "variant1"));
-        assertEquals(0, Iterables.size(equipmentInfosService.findAll(NETWORK_UUID)));
+        equipmentInfosService.deleteVariants(NETWORK_UUID, List.of("variant1"));
+        assertEquals(0, Iterables.size(equipmentInfosService.findAllEquipmentInfos(NETWORK_UUID)));
+        assertEquals(0, Iterables.size(equipmentInfosService.findAllTombstonedEquipmentInfos(NETWORK_UUID)));
     }
 
     private void addEquipmentInfos(Set<String> ids, EquipmentInfos equipmentInfos) {
@@ -89,33 +92,33 @@ public class EquipmentInfosServiceTests {
     @Test
     public void testCloneVariant() {
         equipmentInfosService.addEquipmentInfos(EquipmentInfos.builder().networkUuid(NETWORK_UUID).id("id1").name("name1").type(IdentifiableType.LOAD.name()).variantId("variant1").voltageLevels(Set.of(VoltageLevelInfos.builder().id("vl1").name("vl1").build())).build());
-        assertEquals(1, Iterables.size(equipmentInfosService.findAll(NETWORK_UUID)));
+        assertEquals(1, Iterables.size(equipmentInfosService.findAllEquipmentInfos(NETWORK_UUID)));
 
         equipmentInfosService.cloneVariantModifications(NETWORK_UUID, "variant1", "variant2");
-        assertEquals(2, Iterables.size(equipmentInfosService.findAll(NETWORK_UUID)));
+        assertEquals(2, Iterables.size(equipmentInfosService.findAllEquipmentInfos(NETWORK_UUID)));
 
         equipmentInfosService.deleteVariants(NETWORK_UUID, List.of("variant1", "variant2"));
-        assertEquals(0, Iterables.size(equipmentInfosService.findAll(NETWORK_UUID)));
+        assertEquals(0, Iterables.size(equipmentInfosService.findAllEquipmentInfos(NETWORK_UUID)));
     }
 
     @Test
     public void testDeleteVariants() {
         equipmentInfosService.addEquipmentInfos(EquipmentInfos.builder().networkUuid(NETWORK_UUID).id("id1").name("name1").type(IdentifiableType.LOAD.name()).variantId("variant1").voltageLevels(Set.of(VoltageLevelInfos.builder().id("vl1").name("vl1").build())).build());
-        assertEquals(1, Iterables.size(equipmentInfosService.findAll(NETWORK_UUID)));
+        assertEquals(1, Iterables.size(equipmentInfosService.findAllEquipmentInfos(NETWORK_UUID)));
 
         equipmentInfosService.addEquipmentInfos(EquipmentInfos.builder().networkUuid(NETWORK_UUID).id("id2").name("name2").type(IdentifiableType.GENERATOR.name()).variantId("variant2").voltageLevels(Set.of(VoltageLevelInfos.builder().id("vl2").name("vl2").build())).build());
-        assertEquals(2, Iterables.size(equipmentInfosService.findAll(NETWORK_UUID)));
+        assertEquals(2, Iterables.size(equipmentInfosService.findAllEquipmentInfos(NETWORK_UUID)));
 
         equipmentInfosService.addEquipmentInfos(EquipmentInfos.builder().networkUuid(NETWORK_UUID).id("id3").name("name3").type(IdentifiableType.BATTERY.name()).variantId("variant3").voltageLevels(Set.of(VoltageLevelInfos.builder().id("vl3").name("vl3").build())).build());
-        assertEquals(3, Iterables.size(equipmentInfosService.findAll(NETWORK_UUID)));
+        assertEquals(3, Iterables.size(equipmentInfosService.findAllEquipmentInfos(NETWORK_UUID)));
 
         equipmentInfosService.deleteVariants(NETWORK_UUID, List.of("variant1", "variant3"));
-        Iterable<EquipmentInfos> equipments = equipmentInfosService.findAll(NETWORK_UUID);
+        Iterable<EquipmentInfos> equipments = equipmentInfosService.findAllEquipmentInfos(NETWORK_UUID);
         assertEquals(1, Iterables.size(equipments));
         assertTrue(Iterables.get(equipments, 0).getVariantId().equals("variant2"));
 
         equipmentInfosService.deleteVariants(NETWORK_UUID, List.of("variant2"));
-        assertEquals(0, Iterables.size(equipmentInfosService.findAll(NETWORK_UUID)));
+        assertEquals(0, Iterables.size(equipmentInfosService.findAllEquipmentInfos(NETWORK_UUID)));
     }
 
     @Test

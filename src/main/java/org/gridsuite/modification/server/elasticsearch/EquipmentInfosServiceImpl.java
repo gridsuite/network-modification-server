@@ -101,7 +101,12 @@ public class EquipmentInfosServiceImpl implements EquipmentInfosService {
     }
 
     @Override
-    public Iterable<EquipmentInfos> findAll(@NonNull UUID networkUuid) {
+    public Iterable<EquipmentInfos> findAllEquipmentInfos(@NonNull UUID networkUuid) {
         return equipmentInfosRepository.findAllByNetworkUuid(networkUuid);
+    }
+
+    @Override
+    public Iterable<TombstonedEquipmentInfos> findAllTombstonedEquipmentInfos(UUID networkUuid) {
+        return tombstonedEquipmentInfosRepository.findAllByNetworkUuid(networkUuid);
     }
 }
