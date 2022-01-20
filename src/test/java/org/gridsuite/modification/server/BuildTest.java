@@ -13,9 +13,8 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.sld.iidm.extensions.BranchStatus;
-import org.gridsuite.modification.server.dto.BranchStatusModificationInfos;
-import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.dto.BuildInfos;
+import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.NetworkModificationService;
@@ -46,10 +45,9 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.config.EnableWebFlux;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -66,7 +64,7 @@ import static org.mockito.Mockito.when;
 @RunWith(SpringRunner.class)
 @EnableWebFlux
 @AutoConfigureWebTestClient
-@SpringBootTest(properties = {"spring.data.elasticsearch.enabled=false"})
+@SpringBootTest(properties = {"spring.data.elasticsearch.enabled=true"})
 @ContextHierarchy({@ContextConfiguration(classes = {NetworkModificationApplication.class, TestChannelBinderConfiguration.class})})
 public class BuildTest {
 
@@ -74,6 +72,7 @@ public class BuildTest {
     private static final UUID TEST_NETWORK_STOP_BUILD_ID = UUID.fromString("11111111-7977-4592-ba19-88027e4254e4");
     private static final UUID TEST_GROUP_ID = UUID.randomUUID();
     private static final UUID TEST_GROUP_ID_2 = UUID.randomUUID();
+    private static final String VARIANT_ID_2 = "Variant2";
 
     @Autowired
     private OutputDestination output;
@@ -93,6 +92,9 @@ public class BuildTest {
 
     @Autowired
     private NetworkModificationService networkModificationService;
+
+    @Autowired
+    private EquipmentInfosService equipmentInfosService;
 
     private Network network;
 
@@ -119,6 +121,7 @@ public class BuildTest {
 
         // clean DB
         modificationRepository.deleteAll();
+        equipmentInfosService.deleteVariants(TEST_NETWORK_ID, List.of(VariantManagerConstants.INITIAL_VARIANT_ID, NetworkCreation.VARIANT_ID, VARIANT_ID_2));
 
         // purge messages
         while (output.receive(1000, "build.result") != null) {
@@ -219,6 +222,29 @@ public class BuildTest {
         // No new modification entity should have been added to the database
         testNetworkModificationsCount(TEST_GROUP_ID, 6);
         testNetworkModificationsCount(TEST_GROUP_ID_2, 6);
+
+        // Execute another build starting from variant VARIANT_ID to variant VARIANT_ID_2
+        // to check
+        BuildInfos newBuildInfos = new BuildInfos(NetworkCreation.VARIANT_ID,
+                VARIANT_ID_2,
+                Collections.emptyList());
+        webTestClient.post().uri(uriString, TEST_NETWORK_ID)
+                .bodyValue(newBuildInfos)
+                .exchange()
+                .expectStatus().isOk();
+
+        Thread.sleep(3000);  // Needed to be sure that build result message has been sent
+        StreamSupport.stream(equipmentInfosService.findAllEquipmentInfos(TEST_NETWORK_ID).spliterator(), false).filter(eq -> eq.getVariantId().equals(NetworkCreation.VARIANT_ID)).forEach(eq -> System.out.println(eq));
+        List<EquipmentInfos> eqVariant1 = StreamSupport.stream(equipmentInfosService.findAllEquipmentInfos(TEST_NETWORK_ID).spliterator(), false).filter(eq -> eq.getVariantId().equals(NetworkCreation.VARIANT_ID)).collect(Collectors.toList());
+        List<EquipmentInfos> eqVariant2 = StreamSupport.stream(equipmentInfosService.findAllEquipmentInfos(TEST_NETWORK_ID).spliterator(), false).filter(eq -> eq.getVariantId().equals(VARIANT_ID_2)).collect(Collectors.toList());
+        assertTrue(eqVariant2.size() > 0);
+        assertEquals(eqVariant1.size(), eqVariant2.size());
+
+        List<TombstonedEquipmentInfos> tbseqVariant1 = StreamSupport.stream(equipmentInfosService.findAllTombstonedEquipmentInfos(TEST_NETWORK_ID).spliterator(), false).filter(eq -> eq.getVariantId().equals(NetworkCreation.VARIANT_ID)).collect(Collectors.toList());
+        List<TombstonedEquipmentInfos> tbseqVariant2 = StreamSupport.stream(equipmentInfosService.findAllTombstonedEquipmentInfos(TEST_NETWORK_ID).spliterator(), false).filter(eq -> eq.getVariantId().equals(VARIANT_ID_2)).collect(Collectors.toList());
+        // v2shunt was deleted from initial variant => created as TombstonedEquipmentInfos in ElasticSearch
+        assertEquals(1, tbseqVariant1.size());
+        assertEquals(tbseqVariant1.size(), tbseqVariant2.size());
     }
 
     @Test
