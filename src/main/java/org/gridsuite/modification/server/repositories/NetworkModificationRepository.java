@@ -246,8 +246,10 @@ public class NetworkModificationRepository {
         return new SubstationCreationEntity(id, name, country);
     }
 
-    public EquipmentCreationEntity createVoltageLevelEntity(String id, String name, double nominalVoltage, String substationId) {
-        return new VoltageLevelCreationEntity(id, name, nominalVoltage, substationId);
+    public EquipmentCreationEntity createVoltageLevelEntity(String id, String name, double nominalVoltage, String substationId,
+        List<BusbarSectionCreationEmbeddable> busbarSections,
+        List<BusbarConnectionCreationEmbeddable> busbarConnections) {
+        return new VoltageLevelCreationEntity(id, name, nominalVoltage, substationId, busbarSections, busbarConnections);
     }
 
     public EquipmentDeletionEntity createEquipmentDeletionEntity(String equipmentId, String equipmentType) {

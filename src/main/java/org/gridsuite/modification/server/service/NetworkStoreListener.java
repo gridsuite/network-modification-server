@@ -10,6 +10,8 @@ import com.powsybl.iidm.network.*;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.creation.BusbarConnectionCreationEmbeddable;
+import org.gridsuite.modification.server.entities.equipment.creation.BusbarSectionCreationEmbeddable;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 
 import java.util.*;
@@ -223,11 +225,19 @@ public class NetworkStoreListener implements NetworkListener {
     }
 
     public void storeVoltageLevelCreation(VoltageLevelCreationInfos voltageLevelCreationInfos) {
+        List<BusbarSectionCreationEmbeddable> bbsEmbeddables = voltageLevelCreationInfos.getBusbarSections().stream().map(bbsi -> {
+            return new BusbarSectionCreationEmbeddable(bbsi.getId(), bbsi.getName(), bbsi.getVertPos(), bbsi.getHorizPos());
+        }).collect(Collectors.toList());
+        List<BusbarConnectionCreationEmbeddable> cnxEmbeddables = voltageLevelCreationInfos.getBusbarConnections().stream().map(cnxi -> {
+            return new BusbarConnectionCreationEmbeddable(cnxi.getFromBBS(), cnxi.getToBBS(), cnxi.getSwitchKind());
+        }).collect(Collectors.toList());
         modifications.add(this.modificationRepository.createVoltageLevelEntity(
             voltageLevelCreationInfos.getEquipmentId(),
             voltageLevelCreationInfos.getEquipmentName(),
             voltageLevelCreationInfos.getNominalVoltage(),
-            voltageLevelCreationInfos.getSubstationId()
+            voltageLevelCreationInfos.getSubstationId(),
+            bbsEmbeddables,
+            cnxEmbeddables
         ));
     }
 

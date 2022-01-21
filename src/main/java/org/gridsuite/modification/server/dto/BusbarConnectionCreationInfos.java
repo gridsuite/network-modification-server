@@ -6,22 +6,22 @@
  */
 package org.gridsuite.modification.server.dto;
 
+import com.powsybl.iidm.network.SwitchKind;
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @NoArgsConstructor
+@AllArgsConstructor
 @Getter
 @Setter
-@Schema(description = "Voltage level bus bar section creation")
-public class BusbarSectionCreateInfos {
-    @Schema(description = "bus bar section id")
-    private String id;
+@Schema(description = "Voltage level bus bar sections connection creation")
+public class BusbarConnectionCreationInfos {
+    private String fromBBS;
 
-    private String name;
+    private String toBBS;
 
-    private int vertPos;
-
-    private int horizPos;
+    private SwitchKind switchKind;
 }

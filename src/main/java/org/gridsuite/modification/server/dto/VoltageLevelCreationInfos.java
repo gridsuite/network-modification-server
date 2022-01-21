@@ -29,7 +29,9 @@ public class VoltageLevelCreationInfos extends EquipmentCreationInfos {
     @Schema(description = "substation id")
     private String substationId;
 
-    private List<BusbarSectionCreateInfos> busbarSections;
+    @Schema(description = "bus bar sections")
+    private List<BusbarSectionCreationInfos> busbarSections;
 
-    private List<BusbarConnectionCreateInfos> busbarConnections;
+    @Schema(description = "connections between bus bar sections")
+    private List<BusbarConnectionCreationInfos> busbarConnections;
 }
