@@ -20,7 +20,6 @@ import org.gridsuite.modification.server.repositories.NetworkModificationReposit
 import org.gridsuite.modification.server.service.NetworkModificationService;
 import org.gridsuite.modification.server.service.BuildStoppedPublisherService;
 import org.gridsuite.modification.server.utils.NetworkCreation;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -73,7 +72,7 @@ public class BuildTest {
     private static final UUID TEST_NETWORK_STOP_BUILD_ID = UUID.fromString("11111111-7977-4592-ba19-88027e4254e4");
     private static final UUID TEST_GROUP_ID = UUID.randomUUID();
     private static final UUID TEST_GROUP_ID_2 = UUID.randomUUID();
-    private static final String VARIANT_ID_2 = "Variant2";
+    private static final String VARIANT_ID_2 = "variant_2";
 
     @Autowired
     private OutputDestination output;
@@ -237,6 +236,7 @@ public class BuildTest {
         Thread.sleep(3000);  // Needed to be sure that build result message has been sent
         StreamSupport.stream(equipmentInfosService.findAllEquipmentInfos(TEST_NETWORK_ID).spliterator(), false).filter(eq -> eq.getVariantId().equals(NetworkCreation.VARIANT_ID)).forEach(eq -> System.out.println(eq));
         List<EquipmentInfos> eqVariant1 = StreamSupport.stream(equipmentInfosService.findAllEquipmentInfos(TEST_NETWORK_ID).spliterator(), false).filter(eq -> eq.getVariantId().equals(NetworkCreation.VARIANT_ID)).collect(Collectors.toList());
+        StreamSupport.stream(equipmentInfosService.findAllEquipmentInfos(TEST_NETWORK_ID).spliterator(), false).filter(eq -> eq.getVariantId().equals(VARIANT_ID_2)).forEach(eq -> System.out.println(eq));
         List<EquipmentInfos> eqVariant2 = StreamSupport.stream(equipmentInfosService.findAllEquipmentInfos(TEST_NETWORK_ID).spliterator(), false).filter(eq -> eq.getVariantId().equals(VARIANT_ID_2)).collect(Collectors.toList());
         assertTrue(eqVariant2.size() > 0);
         assertEquals(eqVariant1.size(), eqVariant2.size());
@@ -287,12 +287,5 @@ public class BuildTest {
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
             .expectBodyList(ModificationInfos.class)
             .returnResult().getResponseBody()).size());
-    }
-
-    @After
-    public void tearDown() {
-        // clean DB
-        modificationRepository.deleteAll();
-        equipmentInfosService.deleteVariants(TEST_NETWORK_ID, List.of(VariantManagerConstants.INITIAL_VARIANT_ID, NetworkCreation.VARIANT_ID, VARIANT_ID_2));
     }
 }
