@@ -233,10 +233,12 @@ public class BuildTest {
                 .exchange()
                 .expectStatus().isOk();
 
-        Thread.sleep(5000);  // Needed to be sure that build result message has been sent and data have been written in ES
-        StreamSupport.stream(equipmentInfosService.findAllEquipmentInfos(TEST_NETWORK_ID).spliterator(), false).filter(eq -> eq.getVariantId().equals(NetworkCreation.VARIANT_ID)).forEach(eq -> System.out.println(eq));
+        Thread.sleep(3000);  // Needed to be sure that build result message has been sent and data have been written in ES
+        resultMessage = output.receive(1000, "build.result");
+        assertEquals("me", resultMessage.getHeaders().get("receiver"));
+        assertEquals("", new String(resultMessage.getPayload()));
+
         List<EquipmentInfos> eqVariant1 = StreamSupport.stream(equipmentInfosService.findAllEquipmentInfos(TEST_NETWORK_ID).spliterator(), false).filter(eq -> eq.getVariantId().equals(NetworkCreation.VARIANT_ID)).collect(Collectors.toList());
-        StreamSupport.stream(equipmentInfosService.findAllEquipmentInfos(TEST_NETWORK_ID).spliterator(), false).filter(eq -> eq.getVariantId().equals(VARIANT_ID_2)).forEach(eq -> System.out.println(eq));
         List<EquipmentInfos> eqVariant2 = StreamSupport.stream(equipmentInfosService.findAllEquipmentInfos(TEST_NETWORK_ID).spliterator(), false).filter(eq -> eq.getVariantId().equals(VARIANT_ID_2)).collect(Collectors.toList());
         assertTrue(eqVariant2.size() > 0);
         assertEquals(eqVariant1.size(), eqVariant2.size());
