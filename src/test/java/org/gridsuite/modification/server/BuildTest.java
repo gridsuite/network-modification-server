@@ -233,7 +233,7 @@ public class BuildTest {
                 .exchange()
                 .expectStatus().isOk();
 
-        Thread.sleep(3000);  // Needed to be sure that build result message has been sent
+        Thread.sleep(5000);  // Needed to be sure that build result message has been sent and data have been written in ES
         StreamSupport.stream(equipmentInfosService.findAllEquipmentInfos(TEST_NETWORK_ID).spliterator(), false).filter(eq -> eq.getVariantId().equals(NetworkCreation.VARIANT_ID)).forEach(eq -> System.out.println(eq));
         List<EquipmentInfos> eqVariant1 = StreamSupport.stream(equipmentInfosService.findAllEquipmentInfos(TEST_NETWORK_ID).spliterator(), false).filter(eq -> eq.getVariantId().equals(NetworkCreation.VARIANT_ID)).collect(Collectors.toList());
         StreamSupport.stream(equipmentInfosService.findAllEquipmentInfos(TEST_NETWORK_ID).spliterator(), false).filter(eq -> eq.getVariantId().equals(VARIANT_ID_2)).forEach(eq -> System.out.println(eq));
