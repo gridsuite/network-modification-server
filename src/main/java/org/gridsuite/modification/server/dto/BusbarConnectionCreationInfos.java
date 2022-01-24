@@ -12,16 +12,21 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 
+@SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
 @Schema(description = "Voltage level bus bar sections connection creation")
 public class BusbarConnectionCreationInfos {
+    @Schema(description = "one side of the connection")
     private String fromBBS;
 
+    @Schema(description = "other side of the connection")
     private String toBBS;
 
+    @Schema(description = "switch on the connection")
     private SwitchKind switchKind;
 }

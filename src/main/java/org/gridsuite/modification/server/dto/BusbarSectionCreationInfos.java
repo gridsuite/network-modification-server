@@ -28,8 +28,9 @@ public class BusbarSectionCreationInfos {
     @Schema(description = "bus bar section name")
     private String name;
 
-    @Schema
+    @Schema(description = "vertical position")
     private int vertPos;
 
+    @Schema(description = "horizontal position")
     private int horizPos;
 }

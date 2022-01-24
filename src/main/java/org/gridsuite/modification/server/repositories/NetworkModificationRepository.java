@@ -177,13 +177,13 @@ public class NetworkModificationRepository {
     }
 
     @Transactional
-    public SubstationCreationInfos getVoltageLevelCreationModification(UUID groupUuid, UUID modificationUuid) {
-        return ((SubstationCreationEntity) this.modificationRepository
+    public VoltageLevelCreationInfos getVoltageLevelCreationModification(UUID groupUuid, UUID modificationUuid) {
+        return ((VoltageLevelCreationEntity) this.modificationRepository
             .findById(modificationUuid)
-            .filter(m -> ModificationType.SUBSTATION_CREATION.name().equals(m.getType()))
+            .filter(m -> ModificationType.VOLTAGE_LEVEL_CREATION.name().equals(m.getType()))
             .filter(m -> groupUuid.equals(m.getGroup().getId()))
             .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString())))
-            .toSubstationCreationInfos();
+            .toVoltageLevelCreationInfos();
     }
 
     @Transactional // To have the 2 delete in the same transaction (atomic)
