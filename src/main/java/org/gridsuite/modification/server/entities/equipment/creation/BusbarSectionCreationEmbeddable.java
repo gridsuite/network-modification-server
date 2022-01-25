@@ -12,6 +12,9 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+/**
+ * @author Laurent GARNIER <laurent.garnier at rte-france.com>
+ */
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter

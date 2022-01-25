@@ -1036,7 +1036,11 @@ public class NetworkModificationService {
 
         Network network = listener.getNetwork();
         UUID networkUuid = listener.getNetworkUuid();
-        Substation substation = network.getSubstation(voltageLevelCreationInfos.getSubstationId());
+        String substationId = voltageLevelCreationInfos.getSubstationId();
+        Substation substation = network.getSubstation(substationId);
+        if (substation == null) {
+            throw new NetworkModificationException(SUBSTATION_NOT_FOUND, substationId);
+        }
 
         return doAction(listener, () -> {
             VoltageLevel voltageLevel = substation.newVoltageLevel()
@@ -1076,14 +1080,15 @@ public class NetworkModificationService {
                     throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "To side '" + toBBSId + "' unknown");
                 }
 
+                String infix = voltageLevelCreationInfos.getEquipmentId() + "_" + fromBBSId + "_" + toBBSId + "_";
+
                 SwitchKind switchKind = bbsci.getSwitchKind();
                 if (switchKind == SwitchKind.BREAKER) {
                     int preBreakerRank = nodeRank++;
                     int postBreakerRank = nodeRank++;
                     voltageLevel.getNodeBreakerView().newDisconnector()
                         .setKind(SwitchKind.DISCONNECTOR)
-                        .setId("switch_" + voltageLevelCreationInfos.getEquipmentId() + "_" + fromBBSId + "_" + toBBSId
-                            + "_" + cnxRank++)
+                        .setId("disconnector_" + infix + cnxRank++)
                         .setNode1(rank1)
                         .setNode2(preBreakerRank)
                         .setFictitious(false)
@@ -1093,7 +1098,7 @@ public class NetworkModificationService {
 
                     voltageLevel.getNodeBreakerView().newBreaker()
                         .setKind(switchKind)
-                        .setId("breaker_" + voltageLevelCreationInfos.getEquipmentId() + "_" + cnxRank++)
+                        .setId("breaker_" + infix + cnxRank++)
                         .setNode1(preBreakerRank)
                         .setNode2(postBreakerRank)
                         .setFictitious(false)
@@ -1103,25 +1108,25 @@ public class NetworkModificationService {
 
                     voltageLevel.getNodeBreakerView().newDisconnector()
                         .setKind(SwitchKind.DISCONNECTOR)
-                        .setId("switch_" + voltageLevelCreationInfos.getEquipmentId() + "_" + toBBSId + "_" + fromBBSId
-                            + "_" + cnxRank++)
+                        .setId("disconnector_" + infix + cnxRank++)
                         .setNode1(postBreakerRank)
                         .setNode2(rank2)
                         .setFictitious(false)
                         .setRetained(false)
                         .setOpen(false)
                         .add();
-                } else {
+                } else if (switchKind == SwitchKind.DISCONNECTOR) {
                     voltageLevel.getNodeBreakerView().newDisconnector()
                         .setKind(switchKind)
-                        .setId("switch_" + voltageLevelCreationInfos.getEquipmentId() + "_" + fromBBSId + "_" + toBBSId
-                            + "_" + cnxRank++)
+                        .setId("disconnector_" + infix + cnxRank++)
                         .setNode1(rank1)
                         .setNode2(rank2)
                         .setFictitious(false)
                         .setRetained(false)
                         .setOpen(false)
                         .add();
+                } else {
+                    throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "Swich kind '" + switchKind + "' unknown");
                 }
             }
 

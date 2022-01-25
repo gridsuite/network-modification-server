@@ -27,6 +27,9 @@ import org.gridsuite.modification.server.dto.VoltageLevelCreationInfos;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+/**
+ * @author Laurent GARNIER <laurent.garnier at rte-france.com>
+ */
 @NoArgsConstructor
 @Getter
 @Entity

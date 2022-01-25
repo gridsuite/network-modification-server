@@ -14,6 +14,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
+/**
+ * @author Laurent GARNIER <laurent.garnier at rte-france.com>
+ */
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor

@@ -39,6 +39,7 @@ public class NetworkModificationException extends RuntimeException {
         CREATE_TWO_WINDINGS_TRANSFORMER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         CREATE_SUBSTATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         CREATE_VOLTAGE_LEVEL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
+        SUBSTATION_NOT_FOUND(HttpStatus.NOT_FOUND),
         BRANCH_ACTION_ERROR(HttpStatus.BAD_REQUEST),
         BRANCH_ACTION_TYPE_EMPTY(HttpStatus.BAD_REQUEST, "Empty branch action type"),
         BRANCH_ACTION_TYPE_UNKNOWN(HttpStatus.BAD_REQUEST),

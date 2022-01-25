@@ -14,6 +14,9 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
+/**
+ * @author Laurent GARNIER <laurent.garnier at rte-france.com>
+ */
 @ToString(callSuper = true)
 @SuperBuilder
 @NoArgsConstructor
