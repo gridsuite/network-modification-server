@@ -1551,4 +1551,21 @@ public class ModificationControllerTest {
             .expectBodyList(ModificationInfos.class)
             .returnResult().getResponseBody()).size());
     }
+
+    @Test
+    public void testCloneNetworkVariant() {
+        final String variantIdClone = "variant_clone";
+
+        String uriString = "/v1/networks/{networkUuid}/clone?originVariantId=" + NetworkCreation.VARIANT_ID + "&destinationVariantId=" + variantIdClone;
+
+        webTestClient.put().uri(uriString, TEST_NETWORK_ID)
+            .exchange()
+            .expectStatus().isOk();
+
+        assertEquals(3, network.getVariantManager().getVariantIds().size());
+        assertTrue(network.getVariantManager().getVariantIds().contains(VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertTrue(network.getVariantManager().getVariantIds().contains(NetworkCreation.VARIANT_ID));
+        assertTrue(network.getVariantManager().getVariantIds().contains(variantIdClone));
+        assertFalse(network.getVariantManager().getVariantIds().contains(VARIANT_NOT_EXISTING_ID));
+    }
 }

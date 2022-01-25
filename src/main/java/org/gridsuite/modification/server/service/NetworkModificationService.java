@@ -1255,4 +1255,12 @@ public class NetworkModificationService {
             }
         });
     }
+
+    public Mono<Void> cloneVariant(UUID networkUuid, String originVariantId, String destinationVariantId) {
+        return cloneNetworkVariant(networkUuid, originVariantId, destinationVariantId)
+            .flatMap(network -> {
+                networkStoreService.flush(network);
+                return Mono.empty();
+            });
+    }
 }

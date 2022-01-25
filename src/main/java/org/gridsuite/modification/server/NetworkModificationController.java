@@ -186,4 +186,13 @@ public class NetworkModificationController {
         Mono<Void> result = networkModificationService.stopBuild(receiver);
         return ResponseEntity.ok().body(result);
     }
+
+    @PutMapping(value = "/networks/{networkUuid}/clone")
+    @Operation(summary = "Clone a network variant")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The clone has been done")})
+    public ResponseEntity<Mono<Void>> cloneVariant(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
+                                                   @Parameter(description = "Origin variant id") @RequestParam(name = "originVariantId") String originVariantId,
+                                                   @Parameter(description = "Destination variant id") @RequestParam(name = "destinationVariantId") String destinationVariantId) {
+        return ResponseEntity.ok().body(networkModificationService.cloneVariant(networkUuid, originVariantId, destinationVariantId));
+    }
 }
