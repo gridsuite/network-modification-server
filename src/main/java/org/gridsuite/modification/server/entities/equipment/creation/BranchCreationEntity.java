@@ -14,8 +14,8 @@ import org.gridsuite.modification.server.ModificationType;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.FetchType;
-import javax.persistence.JoinColumn;
 import javax.persistence.ForeignKey;
+import javax.persistence.JoinColumn;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.OneToOne;
 
@@ -48,17 +48,13 @@ public class BranchCreationEntity extends EquipmentCreationEntity {
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JoinColumn(name  =  "current_limits_id1",
         referencedColumnName  =  "id",
-        foreignKey = @ForeignKey(
-            name = "current_limits_id1_fk"
-        ), nullable = true)
+        foreignKey = @ForeignKey(), nullable = true)
     private CurrentLimitsEntity currentLimits1;
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JoinColumn(name  =  "current_limits_id2",
         referencedColumnName  =  "id",
-        foreignKey = @ForeignKey(
-            name = "current_limits_id2_fk"
-        ), nullable = true)
+        foreignKey = @ForeignKey(), nullable = true)
     private CurrentLimitsEntity currentLimits2;
 
     protected BranchCreationEntity(ModificationType modificationType,

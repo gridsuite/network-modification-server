@@ -12,6 +12,7 @@ import com.powsybl.iidm.network.LoadType;
 import com.vladmihalcea.sql.SQLStatementCountValidator;
 import org.gridsuite.modification.server.dto.BranchStatusModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.ShuntCompensatorCreationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationGroupEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.*;
@@ -34,8 +35,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static com.vladmihalcea.sql.SQLStatementCountValidator.*;
-import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_GROUP_NOT_FOUND;
-import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_NOT_FOUND;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
@@ -239,6 +239,55 @@ public class ModificationRepositoryTest {
         SQLStatementCountValidator.reset();
         modificationRepository.deleteModifications(TEST_GROUP_ID, Set.of(createGeneratorEntity2.getId(), createGeneratorEntity3.getId()));
         assertRequestsCount(1, 0, 0, 4);
+
+        SQLStatementCountValidator.reset();
+        assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID, true).size());
+        assertRequestsCount(2, 0, 0, 0);
+
+        SQLStatementCountValidator.reset();
+        modificationRepository.deleteModificationGroup(TEST_GROUP_ID);
+        assertRequestsCount(2, 0, 0, 3);
+
+        assertThrows(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage(),
+            NetworkModificationException.class, () -> modificationRepository.getModifications(TEST_GROUP_ID, true)
+        );
+    }
+
+    @Test
+    public void testShuntCompensatorCreation() {
+        var shunt1 = ShuntCompensatorCreationInfos.builder()
+            .equipmentId("shunt1").equipmentName("nameOne")
+            .currentNumberOfSections(1).maximumNumberOfSections(2)
+            .susceptancePerSection(1.).isIdenticalSection(true)
+            .voltageLevelId("vlId1").busOrBusbarSectionId("busId1")
+            .build();
+        var shunt2 = ShuntCompensatorCreationInfos.builder()
+            .equipmentId("shunt2").equipmentName("notNameOne")
+            .currentNumberOfSections(1).maximumNumberOfSections(2)
+            .susceptancePerSection(1.).isIdenticalSection(true)
+            .voltageLevelId("vlId1").busOrBusbarSectionId("busId1")
+            .build();
+
+        var createShuntCompensatorEntity1 = modificationRepository.createShuntCompensatorEntity(shunt1);
+        var createShuntCompensatorEntity2 = modificationRepository.createShuntCompensatorEntity(shunt2);
+
+        modificationRepository.saveModifications(TEST_GROUP_ID, List.of(createShuntCompensatorEntity1, createShuntCompensatorEntity2));
+        assertRequestsCount(1, 5, 0, 0);
+
+        List<ModificationInfos> modificationInfos = modificationRepository.getModifications(TEST_GROUP_ID, true);
+        assertEquals(2, modificationInfos.size());
+
+        assertThat(modificationRepository.getShuntCompensatorCreationModification(TEST_GROUP_ID, modificationInfos.get(0).getUuid()),
+            MatcherShuntCompensatorCreationInfos.createMatcher(createShuntCompensatorEntity1.toModificationInfos()));
+        assertThat(modificationRepository.getShuntCompensatorCreationModification(TEST_GROUP_ID, modificationInfos.get(1).getUuid()),
+            MatcherShuntCompensatorCreationInfos.createMatcher(createShuntCompensatorEntity2.toModificationInfos()));
+
+        assertEquals(2, modificationRepository.getModifications(TEST_GROUP_ID, true).size());
+        assertEquals(List.of(TEST_GROUP_ID), this.modificationRepository.getModificationGroupsUuids());
+
+        SQLStatementCountValidator.reset();
+        modificationRepository.deleteModifications(TEST_GROUP_ID, Set.of(createShuntCompensatorEntity2.getId()));
+        assertRequestsCount(1, 0, 0, 2);
 
         SQLStatementCountValidator.reset();
         assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID, true).size());

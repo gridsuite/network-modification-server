@@ -259,4 +259,8 @@ public class NetworkStoreListener implements NetworkListener {
         this.substationsIds.addAll(substationsIds);
         equipmentInfosService.delete(equipmentId, networkUuid);
     }
+
+    public void storeShuntCompensatorCreation(ShuntCompensatorCreationInfos shuntCompensatorCreationInfos) {
+        modifications.add(this.modificationRepository.createShuntCompensatorEntity(shuntCompensatorCreationInfos));
+    }
 }
