@@ -1561,7 +1561,27 @@ public class ModificationControllerTest {
         busbarConnectionInfos.add(
             BusbarConnectionCreationInfos.builder().fromBBS("bbs.ne").toBBS("bbs.ne").switchKind(SwitchKind.DISCONNECTOR).build());
 
-        VoltageLevelCreationInfos vli = VoltageLevelCreationInfos.builder()
+        VoltageLevelCreationInfos vli;
+        // first failure, to let room for the success with almost same data
+        vli = VoltageLevelCreationInfos.builder()
+            .equipmentId("VoltageLevelId")
+            .equipmentName("VoltageLevelName")
+            .nominalVoltage(379.1)
+            .substationId("s1")
+            .busbarSections(busbarSectionInfos)
+            .busbarConnections(busbarConnectionInfos)
+            .build();
+
+        webTestClient.put().uri(uriString, TEST_NETWORK_ID)
+            .body(BodyInserters.fromValue(vli))
+            .exchange()
+            .expectStatus().is5xxServerError()
+            .expectBody(String.class)
+            .isEqualTo(new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "Disconnector between same bus bar section 'bbs.ne'").getMessage());
+
+        // then success
+        busbarConnectionInfos.remove(2);
+        vli = VoltageLevelCreationInfos.builder()
             .equipmentId("VoltageLevelId")
             .equipmentName("VoltageLevelName")
             .nominalVoltage(379.1)

@@ -1080,9 +1080,13 @@ public class NetworkModificationService {
                     throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "To side '" + toBBSId + "' unknown");
                 }
 
-                String infix = voltageLevelCreationInfos.getEquipmentId() + "_" + fromBBSId + "_" + toBBSId + "_";
-
                 SwitchKind switchKind = bbsci.getSwitchKind();
+                if (switchKind == SwitchKind.DISCONNECTOR && fromBBSId.equals(toBBSId)) {
+                    throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR,
+                        "Disconnector between same bus bar section '" + toBBSId + "'");
+                }
+
+                String infix = voltageLevelCreationInfos.getEquipmentId() + "_" + fromBBSId + "_" + toBBSId + "_";
                 if (switchKind == SwitchKind.BREAKER) {
                     int preBreakerRank = nodeRank++;
                     int postBreakerRank = nodeRank++;

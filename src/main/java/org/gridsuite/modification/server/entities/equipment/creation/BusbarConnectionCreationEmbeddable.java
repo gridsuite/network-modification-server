@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.entities.equipment.creation;
 
+import javax.persistence.Column;
 import javax.persistence.Embeddable;
 
 import com.powsybl.iidm.network.SwitchKind;
@@ -22,9 +23,12 @@ import lombok.NoArgsConstructor;
 @Embeddable
 public class BusbarConnectionCreationEmbeddable {
 
+    @Column
     private String fromBBS;
 
+    @Column
     private String toBBS;
 
+    @Column
     private SwitchKind switchKind;
 }

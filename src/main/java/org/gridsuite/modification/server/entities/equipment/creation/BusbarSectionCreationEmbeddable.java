@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.entities.equipment.creation;
 
+import javax.persistence.Column;
 import javax.persistence.Embeddable;
 
 import lombok.AllArgsConstructor;
@@ -20,11 +21,15 @@ import lombok.NoArgsConstructor;
 @Getter
 @Embeddable
 public class BusbarSectionCreationEmbeddable {
+    @Column
     private String id;
 
+    @Column
     private String name;
 
+    @Column
     private int vertPos;
 
+    @Column
     private int horizPos;
 }
