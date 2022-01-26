@@ -260,11 +260,6 @@ public class NetworkStoreListener implements NetworkListener {
         // nothing to do
     }
 
-    public void setSubstationsIds(Set<String> substationsIds) {
-        this.substationsIds = substationsIds;
-    }
-
-    public void deleteEquipmentInfos(String equipmentId) {
     public void onTemporaryRemoval(String equipmentId, Set<String> substationsIds) {
         this.substationsIds.addAll(substationsIds);
         equipmentInfosService.delete(equipmentId, networkUuid);
