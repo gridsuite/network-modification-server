@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.EquipmenModificationInfos;
 import org.gridsuite.modification.server.dto.EquipmentDeletionInfos;
-import org.gridsuite.modification.server.entities.EquipmentModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -40,7 +40,8 @@ public class EquipmentDeletionEntity extends EquipmentModificationEntity {
         this.equipmentType = equipmentType;
     }
 
-    public EquipmentDeletionInfos toEquipmentDeletionInfos() {
+    @Override
+    public EquipmentDeletionInfos toModificationInfos() {
         return toEquipmentDeletionInfosBuilder().build();
     }
 

@@ -7,19 +7,22 @@
 package org.gridsuite.modification.server.repositories;
 
 import com.powsybl.commons.PowsyblException;
+import com.powsybl.iidm.network.Country;
 import com.powsybl.iidm.network.EnergySource;
 import com.powsybl.iidm.network.LoadType;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.server.entities.equipment.modification.BranchStatusModificationEntity;
+import org.gridsuite.modification.server.entities.GroovyScriptModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationGroupEntity;
-import org.gridsuite.modification.server.entities.equipment.attribute.modification.BooleanEquipmentAttributeModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.attribute.modification.DoubleEquipmentAttributeModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.attribute.modification.EquipmentAttributeModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.attribute.modification.FloatEquipmentAttributeModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.attribute.modification.IntegerEquipmentAttributeModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.attribute.modification.StringEquipmentAttributeModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.attribute.BooleanEquipmentAttributeModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleEquipmentAttributeModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.attribute.EquipmentAttributeModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.attribute.FloatEquipmentAttributeModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.attribute.IntegerEquipmentAttributeModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.attribute.StringEquipmentAttributeModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.*;
 import org.gridsuite.modification.server.entities.equipment.deletion.EquipmentDeletionEntity;
 import org.springframework.stereotype.Repository;
@@ -86,7 +89,7 @@ public class NetworkModificationRepository {
     }
 
     @Transactional // To have all create in the same transaction (atomic)
-    public void saveModifications(UUID groupUuid, List<ModificationEntity> modifications) {
+    public void saveModifications(UUID groupUuid, List<? extends ModificationEntity> modifications) {
         var modificationGroupEntity = this.modificationGroupRepository
                 .findById(groupUuid)
                 .orElseGet(() -> modificationGroupRepository.save(new ModificationGroupEntity(groupUuid)));
@@ -100,12 +103,20 @@ public class NetworkModificationRepository {
                 .collect(Collectors.toList());
     }
 
-    public List<ModificationInfos> getModifications(UUID groupUuid) {
+    public List<ModificationInfos> getModifications(List<UUID> uuids) {
+        return this.modificationRepository.findAllById(uuids).stream()
+            .map(ModificationEntity::toModificationInfos)
+            .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public List<ModificationInfos> getModifications(UUID groupUuid, boolean onlyMetadata) {
         ModificationGroupEntity group = getModificationGroup(groupUuid);
-        return this.modificationRepository.findAllBaseByGroupId(group.getId())
-                .stream()
-                .map(ModificationEntity::toModificationInfos)
-                .collect(Collectors.toList());
+        var modificationInfos = onlyMetadata ? this.modificationRepository.findAllBaseByGroupId(group.getId())
+            : this.modificationRepository.findAllByGroupId(group.getId());
+        return modificationInfos.stream()
+            .map(ModificationEntity::toModificationInfos)
+            .collect(Collectors.toList());
     }
 
     public EquipmenAttributeModificationInfos getEquipmentAttributeModification(UUID groupUuid, UUID modificationUuid) {
@@ -123,7 +134,7 @@ public class NetworkModificationRepository {
             .filter(m -> ModificationType.LOAD_CREATION.name().equals(m.getType()))
             .filter(m -> groupUuid.equals(m.getGroup().getId()))
             .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString())))
-            .toLoadCreationInfos();
+            .toModificationInfos();
     }
 
     public GeneratorCreationInfos getGeneratorCreationModification(UUID groupUuid, UUID modificationUuid) {
@@ -132,7 +143,7 @@ public class NetworkModificationRepository {
             .filter(m -> ModificationType.GENERATOR_CREATION.name().equals(m.getType()))
             .filter(m -> groupUuid.equals(m.getGroup().getId()))
             .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString())))
-            .toGeneratorCreationInfos();
+            .toModificationInfos();
     }
 
     @Transactional
@@ -142,7 +153,7 @@ public class NetworkModificationRepository {
             .filter(m -> ModificationType.LINE_CREATION.name().equals(m.getType()))
             .filter(m -> groupUuid.equals(m.getGroup().getId()))
             .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString())))
-            .toLineCreationInfos();
+            .toModificationInfos();
     }
 
     @Transactional
@@ -152,7 +163,17 @@ public class NetworkModificationRepository {
                 .filter(m -> ModificationType.TWO_WINDINGS_TRANSFORMER_CREATION.name().equals(m.getType()))
                 .filter(m -> groupUuid.equals(m.getGroup().getId()))
                 .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString())))
-                .toTwoWindingsTransformerCreationInfos();
+                .toModificationInfos();
+    }
+
+    @Transactional
+    public SubstationCreationInfos getSubstationCreationModification(UUID groupUuid, UUID modificationUuid) {
+        return ((SubstationCreationEntity) this.modificationRepository
+                .findById(modificationUuid)
+                .filter(m -> ModificationType.SUBSTATION_CREATION.name().equals(m.getType()))
+                .filter(m -> groupUuid.equals(m.getGroup().getId()))
+                .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString())))
+                .toSubstationCreationInfos();
     }
 
     @Transactional // To have the 2 delete in the same transaction (atomic)
@@ -163,12 +184,14 @@ public class NetworkModificationRepository {
     }
 
     @Transactional // To have the find and delete in the same transaction (atomic)
-    public void deleteModifications(UUID groupUuid, Set<UUID> uuids) {
+    public int deleteModifications(UUID groupUuid, Set<UUID> uuids) {
         List<ModificationEntity> modifications = this.modificationRepository.findAllByGroupId(groupUuid)
                 .stream()
                 .filter(m -> uuids.contains(m.getId()))
                 .collect(Collectors.toList());
+        int count = modifications.size();
         this.modificationRepository.deleteAll(modifications);
+        return count;
     }
 
     private ModificationGroupEntity getModificationGroup(UUID groupUuid) {
@@ -209,7 +232,32 @@ public class NetworkModificationRepository {
                 permanentCurrentLimit1, permanentCurrentLimit2);
     }
 
+    public EquipmentCreationEntity createSubstationEntity(String id, String name, Country country) {
+        return new SubstationCreationEntity(id, name, country);
+    }
+
     public EquipmentDeletionEntity createEquipmentDeletionEntity(String equipmentId, String equipmentType) {
         return new EquipmentDeletionEntity(equipmentId, equipmentType);
+    }
+
+    public GroovyScriptModificationEntity createGroovyScriptModificationEntity(String script) {
+        return new GroovyScriptModificationEntity(script);
+    }
+
+    public BranchStatusModificationEntity createBranchStatusModificationEntity(String lineId, BranchStatusModificationInfos.ActionType action) {
+        return new BranchStatusModificationEntity(lineId, action);
+    }
+
+    public GroovyScriptModificationInfos getGroovyScriptModification(UUID groupUuid, UUID modificationUuid) {
+        return ((GroovyScriptModificationEntity) this.modificationRepository
+            .findById(modificationUuid)
+            .filter(m -> ModificationType.GROOVY_SCRIPT.name().equals(m.getType()))
+            .filter(m -> groupUuid.equals(m.getGroup().getId()))
+            .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString())))
+            .toModificationInfos();
+    }
+
+    public List<ModificationEntity> getModificationsEntities(List<UUID> groupUuids) {
+        return this.modificationRepository.findAllByGroupIdInOrderByDate(groupUuids);
     }
 }

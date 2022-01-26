@@ -6,18 +6,12 @@
  */
 package org.gridsuite.modification.server.dto;
 
-import java.time.ZonedDateTime;
-import java.util.Set;
-import java.util.UUID;
-
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
-import org.gridsuite.modification.server.ModificationType;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -26,19 +20,18 @@ import org.gridsuite.modification.server.ModificationType;
 @NoArgsConstructor
 @Getter
 @Setter
-@ToString
-@Schema(description = "Modification attributes")
-public class ModificationInfos {
-    @Schema(description = "Modification id")
-    private UUID uuid;
+@ToString(callSuper = true)
+@Schema(description = "Branch status modification")
+public class BranchStatusModificationInfos extends EquipmenModificationInfos {
 
-    @Schema(description = "Modification date")
-    ZonedDateTime date;
+    @Schema(description = "Action type")
+    ActionType action;
 
-    @Schema(description = "Modification type")
-    ModificationType type;
-
-    @Schema(description = "Substations ID")
-    @Builder.Default
-    private Set<String> substationIds = Set.of();
+    public enum ActionType {
+        LOCKOUT,
+        TRIP,
+        SWITCH_ON,
+        ENERGISE_END_ONE,
+        ENERGISE_END_TWO
+    }
 }

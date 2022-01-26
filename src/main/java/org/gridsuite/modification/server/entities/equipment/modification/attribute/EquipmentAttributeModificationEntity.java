@@ -4,7 +4,7 @@
   License, v. 2.0. If a copy of the MPL was not distributed with this
   file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package org.gridsuite.modification.server.entities.equipment.attribute.modification;
+package org.gridsuite.modification.server.entities.equipment.modification.attribute;
 
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.EquipmenAttributeModificationInfos;
 import org.gridsuite.modification.server.dto.EquipmenModificationInfos;
-import org.gridsuite.modification.server.entities.EquipmentModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
 
 import java.util.Set;
 
@@ -36,6 +36,11 @@ public class EquipmentAttributeModificationEntity<T> extends EquipmentModificati
         super(equipmentId, ModificationType.EQUIPMENT_ATTRIBUTE_MODIFICATION);
         this.attributeName = attributeName;
         this.attributeValue = attributeValue;
+    }
+
+    @Override
+    public EquipmenAttributeModificationInfos toModificationInfos() {
+        return toModificationInfosBuilder().build();
     }
 
     public EquipmenAttributeModificationInfos toEquipmentAttributeModificationInfos() {

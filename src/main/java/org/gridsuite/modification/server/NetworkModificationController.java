@@ -49,19 +49,34 @@ public class NetworkModificationController {
 
     @PutMapping(value = "/networks/{networkUuid}/groovy", consumes = MediaType.TEXT_PLAIN_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "change an equipment state in a network variant")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The equipment state has been changed")})
-    public ResponseEntity<Flux<EquipmenModificationInfos>> applyGroovyScript(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The equipment state has been changed"),
+                           @ApiResponse(responseCode = "404", description = "the network or equipment not found")})
+    public ResponseEntity<Flux<ModificationInfos>> applyGroovyScript(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
                                                                              @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
                                                                              @RequestParam(value = "group", required = false) UUID groupUuid,
                                                                              @RequestBody String groovyScript) {
         return ResponseEntity.ok().body(networkModificationService.applyGroovyScript(networkUuid, variantId, groupUuid, groovyScript));
     }
 
-    @GetMapping(value = "/groups/{groupUuid}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/groups/{groupUuid}/modifications", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Get modifications list of a group")
     @ApiResponse(responseCode = "200", description = "List of modifications of the group")
     public ResponseEntity<Flux<ModificationInfos>> getModifications(@Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid) {
-        return ResponseEntity.ok().body(networkModificationService.getModifications(groupUuid));
+        return ResponseEntity.ok().body(networkModificationService.getModifications(groupUuid, false));
+    }
+
+    @GetMapping(value = "/groups/{groupUuid}/modifications/metadata", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Get list of modifications metadata of a group")
+    @ApiResponse(responseCode = "200", description = "List of modifications of the group")
+    public ResponseEntity<Flux<ModificationInfos>> getModificationsMetadata(@Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid) {
+        return ResponseEntity.ok().body(networkModificationService.getModifications(groupUuid, true));
+    }
+
+    @DeleteMapping(value = "/groups/{groupUuid}/modifications/{modificationUuid}")
+    @Operation(summary = "Delete a modification from a group")
+    @ApiResponse(responseCode = "200", description = "Modification deleted")
+    public ResponseEntity<Mono<Void>> deleteModifications(@Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid, @Parameter(description = "Modification UUID") @PathVariable("modificationUuid") UUID modificationUuid) {
+        return ResponseEntity.ok().body(networkModificationService.deleteModification(groupUuid, modificationUuid));
     }
 
     @DeleteMapping(value = "/groups/{groupUuid}")
@@ -80,14 +95,18 @@ public class NetworkModificationController {
 
     @PutMapping(value = "/networks/{networkUuid}/lines/{lineId}/status", consumes = MediaType.TEXT_PLAIN_VALUE)
     @Operation(summary = "Change the status of a line in a network variant")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "the line status has been changed")})
-    public ResponseEntity<Flux<EquipmenModificationInfos>> changeLineStatus(
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "The line status has been changed"),
+        @ApiResponse(responseCode = "404", description = "The network or line is not found"),
+        @ApiResponse(responseCode = "400", description = "The modification action is incorrect")
+    })
+    public ResponseEntity<Flux<ModificationInfos>> changeLineStatus(
             @Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
             @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
             @Parameter(description = "Line ID") @PathVariable("lineId") String lineId,
             @RequestParam(value = "group", required = false) UUID groupUuid,
-            @RequestBody(required = true) String status) {
-        return ResponseEntity.ok().body(networkModificationService.changeLineStatus(networkUuid, variantId, groupUuid, lineId, status));
+            @RequestBody String action) {
+        return ResponseEntity.ok().body(networkModificationService.changeLineStatus(networkUuid, variantId, groupUuid, lineId, action));
     }
 
     @PutMapping(value = "/networks/{networkUuid}/loads", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -130,6 +149,16 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.createTwoWindingsTransformer(networkUuid, variantId, groupUuid, twoWindingsTransformerCreationInfos));
     }
 
+    @PutMapping(value = "/networks/{networkUuid}/substations", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "create a substation in the network")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The substation has been created")})
+    public ResponseEntity<Flux<EquipmenModificationInfos>> createSubstation(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
+                                                                                        @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
+                                                                                        @RequestParam(value = "group", required = false) UUID groupUuid,
+                                                                                        @RequestBody SubstationCreationInfos substationCreationInfos) {
+        return ResponseEntity.ok().body(networkModificationService.createSubstation(networkUuid, variantId, groupUuid, substationCreationInfos));
+    }
+
     @DeleteMapping(value = "/networks/{networkUuid}/equipments/type/{equipmentType}/id/{equipmentId}")
     @Operation(summary = "Delete an equipment in a network variant")
     @ApiResponse(responseCode = "200", description = "The equipment has been deleted")
@@ -139,5 +168,22 @@ public class NetworkModificationController {
                                                                         @Parameter(description = "Equipment id") @PathVariable("equipmentId") String equipmentId,
                                                                         @RequestParam(value = "group", required = false) UUID groupUuid) {
         return ResponseEntity.ok().body(networkModificationService.deleteEquipment(networkUuid, variantId, groupUuid, equipmentType, equipmentId));
+    }
+
+    @PostMapping(value = "/networks/{networkUuid}/build")
+    @Operation(summary = "Build a network variant")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The build has been done")})
+    public ResponseEntity<Mono<Void>> buildVariant(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
+                                                     @Parameter(description = "Receiver") @RequestParam(name = "receiver", required = false) String receiver,
+                                                     @RequestBody BuildInfos buildInfos) {
+        return ResponseEntity.ok().body(networkModificationService.buildVariant(networkUuid, buildInfos, receiver));
+    }
+
+    @PutMapping(value = "/build/stop")
+    @Operation(summary = "Stop a build")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The build has been stopped")})
+    public ResponseEntity<Mono<Void>> stopBuild(@Parameter(description = "Build receiver") @RequestParam(name = "receiver", required = false) String receiver) {
+        Mono<Void> result = networkModificationService.stopBuild(receiver);
+        return ResponseEntity.ok().body(result);
     }
 }

@@ -9,7 +9,6 @@ package org.gridsuite.modification.server.service;
 import com.powsybl.iidm.network.*;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
-import org.gridsuite.modification.server.entities.EquipmentModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 
@@ -26,44 +25,92 @@ public class NetworkStoreListener implements NetworkListener {
 
     private final UUID networkUuid;
 
-    private final String variantId;
-
     private final Network network;
 
     private final NetworkModificationRepository modificationRepository;
 
     private final EquipmentInfosService equipmentInfosService;
 
-    private final List<EquipmentModificationEntity> modifications = new LinkedList<>();
+    private final List<ModificationEntity> modifications = new LinkedList<>();
 
     private Set<String> substationsIds = new HashSet<>();
+
+    private boolean isBuild;
+
+    private boolean isApplyModifications;
+
+    protected NetworkStoreListener(Network network, UUID networkUuid, UUID groupUuid,
+                                   NetworkModificationRepository modificationRepository, EquipmentInfosService equipmentInfosService,
+                                   boolean isBuild, boolean isApplyModifications) {
+        this.network = network;
+        this.networkUuid = networkUuid;
+        this.groupUuid = groupUuid;
+        this.modificationRepository = modificationRepository;
+        this.equipmentInfosService = equipmentInfosService;
+        this.isBuild = isBuild;
+        this.isApplyModifications = isApplyModifications;
+    }
+
+    public static NetworkStoreListener create(Network network, UUID networkUuid, UUID groupUuid,
+                                              NetworkModificationRepository modificationRepository,
+                                              EquipmentInfosService equipmentInfosService,
+                                              boolean isBuild, boolean isApplyModifications) {
+        var listener = new NetworkStoreListener(network, networkUuid, groupUuid, modificationRepository, equipmentInfosService,
+            isBuild, isApplyModifications);
+        network.addListener(listener);
+        return listener;
+    }
+
+    public static Set<String> getSubstationIds(Identifiable identifiable) {
+        Set<String> ids = new HashSet<>();
+        if (identifiable instanceof Switch) {
+            ids.add(((Switch) identifiable).getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
+        } else if (identifiable instanceof Injection) {
+            ids.add(((Injection<?>) identifiable).getTerminal().getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
+        } else if (identifiable instanceof Branch) {
+            ids.add(((Branch<?>) identifiable).getTerminal1().getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
+            ids.add(((Branch<?>) identifiable).getTerminal2().getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
+        } else if (identifiable instanceof ThreeWindingsTransformer) {
+            ids.add(((ThreeWindingsTransformer) identifiable).getTerminal(ThreeWindingsTransformer.Side.ONE).getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
+            ids.add(((ThreeWindingsTransformer) identifiable).getTerminal(ThreeWindingsTransformer.Side.TWO).getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
+            ids.add(((ThreeWindingsTransformer) identifiable).getTerminal(ThreeWindingsTransformer.Side.THREE).getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
+        } else if (identifiable instanceof HvdcLine) {
+            ids.add(((HvdcLine) identifiable).getConverterStation1().getTerminal().getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
+            ids.add(((HvdcLine) identifiable).getConverterStation2().getTerminal().getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
+        } else if (identifiable instanceof Substation) {
+            ids.add(identifiable.getId());
+        } else if (identifiable instanceof VoltageLevel) {
+            ids.add(((VoltageLevel) identifiable).getSubstation().orElseThrow().getId());
+        }
+        return ids;
+    }
 
     Network getNetwork() {
         return network;
     }
 
-    public static NetworkStoreListener create(Network network, UUID networkUuid, String variantId, UUID groupUuid,
-                                              NetworkModificationRepository modificationRepository, EquipmentInfosService equipmentInfosService) {
-        var listener = new NetworkStoreListener(network, networkUuid, variantId, groupUuid, modificationRepository, equipmentInfosService);
-        network.addListener(listener);
-        return listener;
+    UUID getNetworkUuid() {
+        return networkUuid;
     }
 
-    protected NetworkStoreListener(Network network, UUID networkUuid, String variantId, UUID groupUuid,
-                                   NetworkModificationRepository modificationRepository, EquipmentInfosService equipmentInfosService) {
-        this.network = network;
-        this.networkUuid = networkUuid;
-        this.variantId = variantId;
-        this.groupUuid = groupUuid;
-        this.modificationRepository = modificationRepository;
-        this.equipmentInfosService = equipmentInfosService;
+    boolean isBuild() {
+        return isBuild;
     }
 
-    public List<EquipmenModificationInfos> getModifications() {
-        return modifications.stream()
-            .map(m -> m.toEquipmentModificationInfos(substationsIds.isEmpty() ? getSubstationsIds(m.getEquipmentId())
-                : substationsIds))
-                .collect(Collectors.toList());
+    boolean isApplyModifications() {
+        return isApplyModifications;
+    }
+
+    public List<ModificationInfos> getModifications() {
+        List<ModificationInfos> modificationInfos = modifications.stream()
+            .map(m -> {
+                ModificationInfos infos = m.toModificationInfos();
+                infos.setSubstationIds(substationsIds);
+                return infos;
+            })
+            .collect(Collectors.toList());
+        modifications.clear();
+        return modificationInfos;
     }
 
     public void saveModifications() {
@@ -86,8 +133,12 @@ public class NetworkStoreListener implements NetworkListener {
         }
     }
 
-    private void storeEquipmentAttributeModification(Identifiable<?> identifiable, String attributeName, Object attributeValue) {
+    public void storeEquipmentAttributeModification(Identifiable<?> identifiable, String attributeName, Object attributeValue) {
         modifications.add(this.modificationRepository.createEquipmentAttributeModification(identifiable.getId(), attributeName, attributeValue));
+    }
+
+    public void storeEquipmentAttributeModification(String equipmentId, String attributeName, Object attributeValue) {
+        modifications.add(this.modificationRepository.createEquipmentAttributeModification(equipmentId, attributeName, attributeValue));
     }
 
     public void storeLoadCreation(LoadCreationInfos loadCreationInfos) {
@@ -139,59 +190,51 @@ public class NetworkStoreListener implements NetworkListener {
 
     public void storeTwoWindingsTransformerCreation(TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
         modifications.add(this.modificationRepository.createTwoWindingsTransformerEntity(twoWindingsTransformerCreationInfos.getEquipmentId(),
-                twoWindingsTransformerCreationInfos.getEquipmentName(),
-                twoWindingsTransformerCreationInfos.getSeriesResistance(),
-                twoWindingsTransformerCreationInfos.getSeriesReactance(),
-                twoWindingsTransformerCreationInfos.getMagnetizingConductance(),
-                twoWindingsTransformerCreationInfos.getMagnetizingSusceptance(),
-                twoWindingsTransformerCreationInfos.getRatedVoltage1(),
-                twoWindingsTransformerCreationInfos.getRatedVoltage2(),
-                twoWindingsTransformerCreationInfos.getVoltageLevelId1(),
-                twoWindingsTransformerCreationInfos.getBusOrBusbarSectionId1(),
-                twoWindingsTransformerCreationInfos.getVoltageLevelId2(),
-                twoWindingsTransformerCreationInfos.getBusOrBusbarSectionId2(),
-                twoWindingsTransformerCreationInfos.getCurrentLimits1() != null ? twoWindingsTransformerCreationInfos.getCurrentLimits1().getPermanentLimit() : null,
-                twoWindingsTransformerCreationInfos.getCurrentLimits2() != null ? twoWindingsTransformerCreationInfos.getCurrentLimits2().getPermanentLimit() : null)
+            twoWindingsTransformerCreationInfos.getEquipmentName(),
+            twoWindingsTransformerCreationInfos.getSeriesResistance(),
+            twoWindingsTransformerCreationInfos.getSeriesReactance(),
+            twoWindingsTransformerCreationInfos.getMagnetizingConductance(),
+            twoWindingsTransformerCreationInfos.getMagnetizingSusceptance(),
+            twoWindingsTransformerCreationInfos.getRatedVoltage1(),
+            twoWindingsTransformerCreationInfos.getRatedVoltage2(),
+            twoWindingsTransformerCreationInfos.getVoltageLevelId1(),
+            twoWindingsTransformerCreationInfos.getBusOrBusbarSectionId1(),
+            twoWindingsTransformerCreationInfos.getVoltageLevelId2(),
+            twoWindingsTransformerCreationInfos.getBusOrBusbarSectionId2(),
+            twoWindingsTransformerCreationInfos.getCurrentLimits1() != null ? twoWindingsTransformerCreationInfos.getCurrentLimits1().getPermanentLimit() : null,
+            twoWindingsTransformerCreationInfos.getCurrentLimits2() != null ? twoWindingsTransformerCreationInfos.getCurrentLimits2().getPermanentLimit() : null)
         );
     }
 
-    private Set<String> getSubstationsIds(String equipmentId) {
-        Identifiable<?> identifiable = network.getIdentifiable(equipmentId);
-        return getSubstationIds(identifiable);
+    public void storeGroovyScriptModification(String script) {
+        modifications.add(this.modificationRepository.createGroovyScriptModificationEntity(script));
     }
 
-    public static Set<String> getSubstationIds(Identifiable identifiable) {
-        Set<String> ids = new HashSet<>();
-        if (identifiable instanceof Switch) {
-            ids.add(((Switch) identifiable).getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
-        } else if (identifiable instanceof Injection) {
-            ids.add(((Injection<?>) identifiable).getTerminal().getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
-        } else if (identifiable instanceof Branch) {
-            ids.add(((Branch<?>) identifiable).getTerminal1().getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
-            ids.add(((Branch<?>) identifiable).getTerminal2().getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
-        } else if (identifiable instanceof ThreeWindingsTransformer) {
-            ids.add(((ThreeWindingsTransformer) identifiable).getTerminal(ThreeWindingsTransformer.Side.ONE).getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
-            ids.add(((ThreeWindingsTransformer) identifiable).getTerminal(ThreeWindingsTransformer.Side.TWO).getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
-            ids.add(((ThreeWindingsTransformer) identifiable).getTerminal(ThreeWindingsTransformer.Side.THREE).getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
-        } else if (identifiable instanceof HvdcLine) {
-            ids.add(((HvdcLine) identifiable).getConverterStation1().getTerminal().getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
-            ids.add(((HvdcLine) identifiable).getConverterStation2().getTerminal().getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
-        }
-        return ids;
+    public void storeBranchStatusModification(String lineId, BranchStatusModificationInfos.ActionType action) {
+        modifications.add(this.modificationRepository.createBranchStatusModificationEntity(lineId, action));
+    }
+
+    public void storeSubstationCreation(SubstationCreationInfos substationCreationInfos) {
+        modifications.add(this.modificationRepository.createSubstationEntity(
+            substationCreationInfos.getEquipmentId(),
+            substationCreationInfos.getEquipmentName(),
+            substationCreationInfos.getSubstationCountry()
+        ));
     }
 
     @Override
     public void onUpdate(Identifiable identifiable, String attribute, Object oldValue, Object newValue) {
-        storeEquipmentAttributeModification(identifiable, attribute, newValue);
+        substationsIds.addAll(getSubstationIds(identifiable));
     }
 
     @Override
     public void onUpdate(Identifiable identifiable, String attribute, String variantId, Object oldValue, Object newValue) {
-        storeEquipmentAttributeModification(identifiable, attribute, newValue);
+        substationsIds.addAll(getSubstationIds(identifiable));
     }
 
     @Override
     public void onCreation(Identifiable identifiable) {
+        substationsIds.addAll(getSubstationIds(identifiable));
         equipmentInfosService.add(
             EquipmentInfos.builder()
                 .networkUuid(networkUuid)
@@ -222,6 +265,8 @@ public class NetworkStoreListener implements NetworkListener {
     }
 
     public void deleteEquipmentInfos(String equipmentId) {
+    public void onTemporaryRemoval(String equipmentId, Set<String> substationsIds) {
+        this.substationsIds.addAll(substationsIds);
         equipmentInfosService.delete(equipmentId, networkUuid);
     }
 }

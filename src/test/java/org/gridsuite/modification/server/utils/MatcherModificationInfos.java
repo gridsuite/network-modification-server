@@ -6,15 +6,28 @@
  */
 package org.gridsuite.modification.server.utils;
 
+import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.hamcrest.Description;
 import org.hamcrest.TypeSafeMatcher;
 
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.util.Set;
+
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
-class MatcherModificationInfos<T extends ModificationInfos> extends TypeSafeMatcher<T> {
+public class MatcherModificationInfos<T extends ModificationInfos> extends TypeSafeMatcher<T> {
     T reference;
+
+    public static MatcherModificationInfos<ModificationInfos> createMatcherModificationInfos(ModificationType modificationType, Set<String> substationIds) {
+        return new MatcherModificationInfos<>(ModificationInfos.builder()
+            .date(ZonedDateTime.now(ZoneOffset.UTC))
+            .type(modificationType)
+            .substationIds(substationIds)
+            .build());
+    }
 
     protected MatcherModificationInfos(T ref) {
         this.reference = ref;
@@ -23,6 +36,7 @@ class MatcherModificationInfos<T extends ModificationInfos> extends TypeSafeMatc
     @Override
     public boolean matchesSafely(T m) {
         return m.getType() == reference.getType()
+                && m.getSubstationIds().equals(reference.getSubstationIds())
                 && m.getDate().toEpochSecond() - reference.getDate().toEpochSecond() < 2;
     }
 

@@ -8,21 +8,14 @@ package org.gridsuite.modification.server;
 
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.reporter.ReporterModel;
-import com.powsybl.iidm.network.EnergySource;
-import com.powsybl.iidm.network.Generator;
-import com.powsybl.iidm.network.LoadType;
-import com.powsybl.iidm.network.Network;
+import com.powsybl.iidm.network.*;
 import com.powsybl.network.store.client.NetworkStoreService;
-import com.powsybl.sld.iidm.extensions.BranchStatus;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.NetworkModificationService;
 import org.gridsuite.modification.server.service.NetworkStoreListener;
-import org.gridsuite.modification.server.utils.MatcheEquipmentAttributeModificationInfos;
-import org.gridsuite.modification.server.utils.MatcherEquipmentDeletionInfos;
-import org.gridsuite.modification.server.utils.MatcherEquipmentModificationInfos;
-import org.gridsuite.modification.server.utils.NetworkCreation;
+import org.gridsuite.modification.server.utils.*;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -33,11 +26,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.client.RestTemplate;
@@ -52,6 +41,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
@@ -76,9 +66,7 @@ public class ModificationControllerTest {
     private static final UUID TEST_GROUP_ID = UUID.randomUUID();
     private static final UUID TEST_NETWORK_BUS_BREAKER_ID = UUID.fromString("11111111-7977-4592-ba19-88027e4254e4");
     private static final UUID TEST_NETWORK_MIXED_TOPOLOGY_ID = UUID.fromString("22222222-7977-4592-ba19-88027e4254e4");
-    private static final String VARIANT_NOT_FOUND_ID = "variantNotFound";
-
-    private static final String ERROR_MESSAGE = "Error message";
+    public static final String VARIANT_NOT_EXISTING_ID = "variant_not_existing";
 
     @Autowired
     private WebTestClient webTestClient;
@@ -99,10 +87,15 @@ public class ModificationControllerTest {
     @Autowired
     private EquipmentInfosService equipmentInfosService;
 
+    private Network network;
+
     @Before
     public void setUp() {
         // /!\ create a new network for each invocation (answer)
-        when(networkStoreService.getNetwork(TEST_NETWORK_ID)).then((Answer<Network>) invocation -> NetworkCreation.create(TEST_NETWORK_ID, true));
+        when(networkStoreService.getNetwork(TEST_NETWORK_ID)).then((Answer<Network>) invocation -> {
+            network = NetworkCreation.create(TEST_NETWORK_ID, true);
+            return network;
+        });
         when(networkStoreService.getNetwork(TEST_NETWORK_ID_2)).then((Answer<Network>) invocation -> NetworkCreation.create(TEST_NETWORK_ID_2, false));
         when(networkStoreService.getNetwork(NOT_FOUND_NETWORK_ID)).thenThrow(new PowsyblException());
         when(networkStoreService.getNetwork(TEST_NETWORK_WITH_FLUSH_ERROR_ID)).then((Answer<Network>) invocation -> NetworkCreation.create(TEST_NETWORK_WITH_FLUSH_ERROR_ID, true));
@@ -121,10 +114,9 @@ public class ModificationControllerTest {
 
     @Test
     public void testModificationException() {
-        assertEquals(new NetworkModificationException(GROOVY_SCRIPT_EMPTY).getMessage(), GROOVY_SCRIPT_EMPTY.name() + " : " + NetworkModificationException.EMPTY_SCRIPT);
-        assertEquals(new NetworkModificationException(GROOVY_SCRIPT_EMPTY, ERROR_MESSAGE).getMessage(), GROOVY_SCRIPT_EMPTY.name() + " : " + ERROR_MESSAGE);
         assertEquals(new NetworkModificationException(MODIFICATION_ERROR).getMessage(), MODIFICATION_ERROR.name());
-        assertEquals(new NetworkModificationException(MODIFICATION_ERROR, ERROR_MESSAGE).getMessage(), MODIFICATION_ERROR.name() + " : " + ERROR_MESSAGE);
+        assertEquals(new NetworkModificationException(MODIFICATION_ERROR, "Error message").getMessage(), MODIFICATION_ERROR.name() + " : Error message");
+        assertEquals(new NetworkModificationException(MODIFICATION_ERROR, new IllegalArgumentException("Error message")).getMessage(), MODIFICATION_ERROR.name() +  " : Error message");
     }
 
     @Test
@@ -138,7 +130,6 @@ public class ModificationControllerTest {
                 .equipmentAttributeName("equipmentAttributeName")
                 .equipmentAttributeValue("equipmentAttributeValue")
                 .build();
-        assertEquals("EquipmenAttributeModificationInfos(super=EquipmenModificationInfos(super=ModificationInfos(uuid=7928181c-7977-4592-ba19-88027e4254e4, date=2021-02-19T00:00Z, type=EQUIPMENT_ATTRIBUTE_MODIFICATION), equipmentId=equipmentId, substationIds=[substationId]), equipmentAttributeName=equipmentAttributeName, equipmentAttributeValue=equipmentAttributeValue)", modificationInfos.toString());
 
         // switch opening
         EquipmenAttributeModificationInfos modificationSwitchInfos =
@@ -150,7 +141,7 @@ public class ModificationControllerTest {
                         .returnResult()
                         .getResponseBody()).get(0);
 
-        assertTrue(MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v1b1", Set.of("s1"), "open", true).matchesSafely(modificationSwitchInfos));
+        assertTrue(MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v1b1", Set.of("s1"), "open", true).matchesSafely(modificationSwitchInfos));
 
         // switch in variant VARIANT_ID opening
         modificationSwitchInfos =
@@ -162,17 +153,17 @@ public class ModificationControllerTest {
                 .returnResult()
                 .getResponseBody()).get(0);
 
-        assertTrue(MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("break1Variant", Set.of("s1Variant"), "open", true).matchesSafely(modificationSwitchInfos));
+        assertTrue(MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("break1Variant", Set.of("s1Variant"), "open", true).matchesSafely(modificationSwitchInfos));
     }
 
     @Test
     public void testNetworkListener() {
         Network network = NetworkCreation.create(TEST_NETWORK_ID, true);
-        NetworkStoreListener listener = NetworkStoreListener.create(network, TEST_NETWORK_ID, null, TEST_GROUP_ID, modificationRepository, equipmentInfosService);
+        NetworkStoreListener listener = NetworkStoreListener.create(network, TEST_NETWORK_ID, null, modificationRepository, equipmentInfosService, false, true);
         Generator generator = network.getGenerator("idGenerator");
         Object invalidValue = new Object();
         assertTrue(assertThrows(PowsyblException.class, () ->
-            listener.onUpdate(generator, "targetP", 0, invalidValue)).getMessage().contains("Value type invalid : Object"));
+            listener.storeEquipmentAttributeModification(generator, "targetP", invalidValue)).getMessage().contains("Value type invalid : Object"));
     }
 
     @Test
@@ -192,7 +183,7 @@ public class ModificationControllerTest {
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
                 .expectBodyList(EquipmenAttributeModificationInfos.class)
                 .value(modifications -> modifications.get(0),
-                        MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v1b1", Set.of("s1"), "open", true));
+                        MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v1b1", Set.of("s1"), "open", true));
 
         webTestClient.get().uri("/v1/groups")
                 .exchange()
@@ -206,7 +197,7 @@ public class ModificationControllerTest {
                 .exchange()
                 .expectStatus().isOk();
 
-        webTestClient.get().uri("/v1/groups/{groupUuid}", TEST_GROUP_ID)
+        webTestClient.get().uri("/v1/groups/{groupUuid}/modifications/metadata", TEST_GROUP_ID)
                 .exchange()
                 .expectStatus().isNotFound()
                 .expectBody(String.class)
@@ -236,7 +227,8 @@ public class ModificationControllerTest {
             .expectStatus().isOk()
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
             .expectBodyList(EquipmenAttributeModificationInfos.class)
-            .isEqualTo(List.of());
+            .value(modifications -> modifications.get(0),
+                MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos(switchId1, Set.of(), "open", false));
 
         // switch opening
         webTestClient.put().uri(uriString + "&open=true", TEST_NETWORK_ID, switchId1)
@@ -245,7 +237,7 @@ public class ModificationControllerTest {
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
             .expectBodyList(EquipmenAttributeModificationInfos.class)
             .value(modifications -> modifications.get(0),
-                MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos(switchId1, substationsIds, "open", true));
+                MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos(switchId1, substationsIds, "open", true));
 
         // switch closing
         webTestClient.put().uri(uriString + "&open=false", TEST_NETWORK_ID, switchId2)
@@ -254,7 +246,7 @@ public class ModificationControllerTest {
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
             .expectBodyList(EquipmenAttributeModificationInfos.class)
             .value(modifications -> modifications.get(0),
-                MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos(switchId2, substationsIds, "open", false));
+                MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos(switchId2, substationsIds, "open", false));
 
         // switch opening on another substation
         webTestClient.put().uri(uriString + "&open=true", TEST_NETWORK_ID, switchId3)
@@ -263,7 +255,7 @@ public class ModificationControllerTest {
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
             .expectBodyList(EquipmenAttributeModificationInfos.class)
             .value(modifications -> modifications.get(0),
-                MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos(switchId3, otherSubstationsIds, "open", true));
+                MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos(switchId3, otherSubstationsIds, "open", true));
 
         testNetworkModificationsCount(TEST_GROUP_ID, modificationsCount);
     }
@@ -273,10 +265,42 @@ public class ModificationControllerTest {
         String uriString = "/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID;
 
         // switches modifications on initial variant
-        switchModifications(uriString, "v1b1", "disc1Variant", "v2b1", "v3b1", Set.of("s1"), Set.of("s2"), 3);
+        switchModifications(uriString, "v1b1", "disc1Variant", "v2b1", "v3b1", Set.of("s1"), Set.of("s2"), 4);
 
         // switches modifications on variant VARIANT_ID
-        switchModifications(uriString + "&variantId=" + NetworkCreation.VARIANT_ID, "break1Variant", "notFound", "disc1Variant", "break2Variant", Set.of("s1Variant"), Set.of("s2Variant"), 6);
+        switchModifications(uriString + "&variantId=" + NetworkCreation.VARIANT_ID, "break1Variant", "notFound", "disc1Variant", "break2Variant", Set.of("s1Variant"), Set.of("s2Variant"), 8);
+    }
+
+    @Test
+    public void testDeleteModification() {
+        var res = webTestClient.put().uri("/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID + "&open=true", TEST_NETWORK_ID, "v1b1")
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBodyList(EquipmenAttributeModificationInfos.class)
+            .returnResult().getResponseBody();
+        assertNotNull(res);
+        assertEquals(1, res.size());
+
+        assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID, false).size());
+        String deleteStrWrongGroup = "/v1/groups/" + UUID.randomUUID() + "/modifications/" + res.get(0).getUuid();
+        String deleteStr = "/v1/groups/" + TEST_GROUP_ID + "/modifications/" + res.get(0).getUuid();
+
+        webTestClient.delete().uri(deleteStrWrongGroup)
+            .exchange()
+            .expectStatus().isNotFound();
+
+        webTestClient.delete().uri(deleteStr)
+            .exchange()
+            .expectStatus().isOk();
+
+        assertEquals(0, modificationRepository.getModifications(TEST_GROUP_ID, false).size());
+
+        /* non existing modification */
+        webTestClient.delete().uri(deleteStr)
+            .exchange()
+            .expectStatus().isNotFound();
+
     }
 
     @Test
@@ -289,121 +313,128 @@ public class ModificationControllerTest {
             .expectStatus().isNotFound()
             .expectBody(String.class)
             .isEqualTo(new NetworkModificationException(NETWORK_NOT_FOUND, NOT_FOUND_NETWORK_ID.toString()).getMessage());
-
-        // variant not existing
-        webTestClient.put().uri(uriString + "&open=true" + "&variantId=" + VARIANT_NOT_FOUND_ID, TEST_NETWORK_ID, "v1b1")
-            .exchange()
-            .expectStatus().isNotFound()
-            .expectBody(String.class)
-            .isEqualTo(new NetworkModificationException(VARIANT_NOT_FOUND, VARIANT_NOT_FOUND_ID.toString()).getMessage());
     }
 
     @Test
-    public void testLine() {
+    public void testLineStatusModification() {
+        String uriString = "/v1/networks/{networkUuid}/lines/{lineId}/status?group=" + TEST_GROUP_ID;
+
+        // line lockout
+        webTestClient.put().uri(uriString, TEST_NETWORK_ID, "line2")
+            .bodyValue("lockout")
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBodyList(BranchStatusModificationInfos.class)
+            .value(modifications -> modifications.get(0),
+                MatcherBranchStatusModificationInfos.createMatcherBranchStatusModificationInfos("line2", BranchStatusModificationInfos.ActionType.LOCKOUT, Set.of("s1", "s2")));
+
+        // line switch on (already switched on)
+        webTestClient.put().uri(uriString, TEST_NETWORK_ID, "line2")
+            .bodyValue("switch_on")
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBodyList(BranchStatusModificationInfos.class)
+            .value(modifications -> modifications.get(0),
+                MatcherBranchStatusModificationInfos.createMatcherBranchStatusModificationInfos("line2", BranchStatusModificationInfos.ActionType.SWITCH_ON, Set.of()));
+
+        // line trip
+        webTestClient.put().uri(uriString, TEST_NETWORK_ID, "line2")
+            .bodyValue("trip")
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBodyList(BranchStatusModificationInfos.class)
+            .value(modifications -> modifications.get(0),
+                MatcherBranchStatusModificationInfos.createMatcherBranchStatusModificationInfos("line2", BranchStatusModificationInfos.ActionType.TRIP, Set.of("s1", "s2")));
+
+        // line energise on one end
+        webTestClient.put().uri(uriString, TEST_NETWORK_ID, "line2")
+            .bodyValue("energise_end_one")
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBodyList(BranchStatusModificationInfos.class)
+            .value(modifications -> modifications.get(0),
+                MatcherBranchStatusModificationInfos.createMatcherBranchStatusModificationInfos("line2", BranchStatusModificationInfos.ActionType.ENERGISE_END_ONE, Set.of("s2")));
+
+        // line energise on other end
+        webTestClient.put().uri(uriString, TEST_NETWORK_ID, "line2")
+            .bodyValue("energise_end_two")
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBodyList(BranchStatusModificationInfos.class)
+            .value(modifications -> modifications.get(0),
+                MatcherBranchStatusModificationInfos.createMatcherBranchStatusModificationInfos("line2", BranchStatusModificationInfos.ActionType.ENERGISE_END_TWO, Set.of("s1")));
+
+        testNetworkModificationsCount(TEST_GROUP_ID, 5);
+    }
+
+    @Test
+    public void testLineStatusModificationWithErrors() {
         String uriString = "/v1/networks/{networkUuid}/lines/{lineId}/status?group=" + TEST_GROUP_ID;
 
         // network not existing
         webTestClient.put().uri(uriString, NOT_FOUND_NETWORK_ID, "line2")
-                .bodyValue("lockout")
-                .exchange()
-                .expectStatus().isNotFound()
-                .expectBody(String.class)
-                .isEqualTo(new NetworkModificationException(NETWORK_NOT_FOUND, NOT_FOUND_NETWORK_ID.toString()).getMessage());
+            .bodyValue("lockout")
+            .exchange()
+            .expectStatus().isNotFound()
+            .expectBody(String.class)
+            .isEqualTo(new NetworkModificationException(NETWORK_NOT_FOUND, NOT_FOUND_NETWORK_ID.toString()).getMessage());
 
         // line not existing
         webTestClient.put().uri(uriString, TEST_NETWORK_ID, "notFound")
-                .bodyValue("lockout")
-                .exchange()
-                .expectStatus().isNotFound()
-                .expectBody(String.class)
-                .isEqualTo(new NetworkModificationException(LINE_NOT_FOUND, "notFound").getMessage());
+            .bodyValue("lockout")
+            .exchange()
+            .expectStatus().isNotFound()
+            .expectBody(String.class)
+            .isEqualTo(new NetworkModificationException(LINE_NOT_FOUND, "notFound").getMessage());
 
-        // line lockout
+        // modification action empty
         webTestClient.put().uri(uriString, TEST_NETWORK_ID, "line2")
-                .bodyValue("lockout")
-                .exchange()
-                .expectStatus().isOk()
-                .expectHeader().contentType(MediaType.APPLICATION_JSON)
-                .expectBodyList(EquipmenAttributeModificationInfos.class)
-                .value(modifications -> modifications.get(0),
-                        MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v1bl1", Set.of("s1"), "open", true))
-                .value(modifications -> modifications.get(1),
-                        MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v3bl1", Set.of("s2"), "open", true))
-                .value(modifications -> modifications.get(2),
-                        MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("line2", Set.of("s1", "s2"), "branchStatus", BranchStatus.Status.PLANNED_OUTAGE.name()));
+            .bodyValue("")
+            .exchange()
+            .expectStatus().isBadRequest()
+            .expectBody(String.class)
+            .isEqualTo(new NetworkModificationException(BRANCH_ACTION_TYPE_EMPTY).getMessage());
+
+        // modification action not existing
+        webTestClient.put().uri(uriString, TEST_NETWORK_ID, "line2")
+            .bodyValue("foo")
+            .exchange()
+            .expectStatus().isBadRequest()
+            .expectBody(String.class)
+            .isEqualTo(NetworkModificationException.createBranchActionTypeUnknown("foo").getMessage());
 
         webTestClient.put().uri(uriString, TEST_NETWORK_ID, "line3")
-                .bodyValue("lockout")
-                .exchange()
-                .expectStatus().is5xxServerError()
-                .expectBody(String.class)
-                .isEqualTo(new NetworkModificationException(MODIFICATION_ERROR, "Unable to disconnect both line ends").getMessage());
-
-        // line switch on
-        webTestClient.put().uri(uriString, TEST_NETWORK_ID, "line2")
-                .bodyValue("switchOn")
-                .exchange()
-                .expectStatus().isOk()
-                .expectHeader().contentType(MediaType.APPLICATION_JSON)
-                .expectBodyList(EquipmenAttributeModificationInfos.class)
-                .isEqualTo(List.of());
-
-        // line trip
-        webTestClient.put().uri(uriString, TEST_NETWORK_ID, "line2")
-                .bodyValue("trip")
-                .exchange()
-                .expectStatus().isOk()
-                .expectHeader().contentType(MediaType.APPLICATION_JSON)
-                .expectBodyList(EquipmenAttributeModificationInfos.class)
-                .value(modifications -> modifications.get(0),
-                        MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v1bl1", Set.of("s1"), "open", true))
-                .value(modifications -> modifications.get(1),
-                        MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v3bl1", Set.of("s2"), "open", true))
-                .value(modifications -> modifications.get(2),
-                        MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("line2", Set.of("s1", "s2"), "branchStatus", BranchStatus.Status.FORCED_OUTAGE.name()));
+            .bodyValue("lockout")
+            .exchange()
+            .expectStatus().isBadRequest()
+            .expectBody(String.class)
+            .isEqualTo(new NetworkModificationException(BRANCH_ACTION_ERROR, "Unable to disconnect both line ends").getMessage());
 
         webTestClient.put().uri(uriString, TEST_NETWORK_ID, "line3")
-                .bodyValue("trip")
-                .exchange()
-                .expectStatus().is5xxServerError()
-                .expectBody(String.class)
-                .isEqualTo(new NetworkModificationException(MODIFICATION_ERROR, "Unable to disconnect both line ends").getMessage());
-
-        // line energise on one end
-        webTestClient.put().uri(uriString, TEST_NETWORK_ID, "line2")
-                .bodyValue("energiseEndOne")
-                .exchange()
-                .expectStatus().isOk()
-                .expectHeader().contentType(MediaType.APPLICATION_JSON)
-                .expectBodyList(EquipmenAttributeModificationInfos.class)
-                .value(modifications -> modifications.get(0),
-                        MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v3bl1", Set.of("s2"), "open", true));
+            .bodyValue("trip")
+            .exchange()
+            .expectStatus().isBadRequest()
+            .expectBody(String.class)
+            .isEqualTo(new NetworkModificationException(BRANCH_ACTION_ERROR, "Unable to disconnect both line ends").getMessage());
 
         webTestClient.put().uri(uriString, TEST_NETWORK_ID, "line3")
-                .bodyValue("energiseEndOne")
-                .exchange()
-                .expectStatus().is5xxServerError()
-                .expectBody(String.class)
-                .isEqualTo(new NetworkModificationException(MODIFICATION_ERROR, "Unable to energise line end").getMessage());
-
-        // line energise on other end
-        webTestClient.put().uri(uriString, TEST_NETWORK_ID, "line2")
-                .bodyValue("energiseEndTwo")
-                .exchange()
-                .expectStatus().isOk()
-                .expectHeader().contentType(MediaType.APPLICATION_JSON)
-                .expectBodyList(EquipmenAttributeModificationInfos.class)
-                .value(modifications -> modifications.get(0),
-                        MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v1bl1", Set.of("s1"), "open", true));
+            .bodyValue("energise_end_one")
+            .exchange()
+            .expectStatus().isBadRequest()
+            .expectBody(String.class)
+            .isEqualTo(new NetworkModificationException(BRANCH_ACTION_ERROR, "Unable to energise line end").getMessage());
 
         webTestClient.put().uri(uriString, TEST_NETWORK_ID, "line3")
-                .bodyValue("energiseEndTwo")
-                .exchange()
-                .expectStatus().is5xxServerError()
-                .expectBody(String.class)
-                .isEqualTo(new NetworkModificationException(MODIFICATION_ERROR, "Unable to energise line end").getMessage());
-
-        testNetworkModificationsCount(TEST_GROUP_ID, 8);
+            .bodyValue("energise_end_two")
+            .exchange()
+            .expectStatus().isBadRequest()
+            .expectBody(String.class)
+            .isEqualTo(new NetworkModificationException(BRANCH_ACTION_ERROR, "Unable to energise line end").getMessage());
     }
 
     @Test
@@ -450,9 +481,9 @@ public class ModificationControllerTest {
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
-                .expectBodyList(EquipmenAttributeModificationInfos.class)
+                .expectBodyList(ModificationInfos.class)
                 .value(modifications -> modifications.get(0),
-                        MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("idGenerator", Set.of("s1"), "targetP", 12.0));
+                        MatcherModificationInfos.createMatcherModificationInfos(ModificationType.GROOVY_SCRIPT, Set.of("s1")));
 
         // apply groovy script with load type modification
         webTestClient.put().uri(uriString, TEST_NETWORK_ID)
@@ -460,9 +491,9 @@ public class ModificationControllerTest {
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
-                .expectBodyList(EquipmenAttributeModificationInfos.class)
+                .expectBodyList(ModificationInfos.class)
                 .value(modifications -> modifications.get(0),
-                        MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v1load", Set.of("s1"), "loadType", "FICTITIOUS"));
+                        MatcherModificationInfos.createMatcherModificationInfos(ModificationType.GROOVY_SCRIPT, Set.of("s1")));
 
         // apply groovy script with lcc converter station power factor modification
         webTestClient.put().uri(uriString, TEST_NETWORK_ID)
@@ -470,9 +501,9 @@ public class ModificationControllerTest {
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
-                .expectBodyList(EquipmenAttributeModificationInfos.class)
+                .expectBodyList(ModificationInfos.class)
                 .value(modifications -> modifications.get(0),
-                        MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v1lcc", Set.of("s1"), "powerFactor", 1.0));
+                        MatcherModificationInfos.createMatcherModificationInfos(ModificationType.GROOVY_SCRIPT, Set.of("s1")));
 
         // apply groovy script with line R modification
         webTestClient.put().uri(uriString, TEST_NETWORK_ID)
@@ -480,9 +511,9 @@ public class ModificationControllerTest {
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
-                .expectBodyList(EquipmenAttributeModificationInfos.class)
+                .expectBodyList(ModificationInfos.class)
                 .value(modifications -> modifications.get(0),
-                        MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("line1", Set.of("s1", "s2"), "r", 2.0));
+                        MatcherModificationInfos.createMatcherModificationInfos(ModificationType.GROOVY_SCRIPT, Set.of("s1", "s2")));
 
         // apply groovy script with two windings transformer ratio tap modification
         webTestClient.put().uri(uriString, TEST_NETWORK_ID)
@@ -490,9 +521,9 @@ public class ModificationControllerTest {
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
-                .expectBodyList(EquipmenAttributeModificationInfos.class)
+                .expectBodyList(ModificationInfos.class)
                 .value(modifications -> modifications.get(0),
-                        MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("trf1", Set.of("s1"), "ratioTapChanger.tapPosition", 2));
+                        MatcherModificationInfos.createMatcherModificationInfos(ModificationType.GROOVY_SCRIPT, Set.of("s1")));
 
         // apply groovy script with three windings transformer phase tap modification
         webTestClient.put().uri(uriString, TEST_NETWORK_ID)
@@ -500,9 +531,9 @@ public class ModificationControllerTest {
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
-                .expectBodyList(EquipmenAttributeModificationInfos.class)
+                .expectBodyList(ModificationInfos.class)
                 .value(modifications -> modifications.get(0),
-                        MatcheEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("trf6", Set.of("s1"), "phaseTapChanger1.tapPosition", 0));
+                        MatcherModificationInfos.createMatcherModificationInfos(ModificationType.GROOVY_SCRIPT, Set.of("s1")));
 
         testNetworkModificationsCount(TEST_GROUP_ID, 6);
     }
@@ -518,22 +549,22 @@ public class ModificationControllerTest {
                 .expectBody(String.class)
                 .isEqualTo(new NetworkModificationException(GROOVY_SCRIPT_ERROR, PowsyblException.class.getName()).getMessage());
 
-        assertEquals(0, modificationRepository.getModifications(TEST_GROUP_ID).size());
+        assertEquals(0, modificationRepository.getModifications(TEST_GROUP_ID, true).size());
     }
 
     @Test
     public void testMultipleModificationsWithError() {
         String uriString = "/v1/networks/{networkUuid}/groovy?group=" + TEST_GROUP_ID;
 
-        // apply groovy script with 2 modifications without error
+        // apply groovy script without error
         webTestClient.put().uri(uriString, TEST_NETWORK_ID)
                 .bodyValue("network.getGenerator('idGenerator').targetP=10\nnetwork.getGenerator('idGenerator').targetP=20\n")
                 .exchange()
                 .expectStatus().isOk();
 
-        assertEquals(2, modificationRepository.getModifications(TEST_GROUP_ID).size());
+        assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID, true).size());
 
-        // apply groovy script with 2 modifications with error ont the second
+        // apply groovy script with error ont the second
         webTestClient.put().uri(uriString, TEST_NETWORK_ID)
             .bodyValue("network.getGenerator('idGenerator').targetP=30\nnetwork.getGenerator('there is no generator').targetP=40\n")
             .exchange()
@@ -541,8 +572,8 @@ public class ModificationControllerTest {
             .expectBody(String.class)
             .isEqualTo(new NetworkModificationException(GROOVY_SCRIPT_ERROR, "Cannot set property 'targetP' on null object").getMessage());
 
-        // the last 2 modifications have not been saved
-        assertEquals(2, modificationRepository.getModifications(TEST_GROUP_ID).size());
+        // no modifications have been saved
+        assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID, true).size());
     }
 
     @Test
@@ -569,7 +600,8 @@ public class ModificationControllerTest {
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.LOAD_CREATION, "idLoad1", Set.of("s1")));
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 1);
+        assertNotNull(network.getLoad("idLoad1"));  // load was created
+        testNetworkModificationsCount(TEST_GROUP_ID, 1);  // new modification stored in the database
 
         // create load with errors
         webTestClient.put().uri(uriString, NOT_FOUND_NETWORK_ID)
@@ -616,6 +648,25 @@ public class ModificationControllerTest {
             .isEqualTo(new NetworkModificationException(CREATE_LOAD_ERROR, "Load 'idLoad1': p0 is invalid").getMessage());
 
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
+
+        // Test create load on not yet existing variant VARIANT_NOT_EXISTING_ID :
+        // Only the modification should be added in the database but the load cannot be created
+        uriString = "/v1/networks/{networkUuid}/loads?variantId=" + VARIANT_NOT_EXISTING_ID + "&group=" + TEST_GROUP_ID;
+        loadCreationInfos.setEquipmentId("idLoad3");
+        loadCreationInfos.setEquipmentName("nameLoad3");
+        loadCreationInfos.setVoltageLevelId("v2");
+        loadCreationInfos.setBusOrBusbarSectionId("1B");
+        List<EquipmenModificationInfos> modifications = webTestClient.put().uri(uriString, TEST_NETWORK_ID)
+            .body(BodyInserters.fromValue(loadCreationInfos))
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBodyList(EquipmenModificationInfos.class)
+            .returnResult().getResponseBody();
+
+        assertTrue(modifications.isEmpty());  // no modifications returned
+        assertNull(network.getLoad("idLoad3"));  // load was not created
+        testNetworkModificationsCount(TEST_GROUP_ID, 2);  // new modification stored in the database
     }
 
     @Test
@@ -685,6 +736,7 @@ public class ModificationControllerTest {
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.GENERATOR_CREATION, "idGenerator1", Set.of("s1")));
 
+        assertNotNull(network.getGenerator("idGenerator1"));  // generator was created
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
 
         // create generator with errors
@@ -732,6 +784,25 @@ public class ModificationControllerTest {
             .isEqualTo(new NetworkModificationException(CREATE_GENERATOR_ERROR, "Generator 'idGenerator1': invalid value (NaN) for minimum P").getMessage());
 
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
+
+        // Test create generator on not yet existing variant VARIANT_NOT_EXISTING_ID :
+        // Only the modification should be added in the database but the generator cannot be created
+        uriString = "/v1/networks/{networkUuid}/generators?variantId=" + VARIANT_NOT_EXISTING_ID + "&group=" + TEST_GROUP_ID;
+        generatorCreationInfos.setEquipmentId("idGenerator3");
+        generatorCreationInfos.setEquipmentName("nameGenerator3");
+        generatorCreationInfos.setVoltageLevelId("v2");
+        generatorCreationInfos.setBusOrBusbarSectionId("1B");
+        List<EquipmenModificationInfos> modifications = webTestClient.put().uri(uriString, TEST_NETWORK_ID)
+            .body(BodyInserters.fromValue(generatorCreationInfos))
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBodyList(EquipmenModificationInfos.class)
+            .returnResult().getResponseBody();
+
+        assertTrue(modifications.isEmpty());  // no modifications returned
+        assertNull(network.getGenerator("idGenerator3"));  // generator was not created
+        testNetworkModificationsCount(TEST_GROUP_ID, 2);  // new modification stored in the database
     }
 
     @Test
@@ -849,7 +920,25 @@ public class ModificationControllerTest {
                 .value(modifications -> modifications.get(0),
                         MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.TWO_WINDINGS_TRANSFORMER_CREATION, "id2wt1", Set.of("s1")));
 
+        assertNotNull(network.getTwoWindingsTransformer("id2wt1"));  // transformer was created
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
+
+        // Test create transformer on not yet existing variant VARIANT_NOT_EXISTING_ID :
+        // Only the modification should be added in the database but the transformer cannot be created
+        uriString = "/v1/networks/{networkUuid}/two-windings-transformer?variantId=" + VARIANT_NOT_EXISTING_ID + "&group=" + TEST_GROUP_ID;
+        twoWindingsTransformerCreationInfos.setEquipmentId("id2wt3");
+        twoWindingsTransformerCreationInfos.setEquipmentName("name2wt3");
+        List<EquipmenModificationInfos> modifications = webTestClient.put().uri(uriString, TEST_NETWORK_ID)
+            .body(BodyInserters.fromValue(twoWindingsTransformerCreationInfos))
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBodyList(EquipmenModificationInfos.class)
+            .returnResult().getResponseBody();
+
+        assertTrue(modifications.isEmpty());  // no modifications returned
+        assertNull(network.getTwoWindingsTransformer("id2wt3"));  // transformer was not created
+        testNetworkModificationsCount(TEST_GROUP_ID, 2);  // new modification stored in the database
     }
 
     @Test
@@ -897,7 +986,24 @@ public class ModificationControllerTest {
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "v1load", "LOAD", Set.of("s1")));
 
+        assertNull(network.getLoad("v1load"));  // load was removed
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
+
+        // Test delete load on not yet existing variant VARIANT_NOT_EXISTING_ID :
+        // Only the modification should be added in the database but the load cannot be deleted
+        uriString = "/v1/networks/{networkUuid}/equipments/type/{equipmentType}/id/{equipmentId}?variantId=" + VARIANT_NOT_EXISTING_ID + "&group=" + TEST_GROUP_ID;
+        List<EquipmentDeletionInfos> deletions = webTestClient.delete().uri(uriString, TEST_NETWORK_ID, "LOAD", "v3load")
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBodyList(EquipmentDeletionInfos.class)
+            .returnResult().getResponseBody();
+
+        assertTrue(deletions.isEmpty());  // no modifications returned
+        assertNotNull(network.getLoad("v3load"));  // load was not deleted
+        testNetworkModificationsCount(TEST_GROUP_ID, 2);  // new modification stored in the database
+
+        uriString = "/v1/networks/{networkUuid}/equipments/type/{equipmentType}/id/{equipmentId}?group=" + TEST_GROUP_ID;
 
         // delete equipment with errors
         webTestClient.delete().uri(uriString, NOT_FOUND_NETWORK_ID, "LOAD", "v1load")
@@ -912,7 +1018,7 @@ public class ModificationControllerTest {
             .expectBody(String.class)
             .isEqualTo(new NetworkModificationException(EQUIPMENT_NOT_FOUND, "Equipment with id=notFoundLoad not found or of bad type").getMessage());
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 1);
+        testNetworkModificationsCount(TEST_GROUP_ID, 2);
 
         // delete shunt compensator
         webTestClient.delete().uri(uriString, TEST_NETWORK_ID, "SHUNT_COMPENSATOR", "v2shunt")
@@ -923,7 +1029,8 @@ public class ModificationControllerTest {
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "v2shunt", "SHUNT_COMPENSATOR", Set.of("s1")));
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 2);
+        assertNull(network.getShuntCompensator("v2shunt"));  // shunt compensator was removed
+        testNetworkModificationsCount(TEST_GROUP_ID, 3);
 
         // delete generator
         webTestClient.delete().uri(uriString, TEST_NETWORK_ID, "GENERATOR", "idGenerator")
@@ -934,7 +1041,8 @@ public class ModificationControllerTest {
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "idGenerator", "GENERATOR", Set.of("s1")));
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 3);
+        assertNull(network.getGenerator("idGenerator"));  // generator was removed
+        testNetworkModificationsCount(TEST_GROUP_ID, 4);
 
         // delete line
         webTestClient.delete().uri(uriString, TEST_NETWORK_ID, "LINE", "line2")
@@ -945,7 +1053,8 @@ public class ModificationControllerTest {
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "line2", "LINE", Set.of("s1", "s2")));
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 4);
+        assertNull(network.getLine("line2"));  // line was removed
+        testNetworkModificationsCount(TEST_GROUP_ID, 5);
 
         // delete two windings transformer
         webTestClient.delete().uri(uriString, TEST_NETWORK_ID, "TWO_WINDINGS_TRANSFORMER", "trf1")
@@ -956,7 +1065,8 @@ public class ModificationControllerTest {
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "trf1", "TWO_WINDINGS_TRANSFORMER", Set.of("s1")));
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 5);
+        assertNull(network.getTwoWindingsTransformer("trf1"));  // two windings transformer was removed
+        testNetworkModificationsCount(TEST_GROUP_ID, 6);
 
         // delete three windings transformer
         webTestClient.delete().uri(uriString, TEST_NETWORK_ID, "THREE_WINDINGS_TRANSFORMER", "trf6")
@@ -967,7 +1077,8 @@ public class ModificationControllerTest {
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "trf6", "THREE_WINDINGS_TRANSFORMER", Set.of("s1")));
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 6);
+        assertNull(network.getThreeWindingsTransformer("trf6"));  // three windings transformer was removed
+        testNetworkModificationsCount(TEST_GROUP_ID, 7);
 
         // delete static var compensator
         webTestClient.delete().uri(uriString, TEST_NETWORK_ID, "STATIC_VAR_COMPENSATOR", "v3Compensator")
@@ -978,7 +1089,8 @@ public class ModificationControllerTest {
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "v3Compensator", "STATIC_VAR_COMPENSATOR", Set.of("s2")));
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 7);
+        assertNull(network.getStaticVarCompensator("v3Compensator"));  // static var compensator was removed
+        testNetworkModificationsCount(TEST_GROUP_ID, 8);
 
         // delete battery
         webTestClient.delete().uri(uriString, TEST_NETWORK_ID, "BATTERY", "v3Battery")
@@ -989,7 +1101,8 @@ public class ModificationControllerTest {
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "v3Battery", "BATTERY", Set.of("s2")));
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 8);
+        assertNull(network.getBattery("v3Battery"));  // battery was removed
+        testNetworkModificationsCount(TEST_GROUP_ID, 9);
 
         // delete dangling line
         webTestClient.delete().uri(uriString, TEST_NETWORK_ID, "DANGLING_LINE", "v2Dangling")
@@ -1000,7 +1113,8 @@ public class ModificationControllerTest {
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "v2Dangling", "DANGLING_LINE", Set.of("s1")));
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 9);
+        assertNull(network.getDanglingLine("v2Dangling"));  // dangling line was removed
+        testNetworkModificationsCount(TEST_GROUP_ID, 10);
 
         // delete hvdc line
         webTestClient.delete().uri(uriString, TEST_NETWORK_ID, "HVDC_LINE", "hvdcLine")
@@ -1011,7 +1125,8 @@ public class ModificationControllerTest {
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "hvdcLine", "HVDC_LINE", Set.of("s1")));
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 10);
+        assertNull(network.getHvdcLine("hvdcLine"));  // hvdc line was removed
+        testNetworkModificationsCount(TEST_GROUP_ID, 11);
 
         // delete vsc converter station
         webTestClient.delete().uri(uriString, TEST_NETWORK_ID_2, "HVDC_CONVERTER_STATION", "v2vsc")
@@ -1022,7 +1137,7 @@ public class ModificationControllerTest {
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "v2vsc", "HVDC_CONVERTER_STATION", Set.of("s1")));
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 11);
+        testNetworkModificationsCount(TEST_GROUP_ID, 12);
 
         // delete lcc converter station
         webTestClient.delete().uri(uriString, TEST_NETWORK_ID_2, "HVDC_CONVERTER_STATION", "v1lcc")
@@ -1033,7 +1148,45 @@ public class ModificationControllerTest {
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "v1lcc", "HVDC_CONVERTER_STATION", Set.of("s1")));
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 12);
+        testNetworkModificationsCount(TEST_GROUP_ID, 13);
+
+        // delete voltage level
+        webTestClient.delete().uri(uriString, TEST_NETWORK_ID, "VOLTAGE_LEVEL", "v5")
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBodyList(EquipmentDeletionInfos.class)
+            .value(modifications -> modifications.get(0),
+                MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "v5", "VOLTAGE_LEVEL", Set.of("s3")));
+        assertNull(network.getVoltageLevel("v5"));
+        testNetworkModificationsCount(TEST_GROUP_ID, 14);
+
+        // delete voltage level (fail because the vl is connected)
+        webTestClient.delete().uri(uriString, TEST_NETWORK_ID, "VOLTAGE_LEVEL", "v4")
+            .exchange()
+            .expectStatus().is5xxServerError()
+            .expectBody(String.class)
+            .value(exception -> exception, containsString("\"status\":500,\"error\":\"Internal Server Error\",\"message\":\"The voltage level 'v4' cannot be removed because of a remaining THREE_WINDINGS_TRANSFORMER"));
+        assertNotNull(network.getVoltageLevel("v4"));
+
+        // delete substation
+        webTestClient.delete().uri(uriString, TEST_NETWORK_ID, "SUBSTATION", "s3")
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBodyList(EquipmentDeletionInfos.class)
+            .value(modifications -> modifications.get(0),
+                MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "s3", "SUBSTATION", Set.of()));
+        assertNull(network.getSubstation("s3"));
+        testNetworkModificationsCount(TEST_GROUP_ID, 15);
+
+        // delete substation (fail because the substations is connected)
+        webTestClient.delete().uri(uriString, TEST_NETWORK_ID, "SUBSTATION", "s2")
+            .exchange()
+            .expectStatus().is5xxServerError()
+            .expectBody(String.class)
+            .value(exception -> exception, containsString("DELETE_EQUIPMENT_ERROR : The substation s2 is still connected to another substation"));
+        assertNotNull(network.getSubstation("s2"));
     }
 
     @Test
@@ -1058,8 +1211,6 @@ public class ModificationControllerTest {
             .busOrBusbarSectionId2("1A")
             .build();
 
-        assertEquals("LineCreationInfos(super=BranchCreationInfos(super=EquipmentCreationInfos(super=EquipmenModificationInfos(super=ModificationInfos(uuid=null, date=null, type=null), equipmentId=idLine4, substationIds=[]), equipmentName=nameLine4), seriesResistance=100.0, seriesReactance=100.0, voltageLevelId1=v1, voltageLevelId2=v2, busOrBusbarSectionId1=1.1, busOrBusbarSectionId2=1A, currentLimits1=null, currentLimits2=null), shuntConductance1=10.0, shuntSusceptance1=10.0, shuntConductance2=20.0, shuntSusceptance2=20.0)", lineCreationInfos.toString());
-
         webTestClient.put().uri(uriString, TEST_NETWORK_ID)
             .body(BodyInserters.fromValue(lineCreationInfos))
             .exchange()
@@ -1069,6 +1220,7 @@ public class ModificationControllerTest {
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.LINE_CREATION, "idLine4", Set.of("s1")));
 
+        assertNotNull(network.getLine("idLine4"));  // line was created
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
 
         // create line with errors
@@ -1126,6 +1278,23 @@ public class ModificationControllerTest {
         lineCreationInfos.setSeriesReactance(100.0);
 
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
+
+        // Test create line on not yet existing variant VARIANT_NOT_EXISTING_ID :
+        // Only the modification should be added in the database but the line cannot be created
+        uriString = "/v1/networks/{networkUuid}/lines?variantId=" + VARIANT_NOT_EXISTING_ID + "&group=" + TEST_GROUP_ID;
+        lineCreationInfos.setEquipmentId("idLine5");
+        lineCreationInfos.setEquipmentName("nameLine5");
+        List<EquipmenModificationInfos> modifications = webTestClient.put().uri(uriString, TEST_NETWORK_ID)
+            .body(BodyInserters.fromValue(lineCreationInfos))
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBodyList(EquipmenModificationInfos.class)
+            .returnResult().getResponseBody();
+
+        assertTrue(modifications.isEmpty());  // no modifications returned
+        assertNull(network.getLine("idLine5"));  // line was not created
+        testNetworkModificationsCount(TEST_GROUP_ID, 2);  // new modification stored in the database
     }
 
     @Test
@@ -1331,13 +1500,55 @@ public class ModificationControllerTest {
         testNetworkModificationsCount(TEST_GROUP_ID, 4);
     }
 
+    @Test
+    public void testCreateSubstation() {
+        String uriString = "/v1/networks/{networkUuid}/substations?group=" + TEST_GROUP_ID;
+
+        // create new substation
+        SubstationCreationInfos substationCreationInfos = SubstationCreationInfos.builder()
+                .equipmentId("SubstationId")
+                .equipmentName("SubstationName")
+                .substationCountry(Country.AF)
+                .build();
+        assertEquals("SubstationCreationInfos(super=EquipmentCreationInfos(super=EquipmenModificationInfos(super=ModificationInfos(uuid=null, date=null, type=null, substationIds=[]), equipmentId=SubstationId), equipmentName=SubstationName), substationCountry=AF)", substationCreationInfos.toString());
+
+        webTestClient.put().uri(uriString, TEST_NETWORK_ID)
+                .body(BodyInserters.fromValue(substationCreationInfos))
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBodyList(EquipmenModificationInfos.class)
+                .value(modifications -> modifications.get(0),
+                        MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.SUBSTATION_CREATION, "SubstationId", Set.of("SubstationId")));
+
+        testNetworkModificationsCount(TEST_GROUP_ID, 1);
+
+        // create substation with errors
+        webTestClient.put().uri(uriString, NOT_FOUND_NETWORK_ID)
+                .body(BodyInserters.fromValue(substationCreationInfos))
+                .exchange()
+                .expectStatus().isNotFound()
+                .expectBody(String.class)
+                .isEqualTo(new NetworkModificationException(NETWORK_NOT_FOUND, NOT_FOUND_NETWORK_ID.toString()).getMessage());
+
+        substationCreationInfos.setEquipmentId(null);
+        webTestClient.put().uri(uriString, TEST_NETWORK_ID)
+                .body(BodyInserters.fromValue(substationCreationInfos))
+                .exchange()
+                .expectStatus().is5xxServerError()
+                .expectBody(String.class)
+                .isEqualTo(new NetworkModificationException(CREATE_SUBSTATION_ERROR, "Substation id is not set").getMessage());
+
+        testNetworkModificationsCount(TEST_GROUP_ID, 1);
+    }
+
     private void testNetworkModificationsCount(UUID groupUuid, int actualSize) {
         // get all modifications for the given group of a network
-        assertEquals(actualSize, Objects.requireNonNull(webTestClient.get().uri("/v1/groups/{groupUuid}", groupUuid)
+        assertEquals(actualSize, Objects.requireNonNull(webTestClient.get().uri("/v1/groups/{groupUuid}/modifications/metadata", groupUuid)
             .exchange()
             .expectStatus().isOk()
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
-            .expectBodyList(EquipmenAttributeModificationInfos.class)
+            .expectBodyList(ModificationInfos.class)
             .returnResult().getResponseBody()).size());
     }
 }
