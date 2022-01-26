@@ -48,13 +48,17 @@ public class BranchCreationEntity extends EquipmentCreationEntity {
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JoinColumn(name  =  "current_limits_id1",
         referencedColumnName  =  "id",
-        foreignKey = @ForeignKey(), nullable = true)
+        foreignKey = @ForeignKey(
+            name = "current_limits_id1_fk"
+        ), nullable = true)
     private CurrentLimitsEntity currentLimits1;
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JoinColumn(name  =  "current_limits_id2",
         referencedColumnName  =  "id",
-        foreignKey = @ForeignKey(), nullable = true)
+        foreignKey = @ForeignKey(
+            name = "current_limits_id2_fk"
+        ), nullable = true)
     private CurrentLimitsEntity currentLimits2;
 
     protected BranchCreationEntity(ModificationType modificationType,
