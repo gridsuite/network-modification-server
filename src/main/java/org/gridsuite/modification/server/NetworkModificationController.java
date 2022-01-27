@@ -163,10 +163,20 @@ public class NetworkModificationController {
     @Operation(summary = "create a substation in the network")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The substation has been created")})
     public ResponseEntity<Flux<EquipmenModificationInfos>> createSubstation(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
-                                                                                        @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
-                                                                                        @RequestParam(value = "group", required = false) UUID groupUuid,
-                                                                                        @RequestBody SubstationCreationInfos substationCreationInfos) {
+        @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
+        @RequestParam(value = "group", required = false) UUID groupUuid,
+        @RequestBody SubstationCreationInfos substationCreationInfos) {
         return ResponseEntity.ok().body(networkModificationService.createSubstation(networkUuid, variantId, groupUuid, substationCreationInfos));
+    }
+
+    @PutMapping(value = "/networks/{networkUuid}/voltage-levels", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "create a voltage level in the network")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The voltage level has been created")})
+    public ResponseEntity<Flux<EquipmenModificationInfos>> createVoltageLevel(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
+        @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
+        @RequestParam(value = "group", required = false) UUID groupUuid,
+        @RequestBody VoltageLevelCreationInfos voltageLevelCreationInfos) {
+        return ResponseEntity.ok().body(networkModificationService.createVoltageLevel(networkUuid, variantId, groupUuid, voltageLevelCreationInfos));
     }
 
     @DeleteMapping(value = "/networks/{networkUuid}/equipments/type/{equipmentType}/id/{equipmentId}")

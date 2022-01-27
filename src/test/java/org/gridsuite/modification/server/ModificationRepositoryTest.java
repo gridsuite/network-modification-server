@@ -9,6 +9,7 @@ package org.gridsuite.modification.server;
 import com.powsybl.iidm.network.Country;
 import com.powsybl.iidm.network.EnergySource;
 import com.powsybl.iidm.network.LoadType;
+import com.powsybl.iidm.network.SwitchKind;
 import com.vladmihalcea.sql.SQLStatementCountValidator;
 import org.gridsuite.modification.server.dto.BranchStatusModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
@@ -28,6 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
@@ -456,6 +458,40 @@ public class ModificationRepositoryTest {
         SQLStatementCountValidator.reset();
         modificationRepository.deleteModificationGroup(TEST_GROUP_ID);
         assertRequestsCount(2, 0, 0, 3);
+
+        assertThrows(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage(),
+            NetworkModificationException.class, () -> modificationRepository.getModifications(TEST_GROUP_ID, false)
+        );
+    }
+
+    @Test
+    public void testVoltageLevelCreation() {
+        List<BusbarSectionCreationEmbeddable> bbses = new ArrayList<>();
+        bbses.add(new BusbarSectionCreationEmbeddable("bbs.nw", "NW", 1, 1));
+        bbses.add(new BusbarSectionCreationEmbeddable("bbs.ne", "NE", 1, 2));
+        bbses.add(new BusbarSectionCreationEmbeddable("bbs.sw", "SW", 2, 1));
+
+        List<BusbarConnectionCreationEmbeddable> cnxes = new ArrayList<>();
+        cnxes.add(new BusbarConnectionCreationEmbeddable("bbs.nw", "bbs.ne", SwitchKind.BREAKER));
+        cnxes.add(new BusbarConnectionCreationEmbeddable("bbs.nw", "bbs.sw", SwitchKind.DISCONNECTOR));
+        cnxes.add(new BusbarConnectionCreationEmbeddable("bbs.ne", "bbs.ne", SwitchKind.DISCONNECTOR));
+
+        EquipmentCreationEntity createVoltLvlEntity1 = modificationRepository.createVoltageLevelEntity("idVL1", "VLName", 379.0, "s1", bbses, cnxes);
+
+        modificationRepository.saveModifications(TEST_GROUP_ID, List.of(createVoltLvlEntity1));
+        List<ModificationInfos> modificationInfos = modificationRepository.getModifications(TEST_GROUP_ID, false);
+        assertEquals(1, modificationInfos.size());
+
+        assertThat(modificationRepository.getVoltageLevelCreationModification(TEST_GROUP_ID, modificationInfos.get(0).getUuid()),
+            MatcherVoltageLevelCreationInfos.createMatcherVoltageLevelCreationInfos(((VoltageLevelCreationEntity) createVoltLvlEntity1).toVoltageLevelCreationInfos()));
+
+        SQLStatementCountValidator.reset();
+        modificationRepository.deleteModifications(TEST_GROUP_ID, Set.of(createVoltLvlEntity1.getId()));
+        assertRequestsCount(1, 0, 0, 4);
+
+        SQLStatementCountValidator.reset();
+        modificationRepository.deleteModificationGroup(TEST_GROUP_ID);
+        assertRequestsCount(2, 0, 0, 1);
 
         assertThrows(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage(),
             NetworkModificationException.class, () -> modificationRepository.getModifications(TEST_GROUP_ID, false)
