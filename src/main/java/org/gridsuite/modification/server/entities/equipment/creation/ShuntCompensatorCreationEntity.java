@@ -17,7 +17,6 @@ import javax.persistence.Entity;
 import javax.persistence.ForeignKey;
 import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
-import java.util.Set;
 
 /**
  * @author Jacques Borsenberger <jacques.borsenberger at rte-france.com>
