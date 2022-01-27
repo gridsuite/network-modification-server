@@ -10,6 +10,8 @@ import com.powsybl.iidm.network.*;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.creation.BusbarConnectionCreationEmbeddable;
+import org.gridsuite.modification.server.entities.equipment.creation.BusbarSectionCreationEmbeddable;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 
 import java.util.*;
@@ -108,7 +110,7 @@ public class NetworkStoreListener implements NetworkListener {
                 infos.setSubstationIds(substationsIds);
                 return infos;
             })
-            .collect(Collectors.toList());
+                .collect(Collectors.toList());
         modifications.clear();
         return modificationInfos;
     }
@@ -190,19 +192,19 @@ public class NetworkStoreListener implements NetworkListener {
 
     public void storeTwoWindingsTransformerCreation(TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
         modifications.add(this.modificationRepository.createTwoWindingsTransformerEntity(twoWindingsTransformerCreationInfos.getEquipmentId(),
-            twoWindingsTransformerCreationInfos.getEquipmentName(),
-            twoWindingsTransformerCreationInfos.getSeriesResistance(),
-            twoWindingsTransformerCreationInfos.getSeriesReactance(),
-            twoWindingsTransformerCreationInfos.getMagnetizingConductance(),
-            twoWindingsTransformerCreationInfos.getMagnetizingSusceptance(),
-            twoWindingsTransformerCreationInfos.getRatedVoltage1(),
-            twoWindingsTransformerCreationInfos.getRatedVoltage2(),
-            twoWindingsTransformerCreationInfos.getVoltageLevelId1(),
-            twoWindingsTransformerCreationInfos.getBusOrBusbarSectionId1(),
-            twoWindingsTransformerCreationInfos.getVoltageLevelId2(),
-            twoWindingsTransformerCreationInfos.getBusOrBusbarSectionId2(),
-            twoWindingsTransformerCreationInfos.getCurrentLimits1() != null ? twoWindingsTransformerCreationInfos.getCurrentLimits1().getPermanentLimit() : null,
-            twoWindingsTransformerCreationInfos.getCurrentLimits2() != null ? twoWindingsTransformerCreationInfos.getCurrentLimits2().getPermanentLimit() : null)
+                twoWindingsTransformerCreationInfos.getEquipmentName(),
+                twoWindingsTransformerCreationInfos.getSeriesResistance(),
+                twoWindingsTransformerCreationInfos.getSeriesReactance(),
+                twoWindingsTransformerCreationInfos.getMagnetizingConductance(),
+                twoWindingsTransformerCreationInfos.getMagnetizingSusceptance(),
+                twoWindingsTransformerCreationInfos.getRatedVoltage1(),
+                twoWindingsTransformerCreationInfos.getRatedVoltage2(),
+                twoWindingsTransformerCreationInfos.getVoltageLevelId1(),
+                twoWindingsTransformerCreationInfos.getBusOrBusbarSectionId1(),
+                twoWindingsTransformerCreationInfos.getVoltageLevelId2(),
+                twoWindingsTransformerCreationInfos.getBusOrBusbarSectionId2(),
+                twoWindingsTransformerCreationInfos.getCurrentLimits1() != null ? twoWindingsTransformerCreationInfos.getCurrentLimits1().getPermanentLimit() : null,
+                twoWindingsTransformerCreationInfos.getCurrentLimits2() != null ? twoWindingsTransformerCreationInfos.getCurrentLimits2().getPermanentLimit() : null)
         );
     }
 
@@ -216,9 +218,26 @@ public class NetworkStoreListener implements NetworkListener {
 
     public void storeSubstationCreation(SubstationCreationInfos substationCreationInfos) {
         modifications.add(this.modificationRepository.createSubstationEntity(
-            substationCreationInfos.getEquipmentId(),
-            substationCreationInfos.getEquipmentName(),
-            substationCreationInfos.getSubstationCountry()
+                substationCreationInfos.getEquipmentId(),
+                substationCreationInfos.getEquipmentName(),
+                substationCreationInfos.getSubstationCountry()
+        ));
+    }
+
+    public void storeVoltageLevelCreation(VoltageLevelCreationInfos voltageLevelCreationInfos) {
+        List<BusbarSectionCreationEmbeddable> bbsEmbeddables = voltageLevelCreationInfos.getBusbarSections().stream().map(bbsi -> {
+            return new BusbarSectionCreationEmbeddable(bbsi.getId(), bbsi.getName(), bbsi.getVertPos(), bbsi.getHorizPos());
+        }).collect(Collectors.toList());
+        List<BusbarConnectionCreationEmbeddable> cnxEmbeddables = voltageLevelCreationInfos.getBusbarConnections().stream().map(cnxi -> {
+            return new BusbarConnectionCreationEmbeddable(cnxi.getFromBBS(), cnxi.getToBBS(), cnxi.getSwitchKind());
+        }).collect(Collectors.toList());
+        modifications.add(this.modificationRepository.createVoltageLevelEntity(
+            voltageLevelCreationInfos.getEquipmentId(),
+            voltageLevelCreationInfos.getEquipmentName(),
+            voltageLevelCreationInfos.getNominalVoltage(),
+            voltageLevelCreationInfos.getSubstationId(),
+            bbsEmbeddables,
+            cnxEmbeddables
         ));
     }
 
