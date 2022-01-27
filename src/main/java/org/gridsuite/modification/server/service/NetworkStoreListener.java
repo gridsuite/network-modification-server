@@ -206,6 +206,10 @@ public class NetworkStoreListener implements NetworkListener {
         );
     }
 
+    public void storeShuntCompensatorCreation(ShuntCompensatorCreationInfos shuntCompensatorCreationInfos) {
+        modifications.add(this.modificationRepository.createShuntCompensatorEntity(shuntCompensatorCreationInfos));
+    }
+
     public void storeGroovyScriptModification(String script) {
         modifications.add(this.modificationRepository.createGroovyScriptModificationEntity(script));
     }
@@ -265,7 +269,4 @@ public class NetworkStoreListener implements NetworkListener {
         equipmentInfosService.delete(equipmentId, networkUuid);
     }
 
-    public void storeShuntCompensatorCreation(ShuntCompensatorCreationInfos shuntCompensatorCreationInfos) {
-        modifications.add(this.modificationRepository.createShuntCompensatorEntity(shuntCompensatorCreationInfos));
-    }
 }

@@ -58,11 +58,6 @@ public class ShuntCompensatorCreationEntity extends InjectionCreationEntity {
         return toShuntCompensatorCreationInfosBuilder().build();
     }
 
-    @Override
-    public ShuntCompensatorCreationInfos toEquipmentModificationInfos(Set<String> uuids) {
-        return toShuntCompensatorCreationInfosBuilder().substationIds(uuids).build();
-    }
-
     private ShuntCompensatorCreationInfos.ShuntCompensatorCreationInfosBuilder<?, ?> toShuntCompensatorCreationInfosBuilder() {
         return ShuntCompensatorCreationInfos
             .builder()
