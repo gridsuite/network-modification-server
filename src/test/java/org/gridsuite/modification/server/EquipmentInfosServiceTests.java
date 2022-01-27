@@ -8,12 +8,12 @@ package org.gridsuite.modification.server;
 
 import com.google.common.collect.Iterables;
 import com.powsybl.iidm.network.Identifiable;
+import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
 import com.powsybl.network.store.iidm.impl.NetworkImpl;
 import nl.jqno.equalsverifier.EqualsVerifier;
 import org.gridsuite.modification.server.dto.EquipmentInfos;
-import org.gridsuite.modification.server.dto.EquipmentType;
 import org.gridsuite.modification.server.dto.VoltageLevelInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -46,20 +46,20 @@ public class EquipmentInfosServiceTests {
         EqualsVerifier.simple().forClass(EquipmentInfos.class).verify();
         EqualsVerifier.simple().forClass(VoltageLevelInfos.class).verify();
 
-        EquipmentInfos equipmentInfos = EquipmentInfos.builder().networkUuid(NETWORK_UUID).id("id1").name("name1").type(EquipmentType.LOAD.name()).voltageLevels(Set.of(VoltageLevelInfos.builder().id("vl1").name("vl1").build())).build();
+        EquipmentInfos equipmentInfos = EquipmentInfos.builder().networkUuid(NETWORK_UUID).id("id1").name("name1").type(IdentifiableType.LOAD.name()).voltageLevels(Set.of(VoltageLevelInfos.builder().id("vl1").name("vl1").build())).build();
         assertEquals(equipmentInfosService.add(equipmentInfos), equipmentInfos);
 
         equipmentInfosService.delete(equipmentInfos.getId(), NETWORK_UUID);
         assertEquals(0, Iterables.size(equipmentInfosService.findAll(NETWORK_UUID)));
 
         Set<String> ids = new HashSet<>();
-        addEquipmentInfos(ids, EquipmentInfos.builder().networkUuid(NETWORK_UUID).id("id1").name("name1").type(EquipmentType.LOAD.name()).voltageLevels(Set.of(VoltageLevelInfos.builder().id("vl1").name("vl1").build())).build());
-        addEquipmentInfos(ids, EquipmentInfos.builder().networkUuid(NETWORK_UUID).id("id2").name("name2").type(EquipmentType.GENERATOR.name()).voltageLevels(Set.of(VoltageLevelInfos.builder().id("vl2").name("vl2").build())).build());
-        addEquipmentInfos(ids, EquipmentInfos.builder().networkUuid(NETWORK_UUID).id("id3").name("name3").type(EquipmentType.BREAKER.name()).voltageLevels(Set.of(VoltageLevelInfos.builder().id("vl3").name("vl3").build())).build());
-        addEquipmentInfos(ids, EquipmentInfos.builder().networkUuid(NETWORK_UUID).id("id4").name("name4").type(EquipmentType.HVDC_LINE.name()).voltageLevels(Set.of(VoltageLevelInfos.builder().id("vl4").name("vl4").build())).build());
-        addEquipmentInfos(ids, EquipmentInfos.builder().networkUuid(NETWORK_UUID).id("id5").name("name5").type(EquipmentType.SUBSTATION.name()).voltageLevels(Set.of(VoltageLevelInfos.builder().id("vl5").name("vl5").build())).build());
-        addEquipmentInfos(ids, EquipmentInfos.builder().networkUuid(NETWORK_UUID).id("id6").name("name6").type(EquipmentType.VOLTAGE_LEVEL.name()).voltageLevels(Set.of(VoltageLevelInfos.builder().id("vl6").name("vl6").build())).build());
-        addEquipmentInfos(ids, EquipmentInfos.builder().networkUuid(NETWORK_UUID).id("id7").name("name6").type(EquipmentType.CONFIGURED_BUS.name()).voltageLevels(Set.of(VoltageLevelInfos.builder().id("vl7").name("vl7").build())).build());
+        addEquipmentInfos(ids, EquipmentInfos.builder().networkUuid(NETWORK_UUID).id("id1").name("name1").type(IdentifiableType.LOAD.name()).voltageLevels(Set.of(VoltageLevelInfos.builder().id("vl1").name("vl1").build())).build());
+        addEquipmentInfos(ids, EquipmentInfos.builder().networkUuid(NETWORK_UUID).id("id2").name("name2").type(IdentifiableType.GENERATOR.name()).voltageLevels(Set.of(VoltageLevelInfos.builder().id("vl2").name("vl2").build())).build());
+        addEquipmentInfos(ids, EquipmentInfos.builder().networkUuid(NETWORK_UUID).id("id3").name("name3").type(IdentifiableType.SWITCH.name()).voltageLevels(Set.of(VoltageLevelInfos.builder().id("vl3").name("vl3").build())).build());
+        addEquipmentInfos(ids, EquipmentInfos.builder().networkUuid(NETWORK_UUID).id("id4").name("name4").type(IdentifiableType.HVDC_LINE.name()).voltageLevels(Set.of(VoltageLevelInfos.builder().id("vl4").name("vl4").build())).build());
+        addEquipmentInfos(ids, EquipmentInfos.builder().networkUuid(NETWORK_UUID).id("id5").name("name5").type(IdentifiableType.SUBSTATION.name()).voltageLevels(Set.of(VoltageLevelInfos.builder().id("vl5").name("vl5").build())).build());
+        addEquipmentInfos(ids, EquipmentInfos.builder().networkUuid(NETWORK_UUID).id("id6").name("name6").type(IdentifiableType.VOLTAGE_LEVEL.name()).voltageLevels(Set.of(VoltageLevelInfos.builder().id("vl6").name("vl6").build())).build());
+        addEquipmentInfos(ids, EquipmentInfos.builder().networkUuid(NETWORK_UUID).id("id7").name("name6").type(IdentifiableType.BUS.name()).voltageLevels(Set.of(VoltageLevelInfos.builder().id("vl7").name("vl7").build())).build());
         assertEquals(7, Iterables.size(equipmentInfosService.findAll(NETWORK_UUID)));
 
         ids.forEach(id -> equipmentInfosService.delete(id, NETWORK_UUID));
@@ -68,26 +68,6 @@ public class EquipmentInfosServiceTests {
 
     private void addEquipmentInfos(Set<String> ids, EquipmentInfos equipmentInfos) {
         ids.add(equipmentInfosService.add(equipmentInfos).getId());
-    }
-
-    @Test
-    public void testEquipmentType() {
-        Network network = NetworkCreation.create(NETWORK_UUID, true);
-
-        assertEquals(EquipmentType.SUBSTATION, EquipmentType.getType(network.getSubstation("s1")));
-        assertEquals(EquipmentType.VOLTAGE_LEVEL, EquipmentType.getType(network.getVoltageLevel("v1")));
-        assertEquals(EquipmentType.BREAKER, EquipmentType.getType(network.getSwitch("v1b1")));
-        assertEquals(EquipmentType.LOAD, EquipmentType.getType(network.getLoad("v1load")));
-        assertEquals(EquipmentType.HVDC_LINE, EquipmentType.getType(network.getHvdcLine("hvdcLine")));
-        assertEquals(EquipmentType.LINE, EquipmentType.getType(network.getLine("line1")));
-        assertEquals(EquipmentType.TWO_WINDINGS_TRANSFORMER, EquipmentType.getType(network.getTwoWindingsTransformer("trf1")));
-        assertEquals(EquipmentType.THREE_WINDINGS_TRANSFORMER, EquipmentType.getType(network.getThreeWindingsTransformer("trf6")));
-
-        network = NetworkCreation.createBusBreaker(NETWORK_UUID);
-        assertEquals(EquipmentType.SUBSTATION, EquipmentType.getType(network.getSubstation("s1")));
-        assertEquals(EquipmentType.VOLTAGE_LEVEL, EquipmentType.getType(network.getVoltageLevel("v1")));
-        assertEquals(EquipmentType.CONFIGURED_BUS, EquipmentType.getType(network.getBusBreakerView().getBus("bus1")));
-        assertEquals(EquipmentType.GENERATOR, EquipmentType.getType(network.getGenerator("idGenerator1")));
     }
 
     @Test
@@ -112,10 +92,8 @@ public class EquipmentInfosServiceTests {
     @Test
     public void testBadType() {
         Identifiable<Network> network = new NetworkFactoryImpl().createNetwork("test", "test");
-        String errorMessage = assertThrows(NetworkModificationException.class, () -> EquipmentType.getType(network)).getMessage();
-        assertTrue(errorMessage.contains(String.format("The equipment type : %s is unknown", NetworkImpl.class.getSimpleName())));
 
-        errorMessage = assertThrows(NetworkModificationException.class, () -> EquipmentInfos.getVoltageLevels(network)).getMessage();
+        String errorMessage = assertThrows(NetworkModificationException.class, () -> EquipmentInfos.getVoltageLevels(network)).getMessage();
         assertTrue(errorMessage.contains(String.format("The equipment type : %s is unknown", NetworkImpl.class.getSimpleName())));
     }
 }
