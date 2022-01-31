@@ -22,6 +22,7 @@ import java.util.stream.StreamSupport;
  * A class to implement elasticsearch indexing
  *
  * @author Slimane Amar <slimane.amar at rte-france.com>
+ * @author Nicolas Noir <nicolas.noir at rte-france.com>
  */
 public class EquipmentInfosServiceImpl implements EquipmentInfosService {
     private final EquipmentInfosRepository equipmentInfosRepository;
