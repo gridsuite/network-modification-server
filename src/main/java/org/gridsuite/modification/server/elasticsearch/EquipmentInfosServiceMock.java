@@ -63,12 +63,12 @@ public class EquipmentInfosServiceMock implements EquipmentInfosService {
     }
 
     @Override
-    public Iterable<EquipmentInfos> findAllEquipmentInfos(@NonNull UUID networkUuid) {
+    public List<EquipmentInfos> findAllEquipmentInfos(@NonNull UUID networkUuid) {
         return Collections.emptyList();
     }
 
     @Override
-    public Iterable<TombstonedEquipmentInfos> findAllTombstonedEquipmentInfos(UUID networkUuid) {
+    public List<TombstonedEquipmentInfos> findAllTombstonedEquipmentInfos(UUID networkUuid) {
         return Collections.emptyList();
     }
 }

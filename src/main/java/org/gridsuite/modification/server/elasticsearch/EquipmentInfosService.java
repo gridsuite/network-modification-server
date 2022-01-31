@@ -38,7 +38,7 @@ public interface EquipmentInfosService {
 
     boolean existEquipmentInfos(String equipmentId, UUID networkUuid, String variantId);
 
-    Iterable<EquipmentInfos> findAllEquipmentInfos(@NonNull UUID networkUuid); // Only for tests
+    List<EquipmentInfos> findAllEquipmentInfos(@NonNull UUID networkUuid); // Only for tests
 
-    Iterable<TombstonedEquipmentInfos> findAllTombstonedEquipmentInfos(@NonNull UUID networkUuid); // Only for tests
+    List<TombstonedEquipmentInfos> findAllTombstonedEquipmentInfos(@NonNull UUID networkUuid); // Only for tests
 }

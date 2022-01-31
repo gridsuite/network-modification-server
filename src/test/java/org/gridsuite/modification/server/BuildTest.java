@@ -47,7 +47,6 @@ import org.springframework.web.reactive.config.EnableWebFlux;
 
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -238,13 +237,13 @@ public class BuildTest {
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
         assertEquals("", new String(resultMessage.getPayload()));
 
-        List<EquipmentInfos> eqVariant1 = StreamSupport.stream(equipmentInfosService.findAllEquipmentInfos(TEST_NETWORK_ID).spliterator(), false).filter(eq -> eq.getVariantId().equals(NetworkCreation.VARIANT_ID)).collect(Collectors.toList());
-        List<EquipmentInfos> eqVariant2 = StreamSupport.stream(equipmentInfosService.findAllEquipmentInfos(TEST_NETWORK_ID).spliterator(), false).filter(eq -> eq.getVariantId().equals(VARIANT_ID_2)).collect(Collectors.toList());
+        List<EquipmentInfos> eqVariant1 = equipmentInfosService.findAllEquipmentInfos(TEST_NETWORK_ID).stream().filter(eq -> eq.getVariantId().equals(NetworkCreation.VARIANT_ID)).collect(Collectors.toList());
+        List<EquipmentInfos> eqVariant2 = equipmentInfosService.findAllEquipmentInfos(TEST_NETWORK_ID).stream().filter(eq -> eq.getVariantId().equals(VARIANT_ID_2)).collect(Collectors.toList());
         assertTrue(eqVariant2.size() > 0);
         assertEquals(eqVariant1.size(), eqVariant2.size());
 
-        List<TombstonedEquipmentInfos> tbseqVariant1 = StreamSupport.stream(equipmentInfosService.findAllTombstonedEquipmentInfos(TEST_NETWORK_ID).spliterator(), false).filter(eq -> eq.getVariantId().equals(NetworkCreation.VARIANT_ID)).collect(Collectors.toList());
-        List<TombstonedEquipmentInfos> tbseqVariant2 = StreamSupport.stream(equipmentInfosService.findAllTombstonedEquipmentInfos(TEST_NETWORK_ID).spliterator(), false).filter(eq -> eq.getVariantId().equals(VARIANT_ID_2)).collect(Collectors.toList());
+        List<TombstonedEquipmentInfos> tbseqVariant1 = equipmentInfosService.findAllTombstonedEquipmentInfos(TEST_NETWORK_ID).stream().filter(eq -> eq.getVariantId().equals(NetworkCreation.VARIANT_ID)).collect(Collectors.toList());
+        List<TombstonedEquipmentInfos> tbseqVariant2 = equipmentInfosService.findAllTombstonedEquipmentInfos(TEST_NETWORK_ID).stream().filter(eq -> eq.getVariantId().equals(VARIANT_ID_2)).collect(Collectors.toList());
         // v2shunt was deleted from initial variant => created as TombstonedEquipmentInfos in ElasticSearch
         assertEquals(1, tbseqVariant1.size());
         assertEquals(tbseqVariant1.size(), tbseqVariant2.size());
