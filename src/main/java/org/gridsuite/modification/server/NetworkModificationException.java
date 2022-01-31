@@ -33,6 +33,7 @@ public class NetworkModificationException extends RuntimeException {
         BUSBAR_SECTION_NOT_FOUND(HttpStatus.NOT_FOUND),
         BUS_NOT_FOUND(HttpStatus.NOT_FOUND),
         CREATE_GENERATOR_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
+        CREATE_SHUNT_COMPENSATOR_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         DELETE_EQUIPMENT_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         EQUIPMENT_NOT_FOUND(HttpStatus.NOT_FOUND),
         CREATE_LINE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),

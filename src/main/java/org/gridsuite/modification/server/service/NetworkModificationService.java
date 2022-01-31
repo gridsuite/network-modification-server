@@ -1403,4 +1403,77 @@ public class NetworkModificationService {
             }
         });
     }
+
+    private Mono<Void> assertShuntCompensatorCreationInfosNotEmpty(ShuntCompensatorCreationInfos shuntCompensatorCreationInfos) {
+        if (shuntCompensatorCreationInfos == null) {
+            return Mono.error(new NetworkModificationException(CREATE_SHUNT_COMPENSATOR_ERROR, "Missing required attributes to create the shunt Compensator"));
+        }
+        return Mono.empty();
+    }
+
+    private void createShuntCompensator(VoltageLevel voltageLevel, ShuntCompensatorCreationInfos shuntCompensatorInfos, boolean isNodeBreaker) {
+        // creating the shunt compensator
+        var shunt = voltageLevel.newShuntCompensator()
+            .setId(shuntCompensatorInfos.getEquipmentId())
+            .setName(shuntCompensatorInfos.getEquipmentName())
+            .setSectionCount(shuntCompensatorInfos.getCurrentNumberOfSections());
+
+        /* connect it !*/
+        if (isNodeBreaker) {
+            // create cell switches
+            int nodeNum = createNodeBreakerCellSwitches(voltageLevel, shuntCompensatorInfos.getBusOrBusbarSectionId(),
+                shuntCompensatorInfos.getEquipmentId(),
+                shuntCompensatorInfos.getEquipmentName());
+            shunt.setNode(nodeNum);
+        } else {
+            Bus bus = getBusBreakerBus(voltageLevel, shuntCompensatorInfos.getBusOrBusbarSectionId());
+            shunt.setBus(bus.getId())
+                 .setConnectableBus(bus.getId());
+        }
+
+        /* when we create non linear shunt, this is where we branch ;) */
+        shunt.newLinearModel()
+            .setBPerSection(shuntCompensatorInfos.getSusceptancePerSection())
+            .setMaximumSectionCount(shuntCompensatorInfos.getMaximumNumberOfSections()).add();
+
+        shunt.add();
+    }
+
+    private List<EquipmenModificationInfos> execCreateShuntCompensator(NetworkStoreListener listener,
+                                                                       ShuntCompensatorCreationInfos shuntCompensatorCreationInfos,
+                                                                       ReporterModel reporter,
+                                                                       Reporter subReporter) {
+        Network network = listener.getNetwork();
+        UUID networkUuid = listener.getNetworkUuid();
+
+        return doAction(listener, () -> {
+            if (listener.isApplyModifications()) {
+                // create the shunt compensator in the network
+                VoltageLevel voltageLevel = getVoltageLevel(network, shuntCompensatorCreationInfos.getVoltageLevelId());
+                createShuntCompensator(voltageLevel, shuntCompensatorCreationInfos, voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER);
+
+                subReporter.report(Report.builder()
+                    .withKey("shuntCompensatorCreated")
+                    .withDefaultMessage("New shunt compensator with id=${id} created")
+                    .withValue("id", shuntCompensatorCreationInfos.getEquipmentId())
+                    .withSeverity(new TypedValue("SHUNT_COMPENSATOR_CREATION_INFO", TypedValue.INFO_LOGLEVEL))
+                    .build());
+            }
+
+            // add the shunt compensator creation entity to the listener
+            listener.storeShuntCompensatorCreation(shuntCompensatorCreationInfos);
+        }, CREATE_SHUNT_COMPENSATOR_ERROR, networkUuid, reporter, subReporter).stream().map(EquipmenModificationInfos.class::cast)
+            .collect(Collectors.toList());
+    }
+
+    public Flux<EquipmenModificationInfos> createShuntCompensator(UUID networkUuid, String variantId, UUID groupUuid, ShuntCompensatorCreationInfos shuntCompensatorCreationInfos) {
+        return assertShuntCompensatorCreationInfosNotEmpty(shuntCompensatorCreationInfos).thenMany(
+            getNetworkModificationInfos(networkUuid, variantId).flatMapIterable(networkInfos -> {
+                NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, modificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
+                ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
+                Reporter subReporter = reporter.createSubReporter("shuntCompensatorCreation", "Shunt compensator creation");
+
+                return execCreateShuntCompensator(listener, shuntCompensatorCreationInfos, reporter, subReporter);
+            }));
+    }
 }

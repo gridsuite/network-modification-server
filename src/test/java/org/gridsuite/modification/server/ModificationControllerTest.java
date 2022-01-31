@@ -711,6 +711,37 @@ public class ModificationControllerTest {
     }
 
     @Test
+    public void testCreateShuntCompensator() {
+        String uriString = "/v1/networks/{networkUuid}/shunt-compensators?group=" + TEST_GROUP_ID;
+
+        var shunt1 = ShuntCompensatorCreationInfos.builder()
+            .equipmentId("shuntOneId").equipmentName("hop")
+            .currentNumberOfSections(4).maximumNumberOfSections(9)
+            .susceptancePerSection(1.).isIdenticalSection(true)
+            .voltageLevelId("v2").busOrBusbarSectionId("1B")
+            .build();
+
+        webTestClient.put().uri(uriString, TEST_NETWORK_ID)
+            .body(BodyInserters.fromValue(shunt1))
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBodyList(EquipmenModificationInfos.class)
+            .value(modifications -> modifications.get(0),
+                MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.SHUNT_COMPENSATOR_CREATION, "shuntOneId", Set.of("s1")));
+
+        assertNotNull(network.getShuntCompensator("shuntOneId"));  // shunt compensator was created
+        testNetworkModificationsCount(TEST_GROUP_ID, 1);
+
+        shunt1.setMaximumNumberOfSections(2);
+        webTestClient.put().uri(uriString, TEST_NETWORK_ID)
+            .body(BodyInserters.fromValue(shunt1))
+            .exchange()
+            .expectStatus().is5xxServerError()
+            .expectBody(String.class);
+    }
+
+    @Test
     public void testCreateGeneratorInNodeBreaker() {
         String uriString = "/v1/networks/{networkUuid}/generators?group=" + TEST_GROUP_ID;
 
