@@ -6,7 +6,6 @@
  */
 package org.gridsuite.modification.server;
 
-import com.google.common.collect.Iterables;
 import com.powsybl.iidm.network.IdentifiableType;
 import org.gridsuite.modification.server.dto.EquipmentInfos;
 import org.gridsuite.modification.server.dto.TombstonedEquipmentInfos;
@@ -49,26 +48,26 @@ public class EquipmentInfosServiceMockTests {
         TombstonedEquipmentInfos tbsGenerator = TombstonedEquipmentInfos.builder().networkUuid(NETWORK_UUID).id("tbsid2").variantId(VARIANT_ID).build();
 
         equipmentInfosService.addEquipmentInfos(load);
-        assertEquals(0, Iterables.size(equipmentInfosService.findAllEquipmentInfos(NETWORK_UUID)));
+        assertEquals(0, equipmentInfosService.findAllEquipmentInfos(NETWORK_UUID).size());
 
         equipmentInfosService.deleteEquipmentInfos("foo", NETWORK_UUID, VARIANT_ID);
-        assertEquals(0, Iterables.size(equipmentInfosService.findAllEquipmentInfos(NETWORK_UUID)));
+        assertEquals(0, equipmentInfosService.findAllEquipmentInfos(NETWORK_UUID).size());
 
         equipmentInfosService.addTombstonedEquipmentInfos(TombstonedEquipmentInfos.builder().networkUuid(NETWORK_UUID).id("id_ts_1").variantId(VARIANT_ID).build());
-        assertEquals(0, Iterables.size(equipmentInfosService.findAllTombstonedEquipmentInfos(NETWORK_UUID)));
+        assertEquals(0, equipmentInfosService.findAllTombstonedEquipmentInfos(NETWORK_UUID).size());
 
         equipmentInfosService.addAllEquipmentInfos(List.of(load, generator));
-        assertEquals(0, Iterables.size(equipmentInfosService.findAllEquipmentInfos(NETWORK_UUID)));
+        assertEquals(0, equipmentInfosService.findAllEquipmentInfos(NETWORK_UUID).size());
 
         equipmentInfosService.addAllTombstonedEquipmentInfos(List.of(tbsLoad, tbsGenerator));
-        assertEquals(0, Iterables.size(equipmentInfosService.findAllTombstonedEquipmentInfos(NETWORK_UUID)));
+        assertEquals(0, equipmentInfosService.findAllTombstonedEquipmentInfos(NETWORK_UUID).size());
 
         equipmentInfosService.cloneVariantModifications(NETWORK_UUID, VARIANT_ID, NEW_VARIANT_ID);
-        assertEquals(0, Iterables.size(equipmentInfosService.findAllEquipmentInfos(NETWORK_UUID)));
-        assertEquals(0, Iterables.size(equipmentInfosService.findAllTombstonedEquipmentInfos(NETWORK_UUID)));
+        assertEquals(0, equipmentInfosService.findAllEquipmentInfos(NETWORK_UUID).size());
+        assertEquals(0, equipmentInfosService.findAllTombstonedEquipmentInfos(NETWORK_UUID).size());
 
         equipmentInfosService.deleteVariants(NETWORK_UUID, List.of(VARIANT_ID, NEW_VARIANT_ID));
-        assertEquals(0, Iterables.size(equipmentInfosService.findAllEquipmentInfos(NETWORK_UUID)));
-        assertEquals(0, Iterables.size(equipmentInfosService.findAllTombstonedEquipmentInfos(NETWORK_UUID)));
+        assertEquals(0, equipmentInfosService.findAllEquipmentInfos(NETWORK_UUID).size());
+        assertEquals(0, equipmentInfosService.findAllTombstonedEquipmentInfos(NETWORK_UUID).size());
     }
 }
