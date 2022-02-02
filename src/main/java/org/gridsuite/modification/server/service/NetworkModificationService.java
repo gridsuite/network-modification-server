@@ -1171,6 +1171,7 @@ public class NetworkModificationService {
             Network network;
             try {
                 network = networkStoreService.getNetwork(networkUuid);
+                network.addListener(new NetworkVariantsListener(network, networkUuid, equipmentInfosService));
             } catch (PowsyblException e) {
                 throw new NetworkModificationException(NETWORK_NOT_FOUND, networkUuid.toString());
             }
