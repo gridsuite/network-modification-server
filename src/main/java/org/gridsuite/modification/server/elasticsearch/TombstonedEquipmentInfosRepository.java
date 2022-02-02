@@ -1,12 +1,12 @@
 /*
-  Copyright (c) 2021, RTE (http://www.rte-france.com)
+  Copyright (c) 2022, RTE (http://www.rte-france.com)
   This Source Code Form is subject to the terms of the Mozilla Public
   License, v. 2.0. If a copy of the MPL was not distributed with this
   file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 package org.gridsuite.modification.server.elasticsearch;
 
-import org.gridsuite.modification.server.dto.EquipmentInfos;
+import org.gridsuite.modification.server.dto.TombstonedEquipmentInfos;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
@@ -16,18 +16,14 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * @author Slimane Amar <slimane.amar at rte-france.com>
+ * @author Nicolas Noir <nicolas.noir at rte-france.com>
  */
 @ConditionalOnExpression("'${spring.data.elasticsearch.enabled:false}' == 'true'")
 @Lazy
-public interface EquipmentInfosRepository extends ElasticsearchRepository<EquipmentInfos, String> {
-    List<EquipmentInfos> findAllByNetworkUuid(@NonNull UUID networkUuid);
+public interface TombstonedEquipmentInfosRepository extends ElasticsearchRepository<TombstonedEquipmentInfos, String> {
+    List<TombstonedEquipmentInfos> findAllByNetworkUuid(@NonNull UUID networkUuid);
 
-    List<EquipmentInfos> findAllByNetworkUuidAndVariantId(@NonNull UUID networkUuid, @NonNull String variantId);
-
-    void deleteByIdAndNetworkUuidAndVariantId(@NonNull String equipmentId, @NonNull UUID networkUuid, @NonNull String variantId);
+    List<TombstonedEquipmentInfos> findAllByNetworkUuidAndVariantId(@NonNull UUID networkUuid, @NonNull String variantId);
 
     void deleteAllByNetworkUuidAndVariantId(UUID networkUuid, String variantId);
-
-    List<EquipmentInfos> findByIdAndNetworkUuidAndVariantId(@NonNull String equipmentId, @NonNull UUID networkUuid, @NonNull String variantId);
 }

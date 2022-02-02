@@ -10,7 +10,6 @@ import com.powsybl.iidm.network.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
@@ -21,34 +20,23 @@ import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.lang.NonNull;
 
 import java.util.Set;
-import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
+ * @author Nicolas Noir <nicolas.noir at rte-france.com>
  */
 @SuperBuilder
 @NoArgsConstructor
 @Getter
-@ToString
-@EqualsAndHashCode
+@Setter
+@ToString(callSuper = true)
+@EqualsAndHashCode(callSuper = true)
 @Document(indexName = "#{@environment.getProperty('powsybl-ws.elasticsearch.index.prefix')}equipments")
 @Setting(settingPath = "elasticsearch_settings.json")
 @TypeAlias(value = "EquipmentInfos")
-public class EquipmentInfos {
-    @Id
-    String uniqueId;
-
-    @MultiField(
-        mainField = @Field(name = "equipmentId", type = FieldType.Text),
-        otherFields = {
-            @InnerField(suffix = "fullascii", type = FieldType.Keyword, normalizer = "fullascii"),
-            @InnerField(suffix = "raw", type = FieldType.Keyword)
-        }
-    )
-    String id;
-
+public class EquipmentInfos extends BasicEquipmentInfos {
     @MultiField(
         mainField = @Field(name = "equipmentName", type = FieldType.Text),
         otherFields = {
@@ -63,8 +51,6 @@ public class EquipmentInfos {
 
     @Field(type = FieldType.Nested, includeInParent = true)
     Set<VoltageLevelInfos> voltageLevels;
-
-    UUID networkUuid;
 
     public static Set<VoltageLevelInfos> getVoltageLevels(@NonNull Identifiable<?> identifiable) {
         if (identifiable instanceof Substation) {
