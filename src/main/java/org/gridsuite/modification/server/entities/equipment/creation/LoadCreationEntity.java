@@ -10,7 +10,6 @@ import com.powsybl.iidm.network.LoadType;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.ModificationType;
-import org.gridsuite.modification.server.dto.EquipmenModificationInfos;
 import org.gridsuite.modification.server.dto.LoadCreationInfos;
 
 import javax.persistence.Column;
@@ -18,7 +17,6 @@ import javax.persistence.Entity;
 import javax.persistence.ForeignKey;
 import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
-import java.util.Set;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -49,11 +47,6 @@ public class LoadCreationEntity extends InjectionCreationEntity {
     @Override
     public LoadCreationInfos toModificationInfos() {
         return toLoadCreationInfosBuilder().build();
-    }
-
-    @Override
-    public EquipmenModificationInfos toEquipmentModificationInfos(Set<String> uuids) {
-        return toLoadCreationInfosBuilder().substationIds(uuids).build();
     }
 
     private LoadCreationInfos.LoadCreationInfosBuilder<?, ?> toLoadCreationInfosBuilder() {

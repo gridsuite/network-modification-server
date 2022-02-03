@@ -1277,7 +1277,10 @@ public class NetworkModificationService {
             true);
         ReporterModel reporter = new ReporterModel(NETWORK_BUILD_REPORT_KEY, NETWORK_BUILD_REPORT_NAME);
 
-        modificationRepository.getModificationsEntities(buildInfos.getModifications()).forEach(modificationEntity -> {
+        modificationRepository.getModificationsEntities(buildInfos.getModificationGroups()).forEach(modificationEntity -> {
+            if (buildInfos.getModificationsToExclude().contains(modificationEntity.getId())) {
+                return;  // modification is excluded, so we don't apply it
+            }
             ModificationType type = ModificationType.valueOf(modificationEntity.getType());
             switch (type) {
                 case EQUIPMENT_ATTRIBUTE_MODIFICATION: {
