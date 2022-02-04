@@ -229,12 +229,12 @@ public class NetworkStoreListener implements NetworkListener {
     }
 
     public void storeVoltageLevelCreation(VoltageLevelCreationInfos voltageLevelCreationInfos) {
-        List<BusbarSectionCreationEmbeddable> bbsEmbeddables = voltageLevelCreationInfos.getBusbarSections().stream().map(bbsi -> {
-            return new BusbarSectionCreationEmbeddable(bbsi.getId(), bbsi.getName(), bbsi.getVertPos(), bbsi.getHorizPos());
-        }).collect(Collectors.toList());
-        List<BusbarConnectionCreationEmbeddable> cnxEmbeddables = voltageLevelCreationInfos.getBusbarConnections().stream().map(cnxi -> {
-            return new BusbarConnectionCreationEmbeddable(cnxi.getFromBBS(), cnxi.getToBBS(), cnxi.getSwitchKind());
-        }).collect(Collectors.toList());
+        List<BusbarSectionCreationEmbeddable> bbsEmbeddables = voltageLevelCreationInfos.getBusbarSections().stream().map(bbsi ->
+            new BusbarSectionCreationEmbeddable(bbsi.getId(), bbsi.getName(), bbsi.getVertPos(), bbsi.getHorizPos())
+        ).collect(Collectors.toList());
+        List<BusbarConnectionCreationEmbeddable> cnxEmbeddables = voltageLevelCreationInfos.getBusbarConnections().stream().map(cnxi ->
+            new BusbarConnectionCreationEmbeddable(cnxi.getFromBBS(), cnxi.getToBBS(), cnxi.getSwitchKind())
+        ).collect(Collectors.toList());
         modifications.add(this.modificationRepository.createVoltageLevelEntity(
             voltageLevelCreationInfos.getEquipmentId(),
             voltageLevelCreationInfos.getEquipmentName(),

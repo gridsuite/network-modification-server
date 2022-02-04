@@ -11,12 +11,15 @@ import com.powsybl.iidm.network.Country;
 import com.powsybl.iidm.network.EnergySource;
 import com.powsybl.iidm.network.LoadType;
 import com.powsybl.iidm.network.Network;
+import com.powsybl.iidm.network.SwitchKind;
 import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.sld.iidm.extensions.BranchStatus;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.creation.BusbarConnectionCreationEmbeddable;
+import org.gridsuite.modification.server.entities.equipment.creation.BusbarSectionCreationEmbeddable;
 import org.gridsuite.modification.server.entities.equipment.creation.LoadCreationEntity;
 import org.gridsuite.modification.server.entities.equipment.deletion.EquipmentDeletionEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.EquipmentAttributeModificationEntity;
@@ -157,12 +160,26 @@ public class BuildTest {
         entities2.add(modificationRepository.createEquipmentDeletionEntity("v2shunt", "SHUNT_COMPENSATOR"));
         entities2.add(modificationRepository.createGroovyScriptModificationEntity("network.getGenerator('idGenerator').targetP=55\n"));
         entities2.add(modificationRepository.createBranchStatusModificationEntity("line2", BranchStatusModificationInfos.ActionType.TRIP));
+        entities2.add(modificationRepository.createVoltageLevelEntity("vl9", "vl9", 225, "s1",
+            List.of(new BusbarSectionCreationEmbeddable("1.1", "1.1", 1, 1),
+                    new BusbarSectionCreationEmbeddable("1.2", "1.2", 1, 2)),
+            List.of(new BusbarConnectionCreationEmbeddable("1.1", "1.2", SwitchKind.BREAKER))));
+        entities2.add(modificationRepository.createShuntCompensatorEntity(ShuntCompensatorCreationInfos.builder()
+            .equipmentId("shunt9")
+            .equipmentName("shunt9")
+            .voltageLevelId("v2")
+            .busOrBusbarSectionId("1A")
+            .maximumNumberOfSections(2)
+            .currentNumberOfSections(2)
+            .susceptancePerSection(1.)
+            .isIdenticalSection(true)
+            .build()));
 
         modificationRepository.saveModifications(TEST_GROUP_ID, entities1);
         modificationRepository.saveModifications(TEST_GROUP_ID_2, entities2);
 
         testNetworkModificationsCount(TEST_GROUP_ID, 7);
-        testNetworkModificationsCount(TEST_GROUP_ID_2, 6);
+        testNetworkModificationsCount(TEST_GROUP_ID_2, 8);
 
         // build VARIANT_ID by cloning network initial variant and applying all modifications in all groups
         String uriString = "/v1/networks/{networkUuid}/build?receiver=me";
@@ -211,6 +228,8 @@ public class BuildTest {
         assertEquals(5., network.getTwoWindingsTransformer("new2wt").getRatedU1(), 0.1);
         assertNull(network.getShuntCompensator("v2shunt"));
         assertEquals(Country.FR, network.getSubstation("newSubstation").getCountry().orElse(Country.AF));
+        assertNotNull(network.getVoltageLevel("vl9"));
+        assertNotNull(network.getShuntCompensator("shunt9"));
 
         // Test that no modifications have been made on initial variant
         network.getVariantManager().setWorkingVariant(VariantManagerConstants.INITIAL_VARIANT_ID);
@@ -226,10 +245,12 @@ public class BuildTest {
         assertNull(network.getGenerator("new2wt"));
         assertNotNull(network.getShuntCompensator("v2shunt"));
         assertNull(network.getSubstation("newSubstation"));
+        assertNull(network.getVoltageLevel("vl9"));
+        assertNull(network.getShuntCompensator("shunt9"));
 
         // No new modification entity should have been added to the database
         testNetworkModificationsCount(TEST_GROUP_ID, 7);
-        testNetworkModificationsCount(TEST_GROUP_ID_2, 6);
+        testNetworkModificationsCount(TEST_GROUP_ID_2, 8);
 
         // Execute another build starting from variant VARIANT_ID to variant VARIANT_ID_2
         // to check
@@ -316,6 +337,8 @@ public class BuildTest {
         assertEquals(5., network.getTwoWindingsTransformer("new2wt").getRatedU1(), 0.1);
         assertNotNull(network.getShuntCompensator("v2shunt"));
         assertEquals(Country.FR, network.getSubstation("newSubstation").getCountry().orElse(Country.AF));
+        assertNotNull(network.getVoltageLevel("vl9"));
+        assertNotNull(network.getShuntCompensator("shunt9"));
     }
 
     @Test
