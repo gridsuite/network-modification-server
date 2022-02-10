@@ -644,7 +644,7 @@ public class NetworkModificationService {
                 }
 
                 if (identifiable instanceof Connectable) {
-                    ((Connectable) identifiable).remove();
+                    ((Connectable) identifiable).remove(true);
                 } else if (identifiable instanceof HvdcLine) {
                     ((HvdcLine) identifiable).remove();
                 } else if (identifiable instanceof VoltageLevel) {

@@ -54,7 +54,7 @@ public final class NetworkCreation {
         createBattery(v3, "v3Battery", "v3Battery", 12, 0, 10, 1, 1);
 
         TwoWindingsTransformer t2 = createTwoWindingsTransformer(s1, "trf1", "trf1", 2.0, 14.745, 0.0, 3.2E-5, 400.0, 225.0,
-            19, 9, v1.getId(), v2.getId(),
+            19, 10, v1.getId(), v2.getId(),
             "trf1", 1, ConnectablePosition.Direction.TOP,
             "trf1", 1, ConnectablePosition.Direction.TOP);
         t2.newRatioTapChanger()
