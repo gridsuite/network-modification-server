@@ -1224,6 +1224,26 @@ public class ModificationControllerTest {
     }
 
     @Test
+    public void testErrorRemovingDanglingSwitches() {
+        String uriString = "/v1/networks/{networkUuid}/equipments/type/{equipmentType}/id/{equipmentId}?group=" + TEST_GROUP_ID;
+
+        // delete load with error removing dangling switches, because the load connection node is not linked to any other node
+        webTestClient.delete().uri(uriString, TEST_NETWORK_ID, "LOAD", "v5load")
+            .exchange()
+            .expectStatus().is5xxServerError()
+            .expectBody(String.class)
+            .value(exception -> exception, containsString("DELETE_EQUIPMENT_ERROR : no such vertex in graph: 2"));
+
+        // no modifications added
+        webTestClient.get().uri("/v1/groups")
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBodyList(UUID.class)
+            .isEqualTo(List.of());
+    }
+
+    @Test
     public void testCreateLineInNodeBreaker() {
         String uriString = "/v1/networks/{networkUuid}/lines?group=" + TEST_GROUP_ID;
 
