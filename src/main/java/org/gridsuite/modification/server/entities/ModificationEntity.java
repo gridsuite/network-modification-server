@@ -28,18 +28,13 @@ import org.gridsuite.modification.server.dto.ModificationInfos;
 @Setter
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
-@Table(name = "modification", indexes = {@Index(name = "modificationEntity_group_id_index", columnList = "group_id")})
+@Table(name = "modification"/*, indexes = {@Index(name = "modificationEntity_group_id_index", columnList = "group_id")}*/)
 public class ModificationEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "id")
     private UUID id;
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(foreignKey = @ForeignKey(name = "group_id_fk_constraint"))
-    @Setter
-    private ModificationGroupEntity group;
 
     @Column(name = "date")
     private ZonedDateTime date;

@@ -1,0 +1,33 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-3.10.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.10.xsd">
+    <changeSet author="borsenbergerjac (generated)" id="1644935557396-8">
+        <addColumn tableName="modification">
+            <column name="modifications_order" type="int4"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="borsenbergerjac (generated)" id="1644935557396-1">
+        <dropForeignKeyConstraint baseTableName="two_windings_transformer_creation" constraintName="current_limits_id1_fk"/>
+    </changeSet>
+    <changeSet author="borsenbergerjac (generated)" id="1644935557396-2">
+        <addForeignKeyConstraint baseColumnNames="current_limits_id1" baseTableName="two_windings_transformer_creation" constraintName="current_limits_id1_fk" referencedColumnNames="id" referencedTableName="current_limits"/>
+    </changeSet>
+    <changeSet author="borsenbergerjac (generated)" id="1644935557396-3">
+        <dropForeignKeyConstraint baseTableName="two_windings_transformer_creation" constraintName="current_limits_id2_fk"/>
+    </changeSet>
+    <changeSet author="borsenbergerjac (generated)" id="1644935557396-4">
+        <addForeignKeyConstraint baseColumnNames="current_limits_id2" baseTableName="two_windings_transformer_creation" constraintName="current_limits_id2_fk" referencedColumnNames="id" referencedTableName="current_limits"/>
+    </changeSet>
+    <changeSet author="borsenbergerjac (generated)" id="1644935557396-5">
+        <dropNotNullConstraint columnDataType="uuid" columnName="group_id" tableName="modification"/>
+    </changeSet>
+    <changeSet author="borsenbergerjac (generated)" id="1644935557396-6">
+        <dropNotNullConstraint columnDataType="int" columnName="horiz_pos" tableName="voltage_level_creation_entity_busbar_sections"/>
+    </changeSet>
+    <changeSet author="borsenbergerjac (generated)" id="1644935557396-7">
+        <dropNotNullConstraint columnDataType="int" columnName="vert_pos" tableName="voltage_level_creation_entity_busbar_sections"/>
+    </changeSet>
+    <changeSet author="borsenbergerjac (generated)" id="1645016885220-1">
+        <addNotNullConstraint columnDataType="uuid" columnName="group_id" tableName="modification" validate="true"/>
+    </changeSet>
+
+</databaseChangeLog>

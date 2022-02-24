@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -70,6 +71,15 @@ public class NetworkModificationController {
     @ApiResponse(responseCode = "200", description = "List of modifications of the group")
     public ResponseEntity<Flux<ModificationInfos>> getModificationsMetadata(@Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid) {
         return ResponseEntity.ok().body(networkModificationService.getModifications(groupUuid, true));
+    }
+
+    @PutMapping(value = "/groups/{groupUuid}/modifications/move", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Get list of modifications metadata of a group")
+    @ApiResponse(responseCode = "200", description = "List of modifications of the group")
+    public ResponseEntity<Mono<Void>> moveModifications(@Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid,
+                                                  @Parameter(description = "before") @RequestParam(value = "before", required = false) UUID before,
+                                                  @Parameter(description = "modification to moves", required = true) @RequestParam(value = "modificationsToMove", required = false) List<UUID> modificationsToMove) {
+        return ResponseEntity.ok().body(networkModificationService.moveModifications(groupUuid, before, modificationsToMove));
     }
 
     @DeleteMapping(value = "/groups/{groupUuid}/modifications/{modificationUuid}")
