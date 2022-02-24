@@ -6,30 +6,13 @@
  */
 package org.gridsuite.modification.server.utils;
 
-import com.powsybl.iidm.network.Country;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.SubstationCreationInfos;
 import org.hamcrest.Description;
-
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
 
 /**
  * @author Abdelsalem HEDHILI <abdelsalem.hedhili at rte-france.com>
  */
 public class MatcherSubstationCreationInfos extends MatcherModificationInfos<SubstationCreationInfos> {
-
-    public static MatcherSubstationCreationInfos createMatcherSubstationCreationInfos(String equipmentId,
-                                                                          String equipmentName,
-                                                                          Country country) {
-        return new MatcherSubstationCreationInfos(SubstationCreationInfos.builder()
-                .date(ZonedDateTime.now(ZoneOffset.UTC))
-                .type(ModificationType.SUBSTATION_CREATION)
-                .equipmentId(equipmentId)
-                .equipmentName(equipmentName)
-                .substationCountry(country)
-                .build());
-    }
 
     public static MatcherSubstationCreationInfos createMatcherSubstationCreationInfos(SubstationCreationInfos substationCreationInfos) {
         return new MatcherSubstationCreationInfos(substationCreationInfos);

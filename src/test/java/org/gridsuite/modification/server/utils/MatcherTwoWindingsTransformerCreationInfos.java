@@ -6,56 +6,14 @@
  */
 package org.gridsuite.modification.server.utils;
 
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.CurrentLimitsInfos;
 import org.gridsuite.modification.server.dto.TwoWindingsTransformerCreationInfos;
 import org.hamcrest.Description;
-
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
-import java.util.Set;
 
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
  */
 public class MatcherTwoWindingsTransformerCreationInfos extends MatcherModificationInfos<TwoWindingsTransformerCreationInfos> {
-
-    public static MatcherTwoWindingsTransformerCreationInfos createMatcherTwoWindingsTransformerCreationInfos(
-            String equipmentId,
-            String equipmentName,
-            Set<String> substationIds,
-            String voltageLevelId1,
-            String busOrBusbarSectionId1,
-            String voltageLevelId2,
-            String busOrBusbarSectionId2,
-            double ratedVoltage1,
-            double ratedVoltage2,
-            double magnetizingSusceptance,
-            double magnetizingConductance,
-            double seriesReactance,
-            double seriesResistance,
-            Double permanentCurrentLimit1,
-            Double permanentCurrentLimit2) {
-        return new MatcherTwoWindingsTransformerCreationInfos(TwoWindingsTransformerCreationInfos.builder()
-                .date(ZonedDateTime.now(ZoneOffset.UTC))
-                .type(ModificationType.TWO_WINDINGS_TRANSFORMER_CREATION)
-                .equipmentId(equipmentId)
-                .substationIds(substationIds)
-                .equipmentName(equipmentName)
-                .voltageLevelId1(voltageLevelId1)
-                .busOrBusbarSectionId1(busOrBusbarSectionId1)
-                .voltageLevelId2(voltageLevelId2)
-                .busOrBusbarSectionId2(busOrBusbarSectionId2)
-                .ratedVoltage1(ratedVoltage1)
-                .ratedVoltage2(ratedVoltage2)
-                .magnetizingSusceptance(magnetizingSusceptance)
-                .magnetizingConductance(magnetizingConductance)
-                .seriesReactance(seriesReactance)
-                .seriesResistance(seriesResistance)
-                .currentLimits1(CurrentLimitsInfos.builder().permanentLimit(permanentCurrentLimit1).build())
-                .currentLimits2(CurrentLimitsInfos.builder().permanentLimit(permanentCurrentLimit2).build())
-                .build());
-    }
 
     public static MatcherTwoWindingsTransformerCreationInfos createMatcherTwoWindingsTransformerCreationInfos(TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
         return new MatcherTwoWindingsTransformerCreationInfos(twoWindingsTransformerCreationInfos);

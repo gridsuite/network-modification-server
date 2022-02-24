@@ -14,8 +14,8 @@ import org.gridsuite.modification.server.ModificationType;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.FetchType;
-import javax.persistence.JoinColumn;
 import javax.persistence.ForeignKey;
+import javax.persistence.JoinColumn;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.OneToOne;
 

@@ -7,7 +7,6 @@
 package org.gridsuite.modification.server.entities.equipment.creation;
 
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.persistence.CollectionTable;
@@ -21,7 +20,6 @@ import javax.persistence.Table;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.BusbarConnectionCreationInfos;
 import org.gridsuite.modification.server.dto.BusbarSectionCreationInfos;
-import org.gridsuite.modification.server.dto.EquipmenModificationInfos;
 import org.gridsuite.modification.server.dto.VoltageLevelCreationInfos;
 
 import lombok.Getter;
@@ -66,11 +64,6 @@ public class VoltageLevelCreationEntity extends EquipmentCreationEntity {
     @Override
     public VoltageLevelCreationInfos toModificationInfos() {
         return toVoltageLevelCreationInfosBuilder().build();
-    }
-
-    @Override
-    public EquipmenModificationInfos toEquipmentModificationInfos(Set<String> uuids) {
-        return toVoltageLevelCreationInfosBuilder().substationIds(uuids).build();
     }
 
     public VoltageLevelCreationInfos toVoltageLevelCreationInfos() {

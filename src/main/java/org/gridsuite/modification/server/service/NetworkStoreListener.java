@@ -208,6 +208,10 @@ public class NetworkStoreListener implements NetworkListener {
         );
     }
 
+    public void storeShuntCompensatorCreation(ShuntCompensatorCreationInfos shuntCompensatorCreationInfos) {
+        modifications.add(this.modificationRepository.createShuntCompensatorEntity(shuntCompensatorCreationInfos));
+    }
+
     public void storeGroovyScriptModification(String script) {
         modifications.add(this.modificationRepository.createGroovyScriptModificationEntity(script));
     }
@@ -225,12 +229,12 @@ public class NetworkStoreListener implements NetworkListener {
     }
 
     public void storeVoltageLevelCreation(VoltageLevelCreationInfos voltageLevelCreationInfos) {
-        List<BusbarSectionCreationEmbeddable> bbsEmbeddables = voltageLevelCreationInfos.getBusbarSections().stream().map(bbsi -> {
-            return new BusbarSectionCreationEmbeddable(bbsi.getId(), bbsi.getName(), bbsi.getVertPos(), bbsi.getHorizPos());
-        }).collect(Collectors.toList());
-        List<BusbarConnectionCreationEmbeddable> cnxEmbeddables = voltageLevelCreationInfos.getBusbarConnections().stream().map(cnxi -> {
-            return new BusbarConnectionCreationEmbeddable(cnxi.getFromBBS(), cnxi.getToBBS(), cnxi.getSwitchKind());
-        }).collect(Collectors.toList());
+        List<BusbarSectionCreationEmbeddable> bbsEmbeddables = voltageLevelCreationInfos.getBusbarSections().stream().map(bbsi ->
+            new BusbarSectionCreationEmbeddable(bbsi.getId(), bbsi.getName(), bbsi.getVertPos(), bbsi.getHorizPos())
+        ).collect(Collectors.toList());
+        List<BusbarConnectionCreationEmbeddable> cnxEmbeddables = voltageLevelCreationInfos.getBusbarConnections().stream().map(cnxi ->
+            new BusbarConnectionCreationEmbeddable(cnxi.getFromBBS(), cnxi.getToBBS(), cnxi.getSwitchKind())
+        ).collect(Collectors.toList());
         modifications.add(this.modificationRepository.createVoltageLevelEntity(
             voltageLevelCreationInfos.getEquipmentId(),
             voltageLevelCreationInfos.getEquipmentName(),
@@ -254,9 +258,10 @@ public class NetworkStoreListener implements NetworkListener {
     @Override
     public void onCreation(Identifiable identifiable) {
         substationsIds.addAll(getSubstationIds(identifiable));
-        equipmentInfosService.add(
+        equipmentInfosService.addEquipmentInfos(
             EquipmentInfos.builder()
                 .networkUuid(networkUuid)
+                .variantId(network.getVariantManager().getWorkingVariantId())
                 .id(identifiable.getId())
                 .name(identifiable.getNameOrId())
                 .type(identifiable.getType().name())
@@ -271,7 +276,7 @@ public class NetworkStoreListener implements NetworkListener {
         // identifiable.getId() throws PowsyblException("Object has been removed in current variant");
         // because the identifiable resource was set to null in remove method, before calling onRemoval method
         // onRemoval must be changed in powsybl core (maybe passing only the id as string argument)
-        //equipmentInfosService.delete(identifiable.getId(), networkUuid);
+        //this.substationsIds.addAll(getSubstationIds(identifiable));
     }
 
     @Override
@@ -281,6 +286,20 @@ public class NetworkStoreListener implements NetworkListener {
 
     public void onTemporaryRemoval(String equipmentId, Set<String> substationsIds) {
         this.substationsIds.addAll(substationsIds);
-        equipmentInfosService.delete(equipmentId, networkUuid);
+        // The following code should be removed from this listener and put in method onRemoval
+        // of the EquipmentInfosNetworkListener as soon as previously mentioned bug is corrected
+        String variantId = network.getVariantManager().getWorkingVariantId();
+        if (equipmentInfosService.existEquipmentInfos(equipmentId, networkUuid, variantId)) {
+            equipmentInfosService.deleteEquipmentInfos(equipmentId, networkUuid, variantId);
+        } else {
+            equipmentInfosService.addTombstonedEquipmentInfos(
+                    TombstonedEquipmentInfos.builder()
+                            .networkUuid(networkUuid)
+                            .variantId(variantId)
+                            .id(equipmentId)
+                            .build()
+            );
+        }
     }
+
 }

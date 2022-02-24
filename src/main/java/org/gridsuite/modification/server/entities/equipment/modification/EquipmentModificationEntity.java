@@ -9,12 +9,10 @@ package org.gridsuite.modification.server.entities.equipment.modification;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.ModificationType;
-import org.gridsuite.modification.server.dto.EquipmenModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
-import java.util.Set;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -29,18 +27,5 @@ public class EquipmentModificationEntity extends ModificationEntity {
     protected EquipmentModificationEntity(String equipmentId, ModificationType modificationType) {
         super(modificationType);
         this.equipmentId = equipmentId;
-    }
-
-    public EquipmenModificationInfos toEquipmentModificationInfos(Set<String> uuids) {
-        return toEquipmentModificationInfosBuilder().substationIds(uuids).build();
-    }
-
-    private EquipmenModificationInfos.EquipmenModificationInfosBuilder<?, ?> toEquipmentModificationInfosBuilder() {
-        return EquipmenModificationInfos
-                .builder()
-                .uuid(getId())
-                .date(getDate())
-                .type(ModificationType.valueOf(getType()))
-                .equipmentId(getEquipmentId());
     }
 }

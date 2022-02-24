@@ -25,11 +25,6 @@ import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
-import org.gridsuite.modification.server.entities.GroovyScriptModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.BranchStatusModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.attribute.EquipmentAttributeModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.creation.*;
-import org.gridsuite.modification.server.entities.equipment.deletion.EquipmentDeletionEntity;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -653,7 +648,7 @@ public class NetworkModificationService {
                 }
 
                 if (identifiable instanceof Connectable) {
-                    ((Connectable) identifiable).remove();
+                    ((Connectable) identifiable).remove(true);
                 } else if (identifiable instanceof HvdcLine) {
                     ((HvdcLine) identifiable).remove();
                 } else if (identifiable instanceof VoltageLevel) {
@@ -1175,6 +1170,7 @@ public class NetworkModificationService {
             Network network;
             try {
                 network = networkStoreService.getNetwork(networkUuid);
+                network.addListener(new NetworkVariantsListener(network, networkUuid, equipmentInfosService));
             } catch (PowsyblException e) {
                 throw new NetworkModificationException(NETWORK_NOT_FOUND, networkUuid.toString());
             }
@@ -1280,88 +1276,109 @@ public class NetworkModificationService {
             true);
         ReporterModel reporter = new ReporterModel(NETWORK_BUILD_REPORT_KEY, NETWORK_BUILD_REPORT_NAME);
 
-        modificationRepository.getModificationsEntities(buildInfos.getModifications()).forEach(modificationEntity -> {
-            ModificationType type = ModificationType.valueOf(modificationEntity.getType());
-            switch (type) {
-                case EQUIPMENT_ATTRIBUTE_MODIFICATION: {
-                    EquipmentAttributeModificationEntity<?> attributeModificationEntity = (EquipmentAttributeModificationEntity<?>) modificationEntity;
-                    Reporter subReporter = reporter.createSubReporter("AttributeModification", "Attribute modification");
-                    List<EquipmenModificationInfos> modificationInfos = execChangeEquipmentAttribute(listener, attributeModificationEntity.getEquipmentId(), attributeModificationEntity.getAttributeName(), attributeModificationEntity.getAttributeValue(), reporter, subReporter);
-                    allModificationsInfos.addAll(modificationInfos);
+        modificationRepository.getModificationsInfos(buildInfos.getModificationGroups()).forEach(infos -> {
+            try {
+                if (buildInfos.getModificationsToExclude().contains(infos.getUuid())) {
+                    return;  // modification is excluded, so we don't apply it
                 }
-                break;
+                ModificationType type = infos.getType();
+                switch (type) {
+                    case EQUIPMENT_ATTRIBUTE_MODIFICATION: {
+                        EquipmenAttributeModificationInfos attributeModificationInfos = (EquipmenAttributeModificationInfos) infos;
+                        Reporter subReporter = reporter.createSubReporter("AttributeModification", "Attribute modification");
+                        List<EquipmenModificationInfos> modificationInfos = execChangeEquipmentAttribute(listener, attributeModificationInfos.getEquipmentId(), attributeModificationInfos.getEquipmentAttributeName(), attributeModificationInfos.getEquipmentAttributeValue(), reporter, subReporter);
+                        allModificationsInfos.addAll(modificationInfos);
+                    }
+                    break;
 
-                case LOAD_CREATION: {
-                    LoadCreationEntity loadCreationEntity = (LoadCreationEntity) modificationEntity;
-                    Reporter subReporter = reporter.createSubReporter("LoadCreation", "Load creation");
-                    List<EquipmenModificationInfos> modificationInfos = execCreateLoad(listener, loadCreationEntity.toModificationInfos(), reporter, subReporter);
-                    allModificationsInfos.addAll(modificationInfos);
+                    case LOAD_CREATION: {
+                        LoadCreationInfos loadCreationInfos = (LoadCreationInfos) infos;
+                        Reporter subReporter = reporter.createSubReporter("LoadCreation", "Load creation");
+                        List<EquipmenModificationInfos> modificationInfos = execCreateLoad(listener, loadCreationInfos, reporter, subReporter);
+                        allModificationsInfos.addAll(modificationInfos);
+                    }
+                    break;
+
+                    case GENERATOR_CREATION: {
+                        GeneratorCreationInfos generatorCreationInfos = (GeneratorCreationInfos) infos;
+                        Reporter subReporter = reporter.createSubReporter("GeneratorCreation", "Generator creation");
+                        List<EquipmenModificationInfos> modificationInfos = execCreateGenerator(listener, generatorCreationInfos, reporter, subReporter);
+                        allModificationsInfos.addAll(modificationInfos);
+                    }
+                    break;
+
+                    case LINE_CREATION: {
+                        LineCreationInfos lineCreationInfos = (LineCreationInfos) infos;
+                        Reporter subReporter = reporter.createSubReporter("LineCreation", "Line creation");
+                        List<EquipmenModificationInfos> modificationInfos = execCreateLine(listener, lineCreationInfos, reporter, subReporter);
+                        allModificationsInfos.addAll(modificationInfos);
+                    }
+                    break;
+
+                    case TWO_WINDINGS_TRANSFORMER_CREATION: {
+                        TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos = (TwoWindingsTransformerCreationInfos) infos;
+                        Reporter subReporter = reporter.createSubReporter("TwoWindingsTransformerCreation", "Two windings transformer creation");
+                        List<EquipmenModificationInfos> modificationInfos = execCreateTwoWindingsTransformer(listener, twoWindingsTransformerCreationInfos, reporter, subReporter);
+                        allModificationsInfos.addAll(modificationInfos);
+                    }
+                    break;
+
+                    case EQUIPMENT_DELETION: {
+                        EquipmentDeletionInfos deletionInfos = (EquipmentDeletionInfos) infos;
+                        Reporter subReporter = reporter.createSubReporter("EquipmentDeletion", "Equipment deletion");
+                        List<EquipmentDeletionInfos> modificationInfos = execDeleteEquipment(listener, deletionInfos.getEquipmentType(), deletionInfos.getEquipmentId(), reporter, subReporter);
+                        allModificationsInfos.addAll(modificationInfos);
+                    }
+                    break;
+
+                    case GROOVY_SCRIPT: {
+                        GroovyScriptModificationInfos groovyModificationInfos = (GroovyScriptModificationInfos) infos;
+                        Reporter subReporter = reporter.createSubReporter("GroovyScriptModification", "Groovy script modification");
+                        List<ModificationInfos> modificationInfos = execApplyGroovyScript(listener, groovyModificationInfos.getScript(), reporter, subReporter);
+                        allModificationsInfos.addAll(modificationInfos);
+                    }
+                    break;
+
+                    case SUBSTATION_CREATION: {
+                        SubstationCreationInfos substationCreationInfos = (SubstationCreationInfos) infos;
+                        Reporter subReporter = reporter.createSubReporter("SubstationCreation", "Substation creation");
+                        List<EquipmenModificationInfos> modificationInfos = execCreateSubstation(listener, substationCreationInfos, reporter, subReporter);
+                        allModificationsInfos.addAll(modificationInfos);
+                    }
+                    break;
+
+                    case VOLTAGE_LEVEL_CREATION: {
+                        VoltageLevelCreationInfos voltageLevelCreationInfos = (VoltageLevelCreationInfos) infos;
+                        Reporter subReporter = reporter.createSubReporter("VoltageLevelCreation", "VoltageLevel creation");
+                        List<EquipmenModificationInfos> modificationInfos = execCreateVoltageLevel(listener, voltageLevelCreationInfos, reporter, subReporter);
+                        allModificationsInfos.addAll(modificationInfos);
+                    }
+                    break;
+
+                    case BRANCH_STATUS: {
+                        BranchStatusModificationInfos branchStatusModificationInfos = (BranchStatusModificationInfos) infos;
+                        List<ModificationInfos> modificationInfos = execChangeLineStatus(listener, branchStatusModificationInfos.getEquipmentId(), branchStatusModificationInfos.getAction(), reporter);
+                        allModificationsInfos.addAll(modificationInfos);
+                    }
+                    break;
+
+                    case SHUNT_COMPENSATOR_CREATION: {
+                        ShuntCompensatorCreationInfos shuntCompensatorCreationInfos = (ShuntCompensatorCreationInfos) infos;
+                        Reporter subReporter = reporter.createSubReporter("shuntCompensatorCreation", "Shunt compensator creation");
+                        List<EquipmenModificationInfos> modificationInfos = execCreateShuntCompensator(listener, shuntCompensatorCreationInfos, reporter, subReporter);
+                        allModificationsInfos.addAll(modificationInfos);
+                    }
+                    break;
+
+                    default:
                 }
-                break;
-
-                case GENERATOR_CREATION: {
-                    GeneratorCreationEntity generatorCreationEntity = (GeneratorCreationEntity) modificationEntity;
-                    Reporter subReporter = reporter.createSubReporter("GeneratorCreation", "Generator creation");
-                    List<EquipmenModificationInfos> modificationInfos = execCreateGenerator(listener, generatorCreationEntity.toModificationInfos(), reporter, subReporter);
-                    allModificationsInfos.addAll(modificationInfos);
-                }
-                break;
-
-                case LINE_CREATION: {
-                    LineCreationEntity lineCreationEntity = (LineCreationEntity) modificationEntity;
-                    Reporter subReporter = reporter.createSubReporter("LineCreation", "Line creation");
-                    List<EquipmenModificationInfos> modificationInfos = execCreateLine(listener, lineCreationEntity.toModificationInfos(), reporter, subReporter);
-                    allModificationsInfos.addAll(modificationInfos);
-                }
-                break;
-
-                case TWO_WINDINGS_TRANSFORMER_CREATION: {
-                    TwoWindingsTransformerCreationEntity twoWindingsTransformerCreationEntity = (TwoWindingsTransformerCreationEntity) modificationEntity;
-                    Reporter subReporter = reporter.createSubReporter("TwoWindingsTransformerCreation", "Two windings transformer creation");
-                    List<EquipmenModificationInfos> modificationInfos = execCreateTwoWindingsTransformer(listener, twoWindingsTransformerCreationEntity.toModificationInfos(), reporter, subReporter);
-                    allModificationsInfos.addAll(modificationInfos);
-                }
-                break;
-
-                case EQUIPMENT_DELETION: {
-                    EquipmentDeletionEntity deletionEntity = (EquipmentDeletionEntity) modificationEntity;
-                    Reporter subReporter = reporter.createSubReporter("EquipmentDeletion", "Equipment deletion");
-                    List<EquipmentDeletionInfos> deletionInfos = execDeleteEquipment(listener, deletionEntity.getEquipmentType(), deletionEntity.getEquipmentId(), reporter, subReporter);
-                    allModificationsInfos.addAll(deletionInfos);
-                }
-                break;
-
-                case GROOVY_SCRIPT: {
-                    GroovyScriptModificationEntity groovyModificationEntity = (GroovyScriptModificationEntity) modificationEntity;
-                    Reporter subReporter = reporter.createSubReporter("GroovyScriptModification", "Groovy script modification");
-                    List<ModificationInfos> modificationInfos = execApplyGroovyScript(listener, groovyModificationEntity.getScript(), reporter, subReporter);
-                    allModificationsInfos.addAll(modificationInfos);
-                }
-                break;
-
-                case SUBSTATION_CREATION: {
-                    SubstationCreationEntity substationCreationEntity = (SubstationCreationEntity) modificationEntity;
-                    Reporter subReporter = reporter.createSubReporter("SubstationCreation", "Substation creation");
-                    List<EquipmenModificationInfos> modificationInfos = execCreateSubstation(listener, substationCreationEntity.toSubstationCreationInfos(), reporter, subReporter);
-                    allModificationsInfos.addAll(modificationInfos);
-                }
-                break;
-
-                case VOLTAGE_LEVEL_CREATION: {
-                    VoltageLevelCreationEntity voltageLevelCreationEntity = (VoltageLevelCreationEntity) modificationEntity;
-                    Reporter subReporter = reporter.createSubReporter("VoltageLevelCreation", "VoltageLevel creation");
-                    List<EquipmenModificationInfos> modificationInfos = execCreateVoltageLevel(listener, voltageLevelCreationEntity.toVoltageLevelCreationInfos(), reporter, subReporter);
-                    allModificationsInfos.addAll(modificationInfos);
-                }
-
-                case BRANCH_STATUS: {
-                    BranchStatusModificationEntity branchStatusModificationEntity = (BranchStatusModificationEntity) modificationEntity;
-                    List<ModificationInfos> modificationInfos = execChangeLineStatus(listener,  branchStatusModificationEntity.getEquipmentId(),  branchStatusModificationEntity.getAction(),  reporter);
-                    allModificationsInfos.addAll(modificationInfos);
-                }
-                break;
-
-                default:
+            } catch (Exception e) {
+                NetworkModificationException exc = e instanceof NetworkModificationException ? (NetworkModificationException) e : new NetworkModificationException(MODIFICATION_ERROR, e);
+                reporter.report(Report.builder()
+                    .withKey(MODIFICATION_ERROR.name())
+                    .withDefaultMessage(exc.getMessage())
+                    .withSeverity(new TypedValue("NETWORK_MODIFICATION_ERROR", TypedValue.ERROR_LOGLEVEL))
+                    .build());
             }
         });
 
@@ -1403,5 +1420,78 @@ public class NetworkModificationService {
                 throw new NetworkModificationException(MODIFICATION_NOT_FOUND);
             }
         });
+    }
+
+    private Mono<Void> assertShuntCompensatorCreationInfosNotEmpty(ShuntCompensatorCreationInfos shuntCompensatorCreationInfos) {
+        if (shuntCompensatorCreationInfos == null) {
+            return Mono.error(new NetworkModificationException(CREATE_SHUNT_COMPENSATOR_ERROR, "Missing required attributes to create the shunt Compensator"));
+        }
+        return Mono.empty();
+    }
+
+    private void createShuntCompensator(VoltageLevel voltageLevel, ShuntCompensatorCreationInfos shuntCompensatorInfos, boolean isNodeBreaker) {
+        // creating the shunt compensator
+        var shunt = voltageLevel.newShuntCompensator()
+            .setId(shuntCompensatorInfos.getEquipmentId())
+            .setName(shuntCompensatorInfos.getEquipmentName())
+            .setSectionCount(shuntCompensatorInfos.getCurrentNumberOfSections());
+
+        /* connect it !*/
+        if (isNodeBreaker) {
+            // create cell switches
+            int nodeNum = createNodeBreakerCellSwitches(voltageLevel, shuntCompensatorInfos.getBusOrBusbarSectionId(),
+                shuntCompensatorInfos.getEquipmentId(),
+                shuntCompensatorInfos.getEquipmentName());
+            shunt.setNode(nodeNum);
+        } else {
+            Bus bus = getBusBreakerBus(voltageLevel, shuntCompensatorInfos.getBusOrBusbarSectionId());
+            shunt.setBus(bus.getId())
+                 .setConnectableBus(bus.getId());
+        }
+
+        /* when we create non linear shunt, this is where we branch ;) */
+        shunt.newLinearModel()
+            .setBPerSection(shuntCompensatorInfos.getSusceptancePerSection())
+            .setMaximumSectionCount(shuntCompensatorInfos.getMaximumNumberOfSections()).add();
+
+        shunt.add();
+    }
+
+    private List<EquipmenModificationInfos> execCreateShuntCompensator(NetworkStoreListener listener,
+                                                                       ShuntCompensatorCreationInfos shuntCompensatorCreationInfos,
+                                                                       ReporterModel reporter,
+                                                                       Reporter subReporter) {
+        Network network = listener.getNetwork();
+        UUID networkUuid = listener.getNetworkUuid();
+
+        return doAction(listener, () -> {
+            if (listener.isApplyModifications()) {
+                // create the shunt compensator in the network
+                VoltageLevel voltageLevel = getVoltageLevel(network, shuntCompensatorCreationInfos.getVoltageLevelId());
+                createShuntCompensator(voltageLevel, shuntCompensatorCreationInfos, voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER);
+
+                subReporter.report(Report.builder()
+                    .withKey("shuntCompensatorCreated")
+                    .withDefaultMessage("New shunt compensator with id=${id} created")
+                    .withValue("id", shuntCompensatorCreationInfos.getEquipmentId())
+                    .withSeverity(new TypedValue("SHUNT_COMPENSATOR_CREATION_INFO", TypedValue.INFO_LOGLEVEL))
+                    .build());
+            }
+
+            // add the shunt compensator creation entity to the listener
+            listener.storeShuntCompensatorCreation(shuntCompensatorCreationInfos);
+        }, CREATE_SHUNT_COMPENSATOR_ERROR, networkUuid, reporter, subReporter).stream().map(EquipmenModificationInfos.class::cast)
+            .collect(Collectors.toList());
+    }
+
+    public Flux<EquipmenModificationInfos> createShuntCompensator(UUID networkUuid, String variantId, UUID groupUuid, ShuntCompensatorCreationInfos shuntCompensatorCreationInfos) {
+        return assertShuntCompensatorCreationInfosNotEmpty(shuntCompensatorCreationInfos).thenMany(
+            getNetworkModificationInfos(networkUuid, variantId).flatMapIterable(networkInfos -> {
+                NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, modificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
+                ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
+                Reporter subReporter = reporter.createSubReporter("shuntCompensatorCreation", "Shunt compensator creation");
+
+                return execCreateShuntCompensator(listener, shuntCompensatorCreationInfos, reporter, subReporter);
+            }));
     }
 }

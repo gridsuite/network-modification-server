@@ -277,4 +277,22 @@ public class NetworkModificationRepository {
     public List<ModificationEntity> getModificationsEntities(List<UUID> groupUuids) {
         return this.modificationRepository.findAllByGroupIdInOrderByDate(groupUuids);
     }
+
+    @Transactional(readOnly = true)
+    public List<ModificationInfos> getModificationsInfos(List<UUID> groupUuids) {
+        return this.modificationRepository.findAllByGroupIdInOrderByDate(groupUuids).stream().map(ModificationEntity::toModificationInfos).collect(Collectors.toList());
+    }
+
+    public ShuntCompensatorCreationEntity createShuntCompensatorEntity(ShuntCompensatorCreationInfos shuntCompensatorCreationInfos) {
+        return new ShuntCompensatorCreationEntity(shuntCompensatorCreationInfos);
+    }
+
+    public ShuntCompensatorCreationInfos getShuntCompensatorCreationModification(UUID groupId, UUID modificationUuid) {
+        return ((ShuntCompensatorCreationEntity) this.modificationRepository
+            .findById(modificationUuid)
+            .filter(m -> ModificationType.SHUNT_COMPENSATOR_CREATION.name().equals(m.getType()))
+            .filter(m -> groupId.equals(m.getGroup().getId()))
+            .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString())))
+            .toModificationInfos();
+    }
 }

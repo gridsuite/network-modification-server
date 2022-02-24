@@ -7,16 +7,22 @@
 package org.gridsuite.modification.server;
 
 import com.powsybl.commons.reporter.ReporterModel;
+import com.powsybl.iidm.network.Country;
 import com.powsybl.iidm.network.EnergySource;
 import com.powsybl.iidm.network.LoadType;
 import com.powsybl.iidm.network.Network;
+import com.powsybl.iidm.network.SwitchKind;
 import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.sld.iidm.extensions.BranchStatus;
-import org.gridsuite.modification.server.dto.BranchStatusModificationInfos;
-import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.dto.BuildInfos;
+import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.creation.BusbarConnectionCreationEmbeddable;
+import org.gridsuite.modification.server.entities.equipment.creation.BusbarSectionCreationEmbeddable;
+import org.gridsuite.modification.server.entities.equipment.creation.LoadCreationEntity;
+import org.gridsuite.modification.server.entities.equipment.deletion.EquipmentDeletionEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.attribute.EquipmentAttributeModificationEntity;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.NetworkModificationService;
 import org.gridsuite.modification.server.service.BuildStoppedPublisherService;
@@ -46,10 +52,9 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.config.EnableWebFlux;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -66,7 +71,7 @@ import static org.mockito.Mockito.when;
 @RunWith(SpringRunner.class)
 @EnableWebFlux
 @AutoConfigureWebTestClient
-@SpringBootTest(properties = {"spring.data.elasticsearch.enabled=false"})
+@SpringBootTest(properties = {"spring.data.elasticsearch.enabled=true"})
 @ContextHierarchy({@ContextConfiguration(classes = {NetworkModificationApplication.class, TestChannelBinderConfiguration.class})})
 public class BuildTest {
 
@@ -74,6 +79,7 @@ public class BuildTest {
     private static final UUID TEST_NETWORK_STOP_BUILD_ID = UUID.fromString("11111111-7977-4592-ba19-88027e4254e4");
     private static final UUID TEST_GROUP_ID = UUID.randomUUID();
     private static final UUID TEST_GROUP_ID_2 = UUID.randomUUID();
+    private static final String VARIANT_ID_2 = "variant_2";
 
     @Autowired
     private OutputDestination output;
@@ -93,6 +99,9 @@ public class BuildTest {
 
     @Autowired
     private NetworkModificationService networkModificationService;
+
+    @Autowired
+    private EquipmentInfosService equipmentInfosService;
 
     private Network network;
 
@@ -119,6 +128,7 @@ public class BuildTest {
 
         // clean DB
         modificationRepository.deleteAll();
+        equipmentInfosService.deleteVariants(TEST_NETWORK_ID, List.of(VariantManagerConstants.INITIAL_VARIANT_ID, NetworkCreation.VARIANT_ID, VARIANT_ID_2));
 
         // purge messages
         while (output.receive(1000, "build.result") != null) {
@@ -141,6 +151,7 @@ public class BuildTest {
         entities1.add(modificationRepository.createEquipmentAttributeModification("trf1", "ratioTapChanger.tapPosition", 2));
         entities1.add(modificationRepository.createEquipmentAttributeModification("trf6", "phaseTapChanger1.tapPosition", 0));
         entities1.add(modificationRepository.createLoadEntity("newLoad", "newLoad", LoadType.AUXILIARY, "v1", "1.1", 10., 20.));
+        entities1.add(modificationRepository.createSubstationEntity("newSubstation", "newSubstation", Country.FR));
 
         List<ModificationEntity> entities2 = new ArrayList<>();
         entities2.add(modificationRepository.createGeneratorEntity("newGenerator", "newGenerator", EnergySource.HYDRO, "v2", "1A", 0., 500., 1., 100., 50., true, 225.));
@@ -149,18 +160,33 @@ public class BuildTest {
         entities2.add(modificationRepository.createEquipmentDeletionEntity("v2shunt", "SHUNT_COMPENSATOR"));
         entities2.add(modificationRepository.createGroovyScriptModificationEntity("network.getGenerator('idGenerator').targetP=55\n"));
         entities2.add(modificationRepository.createBranchStatusModificationEntity("line2", BranchStatusModificationInfos.ActionType.TRIP));
+        entities2.add(modificationRepository.createVoltageLevelEntity("vl9", "vl9", 225, "s1",
+            List.of(new BusbarSectionCreationEmbeddable("1.1", "1.1", 1, 1),
+                    new BusbarSectionCreationEmbeddable("1.2", "1.2", 1, 2)),
+            List.of(new BusbarConnectionCreationEmbeddable("1.1", "1.2", SwitchKind.BREAKER))));
+        entities2.add(modificationRepository.createShuntCompensatorEntity(ShuntCompensatorCreationInfos.builder()
+            .equipmentId("shunt9")
+            .equipmentName("shunt9")
+            .voltageLevelId("v2")
+            .busOrBusbarSectionId("1A")
+            .maximumNumberOfSections(2)
+            .currentNumberOfSections(2)
+            .susceptancePerSection(1.)
+            .isIdenticalSection(true)
+            .build()));
 
         modificationRepository.saveModifications(TEST_GROUP_ID, entities1);
         modificationRepository.saveModifications(TEST_GROUP_ID_2, entities2);
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 6);
-        testNetworkModificationsCount(TEST_GROUP_ID_2, 6);
+        testNetworkModificationsCount(TEST_GROUP_ID, 7);
+        testNetworkModificationsCount(TEST_GROUP_ID_2, 8);
 
         // build VARIANT_ID by cloning network initial variant and applying all modifications in all groups
         String uriString = "/v1/networks/{networkUuid}/build?receiver=me";
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
                                                                  NetworkCreation.VARIANT_ID,
-                                                                 List.of(TEST_GROUP_ID, TEST_GROUP_ID_2));
+                                                                 List.of(TEST_GROUP_ID, TEST_GROUP_ID_2),
+                                                                 new HashSet<>());
         webTestClient.post().uri(uriString, TEST_NETWORK_ID)
             .bodyValue(buildInfos)
             .exchange()
@@ -169,7 +195,7 @@ public class BuildTest {
         Thread.sleep(3000);  // Needed to be sure that build result message has been sent
         Message<byte[]> resultMessage = output.receive(1000, "build.result");
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
-        assertEquals("s1,s2", new String(resultMessage.getPayload()));
+        assertEquals("newSubstation,s1,s2", new String(resultMessage.getPayload()));
 
         // test all modifications have been made on variant VARIANT_ID
         network.getVariantManager().setWorkingVariant(NetworkCreation.VARIANT_ID);
@@ -201,6 +227,9 @@ public class BuildTest {
         assertEquals(2., network.getTwoWindingsTransformer("new2wt").getX(), 0.1);
         assertEquals(5., network.getTwoWindingsTransformer("new2wt").getRatedU1(), 0.1);
         assertNull(network.getShuntCompensator("v2shunt"));
+        assertEquals(Country.FR, network.getSubstation("newSubstation").getCountry().orElse(Country.AF));
+        assertNotNull(network.getVoltageLevel("vl9"));
+        assertNotNull(network.getShuntCompensator("shunt9"));
 
         // Test that no modifications have been made on initial variant
         network.getVariantManager().setWorkingVariant(VariantManagerConstants.INITIAL_VARIANT_ID);
@@ -215,10 +244,101 @@ public class BuildTest {
         assertNull(network.getGenerator("newLine"));
         assertNull(network.getGenerator("new2wt"));
         assertNotNull(network.getShuntCompensator("v2shunt"));
+        assertNull(network.getSubstation("newSubstation"));
+        assertNull(network.getVoltageLevel("vl9"));
+        assertNull(network.getShuntCompensator("shunt9"));
 
         // No new modification entity should have been added to the database
-        testNetworkModificationsCount(TEST_GROUP_ID, 6);
-        testNetworkModificationsCount(TEST_GROUP_ID_2, 6);
+        testNetworkModificationsCount(TEST_GROUP_ID, 7);
+        testNetworkModificationsCount(TEST_GROUP_ID_2, 8);
+
+        // Execute another build starting from variant VARIANT_ID to variant VARIANT_ID_2
+        // to check
+        BuildInfos newBuildInfos = new BuildInfos(NetworkCreation.VARIANT_ID,
+            VARIANT_ID_2,
+            Collections.emptyList(),
+            new HashSet<>());
+        webTestClient.post().uri(uriString, TEST_NETWORK_ID)
+            .bodyValue(newBuildInfos)
+            .exchange()
+            .expectStatus().isOk();
+
+        Thread.sleep(3000);  // Needed to be sure that build result message has been sent and data have been written in ES
+        resultMessage = output.receive(1000, "build.result");
+        assertEquals("me", resultMessage.getHeaders().get("receiver"));
+        assertEquals("", new String(resultMessage.getPayload()));
+
+        List<EquipmentInfos> eqVariant1 = equipmentInfosService.findAllEquipmentInfos(TEST_NETWORK_ID).stream().filter(eq -> eq.getVariantId().equals(NetworkCreation.VARIANT_ID)).collect(Collectors.toList());
+        List<EquipmentInfos> eqVariant2 = equipmentInfosService.findAllEquipmentInfos(TEST_NETWORK_ID).stream().filter(eq -> eq.getVariantId().equals(VARIANT_ID_2)).collect(Collectors.toList());
+        assertTrue(eqVariant2.size() > 0);
+        assertEquals(eqVariant1.size(), eqVariant2.size());
+
+        List<TombstonedEquipmentInfos> tbseqVariant1 = equipmentInfosService.findAllTombstonedEquipmentInfos(TEST_NETWORK_ID).stream().filter(eq -> eq.getVariantId().equals(NetworkCreation.VARIANT_ID)).collect(Collectors.toList());
+        List<TombstonedEquipmentInfos> tbseqVariant2 = equipmentInfosService.findAllTombstonedEquipmentInfos(TEST_NETWORK_ID).stream().filter(eq -> eq.getVariantId().equals(VARIANT_ID_2)).collect(Collectors.toList());
+        // v2shunt was deleted from initial variant => created as TombstonedEquipmentInfos in ElasticSearch
+        assertEquals(1, tbseqVariant1.size());
+        assertEquals(tbseqVariant1.size(), tbseqVariant2.size());
+        // deactivate some modifications and rebuild VARIANT_ID
+        network.getVariantManager().cloneVariant(VariantManagerConstants.INITIAL_VARIANT_ID, NetworkCreation.VARIANT_ID, true);
+
+        AtomicReference<UUID> lineModificationEntityUuid = new AtomicReference<>();
+        AtomicReference<UUID> loadCreationEntityUuid = new AtomicReference<>();
+        AtomicReference<UUID> equipmentDeletionEntityUuid = new AtomicReference<>();
+        modificationRepository.getModificationsEntities(List.of(TEST_GROUP_ID, TEST_GROUP_ID_2)).forEach(entity -> {
+            if (entity.getType().equals(ModificationType.EQUIPMENT_ATTRIBUTE_MODIFICATION.name())) {
+                if (((EquipmentAttributeModificationEntity) entity).getEquipmentId().equals("line1")) {
+                    lineModificationEntityUuid.set(entity.getId());
+                }
+            } else if (entity.getType().equals(ModificationType.LOAD_CREATION.name())) {
+                if (((LoadCreationEntity) entity).getEquipmentId().equals("newLoad")) {
+                    loadCreationEntityUuid.set(entity.getId());
+                }
+            } else if (entity.getType().equals(ModificationType.EQUIPMENT_DELETION.name())) {
+                if (((EquipmentDeletionEntity) entity).getEquipmentId().equals("v2shunt")) {
+                    equipmentDeletionEntityUuid.set(entity.getId());
+                }
+            }
+        });
+
+        buildInfos.addModificationToExclude(lineModificationEntityUuid.get());
+        buildInfos.addModificationToExclude(loadCreationEntityUuid.get());
+        buildInfos.addModificationToExclude(equipmentDeletionEntityUuid.get());
+
+        webTestClient.post().uri(uriString, TEST_NETWORK_ID)
+            .bodyValue(buildInfos)
+            .exchange()
+            .expectStatus().isOk();
+
+        Thread.sleep(3000);  // Needed to be sure that build result message has been sent
+        resultMessage = output.receive(1000, "build.result");
+        assertEquals("me", resultMessage.getHeaders().get("receiver"));
+        assertEquals("newSubstation,s1,s2", new String(resultMessage.getPayload()));
+
+        // test that only active modifications have been made on variant VARIANT_ID
+        network.getVariantManager().setWorkingVariant(NetworkCreation.VARIANT_ID);
+        assertTrue(network.getSwitch("v1d1").isOpen());
+        assertNull(network.getLine("line1").getExtension(BranchStatus.class));
+        assertEquals(55., network.getGenerator("idGenerator").getTargetP(), 0.1);
+        assertEquals(2, network.getTwoWindingsTransformer("trf1").getRatioTapChanger().getTapPosition());
+        assertEquals(0, network.getThreeWindingsTransformer("trf6").getLeg1().getPhaseTapChanger().getTapPosition());
+        assertNull(network.getLoad("newLoad"));
+        assertEquals(EnergySource.HYDRO, network.getGenerator("newGenerator").getEnergySource());
+        assertEquals("v2", network.getGenerator("newGenerator").getTerminal().getVoltageLevel().getId());
+        assertEquals(500., network.getGenerator("newGenerator").getMaxP(), 0.1);
+        assertEquals(100., network.getGenerator("newGenerator").getTargetP(), 0.1);
+        assertTrue(network.getGenerator("newGenerator").isVoltageRegulatorOn());
+        assertEquals(225., network.getGenerator("newGenerator").getTargetV(), 0.1);
+        assertEquals("v1", network.getLine("newLine").getTerminal1().getVoltageLevel().getId());
+        assertEquals("v2", network.getLine("newLine").getTerminal2().getVoltageLevel().getId());
+        assertEquals(4., network.getLine("newLine").getB1(), 0.1);
+        assertEquals("v1", network.getTwoWindingsTransformer("new2wt").getTerminal1().getVoltageLevel().getId());
+        assertEquals("v2", network.getTwoWindingsTransformer("new2wt").getTerminal2().getVoltageLevel().getId());
+        assertEquals(2., network.getTwoWindingsTransformer("new2wt").getX(), 0.1);
+        assertEquals(5., network.getTwoWindingsTransformer("new2wt").getRatedU1(), 0.1);
+        assertNotNull(network.getShuntCompensator("v2shunt"));
+        assertEquals(Country.FR, network.getSubstation("newSubstation").getCountry().orElse(Country.AF));
+        assertNotNull(network.getVoltageLevel("vl9"));
+        assertNotNull(network.getShuntCompensator("shunt9"));
     }
 
     @Test
@@ -234,7 +354,8 @@ public class BuildTest {
         String uriString = "/v1/networks/{networkUuid}/build?receiver=me";
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
             NetworkCreation.VARIANT_ID,
-            List.of(TEST_GROUP_ID));
+            List.of(TEST_GROUP_ID),
+            new HashSet<>());
         webTestClient.post().uri(uriString, TEST_NETWORK_STOP_BUILD_ID)
             .bodyValue(buildInfos)
             .exchange()

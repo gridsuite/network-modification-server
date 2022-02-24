@@ -132,6 +132,7 @@ public class ModificationControllerTest {
                 .equipmentAttributeName("equipmentAttributeName")
                 .equipmentAttributeValue("equipmentAttributeValue")
                 .build();
+        assertEquals("EquipmenAttributeModificationInfos(super=EquipmenModificationInfos(super=ModificationInfos(uuid=7928181c-7977-4592-ba19-88027e4254e4, date=2021-02-19T00:00Z, type=EQUIPMENT_ATTRIBUTE_MODIFICATION, substationIds=[substationId]), equipmentId=equipmentId), equipmentAttributeName=equipmentAttributeName, equipmentAttributeValue=equipmentAttributeValue)", modificationInfos.toString());
 
         // switch opening
         EquipmenAttributeModificationInfos modificationSwitchInfos =
@@ -710,6 +711,37 @@ public class ModificationControllerTest {
     }
 
     @Test
+    public void testCreateShuntCompensator() {
+        String uriString = "/v1/networks/{networkUuid}/shunt-compensators?group=" + TEST_GROUP_ID;
+
+        var shunt1 = ShuntCompensatorCreationInfos.builder()
+            .equipmentId("shuntOneId").equipmentName("hop")
+            .currentNumberOfSections(4).maximumNumberOfSections(9)
+            .susceptancePerSection(1.).isIdenticalSection(true)
+            .voltageLevelId("v2").busOrBusbarSectionId("1B")
+            .build();
+
+        webTestClient.put().uri(uriString, TEST_NETWORK_ID)
+            .body(BodyInserters.fromValue(shunt1))
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBodyList(EquipmenModificationInfos.class)
+            .value(modifications -> modifications.get(0),
+                MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.SHUNT_COMPENSATOR_CREATION, "shuntOneId", Set.of("s1")));
+
+        assertNotNull(network.getShuntCompensator("shuntOneId"));  // shunt compensator was created
+        testNetworkModificationsCount(TEST_GROUP_ID, 1);
+
+        shunt1.setMaximumNumberOfSections(2);
+        webTestClient.put().uri(uriString, TEST_NETWORK_ID)
+            .body(BodyInserters.fromValue(shunt1))
+            .exchange()
+            .expectStatus().is5xxServerError()
+            .expectBody(String.class);
+    }
+
+    @Test
     public void testCreateGeneratorInNodeBreaker() {
         String uriString = "/v1/networks/{networkUuid}/generators?group=" + TEST_GROUP_ID;
 
@@ -1192,6 +1224,26 @@ public class ModificationControllerTest {
     }
 
     @Test
+    public void testErrorRemovingDanglingSwitches() {
+        String uriString = "/v1/networks/{networkUuid}/equipments/type/{equipmentType}/id/{equipmentId}?group=" + TEST_GROUP_ID;
+
+        // delete load with error removing dangling switches, because the load connection node is not linked to any other node
+        webTestClient.delete().uri(uriString, TEST_NETWORK_ID, "LOAD", "v5load")
+            .exchange()
+            .expectStatus().is5xxServerError()
+            .expectBody(String.class)
+            .value(exception -> exception, containsString("DELETE_EQUIPMENT_ERROR : no such vertex in graph: 2"));
+
+        // no modifications added
+        webTestClient.get().uri("/v1/groups")
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBodyList(UUID.class)
+            .isEqualTo(List.of());
+    }
+
+    @Test
     public void testCreateLineInNodeBreaker() {
         String uriString = "/v1/networks/{networkUuid}/lines?group=" + TEST_GROUP_ID;
 
@@ -1212,6 +1264,8 @@ public class ModificationControllerTest {
             .voltageLevelId2("v2")
             .busOrBusbarSectionId2("1A")
             .build();
+
+        assertEquals("LineCreationInfos(super=BranchCreationInfos(super=EquipmentCreationInfos(super=EquipmenModificationInfos(super=ModificationInfos(uuid=null, date=null, type=null, substationIds=[]), equipmentId=idLine4), equipmentName=nameLine4), seriesResistance=100.0, seriesReactance=100.0, voltageLevelId1=v1, voltageLevelId2=v2, busOrBusbarSectionId1=1.1, busOrBusbarSectionId2=1A, currentLimits1=null, currentLimits2=null), shuntConductance1=10.0, shuntSusceptance1=10.0, shuntConductance2=20.0, shuntSusceptance2=20.0)", lineCreationInfos.toString());
 
         webTestClient.put().uri(uriString, TEST_NETWORK_ID)
             .body(BodyInserters.fromValue(lineCreationInfos))

@@ -9,7 +9,6 @@ package org.gridsuite.modification.server.entities.equipment.deletion;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.ModificationType;
-import org.gridsuite.modification.server.dto.EquipmenModificationInfos;
 import org.gridsuite.modification.server.dto.EquipmentDeletionInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
 
@@ -18,8 +17,6 @@ import javax.persistence.Entity;
 import javax.persistence.ForeignKey;
 import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
-
-import java.util.Set;
 
 import static org.gridsuite.modification.server.ModificationType.EQUIPMENT_DELETION;
 
@@ -43,11 +40,6 @@ public class EquipmentDeletionEntity extends EquipmentModificationEntity {
     @Override
     public EquipmentDeletionInfos toModificationInfos() {
         return toEquipmentDeletionInfosBuilder().build();
-    }
-
-    @Override
-    public EquipmenModificationInfos toEquipmentModificationInfos(Set<String> uuids) {
-        return toEquipmentDeletionInfosBuilder().substationIds(uuids).build();
     }
 
     private EquipmentDeletionInfos.EquipmentDeletionInfosBuilder<?, ?> toEquipmentDeletionInfosBuilder() {

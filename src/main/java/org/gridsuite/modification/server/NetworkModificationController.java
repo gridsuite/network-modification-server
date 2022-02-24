@@ -136,6 +136,16 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.createGenerator(networkUuid, variantId, groupUuid, generatorCreationInfos));
     }
 
+    @PutMapping(value = "/networks/{networkUuid}/shunt-compensators", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "create a shunt compensator in a network variant")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The shunt compensator has been created")})
+    public ResponseEntity<Flux<EquipmenModificationInfos>> createShuntCompensator(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
+                                                                           @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
+                                                                           @RequestParam(value = "group", required = false) UUID groupUuid,
+                                                                           @RequestBody ShuntCompensatorCreationInfos shuntCompensatorCreationInfos) {
+        return ResponseEntity.ok().body(networkModificationService.createShuntCompensator(networkUuid, variantId, groupUuid, shuntCompensatorCreationInfos));
+    }
+
     @PutMapping(value = "/networks/{networkUuid}/lines", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "create a line in a network variant")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The line has been created")})

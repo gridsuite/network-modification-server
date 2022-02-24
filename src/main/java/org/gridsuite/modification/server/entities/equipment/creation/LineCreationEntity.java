@@ -9,7 +9,6 @@ package org.gridsuite.modification.server.entities.equipment.creation;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.ModificationType;
-import org.gridsuite.modification.server.dto.EquipmenModificationInfos;
 import org.gridsuite.modification.server.dto.LineCreationInfos;
 
 import javax.persistence.Column;
@@ -17,7 +16,6 @@ import javax.persistence.Entity;
 import javax.persistence.ForeignKey;
 import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
-import java.util.Set;
 
 /**
  * @author Sylvain Bouzols <sylvain.bouzols at rte-france.com>
@@ -77,11 +75,6 @@ public class LineCreationEntity extends BranchCreationEntity {
     @Override
     public LineCreationInfos toModificationInfos() {
         return toLineCreationInfosBuilder().build();
-    }
-
-    @Override
-    public EquipmenModificationInfos toEquipmentModificationInfos(Set<String> uuids) {
-        return toLineCreationInfosBuilder().substationIds(uuids).build();
     }
 
     private LineCreationInfos.LineCreationInfosBuilder<?, ?> toLineCreationInfosBuilder() {

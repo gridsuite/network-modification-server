@@ -13,7 +13,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -29,5 +31,11 @@ public class BuildInfos {
 
     private String destinationVariantId;
 
-    private List<UUID> modifications = new ArrayList<>();
+    private List<UUID> modificationGroups = new ArrayList<>();
+
+    private Set<UUID> modificationsToExclude = new HashSet<>();
+
+    public void addModificationToExclude(UUID modificationUuid) {
+        modificationsToExclude.add(modificationUuid);
+    }
 }
