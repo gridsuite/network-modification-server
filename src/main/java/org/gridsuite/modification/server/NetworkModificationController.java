@@ -65,6 +65,13 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.getModifications(groupUuid, false));
     }
 
+    @GetMapping(value = "/modifications/{modificationUuid}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Get a modification")
+    @ApiResponse(responseCode = "200", description = "The modification")
+    public ResponseEntity<Flux<ModificationInfos>> getModification(@Parameter(description = "Modification UUID") @PathVariable("modificationUuid") UUID modificationUuid) {
+        return ResponseEntity.ok().body(networkModificationService.getModification(modificationUuid));
+    }
+
     @GetMapping(value = "/groups/{groupUuid}/modifications/metadata", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Get list of modifications metadata of a group")
     @ApiResponse(responseCode = "200", description = "List of modifications of the group")

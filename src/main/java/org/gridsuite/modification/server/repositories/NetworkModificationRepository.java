@@ -103,6 +103,7 @@ public class NetworkModificationRepository {
                 .collect(Collectors.toList());
     }
 
+    @Transactional
     public List<ModificationInfos> getModifications(List<UUID> uuids) {
         return this.modificationRepository.findAllById(uuids).stream()
             .map(ModificationEntity::toModificationInfos)

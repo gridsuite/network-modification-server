@@ -198,6 +198,10 @@ public class NetworkModificationService {
         return Flux.fromStream(() -> modificationRepository.getModifications(groupUuid, onlyMetadata).stream());
     }
 
+    public Flux<ModificationInfos> getModification(UUID modificationUuid) {
+        return Flux.fromStream(() -> modificationRepository.getModifications(List.of(modificationUuid)).stream());
+    }
+
     private boolean disconnectLineBothSides(Network network, String lineId) {
         Terminal terminal1 = network.getLine(lineId).getTerminal1();
         boolean terminal1Disconnected = !terminal1.isConnected() || terminal1.disconnect();
