@@ -205,6 +205,10 @@ public class NetworkModificationRepository {
         return count;
     }
 
+    public void updateModification(EquipmentCreationEntity substationEntity) {
+        this.modificationRepository.save(substationEntity);
+    }
+
     private ModificationGroupEntity getModificationGroup(UUID groupUuid) {
         return this.modificationGroupRepository.findById(groupUuid).orElseThrow(() -> new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, groupUuid.toString()));
     }
@@ -295,4 +299,5 @@ public class NetworkModificationRepository {
             .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString())))
             .toModificationInfos();
     }
+
 }

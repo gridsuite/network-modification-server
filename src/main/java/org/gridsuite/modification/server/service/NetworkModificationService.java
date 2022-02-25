@@ -1013,6 +1013,33 @@ public class NetworkModificationService {
             .collect(Collectors.toList());
     }
 
+    private List<EquipmenModificationInfos> execSubstationCreationUpdate(NetworkStoreListener listener,
+                                                                 SubstationCreationInfos substationCreationInfos,
+                                                                 ReporterModel reporter,
+                                                                 Reporter subReporter,
+                                                                 UUID groupUuid) {
+        Network network = listener.getNetwork();
+        UUID networkUuid = listener.getNetworkUuid();
+
+        return doAction(listener, () -> {
+//            if (listener.isApplyModifications()) {
+//                SubstationImpl substation = (SubstationImpl) network.getSubstation(substationCreationInfos.getUuid().toString());
+//                substation.setCountry(substationCreationInfos.getSubstationCountry());
+//
+//                subReporter.report(Report.builder()
+//                        .withKey("substationCreationUpdate")
+//                        .withDefaultMessage("New substation with id=${id} created")
+//                        .withValue("id", substationCreationInfos.getEquipmentId())
+//                        .withSeverity(new TypedValue("SUBSTATION_CREATION_INFO", TypedValue.INFO_LOGLEVEL))
+//                        .build());
+//            }
+
+            // add the substation creation entity to the listener
+            listener.storeSubstationCreationUpdate(substationCreationInfos, groupUuid);
+        }, CREATE_SUBSTATION_ERROR, networkUuid, reporter, subReporter).stream().map(EquipmenModificationInfos.class::cast)
+                .collect(Collectors.toList());
+    }
+
     public Flux<EquipmenModificationInfos> createSubstation(UUID networkUuid, String variantId, UUID groupUuid, SubstationCreationInfos substationCreationInfos) {
         return assertSubstationCreationInfosNotEmpty(substationCreationInfos).thenMany(
                 getNetworkModificationInfos(networkUuid, variantId).flatMapIterable(networkInfos -> {
@@ -1021,6 +1048,18 @@ public class NetworkModificationService {
                     Reporter subReporter = reporter.createSubReporter("SubstationCreation", "Substation creation");
 
                     return execCreateSubstation(listener, substationCreationInfos, reporter, subReporter);
+                }));
+    }
+
+    public Flux<EquipmenModificationInfos> updateSubstationCreation(UUID networkUuid, String variantId, UUID groupUuid, SubstationCreationInfos substationCreationInfos) {
+        System.out.println("UPDATE");
+        return assertSubstationCreationInfosNotEmpty(substationCreationInfos).thenMany(
+                getNetworkModificationInfos(networkUuid, variantId).flatMapIterable(networkInfos -> {
+                    NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, modificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
+                    ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
+                    Reporter subReporter = reporter.createSubReporter("SubstationrCreation", "Substation creation");
+
+                    return execSubstationCreationUpdate(listener, substationCreationInfos, reporter, subReporter, groupUuid);
                 }));
     }
 
