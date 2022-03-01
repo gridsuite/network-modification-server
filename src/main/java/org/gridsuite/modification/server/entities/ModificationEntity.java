@@ -28,7 +28,7 @@ import org.gridsuite.modification.server.dto.ModificationInfos;
 @Setter
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
-@Table(name = "modification"/*, indexes = {@Index(name = "modificationEntity_group_id_index", columnList = "group_id")}*/)
+@Table(name = "modification")
 public class ModificationEntity {
 
     @Id
