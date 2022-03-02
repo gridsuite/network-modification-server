@@ -14,6 +14,7 @@ import com.vladmihalcea.sql.SQLStatementCountValidator;
 import org.gridsuite.modification.server.dto.BranchStatusModificationInfos;
 import org.gridsuite.modification.server.dto.EquipmenAttributeModificationInfos;
 import org.gridsuite.modification.server.dto.GeneratorCreationInfos;
+import org.gridsuite.modification.server.dto.GroovyScriptModificationInfos;
 import org.gridsuite.modification.server.dto.LineCreationInfos;
 import org.gridsuite.modification.server.dto.LoadCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
@@ -36,6 +37,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -102,6 +104,14 @@ public class ModificationRepositoryTest {
 
     private VoltageLevelCreationInfos getVoltageLevelCreationModification(UUID modificationUuid) {
         return (VoltageLevelCreationInfos) networkModificationRepository.getModificationInfo(modificationUuid);
+    }
+
+    public GroovyScriptModificationInfos getGroovyScriptModification(UUID modificationUuid) {
+        return (GroovyScriptModificationInfos) networkModificationRepository.getModificationInfo(modificationUuid);
+    }
+
+    public ShuntCompensatorCreationInfos getShuntCompensatorCreationModification(UUID modificationUuid) {
+        return (ShuntCompensatorCreationInfos) networkModificationRepository.getModificationInfo(modificationUuid);
     }
 
     @Test
@@ -315,9 +325,9 @@ public class ModificationRepositoryTest {
         List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, true);
         assertEquals(2, modificationInfos.size());
 
-        assertThat(networkModificationRepository.getShuntCompensatorCreationModification(TEST_GROUP_ID, modificationInfos.get(0).getUuid()),
+        assertThat(getShuntCompensatorCreationModification(modificationInfos.get(0).getUuid()),
             MatcherShuntCompensatorCreationInfos.createMatcher(createShuntCompensatorEntity1.toModificationInfos()));
-        assertThat(networkModificationRepository.getShuntCompensatorCreationModification(TEST_GROUP_ID, modificationInfos.get(1).getUuid()),
+        assertThat(getShuntCompensatorCreationModification(modificationInfos.get(1).getUuid()),
             MatcherShuntCompensatorCreationInfos.createMatcher(createShuntCompensatorEntity2.toModificationInfos()));
 
         assertEquals(2, networkModificationRepository.getModifications(TEST_GROUP_ID, true).size());
@@ -476,11 +486,11 @@ public class ModificationRepositoryTest {
         List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false);
         assertEquals(3, modificationInfos.size());
 
-        assertThat(networkModificationRepository.getGroovyScriptModification(TEST_GROUP_ID, modificationInfos.get(0).getUuid()),
+        assertThat(getGroovyScriptModification(modificationInfos.get(0).getUuid()),
             MatcherGroovyScriptModificationInfos.createMatcherGroovyScriptModificationInfos(groovyScriptModificationEntity1.toModificationInfos()));
-        assertThat(networkModificationRepository.getGroovyScriptModification(TEST_GROUP_ID, modificationInfos.get(1).getUuid()),
+        assertThat(getGroovyScriptModification(modificationInfos.get(1).getUuid()),
             MatcherGroovyScriptModificationInfos.createMatcherGroovyScriptModificationInfos(groovyScriptModificationEntity2.toModificationInfos()));
-        assertThat(networkModificationRepository.getGroovyScriptModification(TEST_GROUP_ID, modificationInfos.get(2).getUuid()),
+        assertThat(getGroovyScriptModification(modificationInfos.get(2).getUuid()),
             MatcherGroovyScriptModificationInfos.createMatcherGroovyScriptModificationInfos(groovyScriptModificationEntity3.toModificationInfos()));
 
         assertEquals(3, networkModificationRepository.getModifications(TEST_GROUP_ID, false).size());

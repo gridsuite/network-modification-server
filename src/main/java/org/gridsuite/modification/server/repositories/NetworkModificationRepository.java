@@ -240,11 +240,6 @@ public class NetworkModificationRepository {
     }
 
     @Transactional(readOnly = true)
-    public GroovyScriptModificationInfos getGroovyScriptModification(UUID groupUuid, UUID modificationUuid) {
-        return (GroovyScriptModificationInfos) getModificationInfo(modificationUuid);
-    }
-
-    @Transactional(readOnly = true)
     public List<ModificationEntity> getModificationsEntities(List<UUID> groupUuids) {
         return groupUuids.stream().flatMap(this::getModificationList).collect(Collectors.toList());
     }
@@ -259,8 +254,4 @@ public class NetworkModificationRepository {
         return new ShuntCompensatorCreationEntity(shuntCompensatorCreationInfos);
     }
 
-    @Transactional(readOnly = true)
-    public ShuntCompensatorCreationInfos getShuntCompensatorCreationModification(UUID groupId, UUID modificationUuid) {
-        return (ShuntCompensatorCreationInfos) getModificationInfo(modificationUuid);
-    }
 }
