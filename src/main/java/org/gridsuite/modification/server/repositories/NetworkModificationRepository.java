@@ -103,6 +103,7 @@ public class NetworkModificationRepository {
 
     @Transactional // To have all move in the same transaction (atomic)
     public void moveModifications(UUID groupUuid, List<UUID> modifications, UUID before) {
+        /* when before == null we move at the end of list */
         var modificationGroupEntity = getModificationGroup(groupUuid);
 
         Map<UUID, ModificationEntity> originalModifications = modificationRepository.findAllBaseByGroupId(groupUuid).stream()
@@ -135,10 +136,13 @@ public class NetworkModificationRepository {
 
     @Transactional(readOnly = true)
     public List<ModificationInfos> getModifications(UUID groupUuid, boolean onlyMetadata) {
-        ModificationGroupEntity group = getModificationGroup(groupUuid);
-        var modificationEntities = onlyMetadata ? this.modificationRepository.findAllBaseByGroupId(group.getId())
-            : new ArrayList<>(getModificationsEntities(List.of(groupUuid)));
-        return modificationEntities.stream()
+        return onlyMetadata ? getModificationsMetadata(groupUuid) : getModificationsInfos(List.of(groupUuid));
+    }
+
+    private List<ModificationInfos> getModificationsMetadata(UUID groupUuid) {
+        return modificationRepository
+            .findAllBaseByGroupId(getModificationGroup(groupUuid).getId())
+            .stream()
             .map(ModificationEntity::toModificationInfos)
             .collect(Collectors.toList());
     }
