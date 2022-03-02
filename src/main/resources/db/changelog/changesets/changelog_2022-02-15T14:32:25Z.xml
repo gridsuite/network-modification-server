@@ -5,11 +5,5 @@
             <column name="modifications_order" type="int4"/>
         </addColumn>
     </changeSet>
-    <changeSet author="borsenbergerjac (generated)" id="1644935557396-5">
-        <dropNotNullConstraint columnDataType="uuid" columnName="group_id" tableName="modification"/>
-    </changeSet>
-    <changeSet author="borsenbergerjac (generated)" id="1645016885220-1">
-        <addNotNullConstraint columnDataType="uuid" columnName="group_id" tableName="modification" validate="true"/>
-    </changeSet>
 
 </databaseChangeLog>
