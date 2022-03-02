@@ -19,10 +19,14 @@ public final class NetworkCreation {
         Substation s1 = createSubstation(network, "s1", "s1", Country.FR);
         VoltageLevel v1 = createVoltageLevel(s1, "v1", "v1", TopologyKind.NODE_BREAKER, 380.0);
         createBusBarSection(v1, "1.1", "1.1", 0);
+
+        createLoad(v1, "v1load", "v1load", 2, 0., 0.);
         createSwitch(v1, "v1d1", "v1d1", SwitchKind.DISCONNECTOR, true, false, false, 0, 1);
         createSwitch(v1, "v1b1", "v1b1", SwitchKind.BREAKER, true, false, false, 1, 2);
-        createLoad(v1, "v1load", "v1load", 2, 0., 0.);
-        createLccConverterStation(v1, "v1lcc", "v1lcc", 3, 0, 0);
+
+        createLccConverterStation(v1, "v1lcc", "v1lcc", 11, 0, 0);
+        createSwitch(v1, "v1dlcc", "v1dlcc", SwitchKind.DISCONNECTOR, true, false, false, 0, 12);
+        createSwitch(v1, "v1blcc", "v1blcc", SwitchKind.BREAKER, true, false, false, 12, 11);
 
         VoltageLevel v2 = createVoltageLevel(s1, "v2", "v2", TopologyKind.NODE_BREAKER, 225.0);
         createBusBarSection(v2, "1A", "1A", 0);
@@ -30,15 +34,29 @@ public final class NetworkCreation {
         createSwitch(v2, "v2d1", "v2d1", SwitchKind.DISCONNECTOR, true, false, false, 0, 2);
         createSwitch(v2, "v2b1", "v2b1", SwitchKind.BREAKER, true, true, false, 2, 3);
         createSwitch(v2, "v2d2", "v2d2", SwitchKind.DISCONNECTOR, true, false, false, 3, 1);
+
+        createLoad(v2, "v2load", "v2load", 5, 0., 0.);
         createSwitch(v2, "v2dload", "v2dload", SwitchKind.DISCONNECTOR, true, false, false, 1, 4);
         createSwitch(v2, "v2bload", "v2bload", SwitchKind.BREAKER, true, false, false, 4, 5);
-        createLoad(v2, "v2load", "v2load", 5, 0., 0.);
+
         createGenerator(v2, "idGenerator", 6, 42.1, 1.0);
-        createShuntCompensator(v2, "v2shunt", "v2shunt", 7, 225., 10, true, 3, 1, 2, 2);
-        createDanglingLine(v2, "v2Dangling", "v2Dangling", 8, 1, 2, 3, 4, 50, 30, "xnode1");
-        createVscConverterStation(v2, "v2vsc", "v2vsc", 9, 1, 40, true, 150);
+        createSwitch(v2, "v2bgenerator", "v2bgenerator", SwitchKind.BREAKER, true, false, false, 6, 7);
+        createSwitch(v2, "v2dgenerator", "v2dgenerator", SwitchKind.DISCONNECTOR, true, false, false, 7, 1);
+
+        createShuntCompensator(v2, "v2shunt", "v2shunt", 8, 225., 10, true, 3, 1, 2, 2);
+        createSwitch(v2, "v2bshunt", "v2bshunt", SwitchKind.BREAKER, true, false, false, 8, 9);
+        createSwitch(v2, "v2dshunt", "v2dshunt", SwitchKind.DISCONNECTOR, true, false, false, 9, 0);
+
+        createDanglingLine(v2, "v2Dangling", "v2Dangling", 10, 1, 2, 3, 4, 50, 30, "xnode1");
+        createSwitch(v2, "v2bdangling", "v2bdangling", SwitchKind.BREAKER, true, false, false, 10, 11);
+        createSwitch(v2, "v2ddangling", "v2ddangling", SwitchKind.DISCONNECTOR, true, false, false, 11, 1);
+
+        createVscConverterStation(v2, "v2vsc", "v2vsc", 12, 1, 40, true, 150);
+        createSwitch(v2, "v2bvsc", "v2bdvsc", SwitchKind.BREAKER, true, false, false, 12, 13);
+        createSwitch(v2, "v2dvsc", "v2dvsc", SwitchKind.DISCONNECTOR, true, false, false, 13, 0);
 
         VoltageLevel v4 = createVoltageLevel(s1, "v4", "v4", TopologyKind.NODE_BREAKER, 380.0);
+        createBusBarSection(v4, "1.A", "1.A", 0);
 
         Substation s3 = createSubstation(network, "s3", "s3", Country.FR);
         VoltageLevel v5 = createVoltageLevel(s3, "v5", "v5", TopologyKind.NODE_BREAKER, 380.0);
@@ -47,14 +65,21 @@ public final class NetworkCreation {
         Substation s2 = createSubstation(network, "s2", "s2", Country.FR);
         VoltageLevel v3 = createVoltageLevel(s2, "v3", "v3", TopologyKind.NODE_BREAKER, 380.0);
         createBusBarSection(v3, "3A", "3A", 0);
+
+        createLoad(v3, "v3load", "v3load", 2, 0., 0.);
         createSwitch(v3, "v3d1", "v3d1", SwitchKind.DISCONNECTOR, true, false, false, 0, 1);
         createSwitch(v3, "v3b1", "v3b1", SwitchKind.BREAKER, true, false, false, 1, 2);
-        createLoad(v3, "v3load", "v3load", 2, 0., 0.);
-        createStaticVarCompensator(v3, "v3Compensator", "v3Compensator", 11, StaticVarCompensator.RegulationMode.VOLTAGE, 380., 100, 2, 30);
-        createBattery(v3, "v3Battery", "v3Battery", 12, 0, 10, 1, 1);
+
+        createStaticVarCompensator(v3, "v3Compensator", "v3Compensator", 4, StaticVarCompensator.RegulationMode.VOLTAGE, 380., 100, 2, 30);
+        createSwitch(v3, "v3dCompensator", "v3dCompensator", SwitchKind.DISCONNECTOR, true, false, false, 0, 3);
+        createSwitch(v3, "v3bCompensator", "v3bCompensator", SwitchKind.BREAKER, true, false, false, 3, 4);
+
+        createBattery(v3, "v3Battery", "v3Battery", 6, 0, 10, 1, 1);
+        createSwitch(v3, "v3dBattery", "v3dBattery", SwitchKind.DISCONNECTOR, true, false, false, 0, 5);
+        createSwitch(v3, "v3bBattery", "v3bBattery", SwitchKind.BREAKER, true, false, false, 5, 6);
 
         TwoWindingsTransformer t2 = createTwoWindingsTransformer(s1, "trf1", "trf1", 2.0, 14.745, 0.0, 3.2E-5, 400.0, 225.0,
-            19, 9, v1.getId(), v2.getId(),
+            4, 14, v1.getId(), v2.getId(),
             "trf1", 1, ConnectablePosition.Direction.TOP,
             "trf1", 1, ConnectablePosition.Direction.TOP);
         t2.newRatioTapChanger()
@@ -87,14 +112,24 @@ public final class NetworkCreation {
             .setRho(1.0)
             .endStep()
             .add();
+        createSwitch(v1, "v1btrf1", "v1btrf1", SwitchKind.BREAKER, true, false, false, 4, 5);
+        createSwitch(v1, "v1dtrf1", "v1dtrf1", SwitchKind.DISCONNECTOR, true, false, false, 5, 0);
+        createSwitch(v2, "v2btrf1", "v2btrf1", SwitchKind.BREAKER, true, false, false, 14, 15);
+        createSwitch(v2, "v2dtrf1", "v2dtrf1", SwitchKind.DISCONNECTOR, true, false, false, 15, 1);
 
         ThreeWindingsTransformer t3 = createThreeWindingsTransformer(s1, "trf6", "trf6", v1.getId(), v2.getId(), v4.getId(),
             0.5, 0.5, 0.5, 1., 1., 1., 0.1, 0.1,
             400., 225., 225.,
-            29, 17, 8,
+            5, 16, 1,
             "trf61", 5, ConnectablePosition.Direction.TOP,
             "trf62", 5, ConnectablePosition.Direction.TOP,
             "trf63", 3, ConnectablePosition.Direction.TOP);
+        createSwitch(v1, "v1btrf6", "v1btrf6", SwitchKind.BREAKER, true, false, false, 5, 6);
+        createSwitch(v1, "v1dtrf6", "v1dtrf6", SwitchKind.DISCONNECTOR, true, false, false, 6, 0);
+        createSwitch(v2, "v2btrf6", "v2btrf6", SwitchKind.BREAKER, true, false, false, 16, 17);
+        createSwitch(v2, "v2dtrf6", "v2dtrf6", SwitchKind.DISCONNECTOR, true, false, false, 17, 0);
+        createSwitch(v4, "v4btrf6", "v4btrf6", SwitchKind.BREAKER, true, false, false, 1, 2);
+        createSwitch(v4, "v4dtrf6", "v4dtrf6", SwitchKind.DISCONNECTOR, true, false, false, 2, 0);
 
         t3.getLeg1().newPhaseTapChanger()
             .setTapPosition(1)
@@ -123,32 +158,23 @@ public final class NetworkCreation {
             .add();
 
         // create lines
-        network.newLine()
-            .setId("line1")
-            .setVoltageLevel1(v3.getId())
-            .setNode1(10)
-            .setVoltageLevel2(v4.getId())
-            .setNode2(10)
-            .setR(1.0)
-            .setX(1.0)
-            .setG1(1.0)
-            .setB1(1.0)
-            .setG2(2.0)
-            .setB2(2.0)
-            .add();
+        createLine(network, "line1", "line1", "v3", "v4", 8, 4, 1.0, 1.0, 1.0, 2.0, 1.0, 2.0);
+        createSwitch(v3, "v3dl1", "v3dl1", SwitchKind.DISCONNECTOR, true, false, false, 0, 7);
+        createSwitch(v3, "v3bl1", "v3bl1", SwitchKind.BREAKER, true, false, false, 7, 8);
+        createSwitch(v4, "v4dl1", "v4dl1", SwitchKind.DISCONNECTOR, true, false, false, 0, 3);
+        createSwitch(v4, "v4bl1", "v4bl1", SwitchKind.BREAKER, true, false, false, 3, 4);
 
-        createSwitch(v1, "v1dl1", "v1dl1", SwitchKind.DISCONNECTOR, true, false, false, 0, 4);
-        createSwitch(v1, "v1bl1", "v1bl1", SwitchKind.BREAKER, true, false, false, 4, 5);
+        createLine(network, "line2", "line2", "v1", "v3", 31, 31, 10.0, 5.0, 3.5, 5.5, 4.5, 6.5);
+        createSwitch(v1, "v1dl2", "v1dl2", SwitchKind.DISCONNECTOR, true, false, false, 0, 30);
+        createSwitch(v1, "v1bl2", "v1bl2", SwitchKind.BREAKER, true, false, false, 30, 31);
+        createSwitch(v3, "v3dl2", "v3dl2", SwitchKind.DISCONNECTOR, true, false, false, 0, 30);
+        createSwitch(v3, "v3bl2", "v3bl2", SwitchKind.BREAKER, true, false, false, 30, 31);
 
-        createSwitch(v3, "v3dl1", "v3dl1", SwitchKind.DISCONNECTOR, true, false, false, 0, 3);
-        createSwitch(v3, "v3bl1", "v3bl1", SwitchKind.BREAKER, true, false, false, 3, 4);
-
-        createLine(network, "line2", "line2", "v1", "v3", 5, 4, 10.0, 5.0, 3.5, 5.5, 4.5, 6.5);
-
-        createSwitch(v1, "v1bl2", "v1bl2", SwitchKind.BREAKER, true, false, true, 0, 6);
-        createSwitch(v3, "v3bl2", "v3bl2", SwitchKind.BREAKER, true, false, true, 0, 5);
-
-        createLine(network, "line3", "line3", "v1", "v3", 6, 5, 12.0, 7.0, 5.5, 7.5, 6.5, 8.5);
+        createLine(network, "line3", "line3", "v1", "v3", 10, 12, 12.0, 7.0, 5.5, 7.5, 6.5, 8.5);
+        createSwitch(v1, "v1dl3", "v1dl3", SwitchKind.DISCONNECTOR, true, false, false, 0, 9);
+        createSwitch(v1, "v1bl3", "v1bl3", SwitchKind.BREAKER, true, false, true, 9, 10);
+        createSwitch(v3, "v3dl3", "v3dl3", SwitchKind.DISCONNECTOR, true, false, false, 0, 11);
+        createSwitch(v3, "v3bl3", "v3bl3", SwitchKind.BREAKER, true, false, true, 11, 12);
 
         if (createHvdcLine) {
             createHvdcLine(network, "hvdcLine", "hvdcLine", 1, 100, HvdcLine.ConvertersMode.SIDE_1_INVERTER_SIDE_2_RECTIFIER, 225, 500, "v1lcc", "v2vsc");
