@@ -30,7 +30,6 @@ import org.gridsuite.modification.server.repositories.ModificationGroupRepositor
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.utils.*;
-import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -461,7 +460,6 @@ public class ModificationRepositoryTest {
 
     }
 
-    @NotNull
     private List<UUID> getIds(List<ModificationInfos> expected) {
         return expected.stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
     }
