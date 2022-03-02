@@ -8,12 +8,6 @@
     <changeSet author="borsenbergerjac (generated)" id="1644935557396-5">
         <dropNotNullConstraint columnDataType="uuid" columnName="group_id" tableName="modification"/>
     </changeSet>
-    <changeSet author="borsenbergerjac (generated)" id="1644935557396-6">
-        <dropNotNullConstraint columnDataType="int" columnName="horiz_pos" tableName="voltage_level_creation_entity_busbar_sections"/>
-    </changeSet>
-    <changeSet author="borsenbergerjac (generated)" id="1644935557396-7">
-        <dropNotNullConstraint columnDataType="int" columnName="vert_pos" tableName="voltage_level_creation_entity_busbar_sections"/>
-    </changeSet>
     <changeSet author="borsenbergerjac (generated)" id="1645016885220-1">
         <addNotNullConstraint columnDataType="uuid" columnName="group_id" tableName="modification" validate="true"/>
     </changeSet>
