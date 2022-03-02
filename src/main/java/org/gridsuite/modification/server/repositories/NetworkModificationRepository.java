@@ -10,7 +10,6 @@ import com.powsybl.commons.PowsyblException;
 import com.powsybl.iidm.network.Country;
 import com.powsybl.iidm.network.EnergySource;
 import com.powsybl.iidm.network.LoadType;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.entities.equipment.modification.BranchStatusModificationEntity;
@@ -145,54 +144,11 @@ public class NetworkModificationRepository {
     }
 
     @Transactional(readOnly = true)
-    public ModificationEntity getModificationEntity(UUID groupUuid, UUID modificationUuid, ModificationType type) {
-        if (modificationRepository.existsByIdAndGroupId(modificationUuid, groupUuid)) {
-            ModificationEntity modification = modificationRepository.getOne(modificationUuid);
-            if (modification.getType().equals(type.name())) {
-                return modification;
-            }
-        }
-        throw new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString());
-    }
-
-    @Transactional(readOnly = true)
-    public ModificationInfos getModificationInfo(UUID groupUuid, UUID modificationUuid, ModificationType type) {
-        return getModificationEntity(groupUuid, modificationUuid, type).toModificationInfos();
-    }
-
-    @Transactional(readOnly = true)
-    public EquipmenAttributeModificationInfos getEquipmentAttributeModification(UUID groupUuid, UUID modificationUuid) {
-        return (EquipmenAttributeModificationInfos) this.getModificationInfo(groupUuid, modificationUuid, ModificationType.EQUIPMENT_ATTRIBUTE_MODIFICATION);
-    }
-
-    @Transactional(readOnly = true)
-    public LoadCreationInfos getLoadCreationModification(UUID groupUuid, UUID modificationUuid) {
-        return (LoadCreationInfos) this.getModificationInfo(groupUuid, modificationUuid, ModificationType.LOAD_CREATION);
-    }
-
-    @Transactional(readOnly = true)
-    public GeneratorCreationInfos getGeneratorCreationModification(UUID groupUuid, UUID modificationUuid) {
-        return (GeneratorCreationInfos) this.getModificationInfo(groupUuid, modificationUuid, ModificationType.GENERATOR_CREATION);
-    }
-
-    @Transactional
-    public LineCreationInfos getLineCreationModification(UUID groupUuid, UUID modificationUuid) {
-        return (LineCreationInfos) this.getModificationInfo(groupUuid, modificationUuid, ModificationType.LINE_CREATION);
-    }
-
-    @Transactional
-    public TwoWindingsTransformerCreationInfos getTwoWindingsTransformerCreationModification(UUID groupUuid, UUID modificationUuid) {
-        return (TwoWindingsTransformerCreationInfos) this.getModificationInfo(groupUuid, modificationUuid, ModificationType.TWO_WINDINGS_TRANSFORMER_CREATION);
-    }
-
-    @Transactional
-    public SubstationCreationInfos getSubstationCreationModification(UUID groupUuid, UUID modificationUuid) {
-        return (SubstationCreationInfos) this.getModificationInfo(groupUuid, modificationUuid, ModificationType.SUBSTATION_CREATION);
-    }
-
-    @Transactional
-    public VoltageLevelCreationInfos getVoltageLevelCreationModification(UUID groupUuid, UUID modificationUuid) {
-        return (VoltageLevelCreationInfos) this.getModificationInfo(groupUuid, modificationUuid, ModificationType.VOLTAGE_LEVEL_CREATION);
+    public ModificationInfos getModificationInfo(UUID modificationUuid) {
+        return modificationRepository
+            .findById(modificationUuid)
+            .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString()))
+            .toModificationInfos();
     }
 
     public Stream<ModificationEntity> getModificationList(UUID groupUuid) {
@@ -281,7 +237,7 @@ public class NetworkModificationRepository {
 
     @Transactional(readOnly = true)
     public GroovyScriptModificationInfos getGroovyScriptModification(UUID groupUuid, UUID modificationUuid) {
-        return (GroovyScriptModificationInfos) getModificationInfo(groupUuid, modificationUuid, ModificationType.GROOVY_SCRIPT);
+        return (GroovyScriptModificationInfos) getModificationInfo(modificationUuid);
     }
 
     @Transactional(readOnly = true)
@@ -301,6 +257,6 @@ public class NetworkModificationRepository {
 
     @Transactional(readOnly = true)
     public ShuntCompensatorCreationInfos getShuntCompensatorCreationModification(UUID groupId, UUID modificationUuid) {
-        return (ShuntCompensatorCreationInfos) getModificationInfo(groupId, modificationUuid, ModificationType.SHUNT_COMPENSATOR_CREATION);
+        return (ShuntCompensatorCreationInfos) getModificationInfo(modificationUuid);
     }
 }

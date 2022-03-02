@@ -22,7 +22,4 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     @Query(value = "SELECT *, 0 AS clazz_ FROM modification WHERE group_id = ?1 order by modifications_order", nativeQuery = true)
     List<ModificationEntity> findAllBaseByGroupId(UUID uuid);
 
-    @Query(value = "SELECT count(*)>0 FROM modification WHERE id = ?1 and group_id = ?2", nativeQuery = true)
-    boolean existsByIdAndGroupId(UUID id, UUID groupId);
-
 }
