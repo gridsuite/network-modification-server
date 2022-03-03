@@ -37,6 +37,7 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -1241,6 +1242,37 @@ public class ModificationControllerTest {
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
             .expectBodyList(UUID.class)
             .isEqualTo(List.of());
+    }
+
+    @Test
+    public void testMoveModification() {
+        webTestClient.put().uri("/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID + "&open=true", TEST_NETWORK_ID, "v1b1")
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBodyList(EquipmenAttributeModificationInfos.class)
+            .returnResult().getResponseBody();
+        webTestClient.put().uri("/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID + "&open=true", TEST_NETWORK_ID, "v1b1")
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBodyList(EquipmenAttributeModificationInfos.class)
+            .returnResult().getResponseBody();
+
+        var modificationList = networkModificationService.getModifications(TEST_GROUP_ID, true).map(ModificationInfos::getUuid).collectList().block();
+        assertNotNull(modificationList);
+        assertEquals(2, modificationList.size());
+        webTestClient.put().uri("/v1/groups/" + TEST_GROUP_ID
+                    + "/modifications/move?before=" + modificationList.get(0)
+                    + "&modificationsToMove=" + modificationList.get(1))
+            .exchange()
+            .expectStatus().isOk();
+
+        var newModificationList = networkModificationService.getModifications(TEST_GROUP_ID, true).map(ModificationInfos::getUuid).collectList().block();
+        assertNotNull(newModificationList);
+        Collections.reverse(newModificationList);
+
+        assertEquals(modificationList, newModificationList);
     }
 
     @Test

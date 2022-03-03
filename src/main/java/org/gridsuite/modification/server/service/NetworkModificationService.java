@@ -1490,4 +1490,8 @@ public class NetworkModificationService {
                 return execCreateShuntCompensator(listener, shuntCompensatorCreationInfos, reporter, subReporter);
             }));
     }
+
+    public Mono<Void> moveModifications(UUID groupUuid, UUID before, List<UUID> modificationsToMove) {
+        return Mono.fromRunnable(() -> modificationRepository.moveModifications(groupUuid, modificationsToMove, before));
+    }
 }
