@@ -41,4 +41,8 @@ public interface EquipmentInfosService {
     List<EquipmentInfos> findAllEquipmentInfos(@NonNull UUID networkUuid); // Only for tests
 
     List<TombstonedEquipmentInfos> findAllTombstonedEquipmentInfos(@NonNull UUID networkUuid); // Only for tests
+
+    boolean existTombstonedEquipmentInfos(String equipmentId, UUID networkUuid, String variantId); // Only for tests
+
+    void deleteAll(); // Only for tests
 }
