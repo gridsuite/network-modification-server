@@ -275,8 +275,8 @@ public class BuildTest {
 
         List<TombstonedEquipmentInfos> tbseqVariant1 = equipmentInfosService.findAllTombstonedEquipmentInfos(TEST_NETWORK_ID).stream().filter(eq -> eq.getVariantId().equals(NetworkCreation.VARIANT_ID)).collect(Collectors.toList());
         List<TombstonedEquipmentInfos> tbseqVariant2 = equipmentInfosService.findAllTombstonedEquipmentInfos(TEST_NETWORK_ID).stream().filter(eq -> eq.getVariantId().equals(VARIANT_ID_2)).collect(Collectors.toList());
-        // v2shunt was deleted from initial variant => created as TombstonedEquipmentInfos in ElasticSearch
-        assertEquals(1, tbseqVariant1.size());
+        // v2shunt was deleted from initial variant => v2shunt and the cell switches (breaker and disconnector) have been added as TombstonedEquipmentInfos in ElasticSearch
+        assertEquals(3, tbseqVariant1.size());
         assertEquals(tbseqVariant1.size(), tbseqVariant2.size());
         // deactivate some modifications and rebuild VARIANT_ID
         network.getVariantManager().cloneVariant(VariantManagerConstants.INITIAL_VARIANT_ID, NetworkCreation.VARIANT_ID, true);

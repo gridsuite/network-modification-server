@@ -634,13 +634,11 @@ public class NetworkModificationService {
                 }
 
                 // store the substations ids in the listener
-
-                Set<String> substationIds = Set.of();
                 // On substation deletion, the substation id isn't set in the substations to be updated.
                 // If later we handle automatic lines deletion (i.e. on substation deletion, we remove all the lines connected to the substation), we'll have to set
                 // the adjacent substations in the substations to be updated.
                 if (!(identifiable instanceof Substation)) {
-                    substationIds = NetworkStoreListener.getSubstationIds(identifiable);
+                    listener.addSubstationsIds(identifiable);
                 }
 
                 if (identifiable instanceof Connectable) {
@@ -652,10 +650,6 @@ public class NetworkModificationService {
                 } else if (identifiable instanceof Substation) {
                     ((Substation) identifiable).remove();
                 }
-
-                // Done here, and not in the network listener onRemoval method
-                // because onRemoval must be refactored in powsybl core
-                listener.onTemporaryRemoval(equipmentId, substationIds);
 
                 subReporter.report(Report.builder()
                     .withKey("equipmentDeleted")

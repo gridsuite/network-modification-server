@@ -71,4 +71,14 @@ public class EquipmentInfosServiceMock implements EquipmentInfosService {
     public List<TombstonedEquipmentInfos> findAllTombstonedEquipmentInfos(UUID networkUuid) {
         return Collections.emptyList();
     }
+
+    @Override
+    public boolean existTombstonedEquipmentInfos(String equipmentId, UUID networkUuid, String variantId) {
+        return false;
+    }
+
+    @Override
+    public void deleteAll() {
+        // Do nothing
+    }
 }

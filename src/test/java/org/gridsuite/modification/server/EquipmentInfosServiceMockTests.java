@@ -11,6 +11,7 @@ import org.gridsuite.modification.server.dto.EquipmentInfos;
 import org.gridsuite.modification.server.dto.TombstonedEquipmentInfos;
 import org.gridsuite.modification.server.dto.VoltageLevelInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -38,6 +40,11 @@ public class EquipmentInfosServiceMockTests {
 
     @Autowired
     private EquipmentInfosService equipmentInfosService;
+
+    @Before
+    public void setUp() {
+        equipmentInfosService.deleteAll();
+    }
 
     @Test
     public void testAddDeleteEquipmentInfos() {
@@ -69,5 +76,7 @@ public class EquipmentInfosServiceMockTests {
         equipmentInfosService.deleteVariants(NETWORK_UUID, List.of(VARIANT_ID, NEW_VARIANT_ID));
         assertEquals(0, equipmentInfosService.findAllEquipmentInfos(NETWORK_UUID).size());
         assertEquals(0, equipmentInfosService.findAllTombstonedEquipmentInfos(NETWORK_UUID).size());
+
+        assertFalse(equipmentInfosService.existTombstonedEquipmentInfos("foo", NETWORK_UUID, VARIANT_ID));
     }
 }
