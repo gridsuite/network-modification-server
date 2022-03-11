@@ -231,24 +231,6 @@ public class NetworkStoreListener implements NetworkListener {
         ));
     }
 
-    public void storeSubstationCreationUpdate(SubstationCreationInfos substationCreationInfos, UUID groupUuid) {
-        SubstationCreationInfos subCreation = this.modificationRepository.getSubstationCreationModification(groupUuid, substationCreationInfos.getUuid());
-
-        if (substationCreationInfos.getEquipmentId() != null) {
-            subCreation.setEquipmentId(substationCreationInfos.getEquipmentId());
-        }
-        if (substationCreationInfos.getEquipmentName() != null) {
-            subCreation.setEquipmentName(substationCreationInfos.getEquipmentName());
-        }
-        if (substationCreationInfos.getSubstationCountry() != null) {
-            subCreation.setSubstationCountry(substationCreationInfos.getSubstationCountry());
-        }
-        EquipmentCreationEntity entity = this.modificationRepository.createSubstationEntity(subCreation.getEquipmentId(), subCreation.getEquipmentName(), subCreation.getSubstationCountry());
-        entity.setGroup(new ModificationGroupEntity(groupUuid));
-        entity.setId(subCreation.getUuid());
-        this.modificationRepository.updateModification(entity);
-    }
-
     public void storeVoltageLevelCreation(VoltageLevelCreationInfos voltageLevelCreationInfos) {
         List<BusbarSectionCreationEmbeddable> bbsEmbeddables = voltageLevelCreationInfos.getBusbarSections().stream().map(bbsi ->
             new BusbarSectionCreationEmbeddable(bbsi.getId(), bbsi.getName(), bbsi.getVertPos(), bbsi.getHorizPos())
