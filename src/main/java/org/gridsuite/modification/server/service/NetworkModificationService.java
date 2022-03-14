@@ -536,7 +536,7 @@ public class NetworkModificationService {
             .add();
     }
 
-    public Mono<Void> updateGeneratorCreation(UUID groupUuid, GeneratorCreationInfos generatorCreationInfos) {
+    public Mono<Void> updateGeneratorCreation(GeneratorCreationInfos generatorCreationInfos) {
         assertGeneratorCreationInfosNotEmpty(generatorCreationInfos).subscribe();
         EquipmentCreationEntity entity = this.modificationRepository.createGeneratorEntity(
                 generatorCreationInfos.getEquipmentId(),
@@ -551,7 +551,6 @@ public class NetworkModificationService {
                 generatorCreationInfos.getReactivePowerSetpoint(),
                 generatorCreationInfos.isVoltageRegulationOn(),
                 generatorCreationInfos.getVoltageSetpoint());
-//        entity.setGroup(new ModificationGroupEntity(groupUuid));
         entity.setId(generatorCreationInfos.getUuid());
         this.modificationRepository.updateModification(entity);
         return Mono.empty();
@@ -599,7 +598,7 @@ public class NetworkModificationService {
             }));
     }
 
-    public Mono<Void> updateLoadCreation(UUID groupUuid, LoadCreationInfos loadCreationInfos) {
+    public Mono<Void> updateLoadCreation(LoadCreationInfos loadCreationInfos) {
         assertLoadCreationInfosNotEmpty(loadCreationInfos).subscribe();
         EquipmentCreationEntity entity = this.modificationRepository.createLoadEntity(
                 loadCreationInfos.getEquipmentId(),
@@ -609,7 +608,6 @@ public class NetworkModificationService {
                 loadCreationInfos.getBusOrBusbarSectionId(),
                 loadCreationInfos.getActivePower(),
                 loadCreationInfos.getReactivePower());
-//        entity.setGroup(new ModificationGroupEntity(groupUuid));
         entity.setId(loadCreationInfos.getUuid());
         this.modificationRepository.updateModification(entity);
         return Mono.empty();
@@ -885,7 +883,7 @@ public class NetworkModificationService {
         return lineAdder.add();
     }
 
-    public Mono<Void> updateLineCreation(UUID groupUuid, LineCreationInfos lineCreationInfos) {
+    public Mono<Void> updateLineCreation(LineCreationInfos lineCreationInfos) {
         assertLineCreationInfosNotEmpty(lineCreationInfos).subscribe();
         EquipmentCreationEntity entity = this.modificationRepository.createLineEntity(
                 lineCreationInfos.getEquipmentId(),
@@ -902,7 +900,6 @@ public class NetworkModificationService {
                 lineCreationInfos.getBusOrBusbarSectionId2(),
                 lineCreationInfos.getCurrentLimits1().getPermanentLimit(),
                 lineCreationInfos.getCurrentLimits2().getPermanentLimit());
-//        entity.setGroup(new ModificationGroupEntity(groupUuid));
         entity.setId(lineCreationInfos.getUuid());
         this.modificationRepository.updateModification(entity);
         return Mono.empty();
@@ -1037,7 +1034,7 @@ public class NetworkModificationService {
         return twoWindingsTransformerAdder.add();
     }
 
-    public Mono<Void> updatTwoWindingsTransformerCreation(UUID groupUuid, TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
+    public Mono<Void> updatTwoWindingsTransformerCreation(TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
         assertTwoWindingsTransformerCreationInfosNotEmpty(twoWindingsTransformerCreationInfos).subscribe();
         EquipmentCreationEntity entity = this.modificationRepository.createTwoWindingsTransformerEntity(
                 twoWindingsTransformerCreationInfos.getEquipmentId(),
@@ -1055,7 +1052,6 @@ public class NetworkModificationService {
                 twoWindingsTransformerCreationInfos.getCurrentLimits1().getPermanentLimit(),
                 twoWindingsTransformerCreationInfos.getCurrentLimits2().getPermanentLimit()
         );
-//        entity.setGroup(new ModificationGroupEntity(groupUuid));
         entity.setId(twoWindingsTransformerCreationInfos.getUuid());
         this.modificationRepository.updateModification(entity);
         return Mono.empty();
@@ -1105,10 +1101,9 @@ public class NetworkModificationService {
                 }));
     }
 
-    public Mono<Void> updateSubstationCreation(UUID groupUuid, SubstationCreationInfos substationCreationInfos) {
+    public Mono<Void> updateSubstationCreation(SubstationCreationInfos substationCreationInfos) {
         assertSubstationCreationInfosNotEmpty(substationCreationInfos).subscribe();
         EquipmentCreationEntity entity = this.modificationRepository.createSubstationEntity(substationCreationInfos.getEquipmentId(), substationCreationInfos.getEquipmentName(), substationCreationInfos.getSubstationCountry());
-//        entity.setGroup(new ModificationGroupEntity(groupUuid));
         entity.setId(substationCreationInfos.getUuid());
         this.modificationRepository.updateModification(entity);
         return Mono.empty();
@@ -1251,7 +1246,7 @@ public class NetworkModificationService {
             }));
     }
 
-    public Mono<Void> updateVoltageLevelCreation(UUID groupUuid, VoltageLevelCreationInfos voltageLevelCreationInfos) {
+    public Mono<Void> updateVoltageLevelCreation(VoltageLevelCreationInfos voltageLevelCreationInfos) {
         assertVoltageLevelCreationInfosNotEmpty(voltageLevelCreationInfos).subscribe();
         List<BusbarSectionCreationEmbeddable> busbarSections = voltageLevelCreationInfos.getBusbarSections().stream().map(bbsi ->
                 new BusbarSectionCreationEmbeddable(bbsi.getId(), bbsi.getName(), bbsi.getVertPos(), bbsi.getHorizPos())
@@ -1266,7 +1261,6 @@ public class NetworkModificationService {
                 voltageLevelCreationInfos.getSubstationId(),
                 busbarSections,
                 busbarConnections);
-//        entity.setGroup(new ModificationGroupEntity(groupUuid));
         entity.setId(voltageLevelCreationInfos.getUuid());
         this.modificationRepository.updateModification(entity);
         return Mono.empty();
@@ -1568,10 +1562,9 @@ public class NetworkModificationService {
         shunt.add();
     }
 
-    public Mono<Void> updateShuntCompensatorCreation(UUID groupUuid, ShuntCompensatorCreationInfos shuntCompensatorCreationInfos) {
+    public Mono<Void> updateShuntCompensatorCreation(ShuntCompensatorCreationInfos shuntCompensatorCreationInfos) {
         assertShuntCompensatorCreationInfosNotEmpty(shuntCompensatorCreationInfos).subscribe();
         EquipmentCreationEntity entity = this.modificationRepository.createShuntCompensatorEntity(shuntCompensatorCreationInfos);
-//        entity.setGroup(new ModificationGroupEntity(groupUuid));
         entity.setId(shuntCompensatorCreationInfos.getUuid());
         this.modificationRepository.updateModification(entity);
         return Mono.empty();

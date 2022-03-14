@@ -139,9 +139,8 @@ public class NetworkModificationController {
     @PutMapping(value = "/loads", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "update a load creation in the network")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The load creation has been updated")})
-    public ResponseEntity<Mono<Void>> updateLoadCreation(@RequestParam(value = "group", required = false) UUID groupUuid,
-                                                               @RequestBody LoadCreationInfos loadCreationInfos) {
-        return ResponseEntity.ok().body(networkModificationService.updateLoadCreation(groupUuid, loadCreationInfos));
+    public ResponseEntity<Mono<Void>> updateLoadCreation(@RequestBody LoadCreationInfos loadCreationInfos) {
+        return ResponseEntity.ok().body(networkModificationService.updateLoadCreation(loadCreationInfos));
     }
 
     @PostMapping(value = "/networks/{networkUuid}/generators", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -157,9 +156,8 @@ public class NetworkModificationController {
     @PutMapping(value = "/generators", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "update a generator creation in the network")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The generator creation has been updated")})
-    public ResponseEntity<Mono<Void>> updateGeneratorCreation(@RequestParam(value = "group", required = false) UUID groupUuid,
-                                                               @RequestBody GeneratorCreationInfos generatorCreationInfos) {
-        return ResponseEntity.ok().body(networkModificationService.updateGeneratorCreation(groupUuid, generatorCreationInfos));
+    public ResponseEntity<Mono<Void>> updateGeneratorCreation(@RequestBody GeneratorCreationInfos generatorCreationInfos) {
+        return ResponseEntity.ok().body(networkModificationService.updateGeneratorCreation(generatorCreationInfos));
     }
 
     @PostMapping(value = "/networks/{networkUuid}/shunt-compensators", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -175,9 +173,8 @@ public class NetworkModificationController {
     @PutMapping(value = "/shunt-compensators", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "update a shunt-compensator creation in the network")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The shunt compensator creation has been updated")})
-    public ResponseEntity<Mono<Void>> updateShuntCompensatorCreation(@RequestParam(value = "group", required = false) UUID groupUuid,
-                                                              @RequestBody ShuntCompensatorCreationInfos shuntCompensatorCreationInfos) {
-        return ResponseEntity.ok().body(networkModificationService.updateShuntCompensatorCreation(groupUuid, shuntCompensatorCreationInfos));
+    public ResponseEntity<Mono<Void>> updateShuntCompensatorCreation(@RequestBody ShuntCompensatorCreationInfos shuntCompensatorCreationInfos) {
+        return ResponseEntity.ok().body(networkModificationService.updateShuntCompensatorCreation(shuntCompensatorCreationInfos));
     }
 
     @PostMapping(value = "/networks/{networkUuid}/lines", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -193,9 +190,8 @@ public class NetworkModificationController {
     @PutMapping(value = "/lines", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "update a line creation in the network")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The line creation has been updated")})
-    public ResponseEntity<Mono<Void>> updateLineCreation(@RequestParam(value = "group", required = false) UUID groupUuid,
-                                                               @RequestBody LineCreationInfos lineCreationInfos) {
-        return ResponseEntity.ok().body(networkModificationService.updateLineCreation(groupUuid, lineCreationInfos));
+    public ResponseEntity<Mono<Void>> updateLineCreation(@RequestBody LineCreationInfos lineCreationInfos) {
+        return ResponseEntity.ok().body(networkModificationService.updateLineCreation(lineCreationInfos));
     }
 
     @PostMapping(value = "/networks/{networkUuid}/two-windings-transformer", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -211,9 +207,8 @@ public class NetworkModificationController {
     @PutMapping(value = "/two-windings-transformer", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "update a two windings transformer creation in the network")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The two windings transformer creation has been updated")})
-    public ResponseEntity<Mono<Void>> updateTwoWindingsTransformer(@RequestParam(value = "group", required = false) UUID groupUuid,
-                                                         @RequestBody TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
-        return ResponseEntity.ok().body(networkModificationService.updatTwoWindingsTransformerCreation(groupUuid, twoWindingsTransformerCreationInfos));
+    public ResponseEntity<Mono<Void>> updateTwoWindingsTransformer(@RequestBody TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
+        return ResponseEntity.ok().body(networkModificationService.updatTwoWindingsTransformerCreation(twoWindingsTransformerCreationInfos));
     }
 
     @PostMapping(value = "/networks/{networkUuid}/substations", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -229,9 +224,8 @@ public class NetworkModificationController {
     @PutMapping(value = "/substations", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "update a substation creation in the network")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The substation creation has been updated")})
-    public ResponseEntity<Mono<Void>> updateSubstationCreation(@RequestParam(value = "group", required = false) UUID groupUuid,
-                                                                            @RequestBody SubstationCreationInfos substationCreationInfos) {
-        return ResponseEntity.ok().body(networkModificationService.updateSubstationCreation(groupUuid, substationCreationInfos));
+    public ResponseEntity<Mono<Void>> updateSubstationCreation(@RequestBody SubstationCreationInfos substationCreationInfos) {
+        return ResponseEntity.ok().body(networkModificationService.updateSubstationCreation(substationCreationInfos));
     }
 
     @PostMapping(value = "/networks/{networkUuid}/voltage-levels", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -247,9 +241,8 @@ public class NetworkModificationController {
     @PutMapping(value = "/voltage-levels", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "update a voltage level creation in the network")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The voltage level creation has been updated")})
-    public ResponseEntity<Mono<Void>> updateVoltageLevelCreation(@RequestParam(value = "group", required = false) UUID groupUuid,
-                                                               @RequestBody VoltageLevelCreationInfos voltageLevelCreationInfos) {
-        return ResponseEntity.ok().body(networkModificationService.updateVoltageLevelCreation(groupUuid, voltageLevelCreationInfos));
+    public ResponseEntity<Mono<Void>> updateVoltageLevelCreation(@RequestBody VoltageLevelCreationInfos voltageLevelCreationInfos) {
+        return ResponseEntity.ok().body(networkModificationService.updateVoltageLevelCreation(voltageLevelCreationInfos));
     }
 
     @DeleteMapping(value = "/networks/{networkUuid}/equipments/type/{equipmentType}/id/{equipmentId}")

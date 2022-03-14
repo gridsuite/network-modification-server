@@ -705,6 +705,19 @@ public class ModificationControllerTest {
 
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
 
+        loadCreationInfos.setLoadType(LoadType.AUXILIARY);
+        loadCreationInfos.setActivePower(175.0);
+        webTestClient.post().uri(uriString, TEST_NETWORK_BUS_BREAKER_ID)
+                .body(BodyInserters.fromValue(loadCreationInfos))
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBodyList(EquipmenModificationInfos.class)
+                .value(modifications -> modifications.get(0),
+                        MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.LOAD_CREATION, "idLoad1", Set.of("s1")));
+
+        testNetworkModificationsCount(TEST_GROUP_ID, 2);
+
         // create load with errors
         loadCreationInfos.setBusOrBusbarSectionId("notFoundBus");
         webTestClient.post().uri(uriString, TEST_NETWORK_BUS_BREAKER_ID)
@@ -714,7 +727,7 @@ public class ModificationControllerTest {
             .expectBody(String.class)
             .isEqualTo(new NetworkModificationException(BUS_NOT_FOUND, "notFoundBus").getMessage());
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 1);
+        testNetworkModificationsCount(TEST_GROUP_ID, 2);
     }
 
     @Test
