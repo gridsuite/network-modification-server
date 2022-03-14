@@ -44,7 +44,8 @@ public class NetworkModificationException extends RuntimeException {
         BRANCH_ACTION_ERROR(HttpStatus.BAD_REQUEST),
         BRANCH_ACTION_TYPE_EMPTY(HttpStatus.BAD_REQUEST, "Empty branch action type"),
         BRANCH_ACTION_TYPE_UNKNOWN(HttpStatus.BAD_REQUEST),
-        BRANCH_ACTION_TYPE_UNSUPPORTED(HttpStatus.INTERNAL_SERVER_ERROR);
+        BRANCH_ACTION_TYPE_UNSUPPORTED(HttpStatus.INTERNAL_SERVER_ERROR),
+        MODIFICATION_OUT_OF_RANGE(HttpStatus.BAD_REQUEST);
 
         public final HttpStatus status;
         private final String message;

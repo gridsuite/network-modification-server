@@ -108,4 +108,15 @@ public class EquipmentInfosServiceImpl implements EquipmentInfosService {
     public List<TombstonedEquipmentInfos> findAllTombstonedEquipmentInfos(UUID networkUuid) {
         return tombstonedEquipmentInfosRepository.findAllByNetworkUuid(networkUuid);
     }
+
+    @Override
+    public boolean existTombstonedEquipmentInfos(String equipmentId, UUID networkUuid, String variantId) {
+        return tombstonedEquipmentInfosRepository.findByIdAndNetworkUuidAndVariantId(equipmentId, networkUuid, variantId).size() > 0;
+    }
+
+    @Override
+    public void deleteAll() {
+        equipmentInfosRepository.deleteAll();
+        tombstonedEquipmentInfosRepository.deleteAll();
+    }
 }

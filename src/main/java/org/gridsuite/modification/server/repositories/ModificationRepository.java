@@ -19,10 +19,7 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public interface ModificationRepository extends JpaRepository<ModificationEntity, UUID> {
-    @Query(value = "SELECT *, 0 AS clazz_ FROM modification WHERE group_id = ?1", nativeQuery = true)
+    @Query(value = "SELECT *, 0 AS clazz_ FROM modification WHERE group_id = ?1 order by modifications_order", nativeQuery = true)
     List<ModificationEntity> findAllBaseByGroupId(UUID uuid);
 
-    List<ModificationEntity> findAllByGroupId(UUID uuid);
-
-    List<ModificationEntity> findAllByGroupIdInOrderByDate(List<UUID> uuids);
 }

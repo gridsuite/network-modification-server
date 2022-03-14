@@ -10,7 +10,6 @@ import com.powsybl.commons.PowsyblException;
 import com.powsybl.iidm.network.Country;
 import com.powsybl.iidm.network.EnergySource;
 import com.powsybl.iidm.network.LoadType;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.entities.equipment.modification.BranchStatusModificationEntity;
@@ -28,13 +27,18 @@ import org.gridsuite.modification.server.entities.equipment.deletion.EquipmentDe
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_GROUP_NOT_FOUND;
-import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_NOT_FOUND;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -93,8 +97,29 @@ public class NetworkModificationRepository {
         var modificationGroupEntity = this.modificationGroupRepository
                 .findById(groupUuid)
                 .orElseGet(() -> modificationGroupRepository.save(new ModificationGroupEntity(groupUuid)));
-        modifications.forEach(m -> m.setGroup(modificationGroupEntity));
+        modificationGroupEntity.getModifications().addAll(modifications);
         this.modificationRepository.saveAll(modifications);
+    }
+
+    @Transactional // To have all move in the same transaction (atomic)
+    public void moveModifications(UUID groupUuid, List<UUID> modifications, UUID before) {
+        /* when before == null we move at the end of list */
+        var modificationGroupEntity = getModificationGroup(groupUuid);
+
+        Map<UUID, ModificationEntity> originalModifications = modificationRepository.findAllBaseByGroupId(groupUuid).stream()
+            .collect(Collectors.toMap(ModificationEntity::getId, Function.identity(), (x, y) -> y, LinkedHashMap::new));
+
+        if (!originalModifications.keySet().containsAll(modifications) || (before != null && !originalModifications.containsKey(before))) {
+            throw new NetworkModificationException(MODIFICATION_NOT_FOUND);
+        }
+
+        List<ModificationEntity> modificationsToMove = modifications.stream().map(originalModifications::remove).collect(Collectors.toList());
+
+        List<ModificationEntity> newModificationList = new ArrayList<>(originalModifications.values());
+        int index =  before == null ? newModificationList.size() : newModificationList.indexOf(originalModifications.get(before));
+        newModificationList.addAll(index, modificationsToMove);
+
+        modificationGroupEntity.setModifications(newModificationList);
     }
 
     public List<UUID> getModificationGroupsUuids() {
@@ -110,94 +135,44 @@ public class NetworkModificationRepository {
             .collect(Collectors.toList());
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public List<ModificationInfos> getModifications(UUID groupUuid, boolean onlyMetadata) {
-        ModificationGroupEntity group = getModificationGroup(groupUuid);
-        var modificationInfos = onlyMetadata ? this.modificationRepository.findAllBaseByGroupId(group.getId())
-            : this.modificationRepository.findAllByGroupId(group.getId());
-        return modificationInfos.stream()
+        return onlyMetadata ? getModificationsMetadata(groupUuid) : getModificationsInfos(List.of(groupUuid));
+    }
+
+    private List<ModificationInfos> getModificationsMetadata(UUID groupUuid) {
+        return modificationRepository
+            .findAllBaseByGroupId(getModificationGroup(groupUuid).getId())
+            .stream()
             .map(ModificationEntity::toModificationInfos)
             .collect(Collectors.toList());
     }
 
-    public EquipmenAttributeModificationInfos getEquipmentAttributeModification(UUID groupUuid, UUID modificationUuid) {
-        return ((EquipmentAttributeModificationEntity<?>) this.modificationRepository
-                .findById(modificationUuid)
-                .filter(m -> ModificationType.EQUIPMENT_ATTRIBUTE_MODIFICATION.name().equals(m.getType()))
-                .filter(m -> groupUuid.equals(m.getGroup().getId()))
-                .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString())))
-                .toEquipmentAttributeModificationInfos();
-    }
-
-    public LoadCreationInfos getLoadCreationModification(UUID groupUuid, UUID modificationUuid) {
-        return ((LoadCreationEntity) this.modificationRepository
+    @Transactional(readOnly = true)
+    public ModificationInfos getModificationInfo(UUID modificationUuid) {
+        return modificationRepository
             .findById(modificationUuid)
-            .filter(m -> ModificationType.LOAD_CREATION.name().equals(m.getType()))
-            .filter(m -> groupUuid.equals(m.getGroup().getId()))
-            .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString())))
+            .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString()))
             .toModificationInfos();
     }
 
-    public GeneratorCreationInfos getGeneratorCreationModification(UUID groupUuid, UUID modificationUuid) {
-        return ((GeneratorCreationEntity) this.modificationRepository
-            .findById(modificationUuid)
-            .filter(m -> ModificationType.GENERATOR_CREATION.name().equals(m.getType()))
-            .filter(m -> groupUuid.equals(m.getGroup().getId()))
-            .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString())))
-            .toModificationInfos();
-    }
-
-    @Transactional
-    public LineCreationInfos getLineCreationModification(UUID groupUuid, UUID modificationUuid) {
-        return ((LineCreationEntity) this.modificationRepository
-            .findById(modificationUuid)
-            .filter(m -> ModificationType.LINE_CREATION.name().equals(m.getType()))
-            .filter(m -> groupUuid.equals(m.getGroup().getId()))
-            .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString())))
-            .toModificationInfos();
-    }
-
-    @Transactional
-    public TwoWindingsTransformerCreationInfos getTwoWindingsTransformerCreationModification(UUID groupUuid, UUID modificationUuid) {
-        return ((TwoWindingsTransformerCreationEntity) this.modificationRepository
-                .findById(modificationUuid)
-                .filter(m -> ModificationType.TWO_WINDINGS_TRANSFORMER_CREATION.name().equals(m.getType()))
-                .filter(m -> groupUuid.equals(m.getGroup().getId()))
-                .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString())))
-                .toModificationInfos();
-    }
-
-    @Transactional
-    public SubstationCreationInfos getSubstationCreationModification(UUID groupUuid, UUID modificationUuid) {
-        return ((SubstationCreationEntity) this.modificationRepository
-            .findById(modificationUuid)
-            .filter(m -> ModificationType.SUBSTATION_CREATION.name().equals(m.getType()))
-            .filter(m -> groupUuid.equals(m.getGroup().getId()))
-            .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString())))
-            .toSubstationCreationInfos();
-    }
-
-    @Transactional
-    public VoltageLevelCreationInfos getVoltageLevelCreationModification(UUID groupUuid, UUID modificationUuid) {
-        return ((VoltageLevelCreationEntity) this.modificationRepository
-            .findById(modificationUuid)
-            .filter(m -> ModificationType.VOLTAGE_LEVEL_CREATION.name().equals(m.getType()))
-            .filter(m -> groupUuid.equals(m.getGroup().getId()))
-            .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString())))
-            .toVoltageLevelCreationInfos();
+    public Stream<ModificationEntity> getModificationList(UUID groupUuid) {
+        return getModificationGroup(groupUuid).getModifications().stream().filter(Objects::nonNull);
     }
 
     @Transactional // To have the 2 delete in the same transaction (atomic)
     public void deleteModificationGroup(UUID groupUuid) {
         ModificationGroupEntity groupEntity = getModificationGroup(groupUuid);
-        this.modificationRepository.deleteAll(this.modificationRepository.findAllByGroupId(groupUuid));
+        if (!groupEntity.getModifications().isEmpty()) {
+            modificationRepository.deleteAll(groupEntity.getModifications().stream().filter(Objects::nonNull).collect(Collectors.toList()));
+        }
         this.modificationGroupRepository.delete(groupEntity);
+
     }
 
     @Transactional // To have the find and delete in the same transaction (atomic)
     public int deleteModifications(UUID groupUuid, Set<UUID> uuids) {
-        List<ModificationEntity> modifications = this.modificationRepository.findAllByGroupId(groupUuid)
-                .stream()
+        List<ModificationEntity> modifications = getModificationList(groupUuid)
                 .filter(m -> uuids.contains(m.getId()))
                 .collect(Collectors.toList());
         int count = modifications.size();
@@ -269,35 +244,18 @@ public class NetworkModificationRepository {
         return new BranchStatusModificationEntity(lineId, action);
     }
 
-    public GroovyScriptModificationInfos getGroovyScriptModification(UUID groupUuid, UUID modificationUuid) {
-        return ((GroovyScriptModificationEntity) this.modificationRepository
-            .findById(modificationUuid)
-            .filter(m -> ModificationType.GROOVY_SCRIPT.name().equals(m.getType()))
-            .filter(m -> groupUuid.equals(m.getGroup().getId()))
-            .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString())))
-            .toModificationInfos();
-    }
-
+    @Transactional(readOnly = true)
     public List<ModificationEntity> getModificationsEntities(List<UUID> groupUuids) {
-        return this.modificationRepository.findAllByGroupIdInOrderByDate(groupUuids);
+        return groupUuids.stream().flatMap(this::getModificationList).collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public List<ModificationInfos> getModificationsInfos(List<UUID> groupUuids) {
-        return this.modificationRepository.findAllByGroupIdInOrderByDate(groupUuids).stream().map(ModificationEntity::toModificationInfos).collect(Collectors.toList());
+        return this.getModificationsEntities(groupUuids).stream().map(ModificationEntity::toModificationInfos)
+            .collect(Collectors.toList());
     }
 
     public ShuntCompensatorCreationEntity createShuntCompensatorEntity(ShuntCompensatorCreationInfos shuntCompensatorCreationInfos) {
         return new ShuntCompensatorCreationEntity(shuntCompensatorCreationInfos);
     }
-
-    public ShuntCompensatorCreationInfos getShuntCompensatorCreationModification(UUID groupId, UUID modificationUuid) {
-        return ((ShuntCompensatorCreationEntity) this.modificationRepository
-            .findById(modificationUuid)
-            .filter(m -> ModificationType.SHUNT_COMPENSATOR_CREATION.name().equals(m.getType()))
-            .filter(m -> groupId.equals(m.getGroup().getId()))
-            .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString())))
-            .toModificationInfos();
-    }
-
 }

@@ -272,34 +272,26 @@ public class NetworkStoreListener implements NetworkListener {
 
     @Override
     public void beforeRemoval(Identifiable identifiable) {
-        // At the moment, we cannot delete equipments infos in elasticsearch here :
-        // identifiable.getId() throws PowsyblException("Object has been removed in current variant");
-        // because the identifiable resource was set to null in remove method, before calling onRemoval method
-        // onRemoval must be changed in powsybl core (maybe passing only the id as string argument)
-        //this.substationsIds.addAll(getSubstationIds(identifiable));
+        // nothing to do
     }
 
     @Override
     public void afterRemoval(String id) {
-        // nothing to do
-    }
-
-    public void onTemporaryRemoval(String equipmentId, Set<String> substationsIds) {
-        this.substationsIds.addAll(substationsIds);
-        // The following code should be removed from this listener and put in method onRemoval
-        // of the EquipmentInfosNetworkListener as soon as previously mentioned bug is corrected
         String variantId = network.getVariantManager().getWorkingVariantId();
-        if (equipmentInfosService.existEquipmentInfos(equipmentId, networkUuid, variantId)) {
-            equipmentInfosService.deleteEquipmentInfos(equipmentId, networkUuid, variantId);
+        if (equipmentInfosService.existEquipmentInfos(id, networkUuid, variantId)) {
+            equipmentInfosService.deleteEquipmentInfos(id, networkUuid, variantId);
         } else {
             equipmentInfosService.addTombstonedEquipmentInfos(
-                    TombstonedEquipmentInfos.builder()
-                            .networkUuid(networkUuid)
-                            .variantId(variantId)
-                            .id(equipmentId)
-                            .build()
+                TombstonedEquipmentInfos.builder()
+                    .networkUuid(networkUuid)
+                    .variantId(variantId)
+                    .id(id)
+                    .build()
             );
         }
     }
 
+    public void addSubstationsIds(Identifiable identifiable) {
+        substationsIds.addAll(getSubstationIds(identifiable));
+    }
 }

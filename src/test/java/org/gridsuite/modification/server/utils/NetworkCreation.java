@@ -60,7 +60,18 @@ public final class NetworkCreation {
 
         Substation s3 = createSubstation(network, "s3", "s3", Country.FR);
         VoltageLevel v5 = createVoltageLevel(s3, "v5", "v5", TopologyKind.NODE_BREAKER, 380.0);
+        createBusBarSection(v5, "1A1", "1A1", 0);
         createLoad(v5, "v5load", "v5load", 2, 0., 0.);
+        createGenerator(v5, "v5generator", 3, 42.1, 1.0);
+        createShuntCompensator(v5, "v5shunt", "v5shunt", 4, 225., 10, true, 3, 1, 2, 2);
+        createStaticVarCompensator(v5, "v5Compensator", "v5Compensator", 5, StaticVarCompensator.RegulationMode.VOLTAGE, 380., 100, 2, 30);
+
+        VoltageLevel v6 = createVoltageLevel(s3, "v6", "v6", TopologyKind.NODE_BREAKER, 380.0);
+        createBusBarSection(v6, "1B1", "1B1", 0);
+        createLoad(v6, "v6load", "v6load", 2, 0., 0.);
+        createGenerator(v6, "v6generator", 3, 42.1, 1.0);
+        createShuntCompensator(v6, "v6shunt", "v6shunt", 4, 225., 10, true, 3, 1, 2, 2);
+        createStaticVarCompensator(v6, "v6Compensator", "v6Compensator", 5, StaticVarCompensator.RegulationMode.VOLTAGE, 380., 100, 2, 30);
 
         Substation s2 = createSubstation(network, "s2", "s2", Country.FR);
         VoltageLevel v3 = createVoltageLevel(s2, "v3", "v3", TopologyKind.NODE_BREAKER, 380.0);

@@ -37,6 +37,7 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -58,7 +59,7 @@ import static org.mockito.Mockito.when;
 @RunWith(SpringRunner.class)
 @EnableWebFlux
 @AutoConfigureWebTestClient
-@SpringBootTest
+@SpringBootTest(properties = {"spring.data.elasticsearch.enabled=true"})
 public class ModificationControllerTest {
 
     private static final UUID TEST_NETWORK_ID = UUID.fromString("7928181c-7977-4592-ba19-88027e4254e4");
@@ -91,6 +92,8 @@ public class ModificationControllerTest {
 
     private Network network;
 
+    private Network network2;
+
     @Before
     public void setUp() {
         // /!\ create a new network for each invocation (answer)
@@ -98,7 +101,10 @@ public class ModificationControllerTest {
             network = NetworkCreation.create(TEST_NETWORK_ID, true);
             return network;
         });
-        when(networkStoreService.getNetwork(TEST_NETWORK_ID_2)).then((Answer<Network>) invocation -> NetworkCreation.create(TEST_NETWORK_ID_2, false));
+        when(networkStoreService.getNetwork(TEST_NETWORK_ID_2)).then((Answer<Network>) invocation -> {
+            network2 = NetworkCreation.create(TEST_NETWORK_ID_2, false);
+            return network2;
+        });
         when(networkStoreService.getNetwork(NOT_FOUND_NETWORK_ID)).thenThrow(new PowsyblException());
         when(networkStoreService.getNetwork(TEST_NETWORK_WITH_FLUSH_ERROR_ID)).then((Answer<Network>) invocation -> NetworkCreation.create(TEST_NETWORK_WITH_FLUSH_ERROR_ID, true));
         when(networkStoreService.getNetwork(TEST_NETWORK_BUS_BREAKER_ID)).then((Answer<Network>) invocation -> NetworkCreation.createBusBreaker(TEST_NETWORK_BUS_BREAKER_ID));
@@ -112,6 +118,7 @@ public class ModificationControllerTest {
 
         // clean DB
         modificationRepository.deleteAll();
+        equipmentInfosService.deleteAll();
     }
 
     @Test
@@ -1011,6 +1018,11 @@ public class ModificationControllerTest {
     public void testDeleteEquipment() {
         String uriString = "/v1/networks/{networkUuid}/equipments/type/{equipmentType}/id/{equipmentId}?group=" + TEST_GROUP_ID;
 
+        assertTrue(equipmentInfosService.findAllEquipmentInfos(TEST_NETWORK_ID).isEmpty());
+        assertTrue(equipmentInfosService.findAllEquipmentInfos(TEST_NETWORK_ID_2).isEmpty());
+        assertTrue(equipmentInfosService.findAllTombstonedEquipmentInfos(TEST_NETWORK_ID).isEmpty());
+        assertTrue(equipmentInfosService.findAllTombstonedEquipmentInfos(TEST_NETWORK_ID_2).isEmpty());
+
         // delete load
         webTestClient.delete().uri(uriString, TEST_NETWORK_ID, "LOAD", "v1load")
             .exchange()
@@ -1020,8 +1032,15 @@ public class ModificationControllerTest {
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "v1load", "LOAD", Set.of("s1")));
 
-        assertNull(network.getLoad("v1load"));  // load was removed
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
+
+        // load and switches have been removed from network and added as TombstonedEquipmentInfos in ElasticSearch
+        assertNull(network.getLoad("v1load"));
+        assertNull(network.getSwitch("v1d1"));
+        assertNull(network.getSwitch("v1b1"));
+        assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v1load", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v1d1", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v1b1", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
 
         // Test delete load on not yet existing variant VARIANT_NOT_EXISTING_ID :
         // Only the modification should be added in the database but the load cannot be deleted
@@ -1063,8 +1082,15 @@ public class ModificationControllerTest {
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "v2shunt", "SHUNT_COMPENSATOR", Set.of("s1")));
 
-        assertNull(network.getShuntCompensator("v2shunt"));  // shunt compensator was removed
         testNetworkModificationsCount(TEST_GROUP_ID, 3);
+
+        // shunt compensator and switches have been removed from network and added as TombstonedEquipmentInfos in ElasticSearch
+        assertNull(network.getShuntCompensator("v2shunt"));
+        assertNull(network.getSwitch("v2bshunt"));
+        assertNull(network.getSwitch("v2dshunt"));
+        assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v2shunt", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v2bshunt", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v2dshunt", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
 
         // delete generator
         webTestClient.delete().uri(uriString, TEST_NETWORK_ID, "GENERATOR", "idGenerator")
@@ -1075,8 +1101,15 @@ public class ModificationControllerTest {
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "idGenerator", "GENERATOR", Set.of("s1")));
 
-        assertNull(network.getGenerator("idGenerator"));  // generator was removed
         testNetworkModificationsCount(TEST_GROUP_ID, 4);
+
+        // generator and switches have been removed from network and added as TombstonedEquipmentInfos in ElasticSearch
+        assertNull(network.getGenerator("idGenerator"));
+        assertNull(network.getSwitch("v2bgenerator"));
+        assertNull(network.getSwitch("v2dgenerator"));
+        assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("idGenerator", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v2bgenerator", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v2dgenerator", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
 
         // delete line
         webTestClient.delete().uri(uriString, TEST_NETWORK_ID, "LINE", "line2")
@@ -1087,8 +1120,19 @@ public class ModificationControllerTest {
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "line2", "LINE", Set.of("s1", "s2")));
 
-        assertNull(network.getLine("line2"));  // line was removed
         testNetworkModificationsCount(TEST_GROUP_ID, 5);
+
+        // line and switches have been removed from network and added as TombstonedEquipmentInfos in ElasticSearch
+        assertNull(network.getLine("line2"));
+        assertNull(network.getSwitch("v1dl2"));
+        assertNull(network.getSwitch("v1bl2"));
+        assertNull(network.getSwitch("v3dl2"));
+        assertNull(network.getSwitch("v3bl2"));
+        assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("line2", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v1dl2", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v1bl2", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v3dl2", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v3bl2", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
 
         // delete two windings transformer
         webTestClient.delete().uri(uriString, TEST_NETWORK_ID, "TWO_WINDINGS_TRANSFORMER", "trf1")
@@ -1099,8 +1143,20 @@ public class ModificationControllerTest {
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "trf1", "TWO_WINDINGS_TRANSFORMER", Set.of("s1")));
 
-        assertNull(network.getTwoWindingsTransformer("trf1"));  // two windings transformer was removed
         testNetworkModificationsCount(TEST_GROUP_ID, 6);
+
+        // 2 windings transformer and switches have been removed from network and added as TombstonedEquipmentInfos in ElasticSearch
+        assertNull(network.getTwoWindingsTransformer("trf1"));
+        assertNull(network.getSwitch("v1btrf1"));
+        // disconnector 'v1dtrf1' was not removed (2wt 'trf1' in double feeder with 3wt 'trf6' in voltage level 'v1')
+        assertNotNull(network.getSwitch("v1dtrf1"));
+        assertNull(network.getSwitch("v2btrf1"));
+        assertNull(network.getSwitch("v2dtrf1"));
+        assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("trf1", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v1btrf1", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertFalse(equipmentInfosService.existTombstonedEquipmentInfos("v1dtrf1", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v2btrf1", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v2dtrf1", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
 
         // delete three windings transformer
         webTestClient.delete().uri(uriString, TEST_NETWORK_ID, "THREE_WINDINGS_TRANSFORMER", "trf6")
@@ -1111,8 +1167,25 @@ public class ModificationControllerTest {
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "trf6", "THREE_WINDINGS_TRANSFORMER", Set.of("s1")));
 
-        assertNull(network.getThreeWindingsTransformer("trf6"));  // three windings transformer was removed
         testNetworkModificationsCount(TEST_GROUP_ID, 7);
+
+        // 3 windings transformer and switches have been removed from network and added as TombstonedEquipmentInfos in ElasticSearch
+        assertNull(network.getThreeWindingsTransformer("trf6"));
+        // breaker 'v1btrf6' was not removed (special connection of 3wt 'trf6' in voltage level 'v1')
+        // disconnector 'v1dtrf6' was not removed (special connection of 3wt 'trf6' in voltage level 'v1')
+        assertNotNull(network.getSwitch("v1btrf6"));
+        assertNotNull(network.getSwitch("v1dtrf6"));
+        assertNull(network.getSwitch("v2btrf6"));
+        assertNull(network.getSwitch("v2dtrf6"));
+        assertNull(network.getSwitch("v4btrf6"));
+        assertNull(network.getSwitch("v4dtrf6"));
+        assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("trf6", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertFalse(equipmentInfosService.existTombstonedEquipmentInfos("v1btrf6", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertFalse(equipmentInfosService.existTombstonedEquipmentInfos("v1dtrf6", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v2btrf6", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v2dtrf6", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v4btrf6", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v4dtrf6", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
 
         // delete static var compensator
         webTestClient.delete().uri(uriString, TEST_NETWORK_ID, "STATIC_VAR_COMPENSATOR", "v3Compensator")
@@ -1123,8 +1196,15 @@ public class ModificationControllerTest {
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "v3Compensator", "STATIC_VAR_COMPENSATOR", Set.of("s2")));
 
-        assertNull(network.getStaticVarCompensator("v3Compensator"));  // static var compensator was removed
         testNetworkModificationsCount(TEST_GROUP_ID, 8);
+
+        // static var compensator and switches have been removed from network and added as TombstonedEquipmentInfos in ElasticSearch
+        assertNull(network.getStaticVarCompensator("v3Compensator"));
+        assertNull(network.getSwitch("v3dCompensator"));
+        assertNull(network.getSwitch("v3bCompensator"));
+        assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v3Compensator", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v3dCompensator", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v3bCompensator", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
 
         // delete battery
         webTestClient.delete().uri(uriString, TEST_NETWORK_ID, "BATTERY", "v3Battery")
@@ -1135,8 +1215,15 @@ public class ModificationControllerTest {
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "v3Battery", "BATTERY", Set.of("s2")));
 
-        assertNull(network.getBattery("v3Battery"));  // battery was removed
         testNetworkModificationsCount(TEST_GROUP_ID, 9);
+
+        // battery and switches have been removed from network and added as TombstonedEquipmentInfos in ElasticSearch
+        assertNull(network.getBattery("v3Battery"));
+        assertNull(network.getSwitch("v3dBattery"));
+        assertNull(network.getSwitch("v3bBattery"));
+        assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v3Battery", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v3dBattery", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v3bBattery", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
 
         // delete dangling line
         webTestClient.delete().uri(uriString, TEST_NETWORK_ID, "DANGLING_LINE", "v2Dangling")
@@ -1147,8 +1234,15 @@ public class ModificationControllerTest {
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "v2Dangling", "DANGLING_LINE", Set.of("s1")));
 
-        assertNull(network.getDanglingLine("v2Dangling"));  // dangling line was removed
         testNetworkModificationsCount(TEST_GROUP_ID, 10);
+
+        // dangling line and switches have been removed from network and added as TombstonedEquipmentInfos in ElasticSearch
+        assertNull(network.getDanglingLine("v2Dangling"));
+        assertNull(network.getSwitch("v2bdangling"));
+        assertNull(network.getSwitch("v2ddangling"));
+        assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v2Dangling", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v2bdangling", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v2ddangling", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
 
         // delete hvdc line
         webTestClient.delete().uri(uriString, TEST_NETWORK_ID, "HVDC_LINE", "hvdcLine")
@@ -1159,8 +1253,11 @@ public class ModificationControllerTest {
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "hvdcLine", "HVDC_LINE", Set.of("s1")));
 
-        assertNull(network.getHvdcLine("hvdcLine"));  // hvdc line was removed
         testNetworkModificationsCount(TEST_GROUP_ID, 11);
+
+        // hvdc line has been removed from network and added as TombstonedEquipmentInfos in ElasticSearch
+        assertNull(network.getHvdcLine("hvdcLine"));
+        assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("hvdcLine", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
 
         // delete vsc converter station
         webTestClient.delete().uri(uriString, TEST_NETWORK_ID_2, "HVDC_CONVERTER_STATION", "v2vsc")
@@ -1173,6 +1270,14 @@ public class ModificationControllerTest {
 
         testNetworkModificationsCount(TEST_GROUP_ID, 12);
 
+        // vsc converter station and switches have been removed from network and added as TombstonedEquipmentInfos in ElasticSearch
+        assertNull(network2.getVscConverterStation("v2vsc"));
+        assertNull(network2.getSwitch("v2bvsc"));
+        assertNull(network2.getSwitch("v2dvsc"));
+        assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v2vsc", TEST_NETWORK_ID_2, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v2bvsc", TEST_NETWORK_ID_2, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v2dvsc", TEST_NETWORK_ID_2, VariantManagerConstants.INITIAL_VARIANT_ID));
+
         // delete lcc converter station
         webTestClient.delete().uri(uriString, TEST_NETWORK_ID_2, "HVDC_CONVERTER_STATION", "v1lcc")
             .exchange()
@@ -1184,6 +1289,14 @@ public class ModificationControllerTest {
 
         testNetworkModificationsCount(TEST_GROUP_ID, 13);
 
+        // lcc converter station and switches have been removed from network and added as TombstonedEquipmentInfos in ElasticSearch
+        assertNull(network2.getLccConverterStation("v1lcc"));
+        assertNull(network2.getSwitch("v1dlcc"));
+        assertNull(network2.getSwitch("v1blcc"));
+        assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v1lcc", TEST_NETWORK_ID_2, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v1dlcc", TEST_NETWORK_ID_2, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v1blcc", TEST_NETWORK_ID_2, VariantManagerConstants.INITIAL_VARIANT_ID));
+
         // delete voltage level
         webTestClient.delete().uri(uriString, TEST_NETWORK_ID, "VOLTAGE_LEVEL", "v5")
             .exchange()
@@ -1192,8 +1305,22 @@ public class ModificationControllerTest {
             .expectBodyList(EquipmentDeletionInfos.class)
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "v5", "VOLTAGE_LEVEL", Set.of("s3")));
-        assertNull(network.getVoltageLevel("v5"));
+
         testNetworkModificationsCount(TEST_GROUP_ID, 14);
+
+        // voltage level and equipments have been removed from network and added as TombstonedEquipmentInfos in ElasticSearch
+        assertNull(network.getVoltageLevel("v5"));
+        assertNull(network.getBusbarSection("1A1"));
+        assertNull(network.getLoad("v5load"));
+        assertNull(network.getGenerator("v5generator"));
+        assertNull(network.getShuntCompensator("v5shunt"));
+        assertNull(network.getStaticVarCompensator("v5Compensator"));
+        assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v5", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("1A1", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v5load", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v5generator", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v5shunt", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v5Compensator", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
 
         // delete voltage level (fail because the vl is connected)
         webTestClient.delete().uri(uriString, TEST_NETWORK_ID, "VOLTAGE_LEVEL", "v4")
@@ -1211,8 +1338,24 @@ public class ModificationControllerTest {
             .expectBodyList(EquipmentDeletionInfos.class)
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "s3", "SUBSTATION", Set.of()));
-        assertNull(network.getSubstation("s3"));
+
         testNetworkModificationsCount(TEST_GROUP_ID, 15);
+
+        // substation and equipments have been removed from network and added as TombstonedEquipmentInfos in ElasticSearch
+        assertNull(network.getSubstation("s3"));
+        assertNull(network.getVoltageLevel("v6"));
+        assertNull(network.getBusbarSection("1B1"));
+        assertNull(network.getLoad("v6load"));
+        assertNull(network.getGenerator("v6generator"));
+        assertNull(network.getShuntCompensator("v6shunt"));
+        assertNull(network.getStaticVarCompensator("v6Compensator"));
+        assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("s3", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v6", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("1B1", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v6load", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v6generator", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v6shunt", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v6Compensator", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
 
         // delete substation (fail because the substations is connected)
         webTestClient.delete().uri(uriString, TEST_NETWORK_ID, "SUBSTATION", "s2")
@@ -1221,6 +1364,11 @@ public class ModificationControllerTest {
             .expectBody(String.class)
             .value(exception -> exception, containsString("DELETE_EQUIPMENT_ERROR : The substation s2 is still connected to another substation"));
         assertNotNull(network.getSubstation("s2"));
+
+        assertTrue(equipmentInfosService.findAllEquipmentInfos(TEST_NETWORK_ID).isEmpty());
+        assertTrue(equipmentInfosService.findAllEquipmentInfos(TEST_NETWORK_ID_2).isEmpty());
+        assertEquals(52, equipmentInfosService.findAllTombstonedEquipmentInfos(TEST_NETWORK_ID).size());
+        assertEquals(6, equipmentInfosService.findAllTombstonedEquipmentInfos(TEST_NETWORK_ID_2).size());
     }
 
     @Test
@@ -1241,6 +1389,37 @@ public class ModificationControllerTest {
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
             .expectBodyList(UUID.class)
             .isEqualTo(List.of());
+    }
+
+    @Test
+    public void testMoveModification() {
+        webTestClient.put().uri("/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID + "&open=true", TEST_NETWORK_ID, "v1b1")
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBodyList(EquipmenAttributeModificationInfos.class)
+            .returnResult().getResponseBody();
+        webTestClient.put().uri("/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID + "&open=true", TEST_NETWORK_ID, "v1b1")
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBodyList(EquipmenAttributeModificationInfos.class)
+            .returnResult().getResponseBody();
+
+        var modificationList = networkModificationService.getModifications(TEST_GROUP_ID, true).map(ModificationInfos::getUuid).collectList().block();
+        assertNotNull(modificationList);
+        assertEquals(2, modificationList.size());
+        webTestClient.put().uri("/v1/groups/" + TEST_GROUP_ID
+                    + "/modifications/move?before=" + modificationList.get(0)
+                    + "&modificationsToMove=" + modificationList.get(1))
+            .exchange()
+            .expectStatus().isOk();
+
+        var newModificationList = networkModificationService.getModifications(TEST_GROUP_ID, true).map(ModificationInfos::getUuid).collectList().block();
+        assertNotNull(newModificationList);
+        Collections.reverse(newModificationList);
+
+        assertEquals(modificationList, newModificationList);
     }
 
     @Test
