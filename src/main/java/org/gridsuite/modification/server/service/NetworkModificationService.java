@@ -25,7 +25,6 @@ import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
-import org.gridsuite.modification.server.entities.ModificationGroupEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.BusbarConnectionCreationEmbeddable;
 import org.gridsuite.modification.server.entities.equipment.creation.BusbarSectionCreationEmbeddable;
 import org.gridsuite.modification.server.entities.equipment.creation.EquipmentCreationEntity;
@@ -552,7 +551,7 @@ public class NetworkModificationService {
                 generatorCreationInfos.getReactivePowerSetpoint(),
                 generatorCreationInfos.isVoltageRegulationOn(),
                 generatorCreationInfos.getVoltageSetpoint());
-        entity.setGroup(new ModificationGroupEntity(groupUuid));
+//        entity.setGroup(new ModificationGroupEntity(groupUuid));
         entity.setId(generatorCreationInfos.getUuid());
         this.modificationRepository.updateModification(entity);
         return Mono.empty();
@@ -610,7 +609,7 @@ public class NetworkModificationService {
                 loadCreationInfos.getBusOrBusbarSectionId(),
                 loadCreationInfos.getActivePower(),
                 loadCreationInfos.getReactivePower());
-        entity.setGroup(new ModificationGroupEntity(groupUuid));
+//        entity.setGroup(new ModificationGroupEntity(groupUuid));
         entity.setId(loadCreationInfos.getUuid());
         this.modificationRepository.updateModification(entity);
         return Mono.empty();
@@ -903,7 +902,7 @@ public class NetworkModificationService {
                 lineCreationInfos.getBusOrBusbarSectionId2(),
                 lineCreationInfos.getCurrentLimits1().getPermanentLimit(),
                 lineCreationInfos.getCurrentLimits2().getPermanentLimit());
-        entity.setGroup(new ModificationGroupEntity(groupUuid));
+//        entity.setGroup(new ModificationGroupEntity(groupUuid));
         entity.setId(lineCreationInfos.getUuid());
         this.modificationRepository.updateModification(entity);
         return Mono.empty();
@@ -1056,7 +1055,7 @@ public class NetworkModificationService {
                 twoWindingsTransformerCreationInfos.getCurrentLimits1().getPermanentLimit(),
                 twoWindingsTransformerCreationInfos.getCurrentLimits2().getPermanentLimit()
         );
-        entity.setGroup(new ModificationGroupEntity(groupUuid));
+//        entity.setGroup(new ModificationGroupEntity(groupUuid));
         entity.setId(twoWindingsTransformerCreationInfos.getUuid());
         this.modificationRepository.updateModification(entity);
         return Mono.empty();
@@ -1109,7 +1108,7 @@ public class NetworkModificationService {
     public Mono<Void> updateSubstationCreation(UUID groupUuid, SubstationCreationInfos substationCreationInfos) {
         assertSubstationCreationInfosNotEmpty(substationCreationInfos).subscribe();
         EquipmentCreationEntity entity = this.modificationRepository.createSubstationEntity(substationCreationInfos.getEquipmentId(), substationCreationInfos.getEquipmentName(), substationCreationInfos.getSubstationCountry());
-        entity.setGroup(new ModificationGroupEntity(groupUuid));
+//        entity.setGroup(new ModificationGroupEntity(groupUuid));
         entity.setId(substationCreationInfos.getUuid());
         this.modificationRepository.updateModification(entity);
         return Mono.empty();
@@ -1267,7 +1266,7 @@ public class NetworkModificationService {
                 voltageLevelCreationInfos.getSubstationId(),
                 busbarSections,
                 busbarConnections);
-        entity.setGroup(new ModificationGroupEntity(groupUuid));
+//        entity.setGroup(new ModificationGroupEntity(groupUuid));
         entity.setId(voltageLevelCreationInfos.getUuid());
         this.modificationRepository.updateModification(entity);
         return Mono.empty();
@@ -1572,7 +1571,7 @@ public class NetworkModificationService {
     public Mono<Void> updateShuntCompensatorCreation(UUID groupUuid, ShuntCompensatorCreationInfos shuntCompensatorCreationInfos) {
         assertShuntCompensatorCreationInfosNotEmpty(shuntCompensatorCreationInfos).subscribe();
         EquipmentCreationEntity entity = this.modificationRepository.createShuntCompensatorEntity(shuntCompensatorCreationInfos);
-        entity.setGroup(new ModificationGroupEntity(groupUuid));
+//        entity.setGroup(new ModificationGroupEntity(groupUuid));
         entity.setId(shuntCompensatorCreationInfos.getUuid());
         this.modificationRepository.updateModification(entity);
         return Mono.empty();

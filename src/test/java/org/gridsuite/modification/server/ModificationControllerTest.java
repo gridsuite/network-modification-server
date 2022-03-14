@@ -969,7 +969,7 @@ public class ModificationControllerTest {
         uriString = "/v1/networks/{networkUuid}/two-windings-transformer?variantId=" + VARIANT_NOT_EXISTING_ID + "&group=" + TEST_GROUP_ID;
         twoWindingsTransformerCreationInfos.setEquipmentId("id2wt3");
         twoWindingsTransformerCreationInfos.setEquipmentName("name2wt3");
-        List<EquipmenModificationInfos> modifications = webTestClient.put().uri(uriString, TEST_NETWORK_ID)
+        List<EquipmenModificationInfos> modifications = webTestClient.post().uri(uriString, TEST_NETWORK_ID)
             .body(BodyInserters.fromValue(twoWindingsTransformerCreationInfos))
             .exchange()
             .expectStatus().isOk()
@@ -1459,7 +1459,7 @@ public class ModificationControllerTest {
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
 
         // create line with errors
-        webTestClient.put().uri(uriString, NOT_FOUND_NETWORK_ID)
+        webTestClient.post().uri(uriString, NOT_FOUND_NETWORK_ID)
             .body(BodyInserters.fromValue(lineCreationInfos))
             .exchange()
             .expectStatus().isNotFound()
@@ -1467,7 +1467,7 @@ public class ModificationControllerTest {
             .isEqualTo(new NetworkModificationException(NETWORK_NOT_FOUND, NOT_FOUND_NETWORK_ID.toString()).getMessage());
 
         lineCreationInfos.setEquipmentId(null);
-        webTestClient.put().uri(uriString, TEST_NETWORK_ID)
+        webTestClient.post().uri(uriString, TEST_NETWORK_ID)
             .body(BodyInserters.fromValue(lineCreationInfos))
             .exchange()
             .expectStatus().is5xxServerError()
@@ -1476,7 +1476,7 @@ public class ModificationControllerTest {
 
         lineCreationInfos.setEquipmentId("idLine4");
         lineCreationInfos.setVoltageLevelId1("notFoundVoltageLevelId1");
-        webTestClient.put().uri(uriString, TEST_NETWORK_ID)
+        webTestClient.post().uri(uriString, TEST_NETWORK_ID)
             .body(BodyInserters.fromValue(lineCreationInfos))
             .exchange()
             .expectStatus().is4xxClientError()
@@ -1485,7 +1485,7 @@ public class ModificationControllerTest {
 
         lineCreationInfos.setVoltageLevelId1("v1");
         lineCreationInfos.setBusOrBusbarSectionId1("notFoundBusbarSection1");
-        webTestClient.put().uri(uriString, TEST_NETWORK_ID)
+        webTestClient.post().uri(uriString, TEST_NETWORK_ID)
             .body(BodyInserters.fromValue(lineCreationInfos))
             .exchange()
             .expectStatus().is4xxClientError()
@@ -1495,7 +1495,7 @@ public class ModificationControllerTest {
         lineCreationInfos.setVoltageLevelId1("v1");
         lineCreationInfos.setBusOrBusbarSectionId1("1.1");
         lineCreationInfos.setSeriesResistance(Double.NaN);
-        webTestClient.put().uri(uriString, TEST_NETWORK_ID)
+        webTestClient.post().uri(uriString, TEST_NETWORK_ID)
             .body(BodyInserters.fromValue(lineCreationInfos))
             .exchange()
             .expectStatus().is5xxServerError()
@@ -1504,7 +1504,7 @@ public class ModificationControllerTest {
 
         lineCreationInfos.setSeriesResistance(100.0);
         lineCreationInfos.setSeriesReactance(Double.NaN);
-        webTestClient.put().uri(uriString, TEST_NETWORK_ID)
+        webTestClient.post().uri(uriString, TEST_NETWORK_ID)
             .body(BodyInserters.fromValue(lineCreationInfos))
             .exchange()
             .expectStatus().is5xxServerError()
@@ -1519,7 +1519,7 @@ public class ModificationControllerTest {
         uriString = "/v1/networks/{networkUuid}/lines?variantId=" + VARIANT_NOT_EXISTING_ID + "&group=" + TEST_GROUP_ID;
         lineCreationInfos.setEquipmentId("idLine5");
         lineCreationInfos.setEquipmentName("nameLine5");
-        List<EquipmenModificationInfos> modifications = webTestClient.put().uri(uriString, TEST_NETWORK_ID)
+        List<EquipmenModificationInfos> modifications = webTestClient.post().uri(uriString, TEST_NETWORK_ID)
             .body(BodyInserters.fromValue(lineCreationInfos))
             .exchange()
             .expectStatus().isOk()
