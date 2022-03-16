@@ -30,8 +30,7 @@ public class ModificationGroupEntity extends AbstractManuallyAssignedIdentifierE
 
     @OneToMany(
             mappedBy = "group",
-            cascade = CascadeType.ALL,
-            orphanRemoval = true
+            cascade = CascadeType.ALL
     )
     //TODO à bouger dans Modification
 //    @JoinColumn(name = "groupId", foreignKey = @ForeignKey(name = "group_id_fk_constraint"), nullable = false)
@@ -48,7 +47,7 @@ public class ModificationGroupEntity extends AbstractManuallyAssignedIdentifierE
         modification.setGroup(this);
     }
 
-    public void removeComment(ModificationEntity modification) {
+    public void removeModification(ModificationEntity modification) {
         modifications.remove(modification);
         modification.setGroup(null);
     }

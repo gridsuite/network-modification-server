@@ -171,9 +171,11 @@ public class NetworkModificationRepository {
 
     @Transactional // To have the find and delete in the same transaction (atomic)
     public int deleteModifications(UUID groupUuid, Set<UUID> uuids) {
+        ModificationGroupEntity groupEntity = getModificationGroup(groupUuid);
         List<ModificationEntity> modifications = getModificationList(groupUuid)
                 .filter(m -> uuids.contains(m.getId()))
                 .collect(Collectors.toList());
+        modifications.forEach(m -> groupEntity.removeModification(m));
         int count = modifications.size();
         this.modificationRepository.deleteAll(modifications);
         return count;
