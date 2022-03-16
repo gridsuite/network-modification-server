@@ -32,8 +32,6 @@ public class ModificationGroupEntity extends AbstractManuallyAssignedIdentifierE
             mappedBy = "group",
             cascade = CascadeType.ALL
     )
-    //TODO à bouger dans Modification
-//    @JoinColumn(name = "groupId", foreignKey = @ForeignKey(name = "group_id_fk_constraint"), nullable = false)
     @Setter
     @OrderColumn
     private List<ModificationEntity> modifications = new ArrayList<>();

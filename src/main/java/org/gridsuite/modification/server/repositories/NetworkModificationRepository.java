@@ -97,7 +97,7 @@ public class NetworkModificationRepository {
         var modificationGroupEntity = this.modificationGroupRepository
                 .findById(groupUuid)
                 .orElseGet(() -> modificationGroupRepository.save(new ModificationGroupEntity(groupUuid)));
-        modifications.forEach(m -> modificationGroupEntity.addModification(m));
+        modifications.forEach(modificationGroupEntity::addModification);
     }
 
     @Transactional // To have all move in the same transaction (atomic)
@@ -175,7 +175,7 @@ public class NetworkModificationRepository {
         List<ModificationEntity> modifications = getModificationList(groupUuid)
                 .filter(m -> uuids.contains(m.getId()))
                 .collect(Collectors.toList());
-        modifications.forEach(m -> groupEntity.removeModification(m));
+        modifications.forEach(groupEntity::removeModification);
         int count = modifications.size();
         this.modificationRepository.deleteAll(modifications);
         return count;
