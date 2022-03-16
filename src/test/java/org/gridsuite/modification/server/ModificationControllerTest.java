@@ -12,6 +12,7 @@ import com.powsybl.iidm.network.*;
 import com.powsybl.network.store.client.NetworkStoreService;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
+import org.gridsuite.modification.server.entities.equipment.creation.*;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.NetworkModificationService;
 import org.gridsuite.modification.server.service.NetworkStoreListener;
@@ -694,29 +695,43 @@ public class ModificationControllerTest {
             .reactivePower(30.0)
             .build();
 
-        webTestClient.post().uri(uriString, TEST_NETWORK_BUS_BREAKER_ID)
+        EquipmenModificationInfos result = webTestClient.post().uri(uriString, TEST_NETWORK_BUS_BREAKER_ID)
             .body(BodyInserters.fromValue(loadCreationInfos))
             .exchange()
             .expectStatus().isOk()
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
             .expectBodyList(EquipmenModificationInfos.class)
             .value(modifications -> modifications.get(0),
-                MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.LOAD_CREATION, "idLoad1", Set.of("s1")));
+                MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.LOAD_CREATION, "idLoad1", Set.of("s1"))).returnResult().getResponseBody().get(0);
 
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
 
-        loadCreationInfos.setLoadType(LoadType.AUXILIARY);
-        loadCreationInfos.setActivePower(175.0);
-        webTestClient.post().uri(uriString, TEST_NETWORK_BUS_BREAKER_ID)
+        // Update load creation
+        loadCreationInfos = new LoadCreationEntity(
+                "idLoad1edited",
+                "nameLoad1edited",
+                LoadType.AUXILIARY,
+                "v12",
+                "bus12",
+                175.0,
+                60.0)
+                .toModificationInfos();
+        loadCreationInfos.setUuid(result.getUuid());
+        String uriStringForUpdate = "/v1/loads";
+        webTestClient.put().uri(uriStringForUpdate)
                 .body(BodyInserters.fromValue(loadCreationInfos))
+                .exchange()
+                .expectStatus().isOk();
+
+        testNetworkModificationsCount(TEST_GROUP_ID, 1);
+
+        webTestClient.get().uri("/v1/modifications/" + result.getUuid())
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
-                .expectBodyList(EquipmenModificationInfos.class)
+                .expectBodyList(LoadCreationInfos.class)
                 .value(modifications -> modifications.get(0),
-                        MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.LOAD_CREATION, "idLoad1", Set.of("s1")));
-
-        testNetworkModificationsCount(TEST_GROUP_ID, 2);
+                        MatcherLoadCreationInfos.createMatcherLoadCreationInfos(loadCreationInfos));
 
         // create load with errors
         loadCreationInfos.setBusOrBusbarSectionId("notFoundBus");
@@ -727,31 +742,59 @@ public class ModificationControllerTest {
             .expectBody(String.class)
             .isEqualTo(new NetworkModificationException(BUS_NOT_FOUND, "notFoundBus").getMessage());
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 2);
+        testNetworkModificationsCount(TEST_GROUP_ID, 1);
     }
 
     @Test
     public void testCreateShuntCompensator() {
         String uriString = "/v1/networks/{networkUuid}/shunt-compensators?group=" + TEST_GROUP_ID;
 
-        var shunt1 = ShuntCompensatorCreationInfos.builder()
+        ShuntCompensatorCreationInfos shunt1 = ShuntCompensatorCreationInfos.builder()
             .equipmentId("shuntOneId").equipmentName("hop")
             .currentNumberOfSections(4).maximumNumberOfSections(9)
             .susceptancePerSection(1.).isIdenticalSection(true)
             .voltageLevelId("v2").busOrBusbarSectionId("1B")
             .build();
 
-        webTestClient.post().uri(uriString, TEST_NETWORK_ID)
+        EquipmenModificationInfos result = webTestClient.post().uri(uriString, TEST_NETWORK_ID)
             .body(BodyInserters.fromValue(shunt1))
             .exchange()
             .expectStatus().isOk()
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
             .expectBodyList(EquipmenModificationInfos.class)
             .value(modifications -> modifications.get(0),
-                MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.SHUNT_COMPENSATOR_CREATION, "shuntOneId", Set.of("s1")));
+                MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.SHUNT_COMPENSATOR_CREATION, "shuntOneId", Set.of("s1")))
+                .returnResult().getResponseBody().get(0);
 
         assertNotNull(network.getShuntCompensator("shuntOneId"));  // shunt compensator was created
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
+
+        // Update shunt compansator creation
+        shunt1 = new ShuntCompensatorCreationEntity(shunt1).toModificationInfos();
+        shunt1.setEquipmentId("shuntOneIdEdited");
+        shunt1.setEquipmentName("hopEdited");
+        shunt1.setIsIdenticalSection(false);
+        shunt1.setCurrentNumberOfSections(6);
+        shunt1.setMaximumNumberOfSections(12);
+        shunt1.setSusceptancePerSection(2.);
+        shunt1.setVoltageLevelId("v4");
+        shunt1.setBusOrBusbarSectionId("1.A");
+        shunt1.setUuid(result.getUuid());
+        String uriStringForUpdate = "/v1/shunt-compensators";
+        webTestClient.put().uri(uriStringForUpdate)
+                .body(BodyInserters.fromValue(shunt1))
+                .exchange()
+                .expectStatus().isOk();
+
+        testNetworkModificationsCount(TEST_GROUP_ID, 1);
+
+        webTestClient.get().uri("/v1/modifications/" + result.getUuid())
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBodyList(ShuntCompensatorCreationInfos.class)
+                .value(modifications -> modifications.get(0),
+                        MatcherShuntCompensatorCreationInfos.createMatcher(shunt1));
 
         shunt1.setMaximumNumberOfSections(2);
         webTestClient.post().uri(uriString, TEST_NETWORK_ID)
@@ -781,17 +824,50 @@ public class ModificationControllerTest {
             .voltageSetpoint(225.)
             .build();
 
-        webTestClient.post().uri(uriString, TEST_NETWORK_ID)
+        EquipmenModificationInfos result = webTestClient.post().uri(uriString, TEST_NETWORK_ID)
             .body(BodyInserters.fromValue(generatorCreationInfos))
             .exchange()
             .expectStatus().isOk()
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
             .expectBodyList(EquipmenModificationInfos.class)
             .value(modifications -> modifications.get(0),
-                MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.GENERATOR_CREATION, "idGenerator1", Set.of("s1")));
+                MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.GENERATOR_CREATION, "idGenerator1", Set.of("s1")))
+                .returnResult().getResponseBody().get(0);
 
         assertNotNull(network.getGenerator("idGenerator1"));  // generator was created
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
+
+        // Update generator creation
+        generatorCreationInfos = new GeneratorCreationEntity(
+                "idGenerator1Edited",
+                "nameGenerator1Edited",
+                EnergySource.SOLAR,
+                "v1",
+                "1A",
+                150.,
+                300.,
+                15.,
+                450.,
+                55.,
+                false,
+                235.)
+                .toModificationInfos();
+        generatorCreationInfos.setUuid(result.getUuid());
+        String uriStringForUpdate = "/v1/generators";
+        webTestClient.put().uri(uriStringForUpdate)
+                .body(BodyInserters.fromValue(generatorCreationInfos))
+                .exchange()
+                .expectStatus().isOk();
+
+        testNetworkModificationsCount(TEST_GROUP_ID, 1);
+
+        webTestClient.get().uri("/v1/modifications/" + result.getUuid())
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBodyList(GeneratorCreationInfos.class)
+                .value(modifications -> modifications.get(0),
+                        MatcherGeneratorCreationInfos.createMatcherGeneratorCreationInfos(generatorCreationInfos));
 
         // create generator with errors
         webTestClient.post().uri(uriString, NOT_FOUND_NETWORK_ID)
@@ -922,16 +998,52 @@ public class ModificationControllerTest {
                 .seriesResistance(400)
                 .build();
 
-        webTestClient.post().uri(uriString, TEST_NETWORK_BUS_BREAKER_ID)
+        EquipmenModificationInfos result = webTestClient.post().uri(uriString, TEST_NETWORK_BUS_BREAKER_ID)
                 .body(BodyInserters.fromValue(twoWindingsTransformerCreationInfos))
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
                 .expectBodyList(EquipmenModificationInfos.class)
                 .value(modifications -> modifications.get(0),
-                        MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.TWO_WINDINGS_TRANSFORMER_CREATION, "id2wt1", Set.of("s1")));
+                        MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.TWO_WINDINGS_TRANSFORMER_CREATION, "id2wt1", Set.of("s1")))
+                .returnResult().getResponseBody().get(0);
 
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
+
+        // Update 2wt creation
+        twoWindingsTransformerCreationInfos = new TwoWindingsTransformerCreationEntity(
+                "id2wt1Edited",
+                "2wtNameEdited",
+                150.,
+                250.,
+                1005.,
+                1015.,
+                350.,
+                450.,
+                "v12",
+                "bus12",
+                "v1",
+                "bus1",
+                50.,
+                55.
+                )
+                .toModificationInfos();
+        twoWindingsTransformerCreationInfos.setUuid(result.getUuid());
+        String uriStringForUpdate = "/v1/two-windings-transformer";
+        webTestClient.put().uri(uriStringForUpdate)
+                .body(BodyInserters.fromValue(twoWindingsTransformerCreationInfos))
+                .exchange()
+                .expectStatus().isOk();
+
+        testNetworkModificationsCount(TEST_GROUP_ID, 1);
+
+        webTestClient.get().uri("/v1/modifications/" + result.getUuid())
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBodyList(TwoWindingsTransformerCreationInfos.class)
+                .value(modifications -> modifications.get(0),
+                        MatcherTwoWindingsTransformerCreationInfos.createMatcherTwoWindingsTransformerCreationInfos(twoWindingsTransformerCreationInfos));
 
         // create 2wt with errors
         twoWindingsTransformerCreationInfos.setBusOrBusbarSectionId1("notFoundBus");
@@ -1459,17 +1571,52 @@ public class ModificationControllerTest {
 
         assertEquals("LineCreationInfos(super=BranchCreationInfos(super=EquipmentCreationInfos(super=EquipmenModificationInfos(super=ModificationInfos(uuid=null, date=null, type=null, substationIds=[]), equipmentId=idLine4), equipmentName=nameLine4), seriesResistance=100.0, seriesReactance=100.0, voltageLevelId1=v1, voltageLevelId2=v2, busOrBusbarSectionId1=1.1, busOrBusbarSectionId2=1A, currentLimits1=null, currentLimits2=null), shuntConductance1=10.0, shuntSusceptance1=10.0, shuntConductance2=20.0, shuntSusceptance2=20.0)", lineCreationInfos.toString());
 
-        webTestClient.post().uri(uriString, TEST_NETWORK_ID)
+        EquipmenModificationInfos result = webTestClient.post().uri(uriString, TEST_NETWORK_ID)
             .body(BodyInserters.fromValue(lineCreationInfos))
             .exchange()
             .expectStatus().isOk()
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
             .expectBodyList(EquipmenModificationInfos.class)
             .value(modifications -> modifications.get(0),
-                MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.LINE_CREATION, "idLine4", Set.of("s1")));
+                MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.LINE_CREATION, "idLine4", Set.of("s1")))
+                .returnResult().getResponseBody().get(0);
 
         assertNotNull(network.getLine("idLine4"));  // line was created
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
+
+        // Update load creation
+        lineCreationInfos = new LineCreationEntity(
+                "idLine4edited",
+                "nameLine4edited",
+                110.0,
+                110.0,
+                15.0,
+                15.,
+                25.,
+                25.,
+                "v2",
+                "1A",
+                "v1",
+                "1.1",
+                5.,
+                5.)
+                .toModificationInfos();
+        lineCreationInfos.setUuid(result.getUuid());
+        String uriStringForUpdate = "/v1/lines";
+        webTestClient.put().uri(uriStringForUpdate)
+                .body(BodyInserters.fromValue(lineCreationInfos))
+                .exchange()
+                .expectStatus().isOk();
+
+        testNetworkModificationsCount(TEST_GROUP_ID, 1);
+
+        webTestClient.get().uri("/v1/modifications/" + result.getUuid())
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBodyList(LineCreationInfos.class)
+                .value(modifications -> modifications.get(0),
+                        MatcherLineCreationInfos.createMatcherLineCreationInfos(lineCreationInfos));
 
         // create line with errors
         webTestClient.post().uri(uriString, NOT_FOUND_NETWORK_ID)
@@ -1760,16 +1907,40 @@ public class ModificationControllerTest {
                 .build();
         assertEquals("SubstationCreationInfos(super=EquipmentCreationInfos(super=EquipmenModificationInfos(super=ModificationInfos(uuid=null, date=null, type=null, substationIds=[]), equipmentId=SubstationId), equipmentName=SubstationName), substationCountry=AF)", substationCreationInfos.toString());
 
-        webTestClient.post().uri(uriString, TEST_NETWORK_ID)
+        EquipmenModificationInfos result = webTestClient.post().uri(uriString, TEST_NETWORK_ID)
                 .body(BodyInserters.fromValue(substationCreationInfos))
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
                 .expectBodyList(EquipmenModificationInfos.class)
                 .value(modifications -> modifications.get(0),
-                        MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.SUBSTATION_CREATION, "SubstationId", Set.of("SubstationId")));
+                        MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.SUBSTATION_CREATION, "SubstationId", Set.of("SubstationId")))
+                .returnResult().getResponseBody().get(0);
 
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
+
+        // Update substation creation
+        substationCreationInfos = new SubstationCreationEntity(
+                "SubstationIdEdited",
+                "SubstationNameEdited",
+                Country.CI)
+                .toModificationInfos();
+        substationCreationInfos.setUuid(result.getUuid());
+        String uriStringForUpdate = "/v1/substations";
+        webTestClient.put().uri(uriStringForUpdate)
+                .body(BodyInserters.fromValue(substationCreationInfos))
+                .exchange()
+                .expectStatus().isOk();
+
+        testNetworkModificationsCount(TEST_GROUP_ID, 1);
+
+        webTestClient.get().uri("/v1/modifications/" + result.getUuid())
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBodyList(SubstationCreationInfos.class)
+                .value(modifications -> modifications.get(0),
+                        MatcherSubstationCreationInfos.createMatcherSubstationCreationInfos(substationCreationInfos));
 
         // create substation with errors
         webTestClient.post().uri(uriString, NOT_FOUND_NETWORK_ID)
@@ -1836,16 +2007,43 @@ public class ModificationControllerTest {
             .busbarConnections(busbarConnectionInfos)
             .build();
 
-        webTestClient.post().uri(uriString, TEST_NETWORK_ID)
+        EquipmenModificationInfos result = webTestClient.post().uri(uriString, TEST_NETWORK_ID)
             .body(BodyInserters.fromValue(vli))
             .exchange()
             .expectStatus().isOk()
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
             .expectBodyList(EquipmenModificationInfos.class)
             .value(modifications -> modifications.get(0),
-                MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.VOLTAGE_LEVEL_CREATION, "VoltageLevelId", Set.of("s1")));
+                MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.VOLTAGE_LEVEL_CREATION, "VoltageLevelId", Set.of("s1")))
+                .returnResult().getResponseBody().get(0);
 
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
+
+        // Update voltage level creation
+        vli = new VoltageLevelCreationEntity(
+                "VoltageLevelIdEdited",
+                "VoltageLevelEdited",
+                385.,
+                "s2",
+                List.of(),
+                List.of())
+                .toModificationInfos();
+        vli.setUuid(result.getUuid());
+        String uriStringForUpdate = "/v1/voltage-levels";
+        webTestClient.put().uri(uriStringForUpdate)
+                .body(BodyInserters.fromValue(vli))
+                .exchange()
+                .expectStatus().isOk();
+
+        testNetworkModificationsCount(TEST_GROUP_ID, 1);
+
+        webTestClient.get().uri("/v1/modifications/" + result.getUuid())
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBodyList(VoltageLevelCreationInfos.class)
+                .value(modifications -> modifications.get(0),
+                        MatcherVoltageLevelCreationInfos.createMatcherVoltageLevelCreationInfos(vli));
 
         // create substation with errors
         webTestClient.post().uri(uriString, NOT_FOUND_NETWORK_ID)

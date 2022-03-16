@@ -208,7 +208,7 @@ public class NetworkModificationController {
     @Operation(summary = "update a two windings transformer creation in the network")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The two windings transformer creation has been updated")})
     public ResponseEntity<Mono<Void>> updateTwoWindingsTransformer(@RequestBody TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
-        return ResponseEntity.ok().body(networkModificationService.updatTwoWindingsTransformerCreation(twoWindingsTransformerCreationInfos));
+        return ResponseEntity.ok().body(networkModificationService.updateTwoWindingsTransformerCreation(twoWindingsTransformerCreationInfos));
     }
 
     @PostMapping(value = "/networks/{networkUuid}/substations", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
