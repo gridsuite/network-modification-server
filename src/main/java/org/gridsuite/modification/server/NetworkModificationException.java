@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server;
 
+import com.powsybl.commons.PowsyblException;
 import lombok.NonNull;
 import org.gridsuite.modification.server.dto.BranchStatusModificationInfos;
 import org.springframework.http.HttpStatus;
@@ -16,7 +17,7 @@ import java.util.Objects;
  * @author Slimane Amar <slimane.amar at rte-france.com>
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
-public class NetworkModificationException extends RuntimeException {
+public class NetworkModificationException extends PowsyblException {
     public enum Type {
         GROOVY_SCRIPT_EMPTY(HttpStatus.BAD_REQUEST, "Empty script"),
         GROOVY_SCRIPT_ERROR(HttpStatus.BAD_REQUEST),
