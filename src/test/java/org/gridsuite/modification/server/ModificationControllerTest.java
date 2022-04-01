@@ -293,21 +293,23 @@ public class ModificationControllerTest {
         assertEquals(1, res.size());
 
         assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID, false).size());
-        String deleteStrWrongGroup = "/v1/groups/" + UUID.randomUUID() + "/modifications/" + res.get(0).getUuid();
-        String deleteStr = "/v1/groups/" + TEST_GROUP_ID + "/modifications/" + res.get(0).getUuid();
+        String deleteStrWrongGroup = "/v1/groups/" + UUID.randomUUID() + "/modifications?modificationsUuids=" + res.get(0).getUuid();
+        String deleteStr = "/v1/groups/" + TEST_GROUP_ID + "/modifications";
 
         webTestClient.delete().uri(deleteStrWrongGroup)
             .exchange()
             .expectStatus().isNotFound();
 
-        webTestClient.delete().uri(deleteStr)
+        webTestClient.delete()
+            .uri(uriBuilder -> uriBuilder.path(deleteStr).queryParam("modificationsUuids", List.of(res.get(0).getUuid())).build())
             .exchange()
             .expectStatus().isOk();
 
         assertEquals(0, modificationRepository.getModifications(TEST_GROUP_ID, false).size());
 
         /* non existing modification */
-        webTestClient.delete().uri(deleteStr)
+        webTestClient.delete()
+            .uri(uriBuilder -> uriBuilder.path(deleteStr).queryParam("modificationsUuids", List.of(res.get(0).getUuid())).build())
             .exchange()
             .expectStatus().isNotFound();
 
