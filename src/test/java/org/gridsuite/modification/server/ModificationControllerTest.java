@@ -717,9 +717,19 @@ public class ModificationControllerTest {
                 60.0)
                 .toModificationInfos();
         loadCreationInfos.setUuid(result.getUuid());
-        String uriStringForUpdate = "/v1/loads";
+
+        LoadCreationInfos loadCreationUpdate = new LoadCreationEntity(
+                "idLoad1edited",
+                "nameLoad1edited",
+                LoadType.AUXILIARY,
+                "v12",
+                "bus12",
+                175.0,
+                60.0)
+                .toModificationInfos();
+        String uriStringForUpdate = "/v1/" + result.getUuid() + "/loads-creation";
         webTestClient.put().uri(uriStringForUpdate)
-                .body(BodyInserters.fromValue(loadCreationInfos))
+                .body(BodyInserters.fromValue(loadCreationUpdate))
                 .exchange()
                 .expectStatus().isOk();
 
@@ -769,7 +779,6 @@ public class ModificationControllerTest {
         assertNotNull(network.getShuntCompensator("shuntOneId"));  // shunt compensator was created
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
 
-        // Update shunt compansator creation
         shunt1 = new ShuntCompensatorCreationEntity(shunt1).toModificationInfos();
         shunt1.setEquipmentId("shuntOneIdEdited");
         shunt1.setEquipmentName("hopEdited");
@@ -780,9 +789,20 @@ public class ModificationControllerTest {
         shunt1.setVoltageLevelId("v4");
         shunt1.setBusOrBusbarSectionId("1.A");
         shunt1.setUuid(result.getUuid());
-        String uriStringForUpdate = "/v1/shunt-compensators";
+        String uriStringForUpdate = "/v1/" + result.getUuid() + "/shunt-compensators-creation";
+
+        // Update shunt compansator creation
+        ShuntCompensatorCreationInfos shuntUpdate = new ShuntCompensatorCreationEntity(shunt1).toModificationInfos();
+        shuntUpdate.setEquipmentId("shuntOneIdEdited");
+        shuntUpdate.setEquipmentName("hopEdited");
+        shuntUpdate.setIsIdenticalSection(false);
+        shuntUpdate.setCurrentNumberOfSections(6);
+        shuntUpdate.setMaximumNumberOfSections(12);
+        shuntUpdate.setSusceptancePerSection(2.);
+        shuntUpdate.setVoltageLevelId("v4");
+        shuntUpdate.setBusOrBusbarSectionId("1.A");
         webTestClient.put().uri(uriStringForUpdate)
-                .body(BodyInserters.fromValue(shunt1))
+                .body(BodyInserters.fromValue(shuntUpdate))
                 .exchange()
                 .expectStatus().isOk();
 
@@ -837,7 +857,6 @@ public class ModificationControllerTest {
         assertNotNull(network.getGenerator("idGenerator1"));  // generator was created
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
 
-        // Update generator creation
         generatorCreationInfos = new GeneratorCreationEntity(
                 "idGenerator1Edited",
                 "nameGenerator1Edited",
@@ -853,9 +872,25 @@ public class ModificationControllerTest {
                 235.)
                 .toModificationInfos();
         generatorCreationInfos.setUuid(result.getUuid());
-        String uriStringForUpdate = "/v1/generators";
+
+        // Update generator creation
+        GeneratorCreationInfos generatorCreationUpdate = new GeneratorCreationEntity(
+                "idGenerator1Edited",
+                "nameGenerator1Edited",
+                EnergySource.SOLAR,
+                "v1",
+                "1A",
+                150.,
+                300.,
+                15.,
+                450.,
+                55.,
+                false,
+                235.)
+                .toModificationInfos();
+        String uriStringForUpdate = "/v1/" + result.getUuid() + "/generators-creation";
         webTestClient.put().uri(uriStringForUpdate)
-                .body(BodyInserters.fromValue(generatorCreationInfos))
+                .body(BodyInserters.fromValue(generatorCreationUpdate))
                 .exchange()
                 .expectStatus().isOk();
 
@@ -980,7 +1015,7 @@ public class ModificationControllerTest {
 
     @Test
     public void testCreateTwoWindingsTransformerInBusBreaker() {
-        String uriString = "/v1/networks/{networkUuid}/two-windings-transformer?group=" + TEST_GROUP_ID;
+        String uriString = "/v1/networks/{networkUuid}/two-windings-transformers?group=" + TEST_GROUP_ID;
 
         // create new 2wt in voltage level with bus/breaker topology
         TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos = TwoWindingsTransformerCreationInfos.builder()
@@ -1010,7 +1045,6 @@ public class ModificationControllerTest {
 
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
 
-        // Update 2wt creation
         twoWindingsTransformerCreationInfos = new TwoWindingsTransformerCreationEntity(
                 "id2wt1Edited",
                 "2wtNameEdited",
@@ -1029,9 +1063,27 @@ public class ModificationControllerTest {
                 )
                 .toModificationInfos();
         twoWindingsTransformerCreationInfos.setUuid(result.getUuid());
-        String uriStringForUpdate = "/v1/two-windings-transformer";
+
+        // Update 2wt creation
+        TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationUpdate = new TwoWindingsTransformerCreationEntity(
+                "id2wt1Edited",
+                "2wtNameEdited",
+                150.,
+                250.,
+                1005.,
+                1015.,
+                350.,
+                450.,
+                "v12",
+                "bus12",
+                "v1",
+                "bus1",
+                50.,
+                55.
+        ).toModificationInfos();
+        String uriStringForUpdate = "/v1/" + result.getUuid() + "/two-windings-transformers-creation";
         webTestClient.put().uri(uriStringForUpdate)
-                .body(BodyInserters.fromValue(twoWindingsTransformerCreationInfos))
+                .body(BodyInserters.fromValue(twoWindingsTransformerCreationUpdate))
                 .exchange()
                 .expectStatus().isOk();
 
@@ -1059,7 +1111,7 @@ public class ModificationControllerTest {
 
     @Test
     public void testCreateTwoWindingsTransformerInNodeBreaker() {
-        String uriString = "/v1/networks/{networkUuid}/two-windings-transformer?group=" + TEST_GROUP_ID;
+        String uriString = "/v1/networks/{networkUuid}/two-windings-transformers?group=" + TEST_GROUP_ID;
 
         // create new 2wt in voltage level with Node/breaker topology
         TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos = TwoWindingsTransformerCreationInfos.builder()
@@ -1091,7 +1143,7 @@ public class ModificationControllerTest {
 
         // Test create transformer on not yet existing variant VARIANT_NOT_EXISTING_ID :
         // Only the modification should be added in the database but the transformer cannot be created
-        uriString = "/v1/networks/{networkUuid}/two-windings-transformer?variantId=" + VARIANT_NOT_EXISTING_ID + "&group=" + TEST_GROUP_ID;
+        uriString = "/v1/networks/{networkUuid}/two-windings-transformers?variantId=" + VARIANT_NOT_EXISTING_ID + "&group=" + TEST_GROUP_ID;
         twoWindingsTransformerCreationInfos.setEquipmentId("id2wt3");
         twoWindingsTransformerCreationInfos.setEquipmentName("name2wt3");
         List<EquipmenModificationInfos> modifications = webTestClient.post().uri(uriString, TEST_NETWORK_ID)
@@ -1109,7 +1161,7 @@ public class ModificationControllerTest {
 
     @Test
     public void testCreateTwoWindingsTransformerInMixedTopology() {
-        String uriString = "/v1/networks/{networkUuid}/two-windings-transformer?group=" + TEST_NETWORK_MIXED_TOPOLOGY_ID;
+        String uriString = "/v1/networks/{networkUuid}/two-windings-transformers?group=" + TEST_NETWORK_MIXED_TOPOLOGY_ID;
 
         // create new 2wt in voltage level with mixed topology
         TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos = TwoWindingsTransformerCreationInfos.builder()
@@ -1584,7 +1636,6 @@ public class ModificationControllerTest {
         assertNotNull(network.getLine("idLine4"));  // line was created
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
 
-        // Update load creation
         lineCreationInfos = new LineCreationEntity(
                 "idLine4edited",
                 "nameLine4edited",
@@ -1602,9 +1653,26 @@ public class ModificationControllerTest {
                 5.)
                 .toModificationInfos();
         lineCreationInfos.setUuid(result.getUuid());
-        String uriStringForUpdate = "/v1/lines";
+
+        // Update load creation
+        LineCreationInfos lineCreationUpdate = new LineCreationEntity(
+                "idLine4edited",
+                "nameLine4edited",
+                110.0,
+                110.0,
+                15.0,
+                15.,
+                25.,
+                25.,
+                "v2",
+                "1A",
+                "v1",
+                "1.1",
+                5.,
+                5.).toModificationInfos();
+        String uriStringForUpdate = "/v1/" + result.getUuid() + "/lines-creation";
         webTestClient.put().uri(uriStringForUpdate)
-                .body(BodyInserters.fromValue(lineCreationInfos))
+                .body(BodyInserters.fromValue(lineCreationUpdate))
                 .exchange()
                 .expectStatus().isOk();
 
@@ -1919,16 +1987,21 @@ public class ModificationControllerTest {
 
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
 
-        // Update substation creation
         substationCreationInfos = new SubstationCreationEntity(
                 "SubstationIdEdited",
                 "SubstationNameEdited",
                 Country.CI)
                 .toModificationInfos();
         substationCreationInfos.setUuid(result.getUuid());
-        String uriStringForUpdate = "/v1/substations";
+
+        // Update substation creation
+        SubstationCreationInfos substationCreationUpdate = new SubstationCreationEntity(
+                "SubstationIdEdited",
+                "SubstationNameEdited",
+                Country.CI).toModificationInfos();
+        String uriStringForUpdate = "/v1/" + result.getUuid() + "/substations-creation";
         webTestClient.put().uri(uriStringForUpdate)
-                .body(BodyInserters.fromValue(substationCreationInfos))
+                .body(BodyInserters.fromValue(substationCreationUpdate))
                 .exchange()
                 .expectStatus().isOk();
 
@@ -2019,7 +2092,6 @@ public class ModificationControllerTest {
 
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
 
-        // Update voltage level creation
         vli = new VoltageLevelCreationEntity(
                 "VoltageLevelIdEdited",
                 "VoltageLevelEdited",
@@ -2029,9 +2101,19 @@ public class ModificationControllerTest {
                 List.of())
                 .toModificationInfos();
         vli.setUuid(result.getUuid());
-        String uriStringForUpdate = "/v1/voltage-levels";
+
+        // Update voltage level creation
+        VoltageLevelCreationInfos vlu = new VoltageLevelCreationEntity(
+                "VoltageLevelIdEdited",
+                "VoltageLevelEdited",
+                385.,
+                "s2",
+                List.of(),
+                List.of())
+                .toModificationInfos();
+        String uriStringForUpdate = "/v1/" + result.getUuid() + "/voltage-levels-creation";
         webTestClient.put().uri(uriStringForUpdate)
-                .body(BodyInserters.fromValue(vli))
+                .body(BodyInserters.fromValue(vlu))
                 .exchange()
                 .expectStatus().isOk();
 

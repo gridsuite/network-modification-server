@@ -541,13 +541,13 @@ public class NetworkModificationService {
             .add();
     }
 
-    public Mono<Void> updateGeneratorCreation(GeneratorCreationInfos generatorCreationInfos) {
+    public Mono<Void> updateGeneratorCreation(GeneratorCreationInfos generatorCreationInfos, UUID modificationUuid) {
         assertGeneratorCreationInfosNotEmpty(generatorCreationInfos).subscribe();
 
-        Optional<ModificationEntity> generatorModificationEntity = this.modificationRepository.findById(generatorCreationInfos.getUuid());
+        Optional<ModificationEntity> generatorModificationEntity = this.modificationRepository.findById(modificationUuid);
 
         if (!generatorModificationEntity.isPresent()) {
-            return Mono.error(new NetworkModificationException(CREATE_LOAD_ERROR, "Generator creation not found"));
+            return Mono.error(new NetworkModificationException(CREATE_GENERATOR_ERROR, "Generator creation not found"));
         }
 
         EquipmentCreationEntity updatedEntity = this.networkModificationRepository.createGeneratorEntity(
@@ -563,7 +563,7 @@ public class NetworkModificationService {
                 generatorCreationInfos.getReactivePowerSetpoint(),
                 generatorCreationInfos.isVoltageRegulationOn(),
                 generatorCreationInfos.getVoltageSetpoint());
-        updatedEntity.setId(generatorCreationInfos.getUuid());
+        updatedEntity.setId(modificationUuid);
         updatedEntity.setGroup(generatorModificationEntity.get().getGroup());
         this.networkModificationRepository.updateModification(updatedEntity);
         return Mono.empty();
@@ -611,10 +611,10 @@ public class NetworkModificationService {
             }));
     }
 
-    public Mono<Void> updateLoadCreation(LoadCreationInfos loadCreationInfos) {
+    public Mono<Void> updateLoadCreation(LoadCreationInfos loadCreationInfos, UUID modificationUuid) {
         assertLoadCreationInfosNotEmpty(loadCreationInfos).subscribe();
 
-        Optional<ModificationEntity> loadModificationEntity = this.modificationRepository.findById(loadCreationInfos.getUuid());
+        Optional<ModificationEntity> loadModificationEntity = this.modificationRepository.findById(modificationUuid);
 
         if (!loadModificationEntity.isPresent()) {
             return Mono.error(new NetworkModificationException(CREATE_LOAD_ERROR, "Load creation not found"));
@@ -627,7 +627,7 @@ public class NetworkModificationService {
                 loadCreationInfos.getBusOrBusbarSectionId(),
                 loadCreationInfos.getActivePower(),
                 loadCreationInfos.getReactivePower());
-        updatedEntity.setId(loadCreationInfos.getUuid());
+        updatedEntity.setId(modificationUuid);
         updatedEntity.setGroup(loadModificationEntity.get().getGroup());
         this.networkModificationRepository.updateModification(updatedEntity);
         return Mono.empty();
@@ -903,13 +903,13 @@ public class NetworkModificationService {
         return lineAdder.add();
     }
 
-    public Mono<Void> updateLineCreation(LineCreationInfos lineCreationInfos) {
+    public Mono<Void> updateLineCreation(LineCreationInfos lineCreationInfos, UUID modificationUuid) {
         assertLineCreationInfosNotEmpty(lineCreationInfos).subscribe();
 
-        Optional<ModificationEntity> lineModificationEntity = this.modificationRepository.findById(lineCreationInfos.getUuid());
+        Optional<ModificationEntity> lineModificationEntity = this.modificationRepository.findById(modificationUuid);
 
         if (!lineModificationEntity.isPresent()) {
-            return Mono.error(new NetworkModificationException(CREATE_LOAD_ERROR, "Line creation not found"));
+            return Mono.error(new NetworkModificationException(CREATE_LINE_ERROR, "Line creation not found"));
         }
 
         EquipmentCreationEntity updatedEntity = this.networkModificationRepository.createLineEntity(
@@ -927,7 +927,7 @@ public class NetworkModificationService {
                 lineCreationInfos.getBusOrBusbarSectionId2(),
                 lineCreationInfos.getCurrentLimits1().getPermanentLimit(),
                 lineCreationInfos.getCurrentLimits2().getPermanentLimit());
-        updatedEntity.setId(lineCreationInfos.getUuid());
+        updatedEntity.setId(modificationUuid);
         updatedEntity.setGroup(lineModificationEntity.get().getGroup());
         this.networkModificationRepository.updateModification(updatedEntity);
         return Mono.empty();
@@ -1062,9 +1062,9 @@ public class NetworkModificationService {
         return twoWindingsTransformerAdder.add();
     }
 
-    public Mono<Void> updateTwoWindingsTransformerCreation(TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
+    public Mono<Void> updateTwoWindingsTransformerCreation(TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos, UUID modificationUuid) {
         assertTwoWindingsTransformerCreationInfosNotEmpty(twoWindingsTransformerCreationInfos).subscribe();
-        Optional<ModificationEntity> twoWindingsTransformerModificationEntity = this.modificationRepository.findById(twoWindingsTransformerCreationInfos.getUuid());
+        Optional<ModificationEntity> twoWindingsTransformerModificationEntity = this.modificationRepository.findById(modificationUuid);
 
         if (!twoWindingsTransformerModificationEntity.isPresent()) {
             return Mono.error(new NetworkModificationException(CREATE_TWO_WINDINGS_TRANSFORMER_ERROR, "Two windings transformer creation not found"));
@@ -1082,10 +1082,10 @@ public class NetworkModificationService {
                 twoWindingsTransformerCreationInfos.getBusOrBusbarSectionId1(),
                 twoWindingsTransformerCreationInfos.getVoltageLevelId2(),
                 twoWindingsTransformerCreationInfos.getBusOrBusbarSectionId2(),
-                twoWindingsTransformerCreationInfos.getCurrentLimits1().getPermanentLimit(),
-                twoWindingsTransformerCreationInfos.getCurrentLimits2().getPermanentLimit()
+                twoWindingsTransformerCreationInfos.getCurrentLimits1() != null ? twoWindingsTransformerCreationInfos.getCurrentLimits1().getPermanentLimit() : null,
+                twoWindingsTransformerCreationInfos.getCurrentLimits2() != null ? twoWindingsTransformerCreationInfos.getCurrentLimits2().getPermanentLimit() : null
         );
-        updatedEntity.setId(twoWindingsTransformerCreationInfos.getUuid());
+        updatedEntity.setId(modificationUuid);
         updatedEntity.setGroup(twoWindingsTransformerModificationEntity.get().getGroup());
         this.networkModificationRepository.updateModification(updatedEntity);
         return Mono.empty();
@@ -1135,17 +1135,17 @@ public class NetworkModificationService {
                 }));
     }
 
-    public Mono<Void> updateSubstationCreation(SubstationCreationInfos substationCreationInfos) {
+    public Mono<Void> updateSubstationCreation(SubstationCreationInfos substationCreationInfos, UUID modificationUuid) {
         assertSubstationCreationInfosNotEmpty(substationCreationInfos).subscribe();
 
-        Optional<ModificationEntity> substationModificationEntity = this.modificationRepository.findById(substationCreationInfos.getUuid());
+        Optional<ModificationEntity> substationModificationEntity = this.modificationRepository.findById(modificationUuid);
 
         if (!substationModificationEntity.isPresent()) {
             return Mono.error(new NetworkModificationException(CREATE_SUBSTATION_ERROR, "Substation creation not found"));
         }
 
         EquipmentCreationEntity updatedEntity = this.networkModificationRepository.createSubstationEntity(substationCreationInfos.getEquipmentId(), substationCreationInfos.getEquipmentName(), substationCreationInfos.getSubstationCountry());
-        updatedEntity.setId(substationCreationInfos.getUuid());
+        updatedEntity.setId(modificationUuid);
         updatedEntity.setGroup(substationModificationEntity.get().getGroup());
         this.networkModificationRepository.updateModification(updatedEntity);
         return Mono.empty();
@@ -1288,10 +1288,10 @@ public class NetworkModificationService {
             }));
     }
 
-    public Mono<Void> updateVoltageLevelCreation(VoltageLevelCreationInfos voltageLevelCreationInfos) {
+    public Mono<Void> updateVoltageLevelCreation(VoltageLevelCreationInfos voltageLevelCreationInfos, UUID modificationUuid) {
         assertVoltageLevelCreationInfosNotEmpty(voltageLevelCreationInfos).subscribe();
 
-        Optional<ModificationEntity> voltageLevelModificationEntity = this.modificationRepository.findById(voltageLevelCreationInfos.getUuid());
+        Optional<ModificationEntity> voltageLevelModificationEntity = this.modificationRepository.findById(modificationUuid);
 
         if (!voltageLevelModificationEntity.isPresent()) {
             return Mono.error(new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "Voltage level creation not found"));
@@ -1311,7 +1311,7 @@ public class NetworkModificationService {
                 voltageLevelCreationInfos.getSubstationId(),
                 busbarSections,
                 busbarConnections);
-        updatedEntity.setId(voltageLevelCreationInfos.getUuid());
+        updatedEntity.setId(modificationUuid);
         updatedEntity.setGroup(voltageLevelModificationEntity.get().getGroup());
         this.networkModificationRepository.updateModification(updatedEntity);
         return Mono.empty();
@@ -1426,7 +1426,7 @@ public class NetworkModificationService {
         NetworkStoreListener listener = NetworkStoreListener.create(network,
             networkUuid,
             null,
-                networkModificationRepository,
+            networkModificationRepository,
             equipmentInfosService,
             true,
             true);
@@ -1613,17 +1613,17 @@ public class NetworkModificationService {
         shunt.add();
     }
 
-    public Mono<Void> updateShuntCompensatorCreation(ShuntCompensatorCreationInfos shuntCompensatorCreationInfos) {
+    public Mono<Void> updateShuntCompensatorCreation(ShuntCompensatorCreationInfos shuntCompensatorCreationInfos, UUID modificationUuid) {
         assertShuntCompensatorCreationInfosNotEmpty(shuntCompensatorCreationInfos).subscribe();
 
-        Optional<ModificationEntity> shuntCompensatorModificationEntity = this.modificationRepository.findById(shuntCompensatorCreationInfos.getUuid());
+        Optional<ModificationEntity> shuntCompensatorModificationEntity = this.modificationRepository.findById(modificationUuid);
 
         if (!shuntCompensatorModificationEntity.isPresent()) {
-            return Mono.error(new NetworkModificationException(CREATE_LOAD_ERROR, "Shunt compensator creation not found"));
+            return Mono.error(new NetworkModificationException(CREATE_SHUNT_COMPENSATOR_ERROR, "Shunt compensator creation not found"));
         }
 
         EquipmentCreationEntity updatedEntity = this.networkModificationRepository.createShuntCompensatorEntity(shuntCompensatorCreationInfos);
-        updatedEntity.setId(shuntCompensatorCreationInfos.getUuid());
+        updatedEntity.setId(modificationUuid);
         updatedEntity.setGroup(shuntCompensatorModificationEntity.get().getGroup());
         this.networkModificationRepository.updateModification(updatedEntity);
         return Mono.empty();
