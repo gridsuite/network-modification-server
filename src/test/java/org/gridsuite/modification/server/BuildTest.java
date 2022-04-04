@@ -9,6 +9,7 @@ package org.gridsuite.modification.server;
 import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.iidm.network.Country;
 import com.powsybl.iidm.network.EnergySource;
+import com.powsybl.iidm.network.Line;
 import com.powsybl.iidm.network.LoadType;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.SwitchKind;
@@ -49,6 +50,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.ContextHierarchy;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.config.EnableWebFlux;
 
@@ -61,6 +63,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.when;
@@ -200,7 +203,7 @@ public class BuildTest {
         // test all modifications have been made on variant VARIANT_ID
         network.getVariantManager().setWorkingVariant(NetworkCreation.VARIANT_ID);
         assertTrue(network.getSwitch("v1d1").isOpen());
-        BranchStatus branchStatus = network.getLine("line1").getExtension(BranchStatus.class);
+        BranchStatus<Line> branchStatus = network.getLine("line1").getExtension(BranchStatus.class);
         assertNotNull(branchStatus);
         assertEquals(BranchStatus.Status.PLANNED_OUTAGE, branchStatus.getStatus());
         branchStatus = network.getLine("line2").getExtension(BranchStatus.class);
@@ -286,7 +289,7 @@ public class BuildTest {
         AtomicReference<UUID> equipmentDeletionEntityUuid = new AtomicReference<>();
         modificationRepository.getModificationsEntities(List.of(TEST_GROUP_ID, TEST_GROUP_ID_2)).forEach(entity -> {
             if (entity.getType().equals(ModificationType.EQUIPMENT_ATTRIBUTE_MODIFICATION.name())) {
-                if (((EquipmentAttributeModificationEntity) entity).getEquipmentId().equals("line1")) {
+                if (((EquipmentAttributeModificationEntity<?>) entity).getEquipmentId().equals("line1")) {
                     lineModificationEntityUuid.set(entity.getId());
                 }
             } else if (entity.getType().equals(ModificationType.LOAD_CREATION.name())) {
@@ -371,6 +374,28 @@ public class BuildTest {
         Message<byte[]> message = output.receive(3000, "build.stopped");
         assertEquals("me", message.getHeaders().get("receiver"));
         assertEquals(BuildStoppedPublisherService.CANCEL_MESSAGE, message.getHeaders().get("message"));
+    }
+
+    @Test
+    public void runBuildWithFatalErrorTest() {
+        // mock exception when sending to report server
+        given(reportServerRest.exchange(eq("/v1/reports/" + TEST_NETWORK_ID), eq(HttpMethod.PUT), any(HttpEntity.class), eq(ReporterModel.class)))
+            .willThrow(RestClientException.class);
+
+        modificationRepository.saveModifications(TEST_GROUP_ID, List.of(modificationRepository.createEquipmentAttributeModification("v1d1", "open", true)));
+
+        // build VARIANT_ID by cloning network initial variant and applying all modifications in all groups
+        String uriString = "/v1/networks/{networkUuid}/build?receiver=me";
+        BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
+            NetworkCreation.VARIANT_ID,
+            List.of(TEST_GROUP_ID),
+            new HashSet<>());
+        webTestClient.post().uri(uriString, TEST_NETWORK_ID)
+            .bodyValue(buildInfos)
+            .exchange()
+            .expectStatus().isOk();
+
+        assertNull(output.receive(1000, "build.result"));
     }
 
     private void testNetworkModificationsCount(UUID groupUuid, int actualSize) {
