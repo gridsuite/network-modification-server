@@ -359,10 +359,10 @@ public class NetworkModificationService {
         return Mono.fromRunnable(() -> modificationRepository.deleteModificationGroup(groupUuid));
     }
 
-    private List<ModificationInfos> doAction(NetworkStoreListener listener, Runnable action,
-                                             NetworkModificationException.Type typeIfError,
-                                             UUID networkUuid, ReporterModel reporter,
-                                             Reporter subReporter) {
+    public List<ModificationInfos> doAction(NetworkStoreListener listener, Runnable action,
+                                            NetworkModificationException.Type typeIfError,
+                                            UUID networkUuid, ReporterModel reporter,
+                                            Reporter subReporter) {
         try {
             action.run();
             if (!listener.isBuild()) {

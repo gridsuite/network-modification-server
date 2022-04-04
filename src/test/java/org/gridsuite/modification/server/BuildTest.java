@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server;
 
+import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.iidm.network.Country;
 import com.powsybl.iidm.network.EnergySource;
@@ -27,6 +28,7 @@ import org.gridsuite.modification.server.entities.equipment.modification.attribu
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.NetworkModificationService;
 import org.gridsuite.modification.server.service.BuildStoppedPublisherService;
+import org.gridsuite.modification.server.service.NetworkStoreListener;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Before;
 import org.junit.Test;
@@ -58,10 +60,12 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
+import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_ERROR;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -377,7 +381,7 @@ public class BuildTest {
     }
 
     @Test
-    public void runBuildWithFatalErrorTest() {
+    public void runBuildWithReportErrorTest() {
         // mock exception when sending to report server
         given(reportServerRest.exchange(eq("/v1/reports/" + TEST_NETWORK_ID), eq(HttpMethod.PUT), any(HttpEntity.class), eq(ReporterModel.class)))
             .willThrow(RestClientException.class);
@@ -396,6 +400,19 @@ public class BuildTest {
             .expectStatus().isOk();
 
         assertNull(output.receive(1000, "build.result"));
+    }
+
+    @Test
+    public void doActionWithUncheckedExceptionTest() {
+        Network networkTest = NetworkCreation.create(TEST_NETWORK_ID, true);
+        NetworkStoreListener listener = NetworkStoreListener.create(networkTest, TEST_NETWORK_ID, null, modificationRepository, equipmentInfosService, true, true);
+        ReporterModel reporter = new ReporterModel("reportKey", "reportName");
+        Reporter subReporter = reporter.createSubReporter("AttributeModification", "Attribute modification");
+        assertThrows("unexpected error", RuntimeException.class, () ->
+            networkModificationService.doAction(listener, () -> {
+                throw new RuntimeException("unexpected error");
+            }, MODIFICATION_ERROR, TEST_NETWORK_ID, reporter, subReporter)
+        );
     }
 
     private void testNetworkModificationsCount(UUID groupUuid, int actualSize) {
