@@ -359,6 +359,23 @@ public class ModificationControllerTest {
             .value(modifications -> modifications.get(0),
                 MatcherBranchStatusModificationInfos.createMatcherBranchStatusModificationInfos("line2", BranchStatusModificationInfos.ActionType.TRIP, Set.of("s1", "s2")));
 
+        var res = webTestClient.put().uri(uriString, TEST_NETWORK_ID, "line3")
+            .bodyValue("trip")
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBodyList(BranchStatusModificationInfos.class)
+            .returnResult().getResponseBody();
+        assertEquals(4, res.size());
+        var matcher = MatcherBranchStatusModificationInfos.createMatcherBranchStatusModificationInfos("line3", BranchStatusModificationInfos.ActionType.TRIP, Set.of("s1", "s2"));
+        assertTrue(res.stream().anyMatch(matcher::matchesSafely));
+        matcher = MatcherBranchStatusModificationInfos.createMatcherBranchStatusModificationInfos("3A", BranchStatusModificationInfos.ActionType.TRIP, Set.of("s1", "s2"));
+        assertTrue(res.stream().anyMatch(matcher::matchesSafely));
+        matcher = MatcherBranchStatusModificationInfos.createMatcherBranchStatusModificationInfos("trf6", BranchStatusModificationInfos.ActionType.TRIP, Set.of("s1", "s2"));
+        assertTrue(res.stream().anyMatch(matcher::matchesSafely));
+        matcher = MatcherBranchStatusModificationInfos.createMatcherBranchStatusModificationInfos("1.1", BranchStatusModificationInfos.ActionType.TRIP, Set.of("s1", "s2"));
+        assertTrue(res.stream().anyMatch(matcher::matchesSafely));
+
         // line energise on one end
         webTestClient.put().uri(uriString, TEST_NETWORK_ID, "line2")
             .bodyValue("energise_end_one")
@@ -379,7 +396,7 @@ public class ModificationControllerTest {
             .value(modifications -> modifications.get(0),
                 MatcherBranchStatusModificationInfos.createMatcherBranchStatusModificationInfos("line2", BranchStatusModificationInfos.ActionType.ENERGISE_END_TWO, Set.of("s1")));
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 5);
+        testNetworkModificationsCount(TEST_GROUP_ID, 9);
     }
 
     @Test
@@ -420,13 +437,6 @@ public class ModificationControllerTest {
 
         webTestClient.put().uri(uriString, TEST_NETWORK_ID, "line3")
             .bodyValue("lockout")
-            .exchange()
-            .expectStatus().isBadRequest()
-            .expectBody(String.class)
-            .isEqualTo(new NetworkModificationException(BRANCH_ACTION_ERROR, "Unable to disconnect both line ends").getMessage());
-
-        webTestClient.put().uri(uriString, TEST_NETWORK_ID, "line3")
-            .bodyValue("trip")
             .exchange()
             .expectStatus().isBadRequest()
             .expectBody(String.class)

@@ -12,6 +12,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.reporter.*;
 import com.powsybl.iidm.network.*;
+import com.powsybl.iidm.modification.tripping.BranchTripping;
+
 import com.powsybl.iidm.network.Branch.Side;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.sld.iidm.extensions.BranchStatus;
@@ -264,27 +266,34 @@ public class NetworkModificationService {
         UUID networkUuid = listener.getNetworkUuid();
 
         Reporter subReporter = reporter.createSubReporter("LineTrip", "Trip line");
-
         return doAction(listener, () -> {
-                if (listener.isApplyModifications()) {
-                    if (disconnectLineBothSides(network, lineId)) {
-                        network.getLine(lineId).newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.FORCED_OUTAGE).add();
-                    } else {
-                        throw new NetworkModificationException(BRANCH_ACTION_ERROR, "Unable to disconnect both line ends");
-                    }
+            var trip = new BranchTripping(lineId);
+            var switchToDisconnect = new HashSet<Switch>();
+            var terminalsToDisconnect = new HashSet<Terminal>();
+            var affectedTerminals = new HashSet<Terminal>();
+            trip.traverse(network, switchToDisconnect, terminalsToDisconnect, affectedTerminals);
+            affectedTerminals.addAll(terminalsToDisconnect);
+            if (listener.isApplyModifications()) {
 
-                    subReporter.report(Report.builder()
-                        .withKey("tripLineApplied")
-                        .withDefaultMessage("Line ${id} (id) : trip applied")
-                        .withValue("id", lineId)
-                        .withSeverity(new TypedValue(LINE_STATUS_INFO_REPORT_SEVERITY, TypedValue.INFO_LOGLEVEL))
-                        .build());
-                }
+                switchToDisconnect.forEach(sw -> sw.setOpen(true));
+                terminalsToDisconnect.forEach(Terminal::disconnect);
 
-                // add the branch status modification entity to the listener
-                listener.storeBranchStatusModification(lineId, BranchStatusModificationInfos.ActionType.TRIP);
-            }, MODIFICATION_ERROR, networkUuid, reporter, subReporter
-        );
+                subReporter.report(Report.builder()
+                    .withKey("tripLineApplied")
+                    .withDefaultMessage("Line ${id} (id) : trip applied")
+                    .withValue("id", lineId)
+                    .withSeverity(new TypedValue(LINE_STATUS_INFO_REPORT_SEVERITY, TypedValue.INFO_LOGLEVEL))
+                    .build());
+
+                affectedTerminals.stream().map(t -> network.getLine(t.getConnectable().getId())).filter(Objects::nonNull)
+                    .forEach(b -> b.newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.FORCED_OUTAGE).add());
+            }
+
+            // add the branch status modification entity to the listener
+            affectedTerminals.stream().map(t -> t.getConnectable().getId()).collect(Collectors.toSet())
+                .forEach(id -> listener.storeBranchStatusModification(id, BranchStatusModificationInfos.ActionType.TRIP));
+
+        }, MODIFICATION_ERROR, networkUuid, reporter, subReporter);
     }
 
     private List<ModificationInfos> execEnergiseLineEnd(NetworkStoreListener listener,
