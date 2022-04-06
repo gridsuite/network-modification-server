@@ -727,7 +727,7 @@ public class ModificationControllerTest {
                 175.0,
                 60.0)
                 .toModificationInfos();
-        String uriStringForUpdate = "/v1/" + result.getUuid() + "/loads-creation";
+        String uriStringForUpdate = "/v1/modifications/" + result.getUuid() + "/loads-creation";
         webTestClient.put().uri(uriStringForUpdate)
                 .body(BodyInserters.fromValue(loadCreationUpdate))
                 .exchange()
@@ -789,7 +789,7 @@ public class ModificationControllerTest {
         shunt1.setVoltageLevelId("v4");
         shunt1.setBusOrBusbarSectionId("1.A");
         shunt1.setUuid(result.getUuid());
-        String uriStringForUpdate = "/v1/" + result.getUuid() + "/shunt-compensators-creation";
+        String uriStringForUpdate = "/v1/modifications/" + result.getUuid() + "/shunt-compensators-creation";
 
         // Update shunt compansator creation
         ShuntCompensatorCreationInfos shuntUpdate = new ShuntCompensatorCreationEntity(shunt1).toModificationInfos();
@@ -888,7 +888,7 @@ public class ModificationControllerTest {
                 false,
                 235.)
                 .toModificationInfos();
-        String uriStringForUpdate = "/v1/" + result.getUuid() + "/generators-creation";
+        String uriStringForUpdate = "/v1/modifications/" + result.getUuid() + "/generators-creation";
         webTestClient.put().uri(uriStringForUpdate)
                 .body(BodyInserters.fromValue(generatorCreationUpdate))
                 .exchange()
@@ -1081,7 +1081,7 @@ public class ModificationControllerTest {
                 50.,
                 55.
         ).toModificationInfos();
-        String uriStringForUpdate = "/v1/" + result.getUuid() + "/two-windings-transformers-creation";
+        String uriStringForUpdate = "/v1/modifications/" + result.getUuid() + "/two-windings-transformers-creation";
         webTestClient.put().uri(uriStringForUpdate)
                 .body(BodyInserters.fromValue(twoWindingsTransformerCreationUpdate))
                 .exchange()
@@ -1670,7 +1670,7 @@ public class ModificationControllerTest {
                 "1.1",
                 5.,
                 5.).toModificationInfos();
-        String uriStringForUpdate = "/v1/" + result.getUuid() + "/lines-creation";
+        String uriStringForUpdate = "/v1/modifications/" + result.getUuid() + "/lines-creation";
         webTestClient.put().uri(uriStringForUpdate)
                 .body(BodyInserters.fromValue(lineCreationUpdate))
                 .exchange()
@@ -1999,7 +1999,7 @@ public class ModificationControllerTest {
                 "SubstationIdEdited",
                 "SubstationNameEdited",
                 Country.CI).toModificationInfos();
-        String uriStringForUpdate = "/v1/" + result.getUuid() + "/substations-creation";
+        String uriStringForUpdate = "/v1/modifications/" + result.getUuid() + "/substations-creation";
         webTestClient.put().uri(uriStringForUpdate)
                 .body(BodyInserters.fromValue(substationCreationUpdate))
                 .exchange()
@@ -2111,7 +2111,7 @@ public class ModificationControllerTest {
                 List.of(),
                 List.of())
                 .toModificationInfos();
-        String uriStringForUpdate = "/v1/" + result.getUuid() + "/voltage-levels-creation";
+        String uriStringForUpdate = "/v1/modifications/" + result.getUuid() + "/voltage-levels-creation";
         webTestClient.put().uri(uriStringForUpdate)
                 .body(BodyInserters.fromValue(vlu))
                 .exchange()

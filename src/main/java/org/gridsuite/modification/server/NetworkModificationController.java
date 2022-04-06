@@ -136,7 +136,7 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.createLoad(networkUuid, variantId, groupUuid, loadCreationInfos));
     }
 
-    @PutMapping(value = "/{modificationUuid}/loads-creation", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/modifications/{modificationUuid}/loads-creation", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "update a load creation in the network")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The load creation has been updated")})
     public ResponseEntity<Mono<Void>> updateLoadCreation(@PathVariable("modificationUuid") UUID modificationUuid,
@@ -154,7 +154,7 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.createGenerator(networkUuid, variantId, groupUuid, generatorCreationInfos));
     }
 
-    @PutMapping(value = "/{modificationUuid}/generators-creation", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/modifications/{modificationUuid}/generators-creation", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "update a generator creation in the network")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The generator creation has been updated")})
     public ResponseEntity<Mono<Void>> updateGeneratorCreation(@PathVariable("modificationUuid") UUID modificationUuid,
@@ -172,7 +172,7 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.createShuntCompensator(networkUuid, variantId, groupUuid, shuntCompensatorCreationInfos));
     }
 
-    @PutMapping(value = "/{modificationUuid}/shunt-compensators-creation", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/modifications/{modificationUuid}/shunt-compensators-creation", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "update a shunt-compensator creation in the network")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The shunt compensator creation has been updated")})
     public ResponseEntity<Mono<Void>> updateShuntCompensatorCreation(@PathVariable("modificationUuid") UUID modificationUuid,
@@ -190,7 +190,7 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.createLine(networkUuid, variantId, groupUuid, lineCreationInfos));
     }
 
-    @PutMapping(value = "/{modificationUuid}/lines-creation", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/modifications/{modificationUuid}/lines-creation", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "update a line creation in the network")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The line creation has been updated")})
     public ResponseEntity<Mono<Void>> updateLineCreation(@PathVariable("modificationUuid") UUID modificationUuid,
@@ -208,7 +208,7 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.createTwoWindingsTransformer(networkUuid, variantId, groupUuid, twoWindingsTransformerCreationInfos));
     }
 
-    @PutMapping(value = "/{modificationUuid}/two-windings-transformers-creation", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/modifications/{modificationUuid}/two-windings-transformers-creation", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "update a two windings transformer creation in the network")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The two windings transformer creation has been updated")})
     public ResponseEntity<Mono<Void>> updateTwoWindingsTransformer(@PathVariable("modificationUuid") UUID modificationUuid,
@@ -226,7 +226,7 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.createSubstation(networkUuid, variantId, groupUuid, substationCreationInfos));
     }
 
-    @PutMapping(value = "/{modificationUuid}/substations-creation", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/modifications/{modificationUuid}/substations-creation", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "update a substation creation in the network")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The substation creation has been updated")})
     public ResponseEntity<Mono<Void>> updateSubstationCreation(@PathVariable("modificationUuid") UUID modificationUuid,
@@ -244,7 +244,7 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.createVoltageLevel(networkUuid, variantId, groupUuid, voltageLevelCreationInfos));
     }
 
-    @PutMapping(value = "/{modificationUuid}/voltage-levels-creation", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/modifications/{modificationUuid}/voltage-levels-creation", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "update a voltage level creation in the network")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The voltage level creation has been updated")})
     public ResponseEntity<Mono<Void>> updateVoltageLevelCreation(@PathVariable("modificationUuid") UUID modificationUuid,
