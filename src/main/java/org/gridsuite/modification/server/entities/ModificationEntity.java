@@ -42,6 +42,11 @@ public class ModificationEntity {
     @Column(name = "type")
     private String type;
 
+    @JoinColumn(name = "groupId", foreignKey = @ForeignKey(name = "group_id_fk_constraint"), nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @Setter
+    private ModificationGroupEntity group;
+
     protected ModificationEntity(ModificationType type) {
         this.id = null;
         this.date = ZonedDateTime.now(ZoneOffset.UTC);
@@ -59,5 +64,22 @@ public class ModificationEntity {
                 .type(ModificationType.valueOf(this.type))
                 .substationIds(substationsIds)
                 .build();
+    }
+
+    //From https://vladmihalcea.com/the-best-way-to-map-a-onetomany-association-with-jpa-and-hibernate/
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof ModificationEntity)) {
+            return false;
+        }
+        return id != null && id.equals(((ModificationEntity) o).getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
     }
 }

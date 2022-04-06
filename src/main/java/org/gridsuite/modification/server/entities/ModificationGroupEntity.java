@@ -6,15 +6,7 @@
  */
 package org.gridsuite.modification.server.entities;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.ForeignKey;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.OneToMany;
-import javax.persistence.OrderColumn;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,13 +28,25 @@ public class ModificationGroupEntity extends AbstractManuallyAssignedIdentifierE
     @Column(name = "id")
     private UUID id;
 
-    @OneToMany(fetch = FetchType.LAZY)
-    @JoinColumn(name = "groupId", foreignKey = @ForeignKey(name = "group_id_fk_constraint"), nullable = false)
+    @OneToMany(
+            mappedBy = "group",
+            cascade = CascadeType.ALL
+    )
     @Setter
     @OrderColumn
     private List<ModificationEntity> modifications = new ArrayList<>();
 
     public ModificationGroupEntity(UUID uuid) {
         this.id = uuid;
+    }
+
+    public void addModification(ModificationEntity modification) {
+        modifications.add(modification);
+        modification.setGroup(this);
+    }
+
+    public void removeModification(ModificationEntity modification) {
+        modifications.remove(modification);
+        modification.setGroup(null);
     }
 }

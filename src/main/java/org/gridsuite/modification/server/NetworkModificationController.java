@@ -66,6 +66,13 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.getModifications(groupUuid, false));
     }
 
+    @GetMapping(value = "/modifications/{modificationUuid}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Get a modification")
+    @ApiResponse(responseCode = "200", description = "The modification")
+    public ResponseEntity<Flux<ModificationInfos>> getModification(@Parameter(description = "Modification UUID") @PathVariable("modificationUuid") UUID modificationUuid) {
+        return ResponseEntity.ok().body(networkModificationService.getModification(modificationUuid));
+    }
+
     @GetMapping(value = "/groups/{groupUuid}/modifications/metadata", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Get list of modifications metadata of a group")
     @ApiResponse(responseCode = "200", description = "List of modifications of the group")
@@ -119,7 +126,7 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.changeLineStatus(networkUuid, variantId, groupUuid, lineId, action));
     }
 
-    @PutMapping(value = "/networks/{networkUuid}/loads", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/networks/{networkUuid}/loads", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "create a load in a network variant")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The load has been created")})
     public ResponseEntity<Flux<EquipmenModificationInfos>> createLoad(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
@@ -129,7 +136,15 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.createLoad(networkUuid, variantId, groupUuid, loadCreationInfos));
     }
 
-    @PutMapping(value = "/networks/{networkUuid}/generators", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/modifications/{modificationUuid}/loads-creation", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "update a load creation in the network")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The load creation has been updated")})
+    public ResponseEntity<Mono<Void>> updateLoadCreation(@PathVariable("modificationUuid") UUID modificationUuid,
+                                                         @RequestBody LoadCreationInfos loadCreationInfos) {
+        return ResponseEntity.ok().body(networkModificationService.updateLoadCreation(loadCreationInfos, modificationUuid));
+    }
+
+    @PostMapping(value = "/networks/{networkUuid}/generators", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "create a generator in a network variant")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The generator has been created")})
     public ResponseEntity<Flux<EquipmenModificationInfos>> createGenerator(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
@@ -139,7 +154,15 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.createGenerator(networkUuid, variantId, groupUuid, generatorCreationInfos));
     }
 
-    @PutMapping(value = "/networks/{networkUuid}/shunt-compensators", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/modifications/{modificationUuid}/generators-creation", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "update a generator creation in the network")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The generator creation has been updated")})
+    public ResponseEntity<Mono<Void>> updateGeneratorCreation(@PathVariable("modificationUuid") UUID modificationUuid,
+                                                              @RequestBody GeneratorCreationInfos generatorCreationInfos) {
+        return ResponseEntity.ok().body(networkModificationService.updateGeneratorCreation(generatorCreationInfos, modificationUuid));
+    }
+
+    @PostMapping(value = "/networks/{networkUuid}/shunt-compensators", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "create a shunt compensator in a network variant")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The shunt compensator has been created")})
     public ResponseEntity<Flux<EquipmenModificationInfos>> createShuntCompensator(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
@@ -149,7 +172,15 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.createShuntCompensator(networkUuid, variantId, groupUuid, shuntCompensatorCreationInfos));
     }
 
-    @PutMapping(value = "/networks/{networkUuid}/lines", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/modifications/{modificationUuid}/shunt-compensators-creation", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "update a shunt-compensator creation in the network")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The shunt compensator creation has been updated")})
+    public ResponseEntity<Mono<Void>> updateShuntCompensatorCreation(@PathVariable("modificationUuid") UUID modificationUuid,
+                                                                     @RequestBody ShuntCompensatorCreationInfos shuntCompensatorCreationInfos) {
+        return ResponseEntity.ok().body(networkModificationService.updateShuntCompensatorCreation(shuntCompensatorCreationInfos, modificationUuid));
+    }
+
+    @PostMapping(value = "/networks/{networkUuid}/lines", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "create a line in a network variant")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The line has been created")})
     public ResponseEntity<Flux<EquipmenModificationInfos>> createLine(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
@@ -159,7 +190,15 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.createLine(networkUuid, variantId, groupUuid, lineCreationInfos));
     }
 
-    @PutMapping(value = "/networks/{networkUuid}/two-windings-transformer", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/modifications/{modificationUuid}/lines-creation", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "update a line creation in the network")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The line creation has been updated")})
+    public ResponseEntity<Mono<Void>> updateLineCreation(@PathVariable("modificationUuid") UUID modificationUuid,
+                                                         @RequestBody LineCreationInfos lineCreationInfos) {
+        return ResponseEntity.ok().body(networkModificationService.updateLineCreation(lineCreationInfos, modificationUuid));
+    }
+
+    @PostMapping(value = "/networks/{networkUuid}/two-windings-transformers", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "create a two windings transformer in the network")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The two windings transformer has been created")})
     public ResponseEntity<Flux<EquipmenModificationInfos>> createTwoWindingsTransformer(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
@@ -169,7 +208,15 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.createTwoWindingsTransformer(networkUuid, variantId, groupUuid, twoWindingsTransformerCreationInfos));
     }
 
-    @PutMapping(value = "/networks/{networkUuid}/substations", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/modifications/{modificationUuid}/two-windings-transformers-creation", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "update a two windings transformer creation in the network")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The two windings transformer creation has been updated")})
+    public ResponseEntity<Mono<Void>> updateTwoWindingsTransformer(@PathVariable("modificationUuid") UUID modificationUuid,
+                                                                   @RequestBody TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
+        return ResponseEntity.ok().body(networkModificationService.updateTwoWindingsTransformerCreation(twoWindingsTransformerCreationInfos, modificationUuid));
+    }
+
+    @PostMapping(value = "/networks/{networkUuid}/substations", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "create a substation in the network")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The substation has been created")})
     public ResponseEntity<Flux<EquipmenModificationInfos>> createSubstation(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
@@ -179,7 +226,15 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.createSubstation(networkUuid, variantId, groupUuid, substationCreationInfos));
     }
 
-    @PutMapping(value = "/networks/{networkUuid}/voltage-levels", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/modifications/{modificationUuid}/substations-creation", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "update a substation creation in the network")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The substation creation has been updated")})
+    public ResponseEntity<Mono<Void>> updateSubstationCreation(@PathVariable("modificationUuid") UUID modificationUuid,
+                                                               @RequestBody SubstationCreationInfos substationCreationInfos) {
+        return ResponseEntity.ok().body(networkModificationService.updateSubstationCreation(substationCreationInfos, modificationUuid));
+    }
+
+    @PostMapping(value = "/networks/{networkUuid}/voltage-levels", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "create a voltage level in the network")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The voltage level has been created")})
     public ResponseEntity<Flux<EquipmenModificationInfos>> createVoltageLevel(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
@@ -187,6 +242,14 @@ public class NetworkModificationController {
         @RequestParam(value = "group", required = false) UUID groupUuid,
         @RequestBody VoltageLevelCreationInfos voltageLevelCreationInfos) {
         return ResponseEntity.ok().body(networkModificationService.createVoltageLevel(networkUuid, variantId, groupUuid, voltageLevelCreationInfos));
+    }
+
+    @PutMapping(value = "/modifications/{modificationUuid}/voltage-levels-creation", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "update a voltage level creation in the network")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The voltage level creation has been updated")})
+    public ResponseEntity<Mono<Void>> updateVoltageLevelCreation(@PathVariable("modificationUuid") UUID modificationUuid,
+                                                                 @RequestBody VoltageLevelCreationInfos voltageLevelCreationInfos) {
+        return ResponseEntity.ok().body(networkModificationService.updateVoltageLevelCreation(voltageLevelCreationInfos, modificationUuid));
     }
 
     @DeleteMapping(value = "/networks/{networkUuid}/equipments/type/{equipmentType}/id/{equipmentId}")
