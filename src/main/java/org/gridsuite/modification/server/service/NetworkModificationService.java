@@ -371,17 +371,17 @@ public class NetworkModificationService {
         return Mono.fromRunnable(() -> networkModificationRepository.deleteModificationGroup(groupUuid));
     }
 
-    private List<ModificationInfos> doAction(NetworkStoreListener listener, Runnable action,
-                                             NetworkModificationException.Type typeIfError,
-                                             UUID networkUuid, ReporterModel reporter,
-                                             Reporter subReporter) {
+    public List<ModificationInfos> doAction(NetworkStoreListener listener, Runnable action,
+                                            NetworkModificationException.Type typeIfError,
+                                            UUID networkUuid, ReporterModel reporter,
+                                            Reporter subReporter) {
         try {
             action.run();
             if (!listener.isBuild()) {
                 saveModifications(listener);
             }
             return listener.isApplyModifications() ? listener.getModifications() : Collections.emptyList();
-        } catch (Exception e) {
+        } catch (PowsyblException e) {
             NetworkModificationException exc = e instanceof NetworkModificationException ? (NetworkModificationException) e : new NetworkModificationException(typeIfError, e);
             subReporter.report(Report.builder()
                 .withKey(typeIfError.name())
@@ -392,6 +392,12 @@ public class NetworkModificationService {
                 throw exc;
             } else {
                 return Collections.emptyList();
+            }
+        } catch (Exception e) {
+            if (!listener.isBuild()) {
+                throw new NetworkModificationException(typeIfError, e);
+            } else {
+                throw e;
             }
         } finally {
             if (!listener.isBuild()) {
@@ -1528,7 +1534,7 @@ public class NetworkModificationService {
 
                     default:
                 }
-            } catch (Exception e) {
+            } catch (PowsyblException e) {
                 NetworkModificationException exc = e instanceof NetworkModificationException ? (NetworkModificationException) e : new NetworkModificationException(MODIFICATION_ERROR, e);
                 reporter.report(Report.builder()
                     .withKey(MODIFICATION_ERROR.name())
