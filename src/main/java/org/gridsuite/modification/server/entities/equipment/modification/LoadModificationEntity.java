@@ -47,12 +47,12 @@ public class LoadModificationEntity extends InjectionModificationEntity {
                               AttributeModification  voltageLevelId, AttributeModification<String> busOrBusbarSectionId,
                               AttributeModification<Double> activePower, AttributeModification<Double> reactivePower) {
         super(ModificationType.LOAD_MODIFICATION, equipmentId, equipmentName, voltageLevelId, busOrBusbarSectionId);
-        this.loadTypeValue = loadType.getValue();
-        this.loadTypeOp = loadType.getOp();
-        this.activePowerValue = activePower.getValue();
-        this.activePowerOp = activePower.getOp();
-        this.reactivePowerValue = reactivePower.getValue();
-        this.reactivePowerOp = reactivePower.getOp();
+        this.loadTypeValue = loadType != null ? loadType.getValue() : null;
+        this.loadTypeOp = loadType != null ? loadType.getOp() : null;
+        this.activePowerValue = activePower != null ? activePower.getValue() : null;
+        this.activePowerOp = activePower != null ? activePower.getOp() : null;
+        this.reactivePowerValue = reactivePower != null ? reactivePower.getValue() : null;
+        this.reactivePowerOp = reactivePower != null ? reactivePower.getOp() : null;
     }
 
     @Override

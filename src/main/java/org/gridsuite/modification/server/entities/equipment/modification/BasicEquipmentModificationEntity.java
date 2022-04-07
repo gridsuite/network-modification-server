@@ -30,7 +30,7 @@ public class BasicEquipmentModificationEntity extends EquipmentModificationEntit
 
     protected BasicEquipmentModificationEntity(ModificationType modificationType, String equipmentId, AttributeModification<String> equipmentName) {
         super(equipmentId, modificationType);
-        this.equipmentNameValue = equipmentName.getValue();
-        this.equipmentNameOp = equipmentName.getOp();
+        this.equipmentNameValue = equipmentName != null ? equipmentName.getValue() : null;
+        this.equipmentNameOp = equipmentName != null ? equipmentName.getOp() : null;
     }
 }

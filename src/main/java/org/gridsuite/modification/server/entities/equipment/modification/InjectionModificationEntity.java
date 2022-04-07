@@ -39,9 +39,9 @@ public class InjectionModificationEntity extends BasicEquipmentModificationEntit
                                           AttributeModification<String> voltageLevelId,
                                           AttributeModification<String> busOrBusbarSectionId) {
         super(modificationType, equipmentId, equipmentName);
-        this.voltageLevelIdValue = voltageLevelId.getValue();
-        this.voltageLevelIdOp = voltageLevelId.getOp();
-        this.busOrBusbarSectionIdValue = busOrBusbarSectionId.getValue();
-        this.busOrBusbarSectionIdOp = busOrBusbarSectionId.getOp();
+        this.voltageLevelIdValue = voltageLevelId != null ? voltageLevelId.getValue() : null;
+        this.voltageLevelIdOp = voltageLevelId != null ? voltageLevelId.getOp() : null;
+        this.busOrBusbarSectionIdValue = busOrBusbarSectionId != null ? busOrBusbarSectionId.getValue() : null;
+        this.busOrBusbarSectionIdOp = busOrBusbarSectionId != null ? busOrBusbarSectionId.getOp() : null;
     }
 }

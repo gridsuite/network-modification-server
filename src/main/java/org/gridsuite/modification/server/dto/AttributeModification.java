@@ -14,6 +14,7 @@ import lombok.experimental.SuperBuilder;
  * @author Nicolas Noir <nicolas.noir at rte-france.com>
  */
 @SuperBuilder
+@NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
