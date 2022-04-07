@@ -131,11 +131,13 @@ public class BuildWorkerService {
                             }
                         }
                     })
-                    .onErrorContinue((t, r) -> {
+                    .onErrorResume(t -> {
                         if (!(t instanceof CancellationException)) {
                             LOGGER.error(FAIL_MESSAGE, t);
                             stoppedPublisherService.publishFail(execContext.getReceiver(), t.getMessage());
+                            return Mono.empty();
                         }
+                        return Mono.empty();
                     })
                     .doFinally(s -> {
                         futures.remove(execContext.getReceiver());
@@ -143,6 +145,7 @@ public class BuildWorkerService {
                         buildRequests.remove(execContext.getReceiver());
                     });
             })
+            .onErrorContinue((t, r) -> LOGGER.error("Exception in consumeBuild", t))
             .subscribe();
     }
 

@@ -97,8 +97,7 @@ public class NetworkModificationRepository {
         var modificationGroupEntity = this.modificationGroupRepository
                 .findById(groupUuid)
                 .orElseGet(() -> modificationGroupRepository.save(new ModificationGroupEntity(groupUuid)));
-        modificationGroupEntity.getModifications().addAll(modifications);
-        this.modificationRepository.saveAll(modifications);
+        modifications.forEach(modificationGroupEntity::addModification);
     }
 
     @Transactional // To have all move in the same transaction (atomic)
@@ -128,6 +127,7 @@ public class NetworkModificationRepository {
                 .collect(Collectors.toList());
     }
 
+    @Transactional
     public List<ModificationInfos> getModifications(List<UUID> uuids) {
         return this.modificationRepository.findAllById(uuids).stream()
             .map(ModificationEntity::toModificationInfos)
@@ -171,12 +171,18 @@ public class NetworkModificationRepository {
 
     @Transactional // To have the find and delete in the same transaction (atomic)
     public int deleteModifications(UUID groupUuid, Set<UUID> uuids) {
+        ModificationGroupEntity groupEntity = getModificationGroup(groupUuid);
         List<ModificationEntity> modifications = getModificationList(groupUuid)
                 .filter(m -> uuids.contains(m.getId()))
                 .collect(Collectors.toList());
+        modifications.forEach(groupEntity::removeModification);
         int count = modifications.size();
         this.modificationRepository.deleteAll(modifications);
         return count;
+    }
+
+    public void updateModification(EquipmentCreationEntity equipmentCreationEntity) {
+        this.modificationRepository.save(equipmentCreationEntity);
     }
 
     private ModificationGroupEntity getModificationGroup(UUID groupUuid) {
@@ -253,5 +259,4 @@ public class NetworkModificationRepository {
     public ShuntCompensatorCreationEntity createShuntCompensatorEntity(ShuntCompensatorCreationInfos shuntCompensatorCreationInfos) {
         return new ShuntCompensatorCreationEntity(shuntCompensatorCreationInfos);
     }
-
 }
