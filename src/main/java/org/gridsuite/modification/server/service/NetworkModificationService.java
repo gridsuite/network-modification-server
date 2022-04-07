@@ -1576,9 +1576,9 @@ public class NetworkModificationService {
         publisher.send("publishCancelBuild-out-0", message);
     }
 
-    public Mono<Void> deleteModifications(UUID groupUuid, Set<UUID> modificationUuid) {
+    public Mono<Void> deleteModifications(UUID groupUuid, Set<UUID> modificationsUuids) {
         return Mono.fromRunnable(() -> {
-            if (networkModificationRepository.deleteModifications(groupUuid, modificationUuid) == 0) {
+            if (networkModificationRepository.deleteModifications(groupUuid, modificationsUuids) == 0) {
                 throw new NetworkModificationException(MODIFICATION_NOT_FOUND);
             }
         });

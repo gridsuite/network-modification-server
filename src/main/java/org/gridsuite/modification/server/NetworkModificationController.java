@@ -91,7 +91,7 @@ public class NetworkModificationController {
     }
 
     @DeleteMapping(value = "/groups/{groupUuid}/modifications")
-    @Operation(summary = "Delete a modifications from a group")
+    @Operation(summary = "Delete modifications from a group")
     @ApiResponse(responseCode = "200", description = "Modifications deleted")
     public ResponseEntity<Mono<Void>> deleteModifications(@Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid,
                                                           @Parameter(description = "modifications to delete", required = true) @RequestParam(value = "modificationsUuids") Set<UUID> modificationsUuids) {
