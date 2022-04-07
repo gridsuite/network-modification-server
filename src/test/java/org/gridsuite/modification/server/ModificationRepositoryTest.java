@@ -12,7 +12,7 @@ import com.powsybl.iidm.network.LoadType;
 import com.powsybl.iidm.network.SwitchKind;
 import com.vladmihalcea.sql.SQLStatementCountValidator;
 import org.gridsuite.modification.server.dto.BranchStatusModificationInfos;
-import org.gridsuite.modification.server.dto.EquipmenAttributeModificationInfos;
+import org.gridsuite.modification.server.dto.EquipmentAttributeModificationInfos;
 import org.gridsuite.modification.server.dto.GeneratorCreationInfos;
 import org.gridsuite.modification.server.dto.GroovyScriptModificationInfos;
 import org.gridsuite.modification.server.dto.LineCreationInfos;
@@ -77,8 +77,8 @@ public class ModificationRepositoryTest {
         SQLStatementCountValidator.reset();
     }
 
-    public EquipmenAttributeModificationInfos getEquipmentAttributeModification(UUID modificationUuid) {
-        return (EquipmenAttributeModificationInfos) networkModificationRepository.getModificationInfo(modificationUuid);
+    public EquipmentAttributeModificationInfos getEquipmentAttributeModification(UUID modificationUuid) {
+        return (EquipmentAttributeModificationInfos) networkModificationRepository.getModificationInfo(modificationUuid);
     }
 
     private LoadCreationInfos getLoadCreationModification(UUID modificationUuid) {
@@ -224,9 +224,9 @@ public class ModificationRepositoryTest {
 
     @Test
     public void testLoadCreation() {
-        var createLoadEntity1 = networkModificationRepository.createLoadEntity("idLoad1", "nameLoad1", LoadType.AUXILIARY, "vlId1", "busId1", 100.0, 20.0);
-        var createLoadEntity2 = networkModificationRepository.createLoadEntity("idLoad2", "nameLoad2", LoadType.FICTITIOUS, "vlId2", "busId2", 80.0, 30.0);
-        var createLoadEntity3 = networkModificationRepository.createLoadEntity("idLoad3", "nameLoad3", LoadType.UNDEFINED, "vlId3", "busId3", 50.0, 90.0);
+        var createLoadEntity1 = networkModificationRepository.createLoadCreationEntity("idLoad1", "nameLoad1", LoadType.AUXILIARY, "vlId1", "busId1", 100.0, 20.0);
+        var createLoadEntity2 = networkModificationRepository.createLoadCreationEntity("idLoad2", "nameLoad2", LoadType.FICTITIOUS, "vlId2", "busId2", 80.0, 30.0);
+        var createLoadEntity3 = networkModificationRepository.createLoadCreationEntity("idLoad3", "nameLoad3", LoadType.UNDEFINED, "vlId3", "busId3", 50.0, 90.0);
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(createLoadEntity1, createLoadEntity2, createLoadEntity3));
         assertRequestsCount(1, 7, 3, 0);

@@ -9,21 +9,21 @@ package org.gridsuite.modification.server.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
 /**
- * @author Slimane Amar <slimane.amar at rte-france.com>
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 @SuperBuilder
 @NoArgsConstructor
 @Getter
-@Setter
 @ToString(callSuper = true)
-@Schema(description = "Equipment modification")
-public class EquipmenModificationInfos extends ModificationInfos {
-    @Schema(description = "Equipment ID")
-    private String equipmentId;
+@Schema(description = "Equipment attribute modification")
+public class EquipmentAttributeModificationInfos extends EquipmentModificationInfos {
+    @Schema(description = "Equipment attribute name")
+    private String equipmentAttributeName;
+
+    @Schema(description = "Equipment attribute value")
+    private Object equipmentAttributeValue;
 }

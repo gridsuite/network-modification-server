@@ -16,6 +16,8 @@ import org.gridsuite.modification.server.entities.equipment.modification.BranchS
 import org.gridsuite.modification.server.entities.GroovyScriptModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationGroupEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.LoadModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.BooleanEquipmentAttributeModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleEquipmentAttributeModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.EquipmentAttributeModificationEntity;
@@ -189,9 +191,15 @@ public class NetworkModificationRepository {
         return this.modificationGroupRepository.findById(groupUuid).orElseThrow(() -> new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, groupUuid.toString()));
     }
 
-    public EquipmentCreationEntity createLoadEntity(String loadId, String loadName, LoadType loadType,
-                                                    String voltageLevelId, String busOrBusbarSectionId, double activePower, double reactivePower) {
+    public EquipmentCreationEntity createLoadCreationEntity(String loadId, String loadName, LoadType loadType,
+                                                            String voltageLevelId, String busOrBusbarSectionId, double activePower, double reactivePower) {
         return new LoadCreationEntity(loadId, loadName, loadType, voltageLevelId, busOrBusbarSectionId, activePower, reactivePower);
+    }
+
+    public EquipmentModificationEntity createLoadModificationEntity(String loadId, AttributeModification<String> loadName, AttributeModification<LoadType> loadType,
+                                                                    AttributeModification<String> voltageLevelId, AttributeModification<String> busOrBusbarSectionId,
+                                                                    AttributeModification<Double> activePower, AttributeModification<Double> reactivePower) {
+        return new LoadModificationEntity(loadId, loadName, loadType, voltageLevelId, busOrBusbarSectionId, activePower, reactivePower);
     }
 
     public EquipmentCreationEntity createGeneratorEntity(String generatorId, String generatorName, EnergySource energySource,

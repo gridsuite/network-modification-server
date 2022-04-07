@@ -7,7 +7,7 @@
 package org.gridsuite.modification.server.utils;
 
 import org.gridsuite.modification.server.ModificationType;
-import org.gridsuite.modification.server.dto.EquipmenModificationInfos;
+import org.gridsuite.modification.server.dto.EquipmentModificationInfos;
 
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -16,10 +16,10 @@ import java.util.Set;
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
-public class MatcherEquipmentModificationInfos<T extends EquipmenModificationInfos> extends MatcherModificationInfos<T> {
+public class MatcherEquipmentModificationInfos<T extends EquipmentModificationInfos> extends MatcherModificationInfos<T> {
 
-    public static MatcherEquipmentModificationInfos<EquipmenModificationInfos> createMatcherEquipmentModificationInfos(ModificationType modificationType, String equipmentId, Set<String> substationIds) {
-        return new MatcherEquipmentModificationInfos<>(EquipmenModificationInfos.builder()
+    public static MatcherEquipmentModificationInfos<EquipmentModificationInfos> createMatcherEquipmentModificationInfos(ModificationType modificationType, String equipmentId, Set<String> substationIds) {
+        return new MatcherEquipmentModificationInfos<>(EquipmentModificationInfos.builder()
                 .date(ZonedDateTime.now(ZoneOffset.UTC))
                 .type(modificationType)
                 .equipmentId(equipmentId)
@@ -27,7 +27,7 @@ public class MatcherEquipmentModificationInfos<T extends EquipmenModificationInf
                 .build());
     }
 
-    public static MatcherEquipmentModificationInfos<EquipmenModificationInfos> createMatcherEquipmentModificationInfos(EquipmenModificationInfos modificationInfos) {
+    public static MatcherEquipmentModificationInfos<EquipmentModificationInfos> createMatcherEquipmentModificationInfos(EquipmentModificationInfos modificationInfos) {
         return new MatcherEquipmentModificationInfos<>(modificationInfos);
     }
 

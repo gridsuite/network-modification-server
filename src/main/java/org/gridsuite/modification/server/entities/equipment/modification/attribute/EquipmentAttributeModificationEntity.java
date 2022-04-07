@@ -12,7 +12,7 @@ import javax.persistence.MappedSuperclass;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.ModificationType;
-import org.gridsuite.modification.server.dto.EquipmenAttributeModificationInfos;
+import org.gridsuite.modification.server.dto.EquipmentAttributeModificationInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
 
 /**
@@ -36,16 +36,16 @@ public class EquipmentAttributeModificationEntity<T> extends EquipmentModificati
     }
 
     @Override
-    public EquipmenAttributeModificationInfos toModificationInfos() {
+    public EquipmentAttributeModificationInfos toModificationInfos() {
         return toModificationInfosBuilder().build();
     }
 
-    public EquipmenAttributeModificationInfos toEquipmentAttributeModificationInfos() {
+    public EquipmentAttributeModificationInfos toEquipmentAttributeModificationInfos() {
         return toModificationInfosBuilder().build();
     }
 
-    private EquipmenAttributeModificationInfos.EquipmenAttributeModificationInfosBuilder<?, ?> toModificationInfosBuilder() {
-        return EquipmenAttributeModificationInfos
+    private EquipmentAttributeModificationInfos.EquipmentAttributeModificationInfosBuilder<?, ?> toModificationInfosBuilder() {
+        return EquipmentAttributeModificationInfos
                 .builder()
                 .uuid(getId())
                 .date(getDate())

@@ -31,6 +31,7 @@ public class NetworkModificationException extends PowsyblException {
         MODIFICATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         VOLTAGE_LEVEL_NOT_FOUND(HttpStatus.NOT_FOUND),
         CREATE_LOAD_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
+        MODIFY_LOAD_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         BUSBAR_SECTION_NOT_FOUND(HttpStatus.NOT_FOUND),
         BUS_NOT_FOUND(HttpStatus.NOT_FOUND),
         CREATE_GENERATOR_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
