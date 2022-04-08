@@ -23,4 +23,13 @@ import lombok.experimental.SuperBuilder;
 public class AttributeModification<T> {
     T value;
     OperationType op;
+
+    public T applyModification(T initialValue) {
+        if (op == OperationType.SET) {
+            return value;
+        } else if (op == OperationType.UNSET) {
+            return null;
+        }
+        return initialValue;
+    }
 }

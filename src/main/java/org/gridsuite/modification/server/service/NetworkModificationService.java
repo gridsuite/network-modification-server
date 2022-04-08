@@ -643,6 +643,22 @@ public class NetworkModificationService {
         return loadCreationInfos == null ? Mono.error(new NetworkModificationException(CREATE_LOAD_ERROR, "Missing required attributes to create the load")) : Mono.empty();
     }
 
+    private Load modifyLoad(Network network, LoadModificationInfos loadModificationInfos) {
+        // modify the load
+        Load load = network.getLoad(loadModificationInfos.getEquipmentId());
+        if (loadModificationInfos.getLoadType() != null) {
+            load.setLoadType(loadModificationInfos.getLoadType().applyModification(load.getLoadType()));
+        }
+        if (loadModificationInfos.getActivePower() != null) {
+            load.setP0(loadModificationInfos.getActivePower().applyModification(load.getP0()));
+        }
+        if (loadModificationInfos.getReactivePower() != null) {
+            load.setQ0(loadModificationInfos.getReactivePower().applyModification(load.getQ0()));
+        }
+        // TODO connectivity modification
+        return load;
+    }
+
     private List<EquipmentModificationInfos> execModifyLoad(NetworkStoreListener listener,
                                                             LoadModificationInfos loadModificationInfos,
                                                             ReporterModel reporter,
@@ -653,7 +669,7 @@ public class NetworkModificationService {
         return doAction(listener, () -> {
             if (listener.isApplyModifications()) {
                 // modify the load in the network
-                // TODO Modify load !
+                modifyLoad(network, loadModificationInfos);
 
                 subReporter.report(Report.builder()
                         .withKey("loadModified")
@@ -1498,6 +1514,14 @@ public class NetworkModificationService {
                         LoadCreationInfos loadCreationInfos = (LoadCreationInfos) infos;
                         Reporter subReporter = reporter.createSubReporter("LoadCreation", "Load creation");
                         List<EquipmentModificationInfos> modificationInfos = execCreateLoad(listener, loadCreationInfos, reporter, subReporter);
+                        allModificationsInfos.addAll(modificationInfos);
+                    }
+                    break;
+
+                    case LOAD_MODIFICATION: {
+                        LoadModificationInfos loadModificationInfos = (LoadModificationInfos) infos;
+                        Reporter subReporter = reporter.createSubReporter("LoadModification", "Load modification");
+                        List<EquipmentModificationInfos> modificationInfos = execModifyLoad(listener, loadModificationInfos, reporter, subReporter);
                         allModificationsInfos.addAll(modificationInfos);
                     }
                     break;
