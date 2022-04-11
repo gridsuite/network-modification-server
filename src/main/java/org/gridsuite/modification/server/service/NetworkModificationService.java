@@ -646,6 +646,10 @@ public class NetworkModificationService {
     private Load modifyLoad(Network network, LoadModificationInfos loadModificationInfos) {
         // modify the load
         Load load = network.getLoad(loadModificationInfos.getEquipmentId());
+        if (load == null) {
+            throw new NetworkModificationException(LOAD_NOT_FOUND, "Load " + loadModificationInfos.getEquipmentId() + " does not exist in network");
+        }
+
         if (loadModificationInfos.getLoadType() != null) {
             load.setLoadType(loadModificationInfos.getLoadType().applyModification(load.getLoadType()));
         }

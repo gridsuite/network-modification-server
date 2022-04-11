@@ -30,6 +30,7 @@ public class AttributeModification<T> {
         } else if (op == OperationType.UNSET) {
             return null;
         }
+        // TODO throw exception
         return initialValue;
     }
 }

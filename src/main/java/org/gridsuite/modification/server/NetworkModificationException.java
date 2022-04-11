@@ -27,6 +27,7 @@ public class NetworkModificationException extends PowsyblException {
         MODIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND),
         SWITCH_NOT_FOUND(HttpStatus.NOT_FOUND),
         LINE_NOT_FOUND(HttpStatus.NOT_FOUND),
+        LOAD_NOT_FOUND(HttpStatus.NOT_FOUND),
         UNKNOWN_EQUIPMENT_TYPE(HttpStatus.INTERNAL_SERVER_ERROR),
         MODIFICATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         VOLTAGE_LEVEL_NOT_FOUND(HttpStatus.NOT_FOUND),

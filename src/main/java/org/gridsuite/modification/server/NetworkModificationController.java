@@ -147,9 +147,9 @@ public class NetworkModificationController {
     }
 
     @PutMapping(value = "/networks/{networkUuid}/loads/{loadId}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "create a load in a network variant")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The load has been created")})
-    public ResponseEntity<Flux<EquipmentModificationInfos>> createLoad(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
+    @Operation(summary = "modify a load in a network variant")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The load has been modified")})
+    public ResponseEntity<Flux<EquipmentModificationInfos>> modifyLoad(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
                                                                        @Parameter(description = "Load id") @PathVariable("loadId") String loadId,
                                                                        @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
                                                                        @RequestParam(value = "group", required = false) UUID groupUuid,
