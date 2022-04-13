@@ -644,10 +644,6 @@ public class NetworkModificationService {
     }
 
     private Load modifyLoad(Network network, LoadModificationInfos loadModificationInfos) {
-        if (Objects.isNull(loadModificationInfos) || Objects.isNull(loadModificationInfos.getEquipmentId())) {
-            throw new NetworkModificationException(MODIFY_LOAD_ERROR, "Missing required attributes to modify the load");
-        }
-
         // modify the load
         Load load = network.getLoad(loadModificationInfos.getEquipmentId());
         if (load == null) {
@@ -676,15 +672,24 @@ public class NetworkModificationService {
 
         return doAction(listener, () -> {
             if (listener.isApplyModifications()) {
-                // modify the load in the network
-                modifyLoad(network, loadModificationInfos);
+                try {
+                    // modify the load in the network
+                    modifyLoad(network, loadModificationInfos);
 
-                subReporter.report(Report.builder()
-                        .withKey("loadModified")
-                        .withDefaultMessage("Load with id=${id} modified")
-                        .withValue("id", loadModificationInfos.getEquipmentId())
-                        .withSeverity(new TypedValue("LOAD_MODIFICATION_INFO", TypedValue.INFO_LOGLEVEL))
-                        .build());
+                    subReporter.report(Report.builder()
+                            .withKey("loadModification")
+                            .withDefaultMessage("Load with id=${id} modified")
+                            .withValue("id", loadModificationInfos.getEquipmentId())
+                            .withSeverity(new TypedValue("LOAD_MODIFICATION_INFO", TypedValue.INFO_LOGLEVEL))
+                            .build());
+                } catch (NetworkModificationException exc) {
+                    subReporter.report(Report.builder()
+                            .withKey("loadModification")
+                            .withDefaultMessage(exc.getMessage())
+                            .withValue("id", loadModificationInfos.getEquipmentId())
+                            .withSeverity(new TypedValue("LOAD_MODIFICATION_ERROR", TypedValue.ERROR_LOGLEVEL))
+                            .build());
+                }
             }
 
             // add the load creation entity to the listener
@@ -694,7 +699,7 @@ public class NetworkModificationService {
     }
 
     public Flux<EquipmentModificationInfos> modifyLoad(UUID networkUuid, String variantId, UUID groupUuid, LoadModificationInfos loadModificationInfos) {
-        return assertLoadModificationInfosNotEmpty(loadModificationInfos).thenMany(
+        return assertLoadModificationInfosOk(loadModificationInfos).thenMany(
                 getNetworkModificationInfos(networkUuid, variantId).flatMapIterable(networkInfos -> {
                     NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
                     ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
@@ -704,8 +709,9 @@ public class NetworkModificationService {
                 }));
     }
 
-    private Mono<Void> assertLoadModificationInfosNotEmpty(LoadModificationInfos loadModificationInfos) {
-        return loadModificationInfos == null ? Mono.error(new NetworkModificationException(MODIFY_LOAD_ERROR, "Missing required attributes to create the load")) : Mono.empty();
+    private Mono<Void> assertLoadModificationInfosOk(LoadModificationInfos loadModificationInfos) {
+        return loadModificationInfos == null || loadModificationInfos.getEquipmentId() == null ?
+                Mono.error(new NetworkModificationException(MODIFY_LOAD_ERROR, "Missing required attributes to modify the load")) : Mono.empty();
     }
 
     private List<EquipmentDeletionInfos> execDeleteEquipment(NetworkStoreListener listener,

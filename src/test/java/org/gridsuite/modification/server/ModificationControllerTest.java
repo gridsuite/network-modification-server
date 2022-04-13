@@ -797,13 +797,16 @@ public class ModificationControllerTest {
                 .expectBody(String.class)
                 .isEqualTo(new NetworkModificationException(MODIFY_LOAD_ERROR, "Missing required attributes to modify the load").getMessage());
 
-        loadModificationInfos.setEquipmentId("badLoadId");
+        loadModificationInfos.setEquipmentId("unknownLoadId");
         webTestClient.put().uri(uriString, TEST_NETWORK_ID)
                 .body(BodyInserters.fromValue(loadModificationInfos))
                 .exchange()
-                .expectStatus().is4xxClientError()
-                .expectBody(String.class)
-                .isEqualTo(new NetworkModificationException(LOAD_NOT_FOUND, "Load badLoadId does not exist in network").getMessage());
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBodyList(EquipmentModificationInfos.class)
+                .value(modifications -> modifications.get(0),
+                        MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.LOAD_MODIFICATION, "unknownLoadId", Set.of()));
+        testNetworkModificationsCount(TEST_GROUP_ID, 2);  // new modification stored in the database
 
         // Modify all attributes of the load
         loadModificationInfos = LoadModificationInfos.builder()
@@ -832,7 +835,7 @@ public class ModificationControllerTest {
         assertEquals(network.getLoad("v1load").getP0(), 80.0, 0.1);
         assertEquals(network.getLoad("v1load").getQ0(), 40.0, 0.1);
         // TODO check connectivity when it will be implemented
-        testNetworkModificationsCount(TEST_GROUP_ID, 2);  // new modification stored in the database
+        testNetworkModificationsCount(TEST_GROUP_ID, 3);  // new modification stored in the database
 
         // Unset an attribute that should not be null
         loadModificationInfos = LoadModificationInfos.builder()
