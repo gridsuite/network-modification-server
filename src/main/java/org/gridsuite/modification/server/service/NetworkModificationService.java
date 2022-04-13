@@ -644,6 +644,10 @@ public class NetworkModificationService {
     }
 
     private Load modifyLoad(Network network, LoadModificationInfos loadModificationInfos) {
+        if (Objects.isNull(loadModificationInfos) || Objects.isNull(loadModificationInfos.getEquipmentId())) {
+            throw new NetworkModificationException(MODIFY_LOAD_ERROR, "Missing required attributes to modify the load");
+        }
+
         // modify the load
         Load load = network.getLoad(loadModificationInfos.getEquipmentId());
         if (load == null) {

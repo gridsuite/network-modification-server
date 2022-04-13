@@ -146,11 +146,10 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.updateLoadCreation(loadCreationInfos, modificationUuid));
     }
 
-    @PutMapping(value = "/networks/{networkUuid}/loads/{loadId}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/networks/{networkUuid}/loads", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "modify a load in a network variant")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The load has been modified")})
     public ResponseEntity<Flux<EquipmentModificationInfos>> modifyLoad(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
-                                                                       @Parameter(description = "Load id") @PathVariable("loadId") String loadId,
                                                                        @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
                                                                        @RequestParam(value = "group", required = false) UUID groupUuid,
                                                                        @RequestBody LoadModificationInfos loadModificationInfos) {
