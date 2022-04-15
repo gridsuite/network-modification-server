@@ -12,6 +12,7 @@ import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.BusbarConnectionCreationEmbeddable;
 import org.gridsuite.modification.server.entities.equipment.creation.BusbarSectionCreationEmbeddable;
+import org.gridsuite.modification.server.entities.equipment.creation.VoltageLevelCreationEntity;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 
 import java.util.*;
@@ -239,20 +240,27 @@ public class NetworkStoreListener implements NetworkListener {
     }
 
     public void storeVoltageLevelCreation(VoltageLevelCreationInfos voltageLevelCreationInfos) {
+        VoltageLevelCreationEntity voltageLevelEntity = makeVoltageLevelCreationEntity(
+            voltageLevelCreationInfos);
+        modifications.add(voltageLevelEntity);
+    }
+
+    private VoltageLevelCreationEntity makeVoltageLevelCreationEntity(VoltageLevelCreationInfos voltageLevelCreationInfos) {
         List<BusbarSectionCreationEmbeddable> bbsEmbeddables = voltageLevelCreationInfos.getBusbarSections().stream().map(bbsi ->
             new BusbarSectionCreationEmbeddable(bbsi.getId(), bbsi.getName(), bbsi.getVertPos(), bbsi.getHorizPos())
         ).collect(Collectors.toList());
         List<BusbarConnectionCreationEmbeddable> cnxEmbeddables = voltageLevelCreationInfos.getBusbarConnections().stream().map(cnxi ->
             new BusbarConnectionCreationEmbeddable(cnxi.getFromBBS(), cnxi.getToBBS(), cnxi.getSwitchKind())
         ).collect(Collectors.toList());
-        modifications.add(this.modificationRepository.createVoltageLevelEntity(
+        VoltageLevelCreationEntity voltageLevelEntity = this.modificationRepository.createVoltageLevelEntity(
             voltageLevelCreationInfos.getEquipmentId(),
             voltageLevelCreationInfos.getEquipmentName(),
             voltageLevelCreationInfos.getNominalVoltage(),
             voltageLevelCreationInfos.getSubstationId(),
             bbsEmbeddables,
             cnxEmbeddables
-        ));
+        );
+        return voltageLevelEntity;
     }
 
     @Override
@@ -303,5 +311,21 @@ public class NetworkStoreListener implements NetworkListener {
 
     public void addSubstationsIds(Identifiable identifiable) {
         substationsIds.addAll(getSubstationIds(identifiable));
+    }
+
+    public void storeLineSplitWithVoltageLevelInfos(LineSplitWithVoltageLevelInfos lineSplitWithVoltageLevelInfos) {
+        VoltageLevelCreationInfos mayNewVoltageLevelInfos = lineSplitWithVoltageLevelInfos.getMayNewVoltageLevelInfos();
+
+        modifications.add(this.modificationRepository.lineSplitWithVoltageLevelEntity(
+            lineSplitWithVoltageLevelInfos.getLineToSplitId(),
+            lineSplitWithVoltageLevelInfos.getPercent(),
+            mayNewVoltageLevelInfos == null ? null : makeVoltageLevelCreationEntity(mayNewVoltageLevelInfos),
+            lineSplitWithVoltageLevelInfos.getExistingVoltageLevelId(),
+            lineSplitWithVoltageLevelInfos.getBbsOrBusId(),
+            lineSplitWithVoltageLevelInfos.getNewLine1Id(),
+            lineSplitWithVoltageLevelInfos.getNewLine1Name(),
+            lineSplitWithVoltageLevelInfos.getNewLine2Id(),
+            lineSplitWithVoltageLevelInfos.getNewLine2Name())
+        );
     }
 }

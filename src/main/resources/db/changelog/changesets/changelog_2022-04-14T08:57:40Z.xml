@@ -1,0 +1,25 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-3.10.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.10.xsd">
+    <changeSet author="garnierlar (generated)" id="1649926680033-7">
+        <createTable tableName="line_split_with_voltage_level_entity">
+            <column name="bbs_or_bus_id" type="VARCHAR(255)"/>
+            <column name="existing_voltage_level_id" type="VARCHAR(255)"/>
+            <column name="line_to_split_id" type="VARCHAR(255)"/>
+            <column name="new_line1id" type="VARCHAR(255)"/>
+            <column name="new_line1name" type="VARCHAR(255)"/>
+            <column name="new_line2id" type="VARCHAR(255)"/>
+            <column name="new_line2name" type="VARCHAR(255)"/>
+            <column name="percent" type="FLOAT8"/>
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="line_split_with_voltage_level_entityPK"/>
+            </column>
+            <column name="may_voltage_level_creation_id" type="UUID"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="garnierlar (generated)" id="1649926680033-9">
+        <addForeignKeyConstraint baseColumnNames="id" baseTableName="line_split_with_voltage_level_entity" constraintName="FKe6vdxpxw9lamld9e60uljw6u2" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
+    </changeSet>
+    <changeSet author="garnierlar (generated)" id="1649926680033-10">
+        <addForeignKeyConstraint baseColumnNames="may_voltage_level_creation_id" baseTableName="line_split_with_voltage_level_entity" constraintName="FKfjgett3ekju7k56v2nyliqr1a" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="voltage_level_creation_entity" validate="true"/>
+    </changeSet>
+</databaseChangeLog>

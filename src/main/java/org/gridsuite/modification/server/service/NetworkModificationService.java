@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.InjectableValues;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.reporter.*;
+import com.powsybl.iidm.modification.topology.AttachVoltageLevelOnLine;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.Branch.Side;
 import com.powsybl.network.store.client.NetworkStoreService;
@@ -152,10 +153,10 @@ public class NetworkModificationService {
     }
 
     private List<EquipmentModificationInfos> execChangeSwitchState(NetworkStoreListener listener,
-                                                                   String switchId,
-                                                                   boolean open,
-                                                                   ReporterModel reporter,
-                                                                   Reporter subReporter) {
+                                                                  String switchId,
+                                                                  boolean open,
+                                                                  ReporterModel reporter,
+                                                                  Reporter subReporter) {
         Network network = listener.getNetwork();
         UUID networkUuid = listener.getNetworkUuid();
 
@@ -577,9 +578,9 @@ public class NetworkModificationService {
     }
 
     private List<EquipmentModificationInfos> execCreateLoad(NetworkStoreListener listener,
-                                                            LoadCreationInfos loadCreationInfos,
-                                                            ReporterModel reporter,
-                                                            Reporter subReporter) {
+                                                           LoadCreationInfos loadCreationInfos,
+                                                           ReporterModel reporter,
+                                                           Reporter subReporter) {
         Network network = listener.getNetwork();
         UUID networkUuid = listener.getNetworkUuid();
 
@@ -875,9 +876,9 @@ public class NetworkModificationService {
     }
 
     private List<EquipmentModificationInfos> execCreateGenerator(NetworkStoreListener listener,
-                                                                 GeneratorCreationInfos generatorCreationInfos,
-                                                                 ReporterModel reporter,
-                                                                 Reporter subReporter) {
+                                                                GeneratorCreationInfos generatorCreationInfos,
+                                                                ReporterModel reporter,
+                                                                Reporter subReporter) {
         Network network = listener.getNetwork();
         UUID networkUuid = listener.getNetworkUuid();
 
@@ -1012,9 +1013,9 @@ public class NetworkModificationService {
     }
 
     private List<EquipmentModificationInfos> execCreateLine(NetworkStoreListener listener,
-                                                            LineCreationInfos lineCreationInfos,
-                                                            ReporterModel reporter,
-                                                            Reporter subReporter) {
+                                                           LineCreationInfos lineCreationInfos,
+                                                           ReporterModel reporter,
+                                                           Reporter subReporter) {
         Network network = listener.getNetwork();
         UUID networkUuid = listener.getNetworkUuid();
 
@@ -1067,9 +1068,9 @@ public class NetworkModificationService {
     }
 
     private List<EquipmentModificationInfos> execCreateTwoWindingsTransformer(NetworkStoreListener listener,
-                                                                              TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos,
-                                                                              ReporterModel reporter,
-                                                                              Reporter subReporter) {
+                                                                             TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos,
+                                                                             ReporterModel reporter,
+                                                                             Reporter subReporter) {
         Network network = listener.getNetwork();
         UUID networkUuid = listener.getNetworkUuid();
 
@@ -1174,9 +1175,9 @@ public class NetworkModificationService {
     }
 
     private List<EquipmentModificationInfos> execCreateSubstation(NetworkStoreListener listener,
-                                                                  SubstationCreationInfos substationCreationInfos,
-                                                                  ReporterModel reporter,
-                                                                  Reporter subReporter) {
+                                                                 SubstationCreationInfos substationCreationInfos,
+                                                                 ReporterModel reporter,
+                                                                 Reporter subReporter) {
         Network network = listener.getNetwork();
         UUID networkUuid = listener.getNetworkUuid();
 
@@ -1240,119 +1241,125 @@ public class NetworkModificationService {
 
         Network network = listener.getNetwork();
         UUID networkUuid = listener.getNetworkUuid();
+
+        return doAction(listener, () -> {
+            createVoltageLevelAction(listener, voltageLevelCreationInfos, subReporter, network);
+        }, CREATE_VOLTAGE_LEVEL_ERROR, networkUuid, reporter, subReporter).stream().map(EquipmentModificationInfos.class::cast)
+            .collect(Collectors.toList());
+    }
+
+    private void createVoltageLevelAction(NetworkStoreListener listener, VoltageLevelCreationInfos voltageLevelCreationInfos, Reporter subReporter,
+        Network network) {
         String substationId = voltageLevelCreationInfos.getSubstationId();
         Substation substation = network.getSubstation(substationId);
         if (substation == null) {
             throw new NetworkModificationException(SUBSTATION_NOT_FOUND, substationId);
         }
 
-        return doAction(listener, () -> {
-            VoltageLevel voltageLevel = substation.newVoltageLevel()
-                .setId(voltageLevelCreationInfos.getEquipmentId())
-                .setName(voltageLevelCreationInfos.getEquipmentName())
-                .setTopologyKind(TopologyKind.NODE_BREAKER)
-                .setNominalV(voltageLevelCreationInfos.getNominalVoltage())
+        VoltageLevel voltageLevel = substation.newVoltageLevel()
+            .setId(voltageLevelCreationInfos.getEquipmentId())
+            .setName(voltageLevelCreationInfos.getEquipmentName())
+            .setTopologyKind(TopologyKind.NODE_BREAKER)
+            .setNominalV(voltageLevelCreationInfos.getNominalVoltage())
+            .add();
+
+        int nodeRank = voltageLevel.getNodeBreakerView().getMaximumNodeIndex() + 1;
+        Map<String, Integer> idToNodeRank = new TreeMap<>();
+        for (BusbarSectionCreationInfos bbs : voltageLevelCreationInfos.getBusbarSections()) {
+            BusbarSection sjb = voltageLevel.getNodeBreakerView().newBusbarSection()
+                .setId(bbs.getId())
+                .setName(bbs.getName())
+                .setNode(nodeRank)
                 .add();
+            sjb.newExtension(BusbarSectionPositionAdder.class)
+                .withBusbarIndex(bbs.getVertPos())
+                .withSectionIndex(bbs.getHorizPos())
+                .add();
+            idToNodeRank.put(bbs.getId(), nodeRank);
+            nodeRank += 1;
+        }
 
-            int nodeRank = voltageLevel.getNodeBreakerView().getMaximumNodeIndex() + 1;
-            Map<String, Integer> idToNodeRank = new TreeMap<>();
-            for (BusbarSectionCreationInfos bbs : voltageLevelCreationInfos.getBusbarSections()) {
-                BusbarSection sjb = voltageLevel.getNodeBreakerView().newBusbarSection()
-                    .setId(bbs.getId())
-                    .setName(bbs.getName())
-                    .setNode(nodeRank)
-                    .add();
-                sjb.newExtension(BusbarSectionPositionAdder.class)
-                    .withBusbarIndex(bbs.getVertPos())
-                    .withSectionIndex(bbs.getHorizPos())
-                    .add();
-                idToNodeRank.put(bbs.getId(), nodeRank);
-                nodeRank += 1;
+        int cnxRank = 1;
+        for (BusbarConnectionCreationInfos bbsci : voltageLevelCreationInfos.getBusbarConnections()) {
+            String fromBBSId = bbsci.getFromBBS();
+            Integer rank1 = idToNodeRank.get(fromBBSId);
+            if (rank1 == null) {
+                throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "From side '" + fromBBSId + "' unknown");
             }
 
-            int cnxRank = 1;
-            for (BusbarConnectionCreationInfos bbsci : voltageLevelCreationInfos.getBusbarConnections()) {
-                String fromBBSId = bbsci.getFromBBS();
-                Integer rank1 = idToNodeRank.get(fromBBSId);
-                if (rank1 == null) {
-                    throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "From side '" + fromBBSId + "' unknown");
-                }
-
-                String toBBSId = bbsci.getToBBS();
-                Integer rank2 = idToNodeRank.get(toBBSId);
-                if (rank2 == null) {
-                    throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "To side '" + toBBSId + "' unknown");
-                }
-
-                SwitchKind switchKind = bbsci.getSwitchKind();
-                if (switchKind == SwitchKind.DISCONNECTOR && fromBBSId.equals(toBBSId)) {
-                    throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR,
-                        "Disconnector between same bus bar section '" + toBBSId + "'");
-                }
-
-                String infix = voltageLevelCreationInfos.getEquipmentId() + "_" + fromBBSId + "_" + toBBSId + "_";
-                if (switchKind == SwitchKind.BREAKER) {
-                    int preBreakerRank = nodeRank++;
-                    int postBreakerRank = nodeRank++;
-                    voltageLevel.getNodeBreakerView().newDisconnector()
-                        .setKind(SwitchKind.DISCONNECTOR)
-                        .setId("disconnector_" + infix + cnxRank++)
-                        .setNode1(rank1)
-                        .setNode2(preBreakerRank)
-                        .setFictitious(false)
-                        .setRetained(false)
-                        .setOpen(false)
-                        .add();
-
-                    voltageLevel.getNodeBreakerView().newBreaker()
-                        .setKind(switchKind)
-                        .setId("breaker_" + infix + cnxRank++)
-                        .setNode1(preBreakerRank)
-                        .setNode2(postBreakerRank)
-                        .setFictitious(false)
-                        .setRetained(false)
-                        .setOpen(false)
-                        .add();
-
-                    voltageLevel.getNodeBreakerView().newDisconnector()
-                        .setKind(SwitchKind.DISCONNECTOR)
-                        .setId("disconnector_" + infix + cnxRank++)
-                        .setNode1(postBreakerRank)
-                        .setNode2(rank2)
-                        .setFictitious(false)
-                        .setRetained(false)
-                        .setOpen(false)
-                        .add();
-                } else if (switchKind == SwitchKind.DISCONNECTOR) {
-                    voltageLevel.getNodeBreakerView().newDisconnector()
-                        .setKind(switchKind)
-                        .setId("disconnector_" + infix + cnxRank++)
-                        .setNode1(rank1)
-                        .setNode2(rank2)
-                        .setFictitious(false)
-                        .setRetained(false)
-                        .setOpen(false)
-                        .add();
-                } else {
-                    throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "Swich kind '" + switchKind + "' unknown");
-                }
+            String toBBSId = bbsci.getToBBS();
+            Integer rank2 = idToNodeRank.get(toBBSId);
+            if (rank2 == null) {
+                throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "To side '" + toBBSId + "' unknown");
             }
 
-            subReporter.report(Report.builder()
-                .withKey("voltageLevelCreated")
-                .withDefaultMessage("New voltage level with id=${id} created")
-                .withValue("id", voltageLevelCreationInfos.getEquipmentId())
-                .withSeverity(new TypedValue("VOLTAGE_LEVEL_CREATION_INFO", TypedValue.INFO_LOGLEVEL))
-                .build());
+            SwitchKind switchKind = bbsci.getSwitchKind();
+            if (switchKind == SwitchKind.DISCONNECTOR && fromBBSId.equals(toBBSId)) {
+                throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR,
+                    "Disconnector between same bus bar section '" + toBBSId + "'");
+            }
 
-            // add the voltage level creation entity to the listener
-            listener.storeVoltageLevelCreation(voltageLevelCreationInfos);
-        }, CREATE_VOLTAGE_LEVEL_ERROR, networkUuid, reporter, subReporter).stream().map(EquipmentModificationInfos.class::cast)
-            .collect(Collectors.toList());
+            String infix = voltageLevelCreationInfos.getEquipmentId() + "_" + fromBBSId + "_" + toBBSId + "_";
+            if (switchKind == SwitchKind.BREAKER) {
+                int preBreakerRank = nodeRank++;
+                int postBreakerRank = nodeRank++;
+                voltageLevel.getNodeBreakerView().newDisconnector()
+                    .setKind(SwitchKind.DISCONNECTOR)
+                    .setId("disconnector_" + infix + cnxRank++)
+                    .setNode1(rank1)
+                    .setNode2(preBreakerRank)
+                    .setFictitious(false)
+                    .setRetained(false)
+                    .setOpen(false)
+                    .add();
+
+                voltageLevel.getNodeBreakerView().newBreaker()
+                    .setKind(switchKind)
+                    .setId("breaker_" + infix + cnxRank++)
+                    .setNode1(preBreakerRank)
+                    .setNode2(postBreakerRank)
+                    .setFictitious(false)
+                    .setRetained(false)
+                    .setOpen(false)
+                    .add();
+
+                voltageLevel.getNodeBreakerView().newDisconnector()
+                    .setKind(SwitchKind.DISCONNECTOR)
+                    .setId("disconnector_" + infix + cnxRank++)
+                    .setNode1(postBreakerRank)
+                    .setNode2(rank2)
+                    .setFictitious(false)
+                    .setRetained(false)
+                    .setOpen(false)
+                    .add();
+            } else if (switchKind == SwitchKind.DISCONNECTOR) {
+                voltageLevel.getNodeBreakerView().newDisconnector()
+                    .setKind(switchKind)
+                    .setId("disconnector_" + infix + cnxRank++)
+                    .setNode1(rank1)
+                    .setNode2(rank2)
+                    .setFictitious(false)
+                    .setRetained(false)
+                    .setOpen(false)
+                    .add();
+            } else {
+                throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "Swich kind '" + switchKind + "' unknown");
+            }
+        }
+
+        subReporter.report(Report.builder()
+            .withKey("voltageLevelCreated")
+            .withDefaultMessage("New voltage level with id=${id} created")
+            .withValue("id", voltageLevelCreationInfos.getEquipmentId())
+            .withSeverity(new TypedValue("VOLTAGE_LEVEL_CREATION_INFO", TypedValue.INFO_LOGLEVEL))
+            .build());
+
+        // add the voltage level creation entity to the listener
+        listener.storeVoltageLevelCreation(voltageLevelCreationInfos);
     }
 
     public Flux<EquipmentModificationInfos> createVoltageLevel(UUID networkUuid, String variantId, UUID groupUuid,
-                                                               VoltageLevelCreationInfos voltageLevelCreationInfos) {
+        VoltageLevelCreationInfos voltageLevelCreationInfos) {
 
         return assertVoltageLevelCreationInfosNotEmpty(voltageLevelCreationInfos).thenMany(
             getNetworkModificationInfos(networkUuid, variantId).flatMapIterable(networkInfos -> {
@@ -1462,11 +1469,11 @@ public class NetworkModificationService {
     }
 
     private List<EquipmentModificationInfos> execChangeEquipmentAttribute(NetworkStoreListener listener,
-                                                                          String equipmentId,
-                                                                          String attributeName,
-                                                                          Object attributeValue,
-                                                                          ReporterModel reporter,
-                                                                          Reporter subReporter) {
+                                                                         String equipmentId,
+                                                                         String attributeName,
+                                                                         Object attributeValue,
+                                                                         ReporterModel reporter,
+                                                                         Reporter subReporter) {
         Network network = listener.getNetwork();
         UUID networkUuid = listener.getNetworkUuid();
 
@@ -1612,6 +1619,14 @@ public class NetworkModificationService {
                     }
                     break;
 
+                    case LINE_SPLIT_WITH_VOLTAGE_LEVEL: {
+                        LineSplitWithVoltageLevelInfos lineSplitWithVoltageLevelInfos = (LineSplitWithVoltageLevelInfos) infos;
+                        Reporter subReporter = reporter.createSubReporter("lineSplitWithVoltageLevel", "Line split with voltage level");
+                        List<ModificationInfos> modificationInfos = execSplitLineWithVoltageLevel(listener, lineSplitWithVoltageLevelInfos, reporter, subReporter);
+                        allModificationsInfos.addAll(modificationInfos);
+                    }
+                    break;
+
                     default:
                 }
             } catch (PowsyblException e) {
@@ -1716,9 +1731,9 @@ public class NetworkModificationService {
     }
 
     private List<EquipmentModificationInfos> execCreateShuntCompensator(NetworkStoreListener listener,
-                                                                        ShuntCompensatorCreationInfos shuntCompensatorCreationInfos,
-                                                                        ReporterModel reporter,
-                                                                        Reporter subReporter) {
+                                                                       ShuntCompensatorCreationInfos shuntCompensatorCreationInfos,
+                                                                       ReporterModel reporter,
+                                                                       Reporter subReporter) {
         Network network = listener.getNetwork();
         UUID networkUuid = listener.getNetworkUuid();
 
@@ -1755,5 +1770,70 @@ public class NetworkModificationService {
 
     public Mono<Void> moveModifications(UUID groupUuid, UUID before, List<UUID> modificationsToMove) {
         return Mono.fromRunnable(() -> networkModificationRepository.moveModifications(groupUuid, modificationsToMove, before));
+    }
+
+    private Mono<Void> assertLineSplitWithVoltageLevelInfosNotEmpty(LineSplitWithVoltageLevelInfos lineSplitWithVoltageLevelInfos) {
+        return lineSplitWithVoltageLevelInfos == null ? Mono.error(new NetworkModificationException(LINE_SPLIT_ERROR,
+            "Missing required attributes to split a line")) : Mono.empty();
+    }
+
+    private List<ModificationInfos> execSplitLineWithVoltageLevel(NetworkStoreListener listener,
+        LineSplitWithVoltageLevelInfos lineSplitWithVoltageLevelInfos,
+        ReporterModel reporter, Reporter subReporter) {
+        Network network = listener.getNetwork();
+        UUID networkUuid = listener.getNetworkUuid();
+
+        return doAction(listener, () -> {
+            if (listener.isApplyModifications()) {
+                Line line = network.getLine(lineSplitWithVoltageLevelInfos.getLineToSplitId());
+                if (line == null) {
+                    throw new NetworkModificationException(LINE_NOT_FOUND, lineSplitWithVoltageLevelInfos.getLineToSplitId());
+                }
+
+                VoltageLevelCreationInfos mayNewVL = lineSplitWithVoltageLevelInfos.getMayNewVoltageLevelInfos();
+                String voltageLeveId;
+                if (mayNewVL != null) {
+                    createVoltageLevelAction(listener, mayNewVL, subReporter, network);
+                    voltageLeveId = mayNewVL.getEquipmentId();
+                } else {
+                    voltageLeveId = lineSplitWithVoltageLevelInfos.getExistingVoltageLevelId();
+                }
+
+                AttachVoltageLevelOnLine algo = new AttachVoltageLevelOnLine(
+                    lineSplitWithVoltageLevelInfos.getPercent(),
+                    voltageLeveId,
+                    lineSplitWithVoltageLevelInfos.getBbsOrBusId(),
+                    lineSplitWithVoltageLevelInfos.getNewLine1Id(),
+                    lineSplitWithVoltageLevelInfos.getNewLine1Name(),
+                    lineSplitWithVoltageLevelInfos.getNewLine2Id(),
+                    lineSplitWithVoltageLevelInfos.getNewLine2Name(),
+                    line);
+
+                algo.apply(network);
+
+                subReporter.report(Report.builder()
+                    .withKey("lineSplit")
+                    .withDefaultMessage("Line ${lineId} was split")
+                    .withValue("id", lineSplitWithVoltageLevelInfos.getLineToSplitId())
+                    .withSeverity(new TypedValue("LINE_SPLIT_INFO", TypedValue.INFO_LOGLEVEL))
+                    .build());
+            }
+
+            // add the shunt compensator creation entity to the listener
+            listener.storeLineSplitWithVoltageLevelInfos(lineSplitWithVoltageLevelInfos);
+        }, LINE_SPLIT_ERROR, networkUuid, reporter, subReporter).stream().map(ModificationInfos.class::cast)
+            .collect(Collectors.toList());
+    }
+
+    public Flux<ModificationInfos> lineSplitWithVoltageLevel(UUID networkUuid, String variantId, UUID groupUuid,
+        LineSplitWithVoltageLevelInfos lineSplitWithVoltageLevelInfos) {
+        return assertLineSplitWithVoltageLevelInfosNotEmpty(lineSplitWithVoltageLevelInfos).thenMany(
+            getNetworkModificationInfos(networkUuid, variantId).flatMapIterable(networkInfos -> {
+                NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
+                ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
+                Reporter subReporter = reporter.createSubReporter("lineSplitWithVoltageLevel", "Line split with voltage level");
+
+                return execSplitLineWithVoltageLevel(listener, lineSplitWithVoltageLevelInfos, reporter, subReporter);
+            }));
     }
 }
