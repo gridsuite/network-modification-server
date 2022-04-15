@@ -692,7 +692,7 @@ public class NetworkModificationService {
                 }
             }
 
-            // add the load creation entity to the listener
+            // add the load modification entity to the listener
             listener.storeLoadModification(loadModificationInfos);
         }, MODIFY_LOAD_ERROR, networkUuid, reporter, subReporter).stream().map(EquipmentModificationInfos.class::cast)
                 .collect(Collectors.toList());

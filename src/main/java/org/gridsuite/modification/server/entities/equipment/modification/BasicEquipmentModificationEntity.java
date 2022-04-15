@@ -13,6 +13,8 @@ import org.gridsuite.modification.server.dto.AttributeModification;
 import org.gridsuite.modification.server.dto.OperationType;
 
 import javax.persistence.Column;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.MappedSuperclass;
 
 /**
@@ -26,6 +28,7 @@ public class BasicEquipmentModificationEntity extends EquipmentModificationEntit
     private String equipmentNameValue;
 
     @Column(name = "equipmentNameOp")
+    @Enumerated(EnumType.STRING)
     private OperationType equipmentNameOp;
 
     protected BasicEquipmentModificationEntity(ModificationType modificationType, String equipmentId, AttributeModification<String> equipmentName) {

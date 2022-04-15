@@ -13,6 +13,8 @@ import org.gridsuite.modification.server.dto.AttributeModification;
 import org.gridsuite.modification.server.dto.OperationType;
 
 import javax.persistence.Column;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.MappedSuperclass;
 
 /**
@@ -26,12 +28,14 @@ public class InjectionModificationEntity extends BasicEquipmentModificationEntit
     private String voltageLevelIdValue;
 
     @Column(name = "voltageLevelIdOp")
+    @Enumerated(EnumType.STRING)
     private OperationType voltageLevelIdOp;
 
     @Column(name = "busOrBusbarSectionIdValue")
     private String busOrBusbarSectionIdValue;
 
     @Column(name = "busOrBusbarSectionIdOp")
+    @Enumerated(EnumType.STRING)
     private OperationType busOrBusbarSectionIdOp;
 
     protected InjectionModificationEntity(ModificationType modificationType, String equipmentId,

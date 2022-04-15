@@ -29,18 +29,21 @@ public class LoadModificationEntity extends InjectionModificationEntity {
     private LoadType loadTypeValue;
 
     @Column(name = "loadTypeOp")
+    @Enumerated(EnumType.STRING)
     private OperationType loadTypeOp;
 
     @Column(name = "activePowerValue")
     private Double activePowerValue;
 
     @Column(name = "activePowerOp")
+    @Enumerated(EnumType.STRING)
     private OperationType activePowerOp;
 
     @Column(name = "reactivePowerValue")
     private Double reactivePowerValue;
 
     @Column(name = "reactivePowerOp")
+    @Enumerated(EnumType.STRING)
     private OperationType reactivePowerOp;
 
     public LoadModificationEntity(String equipmentId, AttributeModification<String> equipmentName, AttributeModification<LoadType> loadType,
