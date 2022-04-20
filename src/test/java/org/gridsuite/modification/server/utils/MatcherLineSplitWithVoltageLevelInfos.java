@@ -29,7 +29,7 @@ public class MatcherLineSplitWithVoltageLevelInfos extends MatcherModificationIn
             && Math.abs(reference.getPercent() - m.getPercent()) < 0.2
             && Objects.equals(reference.getLineToSplitId(), m.getLineToSplitId())
             && ((reference.getMayNewVoltageLevelInfos() == null && m.getMayNewVoltageLevelInfos() == null)
-                || new MatcherVoltageLevelCreationInfos(reference.getMayNewVoltageLevelInfos()).matchesSafely(m.getMayNewVoltageLevelInfos()))
+              || new MatcherVoltageLevelCreationInfos(reference.getMayNewVoltageLevelInfos()).matchesSafely(m.getMayNewVoltageLevelInfos()))
             && Objects.equals(reference.getExistingVoltageLevelId(), m.getExistingVoltageLevelId())
             && Objects.equals(reference.getBbsOrBusId(), m.getBbsOrBusId())
             && Objects.equals(reference.getNewLine1Id(), m.getNewLine1Id())
