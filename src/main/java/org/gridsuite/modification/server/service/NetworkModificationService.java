@@ -150,11 +150,11 @@ public class NetworkModificationService {
         );
     }
 
-    private List<EquipmenModificationInfos> execChangeSwitchState(NetworkStoreListener listener,
-                                                                  String switchId,
-                                                                  boolean open,
-                                                                  ReporterModel reporter,
-                                                                  Reporter subReporter) {
+    private List<EquipmentModificationInfos> execChangeSwitchState(NetworkStoreListener listener,
+                                                                   String switchId,
+                                                                   boolean open,
+                                                                   ReporterModel reporter,
+                                                                   Reporter subReporter) {
         Network network = listener.getNetwork();
         UUID networkUuid = listener.getNetworkUuid();
 
@@ -178,11 +178,11 @@ public class NetworkModificationService {
 
             // add the switch 'open' attribute modification entity to the listener
             listener.storeEquipmentAttributeModification(switchId, "open", open);
-        }, MODIFICATION_ERROR, networkUuid, reporter, subReporter).stream().map(EquipmenModificationInfos.class::cast)
+        }, MODIFICATION_ERROR, networkUuid, reporter, subReporter).stream().map(EquipmentModificationInfos.class::cast)
             .collect(Collectors.toList());
     }
 
-    public Flux<EquipmenModificationInfos> changeSwitchState(UUID networkUuid, String variantId, UUID groupUuid, String switchId, boolean open) {
+    public Flux<EquipmentModificationInfos> changeSwitchState(UUID networkUuid, String variantId, UUID groupUuid, String switchId, boolean open) {
         return getNetworkModificationInfos(networkUuid, variantId)
             .flatMapIterable(networkInfos -> {
                 NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
@@ -575,10 +575,10 @@ public class NetworkModificationService {
         return Mono.empty();
     }
 
-    private List<EquipmenModificationInfos> execCreateLoad(NetworkStoreListener listener,
-                                                           LoadCreationInfos loadCreationInfos,
-                                                           ReporterModel reporter,
-                                                           Reporter subReporter) {
+    private List<EquipmentModificationInfos> execCreateLoad(NetworkStoreListener listener,
+                                                            LoadCreationInfos loadCreationInfos,
+                                                            ReporterModel reporter,
+                                                            Reporter subReporter) {
         Network network = listener.getNetwork();
         UUID networkUuid = listener.getNetworkUuid();
 
@@ -602,11 +602,11 @@ public class NetworkModificationService {
 
             // add the load creation entity to the listener
             listener.storeLoadCreation(loadCreationInfos);
-        }, CREATE_LOAD_ERROR, networkUuid, reporter, subReporter).stream().map(EquipmenModificationInfos.class::cast)
+        }, CREATE_LOAD_ERROR, networkUuid, reporter, subReporter).stream().map(EquipmentModificationInfos.class::cast)
             .collect(Collectors.toList());
     }
 
-    public Flux<EquipmenModificationInfos> createLoad(UUID networkUuid, String variantId, UUID groupUuid, LoadCreationInfos loadCreationInfos) {
+    public Flux<EquipmentModificationInfos> createLoad(UUID networkUuid, String variantId, UUID groupUuid, LoadCreationInfos loadCreationInfos) {
         return assertLoadCreationInfosNotEmpty(loadCreationInfos).thenMany(
             getNetworkModificationInfos(networkUuid, variantId).flatMapIterable(networkInfos -> {
                 NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
@@ -625,7 +625,7 @@ public class NetworkModificationService {
         if (!loadModificationEntity.isPresent()) {
             return Mono.error(new NetworkModificationException(CREATE_LOAD_ERROR, "Load creation not found"));
         }
-        EquipmentCreationEntity updatedEntity = this.networkModificationRepository.createLoadEntity(
+        EquipmentCreationEntity updatedEntity = this.networkModificationRepository.createLoadCreationEntity(
                 loadCreationInfos.getEquipmentId(),
                 loadCreationInfos.getEquipmentName(),
                 loadCreationInfos.getLoadType(),
@@ -641,6 +641,77 @@ public class NetworkModificationService {
 
     private Mono<Void> assertLoadCreationInfosNotEmpty(LoadCreationInfos loadCreationInfos) {
         return loadCreationInfos == null ? Mono.error(new NetworkModificationException(CREATE_LOAD_ERROR, "Missing required attributes to create the load")) : Mono.empty();
+    }
+
+    private Load modifyLoad(Network network, LoadModificationInfos loadModificationInfos) {
+        // modify the load
+        Load load = network.getLoad(loadModificationInfos.getEquipmentId());
+        if (load == null) {
+            throw new NetworkModificationException(LOAD_NOT_FOUND, "Load " + loadModificationInfos.getEquipmentId() + " does not exist in network");
+        }
+
+        if (loadModificationInfos.getLoadType() != null) {
+            load.setLoadType(loadModificationInfos.getLoadType().applyModification(load.getLoadType()));
+        }
+        if (loadModificationInfos.getActivePower() != null) {
+            load.setP0(loadModificationInfos.getActivePower().applyModification(load.getP0()));
+        }
+        if (loadModificationInfos.getReactivePower() != null) {
+            load.setQ0(loadModificationInfos.getReactivePower().applyModification(load.getQ0()));
+        }
+        // TODO connectivity modification
+        return load;
+    }
+
+    private List<EquipmentModificationInfos> execModifyLoad(NetworkStoreListener listener,
+                                                            LoadModificationInfos loadModificationInfos,
+                                                            ReporterModel reporter,
+                                                            Reporter subReporter) {
+        Network network = listener.getNetwork();
+        UUID networkUuid = listener.getNetworkUuid();
+
+        return doAction(listener, () -> {
+            if (listener.isApplyModifications()) {
+                try {
+                    // modify the load in the network
+                    modifyLoad(network, loadModificationInfos);
+
+                    subReporter.report(Report.builder()
+                            .withKey("loadModification")
+                            .withDefaultMessage("Load with id=${id} modified")
+                            .withValue("id", loadModificationInfos.getEquipmentId())
+                            .withSeverity(new TypedValue("LOAD_MODIFICATION_INFO", TypedValue.INFO_LOGLEVEL))
+                            .build());
+                } catch (NetworkModificationException exc) {
+                    subReporter.report(Report.builder()
+                            .withKey("loadModification")
+                            .withDefaultMessage(exc.getMessage())
+                            .withValue("id", loadModificationInfos.getEquipmentId())
+                            .withSeverity(new TypedValue("LOAD_MODIFICATION_ERROR", TypedValue.ERROR_LOGLEVEL))
+                            .build());
+                }
+            }
+
+            // add the load modification entity to the listener
+            listener.storeLoadModification(loadModificationInfos);
+        }, MODIFY_LOAD_ERROR, networkUuid, reporter, subReporter).stream().map(EquipmentModificationInfos.class::cast)
+                .collect(Collectors.toList());
+    }
+
+    public Flux<EquipmentModificationInfos> modifyLoad(UUID networkUuid, String variantId, UUID groupUuid, LoadModificationInfos loadModificationInfos) {
+        return assertLoadModificationInfosOk(loadModificationInfos).thenMany(
+                getNetworkModificationInfos(networkUuid, variantId).flatMapIterable(networkInfos -> {
+                    NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
+                    ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
+                    Reporter subReporter = reporter.createSubReporter("LoadModification", "Load modification");
+
+                    return execModifyLoad(listener, loadModificationInfos, reporter, subReporter);
+                }));
+    }
+
+    private Mono<Void> assertLoadModificationInfosOk(LoadModificationInfos loadModificationInfos) {
+        return loadModificationInfos == null || loadModificationInfos.getEquipmentId() == null ?
+                Mono.error(new NetworkModificationException(MODIFY_LOAD_ERROR, "Missing required attributes to modify the load")) : Mono.empty();
     }
 
     private List<EquipmentDeletionInfos> execDeleteEquipment(NetworkStoreListener listener,
@@ -802,10 +873,10 @@ public class NetworkModificationService {
             .add();
     }
 
-    private List<EquipmenModificationInfos> execCreateGenerator(NetworkStoreListener listener,
-                                                                GeneratorCreationInfos generatorCreationInfos,
-                                                                ReporterModel reporter,
-                                                                Reporter subReporter) {
+    private List<EquipmentModificationInfos> execCreateGenerator(NetworkStoreListener listener,
+                                                                 GeneratorCreationInfos generatorCreationInfos,
+                                                                 ReporterModel reporter,
+                                                                 Reporter subReporter) {
         Network network = listener.getNetwork();
         UUID networkUuid = listener.getNetworkUuid();
 
@@ -829,11 +900,11 @@ public class NetworkModificationService {
 
             // add the generator creation entity to the listener
             listener.storeGeneratorCreation(generatorCreationInfos);
-        }, CREATE_GENERATOR_ERROR, networkUuid, reporter, subReporter).stream().map(EquipmenModificationInfos.class::cast)
+        }, CREATE_GENERATOR_ERROR, networkUuid, reporter, subReporter).stream().map(EquipmentModificationInfos.class::cast)
             .collect(Collectors.toList());
     }
 
-    public Flux<EquipmenModificationInfos> createGenerator(UUID networkUuid, String variantId, UUID groupUuid, GeneratorCreationInfos generatorCreationInfos) {
+    public Flux<EquipmentModificationInfos> createGenerator(UUID networkUuid, String variantId, UUID groupUuid, GeneratorCreationInfos generatorCreationInfos) {
         return assertGeneratorCreationInfosNotEmpty(generatorCreationInfos).thenMany(
             getNetworkModificationInfos(networkUuid, variantId).flatMapIterable(networkInfos -> {
                 NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
@@ -939,10 +1010,10 @@ public class NetworkModificationService {
         return Mono.empty();
     }
 
-    private List<EquipmenModificationInfos> execCreateLine(NetworkStoreListener listener,
-                                                           LineCreationInfos lineCreationInfos,
-                                                           ReporterModel reporter,
-                                                           Reporter subReporter) {
+    private List<EquipmentModificationInfos> execCreateLine(NetworkStoreListener listener,
+                                                            LineCreationInfos lineCreationInfos,
+                                                            ReporterModel reporter,
+                                                            Reporter subReporter) {
         Network network = listener.getNetwork();
         UUID networkUuid = listener.getNetworkUuid();
 
@@ -975,11 +1046,11 @@ public class NetworkModificationService {
 
             // add the line creation entity to the listener
             listener.storeLineCreation(lineCreationInfos);
-        }, CREATE_LINE_ERROR, networkUuid, reporter, subReporter).stream().map(EquipmenModificationInfos.class::cast)
+        }, CREATE_LINE_ERROR, networkUuid, reporter, subReporter).stream().map(EquipmentModificationInfos.class::cast)
             .collect(Collectors.toList());
     }
 
-    public Flux<EquipmenModificationInfos> createLine(UUID networkUuid, String variantId, UUID groupUuid, LineCreationInfos lineCreationInfos) {
+    public Flux<EquipmentModificationInfos> createLine(UUID networkUuid, String variantId, UUID groupUuid, LineCreationInfos lineCreationInfos) {
         return assertLineCreationInfosNotEmpty(lineCreationInfos).thenMany(
             getNetworkModificationInfos(networkUuid, variantId).flatMapIterable(networkInfos -> {
                 NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
@@ -994,10 +1065,10 @@ public class NetworkModificationService {
         return lineCreationInfos == null ? Mono.error(new NetworkModificationException(CREATE_LINE_ERROR, "Missing required attributes to create the line")) : Mono.empty();
     }
 
-    private List<EquipmenModificationInfos> execCreateTwoWindingsTransformer(NetworkStoreListener listener,
-                                                                             TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos,
-                                                                             ReporterModel reporter,
-                                                                             Reporter subReporter) {
+    private List<EquipmentModificationInfos> execCreateTwoWindingsTransformer(NetworkStoreListener listener,
+                                                                              TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos,
+                                                                              ReporterModel reporter,
+                                                                              Reporter subReporter) {
         Network network = listener.getNetwork();
         UUID networkUuid = listener.getNetworkUuid();
 
@@ -1019,11 +1090,11 @@ public class NetworkModificationService {
 
             // add the 2wt creation entity to the listener
             listener.storeTwoWindingsTransformerCreation(twoWindingsTransformerCreationInfos);
-        }, CREATE_TWO_WINDINGS_TRANSFORMER_ERROR, networkUuid, reporter, subReporter).stream().map(EquipmenModificationInfos.class::cast)
+        }, CREATE_TWO_WINDINGS_TRANSFORMER_ERROR, networkUuid, reporter, subReporter).stream().map(EquipmentModificationInfos.class::cast)
             .collect(Collectors.toList());
     }
 
-    public Flux<EquipmenModificationInfos> createTwoWindingsTransformer(UUID networkUuid, String variantId, UUID groupUuid, TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
+    public Flux<EquipmentModificationInfos> createTwoWindingsTransformer(UUID networkUuid, String variantId, UUID groupUuid, TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
         return assertTwoWindingsTransformerCreationInfosNotEmpty(twoWindingsTransformerCreationInfos).thenMany(
             getNetworkModificationInfos(networkUuid, variantId).flatMapIterable(networkInfos -> {
                 NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
@@ -1101,10 +1172,10 @@ public class NetworkModificationService {
         return twoWindingsTransformerCreationInfos == null ? Mono.error(new NetworkModificationException(CREATE_TWO_WINDINGS_TRANSFORMER_ERROR, "Missing required attributes to create the two windings transformer")) : Mono.empty();
     }
 
-    private List<EquipmenModificationInfos> execCreateSubstation(NetworkStoreListener listener,
-                                                                 SubstationCreationInfos substationCreationInfos,
-                                                                 ReporterModel reporter,
-                                                                 Reporter subReporter) {
+    private List<EquipmentModificationInfos> execCreateSubstation(NetworkStoreListener listener,
+                                                                  SubstationCreationInfos substationCreationInfos,
+                                                                  ReporterModel reporter,
+                                                                  Reporter subReporter) {
         Network network = listener.getNetwork();
         UUID networkUuid = listener.getNetworkUuid();
 
@@ -1126,11 +1197,11 @@ public class NetworkModificationService {
 
             // add the substation creation entity to the listener
             listener.storeSubstationCreation(substationCreationInfos);
-        }, CREATE_SUBSTATION_ERROR, networkUuid, reporter, subReporter).stream().map(EquipmenModificationInfos.class::cast)
+        }, CREATE_SUBSTATION_ERROR, networkUuid, reporter, subReporter).stream().map(EquipmentModificationInfos.class::cast)
             .collect(Collectors.toList());
     }
 
-    public Flux<EquipmenModificationInfos> createSubstation(UUID networkUuid, String variantId, UUID groupUuid, SubstationCreationInfos substationCreationInfos) {
+    public Flux<EquipmentModificationInfos> createSubstation(UUID networkUuid, String variantId, UUID groupUuid, SubstationCreationInfos substationCreationInfos) {
         return assertSubstationCreationInfosNotEmpty(substationCreationInfos).thenMany(
                 getNetworkModificationInfos(networkUuid, variantId).flatMapIterable(networkInfos -> {
                     NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
@@ -1161,7 +1232,7 @@ public class NetworkModificationService {
         return substationCreationInfos == null ? Mono.error(new NetworkModificationException(CREATE_SUBSTATION_ERROR, "Missing required attributes to create the substation")) : Mono.empty();
     }
 
-    private List<EquipmenModificationInfos> execCreateVoltageLevel(
+    private List<EquipmentModificationInfos> execCreateVoltageLevel(
         NetworkStoreListener listener, VoltageLevelCreationInfos voltageLevelCreationInfos,
         ReporterModel reporter,
         Reporter subReporter) {
@@ -1275,12 +1346,12 @@ public class NetworkModificationService {
 
             // add the voltage level creation entity to the listener
             listener.storeVoltageLevelCreation(voltageLevelCreationInfos);
-        }, CREATE_VOLTAGE_LEVEL_ERROR, networkUuid, reporter, subReporter).stream().map(EquipmenModificationInfos.class::cast)
+        }, CREATE_VOLTAGE_LEVEL_ERROR, networkUuid, reporter, subReporter).stream().map(EquipmentModificationInfos.class::cast)
             .collect(Collectors.toList());
     }
 
-    public Flux<EquipmenModificationInfos> createVoltageLevel(UUID networkUuid, String variantId, UUID groupUuid,
-        VoltageLevelCreationInfos voltageLevelCreationInfos) {
+    public Flux<EquipmentModificationInfos> createVoltageLevel(UUID networkUuid, String variantId, UUID groupUuid,
+                                                               VoltageLevelCreationInfos voltageLevelCreationInfos) {
 
         return assertVoltageLevelCreationInfosNotEmpty(voltageLevelCreationInfos).thenMany(
             getNetworkModificationInfos(networkUuid, variantId).flatMapIterable(networkInfos -> {
@@ -1389,12 +1460,12 @@ public class NetworkModificationService {
         }
     }
 
-    private List<EquipmenModificationInfos> execChangeEquipmentAttribute(NetworkStoreListener listener,
-                                                                         String equipmentId,
-                                                                         String attributeName,
-                                                                         Object attributeValue,
-                                                                         ReporterModel reporter,
-                                                                         Reporter subReporter) {
+    private List<EquipmentModificationInfos> execChangeEquipmentAttribute(NetworkStoreListener listener,
+                                                                          String equipmentId,
+                                                                          String attributeName,
+                                                                          Object attributeValue,
+                                                                          ReporterModel reporter,
+                                                                          Reporter subReporter) {
         Network network = listener.getNetwork();
         UUID networkUuid = listener.getNetworkUuid();
 
@@ -1422,7 +1493,7 @@ public class NetworkModificationService {
                     // no hvdc line modifications yet
                 }
             }
-        }, MODIFICATION_ERROR, networkUuid, reporter, subReporter).stream().map(EquipmenModificationInfos.class::cast)
+        }, MODIFICATION_ERROR, networkUuid, reporter, subReporter).stream().map(EquipmentModificationInfos.class::cast)
             .collect(Collectors.toList());
     }
 
@@ -1446,9 +1517,9 @@ public class NetworkModificationService {
                 ModificationType type = infos.getType();
                 switch (type) {
                     case EQUIPMENT_ATTRIBUTE_MODIFICATION: {
-                        EquipmenAttributeModificationInfos attributeModificationInfos = (EquipmenAttributeModificationInfos) infos;
+                        EquipmentAttributeModificationInfos attributeModificationInfos = (EquipmentAttributeModificationInfos) infos;
                         Reporter subReporter = reporter.createSubReporter("AttributeModification", "Attribute modification");
-                        List<EquipmenModificationInfos> modificationInfos = execChangeEquipmentAttribute(listener, attributeModificationInfos.getEquipmentId(), attributeModificationInfos.getEquipmentAttributeName(), attributeModificationInfos.getEquipmentAttributeValue(), reporter, subReporter);
+                        List<EquipmentModificationInfos> modificationInfos = execChangeEquipmentAttribute(listener, attributeModificationInfos.getEquipmentId(), attributeModificationInfos.getEquipmentAttributeName(), attributeModificationInfos.getEquipmentAttributeValue(), reporter, subReporter);
                         allModificationsInfos.addAll(modificationInfos);
                     }
                     break;
@@ -1456,7 +1527,15 @@ public class NetworkModificationService {
                     case LOAD_CREATION: {
                         LoadCreationInfos loadCreationInfos = (LoadCreationInfos) infos;
                         Reporter subReporter = reporter.createSubReporter("LoadCreation", "Load creation");
-                        List<EquipmenModificationInfos> modificationInfos = execCreateLoad(listener, loadCreationInfos, reporter, subReporter);
+                        List<EquipmentModificationInfos> modificationInfos = execCreateLoad(listener, loadCreationInfos, reporter, subReporter);
+                        allModificationsInfos.addAll(modificationInfos);
+                    }
+                    break;
+
+                    case LOAD_MODIFICATION: {
+                        LoadModificationInfos loadModificationInfos = (LoadModificationInfos) infos;
+                        Reporter subReporter = reporter.createSubReporter("LoadModification", "Load modification");
+                        List<EquipmentModificationInfos> modificationInfos = execModifyLoad(listener, loadModificationInfos, reporter, subReporter);
                         allModificationsInfos.addAll(modificationInfos);
                     }
                     break;
@@ -1464,7 +1543,7 @@ public class NetworkModificationService {
                     case GENERATOR_CREATION: {
                         GeneratorCreationInfos generatorCreationInfos = (GeneratorCreationInfos) infos;
                         Reporter subReporter = reporter.createSubReporter("GeneratorCreation", "Generator creation");
-                        List<EquipmenModificationInfos> modificationInfos = execCreateGenerator(listener, generatorCreationInfos, reporter, subReporter);
+                        List<EquipmentModificationInfos> modificationInfos = execCreateGenerator(listener, generatorCreationInfos, reporter, subReporter);
                         allModificationsInfos.addAll(modificationInfos);
                     }
                     break;
@@ -1472,7 +1551,7 @@ public class NetworkModificationService {
                     case LINE_CREATION: {
                         LineCreationInfos lineCreationInfos = (LineCreationInfos) infos;
                         Reporter subReporter = reporter.createSubReporter("LineCreation", "Line creation");
-                        List<EquipmenModificationInfos> modificationInfos = execCreateLine(listener, lineCreationInfos, reporter, subReporter);
+                        List<EquipmentModificationInfos> modificationInfos = execCreateLine(listener, lineCreationInfos, reporter, subReporter);
                         allModificationsInfos.addAll(modificationInfos);
                     }
                     break;
@@ -1480,7 +1559,7 @@ public class NetworkModificationService {
                     case TWO_WINDINGS_TRANSFORMER_CREATION: {
                         TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos = (TwoWindingsTransformerCreationInfos) infos;
                         Reporter subReporter = reporter.createSubReporter("TwoWindingsTransformerCreation", "Two windings transformer creation");
-                        List<EquipmenModificationInfos> modificationInfos = execCreateTwoWindingsTransformer(listener, twoWindingsTransformerCreationInfos, reporter, subReporter);
+                        List<EquipmentModificationInfos> modificationInfos = execCreateTwoWindingsTransformer(listener, twoWindingsTransformerCreationInfos, reporter, subReporter);
                         allModificationsInfos.addAll(modificationInfos);
                     }
                     break;
@@ -1504,7 +1583,7 @@ public class NetworkModificationService {
                     case SUBSTATION_CREATION: {
                         SubstationCreationInfos substationCreationInfos = (SubstationCreationInfos) infos;
                         Reporter subReporter = reporter.createSubReporter("SubstationCreation", "Substation creation");
-                        List<EquipmenModificationInfos> modificationInfos = execCreateSubstation(listener, substationCreationInfos, reporter, subReporter);
+                        List<EquipmentModificationInfos> modificationInfos = execCreateSubstation(listener, substationCreationInfos, reporter, subReporter);
                         allModificationsInfos.addAll(modificationInfos);
                     }
                     break;
@@ -1512,7 +1591,7 @@ public class NetworkModificationService {
                     case VOLTAGE_LEVEL_CREATION: {
                         VoltageLevelCreationInfos voltageLevelCreationInfos = (VoltageLevelCreationInfos) infos;
                         Reporter subReporter = reporter.createSubReporter("VoltageLevelCreation", "VoltageLevel creation");
-                        List<EquipmenModificationInfos> modificationInfos = execCreateVoltageLevel(listener, voltageLevelCreationInfos, reporter, subReporter);
+                        List<EquipmentModificationInfos> modificationInfos = execCreateVoltageLevel(listener, voltageLevelCreationInfos, reporter, subReporter);
                         allModificationsInfos.addAll(modificationInfos);
                     }
                     break;
@@ -1527,7 +1606,7 @@ public class NetworkModificationService {
                     case SHUNT_COMPENSATOR_CREATION: {
                         ShuntCompensatorCreationInfos shuntCompensatorCreationInfos = (ShuntCompensatorCreationInfos) infos;
                         Reporter subReporter = reporter.createSubReporter("shuntCompensatorCreation", "Shunt compensator creation");
-                        List<EquipmenModificationInfos> modificationInfos = execCreateShuntCompensator(listener, shuntCompensatorCreationInfos, reporter, subReporter);
+                        List<EquipmentModificationInfos> modificationInfos = execCreateShuntCompensator(listener, shuntCompensatorCreationInfos, reporter, subReporter);
                         allModificationsInfos.addAll(modificationInfos);
                     }
                     break;
@@ -1635,10 +1714,10 @@ public class NetworkModificationService {
         return Mono.empty();
     }
 
-    private List<EquipmenModificationInfos> execCreateShuntCompensator(NetworkStoreListener listener,
-                                                                       ShuntCompensatorCreationInfos shuntCompensatorCreationInfos,
-                                                                       ReporterModel reporter,
-                                                                       Reporter subReporter) {
+    private List<EquipmentModificationInfos> execCreateShuntCompensator(NetworkStoreListener listener,
+                                                                        ShuntCompensatorCreationInfos shuntCompensatorCreationInfos,
+                                                                        ReporterModel reporter,
+                                                                        Reporter subReporter) {
         Network network = listener.getNetwork();
         UUID networkUuid = listener.getNetworkUuid();
 
@@ -1658,11 +1737,11 @@ public class NetworkModificationService {
 
             // add the shunt compensator creation entity to the listener
             listener.storeShuntCompensatorCreation(shuntCompensatorCreationInfos);
-        }, CREATE_SHUNT_COMPENSATOR_ERROR, networkUuid, reporter, subReporter).stream().map(EquipmenModificationInfos.class::cast)
+        }, CREATE_SHUNT_COMPENSATOR_ERROR, networkUuid, reporter, subReporter).stream().map(EquipmentModificationInfos.class::cast)
             .collect(Collectors.toList());
     }
 
-    public Flux<EquipmenModificationInfos> createShuntCompensator(UUID networkUuid, String variantId, UUID groupUuid, ShuntCompensatorCreationInfos shuntCompensatorCreationInfos) {
+    public Flux<EquipmentModificationInfos> createShuntCompensator(UUID networkUuid, String variantId, UUID groupUuid, ShuntCompensatorCreationInfos shuntCompensatorCreationInfos) {
         return assertShuntCompensatorCreationInfosNotEmpty(shuntCompensatorCreationInfos).thenMany(
             getNetworkModificationInfos(networkUuid, variantId).flatMapIterable(networkInfos -> {
                 NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());

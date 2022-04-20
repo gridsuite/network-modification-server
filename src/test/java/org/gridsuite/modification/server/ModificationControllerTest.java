@@ -131,7 +131,7 @@ public class ModificationControllerTest {
 
     @Test
     public void testEquipmentAttributeModificationInfos() {
-        EquipmenAttributeModificationInfos modificationInfos = EquipmenAttributeModificationInfos.builder()
+        EquipmentAttributeModificationInfos modificationInfos = EquipmentAttributeModificationInfos.builder()
                 .uuid(TEST_NETWORK_ID)
                 .date(ZonedDateTime.of(2021, 2, 19, 0, 0, 0, 0, ZoneOffset.UTC))
                 .type(ModificationType.EQUIPMENT_ATTRIBUTE_MODIFICATION)
@@ -140,15 +140,15 @@ public class ModificationControllerTest {
                 .equipmentAttributeName("equipmentAttributeName")
                 .equipmentAttributeValue("equipmentAttributeValue")
                 .build();
-        assertEquals("EquipmenAttributeModificationInfos(super=EquipmenModificationInfos(super=ModificationInfos(uuid=7928181c-7977-4592-ba19-88027e4254e4, date=2021-02-19T00:00Z, type=EQUIPMENT_ATTRIBUTE_MODIFICATION, substationIds=[substationId]), equipmentId=equipmentId), equipmentAttributeName=equipmentAttributeName, equipmentAttributeValue=equipmentAttributeValue)", modificationInfos.toString());
+        assertEquals("EquipmentAttributeModificationInfos(super=EquipmentModificationInfos(super=ModificationInfos(uuid=7928181c-7977-4592-ba19-88027e4254e4, date=2021-02-19T00:00Z, type=EQUIPMENT_ATTRIBUTE_MODIFICATION, substationIds=[substationId]), equipmentId=equipmentId), equipmentAttributeName=equipmentAttributeName, equipmentAttributeValue=equipmentAttributeValue)", modificationInfos.toString());
 
         // switch opening
-        EquipmenAttributeModificationInfos modificationSwitchInfos =
+        EquipmentAttributeModificationInfos modificationSwitchInfos =
                 Objects.requireNonNull(webTestClient.put().uri("/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID + "&open=true", TEST_NETWORK_ID, "v1b1")
                         .exchange()
                         .expectStatus().isOk()
                         .expectHeader().contentType(MediaType.APPLICATION_JSON)
-                        .expectBodyList(EquipmenAttributeModificationInfos.class)
+                        .expectBodyList(EquipmentAttributeModificationInfos.class)
                         .returnResult()
                         .getResponseBody()).get(0);
 
@@ -160,7 +160,7 @@ public class ModificationControllerTest {
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
-                .expectBodyList(EquipmenAttributeModificationInfos.class)
+                .expectBodyList(EquipmentAttributeModificationInfos.class)
                 .returnResult()
                 .getResponseBody()).get(0);
 
@@ -192,7 +192,7 @@ public class ModificationControllerTest {
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
-                .expectBodyList(EquipmenAttributeModificationInfos.class)
+                .expectBodyList(EquipmentAttributeModificationInfos.class)
                 .value(modifications -> modifications.get(0),
                         MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v1b1", Set.of("s1"), "open", true));
 
@@ -237,7 +237,7 @@ public class ModificationControllerTest {
             .exchange()
             .expectStatus().isOk()
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
-            .expectBodyList(EquipmenAttributeModificationInfos.class)
+            .expectBodyList(EquipmentAttributeModificationInfos.class)
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos(switchId1, Set.of(), "open", false));
 
@@ -246,7 +246,7 @@ public class ModificationControllerTest {
             .exchange()
             .expectStatus().isOk()
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
-            .expectBodyList(EquipmenAttributeModificationInfos.class)
+            .expectBodyList(EquipmentAttributeModificationInfos.class)
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos(switchId1, substationsIds, "open", true));
 
@@ -255,7 +255,7 @@ public class ModificationControllerTest {
             .exchange()
             .expectStatus().isOk()
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
-            .expectBodyList(EquipmenAttributeModificationInfos.class)
+            .expectBodyList(EquipmentAttributeModificationInfos.class)
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos(switchId2, substationsIds, "open", false));
 
@@ -264,7 +264,7 @@ public class ModificationControllerTest {
             .exchange()
             .expectStatus().isOk()
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
-            .expectBodyList(EquipmenAttributeModificationInfos.class)
+            .expectBodyList(EquipmentAttributeModificationInfos.class)
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos(switchId3, otherSubstationsIds, "open", true));
 
@@ -288,7 +288,7 @@ public class ModificationControllerTest {
             .exchange()
             .expectStatus().isOk()
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
-            .expectBodyList(EquipmenAttributeModificationInfos.class)
+            .expectBodyList(EquipmentAttributeModificationInfos.class)
             .returnResult().getResponseBody();
         assertNotNull(res);
         assertEquals(1, res.size());
@@ -609,7 +609,7 @@ public class ModificationControllerTest {
             .exchange()
             .expectStatus().isOk()
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
-            .expectBodyList(EquipmenModificationInfos.class)
+            .expectBodyList(EquipmentModificationInfos.class)
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.LOAD_CREATION, "idLoad1", Set.of("s1")));
 
@@ -669,12 +669,12 @@ public class ModificationControllerTest {
         loadCreationInfos.setEquipmentName("nameLoad3");
         loadCreationInfos.setVoltageLevelId("v2");
         loadCreationInfos.setBusOrBusbarSectionId("1B");
-        List<EquipmenModificationInfos> modifications = webTestClient.post().uri(uriString, TEST_NETWORK_ID)
+        List<EquipmentModificationInfos> modifications = webTestClient.post().uri(uriString, TEST_NETWORK_ID)
             .body(BodyInserters.fromValue(loadCreationInfos))
             .exchange()
             .expectStatus().isOk()
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
-            .expectBodyList(EquipmenModificationInfos.class)
+            .expectBodyList(EquipmentModificationInfos.class)
             .returnResult().getResponseBody();
 
         assertTrue(modifications.isEmpty());  // no modifications returned
@@ -697,12 +697,12 @@ public class ModificationControllerTest {
             .reactivePower(30.0)
             .build();
 
-        EquipmenModificationInfos result = webTestClient.post().uri(uriString, TEST_NETWORK_BUS_BREAKER_ID)
+        EquipmentModificationInfos result = webTestClient.post().uri(uriString, TEST_NETWORK_BUS_BREAKER_ID)
             .body(BodyInserters.fromValue(loadCreationInfos))
             .exchange()
             .expectStatus().isOk()
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
-            .expectBodyList(EquipmenModificationInfos.class)
+            .expectBodyList(EquipmentModificationInfos.class)
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.LOAD_CREATION, "idLoad1", Set.of("s1"))).returnResult().getResponseBody().get(0);
 
@@ -758,6 +758,101 @@ public class ModificationControllerTest {
     }
 
     @Test
+    public void testModifyLoad() {
+        String uriString = "/v1/networks/{networkUuid}/loads?group=" + TEST_GROUP_ID;
+
+        LoadModificationInfos loadModificationInfos = LoadModificationInfos.builder()
+                .equipmentId("v1load")
+                .loadType(new AttributeModification<>(LoadType.AUXILIARY, OperationType.SET))
+                .activePower(new AttributeModification<>(100.0, OperationType.SET))
+                .build();
+
+        webTestClient.put().uri(uriString, TEST_NETWORK_ID)
+                .body(BodyInserters.fromValue(loadModificationInfos))
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBodyList(EquipmentModificationInfos.class)
+                .value(modifications -> modifications.get(0),
+                        MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.LOAD_MODIFICATION, "v1load", Set.of("s1")));
+
+        assertNotNull(network.getLoad("v1load"));  // load was modified
+        assertEquals(network.getLoad("v1load").getLoadType(), LoadType.AUXILIARY);
+        assertEquals(network.getLoad("v1load").getP0(), 100.0, 0.1);
+        testNetworkModificationsCount(TEST_GROUP_ID, 1);  // new modification stored in the database
+
+        // modify load with errors
+        webTestClient.put().uri(uriString, NOT_FOUND_NETWORK_ID)
+                .body(BodyInserters.fromValue(loadModificationInfos))
+                .exchange()
+                .expectStatus().isNotFound()
+                .expectBody(String.class)
+                .isEqualTo(new NetworkModificationException(NETWORK_NOT_FOUND, NOT_FOUND_NETWORK_ID.toString()).getMessage());
+
+        loadModificationInfos.setEquipmentId(null);
+        webTestClient.put().uri(uriString, TEST_NETWORK_ID)
+                .body(BodyInserters.fromValue(loadModificationInfos))
+                .exchange()
+                .expectStatus().is5xxServerError()
+                .expectBody(String.class)
+                .isEqualTo(new NetworkModificationException(MODIFY_LOAD_ERROR, "Missing required attributes to modify the load").getMessage());
+
+        loadModificationInfos.setEquipmentId("unknownLoadId");
+        webTestClient.put().uri(uriString, TEST_NETWORK_ID)
+                .body(BodyInserters.fromValue(loadModificationInfos))
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBodyList(EquipmentModificationInfos.class)
+                .value(modifications -> modifications.get(0),
+                        MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.LOAD_MODIFICATION, "unknownLoadId", Set.of()));
+        testNetworkModificationsCount(TEST_GROUP_ID, 2);  // new modification stored in the database
+
+        // Modify all attributes of the load
+        loadModificationInfos = LoadModificationInfos.builder()
+                .equipmentId("v1load")
+                .loadType(new AttributeModification<>(LoadType.FICTITIOUS, OperationType.SET))
+                .equipmentName(new AttributeModification<>("newV1Load", OperationType.SET))
+                .activePower(new AttributeModification<>(80.0, OperationType.SET))
+                .reactivePower(new AttributeModification<>(40.0, OperationType.SET))
+                .voltageLevelId(new AttributeModification<>("newVlId", OperationType.SET))
+                .busOrBusbarSectionId(new AttributeModification<>("newBusbarId", OperationType.SET))
+                .build();
+
+        webTestClient.put().uri(uriString, TEST_NETWORK_ID)
+                .body(BodyInserters.fromValue(loadModificationInfos))
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBodyList(EquipmentModificationInfos.class)
+                .value(modifications -> modifications.get(0),
+                        MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.LOAD_MODIFICATION, "v1load", Set.of("s1")));
+
+        assertNotNull(network.getLoad("v1load"));  // load was modified
+        // TODO uncomment when load name modification will be enabled in Powsybl
+        //assertEquals(network.getLoad("v1load").getNameOrId(), "newV1Load");
+        assertEquals(network.getLoad("v1load").getLoadType(), LoadType.FICTITIOUS);
+        assertEquals(network.getLoad("v1load").getP0(), 80.0, 0.1);
+        assertEquals(network.getLoad("v1load").getQ0(), 40.0, 0.1);
+        // TODO check connectivity when it will be implemented
+        testNetworkModificationsCount(TEST_GROUP_ID, 3);  // new modification stored in the database
+
+        // Unset an attribute that should not be null
+        loadModificationInfos = LoadModificationInfos.builder()
+                .equipmentId("v1load")
+                .loadType(new AttributeModification<>(null, OperationType.UNSET))
+                .build();
+
+        webTestClient.put().uri(uriString, TEST_NETWORK_ID)
+                .body(BodyInserters.fromValue(loadModificationInfos))
+                .exchange()
+                .expectStatus().is5xxServerError()
+                .expectBody(String.class)
+                .isEqualTo(new NetworkModificationException(MODIFY_LOAD_ERROR, "Load 'v1load': load type is null").getMessage());
+
+    }
+
+    @Test
     public void testCreateShuntCompensator() {
         String uriString = "/v1/networks/{networkUuid}/shunt-compensators?group=" + TEST_GROUP_ID;
 
@@ -768,12 +863,12 @@ public class ModificationControllerTest {
             .voltageLevelId("v2").busOrBusbarSectionId("1B")
             .build();
 
-        EquipmenModificationInfos result = webTestClient.post().uri(uriString, TEST_NETWORK_ID)
+        EquipmentModificationInfos result = webTestClient.post().uri(uriString, TEST_NETWORK_ID)
             .body(BodyInserters.fromValue(shunt1))
             .exchange()
             .expectStatus().isOk()
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
-            .expectBodyList(EquipmenModificationInfos.class)
+            .expectBodyList(EquipmentModificationInfos.class)
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.SHUNT_COMPENSATOR_CREATION, "shuntOneId", Set.of("s1")))
                 .returnResult().getResponseBody().get(0);
@@ -846,12 +941,12 @@ public class ModificationControllerTest {
             .voltageSetpoint(225.)
             .build();
 
-        EquipmenModificationInfos result = webTestClient.post().uri(uriString, TEST_NETWORK_ID)
+        EquipmentModificationInfos result = webTestClient.post().uri(uriString, TEST_NETWORK_ID)
             .body(BodyInserters.fromValue(generatorCreationInfos))
             .exchange()
             .expectStatus().isOk()
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
-            .expectBodyList(EquipmenModificationInfos.class)
+            .expectBodyList(EquipmentModificationInfos.class)
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.GENERATOR_CREATION, "idGenerator1", Set.of("s1")))
                 .returnResult().getResponseBody().get(0);
@@ -959,12 +1054,12 @@ public class ModificationControllerTest {
         generatorCreationInfos.setEquipmentName("nameGenerator3");
         generatorCreationInfos.setVoltageLevelId("v2");
         generatorCreationInfos.setBusOrBusbarSectionId("1B");
-        List<EquipmenModificationInfos> modifications = webTestClient.post().uri(uriString, TEST_NETWORK_ID)
+        List<EquipmentModificationInfos> modifications = webTestClient.post().uri(uriString, TEST_NETWORK_ID)
             .body(BodyInserters.fromValue(generatorCreationInfos))
             .exchange()
             .expectStatus().isOk()
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
-            .expectBodyList(EquipmenModificationInfos.class)
+            .expectBodyList(EquipmentModificationInfos.class)
             .returnResult().getResponseBody();
 
         assertTrue(modifications.isEmpty());  // no modifications returned
@@ -997,7 +1092,7 @@ public class ModificationControllerTest {
             .exchange()
             .expectStatus().isOk()
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
-            .expectBodyList(EquipmenModificationInfos.class)
+            .expectBodyList(EquipmentModificationInfos.class)
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.GENERATOR_CREATION, "idGenerator2", Set.of("s1")));
 
@@ -1035,12 +1130,12 @@ public class ModificationControllerTest {
                 .seriesResistance(400)
                 .build();
 
-        EquipmenModificationInfos result = webTestClient.post().uri(uriString, TEST_NETWORK_BUS_BREAKER_ID)
+        EquipmentModificationInfos result = webTestClient.post().uri(uriString, TEST_NETWORK_BUS_BREAKER_ID)
                 .body(BodyInserters.fromValue(twoWindingsTransformerCreationInfos))
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
-                .expectBodyList(EquipmenModificationInfos.class)
+                .expectBodyList(EquipmentModificationInfos.class)
                 .value(modifications -> modifications.get(0),
                         MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.TWO_WINDINGS_TRANSFORMER_CREATION, "id2wt1", Set.of("s1")))
                 .returnResult().getResponseBody().get(0);
@@ -1136,7 +1231,7 @@ public class ModificationControllerTest {
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
-                .expectBodyList(EquipmenModificationInfos.class)
+                .expectBodyList(EquipmentModificationInfos.class)
                 .value(modifications -> modifications.get(0),
                         MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.TWO_WINDINGS_TRANSFORMER_CREATION, "id2wt1", Set.of("s1")));
 
@@ -1148,12 +1243,12 @@ public class ModificationControllerTest {
         uriString = "/v1/networks/{networkUuid}/two-windings-transformers?variantId=" + VARIANT_NOT_EXISTING_ID + "&group=" + TEST_GROUP_ID;
         twoWindingsTransformerCreationInfos.setEquipmentId("id2wt3");
         twoWindingsTransformerCreationInfos.setEquipmentName("name2wt3");
-        List<EquipmenModificationInfos> modifications = webTestClient.post().uri(uriString, TEST_NETWORK_ID)
+        List<EquipmentModificationInfos> modifications = webTestClient.post().uri(uriString, TEST_NETWORK_ID)
             .body(BodyInserters.fromValue(twoWindingsTransformerCreationInfos))
             .exchange()
             .expectStatus().isOk()
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
-            .expectBodyList(EquipmenModificationInfos.class)
+            .expectBodyList(EquipmentModificationInfos.class)
             .returnResult().getResponseBody();
 
         assertTrue(modifications.isEmpty());  // no modifications returned
@@ -1186,7 +1281,7 @@ public class ModificationControllerTest {
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
-                .expectBodyList(EquipmenModificationInfos.class)
+                .expectBodyList(EquipmentModificationInfos.class)
                 .value(modifications -> modifications.get(0),
                         MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.TWO_WINDINGS_TRANSFORMER_CREATION, "id2wt1", Set.of("s1")));
 
@@ -1576,13 +1671,13 @@ public class ModificationControllerTest {
             .exchange()
             .expectStatus().isOk()
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
-            .expectBodyList(EquipmenAttributeModificationInfos.class)
+            .expectBodyList(EquipmentAttributeModificationInfos.class)
             .returnResult().getResponseBody();
         webTestClient.put().uri("/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID + "&open=true", TEST_NETWORK_ID, "v1b1")
             .exchange()
             .expectStatus().isOk()
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
-            .expectBodyList(EquipmenAttributeModificationInfos.class)
+            .expectBodyList(EquipmentAttributeModificationInfos.class)
             .returnResult().getResponseBody();
 
         var modificationList = networkModificationService.getModifications(TEST_GROUP_ID, true).map(ModificationInfos::getUuid).collectList().block();
@@ -1623,14 +1718,14 @@ public class ModificationControllerTest {
             .busOrBusbarSectionId2("1A")
             .build();
 
-        assertEquals("LineCreationInfos(super=BranchCreationInfos(super=EquipmentCreationInfos(super=EquipmenModificationInfos(super=ModificationInfos(uuid=null, date=null, type=null, substationIds=[]), equipmentId=idLine4), equipmentName=nameLine4), seriesResistance=100.0, seriesReactance=100.0, voltageLevelId1=v1, voltageLevelId2=v2, busOrBusbarSectionId1=1.1, busOrBusbarSectionId2=1A, currentLimits1=null, currentLimits2=null), shuntConductance1=10.0, shuntSusceptance1=10.0, shuntConductance2=20.0, shuntSusceptance2=20.0)", lineCreationInfos.toString());
+        assertEquals("LineCreationInfos(super=BranchCreationInfos(super=EquipmentCreationInfos(super=EquipmentModificationInfos(super=ModificationInfos(uuid=null, date=null, type=null, substationIds=[]), equipmentId=idLine4), equipmentName=nameLine4), seriesResistance=100.0, seriesReactance=100.0, voltageLevelId1=v1, voltageLevelId2=v2, busOrBusbarSectionId1=1.1, busOrBusbarSectionId2=1A, currentLimits1=null, currentLimits2=null), shuntConductance1=10.0, shuntSusceptance1=10.0, shuntConductance2=20.0, shuntSusceptance2=20.0)", lineCreationInfos.toString());
 
-        EquipmenModificationInfos result = webTestClient.post().uri(uriString, TEST_NETWORK_ID)
+        EquipmentModificationInfos result = webTestClient.post().uri(uriString, TEST_NETWORK_ID)
             .body(BodyInserters.fromValue(lineCreationInfos))
             .exchange()
             .expectStatus().isOk()
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
-            .expectBodyList(EquipmenModificationInfos.class)
+            .expectBodyList(EquipmentModificationInfos.class)
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.LINE_CREATION, "idLine4", Set.of("s1")))
                 .returnResult().getResponseBody().get(0);
@@ -1749,12 +1844,12 @@ public class ModificationControllerTest {
         uriString = "/v1/networks/{networkUuid}/lines?variantId=" + VARIANT_NOT_EXISTING_ID + "&group=" + TEST_GROUP_ID;
         lineCreationInfos.setEquipmentId("idLine5");
         lineCreationInfos.setEquipmentName("nameLine5");
-        List<EquipmenModificationInfos> modifications = webTestClient.post().uri(uriString, TEST_NETWORK_ID)
+        List<EquipmentModificationInfos> modifications = webTestClient.post().uri(uriString, TEST_NETWORK_ID)
             .body(BodyInserters.fromValue(lineCreationInfos))
             .exchange()
             .expectStatus().isOk()
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
-            .expectBodyList(EquipmenModificationInfos.class)
+            .expectBodyList(EquipmentModificationInfos.class)
             .returnResult().getResponseBody();
 
         assertTrue(modifications.isEmpty());  // no modifications returned
@@ -1789,7 +1884,7 @@ public class ModificationControllerTest {
             .exchange()
             .expectStatus().isOk()
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
-            .expectBodyList(EquipmenModificationInfos.class)
+            .expectBodyList(EquipmentModificationInfos.class)
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.LINE_CREATION, "idLine1", Set.of("s1", "s2")));
 
@@ -1834,7 +1929,7 @@ public class ModificationControllerTest {
             .exchange()
             .expectStatus().isOk()
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
-            .expectBodyList(EquipmenModificationInfos.class)
+            .expectBodyList(EquipmentModificationInfos.class)
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.LINE_CREATION, "idLine1", Set.of("s1", "s2")));
 
@@ -1884,7 +1979,7 @@ public class ModificationControllerTest {
             .exchange()
             .expectStatus().isOk()
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
-            .expectBodyList(EquipmenModificationInfos.class)
+            .expectBodyList(EquipmentModificationInfos.class)
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.LINE_CREATION, "idLine1", Set.of("s1", "s2")));
 
@@ -1900,7 +1995,7 @@ public class ModificationControllerTest {
             .exchange()
             .expectStatus().isOk()
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
-            .expectBodyList(EquipmenModificationInfos.class)
+            .expectBodyList(EquipmentModificationInfos.class)
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.LINE_CREATION, "idLine1", Set.of("s1", "s2")));
 
@@ -1923,7 +2018,7 @@ public class ModificationControllerTest {
             .exchange()
             .expectStatus().isOk()
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
-            .expectBodyList(EquipmenModificationInfos.class)
+            .expectBodyList(EquipmentModificationInfos.class)
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.LINE_CREATION, "idLine2", Set.of("s1", "s2")));
 
@@ -1937,7 +2032,7 @@ public class ModificationControllerTest {
             .exchange()
             .expectStatus().isOk()
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
-            .expectBodyList(EquipmenModificationInfos.class)
+            .expectBodyList(EquipmentModificationInfos.class)
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.LINE_CREATION, "idLine2", Set.of("s1", "s2")));
 
@@ -1975,14 +2070,14 @@ public class ModificationControllerTest {
                 .equipmentName("SubstationName")
                 .substationCountry(Country.AF)
                 .build();
-        assertEquals("SubstationCreationInfos(super=EquipmentCreationInfos(super=EquipmenModificationInfos(super=ModificationInfos(uuid=null, date=null, type=null, substationIds=[]), equipmentId=SubstationId), equipmentName=SubstationName), substationCountry=AF)", substationCreationInfos.toString());
+        assertEquals("SubstationCreationInfos(super=EquipmentCreationInfos(super=EquipmentModificationInfos(super=ModificationInfos(uuid=null, date=null, type=null, substationIds=[]), equipmentId=SubstationId), equipmentName=SubstationName), substationCountry=AF)", substationCreationInfos.toString());
 
-        EquipmenModificationInfos result = webTestClient.post().uri(uriString, TEST_NETWORK_ID)
+        EquipmentModificationInfos result = webTestClient.post().uri(uriString, TEST_NETWORK_ID)
                 .body(BodyInserters.fromValue(substationCreationInfos))
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
-                .expectBodyList(EquipmenModificationInfos.class)
+                .expectBodyList(EquipmentModificationInfos.class)
                 .value(modifications -> modifications.get(0),
                         MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.SUBSTATION_CREATION, "SubstationId", Set.of("SubstationId")))
                 .returnResult().getResponseBody().get(0);
@@ -2082,12 +2177,12 @@ public class ModificationControllerTest {
             .busbarConnections(busbarConnectionInfos)
             .build();
 
-        EquipmenModificationInfos result = webTestClient.post().uri(uriString, TEST_NETWORK_ID)
+        EquipmentModificationInfos result = webTestClient.post().uri(uriString, TEST_NETWORK_ID)
             .body(BodyInserters.fromValue(vli))
             .exchange()
             .expectStatus().isOk()
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
-            .expectBodyList(EquipmenModificationInfos.class)
+            .expectBodyList(EquipmentModificationInfos.class)
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.VOLTAGE_LEVEL_CREATION, "VoltageLevelId", Set.of("s1")))
                 .returnResult().getResponseBody().get(0);

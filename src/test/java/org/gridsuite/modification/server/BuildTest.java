@@ -157,7 +157,7 @@ public class BuildTest {
         entities1.add(modificationRepository.createEquipmentAttributeModification("idGenerator", "targetP", 50.));
         entities1.add(modificationRepository.createEquipmentAttributeModification("trf1", "ratioTapChanger.tapPosition", 2));
         entities1.add(modificationRepository.createEquipmentAttributeModification("trf6", "phaseTapChanger1.tapPosition", 0));
-        entities1.add(modificationRepository.createLoadEntity("newLoad", "newLoad", LoadType.AUXILIARY, "v1", "1.1", 10., 20.));
+        entities1.add(modificationRepository.createLoadCreationEntity("newLoad", "newLoad", LoadType.AUXILIARY, "v1", "1.1", 10., 20.));
         entities1.add(modificationRepository.createSubstationEntity("newSubstation", "newSubstation", Country.FR));
 
         List<ModificationEntity> entities2 = new ArrayList<>();
