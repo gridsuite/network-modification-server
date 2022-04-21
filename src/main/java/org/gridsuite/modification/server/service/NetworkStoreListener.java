@@ -252,12 +252,13 @@ public class NetworkStoreListener implements NetworkListener {
             new BusbarSectionCreationEmbeddable(bbsi.getId(), bbsi.getName(), bbsi.getVertPos(), bbsi.getHorizPos())
         ).collect(Collectors.toList());
         List<BusbarConnectionCreationEmbeddable> cnxEmbeddables;
-        if (voltageLevelCreationInfos.getBusbarConnections() == null)
+        if (voltageLevelCreationInfos.getBusbarConnections() == null) {
             cnxEmbeddables = Collections.emptyList();
-        else
+        } else {
             cnxEmbeddables = voltageLevelCreationInfos.getBusbarConnections().stream().map(cnxi ->
                 new BusbarConnectionCreationEmbeddable(cnxi.getFromBBS(), cnxi.getToBBS(), cnxi.getSwitchKind())
             ).collect(Collectors.toList());
+        }
         VoltageLevelCreationEntity voltageLevelEntity = modificationRepository.createVoltageLevelEntity(
             voltageLevelCreationInfos.getEquipmentId(),
             voltageLevelCreationInfos.getEquipmentName(),
@@ -326,7 +327,7 @@ public class NetworkStoreListener implements NetworkListener {
             lineSplitWithVoltageLevelInfos.getLineToSplitId(),
             lineSplitWithVoltageLevelInfos.getPercent(),
             mayNewVoltageLevelInfos == null ? null : makeVoltageLevelCreationEntity(
-                this.modificationRepository,mayNewVoltageLevelInfos),
+                this.modificationRepository, mayNewVoltageLevelInfos),
             lineSplitWithVoltageLevelInfos.getExistingVoltageLevelId(),
             lineSplitWithVoltageLevelInfos.getBbsOrBusId(),
             lineSplitWithVoltageLevelInfos.getNewLine1Id(),
