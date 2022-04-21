@@ -184,7 +184,7 @@ public class NetworkModificationRepository {
         return count;
     }
 
-    public void updateModification(EquipmentCreationEntity equipmentCreationEntity) {
+    public void updateModification(ModificationEntity equipmentCreationEntity) {
         this.modificationRepository.save(equipmentCreationEntity);
     }
 

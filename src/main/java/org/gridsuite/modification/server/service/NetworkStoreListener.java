@@ -241,18 +241,24 @@ public class NetworkStoreListener implements NetworkListener {
 
     public void storeVoltageLevelCreation(VoltageLevelCreationInfos voltageLevelCreationInfos) {
         VoltageLevelCreationEntity voltageLevelEntity = makeVoltageLevelCreationEntity(
+            this.modificationRepository,
             voltageLevelCreationInfos);
         modifications.add(voltageLevelEntity);
     }
 
-    private VoltageLevelCreationEntity makeVoltageLevelCreationEntity(VoltageLevelCreationInfos voltageLevelCreationInfos) {
+    public static VoltageLevelCreationEntity makeVoltageLevelCreationEntity(NetworkModificationRepository modificationRepository,
+        VoltageLevelCreationInfos voltageLevelCreationInfos) {
         List<BusbarSectionCreationEmbeddable> bbsEmbeddables = voltageLevelCreationInfos.getBusbarSections().stream().map(bbsi ->
             new BusbarSectionCreationEmbeddable(bbsi.getId(), bbsi.getName(), bbsi.getVertPos(), bbsi.getHorizPos())
         ).collect(Collectors.toList());
-        List<BusbarConnectionCreationEmbeddable> cnxEmbeddables = voltageLevelCreationInfos.getBusbarConnections().stream().map(cnxi ->
-            new BusbarConnectionCreationEmbeddable(cnxi.getFromBBS(), cnxi.getToBBS(), cnxi.getSwitchKind())
-        ).collect(Collectors.toList());
-        VoltageLevelCreationEntity voltageLevelEntity = this.modificationRepository.createVoltageLevelEntity(
+        List<BusbarConnectionCreationEmbeddable> cnxEmbeddables;
+        if (voltageLevelCreationInfos.getBusbarConnections() == null)
+            cnxEmbeddables = Collections.emptyList();
+        else
+            cnxEmbeddables = voltageLevelCreationInfos.getBusbarConnections().stream().map(cnxi ->
+                new BusbarConnectionCreationEmbeddable(cnxi.getFromBBS(), cnxi.getToBBS(), cnxi.getSwitchKind())
+            ).collect(Collectors.toList());
+        VoltageLevelCreationEntity voltageLevelEntity = modificationRepository.createVoltageLevelEntity(
             voltageLevelCreationInfos.getEquipmentId(),
             voltageLevelCreationInfos.getEquipmentName(),
             voltageLevelCreationInfos.getNominalVoltage(),
@@ -319,7 +325,8 @@ public class NetworkStoreListener implements NetworkListener {
         modifications.add(this.modificationRepository.lineSplitWithVoltageLevelEntity(
             lineSplitWithVoltageLevelInfos.getLineToSplitId(),
             lineSplitWithVoltageLevelInfos.getPercent(),
-            mayNewVoltageLevelInfos == null ? null : makeVoltageLevelCreationEntity(mayNewVoltageLevelInfos),
+            mayNewVoltageLevelInfos == null ? null : makeVoltageLevelCreationEntity(
+                this.modificationRepository,mayNewVoltageLevelInfos),
             lineSplitWithVoltageLevelInfos.getExistingVoltageLevelId(),
             lineSplitWithVoltageLevelInfos.getBbsOrBusId(),
             lineSplitWithVoltageLevelInfos.getNewLine1Id(),

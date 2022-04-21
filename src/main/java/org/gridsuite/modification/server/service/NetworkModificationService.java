@@ -30,6 +30,7 @@ import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.BusbarConnectionCreationEmbeddable;
 import org.gridsuite.modification.server.entities.equipment.creation.BusbarSectionCreationEmbeddable;
 import org.gridsuite.modification.server.entities.equipment.creation.EquipmentCreationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.LineSplitWithVoltageLevelEntity;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.slf4j.Logger;
@@ -1280,70 +1281,74 @@ public class NetworkModificationService {
         }
 
         int cnxRank = 1;
-        for (BusbarConnectionCreationInfos bbsci : voltageLevelCreationInfos.getBusbarConnections()) {
-            String fromBBSId = bbsci.getFromBBS();
-            Integer rank1 = idToNodeRank.get(fromBBSId);
-            if (rank1 == null) {
-                throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "From side '" + fromBBSId + "' unknown");
-            }
+        List<BusbarConnectionCreationInfos> busbarConnections = voltageLevelCreationInfos.getBusbarConnections();
+        // js empty [] seems to be decoded null on java side some times -> temporary (?) protection
+        if (busbarConnections != null) {
+            for (BusbarConnectionCreationInfos bbsci : busbarConnections) {
+                String fromBBSId = bbsci.getFromBBS();
+                Integer rank1 = idToNodeRank.get(fromBBSId);
+                if (rank1 == null) {
+                    throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "From side '" + fromBBSId + "' unknown");
+                }
 
-            String toBBSId = bbsci.getToBBS();
-            Integer rank2 = idToNodeRank.get(toBBSId);
-            if (rank2 == null) {
-                throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "To side '" + toBBSId + "' unknown");
-            }
+                String toBBSId = bbsci.getToBBS();
+                Integer rank2 = idToNodeRank.get(toBBSId);
+                if (rank2 == null) {
+                    throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "To side '" + toBBSId + "' unknown");
+                }
 
-            SwitchKind switchKind = bbsci.getSwitchKind();
-            if (switchKind == SwitchKind.DISCONNECTOR && fromBBSId.equals(toBBSId)) {
-                throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR,
-                    "Disconnector between same bus bar section '" + toBBSId + "'");
-            }
+                SwitchKind switchKind = bbsci.getSwitchKind();
+                if (switchKind == SwitchKind.DISCONNECTOR && fromBBSId.equals(toBBSId)) {
+                    throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR,
+                        "Disconnector between same bus bar section '" + toBBSId + "'");
+                }
 
-            String infix = voltageLevelCreationInfos.getEquipmentId() + "_" + fromBBSId + "_" + toBBSId + "_";
-            if (switchKind == SwitchKind.BREAKER) {
-                int preBreakerRank = nodeRank++;
-                int postBreakerRank = nodeRank++;
-                voltageLevel.getNodeBreakerView().newDisconnector()
-                    .setKind(SwitchKind.DISCONNECTOR)
-                    .setId("disconnector_" + infix + cnxRank++)
-                    .setNode1(rank1)
-                    .setNode2(preBreakerRank)
-                    .setFictitious(false)
-                    .setRetained(false)
-                    .setOpen(false)
-                    .add();
+                String infix = voltageLevelCreationInfos.getEquipmentId() + "_" + fromBBSId + "_" + toBBSId + "_";
+                if (switchKind == SwitchKind.BREAKER) {
+                    int preBreakerRank = nodeRank++;
+                    int postBreakerRank = nodeRank++;
+                    voltageLevel.getNodeBreakerView().newDisconnector()
+                        .setKind(SwitchKind.DISCONNECTOR)
+                        .setId("disconnector_" + infix + cnxRank++)
+                        .setNode1(rank1)
+                        .setNode2(preBreakerRank)
+                        .setFictitious(false)
+                        .setRetained(false)
+                        .setOpen(false)
+                        .add();
 
-                voltageLevel.getNodeBreakerView().newBreaker()
-                    .setKind(switchKind)
-                    .setId("breaker_" + infix + cnxRank++)
-                    .setNode1(preBreakerRank)
-                    .setNode2(postBreakerRank)
-                    .setFictitious(false)
-                    .setRetained(false)
-                    .setOpen(false)
-                    .add();
+                    voltageLevel.getNodeBreakerView().newBreaker()
+                        .setKind(switchKind)
+                        .setId("breaker_" + infix + cnxRank++)
+                        .setNode1(preBreakerRank)
+                        .setNode2(postBreakerRank)
+                        .setFictitious(false)
+                        .setRetained(false)
+                        .setOpen(false)
+                        .add();
 
-                voltageLevel.getNodeBreakerView().newDisconnector()
-                    .setKind(SwitchKind.DISCONNECTOR)
-                    .setId("disconnector_" + infix + cnxRank++)
-                    .setNode1(postBreakerRank)
-                    .setNode2(rank2)
-                    .setFictitious(false)
-                    .setRetained(false)
-                    .setOpen(false)
-                    .add();
-            } else if (switchKind == SwitchKind.DISCONNECTOR) {
-                voltageLevel.getNodeBreakerView().newDisconnector()
-                    .setKind(switchKind)
-                    .setId("disconnector_" + infix + cnxRank++)
-                    .setNode1(rank1)
-                    .setNode2(rank2)
-                    .setFictitious(false)
-                    .setRetained(false)
-                    .setOpen(false)
-                    .add();
-            } else {
-                throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "Swich kind '" + switchKind + "' unknown");
+                    voltageLevel.getNodeBreakerView().newDisconnector()
+                        .setKind(SwitchKind.DISCONNECTOR)
+                        .setId("disconnector_" + infix + cnxRank++)
+                        .setNode1(postBreakerRank)
+                        .setNode2(rank2)
+                        .setFictitious(false)
+                        .setRetained(false)
+                        .setOpen(false)
+                        .add();
+                } else if (switchKind == SwitchKind.DISCONNECTOR) {
+                    voltageLevel.getNodeBreakerView().newDisconnector()
+                        .setKind(switchKind)
+                        .setId("disconnector_" + infix + cnxRank++)
+                        .setNode1(rank1)
+                        .setNode2(rank2)
+                        .setFictitious(false)
+                        .setRetained(false)
+                        .setOpen(false)
+                        .add();
+                } else {
+                    throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "Swich kind '" + switchKind + "' unknown");
+                }
             }
         }
 
@@ -1825,7 +1830,7 @@ public class NetworkModificationService {
             .collect(Collectors.toList());
     }
 
-    public Flux<ModificationInfos> lineSplitWithVoltageLevel(UUID networkUuid, String variantId, UUID groupUuid,
+    public Flux<ModificationInfos> createLineSplitWithVoltageLevel(UUID networkUuid, String variantId, UUID groupUuid,
         LineSplitWithVoltageLevelInfos lineSplitWithVoltageLevelInfos) {
         return assertLineSplitWithVoltageLevelInfosNotEmpty(lineSplitWithVoltageLevelInfos).thenMany(
             getNetworkModificationInfos(networkUuid, variantId).flatMapIterable(networkInfos -> {
@@ -1835,5 +1840,35 @@ public class NetworkModificationService {
 
                 return execSplitLineWithVoltageLevel(listener, lineSplitWithVoltageLevelInfos, reporter, subReporter);
             }));
+    }
+
+    public Mono<Void> updateLineSplitWithVoltageLevel(UUID modificationUuid, LineSplitWithVoltageLevelInfos lineSplitWithVoltageLevelInfos) {
+        assertLineSplitWithVoltageLevelInfosNotEmpty(lineSplitWithVoltageLevelInfos).subscribe();
+
+        Optional<ModificationEntity> lineSplitWithVoltageLevelEntity = this.modificationRepository.findById(modificationUuid);
+
+        if (!lineSplitWithVoltageLevelEntity.isPresent()) {
+            return Mono.error(new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "Line split not found"));
+        }
+
+        VoltageLevelCreationInfos mayNewVoltageLevelInfos = lineSplitWithVoltageLevelInfos.getMayNewVoltageLevelInfos();
+
+        LineSplitWithVoltageLevelEntity updatedEntity = this.networkModificationRepository.lineSplitWithVoltageLevelEntity(
+
+            lineSplitWithVoltageLevelInfos.getLineToSplitId(),
+            lineSplitWithVoltageLevelInfos.getPercent(),
+            mayNewVoltageLevelInfos == null ? null : NetworkStoreListener.makeVoltageLevelCreationEntity(
+                networkModificationRepository, mayNewVoltageLevelInfos),
+            lineSplitWithVoltageLevelInfos.getExistingVoltageLevelId(),
+            lineSplitWithVoltageLevelInfos.getBbsOrBusId(),
+            lineSplitWithVoltageLevelInfos.getNewLine1Id(),
+            lineSplitWithVoltageLevelInfos.getNewLine1Name(),
+            lineSplitWithVoltageLevelInfos.getNewLine2Id(),
+            lineSplitWithVoltageLevelInfos.getNewLine2Name()
+        );
+        updatedEntity.setId(modificationUuid);
+        updatedEntity.setGroup(lineSplitWithVoltageLevelEntity.get().getGroup());
+        this.networkModificationRepository.updateModification(updatedEntity);
+        return Mono.empty();
     }
 }

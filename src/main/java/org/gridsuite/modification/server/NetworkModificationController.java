@@ -282,7 +282,15 @@ public class NetworkModificationController {
         @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
         @RequestParam(value = "group", required = false) UUID groupUuid,
         @RequestBody LineSplitWithVoltageLevelInfos lineSplitWithVoltageLevelInfos) {
-        return ResponseEntity.ok().body(networkModificationService.lineSplitWithVoltageLevel(networkUuid, variantId, groupUuid, lineSplitWithVoltageLevelInfos));
+        return ResponseEntity.ok().body(networkModificationService.createLineSplitWithVoltageLevel(networkUuid, variantId, groupUuid, lineSplitWithVoltageLevelInfos));
+    }
+
+    @PutMapping(value = "/modifications/{modificationUuid}/line-splits", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "update a line split")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The voltage level creation has been updated")})
+    public ResponseEntity<Mono<Void>> updateLineSplitWithVoltageLevel(@PathVariable("modificationUuid") UUID modificationUuid,
+        @RequestBody LineSplitWithVoltageLevelInfos lineSplitWithVoltageLevelInfos) {
+        return ResponseEntity.ok().body(networkModificationService.updateLineSplitWithVoltageLevel(modificationUuid, lineSplitWithVoltageLevelInfos));
     }
 
     @PostMapping(value = "/networks/{networkUuid}/build")
