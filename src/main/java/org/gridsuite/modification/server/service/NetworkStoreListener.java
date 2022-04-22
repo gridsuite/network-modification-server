@@ -7,6 +7,8 @@
 package org.gridsuite.modification.server.service;
 
 import com.powsybl.iidm.network.*;
+
+import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
@@ -17,6 +19,9 @@ import org.gridsuite.modification.server.repositories.NetworkModificationReposit
 
 import java.util.*;
 import java.util.stream.Collectors;
+
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -37,6 +42,8 @@ public class NetworkStoreListener implements NetworkListener {
     private final List<ModificationEntity> modifications = new LinkedList<>();
 
     private Set<String> substationsIds = new HashSet<>();
+
+    private List<EquipmentDeletionInfos> deletions = new ArrayList<>();
 
     private boolean isBuild;
 
@@ -134,6 +141,10 @@ public class NetworkStoreListener implements NetworkListener {
                     .map(ModificationEntity::getId)
                     .collect(Collectors.toSet()));
         }
+    }
+
+    public Collection<EquipmentDeletionInfos> getDeletions() {
+        return Collections.unmodifiableCollection(deletions);
     }
 
     public void storeEquipmentAttributeModification(Identifiable<?> identifiable, String attributeName, Object attributeValue) {
@@ -297,7 +308,15 @@ public class NetworkStoreListener implements NetworkListener {
 
     @Override
     public void beforeRemoval(Identifiable identifiable) {
-        // nothing to do
+        EquipmentDeletionInfos di = EquipmentDeletionInfos
+            .builder()
+            .uuid(null) // not in "this" db, transient
+            .date(ZonedDateTime.now(ZoneOffset.UTC))
+            .type(ModificationType.EQUIPMENT_DELETION)
+            .equipmentId(identifiable.getId())
+            .equipmentType(identifiable.getType().name())
+            .build();
+        this.deletions.add(di);
     }
 
     @Override

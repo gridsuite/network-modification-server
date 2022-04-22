@@ -46,6 +46,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.vladmihalcea.sql.SQLStatementCountValidator.*;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
@@ -559,7 +560,7 @@ public class ModificationRepositoryTest {
 
     @Test
     public void testVoltageLevelCreation() {
-        VoltageLevelCreationEntity createVoltLvlEntity1 = makeAVoltageLevelEntity();
+        VoltageLevelCreationEntity createVoltLvlEntity1 = makeAVoltageLevelEntity(3, 3);
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(createVoltLvlEntity1));
         List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false);
@@ -581,16 +582,25 @@ public class ModificationRepositoryTest {
         );
     }
 
-    private VoltageLevelCreationEntity makeAVoltageLevelEntity() {
-        List<BusbarSectionCreationEmbeddable> bbses = new ArrayList<>();
-        bbses.add(new BusbarSectionCreationEmbeddable("bbs.nw", "NW", 1, 1));
-        bbses.add(new BusbarSectionCreationEmbeddable("bbs.ne", "NE", 1, 2));
-        bbses.add(new BusbarSectionCreationEmbeddable("bbs.sw", "SW", 2, 1));
+    private VoltageLevelCreationEntity makeAVoltageLevelEntity(int nbBBSs, int nbCnxs) {
+        List<BusbarSectionCreationEmbeddable> bbses;
+        if (nbBBSs < 0) {
+            bbses = null;
+        } else {
+            bbses = new ArrayList<>();
+            Stream.iterate(1, n -> n + 1).limit(nbBBSs + 1).forEach(i -> bbses.add(new BusbarSectionCreationEmbeddable("bbs" + i, "NW", 1 + i, 1)));
+        }
 
-        List<BusbarConnectionCreationEmbeddable> cnxes = new ArrayList<>();
-        cnxes.add(new BusbarConnectionCreationEmbeddable("bbs.nw", "bbs.ne", SwitchKind.BREAKER));
-        cnxes.add(new BusbarConnectionCreationEmbeddable("bbs.nw", "bbs.sw", SwitchKind.DISCONNECTOR));
-        cnxes.add(new BusbarConnectionCreationEmbeddable("bbs.ne", "bbs.ne", SwitchKind.DISCONNECTOR));
+        List<BusbarConnectionCreationEmbeddable> cnxes;
+        if (nbCnxs < 0) {
+            cnxes = null;
+        } else {
+            cnxes = new ArrayList<>();
+            Stream.iterate(0, n -> n + 1).limit(nbBBSs).forEach(i -> {
+                cnxes.add(new BusbarConnectionCreationEmbeddable("bbs.nw", "bbs.ne", SwitchKind.BREAKER));
+                cnxes.add(new BusbarConnectionCreationEmbeddable("bbs.nw", "bbs.ne", SwitchKind.DISCONNECTOR));
+            });
+        }
 
         VoltageLevelCreationEntity createVoltLvlEntity1 = networkModificationRepository.createVoltageLevelEntity("idVL1", "VLName", 379.0, "s1", bbses, cnxes);
         return createVoltLvlEntity1;
@@ -639,7 +649,7 @@ public class ModificationRepositoryTest {
         LineSplitWithVoltageLevelEntity lineSplitEntity1 = networkModificationRepository.lineSplitWithVoltageLevelEntity(
             "lineId0", 30.0, null, "vl1", "bbsId", "line1id", "line1Name", "line2Id", "line2Name"
         );
-        VoltageLevelCreationEntity voltageLevelCreationEntity = makeAVoltageLevelEntity();
+        VoltageLevelCreationEntity voltageLevelCreationEntity = makeAVoltageLevelEntity(1, 0);
         LineSplitWithVoltageLevelEntity lineSplitEntity2 = networkModificationRepository.lineSplitWithVoltageLevelEntity(
             "lineId0", 30.0, voltageLevelCreationEntity, null, "bbsId", "line1id", "line1Name", "line2Id", "line2Name"
         );

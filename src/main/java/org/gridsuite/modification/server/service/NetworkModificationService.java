@@ -1788,7 +1788,7 @@ public class NetworkModificationService {
         Network network = listener.getNetwork();
         UUID networkUuid = listener.getNetworkUuid();
 
-        return doAction(listener, () -> {
+        List<ModificationInfos> inspectable = doAction(listener, () -> {
             if (listener.isApplyModifications()) {
                 Line line = network.getLine(lineSplitWithVoltageLevelInfos.getLineToSplitId());
                 if (line == null) {
@@ -1828,6 +1828,8 @@ public class NetworkModificationService {
             listener.storeLineSplitWithVoltageLevelInfos(lineSplitWithVoltageLevelInfos);
         }, LINE_SPLIT_ERROR, networkUuid, reporter, subReporter).stream().map(ModificationInfos.class::cast)
             .collect(Collectors.toList());
+        inspectable.addAll(listener.getDeletions());
+        return inspectable;
     }
 
     public Flux<ModificationInfos> createLineSplitWithVoltageLevel(UUID networkUuid, String variantId, UUID groupUuid,
