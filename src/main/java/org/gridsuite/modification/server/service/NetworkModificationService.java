@@ -779,9 +779,9 @@ public class NetworkModificationService {
                 // On substation deletion, the substation id isn't set in the substations to be updated.
                 // If later we handle automatic lines deletion (i.e. on substation deletion, we remove all the lines connected to the substation), we'll have to set
                 // the adjacent substations in the substations to be updated.
-                if (!(identifiable instanceof Substation)) {
-                    listener.addSubstationsIds(identifiable);
-                }
+                //if (!(identifiable instanceof Substation)) {
+                //    listener.addSubstationsIds(identifiable);
+                //}
 
                 if (identifiable instanceof Connectable) {
                     ((Connectable) identifiable).remove(true);
@@ -1849,7 +1849,7 @@ public class NetworkModificationService {
         Optional<ModificationEntity> lineSplitWithVoltageLevelEntity = this.modificationRepository.findById(modificationUuid);
 
         if (lineSplitWithVoltageLevelEntity.isEmpty()) {
-            return Mono.error(new NetworkModificationException(LINE_SPLIT_ERROR, "Line split not found"));
+            return Mono.error(new NetworkModificationException(LINE_SPLIT_NOT_FOUND, "Line split not found"));
         }
 
         VoltageLevelCreationInfos mayNewVoltageLevelInfos = lineSplitWithVoltageLevelInfos.getMayNewVoltageLevelInfos();
