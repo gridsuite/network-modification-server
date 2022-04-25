@@ -27,7 +27,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Getter
 @Entity
-@Table
+@Table(name = "LineSplitWithVoltageLevel")
 public class LineSplitWithVoltageLevelEntity  extends ModificationEntity {
 
     @Column

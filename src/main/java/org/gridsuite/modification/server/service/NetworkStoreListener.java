@@ -270,7 +270,7 @@ public class NetworkStoreListener implements NetworkListener {
                 new BusbarConnectionCreationEmbeddable(cnxi.getFromBBS(), cnxi.getToBBS(), cnxi.getSwitchKind())
             ).collect(Collectors.toList());
         }
-        VoltageLevelCreationEntity voltageLevelEntity = modificationRepository.createVoltageLevelEntity(
+        return modificationRepository.createVoltageLevelEntity(
             voltageLevelCreationInfos.getEquipmentId(),
             voltageLevelCreationInfos.getEquipmentName(),
             voltageLevelCreationInfos.getNominalVoltage(),
@@ -278,7 +278,6 @@ public class NetworkStoreListener implements NetworkListener {
             bbsEmbeddables,
             cnxEmbeddables
         );
-        return voltageLevelEntity;
     }
 
     @Override

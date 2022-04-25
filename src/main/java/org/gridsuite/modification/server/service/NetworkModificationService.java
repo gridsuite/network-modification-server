@@ -1824,7 +1824,6 @@ public class NetworkModificationService {
                     .build());
             }
 
-            // add the shunt compensator creation entity to the listener
             listener.storeLineSplitWithVoltageLevelInfos(lineSplitWithVoltageLevelInfos);
         }, LINE_SPLIT_ERROR, networkUuid, reporter, subReporter).stream().map(ModificationInfos.class::cast)
             .collect(Collectors.toList());
@@ -1849,8 +1848,8 @@ public class NetworkModificationService {
 
         Optional<ModificationEntity> lineSplitWithVoltageLevelEntity = this.modificationRepository.findById(modificationUuid);
 
-        if (!lineSplitWithVoltageLevelEntity.isPresent()) {
-            return Mono.error(new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "Line split not found"));
+        if (lineSplitWithVoltageLevelEntity.isEmpty()) {
+            return Mono.error(new NetworkModificationException(LINE_SPLIT_ERROR, "Line split not found"));
         }
 
         VoltageLevelCreationInfos mayNewVoltageLevelInfos = lineSplitWithVoltageLevelInfos.getMayNewVoltageLevelInfos();

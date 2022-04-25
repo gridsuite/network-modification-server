@@ -287,7 +287,7 @@ public class NetworkModificationController {
 
     @PutMapping(value = "/modifications/{modificationUuid}/line-splits", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "update a line split")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The voltage level creation has been updated")})
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The line split at voltage level has been updated")})
     public ResponseEntity<Mono<Void>> updateLineSplitWithVoltageLevel(@PathVariable("modificationUuid") UUID modificationUuid,
         @RequestBody LineSplitWithVoltageLevelInfos lineSplitWithVoltageLevelInfos) {
         return ResponseEntity.ok().body(networkModificationService.updateLineSplitWithVoltageLevel(modificationUuid, lineSplitWithVoltageLevelInfos));
