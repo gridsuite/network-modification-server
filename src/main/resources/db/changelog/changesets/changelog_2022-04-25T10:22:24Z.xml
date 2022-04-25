@@ -1,7 +1,7 @@
 <?xml version="1.1" encoding="UTF-8" standalone="no"?>
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-4.1.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
-    <changeSet author="garnierlar (generated)" id="1650637173628-8">
-        <createTable tableName="line_split_with_voltage_level_entity">
+    <changeSet author="garnierlar (generated)" id="1650882159368-8">
+        <createTable tableName="line_split_with_voltage_level">
             <column name="bbs_or_bus_id" type="VARCHAR(255)"/>
             <column name="existing_voltage_level_id" type="VARCHAR(255)"/>
             <column name="line_to_split_id" type="VARCHAR(255)"/>
@@ -11,36 +11,36 @@
             <column name="new_line2name" type="VARCHAR(255)"/>
             <column name="percent" type="FLOAT8"/>
             <column name="id" type="UUID">
-                <constraints nullable="false" primaryKey="true" primaryKeyName="line_split_with_voltage_level_entityPK"/>
+                <constraints nullable="false" primaryKey="true" primaryKeyName="line_split_with_voltage_levelPK"/>
             </column>
             <column name="may_voltage_level_creation_id" type="UUID"/>
         </createTable>
     </changeSet>
-    <changeSet author="garnierlar (generated)" id="1650637173628-9">
-        <addForeignKeyConstraint baseColumnNames="id" baseTableName="line_split_with_voltage_level_entity" constraintName="FKe6vdxpxw9lamld9e60uljw6u2" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
+    <changeSet author="garnierlar (generated)" id="1650882159368-9">
+        <addForeignKeyConstraint baseColumnNames="id" baseTableName="line_split_with_voltage_level" constraintName="FKbxsm40mgb8esi1yitlwlxegep" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
     </changeSet>
-    <changeSet author="garnierlar (generated)" id="1650637173628-10">
-        <addForeignKeyConstraint baseColumnNames="may_voltage_level_creation_id" baseTableName="line_split_with_voltage_level_entity" constraintName="FKfjgett3ekju7k56v2nyliqr1a" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="voltage_level_creation_entity" validate="true"/>
+    <changeSet author="garnierlar (generated)" id="1650882159368-10">
+        <addForeignKeyConstraint baseColumnNames="may_voltage_level_creation_id" baseTableName="line_split_with_voltage_level" constraintName="FKgbmxhyxsvkreq7mpimshlj2fl" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="voltage_level_creation_entity" validate="true"/>
     </changeSet>
-    <changeSet author="garnierlar (generated)" id="1650637173628-1">
+    <changeSet author="garnierlar (generated)" id="1650882159368-1">
         <dropForeignKeyConstraint baseTableName="two_windings_transformer_creation" constraintName="current_limits_id1_fk"/>
     </changeSet>
-    <changeSet author="garnierlar (generated)" id="1650637173628-2">
+    <changeSet author="garnierlar (generated)" id="1650882159368-2">
         <addForeignKeyConstraint baseColumnNames="current_limits_id1" baseTableName="two_windings_transformer_creation" constraintName="current_limits_id1_fk" referencedColumnNames="id" referencedTableName="current_limits"/>
     </changeSet>
-    <changeSet author="garnierlar (generated)" id="1650637173628-3">
+    <changeSet author="garnierlar (generated)" id="1650882159368-3">
         <dropForeignKeyConstraint baseTableName="two_windings_transformer_creation" constraintName="current_limits_id2_fk"/>
     </changeSet>
-    <changeSet author="garnierlar (generated)" id="1650637173628-4">
+    <changeSet author="garnierlar (generated)" id="1650882159368-4">
         <addForeignKeyConstraint baseColumnNames="current_limits_id2" baseTableName="two_windings_transformer_creation" constraintName="current_limits_id2_fk" referencedColumnNames="id" referencedTableName="current_limits"/>
     </changeSet>
-    <changeSet author="garnierlar (generated)" id="1650637173628-5">
+    <changeSet author="garnierlar (generated)" id="1650882159368-5">
         <dropNotNullConstraint columnDataType="uuid" columnName="group_id" tableName="modification"/>
     </changeSet>
-    <changeSet author="garnierlar (generated)" id="1650637173628-6">
+    <changeSet author="garnierlar (generated)" id="1650882159368-6">
         <dropNotNullConstraint columnDataType="int" columnName="horiz_pos" tableName="voltage_level_creation_entity_busbar_sections"/>
     </changeSet>
-    <changeSet author="garnierlar (generated)" id="1650637173628-7">
+    <changeSet author="garnierlar (generated)" id="1650882159368-7">
         <dropNotNullConstraint columnDataType="int" columnName="vert_pos" tableName="voltage_level_creation_entity_busbar_sections"/>
     </changeSet>
 </databaseChangeLog>
