@@ -10,6 +10,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
+import java.util.Objects;
+
 /**
  * @author Nicolas Noir <nicolas.noir at rte-france.com>
  */
@@ -23,6 +25,14 @@ import lombok.experimental.SuperBuilder;
 public class AttributeModification<T> {
     T value;
     OperationType op;
+
+    public static <V> AttributeModification<V> toAttributeModification(V value, OperationType opType) {
+        if (Objects.isNull(value) && Objects.isNull(opType)) {
+            return null;
+        } else {
+            return new AttributeModification<>(value, opType);
+        }
+    }
 
     public T applyModification(T initialValue) {
         if (op == OperationType.SET) {
