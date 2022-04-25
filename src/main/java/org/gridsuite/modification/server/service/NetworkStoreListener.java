@@ -315,6 +315,7 @@ public class NetworkStoreListener implements NetworkListener {
             .equipmentId(identifiable.getId())
             .equipmentType(identifiable.getType().name())
             .build();
+        addSubstationsIds(identifiable);
         this.deletions.add(di);
     }
 

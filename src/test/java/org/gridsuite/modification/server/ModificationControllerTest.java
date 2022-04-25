@@ -17,6 +17,7 @@ import org.gridsuite.modification.server.repositories.NetworkModificationReposit
 import org.gridsuite.modification.server.service.NetworkModificationService;
 import org.gridsuite.modification.server.service.NetworkStoreListener;
 import org.gridsuite.modification.server.utils.*;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -118,6 +119,10 @@ public class ModificationControllerTest {
         given(reportServerRest.exchange(eq("/v1/reports/" + TEST_NETWORK_ID), eq(HttpMethod.PUT), ArgumentMatchers.any(HttpEntity.class), eq(ReporterModel.class)))
             .willReturn(new ResponseEntity<>(HttpStatus.OK));
 
+    }
+
+    @After
+    public void tearOff() {
         // clean DB
         modificationRepository.deleteAll();
         equipmentInfosService.deleteAll();
@@ -2320,20 +2325,21 @@ public class ModificationControllerTest {
         assertTrue(vlCreation.isPresent());
         assertTrue(vlCreation.get().getSubstationIds().contains("s1"));
 
-        LineSplitWithVoltageLevelInfos lineSplitWithNewVL_U = new LineSplitWithVoltageLevelInfos("line2", 20.0, vl1, null, "v1bbs",
+        LineSplitWithVoltageLevelInfos lineSplitWithNewVLUpd = new LineSplitWithVoltageLevelInfos("line2", 20.0, vl1, null, "v1bbs",
             "nl1v", "NewLine1", "nl2v", "NewLine2");
 
-        webTestClient.put().uri("/v1/modifications/" + result.get(0).getUuid() + "/line-splits")
-            .body(BodyInserters.fromValue(lineSplitWithNewVL_U))
-            .exchange()
-            .expectStatus().isOk();
-
         webTestClient.put().uri("/v1/modifications/" + new UUID(128, 16) + "/line-splits")
-            .body(BodyInserters.fromValue(lineSplitWithNewVL_U))
+            .body(BodyInserters.fromValue(lineSplitWithNewVLUpd))
             .exchange()
             .expectStatus().is4xxClientError()
             .expectBody(String.class)
             .isEqualTo(new NetworkModificationException(LINE_SPLIT_NOT_FOUND, "Line split not found").getMessage());
+
+        webTestClient.put().uri("/v1/modifications/" + lineSplitProper.get().getUuid() + "/line-splits")
+            .body(BodyInserters.fromValue(lineSplitWithNewVLUpd))
+            .exchange()
+            .expectStatus().isOk();
+
     }
 
     private void testNetworkModificationsCount(UUID groupUuid, int actualSize) {
