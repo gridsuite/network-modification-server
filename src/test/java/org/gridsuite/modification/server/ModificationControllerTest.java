@@ -119,6 +119,9 @@ public class ModificationControllerTest {
         given(reportServerRest.exchange(eq("/v1/reports/" + TEST_NETWORK_ID), eq(HttpMethod.PUT), ArgumentMatchers.any(HttpEntity.class), eq(ReporterModel.class)))
             .willReturn(new ResponseEntity<>(HttpStatus.OK));
 
+        // clean DB
+        modificationRepository.deleteAll();
+        equipmentInfosService.deleteAll();
     }
 
     @After

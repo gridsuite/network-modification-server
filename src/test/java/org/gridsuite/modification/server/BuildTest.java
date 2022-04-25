@@ -149,6 +149,49 @@ public class BuildTest {
     }
 
     @Test
+    public void runBuildForLineSplits() throws InterruptedException {
+        List<ModificationEntity> entities1 = new ArrayList<>();
+        entities1.add(modificationRepository.createLineEntity("newLine", "newLine", 1., 2., 3., 4., 5., 6., "v1", "1.1", "v2", "1B", null, null));
+        entities1.add(modificationRepository.lineSplitWithVoltageLevelEntity("line3", 0.32, null, "vl1", "sjb1", "un", "One", "deux", "Two"));
+        modificationRepository.saveModifications(TEST_GROUP_ID, entities1);
+
+        List<ModificationEntity> entities2 = new ArrayList<>();
+        entities2.add(modificationRepository.createVoltageLevelEntity("vl9", "vl9", 225, "s1",
+            List.of(new BusbarSectionCreationEmbeddable("1.1", "1.1", 1, 1),
+                new BusbarSectionCreationEmbeddable("1.2", "1.2", 1, 2)),
+            List.of(new BusbarConnectionCreationEmbeddable("1.1", "1.2", SwitchKind.BREAKER))));
+        modificationRepository.saveModifications(TEST_GROUP_ID_2, entities2);
+
+        String uriString = "/v1/networks/{networkUuid}/build?receiver=me";
+        BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
+            NetworkCreation.VARIANT_ID,
+            List.of(TEST_GROUP_ID, TEST_GROUP_ID_2),
+            new HashSet<>());
+        webTestClient.post().uri(uriString, TEST_NETWORK_ID)
+            .bodyValue(buildInfos)
+            .exchange()
+            .expectStatus().isOk();
+
+        Thread.sleep(3000);  // Needed to be sure that build result message has been sent
+        Message<byte[]> resultMessage = output.receive(1000, "build.result");
+        assertEquals("me", resultMessage.getHeaders().get("receiver"));
+
+        BuildInfos newBuildInfos = new BuildInfos(NetworkCreation.VARIANT_ID,
+            VARIANT_ID_2,
+            Collections.emptyList(),
+            new HashSet<>());
+        webTestClient.post().uri(uriString, TEST_NETWORK_ID)
+            .bodyValue(newBuildInfos)
+            .exchange()
+            .expectStatus().isOk();
+
+        Thread.sleep(3000);  // Needed to be sure that build result message has been sent and data have been written in ES
+        resultMessage = output.receive(1000, "build.result");
+        assertEquals("me", resultMessage.getHeaders().get("receiver"));
+        assertEquals("", new String(resultMessage.getPayload()));
+    }
+
+    @Test
     public void runBuildTest() throws InterruptedException {
         // create modification entities in the database
         List<ModificationEntity> entities1 = new ArrayList<>();
