@@ -22,18 +22,6 @@
     <changeSet author="garnierlar (generated)" id="1650882159368-10">
         <addForeignKeyConstraint baseColumnNames="may_voltage_level_creation_id" baseTableName="line_split_with_voltage_level" constraintName="FKgbmxhyxsvkreq7mpimshlj2fl" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="voltage_level_creation_entity" validate="true"/>
     </changeSet>
-    <changeSet author="garnierlar (generated)" id="1650882159368-1">
-        <dropForeignKeyConstraint baseTableName="two_windings_transformer_creation" constraintName="current_limits_id1_fk"/>
-    </changeSet>
-    <changeSet author="garnierlar (generated)" id="1650882159368-2">
-        <addForeignKeyConstraint baseColumnNames="current_limits_id1" baseTableName="two_windings_transformer_creation" constraintName="current_limits_id1_fk" referencedColumnNames="id" referencedTableName="current_limits"/>
-    </changeSet>
-    <changeSet author="garnierlar (generated)" id="1650882159368-3">
-        <dropForeignKeyConstraint baseTableName="two_windings_transformer_creation" constraintName="current_limits_id2_fk"/>
-    </changeSet>
-    <changeSet author="garnierlar (generated)" id="1650882159368-4">
-        <addForeignKeyConstraint baseColumnNames="current_limits_id2" baseTableName="two_windings_transformer_creation" constraintName="current_limits_id2_fk" referencedColumnNames="id" referencedTableName="current_limits"/>
-    </changeSet>
     <changeSet author="garnierlar (generated)" id="1650882159368-5">
         <dropNotNullConstraint columnDataType="uuid" columnName="group_id" tableName="modification"/>
     </changeSet>
