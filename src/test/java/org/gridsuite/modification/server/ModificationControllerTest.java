@@ -13,6 +13,7 @@ import com.powsybl.network.store.client.NetworkStoreService;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.equipment.creation.*;
+import org.gridsuite.modification.server.entities.equipment.modification.LoadModificationEntity;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.NetworkModificationService;
 import org.gridsuite.modification.server.service.NetworkStoreListener;
@@ -819,14 +820,14 @@ public class ModificationControllerTest {
                 .busOrBusbarSectionId(new AttributeModification<>("newBusbarId", OperationType.SET))
                 .build();
 
-        webTestClient.put().uri(uriString, TEST_NETWORK_ID)
+        EquipmentModificationInfos result = webTestClient.put().uri(uriString, TEST_NETWORK_ID)
                 .body(BodyInserters.fromValue(loadModificationInfos))
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
                 .expectBodyList(EquipmentModificationInfos.class)
                 .value(modifications -> modifications.get(0),
-                        MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.LOAD_MODIFICATION, "v1load", Set.of("s1")));
+                        MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.LOAD_MODIFICATION, "v1load", Set.of("s1"))).returnResult().getResponseBody().get(0);
 
         assertNotNull(network.getLoad("v1load"));  // load was modified
         // TODO uncomment when load name modification will be enabled in Powsybl
@@ -849,6 +850,39 @@ public class ModificationControllerTest {
                 .expectStatus().is5xxServerError()
                 .expectBody(String.class)
                 .isEqualTo(new NetworkModificationException(MODIFY_LOAD_ERROR, "Load 'v1load': load type is null").getMessage());
+
+        // Update load modification
+        loadModificationInfos = new LoadModificationEntity(
+                "v1load",
+                null,
+                new AttributeModification<>(LoadType.FICTITIOUS, OperationType.SET),
+                null,
+                null,
+                null,
+                new AttributeModification<>(70.0, OperationType.SET))
+                .toModificationInfos();
+        loadModificationInfos.setUuid(result.getUuid());
+
+        LoadModificationInfos loadModificationUpdate = LoadModificationInfos.builder()
+                .equipmentId("v1load")
+                .loadType(new AttributeModification<>(LoadType.FICTITIOUS, OperationType.SET))
+                .reactivePower(new AttributeModification<>(70.0, OperationType.SET))
+                .build();
+        String uriStringForUpdate = "/v1/modifications/" + result.getUuid() + "/loads-modification";
+        webTestClient.put().uri(uriStringForUpdate)
+                .body(BodyInserters.fromValue(loadModificationUpdate))
+                .exchange()
+                .expectStatus().isOk();
+
+        testNetworkModificationsCount(TEST_GROUP_ID, 3);
+
+        webTestClient.get().uri("/v1/modifications/" + result.getUuid())
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBodyList(LoadModificationInfos.class)
+                .value(modifications -> modifications.get(0),
+                        MatcherLoadModificationInfos.createMatcherLoadModificationInfos(loadModificationInfos));
 
     }
 
