@@ -155,7 +155,8 @@ public class NetworkModificationService {
                                                                    String switchId,
                                                                    boolean open,
                                                                    ReporterModel reporter,
-                                                                   Reporter subReporter) {
+                                                                   Reporter subReporter,
+                                                                   UUID reportUuid) {
         Network network = listener.getNetwork();
         UUID networkUuid = listener.getNetworkUuid();
 
@@ -169,7 +170,7 @@ public class NetworkModificationService {
                     aSwitch.setOpen(open);
                 }
 
-                subReporter.report(Report.builder()
+                reporter.report(Report.builder()
                     .withKey("switchChanged")
                     .withDefaultMessage("Switch with id=${id} open state changed")
                     .withValue("id", switchId)
@@ -179,18 +180,18 @@ public class NetworkModificationService {
 
             // add the switch 'open' attribute modification entity to the listener
             listener.storeEquipmentAttributeModification(switchId, "open", open);
-        }, MODIFICATION_ERROR, networkUuid, reporter, subReporter).stream().map(EquipmentModificationInfos.class::cast)
+        }, MODIFICATION_ERROR, reportUuid, reporter, subReporter).stream().map(EquipmentModificationInfos.class::cast)
             .collect(Collectors.toList());
     }
 
-    public Flux<EquipmentModificationInfos> changeSwitchState(UUID networkUuid, String variantId, UUID groupUuid, String switchId, boolean open) {
+    public Flux<EquipmentModificationInfos> changeSwitchState(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String switchId, boolean open) {
         return getNetworkModificationInfos(networkUuid, variantId)
             .flatMapIterable(networkInfos -> {
                 NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
-                ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
-                Reporter subReporter = reporter.createSubReporter("SwitchChange", "Switch state change");
+                //ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
+                ReporterModel reporter = new ReporterModel(UUID.randomUUID().toString(), "Switch '" + switchId + "' state change");
 
-                return execChangeSwitchState(listener, switchId, open, reporter, subReporter);
+                return execChangeSwitchState(listener, switchId, open, reporter, null, reportUuid);
             });
     }
 
@@ -374,7 +375,7 @@ public class NetworkModificationService {
 
     public List<ModificationInfos> doAction(NetworkStoreListener listener, Runnable action,
                                             NetworkModificationException.Type typeIfError,
-                                            UUID networkUuid, ReporterModel reporter,
+                                            UUID reportUuid, ReporterModel reporter,
                                             Reporter subReporter) {
         try {
             action.run();
@@ -384,7 +385,7 @@ public class NetworkModificationService {
             return listener.isApplyModifications() ? listener.getModifications() : Collections.emptyList();
         } catch (PowsyblException e) {
             NetworkModificationException exc = e instanceof NetworkModificationException ? (NetworkModificationException) e : new NetworkModificationException(typeIfError, e);
-            subReporter.report(Report.builder()
+            reporter.report(Report.builder()
                 .withKey(typeIfError.name())
                 .withDefaultMessage(exc.getMessage())
                 .withSeverity(new TypedValue("NETWORK_MODIFICATION_ERROR", TypedValue.ERROR_LOGLEVEL))
@@ -403,7 +404,7 @@ public class NetworkModificationService {
         } finally {
             if (!listener.isBuild()) {
                 // send report
-                sendReport(networkUuid, reporter);
+                sendReport(reportUuid, reporter, false);
             }
         }
     }
@@ -816,11 +817,11 @@ public class NetworkModificationService {
         });
     }
 
-    private void sendReport(UUID networkUuid, ReporterModel reporter) {
+    private void sendReport(UUID reportUuid, ReporterModel reporter, boolean overwrite) {
         var headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        var resourceUrl = DELIMITER + REPORT_API_VERSION + DELIMITER + "reports" + DELIMITER + networkUuid.toString();
-        var uriBuilder = UriComponentsBuilder.fromPath(resourceUrl);
+        var resourceUrl = DELIMITER + REPORT_API_VERSION + DELIMITER + "reports" + DELIMITER + reportUuid.toString();
+        var uriBuilder = UriComponentsBuilder.fromPath(resourceUrl).queryParam("overwrite", Boolean.toString(overwrite));
         try {
             reportServerRest.exchange(uriBuilder.toUriString(), HttpMethod.PUT, new HttpEntity<>(objectMapper.writeValueAsString(reporter), headers), ReporterModel.class);
         } catch (JsonProcessingException error) {
@@ -1628,7 +1629,7 @@ public class NetworkModificationService {
         networkStoreService.flush(listener.getNetwork());
 
         // send report (only once at the end)
-        sendReport(networkUuid, reporter);
+        sendReport(networkUuid, reporter, true);
 
         return allModificationsInfos;
     }
