@@ -10,6 +10,7 @@ import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.iidm.network.*;
 import com.powsybl.network.store.client.NetworkStoreService;
+import nl.jqno.equalsverifier.EqualsVerifier;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.equipment.creation.*;
@@ -760,6 +761,8 @@ public class ModificationControllerTest {
 
     @Test
     public void testModifyLoad() {
+        EqualsVerifier.simple().forClass(AttributeModification.class).verify();
+
         String uriString = "/v1/networks/{networkUuid}/loads?group=" + TEST_GROUP_ID;
 
         LoadModificationInfos loadModificationInfos = LoadModificationInfos.builder()
