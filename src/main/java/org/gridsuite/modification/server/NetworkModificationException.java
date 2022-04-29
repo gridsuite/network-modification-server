@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server;
 
+import com.powsybl.commons.PowsyblException;
 import lombok.NonNull;
 import org.gridsuite.modification.server.dto.BranchStatusModificationInfos;
 import org.springframework.http.HttpStatus;
@@ -16,7 +17,7 @@ import java.util.Objects;
  * @author Slimane Amar <slimane.amar at rte-france.com>
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
-public class NetworkModificationException extends RuntimeException {
+public class NetworkModificationException extends PowsyblException {
     public enum Type {
         GROOVY_SCRIPT_EMPTY(HttpStatus.BAD_REQUEST, "Empty script"),
         GROOVY_SCRIPT_ERROR(HttpStatus.BAD_REQUEST),
@@ -26,10 +27,12 @@ public class NetworkModificationException extends RuntimeException {
         MODIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND),
         SWITCH_NOT_FOUND(HttpStatus.NOT_FOUND),
         LINE_NOT_FOUND(HttpStatus.NOT_FOUND),
+        LOAD_NOT_FOUND(HttpStatus.NOT_FOUND),
         UNKNOWN_EQUIPMENT_TYPE(HttpStatus.INTERNAL_SERVER_ERROR),
         MODIFICATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         VOLTAGE_LEVEL_NOT_FOUND(HttpStatus.NOT_FOUND),
         CREATE_LOAD_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
+        MODIFY_LOAD_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         BUSBAR_SECTION_NOT_FOUND(HttpStatus.NOT_FOUND),
         BUS_NOT_FOUND(HttpStatus.NOT_FOUND),
         CREATE_GENERATOR_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),

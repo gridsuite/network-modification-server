@@ -16,6 +16,8 @@ import org.gridsuite.modification.server.entities.equipment.modification.BranchS
 import org.gridsuite.modification.server.entities.GroovyScriptModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationGroupEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.LoadModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.BooleanEquipmentAttributeModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleEquipmentAttributeModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.EquipmentAttributeModificationEntity;
@@ -97,8 +99,7 @@ public class NetworkModificationRepository {
         var modificationGroupEntity = this.modificationGroupRepository
                 .findById(groupUuid)
                 .orElseGet(() -> modificationGroupRepository.save(new ModificationGroupEntity(groupUuid)));
-        modificationGroupEntity.getModifications().addAll(modifications);
-        this.modificationRepository.saveAll(modifications);
+        modifications.forEach(modificationGroupEntity::addModification);
     }
 
     @Transactional // To have all move in the same transaction (atomic)
@@ -128,6 +129,7 @@ public class NetworkModificationRepository {
                 .collect(Collectors.toList());
     }
 
+    @Transactional
     public List<ModificationInfos> getModifications(List<UUID> uuids) {
         return this.modificationRepository.findAllById(uuids).stream()
             .map(ModificationEntity::toModificationInfos)
@@ -171,21 +173,33 @@ public class NetworkModificationRepository {
 
     @Transactional // To have the find and delete in the same transaction (atomic)
     public int deleteModifications(UUID groupUuid, Set<UUID> uuids) {
+        ModificationGroupEntity groupEntity = getModificationGroup(groupUuid);
         List<ModificationEntity> modifications = getModificationList(groupUuid)
                 .filter(m -> uuids.contains(m.getId()))
                 .collect(Collectors.toList());
+        modifications.forEach(groupEntity::removeModification);
         int count = modifications.size();
         this.modificationRepository.deleteAll(modifications);
         return count;
+    }
+
+    public void updateModification(EquipmentCreationEntity equipmentCreationEntity) {
+        this.modificationRepository.save(equipmentCreationEntity);
     }
 
     private ModificationGroupEntity getModificationGroup(UUID groupUuid) {
         return this.modificationGroupRepository.findById(groupUuid).orElseThrow(() -> new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, groupUuid.toString()));
     }
 
-    public EquipmentCreationEntity createLoadEntity(String loadId, String loadName, LoadType loadType,
-                                                    String voltageLevelId, String busOrBusbarSectionId, double activePower, double reactivePower) {
+    public EquipmentCreationEntity createLoadCreationEntity(String loadId, String loadName, LoadType loadType,
+                                                            String voltageLevelId, String busOrBusbarSectionId, double activePower, double reactivePower) {
         return new LoadCreationEntity(loadId, loadName, loadType, voltageLevelId, busOrBusbarSectionId, activePower, reactivePower);
+    }
+
+    public EquipmentModificationEntity createLoadModificationEntity(String loadId, AttributeModification<String> loadName, AttributeModification<LoadType> loadType,
+                                                                    AttributeModification<String> voltageLevelId, AttributeModification<String> busOrBusbarSectionId,
+                                                                    AttributeModification<Double> activePower, AttributeModification<Double> reactivePower) {
+        return new LoadModificationEntity(loadId, loadName, loadType, voltageLevelId, busOrBusbarSectionId, activePower, reactivePower);
     }
 
     public EquipmentCreationEntity createGeneratorEntity(String generatorId, String generatorName, EnergySource energySource,
@@ -253,5 +267,4 @@ public class NetworkModificationRepository {
     public ShuntCompensatorCreationEntity createShuntCompensatorEntity(ShuntCompensatorCreationInfos shuntCompensatorCreationInfos) {
         return new ShuntCompensatorCreationEntity(shuntCompensatorCreationInfos);
     }
-
 }

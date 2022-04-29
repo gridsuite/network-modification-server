@@ -144,13 +144,23 @@ public class NetworkStoreListener implements NetworkListener {
     }
 
     public void storeLoadCreation(LoadCreationInfos loadCreationInfos) {
-        modifications.add(this.modificationRepository.createLoadEntity(loadCreationInfos.getEquipmentId(),
-            loadCreationInfos.getEquipmentName(),
-            loadCreationInfos.getLoadType(),
-            loadCreationInfos.getVoltageLevelId(),
-            loadCreationInfos.getBusOrBusbarSectionId(),
-            loadCreationInfos.getActivePower(),
-            loadCreationInfos.getReactivePower()));
+        modifications.add(this.modificationRepository.createLoadCreationEntity(loadCreationInfos.getEquipmentId(),
+                loadCreationInfos.getEquipmentName(),
+                loadCreationInfos.getLoadType(),
+                loadCreationInfos.getVoltageLevelId(),
+                loadCreationInfos.getBusOrBusbarSectionId(),
+                loadCreationInfos.getActivePower(),
+                loadCreationInfos.getReactivePower()));
+    }
+
+    public void storeLoadModification(LoadModificationInfos loadModificationInfos) {
+        modifications.add(this.modificationRepository.createLoadModificationEntity(loadModificationInfos.getEquipmentId(),
+                loadModificationInfos.getEquipmentName(),
+                loadModificationInfos.getLoadType(),
+                loadModificationInfos.getVoltageLevelId(),
+                loadModificationInfos.getBusOrBusbarSectionId(),
+                loadModificationInfos.getActivePower(),
+                loadModificationInfos.getReactivePower()));
     }
 
     public void storeGeneratorCreation(GeneratorCreationInfos generatorCreationInfos) {
