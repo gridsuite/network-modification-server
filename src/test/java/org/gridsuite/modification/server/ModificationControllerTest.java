@@ -71,6 +71,7 @@ public class ModificationControllerTest {
     private static final UUID TEST_NETWORK_BUS_BREAKER_ID = UUID.fromString("11111111-7977-4592-ba19-88027e4254e4");
     private static final UUID TEST_NETWORK_MIXED_TOPOLOGY_ID = UUID.fromString("22222222-7977-4592-ba19-88027e4254e4");
     public static final String VARIANT_NOT_EXISTING_ID = "variant_not_existing";
+    private static final UUID TEST_REPORT_ID = UUID.randomUUID();
 
     @Autowired
     private WebTestClient webTestClient;
@@ -114,7 +115,7 @@ public class ModificationControllerTest {
         doThrow(new PowsyblException()).when(networkStoreService).flush(argThat(n -> TEST_NETWORK_WITH_FLUSH_ERROR_ID.toString().equals(n.getId())));
 
         networkModificationService.setReportServerRest(reportServerRest);
-        given(reportServerRest.exchange(eq("/v1/reports/" + TEST_NETWORK_ID), eq(HttpMethod.PUT), ArgumentMatchers.any(HttpEntity.class), eq(ReporterModel.class)))
+        given(reportServerRest.exchange(eq("/v1/reports/" + TEST_REPORT_ID), eq(HttpMethod.PUT), ArgumentMatchers.any(HttpEntity.class), eq(ReporterModel.class)))
             .willReturn(new ResponseEntity<>(HttpStatus.OK));
 
         // clean DB
@@ -144,7 +145,7 @@ public class ModificationControllerTest {
 
         // switch opening
         EquipmentAttributeModificationInfos modificationSwitchInfos =
-                Objects.requireNonNull(webTestClient.put().uri("/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID + "&open=true", TEST_NETWORK_ID, "v1b1")
+                Objects.requireNonNull(webTestClient.put().uri("/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID + "&open=true" + "&reportUuid=" + TEST_REPORT_ID, TEST_NETWORK_ID, "v1b1")
                         .exchange()
                         .expectStatus().isOk()
                         .expectHeader().contentType(MediaType.APPLICATION_JSON)
@@ -156,7 +157,7 @@ public class ModificationControllerTest {
 
         // switch in variant VARIANT_ID opening
         modificationSwitchInfos =
-            Objects.requireNonNull(webTestClient.put().uri("/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID + "&open=true" + "&variantId=" + NetworkCreation.VARIANT_ID, TEST_NETWORK_ID, "break1Variant")
+            Objects.requireNonNull(webTestClient.put().uri("/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID + "&open=true" + "&variantId=" + NetworkCreation.VARIANT_ID + "&reportUuid=" + TEST_REPORT_ID, TEST_NETWORK_ID, "break1Variant")
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
@@ -188,7 +189,7 @@ public class ModificationControllerTest {
                 .isEqualTo(List.of());
 
         // switch opening to create the default group
-        webTestClient.put().uri("/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID + "&open=true", TEST_NETWORK_ID, "v1b1")
+        webTestClient.put().uri("/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID + "&open=true" + "&reportUuid=" + TEST_REPORT_ID, TEST_NETWORK_ID, "v1b1")
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
@@ -273,7 +274,7 @@ public class ModificationControllerTest {
 
     @Test
     public void testSwitch() {
-        String uriString = "/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID;
+        String uriString = "/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
 
         // switches modifications on initial variant
         switchModifications(uriString, "v1b1", "disc1Variant", "v2b1", "v3b1", Set.of("s1"), Set.of("s2"), 4);
@@ -284,7 +285,7 @@ public class ModificationControllerTest {
 
     @Test
     public void testDeleteModification() {
-        var res = webTestClient.put().uri("/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID + "&open=true", TEST_NETWORK_ID, "v1b1")
+        var res = webTestClient.put().uri("/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID + "&open=true" + "&reportUuid=" + TEST_REPORT_ID, TEST_NETWORK_ID, "v1b1")
             .exchange()
             .expectStatus().isOk()
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
@@ -318,7 +319,7 @@ public class ModificationControllerTest {
 
     @Test
     public void testNetworkOrVariantNotFound() {
-        String uriString = "/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID;
+        String uriString = "/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
 
         // network not existing
         webTestClient.put().uri(uriString + "&open=true", NOT_FOUND_NETWORK_ID, "v1b1")
@@ -330,7 +331,7 @@ public class ModificationControllerTest {
 
     @Test
     public void testLineStatusModification() {
-        String uriString = "/v1/networks/{networkUuid}/lines/{lineId}/status?group=" + TEST_GROUP_ID;
+        String uriString = "/v1/networks/{networkUuid}/lines/{lineId}/status?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
 
         // line lockout
         webTestClient.put().uri(uriString, TEST_NETWORK_ID, "line2")
@@ -387,7 +388,7 @@ public class ModificationControllerTest {
 
     @Test
     public void testLineStatusModificationWithErrors() {
-        String uriString = "/v1/networks/{networkUuid}/lines/{lineId}/status?group=" + TEST_GROUP_ID;
+        String uriString = "/v1/networks/{networkUuid}/lines/{lineId}/status?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
 
         // network not existing
         webTestClient.put().uri(uriString, NOT_FOUND_NETWORK_ID, "line2")
@@ -452,7 +453,7 @@ public class ModificationControllerTest {
 
     @Test
     public void testGroovyWithErrors() {
-        String uriString = "/v1/networks/{networkUuid}/groovy?group=" + TEST_GROUP_ID;
+        String uriString = "/v1/networks/{networkUuid}/groovy?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
 
         // apply null groovy script
         webTestClient.put().uri(uriString, TEST_NETWORK_ID)
@@ -486,7 +487,7 @@ public class ModificationControllerTest {
 
     @Test
     public void testGroovy() {
-        String uriString = "/v1/networks/{networkUuid}/groovy?group=" + TEST_GROUP_ID;
+        String uriString = "/v1/networks/{networkUuid}/groovy?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
 
         // apply groovy script with generator target P modification
         webTestClient.put().uri(uriString, TEST_NETWORK_ID)
@@ -553,7 +554,7 @@ public class ModificationControllerTest {
 
     @Test
     public void testUndoModificationsOnNetworkFlushError() {
-        String uriString = "/v1/networks/{networkUuid}/groovy?group=" + TEST_GROUP_ID;
+        String uriString = "/v1/networks/{networkUuid}/groovy?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
 
         // apply groovy script with 2 modifications with network flush error
         webTestClient.put().uri(uriString, TEST_NETWORK_WITH_FLUSH_ERROR_ID)
@@ -567,7 +568,7 @@ public class ModificationControllerTest {
 
     @Test
     public void testMultipleModificationsWithError() {
-        String uriString = "/v1/networks/{networkUuid}/groovy?group=" + TEST_GROUP_ID;
+        String uriString = "/v1/networks/{networkUuid}/groovy?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
 
         // apply groovy script without error
         webTestClient.put().uri(uriString, TEST_NETWORK_ID)
@@ -591,7 +592,7 @@ public class ModificationControllerTest {
 
     @Test
     public void testCreateLoadInNodeBreaker() {
-        String uriString = "/v1/networks/{networkUuid}/loads?group=" + TEST_GROUP_ID;
+        String uriString = "/v1/networks/{networkUuid}/loads?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
 
         // create new load in voltage level with node/breaker topology (in voltage level "v2" and busbar section "1B")
         LoadCreationInfos loadCreationInfos = LoadCreationInfos.builder()
@@ -664,7 +665,7 @@ public class ModificationControllerTest {
 
         // Test create load on not yet existing variant VARIANT_NOT_EXISTING_ID :
         // Only the modification should be added in the database but the load cannot be created
-        uriString = "/v1/networks/{networkUuid}/loads?variantId=" + VARIANT_NOT_EXISTING_ID + "&group=" + TEST_GROUP_ID;
+        uriString = "/v1/networks/{networkUuid}/loads?variantId=" + VARIANT_NOT_EXISTING_ID + "&group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
         loadCreationInfos.setEquipmentId("idLoad3");
         loadCreationInfos.setEquipmentName("nameLoad3");
         loadCreationInfos.setVoltageLevelId("v2");
@@ -684,7 +685,7 @@ public class ModificationControllerTest {
 
     @Test
     public void testCreateLoadInBusBreaker() {
-        String uriString = "/v1/networks/{networkUuid}/loads?group=" + TEST_GROUP_ID;
+        String uriString = "/v1/networks/{networkUuid}/loads?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
 
         // create new load in voltage level with bus/breaker topology (in voltage level "VLGEN" and bus "NGEN")
         LoadCreationInfos loadCreationInfos = LoadCreationInfos.builder()
@@ -759,7 +760,7 @@ public class ModificationControllerTest {
 
     @Test
     public void testModifyLoad() {
-        String uriString = "/v1/networks/{networkUuid}/loads?group=" + TEST_GROUP_ID;
+        String uriString = "/v1/networks/{networkUuid}/loads?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
 
         LoadModificationInfos loadModificationInfos = LoadModificationInfos.builder()
                 .equipmentId("v1load")
@@ -854,7 +855,7 @@ public class ModificationControllerTest {
 
     @Test
     public void testCreateShuntCompensator() {
-        String uriString = "/v1/networks/{networkUuid}/shunt-compensators?group=" + TEST_GROUP_ID;
+        String uriString = "/v1/networks/{networkUuid}/shunt-compensators?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
 
         ShuntCompensatorCreationInfos shunt1 = ShuntCompensatorCreationInfos.builder()
             .equipmentId("shuntOneId").equipmentName("hop")
@@ -923,7 +924,7 @@ public class ModificationControllerTest {
 
     @Test
     public void testCreateGeneratorInNodeBreaker() {
-        String uriString = "/v1/networks/{networkUuid}/generators?group=" + TEST_GROUP_ID;
+        String uriString = "/v1/networks/{networkUuid}/generators?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
 
         // create new generator in voltage level with node/breaker topology (in voltage level "v2" and busbar section "1B")
         GeneratorCreationInfos generatorCreationInfos = GeneratorCreationInfos.builder()
@@ -1049,7 +1050,7 @@ public class ModificationControllerTest {
 
         // Test create generator on not yet existing variant VARIANT_NOT_EXISTING_ID :
         // Only the modification should be added in the database but the generator cannot be created
-        uriString = "/v1/networks/{networkUuid}/generators?variantId=" + VARIANT_NOT_EXISTING_ID + "&group=" + TEST_GROUP_ID;
+        uriString = "/v1/networks/{networkUuid}/generators?variantId=" + VARIANT_NOT_EXISTING_ID + "&group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
         generatorCreationInfos.setEquipmentId("idGenerator3");
         generatorCreationInfos.setEquipmentName("nameGenerator3");
         generatorCreationInfos.setVoltageLevelId("v2");
@@ -1069,7 +1070,7 @@ public class ModificationControllerTest {
 
     @Test
     public void testCreateGeneratorInBusBreaker() {
-        String uriString = "/v1/networks/{networkUuid}/generators?group=" + TEST_GROUP_ID;
+        String uriString = "/v1/networks/{networkUuid}/generators?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
 
         // create new generator in voltage level with bus/breaker topology (in voltage level "VLGEN" and bus "NGEN")
         GeneratorCreationInfos generatorCreationInfos = GeneratorCreationInfos.builder()
@@ -1112,7 +1113,7 @@ public class ModificationControllerTest {
 
     @Test
     public void testCreateTwoWindingsTransformerInBusBreaker() {
-        String uriString = "/v1/networks/{networkUuid}/two-windings-transformers?group=" + TEST_GROUP_ID;
+        String uriString = "/v1/networks/{networkUuid}/two-windings-transformers?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
 
         // create new 2wt in voltage level with bus/breaker topology
         TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos = TwoWindingsTransformerCreationInfos.builder()
@@ -1208,7 +1209,7 @@ public class ModificationControllerTest {
 
     @Test
     public void testCreateTwoWindingsTransformerInNodeBreaker() {
-        String uriString = "/v1/networks/{networkUuid}/two-windings-transformers?group=" + TEST_GROUP_ID;
+        String uriString = "/v1/networks/{networkUuid}/two-windings-transformers?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
 
         // create new 2wt in voltage level with Node/breaker topology
         TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos = TwoWindingsTransformerCreationInfos.builder()
@@ -1240,7 +1241,7 @@ public class ModificationControllerTest {
 
         // Test create transformer on not yet existing variant VARIANT_NOT_EXISTING_ID :
         // Only the modification should be added in the database but the transformer cannot be created
-        uriString = "/v1/networks/{networkUuid}/two-windings-transformers?variantId=" + VARIANT_NOT_EXISTING_ID + "&group=" + TEST_GROUP_ID;
+        uriString = "/v1/networks/{networkUuid}/two-windings-transformers?variantId=" + VARIANT_NOT_EXISTING_ID + "&group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
         twoWindingsTransformerCreationInfos.setEquipmentId("id2wt3");
         twoWindingsTransformerCreationInfos.setEquipmentName("name2wt3");
         List<EquipmentModificationInfos> modifications = webTestClient.post().uri(uriString, TEST_NETWORK_ID)
@@ -1258,7 +1259,7 @@ public class ModificationControllerTest {
 
     @Test
     public void testCreateTwoWindingsTransformerInMixedTopology() {
-        String uriString = "/v1/networks/{networkUuid}/two-windings-transformers?group=" + TEST_NETWORK_MIXED_TOPOLOGY_ID;
+        String uriString = "/v1/networks/{networkUuid}/two-windings-transformers?group=" + TEST_NETWORK_MIXED_TOPOLOGY_ID + "&reportUuid=" + TEST_REPORT_ID;
 
         // create new 2wt in voltage level with mixed topology
         TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos = TwoWindingsTransformerCreationInfos.builder()
@@ -1290,7 +1291,7 @@ public class ModificationControllerTest {
 
     @Test
     public void testDeleteEquipment() {
-        String uriString = "/v1/networks/{networkUuid}/equipments/type/{equipmentType}/id/{equipmentId}?group=" + TEST_GROUP_ID;
+        String uriString = "/v1/networks/{networkUuid}/equipments/type/{equipmentType}/id/{equipmentId}?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
 
         assertTrue(equipmentInfosService.findAllEquipmentInfos(TEST_NETWORK_ID).isEmpty());
         assertTrue(equipmentInfosService.findAllEquipmentInfos(TEST_NETWORK_ID_2).isEmpty());
@@ -1318,7 +1319,7 @@ public class ModificationControllerTest {
 
         // Test delete load on not yet existing variant VARIANT_NOT_EXISTING_ID :
         // Only the modification should be added in the database but the load cannot be deleted
-        uriString = "/v1/networks/{networkUuid}/equipments/type/{equipmentType}/id/{equipmentId}?variantId=" + VARIANT_NOT_EXISTING_ID + "&group=" + TEST_GROUP_ID;
+        uriString = "/v1/networks/{networkUuid}/equipments/type/{equipmentType}/id/{equipmentId}?variantId=" + VARIANT_NOT_EXISTING_ID + "&group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
         List<EquipmentDeletionInfos> deletions = webTestClient.delete().uri(uriString, TEST_NETWORK_ID, "LOAD", "v3load")
             .exchange()
             .expectStatus().isOk()
@@ -1330,7 +1331,7 @@ public class ModificationControllerTest {
         assertNotNull(network.getLoad("v3load"));  // load was not deleted
         testNetworkModificationsCount(TEST_GROUP_ID, 2);  // new modification stored in the database
 
-        uriString = "/v1/networks/{networkUuid}/equipments/type/{equipmentType}/id/{equipmentId}?group=" + TEST_GROUP_ID;
+        uriString = "/v1/networks/{networkUuid}/equipments/type/{equipmentType}/id/{equipmentId}?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
 
         // delete equipment with errors
         webTestClient.delete().uri(uriString, NOT_FOUND_NETWORK_ID, "LOAD", "v1load")
@@ -1647,7 +1648,7 @@ public class ModificationControllerTest {
 
     @Test
     public void testErrorRemovingDanglingSwitches() {
-        String uriString = "/v1/networks/{networkUuid}/equipments/type/{equipmentType}/id/{equipmentId}?group=" + TEST_GROUP_ID;
+        String uriString = "/v1/networks/{networkUuid}/equipments/type/{equipmentType}/id/{equipmentId}?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
 
         // delete load with error removing dangling switches, because the load connection node is not linked to any other node
         webTestClient.delete().uri(uriString, TEST_NETWORK_ID, "LOAD", "v5load")
@@ -1667,13 +1668,13 @@ public class ModificationControllerTest {
 
     @Test
     public void testMoveModification() {
-        webTestClient.put().uri("/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID + "&open=true", TEST_NETWORK_ID, "v1b1")
+        webTestClient.put().uri("/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID + "&open=true" + "&reportUuid=" + TEST_REPORT_ID, TEST_NETWORK_ID, "v1b1")
             .exchange()
             .expectStatus().isOk()
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
             .expectBodyList(EquipmentAttributeModificationInfos.class)
             .returnResult().getResponseBody();
-        webTestClient.put().uri("/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID + "&open=true", TEST_NETWORK_ID, "v1b1")
+        webTestClient.put().uri("/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID + "&open=true" + "&reportUuid=" + TEST_REPORT_ID, TEST_NETWORK_ID, "v1b1")
             .exchange()
             .expectStatus().isOk()
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
@@ -1698,7 +1699,7 @@ public class ModificationControllerTest {
 
     @Test
     public void testCreateLineInNodeBreaker() {
-        String uriString = "/v1/networks/{networkUuid}/lines?group=" + TEST_GROUP_ID;
+        String uriString = "/v1/networks/{networkUuid}/lines?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
 
         // create new line in voltage levels with node/breaker topology
         // between voltage level "v1" and busbar section "1.1" and
@@ -1841,7 +1842,7 @@ public class ModificationControllerTest {
 
         // Test create line on not yet existing variant VARIANT_NOT_EXISTING_ID :
         // Only the modification should be added in the database but the line cannot be created
-        uriString = "/v1/networks/{networkUuid}/lines?variantId=" + VARIANT_NOT_EXISTING_ID + "&group=" + TEST_GROUP_ID;
+        uriString = "/v1/networks/{networkUuid}/lines?variantId=" + VARIANT_NOT_EXISTING_ID + "&group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
         lineCreationInfos.setEquipmentId("idLine5");
         lineCreationInfos.setEquipmentName("nameLine5");
         List<EquipmentModificationInfos> modifications = webTestClient.post().uri(uriString, TEST_NETWORK_ID)
@@ -1859,7 +1860,7 @@ public class ModificationControllerTest {
 
     @Test
     public void testCreateLineInBusBreaker() {
-        String uriString = "/v1/networks/{networkUuid}/lines?group=" + TEST_GROUP_ID;
+        String uriString = "/v1/networks/{networkUuid}/lines?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
 
         // create new line in voltage levels with node/breaker topology
         // between voltage level "v1" and busbar section "bus1" and
@@ -1904,7 +1905,7 @@ public class ModificationControllerTest {
 
     @Test
     public void testCreateLineInMixedTypology() {
-        String uriString = "/v1/networks/{networkUuid}/lines?group=" + TEST_GROUP_ID;
+        String uriString = "/v1/networks/{networkUuid}/lines?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
 
         // create new line in voltage levels with node breaker topology and bus breaker topology
         // between voltage level "v1" and busbar section "1.1" type NODE_BREAKER and
@@ -1960,7 +1961,7 @@ public class ModificationControllerTest {
 
     @Test
     public void testCreateLineOptionalParameters() {
-        String uriString = "/v1/networks/{networkUuid}/lines?group=" + TEST_GROUP_ID;
+        String uriString = "/v1/networks/{networkUuid}/lines?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
 
         // create new line without shunt conductance or reactance
         LineCreationInfos lineCreationInfosNoShunt = LineCreationInfos.builder()
@@ -2062,7 +2063,7 @@ public class ModificationControllerTest {
 
     @Test
     public void testCreateSubstation() {
-        String uriString = "/v1/networks/{networkUuid}/substations?group=" + TEST_GROUP_ID;
+        String uriString = "/v1/networks/{networkUuid}/substations?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
 
         // create new substation
         SubstationCreationInfos substationCreationInfos = SubstationCreationInfos.builder()
@@ -2133,7 +2134,7 @@ public class ModificationControllerTest {
 
     @Test
     public void testCreateVoltageLevel() {
-        String uriString = "/v1/networks/{networkUuid}/voltage-levels?group=" + TEST_GROUP_ID;
+        String uriString = "/v1/networks/{networkUuid}/voltage-levels?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
 
         List<BusbarSectionCreationInfos> busbarSectionInfos = new ArrayList<>();
         busbarSectionInfos.add(BusbarSectionCreationInfos.builder().id("bbs.nw").name("SJB NO").vertPos(1).horizPos(1).build());

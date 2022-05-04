@@ -86,6 +86,9 @@ public class BuildTest {
     private static final UUID TEST_NETWORK_STOP_BUILD_ID = UUID.fromString("11111111-7977-4592-ba19-88027e4254e4");
     private static final UUID TEST_GROUP_ID = UUID.randomUUID();
     private static final UUID TEST_GROUP_ID_2 = UUID.randomUUID();
+    private static final UUID TEST_REPORT_ID = UUID.randomUUID();
+    private static final UUID TEST_REPORT_ID_2 = UUID.randomUUID();
+
     private static final String VARIANT_ID_2 = "variant_2";
 
     @Autowired
@@ -191,9 +194,10 @@ public class BuildTest {
         // build VARIANT_ID by cloning network initial variant and applying all modifications in all groups
         String uriString = "/v1/networks/{networkUuid}/build?receiver=me";
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
-                                                                 NetworkCreation.VARIANT_ID,
-                                                                 List.of(TEST_GROUP_ID, TEST_GROUP_ID_2),
-                                                                 new HashSet<>());
+            NetworkCreation.VARIANT_ID,
+            List.of(TEST_GROUP_ID, TEST_GROUP_ID_2),
+            List.of(TEST_REPORT_ID, TEST_REPORT_ID_2),
+            new HashSet<>());
         webTestClient.post().uri(uriString, TEST_NETWORK_ID)
             .bodyValue(buildInfos)
             .exchange()
@@ -263,6 +267,7 @@ public class BuildTest {
         // to check
         BuildInfos newBuildInfos = new BuildInfos(NetworkCreation.VARIANT_ID,
             VARIANT_ID_2,
+            Collections.emptyList(),
             Collections.emptyList(),
             new HashSet<>());
         webTestClient.post().uri(uriString, TEST_NETWORK_ID)
@@ -362,6 +367,7 @@ public class BuildTest {
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
             NetworkCreation.VARIANT_ID,
             List.of(TEST_GROUP_ID),
+            List.of(TEST_REPORT_ID),
             new HashSet<>());
         webTestClient.post().uri(uriString, TEST_NETWORK_STOP_BUILD_ID)
             .bodyValue(buildInfos)
@@ -383,7 +389,7 @@ public class BuildTest {
     @Test
     public void runBuildWithReportErrorTest() {
         // mock exception when sending to report server
-        given(reportServerRest.exchange(eq("/v1/reports/" + TEST_NETWORK_ID), eq(HttpMethod.PUT), any(HttpEntity.class), eq(ReporterModel.class)))
+        given(reportServerRest.exchange(eq("/v1/reports/" + TEST_REPORT_ID), eq(HttpMethod.PUT), any(HttpEntity.class), eq(ReporterModel.class)))
             .willThrow(RestClientException.class);
 
         modificationRepository.saveModifications(TEST_GROUP_ID, List.of(modificationRepository.createEquipmentAttributeModification("v1d1", "open", true)));
@@ -393,6 +399,7 @@ public class BuildTest {
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
             NetworkCreation.VARIANT_ID,
             List.of(TEST_GROUP_ID),
+            List.of(TEST_REPORT_ID),
             new HashSet<>());
         webTestClient.post().uri(uriString, TEST_NETWORK_ID)
             .bodyValue(buildInfos)
