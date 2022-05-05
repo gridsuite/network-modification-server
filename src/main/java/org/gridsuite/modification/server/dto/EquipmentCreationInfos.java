@@ -22,7 +22,7 @@ import lombok.experimental.SuperBuilder;
 @Setter
 @ToString(callSuper = true)
 @Schema(description = "Equipment creation")
-public class EquipmentCreationInfos extends EquipmenModificationInfos {
+public class EquipmentCreationInfos extends EquipmentModificationInfos {
     @Schema(description = "Equipment name")
     private String equipmentName;
 }
