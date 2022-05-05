@@ -131,7 +131,7 @@ public class NetworkModificationService {
                 reporter.report(Report.builder()
                     .withKey("groovyScriptApplied")
                     .withDefaultMessage("Groovy script applied")
-                    .withSeverity(new TypedValue("GROOVY_SCRIPT_INFO", TypedValue.INFO_LOGLEVEL))
+                    .withSeverity(TypedValue.INFO_SEVERITY)
                     .build());
             }
 
@@ -175,7 +175,7 @@ public class NetworkModificationService {
                     .withKey("switchChanged")
                     .withDefaultMessage("Switch with id=${id} open state changed")
                     .withValue("id", switchId)
-                    .withSeverity(new TypedValue("SWITCH_OPEN_STATE_CHANGED_INFO", TypedValue.INFO_LOGLEVEL))
+                    .withSeverity(TypedValue.INFO_SEVERITY)
                     .build());
             }
 
@@ -266,7 +266,7 @@ public class NetworkModificationService {
                         .withKey("lockoutLineApplied")
                         .withDefaultMessage("Line ${id} (id) : lockout applied")
                         .withValue("id", lineId)
-                        .withSeverity(new TypedValue(LINE_STATUS_INFO_REPORT_SEVERITY, TypedValue.INFO_LOGLEVEL))
+                        .withSeverity(TypedValue.INFO_SEVERITY)
                         .build());
                 }
 
@@ -294,7 +294,7 @@ public class NetworkModificationService {
                         .withKey("tripLineApplied")
                         .withDefaultMessage("Line ${id} (id) : trip applied")
                         .withValue("id", lineId)
-                        .withSeverity(new TypedValue(LINE_STATUS_INFO_REPORT_SEVERITY, TypedValue.INFO_LOGLEVEL))
+                        .withSeverity(TypedValue.INFO_SEVERITY)
                         .build());
                 }
 
@@ -330,7 +330,7 @@ public class NetworkModificationService {
                         .withDefaultMessage("Line ${id} (id) : energise the side ${side} applied")
                         .withValue("id", lineId)
                         .withValue("side", side.name())
-                        .withSeverity(new TypedValue(LINE_STATUS_INFO_REPORT_SEVERITY, TypedValue.INFO_LOGLEVEL))
+                        .withSeverity(TypedValue.INFO_SEVERITY)
                         .build());
                 }
 
@@ -362,7 +362,7 @@ public class NetworkModificationService {
                         .withKey("switchOnLineApplied")
                         .withDefaultMessage("Line ${id} (id) : switch on applied")
                         .withValue("id", lineId)
-                        .withSeverity(new TypedValue(LINE_STATUS_INFO_REPORT_SEVERITY, TypedValue.INFO_LOGLEVEL))
+                        .withSeverity(TypedValue.INFO_SEVERITY)
                         .build());
                 }
 
@@ -391,7 +391,7 @@ public class NetworkModificationService {
             reporter.report(Report.builder()
                 .withKey(typeIfError.name())
                 .withDefaultMessage(exc.getMessage())
-                .withSeverity(new TypedValue("NETWORK_MODIFICATION_ERROR", TypedValue.ERROR_LOGLEVEL))
+                .withSeverity(TypedValue.ERROR_SEVERITY)
                 .build());
             if (!listener.isBuild()) {
                 throw exc;
@@ -602,7 +602,7 @@ public class NetworkModificationService {
                     .withKey("loadCreated")
                     .withDefaultMessage("New load with id=${id} created")
                     .withValue("id", loadCreationInfos.getEquipmentId())
-                    .withSeverity(new TypedValue("LOAD_CREATION_INFO", TypedValue.INFO_LOGLEVEL))
+                    .withSeverity(TypedValue.INFO_SEVERITY)
                     .build());
             }
 
@@ -687,14 +687,14 @@ public class NetworkModificationService {
                             .withKey("loadModification")
                             .withDefaultMessage("Load with id=${id} modified")
                             .withValue("id", loadModificationInfos.getEquipmentId())
-                            .withSeverity(new TypedValue("LOAD_MODIFICATION_INFO", TypedValue.INFO_LOGLEVEL))
+                            .withSeverity(TypedValue.INFO_SEVERITY)
                             .build());
                 } catch (NetworkModificationException exc) {
                     reporter.report(Report.builder()
                             .withKey("loadModification")
                             .withDefaultMessage(exc.getMessage())
                             .withValue("id", loadModificationInfos.getEquipmentId())
-                            .withSeverity(new TypedValue("LOAD_MODIFICATION_ERROR", TypedValue.ERROR_LOGLEVEL))
+                            .withSeverity(TypedValue.ERROR_SEVERITY)
                             .build());
                 }
             }
@@ -803,7 +803,7 @@ public class NetworkModificationService {
                     .withDefaultMessage("equipment of type=${type} and id=${id} deleted")
                     .withValue("type", equipmentType)
                     .withValue("id", equipmentId)
-                    .withSeverity(new TypedValue("EQUIPMENT_DELETION_INFO", TypedValue.INFO_LOGLEVEL))
+                    .withSeverity(TypedValue.INFO_SEVERITY)
                     .build());
             }
 
@@ -903,7 +903,7 @@ public class NetworkModificationService {
                     .withKey("generatorCreated")
                     .withDefaultMessage("New generator with id=${id} created")
                     .withValue("id", generatorCreationInfos.getEquipmentId())
-                    .withSeverity(new TypedValue("GENERATOR_CREATION_INFO", TypedValue.INFO_LOGLEVEL))
+                    .withSeverity(TypedValue.INFO_SEVERITY)
                     .build());
             }
 
@@ -1050,7 +1050,7 @@ public class NetworkModificationService {
                     .withKey("lineCreated")
                     .withDefaultMessage("New line with id=${id} created")
                     .withValue("id", lineCreationInfos.getEquipmentId())
-                    .withSeverity(new TypedValue("LINE_CREATION_INFO", TypedValue.INFO_LOGLEVEL))
+                    .withSeverity(TypedValue.INFO_SEVERITY)
                     .build());
             }
 
@@ -1095,7 +1095,7 @@ public class NetworkModificationService {
                     .withKey("twoWindingsTransformerCreated")
                     .withDefaultMessage("New two windings transformer with id=${id} created")
                     .withValue("id", twoWindingsTransformerCreationInfos.getEquipmentId())
-                    .withSeverity(new TypedValue("TWO_WINDINGS_TRANSFORMER_CREATION_INFO", TypedValue.INFO_LOGLEVEL))
+                    .withSeverity(TypedValue.INFO_SEVERITY)
                     .build());
             }
 
@@ -1203,7 +1203,7 @@ public class NetworkModificationService {
                     .withKey("substationCreated")
                     .withDefaultMessage("New substation with id=${id} created")
                     .withValue("id", substationCreationInfos.getEquipmentId())
-                    .withSeverity(new TypedValue("SUBSTATION_CREATION_INFO", TypedValue.INFO_LOGLEVEL))
+                    .withSeverity(TypedValue.INFO_SEVERITY)
                     .build());
             }
 
@@ -1353,7 +1353,7 @@ public class NetworkModificationService {
                 .withKey("voltageLevelCreated")
                 .withDefaultMessage("New voltage level with id=${id} created")
                 .withValue("id", voltageLevelCreationInfos.getEquipmentId())
-                .withSeverity(new TypedValue("VOLTAGE_LEVEL_CREATION_INFO", TypedValue.INFO_LOGLEVEL))
+                .withSeverity(TypedValue.INFO_SEVERITY)
                 .build());
 
             // add the voltage level creation entity to the listener
@@ -1633,7 +1633,7 @@ public class NetworkModificationService {
                 reporter.report(Report.builder()
                     .withKey(MODIFICATION_ERROR.name())
                     .withDefaultMessage(exc.getMessage())
-                    .withSeverity(new TypedValue("NETWORK_MODIFICATION_ERROR", TypedValue.ERROR_LOGLEVEL))
+                    .withSeverity(TypedValue.ERROR_SEVERITY)
                     .build());
             }
         });
@@ -1747,7 +1747,7 @@ public class NetworkModificationService {
                     .withKey("shuntCompensatorCreated")
                     .withDefaultMessage("New shunt compensator with id=${id} created")
                     .withValue("id", shuntCompensatorCreationInfos.getEquipmentId())
-                    .withSeverity(new TypedValue("SHUNT_COMPENSATOR_CREATION_INFO", TypedValue.INFO_LOGLEVEL))
+                    .withSeverity(TypedValue.INFO_SEVERITY)
                     .build());
             }
 
