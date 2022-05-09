@@ -31,6 +31,7 @@ import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.BusbarConnectionCreationEmbeddable;
 import org.gridsuite.modification.server.entities.equipment.creation.BusbarSectionCreationEmbeddable;
 import org.gridsuite.modification.server.entities.equipment.creation.EquipmentCreationEntity;
+import org.gridsuite.modification.server.entities.equipment.creation.VoltageLevelCreationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.LineSplitWithVoltageLevelEntity;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
@@ -1867,6 +1868,8 @@ public class NetworkModificationService {
             return Mono.error(new NetworkModificationException(LINE_SPLIT_NOT_FOUND, "Line split not found"));
         }
 
+        LineSplitWithVoltageLevelEntity casted = (LineSplitWithVoltageLevelEntity) lineSplitWithVoltageLevelEntity.get();
+        VoltageLevelCreationEntity mayVoltageLevelCreation = casted.getMayVoltageLevelCreation();
         VoltageLevelCreationInfos mayNewVoltageLevelInfos = lineSplitWithVoltageLevelInfos.getMayNewVoltageLevelInfos();
 
         LineSplitWithVoltageLevelEntity updatedEntity = this.networkModificationRepository.lineSplitWithVoltageLevelEntity(
@@ -1885,6 +1888,12 @@ public class NetworkModificationService {
         updatedEntity.setId(modificationUuid);
         updatedEntity.setGroup(lineSplitWithVoltageLevelEntity.get().getGroup());
         this.networkModificationRepository.updateModification(updatedEntity);
+
+        // NetworkStoreListener.makeVoltageLevelCreationEntity recreates on need, so get rid of previous
+        if (mayVoltageLevelCreation != null) {
+            this.modificationRepository.delete(mayVoltageLevelCreation);
+        }
+
         return Mono.empty();
     }
 }
