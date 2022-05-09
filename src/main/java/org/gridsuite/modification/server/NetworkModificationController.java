@@ -146,6 +146,14 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.updateLoadCreation(loadCreationInfos, modificationUuid));
     }
 
+    @PutMapping(value = "/modifications/{modificationUuid}/loads-modification", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "update a load modification in the network")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The load modification has been updated")})
+    public ResponseEntity<Mono<Void>> updateLoadModification(@PathVariable("modificationUuid") UUID modificationUuid,
+                                                         @RequestBody LoadModificationInfos loadModificationInfos) {
+        return ResponseEntity.ok().body(networkModificationService.updateLoadModification(loadModificationInfos, modificationUuid));
+    }
+
     @PutMapping(value = "/networks/{networkUuid}/loads", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "modify a load in a network variant")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The load has been modified")})

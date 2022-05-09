@@ -183,8 +183,8 @@ public class NetworkModificationRepository {
         return count;
     }
 
-    public void updateModification(EquipmentCreationEntity equipmentCreationEntity) {
-        this.modificationRepository.save(equipmentCreationEntity);
+    public void updateModification(EquipmentModificationEntity equipmentModificationEntity) {
+        this.modificationRepository.save(equipmentModificationEntity);
     }
 
     private ModificationGroupEntity getModificationGroup(UUID groupUuid) {
