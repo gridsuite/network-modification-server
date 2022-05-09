@@ -193,7 +193,7 @@ public class NetworkModificationRepository {
     }
 
     public EquipmentCreationEntity createLoadCreationEntity(String loadId, String loadName, LoadType loadType,
-                                                    String voltageLevelId, String busOrBusbarSectionId, double activePower, double reactivePower) {
+                                                            String voltageLevelId, String busOrBusbarSectionId, double activePower, double reactivePower) {
         return new LoadCreationEntity(loadId, loadName, loadType, voltageLevelId, busOrBusbarSectionId, activePower, reactivePower);
     }
 
