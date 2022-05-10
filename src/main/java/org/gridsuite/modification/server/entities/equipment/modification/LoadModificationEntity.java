@@ -70,11 +70,11 @@ public class LoadModificationEntity extends InjectionModificationEntity {
                 .date(getDate())
                 .type(ModificationType.valueOf(getType()))
                 .equipmentId(getEquipmentId())
-                .equipmentName(new AttributeModification<>(getEquipmentNameValue(), getEquipmentNameOp()))
-                .voltageLevelId(new AttributeModification<>(getVoltageLevelIdValue(), getVoltageLevelIdOp()))
-                .busOrBusbarSectionId(new AttributeModification<>(getBusOrBusbarSectionIdValue(), getBusOrBusbarSectionIdOp()))
-                .loadType(new AttributeModification<>(getLoadTypeValue(), getLoadTypeOp()))
-                .activePower(new AttributeModification<>(getActivePowerValue(), getActivePowerOp()))
-                .reactivePower(new AttributeModification<>(getReactivePowerValue(), getReactivePowerOp()));
+                .equipmentName(AttributeModification.toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))
+                .voltageLevelId(AttributeModification.toAttributeModification(getVoltageLevelIdValue(), getVoltageLevelIdOp()))
+                .busOrBusbarSectionId(AttributeModification.toAttributeModification(getBusOrBusbarSectionIdValue(), getBusOrBusbarSectionIdOp()))
+                .loadType(AttributeModification.toAttributeModification(getLoadTypeValue(), getLoadTypeOp()))
+                .activePower(AttributeModification.toAttributeModification(getActivePowerValue(), getActivePowerOp()))
+                .reactivePower(AttributeModification.toAttributeModification(getReactivePowerValue(), getReactivePowerOp()));
     }
 }

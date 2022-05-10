@@ -29,6 +29,7 @@ import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.BusbarConnectionCreationEmbeddable;
 import org.gridsuite.modification.server.entities.equipment.creation.BusbarSectionCreationEmbeddable;
 import org.gridsuite.modification.server.entities.equipment.creation.EquipmentCreationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.slf4j.Logger;
@@ -673,6 +674,28 @@ public class NetworkModificationService {
         }
         // TODO connectivity modification
         return load;
+    }
+
+    public Mono<Void> updateLoadModification(LoadModificationInfos loadModificationInfos, UUID modificationUuid) {
+        assertLoadModificationInfosOk(loadModificationInfos).subscribe();
+
+        Optional<ModificationEntity> loadModificationEntity = this.modificationRepository.findById(modificationUuid);
+
+        if (!loadModificationEntity.isPresent()) {
+            return Mono.error(new NetworkModificationException(MODIFY_LOAD_ERROR, "Load modification not found"));
+        }
+        EquipmentModificationEntity updatedEntity = this.networkModificationRepository.createLoadModificationEntity(
+                loadModificationInfos.getEquipmentId(),
+                loadModificationInfos.getEquipmentName(),
+                loadModificationInfos.getLoadType(),
+                loadModificationInfos.getVoltageLevelId(),
+                loadModificationInfos.getBusOrBusbarSectionId(),
+                loadModificationInfos.getActivePower(),
+                loadModificationInfos.getReactivePower());
+        updatedEntity.setId(modificationUuid);
+        updatedEntity.setGroup(loadModificationEntity.get().getGroup());
+        this.networkModificationRepository.updateModification(updatedEntity);
+        return Mono.empty();
     }
 
     private List<EquipmentModificationInfos> execModifyLoad(NetworkStoreListener listener,
