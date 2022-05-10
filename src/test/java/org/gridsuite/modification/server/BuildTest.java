@@ -389,7 +389,7 @@ public class BuildTest {
     @Test
     public void runBuildWithReportErrorTest() {
         // mock exception when sending to report server
-        given(reportServerRest.exchange(eq("/v1/reports/" + TEST_REPORT_ID), eq(HttpMethod.PUT), any(HttpEntity.class), eq(ReporterModel.class)))
+        given(reportServerRest.exchange(eq("/v1/reports/" + TEST_REPORT_ID + "?overwrite=false"), eq(HttpMethod.PUT), any(HttpEntity.class), eq(ReporterModel.class)))
             .willThrow(RestClientException.class);
 
         modificationRepository.saveModifications(TEST_GROUP_ID, List.of(modificationRepository.createEquipmentAttributeModification("v1d1", "open", true)));
@@ -418,7 +418,7 @@ public class BuildTest {
         assertThrows("unexpected error", RuntimeException.class, () ->
             networkModificationService.doAction(listener, () -> {
                 throw new RuntimeException("unexpected error");
-            }, MODIFICATION_ERROR, TEST_NETWORK_ID, reporter, subReporter)
+            }, MODIFICATION_ERROR, TEST_NETWORK_ID, reporter)
         );
     }
 
