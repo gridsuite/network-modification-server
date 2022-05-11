@@ -116,7 +116,8 @@ public class NetworkModificationService {
                                                           UUID reportUuid) {
         Network network = listener.getNetwork();
         ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
-        Reporter subReporter = reporter.createSubReporter("Apply groovy script", "Apply groovy script");
+        String subReportId = "Apply groovy script";
+        Reporter subReporter = reporter.createSubReporter(subReportId, subReportId);
 
         return doAction(listener, () -> {
             if (listener.isApplyModifications()) {
@@ -154,7 +155,8 @@ public class NetworkModificationService {
                                                                    UUID reportUuid) {
         Network network = listener.getNetwork();
         ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
-        Reporter subReporter = reporter.createSubReporter("Switch '" + switchId + "' state change", "Switch '" + switchId + "' state change");
+        String subReportId = "Switch '" + switchId + "' state change";
+        Reporter subReporter = reporter.createSubReporter(subReportId, subReportId);
 
         return doAction(listener, () -> {
             if (listener.isApplyModifications()) {
@@ -242,7 +244,8 @@ public class NetworkModificationService {
     private List<ModificationInfos> execLockoutLine(NetworkStoreListener listener, String lineId, UUID reportUuid) {
         Network network = listener.getNetwork();
         ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
-        Reporter subReporter = reporter.createSubReporter("Lockout line " + lineId, "Lockout line " + lineId);
+        String subReportId = "Lockout line " + lineId;
+        Reporter subReporter = reporter.createSubReporter(subReportId, subReportId);
 
         return doAction(listener, () -> {
                 if (listener.isApplyModifications()) {
@@ -269,7 +272,8 @@ public class NetworkModificationService {
     private List<ModificationInfos> execTripLine(NetworkStoreListener listener, String lineId, UUID reportUuid) {
         Network network = listener.getNetwork();
         ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
-        Reporter subReporter = reporter.createSubReporter("Trip line " + lineId, "Trip line " + lineId);
+        String subReportId = "Trip line " + lineId;
+        Reporter subReporter = reporter.createSubReporter(subReportId, subReportId);
 
         return doAction(listener, () -> {
                 if (listener.isApplyModifications()) {
@@ -299,7 +303,8 @@ public class NetworkModificationService {
                                                         UUID reportUuid) {
         Network network = listener.getNetwork();
         ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
-        Reporter subReporter = reporter.createSubReporter("Energise line " + lineId, "Energise line " + lineId);
+        String subReportId = "Energise line " + lineId;
+        Reporter subReporter = reporter.createSubReporter(subReportId, subReportId);
 
         return doAction(listener, () -> {
                 if (listener.isApplyModifications()) {
@@ -331,7 +336,8 @@ public class NetworkModificationService {
     private List<ModificationInfos> execSwitchOnLine(NetworkStoreListener listener, String lineId, UUID reportUuid) {
         Network network = listener.getNetwork();
         ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
-        Reporter subReporter = reporter.createSubReporter("Switch on line " + lineId, "Switch on line " + lineId);
+        String subReportId = "Switch on line " + lineId;
+        Reporter subReporter = reporter.createSubReporter(subReportId, subReportId);
 
         return doAction(listener, () -> {
                 if (listener.isApplyModifications()) {
@@ -574,7 +580,8 @@ public class NetworkModificationService {
                                                             UUID reportUuid) {
         Network network = listener.getNetwork();
         ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
-        Reporter subReporter = reporter.createSubReporter("Load creation " + loadCreationInfos.getEquipmentId(), "Load creation " + loadCreationInfos.getEquipmentId());
+        String subReportId = "Load creation " + loadCreationInfos.getEquipmentId();
+        Reporter subReporter = reporter.createSubReporter(subReportId, subReportId);
 
         return doAction(listener, () -> {
             if (listener.isApplyModifications()) {
@@ -682,7 +689,8 @@ public class NetworkModificationService {
                                                             UUID reportUuid) {
         Network network = listener.getNetwork();
         ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
-        Reporter subReporter = reporter.createSubReporter("Load modification " + loadModificationInfos.getEquipmentId(), "Load modification " + loadModificationInfos.getEquipmentId());
+        String subReportId = "Load modification " + loadModificationInfos.getEquipmentId();
+        Reporter subReporter = reporter.createSubReporter(subReportId, subReportId);
 
         return doAction(listener, () -> {
             if (listener.isApplyModifications()) {
@@ -732,7 +740,8 @@ public class NetworkModificationService {
                                                              UUID reportUuid) {
         Network network = listener.getNetwork();
         ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
-        Reporter subReporter = reporter.createSubReporter("Equipment deletion " + equipmentId, "Equipment deletion " + equipmentId);
+        String subReportId = "Equipment deletion " + equipmentId;
+        Reporter subReporter = reporter.createSubReporter(subReportId, subReportId);
 
         return doAction(listener, () -> {
             if (listener.isApplyModifications()) {
@@ -899,7 +908,8 @@ public class NetworkModificationService {
                                                                  UUID reportUuid) {
         Network network = listener.getNetwork();
         ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
-        Reporter subReporter = reporter.createSubReporter("Generator creation " + generatorCreationInfos.getEquipmentId(), "Generator creation " + generatorCreationInfos.getEquipmentId());
+        String subReportId = "Generator creation " + generatorCreationInfos.getEquipmentId();
+        Reporter subReporter = reporter.createSubReporter(subReportId, subReportId);
 
         return doAction(listener, () -> {
             if (listener.isApplyModifications()) {
@@ -1034,7 +1044,8 @@ public class NetworkModificationService {
                                                             UUID reportUuid) {
         Network network = listener.getNetwork();
         ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
-        Reporter subReporter = reporter.createSubReporter("Line creation " + lineCreationInfos.getEquipmentId(), "Line creation " + lineCreationInfos.getEquipmentId());
+        String subReportId = "Line creation " + lineCreationInfos.getEquipmentId();
+        Reporter subReporter = reporter.createSubReporter(subReportId, subReportId);
 
         return doAction(listener, () -> {
             if (listener.isApplyModifications()) {
@@ -1087,7 +1098,8 @@ public class NetworkModificationService {
                                                                               UUID reportUuid) {
         Network network = listener.getNetwork();
         ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
-        Reporter subReporter = reporter.createSubReporter("Two windings transformer creation " + twoWindingsTransformerCreationInfos.getEquipmentId(), "Two windings transformer creation " + twoWindingsTransformerCreationInfos.getEquipmentId());
+        String subReportId = "Two windings transformer creation " + twoWindingsTransformerCreationInfos.getEquipmentId();
+        Reporter subReporter = reporter.createSubReporter(subReportId, subReportId);
 
         return doAction(listener, () -> {
             if (listener.isApplyModifications()) {
@@ -1192,7 +1204,8 @@ public class NetworkModificationService {
                                                                   UUID reportUuid) {
         Network network = listener.getNetwork();
         ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
-        Reporter subReporter = reporter.createSubReporter("Substation creation " + substationCreationInfos.getEquipmentId(), "Substation creation " + substationCreationInfos.getEquipmentId());
+        String subReportId = "Substation creation " + substationCreationInfos.getEquipmentId();
+        Reporter subReporter = reporter.createSubReporter(subReportId, subReportId);
 
         return doAction(listener, () -> {
             if (listener.isApplyModifications()) {
@@ -1250,7 +1263,8 @@ public class NetworkModificationService {
 
         Network network = listener.getNetwork();
         ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
-        Reporter subReporter = reporter.createSubReporter("VoltageLevel creation " + voltageLevelCreationInfos.getEquipmentId(), "VoltageLevel creation " + voltageLevelCreationInfos.getEquipmentId());
+        String subReportId = "VoltageLevel creation " + voltageLevelCreationInfos.getEquipmentId();
+        Reporter subReporter = reporter.createSubReporter(subReportId, subReportId);
 
         String substationId = voltageLevelCreationInfos.getSubstationId();
         Substation substation = network.getSubstation(substationId);
@@ -1540,29 +1554,34 @@ public class NetworkModificationService {
                     throw new NetworkModificationException(EQUIPMENT_NOT_FOUND, equipmentId);
                 }
                 if (identifiable instanceof Switch) {
-                    subReporter.set(reporter.createSubReporter("Switch '" + identifiable.getId() + "' state change", "Switch '" + identifiable.getId() + "' state change"));
+                    String subReportId = "Switch '" + identifiable.getId() + "' state change";
+                    subReporter.set(reporter.createSubReporter(subReportId, subReportId));
                     changeSwitchAttribute((Switch) identifiable, attributeName, attributeValue, subReporter.get());
                 } else if (identifiable instanceof Injection) {
                     if (identifiable instanceof Generator) {
-                        subReporter.set(reporter.createSubReporter("Generator '" + identifiable.getId() + "' change", "Generator '" + identifiable.getId() + "' change"));
+                        String subReportId = "Generator '" + identifiable.getId() + "' change";
+                        subReporter.set(reporter.createSubReporter(subReportId, subReportId));
                         changeGeneratorAttribute((Generator) identifiable, attributeName, attributeValue, subReporter.get());
                     }
                 } else if (identifiable instanceof Branch) {
                     if (identifiable instanceof Line) {
-                        subReporter.set(reporter.createSubReporter("Line '" + identifiable.getId() + "' change", "Line '" + identifiable.getId() + "' change"));
+                        String subReportId = "Line '" + identifiable.getId() + "' change";
+                        subReporter.set(reporter.createSubReporter(subReportId, subReportId));
                         changeLineAttribute((Line) identifiable, attributeName, attributeValue, subReporter.get());
                     } else if (identifiable instanceof TwoWindingsTransformer) {
-                        subReporter.set(reporter.createSubReporter("Two windings transformer '" + identifiable.getId() + "' change", "Two windings transformer '" + identifiable.getId() + "' change"));
+                        String subReportId = "Two windings transformer '" + identifiable.getId() + "' change";
+                        subReporter.set(reporter.createSubReporter(subReportId, subReportId));
                         changeTwoWindingsTransformerAttribute((TwoWindingsTransformer) identifiable, attributeName, attributeValue, subReporter.get());
                     }
                 } else if (identifiable instanceof ThreeWindingsTransformer) {
-                    subReporter.set(reporter.createSubReporter("Three windings transformer '" + identifiable.getId() + "' change", "Three windings transformer '" + identifiable.getId() + "' change"));
+                    String subReportId = "Three windings transformer '" + identifiable.getId() + "' change";
+                    subReporter.set(reporter.createSubReporter(subReportId, subReportId));
                     changeThreeWindingsTransformerAttribute((ThreeWindingsTransformer) identifiable, attributeName, attributeValue, subReporter.get());
                 } else if (identifiable instanceof HvdcLine) {
                     // no hvdc line modifications yet
                 }
             }
-        }, MODIFICATION_ERROR, reportUuid, () -> reporter, () -> subReporter.get()).stream().map(EquipmentModificationInfos.class::cast)
+        }, MODIFICATION_ERROR, reportUuid, () -> reporter, subReporter::get).stream().map(EquipmentModificationInfos.class::cast)
             .collect(Collectors.toList());
     }
 
@@ -1789,7 +1808,8 @@ public class NetworkModificationService {
                                                                         UUID reportUuid) {
         Network network = listener.getNetwork();
         ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
-        Reporter subReporter = reporter.createSubReporter("Shunt compensator creation " + shuntCompensatorCreationInfos.getEquipmentId(), "Shunt compensator creation " + shuntCompensatorCreationInfos.getEquipmentId());
+        String subReportId = "Shunt compensator creation " + shuntCompensatorCreationInfos.getEquipmentId();
+        Reporter subReporter = reporter.createSubReporter(subReportId, subReportId);
 
         return doAction(listener, () -> {
             if (listener.isApplyModifications()) {
