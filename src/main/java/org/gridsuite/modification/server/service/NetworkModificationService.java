@@ -88,6 +88,9 @@ public class NetworkModificationService {
     private static final String RUN_CATEGORY_BROKER_OUTPUT = NetworkModificationService.class.getName() + ".output-broker-messages.run";
     private static final Logger RUN_MESSAGE_LOGGER = LoggerFactory.getLogger(RUN_CATEGORY_BROKER_OUTPUT);
 
+    private static final String NETWORK_MODIFICATION_REPORT_KEY = "NetworkModification";
+    private static final String NETWORK_MODIFICATION_REPORT_NAME = "NetworkModification";
+
     @Autowired
     private StreamBridge publisher;
 
@@ -112,7 +115,8 @@ public class NetworkModificationService {
                                                           String groovyScript,
                                                           UUID reportUuid) {
         Network network = listener.getNetwork();
-        ReporterModel reporter = new ReporterModel(UUID.randomUUID().toString(), "Apply groovy script");
+        ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
+        Reporter subReporter = reporter.createSubReporter("Apply groovy script", "Apply groovy script");
 
         return doAction(listener, () -> {
             if (listener.isApplyModifications()) {
@@ -122,7 +126,7 @@ public class NetworkModificationService {
                 var shell = new GroovyShell(binding, conf);
                 shell.evaluate(groovyScript);
 
-                reporter.report(Report.builder()
+                subReporter.report(Report.builder()
                     .withKey("groovyScriptApplied")
                     .withDefaultMessage("Groovy script applied")
                     .withSeverity(TypedValue.INFO_SEVERITY)
@@ -131,7 +135,7 @@ public class NetworkModificationService {
 
             // add the groovy script modification entity to the listener
             listener.storeGroovyScriptModification(groovyScript);
-        }, GROOVY_SCRIPT_ERROR, reportUuid, () -> reporter);
+        }, GROOVY_SCRIPT_ERROR, reportUuid, () -> reporter, () -> subReporter);
     }
 
     public Flux<ModificationInfos> applyGroovyScript(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String groovyScript) {
@@ -149,7 +153,8 @@ public class NetworkModificationService {
                                                                    boolean open,
                                                                    UUID reportUuid) {
         Network network = listener.getNetwork();
-        ReporterModel reporter = new ReporterModel(UUID.randomUUID().toString(), "Switch '" + switchId + "' state change");
+        ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
+        Reporter subReporter = reporter.createSubReporter("Switch '" + switchId + "' state change", "Switch '" + switchId + "' state change");
 
         return doAction(listener, () -> {
             if (listener.isApplyModifications()) {
@@ -161,7 +166,7 @@ public class NetworkModificationService {
                     aSwitch.setOpen(open);
                 }
 
-                reporter.report(Report.builder()
+                subReporter.report(Report.builder()
                     .withKey("switchChanged")
                     .withDefaultMessage("Switch with id=${id} open state changed")
                     .withValue("id", switchId)
@@ -171,7 +176,7 @@ public class NetworkModificationService {
 
             // add the switch 'open' attribute modification entity to the listener
             listener.storeEquipmentAttributeModification(switchId, "open", open);
-        }, MODIFICATION_ERROR, reportUuid, () -> reporter).stream().map(EquipmentModificationInfos.class::cast)
+        }, MODIFICATION_ERROR, reportUuid, () -> reporter, () -> subReporter).stream().map(EquipmentModificationInfos.class::cast)
             .collect(Collectors.toList());
     }
 
@@ -236,7 +241,8 @@ public class NetworkModificationService {
 
     private List<ModificationInfos> execLockoutLine(NetworkStoreListener listener, String lineId, UUID reportUuid) {
         Network network = listener.getNetwork();
-        ReporterModel reporter = new ReporterModel(UUID.randomUUID().toString(), "Lockout line " + lineId);
+        ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
+        Reporter subReporter = reporter.createSubReporter("Lockout line " + lineId, "Lockout line " + lineId);
 
         return doAction(listener, () -> {
                 if (listener.isApplyModifications()) {
@@ -246,7 +252,7 @@ public class NetworkModificationService {
                         throw new NetworkModificationException(BRANCH_ACTION_ERROR, "Unable to disconnect both line ends");
                     }
 
-                    reporter.report(Report.builder()
+                    subReporter.report(Report.builder()
                         .withKey("lockoutLineApplied")
                         .withDefaultMessage("Line ${id} (id) : lockout applied")
                         .withValue("id", lineId)
@@ -256,13 +262,14 @@ public class NetworkModificationService {
 
                 // add the branch status modification entity to the listener
                 listener.storeBranchStatusModification(lineId, BranchStatusModificationInfos.ActionType.LOCKOUT);
-            }, MODIFICATION_ERROR, reportUuid, () -> reporter
+            }, MODIFICATION_ERROR, reportUuid, () -> reporter, () -> subReporter
         );
     }
 
     private List<ModificationInfos> execTripLine(NetworkStoreListener listener, String lineId, UUID reportUuid) {
         Network network = listener.getNetwork();
-        ReporterModel reporter = new ReporterModel(UUID.randomUUID().toString(), "Trip line " + lineId);
+        ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
+        Reporter subReporter = reporter.createSubReporter("Trip line " + lineId, "Trip line " + lineId);
 
         return doAction(listener, () -> {
                 if (listener.isApplyModifications()) {
@@ -272,7 +279,7 @@ public class NetworkModificationService {
                         throw new NetworkModificationException(BRANCH_ACTION_ERROR, "Unable to disconnect both line ends");
                     }
 
-                    reporter.report(Report.builder()
+                    subReporter.report(Report.builder()
                         .withKey("tripLineApplied")
                         .withDefaultMessage("Line ${id} (id) : trip applied")
                         .withValue("id", lineId)
@@ -282,7 +289,7 @@ public class NetworkModificationService {
 
                 // add the branch status modification entity to the listener
                 listener.storeBranchStatusModification(lineId, BranchStatusModificationInfos.ActionType.TRIP);
-            }, MODIFICATION_ERROR, reportUuid, () -> reporter
+            }, MODIFICATION_ERROR, reportUuid, () -> reporter, () -> subReporter
         );
     }
 
@@ -291,7 +298,8 @@ public class NetworkModificationService {
                                                         Branch.Side side,
                                                         UUID reportUuid) {
         Network network = listener.getNetwork();
-        ReporterModel reporter = new ReporterModel(UUID.randomUUID().toString(), "Energise line " + lineId);
+        ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
+        Reporter subReporter = reporter.createSubReporter("Energise line " + lineId, "Energise line " + lineId);
 
         return doAction(listener, () -> {
                 if (listener.isApplyModifications()) {
@@ -305,7 +313,7 @@ public class NetworkModificationService {
                         throw new NetworkModificationException(BRANCH_ACTION_ERROR, "Unable to energise line end");
                     }
 
-                    reporter.report(Report.builder()
+                    subReporter.report(Report.builder()
                         .withKey("energiseLineEndApplied")
                         .withDefaultMessage("Line ${id} (id) : energise the side ${side} applied")
                         .withValue("id", lineId)
@@ -316,13 +324,14 @@ public class NetworkModificationService {
 
                 // add the branch status modification entity to the listener
                 listener.storeBranchStatusModification(lineId, side == Branch.Side.ONE ? BranchStatusModificationInfos.ActionType.ENERGISE_END_ONE : BranchStatusModificationInfos.ActionType.ENERGISE_END_TWO);
-            }, MODIFICATION_ERROR, reportUuid, () -> reporter
+            }, MODIFICATION_ERROR, reportUuid, () -> reporter, () -> subReporter
         );
     }
 
     private List<ModificationInfos> execSwitchOnLine(NetworkStoreListener listener, String lineId, UUID reportUuid) {
         Network network = listener.getNetwork();
-        ReporterModel reporter = new ReporterModel(UUID.randomUUID().toString(), "Switch on line " + lineId);
+        ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
+        Reporter subReporter = reporter.createSubReporter("Switch on line " + lineId, "Switch on line " + lineId);
 
         return doAction(listener, () -> {
                 if (listener.isApplyModifications()) {
@@ -336,7 +345,7 @@ public class NetworkModificationService {
                         throw new NetworkModificationException(BRANCH_ACTION_ERROR, "Unable to connect both line ends");
                     }
 
-                    reporter.report(Report.builder()
+                    subReporter.report(Report.builder()
                         .withKey("switchOnLineApplied")
                         .withDefaultMessage("Line ${id} (id) : switch on applied")
                         .withValue("id", lineId)
@@ -346,7 +355,7 @@ public class NetworkModificationService {
 
                 // add the branch status modification entity to the listener
                 listener.storeBranchStatusModification(lineId, BranchStatusModificationInfos.ActionType.SWITCH_ON);
-            }, MODIFICATION_ERROR, reportUuid, () -> reporter
+            }, MODIFICATION_ERROR, reportUuid, () -> reporter, () -> subReporter
         );
     }
 
@@ -356,7 +365,8 @@ public class NetworkModificationService {
 
     public List<ModificationInfos> doAction(NetworkStoreListener listener, Runnable action,
                                             NetworkModificationException.Type typeIfError,
-                                            UUID reportUuid, Supplier<ReporterModel> reporter) {
+                                            UUID reportUuid, Supplier<ReporterModel> reporter,
+                                            Supplier<Reporter> subReporter) {
         try {
             action.run();
             if (!listener.isBuild()) {
@@ -365,8 +375,8 @@ public class NetworkModificationService {
             return listener.isApplyModifications() ? listener.getModifications() : Collections.emptyList();
         } catch (PowsyblException e) {
             NetworkModificationException exc = e instanceof NetworkModificationException ? (NetworkModificationException) e : new NetworkModificationException(typeIfError, e);
-            if (reporter.get() != null) {
-                reporter.get().report(Report.builder()
+            if (subReporter.get() != null) {
+                subReporter.get().report(Report.builder()
                     .withKey(typeIfError.name())
                     .withDefaultMessage(exc.getMessage())
                     .withSeverity(TypedValue.ERROR_SEVERITY)
@@ -563,7 +573,8 @@ public class NetworkModificationService {
                                                             LoadCreationInfos loadCreationInfos,
                                                             UUID reportUuid) {
         Network network = listener.getNetwork();
-        ReporterModel reporter = new ReporterModel(UUID.randomUUID().toString(), "Load creation " + loadCreationInfos.getEquipmentId());
+        ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
+        Reporter subReporter = reporter.createSubReporter("Load creation " + loadCreationInfos.getEquipmentId(), "Load creation " + loadCreationInfos.getEquipmentId());
 
         return doAction(listener, () -> {
             if (listener.isApplyModifications()) {
@@ -575,7 +586,7 @@ public class NetworkModificationService {
                     createLoadInBusBreaker(voltageLevel, loadCreationInfos);
                 }
 
-                reporter.report(Report.builder()
+                subReporter.report(Report.builder()
                     .withKey("loadCreated")
                     .withDefaultMessage("New load with id=${id} created")
                     .withValue("id", loadCreationInfos.getEquipmentId())
@@ -585,7 +596,7 @@ public class NetworkModificationService {
 
             // add the load creation entity to the listener
             listener.storeLoadCreation(loadCreationInfos);
-        }, CREATE_LOAD_ERROR, reportUuid, () -> reporter).stream().map(EquipmentModificationInfos.class::cast)
+        }, CREATE_LOAD_ERROR, reportUuid, () -> reporter, () -> subReporter).stream().map(EquipmentModificationInfos.class::cast)
             .collect(Collectors.toList());
     }
 
@@ -670,7 +681,8 @@ public class NetworkModificationService {
                                                             LoadModificationInfos loadModificationInfos,
                                                             UUID reportUuid) {
         Network network = listener.getNetwork();
-        ReporterModel reporter = new ReporterModel(UUID.randomUUID().toString(), "Load modification " + loadModificationInfos.getEquipmentId());
+        ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
+        Reporter subReporter = reporter.createSubReporter("Load modification " + loadModificationInfos.getEquipmentId(), "Load modification " + loadModificationInfos.getEquipmentId());
 
         return doAction(listener, () -> {
             if (listener.isApplyModifications()) {
@@ -678,14 +690,14 @@ public class NetworkModificationService {
                     // modify the load in the network
                     modifyLoad(network, loadModificationInfos);
 
-                    reporter.report(Report.builder()
+                    subReporter.report(Report.builder()
                             .withKey("loadModification")
                             .withDefaultMessage("Load with id=${id} modified")
                             .withValue("id", loadModificationInfos.getEquipmentId())
                             .withSeverity(TypedValue.INFO_SEVERITY)
                             .build());
                 } catch (NetworkModificationException exc) {
-                    reporter.report(Report.builder()
+                    subReporter.report(Report.builder()
                             .withKey("loadModification")
                             .withDefaultMessage(exc.getMessage())
                             .withValue("id", loadModificationInfos.getEquipmentId())
@@ -696,7 +708,7 @@ public class NetworkModificationService {
 
             // add the load modification entity to the listener
             listener.storeLoadModification(loadModificationInfos);
-        }, MODIFY_LOAD_ERROR, reportUuid, () -> reporter).stream().map(EquipmentModificationInfos.class::cast)
+        }, MODIFY_LOAD_ERROR, reportUuid, () -> reporter, () -> subReporter).stream().map(EquipmentModificationInfos.class::cast)
                 .collect(Collectors.toList());
     }
 
@@ -719,7 +731,8 @@ public class NetworkModificationService {
                                                              String equipmentId,
                                                              UUID reportUuid) {
         Network network = listener.getNetwork();
-        ReporterModel reporter = new ReporterModel(UUID.randomUUID().toString(), "Equipment deletion " + equipmentId);
+        ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
+        Reporter subReporter = reporter.createSubReporter("Equipment deletion " + equipmentId, "Equipment deletion " + equipmentId);
 
         return doAction(listener, () -> {
             if (listener.isApplyModifications()) {
@@ -789,7 +802,7 @@ public class NetworkModificationService {
                     ((Substation) identifiable).remove();
                 }
 
-                reporter.report(Report.builder()
+                subReporter.report(Report.builder()
                     .withKey("equipmentDeleted")
                     .withDefaultMessage("equipment of type=${type} and id=${id} deleted")
                     .withValue("type", equipmentType)
@@ -800,7 +813,7 @@ public class NetworkModificationService {
 
             // add the equipment deletion entity to the listener
             listener.storeEquipmentDeletion(equipmentId, equipmentType);
-        }, DELETE_EQUIPMENT_ERROR, reportUuid, () -> reporter).stream().map(EquipmentDeletionInfos.class::cast)
+        }, DELETE_EQUIPMENT_ERROR, reportUuid, () -> reporter, () -> subReporter).stream().map(EquipmentDeletionInfos.class::cast)
             .collect(Collectors.toList());
     }
 
@@ -885,7 +898,8 @@ public class NetworkModificationService {
                                                                  GeneratorCreationInfos generatorCreationInfos,
                                                                  UUID reportUuid) {
         Network network = listener.getNetwork();
-        ReporterModel reporter = new ReporterModel(UUID.randomUUID().toString(), "Generator creation " + generatorCreationInfos.getEquipmentId());
+        ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
+        Reporter subReporter = reporter.createSubReporter("Generator creation " + generatorCreationInfos.getEquipmentId(), "Generator creation " + generatorCreationInfos.getEquipmentId());
 
         return doAction(listener, () -> {
             if (listener.isApplyModifications()) {
@@ -897,7 +911,7 @@ public class NetworkModificationService {
                     createGeneratorInBusBreaker(voltageLevel, generatorCreationInfos);
                 }
 
-                reporter.report(Report.builder()
+                subReporter.report(Report.builder()
                     .withKey("generatorCreated")
                     .withDefaultMessage("New generator with id=${id} created")
                     .withValue("id", generatorCreationInfos.getEquipmentId())
@@ -907,7 +921,7 @@ public class NetworkModificationService {
 
             // add the generator creation entity to the listener
             listener.storeGeneratorCreation(generatorCreationInfos);
-        }, CREATE_GENERATOR_ERROR, reportUuid, () -> reporter).stream().map(EquipmentModificationInfos.class::cast)
+        }, CREATE_GENERATOR_ERROR, reportUuid, () -> reporter, () -> subReporter).stream().map(EquipmentModificationInfos.class::cast)
             .collect(Collectors.toList());
     }
 
@@ -1019,7 +1033,8 @@ public class NetworkModificationService {
                                                             LineCreationInfos lineCreationInfos,
                                                             UUID reportUuid) {
         Network network = listener.getNetwork();
-        ReporterModel reporter = new ReporterModel(UUID.randomUUID().toString(), "Line creation " + lineCreationInfos.getEquipmentId());
+        ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
+        Reporter subReporter = reporter.createSubReporter("Line creation " + lineCreationInfos.getEquipmentId(), "Line creation " + lineCreationInfos.getEquipmentId());
 
         return doAction(listener, () -> {
             if (listener.isApplyModifications()) {
@@ -1040,7 +1055,7 @@ public class NetworkModificationService {
                     myLine.newCurrentLimits2().setPermanentLimit(currentLimitsInfos2.getPermanentLimit()).add();
                 }
 
-                reporter.report(Report.builder()
+                subReporter.report(Report.builder()
                     .withKey("lineCreated")
                     .withDefaultMessage("New line with id=${id} created")
                     .withValue("id", lineCreationInfos.getEquipmentId())
@@ -1050,7 +1065,7 @@ public class NetworkModificationService {
 
             // add the line creation entity to the listener
             listener.storeLineCreation(lineCreationInfos);
-        }, CREATE_LINE_ERROR, reportUuid, () -> reporter).stream().map(EquipmentModificationInfos.class::cast)
+        }, CREATE_LINE_ERROR, reportUuid, () -> reporter, () -> subReporter).stream().map(EquipmentModificationInfos.class::cast)
             .collect(Collectors.toList());
     }
 
@@ -1071,7 +1086,8 @@ public class NetworkModificationService {
                                                                               TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos,
                                                                               UUID reportUuid) {
         Network network = listener.getNetwork();
-        ReporterModel reporter = new ReporterModel(UUID.randomUUID().toString(), "Two windings transformer creation " + twoWindingsTransformerCreationInfos.getEquipmentId());
+        ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
+        Reporter subReporter = reporter.createSubReporter("Two windings transformer creation " + twoWindingsTransformerCreationInfos.getEquipmentId(), "Two windings transformer creation " + twoWindingsTransformerCreationInfos.getEquipmentId());
 
         return doAction(listener, () -> {
             if (listener.isApplyModifications()) {
@@ -1081,7 +1097,7 @@ public class NetworkModificationService {
 
                 createTwoWindingsTransformer(network, voltageLevel1, voltageLevel2, twoWindingsTransformerCreationInfos);
 
-                reporter.report(Report.builder()
+                subReporter.report(Report.builder()
                     .withKey("twoWindingsTransformerCreated")
                     .withDefaultMessage("New two windings transformer with id=${id} created")
                     .withValue("id", twoWindingsTransformerCreationInfos.getEquipmentId())
@@ -1091,7 +1107,7 @@ public class NetworkModificationService {
 
             // add the 2wt creation entity to the listener
             listener.storeTwoWindingsTransformerCreation(twoWindingsTransformerCreationInfos);
-        }, CREATE_TWO_WINDINGS_TRANSFORMER_ERROR, reportUuid, () -> reporter).stream().map(EquipmentModificationInfos.class::cast)
+        }, CREATE_TWO_WINDINGS_TRANSFORMER_ERROR, reportUuid, () -> reporter, () -> subReporter).stream().map(EquipmentModificationInfos.class::cast)
             .collect(Collectors.toList());
     }
 
@@ -1175,7 +1191,8 @@ public class NetworkModificationService {
                                                                   SubstationCreationInfos substationCreationInfos,
                                                                   UUID reportUuid) {
         Network network = listener.getNetwork();
-        ReporterModel reporter = new ReporterModel(UUID.randomUUID().toString(), "Substation creation " + substationCreationInfos.getEquipmentId());
+        ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
+        Reporter subReporter = reporter.createSubReporter("Substation creation " + substationCreationInfos.getEquipmentId(), "Substation creation " + substationCreationInfos.getEquipmentId());
 
         return doAction(listener, () -> {
             if (listener.isApplyModifications()) {
@@ -1185,7 +1202,7 @@ public class NetworkModificationService {
                     .setCountry(substationCreationInfos.getSubstationCountry())
                     .add();
 
-                reporter.report(Report.builder()
+                subReporter.report(Report.builder()
                     .withKey("substationCreated")
                     .withDefaultMessage("New substation with id=${id} created")
                     .withValue("id", substationCreationInfos.getEquipmentId())
@@ -1195,7 +1212,7 @@ public class NetworkModificationService {
 
             // add the substation creation entity to the listener
             listener.storeSubstationCreation(substationCreationInfos);
-        }, CREATE_SUBSTATION_ERROR, reportUuid, () -> reporter).stream().map(EquipmentModificationInfos.class::cast)
+        }, CREATE_SUBSTATION_ERROR, reportUuid, () -> reporter, () -> subReporter).stream().map(EquipmentModificationInfos.class::cast)
             .collect(Collectors.toList());
     }
 
@@ -1232,7 +1249,8 @@ public class NetworkModificationService {
                                                                     UUID reportUuid) {
 
         Network network = listener.getNetwork();
-        ReporterModel reporter = new ReporterModel(UUID.randomUUID().toString(), "VoltageLevel creation " + voltageLevelCreationInfos.getEquipmentId());
+        ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
+        Reporter subReporter = reporter.createSubReporter("VoltageLevel creation " + voltageLevelCreationInfos.getEquipmentId(), "VoltageLevel creation " + voltageLevelCreationInfos.getEquipmentId());
 
         String substationId = voltageLevelCreationInfos.getSubstationId();
         Substation substation = network.getSubstation(substationId);
@@ -1332,7 +1350,7 @@ public class NetworkModificationService {
                 }
             }
 
-            reporter.report(Report.builder()
+            subReporter.report(Report.builder()
                 .withKey("voltageLevelCreated")
                 .withDefaultMessage("New voltage level with id=${id} created")
                 .withValue("id", voltageLevelCreationInfos.getEquipmentId())
@@ -1341,7 +1359,7 @@ public class NetworkModificationService {
 
             // add the voltage level creation entity to the listener
             listener.storeVoltageLevelCreation(voltageLevelCreationInfos);
-        }, CREATE_VOLTAGE_LEVEL_ERROR, reportUuid, () -> reporter).stream().map(EquipmentModificationInfos.class::cast)
+        }, CREATE_VOLTAGE_LEVEL_ERROR, reportUuid, () -> reporter, () -> subReporter).stream().map(EquipmentModificationInfos.class::cast)
             .collect(Collectors.toList());
     }
 
@@ -1512,7 +1530,8 @@ public class NetworkModificationService {
                                                                           Object attributeValue,
                                                                           UUID reportUuid) {
         Network network = listener.getNetwork();
-        AtomicReference<ReporterModel> reporter = new AtomicReference<>();
+        ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
+        AtomicReference<Reporter> subReporter = new AtomicReference<>();
 
         return doAction(listener, () -> {
             if (listener.isApplyModifications()) {
@@ -1521,29 +1540,29 @@ public class NetworkModificationService {
                     throw new NetworkModificationException(EQUIPMENT_NOT_FOUND, equipmentId);
                 }
                 if (identifiable instanceof Switch) {
-                    reporter.set(new ReporterModel(UUID.randomUUID().toString(), "Switch '" + identifiable.getId() + "' state change"));
-                    changeSwitchAttribute((Switch) identifiable, attributeName, attributeValue, reporter.get());
+                    subReporter.set(reporter.createSubReporter("Switch '" + identifiable.getId() + "' state change", "Switch '" + identifiable.getId() + "' state change"));
+                    changeSwitchAttribute((Switch) identifiable, attributeName, attributeValue, subReporter.get());
                 } else if (identifiable instanceof Injection) {
                     if (identifiable instanceof Generator) {
-                        reporter.set(new ReporterModel(UUID.randomUUID().toString(), "Generator '" + identifiable.getId() + "' change"));
-                        changeGeneratorAttribute((Generator) identifiable, attributeName, attributeValue, reporter.get());
+                        subReporter.set(reporter.createSubReporter("Generator '" + identifiable.getId() + "' change", "Generator '" + identifiable.getId() + "' change"));
+                        changeGeneratorAttribute((Generator) identifiable, attributeName, attributeValue, subReporter.get());
                     }
                 } else if (identifiable instanceof Branch) {
                     if (identifiable instanceof Line) {
-                        reporter.set(new ReporterModel(UUID.randomUUID().toString(), "Line '" + identifiable.getId() + "' change"));
-                        changeLineAttribute((Line) identifiable, attributeName, attributeValue, reporter.get());
+                        subReporter.set(reporter.createSubReporter("Line '" + identifiable.getId() + "' change", "Line '" + identifiable.getId() + "' change"));
+                        changeLineAttribute((Line) identifiable, attributeName, attributeValue, subReporter.get());
                     } else if (identifiable instanceof TwoWindingsTransformer) {
-                        reporter.set(new ReporterModel(UUID.randomUUID().toString(), "Two windings transformer '" + identifiable.getId() + "' change"));
-                        changeTwoWindingsTransformerAttribute((TwoWindingsTransformer) identifiable, attributeName, attributeValue, reporter.get());
+                        subReporter.set(reporter.createSubReporter("Two windings transformer '" + identifiable.getId() + "' change", "Two windings transformer '" + identifiable.getId() + "' change"));
+                        changeTwoWindingsTransformerAttribute((TwoWindingsTransformer) identifiable, attributeName, attributeValue, subReporter.get());
                     }
                 } else if (identifiable instanceof ThreeWindingsTransformer) {
-                    reporter.set(new ReporterModel(UUID.randomUUID().toString(), "Three windings transformer '" + identifiable.getId() + "' change"));
-                    changeThreeWindingsTransformerAttribute((ThreeWindingsTransformer) identifiable, attributeName, attributeValue, reporter.getPlain());
+                    subReporter.set(reporter.createSubReporter("Three windings transformer '" + identifiable.getId() + "' change", "Three windings transformer '" + identifiable.getId() + "' change"));
+                    changeThreeWindingsTransformerAttribute((ThreeWindingsTransformer) identifiable, attributeName, attributeValue, subReporter.get());
                 } else if (identifiable instanceof HvdcLine) {
                     // no hvdc line modifications yet
                 }
             }
-        }, MODIFICATION_ERROR, reportUuid, () -> reporter.get()).stream().map(EquipmentModificationInfos.class::cast)
+        }, MODIFICATION_ERROR, reportUuid, () -> reporter, () -> subReporter.get()).stream().map(EquipmentModificationInfos.class::cast)
             .collect(Collectors.toList());
     }
 
@@ -1666,7 +1685,7 @@ public class NetworkModificationService {
                     }
                 } catch (PowsyblException e) {
                     NetworkModificationException exc = e instanceof NetworkModificationException ? (NetworkModificationException) e : new NetworkModificationException(MODIFICATION_ERROR, e);
-                    ReporterModel reporter = new ReporterModel(UUID.randomUUID().toString(), "Building node");
+                    ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, "Building node");
                     reporter.report(Report.builder()
                         .withKey(MODIFICATION_ERROR.name())
                         .withDefaultMessage(exc.getMessage())
@@ -1769,7 +1788,8 @@ public class NetworkModificationService {
                                                                         ShuntCompensatorCreationInfos shuntCompensatorCreationInfos,
                                                                         UUID reportUuid) {
         Network network = listener.getNetwork();
-        ReporterModel reporter = new ReporterModel(UUID.randomUUID().toString(), "Shunt compensator creation " + shuntCompensatorCreationInfos.getEquipmentId());
+        ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
+        Reporter subReporter = reporter.createSubReporter("Shunt compensator creation " + shuntCompensatorCreationInfos.getEquipmentId(), "Shunt compensator creation " + shuntCompensatorCreationInfos.getEquipmentId());
 
         return doAction(listener, () -> {
             if (listener.isApplyModifications()) {
@@ -1777,7 +1797,7 @@ public class NetworkModificationService {
                 VoltageLevel voltageLevel = getVoltageLevel(network, shuntCompensatorCreationInfos.getVoltageLevelId());
                 createShuntCompensator(voltageLevel, shuntCompensatorCreationInfos, voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER);
 
-                reporter.report(Report.builder()
+                subReporter.report(Report.builder()
                     .withKey("shuntCompensatorCreated")
                     .withDefaultMessage("New shunt compensator with id=${id} created")
                     .withValue("id", shuntCompensatorCreationInfos.getEquipmentId())
@@ -1787,7 +1807,7 @@ public class NetworkModificationService {
 
             // add the shunt compensator creation entity to the listener
             listener.storeShuntCompensatorCreation(shuntCompensatorCreationInfos);
-        }, CREATE_SHUNT_COMPENSATOR_ERROR, reportUuid, () -> reporter).stream().map(EquipmentModificationInfos.class::cast)
+        }, CREATE_SHUNT_COMPENSATOR_ERROR, reportUuid, () -> reporter, () -> subReporter).stream().map(EquipmentModificationInfos.class::cast)
             .collect(Collectors.toList());
     }
 

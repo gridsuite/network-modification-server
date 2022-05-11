@@ -418,7 +418,7 @@ public class BuildTest {
         assertThrows("unexpected error", RuntimeException.class, () ->
             networkModificationService.doAction(listener, () -> {
                 throw new RuntimeException("unexpected error");
-            }, MODIFICATION_ERROR, TEST_NETWORK_ID, () -> reporter)
+            }, MODIFICATION_ERROR, TEST_NETWORK_ID, () -> reporter, () -> subReporter)
         );
     }
 
