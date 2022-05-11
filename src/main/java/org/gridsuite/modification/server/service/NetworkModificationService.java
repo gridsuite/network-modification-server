@@ -56,6 +56,7 @@ import reactor.core.scheduler.Schedulers;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
@@ -130,7 +131,7 @@ public class NetworkModificationService {
 
             // add the groovy script modification entity to the listener
             listener.storeGroovyScriptModification(groovyScript);
-        }, GROOVY_SCRIPT_ERROR, reportUuid, reporter);
+        }, GROOVY_SCRIPT_ERROR, reportUuid, () -> reporter);
     }
 
     public Flux<ModificationInfos> applyGroovyScript(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String groovyScript) {
@@ -170,7 +171,7 @@ public class NetworkModificationService {
 
             // add the switch 'open' attribute modification entity to the listener
             listener.storeEquipmentAttributeModification(switchId, "open", open);
-        }, MODIFICATION_ERROR, reportUuid, reporter).stream().map(EquipmentModificationInfos.class::cast)
+        }, MODIFICATION_ERROR, reportUuid, () -> reporter).stream().map(EquipmentModificationInfos.class::cast)
             .collect(Collectors.toList());
     }
 
@@ -255,7 +256,7 @@ public class NetworkModificationService {
 
                 // add the branch status modification entity to the listener
                 listener.storeBranchStatusModification(lineId, BranchStatusModificationInfos.ActionType.LOCKOUT);
-            }, MODIFICATION_ERROR, reportUuid, reporter
+            }, MODIFICATION_ERROR, reportUuid, () -> reporter
         );
     }
 
@@ -281,7 +282,7 @@ public class NetworkModificationService {
 
                 // add the branch status modification entity to the listener
                 listener.storeBranchStatusModification(lineId, BranchStatusModificationInfos.ActionType.TRIP);
-            }, MODIFICATION_ERROR, reportUuid, reporter
+            }, MODIFICATION_ERROR, reportUuid, () -> reporter
         );
     }
 
@@ -315,7 +316,7 @@ public class NetworkModificationService {
 
                 // add the branch status modification entity to the listener
                 listener.storeBranchStatusModification(lineId, side == Branch.Side.ONE ? BranchStatusModificationInfos.ActionType.ENERGISE_END_ONE : BranchStatusModificationInfos.ActionType.ENERGISE_END_TWO);
-            }, MODIFICATION_ERROR, reportUuid, reporter
+            }, MODIFICATION_ERROR, reportUuid, () -> reporter
         );
     }
 
@@ -345,7 +346,7 @@ public class NetworkModificationService {
 
                 // add the branch status modification entity to the listener
                 listener.storeBranchStatusModification(lineId, BranchStatusModificationInfos.ActionType.SWITCH_ON);
-            }, MODIFICATION_ERROR, reportUuid, reporter
+            }, MODIFICATION_ERROR, reportUuid, () -> reporter
         );
     }
 
@@ -355,7 +356,7 @@ public class NetworkModificationService {
 
     public List<ModificationInfos> doAction(NetworkStoreListener listener, Runnable action,
                                             NetworkModificationException.Type typeIfError,
-                                            UUID reportUuid, AtomicReference<ReporterModel> reporter) {
+                                            UUID reportUuid, Supplier<ReporterModel> reporter) {
         try {
             action.run();
             if (!listener.isBuild()) {
@@ -387,39 +388,6 @@ public class NetworkModificationService {
             if (reporter.get() != null) {
                 sendReport(reportUuid, reporter.get(), false);
             }
-        }
-    }
-
-    public List<ModificationInfos> doAction(NetworkStoreListener listener, Runnable action,
-                                            NetworkModificationException.Type typeIfError,
-                                            UUID reportUuid, ReporterModel reporter) {
-        try {
-            action.run();
-            if (!listener.isBuild()) {
-                saveModifications(listener);
-            }
-            return listener.isApplyModifications() ? listener.getModifications() : Collections.emptyList();
-        } catch (PowsyblException e) {
-            NetworkModificationException exc = e instanceof NetworkModificationException ? (NetworkModificationException) e : new NetworkModificationException(typeIfError, e);
-            reporter.report(Report.builder()
-                .withKey(typeIfError.name())
-                .withDefaultMessage(exc.getMessage())
-                .withSeverity(TypedValue.ERROR_SEVERITY)
-                .build());
-            if (!listener.isBuild()) {
-                throw exc;
-            } else {
-                return Collections.emptyList();
-            }
-        } catch (Exception e) {
-            if (!listener.isBuild()) {
-                throw new NetworkModificationException(typeIfError, e);
-            } else {
-                throw e;
-            }
-        } finally {
-            // send report
-            sendReport(reportUuid, reporter, false);
         }
     }
 
@@ -617,7 +585,7 @@ public class NetworkModificationService {
 
             // add the load creation entity to the listener
             listener.storeLoadCreation(loadCreationInfos);
-        }, CREATE_LOAD_ERROR, reportUuid, reporter).stream().map(EquipmentModificationInfos.class::cast)
+        }, CREATE_LOAD_ERROR, reportUuid, () -> reporter).stream().map(EquipmentModificationInfos.class::cast)
             .collect(Collectors.toList());
     }
 
@@ -728,7 +696,7 @@ public class NetworkModificationService {
 
             // add the load modification entity to the listener
             listener.storeLoadModification(loadModificationInfos);
-        }, MODIFY_LOAD_ERROR, reportUuid, reporter).stream().map(EquipmentModificationInfos.class::cast)
+        }, MODIFY_LOAD_ERROR, reportUuid, () -> reporter).stream().map(EquipmentModificationInfos.class::cast)
                 .collect(Collectors.toList());
     }
 
@@ -832,7 +800,7 @@ public class NetworkModificationService {
 
             // add the equipment deletion entity to the listener
             listener.storeEquipmentDeletion(equipmentId, equipmentType);
-        }, DELETE_EQUIPMENT_ERROR, reportUuid, reporter).stream().map(EquipmentDeletionInfos.class::cast)
+        }, DELETE_EQUIPMENT_ERROR, reportUuid, () -> reporter).stream().map(EquipmentDeletionInfos.class::cast)
             .collect(Collectors.toList());
     }
 
@@ -939,7 +907,7 @@ public class NetworkModificationService {
 
             // add the generator creation entity to the listener
             listener.storeGeneratorCreation(generatorCreationInfos);
-        }, CREATE_GENERATOR_ERROR, reportUuid, reporter).stream().map(EquipmentModificationInfos.class::cast)
+        }, CREATE_GENERATOR_ERROR, reportUuid, () -> reporter).stream().map(EquipmentModificationInfos.class::cast)
             .collect(Collectors.toList());
     }
 
@@ -1082,7 +1050,7 @@ public class NetworkModificationService {
 
             // add the line creation entity to the listener
             listener.storeLineCreation(lineCreationInfos);
-        }, CREATE_LINE_ERROR, reportUuid, reporter).stream().map(EquipmentModificationInfos.class::cast)
+        }, CREATE_LINE_ERROR, reportUuid, () -> reporter).stream().map(EquipmentModificationInfos.class::cast)
             .collect(Collectors.toList());
     }
 
@@ -1123,7 +1091,7 @@ public class NetworkModificationService {
 
             // add the 2wt creation entity to the listener
             listener.storeTwoWindingsTransformerCreation(twoWindingsTransformerCreationInfos);
-        }, CREATE_TWO_WINDINGS_TRANSFORMER_ERROR, reportUuid, reporter).stream().map(EquipmentModificationInfos.class::cast)
+        }, CREATE_TWO_WINDINGS_TRANSFORMER_ERROR, reportUuid, () -> reporter).stream().map(EquipmentModificationInfos.class::cast)
             .collect(Collectors.toList());
     }
 
@@ -1227,7 +1195,7 @@ public class NetworkModificationService {
 
             // add the substation creation entity to the listener
             listener.storeSubstationCreation(substationCreationInfos);
-        }, CREATE_SUBSTATION_ERROR, reportUuid, reporter).stream().map(EquipmentModificationInfos.class::cast)
+        }, CREATE_SUBSTATION_ERROR, reportUuid, () -> reporter).stream().map(EquipmentModificationInfos.class::cast)
             .collect(Collectors.toList());
     }
 
@@ -1373,7 +1341,7 @@ public class NetworkModificationService {
 
             // add the voltage level creation entity to the listener
             listener.storeVoltageLevelCreation(voltageLevelCreationInfos);
-        }, CREATE_VOLTAGE_LEVEL_ERROR, reportUuid, reporter).stream().map(EquipmentModificationInfos.class::cast)
+        }, CREATE_VOLTAGE_LEVEL_ERROR, reportUuid, () -> reporter).stream().map(EquipmentModificationInfos.class::cast)
             .collect(Collectors.toList());
     }
 
@@ -1488,7 +1456,7 @@ public class NetworkModificationService {
             reportKey = "phaseTapPositionChanged";
             reportDefaultMessage = "2WT with id=${id} phase tap changer position changed";
         }
-        if (reportKey != null && reportDefaultMessage != null) {
+        if (reportKey != null) {
             reporter.report(Report.builder()
                 .withKey(reportKey)
                 .withDefaultMessage(reportDefaultMessage)
@@ -1527,7 +1495,7 @@ public class NetworkModificationService {
             reportKey = "phaseTapChanger3.tapPosition";
             reportDefaultMessage = "3WT with id=${id} phase tap changer 3 position changed";
         }
-        if (reportKey != null && reportDefaultMessage != null) {
+        if (reportKey != null) {
             reporter.report(Report.builder()
                 .withKey(reportKey)
                 .withDefaultMessage(reportDefaultMessage)
@@ -1537,6 +1505,7 @@ public class NetworkModificationService {
         }
     }
 
+    @SuppressWarnings("checkstyle:UnnecessaryParentheses")
     private List<EquipmentModificationInfos> execChangeEquipmentAttribute(NetworkStoreListener listener,
                                                                           String equipmentId,
                                                                           String attributeName,
@@ -1574,7 +1543,7 @@ public class NetworkModificationService {
                     // no hvdc line modifications yet
                 }
             }
-        }, MODIFICATION_ERROR, reportUuid, reporter).stream().map(EquipmentModificationInfos.class::cast)
+        }, MODIFICATION_ERROR, reportUuid, () -> reporter.get()).stream().map(EquipmentModificationInfos.class::cast)
             .collect(Collectors.toList());
     }
 
@@ -1818,7 +1787,7 @@ public class NetworkModificationService {
 
             // add the shunt compensator creation entity to the listener
             listener.storeShuntCompensatorCreation(shuntCompensatorCreationInfos);
-        }, CREATE_SHUNT_COMPENSATOR_ERROR, reportUuid, reporter).stream().map(EquipmentModificationInfos.class::cast)
+        }, CREATE_SHUNT_COMPENSATOR_ERROR, reportUuid, () -> reporter).stream().map(EquipmentModificationInfos.class::cast)
             .collect(Collectors.toList());
     }
 
