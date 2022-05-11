@@ -164,6 +164,24 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.modifyLoad(networkUuid, variantId, groupUuid, loadModificationInfos));
     }
 
+    @PostMapping(value = "/modifications/{modificationUuid}/generators-modification", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "modify a generator in a network variant")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The generator modification  has been modified")})
+    public ResponseEntity<Mono<Void>> modifyGeneratorModification(@Parameter(description = "Modification UUID") @PathVariable("modificationUuid") UUID modificationUuid,
+                                                                       @RequestBody GeneratorModificationInfos generatorModificationInfos) {
+        return ResponseEntity.ok().body(networkModificationService.updateModifyGenerator(modificationUuid, generatorModificationInfos));
+    }
+
+    @PutMapping(value = "/networks/{networkUuid}/generators-modification", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "modify a generator in a network variant")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The generator has been modified")})
+    public ResponseEntity<Flux<EquipmentModificationInfos>> modifyGenerator(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
+                                                                       @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
+                                                                       @RequestParam(value = "group", required = false) UUID groupUuid,
+                                                                       @RequestBody GeneratorModificationInfos generatorModificationInfos) {
+        return ResponseEntity.ok().body(networkModificationService.modifyGenerator(networkUuid, variantId, groupUuid, generatorModificationInfos));
+    }
+
     @PostMapping(value = "/networks/{networkUuid}/generators", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "create a generator in a network variant")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The generator has been created")})
