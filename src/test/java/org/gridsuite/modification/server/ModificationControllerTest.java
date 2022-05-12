@@ -763,7 +763,7 @@ public class ModificationControllerTest {
     public void testModifyLoad() {
         EqualsVerifier.simple().forClass(AttributeModification.class).verify();
 
-        String uriString = "/v1/networks/{networkUuid}/loads?group=" + TEST_GROUP_ID;
+        String uriString = "/v1/networks/{networkUuid}/loads-modification?group=" + TEST_GROUP_ID;
 
         LoadModificationInfos loadModificationInfos = LoadModificationInfos.builder()
                 .equipmentId("v1load")
