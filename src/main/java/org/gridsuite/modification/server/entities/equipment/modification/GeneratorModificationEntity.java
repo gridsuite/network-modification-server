@@ -37,7 +37,6 @@ import static org.gridsuite.modification.server.entities.equipment.modification.
 @Setter
 @Getter
 @Entity
-@EqualsAndHashCode
 @Table(name = "generatorModification")
 @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "generatorModification_id_fk_constraint"))
 public class GeneratorModificationEntity extends InjectionModificationEntity {

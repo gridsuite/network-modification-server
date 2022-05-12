@@ -7,7 +7,8 @@
 
 package org.gridsuite.modification.server.entities.equipment.modification.attribute;
 
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import org.gridsuite.modification.server.dto.AttributeModification;
 import org.gridsuite.modification.server.dto.OperationType;
 
@@ -19,8 +20,9 @@ import javax.persistence.Enumerated;
  * @author Jacques Borsenberger <jacques.borsenberger at rte-france.com>
  */
 
+@EqualsAndHashCode
+@Getter
 @Embeddable
-@Data
 public class BooleanModificationEmbedded implements IAttributeModificationEmbeddable<Boolean> {
 
     private Boolean value;

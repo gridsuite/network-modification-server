@@ -7,7 +7,8 @@
 
 package org.gridsuite.modification.server.entities.equipment.modification.attribute;
 
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import org.gridsuite.modification.server.dto.OperationType;
 
 import javax.persistence.Embeddable;
@@ -19,7 +20,8 @@ import javax.persistence.Enumerated;
  */
 
 @Embeddable
-@Data
+@EqualsAndHashCode
+@Getter
 public class DoubleModificationEmbedded implements IAttributeModificationEmbeddable<Double> {
 
     private Double value;
