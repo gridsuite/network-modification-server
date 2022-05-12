@@ -27,6 +27,9 @@ import javax.persistence.ForeignKey;
 import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
 
+import static org.gridsuite.modification.server.entities.equipment.modification.attribute.IAttributeModificationEmbeddable.toAttributeModification;
+
+
 /**
  * @author Jacques Borsenberger <jacques.borsenberger at rte-france.com>
  */
@@ -131,13 +134,14 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
                 .equipmentName(new AttributeModification<>(getEquipmentNameValue(), getEquipmentNameOp()))
                 .voltageLevelId(new AttributeModification<>(getVoltageLevelIdValue(), getVoltageLevelIdOp()))
                 .busOrBusbarSectionId(new AttributeModification<>(getBusOrBusbarSectionIdValue(), getBusOrBusbarSectionIdOp()))
-            .energySource(getEnergySource().toAttributeModification())
-            .activePowerSetpoint(getActivePowerSetpoint().toAttributeModification())
-            .maxActivePower(getMaxActivePower().toAttributeModification())
-            .minActivePower(getMinActivePower().toAttributeModification())
-            .ratedNominalPower(getRatedNominalPower().toAttributeModification())
-            .reactivePowerSetpoint(getReactivePowerSetpoint().toAttributeModification())
-            .voltageRegulationOn(getVoltageRegulationOn().toAttributeModification())
-            .voltageSetpoint(getVoltageSetpoint().toAttributeModification());
+            .energySource(toAttributeModification(getEnergySource()))
+            .activePowerSetpoint(toAttributeModification(getActivePowerSetpoint()))
+            .maxActivePower(toAttributeModification(getMaxActivePower()))
+            .minActivePower(toAttributeModification(getMinActivePower()))
+            .ratedNominalPower(toAttributeModification(getRatedNominalPower()))
+            .reactivePowerSetpoint(toAttributeModification(getReactivePowerSetpoint()))
+            .voltageRegulationOn(toAttributeModification(getVoltageRegulationOn()))
+            .type(ModificationType.GENERATOR_MODIFICATION)
+            .voltageSetpoint(toAttributeModification(getVoltageSetpoint()));
     }
 }

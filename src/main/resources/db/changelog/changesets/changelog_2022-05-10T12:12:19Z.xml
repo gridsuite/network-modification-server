@@ -33,22 +33,4 @@
     <changeSet author="borsenbergerjac (generated)" id="1652184756563-8">
         <addForeignKeyConstraint baseColumnNames="id" baseTableName="generator_modification" constraintName="generatorModification_id_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
     </changeSet>
-    <changeSet author="borsenbergerjac (generated)" id="1652184756563-1">
-        <dropForeignKeyConstraint baseTableName="two_windings_transformer_creation" constraintName="current_limits_id1_fk"/>
-    </changeSet>
-    <changeSet author="borsenbergerjac (generated)" id="1652184756563-2">
-        <addForeignKeyConstraint baseColumnNames="current_limits_id1" baseTableName="two_windings_transformer_creation" constraintName="current_limits_id1_fk" referencedColumnNames="id" referencedTableName="current_limits"/>
-    </changeSet>
-    <changeSet author="borsenbergerjac (generated)" id="1652184756563-3">
-        <dropForeignKeyConstraint baseTableName="two_windings_transformer_creation" constraintName="current_limits_id2_fk"/>
-    </changeSet>
-    <changeSet author="borsenbergerjac (generated)" id="1652184756563-4">
-        <addForeignKeyConstraint baseColumnNames="current_limits_id2" baseTableName="two_windings_transformer_creation" constraintName="current_limits_id2_fk" referencedColumnNames="id" referencedTableName="current_limits"/>
-    </changeSet>
-    <changeSet author="borsenbergerjac (generated)" id="1652184756563-5">
-        <dropNotNullConstraint columnDataType="int" columnName="horiz_pos" tableName="voltage_level_creation_entity_busbar_sections"/>
-    </changeSet>
-    <changeSet author="borsenbergerjac (generated)" id="1652184756563-6">
-        <dropNotNullConstraint columnDataType="int" columnName="vert_pos" tableName="voltage_level_creation_entity_busbar_sections"/>
-    </changeSet>
 </databaseChangeLog>

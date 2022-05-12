@@ -1036,7 +1036,7 @@ public class ModificationControllerTest {
 
         uriString = "/v1/modifications/{modificationUUID}/generators-modification";
 
-        webTestClient.post().uri(uriString, listModifications.get(0).getUuid())
+        webTestClient.put().uri(uriString, listModifications.get(0).getUuid())
             .body(BodyInserters.fromValue(generatorModificationInfos))
             .exchange()
             .expectStatus().isOk();

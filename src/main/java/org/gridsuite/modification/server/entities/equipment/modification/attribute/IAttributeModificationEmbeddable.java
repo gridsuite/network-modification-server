@@ -19,7 +19,7 @@ public interface IAttributeModificationEmbeddable<T> {
 
     OperationType getOpType();
 
-    default AttributeModification<T> toAttributeModification() {
-        return new AttributeModification<>(getValue(), getOpType());
+    static <U> AttributeModification<U> toAttributeModification(IAttributeModificationEmbeddable<U> val) {
+        return val == null ? null : new AttributeModification<>(val.getValue(), val.getOpType());
     }
 }
