@@ -284,9 +284,9 @@ public class NetworkModificationService {
             var trip = new BranchTripping(lineId);
             var switchToDisconnect = new HashSet<Switch>();
             var terminalsToDisconnect = new HashSet<Terminal>();
-            var affectedTerminals = new HashSet<Terminal>();
-            trip.traverse(network, switchToDisconnect, terminalsToDisconnect, affectedTerminals);
-            affectedTerminals.addAll(terminalsToDisconnect);
+            var traversedTerminals = new HashSet<Terminal>();
+            trip.traverse(network, switchToDisconnect, terminalsToDisconnect, traversedTerminals);
+            traversedTerminals.addAll(terminalsToDisconnect);
             if (listener.isApplyModifications()) {
 
                 switchToDisconnect.forEach(sw -> sw.setOpen(true));
@@ -299,12 +299,12 @@ public class NetworkModificationService {
                     .withSeverity(TypedValue.INFO_SEVERITY)
                     .build());
 
-                affectedTerminals.stream().map(t -> network.getLine(t.getConnectable().getId())).filter(Objects::nonNull)
+                traversedTerminals.stream().map(t -> network.getLine(t.getConnectable().getId())).filter(Objects::nonNull)
                     .forEach(b -> b.newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.FORCED_OUTAGE).add());
             }
 
             // add the branch status modification entity to the listener
-            affectedTerminals.stream().map(t -> t.getConnectable().getId()).collect(Collectors.toSet())
+            traversedTerminals.stream().map(t -> t.getConnectable().getId()).collect(Collectors.toSet())
                 .forEach(id -> listener.storeBranchStatusModification(id, BranchStatusModificationInfos.ActionType.TRIP));
 
         }, MODIFICATION_ERROR, networkUuid, reporter, subReporter);
