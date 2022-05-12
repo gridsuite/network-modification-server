@@ -908,7 +908,7 @@ public class ModificationControllerTest {
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.GENERATOR_MODIFICATION, generatorId, Set.of("s1")));
 
-        assertNotNull(network.getGenerator(generatorId));  // load was modified
+        assertNotNull(network.getGenerator(generatorId));  // generator was modified
         assertEquals(EnergySource.HYDRO, network.getGenerator(generatorId).getEnergySource());
         assertEquals(100.0, network.getGenerator(generatorId).getMaxP(), 0.1);
         testNetworkModificationsCount(TEST_GROUP_ID, 1);  // new modification stored in the database
@@ -965,9 +965,8 @@ public class ModificationControllerTest {
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.GENERATOR_MODIFICATION, generatorId, Set.of("s1")));
 
-        assertNotNull(network.getGenerator(generatorId));  // load was modified
-        // TODO uncomment when load name modification will be enabled in Powsybl
-        //assertEquals(network.getLoad("v1load").getNameOrId(), "newV1Load");
+        assertNotNull(network.getGenerator(generatorId));  // generator was modified
+        // TODO uncomment when generator name modification will be enabled in Powsybl
         var equipment = network.getGenerator(generatorId);
         assertEquals(EnergySource.SOLAR, equipment.getEnergySource());
         assertEquals(80.0, equipment.getTargetP(), .1);
