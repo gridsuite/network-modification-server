@@ -371,14 +371,8 @@ public class ModificationControllerTest {
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
             .expectBodyList(BranchStatusModificationInfos.class)
             .returnResult().getResponseBody();
-        assertEquals(4, res.size());
+        assertEquals(1, res.size());
         var matcher = MatcherBranchStatusModificationInfos.createMatcherBranchStatusModificationInfos("line3", BranchStatusModificationInfos.ActionType.TRIP, Set.of("s1", "s2"));
-        assertTrue(res.stream().anyMatch(matcher::matchesSafely));
-        matcher = MatcherBranchStatusModificationInfos.createMatcherBranchStatusModificationInfos("3A", BranchStatusModificationInfos.ActionType.TRIP, Set.of("s1", "s2"));
-        assertTrue(res.stream().anyMatch(matcher::matchesSafely));
-        matcher = MatcherBranchStatusModificationInfos.createMatcherBranchStatusModificationInfos("trf6", BranchStatusModificationInfos.ActionType.TRIP, Set.of("s1", "s2"));
-        assertTrue(res.stream().anyMatch(matcher::matchesSafely));
-        matcher = MatcherBranchStatusModificationInfos.createMatcherBranchStatusModificationInfos("1.1", BranchStatusModificationInfos.ActionType.TRIP, Set.of("s1", "s2"));
         assertTrue(res.stream().anyMatch(matcher::matchesSafely));
 
         // line energise on one end
@@ -401,7 +395,7 @@ public class ModificationControllerTest {
             .value(modifications -> modifications.get(0),
                 MatcherBranchStatusModificationInfos.createMatcherBranchStatusModificationInfos("line2", BranchStatusModificationInfos.ActionType.ENERGISE_END_TWO, Set.of("s1")));
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 9);
+        testNetworkModificationsCount(TEST_GROUP_ID, 6);
     }
 
     @Test
