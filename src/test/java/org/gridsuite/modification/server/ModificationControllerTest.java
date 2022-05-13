@@ -2363,10 +2363,6 @@ public class ModificationControllerTest {
         //assertTrue(lineDeletion.get() instanceof EquipmentDeletionInfos);
         //assertEquals("LINE", ((EquipmentDeletionInfos)lineDeletion.get()).getEquipmentType());
 
-        Optional<EquipmentModificationInfos> vlCreation = result.stream().filter(r -> r.getType() == ModificationType.VOLTAGE_LEVEL_CREATION).findFirst();
-        assertTrue(vlCreation.isPresent());
-        assertTrue(vlCreation.get().getSubstationIds().contains("s1"));
-
         LineSplitWithVoltageLevelInfos lineSplitWithNewVLUpd = new LineSplitWithVoltageLevelInfos("line2", 20.0, vl1, null, "v1bbs",
             "nl1v", "NewLine1", "nl2v", "NewLine2");
 
