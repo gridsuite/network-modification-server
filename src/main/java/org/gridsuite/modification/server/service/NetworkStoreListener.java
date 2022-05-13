@@ -12,8 +12,6 @@ import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.creation.BusbarConnectionCreationEmbeddable;
-import org.gridsuite.modification.server.entities.equipment.creation.BusbarSectionCreationEmbeddable;
 import org.gridsuite.modification.server.entities.equipment.creation.VoltageLevelCreationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.LineSplitWithVoltageLevelEntity;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
@@ -42,13 +40,13 @@ public class NetworkStoreListener implements NetworkListener {
 
     private final List<ModificationEntity> modifications = new LinkedList<>();
 
-    private Set<String> substationsIds = new HashSet<>();
+    private final Set<String> substationsIds = new HashSet<>();
 
-    private List<EquipmentDeletionInfos> deletions = new ArrayList<>();
+    private final List<EquipmentDeletionInfos> deletions = new ArrayList<>();
 
-    private boolean isBuild;
+    private final boolean isBuild;
 
-    private boolean isApplyModifications;
+    private final boolean isApplyModifications;
 
     protected NetworkStoreListener(Network network, UUID networkUuid, UUID groupUuid,
                                    NetworkModificationRepository modificationRepository, EquipmentInfosService equipmentInfosService,
@@ -252,33 +250,8 @@ public class NetworkStoreListener implements NetworkListener {
     }
 
     public void storeVoltageLevelCreation(VoltageLevelCreationInfos voltageLevelCreationInfos) {
-        VoltageLevelCreationEntity voltageLevelEntity = makeVoltageLevelCreationEntity(
-            this.modificationRepository,
-            voltageLevelCreationInfos);
+        VoltageLevelCreationEntity voltageLevelEntity = VoltageLevelCreationEntity.toEntity(voltageLevelCreationInfos);
         modifications.add(voltageLevelEntity);
-    }
-
-    public static VoltageLevelCreationEntity makeVoltageLevelCreationEntity(NetworkModificationRepository modificationRepository,
-        VoltageLevelCreationInfos voltageLevelCreationInfos) {
-        List<BusbarSectionCreationEmbeddable> bbsEmbeddables = voltageLevelCreationInfos.getBusbarSections().stream().map(bbsi ->
-            new BusbarSectionCreationEmbeddable(bbsi.getId(), bbsi.getName(), bbsi.getVertPos(), bbsi.getHorizPos())
-        ).collect(Collectors.toList());
-        List<BusbarConnectionCreationEmbeddable> cnxEmbeddables;
-        if (voltageLevelCreationInfos.getBusbarConnections() == null) {
-            cnxEmbeddables = List.of();
-        } else {
-            cnxEmbeddables = voltageLevelCreationInfos.getBusbarConnections().stream().map(cnxi ->
-                new BusbarConnectionCreationEmbeddable(cnxi.getFromBBS(), cnxi.getToBBS(), cnxi.getSwitchKind())
-            ).collect(Collectors.toList());
-        }
-        return modificationRepository.createVoltageLevelEntity(
-            voltageLevelCreationInfos.getEquipmentId(),
-            voltageLevelCreationInfos.getEquipmentName(),
-            voltageLevelCreationInfos.getNominalVoltage(),
-            voltageLevelCreationInfos.getSubstationId(),
-            bbsEmbeddables,
-            cnxEmbeddables
-        );
     }
 
     @Override
