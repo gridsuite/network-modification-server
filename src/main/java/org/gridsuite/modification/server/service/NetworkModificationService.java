@@ -1261,7 +1261,9 @@ public class NetworkModificationService {
         UUID networkUuid = listener.getNetworkUuid();
 
         return doAction(listener, () -> {
-            createVoltageLevelAction(voltageLevelCreationInfos, subReporter, network);
+            if (listener.isApplyModifications()) {
+                createVoltageLevelAction(voltageLevelCreationInfos, subReporter, network);
+            }
             listener.storeVoltageLevelCreation(voltageLevelCreationInfos);
         }, CREATE_VOLTAGE_LEVEL_ERROR, networkUuid, reporter, subReporter).stream().map(EquipmentModificationInfos.class::cast)
             .collect(Collectors.toList());
@@ -1870,7 +1872,7 @@ public class NetworkModificationService {
         return inspectable;
     }
 
-    public Flux<ModificationInfos> createLineSplitWithVoltageLevel(UUID networkUuid, String variantId, UUID groupUuid,
+    public Flux<ModificationInfos> splitLineWithVoltageLevel(UUID networkUuid, String variantId, UUID groupUuid,
         LineSplitWithVoltageLevelInfos lineSplitWithVoltageLevelInfos) {
         return assertLineSplitWithVoltageLevelInfosNotEmpty(lineSplitWithVoltageLevelInfos).thenMany(
             getNetworkModificationInfos(networkUuid, variantId).flatMapIterable(networkInfos -> {
@@ -1895,12 +1897,10 @@ public class NetworkModificationService {
         VoltageLevelCreationEntity mayVoltageLevelCreation = casted.getMayVoltageLevelCreation();
         VoltageLevelCreationInfos mayNewVoltageLevelInfos = lineSplitWithVoltageLevelInfos.getMayNewVoltageLevelInfos();
 
-        LineSplitWithVoltageLevelEntity updatedEntity = this.networkModificationRepository.lineSplitWithVoltageLevelEntity(
-
+        LineSplitWithVoltageLevelEntity updatedEntity = LineSplitWithVoltageLevelEntity.toEntity(
             lineSplitWithVoltageLevelInfos.getLineToSplitId(),
             lineSplitWithVoltageLevelInfos.getPercent(),
-            mayNewVoltageLevelInfos == null ? null : NetworkStoreListener.makeVoltageLevelCreationEntity(
-                networkModificationRepository, mayNewVoltageLevelInfos),
+            mayNewVoltageLevelInfos,
             lineSplitWithVoltageLevelInfos.getExistingVoltageLevelId(),
             lineSplitWithVoltageLevelInfos.getBbsOrBusId(),
             lineSplitWithVoltageLevelInfos.getNewLine1Id(),

@@ -15,6 +15,7 @@ import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.BusbarConnectionCreationEmbeddable;
 import org.gridsuite.modification.server.entities.equipment.creation.BusbarSectionCreationEmbeddable;
 import org.gridsuite.modification.server.entities.equipment.creation.VoltageLevelCreationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.LineSplitWithVoltageLevelEntity;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 
 import java.util.*;
@@ -342,11 +343,10 @@ public class NetworkStoreListener implements NetworkListener {
     public void storeLineSplitWithVoltageLevelInfos(LineSplitWithVoltageLevelInfos lineSplitWithVoltageLevelInfos) {
         VoltageLevelCreationInfos mayNewVoltageLevelInfos = lineSplitWithVoltageLevelInfos.getMayNewVoltageLevelInfos();
 
-        modifications.add(this.modificationRepository.lineSplitWithVoltageLevelEntity(
+        modifications.add(LineSplitWithVoltageLevelEntity.toEntity(
             lineSplitWithVoltageLevelInfos.getLineToSplitId(),
             lineSplitWithVoltageLevelInfos.getPercent(),
-            mayNewVoltageLevelInfos == null ? null : makeVoltageLevelCreationEntity(
-                this.modificationRepository, mayNewVoltageLevelInfos),
+            mayNewVoltageLevelInfos,
             lineSplitWithVoltageLevelInfos.getExistingVoltageLevelId(),
             lineSplitWithVoltageLevelInfos.getBbsOrBusId(),
             lineSplitWithVoltageLevelInfos.getNewLine1Id(),

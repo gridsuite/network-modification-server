@@ -15,6 +15,7 @@ import javax.persistence.Table;
 
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.LineSplitWithVoltageLevelInfos;
+import org.gridsuite.modification.server.dto.VoltageLevelCreationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.VoltageLevelCreationEntity;
 
@@ -99,4 +100,17 @@ public class LineSplitWithVoltageLevelEntity  extends ModificationEntity {
             .newLine2Id(getNewLine2Id())
             .newLine2Name(getNewLine2Name());
     }
+
+    public static LineSplitWithVoltageLevelEntity toEntity(String lineToSplitId, double percent,
+        VoltageLevelCreationInfos mayVoltageLevelCreationInfos, String existingVoltageLevelId, String bbsOrBusId, String newLine1Id, String newLine1Name,
+        String newLine2Id, String newLine2Name) {
+        VoltageLevelCreationEntity voltageLevelCreationEntity = null;
+        if (mayVoltageLevelCreationInfos != null) {
+            voltageLevelCreationEntity = VoltageLevelCreationEntity.toEntity(mayVoltageLevelCreationInfos);
+        }
+        return new LineSplitWithVoltageLevelEntity(
+            lineToSplitId, percent, voltageLevelCreationEntity, existingVoltageLevelId, bbsOrBusId, newLine1Id, newLine1Name, newLine2Id, newLine2Name
+        );
+    }
+
 }

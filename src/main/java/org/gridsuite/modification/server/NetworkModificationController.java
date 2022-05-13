@@ -290,7 +290,7 @@ public class NetworkModificationController {
         @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
         @RequestParam(value = "group", required = false) UUID groupUuid,
         @RequestBody LineSplitWithVoltageLevelInfos lineSplitWithVoltageLevelInfos) {
-        return ResponseEntity.ok().body(networkModificationService.createLineSplitWithVoltageLevel(networkUuid, variantId, groupUuid, lineSplitWithVoltageLevelInfos));
+        return ResponseEntity.ok().body(networkModificationService.splitLineWithVoltageLevel(networkUuid, variantId, groupUuid, lineSplitWithVoltageLevelInfos));
     }
 
     @PutMapping(value = "/modifications/{modificationUuid}/line-splits", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)

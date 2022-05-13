@@ -17,7 +17,6 @@ import org.gridsuite.modification.server.entities.GroovyScriptModificationEntity
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationGroupEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.LineSplitWithVoltageLevelEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.LoadModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.BooleanEquipmentAttributeModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleEquipmentAttributeModificationEntity;
@@ -267,13 +266,5 @@ public class NetworkModificationRepository {
 
     public ShuntCompensatorCreationEntity createShuntCompensatorEntity(ShuntCompensatorCreationInfos shuntCompensatorCreationInfos) {
         return new ShuntCompensatorCreationEntity(shuntCompensatorCreationInfos);
-    }
-
-    public LineSplitWithVoltageLevelEntity lineSplitWithVoltageLevelEntity(String lineToSplitId, double percent,
-        VoltageLevelCreationEntity mayVoltageLevelCreation, String existingVoltageLevelId, String bbsOrBusId, String newLine1Id, String newLine1Name,
-        String newLine2Id, String newLine2Name) {
-        return new LineSplitWithVoltageLevelEntity(
-            lineToSplitId, percent, mayVoltageLevelCreation, existingVoltageLevelId, bbsOrBusId, newLine1Id, newLine1Name, newLine2Id, newLine2Name
-        );
     }
 }

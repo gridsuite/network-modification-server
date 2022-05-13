@@ -2345,8 +2345,6 @@ public class ModificationControllerTest {
             .expectStatus().isOk()
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
             .expectBodyList(EquipmentModificationInfos.class)
-            //.value(modifications -> modifications.get(0),
-            //    MatcherModificationInfos.createMatcherModificationInfos(ModificationType.LINE_SPLIT_WITH_VOLTAGE_LEVEL, Set.of("s1")))
             .returnResult().getResponseBody();
 
         assertNotNull(result);
