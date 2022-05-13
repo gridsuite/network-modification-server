@@ -1866,13 +1866,6 @@ public class NetworkModificationService {
 
         if (!inspectable.isEmpty()) {
             inspectable.addAll(listener.getDeletions());
-            if (mayNewVL != null) {
-                ModificationInfos modificationInfos = inspectable.get(0);
-                LineSplitWithVoltageLevelInfos reextractedLineSplit = (LineSplitWithVoltageLevelInfos) modificationInfos;
-                VoltageLevelCreationInfos reextractedVoltageLevelCreation = reextractedLineSplit.getMayNewVoltageLevelInfos();
-                reextractedVoltageLevelCreation.setSubstationIds(Set.of(reextractedVoltageLevelCreation.getSubstationId()));
-                inspectable.add(reextractedVoltageLevelCreation);
-            }
         }
         return inspectable;
     }
