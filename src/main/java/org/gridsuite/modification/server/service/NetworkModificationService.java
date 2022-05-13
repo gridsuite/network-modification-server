@@ -1865,7 +1865,7 @@ public class NetworkModificationService {
                 ModificationInfos modificationInfos = inspectable.get(0);
                 LineSplitWithVoltageLevelInfos reextractedLineSplit = (LineSplitWithVoltageLevelInfos) modificationInfos;
                 VoltageLevelCreationInfos reextractedVoltageLevelCreation = reextractedLineSplit.getMayNewVoltageLevelInfos();
-                reextractedVoltageLevelCreation.setSubstationIds(Collections.singleton(reextractedVoltageLevelCreation.getSubstationId()));
+                reextractedVoltageLevelCreation.setSubstationIds(Set.of(reextractedVoltageLevelCreation.getSubstationId()));
                 inspectable.add(reextractedVoltageLevelCreation);
             }
         }

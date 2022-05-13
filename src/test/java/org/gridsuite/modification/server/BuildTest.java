@@ -179,7 +179,7 @@ public class BuildTest {
 
         BuildInfos newBuildInfos = new BuildInfos(NetworkCreation.VARIANT_ID,
             VARIANT_ID_2,
-            Collections.emptyList(),
+            List.of(),
             new HashSet<>());
         webTestClient.post().uri(uriString, TEST_NETWORK_ID)
             .bodyValue(newBuildInfos)

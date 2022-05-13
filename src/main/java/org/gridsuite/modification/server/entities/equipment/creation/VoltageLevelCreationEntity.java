@@ -6,7 +6,6 @@
  */
 package org.gridsuite.modification.server.entities.equipment.creation;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -64,7 +63,7 @@ public class VoltageLevelCreationEntity extends EquipmentCreationEntity {
 
     public static List<BusbarConnectionCreationEmbeddable> toEmbeddableConnections(
         List<BusbarConnectionCreationInfos> busbarConnectionsInfos) {
-        return busbarConnectionsInfos == null ? Collections.emptyList() : busbarConnectionsInfos.stream().map(cnxi ->
+        return busbarConnectionsInfos == null ? List.of() : busbarConnectionsInfos.stream().map(cnxi ->
             new BusbarConnectionCreationEmbeddable(cnxi.getFromBBS(), cnxi.getToBBS(), cnxi.getSwitchKind())
         ).collect(Collectors.toList());
     }

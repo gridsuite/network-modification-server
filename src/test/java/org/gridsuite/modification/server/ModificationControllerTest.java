@@ -2314,8 +2314,8 @@ public class ModificationControllerTest {
             .equipmentName("NewVoltageLevel")
             .nominalVoltage(379.3)
             .substationId("s1")
-            .busbarSections(Collections.singletonList(new BusbarSectionCreationInfos("v1bbs", "BBS1", 1, 1)))
-            .busbarConnections(Collections.emptyList())
+            .busbarSections(List.of(new BusbarSectionCreationInfos("v1bbs", "BBS1", 1, 1)))
+            .busbarConnections(List.of())
             .build();
 
         LineSplitWithVoltageLevelInfos lineSplitAbsentLine = new LineSplitWithVoltageLevelInfos("absent_line_id", 10.0, vl1, null, "v1bbs",

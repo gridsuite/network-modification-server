@@ -265,7 +265,7 @@ public class NetworkStoreListener implements NetworkListener {
         ).collect(Collectors.toList());
         List<BusbarConnectionCreationEmbeddable> cnxEmbeddables;
         if (voltageLevelCreationInfos.getBusbarConnections() == null) {
-            cnxEmbeddables = Collections.emptyList();
+            cnxEmbeddables = List.of();
         } else {
             cnxEmbeddables = voltageLevelCreationInfos.getBusbarConnections().stream().map(cnxi ->
                 new BusbarConnectionCreationEmbeddable(cnxi.getFromBBS(), cnxi.getToBBS(), cnxi.getSwitchKind())
