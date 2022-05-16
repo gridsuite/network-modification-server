@@ -209,6 +209,16 @@ public class NetworkModificationService {
         return Flux.fromStream(() -> networkModificationRepository.getModifications(List.of(modificationUuid)).stream());
     }
 
+    public Mono<Void> duplicateGroup(UUID parentGroupUuid, UUID groupUuid) {
+        getModifications(parentGroupUuid, false).doOnNext(m -> {
+            ModificationEntity modification = this.modificationRepository.findById(m.getUuid()).get();
+            modification.setId(null);
+            networkModificationRepository.saveModifications(groupUuid, List.of(modification));
+        }).subscribe();
+
+        return Mono.empty();
+    }
+
     private boolean disconnectLineBothSides(Network network, String lineId) {
         Terminal terminal1 = network.getLine(lineId).getTerminal1();
         boolean terminal1Disconnected = !terminal1.isConnected() || terminal1.disconnect();
