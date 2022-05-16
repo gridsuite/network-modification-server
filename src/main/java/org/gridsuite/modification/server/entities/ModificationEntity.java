@@ -42,8 +42,8 @@ public class ModificationEntity {
     @Column(name = "type")
     private String type;
 
-    @JoinColumn(name = "groupId", foreignKey = @ForeignKey(name = "group_id_fk_constraint"), nullable = false)
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "groupId", foreignKey = @ForeignKey(name = "group_id_fk_constraint"))
+    @ManyToOne(fetch = FetchType.LAZY)
     @Setter
     private ModificationGroupEntity group;
 
