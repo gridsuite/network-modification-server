@@ -2284,6 +2284,37 @@ public class ModificationControllerTest {
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
     }
 
+    @Test
+    public void testGroupDuplication() {
+        String uriString = "/v1/networks/{networkUuid}/loads?group=" + TEST_GROUP_ID;
+        // create new load in voltage level with node/breaker topology (in voltage level "v2" and busbar section "1B")
+        LoadCreationInfos loadCreationInfos = LoadCreationInfos.builder()
+                .equipmentId("idLoad1")
+                .equipmentName("nameLoad1")
+                .voltageLevelId("v2")
+                .busOrBusbarSectionId("1B")
+                .loadType(LoadType.AUXILIARY)
+                .activePower(100.0)
+                .reactivePower(60.0)
+                .build();
+        webTestClient.post().uri(uriString, TEST_NETWORK_ID)
+                .body(BodyInserters.fromValue(loadCreationInfos))
+                .exchange()
+                .expectStatus().isOk();
+        assertNotNull(network.getLoad("idLoad1"));  // load was created
+        testNetworkModificationsCount(TEST_GROUP_ID, 1);
+
+        uriString = "/v1/groups?duplicateFrom=" + TEST_GROUP_ID + "&groupUuid=" + UUID.randomUUID();
+        webTestClient.post().uri(uriString)
+                .exchange()
+                .expectStatus().isOk();
+
+        uriString = "/v1/groups?duplicateFrom=" + UUID.randomUUID() + "&groupUuid=" + UUID.randomUUID();
+        webTestClient.post().uri(uriString)
+                .exchange()
+                .expectStatus().isNotFound();
+    }
+
     private void testNetworkModificationsCount(UUID groupUuid, int actualSize) {
         // get all modifications for the given group of a network
         assertEquals(actualSize, Objects.requireNonNull(webTestClient.get().uri("/v1/groups/{groupUuid}/modifications/metadata", groupUuid)

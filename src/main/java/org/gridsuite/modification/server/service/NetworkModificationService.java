@@ -209,14 +209,16 @@ public class NetworkModificationService {
         return Flux.fromStream(() -> networkModificationRepository.getModifications(List.of(modificationUuid)).stream());
     }
 
-    public Mono<Void> duplicateGroup(UUID parentGroupUuid, UUID groupUuid) {
-        getModifications(parentGroupUuid, false).doOnNext(m -> {
-            ModificationEntity modification = this.modificationRepository.findById(m.getUuid()).get();
-            modification.setId(null);
-            networkModificationRepository.saveModifications(groupUuid, List.of(modification));
-        }).subscribe();
-
-        return Mono.empty();
+    public Mono<Void> createGroup(UUID parentGroupUuid, UUID groupUuid) {
+        try {
+            return getModifications(parentGroupUuid, false).doOnNext(m -> {
+                ModificationEntity modification = this.modificationRepository.findById(m.getUuid()).get();
+                modification.setId(null);
+                networkModificationRepository.saveModifications(groupUuid, List.of(modification));
+            }).then();
+        } catch (Exception e) {
+            throw new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, parentGroupUuid.toString());
+        }
     }
 
     private boolean disconnectLineBothSides(Network network, String lineId) {
