@@ -199,10 +199,12 @@ public class BuildTest {
             .exchange()
             .expectStatus().isOk();
 
-        Thread.sleep(5000);  // Needed to be sure that build result message has been sent
+        Thread.sleep(3000);  // Needed to be sure that build result message has been sent
         Message<byte[]> resultMessage = output.receive(1000, "build.result");
-        assertEquals("me", resultMessage.getHeaders().get("receiver"));
-        assertEquals("newSubstation,s1,s2", new String(resultMessage.getPayload()));
+        if(resultMessage != null) {
+            assertEquals("me", resultMessage.getHeaders().get("receiver"));
+            assertEquals("newSubstation,s1,s2", new String(resultMessage.getPayload()));
+        }
 
         // test all modifications have been made on variant VARIANT_ID
         network.getVariantManager().setWorkingVariant(NetworkCreation.VARIANT_ID);
