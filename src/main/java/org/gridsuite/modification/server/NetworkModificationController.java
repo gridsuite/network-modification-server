@@ -283,6 +283,24 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.deleteEquipment(networkUuid, variantId, groupUuid, equipmentType, equipmentId));
     }
 
+    @PostMapping(value = "/networks/{networkUuid}/line-splits", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "split a line at a voltage level")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The line has been split")})
+    public ResponseEntity<Flux<ModificationInfos>> lineSplitWithVoltageLevel(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
+        @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
+        @RequestParam(value = "group", required = false) UUID groupUuid,
+        @RequestBody LineSplitWithVoltageLevelInfos lineSplitWithVoltageLevelInfos) {
+        return ResponseEntity.ok().body(networkModificationService.splitLineWithVoltageLevel(networkUuid, variantId, groupUuid, lineSplitWithVoltageLevelInfos));
+    }
+
+    @PutMapping(value = "/modifications/{modificationUuid}/line-splits", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "update a line split")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The line split at voltage level has been updated")})
+    public ResponseEntity<Mono<Void>> updateLineSplitWithVoltageLevel(@PathVariable("modificationUuid") UUID modificationUuid,
+        @RequestBody LineSplitWithVoltageLevelInfos lineSplitWithVoltageLevelInfos) {
+        return ResponseEntity.ok().body(networkModificationService.updateLineSplitWithVoltageLevel(modificationUuid, lineSplitWithVoltageLevelInfos));
+    }
+
     @PostMapping(value = "/networks/{networkUuid}/build")
     @Operation(summary = "Build a network variant")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The build has been done")})

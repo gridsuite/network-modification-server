@@ -61,6 +61,30 @@ public class VoltageLevelCreationEntity extends EquipmentCreationEntity {
         this.busbarConnections = busbarConnections;
     }
 
+    public static List<BusbarConnectionCreationEmbeddable> toEmbeddableConnections(
+        List<BusbarConnectionCreationInfos> busbarConnectionsInfos) {
+        return busbarConnectionsInfos == null ? List.of() : busbarConnectionsInfos.stream().map(cnxi ->
+            new BusbarConnectionCreationEmbeddable(cnxi.getFromBBS(), cnxi.getToBBS(), cnxi.getSwitchKind())
+        ).collect(Collectors.toList());
+    }
+
+    public static List<BusbarSectionCreationEmbeddable> toEmbeddableSections(List<BusbarSectionCreationInfos> busbarSectionsInfos) {
+        return busbarSectionsInfos.stream()
+            .map(bbsi ->
+                new BusbarSectionCreationEmbeddable(bbsi.getId(), bbsi.getName(), bbsi.getVertPos(), bbsi.getHorizPos())
+            ).collect(Collectors.toList());
+    }
+
+    public static VoltageLevelCreationEntity toEntity(VoltageLevelCreationInfos mayVoltageLevelCreationInfos) {
+        VoltageLevelCreationEntity voltageLevelCreationEntity;
+        List<BusbarSectionCreationEmbeddable> bbsEmbeddables = toEmbeddableSections(mayVoltageLevelCreationInfos.getBusbarSections());
+        List<BusbarConnectionCreationEmbeddable> cnxEmbeddables = toEmbeddableConnections(mayVoltageLevelCreationInfos.getBusbarConnections());
+        voltageLevelCreationEntity = new VoltageLevelCreationEntity(mayVoltageLevelCreationInfos.getEquipmentId(),
+            mayVoltageLevelCreationInfos.getEquipmentName(), mayVoltageLevelCreationInfos.getNominalVoltage(),
+            mayVoltageLevelCreationInfos.getSubstationId(), bbsEmbeddables, cnxEmbeddables);
+        return voltageLevelCreationEntity;
+    }
+
     @Override
     public VoltageLevelCreationInfos toModificationInfos() {
         return toVoltageLevelCreationInfosBuilder().build();

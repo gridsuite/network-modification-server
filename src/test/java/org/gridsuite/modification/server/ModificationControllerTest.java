@@ -19,6 +19,7 @@ import org.gridsuite.modification.server.repositories.NetworkModificationReposit
 import org.gridsuite.modification.server.service.NetworkModificationService;
 import org.gridsuite.modification.server.service.NetworkStoreListener;
 import org.gridsuite.modification.server.utils.*;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -43,6 +44,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -119,6 +121,13 @@ public class ModificationControllerTest {
         given(reportServerRest.exchange(eq("/v1/reports/" + TEST_NETWORK_ID), eq(HttpMethod.PUT), ArgumentMatchers.any(HttpEntity.class), eq(ReporterModel.class)))
             .willReturn(new ResponseEntity<>(HttpStatus.OK));
 
+        // clean DB
+        modificationRepository.deleteAll();
+        equipmentInfosService.deleteAll();
+    }
+
+    @After
+    public void tearOff() {
         // clean DB
         modificationRepository.deleteAll();
         equipmentInfosService.deleteAll();
@@ -1652,7 +1661,7 @@ public class ModificationControllerTest {
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
             .expectBodyList(EquipmentDeletionInfos.class)
             .value(modifications -> modifications.get(0),
-                MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "s3", "SUBSTATION", Set.of()));
+                MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "s3", "SUBSTATION", Set.of("s3")));
 
         testNetworkModificationsCount(TEST_GROUP_ID, 15);
 
@@ -2190,7 +2199,23 @@ public class ModificationControllerTest {
             BusbarConnectionCreationInfos.builder().fromBBS("bbs.ne").toBBS("bbs.ne").switchKind(SwitchKind.DISCONNECTOR).build());
 
         VoltageLevelCreationInfos vli;
-        // first failure, to let room for the success with almost same data
+
+        vli = VoltageLevelCreationInfos.builder()
+            .equipmentId("VoltageLevelId")
+            .equipmentName("VoltageLevelName")
+            .nominalVoltage(379.1)
+            .substationId("absent_station")
+            .busbarSections(busbarSectionInfos)
+            .busbarConnections(busbarConnectionInfos)
+            .build();
+
+        webTestClient.post().uri(uriString, TEST_NETWORK_ID)
+            .body(BodyInserters.fromValue(vli))
+            .exchange()
+            .expectStatus().is4xxClientError()
+            .expectBody(String.class)
+            .isEqualTo(new NetworkModificationException(SUBSTATION_NOT_FOUND, "absent_station").getMessage());
+
         vli = VoltageLevelCreationInfos.builder()
             .equipmentId("VoltageLevelId")
             .equipmentName("VoltageLevelName")
@@ -2282,6 +2307,77 @@ public class ModificationControllerTest {
             .isEqualTo(new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "Voltage level id is not set").getMessage());
 
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
+    }
+
+    @Test
+    public void testLineSplitWithVoltageLevel() {
+        String lineSplitUriString = "/v1/networks/{networkUuid}/line-splits?group=" + TEST_GROUP_ID;
+
+        VoltageLevelCreationInfos vl1 = VoltageLevelCreationInfos.builder()
+            .equipmentId("vl1")
+            .equipmentName("NewVoltageLevel")
+            .nominalVoltage(379.3)
+            .substationId("s1")
+            .busbarSections(List.of(new BusbarSectionCreationInfos("v1bbs", "BBS1", 1, 1)))
+            .busbarConnections(List.of())
+            .build();
+
+        LineSplitWithVoltageLevelInfos lineSplitAbsentLine = new LineSplitWithVoltageLevelInfos("absent_line_id", 10.0, vl1, null, "v1bbs",
+            "nl1", "NewLine1", "nl2", "NewLine2");
+
+        webTestClient.post().uri(lineSplitUriString, TEST_NETWORK_ID)
+            .body(BodyInserters.fromValue(lineSplitAbsentLine))
+            .exchange()
+            .expectStatus().is4xxClientError()
+            .expectBody(String.class)
+            .isEqualTo(new NetworkModificationException(LINE_NOT_FOUND, "absent_line_id").getMessage());
+
+        LineSplitWithVoltageLevelInfos lineSplitWoVL = new LineSplitWithVoltageLevelInfos("line3", 10.0, null, "v4", "1.A",
+            "nl1", "NewLine1", "nl2", "NewLine2");
+
+        webTestClient.post().uri(lineSplitUriString, TEST_NETWORK_ID)
+            .body(BodyInserters.fromValue(lineSplitWoVL))
+            .exchange()
+            .expectStatus().isOk();
+
+        LineSplitWithVoltageLevelInfos lineSplitWithNewVL = new LineSplitWithVoltageLevelInfos("line2", 10.0, vl1, null, "v1bbs",
+            "nl1v", "NewLine1", "nl2v", "NewLine2");
+
+        List<EquipmentModificationInfos> result = webTestClient.post().uri(lineSplitUriString, TEST_NETWORK_ID)
+            .body(BodyInserters.fromValue(lineSplitWithNewVL))
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBodyList(EquipmentModificationInfos.class)
+            .returnResult().getResponseBody();
+
+        assertNotNull(result);
+        Optional<EquipmentModificationInfos> lineSplitProper = result.stream().filter(r -> r.getType() == ModificationType.LINE_SPLIT_WITH_VOLTAGE_LEVEL).findFirst();
+        assertTrue(lineSplitProper.isPresent());
+        assertEquals(2, lineSplitProper.get().getSubstationIds().size());
+
+        Optional<EquipmentModificationInfos> lineDeletion = result.stream().filter(r -> r.getType() == ModificationType.EQUIPMENT_DELETION).findFirst();
+        assertTrue(lineDeletion.isPresent());
+        // EquipmentDeletionInfos is erased down to a EquipmentModificationInfos by ->json->
+        //   but handled ok in StudyServer where we added equipementType to EquipementModificationInfos.
+        //assertTrue(lineDeletion.get() instanceof EquipmentDeletionInfos);
+        //assertEquals("LINE", ((EquipmentDeletionInfos)lineDeletion.get()).getEquipmentType());
+
+        LineSplitWithVoltageLevelInfos lineSplitWithNewVLUpd = new LineSplitWithVoltageLevelInfos("line2", 20.0, vl1, null, "v1bbs",
+            "nl1v", "NewLine1", "nl2v", "NewLine2");
+
+        webTestClient.put().uri("/v1/modifications/" + new UUID(128, 16) + "/line-splits")
+            .body(BodyInserters.fromValue(lineSplitWithNewVLUpd))
+            .exchange()
+            .expectStatus().is4xxClientError()
+            .expectBody(String.class)
+            .isEqualTo(new NetworkModificationException(LINE_SPLIT_NOT_FOUND, "Line split not found").getMessage());
+
+        webTestClient.put().uri("/v1/modifications/" + lineSplitProper.get().getUuid() + "/line-splits")
+            .body(BodyInserters.fromValue(lineSplitWithNewVLUpd))
+            .exchange()
+            .expectStatus().isOk();
+
     }
 
     private void testNetworkModificationsCount(UUID groupUuid, int actualSize) {
