@@ -183,8 +183,8 @@ public class NetworkModificationRepository {
         return count;
     }
 
-    public void updateModification(EquipmentModificationEntity equipmentModificationEntity) {
-        this.modificationRepository.save(equipmentModificationEntity);
+    public void updateModification(ModificationEntity modificationEntity) {
+        this.modificationRepository.save(modificationEntity);
     }
 
     private ModificationGroupEntity getModificationGroup(UUID groupUuid) {
@@ -235,7 +235,7 @@ public class NetworkModificationRepository {
         return new SubstationCreationEntity(id, name, country);
     }
 
-    public EquipmentCreationEntity createVoltageLevelEntity(String id, String name, double nominalVoltage, String substationId,
+    public VoltageLevelCreationEntity createVoltageLevelEntity(String id, String name, double nominalVoltage, String substationId,
         List<BusbarSectionCreationEmbeddable> busbarSections,
         List<BusbarConnectionCreationEmbeddable> busbarConnections) {
         return new VoltageLevelCreationEntity(id, name, nominalVoltage, substationId, busbarSections, busbarConnections);

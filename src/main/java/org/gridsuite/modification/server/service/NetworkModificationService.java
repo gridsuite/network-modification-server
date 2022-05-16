@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.InjectableValues;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.reporter.*;
+import com.powsybl.iidm.modification.topology.AttachVoltageLevelOnLine;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.modification.tripping.BranchTripping;
 
@@ -22,6 +23,7 @@ import com.powsybl.sld.iidm.extensions.BusbarSectionPositionAdder;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
@@ -31,7 +33,9 @@ import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.BusbarConnectionCreationEmbeddable;
 import org.gridsuite.modification.server.entities.equipment.creation.BusbarSectionCreationEmbeddable;
 import org.gridsuite.modification.server.entities.equipment.creation.EquipmentCreationEntity;
+import org.gridsuite.modification.server.entities.equipment.creation.VoltageLevelCreationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.LineSplitWithVoltageLevelEntity;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.slf4j.Logger;
@@ -801,14 +805,6 @@ public class NetworkModificationService {
                     throw new NetworkModificationException(EQUIPMENT_NOT_FOUND, "Equipment with id=" + equipmentId + " not found or of bad type");
                 }
 
-                // store the substations ids in the listener
-                // On substation deletion, the substation id isn't set in the substations to be updated.
-                // If later we handle automatic lines deletion (i.e. on substation deletion, we remove all the lines connected to the substation), we'll have to set
-                // the adjacent substations in the substations to be updated.
-                if (!(identifiable instanceof Substation)) {
-                    listener.addSubstationsIds(identifiable);
-                }
-
                 if (identifiable instanceof Connectable) {
                     ((Connectable) identifiable).remove(true);
                 } else if (identifiable instanceof HvdcLine) {
@@ -1281,112 +1277,139 @@ public class NetworkModificationService {
         }
 
         return doAction(listener, () -> {
-            VoltageLevel voltageLevel = substation.newVoltageLevel()
-                .setId(voltageLevelCreationInfos.getEquipmentId())
-                .setName(voltageLevelCreationInfos.getEquipmentName())
-                .setTopologyKind(TopologyKind.NODE_BREAKER)
-                .setNominalV(voltageLevelCreationInfos.getNominalVoltage())
-                .add();
-
-            int nodeRank = voltageLevel.getNodeBreakerView().getMaximumNodeIndex() + 1;
-            Map<String, Integer> idToNodeRank = new TreeMap<>();
-            for (BusbarSectionCreationInfos bbs : voltageLevelCreationInfos.getBusbarSections()) {
-                BusbarSection sjb = voltageLevel.getNodeBreakerView().newBusbarSection()
-                    .setId(bbs.getId())
-                    .setName(bbs.getName())
-                    .setNode(nodeRank)
-                    .add();
-                sjb.newExtension(BusbarSectionPositionAdder.class)
-                    .withBusbarIndex(bbs.getVertPos())
-                    .withSectionIndex(bbs.getHorizPos())
-                    .add();
-                idToNodeRank.put(bbs.getId(), nodeRank);
-                nodeRank += 1;
+            if (listener.isApplyModifications()) {
+                createVoltageLevelAction(voltageLevelCreationInfos, subReporter, network);
             }
-
-            int cnxRank = 1;
-            for (BusbarConnectionCreationInfos bbsci : voltageLevelCreationInfos.getBusbarConnections()) {
-                String fromBBSId = bbsci.getFromBBS();
-                Integer rank1 = idToNodeRank.get(fromBBSId);
-                if (rank1 == null) {
-                    throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "From side '" + fromBBSId + "' unknown");
-                }
-
-                String toBBSId = bbsci.getToBBS();
-                Integer rank2 = idToNodeRank.get(toBBSId);
-                if (rank2 == null) {
-                    throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "To side '" + toBBSId + "' unknown");
-                }
-
-                SwitchKind switchKind = bbsci.getSwitchKind();
-                if (switchKind == SwitchKind.DISCONNECTOR && fromBBSId.equals(toBBSId)) {
-                    throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR,
-                        "Disconnector between same bus bar section '" + toBBSId + "'");
-                }
-
-                String infix = voltageLevelCreationInfos.getEquipmentId() + "_" + fromBBSId + "_" + toBBSId + "_";
-                if (switchKind == SwitchKind.BREAKER) {
-                    int preBreakerRank = nodeRank++;
-                    int postBreakerRank = nodeRank++;
-                    voltageLevel.getNodeBreakerView().newDisconnector()
-                        .setKind(SwitchKind.DISCONNECTOR)
-                        .setId("disconnector_" + infix + cnxRank++)
-                        .setNode1(rank1)
-                        .setNode2(preBreakerRank)
-                        .setFictitious(false)
-                        .setRetained(false)
-                        .setOpen(false)
-                        .add();
-
-                    voltageLevel.getNodeBreakerView().newBreaker()
-                        .setKind(switchKind)
-                        .setId("breaker_" + infix + cnxRank++)
-                        .setNode1(preBreakerRank)
-                        .setNode2(postBreakerRank)
-                        .setFictitious(false)
-                        .setRetained(false)
-                        .setOpen(false)
-                        .add();
-
-                    voltageLevel.getNodeBreakerView().newDisconnector()
-                        .setKind(SwitchKind.DISCONNECTOR)
-                        .setId("disconnector_" + infix + cnxRank++)
-                        .setNode1(postBreakerRank)
-                        .setNode2(rank2)
-                        .setFictitious(false)
-                        .setRetained(false)
-                        .setOpen(false)
-                        .add();
-                } else if (switchKind == SwitchKind.DISCONNECTOR) {
-                    voltageLevel.getNodeBreakerView().newDisconnector()
-                        .setKind(switchKind)
-                        .setId("disconnector_" + infix + cnxRank++)
-                        .setNode1(rank1)
-                        .setNode2(rank2)
-                        .setFictitious(false)
-                        .setRetained(false)
-                        .setOpen(false)
-                        .add();
-                } else {
-                    throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "Swich kind '" + switchKind + "' unknown");
-                }
-            }
-
-            subReporter.report(Report.builder()
-                .withKey("voltageLevelCreated")
-                .withDefaultMessage("New voltage level with id=${id} created")
-                .withValue("id", voltageLevelCreationInfos.getEquipmentId())
-                .withSeverity(TypedValue.INFO_SEVERITY)
-                .build());
-
-            // add the voltage level creation entity to the listener
             listener.storeVoltageLevelCreation(voltageLevelCreationInfos);
         }, CREATE_VOLTAGE_LEVEL_ERROR, reportUuid, () -> reporter, () -> subReporter).stream().map(EquipmentModificationInfos.class::cast)
             .collect(Collectors.toList());
     }
 
+    private Pair<Integer, Integer> addBusbarConnectionTo(VoltageLevelCreationInfos voltageLevelCreationInfos,
+        BusbarConnectionCreationInfos bbsci, Map<String, Integer> idToNodeRank, Pair<Integer, Integer> ranks,
+        VoltageLevel voltageLevel) {
+
+        String fromBBSId = bbsci.getFromBBS();
+        Integer rank1 = idToNodeRank.get(fromBBSId);
+        if (rank1 == null) {
+            throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "From side '" + fromBBSId + "' unknown");
+        }
+
+        String toBBSId = bbsci.getToBBS();
+        Integer rank2 = idToNodeRank.get(toBBSId);
+        if (rank2 == null) {
+            throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "To side '" + toBBSId + "' unknown");
+        }
+
+        SwitchKind switchKind = bbsci.getSwitchKind();
+        if (switchKind == SwitchKind.DISCONNECTOR && fromBBSId.equals(toBBSId)) {
+            throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR,
+                "Disconnector between same bus bar section '" + toBBSId + "'");
+        }
+
+        int nodeRank = ranks.getLeft();
+        int cnxRank = ranks.getRight();
+        String infix = voltageLevelCreationInfos.getEquipmentId() + "_" + fromBBSId + "_" + toBBSId + "_";
+        if (switchKind == SwitchKind.DISCONNECTOR) {
+            voltageLevel.getNodeBreakerView().newDisconnector()
+                .setKind(switchKind)
+                .setId("disconnector_" + infix + cnxRank++)
+                .setNode1(rank1)
+                .setNode2(rank2)
+                .setFictitious(false)
+                .setRetained(false)
+                .setOpen(false)
+                .add();
+        } else if (switchKind == SwitchKind.BREAKER) {
+            int preBreakerRank = nodeRank++;
+            int postBreakerRank = nodeRank++;
+            voltageLevel.getNodeBreakerView().newDisconnector()
+                .setKind(SwitchKind.DISCONNECTOR)
+                .setId("disconnector_" + infix + cnxRank++)
+                .setNode1(rank1)
+                .setNode2(preBreakerRank)
+                .setFictitious(false)
+                .setRetained(false)
+                .setOpen(false)
+                .add();
+
+            voltageLevel.getNodeBreakerView().newBreaker()
+                .setKind(switchKind)
+                .setId("breaker_" + infix + cnxRank++)
+                .setNode1(preBreakerRank)
+                .setNode2(postBreakerRank)
+                .setFictitious(false)
+                .setRetained(false)
+                .setOpen(false)
+                .add();
+
+            voltageLevel.getNodeBreakerView().newDisconnector()
+                .setKind(SwitchKind.DISCONNECTOR)
+                .setId("disconnector_" + infix + cnxRank++)
+                .setNode1(postBreakerRank)
+                .setNode2(rank2)
+                .setFictitious(false)
+                .setRetained(false)
+                .setOpen(false)
+                .add();
+        } else {
+            throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "Swich kind '" + switchKind + "' unknown");
+        }
+
+        return Pair.of(nodeRank, cnxRank);
+    }
+
+    private void createVoltageLevelAction(VoltageLevelCreationInfos voltageLevelCreationInfos,
+        Reporter subReporter, Network network) {
+        String substationId = voltageLevelCreationInfos.getSubstationId();
+        Substation substation = network.getSubstation(substationId);
+        if (substation == null) {
+            throw new NetworkModificationException(SUBSTATION_NOT_FOUND, substationId);
+        }
+
+        VoltageLevel voltageLevel = substation.newVoltageLevel()
+            .setId(voltageLevelCreationInfos.getEquipmentId())
+            .setName(voltageLevelCreationInfos.getEquipmentName())
+            .setTopologyKind(TopologyKind.NODE_BREAKER)
+            .setNominalV(voltageLevelCreationInfos.getNominalVoltage())
+            .add();
+
+        int nodeRank = voltageLevel.getNodeBreakerView().getMaximumNodeIndex() + 1;
+        Map<String, Integer> idToNodeRank = new TreeMap<>();
+        for (BusbarSectionCreationInfos bbs : voltageLevelCreationInfos.getBusbarSections()) {
+            BusbarSection sjb = voltageLevel.getNodeBreakerView().newBusbarSection()
+                .setId(bbs.getId())
+                .setName(bbs.getName())
+                .setNode(nodeRank)
+                .add();
+            sjb.newExtension(BusbarSectionPositionAdder.class)
+                .withBusbarIndex(bbs.getVertPos())
+                .withSectionIndex(bbs.getHorizPos())
+                .add();
+            idToNodeRank.put(bbs.getId(), nodeRank);
+            nodeRank += 1;
+        }
+
+        int cnxRank = 1;
+        Pair<Integer, Integer> currRanks = Pair.of(nodeRank, cnxRank);
+        List<BusbarConnectionCreationInfos> busbarConnections = voltageLevelCreationInfos.getBusbarConnections();
+        // js empty [] seems to be decoded null on java side some times -> temporary (?) protection
+        if (busbarConnections != null) {
+            for (BusbarConnectionCreationInfos bbsci : busbarConnections) {
+                currRanks = addBusbarConnectionTo(voltageLevelCreationInfos, bbsci, idToNodeRank, currRanks, voltageLevel);
+            }
+        }
+
+        subReporter.report(Report.builder()
+            .withKey("voltageLevelCreated")
+            .withDefaultMessage("New voltage level with id=${id} created")
+            .withValue("id", voltageLevelCreationInfos.getEquipmentId())
+            .withSeverity(TypedValue.INFO_SEVERITY)
+            .build());
+    }
+
     public Flux<EquipmentModificationInfos> createVoltageLevel(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid,
-                                                               VoltageLevelCreationInfos voltageLevelCreationInfos) {
+           VoltageLevelCreationInfos voltageLevelCreationInfos) {
         return assertVoltageLevelCreationInfosNotEmpty(voltageLevelCreationInfos).thenMany(
             getNetworkModificationInfos(networkUuid, variantId).flatMapIterable(networkInfos -> {
                 NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid,
@@ -1708,6 +1731,13 @@ public class NetworkModificationService {
                         }
                         break;
 
+                        case LINE_SPLIT_WITH_VOLTAGE_LEVEL: {
+                            LineSplitWithVoltageLevelInfos lineSplitWithVoltageLevelInfos = (LineSplitWithVoltageLevelInfos) infos;
+                            List<ModificationInfos> modificationInfos = execSplitLineWithVoltageLevel(listener, lineSplitWithVoltageLevelInfos, reportUuid);
+                            allModificationsInfos.addAll(modificationInfos);
+                        }
+                        break;
+
                         default:
                     }
                 } catch (PowsyblException e) {
@@ -1850,5 +1880,111 @@ public class NetworkModificationService {
 
     public Mono<Void> moveModifications(UUID groupUuid, UUID before, List<UUID> modificationsToMove) {
         return Mono.fromRunnable(() -> networkModificationRepository.moveModifications(groupUuid, modificationsToMove, before));
+    }
+
+    private Mono<Void> assertLineSplitWithVoltageLevelInfosNotEmpty(LineSplitWithVoltageLevelInfos lineSplitWithVoltageLevelInfos) {
+        return lineSplitWithVoltageLevelInfos == null ? Mono.error(new NetworkModificationException(LINE_SPLIT_ERROR,
+            "Missing required attributes to split a line")) : Mono.empty();
+    }
+
+    private List<ModificationInfos> execSplitLineWithVoltageLevel(NetworkStoreListener listener,
+                                                                  LineSplitWithVoltageLevelInfos lineSplitWithVoltageLevelInfos,
+                                                                  UUID reportUuid) {
+
+        Network network = listener.getNetwork();
+        VoltageLevelCreationInfos mayNewVL = lineSplitWithVoltageLevelInfos.getMayNewVoltageLevelInfos();
+
+        ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
+        Reporter subReporter = reporter.createSubReporter("lineSplitWithVoltageLevel", "Line split with voltage level");
+
+        List<ModificationInfos> inspectable = doAction(listener, () -> {
+            if (listener.isApplyModifications()) {
+                Line line = network.getLine(lineSplitWithVoltageLevelInfos.getLineToSplitId());
+                if (line == null) {
+                    throw new NetworkModificationException(LINE_NOT_FOUND, lineSplitWithVoltageLevelInfos.getLineToSplitId());
+                }
+
+                String voltageLeveId;
+                if (mayNewVL != null) {
+                    createVoltageLevelAction(mayNewVL, subReporter, network);
+                    voltageLeveId = mayNewVL.getEquipmentId();
+                } else {
+                    voltageLeveId = lineSplitWithVoltageLevelInfos.getExistingVoltageLevelId();
+                }
+
+                AttachVoltageLevelOnLine algo = new AttachVoltageLevelOnLine(
+                    lineSplitWithVoltageLevelInfos.getPercent(),
+                    voltageLeveId,
+                    lineSplitWithVoltageLevelInfos.getBbsOrBusId(),
+                    lineSplitWithVoltageLevelInfos.getNewLine1Id(),
+                    lineSplitWithVoltageLevelInfos.getNewLine1Name(),
+                    lineSplitWithVoltageLevelInfos.getNewLine2Id(),
+                    lineSplitWithVoltageLevelInfos.getNewLine2Name(),
+                    line);
+
+                algo.apply(network);
+
+                subReporter.report(Report.builder()
+                    .withKey("lineSplit")
+                    .withDefaultMessage("Line ${lineId} was split")
+                    .withValue("id", lineSplitWithVoltageLevelInfos.getLineToSplitId())
+                    .withSeverity(TypedValue.INFO_SEVERITY)
+                    .build());
+            }
+
+            listener.storeLineSplitWithVoltageLevelInfos(lineSplitWithVoltageLevelInfos);
+        }, LINE_SPLIT_ERROR, reportUuid, () -> reporter, () -> subReporter).stream().map(ModificationInfos.class::cast)
+            .collect(Collectors.toList());
+
+        if (!inspectable.isEmpty()) {
+            inspectable.addAll(listener.getDeletions());
+        }
+        return inspectable;
+    }
+
+    public Flux<ModificationInfos> splitLineWithVoltageLevel(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid,
+        LineSplitWithVoltageLevelInfos lineSplitWithVoltageLevelInfos) {
+        return assertLineSplitWithVoltageLevelInfosNotEmpty(lineSplitWithVoltageLevelInfos).thenMany(
+            getNetworkModificationInfos(networkUuid, variantId).flatMapIterable(networkInfos -> {
+                NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
+
+                return execSplitLineWithVoltageLevel(listener, lineSplitWithVoltageLevelInfos, reportUuid);
+            }));
+    }
+
+    public Mono<Void> updateLineSplitWithVoltageLevel(UUID modificationUuid, LineSplitWithVoltageLevelInfos lineSplitWithVoltageLevelInfos) {
+        assertLineSplitWithVoltageLevelInfosNotEmpty(lineSplitWithVoltageLevelInfos).subscribe();
+
+        Optional<ModificationEntity> lineSplitWithVoltageLevelEntity = this.modificationRepository.findById(modificationUuid);
+
+        if (lineSplitWithVoltageLevelEntity.isEmpty()) {
+            return Mono.error(new NetworkModificationException(LINE_SPLIT_NOT_FOUND, "Line split not found"));
+        }
+
+        LineSplitWithVoltageLevelEntity casted = (LineSplitWithVoltageLevelEntity) lineSplitWithVoltageLevelEntity.get();
+        VoltageLevelCreationEntity mayVoltageLevelCreation = casted.getMayVoltageLevelCreation();
+        VoltageLevelCreationInfos mayNewVoltageLevelInfos = lineSplitWithVoltageLevelInfos.getMayNewVoltageLevelInfos();
+
+        LineSplitWithVoltageLevelEntity updatedEntity = LineSplitWithVoltageLevelEntity.toEntity(
+            lineSplitWithVoltageLevelInfos.getLineToSplitId(),
+            lineSplitWithVoltageLevelInfos.getPercent(),
+            mayNewVoltageLevelInfos,
+            lineSplitWithVoltageLevelInfos.getExistingVoltageLevelId(),
+            lineSplitWithVoltageLevelInfos.getBbsOrBusId(),
+            lineSplitWithVoltageLevelInfos.getNewLine1Id(),
+            lineSplitWithVoltageLevelInfos.getNewLine1Name(),
+            lineSplitWithVoltageLevelInfos.getNewLine2Id(),
+            lineSplitWithVoltageLevelInfos.getNewLine2Name()
+        );
+        updatedEntity.setId(modificationUuid);
+        updatedEntity.setGroup(lineSplitWithVoltageLevelEntity.get().getGroup());
+        this.networkModificationRepository.updateModification(updatedEntity);
+
+        // NetworkStoreListener.makeVoltageLevelCreationEntity recreates on need, so get rid of previous
+        if (mayVoltageLevelCreation != null) {
+            this.modificationRepository.delete(mayVoltageLevelCreation);
+        }
+
+        return Mono.empty();
     }
 }

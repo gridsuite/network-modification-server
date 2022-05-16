@@ -48,6 +48,8 @@ public class NetworkModificationException extends PowsyblException {
         BRANCH_ACTION_TYPE_EMPTY(HttpStatus.BAD_REQUEST, "Empty branch action type"),
         BRANCH_ACTION_TYPE_UNKNOWN(HttpStatus.BAD_REQUEST),
         BRANCH_ACTION_TYPE_UNSUPPORTED(HttpStatus.INTERNAL_SERVER_ERROR),
+        LINE_SPLIT_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
+        LINE_SPLIT_NOT_FOUND(HttpStatus.NOT_FOUND),
         MODIFICATION_OUT_OF_RANGE(HttpStatus.BAD_REQUEST);
 
         public final HttpStatus status;
