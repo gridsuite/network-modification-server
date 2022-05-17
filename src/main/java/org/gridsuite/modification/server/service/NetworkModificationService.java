@@ -210,15 +210,11 @@ public class NetworkModificationService {
     }
 
     public Mono<Void> createGroup(UUID parentGroupUuid, UUID groupUuid) {
-        try {
-            return getModifications(parentGroupUuid, false).doOnNext(m -> {
-                ModificationEntity modification = this.modificationRepository.findById(m.getUuid()).get();
-                modification.setId(null);
-                networkModificationRepository.saveModifications(groupUuid, List.of(modification));
-            }).then();
-        } catch (Exception e) {
-            throw new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, parentGroupUuid.toString());
-        }
+        return getModifications(parentGroupUuid, false).doOnNext(m -> {
+            ModificationEntity modification = this.modificationRepository.findById(m.getUuid()).get();
+            modification.setId(null);
+            networkModificationRepository.saveModifications(groupUuid, List.of(modification));
+        }).then();
     }
 
     private boolean disconnectLineBothSides(Network network, String lineId) {
