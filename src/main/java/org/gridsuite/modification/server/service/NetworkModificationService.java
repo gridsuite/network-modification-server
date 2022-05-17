@@ -219,7 +219,6 @@ public class NetworkModificationService {
         } catch (Exception e) {
             throw new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, parentGroupUuid.toString());
         }
-        
     }
 
     private boolean disconnectLineBothSides(Network network, String lineId) {
