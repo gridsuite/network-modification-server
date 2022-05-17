@@ -209,8 +209,8 @@ public class NetworkModificationService {
         return Flux.fromStream(() -> networkModificationRepository.getModifications(List.of(modificationUuid)).stream());
     }
 
-    public Mono<Void> createGroup(UUID parentGroupUuid, UUID groupUuid) {
-        return getModifications(parentGroupUuid, false).doOnNext(m -> {
+    public Mono<Void> createGroup(UUID sourceGroupUuid, UUID groupUuid) {
+        return getModifications(sourceGroupUuid, false).doOnNext(m -> {
             ModificationEntity modification = this.modificationRepository.findById(m.getUuid()).get();
             modification.setId(null);
             networkModificationRepository.saveModifications(groupUuid, List.of(modification));

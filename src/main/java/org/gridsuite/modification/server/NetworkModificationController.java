@@ -71,8 +71,8 @@ public class NetworkModificationController {
     @Operation(summary = "Create a group based on another group and its modifications")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The group and its have been duplicated")})
     public ResponseEntity<Mono<Void>> createGroup(@RequestParam("groupUuid") UUID groupUuid,
-                                                  @RequestParam("duplicateFrom") UUID parentGroupUuid) {
-        return ResponseEntity.ok().body(networkModificationService.createGroup(parentGroupUuid, groupUuid));
+                                                  @RequestParam("duplicateFrom") UUID sourceGroupUuid) {
+        return ResponseEntity.ok().body(networkModificationService.createGroup(sourceGroupUuid, groupUuid));
     }
 
     @GetMapping(value = "/modifications/{modificationUuid}", produces = MediaType.APPLICATION_JSON_VALUE)
