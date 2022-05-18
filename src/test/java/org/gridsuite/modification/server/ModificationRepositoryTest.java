@@ -695,7 +695,7 @@ public class ModificationRepositoryTest {
         networkModificationRepository.deleteModifications(TEST_GROUP_ID, Set.of(lineSplitEntity1.getId(),
             voltageLevelCreationEntity.getId(),
             lineSplitEntity2.getId()));
-        assertRequestsCount(2, 0, 0, 12);
+        assertRequestsCount(3, 0, 0, 12);
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID);

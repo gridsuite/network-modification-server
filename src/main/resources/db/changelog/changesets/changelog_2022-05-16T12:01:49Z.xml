@@ -1,0 +1,31 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-4.1.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
+    <changeSet author="noirnic (generated)" id="1652702525594-7">
+        <createTable tableName="line_attach_to_voltage_level">
+            <column name="attachment_point_id" type="VARCHAR(255)"/>
+            <column name="attachment_point_name" type="VARCHAR(255)"/>
+            <column name="bbs_or_bus_id" type="VARCHAR(255)"/>
+            <column name="existing_voltage_level_id" type="VARCHAR(255)"/>
+            <column name="line_to_attach_to_id" type="VARCHAR(255)"/>
+            <column name="new_line1id" type="VARCHAR(255)"/>
+            <column name="new_line1name" type="VARCHAR(255)"/>
+            <column name="new_line2id" type="VARCHAR(255)"/>
+            <column name="new_line2name" type="VARCHAR(255)"/>
+            <column name="percent" type="FLOAT8"/>
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="line_attach_to_voltage_levelPK"/>
+            </column>
+            <column name="line_creation_id" type="UUID"/>
+            <column name="may_voltage_level_creation_id" type="UUID"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="noirnic (generated)" id="1652702525594-8">
+        <addForeignKeyConstraint baseColumnNames="id" baseTableName="line_attach_to_voltage_level" constraintName="FK8ssv49kca7btl9j573wlpydb1" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
+    </changeSet>
+    <changeSet author="noirnic (generated)" id="1652702525594-9">
+        <addForeignKeyConstraint baseColumnNames="line_creation_id" baseTableName="line_attach_to_voltage_level" constraintName="FKkpdxmfp4c2gioson9tn9u1fif" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="line_creation" validate="true"/>
+    </changeSet>
+    <changeSet author="noirnic (generated)" id="1652702525594-10">
+        <addForeignKeyConstraint baseColumnNames="may_voltage_level_creation_id" baseTableName="line_attach_to_voltage_level" constraintName="FKrxscr945pnmtx9x95kjpxtrlf" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="voltage_level_creation_entity" validate="true"/>
+    </changeSet>
+</databaseChangeLog>

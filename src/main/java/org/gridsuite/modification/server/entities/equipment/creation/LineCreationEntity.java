@@ -72,6 +72,18 @@ public class LineCreationEntity extends BranchCreationEntity {
         this.shuntSusceptance2 = shuntSusceptance2;
     }
 
+    public static LineCreationEntity toEntity(LineCreationInfos lineCreationInfos) {
+        LineCreationEntity lineCreationEntity = new LineCreationEntity(lineCreationInfos.getEquipmentId(),
+                lineCreationInfos.getEquipmentName(), lineCreationInfos.getSeriesResistance(),
+                lineCreationInfos.getSeriesReactance(), lineCreationInfos.getShuntConductance1(),
+                lineCreationInfos.getShuntSusceptance1(), lineCreationInfos.getShuntConductance2(),
+                lineCreationInfos.getShuntSusceptance2(), lineCreationInfos.getVoltageLevelId1(),
+                lineCreationInfos.getBusOrBusbarSectionId1(), lineCreationInfos.getVoltageLevelId2(),
+                lineCreationInfos.getBusOrBusbarSectionId2(), lineCreationInfos.getCurrentLimits1().getPermanentLimit(),
+                lineCreationInfos.getCurrentLimits2().getPermanentLimit());
+        return lineCreationEntity;
+    }
+
     @Override
     public LineCreationInfos toModificationInfos() {
         return toLineCreationInfosBuilder().build();

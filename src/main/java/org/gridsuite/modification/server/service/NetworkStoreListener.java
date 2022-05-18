@@ -13,6 +13,7 @@ import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.VoltageLevelCreationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.LineAttachToVoltageLevelEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.LineSplitWithVoltageLevelEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
@@ -333,6 +334,26 @@ public class NetworkStoreListener implements NetworkListener {
             lineSplitWithVoltageLevelInfos.getNewLine1Name(),
             lineSplitWithVoltageLevelInfos.getNewLine2Id(),
             lineSplitWithVoltageLevelInfos.getNewLine2Name())
+        );
+    }
+
+    public void storeLineAttachToVoltageLevelInfos(LineAttachToVoltageLevelInfos lineAttachToVoltageLevelInfos) {
+        VoltageLevelCreationInfos mayNewVoltageLevelInfos = lineAttachToVoltageLevelInfos.getMayNewVoltageLevelInfos();
+        LineCreationInfos attachmentLine = lineAttachToVoltageLevelInfos.getAttachmentLine();
+
+        modifications.add(LineAttachToVoltageLevelEntity.toEntity(
+                lineAttachToVoltageLevelInfos.getLineToAttachToId(),
+                lineAttachToVoltageLevelInfos.getPercent(),
+                lineAttachToVoltageLevelInfos.getAttachmentPointId(),
+                lineAttachToVoltageLevelInfos.getAttachmentPointName(),
+                mayNewVoltageLevelInfos,
+                lineAttachToVoltageLevelInfos.getExistingVoltageLevelId(),
+                lineAttachToVoltageLevelInfos.getBbsOrBusId(),
+                attachmentLine,
+                lineAttachToVoltageLevelInfos.getNewLine1Id(),
+                lineAttachToVoltageLevelInfos.getNewLine1Name(),
+                lineAttachToVoltageLevelInfos.getNewLine2Id(),
+                lineAttachToVoltageLevelInfos.getNewLine2Name())
         );
     }
 }

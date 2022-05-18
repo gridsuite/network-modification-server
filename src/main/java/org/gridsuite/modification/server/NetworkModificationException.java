@@ -51,8 +51,9 @@ public class NetworkModificationException extends PowsyblException {
         BRANCH_ACTION_TYPE_UNSUPPORTED(HttpStatus.INTERNAL_SERVER_ERROR),
         LINE_SPLIT_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         LINE_SPLIT_NOT_FOUND(HttpStatus.NOT_FOUND),
-        MODIFICATION_OUT_OF_RANGE(HttpStatus.BAD_REQUEST),
-        MODIFY_GENERATOR_ERROR(HttpStatus.INTERNAL_SERVER_ERROR);
+        LINE_ATTACH_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
+        MODIFY_GENERATOR_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
+        MODIFICATION_OUT_OF_RANGE(HttpStatus.BAD_REQUEST);
 
         public final HttpStatus status;
         private final String message;

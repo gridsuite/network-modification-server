@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.InjectableValues;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.reporter.*;
+import com.powsybl.iidm.modification.topology.AttachNewLineOnLine;
 import com.powsybl.iidm.modification.topology.AttachVoltageLevelOnLine;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.modification.tripping.BranchTripping;
@@ -2092,5 +2093,105 @@ public class NetworkModificationService {
         }
 
         return Mono.empty();
+    }
+
+    private Mono<Void> assertLineAttachToVoltageLevelInfosNotEmpty(LineAttachToVoltageLevelInfos lineAttachToVoltageLevelInfos) {
+        return lineAttachToVoltageLevelInfos == null ? Mono.error(new NetworkModificationException(LINE_ATTACH_ERROR,
+                "Missing required attributes to attach a line to a voltage level")) : Mono.empty();
+    }
+
+    private List<ModificationInfos> execLineAttachToVoltageLevel(NetworkStoreListener listener,
+                                                                 LineAttachToVoltageLevelInfos lineAttachToVoltageLevelInfos,
+                                                                 ReporterModel reporter, Reporter subReporter) {
+        Network network = listener.getNetwork();
+        UUID networkUuid = listener.getNetworkUuid();
+        VoltageLevelCreationInfos mayNewVL = lineAttachToVoltageLevelInfos.getMayNewVoltageLevelInfos();
+        LineCreationInfos attachmentLineInfos = lineAttachToVoltageLevelInfos.getAttachmentLine();
+        if (attachmentLineInfos == null) {
+            throw new NetworkModificationException(LINE_ATTACH_ERROR, "Missing required attachment line description");
+        }
+
+        List<ModificationInfos> inspectable = doAction(listener, () -> {
+            if (listener.isApplyModifications()) {
+                Line line = network.getLine(lineAttachToVoltageLevelInfos.getLineToAttachToId());
+                if (line == null) {
+                    throw new NetworkModificationException(LINE_NOT_FOUND, lineAttachToVoltageLevelInfos.getLineToAttachToId());
+                }
+
+                String voltageLevelId;
+                if (mayNewVL != null) {
+                    createVoltageLevelAction(mayNewVL, subReporter, network);
+                    voltageLevelId = mayNewVL.getEquipmentId();
+                } else {
+                    voltageLevelId = lineAttachToVoltageLevelInfos.getExistingVoltageLevelId();
+                }
+
+                LineAdder lineAdder = network.newLine()
+                        .setId(attachmentLineInfos.getEquipmentId())
+                        .setName(attachmentLineInfos.getEquipmentName())
+                        .setVoltageLevel1(attachmentLineInfos.getVoltageLevelId1())
+                        .setVoltageLevel2(attachmentLineInfos.getVoltageLevelId2())
+                        .setR(attachmentLineInfos.getSeriesResistance())
+                        .setX(attachmentLineInfos.getSeriesReactance())
+                        .setG1(attachmentLineInfos.getShuntConductance1() != null ? attachmentLineInfos.getShuntConductance1() : 0.0)
+                        .setB1(attachmentLineInfos.getShuntSusceptance1() != null ? attachmentLineInfos.getShuntSusceptance1() : 0.0)
+                        .setG2(attachmentLineInfos.getShuntConductance2() != null ? attachmentLineInfos.getShuntConductance2() : 0.0)
+                        .setB2(attachmentLineInfos.getShuntSusceptance2() != null ? attachmentLineInfos.getShuntSusceptance2() : 0.0);
+
+                AttachNewLineOnLine algo = new AttachNewLineOnLine(
+                        lineAttachToVoltageLevelInfos.getPercent(),
+                        voltageLevelId,
+                        lineAttachToVoltageLevelInfos.getBbsOrBusId(),
+                        lineAttachToVoltageLevelInfos.getAttachmentPointId(),
+                        lineAttachToVoltageLevelInfos.getAttachmentPointName(),
+                        true,
+                        "FictitiousSubstation",
+                        "FictitiousSubstation",
+                        lineAttachToVoltageLevelInfos.getNewLine1Id(),
+                        lineAttachToVoltageLevelInfos.getNewLine1Name(),
+                        lineAttachToVoltageLevelInfos.getNewLine2Id(),
+                        lineAttachToVoltageLevelInfos.getNewLine2Name(),
+                        line,
+                        lineAdder
+                );
+
+                algo.apply(network);
+
+                subReporter.report(Report.builder()
+                        .withKey("lineAttach")
+                        .withDefaultMessage("Line ${lineId} was attached")
+                        .withValue("id", lineAttachToVoltageLevelInfos.getLineToAttachToId())
+                        .withSeverity(TypedValue.INFO_SEVERITY)
+                        .build());
+            }
+
+            listener.storeLineAttachToVoltageLevelInfos(lineAttachToVoltageLevelInfos);
+        }, LINE_ATTACH_ERROR, networkUuid, reporter, subReporter).stream().map(ModificationInfos.class::cast)
+                .collect(Collectors.toList());
+
+        if (!inspectable.isEmpty()) {
+            inspectable.addAll(listener.getDeletions());
+            if (mayNewVL != null) {
+                ModificationInfos modificationInfos = inspectable.get(0);
+                LineAttachToVoltageLevelInfos reextractedLineAttach = (LineAttachToVoltageLevelInfos) modificationInfos;
+                VoltageLevelCreationInfos reextractedVoltageLevelCreation = reextractedLineAttach.getMayNewVoltageLevelInfos();
+                reextractedVoltageLevelCreation.setSubstationIds(Collections.singleton(reextractedVoltageLevelCreation.getSubstationId()));
+                inspectable.add(reextractedVoltageLevelCreation);
+            }
+        }
+        return inspectable;
+    }
+
+    public Flux<ModificationInfos> createLineAttachToVoltageLevel(UUID networkUuid, String variantId, UUID groupUuid,
+                                                                  LineAttachToVoltageLevelInfos lineAttachToVoltageLevelInfos) {
+        return assertLineAttachToVoltageLevelInfosNotEmpty(lineAttachToVoltageLevelInfos)
+                .thenMany(getNetworkModificationInfos(networkUuid, variantId)
+                .flatMapIterable(networkInfos -> {
+                    NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
+                    ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
+                    Reporter subReporter = reporter.createSubReporter("lineAttachToVoltageLevel", "Attach line to voltage level");
+
+                    return execLineAttachToVoltageLevel(listener, lineAttachToVoltageLevelInfos, reporter, subReporter);
+                }));
     }
 }
