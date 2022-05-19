@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.entities.equipment.modification;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.ModificationType;
@@ -22,6 +23,7 @@ import javax.persistence.MappedSuperclass;
  */
 @NoArgsConstructor
 @Getter
+@EqualsAndHashCode
 @MappedSuperclass
 public class InjectionModificationEntity extends BasicEquipmentModificationEntity {
     @Column(name = "voltageLevelIdValue")
