@@ -991,7 +991,6 @@ public class ModificationControllerTest {
         assertEquals(100.0, equipment.getMaxP(), .1);
         assertEquals(220.0, equipment.getRatedS(), .1);
 
-        //assertEquals(network.getGenerator(generatorId).getQ0(), 40.0, 0.1);
         // TODO check connectivity when it will be implemented
         testNetworkModificationsCount(TEST_GROUP_ID, 3);  // new modification stored in the database
 

@@ -810,8 +810,8 @@ public class NetworkModificationService {
             }));
     }
 
-    private Mono<Void> assertEquipmentModificationInfosOk(BasicEquipmentModificationInfos loadModificationInfos, NetworkModificationException.Type type) {
-        return loadModificationInfos == null || loadModificationInfos.getEquipmentId() == null ?
+    private Mono<Void> assertEquipmentModificationInfosOk(BasicEquipmentModificationInfos equipmentModificationInfos, NetworkModificationException.Type type) {
+        return equipmentModificationInfos == null || equipmentModificationInfos.getEquipmentId() == null ?
                 Mono.error(new NetworkModificationException(type, "Missing required attributes to modify the equipment")) : Mono.empty();
     }
 

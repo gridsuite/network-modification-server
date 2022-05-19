@@ -9,6 +9,7 @@ package org.gridsuite.modification.server.entities.equipment.modification.attrib
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import org.gridsuite.modification.server.dto.AttributeModification;
 import org.gridsuite.modification.server.dto.OperationType;
 
 import javax.persistence.Embeddable;
@@ -28,7 +29,7 @@ public class DoubleModificationEmbedded implements IAttributeModificationEmbedda
     @Enumerated(EnumType.STRING)
     private OperationType opType;
 
-    public DoubleModificationEmbedded(org.gridsuite.modification.server.dto.AttributeModification<Double> attributeModification) {
+    public DoubleModificationEmbedded(AttributeModification<Double> attributeModification) {
         value = attributeModification != null ? attributeModification.getValue() : null;
         opType = attributeModification != null ? attributeModification.getOp() : null;
     }

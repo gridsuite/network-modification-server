@@ -9,6 +9,7 @@ package org.gridsuite.modification.server.entities.equipment.modification.attrib
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import org.gridsuite.modification.server.dto.AttributeModification;
 import org.gridsuite.modification.server.dto.OperationType;
 
 import javax.persistence.Embeddable;
@@ -29,7 +30,7 @@ public class EnumModificationEmbedded<T extends Enum<?>> implements IAttributeMo
     @Enumerated(EnumType.STRING)
     private OperationType opType;
 
-    public EnumModificationEmbedded(org.gridsuite.modification.server.dto.AttributeModification<T> attributeModification) {
+    public EnumModificationEmbedded(AttributeModification<T> attributeModification) {
         this.value = attributeModification != null ? attributeModification.getValue() : null;
         this.opType = attributeModification != null ? attributeModification.getOp() : null;
     }
