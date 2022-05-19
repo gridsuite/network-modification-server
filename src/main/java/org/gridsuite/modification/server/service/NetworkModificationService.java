@@ -765,11 +765,13 @@ public class NetworkModificationService {
 
     private List<EquipmentModificationInfos> execModifyGenerator(NetworkStoreListener listener,
                                                             GeneratorModificationInfos generatorModificationInfos,
-                                                            ReporterModel reporter,
-                                                            Reporter subReporter
+                                                            UUID repordId
     ) {
         Network network = listener.getNetwork();
         UUID networkUuid = listener.getNetworkUuid();
+        ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
+        String subReportId = "Generator modification " + generatorModificationInfos.getEquipmentId();
+        Reporter subReporter = reporter.createSubReporter(subReportId, subReportId);
 
         return doAction(listener, () -> {
             if (listener.isApplyModifications()) {
@@ -795,18 +797,15 @@ public class NetworkModificationService {
 
             // add the generator modification entity to the listener
             listener.storeGeneratorModification(generatorModificationInfos);
-        }, MODIFY_GENERATOR_ERROR, networkUuid, reporter, subReporter).stream().map(EquipmentModificationInfos.class::cast)
+        }, MODIFY_GENERATOR_ERROR, repordId, reporter, subReporter).stream().map(EquipmentModificationInfos.class::cast)
             .collect(Collectors.toList());
     }
 
-    public Flux<EquipmentModificationInfos> modifyGenerator(UUID networkUuid, String variantId, UUID groupUuid, GeneratorModificationInfos generatorModificationInfo) {
+    public Flux<EquipmentModificationInfos> modifyGenerator(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, GeneratorModificationInfos generatorModificationInfo) {
         return assertEquipmentModificationInfosOk(generatorModificationInfo, MODIFY_GENERATOR_ERROR).thenMany(
             getNetworkModificationInfos(networkUuid, variantId).flatMapIterable(networkInfos -> {
                 NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
-                ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
-                Reporter subReporter = reporter.createSubReporter("GeneratorModification", "generator modification");
-
-                return execModifyGenerator(listener, generatorModificationInfo, reporter, subReporter);
+                return execModifyGenerator(listener, generatorModificationInfo, reportUuid);
             }));
     }
 
@@ -1740,6 +1739,13 @@ public class NetworkModificationService {
                         case GENERATOR_CREATION: {
                             GeneratorCreationInfos generatorCreationInfos = (GeneratorCreationInfos) infos;
                             List<EquipmentModificationInfos> modificationInfos = execCreateGenerator(listener, generatorCreationInfos, reportUuid);
+                            allModificationsInfos.addAll(modificationInfos);
+                        }
+                        break;
+
+                        case GENERATOR_MODIFICATION: {
+                            var generatorModificationInfos = (GeneratorModificationInfos) infos;
+                            List<EquipmentModificationInfos> modificationInfos = execModifyGenerator(listener, generatorModificationInfos, reportUuid);
                             allModificationsInfos.addAll(modificationInfos);
                         }
                         break;

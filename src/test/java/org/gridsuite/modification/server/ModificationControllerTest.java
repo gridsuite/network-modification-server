@@ -905,7 +905,7 @@ public class ModificationControllerTest {
 
     @Test
     public void testModifyGenerator() {
-        String uriString = "/v1/networks/{networkUuid}/generators-modification?group=" + TEST_GROUP_ID;
+        String uriString = "/v1/networks/{networkUuid}/generators-modification?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
         String generatorId = "idGenerator";
         GeneratorModificationInfos generatorModificationInfos = GeneratorModificationInfos.builder()
             .equipmentId(generatorId)
@@ -980,7 +980,7 @@ public class ModificationControllerTest {
                 MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.GENERATOR_MODIFICATION, generatorId, Set.of("s1")));
 
         assertNotNull(network.getGenerator(generatorId));  // generator was modified
-        // TODO uncomment when generator name modification will be enabled in Powsybl
+        // TODO test name change when it will be implemented
         var equipment = network.getGenerator(generatorId);
         assertEquals(EnergySource.SOLAR, equipment.getEnergySource());
         assertEquals(80.0, equipment.getTargetP(), .1);

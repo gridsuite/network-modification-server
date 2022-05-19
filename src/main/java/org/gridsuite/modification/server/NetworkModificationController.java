@@ -181,10 +181,11 @@ public class NetworkModificationController {
     @Operation(summary = "modify a generator in a network variant")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The generator has been modified")})
     public ResponseEntity<Flux<EquipmentModificationInfos>> modifyGenerator(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
-                                                                       @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
-                                                                       @RequestParam(value = "group", required = false) UUID groupUuid,
-                                                                       @RequestBody GeneratorModificationInfos generatorModificationInfos) {
-        return ResponseEntity.ok().body(networkModificationService.modifyGenerator(networkUuid, variantId, groupUuid, generatorModificationInfos));
+                                                                            @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
+                                                                            @RequestParam(value = "group", required = false) UUID groupUuid,
+                                                                            @RequestParam(value = "reportUuid") UUID reportUuid,
+                                                                            @RequestBody GeneratorModificationInfos generatorModificationInfos) {
+        return ResponseEntity.ok().body(networkModificationService.modifyGenerator(networkUuid, variantId, groupUuid, reportUuid, generatorModificationInfos));
     }
 
     @PostMapping(value = "/networks/{networkUuid}/generators", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
