@@ -1963,7 +1963,7 @@ public class NetworkModificationService {
 
         Optional<ModificationEntity> generatorModificationEntity = this.modificationRepository.findById(modificationUuid);
 
-        if (!generatorModificationEntity.isPresent()) {
+        if (generatorModificationEntity.isEmpty()) {
             return Mono.error(new NetworkModificationException(MODIFY_GENERATOR_ERROR, "Generator modification not found"));
         }
         GeneratorModificationEntity updatedEntity = this.networkModificationRepository.createGeneratorModificationEntity(generatorModificationInfos);

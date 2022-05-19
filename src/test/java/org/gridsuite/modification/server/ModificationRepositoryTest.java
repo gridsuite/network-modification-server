@@ -720,6 +720,11 @@ public class ModificationRepositoryTest {
     }
 
     @Test
+    public void testGeneratorModificationEntity() {
+        EqualsVerifier.simple().forClass(GeneratorCreationEntity.class);
+    }
+
+    @Test
     public void testEmbeddedModificationTypes() {
         testModificationEmbedded(new DoubleModificationEmbedded(new AttributeModification<>(10., OperationType.SET)), 10.);
         testModificationEmbedded(new EnumModificationEmbedded<>(new AttributeModification<>(OperationType.SET, OperationType.SET)), OperationType.SET);

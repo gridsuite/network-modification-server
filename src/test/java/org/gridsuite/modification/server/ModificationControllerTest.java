@@ -1011,7 +1011,7 @@ public class ModificationControllerTest {
 
     @Test
     public void testUpdateModifyGenerator() {
-        String uriString = "/v1/networks/{networkUuid}/generators-modification?group=" + TEST_GROUP_ID;
+        String uriString = "/v1/networks/{networkUuid}/generators-modification?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
         String generatorId = "idGenerator";
         GeneratorModificationInfos generatorModificationInfos = GeneratorModificationInfos.builder()
             .equipmentId(generatorId)
