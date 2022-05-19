@@ -14,6 +14,7 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -27,6 +28,7 @@ import org.gridsuite.modification.server.dto.ModificationInfos;
 @Getter
 @Setter
 @Entity
+@EqualsAndHashCode
 @Inheritance(strategy = InheritanceType.JOINED)
 @Table(name = "modification")
 public class ModificationEntity {

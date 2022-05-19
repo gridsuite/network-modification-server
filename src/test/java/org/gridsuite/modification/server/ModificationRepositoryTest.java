@@ -32,7 +32,6 @@ import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationGroupEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.*;
 import org.gridsuite.modification.server.entities.equipment.modification.BranchStatusModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.BooleanModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.EnumModificationEmbedded;
@@ -718,11 +717,6 @@ public class ModificationRepositoryTest {
         assertEquals(val, modification.getValue());
         assertEquals(OperationType.SET, modification.getOpType());
         EqualsVerifier.simple().forClass(modification.getClass()).verify();
-    }
-
-    @Test
-    public void testGeneratorModificationEntity() {
-        EqualsVerifier.simple().forClass(GeneratorModificationEntity.class);
     }
 
     @Test

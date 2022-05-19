@@ -768,7 +768,6 @@ public class NetworkModificationService {
                                                             UUID repordId
     ) {
         Network network = listener.getNetwork();
-        UUID networkUuid = listener.getNetworkUuid();
         ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
         String subReportId = "Generator modification " + generatorModificationInfos.getEquipmentId();
         Reporter subReporter = reporter.createSubReporter(subReportId, subReportId);

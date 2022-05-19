@@ -7,10 +7,8 @@
 package org.gridsuite.modification.server.entities.equipment.modification;
 
 import com.powsybl.iidm.network.EnergySource;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.AttributeModification;
 import org.gridsuite.modification.server.dto.GeneratorModificationInfos;
@@ -34,10 +32,8 @@ import static org.gridsuite.modification.server.entities.equipment.modification.
  * @author Jacques Borsenberger <jacques.borsenberger at rte-france.com>
  */
 @NoArgsConstructor
-@Setter
 @Getter
 @Entity
-@EqualsAndHashCode
 @Table(name = "generatorModification")
 @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "generatorModification_id_fk_constraint"))
 public class GeneratorModificationEntity extends InjectionModificationEntity {
