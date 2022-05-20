@@ -2129,8 +2129,6 @@ public class NetworkModificationService {
                 LineAdder lineAdder = network.newLine()
                         .setId(attachmentLineInfos.getEquipmentId())
                         .setName(attachmentLineInfos.getEquipmentName())
-                        .setVoltageLevel1(attachmentLineInfos.getVoltageLevelId1())
-                        .setVoltageLevel2(attachmentLineInfos.getVoltageLevelId2())
                         .setR(attachmentLineInfos.getSeriesResistance())
                         .setX(attachmentLineInfos.getSeriesReactance())
                         .setG1(attachmentLineInfos.getShuntConductance1() != null ? attachmentLineInfos.getShuntConductance1() : 0.0)
@@ -2145,8 +2143,8 @@ public class NetworkModificationService {
                         lineAttachToVoltageLevelInfos.getAttachmentPointId(),
                         lineAttachToVoltageLevelInfos.getAttachmentPointName(),
                         true,
-                        "FictitiousSubstation",
-                        "FictitiousSubstation",
+                        lineAttachToVoltageLevelInfos.getAttachmentPointId() + "_substation",
+                        null,
                         lineAttachToVoltageLevelInfos.getNewLine1Id(),
                         lineAttachToVoltageLevelInfos.getNewLine1Name(),
                         lineAttachToVoltageLevelInfos.getNewLine2Id(),
