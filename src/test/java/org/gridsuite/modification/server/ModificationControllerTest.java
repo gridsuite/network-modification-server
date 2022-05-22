@@ -2304,10 +2304,12 @@ public class ModificationControllerTest {
         assertNotNull(network.getLoad("idLoad1"));  // load was created
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
 
-        uriString = "/v1/groups?duplicateFrom=" + TEST_GROUP_ID + "&groupUuid=" + UUID.randomUUID();
+        UUID duplicatedGroupUuid = UUID.randomUUID();
+        uriString = "/v1/groups?duplicateFrom=" + TEST_GROUP_ID + "&groupUuid=" + duplicatedGroupUuid;
         webTestClient.post().uri(uriString)
                 .exchange()
                 .expectStatus().isOk();
+        testNetworkModificationsCount(duplicatedGroupUuid, 1);
 
         uriString = "/v1/groups?duplicateFrom=" + UUID.randomUUID() + "&groupUuid=" + UUID.randomUUID();
         webTestClient.post().uri(uriString)

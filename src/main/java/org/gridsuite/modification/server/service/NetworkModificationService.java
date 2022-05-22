@@ -211,9 +211,12 @@ public class NetworkModificationService {
 
     public Mono<Void> createGroup(UUID sourceGroupUuid, UUID groupUuid) {
         return getModifications(sourceGroupUuid, false).doOnNext(m -> {
-            ModificationEntity modification = this.modificationRepository.findById(m.getUuid()).get();
-            modification.setId(null);
-            networkModificationRepository.saveModifications(groupUuid, List.of(modification));
+            Optional<ModificationEntity> modification = this.modificationRepository.findById(m.getUuid());
+            if(modification.isEmpty()) {
+                throw new NetworkModificationException(MODIFICATION_NOT_FOUND, m.getUuid().toString());
+            }
+            modification.get().setId(null);
+            networkModificationRepository.saveModifications(groupUuid, List.of(modification.get()));
         }).then();
     }
 
