@@ -1826,6 +1826,13 @@ public class NetworkModificationService {
                         }
                         break;
 
+                        case LINE_ATTACH_TO_VOLTAGE_LEVEL: {
+                            LineAttachToVoltageLevelInfos lineAttachToVoltageLevelInfos = (LineAttachToVoltageLevelInfos) infos;
+                            List<ModificationInfos> modificationInfos = execLineAttachToVoltageLevel(listener, lineAttachToVoltageLevelInfos, reportUuid);
+                            allModificationsInfos.addAll(modificationInfos);
+                        }
+                        break;
+
                         default:
                     }
                 } catch (PowsyblException e) {
