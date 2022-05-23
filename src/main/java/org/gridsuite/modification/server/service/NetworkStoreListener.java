@@ -14,7 +14,9 @@ import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.VoltageLevelCreationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.LineSplitWithVoltageLevelEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -172,6 +174,11 @@ public class NetworkStoreListener implements NetworkListener {
                 loadModificationInfos.getBusOrBusbarSectionId(),
                 loadModificationInfos.getActivePower(),
                 loadModificationInfos.getReactivePower()));
+    }
+
+    @Transactional
+    public void storeGeneratorModification(GeneratorModificationInfos generatorModificationInfos) {
+        modifications.add(new GeneratorModificationEntity(generatorModificationInfos));
     }
 
     public void storeGeneratorCreation(GeneratorCreationInfos generatorCreationInfos) {

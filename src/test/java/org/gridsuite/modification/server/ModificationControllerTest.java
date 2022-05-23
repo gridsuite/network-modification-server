@@ -777,7 +777,7 @@ public class ModificationControllerTest {
     public void testModifyLoad() {
         EqualsVerifier.simple().forClass(AttributeModification.class).verify();
 
-        String uriString = "/v1/networks/{networkUuid}/loads?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
+        String uriString = "/v1/networks/{networkUuid}/loads-modification?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
 
         LoadModificationInfos loadModificationInfos = LoadModificationInfos.builder()
                 .equipmentId("v1load")
@@ -813,7 +813,7 @@ public class ModificationControllerTest {
                 .exchange()
                 .expectStatus().is5xxServerError()
                 .expectBody(String.class)
-                .isEqualTo(new NetworkModificationException(MODIFY_LOAD_ERROR, "Missing required attributes to modify the load").getMessage());
+                .isEqualTo(new NetworkModificationException(MODIFY_LOAD_ERROR, "Missing required attributes to modify the equipment").getMessage());
 
         loadModificationInfos.setEquipmentId("unknownLoadId");
         webTestClient.put().uri(uriString, TEST_NETWORK_ID)
@@ -901,6 +901,163 @@ public class ModificationControllerTest {
                 .value(modifications -> modifications.get(0),
                         MatcherLoadModificationInfos.createMatcherLoadModificationInfos(loadModificationInfos));
 
+    }
+
+    @Test
+    public void testModifyGenerator() {
+        String uriString = "/v1/networks/{networkUuid}/generators-modification?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
+        String generatorId = "idGenerator";
+        GeneratorModificationInfos generatorModificationInfos = GeneratorModificationInfos.builder()
+            .equipmentId(generatorId)
+            .energySource(new AttributeModification<>(EnergySource.HYDRO, OperationType.SET))
+            .maxActivePower(new AttributeModification<>(100.0, OperationType.SET))
+            .build();
+
+        webTestClient.put().uri(uriString, TEST_NETWORK_ID)
+            .body(BodyInserters.fromValue(generatorModificationInfos))
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBodyList(EquipmentModificationInfos.class)
+            .value(modifications -> modifications.get(0),
+                MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.GENERATOR_MODIFICATION, generatorId, Set.of("s1")));
+
+        assertNotNull(network.getGenerator(generatorId));  // generator was modified
+        assertEquals(EnergySource.HYDRO, network.getGenerator(generatorId).getEnergySource());
+        assertEquals(100.0, network.getGenerator(generatorId).getMaxP(), 0.1);
+        testNetworkModificationsCount(TEST_GROUP_ID, 1);  // new modification stored in the database
+
+        // modify generator with errors
+        webTestClient.put().uri(uriString, NOT_FOUND_NETWORK_ID)
+            .body(BodyInserters.fromValue(generatorModificationInfos))
+            .exchange()
+            .expectStatus().isNotFound()
+            .expectBody(String.class)
+            .isEqualTo(new NetworkModificationException(NETWORK_NOT_FOUND, NOT_FOUND_NETWORK_ID.toString()).getMessage());
+
+        generatorModificationInfos.setEquipmentId(null);
+        webTestClient.put().uri(uriString, TEST_NETWORK_ID)
+            .body(BodyInserters.fromValue(generatorModificationInfos))
+            .exchange()
+            .expectStatus().is5xxServerError()
+            .expectBody(String.class)
+            .isEqualTo(new NetworkModificationException(MODIFY_GENERATOR_ERROR, "Missing required attributes to modify the equipment").getMessage());
+
+        String anotherId = "unknownGeneratorId";
+        generatorModificationInfos.setEquipmentId(anotherId);
+        webTestClient.put().uri(uriString, TEST_NETWORK_ID)
+            .body(BodyInserters.fromValue(generatorModificationInfos))
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBodyList(EquipmentModificationInfos.class)
+            .value(modifications -> modifications.get(0),
+                MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.GENERATOR_MODIFICATION, anotherId, Set.of()));
+        testNetworkModificationsCount(TEST_GROUP_ID, 2);  // new modification stored in the database
+
+        // Modify all attributes of the generator
+        generatorModificationInfos = GeneratorModificationInfos.builder()
+            .type(ModificationType.GENERATOR_MODIFICATION)
+            .energySource(new AttributeModification<>(EnergySource.SOLAR, OperationType.SET))
+            .equipmentName(new AttributeModification<>("newV1Generator", OperationType.SET))
+            .activePowerSetpoint(new AttributeModification<>(80.0, OperationType.SET))
+            .reactivePowerSetpoint(new AttributeModification<>(40.0, OperationType.SET))
+            .voltageSetpoint(new AttributeModification<>(48.0, OperationType.SET))
+            .voltageRegulationOn(new AttributeModification<>(true, OperationType.SET))
+            .minActivePower(new AttributeModification<>(0., OperationType.SET))
+            .maxActivePower(new AttributeModification<>(100., OperationType.SET))
+            .ratedNominalPower(new AttributeModification<>(220., OperationType.SET))
+            .equipmentId(generatorId)
+            .build();
+
+        webTestClient.put().uri(uriString, TEST_NETWORK_ID)
+            .body(BodyInserters.fromValue(generatorModificationInfos))
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBodyList(EquipmentModificationInfos.class)
+            .value(modifications -> modifications.get(0),
+                MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.GENERATOR_MODIFICATION, generatorId, Set.of("s1")));
+
+        assertNotNull(network.getGenerator(generatorId));  // generator was modified
+        // TODO test name change when it will be implemented
+        var equipment = network.getGenerator(generatorId);
+        assertEquals(EnergySource.SOLAR, equipment.getEnergySource());
+        assertEquals(80.0, equipment.getTargetP(), .1);
+        assertEquals(40.0, equipment.getTargetQ(), .1);
+        assertEquals(48.0, equipment.getTargetV(), .1);
+        assertTrue(equipment.isVoltageRegulatorOn());
+        assertEquals(0.0, equipment.getMinP(), .1);
+        assertEquals(100.0, equipment.getMaxP(), .1);
+        assertEquals(220.0, equipment.getRatedS(), .1);
+
+        // TODO check connectivity when it will be implemented
+        testNetworkModificationsCount(TEST_GROUP_ID, 3);  // new modification stored in the database
+
+        // Unset an attribute that should not be null
+        generatorModificationInfos = GeneratorModificationInfos.builder()
+            .equipmentId(generatorId)
+            .energySource(new AttributeModification<>(null, OperationType.UNSET))
+            .build();
+
+        webTestClient.put().uri(uriString, TEST_NETWORK_ID)
+            .body(BodyInserters.fromValue(generatorModificationInfos))
+            .exchange()
+            .expectStatus().is5xxServerError()
+            .expectBody(String.class)
+            .isEqualTo(new NetworkModificationException(MODIFY_GENERATOR_ERROR, "Generator '" + generatorId + "': energy source is not set").getMessage());
+
+    }
+
+    @Test
+    public void testUpdateModifyGenerator() {
+        String uriString = "/v1/networks/{networkUuid}/generators-modification?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
+        String generatorId = "idGenerator";
+        GeneratorModificationInfos generatorModificationInfos = GeneratorModificationInfos.builder()
+            .equipmentId(generatorId)
+            .energySource(new AttributeModification<>(EnergySource.HYDRO, OperationType.SET))
+            .maxActivePower(new AttributeModification<>(100.0, OperationType.SET))
+            .build();
+
+        webTestClient.put().uri(uriString, TEST_NETWORK_ID)
+            .body(BodyInserters.fromValue(generatorModificationInfos))
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBodyList(EquipmentModificationInfos.class)
+            .value(modifications -> modifications.get(0),
+                MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.GENERATOR_MODIFICATION, generatorId, Set.of("s1")));
+
+        var listModifications = modificationRepository.getModifications(TEST_GROUP_ID, true);
+        assertEquals(1, listModifications.size());
+
+        generatorModificationInfos = GeneratorModificationInfos.builder()
+            .equipmentId(generatorId)
+            .energySource(new AttributeModification<>(EnergySource.SOLAR, OperationType.SET))
+            .equipmentName(new AttributeModification<>("newV1Generator", OperationType.SET))
+            .activePowerSetpoint(new AttributeModification<>(80.0, OperationType.SET))
+            .reactivePowerSetpoint(new AttributeModification<>(40.0, OperationType.SET))
+            .voltageSetpoint(new AttributeModification<>(48.0, OperationType.SET))
+            .voltageRegulationOn(new AttributeModification<>(true, OperationType.SET))
+            .minActivePower(new AttributeModification<>(0., OperationType.SET))
+            .maxActivePower(new AttributeModification<>(100., OperationType.SET))
+            .ratedNominalPower(new AttributeModification<>(220., OperationType.SET))
+            .uuid(listModifications.get(0).getUuid())
+            .type(ModificationType.GENERATOR_MODIFICATION)
+            .build();
+
+        uriString = "/v1/modifications/{modificationUUID}/generators-modification";
+
+        webTestClient.put().uri(uriString, listModifications.get(0).getUuid())
+            .body(BodyInserters.fromValue(generatorModificationInfos))
+            .exchange()
+            .expectStatus().isOk();
+
+        var modifications = modificationRepository.getModifications(TEST_GROUP_ID, false);
+
+        assertEquals(1, modifications.size());
+        modifications.get(0).setDate(listModifications.get(0).getDate()); // this one is modified by sql database
+        assertEquals(generatorModificationInfos, modifications.get(0));
     }
 
     @Test

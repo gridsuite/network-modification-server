@@ -36,6 +36,7 @@ import org.gridsuite.modification.server.entities.equipment.creation.EquipmentCr
 import org.gridsuite.modification.server.entities.equipment.creation.VoltageLevelCreationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.LineSplitWithVoltageLevelEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.slf4j.Logger;
@@ -53,6 +54,7 @@ import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -61,6 +63,8 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.util.*;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -670,7 +674,7 @@ public class NetworkModificationService {
     }
 
     public Mono<Void> updateLoadModification(LoadModificationInfos loadModificationInfos, UUID modificationUuid) {
-        assertLoadModificationInfosOk(loadModificationInfos).subscribe();
+        assertEquipmentModificationInfosOk(loadModificationInfos, MODIFY_LOAD_ERROR).subscribe();
 
         Optional<ModificationEntity> loadModificationEntity = this.modificationRepository.findById(modificationUuid);
 
@@ -727,8 +731,31 @@ public class NetworkModificationService {
                 .collect(Collectors.toList());
     }
 
+    private static <T> void applyElementaryModifications(Consumer<T> setter, Supplier<T> getter, AttributeModification<T> modification) {
+        if (modification != null) {
+            setter.accept(modification.applyModification(getter.get()));
+        }
+    }
+
+    private void applyModifications(Network network, GeneratorModificationInfos modificationInfos) {
+        Generator generator = network.getGenerator(modificationInfos.getEquipmentId());
+        if (generator == null) {
+            throw new NetworkModificationException(GENERATOR_NOT_FOUND, "Generator " + modificationInfos.getEquipmentId() + " does not exist in network");
+        }
+        applyElementaryModifications(generator::setEnergySource, generator::getEnergySource, modificationInfos.getEnergySource());
+        applyElementaryModifications(generator::setMinP, generator::getMinP, modificationInfos.getMinActivePower());
+        applyElementaryModifications(generator::setMaxP, generator::getMaxP, modificationInfos.getMaxActivePower());
+        applyElementaryModifications(generator::setRatedS, generator::getRatedS, modificationInfos.getRatedNominalPower());
+        applyElementaryModifications(generator::setTargetP, generator::getTargetP, modificationInfos.getActivePowerSetpoint());
+        applyElementaryModifications(generator::setTargetQ, generator::getTargetQ, modificationInfos.getReactivePowerSetpoint());
+        applyElementaryModifications(generator::setTargetV, generator::getTargetV, modificationInfos.getVoltageSetpoint());
+        applyElementaryModifications(generator::setVoltageRegulatorOn, generator::isVoltageRegulatorOn, modificationInfos.getVoltageRegulationOn());
+
+        // TODO connectivity modification
+    }
+
     public Flux<EquipmentModificationInfos> modifyLoad(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, LoadModificationInfos loadModificationInfos) {
-        return assertLoadModificationInfosOk(loadModificationInfos).thenMany(
+        return assertEquipmentModificationInfosOk(loadModificationInfos, MODIFY_LOAD_ERROR).thenMany(
                 getNetworkModificationInfos(networkUuid, variantId).flatMapIterable(networkInfos -> {
                     NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
 
@@ -736,9 +763,54 @@ public class NetworkModificationService {
                 }));
     }
 
-    private Mono<Void> assertLoadModificationInfosOk(LoadModificationInfos loadModificationInfos) {
-        return loadModificationInfos == null || loadModificationInfos.getEquipmentId() == null ?
-                Mono.error(new NetworkModificationException(MODIFY_LOAD_ERROR, "Missing required attributes to modify the load")) : Mono.empty();
+    private List<EquipmentModificationInfos> execModifyGenerator(NetworkStoreListener listener,
+                                                            GeneratorModificationInfos generatorModificationInfos,
+                                                            UUID repordId
+    ) {
+        Network network = listener.getNetwork();
+        ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
+        String subReportId = "Generator modification " + generatorModificationInfos.getEquipmentId();
+        Reporter subReporter = reporter.createSubReporter(subReportId, subReportId);
+
+        return doAction(listener, () -> {
+            if (listener.isApplyModifications()) {
+                try {
+                    // modify the generator in the network
+                    applyModifications(network, generatorModificationInfos);
+
+                    subReporter.report(Report.builder()
+                        .withKey("generatorModification")
+                        .withDefaultMessage("Generator with id=${id} modified")
+                        .withValue("id", generatorModificationInfos.getEquipmentId())
+                        .withSeverity(TypedValue.INFO_SEVERITY)
+                        .build());
+                } catch (NetworkModificationException exc) {
+                    subReporter.report(Report.builder()
+                        .withKey("generatorModification")
+                        .withDefaultMessage(exc.getMessage())
+                        .withValue("id", generatorModificationInfos.getEquipmentId())
+                        .withSeverity(TypedValue.ERROR_SEVERITY)
+                        .build());
+                }
+            }
+
+            // add the generator modification entity to the listener
+            listener.storeGeneratorModification(generatorModificationInfos);
+        }, MODIFY_GENERATOR_ERROR, repordId, reporter, subReporter).stream().map(EquipmentModificationInfos.class::cast)
+            .collect(Collectors.toList());
+    }
+
+    public Flux<EquipmentModificationInfos> modifyGenerator(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, GeneratorModificationInfos generatorModificationInfo) {
+        return assertEquipmentModificationInfosOk(generatorModificationInfo, MODIFY_GENERATOR_ERROR).thenMany(
+            getNetworkModificationInfos(networkUuid, variantId).flatMapIterable(networkInfos -> {
+                NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
+                return execModifyGenerator(listener, generatorModificationInfo, reportUuid);
+            }));
+    }
+
+    private Mono<Void> assertEquipmentModificationInfosOk(BasicEquipmentModificationInfos equipmentModificationInfos, NetworkModificationException.Type type) {
+        return equipmentModificationInfos == null || equipmentModificationInfos.getEquipmentId() == null ?
+                Mono.error(new NetworkModificationException(type, "Missing required attributes to modify the equipment")) : Mono.empty();
     }
 
     private List<EquipmentDeletionInfos> execDeleteEquipment(NetworkStoreListener listener,
@@ -1670,6 +1742,13 @@ public class NetworkModificationService {
                         }
                         break;
 
+                        case GENERATOR_MODIFICATION: {
+                            var generatorModificationInfos = (GeneratorModificationInfos) infos;
+                            List<EquipmentModificationInfos> modificationInfos = execModifyGenerator(listener, generatorModificationInfos, reportUuid);
+                            allModificationsInfos.addAll(modificationInfos);
+                        }
+                        break;
+
                         case LINE_CREATION: {
                             LineCreationInfos lineCreationInfos = (LineCreationInfos) infos;
                             List<EquipmentModificationInfos> modificationInfos = execCreateLine(listener, lineCreationInfos, reportUuid);
@@ -1875,6 +1954,23 @@ public class NetworkModificationService {
 
     public Mono<Void> moveModifications(UUID groupUuid, UUID before, List<UUID> modificationsToMove) {
         return Mono.fromRunnable(() -> networkModificationRepository.moveModifications(groupUuid, modificationsToMove, before));
+    }
+
+    @Transactional
+    public Mono<Void> updateModifyGenerator(UUID modificationUuid, GeneratorModificationInfos generatorModificationInfos) {
+        assertEquipmentModificationInfosOk(generatorModificationInfos, MODIFICATION_NOT_FOUND).subscribe();
+
+        Optional<ModificationEntity> generatorModificationEntity = this.modificationRepository.findById(modificationUuid);
+
+        if (generatorModificationEntity.isEmpty()) {
+            return Mono.error(new NetworkModificationException(MODIFY_GENERATOR_ERROR, "Generator modification not found"));
+        }
+        GeneratorModificationEntity updatedEntity = this.networkModificationRepository.createGeneratorModificationEntity(generatorModificationInfos);
+        updatedEntity.setId(modificationUuid);
+        updatedEntity.setGroup(generatorModificationEntity.get().getGroup());
+        this.networkModificationRepository.updateModification(updatedEntity);
+        return Mono.empty();
+
     }
 
     private Mono<Void> assertLineSplitWithVoltageLevelInfosNotEmpty(LineSplitWithVoltageLevelInfos lineSplitWithVoltageLevelInfos) {
