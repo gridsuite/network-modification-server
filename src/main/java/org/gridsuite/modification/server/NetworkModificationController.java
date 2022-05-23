@@ -349,8 +349,9 @@ public class NetworkModificationController {
     public ResponseEntity<Flux<ModificationInfos>> lineAttachToVoltageLevel(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
                                                                             @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
                                                                             @RequestParam(value = "group", required = false) UUID groupUuid,
+                                                                            @RequestParam(value = "reportUuid") UUID reportUuid,
                                                                             @RequestBody LineAttachToVoltageLevelInfos lineAttachToVoltageLevelInfos) {
-        return ResponseEntity.ok().body(networkModificationService.createLineAttachToVoltageLevel(networkUuid, variantId, groupUuid, lineAttachToVoltageLevelInfos));
+        return ResponseEntity.ok().body(networkModificationService.createLineAttachToVoltageLevel(networkUuid, variantId, groupUuid, reportUuid, lineAttachToVoltageLevelInfos));
     }
 
     @PostMapping(value = "/networks/{networkUuid}/build")

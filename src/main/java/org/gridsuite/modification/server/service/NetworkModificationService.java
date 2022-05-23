@@ -2102,14 +2102,16 @@ public class NetworkModificationService {
 
     private List<ModificationInfos> execLineAttachToVoltageLevel(NetworkStoreListener listener,
                                                                  LineAttachToVoltageLevelInfos lineAttachToVoltageLevelInfos,
-                                                                 ReporterModel reporter, Reporter subReporter) {
+                                                                 UUID reportUuid) {
         Network network = listener.getNetwork();
-        UUID networkUuid = listener.getNetworkUuid();
         VoltageLevelCreationInfos mayNewVL = lineAttachToVoltageLevelInfos.getMayNewVoltageLevelInfos();
         LineCreationInfos attachmentLineInfos = lineAttachToVoltageLevelInfos.getAttachmentLine();
         if (attachmentLineInfos == null) {
             throw new NetworkModificationException(LINE_ATTACH_ERROR, "Missing required attachment line description");
         }
+
+        ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
+        Reporter subReporter = reporter.createSubReporter("lineAttachToVoltageLevel", "Line attach to voltage level");
 
         List<ModificationInfos> inspectable = doAction(listener, () -> {
             if (listener.isApplyModifications()) {
@@ -2164,23 +2166,16 @@ public class NetworkModificationService {
             }
 
             listener.storeLineAttachToVoltageLevelInfos(lineAttachToVoltageLevelInfos);
-        }, LINE_ATTACH_ERROR, networkUuid, reporter, subReporter).stream().map(ModificationInfos.class::cast)
+        }, LINE_ATTACH_ERROR, reportUuid, reporter, subReporter).stream().map(ModificationInfos.class::cast)
                 .collect(Collectors.toList());
 
         if (!inspectable.isEmpty()) {
             inspectable.addAll(listener.getDeletions());
-            if (mayNewVL != null) {
-                ModificationInfos modificationInfos = inspectable.get(0);
-                LineAttachToVoltageLevelInfos reextractedLineAttach = (LineAttachToVoltageLevelInfos) modificationInfos;
-                VoltageLevelCreationInfos reextractedVoltageLevelCreation = reextractedLineAttach.getMayNewVoltageLevelInfos();
-                reextractedVoltageLevelCreation.setSubstationIds(Collections.singleton(reextractedVoltageLevelCreation.getSubstationId()));
-                inspectable.add(reextractedVoltageLevelCreation);
-            }
         }
         return inspectable;
     }
 
-    public Flux<ModificationInfos> createLineAttachToVoltageLevel(UUID networkUuid, String variantId, UUID groupUuid,
+    public Flux<ModificationInfos> createLineAttachToVoltageLevel(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid,
                                                                   LineAttachToVoltageLevelInfos lineAttachToVoltageLevelInfos) {
         return assertLineAttachToVoltageLevelInfosNotEmpty(lineAttachToVoltageLevelInfos)
                 .thenMany(getNetworkModificationInfos(networkUuid, variantId)
@@ -2189,7 +2184,7 @@ public class NetworkModificationService {
                     ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
                     Reporter subReporter = reporter.createSubReporter("lineAttachToVoltageLevel", "Attach line to voltage level");
 
-                    return execLineAttachToVoltageLevel(listener, lineAttachToVoltageLevelInfos, reporter, subReporter);
+                    return execLineAttachToVoltageLevel(listener, lineAttachToVoltageLevelInfos, reportUuid);
                 }));
     }
 }
