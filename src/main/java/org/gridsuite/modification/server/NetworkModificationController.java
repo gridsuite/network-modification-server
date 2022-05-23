@@ -354,6 +354,14 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.createLineAttachToVoltageLevel(networkUuid, variantId, groupUuid, reportUuid, lineAttachToVoltageLevelInfos));
     }
 
+    @PutMapping(value = "/modifications/{modificationUuid}/line-attach-creation", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "update a ta line attachment")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The line attachment to voltage level has been updated")})
+    public ResponseEntity<Mono<Void>> updateTwoWindingsTransformer(@PathVariable("modificationUuid") UUID modificationUuid,
+                                                                   @RequestBody LineAttachToVoltageLevelInfos lineAttachToVoltageLevelInfos) {
+        return ResponseEntity.ok().body(networkModificationService.updateLineAttachToVoltageLevel(modificationUuid, lineAttachToVoltageLevelInfos));
+    }
+
     @PostMapping(value = "/networks/{networkUuid}/build")
     @Operation(summary = "Build a network variant")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The build has been done")})

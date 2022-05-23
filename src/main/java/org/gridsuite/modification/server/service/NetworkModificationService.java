@@ -31,11 +31,9 @@ import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.creation.BusbarConnectionCreationEmbeddable;
-import org.gridsuite.modification.server.entities.equipment.creation.BusbarSectionCreationEmbeddable;
-import org.gridsuite.modification.server.entities.equipment.creation.EquipmentCreationEntity;
-import org.gridsuite.modification.server.entities.equipment.creation.VoltageLevelCreationEntity;
+import org.gridsuite.modification.server.entities.equipment.creation.*;
 import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.LineAttachToVoltageLevelEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.LineSplitWithVoltageLevelEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
@@ -2187,4 +2185,49 @@ public class NetworkModificationService {
                     return execLineAttachToVoltageLevel(listener, lineAttachToVoltageLevelInfos, reportUuid);
                 }));
     }
+
+    public Mono<Void> updateLineAttachToVoltageLevel(UUID modificationUuid, LineAttachToVoltageLevelInfos lineAttachToVoltageLevelInfos) {
+        assertLineAttachToVoltageLevelInfosNotEmpty(lineAttachToVoltageLevelInfos).subscribe();
+
+        Optional<ModificationEntity> lineAttachToVoltageLevelEntity = this.modificationRepository.findById(modificationUuid);
+
+        if (lineAttachToVoltageLevelEntity.isEmpty()) {
+            return Mono.error(new NetworkModificationException(LINE_ATTACH_NOT_FOUND, "Line attach not found"));
+        }
+
+        LineAttachToVoltageLevelEntity casted = (LineAttachToVoltageLevelEntity) lineAttachToVoltageLevelEntity.get();
+        VoltageLevelCreationEntity mayVoltageLevelCreation = casted.getMayVoltageLevelCreation();
+        VoltageLevelCreationInfos mayNewVoltageLevelInfos = lineAttachToVoltageLevelInfos.getMayNewVoltageLevelInfos();
+        LineCreationEntity lineCreation = casted.getLineCreation();
+        LineCreationInfos lineInfos = lineAttachToVoltageLevelInfos.getAttachmentLine();
+
+        LineAttachToVoltageLevelEntity updatedEntity = LineAttachToVoltageLevelEntity.toEntity(
+                lineAttachToVoltageLevelInfos.getLineToAttachToId(),
+                lineAttachToVoltageLevelInfos.getPercent(),
+                lineAttachToVoltageLevelInfos.getAttachmentPointId(),
+                lineAttachToVoltageLevelInfos.getAttachmentPointName(),
+                mayNewVoltageLevelInfos,
+                lineAttachToVoltageLevelInfos.getExistingVoltageLevelId(),
+                lineAttachToVoltageLevelInfos.getBbsOrBusId(),
+                lineInfos,
+                lineAttachToVoltageLevelInfos.getNewLine1Id(),
+                lineAttachToVoltageLevelInfos.getNewLine1Name(),
+                lineAttachToVoltageLevelInfos.getNewLine2Id(),
+                lineAttachToVoltageLevelInfos.getNewLine2Name()
+        );
+        updatedEntity.setId(modificationUuid);
+        updatedEntity.setGroup(lineAttachToVoltageLevelEntity.get().getGroup());
+        this.networkModificationRepository.updateModification(updatedEntity);
+
+        // NetworkStoreListener.makeVoltageLevelCreationEntity recreates on need, so get rid of previous
+        if (mayVoltageLevelCreation != null) {
+            this.modificationRepository.delete(mayVoltageLevelCreation);
+        }
+        if (lineCreation != null) {
+            this.modificationRepository.delete(lineCreation);
+        }
+
+        return Mono.empty();
+    }
+
 }
