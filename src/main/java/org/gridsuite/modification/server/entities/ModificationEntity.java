@@ -14,6 +14,7 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -27,6 +28,7 @@ import org.gridsuite.modification.server.dto.ModificationInfos;
 @Getter
 @Setter
 @Entity
+@EqualsAndHashCode
 @Inheritance(strategy = InheritanceType.JOINED)
 @Table(name = "modification")
 public class ModificationEntity {
@@ -42,8 +44,8 @@ public class ModificationEntity {
     @Column(name = "type")
     private String type;
 
-    @JoinColumn(name = "groupId", foreignKey = @ForeignKey(name = "group_id_fk_constraint"), nullable = false)
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "groupId", foreignKey = @ForeignKey(name = "group_id_fk_constraint"))
+    @ManyToOne(fetch = FetchType.LAZY)
     @Setter
     private ModificationGroupEntity group;
 
