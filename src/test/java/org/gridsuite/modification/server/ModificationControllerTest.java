@@ -2469,7 +2469,7 @@ public class ModificationControllerTest {
 
     @Test
     public void testGroupDuplication() {
-        String uriString = "/v1/networks/{networkUuid}/loads?group=" + TEST_GROUP_ID;
+        String uriString = "/v1/networks/{networkUuid}/loads?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
         // create new load in voltage level with node/breaker topology (in voltage level "v2" and busbar section "1B")
         LoadCreationInfos loadCreationInfos = LoadCreationInfos.builder()
                 .equipmentId("idLoad1")
@@ -2488,13 +2488,13 @@ public class ModificationControllerTest {
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
 
         UUID duplicatedGroupUuid = UUID.randomUUID();
-        uriString = "/v1/groups?duplicateFrom=" + TEST_GROUP_ID + "&groupUuid=" + duplicatedGroupUuid;
+        uriString = "/v1/groups?duplicateFrom=" + TEST_GROUP_ID + "&groupUuid=" + duplicatedGroupUuid + "&reportUuid=" + TEST_REPORT_ID;
         webTestClient.post().uri(uriString)
                 .exchange()
                 .expectStatus().isOk();
         testNetworkModificationsCount(duplicatedGroupUuid, 1);
 
-        uriString = "/v1/groups?duplicateFrom=" + UUID.randomUUID() + "&groupUuid=" + UUID.randomUUID();
+        uriString = "/v1/groups?duplicateFrom=" + UUID.randomUUID() + "&groupUuid=" + UUID.randomUUID() + "&reportUuid=" + TEST_REPORT_ID;
         webTestClient.post().uri(uriString)
                 .exchange()
                 .expectStatus().isNotFound();
