@@ -2499,7 +2499,7 @@ public class ModificationControllerTest {
                 .exchange()
                 .expectStatus().isNotFound();
     }
-    
+
     public void testLineSplitWithVoltageLevel() {
         String lineSplitUriString = "/v1/networks/{networkUuid}/line-splits?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
 
