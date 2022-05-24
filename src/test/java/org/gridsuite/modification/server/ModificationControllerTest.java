@@ -2567,7 +2567,6 @@ public class ModificationControllerTest {
             .body(BodyInserters.fromValue(lineSplitWithNewVLUpd))
             .exchange()
             .expectStatus().isOk();
-        
     }
 
     private void testNetworkModificationsCount(UUID groupUuid, int actualSize) {
