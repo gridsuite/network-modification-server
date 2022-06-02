@@ -18,9 +18,7 @@ import java.util.Objects;
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode
-@Getter
-@Setter
+@Data
 @ToString(callSuper = true)
 @Schema(description = "Attribute modification")
 public class AttributeModification<T> {

@@ -7,15 +7,22 @@
 package org.gridsuite.modification.server.service;
 
 import com.powsybl.iidm.network.*;
+
+import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.creation.BusbarConnectionCreationEmbeddable;
-import org.gridsuite.modification.server.entities.equipment.creation.BusbarSectionCreationEmbeddable;
+import org.gridsuite.modification.server.entities.equipment.creation.VoltageLevelCreationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.LineSplitWithVoltageLevelEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
+
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -35,11 +42,13 @@ public class NetworkStoreListener implements NetworkListener {
 
     private final List<ModificationEntity> modifications = new LinkedList<>();
 
-    private Set<String> substationsIds = new HashSet<>();
+    private final Set<String> substationsIds = new HashSet<>();
 
-    private boolean isBuild;
+    private final List<EquipmentDeletionInfos> deletions = new ArrayList<>();
 
-    private boolean isApplyModifications;
+    private final boolean isBuild;
+
+    private final boolean isApplyModifications;
 
     protected NetworkStoreListener(Network network, UUID networkUuid, UUID groupUuid,
                                    NetworkModificationRepository modificationRepository, EquipmentInfosService equipmentInfosService,
@@ -135,6 +144,10 @@ public class NetworkStoreListener implements NetworkListener {
         }
     }
 
+    public Collection<EquipmentDeletionInfos> getDeletions() {
+        return Collections.unmodifiableCollection(deletions);
+    }
+
     public void storeEquipmentAttributeModification(Identifiable<?> identifiable, String attributeName, Object attributeValue) {
         modifications.add(this.modificationRepository.createEquipmentAttributeModification(identifiable.getId(), attributeName, attributeValue));
     }
@@ -161,6 +174,11 @@ public class NetworkStoreListener implements NetworkListener {
                 loadModificationInfos.getBusOrBusbarSectionId(),
                 loadModificationInfos.getActivePower(),
                 loadModificationInfos.getReactivePower()));
+    }
+
+    @Transactional
+    public void storeGeneratorModification(GeneratorModificationInfos generatorModificationInfos) {
+        modifications.add(new GeneratorModificationEntity(generatorModificationInfos));
     }
 
     public void storeGeneratorCreation(GeneratorCreationInfos generatorCreationInfos) {
@@ -239,20 +257,8 @@ public class NetworkStoreListener implements NetworkListener {
     }
 
     public void storeVoltageLevelCreation(VoltageLevelCreationInfos voltageLevelCreationInfos) {
-        List<BusbarSectionCreationEmbeddable> bbsEmbeddables = voltageLevelCreationInfos.getBusbarSections().stream().map(bbsi ->
-            new BusbarSectionCreationEmbeddable(bbsi.getId(), bbsi.getName(), bbsi.getVertPos(), bbsi.getHorizPos())
-        ).collect(Collectors.toList());
-        List<BusbarConnectionCreationEmbeddable> cnxEmbeddables = voltageLevelCreationInfos.getBusbarConnections().stream().map(cnxi ->
-            new BusbarConnectionCreationEmbeddable(cnxi.getFromBBS(), cnxi.getToBBS(), cnxi.getSwitchKind())
-        ).collect(Collectors.toList());
-        modifications.add(this.modificationRepository.createVoltageLevelEntity(
-            voltageLevelCreationInfos.getEquipmentId(),
-            voltageLevelCreationInfos.getEquipmentName(),
-            voltageLevelCreationInfos.getNominalVoltage(),
-            voltageLevelCreationInfos.getSubstationId(),
-            bbsEmbeddables,
-            cnxEmbeddables
-        ));
+        VoltageLevelCreationEntity voltageLevelEntity = VoltageLevelCreationEntity.toEntity(voltageLevelCreationInfos);
+        modifications.add(voltageLevelEntity);
     }
 
     @Override
@@ -282,7 +288,16 @@ public class NetworkStoreListener implements NetworkListener {
 
     @Override
     public void beforeRemoval(Identifiable identifiable) {
-        // nothing to do
+        EquipmentDeletionInfos di = EquipmentDeletionInfos
+            .builder()
+            .uuid(null) // not in "this" db, transient
+            .date(ZonedDateTime.now(ZoneOffset.UTC))
+            .type(ModificationType.EQUIPMENT_DELETION)
+            .equipmentId(identifiable.getId())
+            .equipmentType(identifiable.getType().name())
+            .build();
+        addSubstationsIds(identifiable);
+        this.deletions.add(di);
     }
 
     @Override
@@ -303,5 +318,21 @@ public class NetworkStoreListener implements NetworkListener {
 
     public void addSubstationsIds(Identifiable identifiable) {
         substationsIds.addAll(getSubstationIds(identifiable));
+    }
+
+    public void storeLineSplitWithVoltageLevelInfos(LineSplitWithVoltageLevelInfos lineSplitWithVoltageLevelInfos) {
+        VoltageLevelCreationInfos mayNewVoltageLevelInfos = lineSplitWithVoltageLevelInfos.getMayNewVoltageLevelInfos();
+
+        modifications.add(LineSplitWithVoltageLevelEntity.toEntity(
+            lineSplitWithVoltageLevelInfos.getLineToSplitId(),
+            lineSplitWithVoltageLevelInfos.getPercent(),
+            mayNewVoltageLevelInfos,
+            lineSplitWithVoltageLevelInfos.getExistingVoltageLevelId(),
+            lineSplitWithVoltageLevelInfos.getBbsOrBusId(),
+            lineSplitWithVoltageLevelInfos.getNewLine1Id(),
+            lineSplitWithVoltageLevelInfos.getNewLine1Name(),
+            lineSplitWithVoltageLevelInfos.getNewLine2Id(),
+            lineSplitWithVoltageLevelInfos.getNewLine2Name())
+        );
     }
 }

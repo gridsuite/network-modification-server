@@ -17,6 +17,7 @@ import org.gridsuite.modification.server.entities.GroovyScriptModificationEntity
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationGroupEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.LoadModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.BooleanEquipmentAttributeModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleEquipmentAttributeModificationEntity;
@@ -183,8 +184,8 @@ public class NetworkModificationRepository {
         return count;
     }
 
-    public void updateModification(EquipmentModificationEntity equipmentModificationEntity) {
-        this.modificationRepository.save(equipmentModificationEntity);
+    public void updateModification(ModificationEntity modificationEntity) {
+        this.modificationRepository.save(modificationEntity);
     }
 
     private ModificationGroupEntity getModificationGroup(UUID groupUuid) {
@@ -235,7 +236,7 @@ public class NetworkModificationRepository {
         return new SubstationCreationEntity(id, name, country);
     }
 
-    public EquipmentCreationEntity createVoltageLevelEntity(String id, String name, double nominalVoltage, String substationId,
+    public VoltageLevelCreationEntity createVoltageLevelEntity(String id, String name, double nominalVoltage, String substationId,
         List<BusbarSectionCreationEmbeddable> busbarSections,
         List<BusbarConnectionCreationEmbeddable> busbarConnections) {
         return new VoltageLevelCreationEntity(id, name, nominalVoltage, substationId, busbarSections, busbarConnections);
@@ -266,5 +267,9 @@ public class NetworkModificationRepository {
 
     public ShuntCompensatorCreationEntity createShuntCompensatorEntity(ShuntCompensatorCreationInfos shuntCompensatorCreationInfos) {
         return new ShuntCompensatorCreationEntity(shuntCompensatorCreationInfos);
+    }
+
+    public GeneratorModificationEntity createGeneratorModificationEntity(GeneratorModificationInfos generatorModificationInfos) {
+        return new GeneratorModificationEntity(generatorModificationInfos);
     }
 }

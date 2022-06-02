@@ -28,6 +28,7 @@ public class NetworkModificationException extends PowsyblException {
         SWITCH_NOT_FOUND(HttpStatus.NOT_FOUND),
         LINE_NOT_FOUND(HttpStatus.NOT_FOUND),
         LOAD_NOT_FOUND(HttpStatus.NOT_FOUND),
+        GENERATOR_NOT_FOUND(HttpStatus.NOT_FOUND),
         UNKNOWN_EQUIPMENT_TYPE(HttpStatus.INTERNAL_SERVER_ERROR),
         MODIFICATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         VOLTAGE_LEVEL_NOT_FOUND(HttpStatus.NOT_FOUND),
@@ -48,7 +49,10 @@ public class NetworkModificationException extends PowsyblException {
         BRANCH_ACTION_TYPE_EMPTY(HttpStatus.BAD_REQUEST, "Empty branch action type"),
         BRANCH_ACTION_TYPE_UNKNOWN(HttpStatus.BAD_REQUEST),
         BRANCH_ACTION_TYPE_UNSUPPORTED(HttpStatus.INTERNAL_SERVER_ERROR),
-        MODIFICATION_OUT_OF_RANGE(HttpStatus.BAD_REQUEST);
+        LINE_SPLIT_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
+        LINE_SPLIT_NOT_FOUND(HttpStatus.NOT_FOUND),
+        MODIFICATION_OUT_OF_RANGE(HttpStatus.BAD_REQUEST),
+        MODIFY_GENERATOR_ERROR(HttpStatus.INTERNAL_SERVER_ERROR);
 
         public final HttpStatus status;
         private final String message;

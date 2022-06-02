@@ -45,8 +45,9 @@ public class NetworkModificationController {
             @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
             @Parameter(description = "Switch ID") @PathVariable("switchId") String switchId,
             @RequestParam(value = "group", required = false) UUID groupUuid,
+            @RequestParam(value = "reportUuid") UUID reportUuid,
             @RequestParam("open") String open) {
-        return ResponseEntity.ok().body(networkModificationService.changeSwitchState(networkUuid, variantId, groupUuid, switchId, Boolean.parseBoolean(open)));
+        return ResponseEntity.ok().body(networkModificationService.changeSwitchState(networkUuid, variantId, groupUuid, reportUuid, switchId, Boolean.parseBoolean(open)));
     }
 
     @PutMapping(value = "/networks/{networkUuid}/groovy", consumes = MediaType.TEXT_PLAIN_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -54,10 +55,11 @@ public class NetworkModificationController {
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The equipment state has been changed"),
                            @ApiResponse(responseCode = "404", description = "the network or equipment not found")})
     public ResponseEntity<Flux<ModificationInfos>> applyGroovyScript(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
-                                                                             @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
-                                                                             @RequestParam(value = "group", required = false) UUID groupUuid,
-                                                                             @RequestBody String groovyScript) {
-        return ResponseEntity.ok().body(networkModificationService.applyGroovyScript(networkUuid, variantId, groupUuid, groovyScript));
+                                                                     @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
+                                                                     @RequestParam(value = "group", required = false) UUID groupUuid,
+                                                                     @RequestParam(value = "reportUuid") UUID reportUuid,
+                                                                     @RequestBody String groovyScript) {
+        return ResponseEntity.ok().body(networkModificationService.applyGroovyScript(networkUuid, variantId, groupUuid, reportUuid, groovyScript));
     }
 
     @GetMapping(value = "/groups/{groupUuid}/modifications", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -132,8 +134,9 @@ public class NetworkModificationController {
             @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
             @Parameter(description = "Line ID") @PathVariable("lineId") String lineId,
             @RequestParam(value = "group", required = false) UUID groupUuid,
+            @RequestParam(value = "reportUuid") UUID reportUuid,
             @RequestBody String action) {
-        return ResponseEntity.ok().body(networkModificationService.changeLineStatus(networkUuid, variantId, groupUuid, lineId, action));
+        return ResponseEntity.ok().body(networkModificationService.changeLineStatus(networkUuid, variantId, groupUuid, reportUuid, lineId, action));
     }
 
     @PostMapping(value = "/networks/{networkUuid}/loads", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -142,8 +145,9 @@ public class NetworkModificationController {
     public ResponseEntity<Flux<EquipmentModificationInfos>> createLoad(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
                                                                        @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
                                                                        @RequestParam(value = "group", required = false) UUID groupUuid,
+                                                                       @RequestParam(value = "reportUuid") UUID reportUuid,
                                                                        @RequestBody LoadCreationInfos loadCreationInfos) {
-        return ResponseEntity.ok().body(networkModificationService.createLoad(networkUuid, variantId, groupUuid, loadCreationInfos));
+        return ResponseEntity.ok().body(networkModificationService.createLoad(networkUuid, variantId, groupUuid, reportUuid, loadCreationInfos));
     }
 
     @PutMapping(value = "/modifications/{modificationUuid}/loads-creation", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -162,14 +166,34 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.updateLoadModification(loadModificationInfos, modificationUuid));
     }
 
-    @PutMapping(value = "/networks/{networkUuid}/loads", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/networks/{networkUuid}/loads-modification", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "modify a load in a network variant")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The load has been modified")})
     public ResponseEntity<Flux<EquipmentModificationInfos>> modifyLoad(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
                                                                        @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
                                                                        @RequestParam(value = "group", required = false) UUID groupUuid,
+                                                                       @RequestParam(value = "reportUuid") UUID reportUuid,
                                                                        @RequestBody LoadModificationInfos loadModificationInfos) {
-        return ResponseEntity.ok().body(networkModificationService.modifyLoad(networkUuid, variantId, groupUuid, loadModificationInfos));
+        return ResponseEntity.ok().body(networkModificationService.modifyLoad(networkUuid, variantId, groupUuid, reportUuid, loadModificationInfos));
+    }
+
+    @PutMapping(value = "/modifications/{modificationUuid}/generators-modification", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "modify a generator modification in a network variant")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The generator modification  has been modified")})
+    public ResponseEntity<Mono<Void>> modifyGeneratorModification(@Parameter(description = "Modification UUID") @PathVariable("modificationUuid") UUID modificationUuid,
+                                                                       @RequestBody GeneratorModificationInfos generatorModificationInfos) {
+        return ResponseEntity.ok().body(networkModificationService.updateModifyGenerator(modificationUuid, generatorModificationInfos));
+    }
+
+    @PutMapping(value = "/networks/{networkUuid}/generators-modification", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "modify a generator in a network variant")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The generator has been modified")})
+    public ResponseEntity<Flux<EquipmentModificationInfos>> modifyGenerator(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
+                                                                            @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
+                                                                            @RequestParam(value = "group", required = false) UUID groupUuid,
+                                                                            @RequestParam(value = "reportUuid") UUID reportUuid,
+                                                                            @RequestBody GeneratorModificationInfos generatorModificationInfos) {
+        return ResponseEntity.ok().body(networkModificationService.modifyGenerator(networkUuid, variantId, groupUuid, reportUuid, generatorModificationInfos));
     }
 
     @PostMapping(value = "/networks/{networkUuid}/generators", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -178,8 +202,9 @@ public class NetworkModificationController {
     public ResponseEntity<Flux<EquipmentModificationInfos>> createGenerator(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
                                                                             @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
                                                                             @RequestParam(value = "group", required = false) UUID groupUuid,
+                                                                            @RequestParam(value = "reportUuid") UUID reportUuid,
                                                                             @RequestBody GeneratorCreationInfos generatorCreationInfos) {
-        return ResponseEntity.ok().body(networkModificationService.createGenerator(networkUuid, variantId, groupUuid, generatorCreationInfos));
+        return ResponseEntity.ok().body(networkModificationService.createGenerator(networkUuid, variantId, groupUuid, reportUuid, generatorCreationInfos));
     }
 
     @PutMapping(value = "/modifications/{modificationUuid}/generators-creation", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -196,8 +221,9 @@ public class NetworkModificationController {
     public ResponseEntity<Flux<EquipmentModificationInfos>> createShuntCompensator(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
                                                                                    @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
                                                                                    @RequestParam(value = "group", required = false) UUID groupUuid,
+                                                                                   @RequestParam(value = "reportUuid") UUID reportUuid,
                                                                                    @RequestBody ShuntCompensatorCreationInfos shuntCompensatorCreationInfos) {
-        return ResponseEntity.ok().body(networkModificationService.createShuntCompensator(networkUuid, variantId, groupUuid, shuntCompensatorCreationInfos));
+        return ResponseEntity.ok().body(networkModificationService.createShuntCompensator(networkUuid, variantId, groupUuid, reportUuid, shuntCompensatorCreationInfos));
     }
 
     @PutMapping(value = "/modifications/{modificationUuid}/shunt-compensators-creation", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -214,8 +240,9 @@ public class NetworkModificationController {
     public ResponseEntity<Flux<EquipmentModificationInfos>> createLine(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
                                                                        @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
                                                                        @RequestParam(value = "group", required = false) UUID groupUuid,
+                                                                       @RequestParam(value = "reportUuid") UUID reportUuid,
                                                                        @RequestBody LineCreationInfos lineCreationInfos) {
-        return ResponseEntity.ok().body(networkModificationService.createLine(networkUuid, variantId, groupUuid, lineCreationInfos));
+        return ResponseEntity.ok().body(networkModificationService.createLine(networkUuid, variantId, groupUuid, reportUuid, lineCreationInfos));
     }
 
     @PutMapping(value = "/modifications/{modificationUuid}/lines-creation", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -232,8 +259,9 @@ public class NetworkModificationController {
     public ResponseEntity<Flux<EquipmentModificationInfos>> createTwoWindingsTransformer(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
                                                                                          @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
                                                                                          @RequestParam(value = "group", required = false) UUID groupUuid,
+                                                                                         @RequestParam(value = "reportUuid") UUID reportUuid,
                                                                                          @RequestBody TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
-        return ResponseEntity.ok().body(networkModificationService.createTwoWindingsTransformer(networkUuid, variantId, groupUuid, twoWindingsTransformerCreationInfos));
+        return ResponseEntity.ok().body(networkModificationService.createTwoWindingsTransformer(networkUuid, variantId, groupUuid, reportUuid, twoWindingsTransformerCreationInfos));
     }
 
     @PutMapping(value = "/modifications/{modificationUuid}/two-windings-transformers-creation", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -250,8 +278,9 @@ public class NetworkModificationController {
     public ResponseEntity<Flux<EquipmentModificationInfos>> createSubstation(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
                                                                              @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
                                                                              @RequestParam(value = "group", required = false) UUID groupUuid,
+                                                                             @RequestParam(value = "reportUuid") UUID reportUuid,
                                                                              @RequestBody SubstationCreationInfos substationCreationInfos) {
-        return ResponseEntity.ok().body(networkModificationService.createSubstation(networkUuid, variantId, groupUuid, substationCreationInfos));
+        return ResponseEntity.ok().body(networkModificationService.createSubstation(networkUuid, variantId, groupUuid, reportUuid, substationCreationInfos));
     }
 
     @PutMapping(value = "/modifications/{modificationUuid}/substations-creation", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -268,8 +297,9 @@ public class NetworkModificationController {
     public ResponseEntity<Flux<EquipmentModificationInfos>> createVoltageLevel(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
                                                                                @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
                                                                                @RequestParam(value = "group", required = false) UUID groupUuid,
+                                                                               @RequestParam(value = "reportUuid") UUID reportUuid,
                                                                                @RequestBody VoltageLevelCreationInfos voltageLevelCreationInfos) {
-        return ResponseEntity.ok().body(networkModificationService.createVoltageLevel(networkUuid, variantId, groupUuid, voltageLevelCreationInfos));
+        return ResponseEntity.ok().body(networkModificationService.createVoltageLevel(networkUuid, variantId, groupUuid, reportUuid, voltageLevelCreationInfos));
     }
 
     @PutMapping(value = "/modifications/{modificationUuid}/voltage-levels-creation", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -287,8 +317,28 @@ public class NetworkModificationController {
                                                                         @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
                                                                         @Parameter(description = "Equipment type") @PathVariable("equipmentType") String equipmentType,
                                                                         @Parameter(description = "Equipment id") @PathVariable("equipmentId") String equipmentId,
-                                                                        @RequestParam(value = "group", required = false) UUID groupUuid) {
-        return ResponseEntity.ok().body(networkModificationService.deleteEquipment(networkUuid, variantId, groupUuid, equipmentType, equipmentId));
+                                                                        @RequestParam(value = "group", required = false) UUID groupUuid,
+                                                                        @RequestParam(value = "reportUuid") UUID reportUuid) {
+        return ResponseEntity.ok().body(networkModificationService.deleteEquipment(networkUuid, variantId, groupUuid, reportUuid, equipmentType, equipmentId));
+    }
+
+    @PostMapping(value = "/networks/{networkUuid}/line-splits", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "split a line at a voltage level")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The line has been split")})
+    public ResponseEntity<Flux<ModificationInfos>> lineSplitWithVoltageLevel(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
+                                                                             @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
+                                                                             @RequestParam(value = "group", required = false) UUID groupUuid,
+                                                                             @RequestParam(value = "reportUuid") UUID reportUuid,
+                                                                             @RequestBody LineSplitWithVoltageLevelInfos lineSplitWithVoltageLevelInfos) {
+        return ResponseEntity.ok().body(networkModificationService.splitLineWithVoltageLevel(networkUuid, variantId, groupUuid, reportUuid, lineSplitWithVoltageLevelInfos));
+    }
+
+    @PutMapping(value = "/modifications/{modificationUuid}/line-splits", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "update a line split")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The line split at voltage level has been updated")})
+    public ResponseEntity<Mono<Void>> updateLineSplitWithVoltageLevel(@PathVariable("modificationUuid") UUID modificationUuid,
+        @RequestBody LineSplitWithVoltageLevelInfos lineSplitWithVoltageLevelInfos) {
+        return ResponseEntity.ok().body(networkModificationService.updateLineSplitWithVoltageLevel(modificationUuid, lineSplitWithVoltageLevelInfos));
     }
 
     @PostMapping(value = "/networks/{networkUuid}/build")
