@@ -709,7 +709,7 @@ public class ModificationRepositoryTest {
         );
         VoltageLevelCreationInfos voltageLevelCreationInfos = makeAVoltageLevelInfos(1, 0);
         LineAttachToVoltageLevelEntity lineAttachToEntity2 = LineAttachToVoltageLevelEntity.toEntity(
-                "lineId1", 40.0, "AttachmentPointId", null, voltageLevelCreationInfos, "vl1", "bbsId", attachmentLine, "line1Id", "line1Name", "line2Id", "line2Name"
+                "lineId1", 40.0, "AttachmentPointId", null, voltageLevelCreationInfos, null, "bbsId", attachmentLine, "line1Id", "line1Name", "line2Id", "line2Name"
         );
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(lineAttachToEntity1, lineAttachToEntity2));
 

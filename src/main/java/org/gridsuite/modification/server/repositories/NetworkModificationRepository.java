@@ -12,7 +12,7 @@ import com.powsybl.iidm.network.EnergySource;
 import com.powsybl.iidm.network.LoadType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
-import org.gridsuite.modification.server.entities.equipment.modification.*;
+import org.gridsuite.modification.server.entities.equipment.modification.BranchStatusModificationEntity;
 import org.gridsuite.modification.server.entities.GroovyScriptModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationGroupEntity;

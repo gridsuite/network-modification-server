@@ -2600,13 +2600,14 @@ public class ModificationControllerTest {
                 .isEqualTo(new NetworkModificationException(LINE_NOT_FOUND, "absent_line_id").getMessage());
 
         LineAttachToVoltageLevelInfos lineAttachToVL = new LineAttachToVoltageLevelInfos("line3",
-                10.0, "AttPointId", "attPointName", vl1, "v4",
+                10.0, "AttPointId", "attPointName", null, "v4",
                 "1.A", attachmentLine, "nl1", "NewLine1", "nl2", "NewLine2");
 
         webTestClient.post().uri(lineAttachUriString, TEST_NETWORK_ID)
                 .body(BodyInserters.fromValue(lineAttachToVL))
                 .exchange()
                 .expectStatus().isOk();
+        testNetworkModificationsCount(TEST_GROUP_ID, 1);
 
         LineAttachToVoltageLevelInfos lineAttachToWithNewVL = new LineAttachToVoltageLevelInfos("line3",
                 10.0, "AttPointId", "attPointName", vl1, null,
@@ -2619,14 +2620,31 @@ public class ModificationControllerTest {
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
                 .expectBodyList(EquipmentModificationInfos.class)
                 .returnResult().getResponseBody();
+        testNetworkModificationsCount(TEST_GROUP_ID, 2);
 
         assertNotNull(result);
         Optional<EquipmentModificationInfos> lineAttachToProper = result.stream().filter(r -> r.getType() == ModificationType.LINE_ATTACH_TO_VOLTAGE_LEVEL).findFirst();
         assertTrue(lineAttachToProper.isPresent());
         assertEquals(3, lineAttachToProper.get().getSubstationIds().size());
+        assertTrue(lineAttachToProper.get().getSubstationIds().contains("s1"));
+        assertTrue(lineAttachToProper.get().getSubstationIds().contains("s2"));
+        assertTrue(lineAttachToProper.get().getSubstationIds().contains("AttPointId_substation"));
 
         Optional<EquipmentModificationInfos> lineDeletion = result.stream().filter(r -> r.getType() == ModificationType.EQUIPMENT_DELETION).findFirst();
         assertTrue(lineDeletion.isPresent());
+        assertEquals("line3", lineDeletion.get().getEquipmentId());
+
+        LineAttachToVoltageLevelInfos incompleteLineAttachToVL = new LineAttachToVoltageLevelInfos("line3",
+                10.0, "AttPointId", "attPointName", null, "v4",
+                "1.A", null, "nl1", "NewLine1", "nl2", "NewLine2");
+
+        webTestClient.post().uri(lineAttachUriString, TEST_NETWORK_ID)
+                .body(BodyInserters.fromValue(incompleteLineAttachToVL))
+                .exchange()
+                .expectStatus().is5xxServerError()
+                .expectBody(String.class)
+                .isEqualTo(new NetworkModificationException(LINE_ATTACH_ERROR, "Missing required attachment line description").getMessage());
+        testNetworkModificationsCount(TEST_GROUP_ID, 2);
 
         LineAttachToVoltageLevelInfos lineAttachWithNewVLUpd = new LineAttachToVoltageLevelInfos("line2",
                 10.0, "AttPointId", "attPointName", vl1, null,
@@ -2638,11 +2656,13 @@ public class ModificationControllerTest {
                 .expectStatus().is4xxClientError()
                 .expectBody(String.class)
                 .isEqualTo(new NetworkModificationException(LINE_ATTACH_NOT_FOUND, "Line attach not found").getMessage());
+        testNetworkModificationsCount(TEST_GROUP_ID, 2);
 
         webTestClient.put().uri("/v1/modifications/" + lineAttachToProper.get().getUuid() + "/line-attach-creation")
                 .body(BodyInserters.fromValue(lineAttachWithNewVLUpd))
                 .exchange()
                 .expectStatus().isOk();
+        testNetworkModificationsCount(TEST_GROUP_ID, 2);
 
     }
 
