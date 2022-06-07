@@ -104,6 +104,7 @@ public class LineAttachToVoltageLevelEntity extends ModificationEntity {
                 .percent(getPercent())
                 .attachmentPointId(getAttachmentPointId())
                 .attachmentPointName(getAttachmentPointName())
+                .existingVoltageLevelId(getExistingVoltageLevelId())
                 .mayNewVoltageLevelInfos(mayVoltageLevelCreation == null ? null : mayVoltageLevelCreation.toVoltageLevelCreationInfos())
                 .bbsOrBusId(getBbsOrBusId())
                 .attachmentLine(lineCreation.toModificationInfos())
