@@ -69,6 +69,16 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.getModifications(groupUuid, false));
     }
 
+    @PostMapping(value = "/groups")
+    @Operation(summary = "Create a group based on another group and its modifications")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The group and its modifications have been duplicated"),
+                           @ApiResponse(responseCode = "404", description = "Source group not found")})
+    public ResponseEntity<Mono<Void>> createGroup(@RequestParam("groupUuid") UUID groupUuid,
+                                                  @RequestParam("duplicateFrom") UUID sourceGroupUuid,
+                                                  @RequestParam("reportUuid") UUID reportUuid) {
+        return ResponseEntity.ok().body(networkModificationService.createGroup(sourceGroupUuid, groupUuid, reportUuid));
+    }
+
     @GetMapping(value = "/modifications/{modificationUuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Get a modification")
     @ApiResponse(responseCode = "200", description = "The modification")

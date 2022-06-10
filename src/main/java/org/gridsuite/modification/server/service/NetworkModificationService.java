@@ -212,6 +212,21 @@ public class NetworkModificationService {
         return Flux.fromStream(() -> networkModificationRepository.getModifications(List.of(modificationUuid)).stream());
     }
 
+    public Mono<Void> createGroup(UUID sourceGroupUuid, UUID groupUuid, UUID reportUuid) {
+        return getModifications(sourceGroupUuid, false).doOnNext(m -> {
+            Optional<ModificationEntity> modification = this.modificationRepository.findById(m.getUuid());
+            if (modification.isEmpty()) {
+                throw new NetworkModificationException(MODIFICATION_NOT_FOUND, m.getUuid().toString());
+            }
+            modification.get().setId(null);
+            networkModificationRepository.saveModifications(groupUuid, List.of(modification.get()));
+        }).doOnNext(unused -> {
+            ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
+            sendReport(reportUuid, reporter, false);
+        }).then();
+
+    }
+
     private boolean disconnectLineBothSides(Network network, String lineId) {
         Terminal terminal1 = network.getLine(lineId).getTerminal1();
         boolean terminal1Disconnected = !terminal1.isConnected() || terminal1.disconnect();
