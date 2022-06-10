@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.entities.equipment.modification;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.ModificationType;
@@ -24,6 +25,7 @@ import javax.persistence.*;
 @NoArgsConstructor
 @Getter
 @Entity
+@EqualsAndHashCode
 @Table(name = "LineAttachToVoltageLevel")
 public class LineAttachToVoltageLevelEntity extends ModificationEntity {
 

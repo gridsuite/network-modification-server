@@ -2186,8 +2186,6 @@ public class NetworkModificationService {
                 .thenMany(getNetworkModificationInfos(networkUuid, variantId)
                 .flatMapIterable(networkInfos -> {
                     NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
-                    ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
-                    Reporter subReporter = reporter.createSubReporter("lineAttachToVoltageLevel", "Attach line to voltage level");
 
                     return execLineAttachToVoltageLevel(listener, lineAttachToVoltageLevelInfos, reportUuid);
                 }));

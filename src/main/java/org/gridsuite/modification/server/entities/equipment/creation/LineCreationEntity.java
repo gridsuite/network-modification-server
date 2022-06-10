@@ -73,7 +73,7 @@ public class LineCreationEntity extends BranchCreationEntity {
     }
 
     public static LineCreationEntity toEntity(LineCreationInfos lineCreationInfos) {
-        LineCreationEntity lineCreationEntity = new LineCreationEntity(
+        return new LineCreationEntity(
                 lineCreationInfos.getEquipmentId(), lineCreationInfos.getEquipmentName(),
                 lineCreationInfos.getSeriesResistance(), lineCreationInfos.getSeriesReactance(),
                 lineCreationInfos.getShuntConductance1(), lineCreationInfos.getShuntSusceptance1(),
@@ -83,7 +83,6 @@ public class LineCreationEntity extends BranchCreationEntity {
                 lineCreationInfos.getCurrentLimits1() != null ? lineCreationInfos.getCurrentLimits1().getPermanentLimit() : null,
                 lineCreationInfos.getCurrentLimits2() != null ? lineCreationInfos.getCurrentLimits2().getPermanentLimit() : null
         );
-        return lineCreationEntity;
     }
 
     @Override
