@@ -2038,7 +2038,7 @@ public class NetworkModificationService {
 
                 subReporter.report(Report.builder()
                     .withKey("lineSplit")
-                    .withDefaultMessage("Line ${lineId} was split")
+                    .withDefaultMessage("Line ${id} was split")
                     .withValue("id", lineSplitWithVoltageLevelInfos.getLineToSplitId())
                     .withSeverity(TypedValue.INFO_SEVERITY)
                     .build());
@@ -2164,7 +2164,7 @@ public class NetworkModificationService {
 
                 subReporter.report(Report.builder()
                         .withKey("lineAttach")
-                        .withDefaultMessage("Line ${lineId} was attached")
+                        .withDefaultMessage("Line ${id} was attached")
                         .withValue("id", lineAttachToVoltageLevelInfos.getLineToAttachToId())
                         .withSeverity(TypedValue.INFO_SEVERITY)
                         .build());
