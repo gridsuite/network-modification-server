@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.InjectableValues;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.reporter.*;
+import com.powsybl.iidm.modification.topology.AttachNewLineOnLine;
 import com.powsybl.iidm.modification.topology.AttachVoltageLevelOnLine;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.modification.tripping.BranchTripping;
@@ -30,11 +31,9 @@ import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.creation.BusbarConnectionCreationEmbeddable;
-import org.gridsuite.modification.server.entities.equipment.creation.BusbarSectionCreationEmbeddable;
-import org.gridsuite.modification.server.entities.equipment.creation.EquipmentCreationEntity;
-import org.gridsuite.modification.server.entities.equipment.creation.VoltageLevelCreationEntity;
+import org.gridsuite.modification.server.entities.equipment.creation.*;
 import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.LineAttachToVoltageLevelEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.LineSplitWithVoltageLevelEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
@@ -1827,6 +1826,13 @@ public class NetworkModificationService {
                         }
                         break;
 
+                        case LINE_ATTACH_TO_VOLTAGE_LEVEL: {
+                            LineAttachToVoltageLevelInfos lineAttachToVoltageLevelInfos = (LineAttachToVoltageLevelInfos) infos;
+                            List<ModificationInfos> modificationInfos = execLineAttachToVoltageLevel(listener, lineAttachToVoltageLevelInfos, reportUuid);
+                            allModificationsInfos.addAll(modificationInfos);
+                        }
+                        break;
+
                         default:
                     }
                 } catch (PowsyblException e) {
@@ -2093,4 +2099,140 @@ public class NetworkModificationService {
 
         return Mono.empty();
     }
+
+    private Mono<Void> assertLineAttachToVoltageLevelInfosNotEmpty(LineAttachToVoltageLevelInfos lineAttachToVoltageLevelInfos) {
+        return lineAttachToVoltageLevelInfos == null ? Mono.error(new NetworkModificationException(LINE_ATTACH_ERROR,
+                "Missing required attributes to attach a line to a voltage level")) : Mono.empty();
+    }
+
+    private List<ModificationInfos> execLineAttachToVoltageLevel(NetworkStoreListener listener,
+                                                                 LineAttachToVoltageLevelInfos lineAttachToVoltageLevelInfos,
+                                                                 UUID reportUuid) {
+        Network network = listener.getNetwork();
+        VoltageLevelCreationInfos mayNewVL = lineAttachToVoltageLevelInfos.getMayNewVoltageLevelInfos();
+        LineCreationInfos attachmentLineInfos = lineAttachToVoltageLevelInfos.getAttachmentLine();
+        if (attachmentLineInfos == null) {
+            throw new NetworkModificationException(LINE_ATTACH_ERROR, "Missing required attachment line description");
+        }
+
+        ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
+        Reporter subReporter = reporter.createSubReporter("lineAttachToVoltageLevel", "Line attach to voltage level");
+
+        List<ModificationInfos> inspectable = doAction(listener, () -> {
+            if (listener.isApplyModifications()) {
+                Line line = network.getLine(lineAttachToVoltageLevelInfos.getLineToAttachToId());
+                if (line == null) {
+                    throw new NetworkModificationException(LINE_NOT_FOUND, lineAttachToVoltageLevelInfos.getLineToAttachToId());
+                }
+
+                String voltageLevelId;
+                if (mayNewVL != null) {
+                    createVoltageLevelAction(mayNewVL, subReporter, network);
+                    voltageLevelId = mayNewVL.getEquipmentId();
+                } else {
+                    voltageLevelId = lineAttachToVoltageLevelInfos.getExistingVoltageLevelId();
+                }
+
+                LineAdder lineAdder = network.newLine()
+                        .setId(attachmentLineInfos.getEquipmentId())
+                        .setName(attachmentLineInfos.getEquipmentName())
+                        .setR(attachmentLineInfos.getSeriesResistance())
+                        .setX(attachmentLineInfos.getSeriesReactance())
+                        .setG1(attachmentLineInfos.getShuntConductance1() != null ? attachmentLineInfos.getShuntConductance1() : 0.0)
+                        .setB1(attachmentLineInfos.getShuntSusceptance1() != null ? attachmentLineInfos.getShuntSusceptance1() : 0.0)
+                        .setG2(attachmentLineInfos.getShuntConductance2() != null ? attachmentLineInfos.getShuntConductance2() : 0.0)
+                        .setB2(attachmentLineInfos.getShuntSusceptance2() != null ? attachmentLineInfos.getShuntSusceptance2() : 0.0);
+
+                AttachNewLineOnLine algo = new AttachNewLineOnLine(
+                        lineAttachToVoltageLevelInfos.getPercent(),
+                        voltageLevelId,
+                        lineAttachToVoltageLevelInfos.getBbsOrBusId(),
+                        lineAttachToVoltageLevelInfos.getAttachmentPointId(),
+                        lineAttachToVoltageLevelInfos.getAttachmentPointName(),
+                        true,
+                        lineAttachToVoltageLevelInfos.getAttachmentPointId() + "_substation",
+                        null,
+                        lineAttachToVoltageLevelInfos.getNewLine1Id(),
+                        lineAttachToVoltageLevelInfos.getNewLine1Name(),
+                        lineAttachToVoltageLevelInfos.getNewLine2Id(),
+                        lineAttachToVoltageLevelInfos.getNewLine2Name(),
+                        line,
+                        lineAdder
+                );
+
+                algo.apply(network);
+
+                subReporter.report(Report.builder()
+                        .withKey("lineAttach")
+                        .withDefaultMessage("Line ${lineId} was attached")
+                        .withValue("id", lineAttachToVoltageLevelInfos.getLineToAttachToId())
+                        .withSeverity(TypedValue.INFO_SEVERITY)
+                        .build());
+            }
+
+            listener.storeLineAttachToVoltageLevelInfos(lineAttachToVoltageLevelInfos);
+        }, LINE_ATTACH_ERROR, reportUuid, reporter, subReporter).stream().map(ModificationInfos.class::cast)
+                .collect(Collectors.toList());
+
+        if (!inspectable.isEmpty()) {
+            inspectable.addAll(listener.getDeletions());
+        }
+        return inspectable;
+    }
+
+    public Flux<ModificationInfos> createLineAttachToVoltageLevel(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid,
+                                                                  LineAttachToVoltageLevelInfos lineAttachToVoltageLevelInfos) {
+        return assertLineAttachToVoltageLevelInfosNotEmpty(lineAttachToVoltageLevelInfos)
+                .thenMany(getNetworkModificationInfos(networkUuid, variantId)
+                .flatMapIterable(networkInfos -> {
+                    NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
+
+                    return execLineAttachToVoltageLevel(listener, lineAttachToVoltageLevelInfos, reportUuid);
+                }));
+    }
+
+    public Mono<Void> updateLineAttachToVoltageLevel(UUID modificationUuid, LineAttachToVoltageLevelInfos lineAttachToVoltageLevelInfos) {
+        assertLineAttachToVoltageLevelInfosNotEmpty(lineAttachToVoltageLevelInfos).subscribe();
+
+        Optional<ModificationEntity> lineAttachToVoltageLevelEntity = this.modificationRepository.findById(modificationUuid);
+
+        if (lineAttachToVoltageLevelEntity.isEmpty()) {
+            return Mono.error(new NetworkModificationException(LINE_ATTACH_NOT_FOUND, "Line attach not found"));
+        }
+
+        LineAttachToVoltageLevelEntity casted = (LineAttachToVoltageLevelEntity) lineAttachToVoltageLevelEntity.get();
+        VoltageLevelCreationEntity mayVoltageLevelCreation = casted.getMayVoltageLevelCreation();
+        VoltageLevelCreationInfos mayNewVoltageLevelInfos = lineAttachToVoltageLevelInfos.getMayNewVoltageLevelInfos();
+        LineCreationEntity lineCreation = casted.getLineCreation();
+        LineCreationInfos lineInfos = lineAttachToVoltageLevelInfos.getAttachmentLine();
+
+        LineAttachToVoltageLevelEntity updatedEntity = LineAttachToVoltageLevelEntity.toEntity(
+                lineAttachToVoltageLevelInfos.getLineToAttachToId(),
+                lineAttachToVoltageLevelInfos.getPercent(),
+                lineAttachToVoltageLevelInfos.getAttachmentPointId(),
+                lineAttachToVoltageLevelInfos.getAttachmentPointName(),
+                mayNewVoltageLevelInfos,
+                lineAttachToVoltageLevelInfos.getExistingVoltageLevelId(),
+                lineAttachToVoltageLevelInfos.getBbsOrBusId(),
+                lineInfos,
+                lineAttachToVoltageLevelInfos.getNewLine1Id(),
+                lineAttachToVoltageLevelInfos.getNewLine1Name(),
+                lineAttachToVoltageLevelInfos.getNewLine2Id(),
+                lineAttachToVoltageLevelInfos.getNewLine2Name()
+        );
+        updatedEntity.setId(modificationUuid);
+        updatedEntity.setGroup(lineAttachToVoltageLevelEntity.get().getGroup());
+        this.networkModificationRepository.updateModification(updatedEntity);
+
+        // NetworkStoreListener.makeVoltageLevelCreationEntity recreates on need, so get rid of previous
+        if (mayVoltageLevelCreation != null) {
+            this.modificationRepository.delete(mayVoltageLevelCreation);
+        }
+        if (lineCreation != null) {
+            this.modificationRepository.delete(lineCreation);
+        }
+
+        return Mono.empty();
+    }
+
 }

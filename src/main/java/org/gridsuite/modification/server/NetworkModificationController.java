@@ -343,6 +343,25 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.updateLineSplitWithVoltageLevel(modificationUuid, lineSplitWithVoltageLevelInfos));
     }
 
+    @PostMapping(value = "/networks/{networkUuid}/line-attach", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "attach line to a voltage level")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The line has been attached to voltage level")})
+    public ResponseEntity<Flux<ModificationInfos>> lineAttachToVoltageLevel(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
+                                                                            @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
+                                                                            @RequestParam(value = "group", required = false) UUID groupUuid,
+                                                                            @RequestParam(value = "reportUuid") UUID reportUuid,
+                                                                            @RequestBody LineAttachToVoltageLevelInfos lineAttachToVoltageLevelInfos) {
+        return ResponseEntity.ok().body(networkModificationService.createLineAttachToVoltageLevel(networkUuid, variantId, groupUuid, reportUuid, lineAttachToVoltageLevelInfos));
+    }
+
+    @PutMapping(value = "/modifications/{modificationUuid}/line-attach-creation", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "update line attachment")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The line attachment to voltage level has been updated")})
+    public ResponseEntity<Mono<Void>> updateLineAttachToVoltageLevel(@PathVariable("modificationUuid") UUID modificationUuid,
+                                                                     @RequestBody LineAttachToVoltageLevelInfos lineAttachToVoltageLevelInfos) {
+        return ResponseEntity.ok().body(networkModificationService.updateLineAttachToVoltageLevel(modificationUuid, lineAttachToVoltageLevelInfos));
+    }
+
     @PostMapping(value = "/networks/{networkUuid}/build")
     @Operation(summary = "Build a network variant")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The build has been done")})
