@@ -25,7 +25,6 @@ import javax.persistence.*;
 @NoArgsConstructor
 @Getter
 @Entity
-@EqualsAndHashCode
 @Table(name = "LineAttachToVoltageLevel")
 public class LineAttachToVoltageLevelEntity extends ModificationEntity {
 
