@@ -65,8 +65,10 @@ public class NetworkModificationController {
     @GetMapping(value = "/groups/{groupUuid}/modifications", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Get modifications list of a group")
     @ApiResponse(responseCode = "200", description = "List of modifications of the group")
-    public ResponseEntity<Flux<ModificationInfos>> getModifications(@Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid) {
-        return ResponseEntity.ok().body(networkModificationService.getModifications(groupUuid, false));
+    public ResponseEntity<Flux<ModificationInfos>> getModifications(@Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid,
+                                                                    @Parameter(description = "Only metatada") @RequestParam(name = "onlyMetadata", required = false, defaultValue = "false") Boolean onlyMetadata,
+                                                                    @Parameter(description = "Return 404 if group is not found or an empty list") @RequestParam(name = "errorOnGroupNotFound", required = false, defaultValue = "true") Boolean errorOnGroupNotFound) {
+        return ResponseEntity.ok().body(networkModificationService.getModifications(groupUuid, onlyMetadata, errorOnGroupNotFound));
     }
 
     @PostMapping(value = "/groups")
@@ -84,13 +86,6 @@ public class NetworkModificationController {
     @ApiResponse(responseCode = "200", description = "The modification")
     public ResponseEntity<Flux<ModificationInfos>> getModification(@Parameter(description = "Modification UUID") @PathVariable("modificationUuid") UUID modificationUuid) {
         return ResponseEntity.ok().body(networkModificationService.getModification(modificationUuid));
-    }
-
-    @GetMapping(value = "/groups/{groupUuid}/modifications/metadata", produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Get list of modifications metadata of a group")
-    @ApiResponse(responseCode = "200", description = "List of modifications of the group")
-    public ResponseEntity<Flux<ModificationInfos>> getModificationsMetadata(@Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid) {
-        return ResponseEntity.ok().body(networkModificationService.getModifications(groupUuid, true));
     }
 
     @PutMapping(value = "/groups/{groupUuid}/modifications/move", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -113,8 +108,9 @@ public class NetworkModificationController {
     @DeleteMapping(value = "/groups/{groupUuid}")
     @Operation(summary = "Delete the modifications group")
     @ApiResponse(responseCode = "200", description = "Modifications group deleted")
-    public ResponseEntity<Mono<Void>> deleteModificationGroup(@Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid) {
-        return ResponseEntity.ok().body(networkModificationService.deleteModificationGroup(groupUuid));
+    public ResponseEntity<Mono<Void>> deleteModificationGroup(@Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid,
+                                                              @Parameter(description = "Return 404 if group is not found") @RequestParam(name = "errorOnGroupNotFound", required = false, defaultValue = "true") Boolean errorOnGroupNotFound) {
+        return ResponseEntity.ok().body(networkModificationService.deleteModificationGroup(groupUuid, errorOnGroupNotFound));
     }
 
     @GetMapping(value = "/groups", produces = MediaType.APPLICATION_JSON_VALUE)
