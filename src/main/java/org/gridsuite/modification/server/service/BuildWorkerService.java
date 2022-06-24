@@ -36,7 +36,7 @@ import java.util.function.Consumer;
 import java.util.logging.Level;
 
 import static org.gridsuite.modification.server.service.BuildStoppedPublisherService.CANCEL_MESSAGE;
-import static org.gridsuite.modification.server.service.BuildStoppedPublisherService.FAIL_MESSAGE;
+import static org.gridsuite.modification.server.service.BuildFailedPublisherService.FAIL_MESSAGE;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -58,9 +58,13 @@ public class BuildWorkerService {
 
     private BuildStoppedPublisherService stoppedPublisherService;
 
+    private BuildFailedPublisherService failedPublisherService;
+
     private Map<String, CompletableFuture<List<ModificationInfos>>> futures = new ConcurrentHashMap<>();
 
     private Map<String, BuildCancelContext> cancelBuildRequests = new ConcurrentHashMap<>();
+
+    private Map<String, BuildFailedContext> failedBuildRequests = new ConcurrentHashMap<>();
 
     private Set<String> buildRequests = Sets.newConcurrentHashSet();
 
@@ -69,10 +73,12 @@ public class BuildWorkerService {
 
     public BuildWorkerService(@NonNull NetworkModificationService networkModificationService,
                               @NonNull ObjectMapper objectMapper,
-                              @NonNull BuildStoppedPublisherService stoppedPublisherService) {
+                              @NonNull BuildStoppedPublisherService stoppedPublisherService,
+                              @NonNull BuildFailedPublisherService failedPublisherService) {
         this.networkModificationService = networkModificationService;
         this.objectMapper = objectMapper;
         this.stoppedPublisherService = stoppedPublisherService;
+        this.failedPublisherService = failedPublisherService;
     }
 
     private Mono<List<ModificationInfos>> execBuildVariant(Network network, BuildExecContext execContext, BuildInfos buildInfos) {
@@ -134,7 +140,7 @@ public class BuildWorkerService {
                     .onErrorResume(t -> {
                         if (!(t instanceof CancellationException)) {
                             LOGGER.error(FAIL_MESSAGE, t);
-                            stoppedPublisherService.publishFail(execContext.getReceiver(), t.getMessage());
+                            failedPublisherService.publishFail(execContext.getReceiver(), t.getMessage());
                             return Mono.empty();
                         }
                         return Mono.empty();
@@ -172,6 +178,32 @@ public class BuildWorkerService {
                 return Mono.empty();
             })
             .onErrorContinue((t, r) -> LOGGER.error("Exception in consumeCancelBuild", t))
+            .subscribe();
+    }
+
+    @Bean
+    public Consumer<Flux<Message<String>>> consumeFailedBuild() {
+        return f -> f.log(CATEGORY_BROKER_INPUT, Level.FINE)
+            .flatMap(message -> {
+                BuildFailedContext failContext = BuildFailedContext.fromMessage(message);
+
+                if (buildRequests.contains(failContext.getReceiver())) {
+                    failedBuildRequests.put(failContext.getReceiver(), failContext);
+                }
+
+                // find the completableFuture associated with receiver
+                CompletableFuture<List<ModificationInfos>> future = futures.get(failContext.getReceiver());
+                if (future != null) {
+                    future.cancel(true);  // cancel build in progress
+
+                    return Mono.fromRunnable(() -> {
+                        failedPublisherService.publishFail(failContext.getReceiver(), failContext.getErrorMessage());
+                        LOGGER.info(FAIL_MESSAGE + " (receiver='{}', errorMessage='{}')", failContext.getReceiver(), failContext.getErrorMessage());
+                    });
+                }
+                return Mono.empty();
+            })
+            .onErrorContinue((t, r) -> LOGGER.error("Exception in consumeFailedBuild", t))
             .subscribe();
     }
 
