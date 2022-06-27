@@ -215,16 +215,34 @@ public class ModificationControllerTest {
                 .expectBodyList(UUID.class)
                 .isEqualTo(List.of(TEST_GROUP_ID));
 
+        webTestClient.get().uri("/v1/groups/{groupUuid}/modifications", TEST_GROUP_ID)
+            .exchange()
+            .expectStatus().isOk()
+            .expectBodyList(ModificationInfos.class)
+            .hasSize(1);
+
+        webTestClient.get().uri("/v1/groups/{groupUuid}/modifications?onlyMetadata=true", TEST_GROUP_ID)
+            .exchange()
+            .expectStatus().isOk()
+            .expectBodyList(ModificationInfos.class)
+            .hasSize(1);
+
         // delete the default modification group of a network
         webTestClient.delete().uri("/v1/groups/{groupUuid}", TEST_GROUP_ID)
                 .exchange()
                 .expectStatus().isOk();
 
-        webTestClient.get().uri("/v1/groups/{groupUuid}/modifications/metadata", TEST_GROUP_ID)
+        webTestClient.get().uri("/v1/groups/{groupUuid}/modifications?onlyMetadata=true", TEST_GROUP_ID)
                 .exchange()
                 .expectStatus().isNotFound()
                 .expectBody(String.class)
                 .isEqualTo(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
+
+        webTestClient.get().uri("/v1/groups/{groupUuid}/modifications?onlyMetadata=true&errorOnGroupNotFound=false", TEST_GROUP_ID)
+            .exchange()
+            .expectStatus().isOk()
+            .expectBodyList(ModificationInfos.class)
+            .isEqualTo(List.of());
     }
 
     private void switchModifications(String uriString, String switchId1, String switchNotFoundId, String switchId2, String switchId3,
@@ -305,7 +323,7 @@ public class ModificationControllerTest {
         assertNotNull(res);
         assertEquals(1, res.size());
 
-        assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID, false).size());
+        assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID, false, true).size());
         String deleteStrWrongGroup = "/v1/groups/" + UUID.randomUUID() + "/modifications?modificationsUuids=" + res.get(0).getUuid();
         String deleteStr = "/v1/groups/" + TEST_GROUP_ID + "/modifications";
 
@@ -318,7 +336,7 @@ public class ModificationControllerTest {
             .exchange()
             .expectStatus().isOk();
 
-        assertEquals(0, modificationRepository.getModifications(TEST_GROUP_ID, false).size());
+        assertEquals(0, modificationRepository.getModifications(TEST_GROUP_ID, false, true).size());
 
         /* non existing modification */
         webTestClient.delete()
@@ -326,6 +344,20 @@ public class ModificationControllerTest {
             .exchange()
             .expectStatus().isNotFound();
 
+        webTestClient.delete()
+            .uri(uriBuilder -> uriBuilder.path("/v1/groups/" + TEST_GROUP_ID).build())
+            .exchange()
+            .expectStatus().isOk();
+
+        webTestClient.delete()
+            .uri(uriBuilder -> uriBuilder.path("/v1/groups/" + TEST_GROUP_ID).build())
+            .exchange()
+            .expectStatus().isNotFound();
+
+        webTestClient.delete()
+            .uri(uriBuilder -> uriBuilder.path("/v1/groups/" + TEST_GROUP_ID).queryParam("errorOnGroupNotFound", "false").build())
+            .exchange()
+            .expectStatus().isOk();
     }
 
     @Test
@@ -578,7 +610,7 @@ public class ModificationControllerTest {
                 .expectBody(String.class)
                 .isEqualTo(new NetworkModificationException(GROOVY_SCRIPT_ERROR, PowsyblException.class.getName()).getMessage());
 
-        assertEquals(0, modificationRepository.getModifications(TEST_GROUP_ID, true).size());
+        assertEquals(0, modificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
     }
 
     @Test
@@ -591,7 +623,7 @@ public class ModificationControllerTest {
                 .exchange()
                 .expectStatus().isOk();
 
-        assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID, true).size());
+        assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
 
         // apply groovy script with error ont the second
         webTestClient.put().uri(uriString, TEST_NETWORK_ID)
@@ -602,7 +634,7 @@ public class ModificationControllerTest {
             .isEqualTo(new NetworkModificationException(GROOVY_SCRIPT_ERROR, "Cannot set property 'targetP' on null object").getMessage());
 
         // no modifications have been saved
-        assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID, true).size());
+        assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
     }
 
     @Test
@@ -1028,7 +1060,7 @@ public class ModificationControllerTest {
             .value(modifications -> modifications.get(0),
                 MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.GENERATOR_MODIFICATION, generatorId, Set.of("s1")));
 
-        var listModifications = modificationRepository.getModifications(TEST_GROUP_ID, true);
+        var listModifications = modificationRepository.getModifications(TEST_GROUP_ID, true, true);
         assertEquals(1, listModifications.size());
 
         generatorModificationInfos = GeneratorModificationInfos.builder()
@@ -1053,7 +1085,7 @@ public class ModificationControllerTest {
             .exchange()
             .expectStatus().isOk();
 
-        var modifications = modificationRepository.getModifications(TEST_GROUP_ID, false);
+        var modifications = modificationRepository.getModifications(TEST_GROUP_ID, false, true);
 
         assertEquals(1, modifications.size());
         modifications.get(0).setDate(listModifications.get(0).getDate()); // this one is modified by sql database
@@ -1888,7 +1920,7 @@ public class ModificationControllerTest {
             .expectBodyList(EquipmentAttributeModificationInfos.class)
             .returnResult().getResponseBody();
 
-        var modificationList = networkModificationService.getModifications(TEST_GROUP_ID, true).map(ModificationInfos::getUuid).collectList().block();
+        var modificationList = networkModificationService.getModifications(TEST_GROUP_ID, true, true).map(ModificationInfos::getUuid).collectList().block();
         assertNotNull(modificationList);
         assertEquals(2, modificationList.size());
         webTestClient.put().uri("/v1/groups/" + TEST_GROUP_ID
@@ -1897,7 +1929,7 @@ public class ModificationControllerTest {
             .exchange()
             .expectStatus().isOk();
 
-        var newModificationList = networkModificationService.getModifications(TEST_GROUP_ID, true).map(ModificationInfos::getUuid).collectList().block();
+        var newModificationList = networkModificationService.getModifications(TEST_GROUP_ID, true, true).map(ModificationInfos::getUuid).collectList().block();
         assertNotNull(newModificationList);
         Collections.reverse(newModificationList);
 
@@ -2668,7 +2700,7 @@ public class ModificationControllerTest {
 
     private void testNetworkModificationsCount(UUID groupUuid, int actualSize) {
         // get all modifications for the given group of a network
-        assertEquals(actualSize, Objects.requireNonNull(webTestClient.get().uri("/v1/groups/{groupUuid}/modifications/metadata", groupUuid)
+        assertEquals(actualSize, Objects.requireNonNull(webTestClient.get().uri("/v1/groups/{groupUuid}/modifications?onlyMetadata=true", groupUuid)
             .exchange()
             .expectStatus().isOk()
             .expectHeader().contentType(MediaType.APPLICATION_JSON)

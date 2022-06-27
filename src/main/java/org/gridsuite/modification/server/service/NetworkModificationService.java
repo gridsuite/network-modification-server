@@ -36,6 +36,7 @@ import org.gridsuite.modification.server.entities.equipment.modification.Equipme
 import org.gridsuite.modification.server.entities.equipment.modification.LineAttachToVoltageLevelEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.LineSplitWithVoltageLevelEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
+import org.gridsuite.modification.server.repositories.ModificationGroupRepository;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.slf4j.Logger;
@@ -79,6 +80,8 @@ public class NetworkModificationService {
 
     private final NetworkModificationRepository networkModificationRepository;
 
+    // TO DO : transfer the use of repositories in NetworkModificationRepository
+    private final ModificationGroupRepository modificationGroupRepository;
     private final ModificationRepository modificationRepository;
 
     private final EquipmentInfosService equipmentInfosService;
@@ -104,10 +107,11 @@ public class NetworkModificationService {
 
     public NetworkModificationService(@Value("${backing-services.report-server.base-uri:http://report-server}") String reportServerURI,
                                       NetworkStoreService networkStoreService, NetworkModificationRepository networkModificationRepository,
-                                      @Lazy EquipmentInfosService equipmentInfosService, ModificationRepository modificationRepository) {
+                                      @Lazy EquipmentInfosService equipmentInfosService, ModificationGroupRepository modificationGroupRepository, ModificationRepository modificationRepository) {
         this.networkStoreService = networkStoreService;
         this.networkModificationRepository = networkModificationRepository;
         this.equipmentInfosService = equipmentInfosService;
+        this.modificationGroupRepository = modificationGroupRepository;
         this.modificationRepository = modificationRepository;
 
         RestTemplateBuilder restTemplateBuilder = new RestTemplateBuilder();
@@ -203,8 +207,8 @@ public class NetworkModificationService {
         return Flux.fromStream(() -> networkModificationRepository.getModificationGroupsUuids().stream());
     }
 
-    public Flux<ModificationInfos> getModifications(UUID groupUuid, boolean onlyMetadata) {
-        return Flux.fromStream(() -> networkModificationRepository.getModifications(groupUuid, onlyMetadata).stream());
+    public Flux<ModificationInfos> getModifications(UUID groupUuid, boolean onlyMetadata, boolean errorOnGroupNotFound) {
+        return Flux.fromStream(() -> networkModificationRepository.getModifications(groupUuid, onlyMetadata, errorOnGroupNotFound).stream());
     }
 
     public Flux<ModificationInfos> getModification(UUID modificationUuid) {
@@ -212,7 +216,7 @@ public class NetworkModificationService {
     }
 
     public Mono<Void> createGroup(UUID sourceGroupUuid, UUID groupUuid, UUID reportUuid) {
-        return getModifications(sourceGroupUuid, false).doOnNext(m -> {
+        return getModifications(sourceGroupUuid, false, true).doOnNext(m -> {
             Optional<ModificationEntity> modification = this.modificationRepository.findById(m.getUuid());
             if (modification.isEmpty()) {
                 throw new NetworkModificationException(MODIFICATION_NOT_FOUND, m.getUuid().toString());
@@ -394,8 +398,8 @@ public class NetworkModificationService {
         );
     }
 
-    public Mono<Void> deleteModificationGroup(UUID groupUuid) {
-        return Mono.fromRunnable(() -> networkModificationRepository.deleteModificationGroup(groupUuid));
+    public Mono<Void> deleteModificationGroup(UUID groupUuid, boolean errorOnGroupNotFound) {
+        return Mono.fromRunnable(() -> networkModificationRepository.deleteModificationGroup(groupUuid, errorOnGroupNotFound));
     }
 
     public List<ModificationInfos> doAction(NetworkStoreListener listener, Runnable action,
@@ -931,7 +935,7 @@ public class NetworkModificationService {
         }
     }
 
-    public void deleteReport(UUID reportUuid) {
+    private void deleteReport(UUID reportUuid) {
         Objects.requireNonNull(reportUuid);
         try {
             var resourceUrl = DELIMITER + REPORT_API_VERSION + DELIMITER + "reports" + DELIMITER + reportUuid;
@@ -1715,10 +1719,13 @@ public class NetworkModificationService {
         Iterator<UUID> itReportUuid = reportUuids.iterator();
 
         // iterate on each modification group
-        while (itGroupUuid.hasNext() && itReportUuid.hasNext()) {
+        while (itGroupUuid.hasNext()) {
             UUID groupUuid = itGroupUuid.next();
-            UUID reportUuid = itReportUuid.next();
+            if (modificationGroupRepository.findById(groupUuid).isEmpty()) { // May not exist
+                continue;
+            }
 
+            UUID reportUuid = itReportUuid.next();
             deleteReport(reportUuid);
 
             networkModificationRepository.getModificationsInfos(List.of(groupUuid)).forEach(infos -> {
