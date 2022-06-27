@@ -131,10 +131,6 @@ public class BuildWorkerService {
 
                             sendResultBuildMessage(sendMessage);
                             LOGGER.info("Build complete on node '{}'", execContext.getReceiver());
-                        } else {  // result not available : stop build request
-                            if (cancelBuildRequests.get(execContext.getReceiver()) != null) {
-                                stoppedPublisherService.publishCancel(execContext.getReceiver());
-                            }
                         }
                     })
                     .onErrorResume(t -> {
@@ -178,32 +174,6 @@ public class BuildWorkerService {
                 return Mono.empty();
             })
             .onErrorContinue((t, r) -> LOGGER.error("Exception in consumeCancelBuild", t))
-            .subscribe();
-    }
-
-    @Bean
-    public Consumer<Flux<Message<String>>> consumeFailedBuild() {
-        return f -> f.log(CATEGORY_BROKER_INPUT, Level.FINE)
-            .flatMap(message -> {
-                BuildFailedContext failContext = BuildFailedContext.fromMessage(message);
-
-                if (buildRequests.contains(failContext.getReceiver())) {
-                    failedBuildRequests.put(failContext.getReceiver(), failContext);
-                }
-
-                // find the completableFuture associated with receiver
-                CompletableFuture<List<ModificationInfos>> future = futures.get(failContext.getReceiver());
-                if (future != null) {
-                    future.cancel(true);  // cancel build in progress
-
-                    return Mono.fromRunnable(() -> {
-                        failedPublisherService.publishFail(failContext.getReceiver(), failContext.getErrorMessage());
-                        LOGGER.info(FAIL_MESSAGE + " (receiver='{}', errorMessage='{}')", failContext.getReceiver(), failContext.getErrorMessage());
-                    });
-                }
-                return Mono.empty();
-            })
-            .onErrorContinue((t, r) -> LOGGER.error("Exception in consumeFailedBuild", t))
             .subscribe();
     }
 
