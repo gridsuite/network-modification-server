@@ -64,8 +64,6 @@ public class BuildWorkerService {
 
     private Map<String, BuildCancelContext> cancelBuildRequests = new ConcurrentHashMap<>();
 
-    private Map<String, BuildFailedContext> failedBuildRequests = new ConcurrentHashMap<>();
-
     private Set<String> buildRequests = Sets.newConcurrentHashSet();
 
     @Autowired
