@@ -227,7 +227,7 @@ public class NetworkModificationService {
             ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
             sendReport(reportUuid, reporter, false);
         }).then();
-        
+
     }
 
     private boolean disconnectLineBothSides(Network network, String lineId) {
