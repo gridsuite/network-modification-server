@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.InjectableValues;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.reporter.*;
+import com.powsybl.iidm.modification.topology.AttachNewLineOnLine;
 import com.powsybl.iidm.modification.topology.AttachVoltageLevelOnLine;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.modification.tripping.BranchTripping;
@@ -30,13 +31,12 @@ import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.creation.BusbarConnectionCreationEmbeddable;
-import org.gridsuite.modification.server.entities.equipment.creation.BusbarSectionCreationEmbeddable;
-import org.gridsuite.modification.server.entities.equipment.creation.EquipmentCreationEntity;
-import org.gridsuite.modification.server.entities.equipment.creation.VoltageLevelCreationEntity;
+import org.gridsuite.modification.server.entities.equipment.creation.*;
 import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.LineAttachToVoltageLevelEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.LineSplitWithVoltageLevelEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
+import org.gridsuite.modification.server.repositories.ModificationGroupRepository;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.slf4j.Logger;
@@ -80,6 +80,8 @@ public class NetworkModificationService {
 
     private final NetworkModificationRepository networkModificationRepository;
 
+    // TO DO : transfer the use of repositories in NetworkModificationRepository
+    private final ModificationGroupRepository modificationGroupRepository;
     private final ModificationRepository modificationRepository;
 
     private final EquipmentInfosService equipmentInfosService;
@@ -105,10 +107,11 @@ public class NetworkModificationService {
 
     public NetworkModificationService(@Value("${backing-services.report-server.base-uri:http://report-server}") String reportServerURI,
                                       NetworkStoreService networkStoreService, NetworkModificationRepository networkModificationRepository,
-                                      @Lazy EquipmentInfosService equipmentInfosService, ModificationRepository modificationRepository) {
+                                      @Lazy EquipmentInfosService equipmentInfosService, ModificationGroupRepository modificationGroupRepository, ModificationRepository modificationRepository) {
         this.networkStoreService = networkStoreService;
         this.networkModificationRepository = networkModificationRepository;
         this.equipmentInfosService = equipmentInfosService;
+        this.modificationGroupRepository = modificationGroupRepository;
         this.modificationRepository = modificationRepository;
 
         RestTemplateBuilder restTemplateBuilder = new RestTemplateBuilder();
@@ -204,22 +207,26 @@ public class NetworkModificationService {
         return Flux.fromStream(() -> networkModificationRepository.getModificationGroupsUuids().stream());
     }
 
-    public Flux<ModificationInfos> getModifications(UUID groupUuid, boolean onlyMetadata) {
-        return Flux.fromStream(() -> networkModificationRepository.getModifications(groupUuid, onlyMetadata).stream());
+    public Flux<ModificationInfos> getModifications(UUID groupUuid, boolean onlyMetadata, boolean errorOnGroupNotFound) {
+        return Flux.fromStream(() -> networkModificationRepository.getModifications(groupUuid, onlyMetadata, errorOnGroupNotFound).stream());
     }
 
     public Flux<ModificationInfos> getModification(UUID modificationUuid) {
         return Flux.fromStream(() -> networkModificationRepository.getModifications(List.of(modificationUuid)).stream());
     }
 
-    public Mono<Void> duplicateGroup(UUID parentGroupUuid, UUID groupUuid) {
-        getModifications(parentGroupUuid, false).doOnNext(m -> {
-            ModificationEntity modification = this.modificationRepository.findById(m.getUuid()).get();
-            modification.setId(null);
-            networkModificationRepository.saveModifications(groupUuid, List.of(modification));
-        }).subscribe();
-
-        return Mono.empty();
+    public Mono<Void> createGroup(UUID sourceGroupUuid, UUID groupUuid, UUID reportUuid) {
+        return getModifications(sourceGroupUuid, false, true).doOnNext(m -> {
+            Optional<ModificationEntity> modification = this.modificationRepository.findById(m.getUuid());
+            if (modification.isEmpty()) {
+                throw new NetworkModificationException(MODIFICATION_NOT_FOUND, m.getUuid().toString());
+            }
+            modification.get().setId(null);
+            networkModificationRepository.saveModifications(groupUuid, List.of(modification.get()));
+        }).doOnNext(unused -> {
+            ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
+            sendReport(reportUuid, reporter, false);
+        }).then();
     }
 
     private boolean disconnectLineBothSides(Network network, String lineId) {
@@ -390,8 +397,8 @@ public class NetworkModificationService {
         );
     }
 
-    public Mono<Void> deleteModificationGroup(UUID groupUuid) {
-        return Mono.fromRunnable(() -> networkModificationRepository.deleteModificationGroup(groupUuid));
+    public Mono<Void> deleteModificationGroup(UUID groupUuid, boolean errorOnGroupNotFound) {
+        return Mono.fromRunnable(() -> networkModificationRepository.deleteModificationGroup(groupUuid, errorOnGroupNotFound));
     }
 
     public List<ModificationInfos> doAction(NetworkStoreListener listener, Runnable action,
@@ -927,7 +934,7 @@ public class NetworkModificationService {
         }
     }
 
-    public void deleteReport(UUID reportUuid) {
+    private void deleteReport(UUID reportUuid) {
         Objects.requireNonNull(reportUuid);
         try {
             var resourceUrl = DELIMITER + REPORT_API_VERSION + DELIMITER + "reports" + DELIMITER + reportUuid;
@@ -1711,10 +1718,13 @@ public class NetworkModificationService {
         Iterator<UUID> itReportUuid = reportUuids.iterator();
 
         // iterate on each modification group
-        while (itGroupUuid.hasNext() && itReportUuid.hasNext()) {
+        while (itGroupUuid.hasNext()) {
             UUID groupUuid = itGroupUuid.next();
-            UUID reportUuid = itReportUuid.next();
+            if (modificationGroupRepository.findById(groupUuid).isEmpty()) { // May not exist
+                continue;
+            }
 
+            UUID reportUuid = itReportUuid.next();
             deleteReport(reportUuid);
 
             networkModificationRepository.getModificationsInfos(List.of(groupUuid)).forEach(infos -> {
@@ -1818,6 +1828,13 @@ public class NetworkModificationService {
                         case LINE_SPLIT_WITH_VOLTAGE_LEVEL: {
                             LineSplitWithVoltageLevelInfos lineSplitWithVoltageLevelInfos = (LineSplitWithVoltageLevelInfos) infos;
                             List<ModificationInfos> modificationInfos = execSplitLineWithVoltageLevel(listener, lineSplitWithVoltageLevelInfos, reportUuid);
+                            allModificationsInfos.addAll(modificationInfos);
+                        }
+                        break;
+
+                        case LINE_ATTACH_TO_VOLTAGE_LEVEL: {
+                            LineAttachToVoltageLevelInfos lineAttachToVoltageLevelInfos = (LineAttachToVoltageLevelInfos) infos;
+                            List<ModificationInfos> modificationInfos = execLineAttachToVoltageLevel(listener, lineAttachToVoltageLevelInfos, reportUuid);
                             allModificationsInfos.addAll(modificationInfos);
                         }
                         break;
@@ -2027,7 +2044,7 @@ public class NetworkModificationService {
 
                 subReporter.report(Report.builder()
                     .withKey("lineSplit")
-                    .withDefaultMessage("Line ${lineId} was split")
+                    .withDefaultMessage("Line ${id} was split")
                     .withValue("id", lineSplitWithVoltageLevelInfos.getLineToSplitId())
                     .withSeverity(TypedValue.INFO_SEVERITY)
                     .build());
@@ -2088,4 +2105,140 @@ public class NetworkModificationService {
 
         return Mono.empty();
     }
+
+    private Mono<Void> assertLineAttachToVoltageLevelInfosNotEmpty(LineAttachToVoltageLevelInfos lineAttachToVoltageLevelInfos) {
+        return lineAttachToVoltageLevelInfos == null ? Mono.error(new NetworkModificationException(LINE_ATTACH_ERROR,
+                "Missing required attributes to attach a line to a voltage level")) : Mono.empty();
+    }
+
+    private List<ModificationInfos> execLineAttachToVoltageLevel(NetworkStoreListener listener,
+                                                                 LineAttachToVoltageLevelInfos lineAttachToVoltageLevelInfos,
+                                                                 UUID reportUuid) {
+        Network network = listener.getNetwork();
+        VoltageLevelCreationInfos mayNewVL = lineAttachToVoltageLevelInfos.getMayNewVoltageLevelInfos();
+        LineCreationInfos attachmentLineInfos = lineAttachToVoltageLevelInfos.getAttachmentLine();
+        if (attachmentLineInfos == null) {
+            throw new NetworkModificationException(LINE_ATTACH_ERROR, "Missing required attachment line description");
+        }
+
+        ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
+        Reporter subReporter = reporter.createSubReporter("lineAttachToVoltageLevel", "Line attach to voltage level");
+
+        List<ModificationInfos> inspectable = doAction(listener, () -> {
+            if (listener.isApplyModifications()) {
+                Line line = network.getLine(lineAttachToVoltageLevelInfos.getLineToAttachToId());
+                if (line == null) {
+                    throw new NetworkModificationException(LINE_NOT_FOUND, lineAttachToVoltageLevelInfos.getLineToAttachToId());
+                }
+
+                String voltageLevelId;
+                if (mayNewVL != null) {
+                    createVoltageLevelAction(mayNewVL, subReporter, network);
+                    voltageLevelId = mayNewVL.getEquipmentId();
+                } else {
+                    voltageLevelId = lineAttachToVoltageLevelInfos.getExistingVoltageLevelId();
+                }
+
+                LineAdder lineAdder = network.newLine()
+                        .setId(attachmentLineInfos.getEquipmentId())
+                        .setName(attachmentLineInfos.getEquipmentName())
+                        .setR(attachmentLineInfos.getSeriesResistance())
+                        .setX(attachmentLineInfos.getSeriesReactance())
+                        .setG1(attachmentLineInfos.getShuntConductance1() != null ? attachmentLineInfos.getShuntConductance1() : 0.0)
+                        .setB1(attachmentLineInfos.getShuntSusceptance1() != null ? attachmentLineInfos.getShuntSusceptance1() : 0.0)
+                        .setG2(attachmentLineInfos.getShuntConductance2() != null ? attachmentLineInfos.getShuntConductance2() : 0.0)
+                        .setB2(attachmentLineInfos.getShuntSusceptance2() != null ? attachmentLineInfos.getShuntSusceptance2() : 0.0);
+
+                AttachNewLineOnLine algo = new AttachNewLineOnLine(
+                        lineAttachToVoltageLevelInfos.getPercent(),
+                        voltageLevelId,
+                        lineAttachToVoltageLevelInfos.getBbsOrBusId(),
+                        lineAttachToVoltageLevelInfos.getAttachmentPointId(),
+                        lineAttachToVoltageLevelInfos.getAttachmentPointName(),
+                        true,
+                        lineAttachToVoltageLevelInfos.getAttachmentPointId() + "_substation",
+                        null,
+                        lineAttachToVoltageLevelInfos.getNewLine1Id(),
+                        lineAttachToVoltageLevelInfos.getNewLine1Name(),
+                        lineAttachToVoltageLevelInfos.getNewLine2Id(),
+                        lineAttachToVoltageLevelInfos.getNewLine2Name(),
+                        line,
+                        lineAdder
+                );
+
+                algo.apply(network);
+
+                subReporter.report(Report.builder()
+                        .withKey("lineAttach")
+                        .withDefaultMessage("Line ${id} was attached")
+                        .withValue("id", lineAttachToVoltageLevelInfos.getLineToAttachToId())
+                        .withSeverity(TypedValue.INFO_SEVERITY)
+                        .build());
+            }
+
+            listener.storeLineAttachToVoltageLevelInfos(lineAttachToVoltageLevelInfos);
+        }, LINE_ATTACH_ERROR, reportUuid, reporter, subReporter).stream().map(ModificationInfos.class::cast)
+                .collect(Collectors.toList());
+
+        if (!inspectable.isEmpty()) {
+            inspectable.addAll(listener.getDeletions());
+        }
+        return inspectable;
+    }
+
+    public Flux<ModificationInfos> createLineAttachToVoltageLevel(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid,
+                                                                  LineAttachToVoltageLevelInfos lineAttachToVoltageLevelInfos) {
+        return assertLineAttachToVoltageLevelInfosNotEmpty(lineAttachToVoltageLevelInfos)
+                .thenMany(getNetworkModificationInfos(networkUuid, variantId)
+                .flatMapIterable(networkInfos -> {
+                    NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
+
+                    return execLineAttachToVoltageLevel(listener, lineAttachToVoltageLevelInfos, reportUuid);
+                }));
+    }
+
+    public Mono<Void> updateLineAttachToVoltageLevel(UUID modificationUuid, LineAttachToVoltageLevelInfos lineAttachToVoltageLevelInfos) {
+        assertLineAttachToVoltageLevelInfosNotEmpty(lineAttachToVoltageLevelInfos).subscribe();
+
+        Optional<ModificationEntity> lineAttachToVoltageLevelEntity = this.modificationRepository.findById(modificationUuid);
+
+        if (lineAttachToVoltageLevelEntity.isEmpty()) {
+            return Mono.error(new NetworkModificationException(LINE_ATTACH_NOT_FOUND, "Line attach not found"));
+        }
+
+        LineAttachToVoltageLevelEntity casted = (LineAttachToVoltageLevelEntity) lineAttachToVoltageLevelEntity.get();
+        VoltageLevelCreationEntity mayVoltageLevelCreation = casted.getMayVoltageLevelCreation();
+        VoltageLevelCreationInfos mayNewVoltageLevelInfos = lineAttachToVoltageLevelInfos.getMayNewVoltageLevelInfos();
+        LineCreationEntity lineCreation = casted.getLineCreation();
+        LineCreationInfos lineInfos = lineAttachToVoltageLevelInfos.getAttachmentLine();
+
+        LineAttachToVoltageLevelEntity updatedEntity = LineAttachToVoltageLevelEntity.toEntity(
+                lineAttachToVoltageLevelInfos.getLineToAttachToId(),
+                lineAttachToVoltageLevelInfos.getPercent(),
+                lineAttachToVoltageLevelInfos.getAttachmentPointId(),
+                lineAttachToVoltageLevelInfos.getAttachmentPointName(),
+                mayNewVoltageLevelInfos,
+                lineAttachToVoltageLevelInfos.getExistingVoltageLevelId(),
+                lineAttachToVoltageLevelInfos.getBbsOrBusId(),
+                lineInfos,
+                lineAttachToVoltageLevelInfos.getNewLine1Id(),
+                lineAttachToVoltageLevelInfos.getNewLine1Name(),
+                lineAttachToVoltageLevelInfos.getNewLine2Id(),
+                lineAttachToVoltageLevelInfos.getNewLine2Name()
+        );
+        updatedEntity.setId(modificationUuid);
+        updatedEntity.setGroup(lineAttachToVoltageLevelEntity.get().getGroup());
+        this.networkModificationRepository.updateModification(updatedEntity);
+
+        // NetworkStoreListener.makeVoltageLevelCreationEntity recreates on need, so get rid of previous
+        if (mayVoltageLevelCreation != null) {
+            this.modificationRepository.delete(mayVoltageLevelCreation);
+        }
+        if (lineCreation != null) {
+            this.modificationRepository.delete(lineCreation);
+        }
+
+        return Mono.empty();
+    }
+
 }

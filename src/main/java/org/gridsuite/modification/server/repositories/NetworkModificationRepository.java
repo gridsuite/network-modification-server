@@ -138,8 +138,15 @@ public class NetworkModificationRepository {
     }
 
     @Transactional(readOnly = true)
-    public List<ModificationInfos> getModifications(UUID groupUuid, boolean onlyMetadata) {
-        return onlyMetadata ? getModificationsMetadata(groupUuid) : getModificationsInfos(List.of(groupUuid));
+    public List<ModificationInfos> getModifications(UUID groupUuid, boolean onlyMetadata, boolean errorOnGroupNotFound) {
+        try {
+            return onlyMetadata ? getModificationsMetadata(groupUuid) : getModificationsInfos(List.of(groupUuid));
+        } catch (NetworkModificationException e) {
+            if (e.getType() == MODIFICATION_GROUP_NOT_FOUND && !errorOnGroupNotFound) {
+                return List.of();
+            }
+            throw e;
+        }
     }
 
     private List<ModificationInfos> getModificationsMetadata(UUID groupUuid) {
@@ -147,6 +154,12 @@ public class NetworkModificationRepository {
             .findAllBaseByGroupId(getModificationGroup(groupUuid).getId())
             .stream()
             .map(ModificationEntity::toModificationInfos)
+            .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<ModificationInfos> getModificationsInfos(List<UUID> groupUuids) {
+        return this.getModificationsEntities(groupUuids).stream().map(ModificationEntity::toModificationInfos)
             .collect(Collectors.toList());
     }
 
@@ -163,13 +176,19 @@ public class NetworkModificationRepository {
     }
 
     @Transactional // To have the 2 delete in the same transaction (atomic)
-    public void deleteModificationGroup(UUID groupUuid) {
-        ModificationGroupEntity groupEntity = getModificationGroup(groupUuid);
-        if (!groupEntity.getModifications().isEmpty()) {
-            modificationRepository.deleteAll(groupEntity.getModifications().stream().filter(Objects::nonNull).collect(Collectors.toList()));
+    public void deleteModificationGroup(UUID groupUuid, boolean errorOnGroupNotFound) {
+        try {
+            ModificationGroupEntity groupEntity = getModificationGroup(groupUuid);
+            if (!groupEntity.getModifications().isEmpty()) {
+                modificationRepository.deleteAll(groupEntity.getModifications().stream().filter(Objects::nonNull).collect(Collectors.toList()));
+            }
+            this.modificationGroupRepository.delete(groupEntity);
+        } catch (NetworkModificationException e) {
+            if (e.getType() == MODIFICATION_GROUP_NOT_FOUND && !errorOnGroupNotFound) {
+                return;
+            }
+            throw e;
         }
-        this.modificationGroupRepository.delete(groupEntity);
-
     }
 
     @Transactional // To have the find and delete in the same transaction (atomic)
@@ -257,12 +276,6 @@ public class NetworkModificationRepository {
     @Transactional(readOnly = true)
     public List<ModificationEntity> getModificationsEntities(List<UUID> groupUuids) {
         return groupUuids.stream().flatMap(this::getModificationList).collect(Collectors.toList());
-    }
-
-    @Transactional(readOnly = true)
-    public List<ModificationInfos> getModificationsInfos(List<UUID> groupUuids) {
-        return this.getModificationsEntities(groupUuids).stream().map(ModificationEntity::toModificationInfos)
-            .collect(Collectors.toList());
     }
 
     public ShuntCompensatorCreationEntity createShuntCompensatorEntity(ShuntCompensatorCreationInfos shuntCompensatorCreationInfos) {

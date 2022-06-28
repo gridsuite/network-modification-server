@@ -10,6 +10,8 @@ import org.gridsuite.modification.server.dto.CurrentLimitsInfos;
 import org.gridsuite.modification.server.dto.LineCreationInfos;
 import org.hamcrest.Description;
 
+import java.util.Objects;
+
 /**
  * @author Sylvain Bouzols <sylvain.bouzols at rte-france.com>
  */
@@ -34,7 +36,7 @@ public class MatcherLineCreationInfos extends MatcherModificationInfos<LineCreat
         return super.matchesSafely(m)
             && m.getEquipmentId().equals(reference.getEquipmentId())
             && m.getSubstationIds().equals(reference.getSubstationIds())
-            && m.getEquipmentName().equals(reference.getEquipmentName())
+            && Objects.equals(m.getEquipmentName(), reference.getEquipmentName())
             && m.getSeriesResistance() == reference.getSeriesResistance()
             && m.getSeriesReactance() == reference.getSeriesReactance()
             && m.getShuntConductance1() != null && m.getShuntConductance1().equals(reference.getShuntConductance1())
@@ -45,10 +47,10 @@ public class MatcherLineCreationInfos extends MatcherModificationInfos<LineCreat
             || m.getShuntConductance2() == null && reference.getShuntConductance2() == null
             && m.getShuntSusceptance2() != null && m.getShuntSusceptance2().equals(reference.getShuntSusceptance2())
             || m.getShuntSusceptance2() == null && reference.getShuntSusceptance2() == null
-            && m.getVoltageLevelId1().equals(reference.getVoltageLevelId1())
-            && m.getBusOrBusbarSectionId1().equals(reference.getBusOrBusbarSectionId1())
-            && m.getVoltageLevelId2().equals(reference.getVoltageLevelId2())
-            && m.getBusOrBusbarSectionId2().equals(reference.getBusOrBusbarSectionId2())
+            && Objects.equals(m.getVoltageLevelId1(), reference.getVoltageLevelId1())
+            && Objects.equals(m.getBusOrBusbarSectionId1(), reference.getBusOrBusbarSectionId1())
+            && Objects.equals(m.getVoltageLevelId2(), reference.getVoltageLevelId2())
+            && Objects.equals(m.getBusOrBusbarSectionId2(), reference.getBusOrBusbarSectionId2())
             && matchesCurrentLimitsInfos(m.getCurrentLimits1(), reference.getCurrentLimits1())
             && matchesCurrentLimitsInfos(m.getCurrentLimits2(), reference.getCurrentLimits2());
     }

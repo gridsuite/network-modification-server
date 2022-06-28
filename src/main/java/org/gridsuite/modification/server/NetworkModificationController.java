@@ -65,8 +65,20 @@ public class NetworkModificationController {
     @GetMapping(value = "/groups/{groupUuid}/modifications", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Get modifications list of a group")
     @ApiResponse(responseCode = "200", description = "List of modifications of the group")
-    public ResponseEntity<Flux<ModificationInfos>> getModifications(@Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid) {
-        return ResponseEntity.ok().body(networkModificationService.getModifications(groupUuid, false));
+    public ResponseEntity<Flux<ModificationInfos>> getModifications(@Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid,
+                                                                    @Parameter(description = "Only metatada") @RequestParam(name = "onlyMetadata", required = false, defaultValue = "false") Boolean onlyMetadata,
+                                                                    @Parameter(description = "Return 404 if group is not found or an empty list") @RequestParam(name = "errorOnGroupNotFound", required = false, defaultValue = "true") Boolean errorOnGroupNotFound) {
+        return ResponseEntity.ok().body(networkModificationService.getModifications(groupUuid, onlyMetadata, errorOnGroupNotFound));
+    }
+
+    @PostMapping(value = "/groups")
+    @Operation(summary = "Create a group based on another group and its modifications")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The group and its modifications have been duplicated"),
+                           @ApiResponse(responseCode = "404", description = "Source group not found")})
+    public ResponseEntity<Mono<Void>> createGroup(@RequestParam("groupUuid") UUID groupUuid,
+                                                  @RequestParam("duplicateFrom") UUID sourceGroupUuid,
+                                                  @RequestParam("reportUuid") UUID reportUuid) {
+        return ResponseEntity.ok().body(networkModificationService.createGroup(sourceGroupUuid, groupUuid, reportUuid));
     }
 
     @PostMapping(value = "/groups/{groupUuid}")
@@ -82,13 +94,6 @@ public class NetworkModificationController {
     @ApiResponse(responseCode = "200", description = "The modification")
     public ResponseEntity<Flux<ModificationInfos>> getModification(@Parameter(description = "Modification UUID") @PathVariable("modificationUuid") UUID modificationUuid) {
         return ResponseEntity.ok().body(networkModificationService.getModification(modificationUuid));
-    }
-
-    @GetMapping(value = "/groups/{groupUuid}/modifications/metadata", produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Get list of modifications metadata of a group")
-    @ApiResponse(responseCode = "200", description = "List of modifications of the group")
-    public ResponseEntity<Flux<ModificationInfos>> getModificationsMetadata(@Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid) {
-        return ResponseEntity.ok().body(networkModificationService.getModifications(groupUuid, true));
     }
 
     @PutMapping(value = "/groups/{groupUuid}/modifications/move", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -111,8 +116,9 @@ public class NetworkModificationController {
     @DeleteMapping(value = "/groups/{groupUuid}")
     @Operation(summary = "Delete the modifications group")
     @ApiResponse(responseCode = "200", description = "Modifications group deleted")
-    public ResponseEntity<Mono<Void>> deleteModificationGroup(@Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid) {
-        return ResponseEntity.ok().body(networkModificationService.deleteModificationGroup(groupUuid));
+    public ResponseEntity<Mono<Void>> deleteModificationGroup(@Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid,
+                                                              @Parameter(description = "Return 404 if group is not found") @RequestParam(name = "errorOnGroupNotFound", required = false, defaultValue = "true") Boolean errorOnGroupNotFound) {
+        return ResponseEntity.ok().body(networkModificationService.deleteModificationGroup(groupUuid, errorOnGroupNotFound));
     }
 
     @GetMapping(value = "/groups", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -339,6 +345,25 @@ public class NetworkModificationController {
     public ResponseEntity<Mono<Void>> updateLineSplitWithVoltageLevel(@PathVariable("modificationUuid") UUID modificationUuid,
         @RequestBody LineSplitWithVoltageLevelInfos lineSplitWithVoltageLevelInfos) {
         return ResponseEntity.ok().body(networkModificationService.updateLineSplitWithVoltageLevel(modificationUuid, lineSplitWithVoltageLevelInfos));
+    }
+
+    @PostMapping(value = "/networks/{networkUuid}/line-attach", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "attach line to a voltage level")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The line has been attached to voltage level")})
+    public ResponseEntity<Flux<ModificationInfos>> lineAttachToVoltageLevel(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
+                                                                            @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
+                                                                            @RequestParam(value = "group", required = false) UUID groupUuid,
+                                                                            @RequestParam(value = "reportUuid") UUID reportUuid,
+                                                                            @RequestBody LineAttachToVoltageLevelInfos lineAttachToVoltageLevelInfos) {
+        return ResponseEntity.ok().body(networkModificationService.createLineAttachToVoltageLevel(networkUuid, variantId, groupUuid, reportUuid, lineAttachToVoltageLevelInfos));
+    }
+
+    @PutMapping(value = "/modifications/{modificationUuid}/line-attach-creation", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "update line attachment")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The line attachment to voltage level has been updated")})
+    public ResponseEntity<Mono<Void>> updateLineAttachToVoltageLevel(@PathVariable("modificationUuid") UUID modificationUuid,
+                                                                     @RequestBody LineAttachToVoltageLevelInfos lineAttachToVoltageLevelInfos) {
+        return ResponseEntity.ok().body(networkModificationService.updateLineAttachToVoltageLevel(modificationUuid, lineAttachToVoltageLevelInfos));
     }
 
     @PostMapping(value = "/networks/{networkUuid}/build")
