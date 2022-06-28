@@ -131,6 +131,10 @@ public class BuildWorkerService {
 
                             sendResultBuildMessage(sendMessage);
                             LOGGER.info("Build complete on node '{}'", execContext.getReceiver());
+                        } else {  // result not available : stop build request
+                            if (cancelBuildRequests.get(execContext.getReceiver()) != null) {
+                                stoppedPublisherService.publishCancel(execContext.getReceiver());
+                            }
                         }
                     })
                     .onErrorResume(t -> {
