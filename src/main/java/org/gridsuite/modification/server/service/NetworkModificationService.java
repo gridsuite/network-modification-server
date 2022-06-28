@@ -216,7 +216,7 @@ public class NetworkModificationService {
     }
 
     public Mono<Void> createGroup(UUID sourceGroupUuid, UUID groupUuid, UUID reportUuid) {
-        return getModifications(sourceGroupUuid, false, true).doOnNext(m -> {
+        return getModifications(sourceGroupUuid, false, false).doOnNext(m -> {
             Optional<ModificationEntity> modification = this.modificationRepository.findById(m.getUuid());
             if (modification.isEmpty()) {
                 throw new NetworkModificationException(MODIFICATION_NOT_FOUND, m.getUuid().toString());
