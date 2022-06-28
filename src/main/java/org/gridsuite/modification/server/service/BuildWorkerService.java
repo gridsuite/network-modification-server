@@ -36,7 +36,7 @@ import java.util.function.Consumer;
 import java.util.logging.Level;
 
 import static org.gridsuite.modification.server.service.BuildStoppedPublisherService.CANCEL_MESSAGE;
-import static org.gridsuite.modification.server.service.BuildStoppedPublisherService.FAIL_MESSAGE;
+import static org.gridsuite.modification.server.service.BuildFailedPublisherService.FAIL_MESSAGE;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -58,6 +58,8 @@ public class BuildWorkerService {
 
     private BuildStoppedPublisherService stoppedPublisherService;
 
+    private BuildFailedPublisherService failedPublisherService;
+
     private Map<String, CompletableFuture<List<ModificationInfos>>> futures = new ConcurrentHashMap<>();
 
     private Map<String, BuildCancelContext> cancelBuildRequests = new ConcurrentHashMap<>();
@@ -69,10 +71,12 @@ public class BuildWorkerService {
 
     public BuildWorkerService(@NonNull NetworkModificationService networkModificationService,
                               @NonNull ObjectMapper objectMapper,
-                              @NonNull BuildStoppedPublisherService stoppedPublisherService) {
+                              @NonNull BuildStoppedPublisherService stoppedPublisherService,
+                              @NonNull BuildFailedPublisherService failedPublisherService) {
         this.networkModificationService = networkModificationService;
         this.objectMapper = objectMapper;
         this.stoppedPublisherService = stoppedPublisherService;
+        this.failedPublisherService = failedPublisherService;
     }
 
     private Mono<List<ModificationInfos>> execBuildVariant(Network network, BuildExecContext execContext, BuildInfos buildInfos) {
@@ -134,7 +138,7 @@ public class BuildWorkerService {
                     .onErrorResume(t -> {
                         if (!(t instanceof CancellationException)) {
                             LOGGER.error(FAIL_MESSAGE, t);
-                            stoppedPublisherService.publishFail(execContext.getReceiver(), t.getMessage());
+                            failedPublisherService.publishFail(execContext.getReceiver(), t.getMessage());
                             return Mono.empty();
                         }
                         return Mono.empty();

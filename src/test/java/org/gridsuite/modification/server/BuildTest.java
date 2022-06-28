@@ -28,9 +28,12 @@ import org.gridsuite.modification.server.entities.equipment.modification.LineSpl
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.EquipmentAttributeModificationEntity;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.NetworkModificationService;
+import org.gridsuite.modification.server.service.BuildFailedPublisherService;
 import org.gridsuite.modification.server.service.BuildStoppedPublisherService;
 import org.gridsuite.modification.server.service.NetworkStoreListener;
 import org.gridsuite.modification.server.utils.NetworkCreation;
+import org.hamcrest.CoreMatchers;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -68,6 +71,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
@@ -89,6 +93,8 @@ public class BuildTest {
     private static final UUID TEST_GROUP_ID_2 = UUID.randomUUID();
     private static final UUID TEST_REPORT_ID = UUID.randomUUID();
     private static final UUID TEST_REPORT_ID_2 = UUID.randomUUID();
+
+    private static final int TIMEOUT = 1000;
 
     private static final String VARIANT_ID_2 = "variant_2";
 
@@ -141,15 +147,6 @@ public class BuildTest {
         modificationRepository.deleteAll();
         equipmentInfosService.deleteVariants(TEST_NETWORK_ID, List.of(VariantManagerConstants.INITIAL_VARIANT_ID, NetworkCreation.VARIANT_ID, VARIANT_ID_2));
 
-        // purge messages
-        while (output.receive(1000, "build.result") != null) {
-        }
-        while (output.receive(1000, "build.run") != null) {
-        }
-        while (output.receive(1000, "build.cancel") != null) {
-        }
-        while (output.receive(1000, "build.stopped") != null) {
-        }
     }
 
     @Test
@@ -178,7 +175,7 @@ public class BuildTest {
             .expectStatus().isOk();
 
         Thread.sleep(3000);  // Needed to be sure that build result message has been sent
-        Message<byte[]> resultMessage = output.receive(1000, "build.result");
+        Message<byte[]> resultMessage = output.receive(TIMEOUT, "build.result");
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
 
         BuildInfos newBuildInfos = new BuildInfos(NetworkCreation.VARIANT_ID,
@@ -192,7 +189,7 @@ public class BuildTest {
             .expectStatus().isOk();
 
         Thread.sleep(3000);  // Needed to be sure that build result message has been sent and data have been written in ES
-        resultMessage = output.receive(1000, "build.result");
+        resultMessage = output.receive(TIMEOUT, "build.result");
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
         assertEquals("", new String(resultMessage.getPayload()));
     }
@@ -250,7 +247,7 @@ public class BuildTest {
             .expectStatus().isOk();
 
         Thread.sleep(3000);  // Needed to be sure that build result message has been sent
-        Message<byte[]> resultMessage = output.receive(1000, "build.result");
+        Message<byte[]> resultMessage = output.receive(TIMEOUT, "build.result");
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
         assertEquals("newSubstation,s1,s2", new String(resultMessage.getPayload()));
 
@@ -322,7 +319,7 @@ public class BuildTest {
             .expectStatus().isOk();
 
         Thread.sleep(3000);  // Needed to be sure that build result message has been sent and data have been written in ES
-        resultMessage = output.receive(1000, "build.result");
+        resultMessage = output.receive(TIMEOUT, "build.result");
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
         assertEquals("", new String(resultMessage.getPayload()));
 
@@ -368,7 +365,7 @@ public class BuildTest {
             .expectStatus().isOk();
 
         Thread.sleep(3000);  // Needed to be sure that build result message has been sent
-        resultMessage = output.receive(1000, "build.result");
+        resultMessage = output.receive(TIMEOUT, "build.result");
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
         assertEquals("newSubstation,s1,s2", new String(resultMessage.getPayload()));
 
@@ -427,7 +424,7 @@ public class BuildTest {
             .exchange()
             .expectStatus().isOk();
 
-        Message<byte[]> message = output.receive(3000, "build.stopped");
+        Message<byte[]> message = output.receive(TIMEOUT * 3, "build.stopped");
         assertEquals("me", message.getHeaders().get("receiver"));
         assertEquals(BuildStoppedPublisherService.CANCEL_MESSAGE, message.getHeaders().get("message"));
     }
@@ -452,8 +449,11 @@ public class BuildTest {
             .exchange()
             .expectStatus().isOk();
 
-        assertNull(output.receive(1000, "build.result"));
-    }
+        assertNull(output.receive(TIMEOUT, "build.result"));
+
+        Message<byte[]> message = output.receive(TIMEOUT * 3, "build.failed");
+        assertEquals("me", message.getHeaders().get("receiver"));
+        assertThat((String) message.getHeaders().get("message"), CoreMatchers.startsWith(BuildFailedPublisherService.FAIL_MESSAGE));    }
 
     @Test
     public void doActionWithUncheckedExceptionTest() {
@@ -476,5 +476,19 @@ public class BuildTest {
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
             .expectBodyList(ModificationInfos.class)
             .returnResult().getResponseBody()).size());
+    }
+
+    @After
+    public void tearDown() {
+        Message<byte[]> message = null;
+        try {
+            message = output.receive(TIMEOUT);
+        } catch (NullPointerException e) {
+            // Ignoring
+        }
+
+        output.clear(); // purge in order to not fail the other tests
+
+        assertNull("Should not be any messages : ", message);
     }
 }
