@@ -28,12 +28,14 @@ import org.gridsuite.modification.server.entities.equipment.modification.LineSpl
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.EquipmentAttributeModificationEntity;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.NetworkModificationService;
+import org.gridsuite.modification.server.service.BuildFailedPublisherService;
 import org.gridsuite.modification.server.service.BuildStoppedPublisherService;
 import org.gridsuite.modification.server.service.NetworkStoreListener;
 import org.gridsuite.modification.server.utils.NetworkCreation;
+import org.hamcrest.CoreMatchers;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatchers;
 import org.mockito.stubbing.Answer;
@@ -69,6 +71,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
@@ -447,7 +450,10 @@ public class BuildTest {
             .expectStatus().isOk();
 
         assertNull(output.receive(TIMEOUT, "build.result"));
-    }
+
+        Message<byte[]> message = output.receive(TIMEOUT * 3, "build.failed");
+        assertEquals("me", message.getHeaders().get("receiver"));
+        assertThat((String) message.getHeaders().get("message"), CoreMatchers.startsWith(BuildFailedPublisherService.FAIL_MESSAGE));    }
 
     @Test
     public void doActionWithUncheckedExceptionTest() {
@@ -472,7 +478,7 @@ public class BuildTest {
             .returnResult().getResponseBody()).size());
     }
 
-    @AfterEach
+    @After
     public void tearDown() {
         Message<byte[]> message = null;
         try {
