@@ -216,6 +216,7 @@ public class NetworkModificationService {
     }
 
     public Mono<Void> createModificationGroup(UUID sourceGroupUuid, UUID groupUuid, UUID reportUuid) {
+        //TODO To be optimized by retrieving ModificationEntity objects directly instead of ModificationInfos objects
         return getModifications(sourceGroupUuid, false, false).doOnNext(m -> {
             Optional<ModificationEntity> modification = this.modificationRepository.findById(m.getUuid());
             modification.get().setId(null);
