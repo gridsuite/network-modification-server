@@ -215,16 +215,14 @@ public class NetworkModificationService {
         return Flux.fromStream(() -> networkModificationRepository.getModifications(List.of(modificationUuid)).stream());
     }
 
-    public Mono<Void> createGroup(UUID sourceGroupUuid, UUID groupUuid, UUID reportUuid) {
-        return getModifications(sourceGroupUuid, false, true).doOnNext(m -> {
+    public Mono<Void> createModificationGroup(UUID sourceGroupUuid, UUID groupUuid, UUID reportUuid) {
+        return getModifications(sourceGroupUuid, false, false).doOnNext(m -> {
             Optional<ModificationEntity> modification = this.modificationRepository.findById(m.getUuid());
             modification.get().setId(null);
             networkModificationRepository.saveModifications(groupUuid, List.of(modification.get()));
         }).doOnNext(unused -> {
             ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
             sendReport(reportUuid, reporter, false);
-        }).doOnError(throwable -> {
-            throw new NetworkModificationException(NO_MODIFICATION_ASSOCIATED, throwable.getMessage());
         }).then();
     }
 
