@@ -2529,7 +2529,7 @@ public class ModificationControllerTest {
         uriString = "/v1/groups?duplicateFrom=" + UUID.randomUUID() + "&groupUuid=" + UUID.randomUUID() + "&reportUuid=" + TEST_REPORT_ID;
         webTestClient.post().uri(uriString)
                 .exchange()
-                .expectStatus().isNotFound();
+                .expectStatus().isNoContent();
     }
 
     public void testLineSplitWithVoltageLevel() {
