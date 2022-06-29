@@ -21,7 +21,6 @@ import org.springframework.stereotype.Service;
 public class BuildStoppedPublisherService {
 
     public static final String CANCEL_MESSAGE = "Build was canceled";
-    public static final String FAIL_MESSAGE = "Build has failed";
 
     private static final String CATEGORY_BROKER_OUTPUT = BuildStoppedPublisherService.class.getName() + ".output-broker-messages";
 
@@ -32,10 +31,6 @@ public class BuildStoppedPublisherService {
 
     public void publishCancel(String receiver) {
         publish(receiver, CANCEL_MESSAGE);
-    }
-
-    public void publishFail(String receiver, String causeMessage) {
-        publish(receiver, FAIL_MESSAGE + " : " + causeMessage);
     }
 
     private void publish(String receiver, String stopMessage) {

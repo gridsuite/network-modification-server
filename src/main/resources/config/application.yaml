@@ -4,7 +4,7 @@ spring:
 
   cloud:
     function:
-      definition: consumeBuild;consumeCancelBuild
+      definition: consumeBuild;consumeCancelBuild;consumeFailedBuild
     stream:
       bindings:
         consumeBuild-in-0:
@@ -20,6 +20,10 @@ spring:
           destination: ${powsybl-ws.rabbitmq.destination.prefix:}build.cancel
         publishStoppedBuild-out-0:
           destination: ${powsybl-ws.rabbitmq.destination.prefix:}build.stopped
-      source: publishBuild;publishResultBuild;publishCancelBuild;publishStoppedBuild
+        publishFailedBuild-out-0:
+          destination: ${powsybl-ws.rabbitmq.destination.prefix:}build.failed
+        consumeFailedBuild-in-0:
+          destination: ${powsybl-ws.rabbitmq.destination.prefix:}build.failed
+      source: publishBuild;publishResultBuild;publishCancelBuild;publishStoppedBuild;publishFailedBuild
 
 dbName: networkmodifications
