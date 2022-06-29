@@ -25,7 +25,6 @@ public class NetworkModificationException extends PowsyblException {
         VARIANT_NOT_FOUND(HttpStatus.NOT_FOUND),
         MODIFICATION_GROUP_NOT_FOUND(HttpStatus.NOT_FOUND),
         MODIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND),
-        NO_MODIFICATION_ASSOCIATED(HttpStatus.NO_CONTENT),
         SWITCH_NOT_FOUND(HttpStatus.NOT_FOUND),
         LINE_NOT_FOUND(HttpStatus.NOT_FOUND),
         LOAD_NOT_FOUND(HttpStatus.NOT_FOUND),
