@@ -1716,12 +1716,10 @@ public class NetworkModificationService {
         // iterate on each modification group
         while (itGroupUuid.hasNext()) {
             UUID groupUuid = itGroupUuid.next();
+            UUID reportUuid = itReportUuid.next();
             if (modificationGroupRepository.findById(groupUuid).isEmpty()) { // May not exist
                 continue;
             }
-
-            UUID reportUuid = itReportUuid.next();
-            deleteReport(reportUuid);
 
             networkModificationRepository.getModificationsInfos(List.of(groupUuid)).forEach(infos -> {
                 try {
