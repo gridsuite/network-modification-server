@@ -676,15 +676,11 @@ public class NetworkModificationService {
             throw new NetworkModificationException(LOAD_NOT_FOUND, "Load " + loadModificationInfos.getEquipmentId() + " does not exist in network");
         }
 
-        if (loadModificationInfos.getLoadType() != null) {
-            load.setLoadType(loadModificationInfos.getLoadType().applyModification(load.getLoadType()));
-        }
-        if (loadModificationInfos.getActivePower() != null) {
-            load.setP0(loadModificationInfos.getActivePower().applyModification(load.getP0()));
-        }
-        if (loadModificationInfos.getReactivePower() != null) {
-            load.setQ0(loadModificationInfos.getReactivePower().applyModification(load.getQ0()));
-        }
+        applyElementaryModifications(load::setName, load::getNameOrId, loadModificationInfos.getEquipmentName());
+        applyElementaryModifications(load::setLoadType, load::getLoadType, loadModificationInfos.getLoadType());
+        applyElementaryModifications(load::setP0, load::getP0, loadModificationInfos.getActivePower());
+        applyElementaryModifications(load::setQ0, load::getQ0, loadModificationInfos.getReactivePower());
+
         // TODO connectivity modification
         return load;
     }
@@ -758,6 +754,7 @@ public class NetworkModificationService {
         if (generator == null) {
             throw new NetworkModificationException(GENERATOR_NOT_FOUND, "Generator " + modificationInfos.getEquipmentId() + " does not exist in network");
         }
+        applyElementaryModifications(generator::setName, generator::getNameOrId, modificationInfos.getEquipmentName());
         applyElementaryModifications(generator::setEnergySource, generator::getEnergySource, modificationInfos.getEnergySource());
         applyElementaryModifications(generator::setMinP, generator::getMinP, modificationInfos.getMinActivePower());
         applyElementaryModifications(generator::setMaxP, generator::getMaxP, modificationInfos.getMaxActivePower());

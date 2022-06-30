@@ -827,8 +827,8 @@ public class ModificationControllerTest {
                         MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.LOAD_MODIFICATION, "v1load", Set.of("s1")));
 
         assertNotNull(network.getLoad("v1load"));  // load was modified
-        assertEquals(network.getLoad("v1load").getLoadType(), LoadType.AUXILIARY);
-        assertEquals(network.getLoad("v1load").getP0(), 100.0, 0.1);
+        assertEquals(LoadType.AUXILIARY, network.getLoad("v1load").getLoadType());
+        assertEquals(100.0, network.getLoad("v1load").getP0(), 0.1);
         testNetworkModificationsCount(TEST_GROUP_ID, 1);  // new modification stored in the database
 
         // modify load with errors
@@ -879,11 +879,11 @@ public class ModificationControllerTest {
                         MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.LOAD_MODIFICATION, "v1load", Set.of("s1"))).returnResult().getResponseBody().get(0);
 
         assertNotNull(network.getLoad("v1load"));  // load was modified
-        // TODO uncomment when load name modification will be enabled in Powsybl
-        //assertEquals(network.getLoad("v1load").getNameOrId(), "newV1Load");
-        assertEquals(network.getLoad("v1load").getLoadType(), LoadType.FICTITIOUS);
-        assertEquals(network.getLoad("v1load").getP0(), 80.0, 0.1);
-        assertEquals(network.getLoad("v1load").getQ0(), 40.0, 0.1);
+        var equipment = network.getLoad("v1load");
+        assertEquals("newV1Load", network.getLoad("v1load").getNameOrId());
+        assertEquals(LoadType.FICTITIOUS, equipment.getLoadType());
+        assertEquals(80.0, equipment.getP0(), 0.1);
+        assertEquals(40.0, equipment.getQ0(), 0.1);
         // TODO check connectivity when it will be implemented
         testNetworkModificationsCount(TEST_GROUP_ID, 3);  // new modification stored in the database
 
@@ -1012,8 +1012,8 @@ public class ModificationControllerTest {
                 MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.GENERATOR_MODIFICATION, generatorId, Set.of("s1")));
 
         assertNotNull(network.getGenerator(generatorId));  // generator was modified
-        // TODO test name change when it will be implemented
         var equipment = network.getGenerator(generatorId);
+        assertEquals("newV1Generator", equipment.getNameOrId());
         assertEquals(EnergySource.SOLAR, equipment.getEnergySource());
         assertEquals(80.0, equipment.getTargetP(), .1);
         assertEquals(40.0, equipment.getTargetQ(), .1);
