@@ -1338,12 +1338,6 @@ public class NetworkModificationService {
         String subReportId = "VoltageLevel creation " + voltageLevelCreationInfos.getEquipmentId();
         Reporter subReporter = reporter.createSubReporter(subReportId, subReportId);
 
-        String substationId = voltageLevelCreationInfos.getSubstationId();
-        Substation substation = network.getSubstation(substationId);
-        if (substation == null) {
-            throw new NetworkModificationException(SUBSTATION_NOT_FOUND, substationId);
-        }
-
         return doAction(listener, () -> {
             if (listener.isApplyModifications()) {
                 createVoltageLevelAction(voltageLevelCreationInfos, subReporter, network);
