@@ -222,7 +222,7 @@ public class NetworkModificationService {
             networkModificationRepository.saveModifications(groupUuid, List.of(modification.get()));
         }).doOnNext(unused -> {
             ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
-            sendReport(reportUuid, reporter, false);
+            sendReport(reportUuid, reporter);
         }).then();
 
     }
@@ -438,7 +438,7 @@ public class NetworkModificationService {
             }
         } finally {
             // send report
-            sendReport(reportUuid, reporter, false);
+            sendReport(reportUuid, reporter);
         }
     }
 
@@ -926,11 +926,11 @@ public class NetworkModificationService {
         });
     }
 
-    private void sendReport(UUID reportUuid, ReporterModel reporter, boolean overwrite) {
+    private void sendReport(UUID reportUuid, ReporterModel reporter) {
         var headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         var resourceUrl = DELIMITER + REPORT_API_VERSION + DELIMITER + "reports" + DELIMITER + reportUuid;
-        var uriBuilder = UriComponentsBuilder.fromPath(resourceUrl).queryParam("overwrite", Boolean.toString(overwrite));
+        var uriBuilder = UriComponentsBuilder.fromPath(resourceUrl);
         try {
             reportServerRest.exchange(uriBuilder.toUriString(), HttpMethod.PUT, new HttpEntity<>(objectMapper.writeValueAsString(reporter), headers), ReporterModel.class);
         } catch (JsonProcessingException error) {
@@ -1834,7 +1834,7 @@ public class NetworkModificationService {
                         .withDefaultMessage(exc.getMessage())
                         .withSeverity(TypedValue.ERROR_SEVERITY)
                         .build());
-                    sendReport(reportUuid, reporter, true);
+                    sendReport(reportUuid, reporter);
                 }
             });
         }
