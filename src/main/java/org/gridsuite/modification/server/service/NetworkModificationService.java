@@ -51,6 +51,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
@@ -959,6 +960,8 @@ public class NetworkModificationService {
             var resourceUrl = DELIMITER + REPORT_API_VERSION + DELIMITER + "reports" + DELIMITER + reportUuid;
             UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromPath(resourceUrl);
             reportServerRest.exchange(uriBuilder.toUriString(), HttpMethod.DELETE, null, ReporterModel.class, reportUuid.toString());
+        } catch (HttpClientErrorException.NotFound e) {
+            // not there already : good
         } catch (RestClientException e) {
             throw new PowsyblException("error deleting report", e);
         }
