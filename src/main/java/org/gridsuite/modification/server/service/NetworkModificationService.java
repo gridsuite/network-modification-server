@@ -51,6 +51,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.DefaultUriBuilderFactory;
@@ -952,6 +953,17 @@ public class NetworkModificationService {
         }
     }
 
+    private void deleteReport(UUID reportUuid) {
+        Objects.requireNonNull(reportUuid);
+        try {
+            var resourceUrl = DELIMITER + REPORT_API_VERSION + DELIMITER + "reports" + DELIMITER + reportUuid;
+            UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromPath(resourceUrl);
+            reportServerRest.exchange(uriBuilder.toUriString(), HttpMethod.DELETE, null, ReporterModel.class, reportUuid.toString());
+        } catch (RestClientException e) {
+            throw new PowsyblException("error deleting report", e);
+        }
+    }
+
     public void setReportServerRest(RestTemplate reportServerRest) {
         this.reportServerRest = Objects.requireNonNull(reportServerRest, "reportServerRest can't be null");
     }
@@ -1723,10 +1735,12 @@ public class NetworkModificationService {
         // iterate on each modification group
         while (itGroupUuid.hasNext()) {
             UUID groupUuid = itGroupUuid.next();
-            UUID reportUuid = itReportUuid.next();
             if (modificationGroupRepository.findById(groupUuid).isEmpty()) { // May not exist
                 continue;
             }
+
+            UUID reportUuid = itReportUuid.next();
+            deleteReport(reportUuid);
 
             networkModificationRepository.getModificationsInfos(List.of(groupUuid)).forEach(infos -> {
                 try {
