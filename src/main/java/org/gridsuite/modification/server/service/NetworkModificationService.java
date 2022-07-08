@@ -438,8 +438,9 @@ public class NetworkModificationService {
                 throw e;
             }
         } finally {
-            // send report
-            sendReport(reportUuid, reporter);
+            if (listener.isApplyModifications()) {
+                sendReport(reportUuid, reporter);
+            }
         }
     }
 
