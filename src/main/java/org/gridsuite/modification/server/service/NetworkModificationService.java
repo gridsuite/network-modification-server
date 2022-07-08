@@ -101,6 +101,8 @@ public class NetworkModificationService {
     private static final String NETWORK_MODIFICATION_REPORT_KEY = "NetworkModification";
     private static final String NETWORK_MODIFICATION_REPORT_NAME = "NetworkModification";
 
+    private static final Logger LOGGER = LoggerFactory.getLogger("details");
+
     @Autowired
     private StreamBridge publisher;
 
@@ -441,7 +443,7 @@ public class NetworkModificationService {
             }
         } finally {
             if (listener.isApplyModifications()) {
-                sendReport(reportUuid, reporter);
+            sendReport(reportUuid, reporter);
             }
         }
     }
@@ -943,6 +945,7 @@ public class NetworkModificationService {
     }
 
     private void sendReport(UUID reportUuid, ReporterModel reporter) {
+        LOGGER.info("About to add report of uuid {}", reportUuid);
         var headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         var resourceUrl = DELIMITER + REPORT_API_VERSION + DELIMITER + "reports" + DELIMITER + reportUuid;
