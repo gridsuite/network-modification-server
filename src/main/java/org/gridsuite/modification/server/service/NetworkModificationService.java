@@ -1736,7 +1736,8 @@ public class NetworkModificationService {
         List<UUID> modificationGroupUuids = buildInfos.getModificationGroupUuids();
         List<UUID> reportUuids = buildInfos.getReportUuids();
         Iterator<UUID> itGroupUuid = modificationGroupUuids.iterator();
-        Iterator<UUID> itReportUuid = reportUuids.iterator();
+        //Iterator<UUID> itReportUuid = reportUuids.iterator();
+        UUID reportUuid = reportUuids.get(reportUuids.size() - 1);
 
         // iterate on each modification group
         while (itGroupUuid.hasNext()) {
@@ -1745,8 +1746,8 @@ public class NetworkModificationService {
                 continue;
             }
 
-            UUID reportUuid = itReportUuid.next();
-            deleteReport(reportUuid);
+            //UUID reportUuid = itReportUuid.next();
+            //deleteReport(reportUuid);
 
             networkModificationRepository.getModificationsInfos(List.of(groupUuid)).forEach(infos -> {
                 try {
