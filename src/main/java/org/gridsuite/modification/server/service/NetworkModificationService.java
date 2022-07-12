@@ -1549,9 +1549,9 @@ public class NetworkModificationService {
             aSwitch.setOpen((Boolean) attributeValue);
             reporter.report(Report.builder()
                 .withKey("switchChanged")
-                .withDefaultMessage("Switch ${operation} ${id} in voltage level ${voltageLevelId}")
+                .withDefaultMessage("${operation} switch ${id} in voltage level ${voltageLevelId}")
                 .withValue("id", aSwitch.getId())
-                .withValue("operation", (Boolean) attributeValue  ? "opening" : "closing")
+                .withValue("operation", Boolean.TRUE.equals(attributeValue)  ? "Opening" : "Closing")
                 .withValue("voltageLevelId", aSwitch.getVoltageLevel().getId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .build());
