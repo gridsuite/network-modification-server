@@ -758,7 +758,6 @@ public class NetworkModificationService {
             subReporter.report(Report.builder()
                 .withKey("Modification" + fieldName)
                 .withDefaultMessage("    ${fieldName} : ${oldValue} -> ${newValue}")
-                .withValue("blank", "    ")
                 .withValue("fieldName", fieldName)
                 .withValue("oldValue", oldValue.toString())
                 .withValue("newValue", newValue.toString())
