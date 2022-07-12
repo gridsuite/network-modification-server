@@ -173,16 +173,19 @@ public class NetworkModificationService {
                 if (aSwitch == null) {
                     throw new NetworkModificationException(SWITCH_NOT_FOUND, switchId);
                 }
+
                 if (aSwitch.isOpen() != open) {
                     aSwitch.setOpen(open);
-                }
 
-                subReporter.report(Report.builder()
-                    .withKey("switchChanged")
-                    .withDefaultMessage("Switch with id=${id} open state changed")
-                    .withValue("id", switchId)
-                    .withSeverity(TypedValue.INFO_SEVERITY)
-                    .build());
+                    subReporter.report(Report.builder()
+                        .withKey("switchChanged")
+                        .withDefaultMessage("Switch ${operation} ${id} in voltage level ${voltageLevelId}")
+                        .withValue("id", switchId)
+                        .withValue("operation", open ? "opening" : "closing")
+                        .withValue("voltageLevelId", aSwitch.getVoltageLevel().getId())
+                        .withSeverity(TypedValue.INFO_SEVERITY)
+                        .build());
+                }
             }
 
             // add the switch 'open' attribute modification entity to the listener
@@ -1546,8 +1549,10 @@ public class NetworkModificationService {
             aSwitch.setOpen((Boolean) attributeValue);
             reporter.report(Report.builder()
                 .withKey("switchChanged")
-                .withDefaultMessage("Switch with id=${id} open state changed")
+                .withDefaultMessage("Switch ${operation} ${id} in voltage level ${voltageLevelId}")
                 .withValue("id", aSwitch.getId())
+                .withValue("operation", (Boolean) attributeValue  ? "opening" : "closing")
+                .withValue("voltageLevelId", aSwitch.getVoltageLevel().getId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .build());
         }
