@@ -675,20 +675,20 @@ public class NetworkModificationService {
         return loadCreationInfos == null ? Mono.error(new NetworkModificationException(CREATE_LOAD_ERROR, "Missing required attributes to create the load")) : Mono.empty();
     }
 
-    private Load modifyLoad(Network network, LoadModificationInfos loadModificationInfos) {
-        // modify the load
-        Load load = network.getLoad(loadModificationInfos.getEquipmentId());
-        if (load == null) {
-            throw new NetworkModificationException(LOAD_NOT_FOUND, "Load " + loadModificationInfos.getEquipmentId() + " does not exist in network");
-        }
+    private void modifyLoad(Load load, LoadModificationInfos loadModificationInfos, Reporter subReporter) {
+        subReporter.report(Report.builder()
+            .withKey("loadModification")
+            .withDefaultMessage("Load with id=${id} modified :")
+            .withValue("id", loadModificationInfos.getEquipmentId())
+            .withSeverity(TypedValue.INFO_SEVERITY)
+            .build());
 
-        applyElementaryModifications(load::setName, load::getNameOrId, loadModificationInfos.getEquipmentName());
-        applyElementaryModifications(load::setLoadType, load::getLoadType, loadModificationInfos.getLoadType());
-        applyElementaryModifications(load::setP0, load::getP0, loadModificationInfos.getActivePower());
-        applyElementaryModifications(load::setQ0, load::getQ0, loadModificationInfos.getReactivePower());
+        applyElementaryModifications(load::setName, load::getNameOrId, loadModificationInfos.getEquipmentName(), subReporter, "Name");
+        applyElementaryModifications(load::setLoadType, load::getLoadType, loadModificationInfos.getLoadType(), subReporter, "Type");
+        applyElementaryModifications(load::setP0, load::getP0, loadModificationInfos.getActivePower(), subReporter, "Active power");
+        applyElementaryModifications(load::setQ0, load::getQ0, loadModificationInfos.getReactivePower(), subReporter, "Reactive power");
 
         // TODO connectivity modification
-        return load;
     }
 
     public Mono<Void> updateLoadModification(LoadModificationInfos loadModificationInfos, UUID modificationUuid) {
@@ -724,15 +724,13 @@ public class NetworkModificationService {
         return doAction(listener, () -> {
             if (listener.isApplyModifications()) {
                 try {
-                    // modify the load in the network
-                    modifyLoad(network, loadModificationInfos);
+                    Load load = network.getLoad(loadModificationInfos.getEquipmentId());
+                    if (load == null) {
+                        throw new NetworkModificationException(LOAD_NOT_FOUND, "Load " + loadModificationInfos.getEquipmentId() + " does not exist in network");
+                    }
 
-                    subReporter.report(Report.builder()
-                            .withKey("loadModification")
-                            .withDefaultMessage("Load with id=${id} modified")
-                            .withValue("id", loadModificationInfos.getEquipmentId())
-                            .withSeverity(TypedValue.INFO_SEVERITY)
-                            .build());
+                    // modify the load in the network
+                    modifyLoad(load, loadModificationInfos, subReporter);
                 } catch (NetworkModificationException exc) {
                     subReporter.report(Report.builder()
                             .withKey("loadModification")
@@ -749,26 +747,42 @@ public class NetworkModificationService {
                 .collect(Collectors.toList());
     }
 
-    private static <T> void applyElementaryModifications(Consumer<T> setter, Supplier<T> getter, AttributeModification<T> modification) {
+    private static <T> void applyElementaryModifications(Consumer<T> setter, Supplier<T> getter,
+                                                         AttributeModification<T> modification,
+                                                         Reporter subReporter, String fieldName) {
         if (modification != null) {
-            setter.accept(modification.applyModification(getter.get()));
+            T oldValue = getter.get();
+            T newValue = modification.applyModification(oldValue);
+            setter.accept(newValue);
+
+            subReporter.report(Report.builder()
+                .withKey("Modification" + fieldName)
+                .withDefaultMessage("    ${fieldName} : ${oldValue} -> ${newValue}")
+                .withValue("fieldName", fieldName)
+                .withValue("oldValue", oldValue.toString())
+                .withValue("newValue", newValue.toString())
+                .withSeverity(TypedValue.INFO_SEVERITY)
+                .build());
         }
     }
 
-    private void applyModifications(Network network, GeneratorModificationInfos modificationInfos) {
-        Generator generator = network.getGenerator(modificationInfos.getEquipmentId());
-        if (generator == null) {
-            throw new NetworkModificationException(GENERATOR_NOT_FOUND, "Generator " + modificationInfos.getEquipmentId() + " does not exist in network");
-        }
-        applyElementaryModifications(generator::setName, generator::getNameOrId, modificationInfos.getEquipmentName());
-        applyElementaryModifications(generator::setEnergySource, generator::getEnergySource, modificationInfos.getEnergySource());
-        applyElementaryModifications(generator::setMinP, generator::getMinP, modificationInfos.getMinActivePower());
-        applyElementaryModifications(generator::setMaxP, generator::getMaxP, modificationInfos.getMaxActivePower());
-        applyElementaryModifications(generator::setRatedS, generator::getRatedS, modificationInfos.getRatedNominalPower());
-        applyElementaryModifications(generator::setTargetP, generator::getTargetP, modificationInfos.getActivePowerSetpoint());
-        applyElementaryModifications(generator::setTargetQ, generator::getTargetQ, modificationInfos.getReactivePowerSetpoint());
-        applyElementaryModifications(generator::setTargetV, generator::getTargetV, modificationInfos.getVoltageSetpoint());
-        applyElementaryModifications(generator::setVoltageRegulatorOn, generator::isVoltageRegulatorOn, modificationInfos.getVoltageRegulationOn());
+    private void modifyGenerator(Generator generator, GeneratorModificationInfos modificationInfos, Reporter subReporter) {
+        subReporter.report(Report.builder()
+            .withKey("generatorModification")
+            .withDefaultMessage("Generator with id=${id} modified :")
+            .withValue("id", modificationInfos.getEquipmentId())
+            .withSeverity(TypedValue.INFO_SEVERITY)
+            .build());
+
+        applyElementaryModifications(generator::setName, generator::getNameOrId, modificationInfos.getEquipmentName(), subReporter, "Name");
+        applyElementaryModifications(generator::setEnergySource, generator::getEnergySource, modificationInfos.getEnergySource(), subReporter, "Energy source");
+        applyElementaryModifications(generator::setMinP, generator::getMinP, modificationInfos.getMinActivePower(), subReporter, "Min active power");
+        applyElementaryModifications(generator::setMaxP, generator::getMaxP, modificationInfos.getMaxActivePower(), subReporter, "Max active power");
+        applyElementaryModifications(generator::setRatedS, generator::getRatedS, modificationInfos.getRatedNominalPower(), subReporter, "Rated nominal power");
+        applyElementaryModifications(generator::setTargetP, generator::getTargetP, modificationInfos.getActivePowerSetpoint(), subReporter, "Active power set point");
+        applyElementaryModifications(generator::setTargetQ, generator::getTargetQ, modificationInfos.getReactivePowerSetpoint(), subReporter, "Reactive power set point");
+        applyElementaryModifications(generator::setTargetV, generator::getTargetV, modificationInfos.getVoltageSetpoint(), subReporter, "Voltage set point");
+        applyElementaryModifications(generator::setVoltageRegulatorOn, generator::isVoltageRegulatorOn, modificationInfos.getVoltageRegulationOn(), subReporter, "Voltage regulation on");
 
         // TODO connectivity modification
     }
@@ -794,15 +808,13 @@ public class NetworkModificationService {
         return doAction(listener, () -> {
             if (listener.isApplyModifications()) {
                 try {
-                    // modify the generator in the network
-                    applyModifications(network, generatorModificationInfos);
+                    Generator generator = network.getGenerator(generatorModificationInfos.getEquipmentId());
+                    if (generator == null) {
+                        throw new NetworkModificationException(GENERATOR_NOT_FOUND, "Generator " + generatorModificationInfos.getEquipmentId() + " does not exist in network");
+                    }
 
-                    subReporter.report(Report.builder()
-                        .withKey("generatorModification")
-                        .withDefaultMessage("Generator with id=${id} modified")
-                        .withValue("id", generatorModificationInfos.getEquipmentId())
-                        .withSeverity(TypedValue.INFO_SEVERITY)
-                        .build());
+                    // modify the generator in the network
+                    modifyGenerator(generator, generatorModificationInfos, subReporter);
                 } catch (NetworkModificationException exc) {
                     subReporter.report(Report.builder()
                         .withKey("generatorModification")
