@@ -51,8 +51,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestClientException;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.DefaultUriBuilderFactory;
@@ -443,7 +441,7 @@ public class NetworkModificationService {
             }
         } finally {
             if (listener.isApplyModifications()) {
-            sendReport(reportUuid, reporter);
+                sendReport(reportUuid, reporter);
             }
         }
     }
