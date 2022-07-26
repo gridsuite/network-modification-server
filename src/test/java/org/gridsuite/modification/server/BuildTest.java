@@ -17,6 +17,10 @@ import com.powsybl.iidm.network.SwitchKind;
 import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.sld.iidm.extensions.BranchStatus;
+
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.MutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
@@ -166,8 +170,7 @@ public class BuildTest {
         String uriString = "/v1/networks/{networkUuid}/build?receiver=me";
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
             NetworkCreation.VARIANT_ID,
-            List.of(TEST_GROUP_ID, TEST_GROUP_ID_2),
-            List.of(TEST_REPORT_ID, TEST_REPORT_ID_2),
+            List.of(new GroupAndReportInfos(TEST_GROUP_ID, TEST_REPORT_ID), new GroupAndReportInfos(TEST_GROUP_ID_2, TEST_REPORT_ID_2)),
             new HashSet<>());
         webTestClient.post().uri(uriString, TEST_NETWORK_ID)
             .bodyValue(buildInfos)
@@ -180,7 +183,6 @@ public class BuildTest {
 
         BuildInfos newBuildInfos = new BuildInfos(NetworkCreation.VARIANT_ID,
             VARIANT_ID_2,
-            List.of(),
             List.of(),
             new HashSet<>());
         webTestClient.post().uri(uriString, TEST_NETWORK_ID)
@@ -238,8 +240,7 @@ public class BuildTest {
         String uriString = "/v1/networks/{networkUuid}/build?receiver=me";
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
             NetworkCreation.VARIANT_ID,
-            List.of(TEST_GROUP_ID, TEST_GROUP_ID_2),
-            List.of(TEST_REPORT_ID, TEST_REPORT_ID_2),
+            List.of(new GroupAndReportInfos(TEST_GROUP_ID, TEST_REPORT_ID), new GroupAndReportInfos(TEST_GROUP_ID_2, TEST_REPORT_ID_2)),
             new HashSet<>());
         webTestClient.post().uri(uriString, TEST_NETWORK_ID)
             .bodyValue(buildInfos)
@@ -310,8 +311,7 @@ public class BuildTest {
         // to check
         BuildInfos newBuildInfos = new BuildInfos(NetworkCreation.VARIANT_ID,
             VARIANT_ID_2,
-            Collections.emptyList(),
-            Collections.emptyList(),
+            List.of(),
             new HashSet<>());
         webTestClient.post().uri(uriString, TEST_NETWORK_ID)
             .bodyValue(newBuildInfos)
@@ -409,8 +409,7 @@ public class BuildTest {
         String uriString = "/v1/networks/{networkUuid}/build?receiver=me";
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
             NetworkCreation.VARIANT_ID,
-            List.of(TEST_GROUP_ID),
-            List.of(TEST_REPORT_ID),
+            List.of(new GroupAndReportInfos(TEST_GROUP_ID, TEST_REPORT_ID)),
             new HashSet<>());
         webTestClient.post().uri(uriString, TEST_NETWORK_STOP_BUILD_ID)
             .bodyValue(buildInfos)
@@ -441,8 +440,7 @@ public class BuildTest {
         String uriString = "/v1/networks/{networkUuid}/build?receiver=me";
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
             NetworkCreation.VARIANT_ID,
-            List.of(TEST_GROUP_ID),
-            List.of(TEST_REPORT_ID),
+            List.of(new GroupAndReportInfos(TEST_GROUP_ID, TEST_REPORT_ID)),
             new HashSet<>());
         webTestClient.post().uri(uriString, TEST_NETWORK_ID)
             .bodyValue(buildInfos)
