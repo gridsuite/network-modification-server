@@ -13,6 +13,10 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
+import org.gridsuite.modification.server.entities.equipment.creation.EquipmentCreationEntity;
+import org.gridsuite.modification.server.entities.equipment.creation.LoadCreationEntity;
+import org.gridsuite.modification.server.modifications.AbstractModification;
+import org.gridsuite.modification.server.modifications.GeneratorCreation;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -33,4 +37,20 @@ public class LoadCreationInfos extends InjectionCreationInfos {
 
     @Schema(description = "Reactive power")
     private double reactivePower;
+
+    @Override
+    public EquipmentCreationEntity toEntity() {
+        return new LoadCreationEntity(getEquipmentId(),
+            getEquipmentName(),
+            getLoadType(),
+            getVoltageLevelId(),
+            getBusOrBusbarSectionId(),
+            getActivePower(),
+            getReactivePower());
+    }
+
+    @Override
+    public AbstractModification toModification() {
+        return new GeneratorCreation(this);
+    }
 }

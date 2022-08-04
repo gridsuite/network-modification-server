@@ -756,6 +756,8 @@ public class ModificationControllerTest {
 
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
 
+        var listModifications = modificationRepository.getModifications(TEST_GROUP_ID, true, true);
+
         // Update load creation
         loadCreationInfos = new LoadCreationEntity(
                 "idLoad1edited",
@@ -766,7 +768,7 @@ public class ModificationControllerTest {
                 175.0,
                 60.0)
                 .toModificationInfos();
-        loadCreationInfos.setUuid(result.getUuid());
+        loadCreationInfos.setUuid(listModifications.get(0).getUuid());
 
         LoadCreationInfos loadCreationUpdate = new LoadCreationEntity(
                 "idLoad1edited",
@@ -777,7 +779,7 @@ public class ModificationControllerTest {
                 175.0,
                 60.0)
                 .toModificationInfos();
-        String uriStringForUpdate = "/v1/modifications/" + result.getUuid() + "/loads-creation";
+        String uriStringForUpdate = "/v1/modifications/" + listModifications.get(0).getUuid() + "/loads-creation";
         webTestClient.put().uri(uriStringForUpdate)
                 .body(BodyInserters.fromValue(loadCreationUpdate))
                 .exchange()
@@ -785,7 +787,7 @@ public class ModificationControllerTest {
 
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
 
-        webTestClient.get().uri("/v1/modifications/" + result.getUuid())
+        webTestClient.get().uri("/v1/modifications/" + listModifications.get(0).getUuid())
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)

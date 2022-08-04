@@ -51,6 +51,10 @@ public class NetworkStoreListener implements NetworkListener {
 
     private final boolean isApplyModifications;
 
+    public Set<String> getSubstationsIds() {
+        return substationsIds;
+    }
+
     protected NetworkStoreListener(Network network, UUID networkUuid, UUID groupUuid,
                                    NetworkModificationRepository modificationRepository, EquipmentInfosService equipmentInfosService,
                                    boolean isBuild, boolean isApplyModifications) {
@@ -97,7 +101,7 @@ public class NetworkStoreListener implements NetworkListener {
         return ids;
     }
 
-    Network getNetwork() {
+    public Network getNetwork() {
         return network;
     }
 
@@ -105,11 +109,11 @@ public class NetworkStoreListener implements NetworkListener {
         return networkUuid;
     }
 
-    boolean isBuild() {
+    public boolean isBuild() {
         return isBuild;
     }
 
-    boolean isApplyModifications() {
+    public boolean isApplyModifications() {
         return isApplyModifications;
     }
 
@@ -317,7 +321,7 @@ public class NetworkStoreListener implements NetworkListener {
         }
     }
 
-    public void addSubstationsIds(Identifiable identifiable) {
+    private void addSubstationsIds(Identifiable identifiable) {
         substationsIds.addAll(getSubstationIds(identifiable));
     }
 

@@ -102,6 +102,9 @@ public class NetworkModificationService {
     @Autowired
     private StreamBridge publisher;
 
+    @Autowired
+    NetworkModificationService self;
+
     public NetworkModificationService(@Value("${backing-services.report-server.base-uri:http://report-server}") String reportServerURI,
                                       NetworkStoreService networkStoreService, NetworkModificationRepository networkModificationRepository,
                                       @Lazy EquipmentInfosService equipmentInfosService, ModificationGroupRepository modificationGroupRepository, ModificationRepository modificationRepository) {
@@ -552,38 +555,6 @@ public class NetworkModificationService {
         return newNode + 2;
     }
 
-    private Load createLoadInNodeBreaker(VoltageLevel voltageLevel, LoadCreationInfos loadCreationInfos) {
-        // create cell switches
-        int nodeNum = createNodeBreakerCellSwitches(voltageLevel, loadCreationInfos.getBusOrBusbarSectionId(),
-            loadCreationInfos.getEquipmentId(),
-            loadCreationInfos.getEquipmentName());
-
-        // creating the load
-        return voltageLevel.newLoad()
-            .setId(loadCreationInfos.getEquipmentId())
-            .setName(loadCreationInfos.getEquipmentName())
-            .setLoadType(loadCreationInfos.getLoadType())
-            .setNode(nodeNum)
-            .setP0(loadCreationInfos.getActivePower())
-            .setQ0(loadCreationInfos.getReactivePower())
-            .add();
-    }
-
-    private Load createLoadInBusBreaker(VoltageLevel voltageLevel, LoadCreationInfos loadCreationInfos) {
-        Bus bus = getBusBreakerBus(voltageLevel, loadCreationInfos.getBusOrBusbarSectionId());
-
-        // creating the load
-        return voltageLevel.newLoad()
-            .setId(loadCreationInfos.getEquipmentId())
-            .setName(loadCreationInfos.getEquipmentName())
-            .setLoadType(loadCreationInfos.getLoadType())
-            .setBus(bus.getId())
-            .setConnectableBus(bus.getId())
-            .setP0(loadCreationInfos.getActivePower())
-            .setQ0(loadCreationInfos.getReactivePower())
-            .add();
-    }
-
     public Mono<Void> updateGeneratorCreation(GeneratorCreationInfos generatorCreationInfos, UUID modificationUuid) {
         assertGeneratorCreationInfosNotEmpty(generatorCreationInfos).subscribe();
 
@@ -612,67 +583,56 @@ public class NetworkModificationService {
         return Mono.empty();
     }
 
-    private List<EquipmentModificationInfos> execCreateLoad(NetworkStoreListener listener,
-                                                            LoadCreationInfos loadCreationInfos,
-                                                            UUID reportUuid) {
-        Network network = listener.getNetwork();
-        ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
-        String subReportId = "Load creation " + loadCreationInfos.getEquipmentId();
-        Reporter subReporter = reporter.createSubReporter(subReportId, subReportId);
-
-        return doAction(listener, () -> {
-            if (listener.isApplyModifications()) {
-                // create the load in the network
-                VoltageLevel voltageLevel = getVoltageLevel(network, loadCreationInfos.getVoltageLevelId());
-                if (voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER) {
-                    createLoadInNodeBreaker(voltageLevel, loadCreationInfos);
-                } else {
-                    createLoadInBusBreaker(voltageLevel, loadCreationInfos);
-                }
-
-                subReporter.report(Report.builder()
-                    .withKey("loadCreated")
-                    .withDefaultMessage("New load with id=${id} created")
-                    .withValue("id", loadCreationInfos.getEquipmentId())
-                    .withSeverity(TypedValue.INFO_SEVERITY)
-                    .build());
-            }
-
-            // add the load creation entity to the listener
-            listener.storeLoadCreation(loadCreationInfos);
-        }, CREATE_LOAD_ERROR, reportUuid, reporter, subReporter).stream().map(EquipmentModificationInfos.class::cast)
-            .collect(Collectors.toList());
-    }
-
     public Flux<EquipmentModificationInfos> createLoad(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, LoadCreationInfos loadCreationInfos) {
         return assertLoadCreationInfosNotEmpty(loadCreationInfos).thenMany(
             getNetworkModificationInfos(networkUuid, variantId).flatMapIterable(networkInfos -> {
                 NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
-
-                return execCreateLoad(listener, loadCreationInfos, reportUuid);
+                return self.handleModification(loadCreationInfos, listener, groupUuid, reportUuid).stream().map(EquipmentModificationInfos.class::cast).collect(Collectors.toList());
             }));
+    }
+
+    @Transactional
+    // Generic form
+    public List<ModificationInfos> handleModification(ModificationInfos modificationInfos, NetworkStoreListener listener, UUID groupUuid, UUID reportUuid) {
+        ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
+        List<ModificationInfos> networkModifications = List.of();
+        try {
+            if (listener.isApplyModifications()) {
+                networkModifications = modificationInfos.toModification().apply(reporter, listener);
+            }
+            if (!listener.isBuild()) {
+                saveModifications(listener, groupUuid, modificationInfos.toEntity());
+            }
+            return networkModifications;
+        } finally {
+            if (listener.isApplyModifications()) {
+                sendReport(reportUuid, reporter);
+            }
+        }
+    }
+
+    private void saveModifications(NetworkStoreListener listener, UUID groupUuid, ModificationEntity modificationEntity) {
+        networkModificationRepository.saveModifications(groupUuid, List.of(modificationEntity));
+        if (listener.isApplyModifications()) {
+            networkStoreService.flush(listener.getNetwork());
+        }
     }
 
     public Mono<Void> updateLoadCreation(LoadCreationInfos loadCreationInfos, UUID modificationUuid) {
         assertLoadCreationInfosNotEmpty(loadCreationInfos).subscribe();
 
-        Optional<ModificationEntity> loadModificationEntity = this.modificationRepository.findById(modificationUuid);
+        self.updateModification(loadCreationInfos, modificationUuid);
 
-        if (!loadModificationEntity.isPresent()) {
-            return Mono.error(new NetworkModificationException(CREATE_LOAD_ERROR, "Load creation not found"));
-        }
-        EquipmentCreationEntity updatedEntity = this.networkModificationRepository.createLoadCreationEntity(
-                loadCreationInfos.getEquipmentId(),
-                loadCreationInfos.getEquipmentName(),
-                loadCreationInfos.getLoadType(),
-                loadCreationInfos.getVoltageLevelId(),
-                loadCreationInfos.getBusOrBusbarSectionId(),
-                loadCreationInfos.getActivePower(),
-                loadCreationInfos.getReactivePower());
-        updatedEntity.setId(modificationUuid);
-        updatedEntity.setGroup(loadModificationEntity.get().getGroup());
-        this.networkModificationRepository.updateModification(updatedEntity);
         return Mono.empty();
+    }
+
+    @Transactional
+    // Generic form
+    public void updateModification(ModificationInfos modificationInfos, UUID modificationUuid) {
+        ModificationEntity modificationEntity = this.modificationRepository.findById(modificationUuid)
+            .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format("Modification (%s) not found", modificationUuid)));
+
+        modificationEntity.update(modificationInfos);
     }
 
     private Mono<Void> assertLoadCreationInfosNotEmpty(LoadCreationInfos loadCreationInfos) {
@@ -1743,9 +1703,8 @@ public class NetworkModificationService {
                         break;
 
                         case LOAD_CREATION: {
-                            LoadCreationInfos loadCreationInfos = (LoadCreationInfos) infos;
-                            List<EquipmentModificationInfos> modificationInfos = execCreateLoad(listener, loadCreationInfos, reportUuid);
-                            allModificationsInfos.addAll(modificationInfos);
+                            // Generic form
+                            allModificationsInfos.addAll(self.handleModification(infos, listener, groupUuid, reportUuid));
                         }
                         break;
 

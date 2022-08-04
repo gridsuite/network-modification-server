@@ -9,6 +9,8 @@ package org.gridsuite.modification.server.entities.equipment.creation;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.ModificationType;
+import org.gridsuite.modification.server.dto.InjectionCreationInfos;
+import org.gridsuite.modification.server.dto.ModificationInfos;
 
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
@@ -30,5 +32,13 @@ public class InjectionCreationEntity extends EquipmentCreationEntity {
         super(modificationType, equipmentId, equipmentName);
         this.voltageLevelId = voltageLevelId;
         this.busOrBusbarSectionId = busOrBusbarSectionId;
+    }
+
+    @Override
+    public void update(ModificationInfos modificationInfos) {
+        super.update(modificationInfos);
+        InjectionCreationInfos injectionCreationInfos = (InjectionCreationInfos) modificationInfos;
+        voltageLevelId = injectionCreationInfos.getVoltageLevelId();
+        busOrBusbarSectionId = injectionCreationInfos.getBusOrBusbarSectionId();
     }
 }

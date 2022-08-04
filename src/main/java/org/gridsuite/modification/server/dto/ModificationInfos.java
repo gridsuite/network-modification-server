@@ -6,18 +6,16 @@
  */
 package org.gridsuite.modification.server.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
+import org.gridsuite.modification.server.ModificationType;
+import org.gridsuite.modification.server.entities.ModificationEntity;
+import org.gridsuite.modification.server.modifications.AbstractModification;
+
 import java.time.ZonedDateTime;
 import java.util.Set;
 import java.util.UUID;
-
-import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
-import lombok.experimental.SuperBuilder;
-import org.gridsuite.modification.server.ModificationType;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -41,4 +39,12 @@ public class ModificationInfos {
     @Schema(description = "Substations ID")
     @Builder.Default
     private Set<String> substationIds = Set.of();
+
+    public ModificationEntity toEntity() {
+        return null;
+    }
+
+    public AbstractModification toModification() {
+        return null;
+    }
 }

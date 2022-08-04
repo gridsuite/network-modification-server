@@ -11,6 +11,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.LoadCreationInfos;
+import org.gridsuite.modification.server.dto.ModificationInfos;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -42,6 +43,15 @@ public class LoadCreationEntity extends InjectionCreationEntity {
         this.loadType = loadType;
         this.activePower = activePower;
         this.reactivePower = reactivePower;
+    }
+
+    @Override
+    public void update(ModificationInfos modificationInfos) {
+        super.update(modificationInfos);
+        LoadCreationInfos loadCreationInfos = (LoadCreationInfos) modificationInfos;
+        loadType = loadCreationInfos.getLoadType();
+        activePower = loadCreationInfos.getActivePower();
+        reactivePower = loadCreationInfos.getReactivePower();
     }
 
     @Override
