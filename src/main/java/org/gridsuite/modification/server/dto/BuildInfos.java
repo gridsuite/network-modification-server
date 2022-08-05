@@ -17,7 +17,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -35,10 +34,6 @@ public class BuildInfos {
     private List<GroupAndReportInfos> modificationGroupAndReportUuids = new ArrayList<>();
 
     private Set<UUID> modificationsToExclude = new HashSet<>();
-
-    public List<UUID> getModificationGroupUuids() {
-        return modificationGroupAndReportUuids.stream().map(GroupAndReportInfos::getGroupUuid).collect(Collectors.toList());
-    }
 
     public void addModificationToExclude(UUID modificationUuid) {
         modificationsToExclude.add(modificationUuid);
