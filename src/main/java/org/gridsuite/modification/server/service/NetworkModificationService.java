@@ -62,6 +62,7 @@ import reactor.core.scheduler.Schedulers;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -1995,6 +1996,22 @@ public class NetworkModificationService {
 
     public Mono<Void> moveModifications(UUID groupUuid, UUID before, List<UUID> modificationsToMove) {
         return Mono.fromRunnable(() -> networkModificationRepository.moveModifications(groupUuid, modificationsToMove, before));
+    }
+
+    public Mono<Void> duplicateModifications(UUID targetGroupUuid, UUID sourceGroupUuid, List<UUID> modificationsToDuplicate) {
+        // This function cannot be @Transactional because we clone all modifications resetting their id to null,
+        // which is not allowed by JPA if we still stay in the same Tx.
+        List<ModificationEntity> newModificationList = new ArrayList<>();
+        for(UUID modifyId : modificationsToDuplicate) {
+            Optional<ModificationEntity> clone = this.modificationRepository.findById(modifyId);
+            if(clone.isEmpty()) {
+                throw new NetworkModificationException(MODIFICATION_NOT_FOUND);
+            }
+            clone.get().setId(null);
+            newModificationList.add(clone.get());
+        }
+        networkModificationRepository.saveModifications(targetGroupUuid, newModificationList);
+        return Mono.empty();
     }
 
     @Transactional
