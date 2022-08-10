@@ -643,6 +643,7 @@ public class ModificationControllerTest {
 
         // create new load in voltage level with node/breaker topology (in voltage level "v2" and busbar section "1B")
         LoadCreationInfos loadCreationInfos = LoadCreationInfos.builder()
+            .type(ModificationType.LOAD_CREATION)
             .equipmentId("idLoad1")
             .equipmentName("nameLoad1")
             .voltageLevelId("v2")
@@ -736,6 +737,7 @@ public class ModificationControllerTest {
 
         // create new load in voltage level with bus/breaker topology (in voltage level "VLGEN" and bus "NGEN")
         LoadCreationInfos loadCreationInfos = LoadCreationInfos.builder()
+            .type(ModificationType.LOAD_CREATION)
             .equipmentId("idLoad1")
             .equipmentName("nameLoad1")
             .voltageLevelId("v1")

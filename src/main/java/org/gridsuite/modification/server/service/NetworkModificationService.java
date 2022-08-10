@@ -34,6 +34,7 @@ import org.gridsuite.modification.server.entities.equipment.modification.Equipme
 import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.LineAttachToVoltageLevelEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.LineSplitWithVoltageLevelEntity;
+import org.gridsuite.modification.server.modifications.ModificationApplicator;
 import org.gridsuite.modification.server.repositories.ModificationGroupRepository;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
@@ -77,6 +78,8 @@ public class NetworkModificationService {
 
     private final NetworkModificationRepository networkModificationRepository;
 
+    private final ModificationApplicator modificationApplicator;
+
     // TO DO : transfer the use of repositories in NetworkModificationRepository
     private final ModificationGroupRepository modificationGroupRepository;
     private final ModificationRepository modificationRepository;
@@ -107,12 +110,14 @@ public class NetworkModificationService {
 
     public NetworkModificationService(@Value("${backing-services.report-server.base-uri:http://report-server}") String reportServerURI,
                                       NetworkStoreService networkStoreService, NetworkModificationRepository networkModificationRepository,
-                                      @Lazy EquipmentInfosService equipmentInfosService, ModificationGroupRepository modificationGroupRepository, ModificationRepository modificationRepository) {
+                                      @Lazy EquipmentInfosService equipmentInfosService, ModificationGroupRepository modificationGroupRepository,
+                                      ModificationRepository modificationRepository, ModificationApplicator modificationApplicator) {
         this.networkStoreService = networkStoreService;
         this.networkModificationRepository = networkModificationRepository;
         this.equipmentInfosService = equipmentInfosService;
         this.modificationGroupRepository = modificationGroupRepository;
         this.modificationRepository = modificationRepository;
+        this.modificationApplicator = modificationApplicator;
 
         RestTemplateBuilder restTemplateBuilder = new RestTemplateBuilder();
         reportServerRest = restTemplateBuilder.build();
@@ -583,30 +588,30 @@ public class NetworkModificationService {
         return Mono.empty();
     }
 
-    public Flux<EquipmentModificationInfos> createLoad(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, LoadCreationInfos loadCreationInfos) {
+    public Flux<EquipmentModificationInfos> createLoad(UUID networkUuid, String variantId, GroupAndReportInfos groupAndReportInfos, LoadCreationInfos loadCreationInfos) {
         return assertLoadCreationInfosNotEmpty(loadCreationInfos).thenMany(
             getNetworkModificationInfos(networkUuid, variantId).flatMapIterable(networkInfos -> {
-                NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
-                return self.handleModification(loadCreationInfos, listener, groupUuid, reportUuid).stream().map(EquipmentModificationInfos.class::cast).collect(Collectors.toList());
+                NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupAndReportInfos.getGroupUuid(), networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
+                return self.handleModification(loadCreationInfos, listener, groupAndReportInfos).stream().map(EquipmentModificationInfos.class::cast).collect(Collectors.toList());
             }));
     }
 
     @Transactional
     // Generic form
-    public List<ModificationInfos> handleModification(ModificationInfos modificationInfos, NetworkStoreListener listener, UUID groupUuid, UUID reportUuid) {
+    public List<ModificationInfos> handleModification(ModificationInfos modificationInfos, NetworkStoreListener listener, GroupAndReportInfos groupAndReportIds) {
         ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
         List<ModificationInfos> networkModifications = List.of();
         try {
             if (listener.isApplyModifications()) {
-                networkModifications = modificationInfos.toModification().apply(reporter, listener);
+                networkModifications = modificationApplicator.apply(modificationInfos, reporter, listener);
             }
             if (!listener.isBuild()) {
-                saveModifications(listener, groupUuid, modificationInfos.toEntity());
+                saveModifications(listener, groupAndReportIds.getGroupUuid(), modificationInfos.toEntity());
             }
             return networkModifications;
         } finally {
             if (listener.isApplyModifications()) {
-                sendReport(reportUuid, reporter);
+                sendReport(groupAndReportIds.getReportUuid(), reporter);
             }
         }
     }
@@ -1677,16 +1682,11 @@ public class NetworkModificationService {
         Set<UUID> modificationsToExclude = buildInfos.getModificationsToExclude();
 
         for (GroupAndReportInfos groupAndReportIds : buildInfos.getModificationGroupAndReportUuids()) {
-            UUID groupUuid = groupAndReportIds.getGroupUuid();
-            UUID reportUuid = groupAndReportIds.getReportUuid();
-
-            if (modificationGroupRepository.findById(groupUuid).isEmpty()) { // May not exist
+            if (modificationGroupRepository.findById(groupAndReportIds.getGroupUuid()).isEmpty()) { // May not exist
                 continue;
             }
 
-            networkModificationRepository.getModificationsInfos(List.of(groupUuid)).forEach(infos -> {
-                applyModification(allModificationsInfos, listener, modificationsToExclude, groupAndReportIds, infos);
-            });
+            networkModificationRepository.getModificationsInfos(List.of(groupAndReportIds.getGroupUuid())).forEach(infos -> applyModification(allModificationsInfos, listener, modificationsToExclude, groupAndReportIds, infos));
         }
 
         // flushing network (only once at the end)
@@ -1697,7 +1697,6 @@ public class NetworkModificationService {
 
     private void applyModification(List<ModificationInfos> allModificationsInfos, NetworkStoreListener listener,
         Set<UUID> modificationsToExclude, GroupAndReportInfos groupAndReportIds, ModificationInfos infos) {
-        UUID groupUuid = groupAndReportIds.getGroupUuid();
         UUID reportUuid = groupAndReportIds.getReportUuid();
         try {
             if (modificationsToExclude.contains(infos.getUuid())) {
@@ -1716,7 +1715,7 @@ public class NetworkModificationService {
 
                 case LOAD_CREATION: {
                     // Generic form
-                    allModificationsInfos.addAll(self.handleModification(infos, listener, groupUuid, reportUuid));
+                    allModificationsInfos.addAll(self.handleModification(infos, listener, groupAndReportIds));
                 }
                 break;
 

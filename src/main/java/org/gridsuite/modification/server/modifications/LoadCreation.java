@@ -8,23 +8,25 @@ package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.commons.reporter.Report;
 import com.powsybl.commons.reporter.Reporter;
-import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.commons.reporter.TypedValue;
+import com.powsybl.computation.ComputationManager;
+import com.powsybl.iidm.modification.NetworkModification;
 import com.powsybl.iidm.network.Bus;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.TopologyKind;
 import com.powsybl.iidm.network.VoltageLevel;
-import org.gridsuite.modification.server.ModificationType;
-import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.LoadCreationInfos;
+import org.gridsuite.modification.server.dto.ModificationInfos;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
-public class GeneratorCreation extends AbstractModification {
+public class LoadCreation implements NetworkModification {
 
-    public GeneratorCreation(LoadCreationInfos modificationInfos) {
-        super(modificationInfos);
+    private final ModificationInfos modificationInfos;
+
+    public LoadCreation(LoadCreationInfos modificationInfos) {
+        this.modificationInfos = modificationInfos;
     }
 
     private LoadCreationInfos getModificationInfos() {
@@ -32,25 +34,19 @@ public class GeneratorCreation extends AbstractModification {
     }
 
     @Override
-    protected ModificationType getType() {
-        return ModificationType.LOAD_CREATION;
+    public void apply(Network network, ComputationManager computationManager) {
+        apply(network);
     }
 
     @Override
-    protected NetworkModificationException.Type getErrorType() {
-        return NetworkModificationException.Type.CREATE_LOAD_ERROR;
-    }
-
-    @Override
-    protected Reporter createSubReporter(ReporterModel reporter) {
-        String subReportId = "Load creation " + getModificationInfos().getEquipmentId();
-        return reporter.createSubReporter(subReportId, subReportId);
+    public void apply(Network network) {
+        apply(network, Reporter.NO_OP);
     }
 
     @Override
     public void apply(Network network, Reporter subReporter) {
         // create the load in the network
-        VoltageLevel voltageLevel = getVoltageLevel(network, getModificationInfos().getVoltageLevelId());
+        VoltageLevel voltageLevel = ModificationUtils.getInstance().getVoltageLevel(network, getModificationInfos().getVoltageLevelId());
         if (voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER) {
             createLoadInNodeBreaker(voltageLevel);
         } else {
@@ -67,7 +63,7 @@ public class GeneratorCreation extends AbstractModification {
 
     private void createLoadInNodeBreaker(VoltageLevel voltageLevel) {
         // create cell switches
-        int nodeNum = createNodeBreakerCellSwitches(voltageLevel, getModificationInfos().getBusOrBusbarSectionId(),
+        int nodeNum = ModificationUtils.getInstance().createNodeBreakerCellSwitches(voltageLevel, getModificationInfos().getBusOrBusbarSectionId(),
             getModificationInfos().getEquipmentId(),
             getModificationInfos().getEquipmentName());
 
@@ -83,7 +79,7 @@ public class GeneratorCreation extends AbstractModification {
     }
 
     private void createLoadInBusBreaker(VoltageLevel voltageLevel) {
-        Bus bus = getBusBreakerBus(voltageLevel, getModificationInfos().getBusOrBusbarSectionId());
+        Bus bus = ModificationUtils.getInstance().getBusBreakerBus(voltageLevel, getModificationInfos().getBusOrBusbarSectionId());
 
         // creating the load
         voltageLevel.newLoad()
@@ -96,5 +92,4 @@ public class GeneratorCreation extends AbstractModification {
             .setQ0(getModificationInfos().getReactivePower())
             .add();
     }
-
 }

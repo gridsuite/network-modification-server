@@ -144,7 +144,7 @@ public class NetworkModificationController {
                                                                        @RequestParam(value = "group", required = false) UUID groupUuid,
                                                                        @RequestParam(value = "reportUuid") UUID reportUuid,
                                                                        @RequestBody LoadCreationInfos loadCreationInfos) {
-        return ResponseEntity.ok().body(networkModificationService.createLoad(networkUuid, variantId, groupUuid, reportUuid, loadCreationInfos));
+        return ResponseEntity.ok().body(networkModificationService.createLoad(networkUuid, variantId, new GroupAndReportInfos(groupUuid, reportUuid), loadCreationInfos));
     }
 
     @PutMapping(value = "/modifications/{modificationUuid}/loads-creation", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)

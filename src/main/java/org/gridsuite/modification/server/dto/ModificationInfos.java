@@ -6,12 +6,15 @@
  */
 package org.gridsuite.modification.server.dto;
 
+import com.powsybl.commons.reporter.Reporter;
+import com.powsybl.commons.reporter.ReporterModel;
+import com.powsybl.iidm.modification.NetworkModification;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.gridsuite.modification.server.ModificationType;
+import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.entities.ModificationEntity;
-import org.gridsuite.modification.server.modifications.AbstractModification;
 
 import java.time.ZonedDateTime;
 import java.util.Set;
@@ -44,7 +47,15 @@ public class ModificationInfos {
         return null;
     }
 
-    public AbstractModification toModification() {
+    public NetworkModification toModification() {
+        return null;
+    }
+
+    public Reporter createSubReporter(ReporterModel reporter) {
+        return null;
+    }
+
+    public NetworkModificationException.Type getErrorType() {
         return null;
     }
 }
