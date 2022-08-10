@@ -2143,6 +2143,83 @@ public class ModificationControllerTest {
     }
 
     @Test
+    public void testDuplicateModificationGroup() {
+        String uriString = "/v1/networks/{networkUuid}/lines?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
+
+        // create new line in voltage levels with node/breaker topology
+        // between voltage level "v1" and busbar section "bus1" and
+        //         voltage level "v2" and busbar section "bus2"
+        CurrentLimitsInfos c1 = new CurrentLimitsInfos();
+        c1.setPermanentLimit(100.0);
+        CurrentLimitsInfos c2 = new CurrentLimitsInfos();
+        c2.setPermanentLimit(200.0);
+        LineCreationInfos lineCreationInfos = LineCreationInfos.builder()
+                .equipmentId("idLine1")
+                .equipmentName("nameLine1")
+                .seriesResistance(100.0)
+                .seriesReactance(100.0)
+                .shuntConductance1(10.0)
+                .shuntSusceptance1(10.0)
+                .shuntConductance2(20.0)
+                .shuntSusceptance2(20.0)
+                .voltageLevelId1("v1")
+                .busOrBusbarSectionId1("bus1")
+                .voltageLevelId2("v2")
+                .busOrBusbarSectionId2("bus2")
+                .currentLimits1(c1)
+                .currentLimits2(c2)
+                .build();
+
+        webTestClient.post().uri(uriString, TEST_NETWORK_BUS_BREAKER_ID)
+                .body(BodyInserters.fromValue(lineCreationInfos))
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBodyList(EquipmentModificationInfos.class)
+                .value(modifications -> modifications.get(0),
+                        MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos(ModificationType.LINE_CREATION, "idLine1", Set.of("s1", "s2")));
+
+        testNetworkModificationsCount(TEST_GROUP_ID, 1);
+
+        uriString = "/v1/networks/{networkUuid}/two-windings-transformers?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
+
+        // create new 2wt in voltage level with bus/breaker topology
+        TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos = TwoWindingsTransformerCreationInfos.builder()
+                .equipmentId("id2wt1")
+                .equipmentName("2wtName")
+                .voltageLevelId1("v1")
+                .busOrBusbarSectionId1("bus1")
+                .voltageLevelId2("v12")
+                .busOrBusbarSectionId2("bus12")
+                .magnetizingConductance(100.0)
+                .magnetizingSusceptance(200.0)
+                .ratedVoltage1(1000)
+                .ratedVoltage2(1010)
+                .seriesReactance(300)
+                .seriesResistance(400)
+                .currentLimits1(c1)
+                .currentLimits2(c2)
+                .build();
+
+        webTestClient.post().uri(uriString, TEST_NETWORK_BUS_BREAKER_ID)
+                .body(BodyInserters.fromValue(twoWindingsTransformerCreationInfos))
+                .exchange()
+                .expectStatus().isOk();
+
+        testNetworkModificationsCount(TEST_GROUP_ID, 2);
+
+        //test copy group
+        UUID newGroupUuid = UUID.randomUUID();
+        uriString = "/v1/groups?groupUuid=" + newGroupUuid + "&duplicateFrom=" + TEST_GROUP_ID + "&reportUuid=" + UUID.randomUUID();
+        webTestClient.post().uri(uriString)
+                .exchange()
+                .expectStatus().isOk();
+
+        testNetworkModificationsCount(newGroupUuid, 2);
+
+    }
+
+    @Test
     public void testCreateLineInMixedTypology() {
         String uriString = "/v1/networks/{networkUuid}/lines?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
 

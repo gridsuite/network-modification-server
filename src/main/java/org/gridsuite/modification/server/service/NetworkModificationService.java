@@ -222,12 +222,22 @@ public class NetworkModificationService {
             modification.get().setId(null);
             //TODO is there a better way ? forced to do the following setting id to null to not get a persist detached object exception on the currentLimits
             if (modification.get().toModificationInfos().getType().equals(ModificationType.LINE_CREATION)) {
-                ((LineCreationEntity) modification.get()).getCurrentLimits1().setId(null);
-                ((LineCreationEntity) modification.get()).getCurrentLimits2().setId(null);
+                LineCreationEntity lineCreationEntity = (LineCreationEntity) modification.get();
+                if (lineCreationEntity.getCurrentLimits1() != null) {
+                    lineCreationEntity.getCurrentLimits1().setId(null);
+                }
+                if (lineCreationEntity.getCurrentLimits2() != null) {
+                    lineCreationEntity.getCurrentLimits2().setId(null);
+                }
             }
             if (modification.get().toModificationInfos().getType().equals(ModificationType.TWO_WINDINGS_TRANSFORMER_CREATION)) {
-                ((TwoWindingsTransformerCreationEntity) modification.get()).getCurrentLimits1().setId(null);
-                ((TwoWindingsTransformerCreationEntity) modification.get()).getCurrentLimits2().setId(null);
+                TwoWindingsTransformerCreationEntity twoWindingsTransformerCreationEntity = (TwoWindingsTransformerCreationEntity) modification.get();
+                if (twoWindingsTransformerCreationEntity.getCurrentLimits1() != null) {
+                    twoWindingsTransformerCreationEntity.getCurrentLimits1().setId(null);
+                }
+                if (twoWindingsTransformerCreationEntity.getCurrentLimits2() != null) {
+                    twoWindingsTransformerCreationEntity.getCurrentLimits2().setId(null);
+                }
             }
             networkModificationRepository.saveModifications(groupUuid, List.of(modification.get()));
         }).doOnNext(unused -> {
