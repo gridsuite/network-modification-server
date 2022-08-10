@@ -220,6 +220,15 @@ public class NetworkModificationService {
         return getModifications(sourceGroupUuid, false, false).doOnNext(m -> {
             Optional<ModificationEntity> modification = this.modificationRepository.findById(m.getUuid());
             modification.get().setId(null);
+            //TODO is there a better way ? forced to do the following setting id to null to not get a persist detached object exception on the currentLimits
+            if (modification.get().toModificationInfos().getType().equals(ModificationType.LINE_CREATION)) {
+                ((LineCreationEntity) modification.get()).getCurrentLimits1().setId(null);
+                ((LineCreationEntity) modification.get()).getCurrentLimits2().setId(null);
+            }
+            if (modification.get().toModificationInfos().getType().equals(ModificationType.TWO_WINDINGS_TRANSFORMER_CREATION)) {
+                ((TwoWindingsTransformerCreationEntity) modification.get()).getCurrentLimits1().setId(null);
+                ((TwoWindingsTransformerCreationEntity) modification.get()).getCurrentLimits2().setId(null);
+            }
             networkModificationRepository.saveModifications(groupUuid, List.of(modification.get()));
         }).doOnNext(unused -> {
             ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
