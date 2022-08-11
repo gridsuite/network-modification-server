@@ -7,23 +7,20 @@
 package org.gridsuite.modification.server.service;
 
 import com.powsybl.iidm.network.*;
-
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.VoltageLevelCreationEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.LineAttachToVoltageLevelEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.LineSplitWithVoltageLevelEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.LineAttachToVoltageLevelEntity;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
-import java.util.stream.Collectors;
-
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -45,7 +42,7 @@ public class NetworkStoreListener implements NetworkListener {
 
     private final Set<String> substationsIds = new HashSet<>();
 
-    private final List<EquipmentDeletionInfos> deletions = new ArrayList<>();
+    private final List<EquipmentDeletionInfos> deletions = new LinkedList<>();
 
     private final boolean isBuild;
 
@@ -77,22 +74,23 @@ public class NetworkStoreListener implements NetworkListener {
         return listener;
     }
 
-    public static Set<String> getSubstationIds(Identifiable identifiable) {
+    public static Set<String> getSubstationIds(Identifiable<?> identifiable) {
         Set<String> ids = new HashSet<>();
+        // TODO implement getVoltageLevels in powsybl
         if (identifiable instanceof Switch) {
-            ids.add(((Switch) identifiable).getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
+            ids.add(((Switch) identifiable).getVoltageLevel().getSubstation().orElseThrow().getId());
         } else if (identifiable instanceof Injection) {
-            ids.add(((Injection<?>) identifiable).getTerminal().getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
+            ids.add(((Injection<?>) identifiable).getTerminal().getVoltageLevel().getSubstation().orElseThrow().getId());
         } else if (identifiable instanceof Branch) {
-            ids.add(((Branch<?>) identifiable).getTerminal1().getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
-            ids.add(((Branch<?>) identifiable).getTerminal2().getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
+            ids.add(((Branch<?>) identifiable).getTerminal1().getVoltageLevel().getSubstation().orElseThrow().getId());
+            ids.add(((Branch<?>) identifiable).getTerminal2().getVoltageLevel().getSubstation().orElseThrow().getId());
         } else if (identifiable instanceof ThreeWindingsTransformer) {
-            ids.add(((ThreeWindingsTransformer) identifiable).getTerminal(ThreeWindingsTransformer.Side.ONE).getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
-            ids.add(((ThreeWindingsTransformer) identifiable).getTerminal(ThreeWindingsTransformer.Side.TWO).getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
-            ids.add(((ThreeWindingsTransformer) identifiable).getTerminal(ThreeWindingsTransformer.Side.THREE).getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
+            ids.add(((ThreeWindingsTransformer) identifiable).getTerminal(ThreeWindingsTransformer.Side.ONE).getVoltageLevel().getSubstation().orElseThrow().getId());
+            ids.add(((ThreeWindingsTransformer) identifiable).getTerminal(ThreeWindingsTransformer.Side.TWO).getVoltageLevel().getSubstation().orElseThrow().getId());
+            ids.add(((ThreeWindingsTransformer) identifiable).getTerminal(ThreeWindingsTransformer.Side.THREE).getVoltageLevel().getSubstation().orElseThrow().getId());
         } else if (identifiable instanceof HvdcLine) {
-            ids.add(((HvdcLine) identifiable).getConverterStation1().getTerminal().getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
-            ids.add(((HvdcLine) identifiable).getConverterStation2().getTerminal().getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
+            ids.add(((HvdcLine) identifiable).getConverterStation1().getTerminal().getVoltageLevel().getSubstation().orElseThrow().getId());
+            ids.add(((HvdcLine) identifiable).getConverterStation2().getTerminal().getVoltageLevel().getSubstation().orElseThrow().getId());
         } else if (identifiable instanceof Substation) {
             ids.add(identifiable.getId());
         } else if (identifiable instanceof VoltageLevel) {
@@ -103,10 +101,6 @@ public class NetworkStoreListener implements NetworkListener {
 
     public Network getNetwork() {
         return network;
-    }
-
-    UUID getNetworkUuid() {
-        return networkUuid;
     }
 
     public boolean isBuild() {
@@ -149,8 +143,8 @@ public class NetworkStoreListener implements NetworkListener {
         }
     }
 
-    public Collection<EquipmentDeletionInfos> getDeletions() {
-        return Collections.unmodifiableCollection(deletions);
+    public List<EquipmentDeletionInfos> getDeletions() {
+        return deletions;
     }
 
     public void storeEquipmentAttributeModification(Identifiable<?> identifiable, String attributeName, Object attributeValue) {
@@ -159,16 +153,6 @@ public class NetworkStoreListener implements NetworkListener {
 
     public void storeEquipmentAttributeModification(String equipmentId, String attributeName, Object attributeValue) {
         modifications.add(this.modificationRepository.createEquipmentAttributeModification(equipmentId, attributeName, attributeValue));
-    }
-
-    public void storeLoadCreation(LoadCreationInfos loadCreationInfos) {
-        modifications.add(this.modificationRepository.createLoadCreationEntity(loadCreationInfos.getEquipmentId(),
-                loadCreationInfos.getEquipmentName(),
-                loadCreationInfos.getLoadType(),
-                loadCreationInfos.getVoltageLevelId(),
-                loadCreationInfos.getBusOrBusbarSectionId(),
-                loadCreationInfos.getActivePower(),
-                loadCreationInfos.getReactivePower()));
     }
 
     public void storeLoadModification(LoadModificationInfos loadModificationInfos) {
@@ -321,24 +305,8 @@ public class NetworkStoreListener implements NetworkListener {
         }
     }
 
-    private void addSubstationsIds(Identifiable identifiable) {
+    private void addSubstationsIds(Identifiable<?> identifiable) {
         substationsIds.addAll(getSubstationIds(identifiable));
-    }
-
-    public void storeLineSplitWithVoltageLevelInfos(LineSplitWithVoltageLevelInfos lineSplitWithVoltageLevelInfos) {
-        VoltageLevelCreationInfos mayNewVoltageLevelInfos = lineSplitWithVoltageLevelInfos.getMayNewVoltageLevelInfos();
-
-        modifications.add(LineSplitWithVoltageLevelEntity.toEntity(
-            lineSplitWithVoltageLevelInfos.getLineToSplitId(),
-            lineSplitWithVoltageLevelInfos.getPercent(),
-            mayNewVoltageLevelInfos,
-            lineSplitWithVoltageLevelInfos.getExistingVoltageLevelId(),
-            lineSplitWithVoltageLevelInfos.getBbsOrBusId(),
-            lineSplitWithVoltageLevelInfos.getNewLine1Id(),
-            lineSplitWithVoltageLevelInfos.getNewLine1Name(),
-            lineSplitWithVoltageLevelInfos.getNewLine2Id(),
-            lineSplitWithVoltageLevelInfos.getNewLine2Name())
-        );
     }
 
     public void storeLineAttachToVoltageLevelInfos(LineAttachToVoltageLevelInfos lineAttachToVoltageLevelInfos) {

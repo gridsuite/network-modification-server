@@ -18,7 +18,10 @@ import org.springframework.stereotype.Service;
 
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -27,17 +30,20 @@ import java.util.List;
 public class ModificationApplicator {
 
     // TODO create a network damage object for each modification from the listener
-    protected ModificationInfos getNetworkDamage(ModificationInfos modificationInfos, NetworkStoreListener listener) {
+    protected List<ModificationInfos> getNetworkDamage(ModificationInfos modificationInfos, NetworkStoreListener listener) {
         modificationInfos.setSubstationIds(listener.getSubstationsIds());
         modificationInfos.setDate(ZonedDateTime.now(ZoneOffset.UTC));
-        return modificationInfos;
+        return Stream
+            .of(List.of(modificationInfos), listener.getDeletions())
+            .flatMap(Collection::stream)
+            .collect(Collectors.toList());
     }
 
     public List<ModificationInfos> apply(ModificationInfos modificationInfos, ReporterModel reporter, NetworkStoreListener listener) {
         Reporter subReporter = modificationInfos.createSubReporter(reporter);
         try {
             modificationInfos.toModification().apply(listener.getNetwork(), subReporter);
-            return List.of(getNetworkDamage(modificationInfos, listener));
+            return getNetworkDamage(modificationInfos, listener);
         } catch (PowsyblException e) {
             NetworkModificationException exc = e instanceof NetworkModificationException ? (NetworkModificationException) e : new NetworkModificationException(modificationInfos.getErrorType(), e);
             subReporter.report(Report.builder()

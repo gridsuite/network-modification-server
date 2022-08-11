@@ -69,6 +69,7 @@ public class ModificationEntity {
     }
 
     public void update(ModificationInfos modificationInfos) {
+        // Basic attributes are immutable in the database
     }
 
     //From https://vladmihalcea.com/the-best-way-to-map-a-onetomany-association-with-jpa-and-hibernate/

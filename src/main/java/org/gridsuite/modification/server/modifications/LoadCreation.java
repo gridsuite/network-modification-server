@@ -16,21 +16,16 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.TopologyKind;
 import com.powsybl.iidm.network.VoltageLevel;
 import org.gridsuite.modification.server.dto.LoadCreationInfos;
-import org.gridsuite.modification.server.dto.ModificationInfos;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
 public class LoadCreation implements NetworkModification {
 
-    private final ModificationInfos modificationInfos;
+    private final LoadCreationInfos modificationInfos;
 
     public LoadCreation(LoadCreationInfos modificationInfos) {
         this.modificationInfos = modificationInfos;
-    }
-
-    private LoadCreationInfos getModificationInfos() {
-        return (LoadCreationInfos) modificationInfos;
     }
 
     @Override
@@ -46,7 +41,7 @@ public class LoadCreation implements NetworkModification {
     @Override
     public void apply(Network network, Reporter subReporter) {
         // create the load in the network
-        VoltageLevel voltageLevel = ModificationUtils.getInstance().getVoltageLevel(network, getModificationInfos().getVoltageLevelId());
+        VoltageLevel voltageLevel = ModificationUtils.getInstance().getVoltageLevel(network, modificationInfos.getVoltageLevelId());
         if (voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER) {
             createLoadInNodeBreaker(voltageLevel);
         } else {
@@ -56,40 +51,40 @@ public class LoadCreation implements NetworkModification {
         subReporter.report(Report.builder()
             .withKey("loadCreated")
             .withDefaultMessage("New load with id=${id} created")
-            .withValue("id", getModificationInfos().getEquipmentId())
+            .withValue("id", modificationInfos.getEquipmentId())
             .withSeverity(TypedValue.INFO_SEVERITY)
             .build());
     }
 
     private void createLoadInNodeBreaker(VoltageLevel voltageLevel) {
         // create cell switches
-        int nodeNum = ModificationUtils.getInstance().createNodeBreakerCellSwitches(voltageLevel, getModificationInfos().getBusOrBusbarSectionId(),
-            getModificationInfos().getEquipmentId(),
-            getModificationInfos().getEquipmentName());
+        int nodeNum = ModificationUtils.getInstance().createNodeBreakerCellSwitches(voltageLevel, modificationInfos.getBusOrBusbarSectionId(),
+            modificationInfos.getEquipmentId(),
+            modificationInfos.getEquipmentName());
 
         // creating the load
         voltageLevel.newLoad()
-            .setId(getModificationInfos().getEquipmentId())
-            .setName(getModificationInfos().getEquipmentName())
-            .setLoadType(getModificationInfos().getLoadType())
+            .setId(modificationInfos.getEquipmentId())
+            .setName(modificationInfos.getEquipmentName())
+            .setLoadType(modificationInfos.getLoadType())
             .setNode(nodeNum)
-            .setP0(getModificationInfos().getActivePower())
-            .setQ0(getModificationInfos().getReactivePower())
+            .setP0(modificationInfos.getActivePower())
+            .setQ0(modificationInfos.getReactivePower())
             .add();
     }
 
     private void createLoadInBusBreaker(VoltageLevel voltageLevel) {
-        Bus bus = ModificationUtils.getInstance().getBusBreakerBus(voltageLevel, getModificationInfos().getBusOrBusbarSectionId());
+        Bus bus = ModificationUtils.getInstance().getBusBreakerBus(voltageLevel, modificationInfos.getBusOrBusbarSectionId());
 
         // creating the load
         voltageLevel.newLoad()
-            .setId(getModificationInfos().getEquipmentId())
-            .setName(getModificationInfos().getEquipmentName())
-            .setLoadType(getModificationInfos().getLoadType())
+            .setId(modificationInfos.getEquipmentId())
+            .setName(modificationInfos.getEquipmentName())
+            .setLoadType(modificationInfos.getLoadType())
             .setBus(bus.getId())
             .setConnectableBus(bus.getId())
-            .setP0(getModificationInfos().getActivePower())
-            .setQ0(getModificationInfos().getReactivePower())
+            .setP0(modificationInfos.getActivePower())
+            .setQ0(modificationInfos.getReactivePower())
             .add();
     }
 }

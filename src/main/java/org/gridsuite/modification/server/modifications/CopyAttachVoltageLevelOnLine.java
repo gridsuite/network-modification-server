@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package org.gridsuite.modification.server.service;
+package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.computation.ComputationManager;
@@ -13,7 +13,7 @@ import com.powsybl.iidm.network.*;
 
 import java.util.Objects;
 
-import static org.gridsuite.modification.server.service.CopyTopologyModificationUtils.*;
+import static org.gridsuite.modification.server.modifications.CopyTopologyModificationUtils.*;
 
 /**
  * This method cuts an existing line in two lines that will be created and attach an existing voltage level at the

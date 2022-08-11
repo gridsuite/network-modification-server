@@ -7,20 +7,16 @@
 
 package org.gridsuite.modification.server.entities.equipment.modification;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.OneToOne;
-import javax.persistence.Table;
-
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.LineSplitWithVoltageLevelInfos;
+import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.VoltageLevelCreationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.VoltageLevelCreationEntity;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import javax.persistence.*;
 
 /**
  * @author Laurent GARNIER <laurent.garnier at rte-france.com>
@@ -37,7 +33,7 @@ public class LineSplitWithVoltageLevelEntity  extends ModificationEntity {
     @Column
     private double percent;
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     private VoltageLevelCreationEntity mayVoltageLevelCreation;
 
     @Column
@@ -73,6 +69,23 @@ public class LineSplitWithVoltageLevelEntity  extends ModificationEntity {
         this.newLine1Name = newLine1Name;
         this.newLine2Id = newLine2Id;
         this.newLine2Name = newLine2Name;
+    }
+
+    @Override
+    public void update(ModificationInfos modificationInfos) {
+        super.update(modificationInfos);
+        LineSplitWithVoltageLevelInfos splitWithVoltageLevelInfos = (LineSplitWithVoltageLevelInfos) modificationInfos;
+        lineToSplitId = splitWithVoltageLevelInfos.getLineToSplitId();
+        percent = splitWithVoltageLevelInfos.getPercent();
+        if (splitWithVoltageLevelInfos.getMayNewVoltageLevelInfos() != null) {
+            mayVoltageLevelCreation = VoltageLevelCreationEntity.toEntity(splitWithVoltageLevelInfos.getMayNewVoltageLevelInfos());
+        }
+        existingVoltageLevelId = splitWithVoltageLevelInfos.getExistingVoltageLevelId();
+        bbsOrBusId = splitWithVoltageLevelInfos.getBbsOrBusId();
+        newLine1Id = splitWithVoltageLevelInfos.getNewLine1Id();
+        newLine1Name = splitWithVoltageLevelInfos.getNewLine1Name();
+        newLine2Id = splitWithVoltageLevelInfos.getNewLine2Id();
+        newLine2Name = splitWithVoltageLevelInfos.getNewLine2Name();
     }
 
     @Override
