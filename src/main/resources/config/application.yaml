@@ -11,7 +11,7 @@ spring:
           destination: ${powsybl-ws.rabbitmq.destination.prefix:}build.run
           group: buildGroup
           consumer:
-            concurrency: 2
+            concurrency: 3
         publishBuild-out-0:
           destination: ${powsybl-ws.rabbitmq.destination.prefix:}build.run
         publishResultBuild-out-0:
@@ -26,6 +26,8 @@ spring:
           destination: ${powsybl-ws.rabbitmq.destination.prefix:}build.failed
         consumeFailedBuild-in-0:
           destination: ${powsybl-ws.rabbitmq.destination.prefix:}build.failed
+          consumer:
+            concurrency: 3
       source: publishBuild;publishResultBuild;publishCancelBuild;publishStoppedBuild;publishFailedBuild
 
 dbName: networkmodifications
