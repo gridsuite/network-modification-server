@@ -10,6 +10,8 @@ spring:
         consumeBuild-in-0:
           destination: ${powsybl-ws.rabbitmq.destination.prefix:}build.run
           group: buildGroup
+          consumer:
+            concurrency: 2
         publishBuild-out-0:
           destination: ${powsybl-ws.rabbitmq.destination.prefix:}build.run
         publishResultBuild-out-0:
