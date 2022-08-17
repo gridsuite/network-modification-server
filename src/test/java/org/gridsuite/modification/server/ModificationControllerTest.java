@@ -248,7 +248,7 @@ public class ModificationControllerTest {
          .andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<ModificationInfos> bsicListResultInfos = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertEquals(bsicListResultInfos.size(), 1);
+        assertEquals(1, bsicListResultInfos.size());
          // delete the default modification group of a network
         mockMvc.perform(delete("/v1/groups/{groupUuid}", TEST_GROUP_ID))
                      .andExpect(status().isOk());
@@ -1548,7 +1548,7 @@ public class ModificationControllerTest {
         mvcResult = mockMvc.perform(delete(uriString, TEST_NETWORK_ID, "LOAD", "v5load").contentType(MediaType.APPLICATION_JSON))
                                                              .andExpect(status().is5xxServerError()).andReturn();
         resultAsString  = mvcResult.getResponse().getContentAsString();
-        assertEquals(resultAsString, "DELETE_EQUIPMENT_ERROR : no such vertex in graph: 2");
+        assertEquals("DELETE_EQUIPMENT_ERROR : no such vertex in graph: 2", resultAsString);
         // no modifications added
         mvcResult = mockMvc.perform(get("/v1/groups").contentType(MediaType.APPLICATION_JSON))
                                              .andExpect(status().isOk()).andReturn();

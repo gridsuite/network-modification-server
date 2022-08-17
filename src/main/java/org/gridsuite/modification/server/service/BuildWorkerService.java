@@ -10,7 +10,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Sets;
 import com.powsybl.iidm.network.Network;
 import lombok.NonNull;
-import org.apache.commons.lang3.StringUtils;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.BuildInfos;
 import org.slf4j.Logger;
@@ -21,11 +20,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+
+import java.util.*;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -41,9 +37,6 @@ import static org.gridsuite.modification.server.service.BuildFailedPublisherServ
 public class BuildWorkerService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BuildWorkerService.class);
-
-    private static final String CATEGORY_BROKER_INPUT = BuildWorkerService.class.getName() + ".input-broker-messages";
-
     private static final String CATEGORY_BROKER_OUTPUT = BuildWorkerService.class.getName() + ".output-broker-messages";
 
     private static final Logger OUTPUT_MESSAGE_LOGGER = LoggerFactory.getLogger(CATEGORY_BROKER_OUTPUT);
@@ -79,14 +72,14 @@ public class BuildWorkerService {
         UUID networkUuid = execContext.getNetworkUuid();
         String receiver = execContext.getReceiver();
         if (cancelBuildRequests.get(receiver) != null) {
-            return null;
+            return Collections.emptyList();
         }
         CompletableFuture<List<ModificationInfos>> future = CompletableFuture.supplyAsync(() ->
             networkModificationService.applyModifications(network, networkUuid, buildInfos)
         );
         futures.put(receiver, future);
         if (cancelBuildRequests.get(receiver) != null) {
-            return null;
+            return Collections.emptyList();
         } else {
             LOGGER.info("Starting build on variant : {}", buildInfos.getDestinationVariantId());
         }
@@ -98,8 +91,6 @@ public class BuildWorkerService {
         return message -> {
             BuildExecContext execContext = BuildExecContext.fromMessage(message, objectMapper);
             try {
-                if (StringUtils.isBlank(execContext.getReceiver())) {
-                }
                 buildRequests.add(execContext.getReceiver()); // receiver is the node uuid to build
                 BuildInfos buildInfos = execContext.getBuildInfos();
                 Network network = networkModificationService.cloneNetworkVariant(execContext.getNetworkUuid(),
