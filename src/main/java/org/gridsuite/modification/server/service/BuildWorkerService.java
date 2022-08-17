@@ -90,13 +90,14 @@ public class BuildWorkerService {
     public Consumer<Message<String>> consumeBuild() {
         return message -> {
             BuildExecContext execContext = BuildExecContext.fromMessage(message, objectMapper);
+            List<ModificationInfos> result = null;
             try {
                 buildRequests.add(execContext.getReceiver()); // receiver is the node uuid to build
                 BuildInfos buildInfos = execContext.getBuildInfos();
                 Network network = networkModificationService.cloneNetworkVariant(execContext.getNetworkUuid(),
                         buildInfos.getOriginVariantId(),
                         buildInfos.getDestinationVariantId());
-                List<ModificationInfos> result = execBuildVariant(network, execContext, buildInfos);
+                result = execBuildVariant(network, execContext, buildInfos);
                 if (result != null) {  // result available
                     Set<String> allSubstationsIds = new HashSet<>();
                     result.forEach(r -> allSubstationsIds.addAll(r.getSubstationIds()));
@@ -113,8 +114,6 @@ public class BuildWorkerService {
                         stoppedPublisherService.publishCancel(execContext.getReceiver());
                     }
                 }
-            } catch (ExecutionException | InterruptedException e) {
-                LOGGER.error("Exception in consumeBuild", e);
             } catch (Exception e) {
                 if (!(e instanceof CancellationException)) {
                     LOGGER.error(FAIL_MESSAGE, e);
