@@ -19,6 +19,7 @@ import com.powsybl.iidm.network.SwitchKind;
 import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.sld.iidm.extensions.BranchStatus;
+
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
@@ -163,8 +164,7 @@ public class BuildTest {
         String uriString = "/v1/networks/{networkUuid}/build?receiver=me";
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
             NetworkCreation.VARIANT_ID,
-            List.of(TEST_GROUP_ID, TEST_GROUP_ID_2),
-            List.of(TEST_REPORT_ID, TEST_REPORT_ID_2),
+            List.of(new GroupAndReportInfos(TEST_GROUP_ID, TEST_REPORT_ID), new GroupAndReportInfos(TEST_GROUP_ID_2, TEST_REPORT_ID_2)),
             new HashSet<>());
         mockMvc.perform(post(uriString, TEST_NETWORK_ID)
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -175,7 +175,6 @@ public class BuildTest {
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
         BuildInfos newBuildInfos = new BuildInfos(NetworkCreation.VARIANT_ID,
             VARIANT_ID_2,
-            List.of(),
             List.of(),
             new HashSet<>());
         mockMvc.perform(post(uriString, TEST_NETWORK_ID)
@@ -229,8 +228,7 @@ public class BuildTest {
         String uriString = "/v1/networks/{networkUuid}/build?receiver=me";
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
             NetworkCreation.VARIANT_ID,
-            List.of(TEST_GROUP_ID, TEST_GROUP_ID_2),
-            List.of(TEST_REPORT_ID, TEST_REPORT_ID_2),
+            List.of(new GroupAndReportInfos(TEST_GROUP_ID, TEST_REPORT_ID), new GroupAndReportInfos(TEST_GROUP_ID_2, TEST_REPORT_ID_2)),
             new HashSet<>());
         String buildInfosJson = objectWriter.writeValueAsString(buildInfos);
         mockMvc.perform(post(uriString, TEST_NETWORK_ID).contentType(MediaType.APPLICATION_JSON).content(buildInfosJson))
@@ -294,8 +292,7 @@ public class BuildTest {
         // to check
         BuildInfos newBuildInfos = new BuildInfos(NetworkCreation.VARIANT_ID,
             VARIANT_ID_2,
-            Collections.emptyList(),
-            Collections.emptyList(),
+            List.of(),
             new HashSet<>());
         buildInfosJson = objectWriter.writeValueAsString(newBuildInfos);
         mockMvc.perform(post(uriString, TEST_NETWORK_ID).contentType(MediaType.APPLICATION_JSON).content(buildInfosJson)
@@ -384,8 +381,7 @@ public class BuildTest {
         String uriString = "/v1/networks/{networkUuid}/build?receiver=me";
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
             NetworkCreation.VARIANT_ID,
-            List.of(TEST_GROUP_ID),
-            List.of(TEST_REPORT_ID),
+            List.of(new GroupAndReportInfos(TEST_GROUP_ID, TEST_REPORT_ID)),
             new HashSet<>());
         mockMvc.perform(post(uriString, TEST_NETWORK_STOP_BUILD_ID)
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -410,8 +406,7 @@ public class BuildTest {
         String uriString = "/v1/networks/{networkUuid}/build?receiver=me";
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
             NetworkCreation.VARIANT_ID,
-            List.of(TEST_GROUP_ID),
-            List.of(TEST_REPORT_ID),
+            List.of(new GroupAndReportInfos(TEST_GROUP_ID, TEST_REPORT_ID)),
             new HashSet<>());
         mockMvc.perform(post(uriString, TEST_NETWORK_ID)
                                 .contentType(MediaType.APPLICATION_JSON)
