@@ -23,11 +23,11 @@ import java.util.UUID;
  */
 public class BuildExecContext {
 
-    private UUID networkUuid;
+    private final UUID networkUuid;
 
-    private BuildInfos buildInfos;
+    private final BuildInfos buildInfos;
 
-    private String receiver;
+    private final String receiver;
 
     public BuildExecContext(@NonNull UUID networkUuid, @NonNull BuildInfos buildInfos, @NonNull String receiver) {
         this.networkUuid = networkUuid;
