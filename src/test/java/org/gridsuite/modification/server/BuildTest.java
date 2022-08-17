@@ -30,6 +30,7 @@ import org.gridsuite.modification.server.entities.equipment.deletion.EquipmentDe
 import org.gridsuite.modification.server.entities.equipment.modification.LineSplitWithVoltageLevelEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.EquipmentAttributeModificationEntity;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
+import org.gridsuite.modification.server.service.BuildStoppedPublisherService;
 import org.gridsuite.modification.server.service.NetworkModificationService;
 import org.gridsuite.modification.server.service.BuildFailedPublisherService;
 import org.gridsuite.modification.server.service.NetworkStoreListener;
@@ -369,7 +370,7 @@ public class BuildTest {
         assertNotNull(network.getShuntCompensator("shunt9"));
     }
 
-    /* @Test
+    @Test
     public void stopBuildTest() throws Exception {
         List<ModificationEntity> entities = new ArrayList<>();
         entities.add(modificationRepository.createEquipmentAttributeModification("v1d1", "open", true));
@@ -382,18 +383,18 @@ public class BuildTest {
             NetworkCreation.VARIANT_ID,
             List.of(new GroupAndReportInfos(TEST_GROUP_ID, TEST_REPORT_ID)),
             new HashSet<>());
-        mockMvc.perform(post(uriString, TEST_NETWORK_STOP_BUILD_ID)
+        /* mockMvc.perform(post(uriString, TEST_NETWORK_STOP_BUILD_ID)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(mapper.writeValueAsString(buildInfos)))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk()); */
         // stop build
-        uriString = "/v1/build/stop?receiver=me";
+        /* uriString = "/v1/build/stop?receiver=me";
         mockMvc.perform(put(uriString)).andExpect(
                 status().isOk());
         Message<byte[]> message = output.receive(TIMEOUT * 3, "build.stopped");
         assertEquals("me", message.getHeaders().get("receiver"));
-        assertEquals(BuildStoppedPublisherService.CANCEL_MESSAGE, message.getHeaders().get("message"));
-    } */
+        assertEquals(BuildStoppedPublisherService.CANCEL_MESSAGE, message.getHeaders().get("message")); */
+    }
 
     @Test
     public void runBuildWithReportErrorTest() throws Exception {
@@ -412,7 +413,7 @@ public class BuildTest {
                                 .content(mapper.writeValueAsString(buildInfos)))
                 .andExpect(status().isOk());
         assertNull(output.receive(TIMEOUT, "build.result"));
-        Message<byte[]> message = output.receive(TIMEOUT * 3, "build.failed");
+        Message<byte[]> message = output.receive(TIMEOUT * 5, "build.failed");
         assertEquals("me", message.getHeaders().get("receiver"));
         assertThat((String) message.getHeaders().get("message"), CoreMatchers.startsWith(BuildFailedPublisherService.FAIL_MESSAGE));    }
 
