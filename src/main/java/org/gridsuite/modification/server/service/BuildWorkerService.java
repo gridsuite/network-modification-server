@@ -113,12 +113,13 @@ public class BuildWorkerService {
                         stoppedPublisherService.publishCancel(execContext.getReceiver());
                     }
                 }
+            } catch (ExecutionException | InterruptedException e) {
+                LOGGER.error("Exception in consumeBuild", e);
             } catch (Exception e) {
                 if (!(e instanceof CancellationException)) {
                     LOGGER.error(FAIL_MESSAGE, e);
                     failedPublisherService.publishFail(execContext.getReceiver(), e.getMessage());
                 }
-                LOGGER.error("Exception in consumeBuild", e);
             } finally {
                 futures.remove(execContext.getReceiver());
                 cancelBuildRequests.remove(execContext.getReceiver());
