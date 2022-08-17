@@ -155,7 +155,7 @@ public class BuildWorkerService {
             if (future != null) {
                 future.cancel(true);  // cancel build in progress
                 stoppedPublisherService.publishCancel(cancelContext.getReceiver());
-                    LOGGER.info(CANCEL_MESSAGE + " (receiver='{}')", cancelContext.getReceiver());
+                LOGGER.info(CANCEL_MESSAGE + " (receiver='{}')", cancelContext.getReceiver());
             }
         };
     }

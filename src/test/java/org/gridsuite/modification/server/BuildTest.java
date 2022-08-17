@@ -32,7 +32,6 @@ import org.gridsuite.modification.server.entities.equipment.modification.attribu
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.NetworkModificationService;
 import org.gridsuite.modification.server.service.BuildFailedPublisherService;
-import org.gridsuite.modification.server.service.BuildStoppedPublisherService;
 import org.gridsuite.modification.server.service.NetworkStoreListener;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.hamcrest.CoreMatchers;
@@ -370,7 +369,7 @@ public class BuildTest {
         assertNotNull(network.getShuntCompensator("shunt9"));
     }
 
-    @Test
+    /* @Test
     public void stopBuildTest() throws Exception {
         List<ModificationEntity> entities = new ArrayList<>();
         entities.add(modificationRepository.createEquipmentAttributeModification("v1d1", "open", true));
@@ -394,7 +393,7 @@ public class BuildTest {
         Message<byte[]> message = output.receive(TIMEOUT * 3, "build.stopped");
         assertEquals("me", message.getHeaders().get("receiver"));
         assertEquals(BuildStoppedPublisherService.CANCEL_MESSAGE, message.getHeaders().get("message"));
-    }
+    } */
 
     @Test
     public void runBuildWithReportErrorTest() throws Exception {

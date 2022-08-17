@@ -183,16 +183,16 @@ public class ModificationControllerTest {
                             .andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<EquipmentAttributeModificationInfos> equipmentAttributeModificationInfosList = mapper.readValue(resultAsString, new TypeReference<>() { });
-                EquipmentAttributeModificationInfos modificationSwitchInfos =
-                Objects.requireNonNull(equipmentAttributeModificationInfosList).get(0);
+        EquipmentAttributeModificationInfos modificationSwitchInfos =
+                   Objects.requireNonNull(equipmentAttributeModificationInfosList).get(0);
         assertTrue(createMatcherEquipmentAttributeModificationInfos("v1b1", Set.of("s1"), "open", true).matchesSafely(modificationSwitchInfos));
         mvcResult = mockMvc.perform(put("/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID + "&open=true" + "&variantId=" + NetworkCreation.VARIANT_ID + "&reportUuid=" + TEST_REPORT_ID, TEST_NETWORK_ID, "break1Variant")).andExpectAll(
          status().isOk(),
          content().contentType(MediaType.APPLICATION_JSON))
          .andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
-         List<EquipmentAttributeModificationInfos> equipmentAttributeModificationInfosListSwitch = mapper.readValue(resultAsString, new TypeReference<>() { });
-         EquipmentAttributeModificationInfos modificationSwitchListInfos = Objects.requireNonNull(equipmentAttributeModificationInfosListSwitch).get(0);
+        List<EquipmentAttributeModificationInfos> equipmentAttributeModificationInfosListSwitch = mapper.readValue(resultAsString, new TypeReference<>() { });
+        EquipmentAttributeModificationInfos modificationSwitchListInfos = Objects.requireNonNull(equipmentAttributeModificationInfosListSwitch).get(0);
         // switch in variant VARIANT_ID opening
         assertTrue(createMatcherEquipmentAttributeModificationInfos("break1Variant", Set.of("s1Variant"), "open", true).matchesSafely(modificationSwitchListInfos));
     }
@@ -216,51 +216,51 @@ public class ModificationControllerTest {
          content().contentType(MediaType.APPLICATION_JSON))
          .andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
-         List<UUID> bsicListResult = mapper.readValue(resultAsString, new TypeReference<>() { });
-         assertEquals(bsicListResult, List.of());
+        List<UUID> bsicListResult = mapper.readValue(resultAsString, new TypeReference<>() { });
+        assertEquals(bsicListResult, List.of());
         // no groups
-         mvcResult = mockMvc.perform(put("/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID + "&open=true" + "&reportUuid=" + TEST_REPORT_ID, TEST_NETWORK_ID, "v1b1"))
+        mvcResult = mockMvc.perform(put("/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID + "&open=true" + "&reportUuid=" + TEST_REPORT_ID, TEST_NETWORK_ID, "v1b1"))
          .andExpectAll(
          status().isOk(),
          content().contentType(MediaType.APPLICATION_JSON))
          .andReturn();
-         resultAsString = mvcResult.getResponse().getContentAsString();
-         List<EquipmentAttributeModificationInfos> bsiListResultModificationInfos = mapper.readValue(resultAsString, new TypeReference<>() { });
-         assertThat(bsiListResultModificationInfos.get(0), createMatcherEquipmentAttributeModificationInfos("v1b1", Set.of("s1"), "open", true));
+        resultAsString = mvcResult.getResponse().getContentAsString();
+        List<EquipmentAttributeModificationInfos> bsiListResultModificationInfos = mapper.readValue(resultAsString, new TypeReference<>() { });
+        assertThat(bsiListResultModificationInfos.get(0), createMatcherEquipmentAttributeModificationInfos("v1b1", Set.of("s1"), "open", true));
          // switch opening to create the default group
-         mvcResult = mockMvc.perform(get("/v1/groups")).andExpectAll(
+        mvcResult = mockMvc.perform(get("/v1/groups")).andExpectAll(
          status().isOk(),
          content().contentType(MediaType.APPLICATION_JSON))
          .andReturn();
-         resultAsString = mvcResult.getResponse().getContentAsString();
-         List<UUID> bsicListResultUUID = mapper.readValue(resultAsString, new TypeReference<>() { });
-         assertEquals(bsicListResultUUID, List.of(TEST_GROUP_ID));
-         mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/modifications", TEST_GROUP_ID)).andExpectAll(
+        resultAsString = mvcResult.getResponse().getContentAsString();
+        List<UUID> bsicListResultUUID = mapper.readValue(resultAsString, new TypeReference<>() { });
+        assertEquals(bsicListResultUUID, List.of(TEST_GROUP_ID));
+        mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/modifications", TEST_GROUP_ID)).andExpectAll(
          status().isOk(),
          content().contentType(MediaType.APPLICATION_JSON))
          .andReturn();
-         resultAsString = mvcResult.getResponse().getContentAsString();
-         List<ModificationInfos> bsicListResulModifInfos = mapper.readValue(resultAsString, new TypeReference<>() { });
-         assertEquals(bsicListResulModifInfos.size() , 1);
-         mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/modifications?onlyMetadata=true", TEST_GROUP_ID)).andExpectAll(
+        resultAsString = mvcResult.getResponse().getContentAsString();
+        List<ModificationInfos> bsicListResulModifInfos = mapper.readValue(resultAsString, new TypeReference<>() { });
+        assertEquals(bsicListResulModifInfos.size(), 1);
+        mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/modifications?onlyMetadata=true", TEST_GROUP_ID)).andExpectAll(
          status().isOk(),
          content().contentType(MediaType.APPLICATION_JSON))
          .andReturn();
-         resultAsString = mvcResult.getResponse().getContentAsString();
-         List<ModificationInfos> bsicListResultInfos = mapper.readValue(resultAsString, new TypeReference<>() { });
-         assertEquals(bsicListResultInfos.size(), 1);
+        resultAsString = mvcResult.getResponse().getContentAsString();
+        List<ModificationInfos> bsicListResultInfos = mapper.readValue(resultAsString, new TypeReference<>() { });
+        assertEquals(bsicListResultInfos.size(), 1);
          // delete the default modification group of a network
-         mockMvc.perform(delete("/v1/groups/{groupUuid}", TEST_GROUP_ID))
+        mockMvc.perform(delete("/v1/groups/{groupUuid}", TEST_GROUP_ID))
                      .andExpect(status().isOk());
-         mockMvc.perform(get("/v1/groups/{groupUuid}/modifications?onlyMetadata=true", TEST_GROUP_ID)).andExpectAll(status().isNotFound(),
+        mockMvc.perform(get("/v1/groups/{groupUuid}/modifications?onlyMetadata=true", TEST_GROUP_ID)).andExpectAll(status().isNotFound(),
                     content().string(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage()));
-         mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/modifications?onlyMetadata=true&errorOnGroupNotFound=false", TEST_GROUP_ID)).andExpectAll(
+        mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/modifications?onlyMetadata=true&errorOnGroupNotFound=false", TEST_GROUP_ID)).andExpectAll(
          status().isOk(),
          content().contentType(MediaType.APPLICATION_JSON))
          .andReturn();
-         resultAsString = mvcResult.getResponse().getContentAsString();
-         List<ModificationInfos> bsicListModificationInfos = mapper.readValue(resultAsString, new TypeReference<>() { });
-         assertEquals(bsicListModificationInfos, List.of());
+        resultAsString = mvcResult.getResponse().getContentAsString();
+        List<ModificationInfos> bsicListModificationInfos = mapper.readValue(resultAsString, new TypeReference<>() { });
+        assertEquals(bsicListModificationInfos, List.of());
     }
 
     private void switchModifications(String uriString, String switchId1, String switchNotFoundId, String switchId2, String switchId3,
@@ -282,8 +282,8 @@ public class ModificationControllerTest {
                                                                status().isOk(),
                                                                content().contentType(MediaType.APPLICATION_JSON))
                                                        .andReturn();
-        String resultAsStringAttributeModificationInfos = mvcResult.getResponse().getContentAsString();
-        List<EquipmentAttributeModificationInfos> bsiListResultAttributeModificationInfos = mapper.readValue(resultAsStringAttributeModificationInfos, new TypeReference<>() { });
+        resultAsString = mvcResult.getResponse().getContentAsString();
+        List<EquipmentAttributeModificationInfos> bsiListResultAttributeModificationInfos = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertThat(bsiListResultAttributeModificationInfos.get(0), createMatcherEquipmentAttributeModificationInfos(switchId1, Set.of(), "open", false));
         // switch opening
         mvcResult = mockMvc.perform(put(uriString + "&open=false", TEST_NETWORK_ID, switchId2))
@@ -328,25 +328,25 @@ public class ModificationControllerTest {
 
     @Test
     public void testDeleteModification() throws Exception {
-         MvcResult mvcResult;
-         String resultAsString;
-         mvcResult = mockMvc.perform(put("/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID + "&open=true" + "&reportUuid=" + TEST_REPORT_ID, TEST_NETWORK_ID, "v1b1"))
+        MvcResult mvcResult;
+        String resultAsString;
+        mvcResult = mockMvc.perform(put("/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID + "&open=true" + "&reportUuid=" + TEST_REPORT_ID, TEST_NETWORK_ID, "v1b1"))
          .andExpectAll(
          status().isOk(),
          content().contentType(MediaType.APPLICATION_JSON))
          .andReturn();
-         resultAsString = mvcResult.getResponse().getContentAsString();
-         List<EquipmentAttributeModificationInfos> bsiListResultAttributemi = mapper.readValue(resultAsString, new TypeReference<>() { });
-         assertNotNull(bsiListResultAttributemi);
-         assertEquals(1, bsiListResultAttributemi.size());
+        resultAsString = mvcResult.getResponse().getContentAsString();
+        List<EquipmentAttributeModificationInfos> bsiListResultAttributemi = mapper.readValue(resultAsString, new TypeReference<>() { });
+        assertNotNull(bsiListResultAttributemi);
+        assertEquals(1, bsiListResultAttributemi.size());
 
-         assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID, false, true).size());
-         String deleteStrWrongGroup = "/v1/groups/" + UUID.randomUUID() + "/modifications?modificationsUuids=" + bsiListResultAttributemi.get(0).getUuid();
-         mockMvc.perform(delete(deleteStrWrongGroup))
+        assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID, false, true).size());
+        String deleteStrWrongGroup = "/v1/groups/" + UUID.randomUUID() + "/modifications?modificationsUuids=" + bsiListResultAttributemi.get(0).getUuid();
+        mockMvc.perform(delete(deleteStrWrongGroup))
                 .andExpect(status().isNotFound());
-         String deleteStr = "/v1/groups/" + TEST_GROUP_ID + "/modifications";
+        String deleteStr = "/v1/groups/" + TEST_GROUP_ID + "/modifications";
         mockMvc.perform(delete(deleteStr).queryParam("modificationsUuids", bsiListResultAttributemi.get(0).getUuid().toString())).andExpect(status().isOk());
-         assertEquals(0, modificationRepository.getModifications(TEST_GROUP_ID, false, true).size());
+        assertEquals(0, modificationRepository.getModifications(TEST_GROUP_ID, false, true).size());
          /* non existing modification */
         mockMvc.perform(delete(deleteStr).queryParam("modificationsUuids", bsiListResultAttributemi.get(0).getUuid().toString())).andExpect(status().isNotFound());
         mockMvc.perform(delete("/v1/groups/" + TEST_GROUP_ID)).andExpect(status().isOk());
@@ -2196,11 +2196,13 @@ public class ModificationControllerTest {
     }
 
     private void testNetworkModificationsCount(UUID groupUuid, int actualSize) throws Exception {
+        MvcResult mvcResult;
+        String resultAsString;
         // get all modifications for the given group of a network
-        MvcResult mvcResultTestGroupId = mockMvc.perform(get("/v1/groups/{groupUuid}/modifications?onlyMetadata=true", groupUuid).contentType(MediaType.APPLICATION_JSON))
+        mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/modifications?onlyMetadata=true", groupUuid).contentType(MediaType.APPLICATION_JSON))
                                                  .andExpect(status().isOk()).andReturn();
-        String resultAsStringTestGroupId = mvcResultTestGroupId.getResponse().getContentAsString();
-        List<ModificationInfos> modificationsTestGroupId = mapper.readValue(resultAsStringTestGroupId, new TypeReference<>() { });
+        resultAsString = mvcResult.getResponse().getContentAsString();
+        List<ModificationInfos> modificationsTestGroupId = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertEquals(actualSize, modificationsTestGroupId.size());
     }
 }

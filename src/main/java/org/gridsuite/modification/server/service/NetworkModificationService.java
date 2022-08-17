@@ -641,7 +641,7 @@ public class NetworkModificationService {
         Optional<ModificationEntity> loadModificationEntity = this.modificationRepository.findById(modificationUuid);
 
         if (!loadModificationEntity.isPresent()) {
-           throw new NetworkModificationException(CREATE_LOAD_ERROR, "Load creation not found");
+            throw new NetworkModificationException(CREATE_LOAD_ERROR, "Load creation not found");
         }
         EquipmentCreationEntity updatedEntity = this.networkModificationRepository.createLoadCreationEntity(
                 loadCreationInfos.getEquipmentId(),
@@ -1088,7 +1088,7 @@ public class NetworkModificationService {
         Optional<ModificationEntity> lineModificationEntity = this.modificationRepository.findById(modificationUuid);
 
         if (!lineModificationEntity.isPresent()) {
-          throw new NetworkModificationException(CREATE_LINE_ERROR, "Line creation not found");
+            throw new NetworkModificationException(CREATE_LINE_ERROR, "Line creation not found");
         }
 
         EquipmentCreationEntity updatedEntity = this.networkModificationRepository.createLineEntity(
@@ -1510,22 +1510,21 @@ public class NetworkModificationService {
     }
 
     public Network cloneNetworkVariant(UUID networkUuid, String originVariantId, String destinationVariantId) {
-            Network network;
-            try {
-                network = networkStoreService.getNetwork(networkUuid);
-                network.addListener(new NetworkVariantsListener(network, networkUuid, equipmentInfosService));
-            } catch (PowsyblException e) {
-                throw new NetworkModificationException(NETWORK_NOT_FOUND, networkUuid.toString());
-            }
-            String startingVariant = StringUtils.isBlank(originVariantId) ? VariantManagerConstants.INITIAL_VARIANT_ID : originVariantId;
-            try {
-                network.getVariantManager().cloneVariant(startingVariant, destinationVariantId, true);  // cloning variant
-                network.getVariantManager().setWorkingVariant(destinationVariantId);  // set current variant to destination variant
-            } catch (PowsyblException e) {
-                throw new NetworkModificationException(VARIANT_NOT_FOUND, startingVariant);
-            }
-            return network;
-        
+        Network network;
+        try {
+            network = networkStoreService.getNetwork(networkUuid);
+            network.addListener(new NetworkVariantsListener(network, networkUuid, equipmentInfosService));
+        } catch (PowsyblException e) {
+            throw new NetworkModificationException(NETWORK_NOT_FOUND, networkUuid.toString());
+        }
+        String startingVariant = StringUtils.isBlank(originVariantId) ? VariantManagerConstants.INITIAL_VARIANT_ID : originVariantId;
+        try {
+            network.getVariantManager().cloneVariant(startingVariant, destinationVariantId, true);  // cloning variant
+            network.getVariantManager().setWorkingVariant(destinationVariantId);  // set current variant to destination variant
+        } catch (PowsyblException e) {
+            throw new NetworkModificationException(VARIANT_NOT_FOUND, startingVariant);
+        }
+        return network;
     }
 
     private void changeSwitchAttribute(Switch aSwitch, String attributeName, Object attributeValue, Reporter reporter) {
@@ -1867,10 +1866,9 @@ public class NetworkModificationService {
     }
 
     public void deleteModifications(UUID groupUuid, Set<UUID> modificationsUuids) {
-            if (networkModificationRepository.deleteModifications(groupUuid, modificationsUuids) == 0) {
-                throw new NetworkModificationException(MODIFICATION_NOT_FOUND);
-            }
-        ;
+        if (networkModificationRepository.deleteModifications(groupUuid, modificationsUuids) == 0) {
+            throw new NetworkModificationException(MODIFICATION_NOT_FOUND);
+        }
     }
 
     private void assertShuntCompensatorCreationInfosNotEmpty(ShuntCompensatorCreationInfos shuntCompensatorCreationInfos) {
@@ -2053,7 +2051,7 @@ public class NetworkModificationService {
         Optional<ModificationEntity> lineSplitWithVoltageLevelEntity = this.modificationRepository.findById(modificationUuid);
 
         if (lineSplitWithVoltageLevelEntity.isEmpty()) {
-           throw new NetworkModificationException(LINE_SPLIT_NOT_FOUND, "Line split not found");
+            throw new NetworkModificationException(LINE_SPLIT_NOT_FOUND, "Line split not found");
         }
 
         LineSplitWithVoltageLevelEntity casted = (LineSplitWithVoltageLevelEntity) lineSplitWithVoltageLevelEntity.get();
