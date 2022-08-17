@@ -30,7 +30,6 @@ import org.gridsuite.modification.server.entities.equipment.deletion.EquipmentDe
 import org.gridsuite.modification.server.entities.equipment.modification.LineSplitWithVoltageLevelEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.EquipmentAttributeModificationEntity;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
-import org.gridsuite.modification.server.service.BuildStoppedPublisherService;
 import org.gridsuite.modification.server.service.NetworkModificationService;
 import org.gridsuite.modification.server.service.BuildFailedPublisherService;
 import org.gridsuite.modification.server.service.NetworkStoreListener;
