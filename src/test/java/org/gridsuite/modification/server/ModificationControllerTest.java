@@ -241,7 +241,7 @@ public class ModificationControllerTest {
          .andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<ModificationInfos> bsicListResulModifInfos = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertEquals(bsicListResulModifInfos.size(), 1);
+        assertEquals(1, bsicListResulModifInfos.size());
         mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/modifications?onlyMetadata=true", TEST_GROUP_ID)).andExpectAll(
          status().isOk(),
          content().contentType(MediaType.APPLICATION_JSON))

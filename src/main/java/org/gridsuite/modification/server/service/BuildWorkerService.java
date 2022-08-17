@@ -96,14 +96,7 @@ public class BuildWorkerService {
                 Network network = networkModificationService.cloneNetworkVariant(execContext.getNetworkUuid(),
                         buildInfos.getOriginVariantId(),
                         buildInfos.getDestinationVariantId());
-                List<ModificationInfos> result = null;
-                try {
-                    result = execBuildVariant(network, execContext, buildInfos);
-                } catch (ExecutionException e) {
-                    throw new RuntimeException(e);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
+                List<ModificationInfos> result = execBuildVariant(network, execContext, buildInfos);
                 if (result != null) {  // result available
                     Set<String> allSubstationsIds = new HashSet<>();
                     result.forEach(r -> allSubstationsIds.addAll(r.getSubstationIds()));
@@ -125,6 +118,7 @@ public class BuildWorkerService {
                     LOGGER.error(FAIL_MESSAGE, e);
                     failedPublisherService.publishFail(execContext.getReceiver(), e.getMessage());
                 }
+                LOGGER.error("Exception in consumeBuild", e);
             } finally {
                 futures.remove(execContext.getReceiver());
                 cancelBuildRequests.remove(execContext.getReceiver());
