@@ -147,14 +147,6 @@ public class NetworkStoreListener implements NetworkListener {
         return deletions;
     }
 
-    public void storeEquipmentAttributeModification(Identifiable<?> identifiable, String attributeName, Object attributeValue) {
-        modifications.add(this.modificationRepository.createEquipmentAttributeModification(identifiable.getId(), attributeName, attributeValue));
-    }
-
-    public void storeEquipmentAttributeModification(String equipmentId, String attributeName, Object attributeValue) {
-        modifications.add(this.modificationRepository.createEquipmentAttributeModification(equipmentId, attributeName, attributeValue));
-    }
-
     public void storeLoadModification(LoadModificationInfos loadModificationInfos) {
         modifications.add(this.modificationRepository.createLoadModificationEntity(loadModificationInfos.getEquipmentId(),
                 loadModificationInfos.getEquipmentName(),

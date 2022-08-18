@@ -11,6 +11,7 @@ import javax.persistence.ForeignKey;
 import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
 
+import com.powsybl.iidm.network.IdentifiableType;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -20,10 +21,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Getter
 @Entity
-@Table(name = "booleanEquipmentAttributeModification")
+@Table
 @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "boolean_equipment_attribute_modification_id_fk_constraint"))
 public class BooleanEquipmentAttributeModificationEntity extends EquipmentAttributeModificationEntity<Boolean> {
-    public BooleanEquipmentAttributeModificationEntity(String equipmentId, String attributeName, Boolean attributeValue) {
-        super(equipmentId, attributeName, attributeValue);
+    public BooleanEquipmentAttributeModificationEntity(String equipmentId, String attributeName, Boolean attributeValue, IdentifiableType equipmentType) {
+        super(equipmentId, attributeName, attributeValue, equipmentType);
     }
 }

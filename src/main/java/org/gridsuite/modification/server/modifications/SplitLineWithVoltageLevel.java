@@ -9,8 +9,6 @@ package org.gridsuite.modification.server.modifications;
 import com.powsybl.commons.reporter.Report;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.TypedValue;
-import com.powsybl.computation.ComputationManager;
-import com.powsybl.iidm.modification.NetworkModification;
 import com.powsybl.iidm.network.Line;
 import com.powsybl.iidm.network.Network;
 import org.gridsuite.modification.server.NetworkModificationException;
@@ -22,22 +20,12 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
-public class SplitLineWithVoltageLevel implements NetworkModification {
+public class SplitLineWithVoltageLevel implements Modification {
 
     private final LineSplitWithVoltageLevelInfos modificationInfos;
 
     public SplitLineWithVoltageLevel(LineSplitWithVoltageLevelInfos lineSplitWithVoltageLevelInfos) {
         this.modificationInfos = lineSplitWithVoltageLevelInfos;
-    }
-
-    @Override
-    public void apply(Network network, ComputationManager computationManager) {
-        apply(network);
-    }
-
-    @Override
-    public void apply(Network network) {
-        apply(network, Reporter.NO_OP);
     }
 
     @Override

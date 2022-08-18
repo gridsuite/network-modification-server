@@ -9,6 +9,7 @@ package org.gridsuite.modification.server.repositories;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.iidm.network.Country;
 import com.powsybl.iidm.network.EnergySource;
+import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.LoadType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
@@ -64,28 +65,34 @@ public class NetworkModificationRepository {
         modificationGroupRepository.deleteAll();
     }
 
+    // TODO remove it
     public <T> EquipmentAttributeModificationEntity<T> createEquipmentAttributeModification(String equipmentId, String attributeName, T attributeValue) {
+        return createEquipmentAttributeModification(equipmentId, attributeName, attributeValue, IdentifiableType.SUBSTATION);
+    }
+
+    // TODO remove it
+    private <T> EquipmentAttributeModificationEntity<T> createEquipmentAttributeModification(String equipmentId, String attributeName, T attributeValue, IdentifiableType equipmentType) {
         EquipmentAttributeModificationEntity<?> modification;
         if (attributeValue == null) {
-            modification = new StringEquipmentAttributeModificationEntity(equipmentId, attributeName, null);
+            modification = new StringEquipmentAttributeModificationEntity(equipmentId, attributeName, null, equipmentType);
         } else if (attributeValue.getClass().isEnum()) {
-            modification = new StringEquipmentAttributeModificationEntity(equipmentId, attributeName, attributeValue.toString());
+            modification = new StringEquipmentAttributeModificationEntity(equipmentId, attributeName, attributeValue.toString(), equipmentType);
         } else {
             switch (attributeValue.getClass().getSimpleName()) {
                 case "String":
-                    modification = new StringEquipmentAttributeModificationEntity(equipmentId, attributeName, (String) attributeValue);
+                    modification = new StringEquipmentAttributeModificationEntity(equipmentId, attributeName, (String) attributeValue, equipmentType);
                     break;
                 case "Boolean":
-                    modification = new BooleanEquipmentAttributeModificationEntity(equipmentId, attributeName, (boolean) attributeValue);
+                    modification = new BooleanEquipmentAttributeModificationEntity(equipmentId, attributeName, (boolean) attributeValue, equipmentType);
                     break;
                 case "Integer":
-                    modification = new IntegerEquipmentAttributeModificationEntity(equipmentId, attributeName, (int) attributeValue);
+                    modification = new IntegerEquipmentAttributeModificationEntity(equipmentId, attributeName, (int) attributeValue, equipmentType);
                     break;
                 case "Float":
-                    modification = new FloatEquipmentAttributeModificationEntity(equipmentId, attributeName, (float) attributeValue);
+                    modification = new FloatEquipmentAttributeModificationEntity(equipmentId, attributeName, (float) attributeValue, equipmentType);
                     break;
                 case "Double":
-                    modification = new DoubleEquipmentAttributeModificationEntity(equipmentId, attributeName, (double) attributeValue);
+                    modification = new DoubleEquipmentAttributeModificationEntity(equipmentId, attributeName, (double) attributeValue, equipmentType);
                     break;
                 default:
                     throw new PowsyblException("Value type invalid : " + attributeValue.getClass().getSimpleName());

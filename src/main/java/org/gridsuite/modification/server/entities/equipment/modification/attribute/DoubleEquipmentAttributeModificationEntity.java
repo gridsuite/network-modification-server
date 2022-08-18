@@ -11,6 +11,7 @@ import javax.persistence.ForeignKey;
 import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
 
+import com.powsybl.iidm.network.IdentifiableType;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -20,10 +21,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Getter
 @Entity
-@Table(name = "doubleEquipmentAttributeModification")
+@Table
 @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "double_equipment_attribute_modification_id_fk_constraint"))
 public class DoubleEquipmentAttributeModificationEntity extends EquipmentAttributeModificationEntity<Double> {
-    public DoubleEquipmentAttributeModificationEntity(String equipmentId, String attributeName, Double attributeValue) {
-        super(equipmentId, attributeName, attributeValue);
+    public DoubleEquipmentAttributeModificationEntity(String equipmentId, String attributeName, Double attributeValue, IdentifiableType equipmentType) {
+        super(equipmentId, attributeName, attributeValue, equipmentType);
     }
 }

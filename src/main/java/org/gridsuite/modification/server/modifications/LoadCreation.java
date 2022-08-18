@@ -9,8 +9,6 @@ package org.gridsuite.modification.server.modifications;
 import com.powsybl.commons.reporter.Report;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.TypedValue;
-import com.powsybl.computation.ComputationManager;
-import com.powsybl.iidm.modification.NetworkModification;
 import com.powsybl.iidm.network.Bus;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.TopologyKind;
@@ -20,22 +18,12 @@ import org.gridsuite.modification.server.dto.LoadCreationInfos;
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
-public class LoadCreation implements NetworkModification {
+public class LoadCreation implements Modification {
 
     private final LoadCreationInfos modificationInfos;
 
     public LoadCreation(LoadCreationInfos modificationInfos) {
         this.modificationInfos = modificationInfos;
-    }
-
-    @Override
-    public void apply(Network network, ComputationManager computationManager) {
-        apply(network);
-    }
-
-    @Override
-    public void apply(Network network) {
-        apply(network, Reporter.NO_OP);
     }
 
     @Override

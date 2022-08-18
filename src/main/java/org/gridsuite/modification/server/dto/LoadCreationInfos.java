@@ -8,7 +8,6 @@ package org.gridsuite.modification.server.dto;
 
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
-import com.powsybl.iidm.modification.NetworkModification;
 import com.powsybl.iidm.network.LoadType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
@@ -20,6 +19,7 @@ import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.entities.equipment.creation.EquipmentCreationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.LoadCreationEntity;
 import org.gridsuite.modification.server.modifications.LoadCreation;
+import org.gridsuite.modification.server.modifications.Modification;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -53,7 +53,7 @@ public class LoadCreationInfos extends InjectionCreationInfos {
     }
 
     @Override
-    public NetworkModification toModification() {
+    public Modification toModification() {
         return new LoadCreation(this);
     }
 

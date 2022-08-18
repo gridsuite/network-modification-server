@@ -40,14 +40,14 @@ public class NetworkModificationController {
     @PutMapping(value = "/networks/{networkUuid}/switches/{switchId}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "change a switch state in a network variant")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The switch state has been changed")})
-    public ResponseEntity<Flux<EquipmentModificationInfos>> changeSwitchState(
+    public ResponseEntity<Flux<EquipmentAttributeModificationInfos>> changeSwitchState(
             @Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
             @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
             @Parameter(description = "Switch ID") @PathVariable("switchId") String switchId,
             @RequestParam(value = "group", required = false) UUID groupUuid,
             @RequestParam(value = "reportUuid") UUID reportUuid,
             @RequestParam("open") String open) {
-        return ResponseEntity.ok().body(networkModificationService.changeSwitchState(networkUuid, variantId, groupUuid, reportUuid, switchId, Boolean.parseBoolean(open)));
+        return ResponseEntity.ok().body(networkModificationService.changeSwitchState(networkUuid, variantId, new GroupAndReportInfos(groupUuid, reportUuid), switchId, Boolean.parseBoolean(open)));
     }
 
     @PutMapping(value = "/networks/{networkUuid}/groovy", consumes = MediaType.TEXT_PLAIN_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)

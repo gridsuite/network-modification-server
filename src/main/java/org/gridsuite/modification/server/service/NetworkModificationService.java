@@ -59,7 +59,6 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -164,48 +163,12 @@ public class NetworkModificationService {
         );
     }
 
-    private List<EquipmentModificationInfos> execChangeSwitchState(NetworkStoreListener listener,
-                                                                   String switchId,
-                                                                   boolean open,
-                                                                   UUID reportUuid) {
-        Network network = listener.getNetwork();
-        ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
-        String subReportId = "Switch '" + switchId + "' state change";
-        Reporter subReporter = reporter.createSubReporter(subReportId, subReportId);
-
-        return doAction(listener, () -> {
-            if (listener.isApplyModifications()) {
-                Switch aSwitch = network.getSwitch(switchId);
-                if (aSwitch == null) {
-                    throw new NetworkModificationException(SWITCH_NOT_FOUND, switchId);
-                }
-
-                if (aSwitch.isOpen() != open) {
-                    aSwitch.setOpen(open);
-
-                    subReporter.report(Report.builder()
-                        .withKey("switchChanged")
-                        .withDefaultMessage("Switch ${operation} ${id} in voltage level ${voltageLevelId}")
-                        .withValue("id", switchId)
-                        .withValue("operation", open ? "opening" : "closing")
-                        .withValue("voltageLevelId", aSwitch.getVoltageLevel().getId())
-                        .withSeverity(TypedValue.INFO_SEVERITY)
-                        .build());
-                }
-            }
-
-            // add the switch 'open' attribute modification entity to the listener
-            listener.storeEquipmentAttributeModification(switchId, "open", open);
-        }, MODIFICATION_ERROR, reportUuid, reporter, subReporter).stream().map(EquipmentModificationInfos.class::cast)
-            .collect(Collectors.toList());
-    }
-
-    public Flux<EquipmentModificationInfos> changeSwitchState(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String switchId, boolean open) {
+    public Flux<EquipmentAttributeModificationInfos> changeSwitchState(UUID networkUuid, String variantId, GroupAndReportInfos groupAndReportInfos, String switchId, boolean open) {
         return getNetworkModificationInfos(networkUuid, variantId)
             .flatMapIterable(networkInfos -> {
-                NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
-
-                return execChangeSwitchState(listener, switchId, open, reportUuid);
+                NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupAndReportInfos.getGroupUuid(), networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
+                EquipmentAttributeModificationInfos modificationInfos = EquipmentAttributeModificationInfos.builder().equipmentType(IdentifiableType.SWITCH).equipmentId(switchId).equipmentAttributeName("open").equipmentAttributeValue(open).build();
+                return self.handleModification(modificationInfos, listener, groupAndReportInfos).stream().map(EquipmentAttributeModificationInfos.class::cast).collect(Collectors.toList());
             });
     }
 
@@ -1352,152 +1315,6 @@ public class NetworkModificationService {
         }).subscribeOn(Schedulers.boundedElastic());
     }
 
-    private void changeSwitchAttribute(Switch aSwitch, String attributeName, Object attributeValue, Reporter reporter) {
-        if (attributeName.equals("open") && Boolean.TRUE.equals(aSwitch.isOpen() != (Boolean) attributeValue)) {
-            aSwitch.setOpen((Boolean) attributeValue);
-            reporter.report(Report.builder()
-                .withKey("switchChanged")
-                .withDefaultMessage("${operation} switch ${id} in voltage level ${voltageLevelId}")
-                .withValue("id", aSwitch.getId())
-                .withValue("operation", Boolean.TRUE.equals(attributeValue)  ? "Opening" : "Closing")
-                .withValue("voltageLevelId", aSwitch.getVoltageLevel().getId())
-                .withSeverity(TypedValue.INFO_SEVERITY)
-                .build());
-        }
-    }
-
-    private void changeGeneratorAttribute(Generator generator, String attributeName, Object attributeValue, Reporter reporter) {
-        if (attributeName.equals("targetP")) {
-            generator.setTargetP((Double) attributeValue);
-            reporter.report(Report.builder()
-                .withKey("generatorChanged")
-                .withDefaultMessage("Generator with id=${id} targetP changed")
-                .withValue("id", generator.getId())
-                .withSeverity(TypedValue.INFO_SEVERITY)
-                .build());
-        }
-    }
-
-    private void changeLineAttribute(Line line, String attributeName, Object attributeValue, Reporter reporter) {
-        if (attributeName.equals("branchStatus")) {
-            line.newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.valueOf((String) attributeValue)).add();
-            reporter.report(Report.builder()
-                .withKey("lineStatusChanged")
-                .withDefaultMessage("Branch with id=${id} status changed")
-                .withValue("id", line.getId())
-                .withSeverity(TypedValue.INFO_SEVERITY)
-                .build());
-        }
-    }
-
-    private void changeTwoWindingsTransformerAttribute(TwoWindingsTransformer transformer, String attributeName, Object attributeValue, Reporter reporter) {
-        String reportKey = null;
-        String reportDefaultMessage = null;
-        if (attributeName.equals("ratioTapChanger.tapPosition")) {
-            transformer.getOptionalRatioTapChanger().ifPresent(r -> r.setTapPosition((Integer) attributeValue));
-            reportKey = "ratioTapPositionChanged";
-            reportDefaultMessage = "2WT with id=${id} ratio tap changer position changed";
-        } else if (attributeName.equals("phaseTapChanger.tapPosition")) {
-            reportKey = "phaseTapPositionChanged";
-            reportDefaultMessage = "2WT with id=${id} phase tap changer position changed";
-        }
-        if (reportKey != null) {
-            reporter.report(Report.builder()
-                .withKey(reportKey)
-                .withDefaultMessage(reportDefaultMessage)
-                .withValue("id", transformer.getId())
-                .withSeverity(TypedValue.INFO_SEVERITY)
-                .build());
-        }
-    }
-
-    private void changeThreeWindingsTransformerAttribute(ThreeWindingsTransformer transformer, String attributeName, Object attributeValue, Reporter reporter) {
-        String reportKey = null;
-        String reportDefaultMessage = null;
-
-        if (attributeName.equals("ratioTapChanger1.tapPosition")) {
-            transformer.getLeg1().getOptionalRatioTapChanger().ifPresent(r -> r.setTapPosition((Integer) attributeValue));
-            reportKey = "ratioTapChanger1.tapPosition";
-            reportDefaultMessage = "3WT with id=${id} ratio tap changer 1 position changed";
-        } else if (attributeName.equals("ratioTapChanger2.tapPosition")) {
-            transformer.getLeg2().getOptionalRatioTapChanger().ifPresent(r -> r.setTapPosition((Integer) attributeValue));
-            reportKey = "ratioTapChanger2.tapPosition";
-            reportDefaultMessage = "3WT with id=${id} ratio tap changer 2 position changed";
-        } else if (attributeName.equals("ratioTapChanger3.tapPosition")) {
-            transformer.getLeg3().getOptionalRatioTapChanger().ifPresent(r -> r.setTapPosition((Integer) attributeValue));
-            reportKey = "ratioTapChanger3.tapPosition";
-            reportDefaultMessage = "3WT with id=${id} ratio tap changer 3 position changed";
-        } else if (attributeName.equals("phaseTapChanger1.tapPosition")) {
-            transformer.getLeg1().getOptionalPhaseTapChanger().ifPresent(p -> p.setTapPosition((Integer) attributeValue));
-            reportKey = "phaseTapChanger1.tapPosition";
-            reportDefaultMessage = "3WT with id=${id} phase tap changer 1 position changed";
-        } else if (attributeName.equals("phaseTapChanger2.tapPosition")) {
-            transformer.getLeg2().getOptionalPhaseTapChanger().ifPresent(p -> p.setTapPosition((Integer) attributeValue));
-            reportKey = "phaseTapChanger2.tapPosition";
-            reportDefaultMessage = "3WT with id=${id} phase tap changer 2 position changed";
-        } else if (attributeName.equals("phaseTapChanger3.tapPosition")) {
-            transformer.getLeg3().getOptionalPhaseTapChanger().ifPresent(p -> p.setTapPosition((Integer) attributeValue));
-            reportKey = "phaseTapChanger3.tapPosition";
-            reportDefaultMessage = "3WT with id=${id} phase tap changer 3 position changed";
-        }
-        if (reportKey != null) {
-            reporter.report(Report.builder()
-                .withKey(reportKey)
-                .withDefaultMessage(reportDefaultMessage)
-                .withValue("id", transformer.getId())
-                .withSeverity(TypedValue.INFO_SEVERITY)
-                .build());
-        }
-    }
-
-    @SuppressWarnings("checkstyle:UnnecessaryParentheses")
-    private List<EquipmentModificationInfos> execChangeEquipmentAttribute(NetworkStoreListener listener,
-                                                                          String equipmentId,
-                                                                          String attributeName,
-                                                                          Object attributeValue,
-                                                                          UUID reportUuid) {
-        Network network = listener.getNetwork();
-        ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
-        AtomicReference<Reporter> subReporter = new AtomicReference<>();
-
-        return doAction(listener, () -> {
-            if (listener.isApplyModifications()) {
-                Identifiable<?> identifiable = network.getIdentifiable(equipmentId);
-                if (identifiable == null) {
-                    throw new NetworkModificationException(EQUIPMENT_NOT_FOUND, equipmentId);
-                }
-                if (identifiable instanceof Switch) {
-                    String subReportId = "Switch '" + identifiable.getId() + "' state change";
-                    subReporter.set(reporter.createSubReporter(subReportId, subReportId));
-                    changeSwitchAttribute((Switch) identifiable, attributeName, attributeValue, subReporter.get());
-                } else if (identifiable instanceof Injection) {
-                    if (identifiable instanceof Generator) {
-                        String subReportId = "Generator '" + identifiable.getId() + "' change";
-                        subReporter.set(reporter.createSubReporter(subReportId, subReportId));
-                        changeGeneratorAttribute((Generator) identifiable, attributeName, attributeValue, subReporter.get());
-                    }
-                } else if (identifiable instanceof Branch) {
-                    if (identifiable instanceof Line) {
-                        String subReportId = "Line '" + identifiable.getId() + "' change";
-                        subReporter.set(reporter.createSubReporter(subReportId, subReportId));
-                        changeLineAttribute((Line) identifiable, attributeName, attributeValue, subReporter.get());
-                    } else if (identifiable instanceof TwoWindingsTransformer) {
-                        String subReportId = "Two windings transformer '" + identifiable.getId() + "' change";
-                        subReporter.set(reporter.createSubReporter(subReportId, subReportId));
-                        changeTwoWindingsTransformerAttribute((TwoWindingsTransformer) identifiable, attributeName, attributeValue, subReporter.get());
-                    }
-                } else if (identifiable instanceof ThreeWindingsTransformer) {
-                    String subReportId = "Three windings transformer '" + identifiable.getId() + "' change";
-                    subReporter.set(reporter.createSubReporter(subReportId, subReportId));
-                    changeThreeWindingsTransformerAttribute((ThreeWindingsTransformer) identifiable, attributeName, attributeValue, subReporter.get());
-                } else if (identifiable instanceof HvdcLine) {
-                    // no hvdc line modifications yet
-                }
-            }
-        }, MODIFICATION_ERROR, reportUuid, reporter, subReporter.get()).stream().map(EquipmentModificationInfos.class::cast)
-            .collect(Collectors.toList());
-    }
-
     public List<ModificationInfos> applyModifications(Network network, UUID networkUuid, BuildInfos buildInfos) {
         // Apply all modifications belonging to the modification groups uuids in buildInfos
         List<ModificationInfos> allModificationsInfos = new ArrayList<>();
@@ -1535,14 +1352,7 @@ public class NetworkModificationService {
             ModificationType type = infos.getType();
 
             switch (type) {
-                case EQUIPMENT_ATTRIBUTE_MODIFICATION: {
-                    EquipmentAttributeModificationInfos attributeModificationInfos = (EquipmentAttributeModificationInfos) infos;
-                    List<EquipmentModificationInfos> modificationInfos = execChangeEquipmentAttribute(listener, attributeModificationInfos.getEquipmentId(), attributeModificationInfos.getEquipmentAttributeName(), attributeModificationInfos.getEquipmentAttributeValue(),
-                        reportUuid);
-                    allModificationsInfos.addAll(modificationInfos);
-                }
-                break;
-
+                case EQUIPMENT_ATTRIBUTE_MODIFICATION:
                 case LOAD_CREATION:
                 case LINE_SPLIT_WITH_VOLTAGE_LEVEL:
                     // Generic form

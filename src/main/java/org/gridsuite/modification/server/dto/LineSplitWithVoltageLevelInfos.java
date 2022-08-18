@@ -8,12 +8,12 @@ package org.gridsuite.modification.server.dto;
 
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
-import com.powsybl.iidm.modification.NetworkModification;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.entities.equipment.modification.LineSplitWithVoltageLevelEntity;
+import org.gridsuite.modification.server.modifications.Modification;
 import org.gridsuite.modification.server.modifications.SplitLineWithVoltageLevel;
 
 /**
@@ -71,7 +71,7 @@ public class LineSplitWithVoltageLevelInfos extends ModificationInfos {
     }
 
     @Override
-    public NetworkModification toModification() {
+    public Modification toModification() {
         return new SplitLineWithVoltageLevel(this);
     }
 

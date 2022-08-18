@@ -17,7 +17,6 @@ import org.gridsuite.modification.server.entities.equipment.creation.*;
 import org.gridsuite.modification.server.entities.equipment.modification.LoadModificationEntity;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.NetworkModificationService;
-import org.gridsuite.modification.server.service.NetworkStoreListener;
 import org.gridsuite.modification.server.utils.*;
 import org.junit.After;
 import org.junit.Before;
@@ -39,14 +38,7 @@ import org.springframework.web.reactive.function.BodyInserters;
 
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.hamcrest.Matchers.containsString;
@@ -151,8 +143,9 @@ public class ModificationControllerTest {
                 .substationIds(Set.of("substationId"))
                 .equipmentAttributeName("equipmentAttributeName")
                 .equipmentAttributeValue("equipmentAttributeValue")
+                .equipmentType(IdentifiableType.VOLTAGE_LEVEL)
                 .build();
-        assertEquals("EquipmentAttributeModificationInfos(super=EquipmentModificationInfos(super=ModificationInfos(uuid=7928181c-7977-4592-ba19-88027e4254e4, date=2021-02-19T00:00Z, type=EQUIPMENT_ATTRIBUTE_MODIFICATION, substationIds=[substationId]), equipmentId=equipmentId), equipmentAttributeName=equipmentAttributeName, equipmentAttributeValue=equipmentAttributeValue)", modificationInfos.toString());
+        assertEquals("EquipmentAttributeModificationInfos(super=EquipmentModificationInfos(super=ModificationInfos(uuid=7928181c-7977-4592-ba19-88027e4254e4, date=2021-02-19T00:00Z, type=EQUIPMENT_ATTRIBUTE_MODIFICATION, substationIds=[substationId]), equipmentId=equipmentId), equipmentAttributeName=equipmentAttributeName, equipmentAttributeValue=equipmentAttributeValue, equipmentType=VOLTAGE_LEVEL)", modificationInfos.toString());
 
         // switch opening
         EquipmentAttributeModificationInfos modificationSwitchInfos =
@@ -164,7 +157,7 @@ public class ModificationControllerTest {
                         .returnResult()
                         .getResponseBody()).get(0);
 
-        assertTrue(MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v1b1", Set.of("s1"), "open", true).matchesSafely(modificationSwitchInfos));
+        org.hamcrest.MatcherAssert.assertThat(modificationSwitchInfos, MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v1b1", Set.of("s1"), "open", true));
 
         // switch in variant VARIANT_ID opening
         modificationSwitchInfos =
@@ -176,17 +169,7 @@ public class ModificationControllerTest {
                 .returnResult()
                 .getResponseBody()).get(0);
 
-        assertTrue(MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("break1Variant", Set.of("s1Variant"), "open", true).matchesSafely(modificationSwitchInfos));
-    }
-
-    @Test
-    public void testNetworkListener() {
-        Network network = NetworkCreation.create(TEST_NETWORK_ID, true);
-        NetworkStoreListener listener = NetworkStoreListener.create(network, TEST_NETWORK_ID, null, modificationRepository, equipmentInfosService, false, true);
-        Generator generator = network.getGenerator("idGenerator");
-        Object invalidValue = new Object();
-        assertTrue(assertThrows(PowsyblException.class, () ->
-            listener.storeEquipmentAttributeModification(generator, "targetP", invalidValue)).getMessage().contains("Value type invalid : Object"));
+        org.hamcrest.MatcherAssert.assertThat(modificationSwitchInfos, MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("break1Variant", Set.of("s1Variant"), "open", true));
     }
 
     @Test
@@ -260,7 +243,7 @@ public class ModificationControllerTest {
             .exchange()
             .expectStatus().isNotFound()
             .expectBody(String.class)
-            .isEqualTo(new NetworkModificationException(SWITCH_NOT_FOUND, switchNotFoundId).getMessage());
+            .isEqualTo(new NetworkModificationException(EQUIPMENT_NOT_FOUND, switchNotFoundId).getMessage());
 
         // switch closing when already closed
         webTestClient.put().uri(uriString + "&open=false", TEST_NETWORK_ID, switchId1)
@@ -323,8 +306,9 @@ public class ModificationControllerTest {
         assertNotNull(res);
         assertEquals(1, res.size());
 
-        assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID, false, true).size());
-        String deleteStrWrongGroup = "/v1/groups/" + UUID.randomUUID() + "/modifications?modificationsUuids=" + res.get(0).getUuid();
+        var modifications = modificationRepository.getModifications(TEST_GROUP_ID, false, true);
+        assertEquals(1, modifications.size());
+        String deleteStrWrongGroup = "/v1/groups/" + UUID.randomUUID() + "/modifications?modificationsUuids=" + modifications.get(0).getUuid();
         String deleteStr = "/v1/groups/" + TEST_GROUP_ID + "/modifications";
 
         webTestClient.delete().uri(deleteStrWrongGroup)
@@ -332,7 +316,7 @@ public class ModificationControllerTest {
             .expectStatus().isNotFound();
 
         webTestClient.delete()
-            .uri(uriBuilder -> uriBuilder.path(deleteStr).queryParam("modificationsUuids", List.of(res.get(0).getUuid())).build())
+            .uri(uriBuilder -> uriBuilder.path(deleteStr).queryParam("modificationsUuids", List.of(modifications.get(0).getUuid())).build())
             .exchange()
             .expectStatus().isOk();
 
@@ -340,7 +324,7 @@ public class ModificationControllerTest {
 
         /* non existing modification */
         webTestClient.delete()
-            .uri(uriBuilder -> uriBuilder.path(deleteStr).queryParam("modificationsUuids", List.of(res.get(0).getUuid())).build())
+            .uri(uriBuilder -> uriBuilder.path(deleteStr).queryParam("modificationsUuids", List.of(modifications.get(0).getUuid())).build())
             .exchange()
             .expectStatus().isNotFound();
 

@@ -8,29 +8,22 @@ package org.gridsuite.modification.server;
 
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
-import com.powsybl.iidm.network.Country;
-import com.powsybl.iidm.network.EnergySource;
-import com.powsybl.iidm.network.Line;
-import com.powsybl.iidm.network.LoadType;
-import com.powsybl.iidm.network.Network;
-import com.powsybl.iidm.network.SwitchKind;
-import com.powsybl.iidm.network.VariantManagerConstants;
+import com.powsybl.iidm.network.*;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.sld.iidm.extensions.BranchStatus;
-
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
+import org.gridsuite.modification.server.entities.GroovyScriptModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.creation.BusbarConnectionCreationEmbeddable;
-import org.gridsuite.modification.server.entities.equipment.creation.BusbarSectionCreationEmbeddable;
-import org.gridsuite.modification.server.entities.equipment.creation.LoadCreationEntity;
+import org.gridsuite.modification.server.entities.equipment.creation.*;
 import org.gridsuite.modification.server.entities.equipment.deletion.EquipmentDeletionEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.BranchStatusModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.LineSplitWithVoltageLevelEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.EquipmentAttributeModificationEntity;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
-import org.gridsuite.modification.server.service.NetworkModificationService;
 import org.gridsuite.modification.server.service.BuildFailedPublisherService;
 import org.gridsuite.modification.server.service.BuildStoppedPublisherService;
+import org.gridsuite.modification.server.service.NetworkModificationService;
 import org.gridsuite.modification.server.service.NetworkStoreListener;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.hamcrest.CoreMatchers;
@@ -47,11 +40,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.cloud.stream.binder.test.OutputDestination;
 import org.springframework.cloud.stream.binder.test.TestChannelBinderConfiguration;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.messaging.Message;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.ContextHierarchy;
@@ -66,13 +55,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_ERROR;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
@@ -193,39 +177,50 @@ public class BuildTest {
         assertEquals("", new String(resultMessage.getPayload()));
     }
 
+    public ModificationEntity createEquipmentAttributeModificationEntity(String equipmentId, String attributeName, Object attributeValue, IdentifiableType equipmentType) {
+        return EquipmentAttributeModificationInfos.builder()
+            .equipmentId(equipmentId)
+            .equipmentAttributeName(attributeName)
+            .equipmentAttributeValue(attributeValue)
+            .equipmentType(equipmentType)
+            .build().toEntity();
+    }
+
     @Test
     public void runBuildTest() throws InterruptedException {
         // create modification entities in the database
-        List<ModificationEntity> entities1 = new ArrayList<>();
-        entities1.add(modificationRepository.createEquipmentAttributeModification("v1d1", "open", true));
-        entities1.add(modificationRepository.createEquipmentAttributeModification("line1", "branchStatus", BranchStatus.Status.PLANNED_OUTAGE));
-        entities1.add(modificationRepository.createEquipmentAttributeModification("idGenerator", "targetP", 50.));
-        entities1.add(modificationRepository.createEquipmentAttributeModification("trf1", "ratioTapChanger.tapPosition", 2));
-        entities1.add(modificationRepository.createEquipmentAttributeModification("trf6", "phaseTapChanger1.tapPosition", 0));
-        entities1.add(modificationRepository.createLoadCreationEntity("newLoad", "newLoad", LoadType.AUXILIARY, "v1", "1.1", 10., 20.));
-        entities1.add(modificationRepository.createSubstationEntity("newSubstation", "newSubstation", Country.FR));
+        List<ModificationEntity> entities1 = List.of(
+            createEquipmentAttributeModificationEntity("v1d1", "open", true, IdentifiableType.SWITCH),
+            createEquipmentAttributeModificationEntity("line1", "branchStatus", BranchStatus.Status.PLANNED_OUTAGE.toString(), IdentifiableType.LINE),
+            createEquipmentAttributeModificationEntity("idGenerator", "targetP", 50., IdentifiableType.GENERATOR),
+            createEquipmentAttributeModificationEntity("trf1", "ratioTapChanger.tapPosition", 2, IdentifiableType.TWO_WINDINGS_TRANSFORMER),
+            createEquipmentAttributeModificationEntity("trf6", "phaseTapChanger1.tapPosition", 0, IdentifiableType.THREE_WINDINGS_TRANSFORMER),
+            new LoadCreationEntity("newLoad", "newLoad", LoadType.AUXILIARY, "v1", "1.1", 10., 20.),
+            new SubstationCreationEntity("newSubstation", "newSubstation", Country.FR)
+        );
 
-        List<ModificationEntity> entities2 = new ArrayList<>();
-        entities2.add(modificationRepository.createGeneratorEntity("newGenerator", "newGenerator", EnergySource.HYDRO, "v2", "1A", 0., 500., 1., 100., 50., true, 225.));
-        entities2.add(modificationRepository.createLineEntity("newLine", "newLine", 1., 2., 3., 4., 5., 6., "v1", "1.1", "v2", "1B", null, null));
-        entities2.add(modificationRepository.createTwoWindingsTransformerEntity("new2wt", "new2wt", 1., 2., 3., 4., 5., 6., "v1", "1.1", "v2", "1A", null, null));
-        entities2.add(modificationRepository.createEquipmentDeletionEntity("v2shunt", "SHUNT_COMPENSATOR"));
-        entities2.add(modificationRepository.createGroovyScriptModificationEntity("network.getGenerator('idGenerator').targetP=55\n"));
-        entities2.add(modificationRepository.createBranchStatusModificationEntity("line2", BranchStatusModificationInfos.ActionType.TRIP));
-        entities2.add(modificationRepository.createVoltageLevelEntity("vl9", "vl9", 225, "s1",
-            List.of(new BusbarSectionCreationEmbeddable("1.1", "1.1", 1, 1),
+        List<ModificationEntity> entities2 = List.of(
+            new GeneratorCreationEntity("newGenerator", "newGenerator", EnergySource.HYDRO, "v2", "1A", 0., 500., 1., 100., 50., true, 225.),
+            new LineCreationEntity("newLine", "newLine", 1., 2., 3., 4., 5., 6., "v1", "1.1", "v2", "1B", null, null),
+            new TwoWindingsTransformerCreationEntity("new2wt", "new2wt", 1., 2., 3., 4., 5., 6., "v1", "1.1", "v2", "1A", null, null),
+            new EquipmentDeletionEntity("v2shunt", "SHUNT_COMPENSATOR"),
+            new GroovyScriptModificationEntity("network.getGenerator('idGenerator').targetP=55\n"),
+            new BranchStatusModificationEntity("line2", BranchStatusModificationInfos.ActionType.TRIP),
+            new VoltageLevelCreationEntity("vl9", "vl9", 225, "s1",
+                List.of(new BusbarSectionCreationEmbeddable("1.1", "1.1", 1, 1),
                     new BusbarSectionCreationEmbeddable("1.2", "1.2", 1, 2)),
-            List.of(new BusbarConnectionCreationEmbeddable("1.1", "1.2", SwitchKind.BREAKER))));
-        entities2.add(modificationRepository.createShuntCompensatorEntity(ShuntCompensatorCreationInfos.builder()
-            .equipmentId("shunt9")
-            .equipmentName("shunt9")
-            .voltageLevelId("v2")
-            .busOrBusbarSectionId("1A")
-            .maximumNumberOfSections(2)
-            .currentNumberOfSections(2)
-            .susceptancePerSection(1.)
-            .isIdenticalSection(true)
-            .build()));
+                List.of(new BusbarConnectionCreationEmbeddable("1.1", "1.2", SwitchKind.BREAKER))),
+            new ShuntCompensatorCreationEntity(ShuntCompensatorCreationInfos.builder()
+                .equipmentId("shunt9")
+                .equipmentName("shunt9")
+                .voltageLevelId("v2")
+                .busOrBusbarSectionId("1A")
+                .maximumNumberOfSections(2)
+                .currentNumberOfSections(2)
+                .susceptancePerSection(1.)
+                .isIdenticalSection(true)
+                .build())
+        );
 
         modificationRepository.saveModifications(TEST_GROUP_ID, entities1);
         modificationRepository.saveModifications(TEST_GROUP_ID_2, entities2);
