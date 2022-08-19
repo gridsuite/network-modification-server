@@ -41,7 +41,7 @@ public class BuildWorkerService {
 
     private static final Logger OUTPUT_MESSAGE_LOGGER = LoggerFactory.getLogger(CATEGORY_BROKER_OUTPUT);
 
-    private final NetworkModificationService networkModificationService;
+    private NetworkModificationService networkModificationService;
 
     private final ObjectMapper objectMapper;
 
@@ -72,17 +72,15 @@ public class BuildWorkerService {
         UUID networkUuid = execContext.getNetworkUuid();
         String receiver = execContext.getReceiver();
         if (cancelBuildRequests.get(receiver) != null) {
-            return Collections.emptyList();
+            return null;
         }
         CompletableFuture<List<ModificationInfos>> future = CompletableFuture.supplyAsync(() ->
             networkModificationService.applyModifications(network, networkUuid, buildInfos)
         );
         futures.put(receiver, future);
         if (cancelBuildRequests.get(receiver) != null) {
-            return Collections.emptyList();
-        } else {
-            LOGGER.info("Starting build on variant : {}", buildInfos.getDestinationVariantId());
-        }
+            return null;
+        }   LOGGER.info("Starting build on variant : {}", buildInfos.getDestinationVariantId());
         return future.get();
     }
 
@@ -129,9 +127,9 @@ public class BuildWorkerService {
     }
 
     @Bean
-    public Consumer<List<Message<String>>> consumeCancelBuild() {
+    public Consumer<Message<String>> consumeCancelBuild() {
         return message -> {
-            BuildCancelContext cancelContext = BuildCancelContext.fromMessage((Message<String>) message);
+            BuildCancelContext cancelContext = BuildCancelContext.fromMessage(message);
             if (buildRequests.contains(cancelContext.getReceiver())) {
                 cancelBuildRequests.put(cancelContext.getReceiver(), cancelContext);
             }
@@ -142,6 +140,7 @@ public class BuildWorkerService {
                 stoppedPublisherService.publishCancel(cancelContext.getReceiver());
                 LOGGER.info(CANCEL_MESSAGE + " (receiver='{}')", cancelContext.getReceiver());
             }
+                LOGGER.error("Exception in consumeCancelBuild");
         };
     }
 

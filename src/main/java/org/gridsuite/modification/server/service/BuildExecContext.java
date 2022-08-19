@@ -23,7 +23,7 @@ import java.util.UUID;
  */
 public class BuildExecContext {
 
-    private final UUID networkUuid;
+    private UUID networkUuid;
 
     private final BuildInfos buildInfos;
 

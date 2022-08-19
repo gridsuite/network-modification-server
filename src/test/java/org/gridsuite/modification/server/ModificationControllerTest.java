@@ -186,6 +186,8 @@ public class ModificationControllerTest {
         EquipmentAttributeModificationInfos modificationSwitchInfos =
                    Objects.requireNonNull(equipmentAttributeModificationInfosList).get(0);
         assertTrue(createMatcherEquipmentAttributeModificationInfos("v1b1", Set.of("s1"), "open", true).matchesSafely(modificationSwitchInfos));
+        
+        // switch in variant VARIANT_ID opening
         mvcResult = mockMvc.perform(put("/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID + "&open=true" + "&variantId=" + NetworkCreation.VARIANT_ID + "&reportUuid=" + TEST_REPORT_ID, TEST_NETWORK_ID, "break1Variant")).andExpectAll(
          status().isOk(),
          content().contentType(MediaType.APPLICATION_JSON))
@@ -193,7 +195,6 @@ public class ModificationControllerTest {
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<EquipmentAttributeModificationInfos> equipmentAttributeModificationInfosListSwitch = mapper.readValue(resultAsString, new TypeReference<>() { });
         EquipmentAttributeModificationInfos modificationSwitchListInfos = Objects.requireNonNull(equipmentAttributeModificationInfosListSwitch).get(0);
-        // switch in variant VARIANT_ID opening
         assertTrue(createMatcherEquipmentAttributeModificationInfos("break1Variant", Set.of("s1Variant"), "open", true).matchesSafely(modificationSwitchListInfos));
     }
 
@@ -211,6 +212,7 @@ public class ModificationControllerTest {
     public void testModificationGroups() throws Exception {
         MvcResult mvcResult;
         String resultAsString;
+        // no groups
         mvcResult = mockMvc.perform(get("/v1/groups")).andExpectAll(
          status().isOk(),
          content().contentType(MediaType.APPLICATION_JSON))
@@ -218,12 +220,8 @@ public class ModificationControllerTest {
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<UUID> bsicListResult = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertEquals(bsicListResult, List.of());
-        // no groups
         mvcResult = mockMvc.perform(put("/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID + "&open=true" + "&reportUuid=" + TEST_REPORT_ID, TEST_NETWORK_ID, "v1b1"))
-         .andExpectAll(
-         status().isOk(),
-         content().contentType(MediaType.APPLICATION_JSON))
-         .andReturn();
+         .andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON)).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<EquipmentAttributeModificationInfos> bsiListResultModificationInfos = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertThat(bsiListResultModificationInfos.get(0), createMatcherEquipmentAttributeModificationInfos("v1b1", Set.of("s1"), "open", true));
@@ -286,7 +284,7 @@ public class ModificationControllerTest {
         List<EquipmentAttributeModificationInfos> bsiListResultAttributeModificationInfos = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertThat(bsiListResultAttributeModificationInfos.get(0), createMatcherEquipmentAttributeModificationInfos(switchId1, Set.of(), "open", false));
         // switch opening
-        mvcResult = mockMvc.perform(put(uriString + "&open=false", TEST_NETWORK_ID, switchId2))
+        mvcResult = mockMvc.perform(put(uriString + "&open=true", TEST_NETWORK_ID, switchId1))
                                          .andExpectAll(
                                                  status().isOk(),
                                                  content().contentType(MediaType.APPLICATION_JSON))
@@ -347,11 +345,12 @@ public class ModificationControllerTest {
         String deleteStr = "/v1/groups/" + TEST_GROUP_ID + "/modifications";
         mockMvc.perform(delete(deleteStr).queryParam("modificationsUuids", bsiListResultAttributemi.get(0).getUuid().toString())).andExpect(status().isOk());
         assertEquals(0, modificationRepository.getModifications(TEST_GROUP_ID, false, true).size());
+        
          /* non existing modification */
         mockMvc.perform(delete(deleteStr).queryParam("modificationsUuids", bsiListResultAttributemi.get(0).getUuid().toString())).andExpect(status().isNotFound());
         mockMvc.perform(delete("/v1/groups/" + TEST_GROUP_ID)).andExpect(status().isOk());
         mockMvc.perform(delete("/v1/groups/" + TEST_GROUP_ID)).andExpect(status().isNotFound());
-        mockMvc.perform(delete("/v1/groups/" + TEST_GROUP_ID)).andExpect(status().isNotFound());
+        mockMvc.perform(delete("/v1/groups/" + TEST_GROUP_ID).queryParam("errorOnGroupNotFound", "false")).andExpect(status().isOk());
     }
 
     @Test
@@ -415,24 +414,30 @@ public class ModificationControllerTest {
         mockMvc.perform(put(uriString, NOT_FOUND_NETWORK_ID, "line2").contentType(MediaType.TEXT_PLAIN_VALUE).content("lockout")).andExpectAll(
                 status().isNotFound(),
                 content().string(new NetworkModificationException(NETWORK_NOT_FOUND, NOT_FOUND_NETWORK_ID.toString()).getMessage()));
+        
         // line not existing
         mockMvc.perform(put(uriString, TEST_NETWORK_ID, "notFound").contentType(MediaType.TEXT_PLAIN_VALUE).content("lockout")).andExpectAll(
                 status().isNotFound(),
                 content().string(new NetworkModificationException(LINE_NOT_FOUND, "notFound").getMessage()));
+        
         // modification action empty
-        mockMvc.perform(put(uriString, TEST_NETWORK_ID, "line2").contentType(MediaType.TEXT_PLAIN_VALUE).content(" ")).andExpectAll(
+        mockMvc.perform(put(uriString, TEST_NETWORK_ID, "line2").contentType(MediaType.TEXT_PLAIN_VALUE).content("")).andExpectAll(
                 status().isBadRequest(),
                 content().string(new NetworkModificationException(BRANCH_ACTION_TYPE_EMPTY).getMessage()));
+        
         // modification action not existing
         mockMvc.perform(put(uriString, TEST_NETWORK_ID, "line2").contentType(MediaType.TEXT_PLAIN_VALUE).content("foo")).andExpectAll(
                 status().isBadRequest(),
                 content().string(NetworkModificationException.createBranchActionTypeUnknown("foo").getMessage()));
+        
         mockMvc.perform(put(uriString, TEST_NETWORK_ID, "line3").contentType(MediaType.TEXT_PLAIN_VALUE).content("lockout")).andExpectAll(
                 status().isBadRequest(),
                 content().string(new NetworkModificationException(BRANCH_ACTION_ERROR, "Unable to disconnect both line ends").getMessage()));
+        
         mockMvc.perform(put(uriString, TEST_NETWORK_ID, "line3").contentType(MediaType.TEXT_PLAIN_VALUE).content("energise_end_one")).andExpectAll(
                 status().isBadRequest(),
                 content().string(new NetworkModificationException(BRANCH_ACTION_ERROR, "Unable to energise line end").getMessage()));
+        
         mockMvc.perform(put(uriString, TEST_NETWORK_ID, "line3").contentType(MediaType.TEXT_PLAIN_VALUE).content("energise_end_two")).andExpectAll(
                 status().isBadRequest(),
                 content().string(new NetworkModificationException(BRANCH_ACTION_ERROR, "Unable to energise line end").getMessage()));

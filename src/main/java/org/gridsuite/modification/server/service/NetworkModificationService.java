@@ -194,7 +194,7 @@ public class NetworkModificationService {
     }
 
     public List<UUID> getModificationGroups() {
-        return networkModificationRepository.getModificationGroupsUuids().stream().collect(Collectors.toList());
+        return networkModificationRepository.getModificationGroupsUuids();
     }
 
     public List<ModificationInfos> getModifications(UUID groupUuid, boolean onlyMetadata, boolean errorOnGroupNotFound) {
@@ -202,19 +202,11 @@ public class NetworkModificationService {
     }
 
     public List<ModificationInfos> getModification(UUID modificationUuid) {
-        return networkModificationRepository.getModifications(List.of(modificationUuid)).stream().collect(Collectors.toList());
+        return networkModificationRepository.getModifications(List.of(modificationUuid));
     }
 
     public void createModificationGroup(UUID sourceGroupUuid, UUID groupUuid, UUID reportUuid) {
         //TODO To be optimized by retrieving ModificationEntity objects directly instead of ModificationInfos objects
-        /** return getModifications(sourceGroupUuid, false, false).doOnNext(m -> {
-            Optional<ModificationEntity> modification = this.modificationRepository.findById(m.getUuid());
-            modification.get().setId(null);
-            networkModificationRepository.saveModifications(groupUuid, List.of(modification.get()));
-        }).doOnNext(unused -> {
-            ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
-            sendReport(reportUuid, reporter);
-        }).then(); **/
     }
 
     private boolean disconnectLineBothSides(Network network, String lineId) {

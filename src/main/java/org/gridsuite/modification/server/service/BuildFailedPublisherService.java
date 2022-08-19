@@ -38,5 +38,6 @@ public class BuildFailedPublisherService {
                 .build();
         LOGGER.debug("Sending message : {}", message);
         failedMessagePublisher.send("publishFailedBuild-out-0", message);
+        
     }
 }

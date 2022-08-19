@@ -133,7 +133,7 @@ public class NetworkModificationController {
             @Parameter(description = "Line ID") @PathVariable("lineId") String lineId,
             @RequestParam(value = "group", required = false) UUID groupUuid,
             @RequestParam(value = "reportUuid") UUID reportUuid,
-            @RequestBody String action) {
+            @RequestBody(required = false) String action) {
         return ResponseEntity.ok().body(networkModificationService.changeLineStatus(networkUuid, variantId, groupUuid, reportUuid, lineId, action));
     }
 
