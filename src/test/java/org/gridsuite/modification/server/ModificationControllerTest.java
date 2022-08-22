@@ -186,7 +186,6 @@ public class ModificationControllerTest {
         EquipmentAttributeModificationInfos modificationSwitchInfos =
                    Objects.requireNonNull(equipmentAttributeModificationInfosList).get(0);
         assertTrue(createMatcherEquipmentAttributeModificationInfos("v1b1", Set.of("s1"), "open", true).matchesSafely(modificationSwitchInfos));
-        
         // switch in variant VARIANT_ID opening
         mvcResult = mockMvc.perform(put("/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID + "&open=true" + "&variantId=" + NetworkCreation.VARIANT_ID + "&reportUuid=" + TEST_REPORT_ID, TEST_NETWORK_ID, "break1Variant")).andExpectAll(
          status().isOk(),
@@ -274,6 +273,7 @@ public class ModificationControllerTest {
         mockMvc.perform(put(uriString + "&open=true", TEST_NETWORK_ID, switchNotFoundId)).andExpectAll(
                 status().isNotFound(),
                 content().string(new NetworkModificationException(SWITCH_NOT_FOUND, switchNotFoundId).getMessage()));
+
         // switch closing when already closed
         mvcResult = mockMvc.perform(put(uriString + "&open=false", TEST_NETWORK_ID, switchId1))
                                                        .andExpectAll(
@@ -291,7 +291,8 @@ public class ModificationControllerTest {
                                          .andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<EquipmentAttributeModificationInfos> bsiListResultSwitchOpening = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertThat(bsiListResultSwitchOpening.get(0), createMatcherEquipmentAttributeModificationInfos(switchId2, substationsIds, "open", false));
+        assertThat(bsiListResultSwitchOpening.get(0), createMatcherEquipmentAttributeModificationInfos(switchId1, substationsIds, "open", true));
+
         // switch closing
         mvcResult = mockMvc.perform(put(uriString + "&open=false", TEST_NETWORK_ID, switchId2))
                                                        .andExpectAll(
@@ -301,6 +302,7 @@ public class ModificationControllerTest {
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<EquipmentAttributeModificationInfos> bsiListResultami = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertThat(bsiListResultami.get(0), createMatcherEquipmentAttributeModificationInfos(switchId2, substationsIds, "open", false));
+
         // switch opening on another substation
         mvcResult = mockMvc.perform(put(uriString + "&open=true", TEST_NETWORK_ID, switchId3))
                                                 .andExpectAll(
@@ -345,7 +347,6 @@ public class ModificationControllerTest {
         String deleteStr = "/v1/groups/" + TEST_GROUP_ID + "/modifications";
         mockMvc.perform(delete(deleteStr).queryParam("modificationsUuids", bsiListResultAttributemi.get(0).getUuid().toString())).andExpect(status().isOk());
         assertEquals(0, modificationRepository.getModifications(TEST_GROUP_ID, false, true).size());
-        
          /* non existing modification */
         mockMvc.perform(delete(deleteStr).queryParam("modificationsUuids", bsiListResultAttributemi.get(0).getUuid().toString())).andExpect(status().isNotFound());
         mockMvc.perform(delete("/v1/groups/" + TEST_GROUP_ID)).andExpect(status().isOk());
@@ -414,30 +415,24 @@ public class ModificationControllerTest {
         mockMvc.perform(put(uriString, NOT_FOUND_NETWORK_ID, "line2").contentType(MediaType.TEXT_PLAIN_VALUE).content("lockout")).andExpectAll(
                 status().isNotFound(),
                 content().string(new NetworkModificationException(NETWORK_NOT_FOUND, NOT_FOUND_NETWORK_ID.toString()).getMessage()));
-        
         // line not existing
         mockMvc.perform(put(uriString, TEST_NETWORK_ID, "notFound").contentType(MediaType.TEXT_PLAIN_VALUE).content("lockout")).andExpectAll(
                 status().isNotFound(),
                 content().string(new NetworkModificationException(LINE_NOT_FOUND, "notFound").getMessage()));
-        
         // modification action empty
         mockMvc.perform(put(uriString, TEST_NETWORK_ID, "line2").contentType(MediaType.TEXT_PLAIN_VALUE).content("")).andExpectAll(
                 status().isBadRequest(),
                 content().string(new NetworkModificationException(BRANCH_ACTION_TYPE_EMPTY).getMessage()));
-        
         // modification action not existing
         mockMvc.perform(put(uriString, TEST_NETWORK_ID, "line2").contentType(MediaType.TEXT_PLAIN_VALUE).content("foo")).andExpectAll(
                 status().isBadRequest(),
                 content().string(NetworkModificationException.createBranchActionTypeUnknown("foo").getMessage()));
-        
         mockMvc.perform(put(uriString, TEST_NETWORK_ID, "line3").contentType(MediaType.TEXT_PLAIN_VALUE).content("lockout")).andExpectAll(
                 status().isBadRequest(),
                 content().string(new NetworkModificationException(BRANCH_ACTION_ERROR, "Unable to disconnect both line ends").getMessage()));
-        
         mockMvc.perform(put(uriString, TEST_NETWORK_ID, "line3").contentType(MediaType.TEXT_PLAIN_VALUE).content("energise_end_one")).andExpectAll(
                 status().isBadRequest(),
                 content().string(new NetworkModificationException(BRANCH_ACTION_ERROR, "Unable to energise line end").getMessage()));
-        
         mockMvc.perform(put(uriString, TEST_NETWORK_ID, "line3").contentType(MediaType.TEXT_PLAIN_VALUE).content("energise_end_two")).andExpectAll(
                 status().isBadRequest(),
                 content().string(new NetworkModificationException(BRANCH_ACTION_ERROR, "Unable to energise line end").getMessage()));
@@ -446,10 +441,8 @@ public class ModificationControllerTest {
     @Test
     public void testGroovyWithErrors() throws Exception {
         String uriString = "/v1/networks/{networkUuid}/groovy?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
-        // apply null groovy script
-        mockMvc.perform(put(uriString, TEST_NETWORK_ID)).andExpect(status().isUnsupportedMediaType());
         // apply empty groovy script
-        mockMvc.perform(put(uriString, TEST_NETWORK_ID).contentType(MediaType.TEXT_PLAIN_VALUE).content(" ")).andExpectAll(
+        mockMvc.perform(put(uriString, TEST_NETWORK_ID).contentType(MediaType.TEXT_PLAIN_VALUE).content("")).andExpectAll(
                 status().isBadRequest(),
                 content().string(new NetworkModificationException(GROOVY_SCRIPT_EMPTY).getMessage()));
         // apply empty groovy script
@@ -955,7 +948,7 @@ public class ModificationControllerTest {
         shunt1.setMaximumNumberOfSections(2);
         shunt1Json = objectWriter.writeValueAsString(shunt1);
         mockMvc.perform(post(uriString, TEST_NETWORK_ID).content(shunt1Json).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().is5xxServerError()).andReturn();
+                .andExpect(status().is5xxServerError());
     }
 
     @Test
@@ -1001,7 +994,6 @@ public class ModificationControllerTest {
                 235.)
                 .toModificationInfos();
         generatorCreationInfos.setUuid(bsmlrGeneratorCreation.get(0).getUuid());
-        generatorCreationInfosJson = objectWriter.writeValueAsString(generatorCreationInfos);
         // Update generator creation
         GeneratorCreationInfos generatorCreationUpdate = new GeneratorCreationEntity(
                 "idGenerator1Edited",
@@ -1182,7 +1174,7 @@ public class ModificationControllerTest {
         mockMvc.perform(put(uriStringForUpdate).content(twoWindingsTransformerCreationUpdateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
-        mvcResult = mockMvc.perform(get("/v1/modifications/" + bsmlrTwoWindings.get(0).getUuid()).contentType(MediaType.APPLICATION_JSON))
+        mvcResult = mockMvc.perform(get("/v1/modifications/" + bsmlrTwoWindings.get(0).getUuid()))
                                                            .andExpect(status().isOk()).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<TwoWindingsTransformerCreationInfos> bsmlrWindingsTransformer = mapper.readValue(resultAsString, new TypeReference<>() { });
@@ -1190,10 +1182,8 @@ public class ModificationControllerTest {
         // create 2wt with errors
         twoWindingsTransformerCreationInfos.setBusOrBusbarSectionId1("notFoundBus");
         twoWindingsTransformerCreationInfosJson = objectWriter.writeValueAsString(twoWindingsTransformerCreationInfos);
-        mvcResult = mockMvc.perform(post(uriString, TEST_NETWORK_BUS_BREAKER_ID).content(twoWindingsTransformerCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                                                    .andExpect(status().is4xxClientError()).andReturn();
-        resultAsString  = mvcResult.getResponse().getContentAsString();
-        assertEquals(resultAsString, new NetworkModificationException(BUS_NOT_FOUND, "notFoundBus").getMessage());
+        mockMvc.perform(post(uriString, TEST_NETWORK_BUS_BREAKER_ID).content(twoWindingsTransformerCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                                                    .andExpectAll(status().is4xxClientError(), content().string(new NetworkModificationException(BUS_NOT_FOUND, "notFoundBus").getMessage())).andReturn();
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
     }
 
@@ -1273,7 +1263,7 @@ public class ModificationControllerTest {
     public void testDeleteEquipment() throws Exception {
         MvcResult mvcResult;
         String resultAsString;
-        final String uriString = "/v1/networks/{networkUuid}/equipments/type/{equipmentType}/id/{equipmentId}?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
+        String uriString = "/v1/networks/{networkUuid}/equipments/type/{equipmentType}/id/{equipmentId}?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
         assertTrue(equipmentInfosService.findAllEquipmentInfos(TEST_NETWORK_ID).isEmpty());
         assertTrue(equipmentInfosService.findAllEquipmentInfos(TEST_NETWORK_ID_2).isEmpty());
         assertTrue(equipmentInfosService.findAllTombstonedEquipmentInfos(TEST_NETWORK_ID).isEmpty());

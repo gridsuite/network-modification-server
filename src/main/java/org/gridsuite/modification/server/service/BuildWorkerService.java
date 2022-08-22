@@ -80,7 +80,8 @@ public class BuildWorkerService {
         futures.put(receiver, future);
         if (cancelBuildRequests.get(receiver) != null) {
             return null;
-        }   LOGGER.info("Starting build on variant : {}", buildInfos.getDestinationVariantId());
+        }
+        LOGGER.info("Starting build on variant : {}", buildInfos.getDestinationVariantId());
         return future.get();
     }
 
@@ -140,7 +141,7 @@ public class BuildWorkerService {
                 stoppedPublisherService.publishCancel(cancelContext.getReceiver());
                 LOGGER.info(CANCEL_MESSAGE + " (receiver='{}')", cancelContext.getReceiver());
             }
-                LOGGER.error("Exception in consumeCancelBuild");
+            LOGGER.error("Exception in consumeCancelBuild");
         };
     }
 

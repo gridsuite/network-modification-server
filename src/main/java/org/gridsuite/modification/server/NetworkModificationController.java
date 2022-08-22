@@ -55,7 +55,7 @@ public class NetworkModificationController {
                                                                      @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
                                                                      @RequestParam(value = "group", required = false) UUID groupUuid,
                                                                      @RequestParam(value = "reportUuid") UUID reportUuid,
-                                                                     @RequestBody String groovyScript) {
+                                                                     @RequestBody(required = false) String groovyScript) {
         return ResponseEntity.ok().body(networkModificationService.applyGroovyScript(networkUuid, variantId, groupUuid, reportUuid, groovyScript));
     }
 
