@@ -25,9 +25,9 @@ public class BuildExecContext {
 
     private UUID networkUuid;
 
-    private final BuildInfos buildInfos;
+    private BuildInfos buildInfos;
 
-    private final String receiver;
+    private String receiver;
 
     public BuildExecContext(@NonNull UUID networkUuid, @NonNull BuildInfos buildInfos, @NonNull String receiver) {
         this.networkUuid = networkUuid;

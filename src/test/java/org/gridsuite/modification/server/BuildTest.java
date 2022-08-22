@@ -104,6 +104,7 @@ public class BuildTest {
 
     @Autowired
     private OutputDestination output;
+
     @MockBean
     private NetworkStoreService networkStoreService;
 
@@ -119,6 +120,7 @@ public class BuildTest {
 
     @Autowired
     private EquipmentInfosService equipmentInfosService;
+
     @Autowired
     private ObjectMapper mapper;
     private ObjectWriter objectWriter;
@@ -132,12 +134,14 @@ public class BuildTest {
             network = NetworkCreation.create(TEST_NETWORK_ID, true);
             return network;
         });
+
         when(networkStoreService.getNetwork(TEST_NETWORK_STOP_BUILD_ID)).then((Answer<Network>) invocation -> {
             // Needed so the stop call doesn't arrive too late
             Thread.sleep(2000);
             network = NetworkCreation.create(TEST_NETWORK_STOP_BUILD_ID, true);
             return network;
         });
+
         networkModificationService.setReportServerRest(reportServerRest);
         given(reportServerRest.exchange(eq("/v1/reports/" + TEST_NETWORK_ID), eq(HttpMethod.PUT), ArgumentMatchers.any(HttpEntity.class), eq(ReporterModel.class)))
             .willReturn(new ResponseEntity<>(HttpStatus.OK));
@@ -156,12 +160,14 @@ public class BuildTest {
         entities1.add(modificationRepository.createLineEntity("newLine", "newLine", 1., 2., 3., 4., 5., 6., "v1", "1.1", "v2", "1B", null, null));
         entities1.add(LineSplitWithVoltageLevelEntity.toEntity("line3", 0.32, null, "vl1", "sjb1", "un", "One", "deux", "Two"));
         modificationRepository.saveModifications(TEST_GROUP_ID, entities1);
+
         List<ModificationEntity> entities2 = new ArrayList<>();
         entities2.add(modificationRepository.createVoltageLevelEntity("vl9", "vl9", 225, "s1",
             List.of(new BusbarSectionCreationEmbeddable("1.1", "1.1", 1, 1),
                 new BusbarSectionCreationEmbeddable("1.2", "1.2", 1, 2)),
             List.of(new BusbarConnectionCreationEmbeddable("1.1", "1.2", SwitchKind.BREAKER))));
         modificationRepository.saveModifications(TEST_GROUP_ID_2, entities2);
+
         String uriString = "/v1/networks/{networkUuid}/build?receiver=me";
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
             NetworkCreation.VARIANT_ID,
@@ -171,9 +177,11 @@ public class BuildTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(mapper.writeValueAsString(buildInfos)))
                 .andExpect(status().isOk());
+
         Thread.sleep(3000);  // Needed to be sure that build result message has been sent
         Message<byte[]> resultMessage = output.receive(TIMEOUT, "build.result");
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
+
         BuildInfos newBuildInfos = new BuildInfos(NetworkCreation.VARIANT_ID,
             VARIANT_ID_2,
             List.of(),
@@ -182,6 +190,7 @@ public class BuildTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(mapper.writeValueAsString(newBuildInfos)))
                 .andExpect(status().isOk());
+
         Thread.sleep(3000);  // Needed to be sure that build result message has been sent and data have been written in ES
         resultMessage = output.receive(TIMEOUT, "build.result");
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
@@ -199,6 +208,7 @@ public class BuildTest {
         entities1.add(modificationRepository.createEquipmentAttributeModification("trf6", "phaseTapChanger1.tapPosition", 0));
         entities1.add(modificationRepository.createLoadCreationEntity("newLoad", "newLoad", LoadType.AUXILIARY, "v1", "1.1", 10., 20.));
         entities1.add(modificationRepository.createSubstationEntity("newSubstation", "newSubstation", Country.FR));
+
         List<ModificationEntity> entities2 = new ArrayList<>();
         entities2.add(modificationRepository.createGeneratorEntity("newGenerator", "newGenerator", EnergySource.HYDRO, "v2", "1A", 0., 500., 1., 100., 50., true, 225.));
         entities2.add(modificationRepository.createLineEntity("newLine", "newLine", 1., 2., 3., 4., 5., 6., "v1", "1.1", "v2", "1B", null, null));
@@ -220,8 +230,10 @@ public class BuildTest {
             .susceptancePerSection(1.)
             .isIdenticalSection(true)
             .build()));
+
         modificationRepository.saveModifications(TEST_GROUP_ID, entities1);
         modificationRepository.saveModifications(TEST_GROUP_ID_2, entities2);
+
         testNetworkModificationsCount(TEST_GROUP_ID, 7);
         testNetworkModificationsCount(TEST_GROUP_ID_2, 8);
 
@@ -234,10 +246,12 @@ public class BuildTest {
         String buildInfosJson = objectWriter.writeValueAsString(buildInfos);
         mockMvc.perform(post(uriString, TEST_NETWORK_ID).contentType(MediaType.APPLICATION_JSON).content(buildInfosJson))
                 .andExpect(status().isOk());
+
         Thread.sleep(3000);  // Needed to be sure that build result message has been sent
         Message<byte[]> resultMessage = output.receive(TIMEOUT, "build.result");
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
         assertEquals("newSubstation,s1,s2", new String(resultMessage.getPayload()));
+
         // test all modifications have been made on variant VARIANT_ID
         network.getVariantManager().setWorkingVariant(NetworkCreation.VARIANT_ID);
         assertTrue(network.getSwitch("v1d1").isOpen());
@@ -247,6 +261,7 @@ public class BuildTest {
         branchStatus = network.getLine("line2").getExtension(BranchStatus.class);
         assertNotNull(branchStatus);
         assertEquals(BranchStatus.Status.FORCED_OUTAGE, branchStatus.getStatus());
+
         assertEquals(55., network.getGenerator("idGenerator").getTargetP(), 0.1);
         assertEquals(2, network.getTwoWindingsTransformer("trf1").getRatioTapChanger().getTapPosition());
         assertEquals(0, network.getThreeWindingsTransformer("trf6").getLeg1().getPhaseTapChanger().getTapPosition());
@@ -270,6 +285,7 @@ public class BuildTest {
         assertEquals(Country.FR, network.getSubstation("newSubstation").getCountry().orElse(Country.AF));
         assertNotNull(network.getVoltageLevel("vl9"));
         assertNotNull(network.getShuntCompensator("shunt9"));
+
         // Test that no modifications have been made on initial variant
         network.getVariantManager().setWorkingVariant(VariantManagerConstants.INITIAL_VARIANT_ID);
         assertFalse(network.getSwitch("v1d1").isOpen());
@@ -286,9 +302,11 @@ public class BuildTest {
         assertNull(network.getSubstation("newSubstation"));
         assertNull(network.getVoltageLevel("vl9"));
         assertNull(network.getShuntCompensator("shunt9"));
+
         // No new modification entity should have been added to the database
         testNetworkModificationsCount(TEST_GROUP_ID, 7);
         testNetworkModificationsCount(TEST_GROUP_ID_2, 8);
+
         // Execute another build starting from variant VARIANT_ID to variant VARIANT_ID_2
         // to check
         BuildInfos newBuildInfos = new BuildInfos(NetworkCreation.VARIANT_ID,
@@ -298,14 +316,17 @@ public class BuildTest {
         buildInfosJson = objectWriter.writeValueAsString(newBuildInfos);
         mockMvc.perform(post(uriString, TEST_NETWORK_ID).contentType(MediaType.APPLICATION_JSON).content(buildInfosJson)
                                  ).andExpect(status().isOk());
+
         Thread.sleep(3000);  // Needed to be sure that build result message has been sent and data have been written in ES
         resultMessage = output.receive(TIMEOUT, "build.result");
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
         assertEquals("", new String(resultMessage.getPayload()));
+
         List<EquipmentInfos> eqVariant1 = equipmentInfosService.findAllEquipmentInfos(TEST_NETWORK_ID).stream().filter(eq -> eq.getVariantId().equals(NetworkCreation.VARIANT_ID)).collect(Collectors.toList());
         List<EquipmentInfos> eqVariant2 = equipmentInfosService.findAllEquipmentInfos(TEST_NETWORK_ID).stream().filter(eq -> eq.getVariantId().equals(VARIANT_ID_2)).collect(Collectors.toList());
         assertTrue(eqVariant2.size() > 0);
         assertEquals(eqVariant1.size(), eqVariant2.size());
+
         List<TombstonedEquipmentInfos> tbseqVariant1 = equipmentInfosService.findAllTombstonedEquipmentInfos(TEST_NETWORK_ID).stream().filter(eq -> eq.getVariantId().equals(NetworkCreation.VARIANT_ID)).collect(Collectors.toList());
         List<TombstonedEquipmentInfos> tbseqVariant2 = equipmentInfosService.findAllTombstonedEquipmentInfos(TEST_NETWORK_ID).stream().filter(eq -> eq.getVariantId().equals(VARIANT_ID_2)).collect(Collectors.toList());
         // v2shunt was deleted from initial variant => v2shunt and the cell switches (breaker and disconnector) have been added as TombstonedEquipmentInfos in ElasticSearch
@@ -313,6 +334,7 @@ public class BuildTest {
         assertEquals(tbseqVariant1.size(), tbseqVariant2.size());
         // deactivate some modifications and rebuild VARIANT_ID
         network.getVariantManager().cloneVariant(VariantManagerConstants.INITIAL_VARIANT_ID, NetworkCreation.VARIANT_ID, true);
+
         AtomicReference<UUID> lineModificationEntityUuid = new AtomicReference<>();
         AtomicReference<UUID> loadCreationEntityUuid = new AtomicReference<>();
         AtomicReference<UUID> equipmentDeletionEntityUuid = new AtomicReference<>();
@@ -331,13 +353,15 @@ public class BuildTest {
                 }
             }
         });
+
         buildInfos.addModificationToExclude(lineModificationEntityUuid.get());
         buildInfos.addModificationToExclude(loadCreationEntityUuid.get());
         buildInfos.addModificationToExclude(equipmentDeletionEntityUuid.get());
         buildInfosJson = objectWriter.writeValueAsString(buildInfos);
+
         mockMvc.perform(post(uriString, TEST_NETWORK_ID).content(buildInfosJson)
-                                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+            .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
 
         Thread.sleep(3000);  // Needed to be sure that build result message has been sent
         resultMessage = output.receive(TIMEOUT, "build.result");
@@ -377,8 +401,10 @@ public class BuildTest {
         List<ModificationEntity> entities = new ArrayList<>();
         entities.add(modificationRepository.createEquipmentAttributeModification("v1d1", "open", true));
         entities.add(modificationRepository.createEquipmentAttributeModification("line1", "branchStatus", BranchStatus.Status.PLANNED_OUTAGE));
+
         modificationRepository.saveModifications(TEST_GROUP_ID, entities);  // save all modification entities in group TEST_GROUP_ID
         testNetworkModificationsCount(TEST_GROUP_ID, 2);
+
         // build VARIANT_ID by cloning network initial variant and applying all modifications in group uuid TEST_GROUP_ID
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
             NetworkCreation.VARIANT_ID,
@@ -388,15 +414,16 @@ public class BuildTest {
             try {
                 String uriString = "/v1/networks/{networkUuid}/build?receiver=me";
                 mockMvc.perform(post(uriString, TEST_NETWORK_STOP_BUILD_ID)
-                                        .contentType(MediaType.APPLICATION_JSON)
+            .contentType(MediaType.APPLICATION_JSON)
                                         .content(mapper.writeValueAsString(buildInfos)))
-                        .andExpect(status().isOk());
+                    .andExpect(status().isOk());
                 countDownLatch.countDown();
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         }).start();
         Thread.sleep(2000);
+
         // stop build
         String uriString = "/v1/build/stop?receiver=me";
         mockMvc.perform(put(uriString)).andExpect(
@@ -412,7 +439,9 @@ public class BuildTest {
         // mock exception when sending to report server
         given(reportServerRest.exchange(eq("/v1/reports/" + TEST_REPORT_ID), eq(HttpMethod.PUT), any(HttpEntity.class), eq(ReporterModel.class)))
             .willThrow(RestClientException.class);
+
         modificationRepository.saveModifications(TEST_GROUP_ID, List.of(modificationRepository.createEquipmentAttributeModification("v1d1", "open", true)));
+
         // build VARIANT_ID by cloning network initial variant and applying all modifications in all groups
         String uriString = "/v1/networks/{networkUuid}/build?receiver=me";
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
@@ -420,10 +449,12 @@ public class BuildTest {
             List.of(new GroupAndReportInfos(TEST_GROUP_ID, TEST_REPORT_ID)),
             new HashSet<>());
         mockMvc.perform(post(uriString, TEST_NETWORK_ID)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(mapper.writeValueAsString(buildInfos)))
-                .andExpect(status().isOk());
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(mapper.writeValueAsString(buildInfos)))
+            .andExpect(status().isOk());
+
         assertNull(output.receive(TIMEOUT, "build.result"));
+
         Message<byte[]> message = output.receive(TIMEOUT * 3, "build.failed");
         assertEquals("me", message.getHeaders().get("receiver"));
         assertThat((String) message.getHeaders().get("message"), CoreMatchers.startsWith(BuildFailedPublisherService.FAIL_MESSAGE));    }
@@ -442,7 +473,7 @@ public class BuildTest {
     }
 
     private void testNetworkModificationsCount(UUID groupUuid, int actualSize) throws Exception {
-                // get all modifications for the given group of a network
+        // get all modifications for the given group of a network
         MvcResult mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/modifications", groupUuid)).andExpect(status().isOk()).andReturn();
         String resultAsString = mvcResult.getResponse().getContentAsString();
         List<ModificationInfos> modificationInfos = mapper.readValue(resultAsString, new TypeReference<>() { });
@@ -457,7 +488,9 @@ public class BuildTest {
         } catch (NullPointerException e) {
             // Ignoring
         }
+
         output.clear(); // purge in order to not fail the other tests
+
         assertNull("Should not be any messages : ", message);
     }
 }

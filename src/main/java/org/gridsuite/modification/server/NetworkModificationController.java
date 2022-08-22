@@ -16,6 +16,7 @@ import org.gridsuite.modification.server.service.NetworkModificationService;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -28,7 +29,7 @@ import java.util.UUID;
 @Tag(name = "network-modification-server")
 public class NetworkModificationController {
 
-    private final NetworkModificationService networkModificationService;
+    private NetworkModificationService networkModificationService;
 
     public NetworkModificationController(NetworkModificationService networkModificationService) {
         this.networkModificationService = networkModificationService;
