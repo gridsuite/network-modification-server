@@ -5,21 +5,15 @@
   file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 package org.gridsuite.modification.server;
+
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
-import com.powsybl.iidm.network.Country;
-import com.powsybl.iidm.network.EnergySource;
-import com.powsybl.iidm.network.Line;
-import com.powsybl.iidm.network.LoadType;
-import com.powsybl.iidm.network.Network;
-import com.powsybl.iidm.network.SwitchKind;
-import com.powsybl.iidm.network.VariantManagerConstants;
+import com.powsybl.iidm.network.*;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.sld.iidm.extensions.BranchStatus;
-
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
@@ -30,9 +24,9 @@ import org.gridsuite.modification.server.entities.equipment.deletion.EquipmentDe
 import org.gridsuite.modification.server.entities.equipment.modification.LineSplitWithVoltageLevelEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.EquipmentAttributeModificationEntity;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
+import org.gridsuite.modification.server.service.BuildFailedPublisherService;
 import org.gridsuite.modification.server.service.BuildStoppedPublisherService;
 import org.gridsuite.modification.server.service.NetworkModificationService;
-import org.gridsuite.modification.server.service.BuildFailedPublisherService;
 import org.gridsuite.modification.server.service.NetworkStoreListener;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.hamcrest.CoreMatchers;
@@ -44,13 +38,13 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.cloud.stream.binder.test.OutputDestination;
 import org.springframework.cloud.stream.binder.test.TestChannelBinderConfiguration;
 import org.springframework.http.*;
-
 import org.springframework.messaging.Message;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.ContextHierarchy;
@@ -61,18 +55,16 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_ERROR;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
@@ -102,6 +94,26 @@ public class BuildTest {
 
     private static final String VARIANT_ID_2 = "variant_2";
 
+    private ExecutorService executorService = Executors.newCachedThreadPool();
+
+    private CountDownLatch waitStartBuild;
+    private CountDownLatch blockBuild;
+
+    @Value("${spring.cloud.stream.bindings.consumeBuild-in-0.destination}")
+    private String consumeBuildDestination;
+
+    @Value("${spring.cloud.stream.bindings.consumeCancelBuild-in-0.destination}")
+    private String cancelBuildDestination;
+
+    @Value("${spring.cloud.stream.bindings.publishResultBuild-out-0.destination}")
+    private String buildResultDestination;
+
+    @Value("${spring.cloud.stream.bindings.publishStoppedBuild-out-0.destination}")
+    private String buildStoppedDestination;
+
+    @Value("${spring.cloud.stream.bindings.publishFailedBuild-out-0.destination}")
+    private String buildFailedDestination;
+
     @Autowired
     private OutputDestination output;
 
@@ -124,6 +136,7 @@ public class BuildTest {
     @Autowired
     private ObjectMapper mapper;
     private ObjectWriter objectWriter;
+
     private Network network;
 
     @Before
@@ -135,9 +148,13 @@ public class BuildTest {
             return network;
         });
 
+        waitStartBuild = new CountDownLatch(1);
+        blockBuild = new CountDownLatch(1);
         when(networkStoreService.getNetwork(TEST_NETWORK_STOP_BUILD_ID)).then((Answer<Network>) invocation -> {
             // Needed so the stop call doesn't arrive too late
-            Thread.sleep(2000);
+            waitStartBuild.countDown();
+            blockBuild.await();
+
             network = NetworkCreation.create(TEST_NETWORK_STOP_BUILD_ID, true);
             return network;
         });
@@ -151,7 +168,6 @@ public class BuildTest {
         // clean DB
         modificationRepository.deleteAll();
         equipmentInfosService.deleteVariants(TEST_NETWORK_ID, List.of(VariantManagerConstants.INITIAL_VARIANT_ID, NetworkCreation.VARIANT_ID, VARIANT_ID_2));
-
     }
 
     @Test
@@ -178,8 +194,8 @@ public class BuildTest {
                                 .content(mapper.writeValueAsString(buildInfos)))
                 .andExpect(status().isOk());
 
-        Thread.sleep(3000);  // Needed to be sure that build result message has been sent
-        Message<byte[]> resultMessage = output.receive(TIMEOUT, "build.result");
+        assertNotNull(output.receive(TIMEOUT, consumeBuildDestination));
+        Message<byte[]> resultMessage = output.receive(TIMEOUT, buildResultDestination);
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
 
         BuildInfos newBuildInfos = new BuildInfos(NetworkCreation.VARIANT_ID,
@@ -191,8 +207,8 @@ public class BuildTest {
                                 .content(mapper.writeValueAsString(newBuildInfos)))
                 .andExpect(status().isOk());
 
-        Thread.sleep(3000);  // Needed to be sure that build result message has been sent and data have been written in ES
-        resultMessage = output.receive(TIMEOUT, "build.result");
+        assertNotNull(output.receive(TIMEOUT, consumeBuildDestination));
+        resultMessage = output.receive(TIMEOUT, buildResultDestination);
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
         assertEquals("", new String(resultMessage.getPayload()));
     }
@@ -247,8 +263,8 @@ public class BuildTest {
         mockMvc.perform(post(uriString, TEST_NETWORK_ID).contentType(MediaType.APPLICATION_JSON).content(buildInfosJson))
                 .andExpect(status().isOk());
 
-        Thread.sleep(3000);  // Needed to be sure that build result message has been sent
-        Message<byte[]> resultMessage = output.receive(TIMEOUT, "build.result");
+        assertNotNull(output.receive(TIMEOUT, consumeBuildDestination));
+        Message<byte[]> resultMessage = output.receive(TIMEOUT, buildResultDestination);
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
         assertEquals("newSubstation,s1,s2", new String(resultMessage.getPayload()));
 
@@ -317,8 +333,8 @@ public class BuildTest {
         mockMvc.perform(post(uriString, TEST_NETWORK_ID).contentType(MediaType.APPLICATION_JSON).content(buildInfosJson)
                                  ).andExpect(status().isOk());
 
-        Thread.sleep(3000);  // Needed to be sure that build result message has been sent and data have been written in ES
-        resultMessage = output.receive(TIMEOUT, "build.result");
+        assertNotNull(output.receive(TIMEOUT, consumeBuildDestination));
+        resultMessage = output.receive(TIMEOUT, buildResultDestination);
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
         assertEquals("", new String(resultMessage.getPayload()));
 
@@ -363,8 +379,8 @@ public class BuildTest {
             .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
 
-        Thread.sleep(3000);  // Needed to be sure that build result message has been sent
-        resultMessage = output.receive(TIMEOUT, "build.result");
+        assertNotNull(output.receive(TIMEOUT, consumeBuildDestination));
+        resultMessage = output.receive(TIMEOUT, buildResultDestination);
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
         assertEquals("newSubstation,s1,s2", new String(resultMessage.getPayload()));
 
@@ -397,39 +413,40 @@ public class BuildTest {
 
     @Test
     public void stopBuildTest() throws Exception {
-        CountDownLatch countDownLatch = new CountDownLatch(1);
-        List<ModificationEntity> entities = new ArrayList<>();
-        entities.add(modificationRepository.createEquipmentAttributeModification("v1d1", "open", true));
-        entities.add(modificationRepository.createEquipmentAttributeModification("line1", "branchStatus", BranchStatus.Status.PLANNED_OUTAGE));
+        List<ModificationEntity> entities = List.of(
+            modificationRepository.createEquipmentAttributeModification("v1d1", "open", true),
+            modificationRepository.createEquipmentAttributeModification("line1", "branchStatus", BranchStatus.Status.PLANNED_OUTAGE)
+        );
 
         modificationRepository.saveModifications(TEST_GROUP_ID, entities);  // save all modification entities in group TEST_GROUP_ID
         testNetworkModificationsCount(TEST_GROUP_ID, 2);
 
-        // build VARIANT_ID by cloning network initial variant and applying all modifications in group uuid TEST_GROUP_ID
+        // Build VARIANT_ID by cloning network initial variant and applying all modifications in group uuid TEST_GROUP_ID
+        // Because TestChannelBinder implementation is synchronous the build is made in a different thread
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
             NetworkCreation.VARIANT_ID,
             List.of(new GroupAndReportInfos(TEST_GROUP_ID, TEST_REPORT_ID)),
-            new HashSet<>());
-        new Thread(() -> {
+            Set.of());
+        String buildInfosJson = mapper.writeValueAsString(buildInfos);
+        CompletableFuture.runAsync(() -> {
             try {
-                String uriString = "/v1/networks/{networkUuid}/build?receiver=me";
-                mockMvc.perform(post(uriString, TEST_NETWORK_STOP_BUILD_ID)
-            .contentType(MediaType.APPLICATION_JSON)
-                                        .content(mapper.writeValueAsString(buildInfos)))
+                mockMvc.perform(post("/v1/networks/{networkUuid}/build?receiver=me", TEST_NETWORK_STOP_BUILD_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(buildInfosJson))
                     .andExpect(status().isOk());
-                countDownLatch.countDown();
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                e.printStackTrace();
             }
-        }).start();
-        Thread.sleep(2000);
+        }, executorService);
 
         // stop build
-        String uriString = "/v1/build/stop?receiver=me";
-        mockMvc.perform(put(uriString)).andExpect(
-                status().isOk());
-        countDownLatch.await();
-        Message<byte[]> message = output.receive(TIMEOUT, "build.stopped");
+        waitStartBuild.await();
+        assertNotNull(output.receive(TIMEOUT, consumeBuildDestination));
+        mockMvc.perform(put("/v1/build/stop?receiver=me")).andExpect(status().isOk());
+        assertNotNull(output.receive(TIMEOUT, cancelBuildDestination));
+
+        Message<byte[]> message = output.receive(TIMEOUT, buildStoppedDestination);
+        assertNotNull(message);
         assertEquals("me", message.getHeaders().get("receiver"));
         assertEquals(BuildStoppedPublisherService.CANCEL_MESSAGE, message.getHeaders().get("message"));
     }
@@ -453,11 +470,12 @@ public class BuildTest {
             .content(mapper.writeValueAsString(buildInfos)))
             .andExpect(status().isOk());
 
-        assertNull(output.receive(TIMEOUT, "build.result"));
-
-        Message<byte[]> message = output.receive(TIMEOUT * 3, "build.failed");
+        assertNotNull(output.receive(TIMEOUT, consumeBuildDestination));
+        assertNull(output.receive(TIMEOUT, buildResultDestination));
+        Message<byte[]> message = output.receive(TIMEOUT * 3, buildFailedDestination);
         assertEquals("me", message.getHeaders().get("receiver"));
-        assertThat((String) message.getHeaders().get("message"), CoreMatchers.startsWith(BuildFailedPublisherService.FAIL_MESSAGE));    }
+        assertThat((String) message.getHeaders().get("message"), CoreMatchers.startsWith(BuildFailedPublisherService.FAIL_MESSAGE));
+    }
 
     @Test
     public void doActionWithUncheckedExceptionTest() {
@@ -482,15 +500,11 @@ public class BuildTest {
 
     @After
     public void tearDown() {
-        Message<byte[]> message = null;
+        List<String> destinations = List.of(consumeBuildDestination, cancelBuildDestination, buildResultDestination, buildStoppedDestination, buildFailedDestination);
         try {
-            message = output.receive(TIMEOUT);
-        } catch (NullPointerException e) {
-            // Ignoring
+            destinations.forEach(destination -> assertNull("Should not be any messages : ", output.receive(TIMEOUT, destination)));
+        } finally {
+            output.clear(); // purge in order to not fail the other tests
         }
-
-        output.clear(); // purge in order to not fail the other tests
-
-        assertNull("Should not be any messages : ", message);
     }
 }

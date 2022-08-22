@@ -301,7 +301,6 @@ public class ModificationControllerTest {
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<EquipmentAttributeModificationInfos> bsiListResultSwitchOpening = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertThat(bsiListResultSwitchOpening.get(0), createMatcherEquipmentAttributeModificationInfos(switchId1, substationsIds, "open", true));
-
         // switch closing
         mvcResult = mockMvc.perform(put(uriString + "&open=false", TEST_NETWORK_ID, switchId2))
             .andExpectAll(
@@ -600,7 +599,7 @@ public class ModificationControllerTest {
 
         loadCreationInfos.setEquipmentId(null);
         loadCreationInfosJson = objectWriter.writeValueAsString(loadCreationInfos);
-        mvcResult = mockMvc.perform(post(uriString, TEST_NETWORK_ID).content(loadCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(post(uriString, TEST_NETWORK_ID).content(loadCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(status().is5xxServerError(), content().string(new NetworkModificationException(CREATE_LOAD_ERROR, "Load id is not set").getMessage())).andReturn();
 
         loadCreationInfos.setEquipmentId("idLoad1");
