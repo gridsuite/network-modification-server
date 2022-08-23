@@ -502,7 +502,7 @@ public class BuildTest {
     public void tearDown() {
         List<String> destinations = List.of(consumeBuildDestination, cancelBuildDestination, buildResultDestination, buildStoppedDestination, buildFailedDestination);
         try {
-            destinations.forEach(destination -> assertNull("Should not be any messages : ", output.receive(TIMEOUT, destination)));
+            destinations.forEach(destination -> assertNull("Should not be any messages in queue " + destination + " : ", output.receive(TIMEOUT, destination)));
         } finally {
             output.clear(); // purge in order to not fail the other tests
         }

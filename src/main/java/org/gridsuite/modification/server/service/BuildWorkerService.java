@@ -75,7 +75,7 @@ public class BuildWorkerService {
         String receiver = execContext.getReceiver();
 
         if (cancelBuildRequests.get(receiver) != null) {
-            return null;
+            return List.of();
         }
         CompletableFuture<List<ModificationInfos>> future = CompletableFuture.supplyAsync(() -> {
                 Network network = networkModificationService.cloneNetworkVariant(networkUuid, buildInfos.getOriginVariantId(), buildInfos.getDestinationVariantId());
@@ -142,14 +142,18 @@ public class BuildWorkerService {
     @Bean
     public Consumer<Message<String>> consumeCancelBuild() {
         return message -> {
-            BuildCancelContext cancelContext = BuildCancelContext.fromMessage(message);
-            cancelBuildRequests.put(cancelContext.getReceiver(), cancelContext);
+            try {
+                BuildCancelContext cancelContext = BuildCancelContext.fromMessage(message);
+                cancelBuildRequests.put(cancelContext.getReceiver(), cancelContext);
 
-            // find the completableFuture associated with receiver
-            CompletableFuture<List<ModificationInfos>> future = futures.get(cancelContext.getReceiver());
-            if (future != null) {
-                future.cancel(true);  // cancel build in progress
-                LOGGER.info(CANCEL_MESSAGE + " (receiver='{}')", cancelContext.getReceiver());
+                // find the completableFuture associated with receiver
+                CompletableFuture<List<ModificationInfos>> future = futures.get(cancelContext.getReceiver());
+                if (future != null) {
+                    future.cancel(true);  // cancel build in progress
+                    LOGGER.info(CANCEL_MESSAGE + " (receiver='{}')", cancelContext.getReceiver());
+                }
+            } catch (Exception e) {
+                LOGGER.error("Exception in consumeCancelBuild");
             }
         };
     }
