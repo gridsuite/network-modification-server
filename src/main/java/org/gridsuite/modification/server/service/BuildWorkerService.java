@@ -75,7 +75,7 @@ public class BuildWorkerService {
         String receiver = execContext.getReceiver();
 
         if (cancelBuildRequests.get(receiver) != null) {
-            return List.of();
+            return null;
         }
         CompletableFuture<List<ModificationInfos>> future = CompletableFuture.supplyAsync(() -> {
                 Network network = networkModificationService.cloneNetworkVariant(networkUuid, buildInfos.getOriginVariantId(), buildInfos.getDestinationVariantId());
