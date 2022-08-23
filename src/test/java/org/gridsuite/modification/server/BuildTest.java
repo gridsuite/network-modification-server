@@ -168,6 +168,7 @@ public class BuildTest {
         // clean DB
         modificationRepository.deleteAll();
         equipmentInfosService.deleteVariants(TEST_NETWORK_ID, List.of(VariantManagerConstants.INITIAL_VARIANT_ID, NetworkCreation.VARIANT_ID, VARIANT_ID_2));
+
     }
 
     @Test

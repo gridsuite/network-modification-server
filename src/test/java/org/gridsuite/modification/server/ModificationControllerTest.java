@@ -39,7 +39,6 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.springframework.web.util.NestedServletException;
-
 import static org.gridsuite.modification.server.utils.MatcherBranchStatusModificationInfos.createMatcherBranchStatusModificationInfos;
 import static org.gridsuite.modification.server.utils.MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos;
 import static org.gridsuite.modification.server.utils.MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos;
@@ -313,10 +312,8 @@ public class ModificationControllerTest {
 
         // switch opening on another substation
         mvcResult = mockMvc.perform(put(uriString + "&open=true", TEST_NETWORK_ID, switchId3))
-           .andExpectAll(
-                                                        status().isOk(),
-                                                        content().contentType(MediaType.APPLICATION_JSON))
-            .andReturn();
+           .andExpectAll(status().isOk(),
+            content().contentType(MediaType.APPLICATION_JSON)).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<EquipmentAttributeModificationInfos> bsiListResultAttributemi = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertThat(bsiListResultAttributemi.get(0), createMatcherEquipmentAttributeModificationInfos(switchId3, otherSubstationsIds, "open", true));
@@ -664,7 +661,8 @@ public class ModificationControllerTest {
             .andExpectAll(status().isOk()).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<EquipmentModificationInfos> bsmlrEquipmentModification = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertThat(bsmlrEquipmentModification.get(0), createMatcherEquipmentModificationInfos(ModificationType.LOAD_CREATION, "idLoad1", Set.of("s1")));
+        EquipmentModificationInfos equipmentModificationInfos = bsmlrEquipmentModification.get(0);
+        assertThat(equipmentModificationInfos, createMatcherEquipmentModificationInfos(ModificationType.LOAD_CREATION, "idLoad1", Set.of("s1")));
 
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
 
@@ -678,7 +676,7 @@ public class ModificationControllerTest {
                 175.0,
                 60.0)
                 .toModificationInfos();
-        loadCreationInfos.setUuid(bsmlrEquipmentModification.get(0).getUuid());
+        loadCreationInfos.setUuid(equipmentModificationInfos.getUuid());
 
         LoadCreationInfos loadCreationUpdate = new LoadCreationEntity(
                 "idLoad1edited",
@@ -689,13 +687,13 @@ public class ModificationControllerTest {
                 175.0,
                 60.0)
                 .toModificationInfos();
-        String uriStringForUpdate = "/v1/modifications/" + bsmlrEquipmentModification.get(0).getUuid() + "/loads-creation";
+        String uriStringForUpdate = "/v1/modifications/" + equipmentModificationInfos.getUuid() + "/loads-creation";
         String loadCreationUpdateJson = objectWriter.writeValueAsString(loadCreationUpdate);
         mockMvc.perform(put(uriStringForUpdate).contentType(MediaType.APPLICATION_JSON).content(loadCreationUpdateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpectAll(status().isOk());
 
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
-        mvcResult = mockMvc.perform(get("/v1/modifications/" + bsmlrEquipmentModification.get(0).getUuid().toString()).contentType(MediaType.APPLICATION_JSON))
+        mvcResult = mockMvc.perform(get("/v1/modifications/" + equipmentModificationInfos.getUuid().toString()).contentType(MediaType.APPLICATION_JSON))
                 .andExpectAll(status().isOk()).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<LoadCreationInfos> bsmlrLoadCreation = mapper.readValue(resultAsString, new TypeReference<>() { });

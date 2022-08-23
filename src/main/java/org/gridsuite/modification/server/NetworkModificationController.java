@@ -66,7 +66,7 @@ public class NetworkModificationController {
     public ResponseEntity<List<ModificationInfos>> getModifications(@Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid,
                                                                     @Parameter(description = "Only metatada") @RequestParam(name = "onlyMetadata", required = false, defaultValue = "false") Boolean onlyMetadata,
                                                                     @Parameter(description = "Return 404 if group is not found or an empty list") @RequestParam(name = "errorOnGroupNotFound", required = false, defaultValue = "true") Boolean errorOnGroupNotFound) {
-        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(networkModificationService.getModifications(groupUuid, onlyMetadata, errorOnGroupNotFound));
+        return ResponseEntity.ok().body(networkModificationService.getModifications(groupUuid, onlyMetadata, errorOnGroupNotFound));
     }
 
     @PostMapping(value = "/groups")
