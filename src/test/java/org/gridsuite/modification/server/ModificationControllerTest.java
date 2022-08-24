@@ -176,10 +176,7 @@ public class ModificationControllerTest {
         assertEquals("EquipmentAttributeModificationInfos(super=EquipmentModificationInfos(super=ModificationInfos(uuid=7928181c-7977-4592-ba19-88027e4254e4, date=2021-02-19T00:00Z, type=EQUIPMENT_ATTRIBUTE_MODIFICATION, substationIds=[substationId]), equipmentId=equipmentId), equipmentAttributeName=equipmentAttributeName, equipmentAttributeValue=equipmentAttributeValue)", modificationInfos.toString());
 
         // switch opening
-        mvcResult = mockMvc.perform(put("/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID + "&open=true" + "&reportUuid=" + TEST_REPORT_ID, TEST_NETWORK_ID, "v1b1")).andExpectAll(
-                        status().isOk(),
-                         content().contentType(MediaType.APPLICATION_JSON))
-                            .andReturn();
+        mvcResult = mockMvc.perform(put("/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID + "&open=true" + "&reportUuid=" + TEST_REPORT_ID, TEST_NETWORK_ID, "v1b1")).andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON)).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<EquipmentAttributeModificationInfos> equipmentAttributeModificationInfosList = mapper.readValue(resultAsString, new TypeReference<>() { });
         EquipmentAttributeModificationInfos modificationSwitchInfos =
@@ -188,10 +185,7 @@ public class ModificationControllerTest {
         assertTrue(createMatcherEquipmentAttributeModificationInfos("v1b1", Set.of("s1"), "open", true).matchesSafely(modificationSwitchInfos));
 
         // switch in variant VARIANT_ID opening
-        mvcResult = mockMvc.perform(put("/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID + "&open=true" + "&variantId=" + NetworkCreation.VARIANT_ID + "&reportUuid=" + TEST_REPORT_ID, TEST_NETWORK_ID, "break1Variant")).andExpectAll(
-         status().isOk(),
-         content().contentType(MediaType.APPLICATION_JSON))
-         .andReturn();
+        mvcResult = mockMvc.perform(put("/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID + "&open=true" + "&variantId=" + NetworkCreation.VARIANT_ID + "&reportUuid=" + TEST_REPORT_ID, TEST_NETWORK_ID, "break1Variant")).andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON)).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<EquipmentAttributeModificationInfos> equipmentAttributeModificationInfosListSwitch = mapper.readValue(resultAsString, new TypeReference<>() { });
         EquipmentAttributeModificationInfos modificationSwitchListInfos = Objects.requireNonNull(equipmentAttributeModificationInfosListSwitch).get(0);
@@ -214,10 +208,7 @@ public class ModificationControllerTest {
         MvcResult mvcResult;
         String resultAsString;
         // no groups
-        mvcResult = mockMvc.perform(get("/v1/groups")).andExpectAll(
-         status().isOk(),
-         content().contentType(MediaType.APPLICATION_JSON))
-         .andReturn();
+        mvcResult = mockMvc.perform(get("/v1/groups")).andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON)).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<UUID> bsicListResult = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertEquals(bsicListResult, List.of());
@@ -292,20 +283,12 @@ public class ModificationControllerTest {
         assertThat(bsiListResultAttributeModificationInfos.get(0), createMatcherEquipmentAttributeModificationInfos(switchId1, Set.of(), "open", false));
 
         // switch opening
-        mvcResult = mockMvc.perform(put(uriString + "&open=true", TEST_NETWORK_ID, switchId1))
-            .andExpectAll(
-                                                 status().isOk(),
-                                                 content().contentType(MediaType.APPLICATION_JSON))
-            .andReturn();
+        mvcResult = mockMvc.perform(put(uriString + "&open=true", TEST_NETWORK_ID, switchId1)).andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON)).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<EquipmentAttributeModificationInfos> bsiListResultSwitchOpening = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertThat(bsiListResultSwitchOpening.get(0), createMatcherEquipmentAttributeModificationInfos(switchId1, substationsIds, "open", true));
         // switch closing
-        mvcResult = mockMvc.perform(put(uriString + "&open=false", TEST_NETWORK_ID, switchId2))
-            .andExpectAll(
-                                                               status().isOk(),
-                                                               content().contentType(MediaType.APPLICATION_JSON))
-            .andReturn();
+        mvcResult = mockMvc.perform(put(uriString + "&open=false", TEST_NETWORK_ID, switchId2)).andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON)).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<EquipmentAttributeModificationInfos> bsiListResultami = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertThat(bsiListResultami.get(0), createMatcherEquipmentAttributeModificationInfos(switchId2, substationsIds, "open", false));
@@ -336,11 +319,7 @@ public class ModificationControllerTest {
     public void testDeleteModification() throws Exception {
         MvcResult mvcResult;
         String resultAsString;
-        mvcResult = mockMvc.perform(put("/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID + "&open=true" + "&reportUuid=" + TEST_REPORT_ID, TEST_NETWORK_ID, "v1b1"))
-         .andExpectAll(
-         status().isOk(),
-         content().contentType(MediaType.APPLICATION_JSON))
-         .andReturn();
+        mvcResult = mockMvc.perform(put("/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID + "&open=true" + "&reportUuid=" + TEST_REPORT_ID, TEST_NETWORK_ID, "v1b1")).andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON)).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<EquipmentAttributeModificationInfos> bsiListResultAttributemi = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertNotNull(bsiListResultAttributemi);
