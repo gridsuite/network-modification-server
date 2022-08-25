@@ -10,8 +10,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Sets;
 import com.powsybl.iidm.network.Network;
 import lombok.NonNull;
-import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.BuildInfos;
+import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,11 +25,9 @@ import java.util.*;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
-
-import static org.gridsuite.modification.server.service.BuildStoppedPublisherService.CANCEL_MESSAGE;
-import static org.gridsuite.modification.server.service.BuildFailedPublisherService.FAIL_MESSAGE;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -42,6 +40,9 @@ public class BuildWorkerService {
     private static final String CATEGORY_BROKER_OUTPUT = BuildWorkerService.class.getName() + ".output-broker-messages";
 
     private static final Logger OUTPUT_MESSAGE_LOGGER = LoggerFactory.getLogger(CATEGORY_BROKER_OUTPUT);
+
+    public static final String CANCEL_MESSAGE = "Build was canceled";
+    public static final String FAIL_MESSAGE = "Build has failed";
 
     private NetworkModificationService networkModificationService;
 
@@ -57,6 +58,8 @@ public class BuildWorkerService {
 
     private Set<String> buildRequests = Sets.newConcurrentHashSet();
 
+    private Lock lockRunAndCancel = new ReentrantLock();
+
     @Autowired
     private StreamBridge resultBuildMessagePublisher;
 
@@ -70,92 +73,110 @@ public class BuildWorkerService {
         this.failedPublisherService = failedPublisherService;
     }
 
-    private List<ModificationInfos> execBuildVariant(BuildExecContext execContext, BuildInfos buildInfos) throws ExecutionException, InterruptedException {
-        UUID networkUuid = execContext.getNetworkUuid();
-        String receiver = execContext.getReceiver();
+    private CompletableFuture<List<ModificationInfos>> execBuildVariant(BuildExecContext execContext, BuildInfos buildInfos) {
+        lockRunAndCancel.lock();
+        try {
+            UUID networkUuid = execContext.getNetworkUuid();
+            String receiver = execContext.getReceiver();
 
-        if (cancelBuildRequests.get(receiver) != null) {
-            return null;
-        }
-        CompletableFuture<List<ModificationInfos>> future = CompletableFuture.supplyAsync(() -> {
-                Network network = networkModificationService.cloneNetworkVariant(networkUuid, buildInfos.getOriginVariantId(), buildInfos.getDestinationVariantId());
-                return networkModificationService.applyModifications(network, networkUuid, buildInfos);
+            if (cancelBuildRequests.get(receiver) != null) {
+                return null;
             }
-        );
 
-        futures.put(receiver, future);
+            buildRequests.add(execContext.getReceiver()); // receiver is the node uuid to build
 
-        if (cancelBuildRequests.get(receiver) != null) {
-            return null;
+            CompletableFuture<List<ModificationInfos>> future = CompletableFuture.supplyAsync(() -> {
+                    Network network = networkModificationService.cloneNetworkVariant(networkUuid, buildInfos.getOriginVariantId(), buildInfos.getDestinationVariantId());
+                    LOGGER.info("Starting build on variant : {}", buildInfos.getDestinationVariantId());
+                    return networkModificationService.applyModifications(network, networkUuid, buildInfos);
+                }
+            );
+
+            futures.put(receiver, future);
+
+            return future;
+        } finally {
+            lockRunAndCancel.unlock();
         }
-        LOGGER.info("Starting build on variant : {}", buildInfos.getDestinationVariantId());
-        return future.get();
     }
 
     @Bean
     public Consumer<Message<String>> consumeBuild() {
         return message -> {
-            BuildExecContext execContext = BuildExecContext.fromMessage(message, objectMapper);
-            List<ModificationInfos> result;
+            BuildExecContext execContext = null;
             try {
-                if (cancelBuildRequests.get(execContext.getReceiver()) != null) {
-                    stoppedPublisherService.publishCancel(execContext.getReceiver());
-                    return;
-                }
-                buildRequests.add(execContext.getReceiver()); // receiver is the node uuid to build
-
-                BuildInfos buildInfos = execContext.getBuildInfos();
-                result = execBuildVariant(execContext, buildInfos);
-                if (result != null) {  // result available
-                    Set<String> allSubstationsIds = new HashSet<>();
-                    result.forEach(r -> allSubstationsIds.addAll(r.getSubstationIds()));
-                    Message<String> sendMessage = MessageBuilder
-                                                          .withPayload(
-                                                                  String.join(",", allSubstationsIds))
-                                                          .setHeader(
-                                                                  "receiver", execContext.getReceiver())
-                                                          .build();
-                    sendResultBuildMessage(sendMessage);
-                    LOGGER.info("Build complete on node '{}'", execContext.getReceiver());
-                } else {  // result not available : stop build request
-                    if (cancelBuildRequests.get(execContext.getReceiver()) != null) {
-                        stoppedPublisherService.publishCancel(execContext.getReceiver());
-                    }
-                }
-            } catch (CancellationException e) {
-                stoppedPublisherService.publishCancel(execContext.getReceiver());
-            } catch (InterruptedException e) {
-                LOGGER.error(FAIL_MESSAGE, e);
-                failedPublisherService.publishFail(execContext.getReceiver(), e.getMessage());
-                Thread.currentThread().interrupt();
+                execContext = BuildExecContext.fromMessage(message, objectMapper);
             } catch (Exception e) {
-                LOGGER.error(FAIL_MESSAGE, e);
-                failedPublisherService.publishFail(execContext.getReceiver(), e.getMessage());
-            } finally {
-                futures.remove(execContext.getReceiver());
-                cancelBuildRequests.remove(execContext.getReceiver());
-                buildRequests.remove(execContext.getReceiver());
+                LOGGER.error("Error retrieving message in consumeBuild", e);
             }
+            startBuild(Objects.requireNonNull(execContext));
         };
+    }
+
+    private void startBuild(BuildExecContext execContext) {
+        try {
+            BuildInfos buildInfos = execContext.getBuildInfos();
+            CompletableFuture<List<ModificationInfos>> future = execBuildVariant(execContext, buildInfos);
+            List<ModificationInfos> result;
+            if (future != null && (result = future.get()) != null) {  // result available
+                Set<String> allSubstationsIds = new HashSet<>();
+                result.forEach(r -> allSubstationsIds.addAll(r.getSubstationIds()));
+                Message<String> sendMessage = MessageBuilder
+                    .withPayload(String.join(",", allSubstationsIds))
+                    .setHeader("receiver", execContext.getReceiver())
+                    .build();
+                sendResultBuildMessage(sendMessage);
+                LOGGER.info("Build complete on node '{}'", execContext.getReceiver());
+            } else {  // result not available : stop build request
+                if (cancelBuildRequests.get(execContext.getReceiver()) != null) {
+                    stoppedPublisherService.publishCancel(execContext.getReceiver(), CANCEL_MESSAGE);
+                }
+            }
+        } catch (CancellationException e) {
+            stoppedPublisherService.publishCancel(execContext.getReceiver(), CANCEL_MESSAGE);
+        } catch (InterruptedException e) {
+            LOGGER.error(FAIL_MESSAGE, e);
+            failedPublisherService.publishFail(execContext.getReceiver(), FAIL_MESSAGE + " : " + e.getMessage());
+            Thread.currentThread().interrupt();
+        } catch (Exception e) {
+            LOGGER.error(FAIL_MESSAGE, e);
+            failedPublisherService.publishFail(execContext.getReceiver(), FAIL_MESSAGE + " : " + e.getMessage());
+        } finally {
+            futures.remove(execContext.getReceiver());
+            cancelBuildRequests.remove(execContext.getReceiver());
+            buildRequests.remove(execContext.getReceiver());
+        }
     }
 
     @Bean
     public Consumer<Message<String>> consumeCancelBuild() {
         return message -> {
+            BuildCancelContext execContext = null;
             try {
-                BuildCancelContext cancelContext = BuildCancelContext.fromMessage(message);
-                cancelBuildRequests.put(cancelContext.getReceiver(), cancelContext);
-
-                // find the completableFuture associated with receiver
-                CompletableFuture<List<ModificationInfos>> future = futures.get(cancelContext.getReceiver());
-                if (future != null) {
-                    future.cancel(true);  // cancel build in progress
-                    LOGGER.info(CANCEL_MESSAGE + " (receiver='{}')", cancelContext.getReceiver());
-                }
+                execContext = BuildCancelContext.fromMessage(message);
             } catch (Exception e) {
-                LOGGER.error("Exception in consumeCancelBuild");
+                LOGGER.error("Error retrieving message in consumeCancelBuild", e);
             }
+            cancelBuild(Objects.requireNonNull(execContext));
         };
+    }
+
+    private void cancelBuild(BuildCancelContext cancelContext) {
+        lockRunAndCancel.lock();
+        try {
+            cancelBuildRequests.put(cancelContext.getReceiver(), cancelContext);
+
+            // find the completableFuture associated with receiver
+            CompletableFuture<List<ModificationInfos>> future = futures.get(cancelContext.getReceiver());
+            if (future != null) {
+                future.cancel(true);  // cancel build in progress
+                LOGGER.info(CANCEL_MESSAGE + " (receiver='{}')", cancelContext.getReceiver());
+            }
+        } catch (Exception e) {
+            LOGGER.error("Cancel has failed", e);
+        } finally {
+            lockRunAndCancel.unlock();
+        }
     }
 
     private void sendResultBuildMessage(Message<String> message) {

@@ -24,12 +24,9 @@ import org.gridsuite.modification.server.entities.equipment.deletion.EquipmentDe
 import org.gridsuite.modification.server.entities.equipment.modification.LineSplitWithVoltageLevelEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.EquipmentAttributeModificationEntity;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
-import org.gridsuite.modification.server.service.BuildFailedPublisherService;
-import org.gridsuite.modification.server.service.BuildStoppedPublisherService;
 import org.gridsuite.modification.server.service.NetworkModificationService;
 import org.gridsuite.modification.server.service.NetworkStoreListener;
 import org.gridsuite.modification.server.utils.NetworkCreation;
-import org.hamcrest.CoreMatchers;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -63,7 +60,10 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_ERROR;
+import static org.gridsuite.modification.server.service.BuildWorkerService.CANCEL_MESSAGE;
+import static org.gridsuite.modification.server.service.BuildWorkerService.FAIL_MESSAGE;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -197,6 +197,7 @@ public class BuildTest {
 
         assertNotNull(output.receive(TIMEOUT, consumeBuildDestination));
         Message<byte[]> resultMessage = output.receive(TIMEOUT, buildResultDestination);
+        assertNotNull(resultMessage);
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
 
         BuildInfos newBuildInfos = new BuildInfos(NetworkCreation.VARIANT_ID,
@@ -210,6 +211,7 @@ public class BuildTest {
 
         assertNotNull(output.receive(TIMEOUT, consumeBuildDestination));
         resultMessage = output.receive(TIMEOUT, buildResultDestination);
+        assertNotNull(resultMessage);
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
         assertEquals("", new String(resultMessage.getPayload()));
     }
@@ -266,6 +268,7 @@ public class BuildTest {
 
         assertNotNull(output.receive(TIMEOUT, consumeBuildDestination));
         Message<byte[]> resultMessage = output.receive(TIMEOUT, buildResultDestination);
+        assertNotNull(resultMessage);
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
         assertEquals("newSubstation,s1,s2", new String(resultMessage.getPayload()));
 
@@ -336,6 +339,7 @@ public class BuildTest {
 
         assertNotNull(output.receive(TIMEOUT, consumeBuildDestination));
         resultMessage = output.receive(TIMEOUT, buildResultDestination);
+        assertNotNull(resultMessage);
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
         assertEquals("", new String(resultMessage.getPayload()));
 
@@ -382,6 +386,7 @@ public class BuildTest {
 
         assertNotNull(output.receive(TIMEOUT, consumeBuildDestination));
         resultMessage = output.receive(TIMEOUT, buildResultDestination);
+        assertNotNull(resultMessage);
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
         assertEquals("newSubstation,s1,s2", new String(resultMessage.getPayload()));
 
@@ -449,7 +454,7 @@ public class BuildTest {
         Message<byte[]> message = output.receive(TIMEOUT, buildStoppedDestination);
         assertNotNull(message);
         assertEquals("me", message.getHeaders().get("receiver"));
-        assertEquals(BuildStoppedPublisherService.CANCEL_MESSAGE, message.getHeaders().get("message"));
+        assertEquals(CANCEL_MESSAGE, message.getHeaders().get("message"));
     }
 
     @Test
@@ -465,7 +470,7 @@ public class BuildTest {
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
             NetworkCreation.VARIANT_ID,
             List.of(new GroupAndReportInfos(TEST_GROUP_ID, TEST_REPORT_ID)),
-            new HashSet<>());
+            Set.of());
         mockMvc.perform(post(uriString, TEST_NETWORK_ID)
             .contentType(MediaType.APPLICATION_JSON)
             .content(mapper.writeValueAsString(buildInfos)))
@@ -475,7 +480,7 @@ public class BuildTest {
         assertNull(output.receive(TIMEOUT, buildResultDestination));
         Message<byte[]> message = output.receive(TIMEOUT * 3, buildFailedDestination);
         assertEquals("me", message.getHeaders().get("receiver"));
-        assertThat((String) message.getHeaders().get("message"), CoreMatchers.startsWith(BuildFailedPublisherService.FAIL_MESSAGE));
+        assertThat((String) message.getHeaders().get("message"), startsWith(FAIL_MESSAGE));
     }
 
     @Test
