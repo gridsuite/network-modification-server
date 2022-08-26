@@ -233,10 +233,9 @@ public class ModificationControllerTest {
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<ModificationInfos> bsicListResulModifInfos = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertEquals(1, bsicListResulModifInfos.size());
-        mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/modifications?onlyMetadata=true", TEST_GROUP_ID)).andExpectAll(
-         status().isOk(),
-         content().contentType(MediaType.APPLICATION_JSON))
-         .andReturn();
+        mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/modifications?onlyMetadata=true", TEST_GROUP_ID))
+                        .andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
+                        .andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<ModificationInfos> bsicListResultInfos = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertEquals(1, bsicListResultInfos.size());
@@ -446,8 +445,7 @@ public class ModificationControllerTest {
 
         // apply empty groovy script
         mockMvc.perform(put(uriString, TEST_NETWORK_ID).contentType(MediaType.TEXT_PLAIN_VALUE).content("")).andExpectAll(
-                status().isBadRequest(),
-                content().string(new NetworkModificationException(GROOVY_SCRIPT_EMPTY).getMessage()));
+                status().isBadRequest());
 
         // apply empty groovy script
         mockMvc.perform(put(uriString, TEST_NETWORK_ID).contentType(MediaType.TEXT_PLAIN_VALUE).content("      ")).andExpectAll(
@@ -2248,14 +2246,14 @@ public class ModificationControllerTest {
                 .build();
         String loadCreationInfosJson = objectWriter.writeValueAsString(loadCreationInfos);
         mockMvc.perform(post(uriString, TEST_NETWORK_ID).content(loadCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
+                            .andExpect(status().isOk()).andReturn();
         assertNotNull(network.getLoad("idLoad1"));  // load was created
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
 
         UUID duplicatedGroupUuid = UUID.randomUUID();
         uriString = "/v1/groups?duplicateFrom=" + TEST_GROUP_ID + "&groupUuid=" + duplicatedGroupUuid + "&reportUuid=" + TEST_REPORT_ID;
-        mockMvc.perform(post(uriString).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
+        mockMvc.perform(post(uriString)).andExpect(status().isOk()).andReturn();
+        testNetworkModificationsCount(duplicatedGroupUuid, 1);
 
         uriString = "/v1/groups?duplicateFrom=" + UUID.randomUUID() + "&groupUuid=" + UUID.randomUUID() + "&reportUuid=" + TEST_REPORT_ID;
         mockMvc.perform(post(uriString).contentType(MediaType.APPLICATION_JSON))
