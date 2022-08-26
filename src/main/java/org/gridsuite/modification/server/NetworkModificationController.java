@@ -56,7 +56,7 @@ public class NetworkModificationController {
                                                                      @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
                                                                      @RequestParam(value = "group", required = false) UUID groupUuid,
                                                                      @RequestParam(value = "reportUuid") UUID reportUuid,
-                                                                     @RequestBody(required = false) String groovyScript) {
+                                                                     @RequestBody String groovyScript) {
         return ResponseEntity.ok().body(networkModificationService.applyGroovyScript(networkUuid, variantId, groupUuid, reportUuid, groovyScript));
     }
 
@@ -75,7 +75,8 @@ public class NetworkModificationController {
     public ResponseEntity<Void> createModificationGroup(@RequestParam("groupUuid") UUID groupUuid,
                                                   @RequestParam("duplicateFrom") UUID sourceGroupUuid,
                                                   @RequestParam("reportUuid") UUID reportUuid) {
-        networkModificationService.createModificationGroup(sourceGroupUuid, groupUuid, reportUuid);
+        List<ModificationInfos> modificationInfosList = networkModificationService.getModifications(sourceGroupUuid, false, false);
+        networkModificationService.createModificationGroup(modificationInfosList, groupUuid, reportUuid);
         return ResponseEntity.ok().build();
     }
 
