@@ -31,6 +31,10 @@ import java.util.UUID;
 @Tag(name = "network-modification-server")
 public class NetworkModificationController {
 
+    enum GroupModificationAction {
+        MOVE, DUPLICATE
+    }
+
     private NetworkModificationService networkModificationService;
 
     public NetworkModificationController(NetworkModificationService networkModificationService) {
@@ -87,22 +91,17 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.getModification(modificationUuid));
     }
 
-    @PutMapping(value = "/groups/{groupUuid}/modifications/move", produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Move some network modifications before another one, or at the end of the list")
-    @ApiResponse(responseCode = "200", description = "List of modifications of the group")
-    public ResponseEntity<Mono<Void>> moveModifications(@Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid,
-                                                  @Parameter(description = "before") @RequestParam(value = "before", required = false) UUID before,
-                                                  @Parameter(description = "modification to moves", required = true) @RequestParam(value = "modificationsToMove", required = false) List<UUID> modificationsToMove) {
-        return ResponseEntity.ok().body(networkModificationService.moveModifications(groupUuid, before, modificationsToMove));
-    }
-
-    @PutMapping(value = "/groups/{groupUuid}/modifications/duplicate")
-    @Operation(summary = "Duplicate a list of network modifications and append them to current group")
-    @ApiResponse(responseCode = "200", description = "The modification list has been updated")
-    public ResponseEntity<Mono<Void>> duplicateModifications(@Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid,
-                                                        @Parameter(description = "the originating group Uuid") @RequestParam(value = "sourceGroupUuid") UUID sourceGroupUuid,
-                                                        @RequestBody List<UUID> modificationsUuidList) {
-        return ResponseEntity.ok().body(networkModificationService.duplicateModifications(groupUuid, sourceGroupUuid, modificationsUuidList));
+    @PutMapping(value = "/groups/{groupUuid}")
+    @Operation(summary = "For a list of network modifications passed in body, Move them before another one or at the end of the list, or Duplicate them at the end of the list")
+    @ApiResponse(responseCode = "200", description = "The modification list of the group has been updated")
+    public ResponseEntity<Mono<Void>> updateModificationGroup(@Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid,
+                                                              @Parameter(description = "kind of modification", required = true) @RequestParam(value = "action") GroupModificationAction action,
+                                                              @Parameter(description = "the modification Uuid to move before (MOVE option, empty means moving at the end)") @RequestParam(value = "before", required = false) UUID before,
+                                                              @RequestBody List<UUID> modificationsUuidList) {
+        if (action == GroupModificationAction.DUPLICATE) {
+            return ResponseEntity.ok().body(networkModificationService.duplicateModifications(groupUuid, modificationsUuidList));
+        }
+        return ResponseEntity.ok().body(networkModificationService.moveModifications(groupUuid, before, modificationsUuidList));
     }
 
     @DeleteMapping(value = "/groups/{groupUuid}/modifications")

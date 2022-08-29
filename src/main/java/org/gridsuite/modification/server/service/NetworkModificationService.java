@@ -1997,7 +1997,7 @@ public class NetworkModificationService {
         return Mono.fromRunnable(() -> networkModificationRepository.moveModifications(groupUuid, modificationsToMove, before));
     }
 
-    public Mono<Void> duplicateModifications(UUID targetGroupUuid, UUID sourceGroupUuid, List<UUID> modificationsToDuplicate) {
+    public Mono<Void> duplicateModifications(UUID targetGroupUuid, List<UUID> modificationsToDuplicate) {
         // This function cannot be @Transactional because we clone all modifications resetting their id to null,
         // which is not allowed by JPA if we still stay in the same Tx.
         List<ModificationEntity> newModificationList = new ArrayList<>();

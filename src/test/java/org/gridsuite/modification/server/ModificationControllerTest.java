@@ -1923,10 +1923,11 @@ public class ModificationControllerTest {
         var modificationList = networkModificationService.getModifications(TEST_GROUP_ID, true, true).map(ModificationInfos::getUuid).collectList().block();
         assertNotNull(modificationList);
         assertEquals(2, modificationList.size());
+        List<UUID> movingModificationUuidList = Collections.singletonList(modificationList.get(1));
         webTestClient.put().uri("/v1/groups/" + TEST_GROUP_ID
-                    + "/modifications/move?before=" + modificationList.get(0)
-                    + "&modificationsToMove=" + modificationList.get(1))
-            .exchange()
+                    + "?action=MOVE&before=" + modificationList.get(0))
+                .body(BodyInserters.fromValue(movingModificationUuidList))
+                .exchange()
             .expectStatus().isOk();
 
         var newModificationList = networkModificationService.getModifications(TEST_GROUP_ID, true, true).map(ModificationInfos::getUuid).collectList().block();
