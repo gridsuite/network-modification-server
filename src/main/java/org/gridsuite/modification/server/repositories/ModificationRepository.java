@@ -22,4 +22,13 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     @Query(value = "SELECT *, 0 AS clazz_ FROM modification WHERE group_id = ?1 order by modifications_order", nativeQuery = true)
     List<ModificationEntity> findAllBaseByGroupId(UUID uuid);
 
+    @Query(value = "SELECT l FROM LineCreationEntity l left join fetch l.currentLimits1 left join fetch l.currentLimits2 WHERE l.id = ?1")
+    ModificationEntity findLineCreationById(UUID uuid);
+
+    @Query(value = "SELECT t FROM TwoWindingsTransformerCreationEntity t left join fetch t.currentLimits1 left join fetch t.currentLimits2 WHERE t.id = ?1")
+    ModificationEntity find2wtCreationById(UUID uuid);
+
+    @Query(value = "SELECT line FROM LineAttachToVoltageLevelEntity line left join fetch line.lineCreation l left join fetch l.currentLimits1 left join fetch l.currentLimits2 WHERE line.id = ?1")
+    ModificationEntity findLineAttachToVoltageLevelEntityCreationById(UUID uuid);
+
 }

@@ -219,32 +219,64 @@ public class NetworkModificationService {
         //TODO To be optimized by retrieving ModificationEntity objects directly instead of ModificationInfos objects
         return getModifications(sourceGroupUuid, false, false).doOnNext(m -> {
             Optional<ModificationEntity> modification = this.modificationRepository.findById(m.getUuid());
-            modification.get().setId(null);
-            //TODO is there a better way ? forced to do the following setting id to null to not get a persist detached object exception on the currentLimits
-            if (modification.get().toModificationInfos().getType().equals(ModificationType.LINE_CREATION)) {
-                LineCreationEntity lineCreationEntity = (LineCreationEntity) modification.get();
-                if (lineCreationEntity.getCurrentLimits1() != null) {
-                    lineCreationEntity.getCurrentLimits1().setId(null);
-                }
-                if (lineCreationEntity.getCurrentLimits2() != null) {
-                    lineCreationEntity.getCurrentLimits2().setId(null);
+            ModificationEntity modificationEntity = modification.orElse(null);
+            if (modificationEntity != null) {
+                //is there a better way ? forced to do the following setting id to null to not get a persist detached object exception on the currentLimits
+                if (modificationEntity.getType().equals(ModificationType.LINE_CREATION.name())) {
+                    //need to eagerly fetch the lazy currentLimits
+                    LineCreationEntity lineCreationEntity = (LineCreationEntity) networkModificationRepository.getModificationEntityEagerly(m.getUuid(), ModificationType.LINE_CREATION.name());
+                    if (lineCreationEntity.getCurrentLimits1() != null) {
+                        lineCreationEntity.getCurrentLimits1().setId(null);
+                    }
+                    if (lineCreationEntity.getCurrentLimits2() != null) {
+                        lineCreationEntity.getCurrentLimits2().setId(null);
+                    }
+                    lineCreationEntity.setId(null);
+                    networkModificationRepository.saveModifications(groupUuid, List.of(lineCreationEntity));
+                } else if (modificationEntity.getType().equals(ModificationType.TWO_WINDINGS_TRANSFORMER_CREATION.name())) {
+                    //need to eagerly fetch the lazy currentLimits
+                    TwoWindingsTransformerCreationEntity twoWindingsTransformerCreationEntity = (TwoWindingsTransformerCreationEntity) networkModificationRepository.getModificationEntityEagerly(m.getUuid(), ModificationType.TWO_WINDINGS_TRANSFORMER_CREATION.name());
+                    if (twoWindingsTransformerCreationEntity.getCurrentLimits1() != null) {
+                        twoWindingsTransformerCreationEntity.getCurrentLimits1().setId(null);
+                    }
+                    if (twoWindingsTransformerCreationEntity.getCurrentLimits2() != null) {
+                        twoWindingsTransformerCreationEntity.getCurrentLimits2().setId(null);
+                    }
+                    twoWindingsTransformerCreationEntity.setId(null);
+                    networkModificationRepository.saveModifications(groupUuid, List.of(twoWindingsTransformerCreationEntity));
+                } else if (modificationEntity.getType().equals(ModificationType.LINE_SPLIT_WITH_VOLTAGE_LEVEL.name())) {
+                    LineSplitWithVoltageLevelEntity lineSplitWithVoltageLevelEntity = (LineSplitWithVoltageLevelEntity) modificationEntity;
+                    if (lineSplitWithVoltageLevelEntity.getMayVoltageLevelCreation() != null) {
+                        lineSplitWithVoltageLevelEntity.getMayVoltageLevelCreation().setId(null);
+                    }
+                    lineSplitWithVoltageLevelEntity.setId(null);
+                    networkModificationRepository.saveModifications(groupUuid, List.of(lineSplitWithVoltageLevelEntity));
+                } else if (modificationEntity.getType().equals(ModificationType.LINE_ATTACH_TO_VOLTAGE_LEVEL.name())) {
+                    LineAttachToVoltageLevelEntity lineAttachToVoltageLevelEntity = (LineAttachToVoltageLevelEntity) networkModificationRepository.getModificationEntityEagerly(m.getUuid(), ModificationType.LINE_ATTACH_TO_VOLTAGE_LEVEL.name());
+                    if (lineAttachToVoltageLevelEntity.getLineCreation() != null) {
+                        LineCreationEntity lineCreationEntity = lineAttachToVoltageLevelEntity.getLineCreation();
+                        lineCreationEntity.setId(null);
+                        if (lineCreationEntity.getCurrentLimits1() != null) {
+                            lineCreationEntity.getCurrentLimits1().setId(null);
+                        }
+                        if (lineCreationEntity.getCurrentLimits2() != null) {
+                            lineCreationEntity.getCurrentLimits2().setId(null);
+                        }
+                    }
+                    if (lineAttachToVoltageLevelEntity.getMayVoltageLevelCreation() != null) {
+                        lineAttachToVoltageLevelEntity.getMayVoltageLevelCreation().setId(null);
+                    }
+                    lineAttachToVoltageLevelEntity.setId(null);
+                    networkModificationRepository.saveModifications(groupUuid, List.of(lineAttachToVoltageLevelEntity));
+                } else {
+                    modificationEntity.setId(null);
+                    networkModificationRepository.saveModifications(groupUuid, List.of(modificationEntity));
                 }
             }
-            if (modification.get().toModificationInfos().getType().equals(ModificationType.TWO_WINDINGS_TRANSFORMER_CREATION)) {
-                TwoWindingsTransformerCreationEntity twoWindingsTransformerCreationEntity = (TwoWindingsTransformerCreationEntity) modification.get();
-                if (twoWindingsTransformerCreationEntity.getCurrentLimits1() != null) {
-                    twoWindingsTransformerCreationEntity.getCurrentLimits1().setId(null);
-                }
-                if (twoWindingsTransformerCreationEntity.getCurrentLimits2() != null) {
-                    twoWindingsTransformerCreationEntity.getCurrentLimits2().setId(null);
-                }
-            }
-            networkModificationRepository.saveModifications(groupUuid, List.of(modification.get()));
         }).doOnNext(unused -> {
             ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
             sendReport(reportUuid, reporter);
         }).then();
-
     }
 
     private boolean disconnectLineBothSides(Network network, String lineId) {

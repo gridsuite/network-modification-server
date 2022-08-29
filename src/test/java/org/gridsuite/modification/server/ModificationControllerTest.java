@@ -2208,6 +2208,44 @@ public class ModificationControllerTest {
 
         testNetworkModificationsCount(TEST_GROUP_ID, 2);
 
+        //create a lineAttached
+        String lineAttachUriString = "/v1/networks/{networkUuid}/line-attach?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
+        LineCreationInfos attachmentLine = LineCreationInfos.builder()
+                .equipmentId("attachmentLine")
+                .seriesResistance(50.6)
+                .seriesReactance(25.3)
+                .build();
+
+        LineAttachToVoltageLevelInfos lineAttachToVL = new LineAttachToVoltageLevelInfos("line3",
+                10.0, "AttPointId", "attPointName", null, "v4",
+                "1.A", attachmentLine, "nl1", "NewLine1", "nl2", "NewLine2");
+
+        webTestClient.post().uri(lineAttachUriString, TEST_NETWORK_ID)
+                .body(BodyInserters.fromValue(lineAttachToVL))
+                .exchange()
+                .expectStatus().isOk();
+        testNetworkModificationsCount(TEST_GROUP_ID, 3);
+
+        //create a lineSplit
+        String lineSplitUriString = "/v1/networks/{networkUuid}/line-splits?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
+        VoltageLevelCreationInfos vl1 = VoltageLevelCreationInfos.builder()
+                .equipmentId("vl1")
+                .equipmentName("NewVoltageLevel")
+                .nominalVoltage(379.3)
+                .substationId("s1")
+                .busbarSections(List.of(new BusbarSectionCreationInfos("v1bbs", "BBS1", 1, 1)))
+                .busbarConnections(List.of())
+                .build();
+
+        LineSplitWithVoltageLevelInfos lineSplitWoVL = new LineSplitWithVoltageLevelInfos("line3", 10.0, null, "v4", "1.A",
+                "nl1", "NewLine1", "nl2", "NewLine2");
+
+        webTestClient.post().uri(lineSplitUriString, TEST_NETWORK_ID)
+                .body(BodyInserters.fromValue(lineSplitWoVL))
+                .exchange()
+                .expectStatus().isOk();
+        testNetworkModificationsCount(TEST_GROUP_ID, 4);
+
         //test copy group
         UUID newGroupUuid = UUID.randomUUID();
         uriString = "/v1/groups?groupUuid=" + newGroupUuid + "&duplicateFrom=" + TEST_GROUP_ID + "&reportUuid=" + UUID.randomUUID();
@@ -2215,7 +2253,7 @@ public class ModificationControllerTest {
                 .exchange()
                 .expectStatus().isOk();
 
-        testNetworkModificationsCount(newGroupUuid, 2);
+        testNetworkModificationsCount(newGroupUuid, 4);
 
     }
 
