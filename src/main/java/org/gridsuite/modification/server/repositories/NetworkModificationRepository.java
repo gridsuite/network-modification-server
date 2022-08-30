@@ -104,7 +104,7 @@ public class NetworkModificationRepository {
     }
 
     @Transactional // To have all move in the same transaction (atomic)
-    public void moveModifications(UUID groupUuid, List<UUID> modifications, UUID before) {
+    public List<UUID> moveModifications(UUID groupUuid, List<UUID> modifications, UUID before) {
         /* when before == null we move at the end of list */
         var modificationGroupEntity = getModificationGroup(groupUuid);
 
@@ -122,6 +122,7 @@ public class NetworkModificationRepository {
         newModificationList.addAll(index, modificationsToMove);
 
         modificationGroupEntity.setModifications(newModificationList);
+        return new ArrayList<>();
     }
 
     public List<UUID> getModificationGroupsUuids() {
