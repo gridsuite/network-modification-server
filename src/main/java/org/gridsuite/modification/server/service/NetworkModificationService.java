@@ -15,7 +15,12 @@ import com.powsybl.iidm.modification.topology.AttachNewLineOnLine;
 import com.powsybl.iidm.modification.tripping.BranchTripping;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.Branch.Side;
+import com.powsybl.iidm.network.extensions.ActivePowerControlAdder;
+import com.powsybl.iidm.network.extensions.GeneratorShortCircuit;
+import com.powsybl.iidm.network.extensions.GeneratorStartupAdder;
+import com.powsybl.iidm.network.impl.extensions.GeneratorShortCircuitImpl;
 import com.powsybl.network.store.client.NetworkStoreService;
+import com.powsybl.network.store.iidm.impl.extensions.GeneratorStartupAdderImpl;
 import com.powsybl.sld.iidm.extensions.BranchStatus;
 import com.powsybl.sld.iidm.extensions.BranchStatusAdder;
 import com.powsybl.sld.iidm.extensions.BusbarSectionPositionAdder;
@@ -66,6 +71,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
+import static org.gridsuite.modification.server.entities.equipment.creation.GeneratorCreationEntity.toEmbeddablePoints;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -606,7 +612,16 @@ public class NetworkModificationService {
                 generatorCreationInfos.getActivePowerSetpoint(),
                 generatorCreationInfos.getReactivePowerSetpoint(),
                 generatorCreationInfos.isVoltageRegulationOn(),
-                generatorCreationInfos.getVoltageSetpoint());
+                generatorCreationInfos.getVoltageSetpoint(),
+                generatorCreationInfos.getMarginalCost(),
+                generatorCreationInfos.getMinQ(),
+                generatorCreationInfos.getMaxQ(),
+                generatorCreationInfos.getParticipate(),
+                generatorCreationInfos.getDroop(),
+                generatorCreationInfos.getTransientReactance(),
+                generatorCreationInfos.getStepUpTransformerReactance(),
+                toEmbeddablePoints(generatorCreationInfos.getPoints()));
+
         updatedEntity.setId(modificationUuid);
         updatedEntity.setGroup(generatorModificationEntity.get().getGroup());
         this.networkModificationRepository.updateModification(updatedEntity);
@@ -860,50 +875,7 @@ public class NetworkModificationService {
 
         return doAction(listener, () -> {
             if (listener.isApplyModifications()) {
-                Identifiable identifiable = null;
-                switch (IdentifiableType.valueOf(equipmentType)) {
-                    case HVDC_LINE:
-                        identifiable = network.getHvdcLine(equipmentId);
-                        break;
-                    case LINE:
-                        identifiable = network.getLine(equipmentId);
-                        break;
-                    case TWO_WINDINGS_TRANSFORMER:
-                        identifiable = network.getTwoWindingsTransformer(equipmentId);
-                        break;
-                    case THREE_WINDINGS_TRANSFORMER:
-                        identifiable = network.getThreeWindingsTransformer(equipmentId);
-                        break;
-                    case GENERATOR:
-                        identifiable = network.getGenerator(equipmentId);
-                        break;
-                    case LOAD:
-                        identifiable = network.getLoad(equipmentId);
-                        break;
-                    case BATTERY:
-                        identifiable = network.getBattery(equipmentId);
-                        break;
-                    case SHUNT_COMPENSATOR:
-                        identifiable = network.getShuntCompensator(equipmentId);
-                        break;
-                    case STATIC_VAR_COMPENSATOR:
-                        identifiable = network.getStaticVarCompensator(equipmentId);
-                        break;
-                    case DANGLING_LINE:
-                        identifiable = network.getDanglingLine(equipmentId);
-                        break;
-                    case HVDC_CONVERTER_STATION:
-                        identifiable = network.getHvdcConverterStation(equipmentId);
-                        break;
-                    case SUBSTATION:
-                        identifiable = network.getSubstation(equipmentId);
-                        break;
-                    case VOLTAGE_LEVEL:
-                        identifiable = network.getVoltageLevel(equipmentId);
-                        break;
-                    default:
-                        break;
-                }
+                Identifiable<?> identifiable = getEquipmentByIdentifiableType(network, equipmentType, equipmentId);
                 if (identifiable == null) {
                     throw new NetworkModificationException(EQUIPMENT_NOT_FOUND, "Equipment with id=" + equipmentId + " not found or of bad type");
                 }
@@ -963,12 +935,26 @@ public class NetworkModificationService {
             generatorCreationInfos.getEquipmentId(),
             generatorCreationInfos.getEquipmentName());
 
+        Terminal terminal = null;
+        if (generatorCreationInfos.getRegulatingTerminalId() != null && generatorCreationInfos.getRegulatingTerminalType() != null) {
+            Identifiable<?> identifiable = getEquipmentByIdentifiableType(
+                    voltageLevel.getNetwork(),
+                    generatorCreationInfos.getRegulatingTerminalType(),
+                    generatorCreationInfos.getRegulatingTerminalId()
+            );
+            if (identifiable == null) {
+                throw new NetworkModificationException(REGULATING_TERMINAL_NOT_FOUND);
+            }
+            terminal = getTerminalFromIdentifiable(identifiable, generatorCreationInfos.getVoltageLevelId());
+        }
+
         // creating the generator
-        return voltageLevel.newGenerator()
+        Generator generator = voltageLevel.newGenerator()
             .setId(generatorCreationInfos.getEquipmentId())
             .setName(generatorCreationInfos.getEquipmentName())
             .setEnergySource(generatorCreationInfos.getEnergySource())
             .setNode(nodeNum)
+            .setRegulatingTerminal(terminal)
             .setMinP(generatorCreationInfos.getMinActivePower())
             .setMaxP(generatorCreationInfos.getMaxActivePower())
             .setRatedS(generatorCreationInfos.getRatedNominalPower() != null ? generatorCreationInfos.getRatedNominalPower() : Double.NaN)
@@ -977,13 +963,59 @@ public class NetworkModificationService {
             .setVoltageRegulatorOn(generatorCreationInfos.isVoltageRegulationOn())
             .setTargetV(generatorCreationInfos.getVoltageSetpoint() != null ? generatorCreationInfos.getVoltageSetpoint() : Double.NaN)
             .add();
+
+        Boolean participate = generatorCreationInfos.getParticipate();
+
+        if (generatorCreationInfos.getMarginalCost() != null) {
+            generator.newExtension(GeneratorStartupAdderImpl.class).withMarginalCost(generatorCreationInfos.getMarginalCost()).add();
+        }
+
+        if (generatorCreationInfos.getTransientReactance() != null && generatorCreationInfos.getStepUpTransformerReactance() != null) {
+            generator.addExtension(GeneratorShortCircuit.class, new GeneratorShortCircuitImpl(generator,
+                    0.0,
+                    generatorCreationInfos.getTransientReactance(),
+                    generatorCreationInfos.getStepUpTransformerReactance())
+            );
+        }
+
+        if (generatorCreationInfos.getParticipate() != null && generatorCreationInfos.getDroop() != null) {
+            generator.newExtension(ActivePowerControlAdder.class).withParticipate(participate)
+                    .withDroop(generatorCreationInfos.getDroop());
+        }
+        if (generatorCreationInfos.getPoints() != null) {
+            generatorCreationInfos.getPoints()
+                    .forEach(point -> generator.newReactiveCapabilityCurve().beginPoint()
+                            .setMaxQ(getDoubleValue(point.getMaxQ()))
+                            .setMinQ(getDoubleValue(point.getMinQ()))
+                            .setP(getDoubleValue(point.getP())));
+        }
+
+        return generator;
+    }
+
+    private double getDoubleValue(Double value) {
+        return value == null ? Double.NaN : value;
     }
 
     private Generator createGeneratorInBusBreaker(VoltageLevel voltageLevel, GeneratorCreationInfos generatorCreationInfos) {
         Bus bus = getBusBreakerBus(voltageLevel, generatorCreationInfos.getBusOrBusbarSectionId());
 
+        Terminal terminal = null;
+        if (generatorCreationInfos.getRegulatingTerminalId() != null && generatorCreationInfos.getRegulatingTerminalType() != null) {
+            Identifiable<?> identifiable = getEquipmentByIdentifiableType(
+                    voltageLevel.getNetwork(),
+                    generatorCreationInfos.getRegulatingTerminalType(),
+                    generatorCreationInfos.getRegulatingTerminalId()
+            );
+            if (identifiable == null) {
+                throw new NetworkModificationException(REGULATING_TERMINAL_NOT_FOUND);
+            }
+
+            terminal = getTerminalFromIdentifiable(identifiable, generatorCreationInfos.getVoltageLevelId());
+        }
+
         // creating the generator
-        return voltageLevel.newGenerator()
+        Generator generator = voltageLevel.newGenerator()
             .setId(generatorCreationInfos.getEquipmentId())
             .setName(generatorCreationInfos.getEquipmentName())
             .setEnergySource(generatorCreationInfos.getEnergySource())
@@ -997,6 +1029,40 @@ public class NetworkModificationService {
             .setVoltageRegulatorOn(generatorCreationInfos.isVoltageRegulationOn())
             .setTargetV(generatorCreationInfos.getVoltageSetpoint() != null ? generatorCreationInfos.getVoltageSetpoint() : Double.NaN)
             .add();
+        if (terminal != null) {
+            generator.setRegulatingTerminal(terminal);
+        }
+
+        if (generatorCreationInfos.getTransientReactance() != null && generatorCreationInfos.getStepUpTransformerReactance() != null) {
+            generator.addExtension(GeneratorShortCircuit.class, new GeneratorShortCircuitImpl(generator,
+                    0.0,
+                    generatorCreationInfos.getTransientReactance(),
+                    generatorCreationInfos.getStepUpTransformerReactance())
+            );
+        }
+
+        if (generatorCreationInfos.getMarginalCost() != null) {
+            generator.newExtension(GeneratorStartupAdder.class).withMarginalCost(generatorCreationInfos.getMarginalCost()).add();
+        }
+
+        if (generatorCreationInfos.getParticipate() != null && generatorCreationInfos.getDroop() != null) {
+            generator.newExtension(ActivePowerControlAdder.class).withParticipate(generatorCreationInfos.getParticipate())
+                    .withDroop(generatorCreationInfos.getDroop());
+        }
+
+        if (generatorCreationInfos.getMaxQ() != null && generatorCreationInfos.getMinQ() != null) {
+            generator.newMinMaxReactiveLimits().setMinQ(generatorCreationInfos.getMinQ())
+                    .setMaxQ(generatorCreationInfos.getMaxQ());
+        }
+
+        if (generatorCreationInfos.getPoints() != null) {
+            generatorCreationInfos.getPoints()
+                    .forEach(point -> generator.newReactiveCapabilityCurve().beginPoint()
+                            .setMaxQ(point.getMaxQ())
+                            .setMinQ(point.getMinQ())
+                            .setP(point.getP()));
+        }
+        return generator;
     }
 
     private List<EquipmentModificationInfos> execCreateGenerator(NetworkStoreListener listener,
@@ -2243,4 +2309,53 @@ public class NetworkModificationService {
         return Mono.empty();
     }
 
+    private Identifiable<?> getEquipmentByIdentifiableType(Network network, String type, String equipmentId) {
+        if (type == null || equipmentId == null) {
+            return null;
+        }
+        switch (IdentifiableType.valueOf(type)) {
+            case HVDC_LINE:
+                return network.getHvdcLine(equipmentId);
+            case LINE:
+                return network.getLine(equipmentId);
+            case TWO_WINDINGS_TRANSFORMER:
+                return network.getTwoWindingsTransformer(equipmentId);
+            case THREE_WINDINGS_TRANSFORMER:
+                return network.getThreeWindingsTransformer(equipmentId);
+            case GENERATOR:
+                return network.getGenerator(equipmentId);
+            case LOAD:
+                return network.getLoad(equipmentId);
+            case BATTERY:
+                return network.getBattery(equipmentId);
+            case SHUNT_COMPENSATOR:
+                return network.getShuntCompensator(equipmentId);
+            case STATIC_VAR_COMPENSATOR:
+                return network.getStaticVarCompensator(equipmentId);
+            case DANGLING_LINE:
+                return network.getDanglingLine(equipmentId);
+            case HVDC_CONVERTER_STATION:
+                return network.getHvdcConverterStation(equipmentId);
+            case SUBSTATION:
+                return network.getSubstation(equipmentId);
+            case VOLTAGE_LEVEL:
+                return network.getVoltageLevel(equipmentId);
+            default:
+                return null;
+        }
+    }
+
+    private Terminal getTerminalFromIdentifiable(Identifiable<?> identifiable, String voltageLevelId) {
+        if (identifiable instanceof Injection<?>) {
+            return ((Injection) identifiable).getTerminal();
+        } else if (identifiable instanceof Branch) {
+            return ((Branch) identifiable).getTerminal(voltageLevelId);
+        } else if (identifiable instanceof BusbarSection) {
+            return ((BusbarSection) identifiable).getTerminal();
+        } else if (identifiable instanceof HvdcConverterStation) {
+            return ((HvdcConverterStation) identifiable).getTerminal();
+        } else {
+            return null;
+        }
+    }
 }

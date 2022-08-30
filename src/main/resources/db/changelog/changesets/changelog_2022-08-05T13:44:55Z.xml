@@ -1,0 +1,51 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-4.1.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
+    <changeSet author="yenguised (generated)" id="1659707106604-7">
+        <createTable tableName="generator_creation_entity_reactive_capability_curve_points">
+            <column name="generator_creation_entity_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="maxq" type="FLOAT8"/>
+            <column name="minq" type="FLOAT8"/>
+            <column name="p" type="FLOAT8"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="yenguised (generated)" id="1659707106604-8">
+        <addColumn tableName="generator_creation">
+            <column name="droop" type="float8"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="yenguised (generated)" id="1659707106604-9">
+        <addColumn tableName="generator_creation">
+            <column name="marginal_cost" type="float8"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="yenguised (generated)" id="1659707106604-10">
+        <addColumn tableName="generator_creation">
+            <column name="maximum_reactive_power" type="float8"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="yenguised (generated)" id="1659707106604-11">
+        <addColumn tableName="generator_creation">
+            <column name="minimum_reactive_power" type="float8"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="yenguised (generated)" id="1659707106604-12">
+        <addColumn tableName="generator_creation">
+            <column name="participate" type="boolean"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="yenguised (generated)" id="1659707106604-13">
+        <addColumn tableName="generator_creation">
+            <column name="step_up_transformer_reactance" type="float8"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="yenguised (generated)" id="1659707106604-14">
+        <addColumn tableName="generator_creation">
+            <column name="transient_reactance" type="float8"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="yenguised (generated)" id="1659707106604-15">
+        <addForeignKeyConstraint baseColumnNames="generator_creation_entity_id" baseTableName="generator_creation_entity_reactive_capability_curve_points" constraintName="FK8dxg53bh5kr2lbcglu7hp6trr" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="generator_creation" validate="true"/>
+    </changeSet>
+</databaseChangeLog>

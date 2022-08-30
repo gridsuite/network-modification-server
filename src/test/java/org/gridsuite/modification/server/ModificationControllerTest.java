@@ -40,13 +40,7 @@ import org.springframework.web.reactive.function.BodyInserters;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.hamcrest.Matchers.containsString;
@@ -1179,6 +1173,15 @@ public class ModificationControllerTest {
             .reactivePowerSetpoint(50.)
             .voltageRegulationOn(true)
             .voltageSetpoint(225.)
+            .stepUpTransformerReactance(60.0)
+            .transientReactance(61.0)
+            .minQ(20.0)
+            .maxQ(25.0)
+            .droop(5f)
+            .participate(true)
+            .regulatingTerminalId("v2load")
+            .regulatingTerminalType("LOAD")
+            .points(Arrays.asList(new ReactiveCapabilityCurveCreationInfos(2.0, 3.0, 3.1)))
             .build();
 
         EquipmentModificationInfos result = webTestClient.post().uri(uriString, TEST_NETWORK_ID)
@@ -1206,7 +1209,15 @@ public class ModificationControllerTest {
                 450.,
                 55.,
                 false,
-                235.)
+                235.,
+                null,
+                null,
+                null,
+                false,
+                null,
+                null,
+                null,
+                List.of())
                 .toModificationInfos();
         generatorCreationInfos.setUuid(result.getUuid());
 
@@ -1223,7 +1234,15 @@ public class ModificationControllerTest {
                 450.,
                 55.,
                 false,
-                235.)
+                235.,
+                null,
+                null,
+                null,
+                false,
+                null,
+                null,
+                null,
+                List.of())
                 .toModificationInfos();
         String uriStringForUpdate = "/v1/modifications/" + result.getUuid() + "/generators-creation";
         webTestClient.put().uri(uriStringForUpdate)
@@ -1325,6 +1344,15 @@ public class ModificationControllerTest {
             .reactivePowerSetpoint(50.)
             .voltageRegulationOn(true)
             .voltageSetpoint(225.)
+            .stepUpTransformerReactance(60.0)
+            .transientReactance(61.0)
+            .minQ(20.0)
+            .maxQ(25.0)
+            .droop(5f)
+            .participate(true)
+            .regulatingTerminalId("idGenerator1")
+            .regulatingTerminalType("GENERATOR")
+            .points(Arrays.asList(new ReactiveCapabilityCurveCreationInfos(2.0, 3.0, 3.1)))
             .build();
 
         webTestClient.post().uri(uriString, TEST_NETWORK_BUS_BREAKER_ID)

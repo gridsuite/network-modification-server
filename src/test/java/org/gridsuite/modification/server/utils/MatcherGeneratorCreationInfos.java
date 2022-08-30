@@ -41,7 +41,9 @@ public class MatcherGeneratorCreationInfos extends MatcherModificationInfos<Gene
             || (m.getReactivePowerSetpoint() == null && reference.getReactivePowerSetpoint() == null))
             && m.isVoltageRegulationOn() == reference.isVoltageRegulationOn()
             && ((m.getVoltageSetpoint() != null && m.getVoltageSetpoint().equals(reference.getVoltageSetpoint()))
-            || (m.getVoltageSetpoint() == null && reference.getVoltageSetpoint() == null));
+            || (m.getVoltageSetpoint() == null && reference.getVoltageSetpoint() == null))
+            && ((m.getDroop() != null && m.getDroop().equals(reference.getDroop())))
+            || (m.getDroop() == null && reference.getDroop() == null);
     }
 
     @Override
