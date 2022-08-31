@@ -218,35 +218,11 @@ public class NetworkModificationService {
     public Mono<Void> createModificationGroup(UUID sourceGroupUuid, UUID groupUuid, UUID reportUuid) {
         //TODO To be optimized by retrieving ModificationEntity objects directly instead of ModificationInfos objects
         return getModifications(sourceGroupUuid, false, false).doOnNext(m -> {
-            Optional<ModificationEntity> modification = this.modificationRepository.findById(m.getUuid());
-            ModificationEntity modificationEntity = modification.orElse(null);
-            if (modificationEntity != null) {
-                //We use the detached entity from jpa and set the id to null to create a new object that will be saved
-                //another solution is to use a transaction and then create a new java object from the retrieved one
-                if (modificationEntity.getType().equals(ModificationType.LINE_CREATION.name())) {
-                    //need to eagerly fetch the lazy currentLimits because we are not in the transaction
-                    //we could also use a transaction and lazily fetch the currentLimits when we need to access it
-                    LineCreationEntity lineCreationEntity = (LineCreationEntity) modificationRepository.findLineCreationById(m.getUuid());
-                    lineCreationEntity.setIdsToNull();
-                    networkModificationRepository.saveModifications(groupUuid, List.of(lineCreationEntity));
-                } else if (modificationEntity.getType().equals(ModificationType.TWO_WINDINGS_TRANSFORMER_CREATION.name())) {
-                    //need to eagerly fetch the lazy currentLimits
-                    TwoWindingsTransformerCreationEntity twoWindingsTransformerCreationEntity = (TwoWindingsTransformerCreationEntity) modificationRepository.find2wtCreationById(m.getUuid());
-                    twoWindingsTransformerCreationEntity.setIdsToNull();
-                    networkModificationRepository.saveModifications(groupUuid, List.of(twoWindingsTransformerCreationEntity));
-                } else if (modificationEntity.getType().equals(ModificationType.LINE_SPLIT_WITH_VOLTAGE_LEVEL.name())) {
-                    LineSplitWithVoltageLevelEntity lineSplitWithVoltageLevelEntity = (LineSplitWithVoltageLevelEntity) modificationEntity;
-                    lineSplitWithVoltageLevelEntity.setIdsToNull();
-                    networkModificationRepository.saveModifications(groupUuid, List.of(lineSplitWithVoltageLevelEntity));
-                } else if (modificationEntity.getType().equals(ModificationType.LINE_ATTACH_TO_VOLTAGE_LEVEL.name())) {
-                    LineAttachToVoltageLevelEntity lineAttachToVoltageLevelEntity = (LineAttachToVoltageLevelEntity) modificationRepository.findLineAttachToVoltageLevelEntityCreationById(m.getUuid());
-                    lineAttachToVoltageLevelEntity.setIdsToNull();
-                    networkModificationRepository.saveModifications(groupUuid, List.of(lineAttachToVoltageLevelEntity));
-                } else {
-                    modificationEntity.setId(null);
-                    networkModificationRepository.saveModifications(groupUuid, List.of(modificationEntity));
-                }
-            }
+            Optional<ModificationEntity> modificationOpt = this.modificationRepository.findById(m.getUuid());
+            ModificationEntity modificationEntity = modificationOpt.orElseThrow();
+            ModificationEntity eagerModification = this.networkModificationRepository.getModificationEntityEagerly(modificationEntity);
+            eagerModification.setIdsToNull();
+            networkModificationRepository.saveModifications(groupUuid, List.of(eagerModification));
         }).doOnNext(unused -> {
             ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
             sendReport(reportUuid, reporter);

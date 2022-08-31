@@ -104,13 +104,4 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
         return builder;
     }
 
-    public void setIdsToNull() {
-        if (this.getCurrentLimits1() != null) {
-            this.getCurrentLimits1().setId(null);
-        }
-        if (this.getCurrentLimits2() != null) {
-            this.getCurrentLimits2().setId(null);
-        }
-        this.setId(null);
-    }
 }
