@@ -22,13 +22,19 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     @Query(value = "SELECT *, 0 AS clazz_ FROM modification WHERE group_id = ?1 order by modifications_order", nativeQuery = true)
     List<ModificationEntity> findAllBaseByGroupId(UUID uuid);
 
-    @Query(value = "SELECT DISTINCT l FROM LineCreationEntity l left join fetch l.currentLimits1 left join fetch l.currentLimits2 WHERE l.id = ?1")
+    //left join is only ok here because the currentLimits are in a 1 to 1 relationship with the lineCreationEntity
+    //To fetch something that is not in a 1 to 1 use either transaction with lazy fetches or split the request to not have a join
+    @Query(value = "SELECT l FROM LineCreationEntity l left join fetch l.currentLimits1 left join fetch l.currentLimits2 WHERE l.id = ?1")
     ModificationEntity findLineCreationById(UUID uuid);
 
-    @Query(value = "SELECT DISTINCT t FROM TwoWindingsTransformerCreationEntity t left join fetch t.currentLimits1 left join fetch t.currentLimits2 WHERE t.id = ?1")
+    //left join is only ok here because the currentLimits are in a 1 to 1 relationship with the TwoWindingsTransformerCreationEntity
+    //To fetch something that is not in a 1 to 1 use either transaction with lazy fetches or split the request to not have a join
+    @Query(value = "SELECT t FROM TwoWindingsTransformerCreationEntity t left join fetch t.currentLimits1 left join fetch t.currentLimits2 WHERE t.id = ?1")
     ModificationEntity find2wtCreationById(UUID uuid);
 
-    @Query(value = "SELECT DISTINCT line FROM LineAttachToVoltageLevelEntity line left join fetch line.lineCreation l left join fetch l.currentLimits1 left join fetch l.currentLimits2 WHERE line.id = ?1")
+    //left join is only ok here because the currentLimits and the lineCreation are in a 1 to 1 relation with the LineAttachToVoltageLevelEntity
+    //To fetch something that is not in a 1 to 1 use either transaction with lazy fetches or split the request to not have a join
+    @Query(value = "SELECT line FROM LineAttachToVoltageLevelEntity line left join fetch line.lineCreation l left join fetch l.currentLimits1 left join fetch l.currentLimits2 WHERE line.id = ?1")
     ModificationEntity findLineAttachToVoltageLevelEntityCreationById(UUID uuid);
 
 }

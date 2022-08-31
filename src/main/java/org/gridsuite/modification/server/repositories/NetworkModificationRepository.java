@@ -10,7 +10,6 @@ import com.powsybl.commons.PowsyblException;
 import com.powsybl.iidm.network.Country;
 import com.powsybl.iidm.network.EnergySource;
 import com.powsybl.iidm.network.LoadType;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.entities.equipment.modification.BranchStatusModificationEntity;
@@ -123,18 +122,6 @@ public class NetworkModificationRepository {
         return this.modificationGroupRepository.findAll().stream()
                 .map(ModificationGroupEntity::getId)
                 .collect(Collectors.toList());
-    }
-
-    public ModificationEntity getModificationEntityEagerly(UUID modificationUuid, String type) {
-        if (type.equals(ModificationType.LINE_CREATION.name())) {
-            return modificationRepository.findLineCreationById(modificationUuid);
-        } else if (type.equals(ModificationType.TWO_WINDINGS_TRANSFORMER_CREATION.name())) {
-            return modificationRepository.find2wtCreationById(modificationUuid);
-        } else if (type.equals(ModificationType.LINE_ATTACH_TO_VOLTAGE_LEVEL.name())) {
-            return modificationRepository.findLineAttachToVoltageLevelEntityCreationById(modificationUuid);
-        } else {
-            return modificationRepository.getById(modificationUuid);
-        }
     }
 
     @Transactional

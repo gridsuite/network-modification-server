@@ -113,4 +113,10 @@ public class LineSplitWithVoltageLevelEntity  extends ModificationEntity {
         );
     }
 
+    public void setIdsToNull() {
+        if (this.getMayVoltageLevelCreation() != null) {
+            this.getMayVoltageLevelCreation().setId(null);
+        }
+        this.setId(null);
+    }
 }

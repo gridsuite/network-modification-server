@@ -221,52 +221,26 @@ public class NetworkModificationService {
             Optional<ModificationEntity> modification = this.modificationRepository.findById(m.getUuid());
             ModificationEntity modificationEntity = modification.orElse(null);
             if (modificationEntity != null) {
-                //is there a better way ? forced to do the following setting id to null to not get a persist detached object exception on the currentLimits
+                //We use the detached entity from jpa and set the id to null to create a new object that will be saved
+                //another solution is to use a transaction and then create a new java object from the retrieved one
                 if (modificationEntity.getType().equals(ModificationType.LINE_CREATION.name())) {
-                    //need to eagerly fetch the lazy currentLimits
-                    LineCreationEntity lineCreationEntity = (LineCreationEntity) networkModificationRepository.getModificationEntityEagerly(m.getUuid(), ModificationType.LINE_CREATION.name());
-                    if (lineCreationEntity.getCurrentLimits1() != null) {
-                        lineCreationEntity.getCurrentLimits1().setId(null);
-                    }
-                    if (lineCreationEntity.getCurrentLimits2() != null) {
-                        lineCreationEntity.getCurrentLimits2().setId(null);
-                    }
-                    lineCreationEntity.setId(null);
+                    //need to eagerly fetch the lazy currentLimits because we are not in the transaction
+                    //we could also use a transaction and lazily fetch the currentLimits when we need to access it
+                    LineCreationEntity lineCreationEntity = (LineCreationEntity) modificationRepository.findLineCreationById(m.getUuid());
+                    lineCreationEntity.setIdsToNull();
                     networkModificationRepository.saveModifications(groupUuid, List.of(lineCreationEntity));
                 } else if (modificationEntity.getType().equals(ModificationType.TWO_WINDINGS_TRANSFORMER_CREATION.name())) {
                     //need to eagerly fetch the lazy currentLimits
-                    TwoWindingsTransformerCreationEntity twoWindingsTransformerCreationEntity = (TwoWindingsTransformerCreationEntity) networkModificationRepository.getModificationEntityEagerly(m.getUuid(), ModificationType.TWO_WINDINGS_TRANSFORMER_CREATION.name());
-                    if (twoWindingsTransformerCreationEntity.getCurrentLimits1() != null) {
-                        twoWindingsTransformerCreationEntity.getCurrentLimits1().setId(null);
-                    }
-                    if (twoWindingsTransformerCreationEntity.getCurrentLimits2() != null) {
-                        twoWindingsTransformerCreationEntity.getCurrentLimits2().setId(null);
-                    }
-                    twoWindingsTransformerCreationEntity.setId(null);
+                    TwoWindingsTransformerCreationEntity twoWindingsTransformerCreationEntity = (TwoWindingsTransformerCreationEntity) modificationRepository.find2wtCreationById(m.getUuid());
+                    twoWindingsTransformerCreationEntity.setIdsToNull();
                     networkModificationRepository.saveModifications(groupUuid, List.of(twoWindingsTransformerCreationEntity));
                 } else if (modificationEntity.getType().equals(ModificationType.LINE_SPLIT_WITH_VOLTAGE_LEVEL.name())) {
                     LineSplitWithVoltageLevelEntity lineSplitWithVoltageLevelEntity = (LineSplitWithVoltageLevelEntity) modificationEntity;
-                    if (lineSplitWithVoltageLevelEntity.getMayVoltageLevelCreation() != null) {
-                        lineSplitWithVoltageLevelEntity.getMayVoltageLevelCreation().setId(null);
-                    }
-                    lineSplitWithVoltageLevelEntity.setId(null);
+                    lineSplitWithVoltageLevelEntity.setIdsToNull();
                     networkModificationRepository.saveModifications(groupUuid, List.of(lineSplitWithVoltageLevelEntity));
                 } else if (modificationEntity.getType().equals(ModificationType.LINE_ATTACH_TO_VOLTAGE_LEVEL.name())) {
-                    LineAttachToVoltageLevelEntity lineAttachToVoltageLevelEntity = (LineAttachToVoltageLevelEntity) networkModificationRepository.getModificationEntityEagerly(m.getUuid(), ModificationType.LINE_ATTACH_TO_VOLTAGE_LEVEL.name());
-                    if (lineAttachToVoltageLevelEntity.getLineCreation() != null) {
-                        LineCreationEntity lineCreationEntity = lineAttachToVoltageLevelEntity.getLineCreation();
-                        lineCreationEntity.setId(null);
-                        if (lineCreationEntity.getCurrentLimits1() != null) {
-                            lineCreationEntity.getCurrentLimits1().setId(null);
-                        }
-                        if (lineCreationEntity.getCurrentLimits2() != null) {
-                            lineCreationEntity.getCurrentLimits2().setId(null);
-                        }
-                    }
-                    if (lineAttachToVoltageLevelEntity.getMayVoltageLevelCreation() != null) {
-                        lineAttachToVoltageLevelEntity.getMayVoltageLevelCreation().setId(null);
-                    }
-                    lineAttachToVoltageLevelEntity.setId(null);
+                    LineAttachToVoltageLevelEntity lineAttachToVoltageLevelEntity = (LineAttachToVoltageLevelEntity) modificationRepository.findLineAttachToVoltageLevelEntityCreationById(m.getUuid());
+                    lineAttachToVoltageLevelEntity.setIdsToNull();
                     networkModificationRepository.saveModifications(groupUuid, List.of(lineAttachToVoltageLevelEntity));
                 } else {
                     modificationEntity.setId(null);
