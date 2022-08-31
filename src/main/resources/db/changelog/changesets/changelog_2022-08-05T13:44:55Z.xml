@@ -1,46 +1,86 @@
 <?xml version="1.1" encoding="UTF-8" standalone="no"?>
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-4.1.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
     <changeSet author="yenguised (generated)" id="1659707106604-7">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="generator_creation_entity_reactive_capability_curve_points"/>
+            </not>
+        </preConditions>
         <createTable tableName="generator_creation_entity_reactive_capability_curve_points">
             <column name="generator_creation_entity_id" type="UUID">
                 <constraints nullable="false"/>
             </column>
-            <column name="maxq" type="FLOAT8"/>
-            <column name="minq" type="FLOAT8"/>
+            <column name="qmin_p" type="FLOAT8"/>
+            <column name="qmax_p" type="FLOAT8"/>
             <column name="p" type="FLOAT8"/>
         </createTable>
     </changeSet>
     <changeSet author="yenguised (generated)" id="1659707106604-8">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists columnName="droop" tableName="generator_creation"/>
+            </not>
+        </preConditions>
         <addColumn tableName="generator_creation">
             <column name="droop" type="float8"/>
         </addColumn>
     </changeSet>
     <changeSet author="yenguised (generated)" id="1659707106604-9">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists columnName="marginal_cost" tableName="generator_creation"/>
+            </not>
+        </preConditions>
         <addColumn tableName="generator_creation">
             <column name="marginal_cost" type="float8"/>
         </addColumn>
     </changeSet>
     <changeSet author="yenguised (generated)" id="1659707106604-10">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists columnName="maximum_reactive_power" tableName="generator_creation"/>
+            </not>
+        </preConditions>
         <addColumn tableName="generator_creation">
             <column name="maximum_reactive_power" type="float8"/>
         </addColumn>
     </changeSet>
     <changeSet author="yenguised (generated)" id="1659707106604-11">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists columnName="minimum_reactive_power" tableName="generator_creation"/>
+            </not>
+        </preConditions>
         <addColumn tableName="generator_creation">
             <column name="minimum_reactive_power" type="float8"/>
         </addColumn>
     </changeSet>
     <changeSet author="yenguised (generated)" id="1659707106604-12">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists columnName="participate" tableName="generator_creation"/>
+            </not>
+        </preConditions>
         <addColumn tableName="generator_creation">
             <column name="participate" type="boolean"/>
         </addColumn>
     </changeSet>
     <changeSet author="yenguised (generated)" id="1659707106604-13">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists columnName="step_up_transformer_reactance" tableName="generator_creation"/>
+            </not>
+        </preConditions>
         <addColumn tableName="generator_creation">
             <column name="step_up_transformer_reactance" type="float8"/>
         </addColumn>
     </changeSet>
     <changeSet author="yenguised (generated)" id="1659707106604-14">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists columnName="transient_reactance" tableName="generator_creation"/>
+            </not>
+        </preConditions>
         <addColumn tableName="generator_creation">
             <column name="transient_reactance" type="float8"/>
         </addColumn>

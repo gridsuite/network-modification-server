@@ -15,10 +15,10 @@ import lombok.experimental.SuperBuilder;
 @Schema(description = "Generator reactive capability curve point creation")
 public class ReactiveCapabilityCurveCreationInfos {
     @Schema(description = "Minimum reactive power ")
-    private Double minQ;
+    private Double qminP;
 
     @Schema(description = "Maximum reactive power")
-    private Double maxQ;
+    private Double qmaxP;
 
     @Schema(description = "Active Power")
     private Double p;

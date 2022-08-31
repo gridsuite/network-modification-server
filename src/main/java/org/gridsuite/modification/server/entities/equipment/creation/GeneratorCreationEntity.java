@@ -102,8 +102,8 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
     public static List<ReactiveCapabilityCurveCreationEmbeddable> toEmbeddablePoints(
             List<ReactiveCapabilityCurveCreationInfos> points) {
         return points == null ? null : points.stream()
-                .map(point -> new ReactiveCapabilityCurveCreationEmbeddable(point.getMinQ(),
-                        point.getMaxQ(),
+                .map(point -> new ReactiveCapabilityCurveCreationEmbeddable(point.getQminP(),
+                        point.getQmaxP(),
                         point.getP()))
                 .collect(Collectors.toList());
     }
@@ -114,12 +114,13 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
     }
 
     private GeneratorCreationInfos.GeneratorCreationInfosBuilder<?, ?> toGeneratorCreationInfosBuilder() {
-        List<ReactiveCapabilityCurveCreationInfos> points = getReactiveCapabilityCurvePoints()
+        List<ReactiveCapabilityCurveCreationEmbeddable> pointsEmbeddable = getReactiveCapabilityCurvePoints();
+        List<ReactiveCapabilityCurveCreationInfos> points = pointsEmbeddable != null ? getReactiveCapabilityCurvePoints()
                 .stream()
-                .map(value -> new ReactiveCapabilityCurveCreationInfos(value.getMinQ(),
-                        value.getMaxQ(),
+                .map(value -> new ReactiveCapabilityCurveCreationInfos(value.getQminP(),
+                        value.getQmaxP(),
                         value.getP()))
-                .collect(Collectors.toList());
+                .collect(Collectors.toList()) : null;
 
         return GeneratorCreationInfos
             .builder()
@@ -139,10 +140,10 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
             .voltageRegulationOn(isVoltageRegulationOn())
             .voltageSetpoint(getVoltageSetpoint())
             .marginalCost(getMarginalCost())
-            .minQ(getMinQ())
+            .minimumReactivePower(getMinQ())
             .participate(getParticipate())
             .droop(getDroop())
-            .maxQ(getMaxQ())
+            .maximumReactivePower(getMaxQ())
             .points(points)
             .transientReactance(getTransientReactance())
             .stepUpTransformerReactance(getStepUpTransformerReactance());

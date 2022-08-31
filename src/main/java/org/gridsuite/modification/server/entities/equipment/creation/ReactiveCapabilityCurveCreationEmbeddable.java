@@ -13,10 +13,10 @@ import javax.persistence.Embeddable;
 @Embeddable
 public class ReactiveCapabilityCurveCreationEmbeddable {
     @Column
-    private Double minQ;
+    private Double qminP;
 
     @Column
-    private Double maxQ;
+    private Double qmaxP;
 
     @Column
     private Double p;

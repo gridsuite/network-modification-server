@@ -55,10 +55,10 @@ public class GeneratorCreationInfos extends InjectionCreationInfos {
     private Double marginalCost;
 
     @Schema(description = "Minimum reactive power")
-    private Double minQ;
+    private Double minimumReactivePower;
 
     @Schema(description = "Maximum reactive power")
-    private Double maxQ;
+    private Double maximumReactivePower;
 
     @Schema(description = "Reactive capability curve points")
     private List<ReactiveCapabilityCurveCreationInfos> points;

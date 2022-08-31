@@ -614,8 +614,8 @@ public class NetworkModificationService {
                 generatorCreationInfos.isVoltageRegulationOn(),
                 generatorCreationInfos.getVoltageSetpoint(),
                 generatorCreationInfos.getMarginalCost(),
-                generatorCreationInfos.getMinQ(),
-                generatorCreationInfos.getMaxQ(),
+                generatorCreationInfos.getMinimumReactivePower(),
+                generatorCreationInfos.getMaximumReactivePower(),
                 generatorCreationInfos.getParticipate(),
                 generatorCreationInfos.getDroop(),
                 generatorCreationInfos.getTransientReactance(),
@@ -985,8 +985,8 @@ public class NetworkModificationService {
         if (generatorCreationInfos.getPoints() != null) {
             generatorCreationInfos.getPoints()
                     .forEach(point -> generator.newReactiveCapabilityCurve().beginPoint()
-                            .setMaxQ(getDoubleValue(point.getMaxQ()))
-                            .setMinQ(getDoubleValue(point.getMinQ()))
+                            .setMaxQ(getDoubleValue(point.getQmaxP()))
+                            .setMinQ(getDoubleValue(point.getQminP()))
                             .setP(getDoubleValue(point.getP())));
         }
 
@@ -1050,16 +1050,16 @@ public class NetworkModificationService {
                     .withDroop(generatorCreationInfos.getDroop());
         }
 
-        if (generatorCreationInfos.getMaxQ() != null && generatorCreationInfos.getMinQ() != null) {
-            generator.newMinMaxReactiveLimits().setMinQ(generatorCreationInfos.getMinQ())
-                    .setMaxQ(generatorCreationInfos.getMaxQ());
+        if (generatorCreationInfos.getMaximumReactivePower() != null && generatorCreationInfos.getMinimumReactivePower() != null) {
+            generator.newMinMaxReactiveLimits().setMinQ(generatorCreationInfos.getMinimumReactivePower())
+                    .setMaxQ(generatorCreationInfos.getMaximumReactivePower());
         }
 
         if (generatorCreationInfos.getPoints() != null) {
             generatorCreationInfos.getPoints()
                     .forEach(point -> generator.newReactiveCapabilityCurve().beginPoint()
-                            .setMaxQ(point.getMaxQ())
-                            .setMinQ(point.getMinQ())
+                            .setMaxQ(point.getQmaxP())
+                            .setMinQ(point.getQminP())
                             .setP(point.getP()));
         }
         return generator;
@@ -2340,6 +2340,8 @@ public class NetworkModificationService {
                 return network.getSubstation(equipmentId);
             case VOLTAGE_LEVEL:
                 return network.getVoltageLevel(equipmentId);
+            case BUSBAR_SECTION:
+                return network.getBusbarSection(equipmentId);
             default:
                 return null;
         }
