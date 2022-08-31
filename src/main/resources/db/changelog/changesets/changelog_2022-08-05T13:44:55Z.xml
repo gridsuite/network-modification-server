@@ -10,8 +10,8 @@
             <column name="generator_creation_entity_id" type="UUID">
                 <constraints nullable="false"/>
             </column>
-            <column name="qmin_p" type="FLOAT8"/>
-            <column name="qmax_p" type="FLOAT8"/>
+            <column name="qminp" type="FLOAT8"/>
+            <column name="qmaxp" type="FLOAT8"/>
             <column name="p" type="FLOAT8"/>
         </createTable>
     </changeSet>
