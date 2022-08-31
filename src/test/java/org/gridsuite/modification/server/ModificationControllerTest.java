@@ -40,17 +40,12 @@ import org.springframework.web.reactive.function.BodyInserters;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
@@ -1905,24 +1900,89 @@ public class ModificationControllerTest {
             .isEqualTo(List.of());
     }
 
+    private List<UUID> createSomeSwitchModifications(UUID groupId, int number) {
+        List<String> openStates = Arrays.asList("true", "false");
+        for (int i = 0; i < number; i++) {
+            webTestClient.put().uri("/v1/networks/{networkUuid}/switches/{switchId}?group=" + groupId + "&open=" + openStates.get(i % 2) + "&reportUuid=" + TEST_REPORT_ID, TEST_NETWORK_ID, "v1b1")
+                    .exchange()
+                    .expectStatus().isOk()
+                    .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                    .expectBodyList(EquipmentAttributeModificationInfos.class)
+                    .returnResult().getResponseBody();
+        }
+        var modificationList = networkModificationService.getModifications(groupId, true, true).map(ModificationInfos::getUuid).collectList().block();
+        assertEquals(number, modificationList.size());
+        return modificationList;
+    }
+
+    @Test
+    public void testDuplicateModification() {
+        // create 3 modifications
+        List<UUID> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 3);
+
+        // Duplicate [0] and [1], and append them at the end of the group modification list.
+        // Also try to duplicate 2 un-existing modifications, that should be returned as errors.
+        List<UUID> duplicateModificationUuidList = new ArrayList<>(modificationList.subList(0, 2));
+        List<UUID> badModificationUuidList = Arrays.asList(UUID.randomUUID(), UUID.randomUUID());
+        duplicateModificationUuidList.addAll(badModificationUuidList);
+        webTestClient.put().uri("/v1/groups/" + TEST_GROUP_ID
+                        + "?action=DUPLICATE")
+                .body(BodyInserters.fromValue(duplicateModificationUuidList))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBodyList(UUID.class)
+                .isEqualTo(badModificationUuidList); // bad uuids are returned
+
+        var newModificationList = networkModificationService.getModifications(TEST_GROUP_ID, true, true).map(ModificationInfos::getUuid).collectList().block();
+        // now 5 modifications: first 0-1-2 are still the same, last 3-4 are new (duplicates of 0-1)
+        assertEquals(5, newModificationList.size());
+        assertEquals(modificationList, newModificationList.subList(0, 3));
+        // compare duplicates 0 and 3 (same data except uuid)
+        var modification0 = networkModificationService.getModification(modificationList.get(0)).blockFirst();
+        var newModification3 = networkModificationService.getModification(newModificationList.get(3)).blockFirst();
+        modification0.setUuid(null);
+        newModification3.setUuid(null);
+        assertEquals(modification0.toString(), newModification3.toString());
+        // compare duplicates 1 and 4 (same data except uuid)
+        var modification1 = networkModificationService.getModification(modificationList.get(1)).blockFirst();
+        var newModification4 = networkModificationService.getModification(newModificationList.get(4)).blockFirst();
+        modification1.setUuid(null);
+        newModification4.setUuid(null);
+        assertEquals(modification1.toString(), newModification4.toString());
+
+        // create 1 modification in another group
+        UUID otherGroupId = UUID.randomUUID();
+        List<UUID> modificationListOtherGroup = createSomeSwitchModifications(otherGroupId, 1);
+
+        // Duplicate the same modifications, and append them at the end of this new group modification list.
+        duplicateModificationUuidList = new ArrayList<>(modificationList.subList(0, 2));
+        webTestClient.put().uri("/v1/groups/" + otherGroupId
+                        + "?action=DUPLICATE")
+                .body(BodyInserters.fromValue(duplicateModificationUuidList))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBodyList(UUID.class)
+                .isEqualTo(List.of()); // no bad id => no error this time
+
+        var newModificationListOtherGroup = networkModificationService.getModifications(otherGroupId, true, true).map(ModificationInfos::getUuid).collectList().block();
+        // now 3 modifications in new group: first 0 is still the same, last 1-2 are new (duplicates of 0-1 from first group)
+        assertEquals(3, newModificationListOtherGroup.size());
+        assertEquals(modificationListOtherGroup, newModificationListOtherGroup.subList(0, 1));
+        // compare duplicates
+        var newModification1 = networkModificationService.getModification(newModificationListOtherGroup.get(1)).blockFirst();
+        newModification1.setUuid(null);
+        assertEquals(modification0.toString(), newModification1.toString());
+        var newModification2 = networkModificationService.getModification(newModificationListOtherGroup.get(2)).blockFirst();
+        newModification2.setUuid(null);
+        assertEquals(modification1.toString(), newModification2.toString());
+    }
+
     @Test
     public void testMoveModification() {
-        webTestClient.put().uri("/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID + "&open=true" + "&reportUuid=" + TEST_REPORT_ID, TEST_NETWORK_ID, "v1b1")
-            .exchange()
-            .expectStatus().isOk()
-            .expectHeader().contentType(MediaType.APPLICATION_JSON)
-            .expectBodyList(EquipmentAttributeModificationInfos.class)
-            .returnResult().getResponseBody();
-        webTestClient.put().uri("/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID + "&open=true" + "&reportUuid=" + TEST_REPORT_ID, TEST_NETWORK_ID, "v1b1")
-            .exchange()
-            .expectStatus().isOk()
-            .expectHeader().contentType(MediaType.APPLICATION_JSON)
-            .expectBodyList(EquipmentAttributeModificationInfos.class)
-            .returnResult().getResponseBody();
+        // create 2 modifications
+        List<UUID> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 2);
 
-        var modificationList = networkModificationService.getModifications(TEST_GROUP_ID, true, true).map(ModificationInfos::getUuid).collectList().block();
-        assertNotNull(modificationList);
-        assertEquals(2, modificationList.size());
+        // swap modifications: move [1] before [0]
         List<UUID> movingModificationUuidList = Collections.singletonList(modificationList.get(1));
         webTestClient.put().uri("/v1/groups/" + TEST_GROUP_ID
                     + "?action=MOVE&before=" + modificationList.get(0))
