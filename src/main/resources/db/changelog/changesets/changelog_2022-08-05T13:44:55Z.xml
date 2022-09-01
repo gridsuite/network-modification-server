@@ -86,6 +86,31 @@
         </addColumn>
     </changeSet>
     <changeSet author="yenguised (generated)" id="1659707106604-15">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists columnName="regulating_terminal_id" tableName="generator_creation"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="generator_creation">
+            <column name="regulating_terminal_id" type="VARCHAR(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="yenguised (generated)" id="1659707106604-16">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists columnName="regulating_terminal_type" tableName="generator_creation"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="generator_creation">
+            <column name="regulating_terminal_type" type="VARCHAR(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="yenguised (generated)" id="1659707106604-17">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FK8dxg53bh5kr2lbcglu7hp6trr" />
+            </not>
+        </preConditions>
         <addForeignKeyConstraint baseColumnNames="generator_creation_entity_id" baseTableName="generator_creation_entity_reactive_capability_curve_points" constraintName="FK8dxg53bh5kr2lbcglu7hp6trr" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="generator_creation" validate="true"/>
     </changeSet>
 </databaseChangeLog>

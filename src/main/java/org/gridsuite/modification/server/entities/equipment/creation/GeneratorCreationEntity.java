@@ -54,10 +54,10 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
     private Double marginalCost;
 
     @Column(name = "minimumReactivePower")
-    private Double minQ;
+    private Double minimumReactivePower;
 
     @Column(name = "maximumReactivePower")
-    private Double maxQ;
+    private Double maximumReactivePower;
 
     @Column(name = "participate")
     private Boolean participate;
@@ -71,6 +71,12 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
     @Column(name = "stepUpTransformerReactance")
     private Double stepUpTransformerReactance;
 
+    @Column(name = "regulatingTerminalId")
+    private String regulatingTerminalId;
+
+    @Column(name = "regulatingTerminalType")
+    private String regulatingTerminalType;
+
     @ElementCollection
     @CollectionTable
     private List<ReactiveCapabilityCurveCreationEmbeddable> reactiveCapabilityCurvePoints;
@@ -79,7 +85,8 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
                                    double minActivePower, double maxActivePower, Double ratedNominalPower, double activePowerSetpoint,
                                    Double reactivePowerSetpoint, boolean voltageRegulationOn, Double voltageSetpoint, Double marginalCost, Double minQ,
                                    Double maxQ, boolean participate, Float droop, Double transientReactance, Double stepUpTransformerReactance,
-                                   List<ReactiveCapabilityCurveCreationEmbeddable> reactiveCapabilityCurvePoints) {
+                                   List<ReactiveCapabilityCurveCreationEmbeddable> reactiveCapabilityCurvePoints, String regulatingTerminalId,
+                                   String regulatingTerminalType) {
         super(ModificationType.GENERATOR_CREATION, equipmentId, equipmentName, voltageLevelId, busOrBusbarSectionId);
         this.energySource = energySource;
         this.minActivePower = minActivePower;
@@ -90,13 +97,15 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
         this.voltageRegulationOn = voltageRegulationOn;
         this.voltageSetpoint = voltageSetpoint;
         this.marginalCost = marginalCost;
-        this.minQ = minQ;
-        this.maxQ = maxQ;
+        this.minimumReactivePower = minQ;
+        this.maximumReactivePower = maxQ;
         this.participate = participate;
         this.droop = droop;
         this.transientReactance = transientReactance;
         this.stepUpTransformerReactance = stepUpTransformerReactance;
         this.reactiveCapabilityCurvePoints = reactiveCapabilityCurvePoints;
+        this.regulatingTerminalId = regulatingTerminalId;
+        this.regulatingTerminalType = regulatingTerminalType;
     }
 
     public static List<ReactiveCapabilityCurveCreationEmbeddable> toEmbeddablePoints(
@@ -140,10 +149,10 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
             .voltageRegulationOn(isVoltageRegulationOn())
             .voltageSetpoint(getVoltageSetpoint())
             .marginalCost(getMarginalCost())
-            .minimumReactivePower(getMinQ())
+            .minimumReactivePower(this.getMinimumReactivePower())
             .participate(getParticipate())
             .droop(getDroop())
-            .maximumReactivePower(getMaxQ())
+            .maximumReactivePower(this.getMaximumReactivePower())
             .points(points)
             .transientReactance(getTransientReactance())
             .stepUpTransformerReactance(getStepUpTransformerReactance());

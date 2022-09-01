@@ -17,6 +17,7 @@ import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.Branch.Side;
 import com.powsybl.iidm.network.extensions.ActivePowerControlAdder;
 import com.powsybl.iidm.network.extensions.GeneratorShortCircuit;
+import com.powsybl.iidm.network.extensions.GeneratorShortCircuitAdder;
 import com.powsybl.iidm.network.extensions.GeneratorStartupAdder;
 import com.powsybl.iidm.network.impl.extensions.GeneratorShortCircuitImpl;
 import com.powsybl.network.store.client.NetworkStoreService;
@@ -620,6 +621,8 @@ public class NetworkModificationService {
                 generatorCreationInfos.getDroop(),
                 generatorCreationInfos.getTransientReactance(),
                 generatorCreationInfos.getStepUpTransformerReactance(),
+                generatorCreationInfos.getRegulatingTerminalId(),
+                generatorCreationInfos.getRegulatingTerminalType(),
                 toEmbeddablePoints(generatorCreationInfos.getPoints()));
 
         updatedEntity.setId(modificationUuid);
@@ -954,7 +957,6 @@ public class NetworkModificationService {
             .setName(generatorCreationInfos.getEquipmentName())
             .setEnergySource(generatorCreationInfos.getEnergySource())
             .setNode(nodeNum)
-            .setRegulatingTerminal(terminal)
             .setMinP(generatorCreationInfos.getMinActivePower())
             .setMaxP(generatorCreationInfos.getMaxActivePower())
             .setRatedS(generatorCreationInfos.getRatedNominalPower() != null ? generatorCreationInfos.getRatedNominalPower() : Double.NaN)
@@ -964,30 +966,39 @@ public class NetworkModificationService {
             .setTargetV(generatorCreationInfos.getVoltageSetpoint() != null ? generatorCreationInfos.getVoltageSetpoint() : Double.NaN)
             .add();
 
+        if (terminal != null) {
+            generator.setRegulatingTerminal(terminal);
+        }
+
         Boolean participate = generatorCreationInfos.getParticipate();
 
         if (generatorCreationInfos.getMarginalCost() != null) {
             generator.newExtension(GeneratorStartupAdderImpl.class).withMarginalCost(generatorCreationInfos.getMarginalCost()).add();
         }
 
-        if (generatorCreationInfos.getTransientReactance() != null && generatorCreationInfos.getStepUpTransformerReactance() != null) {
-            generator.addExtension(GeneratorShortCircuit.class, new GeneratorShortCircuitImpl(generator,
-                    0.0,
-                    generatorCreationInfos.getTransientReactance(),
-                    generatorCreationInfos.getStepUpTransformerReactance())
-            );
-        }
-
         if (generatorCreationInfos.getParticipate() != null && generatorCreationInfos.getDroop() != null) {
             generator.newExtension(ActivePowerControlAdder.class).withParticipate(participate)
-                    .withDroop(generatorCreationInfos.getDroop());
+                    .withDroop(generatorCreationInfos.getDroop()).add();
         }
+
+        if (generatorCreationInfos.getTransientReactance() != null && generatorCreationInfos.getStepUpTransformerReactance() != null) {
+            generator.newExtension(GeneratorShortCircuitAdder.class)
+                    .withDirectTransX(generatorCreationInfos.getTransientReactance())
+                    .withStepUpTransformerX(generatorCreationInfos.getStepUpTransformerReactance())
+                    .add();
+        }
+
         if (generatorCreationInfos.getPoints() != null) {
             generatorCreationInfos.getPoints()
                     .forEach(point -> generator.newReactiveCapabilityCurve().beginPoint()
                             .setMaxQ(getDoubleValue(point.getQmaxP()))
                             .setMinQ(getDoubleValue(point.getQminP()))
                             .setP(getDoubleValue(point.getP())));
+        }
+
+        if (generatorCreationInfos.getMinimumReactivePower() != null && generatorCreationInfos.getMaximumReactivePower() != null) {
+            generator.newMinMaxReactiveLimits().setMinQ(generatorCreationInfos.getMinimumReactivePower())
+                    .setMaxQ(generatorCreationInfos.getMaximumReactivePower());
         }
 
         return generator;
@@ -1029,6 +1040,7 @@ public class NetworkModificationService {
             .setVoltageRegulatorOn(generatorCreationInfos.isVoltageRegulationOn())
             .setTargetV(generatorCreationInfos.getVoltageSetpoint() != null ? generatorCreationInfos.getVoltageSetpoint() : Double.NaN)
             .add();
+
         if (terminal != null) {
             generator.setRegulatingTerminal(terminal);
         }
@@ -1062,6 +1074,7 @@ public class NetworkModificationService {
                             .setMinQ(point.getQminP())
                             .setP(point.getP()));
         }
+
         return generator;
     }
 

@@ -204,6 +204,8 @@ public class NetworkStoreListener implements NetworkListener {
             generatorCreationInfos.getDroop(),
             generatorCreationInfos.getTransientReactance(),
             generatorCreationInfos.getStepUpTransformerReactance(),
+            generatorCreationInfos.getRegulatingTerminalId(),
+            generatorCreationInfos.getRegulatingTerminalType(),
             toEmbeddablePoints(generatorCreationInfos.getPoints())));
     }
 

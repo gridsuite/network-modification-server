@@ -1210,14 +1210,16 @@ public class ModificationControllerTest {
                 55.,
                 false,
                 235.,
-                null,
-                null,
-                null,
-                false,
-                null,
-                null,
-                null,
-                List.of())
+                80.,
+                30.,
+                300.,
+                true,
+                10f,
+                25.,
+                44.,
+                List.of(),
+                "EquipmentTestId",
+                "LINE")
                 .toModificationInfos();
         generatorCreationInfos.setUuid(result.getUuid());
 
@@ -1235,14 +1237,16 @@ public class ModificationControllerTest {
                 55.,
                 false,
                 235.,
+                90.,
                 null,
                 null,
-                null,
-                false,
-                null,
-                null,
-                null,
-                List.of())
+                true,
+                10f,
+                25.,
+                44.,
+                List.of(new ReactiveCapabilityCurveCreationEmbeddable(45., 85., 77.)),
+                "EquipmentTestId",
+                "LINE")
                 .toModificationInfos();
         String uriStringForUpdate = "/v1/modifications/" + result.getUuid() + "/generators-creation";
         webTestClient.put().uri(uriStringForUpdate)
