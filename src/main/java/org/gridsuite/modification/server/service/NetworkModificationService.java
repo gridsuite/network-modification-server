@@ -622,7 +622,7 @@ public class NetworkModificationService {
                 generatorCreationInfos.getRegulatingTerminalId(),
                 generatorCreationInfos.getRegulatingTerminalType(),
                 generatorCreationInfos.getRegulatingTerminalVlId(),
-                generatorCreationInfos.isReactiveCapabilityCurve(),
+                generatorCreationInfos.getReactiveCapabilityCurve(),
                 toEmbeddablePoints(generatorCreationInfos.getPoints()));
 
         updatedEntity.setId(modificationUuid);

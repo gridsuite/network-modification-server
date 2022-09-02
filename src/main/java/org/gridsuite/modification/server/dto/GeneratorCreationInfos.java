@@ -85,5 +85,5 @@ public class GeneratorCreationInfos extends InjectionCreationInfos {
     private String regulatingTerminalVlId;
 
     @Schema(description = "Reactive capability curve")
-    private boolean reactiveCapabilityCurve;
+    private Boolean reactiveCapabilityCurve;
 }
