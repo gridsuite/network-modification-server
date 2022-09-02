@@ -77,6 +77,12 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
     @Column(name = "regulatingTerminalType")
     private String regulatingTerminalType;
 
+    @Column(name = "regulatingTerminalVlId")
+    private String regulatingTerminalVlId;
+
+    @Column(name = "reactiveCapabilityCurve")
+    private Boolean reactiveCapabilityCurve;
+
     @ElementCollection
     @CollectionTable
     private List<ReactiveCapabilityCurveCreationEmbeddable> reactiveCapabilityCurvePoints;
@@ -86,7 +92,7 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
                                    Double reactivePowerSetpoint, boolean voltageRegulationOn, Double voltageSetpoint, Double marginalCost, Double minQ,
                                    Double maxQ, boolean participate, Float droop, Double transientReactance, Double stepUpTransformerReactance,
                                    List<ReactiveCapabilityCurveCreationEmbeddable> reactiveCapabilityCurvePoints, String regulatingTerminalId,
-                                   String regulatingTerminalType) {
+                                   String regulatingTerminalType, String regulatingTerminalVlId, boolean reactiveCapabilityCurve) {
         super(ModificationType.GENERATOR_CREATION, equipmentId, equipmentName, voltageLevelId, busOrBusbarSectionId);
         this.energySource = energySource;
         this.minActivePower = minActivePower;
@@ -106,6 +112,8 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
         this.reactiveCapabilityCurvePoints = reactiveCapabilityCurvePoints;
         this.regulatingTerminalId = regulatingTerminalId;
         this.regulatingTerminalType = regulatingTerminalType;
+        this.regulatingTerminalVlId = regulatingTerminalVlId;
+        this.reactiveCapabilityCurve = reactiveCapabilityCurve;
     }
 
     public static List<ReactiveCapabilityCurveCreationEmbeddable> toEmbeddablePoints(

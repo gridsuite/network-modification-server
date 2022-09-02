@@ -75,9 +75,15 @@ public class GeneratorCreationInfos extends InjectionCreationInfos {
     @Schema(description = "Step up transformer reactance")
     private Double stepUpTransformerReactance;
 
-    @Schema(description = "Regulating terminal id")
+    @Schema(description = "Regulating terminal equipment id")
     private String regulatingTerminalId;
 
-    @Schema(description = "Regulating terminal type")
+    @Schema(description = "Regulating terminal equipment type")
     private String regulatingTerminalType;
+
+    @Schema(description = "Regulating terminal voltage level id")
+    private String regulatingTerminalVlId;
+
+    @Schema(description = "Reactive capability curve")
+    private boolean reactiveCapabilityCurve;
 }

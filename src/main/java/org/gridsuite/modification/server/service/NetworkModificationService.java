@@ -16,10 +16,8 @@ import com.powsybl.iidm.modification.tripping.BranchTripping;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.Branch.Side;
 import com.powsybl.iidm.network.extensions.ActivePowerControlAdder;
-import com.powsybl.iidm.network.extensions.GeneratorShortCircuit;
 import com.powsybl.iidm.network.extensions.GeneratorShortCircuitAdder;
 import com.powsybl.iidm.network.extensions.GeneratorStartupAdder;
-import com.powsybl.iidm.network.impl.extensions.GeneratorShortCircuitImpl;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.iidm.impl.extensions.GeneratorStartupAdderImpl;
 import com.powsybl.sld.iidm.extensions.BranchStatus;
@@ -623,6 +621,8 @@ public class NetworkModificationService {
                 generatorCreationInfos.getStepUpTransformerReactance(),
                 generatorCreationInfos.getRegulatingTerminalId(),
                 generatorCreationInfos.getRegulatingTerminalType(),
+                generatorCreationInfos.getRegulatingTerminalVlId(),
+                generatorCreationInfos.isReactiveCapabilityCurve(),
                 toEmbeddablePoints(generatorCreationInfos.getPoints()));
 
         updatedEntity.setId(modificationUuid);
@@ -948,7 +948,7 @@ public class NetworkModificationService {
             if (identifiable == null) {
                 throw new NetworkModificationException(REGULATING_TERMINAL_NOT_FOUND);
             }
-            terminal = getTerminalFromIdentifiable(identifiable, generatorCreationInfos.getVoltageLevelId());
+            terminal = getTerminalFromIdentifiable(identifiable, generatorCreationInfos.getRegulatingTerminalVlId());
         }
 
         // creating the generator
@@ -1022,7 +1022,7 @@ public class NetworkModificationService {
                 throw new NetworkModificationException(REGULATING_TERMINAL_NOT_FOUND);
             }
 
-            terminal = getTerminalFromIdentifiable(identifiable, generatorCreationInfos.getVoltageLevelId());
+            terminal = getTerminalFromIdentifiable(identifiable, generatorCreationInfos.getRegulatingTerminalVlId());
         }
 
         // creating the generator
@@ -1046,11 +1046,9 @@ public class NetworkModificationService {
         }
 
         if (generatorCreationInfos.getTransientReactance() != null && generatorCreationInfos.getStepUpTransformerReactance() != null) {
-            generator.addExtension(GeneratorShortCircuit.class, new GeneratorShortCircuitImpl(generator,
-                    0.0,
-                    generatorCreationInfos.getTransientReactance(),
-                    generatorCreationInfos.getStepUpTransformerReactance())
-            );
+            generator.newExtension(GeneratorShortCircuitAdder.class).withDirectTransX(generatorCreationInfos.getTransientReactance())
+                    .withStepUpTransformerX(generatorCreationInfos.getStepUpTransformerReactance())
+                    .add();
         }
 
         if (generatorCreationInfos.getMarginalCost() != null) {
