@@ -122,7 +122,7 @@ public class NetworkModificationRepository {
         newModificationList.addAll(index, modificationsToMove);
 
         modificationGroupEntity.setModifications(newModificationList);
-        return new ArrayList<>();
+        return List.of();
     }
 
     public List<UUID> getModificationGroupsUuids() {

@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import static org.gridsuite.modification.server.NetworkModificationException.Type.TYPE_MISMATCH;
+
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
@@ -98,10 +100,14 @@ public class NetworkModificationController {
                                                               @Parameter(description = "kind of modification", required = true) @RequestParam(value = "action") GroupModificationAction action,
                                                               @Parameter(description = "the modification Uuid to move before (MOVE option, empty means moving at the end)") @RequestParam(value = "before", required = false) UUID before,
                                                               @RequestBody List<UUID> modificationsUuidList) {
-        if (action == GroupModificationAction.DUPLICATE) {
-            return ResponseEntity.ok().body(networkModificationService.duplicateModifications(groupUuid, modificationsUuidList));
+        switch (action) {
+            case DUPLICATE:
+                return ResponseEntity.ok().body(networkModificationService.duplicateModifications(groupUuid, modificationsUuidList));
+            case MOVE:
+                return ResponseEntity.ok().body(networkModificationService.moveModifications(groupUuid, before, modificationsUuidList));
+            default:
+                throw new NetworkModificationException(TYPE_MISMATCH);
         }
-        return ResponseEntity.ok().body(networkModificationService.moveModifications(groupUuid, before, modificationsUuidList));
     }
 
     @DeleteMapping(value = "/groups/{groupUuid}/modifications")

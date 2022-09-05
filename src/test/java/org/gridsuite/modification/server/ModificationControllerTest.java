@@ -1950,6 +1950,13 @@ public class ModificationControllerTest {
         newModification4.setUuid(null);
         assertEquals(modification1.toString(), newModification4.toString());
 
+        // bad request error case: wrong action param
+        webTestClient.put().uri("/v1/groups/" + TEST_GROUP_ID
+                        + "?action=XXXXXXX")
+                .body(BodyInserters.fromValue(duplicateModificationUuidList))
+                .exchange()
+                .expectStatus().isBadRequest();
+
         // create 1 modification in another group
         UUID otherGroupId = UUID.randomUUID();
         List<UUID> modificationListOtherGroup = createSomeSwitchModifications(otherGroupId, 1);
