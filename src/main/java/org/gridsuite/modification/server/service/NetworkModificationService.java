@@ -980,9 +980,9 @@ public class NetworkModificationService {
         if (generatorCreationInfos.getPoints() != null) {
             generatorCreationInfos.getPoints()
                     .forEach(point -> generator.newReactiveCapabilityCurve().beginPoint()
-                            .setMaxQ(getDoubleValue(point.getQmaxP()))
-                            .setMinQ(getDoubleValue(point.getQminP()))
-                            .setP(getDoubleValue(point.getP())));
+                            .setMaxQ(point.getQmaxP())
+                            .setMinQ(point.getQminP())
+                            .setP(point.getP()));
         }
 
         if (generatorCreationInfos.getMinimumReactivePower() != null && generatorCreationInfos.getMaximumReactivePower() != null) {
@@ -991,10 +991,6 @@ public class NetworkModificationService {
         }
 
         return generator;
-    }
-
-    private double getDoubleValue(Double value) {
-        return value == null ? Double.NaN : value;
     }
 
     private Generator createGeneratorInBusBreaker(VoltageLevel voltageLevel, GeneratorCreationInfos generatorCreationInfos) {
