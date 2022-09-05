@@ -938,18 +938,7 @@ public class NetworkModificationService {
             generatorCreationInfos.getEquipmentId(),
             generatorCreationInfos.getEquipmentName());
 
-        Terminal terminal = null;
-        if (generatorCreationInfos.getRegulatingTerminalId() != null && generatorCreationInfos.getRegulatingTerminalType() != null) {
-            Identifiable<?> identifiable = getEquipmentByIdentifiableType(
-                    voltageLevel.getNetwork(),
-                    generatorCreationInfos.getRegulatingTerminalType(),
-                    generatorCreationInfos.getRegulatingTerminalId()
-            );
-            if (identifiable == null) {
-                throw new NetworkModificationException(REGULATING_TERMINAL_NOT_FOUND);
-            }
-            terminal = getTerminalFromIdentifiable(identifiable, generatorCreationInfos.getRegulatingTerminalVlId());
-        }
+        Terminal terminal = getTerminalFromIdentifiable(generatorCreationInfos, voltageLevel);
 
         // creating the generator
         Generator generator = voltageLevel.newGenerator()
@@ -1011,19 +1000,7 @@ public class NetworkModificationService {
     private Generator createGeneratorInBusBreaker(VoltageLevel voltageLevel, GeneratorCreationInfos generatorCreationInfos) {
         Bus bus = getBusBreakerBus(voltageLevel, generatorCreationInfos.getBusOrBusbarSectionId());
 
-        Terminal terminal = null;
-        if (generatorCreationInfos.getRegulatingTerminalId() != null && generatorCreationInfos.getRegulatingTerminalType() != null) {
-            Identifiable<?> identifiable = getEquipmentByIdentifiableType(
-                    voltageLevel.getNetwork(),
-                    generatorCreationInfos.getRegulatingTerminalType(),
-                    generatorCreationInfos.getRegulatingTerminalId()
-            );
-            if (identifiable == null) {
-                throw new NetworkModificationException(REGULATING_TERMINAL_NOT_FOUND);
-            }
-
-            terminal = getTerminalFromIdentifiable(identifiable, generatorCreationInfos.getRegulatingTerminalVlId());
-        }
+        Terminal terminal = getTerminalFromIdentifiable(generatorCreationInfos, voltageLevel);
 
         // creating the generator
         Generator generator = voltageLevel.newGenerator()
@@ -2358,17 +2335,33 @@ public class NetworkModificationService {
         }
     }
 
-    private Terminal getTerminalFromIdentifiable(Identifiable<?> identifiable, String voltageLevelId) {
-        if (identifiable instanceof Injection<?>) {
-            return ((Injection) identifiable).getTerminal();
-        } else if (identifiable instanceof Branch) {
-            return ((Branch) identifiable).getTerminal(voltageLevelId);
-        } else if (identifiable instanceof BusbarSection) {
-            return ((BusbarSection) identifiable).getTerminal();
-        } else if (identifiable instanceof HvdcConverterStation) {
-            return ((HvdcConverterStation) identifiable).getTerminal();
-        } else {
-            return null;
+    private Terminal getTerminalFromIdentifiable(GeneratorCreationInfos generatorCreationInfos,
+                                                 VoltageLevel voltageLevel) {
+        if (generatorCreationInfos.getRegulatingTerminalVlId() != null &&
+            generatorCreationInfos.getRegulatingTerminalId() != null &&
+            generatorCreationInfos.getRegulatingTerminalType() != null) {
+
+            Identifiable<?> identifiable = getEquipmentByIdentifiableType(
+                    voltageLevel.getNetwork(),
+                    generatorCreationInfos.getRegulatingTerminalType(),
+                    generatorCreationInfos.getRegulatingTerminalId()
+            );
+
+            if (identifiable == null) {
+                throw new NetworkModificationException(REGULATING_TERMINAL_NOT_FOUND);
+            }
+
+            if (identifiable instanceof Injection<?>) {
+                return ((Injection) identifiable).getTerminal();
+            } else if (identifiable instanceof Branch) {
+                return ((Branch) identifiable).getTerminal(generatorCreationInfos.getRegulatingTerminalVlId());
+            } else if (identifiable instanceof BusbarSection) {
+                return ((BusbarSection) identifiable).getTerminal();
+            } else if (identifiable instanceof HvdcConverterStation) {
+                return ((HvdcConverterStation) identifiable).getTerminal();
+            }
         }
+
+        return null;
     }
 }

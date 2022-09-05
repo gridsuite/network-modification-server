@@ -1181,6 +1181,8 @@ public class ModificationControllerTest {
             .participate(true)
             .regulatingTerminalId("v2load")
             .regulatingTerminalType("LOAD")
+            .regulatingTerminalVlId("v1")
+            .reactiveCapabilityCurve(true)
             .points(Arrays.asList(new ReactiveCapabilityCurveCreationInfos(2.0, 3.0, 3.1)))
             .build();
 
@@ -1218,9 +1220,9 @@ public class ModificationControllerTest {
                 25.,
                 44.,
                 List.of(),
-                "equipmentTestId",
-                "LINE",
-                "idVlRegulatingTerminal",
+                "v2load",
+                "LOAD",
+                "v2",
                 false)
                 .toModificationInfos();
         generatorCreationInfos.setUuid(result.getUuid());
@@ -1247,9 +1249,9 @@ public class ModificationControllerTest {
                 25.,
                 44.,
                 List.of(new ReactiveCapabilityCurveCreationEmbeddable(45., 85., 77.)),
-                "EquipmentTestId",
-                "LINE",
-                "idVlRegulatingTerminal",
+                "v2load",
+                "LOAD",
+                "v2",
                 false)
                 .toModificationInfos();
         String uriStringForUpdate = "/v1/modifications/" + result.getUuid() + "/generators-creation";
@@ -1360,6 +1362,8 @@ public class ModificationControllerTest {
             .participate(true)
             .regulatingTerminalId("idGenerator1")
             .regulatingTerminalType("GENERATOR")
+            .regulatingTerminalVlId("v1")
+            .reactiveCapabilityCurve(false)
             .points(Arrays.asList(new ReactiveCapabilityCurveCreationInfos(2.0, 3.0, 3.1)))
             .build();
 
