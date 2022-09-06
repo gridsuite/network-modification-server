@@ -493,7 +493,7 @@ public class BuildTest {
     public void tearDown() {
         Message<byte[]> message = null;
         try {
-            message = output.receive(4000);
+            message = output.receive(5000);
         } catch (NullPointerException e) {
             // Ignoring
         }
