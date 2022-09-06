@@ -82,4 +82,15 @@ public class BranchCreationEntity extends EquipmentCreationEntity {
         this.currentLimits1 = currentLimits1;
         this.currentLimits2 = currentLimits2;
     }
+
+    @Override
+    public void setIdsToNull() {
+        if (this.getCurrentLimits1() != null) {
+            this.getCurrentLimits1().setId(null);
+        }
+        if (this.getCurrentLimits2() != null) {
+            this.getCurrentLimits2().setId(null);
+        }
+        super.setIdsToNull();
+    }
 }

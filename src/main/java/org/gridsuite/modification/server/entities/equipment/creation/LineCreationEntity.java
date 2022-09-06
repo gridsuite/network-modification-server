@@ -117,4 +117,5 @@ public class LineCreationEntity extends BranchCreationEntity {
         }
         return builder;
     }
+
 }
