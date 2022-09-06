@@ -188,7 +188,8 @@ public class BuildTest {
         String uriString = "/v1/networks/{networkUuid}/build?receiver=me";
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
             NetworkCreation.VARIANT_ID,
-            List.of(new GroupAndReportInfos(TEST_GROUP_ID, TEST_REPORT_ID), new GroupAndReportInfos(TEST_GROUP_ID_2, TEST_REPORT_ID_2)),
+            List.of(TEST_GROUP_ID, TEST_GROUP_ID_2),
+            List.of(TEST_REPORT_ID, TEST_REPORT_ID_2),
             new HashSet<>());
         mockMvc.perform(post(uriString, TEST_NETWORK_ID)
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -202,6 +203,7 @@ public class BuildTest {
 
         BuildInfos newBuildInfos = new BuildInfos(NetworkCreation.VARIANT_ID,
             VARIANT_ID_2,
+            List.of(),
             List.of(),
             new HashSet<>());
         mockMvc.perform(post(uriString, TEST_NETWORK_ID)
@@ -260,7 +262,8 @@ public class BuildTest {
         String uriString = "/v1/networks/{networkUuid}/build?receiver=me";
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
             NetworkCreation.VARIANT_ID,
-            List.of(new GroupAndReportInfos(TEST_GROUP_ID, TEST_REPORT_ID), new GroupAndReportInfos(TEST_GROUP_ID_2, TEST_REPORT_ID_2)),
+            List.of(TEST_GROUP_ID, TEST_GROUP_ID_2),
+            List.of(TEST_REPORT_ID, TEST_REPORT_ID_2),
             new HashSet<>());
         String buildInfosJson = objectWriter.writeValueAsString(buildInfos);
         mockMvc.perform(post(uriString, TEST_NETWORK_ID).contentType(MediaType.APPLICATION_JSON).content(buildInfosJson))
@@ -331,7 +334,8 @@ public class BuildTest {
         // to check
         BuildInfos newBuildInfos = new BuildInfos(NetworkCreation.VARIANT_ID,
             VARIANT_ID_2,
-            List.of(),
+            Collections.emptyList(),
+            Collections.emptyList(),
             new HashSet<>());
         buildInfosJson = objectWriter.writeValueAsString(newBuildInfos);
         mockMvc.perform(post(uriString, TEST_NETWORK_ID).contentType(MediaType.APPLICATION_JSON).content(buildInfosJson)
@@ -431,7 +435,8 @@ public class BuildTest {
         // Because TestChannelBinder implementation is synchronous the build is made in a different thread
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
             NetworkCreation.VARIANT_ID,
-            List.of(new GroupAndReportInfos(TEST_GROUP_ID, TEST_REPORT_ID)),
+            List.of(TEST_GROUP_ID),
+            List.of(TEST_REPORT_ID),
             Set.of());
         String buildInfosJson = mapper.writeValueAsString(buildInfos);
         CompletableFuture.runAsync(() -> {
@@ -469,7 +474,8 @@ public class BuildTest {
         String uriString = "/v1/networks/{networkUuid}/build?receiver=me";
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
             NetworkCreation.VARIANT_ID,
-            List.of(new GroupAndReportInfos(TEST_GROUP_ID, TEST_REPORT_ID)),
+            List.of(TEST_GROUP_ID),
+            List.of(TEST_REPORT_ID),
             Set.of());
         mockMvc.perform(post(uriString, TEST_NETWORK_ID)
             .contentType(MediaType.APPLICATION_JSON)

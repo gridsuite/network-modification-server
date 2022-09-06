@@ -1902,6 +1902,124 @@ public class ModificationControllerTest {
     }
 
     @Test
+    public void testDuplicateModificationGroup() throws Exception {
+        String uriString = "/v1/networks/{networkUuid}/lines?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
+
+        // create new line in voltage levels with node/breaker topology
+        // between voltage level "v1" and busbar section "bus1" and
+        //         voltage level "v2" and busbar section "bus2"
+        CurrentLimitsInfos c1 = new CurrentLimitsInfos();
+        c1.setPermanentLimit(100.0);
+        CurrentLimitsInfos c2 = new CurrentLimitsInfos();
+        c2.setPermanentLimit(200.0);
+        LineCreationInfos lineCreationInfos = LineCreationInfos.builder()
+                .equipmentId("idLine1")
+                .equipmentName("nameLine1")
+                .seriesResistance(100.0)
+                .seriesReactance(100.0)
+                .shuntConductance1(10.0)
+                .shuntSusceptance1(10.0)
+                .shuntConductance2(20.0)
+                .shuntSusceptance2(20.0)
+                .voltageLevelId1("v1")
+                .busOrBusbarSectionId1("bus1")
+                .voltageLevelId2("v2")
+                .busOrBusbarSectionId2("bus2")
+                .currentLimits1(c1)
+                .currentLimits2(c2)
+                .build();
+
+        String resultAsString = mockMvc.perform(
+            post(uriString, TEST_NETWORK_BUS_BREAKER_ID)
+                .content(objectWriter.writeValueAsString(lineCreationInfos))
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString();
+
+        List<EquipmentModificationInfos> modifications = mapper.readValue(resultAsString, new TypeReference<>() { });
+        assertThat(modifications.get(0), createMatcherEquipmentModificationInfos(ModificationType.LINE_CREATION, "idLine1", Set.of("s1", "s2")));
+
+        testNetworkModificationsCount(TEST_GROUP_ID, 1);
+
+        uriString = "/v1/networks/{networkUuid}/two-windings-transformers?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
+
+        // create new 2wt in voltage level with bus/breaker topology
+        TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos = TwoWindingsTransformerCreationInfos.builder()
+                .equipmentId("id2wt1")
+                .equipmentName("2wtName")
+                .voltageLevelId1("v1")
+                .busOrBusbarSectionId1("bus1")
+                .voltageLevelId2("v12")
+                .busOrBusbarSectionId2("bus12")
+                .magnetizingConductance(100.0)
+                .magnetizingSusceptance(200.0)
+                .ratedVoltage1(1000)
+                .ratedVoltage2(1010)
+                .seriesReactance(300)
+                .seriesResistance(400)
+                .currentLimits1(c1)
+                .currentLimits2(c2)
+                .build();
+
+        mockMvc.perform(
+                post(uriString, TEST_NETWORK_BUS_BREAKER_ID)
+                    .content(objectWriter.writeValueAsString(twoWindingsTransformerCreationInfos))
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
+
+        testNetworkModificationsCount(TEST_GROUP_ID, 2);
+
+        //create a lineAttached
+        String lineAttachUriString = "/v1/networks/{networkUuid}/line-attach?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
+        LineCreationInfos attachmentLine = LineCreationInfos.builder()
+                .equipmentId("attachmentLine")
+                .seriesResistance(50.6)
+                .seriesReactance(25.3)
+                .build();
+
+        LineAttachToVoltageLevelInfos lineAttachToVL = new LineAttachToVoltageLevelInfos("line3",
+                10.0, "AttPointId", "attPointName", null, "v4",
+                "1.A", attachmentLine, "nl1", "NewLine1", "nl2", "NewLine2");
+
+        mockMvc.perform(
+                post(lineAttachUriString, TEST_NETWORK_ID)
+                    .content(objectWriter.writeValueAsString(lineAttachToVL))
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
+
+        testNetworkModificationsCount(TEST_GROUP_ID, 3);
+
+        //create a lineSplit
+        String lineSplitUriString = "/v1/networks/{networkUuid}/line-splits?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
+        VoltageLevelCreationInfos vl1 = VoltageLevelCreationInfos.builder()
+                .equipmentId("vl1")
+                .equipmentName("NewVoltageLevel")
+                .nominalVoltage(379.3)
+                .substationId("s1")
+                .busbarSections(List.of(new BusbarSectionCreationInfos("v1bbs", "BBS1", 1, 1)))
+                .busbarConnections(List.of())
+                .build();
+
+        LineSplitWithVoltageLevelInfos lineSplitWoVL = new LineSplitWithVoltageLevelInfos("line3", 10.0, null, "v4", "1.A",
+                "nl1", "NewLine1", "nl2", "NewLine2");
+
+        mockMvc.perform(
+                post(lineSplitUriString, TEST_NETWORK_ID)
+                    .content(objectWriter.writeValueAsString(lineSplitWoVL))
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
+
+        testNetworkModificationsCount(TEST_GROUP_ID, 4);
+
+        //test copy group
+        UUID newGroupUuid = UUID.randomUUID();
+        uriString = "/v1/groups?groupUuid=" + newGroupUuid + "&duplicateFrom=" + TEST_GROUP_ID + "&reportUuid=" + UUID.randomUUID();
+        mockMvc.perform(post(uriString)).andExpect(status().isOk());
+
+        testNetworkModificationsCount(newGroupUuid, 4);
+    }
+
+    @Test
     public void testCreateLineInMixedTypology() throws Exception {
         MvcResult mvcResult;
         String resultAsString;
