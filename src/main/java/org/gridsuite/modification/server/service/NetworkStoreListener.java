@@ -200,14 +200,14 @@ public class NetworkStoreListener implements NetworkListener {
             generatorCreationInfos.getMarginalCost(),
             generatorCreationInfos.getMinimumReactivePower(),
             generatorCreationInfos.getMaximumReactivePower(),
-            generatorCreationInfos.getParticipate() == null ? true : generatorCreationInfos.getParticipate(),
+            generatorCreationInfos.getParticipate() != null && generatorCreationInfos.getParticipate(),
             generatorCreationInfos.getDroop(),
             generatorCreationInfos.getTransientReactance(),
             generatorCreationInfos.getStepUpTransformerReactance(),
             generatorCreationInfos.getRegulatingTerminalId(),
             generatorCreationInfos.getRegulatingTerminalType(),
             generatorCreationInfos.getRegulatingTerminalVlId(),
-            generatorCreationInfos.getReactiveCapabilityCurve() == null ? false : generatorCreationInfos.getReactiveCapabilityCurve(),
+            generatorCreationInfos.getReactiveCapabilityCurve() == null || generatorCreationInfos.getReactiveCapabilityCurve(),
             toEmbeddablePoints(generatorCreationInfos.getPoints())));
     }
 

@@ -2351,7 +2351,7 @@ public class NetworkModificationService {
                                                  String equipmentId,
                                                  String type,
                                                  String voltageLevelId) {
-        if (voltageLevelId != null && equipmentId != null && type != null && voltageLevelId != null) {
+        if (network != null && equipmentId != null && type != null && voltageLevelId != null) {
             Identifiable<?> identifiable = getEquipmentByIdentifiableType(network, type, equipmentId);
 
             if (identifiable == null) {
