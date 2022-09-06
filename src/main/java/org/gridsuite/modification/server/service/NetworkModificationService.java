@@ -51,11 +51,11 @@ import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 import org.springframework.web.util.UriComponentsBuilder;
+
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
@@ -206,16 +206,11 @@ public class NetworkModificationService {
         return networkModificationRepository.getModifications(List.of(modificationUuid));
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void createModificationGroup(List<ModificationInfos> modificationInfosList, UUID groupUuid, UUID reportUuid) {
-        //TODO To be optimized by retrieving ModificationEntity objects directly instead of ModificationInfos objects
-        //List<ModificationInfos> modificationInfosList = getModifications(sourceGroupUuid, false, false);
-        for (ModificationInfos modificationInfos : modificationInfosList) {
-            Optional<ModificationEntity> modification = this.modificationRepository.findById(modificationInfos.getUuid());
-            modification.get().setId(null);
-            networkModificationRepository.saveModifications(groupUuid, List.of(modification.get()));
-        }
-        if (!modificationInfosList.isEmpty()) {
+    public void createModificationGroup(UUID sourceGroupUuid, UUID groupUuid, UUID reportUuid) {
+        List<ModificationEntity> entities = networkModificationRepository.getModificationsEntities(List.of(sourceGroupUuid));
+        entities.forEach(e -> e.setId(null));
+        networkModificationRepository.saveModifications(groupUuid, entities);
+        if (!entities.isEmpty()) {
             ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
             sendReport(reportUuid, reporter);
         }

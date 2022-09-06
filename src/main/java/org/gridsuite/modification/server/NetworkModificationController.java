@@ -75,8 +75,7 @@ public class NetworkModificationController {
     public ResponseEntity<Void> createModificationGroup(@RequestParam("groupUuid") UUID groupUuid,
                                                   @RequestParam("duplicateFrom") UUID sourceGroupUuid,
                                                   @RequestParam("reportUuid") UUID reportUuid) {
-        List<ModificationInfos> modificationInfosList = networkModificationService.getModifications(sourceGroupUuid, false, false);
-        networkModificationService.createModificationGroup(modificationInfosList, groupUuid, reportUuid);
+        networkModificationService.createModificationGroup(sourceGroupUuid, groupUuid, reportUuid);
         return ResponseEntity.ok().build();
     }
 

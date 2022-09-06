@@ -2,6 +2,9 @@ spring:
   application:
     name: netork-modification-server
 
+  jpa:
+    open-in-view: false
+
   cloud:
     function:
       definition: consumeBuild;consumeCancelBuild

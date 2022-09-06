@@ -2245,19 +2245,17 @@ public class ModificationControllerTest {
                 .reactivePower(60.0)
                 .build();
         String loadCreationInfosJson = objectWriter.writeValueAsString(loadCreationInfos);
-        mockMvc.perform(post(uriString, TEST_NETWORK_ID).content(loadCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                            .andExpect(status().isOk()).andReturn();
+        mockMvc.perform(post(uriString, TEST_NETWORK_ID).content(loadCreationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk());
         assertNotNull(network.getLoad("idLoad1"));  // load was created
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
 
         UUID duplicatedGroupUuid = UUID.randomUUID();
         uriString = "/v1/groups?duplicateFrom=" + TEST_GROUP_ID + "&groupUuid=" + duplicatedGroupUuid + "&reportUuid=" + TEST_REPORT_ID;
-        mockMvc.perform(post(uriString)).andExpect(status().isOk()).andReturn();
+        mockMvc.perform(post(uriString)).andExpect(status().isOk());
         testNetworkModificationsCount(duplicatedGroupUuid, 1);
 
         uriString = "/v1/groups?duplicateFrom=" + UUID.randomUUID() + "&groupUuid=" + UUID.randomUUID() + "&reportUuid=" + TEST_REPORT_ID;
-        mockMvc.perform(post(uriString).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
+        mockMvc.perform(post(uriString).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isNotFound());
     }
 
     @Test
