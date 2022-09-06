@@ -1183,7 +1183,8 @@ public class ModificationControllerTest {
             .regulatingTerminalType("LOAD")
             .regulatingTerminalVlId("v1")
             .reactiveCapabilityCurve(true)
-            .points(Arrays.asList(new ReactiveCapabilityCurveCreationInfos(2.0, 3.0, 3.1)))
+            .points(Arrays.asList(new ReactiveCapabilityCurveCreationInfos(2.0, 3.0, 3.1),
+                                  new ReactiveCapabilityCurveCreationInfos(5.6, 9.8, 10.8)))
             .build();
 
         EquipmentModificationInfos result = webTestClient.post().uri(uriString, TEST_NETWORK_ID)
@@ -1364,7 +1365,8 @@ public class ModificationControllerTest {
             .regulatingTerminalType("GENERATOR")
             .regulatingTerminalVlId("v1")
             .reactiveCapabilityCurve(false)
-            .points(Arrays.asList(new ReactiveCapabilityCurveCreationInfos(2.0, 3.0, 3.1)))
+            .points(Arrays.asList(new ReactiveCapabilityCurveCreationInfos(2.0, 3.0, 3.1),
+                                  new ReactiveCapabilityCurveCreationInfos(20.7, 14.5, 18.9)))
             .build();
 
         webTestClient.post().uri(uriString, TEST_NETWORK_BUS_BREAKER_ID)

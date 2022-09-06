@@ -982,13 +982,14 @@ public class NetworkModificationService {
         }
 
         if (generatorCreationInfos.getPoints() != null) {
+            ReactiveCapabilityCurveAdder adder = generator.newReactiveCapabilityCurve();
             generatorCreationInfos.getPoints()
-                    .forEach(point -> generator.newReactiveCapabilityCurve().beginPoint()
+                    .forEach(point -> adder.beginPoint()
                             .setMaxQ(point.getQmaxP())
                             .setMinQ(point.getQminP())
                             .setP(point.getP())
-                            .endPoint()
-                            .add());
+                            .endPoint());
+            adder.add();
         }
 
         if (generatorCreationInfos.getMinimumReactivePower() != null && generatorCreationInfos.getMaximumReactivePower() != null) {
@@ -1051,13 +1052,14 @@ public class NetworkModificationService {
         }
 
         if (generatorCreationInfos.getPoints() != null) {
+            ReactiveCapabilityCurveAdder adder = generator.newReactiveCapabilityCurve();
             generatorCreationInfos.getPoints()
-                    .forEach(point -> generator.newReactiveCapabilityCurve().beginPoint()
+                    .forEach(point -> adder.beginPoint()
                             .setMaxQ(point.getQmaxP())
                             .setMinQ(point.getQminP())
                             .setP(point.getP())
-                            .endPoint()
-                            .add());
+                            .endPoint());
+            adder.add();
         }
 
         return generator;
