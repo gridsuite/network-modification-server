@@ -938,7 +938,10 @@ public class NetworkModificationService {
             generatorCreationInfos.getEquipmentId(),
             generatorCreationInfos.getEquipmentName());
 
-        Terminal terminal = getTerminalFromIdentifiable(generatorCreationInfos, voltageLevel);
+        Terminal terminal = getTerminalFromIdentifiable(voltageLevel.getNetwork(),
+                                                        generatorCreationInfos.getRegulatingTerminalId(),
+                                                        generatorCreationInfos.getRegulatingTerminalType(),
+                                                        generatorCreationInfos.getRegulatingTerminalVlId());
 
         // creating the generator
         Generator generator = voltageLevel.newGenerator()
@@ -967,7 +970,8 @@ public class NetworkModificationService {
 
         if (generatorCreationInfos.getParticipate() != null && generatorCreationInfos.getDroop() != null) {
             generator.newExtension(ActivePowerControlAdder.class).withParticipate(participate)
-                    .withDroop(generatorCreationInfos.getDroop()).add();
+                    .withDroop(generatorCreationInfos.getDroop())
+                    .add();
         }
 
         if (generatorCreationInfos.getTransientReactance() != null && generatorCreationInfos.getStepUpTransformerReactance() != null) {
@@ -982,12 +986,15 @@ public class NetworkModificationService {
                     .forEach(point -> generator.newReactiveCapabilityCurve().beginPoint()
                             .setMaxQ(point.getQmaxP())
                             .setMinQ(point.getQminP())
-                            .setP(point.getP()));
+                            .setP(point.getP())
+                            .endPoint()
+                            .add());
         }
 
         if (generatorCreationInfos.getMinimumReactivePower() != null && generatorCreationInfos.getMaximumReactivePower() != null) {
             generator.newMinMaxReactiveLimits().setMinQ(generatorCreationInfos.getMinimumReactivePower())
-                    .setMaxQ(generatorCreationInfos.getMaximumReactivePower());
+                    .setMaxQ(generatorCreationInfos.getMaximumReactivePower())
+                    .add();
         }
 
         return generator;
@@ -996,7 +1003,10 @@ public class NetworkModificationService {
     private Generator createGeneratorInBusBreaker(VoltageLevel voltageLevel, GeneratorCreationInfos generatorCreationInfos) {
         Bus bus = getBusBreakerBus(voltageLevel, generatorCreationInfos.getBusOrBusbarSectionId());
 
-        Terminal terminal = getTerminalFromIdentifiable(generatorCreationInfos, voltageLevel);
+        Terminal terminal = getTerminalFromIdentifiable(voltageLevel.getNetwork(),
+                                                        generatorCreationInfos.getRegulatingTerminalId(),
+                                                        generatorCreationInfos.getRegulatingTerminalType(),
+                                                        generatorCreationInfos.getRegulatingTerminalVlId());
 
         // creating the generator
         Generator generator = voltageLevel.newGenerator()
@@ -1030,12 +1040,14 @@ public class NetworkModificationService {
 
         if (generatorCreationInfos.getParticipate() != null && generatorCreationInfos.getDroop() != null) {
             generator.newExtension(ActivePowerControlAdder.class).withParticipate(generatorCreationInfos.getParticipate())
-                    .withDroop(generatorCreationInfos.getDroop());
+                    .withDroop(generatorCreationInfos.getDroop())
+                    .add();
         }
 
         if (generatorCreationInfos.getMaximumReactivePower() != null && generatorCreationInfos.getMinimumReactivePower() != null) {
             generator.newMinMaxReactiveLimits().setMinQ(generatorCreationInfos.getMinimumReactivePower())
-                    .setMaxQ(generatorCreationInfos.getMaximumReactivePower());
+                    .setMaxQ(generatorCreationInfos.getMaximumReactivePower())
+                    .add();
         }
 
         if (generatorCreationInfos.getPoints() != null) {
@@ -1043,7 +1055,9 @@ public class NetworkModificationService {
                     .forEach(point -> generator.newReactiveCapabilityCurve().beginPoint()
                             .setMaxQ(point.getQmaxP())
                             .setMinQ(point.getQminP())
-                            .setP(point.getP()));
+                            .setP(point.getP())
+                            .endPoint()
+                            .add());
         }
 
         return generator;
@@ -2331,30 +2345,21 @@ public class NetworkModificationService {
         }
     }
 
-    private Terminal getTerminalFromIdentifiable(GeneratorCreationInfos generatorCreationInfos,
-                                                 VoltageLevel voltageLevel) {
-        if (generatorCreationInfos.getRegulatingTerminalVlId() != null &&
-            generatorCreationInfos.getRegulatingTerminalId() != null &&
-            generatorCreationInfos.getRegulatingTerminalType() != null) {
-
-            Identifiable<?> identifiable = getEquipmentByIdentifiableType(
-                    voltageLevel.getNetwork(),
-                    generatorCreationInfos.getRegulatingTerminalType(),
-                    generatorCreationInfos.getRegulatingTerminalId()
-            );
+    private Terminal getTerminalFromIdentifiable(Network network,
+                                                 String equipmentId,
+                                                 String type,
+                                                 String voltageLevelId) {
+        if (voltageLevelId != null && equipmentId != null && type != null && voltageLevelId != null) {
+            Identifiable<?> identifiable = getEquipmentByIdentifiableType(network, type, equipmentId);
 
             if (identifiable == null) {
-                throw new NetworkModificationException(REGULATING_TERMINAL_NOT_FOUND);
+                throw new NetworkModificationException(EQUIPMENT_NOT_FOUND);
             }
 
             if (identifiable instanceof Injection<?>) {
                 return ((Injection) identifiable).getTerminal();
             } else if (identifiable instanceof Branch) {
-                return ((Branch) identifiable).getTerminal(generatorCreationInfos.getRegulatingTerminalVlId());
-            } else if (identifiable instanceof BusbarSection) {
-                return ((BusbarSection) identifiable).getTerminal();
-            } else if (identifiable instanceof HvdcConverterStation) {
-                return ((HvdcConverterStation) identifiable).getTerminal();
+                return ((Branch) identifiable).getTerminal(voltageLevelId);
             }
         }
 
