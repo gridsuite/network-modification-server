@@ -2313,6 +2313,7 @@ public class NetworkModificationService {
         if (type == null || equipmentId == null) {
             return null;
         }
+
         switch (IdentifiableType.valueOf(type)) {
             case HVDC_LINE:
                 return network.getHvdcLine(equipmentId);
@@ -2359,9 +2360,9 @@ public class NetworkModificationService {
             }
 
             if (identifiable instanceof Injection<?>) {
-                return ((Injection) identifiable).getTerminal();
-            } else if (identifiable instanceof Branch) {
-                return ((Branch) identifiable).getTerminal(voltageLevelId);
+                return ((Injection<?>) identifiable).getTerminal();
+            } else if (identifiable instanceof Branch<?>) {
+                return ((Branch<?>) identifiable).getTerminal(voltageLevelId);
             }
         }
 
