@@ -102,55 +102,58 @@ public class BuildWorkerService {
     }
 
     @Bean
-    public Consumer<Flux<Message<String>>> consumeBuild() {
-        return f -> f.log(CATEGORY_BROKER_INPUT, Level.FINE)
-            .flatMap(message -> {
+    public Consumer<Message<String>> consumeBuild() {
+        return message -> {
+            LOGGER.info(CATEGORY_BROKER_INPUT, Level.FINE);
+            try {
                 BuildExecContext execContext = BuildExecContext.fromMessage(message, objectMapper);
                 if (StringUtils.isBlank(execContext.getReceiver())) {
-                    return Mono.empty();
+                    return;
                 }
                 buildRequests.add(execContext.getReceiver()); // receiver is the node uuid to build
 
                 BuildInfos buildInfos = execContext.getBuildInfos();
 
-                return networkModificationService.cloneNetworkVariant(execContext.getNetworkUuid(),
-                                                                      buildInfos.getOriginVariantId(),
-                                                                      buildInfos.getDestinationVariantId())
-                    .flatMap(network -> execBuildVariant(network, execContext, buildInfos))
-                    .doOnSuccess(result -> {
-                        if (result != null) {  // result available
-                            Set<String> allSubstationsIds = new HashSet<>();
-                            result.forEach(r -> allSubstationsIds.addAll(r.getSubstationIds()));
+                networkModificationService.cloneNetworkVariant(execContext.getNetworkUuid(),
+                                buildInfos.getOriginVariantId(),
+                                buildInfos.getDestinationVariantId())
+                        .flatMap(network -> execBuildVariant(network, execContext, buildInfos))
+                        .doOnSuccess(result -> {
+                            if (result != null) {  // result available
+                                Set<String> allSubstationsIds = new HashSet<>();
+                                result.forEach(r -> allSubstationsIds.addAll(r.getSubstationIds()));
 
-                            Message<String> sendMessage = MessageBuilder
-                                .withPayload(String.join(",", allSubstationsIds))
-                                .setHeader("receiver", execContext.getReceiver())
-                                .build();
+                                Message<String> sendMessage = MessageBuilder
+                                        .withPayload(String.join(",", allSubstationsIds))
+                                        .setHeader("receiver", execContext.getReceiver())
+                                        .build();
 
-                            sendResultBuildMessage(sendMessage);
-                            LOGGER.info("Build complete on node '{}'", execContext.getReceiver());
-                        } else {  // result not available : stop build request
-                            if (cancelBuildRequests.get(execContext.getReceiver()) != null) {
-                                stoppedPublisherService.publishCancel(execContext.getReceiver());
+                                sendResultBuildMessage(sendMessage);
+                                LOGGER.info("Build complete on node '{}'", execContext.getReceiver());
+                            } else {  // result not available : stop build request
+                                if (cancelBuildRequests.get(execContext.getReceiver()) != null) {
+                                    stoppedPublisherService.publishCancel(execContext.getReceiver());
+                                }
                             }
-                        }
-                    })
-                    .onErrorResume(t -> {
-                        if (!(t instanceof CancellationException)) {
-                            LOGGER.error(FAIL_MESSAGE, t);
-                            failedPublisherService.publishFail(execContext.getReceiver(), t.getMessage());
+                        })
+                        .onErrorResume(t -> {
+                            if (!(t instanceof CancellationException)) {
+                                LOGGER.error(FAIL_MESSAGE, t);
+                                failedPublisherService.publishFail(execContext.getReceiver(), t.getMessage());
+                                return Mono.empty();
+                            }
                             return Mono.empty();
-                        }
-                        return Mono.empty();
-                    })
-                    .doFinally(s -> {
-                        futures.remove(execContext.getReceiver());
-                        cancelBuildRequests.remove(execContext.getReceiver());
-                        buildRequests.remove(execContext.getReceiver());
-                    });
-            })
-            .onErrorContinue((t, r) -> LOGGER.error("Exception in consumeBuild", t))
-            .subscribe();
+                        })
+                        .doFinally(s -> {
+                            futures.remove(execContext.getReceiver());
+                            cancelBuildRequests.remove(execContext.getReceiver());
+                            buildRequests.remove(execContext.getReceiver());
+                        })
+                        .block();
+            } catch (Exception e) {
+                LOGGER.error("Exception in consumeBuild", e);
+            }
+        };
     }
 
     @Bean
