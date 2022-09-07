@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.reporter.*;
 import com.powsybl.iidm.modification.topology.AttachNewLineOnLine;
+import com.powsybl.iidm.modification.topology.AttachVoltageLevelOnLine;
 import com.powsybl.iidm.modification.tripping.BranchTripping;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.Branch.Side;
@@ -2032,7 +2033,7 @@ public class NetworkModificationService {
                     voltageLeveId = lineSplitWithVoltageLevelInfos.getExistingVoltageLevelId();
                 }
 
-                CopyAttachVoltageLevelOnLine algo = new CopyAttachVoltageLevelOnLine(
+                AttachVoltageLevelOnLine algo = new AttachVoltageLevelOnLine(
                     lineSplitWithVoltageLevelInfos.getPercent(),
                     voltageLeveId,
                     lineSplitWithVoltageLevelInfos.getBbsOrBusId(),
