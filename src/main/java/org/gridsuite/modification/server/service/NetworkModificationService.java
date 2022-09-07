@@ -1726,7 +1726,9 @@ public class NetworkModificationService {
             }
 
             networkModificationRepository.getModificationsInfos(List.of(groupUuid)).forEach(infos -> {
-                applyModification(allModificationsInfos, listener, modificationsToExclude, reportUuid, infos);
+                if (!modificationsToExclude.contains(infos.getUuid())) {
+                    applyModification(allModificationsInfos, listener, reportUuid, infos);
+                }
             });
         }
 
@@ -1737,11 +1739,9 @@ public class NetworkModificationService {
     }
 
     private void applyModification(List<ModificationInfos> allModificationsInfos, NetworkStoreListener listener,
-        Set<UUID> modificationsToExclude, UUID reportUuid, ModificationInfos infos) {
+        UUID reportUuid, ModificationInfos infos) {
+
         try {
-            if (modificationsToExclude.contains(infos.getUuid())) {
-                return;
-            }
             ModificationType type = infos.getType();
             switch (type) {
                 case EQUIPMENT_ATTRIBUTE_MODIFICATION: {
