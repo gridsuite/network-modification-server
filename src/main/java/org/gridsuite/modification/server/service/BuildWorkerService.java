@@ -52,6 +52,8 @@ public class BuildWorkerService {
 
     private static final Logger OUTPUT_MESSAGE_LOGGER = LoggerFactory.getLogger(CATEGORY_BROKER_OUTPUT);
 
+    private static final Logger INPUT_MESSAGE_LOGGER = LoggerFactory.getLogger(CATEGORY_BROKER_INPUT);
+
     private NetworkModificationService networkModificationService;
 
     private ObjectMapper objectMapper;
@@ -104,7 +106,7 @@ public class BuildWorkerService {
     @Bean
     public Consumer<Message<String>> consumeBuild() {
         return message -> {
-            LOGGER.info(CATEGORY_BROKER_INPUT, Level.FINE);
+            INPUT_MESSAGE_LOGGER.debug("consume {}", message);
             try {
                 BuildExecContext execContext = BuildExecContext.fromMessage(message, objectMapper);
                 if (StringUtils.isBlank(execContext.getReceiver())) {
