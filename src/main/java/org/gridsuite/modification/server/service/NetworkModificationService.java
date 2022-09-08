@@ -1982,25 +1982,27 @@ public class NetworkModificationService {
     }
 
     public Flux<UUID> moveModifications(UUID groupUuid, UUID before, List<UUID> modificationsToMove) {
-        return Flux.fromStream(() -> networkModificationRepository.moveModifications(groupUuid, modificationsToMove, before).stream());
+        List<UUID> emptyMissingList = List.of();
+        networkModificationRepository.moveModifications(groupUuid, modificationsToMove, before);
+        return Flux.fromStream(emptyMissingList::stream);
     }
 
     public Flux<UUID> duplicateModifications(UUID targetGroupUuid, List<UUID> modificationsToDuplicate) {
         // This function cannot be @Transactional because we clone all modifications resetting their id to null,
         // which is not allowed by JPA if we still stay in the same Tx.
         List<ModificationEntity> newModificationList = new ArrayList<>();
-        List<UUID> modificationsInFailure = new ArrayList<>();
+        List<UUID> missingModificationList = new ArrayList<>();
         for (UUID modifyId : modificationsToDuplicate) {
             Optional<ModificationEntity> clone = this.modificationRepository.findById(modifyId);
             if (clone.isEmpty()) {
-                modificationsInFailure.add(modifyId);  // data no more available
+                missingModificationList.add(modifyId);  // data no more available
             } else {
                 clone.get().setId(null);
                 newModificationList.add(clone.get());
             }
         }
         networkModificationRepository.saveModifications(targetGroupUuid, newModificationList);
-        return Flux.fromStream(modificationsInFailure::stream);
+        return Flux.fromStream(missingModificationList::stream);
     }
 
     @Transactional

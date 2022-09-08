@@ -95,7 +95,7 @@ public class NetworkModificationController {
 
     @PutMapping(value = "/groups/{groupUuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "For a list of network modifications passed in body, Move them before another one or at the end of the list, or Duplicate them at the end of the list")
-    @ApiResponse(responseCode = "200", description = "The modification list of the group has been updated. Modifications in failure are returned.")
+    @ApiResponse(responseCode = "200", description = "The modification list of the group has been updated. Missing modifications are returned.")
     public ResponseEntity<Flux<UUID>> updateModificationGroup(@Parameter(description = "group UUID") @PathVariable("groupUuid") UUID groupUuid,
                                                               @Parameter(description = "kind of modification", required = true) @RequestParam(value = "action") GroupModificationAction action,
                                                               @Parameter(description = "the modification Uuid to move before (MOVE option, empty means moving at the end)") @RequestParam(value = "before", required = false) UUID before,
