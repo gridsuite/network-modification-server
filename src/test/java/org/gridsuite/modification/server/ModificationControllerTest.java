@@ -41,6 +41,7 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.hamcrest.Matchers.containsString;
@@ -1915,7 +1916,7 @@ public class ModificationControllerTest {
         return modificationList;
     }
 
-    /*@Test
+    @Test
     public void testDuplicateModification() {
         // create 3 modifications
         List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 3);
@@ -2008,7 +2009,7 @@ public class ModificationControllerTest {
         Collections.reverse(newModificationUuidList);
 
         assertEquals(modificationUuidList, newModificationUuidList);
-    }*/
+    }
 
     @Test
     public void testCreateLineInNodeBreaker() {
