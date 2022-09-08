@@ -1858,13 +1858,10 @@ public class NetworkModificationService {
             if (modificationGroupRepository.findById(groupUuid).isEmpty()) { // May not exist
                 continue;
             }
-
             applyModificationsGroup(groupUuid, reportUuid, listener, modificationsToExclude, allModificationsInfos);
         }
-
         // flushing network (only once at the end)
         networkStoreService.flush(listener.getNetwork());
-
         return allModificationsInfos;
     }
 
