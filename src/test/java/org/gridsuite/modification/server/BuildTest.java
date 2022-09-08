@@ -6,7 +6,12 @@
  */
 package org.gridsuite.modification.server;
 
+import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
+import com.powsybl.iidm.network.Country;
+import com.powsybl.iidm.network.EnergySource;
+import com.powsybl.iidm.network.Line;
+import com.powsybl.iidm.network.LoadType;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.SwitchKind;
 import com.powsybl.iidm.network.VariantManagerConstants;
@@ -17,11 +22,15 @@ import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.BusbarConnectionCreationEmbeddable;
 import org.gridsuite.modification.server.entities.equipment.creation.BusbarSectionCreationEmbeddable;
+import org.gridsuite.modification.server.entities.equipment.creation.LoadCreationEntity;
+import org.gridsuite.modification.server.entities.equipment.deletion.EquipmentDeletionEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.LineSplitWithVoltageLevelEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.attribute.EquipmentAttributeModificationEntity;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.NetworkModificationService;
 import org.gridsuite.modification.server.service.BuildFailedPublisherService;
 import org.gridsuite.modification.server.service.BuildStoppedPublisherService;
+import org.gridsuite.modification.server.service.NetworkStoreListener;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.hamcrest.CoreMatchers;
 import org.junit.After;
@@ -52,9 +61,16 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.config.EnableWebFlux;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
+import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_ERROR;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -178,7 +194,7 @@ public class BuildTest {
         assertEquals("", new String(resultMessage.getPayload()));
     }
 
-    /*@Test
+    @Test
     public void runBuildTest() throws InterruptedException {
         // create modification entities in the database
         List<ModificationEntity> entities1 = new ArrayList<>();
@@ -378,7 +394,7 @@ public class BuildTest {
         assertEquals(Country.FR, network.getSubstation("newSubstation").getCountry().orElse(Country.AF));
         assertNotNull(network.getVoltageLevel("vl9"));
         assertNotNull(network.getShuntCompensator("shunt9"));
-    }*/
+    }
 
     @Test
     public void stopBuildTest() {
@@ -439,7 +455,7 @@ public class BuildTest {
         assertEquals("me", message.getHeaders().get("receiver"));
         assertThat((String) message.getHeaders().get("message"), CoreMatchers.startsWith(BuildFailedPublisherService.FAIL_MESSAGE));    }
 
-    /*@Test
+    @Test
     public void doActionWithUncheckedExceptionTest() {
         Network networkTest = NetworkCreation.create(TEST_NETWORK_ID, true);
         NetworkStoreListener listener = NetworkStoreListener.create(networkTest, TEST_NETWORK_ID, null, modificationRepository, equipmentInfosService, true, true);
@@ -450,7 +466,7 @@ public class BuildTest {
                 throw new RuntimeException("unexpected error");
             }, MODIFICATION_ERROR, TEST_NETWORK_ID, reporter, subReporter)
         );
-    }*/
+    }
 
     private void testNetworkModificationsCount(UUID groupUuid, int actualSize) {
         // get all modifications for the given group of a network
