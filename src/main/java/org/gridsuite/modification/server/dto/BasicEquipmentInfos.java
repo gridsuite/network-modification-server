@@ -32,8 +32,8 @@ public class BasicEquipmentInfos {
     @MultiField(
             mainField = @Field(name = "equipmentId", type = FieldType.Text),
             otherFields = {
-                    @InnerField(suffix = "fullascii", type = FieldType.Keyword, normalizer = "fullascii"),
-                    @InnerField(suffix = "raw", type = FieldType.Keyword)
+                @InnerField(suffix = "fullascii", type = FieldType.Keyword, normalizer = "fullascii"),
+                @InnerField(suffix = "raw", type = FieldType.Keyword)
             }
     )
     String id;
