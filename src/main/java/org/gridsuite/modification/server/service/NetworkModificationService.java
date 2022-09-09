@@ -1855,10 +1855,8 @@ public class NetworkModificationService {
                 }
             });
         }
-
         // flushing network (only once at the end)
         networkStoreService.flush(listener.getNetwork());
-
         return allModificationsInfos;
     }
 
