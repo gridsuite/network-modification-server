@@ -161,9 +161,9 @@ public class NetworkModificationService {
     private List<EquipmentModificationInfos> execChangeSwitchState(NetworkStoreListener listener,
                                                                    String switchId,
                                                                    boolean open,
-                                                                   UUID reportUuid) {
+                                                                   UUID groupUuid, UUID reportUuid) {
         Network network = listener.getNetwork();
-        ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
+        ReporterModel reporter = new ReporterModel(groupUuid.toString(), NETWORK_MODIFICATION_REPORT_NAME);
         String subReportId = "Switch '" + switchId + "' state change";
         Reporter subReporter = reporter.createSubReporter(subReportId, subReportId);
 
@@ -199,7 +199,7 @@ public class NetworkModificationService {
             .flatMapIterable(networkInfos -> {
                 NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
 
-                return execChangeSwitchState(listener, switchId, open, reportUuid);
+                return execChangeSwitchState(listener, switchId, open, groupUuid, reportUuid);
             });
     }
 
@@ -1872,7 +1872,7 @@ public class NetworkModificationService {
             }
         } catch (PowsyblException e) {
             NetworkModificationException exc = e instanceof NetworkModificationException ? (NetworkModificationException) e : new NetworkModificationException(MODIFICATION_ERROR, e);
-            ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, "Building node");
+            ReporterModel reporter = new ReporterModel(groupUuid.toString(), "Building node");
             reporter.report(Report.builder()
                 .withKey(MODIFICATION_ERROR.name())
                 .withDefaultMessage(exc.getMessage())
