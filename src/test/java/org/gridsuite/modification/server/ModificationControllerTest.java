@@ -41,7 +41,6 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.hamcrest.Matchers.containsString;
