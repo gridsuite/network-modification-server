@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.powsybl.commons.PowsyblException;
@@ -37,41 +38,32 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.web.client.RestTemplate;
-import com.fasterxml.jackson.core.type.TypeReference;
 import org.springframework.web.util.NestedServletException;
+
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.utils.MatcherBranchStatusModificationInfos.createMatcherBranchStatusModificationInfos;
 import static org.gridsuite.modification.server.utils.MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos;
 import static org.gridsuite.modification.server.utils.MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos;
+import static org.gridsuite.modification.server.utils.MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos;
 import static org.gridsuite.modification.server.utils.MatcherGeneratorCreationInfos.createMatcherGeneratorCreationInfos;
 import static org.gridsuite.modification.server.utils.MatcherLineCreationInfos.createMatcherLineCreationInfos;
 import static org.gridsuite.modification.server.utils.MatcherLoadCreationInfos.createMatcherLoadCreationInfos;
 import static org.gridsuite.modification.server.utils.MatcherShuntCompensatorCreationInfos.createMatcher;
 import static org.hamcrest.MatcherAssert.assertThat;
-
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
-import static org.gridsuite.modification.server.utils.MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos;
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -1681,33 +1673,111 @@ public class ModificationControllerTest {
         assertEquals(deletionsGroups, List.of());
     }
 
+    private List<ModificationInfos> createSomeSwitchModifications(UUID groupId, int number) throws Exception {
+        List<String> openStates = List.of("true", "false");
+        for (int i = 0; i < number; i++) {
+            mockMvc.perform(put("/v1/networks/{networkUuid}/switches/{switchId}?group=" + groupId + "&open=" + openStates.get(i % 2) + "&reportUuid=" + TEST_REPORT_ID, TEST_NETWORK_ID, "v1b1"))
+                .andExpect(status().isOk());
+        }
+        var modificationList = modificationRepository.getModifications(groupId, true, true);
+        assertEquals(number, modificationList.size());
+        return modificationList;
+    }
+
+    @Test
+    public void testDuplicateModification() throws Exception {
+        // create 3 modifications
+        List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 3);
+        List<UUID> modificationUuidList = modificationList.stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
+
+        // Duplicate [0] and [1], and append them at the end of the group modification list.
+        // Also try to duplicate 2 un-existing modifications, that should be returned as errors.
+        List<UUID> duplicateModificationUuidList = new ArrayList<>(modificationUuidList.subList(0, 2));
+        List<UUID> badModificationUuidList = List.of(UUID.randomUUID(), UUID.randomUUID());
+        duplicateModificationUuidList.addAll(badModificationUuidList);
+
+        MvcResult mvcResult = mockMvc.perform(
+            put("/v1/groups/" + TEST_GROUP_ID + "?action=DUPLICATE")
+                .content(objectWriter.writeValueAsString(duplicateModificationUuidList))
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk()).andReturn();
+        List<UUID> resultModificationUuidList = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertEquals(badModificationUuidList, resultModificationUuidList); // bad uuids are returned
+
+        var newModificationList = modificationRepository.getModifications(TEST_GROUP_ID, true, true);
+        List<UUID> newModificationUuidList = newModificationList.stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
+        // now 5 modifications: first 0-1-2 are still the same, last 3-4 are new (duplicates of 0-1)
+        assertEquals(5, newModificationList.size());
+        assertEquals(modificationUuidList, newModificationUuidList.subList(0, 3));
+        // compare duplicates 0 and 3 (same data except uuid)
+        var modification0 = modificationList.get(0);
+        var newModification3 = newModificationList.get(3);
+        modification0.setUuid(null);
+        newModification3.setUuid(null);
+        assertEquals(modification0.toString(), newModification3.toString());
+        // compare duplicates 1 and 4 (same data except uuid)
+        var modification1 = modificationList.get(1);
+        var newModification4 = newModificationList.get(4);
+        modification1.setUuid(null);
+        newModification4.setUuid(null);
+        assertEquals(modification1.toString(), newModification4.toString());
+
+        // bad request error case: wrong action param
+        mockMvc.perform(
+                put("/v1/groups/" + TEST_GROUP_ID + "?action=XXXXXXX")
+                    .content(objectWriter.writeValueAsString(duplicateModificationUuidList))
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isBadRequest());
+
+        // create 1 modification in another group
+        UUID otherGroupId = UUID.randomUUID();
+        List<ModificationInfos> modificationListOtherGroup = createSomeSwitchModifications(otherGroupId, 1);
+        List<UUID> modificationUuidListOtherGroup = modificationListOtherGroup.stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
+
+        // Duplicate the same modifications, and append them at the end of this new group modification list.
+        duplicateModificationUuidList = new ArrayList<>(modificationUuidList.subList(0, 2));
+        mvcResult = mockMvc.perform(
+                put("/v1/groups/" + otherGroupId + "?action=DUPLICATE")
+                    .content(objectWriter.writeValueAsString(duplicateModificationUuidList))
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk()).andReturn();
+        resultModificationUuidList = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertEquals(List.of(), resultModificationUuidList); // no bad id => no error this time
+
+        var newModificationListOtherGroup = modificationRepository.getModifications(otherGroupId, true, true);
+        List<UUID> newModificationUuidListOtherGroup = newModificationListOtherGroup.stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
+        // now 3 modifications in new group: first 0 is still the same, last 1-2 are new (duplicates of 0-1 from first group)
+        assertEquals(3, newModificationListOtherGroup.size());
+        assertEquals(modificationUuidListOtherGroup, newModificationUuidListOtherGroup.subList(0, 1));
+        // compare duplicates
+        var newModification1 = newModificationListOtherGroup.get(1);
+        newModification1.setUuid(null);
+        assertEquals(modification0.toString(), newModification1.toString());
+        var newModification2 = newModificationListOtherGroup.get(2);
+        newModification2.setUuid(null);
+        assertEquals(modification1.toString(), newModification2.toString());
+    }
+
     @Test
     public void testMoveModification() throws Exception {
-        MvcResult mvcResult;
-        String resultAsString;
-        mvcResult = mockMvc.perform(put("/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID + "&open=true" + "&reportUuid=" + TEST_REPORT_ID, TEST_NETWORK_ID, "v1b1").contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        List<EquipmentAttributeModificationInfos> deletionsEquipAttribModifInfos = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertNotNull(deletionsEquipAttribModifInfos);
-        mvcResult = mockMvc.perform(put("/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID + "&open=true" + "&reportUuid=" + TEST_REPORT_ID, TEST_NETWORK_ID, "v1b1").contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        List<EquipmentAttributeModificationInfos> deletionsSwitch = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertNotNull(deletionsSwitch);
+        // create 2 modifications
+        List<UUID> modificationUuidList = createSomeSwitchModifications(TEST_GROUP_ID, 2).
+                stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
 
-        var modificationList = networkModificationService.getModifications(TEST_GROUP_ID, true, true).stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
-        assertNotNull(modificationList);
-        assertEquals(2, modificationList.size());
-        mockMvc.perform(put("/v1/groups/" + TEST_GROUP_ID
-                    + "/modifications/move?before=" + modificationList.get(0)
-                    + "&modificationsToMove=" + modificationList.get(1)).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk()).andReturn();
-        var newModificationList = networkModificationService.getModifications(TEST_GROUP_ID, true, true).stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
-        assertNotNull(newModificationList);
-        Collections.reverse(newModificationList);
+        // swap modifications: move [1] before [0]
+        List<UUID> movingModificationUuidList = Collections.singletonList(modificationUuidList.get(1));
+        mockMvc.perform(
+            put("/v1/groups/" + TEST_GROUP_ID + "?action=MOVE&before=" + modificationUuidList.get(0))
+                    .content(objectWriter.writeValueAsString(movingModificationUuidList))
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
 
-        assertEquals(modificationList, newModificationList);
+        var newModificationUuidList = modificationRepository.getModifications(TEST_GROUP_ID, true, true).
+                stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
+        assertNotNull(newModificationUuidList);
+        Collections.reverse(newModificationUuidList);
+
+        assertEquals(modificationUuidList, newModificationUuidList);
     }
 
     @Test

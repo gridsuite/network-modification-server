@@ -21,6 +21,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import static org.gridsuite.modification.server.NetworkModificationException.Type.TYPE_MISMATCH;
+
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
@@ -28,6 +30,10 @@ import java.util.UUID;
 @RequestMapping(value = "/" + NetworkModificationApi.API_VERSION + "/")
 @Tag(name = "network-modification-server")
 public class NetworkModificationController {
+
+    enum GroupModificationAction {
+        MOVE, DUPLICATE
+    }
 
     private NetworkModificationService networkModificationService;
 
@@ -86,14 +92,22 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.getModification(modificationUuid));
     }
 
-    @PutMapping(value = "/groups/{groupUuid}/modifications/move", produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Get list of modifications metadata of a group")
-    @ApiResponse(responseCode = "200", description = "List of modifications of the group")
-    public ResponseEntity<Void> moveModifications(@Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid,
-                                                  @Parameter(description = "before") @RequestParam(value = "before", required = false) UUID before,
-                                                  @Parameter(description = "modification to moves", required = true) @RequestParam(value = "modificationsToMove", required = false) List<UUID> modificationsToMove) {
-        networkModificationService.moveModifications(groupUuid, before, modificationsToMove);
-        return ResponseEntity.ok().build();
+    @PutMapping(value = "/groups/{groupUuid}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "For a list of network modifications passed in body, Move them before another one or at the end of the list, or Duplicate them at the end of the list")
+    @ApiResponse(responseCode = "200", description = "The modification list of the group has been updated. Missing modifications are returned.")
+    public ResponseEntity<List<UUID>> updateModificationGroup(@Parameter(description = "group UUID") @PathVariable("groupUuid") UUID groupUuid,
+                                                              @Parameter(description = "kind of modification", required = true) @RequestParam(value = "action") GroupModificationAction action,
+                                                              @Parameter(description = "the modification Uuid to move before (MOVE option, empty means moving at the end)") @RequestParam(value = "before", required = false) UUID before,
+                                                              @RequestBody List<UUID> modificationsUuidList) {
+        switch (action) {
+            case DUPLICATE:
+                return ResponseEntity.ok().body(networkModificationService.duplicateModifications(groupUuid, modificationsUuidList));
+            case MOVE:
+                networkModificationService.moveModifications(groupUuid, before, modificationsUuidList);
+                return ResponseEntity.ok().body(List.of());
+            default:
+                throw new NetworkModificationException(TYPE_MISMATCH);
+        }
     }
 
     @DeleteMapping(value = "/groups/{groupUuid}/modifications")
