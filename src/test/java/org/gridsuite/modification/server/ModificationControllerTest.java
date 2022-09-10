@@ -1023,6 +1023,18 @@ public class ModificationControllerTest {
             .reactivePowerSetpoint(50.)
             .voltageRegulationOn(true)
             .voltageSetpoint(225.)
+            .stepUpTransformerReactance(60.0)
+            .transientReactance(61.0)
+            .minimumReactivePower(20.0)
+            .maximumReactivePower(25.0)
+            .droop(5f)
+            .participate(true)
+            .regulatingTerminalId("v2load")
+            .regulatingTerminalType("LOAD")
+            .regulatingTerminalVlId("v1")
+            .reactiveCapabilityCurve(true)
+            .points(Arrays.asList(new ReactiveCapabilityCurveCreationInfos(2.0, 3.0, 3.1),
+                                  new ReactiveCapabilityCurveCreationInfos(5.6, 9.8, 10.8)))
             .build();
         String generatorCreationInfosJson = objectWriter.writeValueAsString(generatorCreationInfos);
         mvcResult = mockMvc.perform(post(uriString, TEST_NETWORK_ID).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
@@ -1046,7 +1058,19 @@ public class ModificationControllerTest {
                 450.,
                 55.,
                 false,
-                235.)
+                235.,
+                80.,
+                30.,
+                300.,
+                true,
+                10f,
+                25.,
+                44.,
+                List.of(new ReactiveCapabilityCurveCreationEmbeddable(45., 85., 77.)),
+                "v2load",
+                "LOAD",
+                "v2",
+                false)
                 .toModificationInfos();
         generatorCreationInfos.setUuid(bsmlrGeneratorCreation.get(0).getUuid());
 
@@ -1063,7 +1087,19 @@ public class ModificationControllerTest {
                 450.,
                 55.,
                 false,
-                235.)
+                235.,
+                80.,
+                30.,
+                300.,
+                true,
+                10f,
+                25.,
+                44.,
+                List.of(new ReactiveCapabilityCurveCreationEmbeddable(45., 85., 77.)),
+                "v2load",
+                "LOAD",
+                "v2",
+                false)
                 .toModificationInfos();
         String generatorCreationUpdateJson = objectWriter.writeValueAsString(generatorCreationUpdate);
         String uriStringForUpdate = "/v1/modifications/" + bsmlrGeneratorCreation.get(0).getUuid() + "/generators-creation";
@@ -1153,6 +1189,18 @@ public class ModificationControllerTest {
             .reactivePowerSetpoint(50.)
             .voltageRegulationOn(true)
             .voltageSetpoint(225.)
+            .stepUpTransformerReactance(60.0)
+            .transientReactance(61.0)
+            .minimumReactivePower(20.0)
+            .maximumReactivePower(25.0)
+            .droop(5f)
+            .participate(true)
+            .regulatingTerminalId("idGenerator1")
+            .regulatingTerminalType("GENERATOR")
+            .regulatingTerminalVlId("v1")
+            .reactiveCapabilityCurve(false)
+            .points(Arrays.asList(new ReactiveCapabilityCurveCreationInfos(2.0, 3.0, 3.1),
+                                  new ReactiveCapabilityCurveCreationInfos(20.7, 14.5, 18.9)))
             .build();
         String generatorCreationInfosJson = objectWriter.writeValueAsString(generatorCreationInfos);
         mvcResult = mockMvc.perform(post(uriString, TEST_NETWORK_BUS_BREAKER_ID).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))

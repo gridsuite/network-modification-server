@@ -235,9 +235,16 @@ public class NetworkModificationRepository {
                                                          String voltageLevelId, String busOrBusbarSectionId,
                                                          double minActivePower, double maxActivePower,
                                                          Double ratedNominalPower, double activePowerSetpoint,
-                                                         Double reactivePowerSetpoint, boolean voltageRegulationOn, Double voltageSetpoint) {
+                                                         Double reactivePowerSetpoint, boolean voltageRegulationOn, Double voltageSetpoint,
+                                                         Double marginalCost, Double minQ, Double maxQ, boolean participate, Float droop,
+                                                         Double transientReactance, Double stepUpTransformerReactance,
+                                                         String regulatingTerminalId, String regulatingTerminalType, String regulatingTerminalVlId,
+                                                         boolean reactiveCapabilityCurve,
+                                                         List<ReactiveCapabilityCurveCreationEmbeddable> reactiveCapabilityCurvePoints) {
         return new GeneratorCreationEntity(generatorId, generatorName, energySource, voltageLevelId, busOrBusbarSectionId, minActivePower,
-            maxActivePower, ratedNominalPower, activePowerSetpoint, reactivePowerSetpoint, voltageRegulationOn, voltageSetpoint);
+            maxActivePower, ratedNominalPower, activePowerSetpoint, reactivePowerSetpoint, voltageRegulationOn, voltageSetpoint, marginalCost, minQ, maxQ,
+            participate, droop,  transientReactance, stepUpTransformerReactance, reactiveCapabilityCurvePoints, regulatingTerminalId, regulatingTerminalType,
+            regulatingTerminalVlId, reactiveCapabilityCurve);
     }
 
     public EquipmentCreationEntity createLineEntity(String lineId, String lineName, double seriesResistance, double seriesReactance,

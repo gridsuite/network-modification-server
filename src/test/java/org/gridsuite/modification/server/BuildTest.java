@@ -14,6 +14,9 @@ import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.iidm.network.*;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.sld.iidm.extensions.BranchStatus;
+import com.powsybl.iidm.network.extensions.GeneratorStartup;
+import com.powsybl.iidm.network.extensions.GeneratorShortCircuit;
+import com.powsybl.iidm.network.extensions.ActivePowerControl;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
@@ -69,6 +72,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.when;
+import static com.powsybl.iidm.network.ReactiveLimitsKind.MIN_MAX;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -93,6 +97,7 @@ public class BuildTest {
     private static final int TIMEOUT = 1000;
 
     private static final String VARIANT_ID_2 = "variant_2";
+    private static final String NEW_GENERATOR_ID = "newGenerator";
 
     private ExecutorService executorService = Executors.newCachedThreadPool();
 
@@ -231,7 +236,7 @@ public class BuildTest {
         entities1.add(modificationRepository.createSubstationEntity("newSubstation", "newSubstation", Country.FR));
 
         List<ModificationEntity> entities2 = new ArrayList<>();
-        entities2.add(modificationRepository.createGeneratorEntity("newGenerator", "newGenerator", EnergySource.HYDRO, "v2", "1A", 0., 500., 1., 100., 50., true, 225.));
+        entities2.add(modificationRepository.createGeneratorEntity(NEW_GENERATOR_ID, NEW_GENERATOR_ID, EnergySource.HYDRO, "v2", "1A", 0., 500., 1., 100., 50., true, 225., 8., 20., 50., true, 9F, 35., 25., "v2load", "LOAD", "v2", false, List.of()));
         entities2.add(modificationRepository.createLineEntity("newLine", "newLine", 1., 2., 3., 4., 5., 6., "v1", "1.1", "v2", "1B", null, null));
         entities2.add(modificationRepository.createTwoWindingsTransformerEntity("new2wt", "new2wt", 1., 2., 3., 4., 5., 6., "v1", "1.1", "v2", "1A", null, null));
         entities2.add(modificationRepository.createEquipmentDeletionEntity("v2shunt", "SHUNT_COMPENSATOR"));
@@ -291,12 +296,18 @@ public class BuildTest {
         assertEquals(LoadType.AUXILIARY, network.getLoad("newLoad").getLoadType());
         assertEquals(10., network.getLoad("newLoad").getP0(), 0.1);
         assertEquals(20., network.getLoad("newLoad").getQ0(), 0.1);
-        assertEquals(EnergySource.HYDRO, network.getGenerator("newGenerator").getEnergySource());
-        assertEquals("v2", network.getGenerator("newGenerator").getTerminal().getVoltageLevel().getId());
-        assertEquals(500., network.getGenerator("newGenerator").getMaxP(), 0.1);
-        assertEquals(100., network.getGenerator("newGenerator").getTargetP(), 0.1);
-        assertTrue(network.getGenerator("newGenerator").isVoltageRegulatorOn());
-        assertEquals(225., network.getGenerator("newGenerator").getTargetV(), 0.1);
+        assertEquals(EnergySource.HYDRO, network.getGenerator(NEW_GENERATOR_ID).getEnergySource());
+        assertEquals("v2", network.getGenerator(NEW_GENERATOR_ID).getTerminal().getVoltageLevel().getId());
+        assertEquals(500., network.getGenerator(NEW_GENERATOR_ID).getMaxP(), 0.1);
+        assertEquals(100., network.getGenerator(NEW_GENERATOR_ID).getTargetP(), 0.1);
+        assertEquals(8., network.getGenerator(NEW_GENERATOR_ID).getExtension(GeneratorStartup.class).getMarginalCost(), 0);
+        assertTrue(network.getGenerator(NEW_GENERATOR_ID).getExtension(ActivePowerControl.class).isParticipate());
+        assertEquals(9F, network.getGenerator(NEW_GENERATOR_ID).getExtension(ActivePowerControl.class).getDroop(), 0);
+        assertEquals(35., network.getGenerator(NEW_GENERATOR_ID).getExtension(GeneratorShortCircuit.class).getDirectTransX(), 0);
+        assertEquals(25., network.getGenerator(NEW_GENERATOR_ID).getExtension(GeneratorShortCircuit.class).getStepUpTransformerX(), 0);
+        assertEquals(MIN_MAX, network.getGenerator(NEW_GENERATOR_ID).getReactiveLimits().getKind());
+        assertTrue(network.getGenerator(NEW_GENERATOR_ID).isVoltageRegulatorOn());
+        assertEquals(225., network.getGenerator(NEW_GENERATOR_ID).getTargetV(), 0.1);
         assertEquals("v1", network.getLine("newLine").getTerminal1().getVoltageLevel().getId());
         assertEquals("v2", network.getLine("newLine").getTerminal2().getVoltageLevel().getId());
         assertEquals(4., network.getLine("newLine").getB1(), 0.1);
@@ -318,7 +329,7 @@ public class BuildTest {
         assertEquals(1, network.getTwoWindingsTransformer("trf1").getRatioTapChanger().getTapPosition());
         assertEquals(0, network.getThreeWindingsTransformer("trf6").getLeg1().getPhaseTapChanger().getTapPosition());
         assertNull(network.getLoad("newLoad"));
-        assertNull(network.getGenerator("newGenerator"));
+        assertNull(network.getGenerator(NEW_GENERATOR_ID));
         assertNull(network.getGenerator("newLine"));
         assertNull(network.getGenerator("new2wt"));
         assertNotNull(network.getShuntCompensator("v2shunt"));
@@ -402,12 +413,12 @@ public class BuildTest {
         assertEquals(2, network.getTwoWindingsTransformer("trf1").getRatioTapChanger().getTapPosition());
         assertEquals(0, network.getThreeWindingsTransformer("trf6").getLeg1().getPhaseTapChanger().getTapPosition());
         assertNull(network.getLoad("newLoad"));
-        assertEquals(EnergySource.HYDRO, network.getGenerator("newGenerator").getEnergySource());
-        assertEquals("v2", network.getGenerator("newGenerator").getTerminal().getVoltageLevel().getId());
-        assertEquals(500., network.getGenerator("newGenerator").getMaxP(), 0.1);
-        assertEquals(100., network.getGenerator("newGenerator").getTargetP(), 0.1);
-        assertTrue(network.getGenerator("newGenerator").isVoltageRegulatorOn());
-        assertEquals(225., network.getGenerator("newGenerator").getTargetV(), 0.1);
+        assertEquals(EnergySource.HYDRO, network.getGenerator(NEW_GENERATOR_ID).getEnergySource());
+        assertEquals("v2", network.getGenerator(NEW_GENERATOR_ID).getTerminal().getVoltageLevel().getId());
+        assertEquals(500., network.getGenerator(NEW_GENERATOR_ID).getMaxP(), 0.1);
+        assertEquals(100., network.getGenerator(NEW_GENERATOR_ID).getTargetP(), 0.1);
+        assertTrue(network.getGenerator(NEW_GENERATOR_ID).isVoltageRegulatorOn());
+        assertEquals(225., network.getGenerator(NEW_GENERATOR_ID).getTargetV(), 0.1);
         assertEquals("v1", network.getLine("newLine").getTerminal1().getVoltageLevel().getId());
         assertEquals("v2", network.getLine("newLine").getTerminal2().getVoltageLevel().getId());
         assertEquals(4., network.getLine("newLine").getB1(), 0.1);
