@@ -227,12 +227,16 @@ public class BuildTest {
             .susceptancePerSection(1.)
             .isIdenticalSection(true)
             .build()));
+        entities2.add(modificationRepository.createLoadModificationEntity("newLoad",
+            new AttributeModification<>("newLoadName", OperationType.SET), null, null, null, null, null));
+        entities2.add(modificationRepository.createGeneratorModificationEntity(GeneratorModificationInfos.builder().equipmentId("newGenerator")
+            .equipmentName(new AttributeModification<>("newGeneratorName", OperationType.SET)).build()));
 
         modificationRepository.saveModifications(TEST_GROUP_ID, entities1);
         modificationRepository.saveModifications(TEST_GROUP_ID_2, entities2);
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 7);
-        testNetworkModificationsCount(TEST_GROUP_ID_2, 8);
+        testNetworkModificationsCount(TEST_GROUP_ID, entities1.size());
+        testNetworkModificationsCount(TEST_GROUP_ID_2, entities2.size());
 
         // build VARIANT_ID by cloning network initial variant and applying all modifications in all groups
         String uriString = "/v1/networks/{networkUuid}/build?receiver=me";
@@ -303,8 +307,8 @@ public class BuildTest {
         assertNull(network.getShuntCompensator("shunt9"));
 
         // No new modification entity should have been added to the database
-        testNetworkModificationsCount(TEST_GROUP_ID, 7);
-        testNetworkModificationsCount(TEST_GROUP_ID_2, 8);
+        testNetworkModificationsCount(TEST_GROUP_ID, entities1.size());
+        testNetworkModificationsCount(TEST_GROUP_ID_2, entities2.size());
 
         // Execute another build starting from variant VARIANT_ID to variant VARIANT_ID_2
         // to check
@@ -453,7 +457,8 @@ public class BuildTest {
 
         Message<byte[]> message = output.receive(TIMEOUT * 3, "build.failed");
         assertEquals("me", message.getHeaders().get("receiver"));
-        assertThat((String) message.getHeaders().get("message"), CoreMatchers.startsWith(BuildFailedPublisherService.FAIL_MESSAGE));    }
+        assertThat((String) message.getHeaders().get("message"), CoreMatchers.startsWith(BuildFailedPublisherService.FAIL_MESSAGE));
+    }
 
     @Test
     public void doActionWithUncheckedExceptionTest() {
