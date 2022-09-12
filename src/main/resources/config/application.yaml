@@ -2,9 +2,12 @@ spring:
   application:
     name: netork-modification-server
 
+  jpa:
+    open-in-view: false
+
   cloud:
     function:
-      definition: consumeBuild;consumeCancelBuild;consumeFailedBuild
+      definition: consumeBuild;consumeCancelBuild
     stream:
       bindings:
         consumeBuild-in-0:
@@ -23,8 +26,6 @@ spring:
         publishStoppedBuild-out-0:
           destination: ${powsybl-ws.rabbitmq.destination.prefix:}build.stopped
         publishFailedBuild-out-0:
-          destination: ${powsybl-ws.rabbitmq.destination.prefix:}build.failed
-        consumeFailedBuild-in-0:
           destination: ${powsybl-ws.rabbitmq.destination.prefix:}build.failed
       source: publishBuild;publishResultBuild;publishCancelBuild;publishStoppedBuild;publishFailedBuild
 

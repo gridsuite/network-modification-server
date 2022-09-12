@@ -11,14 +11,12 @@ import com.powsybl.ws.commons.Utils;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.web.reactive.config.EnableWebFlux;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 @SuppressWarnings("checkstyle:HideUtilityClassConstructor")
 @SpringBootApplication
-@EnableWebFlux
 @ComponentScan(basePackageClasses = {NetworkModificationApplication.class, NetworkStoreService.class})
 public class NetworkModificationApplication {
 

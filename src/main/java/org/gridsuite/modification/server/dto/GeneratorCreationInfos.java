@@ -14,6 +14,8 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
+import java.util.List;
+
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
@@ -48,4 +50,40 @@ public class GeneratorCreationInfos extends InjectionCreationInfos {
 
     @Schema(description = "Voltage set point")
     private Double voltageSetpoint;
+
+    @Schema(description = "Marginal cost")
+    private Double marginalCost;
+
+    @Schema(description = "Minimum reactive power")
+    private Double minimumReactivePower;
+
+    @Schema(description = "Maximum reactive power")
+    private Double maximumReactivePower;
+
+    @Schema(description = "Reactive capability curve points")
+    private List<ReactiveCapabilityCurveCreationInfos> points;
+
+    @Schema(description = "Participate")
+    private Boolean participate;
+
+    @Schema(description = "Droop")
+    private Float droop;
+
+    @Schema(description = "Transient reactance")
+    private Double transientReactance;
+
+    @Schema(description = "Step up transformer reactance")
+    private Double stepUpTransformerReactance;
+
+    @Schema(description = "Regulating terminal equipment id")
+    private String regulatingTerminalId;
+
+    @Schema(description = "Regulating terminal equipment type")
+    private String regulatingTerminalType;
+
+    @Schema(description = "Regulating terminal voltage level id")
+    private String regulatingTerminalVlId;
+
+    @Schema(description = "Reactive capability curve")
+    private Boolean reactiveCapabilityCurve;
 }

@@ -17,7 +17,6 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class BuildFailedPublisherService {
-    public static final String FAIL_MESSAGE = "Build has failed";
 
     private static final String CATEGORY_BROKER_OUTPUT = BuildFailedPublisherService.class.getName() + ".output-broker-messages";
 
@@ -26,8 +25,8 @@ public class BuildFailedPublisherService {
     @Autowired
     private StreamBridge failedMessagePublisher;
 
-    public void publishFail(String receiver, String causeMessage) {
-        publish(receiver, FAIL_MESSAGE + " : " + causeMessage);
+    public void publishFail(String receiver, String failMessage) {
+        publish(receiver, failMessage);
     }
 
     private void publish(String receiver, String failMessage) {
