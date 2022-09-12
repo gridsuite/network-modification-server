@@ -79,9 +79,8 @@ public class NetworkModificationController {
     @Operation(summary = "Create a modification group based on another group")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The group and its modifications have been duplicated")})
     public ResponseEntity<Void> createModificationGroup(@RequestParam("groupUuid") UUID groupUuid,
-                                                  @RequestParam("duplicateFrom") UUID sourceGroupUuid,
-                                                  @RequestParam("reportUuid") UUID reportUuid) {
-        networkModificationService.createModificationGroup(sourceGroupUuid, groupUuid, reportUuid);
+                                                  @RequestParam("duplicateFrom") UUID sourceGroupUuid) {
+        networkModificationService.createModificationGroup(sourceGroupUuid, groupUuid);
         return ResponseEntity.ok().build();
     }
 

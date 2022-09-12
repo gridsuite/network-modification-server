@@ -98,7 +98,6 @@ public class NetworkModificationService {
     private static final String RUN_CATEGORY_BROKER_OUTPUT = NetworkModificationService.class.getName() + ".output-broker-messages.run";
     private static final Logger RUN_MESSAGE_LOGGER = LoggerFactory.getLogger(RUN_CATEGORY_BROKER_OUTPUT);
 
-    private static final String NETWORK_MODIFICATION_REPORT_KEY = "NetworkModification";
     private static final String NETWORK_MODIFICATION_REPORT_NAME = "NetworkModification";
 
     @Autowired
@@ -211,17 +210,13 @@ public class NetworkModificationService {
         return networkModificationRepository.getModifications(List.of(modificationUuid));
     }
 
-    public void createModificationGroup(UUID sourceGroupUuid, UUID groupUuid, UUID reportUuid) {
+    public void createModificationGroup(UUID sourceGroupUuid, UUID groupUuid) {
         List<ModificationEntity> entities = networkModificationRepository.getModificationsEntities(List.of(sourceGroupUuid))
             .stream()
             .map(networkModificationRepository::getModificationEntityEagerly)
             .collect(Collectors.toList());
         entities.forEach(ModificationEntity::setIdsToNull);
         networkModificationRepository.saveModifications(groupUuid, entities);
-        if (!entities.isEmpty()) {
-            ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
-            sendReport(reportUuid, reporter);
-        }
     }
 
     private boolean disconnectLineBothSides(Network network, String lineId) {
