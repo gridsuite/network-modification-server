@@ -1,0 +1,62 @@
+/**
+ * Copyright (c) 2022, RTE (http://www.rte-france.com)
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+package org.gridsuite.modification.server.service;
+
+import org.gridsuite.modification.server.utils.annotations.PostCompletion;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.stream.function.StreamBridge;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.support.MessageBuilder;
+import org.springframework.stereotype.Service;
+
+/**
+ * @author Seddik Yengui <seddik.yengui at rte-france.com
+ */
+
+@Service
+public class NotificationService {
+
+    private static final String CATEGORY_BROKER_OUTPUT = BuildWorkerService.class.getName() + ".output-broker-messages";
+    private static final Logger OUTPUT_MESSAGE_LOGGER = LoggerFactory.getLogger(CATEGORY_BROKER_OUTPUT);
+    public static final String RECEIVER_HEADER = "receiver";
+    public static final String NETWORK_UUID_HEADER = "networkUuid";
+
+    @Autowired
+    private StreamBridge publisher;
+
+    private void sendMessage(Message<String> message, String bindingName) {
+        OUTPUT_MESSAGE_LOGGER.debug("Sending message : {}", message);
+        publisher.send(bindingName, message);
+    }
+
+    @PostCompletion
+    public void emitBuildResult(String payload, String receiver) {
+        Message<String> message = MessageBuilder.withPayload(payload)
+                .setHeader(RECEIVER_HEADER, receiver)
+                .build();
+        sendMessage(message, "publishResultBuild-out-0");
+    }
+
+    @PostCompletion
+    public void emitBuildMessage(String payLoad, String networkUuid, String receiver) {
+        Message<String> message = MessageBuilder.withPayload(payLoad)
+                .setHeader(NETWORK_UUID_HEADER, networkUuid)
+                .setHeader(RECEIVER_HEADER, receiver)
+                .build();
+        sendMessage(message, "publishBuild-out-0");
+    }
+
+    @PostCompletion
+    public void emitCancelBuildMessage(String receiver) {
+        Message<String> message = MessageBuilder.withPayload("")
+                .setHeader(RECEIVER_HEADER, receiver)
+                .build();
+        sendMessage(message, "publishCancelBuild-out-0");
+    }
+}

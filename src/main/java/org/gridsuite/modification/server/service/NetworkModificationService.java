@@ -10,7 +10,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.InjectableValues;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.commons.PowsyblException;
-import com.powsybl.commons.reporter.*;
+import com.powsybl.commons.reporter.Report;
+import com.powsybl.commons.reporter.Reporter;
+import com.powsybl.commons.reporter.ReporterModel;
+import com.powsybl.commons.reporter.ReporterModelDeserializer;
+import com.powsybl.commons.reporter.ReporterModelJsonModule;
+import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.iidm.modification.topology.AttachNewLineOnLine;
 import com.powsybl.iidm.modification.tripping.BranchTripping;
 import com.powsybl.iidm.network.*;
@@ -33,7 +38,11 @@ import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.creation.*;
+import org.gridsuite.modification.server.entities.equipment.creation.BusbarConnectionCreationEmbeddable;
+import org.gridsuite.modification.server.entities.equipment.creation.BusbarSectionCreationEmbeddable;
+import org.gridsuite.modification.server.entities.equipment.creation.EquipmentCreationEntity;
+import org.gridsuite.modification.server.entities.equipment.creation.LineCreationEntity;
+import org.gridsuite.modification.server.entities.equipment.creation.VoltageLevelCreationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.LineAttachToVoltageLevelEntity;
@@ -43,23 +52,21 @@ import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
-import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.io.UncheckedIOException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
@@ -85,6 +92,8 @@ public class NetworkModificationService {
 
     private final EquipmentInfosService equipmentInfosService;
 
+    private final NotificationService notificationService;
+
     private RestTemplate reportServerRest;
 
     private final ObjectMapper objectMapper;
@@ -101,17 +110,16 @@ public class NetworkModificationService {
     private static final String NETWORK_MODIFICATION_REPORT_KEY = "NetworkModification";
     private static final String NETWORK_MODIFICATION_REPORT_NAME = "NetworkModification";
 
-    @Autowired
-    private StreamBridge publisher;
-
     public NetworkModificationService(@Value("${backing-services.report-server.base-uri:http://report-server}") String reportServerURI,
                                       NetworkStoreService networkStoreService, NetworkModificationRepository networkModificationRepository,
-                                      @Lazy EquipmentInfosService equipmentInfosService, ModificationGroupRepository modificationGroupRepository, ModificationRepository modificationRepository) {
+                                      @Lazy EquipmentInfosService equipmentInfosService, ModificationGroupRepository modificationGroupRepository,
+                                      ModificationRepository modificationRepository, NotificationService notificationService) {
         this.networkStoreService = networkStoreService;
         this.networkModificationRepository = networkModificationRepository;
         this.equipmentInfosService = equipmentInfosService;
         this.modificationGroupRepository = modificationGroupRepository;
         this.modificationRepository = modificationRepository;
+        this.notificationService = notificationService;
 
         RestTemplateBuilder restTemplateBuilder = new RestTemplateBuilder();
         reportServerRest = restTemplateBuilder.build();
@@ -1903,21 +1911,17 @@ public class NetworkModificationService {
     ** Build variant : sending message to rabbitmq
      */
     public void buildVariant(UUID networkUuid, BuildInfos buildInfos, String receiver) {
-        sendRunBuildMessage(new BuildExecContext(networkUuid, buildInfos, receiver).toMessage(objectMapper));
-    }
-
-    private void sendRunBuildMessage(Message<String> message) {
-        RUN_MESSAGE_LOGGER.debug("Sending message : {}", message);
-        publisher.send("publishBuild-out-0", message);
+        String buildInfosJson;
+        try {
+            buildInfosJson = objectMapper.writeValueAsString(buildInfos);
+        } catch (JsonProcessingException e) {
+            throw new UncheckedIOException(e);
+        }
+        notificationService.emitBuildMessage(buildInfosJson, networkUuid.toString(), receiver);
     }
 
     public void stopBuild(String receiver) {
-        sendCancelBuildMessage(new BuildCancelContext(receiver).toMessage());
-    }
-
-    private void sendCancelBuildMessage(Message<String> message) {
-        CANCEL_MESSAGE_LOGGER.debug("Sending message : {}", message);
-        publisher.send("publishCancelBuild-out-0", message);
+        notificationService.emitCancelBuildMessage(receiver);
     }
 
     public void deleteModifications(UUID groupUuid, Set<UUID> modificationsUuids) {
