@@ -11,6 +11,7 @@ import com.powsybl.iidm.network.Country;
 import com.powsybl.iidm.network.EnergySource;
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.LoadType;
+import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.entities.equipment.modification.BranchStatusModificationEntity;
@@ -31,13 +32,7 @@ import org.gridsuite.modification.server.entities.equipment.deletion.EquipmentDe
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -137,6 +132,20 @@ public class NetworkModificationRepository {
                 .collect(Collectors.toList());
     }
 
+    public ModificationEntity getModificationEntityEagerly(ModificationEntity modificationEntity) {
+        String type = modificationEntity.getType();
+        UUID modificationUuid = modificationEntity.getId();
+        if (type.equals(ModificationType.LINE_CREATION.name())) {
+            return modificationRepository.findLineCreationById(modificationUuid);
+        } else if (type.equals(ModificationType.TWO_WINDINGS_TRANSFORMER_CREATION.name())) {
+            return modificationRepository.find2wtCreationById(modificationUuid);
+        } else if (type.equals(ModificationType.LINE_ATTACH_TO_VOLTAGE_LEVEL.name())) {
+            return modificationRepository.findLineAttachToVoltageLevelEntityCreationById(modificationUuid);
+        } else {
+            return modificationEntity;
+        }
+    }
+
     @Transactional
     public List<ModificationInfos> getModifications(List<UUID> uuids) {
         return this.modificationRepository.findAllById(uuids).stream()
@@ -233,9 +242,16 @@ public class NetworkModificationRepository {
                                                          String voltageLevelId, String busOrBusbarSectionId,
                                                          double minActivePower, double maxActivePower,
                                                          Double ratedNominalPower, double activePowerSetpoint,
-                                                         Double reactivePowerSetpoint, boolean voltageRegulationOn, Double voltageSetpoint) {
+                                                         Double reactivePowerSetpoint, boolean voltageRegulationOn, Double voltageSetpoint,
+                                                         Double marginalCost, Double minQ, Double maxQ, boolean participate, Float droop,
+                                                         Double transientReactance, Double stepUpTransformerReactance,
+                                                         String regulatingTerminalId, String regulatingTerminalType, String regulatingTerminalVlId,
+                                                         boolean reactiveCapabilityCurve,
+                                                         List<ReactiveCapabilityCurveCreationEmbeddable> reactiveCapabilityCurvePoints) {
         return new GeneratorCreationEntity(generatorId, generatorName, energySource, voltageLevelId, busOrBusbarSectionId, minActivePower,
-            maxActivePower, ratedNominalPower, activePowerSetpoint, reactivePowerSetpoint, voltageRegulationOn, voltageSetpoint);
+            maxActivePower, ratedNominalPower, activePowerSetpoint, reactivePowerSetpoint, voltageRegulationOn, voltageSetpoint, marginalCost, minQ, maxQ,
+            participate, droop,  transientReactance, stepUpTransformerReactance, reactiveCapabilityCurvePoints, regulatingTerminalId, regulatingTerminalType,
+            regulatingTerminalVlId, reactiveCapabilityCurve);
     }
 
     public EquipmentCreationEntity createLineEntity(String lineId, String lineName, double seriesResistance, double seriesReactance,

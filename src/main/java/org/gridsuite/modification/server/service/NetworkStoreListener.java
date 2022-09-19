@@ -22,6 +22,8 @@ import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static org.gridsuite.modification.server.entities.equipment.creation.GeneratorCreationEntity.toEmbeddablePoints;
+
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -174,7 +176,19 @@ public class NetworkStoreListener implements NetworkListener {
             generatorCreationInfos.getActivePowerSetpoint(),
             generatorCreationInfos.getReactivePowerSetpoint(),
             generatorCreationInfos.isVoltageRegulationOn(),
-            generatorCreationInfos.getVoltageSetpoint()));
+            generatorCreationInfos.getVoltageSetpoint(),
+            generatorCreationInfos.getMarginalCost(),
+            generatorCreationInfos.getMinimumReactivePower(),
+            generatorCreationInfos.getMaximumReactivePower(),
+            generatorCreationInfos.getParticipate() != null && generatorCreationInfos.getParticipate(),
+            generatorCreationInfos.getDroop(),
+            generatorCreationInfos.getTransientReactance(),
+            generatorCreationInfos.getStepUpTransformerReactance(),
+            generatorCreationInfos.getRegulatingTerminalId(),
+            generatorCreationInfos.getRegulatingTerminalType(),
+            generatorCreationInfos.getRegulatingTerminalVlId(),
+            generatorCreationInfos.getReactiveCapabilityCurve() == null || generatorCreationInfos.getReactiveCapabilityCurve(),
+            toEmbeddablePoints(generatorCreationInfos.getPoints())));
     }
 
     public void storeEquipmentDeletion(String equipmentId, String equipmentType) {

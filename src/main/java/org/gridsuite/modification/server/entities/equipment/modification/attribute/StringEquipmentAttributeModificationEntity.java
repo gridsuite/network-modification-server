@@ -21,7 +21,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Getter
 @Entity
-@Table
+@Table(name = "stringEquipmentAttributeModification")
 @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "string_equipment_attribute_modification_id_fk_constraint"))
 public class StringEquipmentAttributeModificationEntity extends EquipmentAttributeModificationEntity<String> {
     public StringEquipmentAttributeModificationEntity(String equipmentId, String attributeName, String attributeValue, IdentifiableType equipmentType) {
