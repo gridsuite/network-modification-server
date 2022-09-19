@@ -6,7 +6,6 @@
  */
 package org.gridsuite.modification.server.service;
 
-import org.gridsuite.modification.server.utils.annotations.PostCompletion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,12 +29,15 @@ public class NotificationService {
     @Autowired
     private StreamBridge publisher;
 
+    // Today we don't send notification inside @Transactional block. If this behavior change, we must make sure
+    // that the notification is sent only when all the work inside @Transactional block is done.
     private void sendMessage(Message<String> message, String bindingName) {
         OUTPUT_MESSAGE_LOGGER.debug("Sending message : {}", message);
         publisher.send(bindingName, message);
     }
 
-    @PostCompletion
+    // Today we don't send notification inside @Transactional block. If this behavior change, we must make sure
+    // that the notification is sent only when all the work inside @Transactional block is done.
     public void emitBuildResult(String payload, String receiver) {
         Message<String> message = MessageBuilder.withPayload(payload)
                 .setHeader(RECEIVER_HEADER, receiver)
@@ -43,7 +45,8 @@ public class NotificationService {
         sendMessage(message, "publishResultBuild-out-0");
     }
 
-    @PostCompletion
+    // Today we don't send notification inside @Transactional block. If this behavior change, we must make sure
+    // that the notification is sent only when all the work inside @Transactional block is done.
     public void emitBuildMessage(String payLoad, String networkUuid, String receiver) {
         Message<String> message = MessageBuilder.withPayload(payLoad)
                 .setHeader(NETWORK_UUID_HEADER, networkUuid)
@@ -52,7 +55,8 @@ public class NotificationService {
         sendMessage(message, "publishBuild-out-0");
     }
 
-    @PostCompletion
+    // Today we don't send notification inside @Transactional block. If this behavior change, we must make sure
+    // that the notification is sent only when all the work inside @Transactional block is done.
     public void emitCancelBuildMessage(String receiver) {
         Message<String> message = MessageBuilder.withPayload("")
                 .setHeader(RECEIVER_HEADER, receiver)

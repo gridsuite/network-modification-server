@@ -40,10 +40,6 @@ public class BuildWorkerService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BuildWorkerService.class);
 
-    private static final String CATEGORY_BROKER_OUTPUT = BuildWorkerService.class.getName() + ".output-broker-messages";
-
-    private static final Logger OUTPUT_MESSAGE_LOGGER = LoggerFactory.getLogger(CATEGORY_BROKER_OUTPUT);
-
     public static final String CANCEL_MESSAGE = "Build was canceled";
     public static final String FAIL_MESSAGE = "Build has failed";
 

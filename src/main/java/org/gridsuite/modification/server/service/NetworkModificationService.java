@@ -50,8 +50,6 @@ import org.gridsuite.modification.server.entities.equipment.modification.LineSpl
 import org.gridsuite.modification.server.repositories.ModificationGroupRepository;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Lazy;
@@ -100,12 +98,6 @@ public class NetworkModificationService {
 
     private static final String REPORT_API_VERSION = "v1";
     private static final String DELIMITER = "/";
-
-    private static final String CANCEL_CATEGORY_BROKER_OUTPUT = NetworkModificationService.class.getName() + ".output-broker-messages.cancel";
-    private static final Logger CANCEL_MESSAGE_LOGGER = LoggerFactory.getLogger(CANCEL_CATEGORY_BROKER_OUTPUT);
-
-    private static final String RUN_CATEGORY_BROKER_OUTPUT = NetworkModificationService.class.getName() + ".output-broker-messages.run";
-    private static final Logger RUN_MESSAGE_LOGGER = LoggerFactory.getLogger(RUN_CATEGORY_BROKER_OUTPUT);
 
     private static final String NETWORK_MODIFICATION_REPORT_KEY = "NetworkModification";
     private static final String NETWORK_MODIFICATION_REPORT_NAME = "NetworkModification";
