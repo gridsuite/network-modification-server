@@ -6,17 +6,17 @@
  */
 package org.gridsuite.modification.server;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
-import com.powsybl.iidm.network.Country;
-import com.powsybl.iidm.network.EnergySource;
-import com.powsybl.iidm.network.Line;
-import com.powsybl.iidm.network.LoadType;
-import com.powsybl.iidm.network.Network;
-import com.powsybl.iidm.network.SwitchKind;
-import com.powsybl.iidm.network.VariantManagerConstants;
+import com.powsybl.iidm.network.*;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.sld.iidm.extensions.BranchStatus;
+import com.powsybl.iidm.network.extensions.GeneratorStartup;
+import com.powsybl.iidm.network.extensions.GeneratorShortCircuit;
+import com.powsybl.iidm.network.extensions.ActivePowerControl;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
@@ -28,11 +28,8 @@ import org.gridsuite.modification.server.entities.equipment.modification.LineSpl
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.EquipmentAttributeModificationEntity;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.NetworkModificationService;
-import org.gridsuite.modification.server.service.BuildFailedPublisherService;
-import org.gridsuite.modification.server.service.BuildStoppedPublisherService;
 import org.gridsuite.modification.server.service.NetworkStoreListener;
 import org.gridsuite.modification.server.utils.NetworkCreation;
-import org.hamcrest.CoreMatchers;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -41,52 +38,55 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.cloud.stream.binder.test.OutputDestination;
 import org.springframework.cloud.stream.binder.test.TestChannelBinderConfiguration;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.messaging.Message;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.ContextHierarchy;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.reactive.config.EnableWebFlux;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_ERROR;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
+import static org.gridsuite.modification.server.service.BuildWorkerService.CANCEL_MESSAGE;
+import static org.gridsuite.modification.server.service.BuildWorkerService.FAIL_MESSAGE;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.startsWith;
+import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.when;
+import static com.powsybl.iidm.network.ReactiveLimitsKind.MIN_MAX;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 @RunWith(SpringRunner.class)
-@EnableWebFlux
-@AutoConfigureWebTestClient
+@AutoConfigureMockMvc
 @SpringBootTest(properties = {"spring.data.elasticsearch.enabled=true"})
 @ContextHierarchy({@ContextConfiguration(classes = {NetworkModificationApplication.class, TestChannelBinderConfiguration.class})})
 public class BuildTest {
 
+    @Autowired
+    private MockMvc mockMvc;
     private static final UUID TEST_NETWORK_ID = UUID.fromString("7928181c-7977-4592-ba19-88027e4254e4");
     private static final UUID TEST_NETWORK_STOP_BUILD_ID = UUID.fromString("11111111-7977-4592-ba19-88027e4254e4");
     private static final UUID TEST_GROUP_ID = UUID.randomUUID();
@@ -97,12 +97,30 @@ public class BuildTest {
     private static final int TIMEOUT = 1000;
 
     private static final String VARIANT_ID_2 = "variant_2";
+    private static final String NEW_GENERATOR_ID = "newGenerator";
+
+    private ExecutorService executorService = Executors.newCachedThreadPool();
+
+    private CountDownLatch waitStartBuild;
+    private CountDownLatch blockBuild;
+
+    @Value("${spring.cloud.stream.bindings.consumeBuild-in-0.destination}")
+    private String consumeBuildDestination;
+
+    @Value("${spring.cloud.stream.bindings.consumeCancelBuild-in-0.destination}")
+    private String cancelBuildDestination;
+
+    @Value("${spring.cloud.stream.bindings.publishResultBuild-out-0.destination}")
+    private String buildResultDestination;
+
+    @Value("${spring.cloud.stream.bindings.publishStoppedBuild-out-0.destination}")
+    private String buildStoppedDestination;
+
+    @Value("${spring.cloud.stream.bindings.publishFailedBuild-out-0.destination}")
+    private String buildFailedDestination;
 
     @Autowired
     private OutputDestination output;
-
-    @Autowired
-    private WebTestClient webTestClient;
 
     @MockBean
     private NetworkStoreService networkStoreService;
@@ -120,19 +138,28 @@ public class BuildTest {
     @Autowired
     private EquipmentInfosService equipmentInfosService;
 
+    @Autowired
+    private ObjectMapper mapper;
+    private ObjectWriter objectWriter;
+
     private Network network;
 
     @Before
     public void setUp() {
+        objectWriter = mapper.writer().withDefaultPrettyPrinter();
         // create a new network for each invocation (answer)
         when(networkStoreService.getNetwork(TEST_NETWORK_ID)).then((Answer<Network>) invocation -> {
             network = NetworkCreation.create(TEST_NETWORK_ID, true);
             return network;
         });
 
+        waitStartBuild = new CountDownLatch(1);
+        blockBuild = new CountDownLatch(1);
         when(networkStoreService.getNetwork(TEST_NETWORK_STOP_BUILD_ID)).then((Answer<Network>) invocation -> {
             // Needed so the stop call doesn't arrive too late
-            Thread.sleep(2000);
+            waitStartBuild.countDown();
+            blockBuild.await();
+
             network = NetworkCreation.create(TEST_NETWORK_STOP_BUILD_ID, true);
             return network;
         });
@@ -150,7 +177,7 @@ public class BuildTest {
     }
 
     @Test
-    public void runBuildForLineSplits() throws InterruptedException {
+    public void runBuildForLineSplits() throws  Exception {
         List<ModificationEntity> entities1 = new ArrayList<>();
         entities1.add(modificationRepository.createLineEntity("newLine", "newLine", 1., 2., 3., 4., 5., 6., "v1", "1.1", "v2", "1B", null, null));
         entities1.add(LineSplitWithVoltageLevelEntity.toEntity("line3", 0.32, null, "vl1", "sjb1", "un", "One", "deux", "Two"));
@@ -169,13 +196,14 @@ public class BuildTest {
             List.of(TEST_GROUP_ID, TEST_GROUP_ID_2),
             List.of(TEST_REPORT_ID, TEST_REPORT_ID_2),
             new HashSet<>());
-        webTestClient.post().uri(uriString, TEST_NETWORK_ID)
-            .bodyValue(buildInfos)
-            .exchange()
-            .expectStatus().isOk();
+        mockMvc.perform(post(uriString, TEST_NETWORK_ID)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(mapper.writeValueAsString(buildInfos)))
+                .andExpect(status().isOk());
 
-        Thread.sleep(3000);  // Needed to be sure that build result message has been sent
-        Message<byte[]> resultMessage = output.receive(TIMEOUT, "build.result");
+        assertNotNull(output.receive(TIMEOUT, consumeBuildDestination));
+        Message<byte[]> resultMessage = output.receive(TIMEOUT, buildResultDestination);
+        assertNotNull(resultMessage);
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
 
         BuildInfos newBuildInfos = new BuildInfos(NetworkCreation.VARIANT_ID,
@@ -183,19 +211,20 @@ public class BuildTest {
             List.of(),
             List.of(),
             new HashSet<>());
-        webTestClient.post().uri(uriString, TEST_NETWORK_ID)
-            .bodyValue(newBuildInfos)
-            .exchange()
-            .expectStatus().isOk();
+        mockMvc.perform(post(uriString, TEST_NETWORK_ID)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(mapper.writeValueAsString(newBuildInfos)))
+                .andExpect(status().isOk());
 
-        Thread.sleep(3000);  // Needed to be sure that build result message has been sent and data have been written in ES
-        resultMessage = output.receive(TIMEOUT, "build.result");
+        assertNotNull(output.receive(TIMEOUT, consumeBuildDestination));
+        resultMessage = output.receive(TIMEOUT, buildResultDestination);
+        assertNotNull(resultMessage);
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
         assertEquals("", new String(resultMessage.getPayload()));
     }
 
     @Test
-    public void runBuildTest() throws InterruptedException {
+    public void runBuildTest() throws Exception {
         // create modification entities in the database
         List<ModificationEntity> entities1 = new ArrayList<>();
         entities1.add(modificationRepository.createEquipmentAttributeModification("v1d1", "open", true));
@@ -207,7 +236,7 @@ public class BuildTest {
         entities1.add(modificationRepository.createSubstationEntity("newSubstation", "newSubstation", Country.FR));
 
         List<ModificationEntity> entities2 = new ArrayList<>();
-        entities2.add(modificationRepository.createGeneratorEntity("newGenerator", "newGenerator", EnergySource.HYDRO, "v2", "1A", 0., 500., 1., 100., 50., true, 225.));
+        entities2.add(modificationRepository.createGeneratorEntity(NEW_GENERATOR_ID, NEW_GENERATOR_ID, EnergySource.HYDRO, "v2", "1A", 0., 500., 1., 100., 50., true, 225., 8., 20., 50., true, 9F, 35., 25., "v2load", "LOAD", "v2", false, List.of()));
         entities2.add(modificationRepository.createLineEntity("newLine", "newLine", 1., 2., 3., 4., 5., 6., "v1", "1.1", "v2", "1B", null, null));
         entities2.add(modificationRepository.createTwoWindingsTransformerEntity("new2wt", "new2wt", 1., 2., 3., 4., 5., 6., "v1", "1.1", "v2", "1A", null, null));
         entities2.add(modificationRepository.createEquipmentDeletionEntity("v2shunt", "SHUNT_COMPENSATOR"));
@@ -241,13 +270,13 @@ public class BuildTest {
             List.of(TEST_GROUP_ID, TEST_GROUP_ID_2),
             List.of(TEST_REPORT_ID, TEST_REPORT_ID_2),
             new HashSet<>());
-        webTestClient.post().uri(uriString, TEST_NETWORK_ID)
-            .bodyValue(buildInfos)
-            .exchange()
-            .expectStatus().isOk();
+        String buildInfosJson = objectWriter.writeValueAsString(buildInfos);
+        mockMvc.perform(post(uriString, TEST_NETWORK_ID).contentType(MediaType.APPLICATION_JSON).content(buildInfosJson))
+                .andExpect(status().isOk());
 
-        Thread.sleep(3000);  // Needed to be sure that build result message has been sent
-        Message<byte[]> resultMessage = output.receive(TIMEOUT, "build.result");
+        assertNotNull(output.receive(TIMEOUT, consumeBuildDestination));
+        Message<byte[]> resultMessage = output.receive(TIMEOUT, buildResultDestination);
+        assertNotNull(resultMessage);
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
         assertEquals("newSubstation,s1,s2", new String(resultMessage.getPayload()));
 
@@ -267,12 +296,18 @@ public class BuildTest {
         assertEquals(LoadType.AUXILIARY, network.getLoad("newLoad").getLoadType());
         assertEquals(10., network.getLoad("newLoad").getP0(), 0.1);
         assertEquals(20., network.getLoad("newLoad").getQ0(), 0.1);
-        assertEquals(EnergySource.HYDRO, network.getGenerator("newGenerator").getEnergySource());
-        assertEquals("v2", network.getGenerator("newGenerator").getTerminal().getVoltageLevel().getId());
-        assertEquals(500., network.getGenerator("newGenerator").getMaxP(), 0.1);
-        assertEquals(100., network.getGenerator("newGenerator").getTargetP(), 0.1);
-        assertTrue(network.getGenerator("newGenerator").isVoltageRegulatorOn());
-        assertEquals(225., network.getGenerator("newGenerator").getTargetV(), 0.1);
+        assertEquals(EnergySource.HYDRO, network.getGenerator(NEW_GENERATOR_ID).getEnergySource());
+        assertEquals("v2", network.getGenerator(NEW_GENERATOR_ID).getTerminal().getVoltageLevel().getId());
+        assertEquals(500., network.getGenerator(NEW_GENERATOR_ID).getMaxP(), 0.1);
+        assertEquals(100., network.getGenerator(NEW_GENERATOR_ID).getTargetP(), 0.1);
+        assertEquals(8., network.getGenerator(NEW_GENERATOR_ID).getExtension(GeneratorStartup.class).getMarginalCost(), 0);
+        assertTrue(network.getGenerator(NEW_GENERATOR_ID).getExtension(ActivePowerControl.class).isParticipate());
+        assertEquals(9F, network.getGenerator(NEW_GENERATOR_ID).getExtension(ActivePowerControl.class).getDroop(), 0);
+        assertEquals(35., network.getGenerator(NEW_GENERATOR_ID).getExtension(GeneratorShortCircuit.class).getDirectTransX(), 0);
+        assertEquals(25., network.getGenerator(NEW_GENERATOR_ID).getExtension(GeneratorShortCircuit.class).getStepUpTransformerX(), 0);
+        assertEquals(MIN_MAX, network.getGenerator(NEW_GENERATOR_ID).getReactiveLimits().getKind());
+        assertTrue(network.getGenerator(NEW_GENERATOR_ID).isVoltageRegulatorOn());
+        assertEquals(225., network.getGenerator(NEW_GENERATOR_ID).getTargetV(), 0.1);
         assertEquals("v1", network.getLine("newLine").getTerminal1().getVoltageLevel().getId());
         assertEquals("v2", network.getLine("newLine").getTerminal2().getVoltageLevel().getId());
         assertEquals(4., network.getLine("newLine").getB1(), 0.1);
@@ -294,7 +329,7 @@ public class BuildTest {
         assertEquals(1, network.getTwoWindingsTransformer("trf1").getRatioTapChanger().getTapPosition());
         assertEquals(0, network.getThreeWindingsTransformer("trf6").getLeg1().getPhaseTapChanger().getTapPosition());
         assertNull(network.getLoad("newLoad"));
-        assertNull(network.getGenerator("newGenerator"));
+        assertNull(network.getGenerator(NEW_GENERATOR_ID));
         assertNull(network.getGenerator("newLine"));
         assertNull(network.getGenerator("new2wt"));
         assertNotNull(network.getShuntCompensator("v2shunt"));
@@ -313,13 +348,13 @@ public class BuildTest {
             Collections.emptyList(),
             Collections.emptyList(),
             new HashSet<>());
-        webTestClient.post().uri(uriString, TEST_NETWORK_ID)
-            .bodyValue(newBuildInfos)
-            .exchange()
-            .expectStatus().isOk();
+        buildInfosJson = objectWriter.writeValueAsString(newBuildInfos);
+        mockMvc.perform(post(uriString, TEST_NETWORK_ID).contentType(MediaType.APPLICATION_JSON).content(buildInfosJson)
+                                 ).andExpect(status().isOk());
 
-        Thread.sleep(3000);  // Needed to be sure that build result message has been sent and data have been written in ES
-        resultMessage = output.receive(TIMEOUT, "build.result");
+        assertNotNull(output.receive(TIMEOUT, consumeBuildDestination));
+        resultMessage = output.receive(TIMEOUT, buildResultDestination);
+        assertNotNull(resultMessage);
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
         assertEquals("", new String(resultMessage.getPayload()));
 
@@ -358,14 +393,15 @@ public class BuildTest {
         buildInfos.addModificationToExclude(lineModificationEntityUuid.get());
         buildInfos.addModificationToExclude(loadCreationEntityUuid.get());
         buildInfos.addModificationToExclude(equipmentDeletionEntityUuid.get());
+        buildInfosJson = objectWriter.writeValueAsString(buildInfos);
 
-        webTestClient.post().uri(uriString, TEST_NETWORK_ID)
-            .bodyValue(buildInfos)
-            .exchange()
-            .expectStatus().isOk();
+        mockMvc.perform(post(uriString, TEST_NETWORK_ID).content(buildInfosJson)
+            .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
 
-        Thread.sleep(3000);  // Needed to be sure that build result message has been sent
-        resultMessage = output.receive(TIMEOUT, "build.result");
+        assertNotNull(output.receive(TIMEOUT, consumeBuildDestination));
+        resultMessage = output.receive(TIMEOUT, buildResultDestination);
+        assertNotNull(resultMessage);
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
         assertEquals("newSubstation,s1,s2", new String(resultMessage.getPayload()));
 
@@ -377,12 +413,12 @@ public class BuildTest {
         assertEquals(2, network.getTwoWindingsTransformer("trf1").getRatioTapChanger().getTapPosition());
         assertEquals(0, network.getThreeWindingsTransformer("trf6").getLeg1().getPhaseTapChanger().getTapPosition());
         assertNull(network.getLoad("newLoad"));
-        assertEquals(EnergySource.HYDRO, network.getGenerator("newGenerator").getEnergySource());
-        assertEquals("v2", network.getGenerator("newGenerator").getTerminal().getVoltageLevel().getId());
-        assertEquals(500., network.getGenerator("newGenerator").getMaxP(), 0.1);
-        assertEquals(100., network.getGenerator("newGenerator").getTargetP(), 0.1);
-        assertTrue(network.getGenerator("newGenerator").isVoltageRegulatorOn());
-        assertEquals(225., network.getGenerator("newGenerator").getTargetV(), 0.1);
+        assertEquals(EnergySource.HYDRO, network.getGenerator(NEW_GENERATOR_ID).getEnergySource());
+        assertEquals("v2", network.getGenerator(NEW_GENERATOR_ID).getTerminal().getVoltageLevel().getId());
+        assertEquals(500., network.getGenerator(NEW_GENERATOR_ID).getMaxP(), 0.1);
+        assertEquals(100., network.getGenerator(NEW_GENERATOR_ID).getTargetP(), 0.1);
+        assertTrue(network.getGenerator(NEW_GENERATOR_ID).isVoltageRegulatorOn());
+        assertEquals(225., network.getGenerator(NEW_GENERATOR_ID).getTargetV(), 0.1);
         assertEquals("v1", network.getLine("newLine").getTerminal1().getVoltageLevel().getId());
         assertEquals("v2", network.getLine("newLine").getTerminal2().getVoltageLevel().getId());
         assertEquals(4., network.getLine("newLine").getB1(), 0.1);
@@ -397,40 +433,48 @@ public class BuildTest {
     }
 
     @Test
-    public void stopBuildTest() {
-        List<ModificationEntity> entities = new ArrayList<>();
-        entities.add(modificationRepository.createEquipmentAttributeModification("v1d1", "open", true));
-        entities.add(modificationRepository.createEquipmentAttributeModification("line1", "branchStatus", BranchStatus.Status.PLANNED_OUTAGE));
+    public void stopBuildTest() throws Exception {
+        List<ModificationEntity> entities = List.of(
+            modificationRepository.createEquipmentAttributeModification("v1d1", "open", true),
+            modificationRepository.createEquipmentAttributeModification("line1", "branchStatus", BranchStatus.Status.PLANNED_OUTAGE)
+        );
 
         modificationRepository.saveModifications(TEST_GROUP_ID, entities);  // save all modification entities in group TEST_GROUP_ID
         testNetworkModificationsCount(TEST_GROUP_ID, 2);
 
-        // build VARIANT_ID by cloning network initial variant and applying all modifications in group uuid TEST_GROUP_ID
-        String uriString = "/v1/networks/{networkUuid}/build?receiver=me";
+        // Build VARIANT_ID by cloning network initial variant and applying all modifications in group uuid TEST_GROUP_ID
+        // Because TestChannelBinder implementation is synchronous the build is made in a different thread
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
             NetworkCreation.VARIANT_ID,
             List.of(TEST_GROUP_ID),
             List.of(TEST_REPORT_ID),
-            new HashSet<>());
-        webTestClient.post().uri(uriString, TEST_NETWORK_STOP_BUILD_ID)
-            .bodyValue(buildInfos)
-            .exchange()
-            .expectStatus().isOk();
+            Set.of());
+        String buildInfosJson = mapper.writeValueAsString(buildInfos);
+        CompletableFuture.runAsync(() -> {
+            try {
+                mockMvc.perform(post("/v1/networks/{networkUuid}/build?receiver=me", TEST_NETWORK_STOP_BUILD_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(buildInfosJson))
+                    .andExpect(status().isOk());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }, executorService);
 
         // stop build
-        uriString = "/v1/build/stop?receiver=me";
-        webTestClient.put()
-            .uri(uriString)
-            .exchange()
-            .expectStatus().isOk();
+        waitStartBuild.await();
+        assertNotNull(output.receive(TIMEOUT, consumeBuildDestination));
+        mockMvc.perform(put("/v1/build/stop?receiver=me")).andExpect(status().isOk());
+        assertNotNull(output.receive(TIMEOUT, cancelBuildDestination));
 
-        Message<byte[]> message = output.receive(TIMEOUT * 3, "build.stopped");
+        Message<byte[]> message = output.receive(TIMEOUT, buildStoppedDestination);
+        assertNotNull(message);
         assertEquals("me", message.getHeaders().get("receiver"));
-        assertEquals(BuildStoppedPublisherService.CANCEL_MESSAGE, message.getHeaders().get("message"));
+        assertEquals(CANCEL_MESSAGE, message.getHeaders().get("message"));
     }
 
     @Test
-    public void runBuildWithReportErrorTest() {
+    public void runBuildWithReportErrorTest() throws Exception {
         // mock exception when sending to report server
         given(reportServerRest.exchange(eq("/v1/reports/" + TEST_REPORT_ID), eq(HttpMethod.PUT), any(HttpEntity.class), eq(ReporterModel.class)))
             .willThrow(RestClientException.class);
@@ -443,17 +487,18 @@ public class BuildTest {
             NetworkCreation.VARIANT_ID,
             List.of(TEST_GROUP_ID),
             List.of(TEST_REPORT_ID),
-            new HashSet<>());
-        webTestClient.post().uri(uriString, TEST_NETWORK_ID)
-            .bodyValue(buildInfos)
-            .exchange()
-            .expectStatus().isOk();
+            Set.of());
+        mockMvc.perform(post(uriString, TEST_NETWORK_ID)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(mapper.writeValueAsString(buildInfos)))
+            .andExpect(status().isOk());
 
-        assertNull(output.receive(TIMEOUT, "build.result"));
-
-        Message<byte[]> message = output.receive(TIMEOUT * 3, "build.failed");
+        assertNotNull(output.receive(TIMEOUT, consumeBuildDestination));
+        assertNull(output.receive(TIMEOUT, buildResultDestination));
+        Message<byte[]> message = output.receive(TIMEOUT * 3, buildFailedDestination);
         assertEquals("me", message.getHeaders().get("receiver"));
-        assertThat((String) message.getHeaders().get("message"), CoreMatchers.startsWith(BuildFailedPublisherService.FAIL_MESSAGE));    }
+        assertThat((String) message.getHeaders().get("message"), startsWith(FAIL_MESSAGE));
+    }
 
     @Test
     public void doActionWithUncheckedExceptionTest() {
@@ -468,27 +513,21 @@ public class BuildTest {
         );
     }
 
-    private void testNetworkModificationsCount(UUID groupUuid, int actualSize) {
+    private void testNetworkModificationsCount(UUID groupUuid, int actualSize) throws Exception {
         // get all modifications for the given group of a network
-        assertEquals(actualSize, Objects.requireNonNull(webTestClient.get().uri("/v1/groups/{groupUuid}/modifications", groupUuid)
-            .exchange()
-            .expectStatus().isOk()
-            .expectHeader().contentType(MediaType.APPLICATION_JSON)
-            .expectBodyList(ModificationInfos.class)
-            .returnResult().getResponseBody()).size());
+        MvcResult mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/modifications", groupUuid)).andExpect(status().isOk()).andReturn();
+        String resultAsString = mvcResult.getResponse().getContentAsString();
+        List<ModificationInfos> modificationInfos = mapper.readValue(resultAsString, new TypeReference<>() { });
+        assertEquals(actualSize, modificationInfos.size());
     }
 
     @After
     public void tearDown() {
-        Message<byte[]> message = null;
+        List<String> destinations = List.of(consumeBuildDestination, cancelBuildDestination, buildResultDestination, buildStoppedDestination, buildFailedDestination);
         try {
-            message = output.receive(TIMEOUT);
-        } catch (NullPointerException e) {
-            // Ignoring
+            destinations.forEach(destination -> assertNull("Should not be any messages in queue " + destination + " : ", output.receive(TIMEOUT, destination)));
+        } finally {
+            output.clear(); // purge in order to not fail the other tests
         }
-
-        output.clear(); // purge in order to not fail the other tests
-
-        assertNull("Should not be any messages : ", message);
     }
 }
