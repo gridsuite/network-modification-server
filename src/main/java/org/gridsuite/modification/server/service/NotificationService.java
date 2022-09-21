@@ -36,7 +36,7 @@ public class NotificationService {
         publisher.send(bindingName, message);
     }
 
-    public void emitBuildResult(String payload, String receiver) {
+    public void emitBuildResultMessage(String payload, String receiver) {
         Message<String> message = MessageBuilder.withPayload(payload)
                 .setHeader(RECEIVER_HEADER, receiver)
                 .build();

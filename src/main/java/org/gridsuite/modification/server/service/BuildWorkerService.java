@@ -120,7 +120,7 @@ public class BuildWorkerService {
             if (future != null && (result = future.get()) != null) {  // result available
                 Set<String> allSubstationsIds = new HashSet<>();
                 result.forEach(r -> allSubstationsIds.addAll(r.getSubstationIds()));
-                notificationService.emitBuildResult(String.join(",", allSubstationsIds), execContext.getReceiver());
+                notificationService.emitBuildResultMessage(String.join(",", allSubstationsIds), execContext.getReceiver());
                 LOGGER.info("Build complete on node '{}'", execContext.getReceiver());
             } else {  // result not available : stop build request
                 if (cancelBuildRequests.get(execContext.getReceiver()) != null) {
