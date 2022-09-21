@@ -29,15 +29,13 @@ public class NotificationService {
     @Autowired
     private StreamBridge publisher;
 
-    // Today we don't send notification inside @Transactional block. If this behavior change, we must make sure
-    // that the notification is sent only when all the work inside @Transactional block is done.
+    // Today we don't send notification inside @Transactional block. If this behavior change, we should use @PostCompletion to
+    // make sure that the notification is sent only when all the work inside @Transactional block is done.
     private void sendMessage(Message<String> message, String bindingName) {
         OUTPUT_MESSAGE_LOGGER.debug("Sending message : {}", message);
         publisher.send(bindingName, message);
     }
 
-    // Today we don't send notification inside @Transactional block. If this behavior change, we must make sure
-    // that the notification is sent only when all the work inside @Transactional block is done.
     public void emitBuildResult(String payload, String receiver) {
         Message<String> message = MessageBuilder.withPayload(payload)
                 .setHeader(RECEIVER_HEADER, receiver)
@@ -45,8 +43,6 @@ public class NotificationService {
         sendMessage(message, "publishResultBuild-out-0");
     }
 
-    // Today we don't send notification inside @Transactional block. If this behavior change, we must make sure
-    // that the notification is sent only when all the work inside @Transactional block is done.
     public void emitBuildMessage(String payLoad, String networkUuid, String receiver) {
         Message<String> message = MessageBuilder.withPayload(payLoad)
                 .setHeader(NETWORK_UUID_HEADER, networkUuid)
@@ -55,8 +51,6 @@ public class NotificationService {
         sendMessage(message, "publishBuild-out-0");
     }
 
-    // Today we don't send notification inside @Transactional block. If this behavior change, we must make sure
-    // that the notification is sent only when all the work inside @Transactional block is done.
     public void emitCancelBuildMessage(String receiver) {
         Message<String> message = MessageBuilder.withPayload("")
                 .setHeader(RECEIVER_HEADER, receiver)
