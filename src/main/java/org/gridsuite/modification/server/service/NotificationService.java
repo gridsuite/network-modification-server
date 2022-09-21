@@ -18,6 +18,8 @@ import org.springframework.stereotype.Service;
  * @author Seddik Yengui <seddik.yengui at rte-france.com
  */
 
+// Today we don't send notification inside @Transactional block. If this behavior change, we should use @PostCompletion to
+// make sure that the notification is sent only when all the work inside @Transactional block is done.
 @Service
 public class NotificationService {
 
@@ -29,8 +31,6 @@ public class NotificationService {
     @Autowired
     private StreamBridge publisher;
 
-    // Today we don't send notification inside @Transactional block. If this behavior change, we should use @PostCompletion to
-    // make sure that the notification is sent only when all the work inside @Transactional block is done.
     private void sendMessage(Message<String> message, String bindingName) {
         OUTPUT_MESSAGE_LOGGER.debug("Sending message : {}", message);
         publisher.send(bindingName, message);
