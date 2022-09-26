@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.service;
 
+import lombok.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,22 +37,18 @@ public class NotificationService {
         publisher.send(bindingName, message);
     }
 
-    public void emitBuildResultMessage(String payload, String receiver) {
+    public void emitBuildResultMessage(@NonNull String payload, @NonNull String receiver) {
         Message<String> message = MessageBuilder.withPayload(payload)
                 .setHeader(RECEIVER_HEADER, receiver)
                 .build();
         sendMessage(message, "publishResultBuild-out-0");
     }
 
-    public void emitBuildMessage(String payLoad, String networkUuid, String receiver) {
-        Message<String> message = MessageBuilder.withPayload(payLoad)
-                .setHeader(NETWORK_UUID_HEADER, networkUuid)
-                .setHeader(RECEIVER_HEADER, receiver)
-                .build();
+    public void emitBuildMessage(@NonNull Message<String> message) {
         sendMessage(message, "publishBuild-out-0");
     }
 
-    public void emitCancelBuildMessage(String receiver) {
+    public void emitCancelBuildMessage(@NonNull String receiver) {
         Message<String> message = MessageBuilder.withPayload("")
                 .setHeader(RECEIVER_HEADER, receiver)
                 .build();
