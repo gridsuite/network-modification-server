@@ -212,15 +212,19 @@ public class NetworkModificationService {
     }
 
     public void createModificationGroup(UUID sourceGroupUuid, UUID groupUuid, UUID reportUuid) {
-        List<ModificationEntity> entities = networkModificationRepository.getModificationsEntities(List.of(sourceGroupUuid))
-            .stream()
-            .map(networkModificationRepository::getModificationEntityEagerly)
-            .collect(Collectors.toList());
-        entities.forEach(ModificationEntity::setIdsToNull);
-        networkModificationRepository.saveModifications(groupUuid, entities);
-        if (!entities.isEmpty()) {
-            ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
-            sendReport(reportUuid, reporter);
+        try {
+            List<ModificationEntity> entities = networkModificationRepository.getModificationsEntities(List.of(sourceGroupUuid))
+                .stream()
+                .map(networkModificationRepository::getModificationEntityEagerly)
+                .collect(Collectors.toList());
+            entities.forEach(ModificationEntity::setIdsToNull);
+            networkModificationRepository.saveModifications(groupUuid, entities);
+
+        } catch (NetworkModificationException e) {
+            if (e.getType() == MODIFICATION_GROUP_NOT_FOUND) { // May not exist
+                return;
+            }
+            throw e;
         }
     }
 
@@ -2020,12 +2024,13 @@ public class NetworkModificationService {
         List<ModificationEntity> newModificationList = new ArrayList<>();
         List<UUID> missingModificationList = new ArrayList<>();
         for (UUID modifyId : modificationsToDuplicate) {
-            Optional<ModificationEntity> clone = this.modificationRepository.findById(modifyId);
-            if (clone.isEmpty()) {
+            Optional<ModificationEntity> modificationEntity = this.modificationRepository.findById(modifyId);
+            if (modificationEntity.isEmpty()) {
                 missingModificationList.add(modifyId);  // data no more available
             } else {
-                clone.get().setId(null);
-                newModificationList.add(clone.get());
+                ModificationEntity clone = networkModificationRepository.getModificationEntityEagerly(modificationEntity.get());
+                clone.setIdsToNull();
+                newModificationList.add(clone);
             }
         }
         networkModificationRepository.saveModifications(targetGroupUuid, newModificationList);
