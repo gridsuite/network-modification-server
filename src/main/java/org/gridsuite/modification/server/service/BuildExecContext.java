@@ -18,16 +18,19 @@ import org.springframework.messaging.support.MessageBuilder;
 import java.io.UncheckedIOException;
 import java.util.UUID;
 
+import static org.gridsuite.modification.server.service.NotificationService.NETWORK_UUID_HEADER;
+import static org.gridsuite.modification.server.service.NotificationService.RECEIVER_HEADER;
+
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 public class BuildExecContext {
 
-    private UUID networkUuid;
+    private final UUID networkUuid;
 
-    private BuildInfos buildInfos;
+    private final BuildInfos buildInfos;
 
-    private String receiver;
+    private final String receiver;
 
     public BuildExecContext(@NonNull UUID networkUuid, @NonNull BuildInfos buildInfos, @NonNull String receiver) {
         this.networkUuid = networkUuid;
@@ -57,8 +60,8 @@ public class BuildExecContext {
 
     public static BuildExecContext fromMessage(@NonNull Message<String> message, ObjectMapper objectMapper) {
         MessageHeaders headers = message.getHeaders();
-        UUID networkUuid = UUID.fromString(getNonNullHeader(headers, "networkUuid"));
-        String receiver = getNonNullHeader(headers, "receiver");
+        UUID networkUuid = UUID.fromString(getNonNullHeader(headers, NETWORK_UUID_HEADER));
+        String receiver = getNonNullHeader(headers, RECEIVER_HEADER);
         BuildInfos infos;
         try {
             infos = objectMapper.readValue(message.getPayload(), BuildInfos.class);
@@ -76,8 +79,8 @@ public class BuildExecContext {
             throw new UncheckedIOException(e);
         }
         return MessageBuilder.withPayload(buildInfosJson)
-            .setHeader("networkUuid", networkUuid.toString())
-            .setHeader("receiver", receiver)
+            .setHeader(NETWORK_UUID_HEADER, networkUuid.toString())
+            .setHeader(RECEIVER_HEADER, receiver)
             .build();
     }
 }
