@@ -6,16 +6,11 @@
  */
 package org.gridsuite.modification.server.entities.equipment.creation;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import javax.persistence.CollectionTable;
-import javax.persistence.Column;
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.ForeignKey;
-import javax.persistence.PrimaryKeyJoinColumn;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.BusbarConnectionCreationInfos;
@@ -110,6 +105,13 @@ public class VoltageLevelCreationEntity extends EquipmentCreationEntity {
                 .substationId(getSubstationId())
                 .busbarSections(bbsis)
                 .busbarConnections(cnxis);
+    }
+
+    @Override
+    public void cloneWithIdsToNull() {
+        super.cloneWithIdsToNull();
+        this.busbarSections = new ArrayList<>(busbarSections);
+        this.busbarConnections = new ArrayList<>(busbarConnections);
     }
 }
 

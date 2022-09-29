@@ -14,6 +14,7 @@ import org.gridsuite.modification.server.dto.GeneratorCreationInfos;
 import org.gridsuite.modification.server.dto.ReactiveCapabilityCurveCreationInfos;
 
 import javax.persistence.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -168,5 +169,11 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
             .reactiveCapabilityCurve(getReactiveCapabilityCurve())
             .transientReactance(getTransientReactance())
             .stepUpTransformerReactance(getStepUpTransformerReactance());
+    }
+
+    @Override
+    public void cloneWithIdsToNull() {
+        super.cloneWithIdsToNull();
+        this.reactiveCapabilityCurvePoints = new ArrayList<>(reactiveCapabilityCurvePoints);
     }
 }

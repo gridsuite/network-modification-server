@@ -203,13 +203,9 @@ public class NetworkModificationService {
 
     public void createModificationGroup(UUID sourceGroupUuid, UUID groupUuid, UUID reportUuid) {
         try {
-            List<ModificationEntity> entities = networkModificationRepository.getModificationsEntities(List.of(sourceGroupUuid))
-                .stream()
-                .map(networkModificationRepository::getModificationEntityEagerly)
-                .collect(Collectors.toList());
-            entities.forEach(ModificationEntity::setIdsToNull);
+            List<ModificationEntity> entities = networkModificationRepository.getModificationsEntitiesEagerly(sourceGroupUuid);
+            entities.forEach(ModificationEntity::cloneWithIdsToNull);
             networkModificationRepository.saveModifications(groupUuid, entities);
-
         } catch (NetworkModificationException e) {
             if (e.getType() == MODIFICATION_GROUP_NOT_FOUND) { // May not exist
                 return;
@@ -1998,22 +1994,22 @@ public class NetworkModificationService {
         networkModificationRepository.moveModifications(groupUuid, modificationsToMove, before);
     }
 
+    // This function cannot be @Transactional because we clone all modifications resetting their id to null,
+    // which is not allowed by JPA if we still stay in the same Tx.
     public List<UUID> duplicateModifications(UUID targetGroupUuid, List<UUID> modificationsToDuplicate) {
-        // This function cannot be @Transactional because we clone all modifications resetting their id to null,
-        // which is not allowed by JPA if we still stay in the same Tx.
         List<ModificationEntity> newModificationList = new ArrayList<>();
         List<UUID> missingModificationList = new ArrayList<>();
         for (UUID modifyId : modificationsToDuplicate) {
-            Optional<ModificationEntity> modificationEntity = this.modificationRepository.findById(modifyId);
-            if (modificationEntity.isEmpty()) {
-                missingModificationList.add(modifyId);  // data no more available
-            } else {
-                ModificationEntity clone = networkModificationRepository.getModificationEntityEagerly(modificationEntity.get());
-                clone.setIdsToNull();
-                newModificationList.add(clone);
-            }
+            this.networkModificationRepository.getEntityEagerly(modifyId).ifPresentOrElse(
+                modificationEntity -> {
+                    modificationEntity.cloneWithIdsToNull();
+                    newModificationList.add(modificationEntity);
+                },
+                () -> missingModificationList.add(modifyId)  // data no more available
+            );
         }
-        networkModificationRepository.saveModifications(targetGroupUuid, newModificationList);
+        this.networkModificationRepository.saveModifications(targetGroupUuid, newModificationList);
+
         return missingModificationList;
     }
 
@@ -2030,7 +2026,6 @@ public class NetworkModificationService {
         updatedEntity.setId(modificationUuid);
         updatedEntity.setGroup(generatorModificationEntity.get().getGroup());
         this.networkModificationRepository.updateModification(updatedEntity);
-
     }
 
     private void assertLineSplitWithVoltageLevelInfosNotEmpty(LineSplitWithVoltageLevelInfos lineSplitWithVoltageLevelInfos) {
