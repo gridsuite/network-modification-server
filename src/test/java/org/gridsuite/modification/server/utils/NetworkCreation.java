@@ -10,9 +10,9 @@ package org.gridsuite.modification.server.utils;
 import java.util.UUID;
 
 import com.powsybl.iidm.network.*;
+import com.powsybl.iidm.network.extensions.ConnectablePosition;
+import com.powsybl.iidm.network.extensions.ConnectablePositionAdder;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
-import com.powsybl.sld.iidm.extensions.ConnectablePosition;
-import com.powsybl.sld.iidm.extensions.ConnectablePositionAdder;
 
 public final class NetworkCreation {
     public static final String VARIANT_ID = "variant_1";

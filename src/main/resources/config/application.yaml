@@ -29,4 +29,6 @@ spring:
           destination: ${powsybl-ws.rabbitmq.destination.prefix:}build.failed
       source: publishBuild;publishResultBuild;publishCancelBuild;publishStoppedBuild;publishFailedBuild
 
-dbName: networkmodifications
+powsybl-ws:
+  database:
+    name: networkmodifications
