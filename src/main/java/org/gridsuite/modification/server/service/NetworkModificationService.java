@@ -11,18 +11,14 @@ import com.fasterxml.jackson.databind.InjectableValues;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.reporter.*;
-import com.powsybl.iidm.modification.topology.AttachNewLineOnLine;
+import com.powsybl.iidm.modification.topology.ConnectVoltageLevelOnLine;
+import com.powsybl.iidm.modification.topology.CreateLineOnLine;
 import com.powsybl.iidm.modification.tripping.BranchTripping;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.Branch.Side;
-import com.powsybl.iidm.network.extensions.ActivePowerControlAdder;
-import com.powsybl.iidm.network.extensions.GeneratorShortCircuitAdder;
-import com.powsybl.iidm.network.extensions.GeneratorStartupAdder;
+import com.powsybl.iidm.network.extensions.*;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.iidm.impl.extensions.GeneratorStartupAdderImpl;
-import com.powsybl.sld.iidm.extensions.BranchStatus;
-import com.powsybl.sld.iidm.extensions.BranchStatusAdder;
-import com.powsybl.sld.iidm.extensions.BusbarSectionPositionAdder;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
 import org.apache.commons.lang3.StringUtils;
@@ -2060,7 +2056,7 @@ public class NetworkModificationService {
                     voltageLeveId = lineSplitWithVoltageLevelInfos.getExistingVoltageLevelId();
                 }
 
-                CopyAttachVoltageLevelOnLine algo = new CopyAttachVoltageLevelOnLine(
+                ConnectVoltageLevelOnLine algo = new ConnectVoltageLevelOnLine(
                     lineSplitWithVoltageLevelInfos.getPercent(),
                     voltageLeveId,
                     lineSplitWithVoltageLevelInfos.getBbsOrBusId(),
@@ -2070,7 +2066,7 @@ public class NetworkModificationService {
                     lineSplitWithVoltageLevelInfos.getNewLine2Name(),
                     line);
 
-                algo.apply(network);
+                algo.apply(network, false, reporter);
 
                 subReporter.report(Report.builder()
                     .withKey("lineSplit")
@@ -2178,7 +2174,7 @@ public class NetworkModificationService {
                         .setG2(attachmentLineInfos.getShuntConductance2() != null ? attachmentLineInfos.getShuntConductance2() : 0.0)
                         .setB2(attachmentLineInfos.getShuntSusceptance2() != null ? attachmentLineInfos.getShuntSusceptance2() : 0.0);
 
-                AttachNewLineOnLine algo = new AttachNewLineOnLine(
+                CreateLineOnLine algo = new CreateLineOnLine(
                         lineAttachToVoltageLevelInfos.getPercent(),
                         voltageLevelId,
                         lineAttachToVoltageLevelInfos.getBbsOrBusId(),
@@ -2195,7 +2191,7 @@ public class NetworkModificationService {
                         lineAdder
                 );
 
-                algo.apply(network);
+                algo.apply(network, false, reporter);
 
                 subReporter.report(Report.builder()
                         .withKey("lineAttach")
