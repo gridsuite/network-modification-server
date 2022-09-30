@@ -17,6 +17,7 @@ import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationGroupEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.*;
 import org.gridsuite.modification.server.entities.equipment.modification.BranchStatusModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.LineAttachToSplitLineEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.LineAttachToVoltageLevelEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.BooleanModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
@@ -117,6 +118,10 @@ public class ModificationRepositoryTest {
 
     private LineAttachToVoltageLevelInfos getLineAttachToVoltageLevelModification(UUID modificationUuid) {
         return (LineAttachToVoltageLevelInfos) networkModificationRepository.getModificationInfo(modificationUuid);
+    }
+
+    private LineAttachToSplitLineInfos getLineAttachToSplitLineModification(UUID modificationUuid) {
+        return (LineAttachToSplitLineInfos) networkModificationRepository.getModificationInfo(modificationUuid);
     }
 
     @Test
@@ -730,6 +735,41 @@ public class ModificationRepositoryTest {
         networkModificationRepository.deleteModifications(TEST_GROUP_ID, Set.of(lineAttachToEntity1.getId(),
                 lineAttachToEntity2.getId()));
         assertRequestsCount(2, 0, 0, 12);
+
+        SQLStatementCountValidator.reset();
+        networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
+        assertRequestsCount(2, 0, 0, 1);
+
+        assertThrows(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage(),
+                NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true)
+        );
+    }
+
+    @Test
+    public void testLineAttachToSplitLine() {
+        LineAttachToSplitLineEntity lineAttachToEntity1 = LineAttachToSplitLineEntity.toEntity(
+                "lineId0", "lineId1", "lineId3", "vl1", "bbsId", "line1Id", "line1Name", "line2Id", "line2Name"
+        );
+        LineAttachToSplitLineEntity lineAttachToEntity2 = LineAttachToSplitLineEntity.toEntity(
+                "lineId4", "lineId5", "lineId6", "vl2", "bbsId2", "line3Id", "line3Name", "line4Id", "line4Name"
+        );
+        networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(lineAttachToEntity1, lineAttachToEntity2));
+
+        List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
+        assertEquals(2, modificationInfos.size());
+
+        assertThat(getLineAttachToSplitLineModification(modificationInfos.get(0).getUuid()),
+                MatcherLineAttachToSplitLineInfos.createMatcherLineAttachToSplitLineInfos(
+                        lineAttachToEntity1.toLineAttachToSplitLineInfos()));
+
+        assertThat(getLineAttachToSplitLineModification(modificationInfos.get(1).getUuid()),
+                MatcherLineAttachToSplitLineInfos.createMatcherLineAttachToSplitLineInfos(
+                        lineAttachToEntity2.toLineAttachToSplitLineInfos()));
+
+        SQLStatementCountValidator.reset();
+        networkModificationRepository.deleteModifications(TEST_GROUP_ID, Set.of(lineAttachToEntity1.getId(),
+                lineAttachToEntity2.getId()));
+        assertRequestsCount(2, 0, 0, 4);
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);

@@ -13,6 +13,7 @@ import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.VoltageLevelCreationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.LineAttachToSplitLineEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.LineAttachToVoltageLevelEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.LineSplitWithVoltageLevelEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
@@ -348,6 +349,21 @@ public class NetworkStoreListener implements NetworkListener {
             lineSplitWithVoltageLevelInfos.getNewLine1Name(),
             lineSplitWithVoltageLevelInfos.getNewLine2Id(),
             lineSplitWithVoltageLevelInfos.getNewLine2Name())
+        );
+    }
+
+    public void storeLineAttachToSplitLineInfos(LineAttachToSplitLineInfos lineAttachToSplitLineInfos) {
+
+        modifications.add(LineAttachToSplitLineEntity.toEntity(
+                lineAttachToSplitLineInfos.getLineToAttachTo1Id(),
+                lineAttachToSplitLineInfos.getLineToAttachTo2Id(),
+                lineAttachToSplitLineInfos.getAttachedLineId(),
+                lineAttachToSplitLineInfos.getExistingVoltageLevelId(),
+                lineAttachToSplitLineInfos.getBbsOrBusId(),
+                lineAttachToSplitLineInfos.getNewLine1Id(),
+                lineAttachToSplitLineInfos.getNewLine1Name(),
+                lineAttachToSplitLineInfos.getNewLine2Id(),
+                lineAttachToSplitLineInfos.getNewLine2Name())
         );
     }
 
