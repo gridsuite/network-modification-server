@@ -2107,6 +2107,17 @@ public class ModificationControllerTest {
 
         testNetworkModificationsCount(TEST_GROUP_ID, 3);
 
+        //Attach lines to split line
+        String attachLineToSplitLineUriString = "/v1/networks/{networkUuid}/line-attach-to-split-line?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
+        LineAttachToSplitLineInfos lineAttachToSplitLineInfos = new LineAttachToSplitLineInfos("line1", "line2", "line3", "v4", "1.A", "nl4", "NewLine4", "nl5", "NewLine4");
+
+        mockMvc.perform(
+                        post(attachLineToSplitLineUriString, TEST_NETWORK_ID)
+                                .content(objectWriter.writeValueAsString(lineAttachToSplitLineInfos))
+                                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        testNetworkModificationsCount(TEST_GROUP_ID, 4);
+
         //create a lineSplit
         String lineSplitUriString = "/v1/networks/{networkUuid}/line-splits?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
         VoltageLevelCreationInfos vl1 = VoltageLevelCreationInfos.builder()
@@ -2127,14 +2138,15 @@ public class ModificationControllerTest {
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 4);
+        testNetworkModificationsCount(TEST_GROUP_ID, 5);
 
         //test copy group
         UUID newGroupUuid = UUID.randomUUID();
         uriString = "/v1/groups?groupUuid=" + newGroupUuid + "&duplicateFrom=" + TEST_GROUP_ID + "&reportUuid=" + UUID.randomUUID();
         mockMvc.perform(post(uriString)).andExpect(status().isOk());
 
-        testNetworkModificationsCount(newGroupUuid, 4);
+        testNetworkModificationsCount(newGroupUuid, 6);
+
     }
 
     @Test
@@ -2282,6 +2294,22 @@ public class ModificationControllerTest {
         assertEquals(resultAsString, new NetworkModificationException(CREATE_LINE_ERROR, "AC Line 'idLine2': permanent limit must be defined and be > 0").getMessage());
 
         testNetworkModificationsCount(TEST_GROUP_ID, 4);
+
+        LineCreationInfos lineCreationInfosOK = LineCreationInfos.builder()
+                .equipmentId("idLine3")
+                .equipmentName("nameLine3")
+                .seriesResistance(100.0)
+                .seriesReactance(100.0)
+                .voltageLevelId1("v1")
+                .busOrBusbarSectionId1("bus1")
+                .voltageLevelId2("v2")
+                .busOrBusbarSectionId2("bus2")
+                .currentLimits2(CurrentLimitsInfos.builder().permanentLimit(1.0).build())
+                .build();
+
+        String lineCreationInfosJson = objectWriter.writeValueAsString(lineCreationInfosOK);
+        mockMvc.perform(post(uriString, TEST_NETWORK_BUS_BREAKER_ID).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
     }
 
     @Test
