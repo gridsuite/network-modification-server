@@ -84,13 +84,13 @@ public class BranchCreationEntity extends EquipmentCreationEntity {
     }
 
     @Override
-    public void setIdsToNull() {
+    public void cloneWithIdsToNull() {
+        super.cloneWithIdsToNull();
         if (this.getCurrentLimits1() != null) {
-            this.getCurrentLimits1().setId(null);
+            this.currentLimits1 = new CurrentLimitsEntity(null, this.getCurrentLimits1().getPermanentLimit());
         }
         if (this.getCurrentLimits2() != null) {
-            this.getCurrentLimits2().setId(null);
+            this.currentLimits2 = new CurrentLimitsEntity(null, this.getCurrentLimits2().getPermanentLimit());
         }
-        super.setIdsToNull();
     }
 }

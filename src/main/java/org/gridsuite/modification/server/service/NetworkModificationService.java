@@ -197,19 +197,6 @@ public class NetworkModificationService {
         return networkModificationRepository.getModifications(List.of(modificationUuid));
     }
 
-    public void createModificationGroup(UUID sourceGroupUuid, UUID groupUuid, UUID reportUuid) {
-        List<ModificationEntity> entities = networkModificationRepository.getModificationsEntities(List.of(sourceGroupUuid))
-            .stream()
-            .map(networkModificationRepository::getModificationEntityEagerly)
-            .collect(Collectors.toList());
-        entities.forEach(ModificationEntity::setIdsToNull);
-        networkModificationRepository.saveModifications(groupUuid, entities);
-        if (!entities.isEmpty()) {
-            ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
-            sendReport(reportUuid, reporter);
-        }
-    }
-
     private boolean disconnectLineBothSides(Network network, String lineId) {
         Terminal terminal1 = network.getLine(lineId).getTerminal1();
         boolean terminal1Disconnected = !terminal1.isConnected() || terminal1.disconnect();
@@ -1990,21 +1977,30 @@ public class NetworkModificationService {
         networkModificationRepository.moveModifications(groupUuid, modificationsToMove, before);
     }
 
+    public void createModificationGroup(UUID sourceGroupUuid, UUID groupUuid, UUID reportUuid) {
+        try {
+            networkModificationRepository.saveModifications(groupUuid, networkModificationRepository.cloneModificationsEntities(sourceGroupUuid));
+        } catch (NetworkModificationException e) {
+            if (e.getType() == MODIFICATION_GROUP_NOT_FOUND) { // May not exist
+                return;
+            }
+            throw e;
+        }
+    }
+
+    // This function cannot be @Transactional because we clone all modifications resetting their id to null,
+    // which is not allowed by JPA if we still stay in the same Tx.
     public List<UUID> duplicateModifications(UUID targetGroupUuid, List<UUID> modificationsToDuplicate) {
-        // This function cannot be @Transactional because we clone all modifications resetting their id to null,
-        // which is not allowed by JPA if we still stay in the same Tx.
         List<ModificationEntity> newModificationList = new ArrayList<>();
         List<UUID> missingModificationList = new ArrayList<>();
         for (UUID modifyId : modificationsToDuplicate) {
-            Optional<ModificationEntity> clone = this.modificationRepository.findById(modifyId);
-            if (clone.isEmpty()) {
-                missingModificationList.add(modifyId);  // data no more available
-            } else {
-                clone.get().setId(null);
-                newModificationList.add(clone.get());
-            }
+            networkModificationRepository.cloneModificationEntity(modifyId).ifPresentOrElse(
+                newModificationList::add,
+                () -> missingModificationList.add(modifyId)  // data no more available
+            );
         }
         networkModificationRepository.saveModifications(targetGroupUuid, newModificationList);
+
         return missingModificationList;
     }
 
@@ -2021,7 +2017,6 @@ public class NetworkModificationService {
         updatedEntity.setId(modificationUuid);
         updatedEntity.setGroup(generatorModificationEntity.get().getGroup());
         this.networkModificationRepository.updateModification(updatedEntity);
-
     }
 
     private void assertLineSplitWithVoltageLevelInfosNotEmpty(LineSplitWithVoltageLevelInfos lineSplitWithVoltageLevelInfos) {
