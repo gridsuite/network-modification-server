@@ -166,13 +166,6 @@ public class NetworkModificationRepository {
             .toModificationInfos();
     }
 
-    @Transactional(readOnly = true)
-    public Optional<ModificationEntity> getEntityEagerly(UUID modificationUuid) {
-        Optional<ModificationEntity> entity = modificationRepository.findById(modificationUuid);
-        entity.ifPresent(ModificationEntity::toModificationInfos);
-        return entity;
-    }
-
     public Stream<ModificationEntity> getModificationEntityList(UUID groupUuid) {
         return getModificationGroup(groupUuid).getModifications().stream().filter(Objects::nonNull);
     }
@@ -288,8 +281,18 @@ public class NetworkModificationRepository {
     }
 
     @Transactional(readOnly = true)
-    public List<ModificationEntity> getModificationsEntitiesEagerly(@NonNull UUID groupUuid) {
-        return getModificationEntityList(groupUuid).peek(ModificationEntity::toModificationInfos).collect(Collectors.toList());
+    public Optional<ModificationEntity> cloneModificationEntity(UUID modificationUuid) {
+        Optional<ModificationEntity> entity = modificationRepository.findById(modificationUuid);
+        entity.ifPresent(ModificationEntity::cloneWithIdsToNull);
+        return entity;
+    }
+
+    @Transactional(readOnly = true)
+    public List<ModificationEntity> cloneModificationsEntities(@NonNull UUID groupUuid) {
+        return getModificationEntityList(groupUuid).map(entity -> {
+            entity.cloneWithIdsToNull();
+            return entity;
+        }).collect(Collectors.toList());
     }
 
     public ShuntCompensatorCreationEntity createShuntCompensatorEntity(ShuntCompensatorCreationInfos shuntCompensatorCreationInfos) {

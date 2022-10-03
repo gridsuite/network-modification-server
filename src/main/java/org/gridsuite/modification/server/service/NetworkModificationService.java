@@ -197,19 +197,6 @@ public class NetworkModificationService {
         return networkModificationRepository.getModifications(List.of(modificationUuid));
     }
 
-    public void createModificationGroup(UUID sourceGroupUuid, UUID groupUuid, UUID reportUuid) {
-        try {
-            List<ModificationEntity> entities = networkModificationRepository.getModificationsEntitiesEagerly(sourceGroupUuid);
-            entities.forEach(ModificationEntity::cloneWithIdsToNull);
-            networkModificationRepository.saveModifications(groupUuid, entities);
-        } catch (NetworkModificationException e) {
-            if (e.getType() == MODIFICATION_GROUP_NOT_FOUND) { // May not exist
-                return;
-            }
-            throw e;
-        }
-    }
-
     private boolean disconnectLineBothSides(Network network, String lineId) {
         Terminal terminal1 = network.getLine(lineId).getTerminal1();
         boolean terminal1Disconnected = !terminal1.isConnected() || terminal1.disconnect();
@@ -1990,21 +1977,29 @@ public class NetworkModificationService {
         networkModificationRepository.moveModifications(groupUuid, modificationsToMove, before);
     }
 
+    public void createModificationGroup(UUID sourceGroupUuid, UUID groupUuid, UUID reportUuid) {
+        try {
+            networkModificationRepository.saveModifications(groupUuid, networkModificationRepository.cloneModificationsEntities(sourceGroupUuid));
+        } catch (NetworkModificationException e) {
+            if (e.getType() == MODIFICATION_GROUP_NOT_FOUND) { // May not exist
+                return;
+            }
+            throw e;
+        }
+    }
+
     // This function cannot be @Transactional because we clone all modifications resetting their id to null,
     // which is not allowed by JPA if we still stay in the same Tx.
     public List<UUID> duplicateModifications(UUID targetGroupUuid, List<UUID> modificationsToDuplicate) {
         List<ModificationEntity> newModificationList = new ArrayList<>();
         List<UUID> missingModificationList = new ArrayList<>();
         for (UUID modifyId : modificationsToDuplicate) {
-            this.networkModificationRepository.getEntityEagerly(modifyId).ifPresentOrElse(
-                modificationEntity -> {
-                    modificationEntity.cloneWithIdsToNull();
-                    newModificationList.add(modificationEntity);
-                },
+            networkModificationRepository.cloneModificationEntity(modifyId).ifPresentOrElse(
+                newModificationList::add,
                 () -> missingModificationList.add(modifyId)  // data no more available
             );
         }
-        this.networkModificationRepository.saveModifications(targetGroupUuid, newModificationList);
+        networkModificationRepository.saveModifications(targetGroupUuid, newModificationList);
 
         return missingModificationList;
     }
