@@ -8,13 +8,15 @@
 package org.gridsuite.modification.server.utils;
 
 import com.powsybl.iidm.network.*;
-import org.gridsuite.modification.server.dto.BusbarConnectionCreationInfos;
-import org.gridsuite.modification.server.dto.BusbarSectionCreationInfos;
-import org.gridsuite.modification.server.dto.VoltageLevelCreationInfos;
+import org.gridsuite.modification.server.dto.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+/**
+ * @author Slimane Amar <slimane.amar at rte-france.com>
+ */
 public final class ModificationCreation {
 
     private ModificationCreation() {
@@ -39,6 +41,36 @@ public final class ModificationCreation {
             .substationId(substationId)
             .busbarSections(busbarSectionInfos)
             .busbarConnections(busbarConnectionInfos)
+            .build();
+    }
+
+    public static GeneratorCreationInfos getCreationGenerator(String vlId, String generatorId, String generatorName, String busOrBusbarSectionId,
+                                                              String regulatingTerminalId, String regulatingTerminalType, String regulatingTerminalVlId) {
+        return GeneratorCreationInfos.builder()
+            .equipmentId(generatorId)
+            .equipmentName(generatorName)
+            .voltageLevelId(vlId)
+            .busOrBusbarSectionId(busOrBusbarSectionId)
+            .energySource(EnergySource.HYDRO)
+            .minActivePower(100.0)
+            .maxActivePower(600.0)
+            .ratedNominalPower(10.)
+            .activePowerSetpoint(400.)
+            .reactivePowerSetpoint(50.)
+            .voltageRegulationOn(true)
+            .voltageSetpoint(225.)
+            .stepUpTransformerReactance(60.0)
+            .transientReactance(61.0)
+            .minimumReactivePower(20.0)
+            .maximumReactivePower(25.0)
+            .droop(5f)
+            .participate(true)
+            .regulatingTerminalId(regulatingTerminalId)
+            .regulatingTerminalType(regulatingTerminalType)
+            .regulatingTerminalVlId(regulatingTerminalVlId)
+            .reactiveCapabilityCurve(true)
+            .points(Arrays.asList(new ReactiveCapabilityCurveCreationInfos(2.0, 3.0, 3.1),
+                new ReactiveCapabilityCurveCreationInfos(5.6, 9.8, 10.8)))
             .build();
     }
 }
