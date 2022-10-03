@@ -84,4 +84,8 @@ public class ModificationEntity {
     public int hashCode() {
         return getClass().hashCode();
     }
+
+    public void setIdsToNull() {
+        this.setId(null);
+    }
 }

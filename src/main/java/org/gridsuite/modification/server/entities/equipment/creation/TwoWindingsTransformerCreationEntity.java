@@ -103,4 +103,5 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
         }
         return builder;
     }
+
 }

@@ -20,8 +20,6 @@ import org.springframework.stereotype.Service;
 @Service
 public class BuildStoppedPublisherService {
 
-    public static final String CANCEL_MESSAGE = "Build was canceled";
-
     private static final String CATEGORY_BROKER_OUTPUT = BuildStoppedPublisherService.class.getName() + ".output-broker-messages";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CATEGORY_BROKER_OUTPUT);
@@ -29,8 +27,8 @@ public class BuildStoppedPublisherService {
     @Autowired
     private StreamBridge stoppedMessagePublisher;
 
-    public void publishCancel(String receiver) {
-        publish(receiver, CANCEL_MESSAGE);
+    public void publishCancel(String receiver, String cancelMessage) {
+        publish(receiver, cancelMessage);
     }
 
     private void publish(String receiver, String stopMessage) {

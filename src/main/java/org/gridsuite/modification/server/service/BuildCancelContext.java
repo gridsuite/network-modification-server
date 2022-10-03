@@ -10,7 +10,6 @@ import com.powsybl.commons.PowsyblException;
 import lombok.NonNull;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
-import org.springframework.messaging.support.MessageBuilder;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -39,11 +38,5 @@ public class BuildCancelContext {
         MessageHeaders headers = message.getHeaders();
         String receiver = getNonNullHeader(headers, "receiver");
         return new BuildCancelContext(receiver);
-    }
-
-    public Message<String> toMessage() {
-        return MessageBuilder.withPayload("")
-                .setHeader("receiver", receiver)
-                .build();
     }
 }

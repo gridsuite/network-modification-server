@@ -9,6 +9,7 @@ package org.gridsuite.modification.server.entities.equipment.creation;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.gridsuite.modification.server.dto.CurrentLimitsInfos;
 
 import java.util.UUID;
@@ -25,6 +26,7 @@ import javax.persistence.Table;
  * @author Sylvain Bouzols <sylvain.bouzols at rte-france.com>
  */
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
