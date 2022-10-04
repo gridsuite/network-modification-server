@@ -21,7 +21,7 @@ import lombok.experimental.SuperBuilder;
 @Setter
 @ToString(callSuper = true)
 @Schema(description = "Line attach to split line")
-public class LineAttachToSplitLineInfos extends ModificationInfos {
+public class LinesAttachToSplitLinesInfos extends ModificationInfos {
 
     @Schema(description = "line 1 id")
     private String lineToAttachTo1Id;
@@ -32,21 +32,21 @@ public class LineAttachToSplitLineInfos extends ModificationInfos {
     @Schema(description = "attachment line id")
     private String attachedLineId;
 
-    @Schema(description = "if no new voltage level, ID for the existing voltage level")
-    private String existingVoltageLevelId;
+    @Schema(description = "ID for the existing voltage level")
+    private String voltageLevelId;
 
     @Schema(description = "bus bar section or bus id")
-    private String bbsOrBusId;
+    private String bbsBusId;
 
-    @Schema(description = "new line 1 ID")
-    private String newLine1Id;
+    @Schema(description = "replacing line 1 ID")
+    private String replacingLine1Id;
 
-    @Schema(description = "new line 1 name")
-    private String newLine1Name;
+    @Schema(description = "replacing line 1 name")
+    private String replacingLine1Name;
 
-    @Schema(description = "new line 1 ID")
-    private String newLine2Id;
+    @Schema(description = "replacing line 1 ID")
+    private String replacingLine2Id;
 
-    @Schema(description = "new line 2 name")
-    private String newLine2Name;
+    @Schema(description = "replacing line 2 name")
+    private String replacingLine2Name;
 }

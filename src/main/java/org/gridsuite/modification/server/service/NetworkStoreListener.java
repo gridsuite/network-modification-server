@@ -7,24 +7,22 @@
 package org.gridsuite.modification.server.service;
 
 import com.powsybl.iidm.network.*;
-
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.VoltageLevelCreationEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.LineAttachToSplitLineEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.LineAttachToVoltageLevelEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.LineSplitWithVoltageLevelEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.LinesAttachToSplitLinesEntity;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
-import java.util.stream.Collectors;
-
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.entities.equipment.creation.GeneratorCreationEntity.toEmbeddablePoints;
 
@@ -372,18 +370,18 @@ public class NetworkStoreListener implements NetworkListener {
         );
     }
 
-    public void storeLineAttachToSplitLineInfos(LineAttachToSplitLineInfos lineAttachToSplitLineInfos) {
+    public void storeLinesAttachToSplitLinesInfos(LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos) {
 
-        modifications.add(LineAttachToSplitLineEntity.toEntity(
-                lineAttachToSplitLineInfos.getLineToAttachTo1Id(),
-                lineAttachToSplitLineInfos.getLineToAttachTo2Id(),
-                lineAttachToSplitLineInfos.getAttachedLineId(),
-                lineAttachToSplitLineInfos.getExistingVoltageLevelId(),
-                lineAttachToSplitLineInfos.getBbsOrBusId(),
-                lineAttachToSplitLineInfos.getNewLine1Id(),
-                lineAttachToSplitLineInfos.getNewLine1Name(),
-                lineAttachToSplitLineInfos.getNewLine2Id(),
-                lineAttachToSplitLineInfos.getNewLine2Name())
+        modifications.add(LinesAttachToSplitLinesEntity.toEntity(
+                linesAttachToSplitLinesInfos.getLineToAttachTo1Id(),
+                linesAttachToSplitLinesInfos.getLineToAttachTo2Id(),
+                linesAttachToSplitLinesInfos.getAttachedLineId(),
+                linesAttachToSplitLinesInfos.getVoltageLevelId(),
+                linesAttachToSplitLinesInfos.getBbsBusId(),
+                linesAttachToSplitLinesInfos.getReplacingLine1Id(),
+                linesAttachToSplitLinesInfos.getReplacingLine1Name(),
+                linesAttachToSplitLinesInfos.getReplacingLine2Id(),
+                linesAttachToSplitLinesInfos.getReplacingLine2Name())
         );
     }
 }

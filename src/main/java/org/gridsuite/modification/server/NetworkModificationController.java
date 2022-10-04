@@ -384,23 +384,23 @@ public class NetworkModificationController {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping(value = "/networks/{networkUuid}/line-attach-to-split-line", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/networks/{networkUuid}/lines-attach-to-split-lines", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "attach line to a split line")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The line has been attached to split line")})
-    public ResponseEntity<List<ModificationInfos>> lineAttachToSplitLine(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The lines has been attached to split lines")})
+    public ResponseEntity<List<ModificationInfos>> linesAttachToSplitLines(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
                                                                          @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
                                                                          @RequestParam(value = "group", required = false) UUID groupUuid,
                                                                          @RequestParam(value = "reportUuid") UUID reportUuid,
-                                                                         @RequestBody LineAttachToSplitLineInfos lineAttachToSplitLineInfos) {
-        return ResponseEntity.ok().body(networkModificationService.createLineAttachToSplitLine(networkUuid, variantId, groupUuid, reportUuid, lineAttachToSplitLineInfos));
+                                                                         @RequestBody LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos) {
+        return ResponseEntity.ok().body(networkModificationService.createLinesAttachToSplitLines(networkUuid, variantId, groupUuid, reportUuid, linesAttachToSplitLinesInfos));
     }
 
-    @PutMapping(value = "/modifications/{modificationUuid}/line-attach-to-split-line-creation", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/modifications/{modificationUuid}/lines-attach-to-split-lines-creation", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "update line attachment")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The line attachment to split line has been updated")})
-    public ResponseEntity<Void> updateLineAttachToSplitLine(@PathVariable("modificationUuid") UUID modificationUuid,
-                                                            @RequestBody LineAttachToSplitLineInfos lineAttachToSplitLineInfos) {
-        networkModificationService.updateLineAttachToSplitLine(modificationUuid, lineAttachToSplitLineInfos);
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The lines attachment to split lines has been updated")})
+    public ResponseEntity<Void> updateLinesAttachToSplitLines(@PathVariable("modificationUuid") UUID modificationUuid,
+                                                            @RequestBody LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos) {
+        networkModificationService.updateLinesAttachToSplitLines(modificationUuid, linesAttachToSplitLinesInfos);
         return ResponseEntity.ok().build();
     }
 

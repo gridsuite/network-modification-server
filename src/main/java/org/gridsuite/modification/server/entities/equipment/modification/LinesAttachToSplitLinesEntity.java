@@ -9,7 +9,7 @@ package org.gridsuite.modification.server.entities.equipment.modification;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.ModificationType;
-import org.gridsuite.modification.server.dto.LineAttachToSplitLineInfos;
+import org.gridsuite.modification.server.dto.LinesAttachToSplitLinesInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 
 import javax.persistence.Column;
@@ -22,8 +22,8 @@ import javax.persistence.Table;
 @NoArgsConstructor
 @Getter
 @Entity
-@Table(name = "LineAttachToSplitLine")
-public class LineAttachToSplitLineEntity extends ModificationEntity {
+@Table(name = "LinesAttachToSplitLines")
+public class LinesAttachToSplitLinesEntity extends ModificationEntity {
 
     @Column
     private String lineToAttachTo1Id;
@@ -52,8 +52,8 @@ public class LineAttachToSplitLineEntity extends ModificationEntity {
     @Column
     private String newLine2Name;
 
-    public LineAttachToSplitLineEntity(String lineToAttachTo1Id, String lineToAttachTo2Id, String attachedLineId, String existingVoltageLevelId, String bbsOrBusId, String newLine1Id, String newLine1Name, String newLine2Id, String newLine2Name) {
-        super(ModificationType.LINE_ATTACH_TO_SPLIT_LINE);
+    public LinesAttachToSplitLinesEntity(String lineToAttachTo1Id, String lineToAttachTo2Id, String attachedLineId, String existingVoltageLevelId, String bbsOrBusId, String newLine1Id, String newLine1Name, String newLine2Id, String newLine2Name) {
+        super(ModificationType.LINES_ATTACH_TO_SPLIT_LINES);
         this.lineToAttachTo1Id = lineToAttachTo1Id;
         this.lineToAttachTo2Id = lineToAttachTo2Id;
         this.attachedLineId = attachedLineId;
@@ -66,16 +66,16 @@ public class LineAttachToSplitLineEntity extends ModificationEntity {
     }
 
     @Override
-    public LineAttachToSplitLineInfos toModificationInfos() {
-        return toLineAttachToSplitLineInfosBuilder().build();
+    public LinesAttachToSplitLinesInfos toModificationInfos() {
+        return toLinesAttachToSplitLinesInfosBuilder().build();
     }
 
-    public LineAttachToSplitLineInfos toLineAttachToSplitLineInfos() {
-        return toLineAttachToSplitLineInfosBuilder().build();
+    public LinesAttachToSplitLinesInfos toLinesAttachToSplitLinesInfos() {
+        return toLinesAttachToSplitLinesInfosBuilder().build();
     }
 
-    private LineAttachToSplitLineInfos.LineAttachToSplitLineInfosBuilder toLineAttachToSplitLineInfosBuilder() {
-        return LineAttachToSplitLineInfos
+    private LinesAttachToSplitLinesInfos.LinesAttachToSplitLinesInfosBuilder toLinesAttachToSplitLinesInfosBuilder() {
+        return LinesAttachToSplitLinesInfos
                 .builder()
                 .uuid(getId())
                 .date(getDate())
@@ -83,20 +83,20 @@ public class LineAttachToSplitLineEntity extends ModificationEntity {
                 .lineToAttachTo1Id(getLineToAttachTo1Id())
                 .lineToAttachTo2Id(getLineToAttachTo2Id())
                 .attachedLineId(getAttachedLineId())
-                .existingVoltageLevelId(getExistingVoltageLevelId())
-                .bbsOrBusId(getBbsOrBusId())
-                .newLine1Id(getNewLine1Id())
-                .newLine1Name(getNewLine1Name())
-                .newLine2Id(getNewLine2Id())
-                .newLine2Name(getNewLine2Name());
+                .voltageLevelId(getExistingVoltageLevelId())
+                .bbsBusId(getBbsOrBusId())
+                .replacingLine1Id(getNewLine1Id())
+                .replacingLine1Name(getNewLine1Name())
+                .replacingLine2Id(getNewLine2Id())
+                .replacingLine2Name(getNewLine2Name());
     }
 
-    public static LineAttachToSplitLineEntity toEntity(String lineToAttachTo1Id,
+    public static LinesAttachToSplitLinesEntity toEntity(String lineToAttachTo1Id,
                                                           String lineToAttachTo2Id, String attachedLineId,
                                                           String existingVoltageLevelId, String bbsOrBusId,
                                                           String newLine1Id, String newLine1Name, String newLine2Id, String newLine2Name) {
 
-        return new LineAttachToSplitLineEntity(
+        return new LinesAttachToSplitLinesEntity(
             lineToAttachTo1Id, lineToAttachTo2Id, attachedLineId, existingVoltageLevelId,
             bbsOrBusId, newLine1Id, newLine1Name, newLine2Id, newLine2Name
         );

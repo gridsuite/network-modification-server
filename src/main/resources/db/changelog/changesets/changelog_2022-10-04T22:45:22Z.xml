@@ -1,7 +1,7 @@
 <?xml version="1.1" encoding="UTF-8" standalone="no"?>
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-4.1.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
-    <changeSet author="bendaamerahm (generated)" id="1664446369530-7">
-        <createTable tableName="line_attach_to_split_line">
+    <changeSet author="bendaamerahm (generated)" id="1664923534086-7">
+        <createTable tableName="lines_attach_to_split_lines">
             <column name="attached_line_id" type="VARCHAR(255)"/>
             <column name="bbs_or_bus_id" type="VARCHAR(255)"/>
             <column name="existing_voltage_level_id" type="VARCHAR(255)"/>
@@ -12,11 +12,11 @@
             <column name="new_line2id" type="VARCHAR(255)"/>
             <column name="new_line2name" type="VARCHAR(255)"/>
             <column name="id" type="UUID">
-                <constraints nullable="false" primaryKey="true" primaryKeyName="line_attach_to_split_linePK"/>
+                <constraints nullable="false" primaryKey="true" primaryKeyName="lines_attach_to_split_linesPK"/>
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="bendaamerahm (generated)" id="1664446369530-8">
-        <addForeignKeyConstraint baseColumnNames="id" baseTableName="line_attach_to_split_line" constraintName="FKmdog5d3q29d8aniobx4w7o2rj" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
+    <changeSet author="bendaamerahm (generated)" id="1664923534086-8">
+        <addForeignKeyConstraint baseColumnNames="id" baseTableName="lines_attach_to_split_lines" constraintName="FKo7djafxcys66h9bsn5dtwyc0e" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
     </changeSet>
 </databaseChangeLog>

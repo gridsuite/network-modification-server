@@ -2074,13 +2074,13 @@ public class ModificationControllerTest {
 
         testNetworkModificationsCount(TEST_GROUP_ID, 5);
 
-        //Attach lines to split line
-        String attachLineToSplitLineUriString = "/v1/networks/{networkUuid}/line-attach-to-split-line?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
-        LineAttachToSplitLineInfos lineAttachToSplitLineInfos = new LineAttachToSplitLineInfos("line1", "line2", "line3", "v4", "1.A", "nl4", "NewLine4", "nl5", "NewLine4");
+        //Attach lines to split lines
+        String attachLinesToSplitLinesUriString = "/v1/networks/{networkUuid}/lines-attach-to-split-lines?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
+        LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos = new LinesAttachToSplitLinesInfos("line1", "line2", "line3", "v4", "1.A", "nl4", "NewLine4", "nl5", "NewLine4");
 
         mockMvc.perform(
-                        post(attachLineToSplitLineUriString, TEST_NETWORK_ID)
-                                .content(objectWriter.writeValueAsString(lineAttachToSplitLineInfos))
+                        post(attachLinesToSplitLinesUriString, TEST_NETWORK_ID)
+                                .content(objectWriter.writeValueAsString(linesAttachToSplitLinesInfos))
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         testNetworkModificationsCount(TEST_GROUP_ID, 6);
@@ -2604,30 +2604,30 @@ public class ModificationControllerTest {
     public void testLineAttachToSplitLine() throws Exception {
         MvcResult mvcResult;
         String resultAsString;
-        String lineAttachToSplitLineUriString = "/v1/networks/{networkUuid}/line-attach-to-split-line?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
+        String linesAttachToSplitLinesUriString = "/v1/networks/{networkUuid}/lines-attach-to-split-lines?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
 
-        LineAttachToSplitLineInfos lineAttachToAbsentLine1 = new LineAttachToSplitLineInfos("absent_line_id", "line2", "line3", "v4", "1.A", "nl4", "NewLine4", "nl5", "NewLine4");
+        LinesAttachToSplitLinesInfos linesAttachToAbsentLine1 = new LinesAttachToSplitLinesInfos("absent_line_id", "line2", "line3", "v4", "1.A", "nl4", "NewLine4", "nl5", "NewLine4");
 
-        String lineAttachToAbsentLine1Json = objectWriter.writeValueAsString(lineAttachToAbsentLine1);
-        mvcResult = mockMvc.perform(post(lineAttachToSplitLineUriString, TEST_NETWORK_ID).content(lineAttachToAbsentLine1Json).contentType(MediaType.APPLICATION_JSON))
+        String linesAttachToAbsentLine1Json = objectWriter.writeValueAsString(linesAttachToAbsentLine1);
+        mvcResult = mockMvc.perform(post(linesAttachToSplitLinesUriString, TEST_NETWORK_ID).content(linesAttachToAbsentLine1Json).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().is4xxClientError()).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
         assertEquals(resultAsString, new NetworkModificationException(LINE_NOT_FOUND, "absent_line_id").getMessage());
 
-        LineAttachToSplitLineInfos lineAttachToSplitLine = new LineAttachToSplitLineInfos("line1", "line2", "line3", "v4", "1.A", "nl4", "NewLine4", "nl5", "NewLine4");
+        LinesAttachToSplitLinesInfos linesAttachToSplitLines = new LinesAttachToSplitLinesInfos("line1", "line2", "line3", "v4", "1.A", "nl4", "NewLine4", "nl5", "NewLine4");
 
-        String lineAttachToSplitLineJson = objectWriter.writeValueAsString(lineAttachToSplitLine);
-        mvcResult = mockMvc.perform(post(lineAttachToSplitLineUriString, TEST_NETWORK_ID).content(lineAttachToSplitLineJson).contentType(MediaType.APPLICATION_JSON))
+        String linesAttachToSplitLinesJson = objectWriter.writeValueAsString(linesAttachToSplitLines);
+        mvcResult = mockMvc.perform(post(linesAttachToSplitLinesUriString, TEST_NETWORK_ID).content(linesAttachToSplitLinesJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
 
         List<EquipmentModificationInfos> result = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertNotNull(result);
-        Optional<EquipmentModificationInfos> lineAttachToProperSplitLine = result.stream().filter(r -> r.getType() == ModificationType.LINE_ATTACH_TO_SPLIT_LINE).findFirst();
-        assertTrue(lineAttachToProperSplitLine.isPresent());
+        Optional<EquipmentModificationInfos> linesAttachToProperSplitLines = result.stream().filter(r -> r.getType() == ModificationType.LINES_ATTACH_TO_SPLIT_LINES).findFirst();
+        assertTrue(linesAttachToProperSplitLines.isPresent());
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
 
-        mockMvc.perform(put("/v1/modifications/" + lineAttachToProperSplitLine.get().getUuid() + "/line-attach-to-split-line-creation").content(lineAttachToSplitLineJson).contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(put("/v1/modifications/" + linesAttachToProperSplitLines.get().getUuid() + "/lines-attach-to-split-lines-creation").content(linesAttachToSplitLinesJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
     }
