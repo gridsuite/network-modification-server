@@ -11,18 +11,14 @@ import com.fasterxml.jackson.databind.InjectableValues;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.reporter.*;
-import com.powsybl.iidm.modification.topology.AttachNewLineOnLine;
+import com.powsybl.iidm.modification.topology.ConnectVoltageLevelOnLine;
+import com.powsybl.iidm.modification.topology.CreateLineOnLine;
 import com.powsybl.iidm.modification.tripping.BranchTripping;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.Branch.Side;
-import com.powsybl.iidm.network.extensions.ActivePowerControlAdder;
-import com.powsybl.iidm.network.extensions.GeneratorShortCircuitAdder;
-import com.powsybl.iidm.network.extensions.GeneratorStartupAdder;
+import com.powsybl.iidm.network.extensions.*;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.iidm.impl.extensions.GeneratorStartupAdderImpl;
-import com.powsybl.sld.iidm.extensions.BranchStatus;
-import com.powsybl.sld.iidm.extensions.BranchStatusAdder;
-import com.powsybl.sld.iidm.extensions.BusbarSectionPositionAdder;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
 import org.apache.commons.lang3.StringUtils;
@@ -41,19 +37,14 @@ import org.gridsuite.modification.server.entities.equipment.modification.LineSpl
 import org.gridsuite.modification.server.repositories.ModificationGroupRepository;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
-import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
@@ -85,6 +76,8 @@ public class NetworkModificationService {
 
     private final EquipmentInfosService equipmentInfosService;
 
+    private final NotificationService notificationService;
+
     private RestTemplate reportServerRest;
 
     private final ObjectMapper objectMapper;
@@ -92,26 +85,19 @@ public class NetworkModificationService {
     private static final String REPORT_API_VERSION = "v1";
     private static final String DELIMITER = "/";
 
-    private static final String CANCEL_CATEGORY_BROKER_OUTPUT = NetworkModificationService.class.getName() + ".output-broker-messages.cancel";
-    private static final Logger CANCEL_MESSAGE_LOGGER = LoggerFactory.getLogger(CANCEL_CATEGORY_BROKER_OUTPUT);
-
-    private static final String RUN_CATEGORY_BROKER_OUTPUT = NetworkModificationService.class.getName() + ".output-broker-messages.run";
-    private static final Logger RUN_MESSAGE_LOGGER = LoggerFactory.getLogger(RUN_CATEGORY_BROKER_OUTPUT);
-
     private static final String NETWORK_MODIFICATION_REPORT_KEY = "NetworkModification";
     private static final String NETWORK_MODIFICATION_REPORT_NAME = "NetworkModification";
 
-    @Autowired
-    private StreamBridge publisher;
-
     public NetworkModificationService(@Value("${backing-services.report-server.base-uri:http://report-server}") String reportServerURI,
                                       NetworkStoreService networkStoreService, NetworkModificationRepository networkModificationRepository,
-                                      @Lazy EquipmentInfosService equipmentInfosService, ModificationGroupRepository modificationGroupRepository, ModificationRepository modificationRepository) {
+                                      @Lazy EquipmentInfosService equipmentInfosService, ModificationGroupRepository modificationGroupRepository,
+                                      ModificationRepository modificationRepository, NotificationService notificationService) {
         this.networkStoreService = networkStoreService;
         this.networkModificationRepository = networkModificationRepository;
         this.equipmentInfosService = equipmentInfosService;
         this.modificationGroupRepository = modificationGroupRepository;
         this.modificationRepository = modificationRepository;
+        this.notificationService = notificationService;
 
         RestTemplateBuilder restTemplateBuilder = new RestTemplateBuilder();
         reportServerRest = restTemplateBuilder.build();
@@ -209,19 +195,6 @@ public class NetworkModificationService {
 
     public List<ModificationInfos> getModification(UUID modificationUuid) {
         return networkModificationRepository.getModifications(List.of(modificationUuid));
-    }
-
-    public void createModificationGroup(UUID sourceGroupUuid, UUID groupUuid, UUID reportUuid) {
-        List<ModificationEntity> entities = networkModificationRepository.getModificationsEntities(List.of(sourceGroupUuid))
-            .stream()
-            .map(networkModificationRepository::getModificationEntityEagerly)
-            .collect(Collectors.toList());
-        entities.forEach(ModificationEntity::setIdsToNull);
-        networkModificationRepository.saveModifications(groupUuid, entities);
-        if (!entities.isEmpty()) {
-            ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
-            sendReport(reportUuid, reporter);
-        }
     }
 
     private boolean disconnectLineBothSides(Network network, String lineId) {
@@ -1903,21 +1876,11 @@ public class NetworkModificationService {
     ** Build variant : sending message to rabbitmq
      */
     public void buildVariant(UUID networkUuid, BuildInfos buildInfos, String receiver) {
-        sendRunBuildMessage(new BuildExecContext(networkUuid, buildInfos, receiver).toMessage(objectMapper));
-    }
-
-    private void sendRunBuildMessage(Message<String> message) {
-        RUN_MESSAGE_LOGGER.debug("Sending message : {}", message);
-        publisher.send("publishBuild-out-0", message);
+        notificationService.emitBuildMessage(new BuildExecContext(networkUuid, buildInfos, receiver).toMessage(objectMapper));
     }
 
     public void stopBuild(String receiver) {
-        sendCancelBuildMessage(new BuildCancelContext(receiver).toMessage());
-    }
-
-    private void sendCancelBuildMessage(Message<String> message) {
-        CANCEL_MESSAGE_LOGGER.debug("Sending message : {}", message);
-        publisher.send("publishCancelBuild-out-0", message);
+        notificationService.emitCancelBuildMessage(receiver);
     }
 
     public void deleteModifications(UUID groupUuid, Set<UUID> modificationsUuids) {
@@ -2014,21 +1977,30 @@ public class NetworkModificationService {
         networkModificationRepository.moveModifications(groupUuid, modificationsToMove, before);
     }
 
+    public void createModificationGroup(UUID sourceGroupUuid, UUID groupUuid, UUID reportUuid) {
+        try {
+            networkModificationRepository.saveModifications(groupUuid, networkModificationRepository.cloneModificationsEntities(sourceGroupUuid));
+        } catch (NetworkModificationException e) {
+            if (e.getType() == MODIFICATION_GROUP_NOT_FOUND) { // May not exist
+                return;
+            }
+            throw e;
+        }
+    }
+
+    // This function cannot be @Transactional because we clone all modifications resetting their id to null,
+    // which is not allowed by JPA if we still stay in the same Tx.
     public List<UUID> duplicateModifications(UUID targetGroupUuid, List<UUID> modificationsToDuplicate) {
-        // This function cannot be @Transactional because we clone all modifications resetting their id to null,
-        // which is not allowed by JPA if we still stay in the same Tx.
         List<ModificationEntity> newModificationList = new ArrayList<>();
         List<UUID> missingModificationList = new ArrayList<>();
         for (UUID modifyId : modificationsToDuplicate) {
-            Optional<ModificationEntity> clone = this.modificationRepository.findById(modifyId);
-            if (clone.isEmpty()) {
-                missingModificationList.add(modifyId);  // data no more available
-            } else {
-                clone.get().setId(null);
-                newModificationList.add(clone.get());
-            }
+            networkModificationRepository.cloneModificationEntity(modifyId).ifPresentOrElse(
+                newModificationList::add,
+                () -> missingModificationList.add(modifyId)  // data no more available
+            );
         }
         networkModificationRepository.saveModifications(targetGroupUuid, newModificationList);
+
         return missingModificationList;
     }
 
@@ -2045,7 +2017,6 @@ public class NetworkModificationService {
         updatedEntity.setId(modificationUuid);
         updatedEntity.setGroup(generatorModificationEntity.get().getGroup());
         this.networkModificationRepository.updateModification(updatedEntity);
-
     }
 
     private void assertLineSplitWithVoltageLevelInfosNotEmpty(LineSplitWithVoltageLevelInfos lineSplitWithVoltageLevelInfos) {
@@ -2080,7 +2051,7 @@ public class NetworkModificationService {
                     voltageLeveId = lineSplitWithVoltageLevelInfos.getExistingVoltageLevelId();
                 }
 
-                CopyAttachVoltageLevelOnLine algo = new CopyAttachVoltageLevelOnLine(
+                ConnectVoltageLevelOnLine algo = new ConnectVoltageLevelOnLine(
                     lineSplitWithVoltageLevelInfos.getPercent(),
                     voltageLeveId,
                     lineSplitWithVoltageLevelInfos.getBbsOrBusId(),
@@ -2090,7 +2061,7 @@ public class NetworkModificationService {
                     lineSplitWithVoltageLevelInfos.getNewLine2Name(),
                     line);
 
-                algo.apply(network);
+                algo.apply(network, false, reporter);
 
                 subReporter.report(Report.builder()
                     .withKey("lineSplit")
@@ -2198,7 +2169,7 @@ public class NetworkModificationService {
                         .setG2(attachmentLineInfos.getShuntConductance2() != null ? attachmentLineInfos.getShuntConductance2() : 0.0)
                         .setB2(attachmentLineInfos.getShuntSusceptance2() != null ? attachmentLineInfos.getShuntSusceptance2() : 0.0);
 
-                AttachNewLineOnLine algo = new AttachNewLineOnLine(
+                CreateLineOnLine algo = new CreateLineOnLine(
                         lineAttachToVoltageLevelInfos.getPercent(),
                         voltageLevelId,
                         lineAttachToVoltageLevelInfos.getBbsOrBusId(),
@@ -2215,7 +2186,7 @@ public class NetworkModificationService {
                         lineAdder
                 );
 
-                algo.apply(network);
+                algo.apply(network, false, reporter);
 
                 subReporter.report(Report.builder()
                         .withKey("lineAttach")

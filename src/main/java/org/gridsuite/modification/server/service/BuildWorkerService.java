@@ -15,13 +15,16 @@ import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.context.annotation.Bean;
 import org.springframework.messaging.Message;
-import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -36,10 +39,6 @@ import java.util.function.Consumer;
 public class BuildWorkerService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BuildWorkerService.class);
-
-    private static final String CATEGORY_BROKER_OUTPUT = BuildWorkerService.class.getName() + ".output-broker-messages";
-
-    private static final Logger OUTPUT_MESSAGE_LOGGER = LoggerFactory.getLogger(CATEGORY_BROKER_OUTPUT);
 
     public static final String CANCEL_MESSAGE = "Build was canceled";
     public static final String FAIL_MESSAGE = "Build has failed";
@@ -61,7 +60,7 @@ public class BuildWorkerService {
     private Lock lockRunAndCancel = new ReentrantLock();
 
     @Autowired
-    private StreamBridge resultBuildMessagePublisher;
+    private NotificationService notificationService;
 
     public BuildWorkerService(@NonNull NetworkModificationService networkModificationService,
                               @NonNull ObjectMapper objectMapper,
@@ -121,11 +120,7 @@ public class BuildWorkerService {
             if (future != null && (result = future.get()) != null) {  // result available
                 Set<String> allSubstationsIds = new HashSet<>();
                 result.forEach(r -> allSubstationsIds.addAll(r.getSubstationIds()));
-                Message<String> sendMessage = MessageBuilder
-                    .withPayload(String.join(",", allSubstationsIds))
-                    .setHeader("receiver", execContext.getReceiver())
-                    .build();
-                sendResultBuildMessage(sendMessage);
+                notificationService.emitBuildResultMessage(String.join(",", allSubstationsIds), execContext.getReceiver());
                 LOGGER.info("Build complete on node '{}'", execContext.getReceiver());
             } else {  // result not available : stop build request
                 if (cancelBuildRequests.get(execContext.getReceiver()) != null) {
@@ -177,10 +172,5 @@ public class BuildWorkerService {
         } finally {
             lockRunAndCancel.unlock();
         }
-    }
-
-    private void sendResultBuildMessage(Message<String> message) {
-        OUTPUT_MESSAGE_LOGGER.debug("Sending message : {}", message);
-        resultBuildMessagePublisher.send("publishResultBuild-out-0", message);
     }
 }
