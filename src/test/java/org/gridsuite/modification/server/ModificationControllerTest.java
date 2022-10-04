@@ -2606,7 +2606,6 @@ public class ModificationControllerTest {
         String resultAsString;
         String lineAttachToSplitLineUriString = "/v1/networks/{networkUuid}/line-attach-to-split-line?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
 
-
         LineAttachToSplitLineInfos lineAttachToAbsentLine1 = new LineAttachToSplitLineInfos("absent_line_id", "line2", "line3", "v4", "1.A", "nl4", "NewLine4", "nl5", "NewLine4");
 
         String lineAttachToAbsentLine1Json = objectWriter.writeValueAsString(lineAttachToAbsentLine1);
@@ -2616,7 +2615,6 @@ public class ModificationControllerTest {
         assertEquals(resultAsString, new NetworkModificationException(LINE_NOT_FOUND, "absent_line_id").getMessage());
 
         LineAttachToSplitLineInfos lineAttachToSplitLine = new LineAttachToSplitLineInfos("line1", "line2", "line3", "v4", "1.A", "nl4", "NewLine4", "nl5", "NewLine4");
-
 
         String lineAttachToSplitLineJson = objectWriter.writeValueAsString(lineAttachToSplitLine);
         mvcResult = mockMvc.perform(post(lineAttachToSplitLineUriString, TEST_NETWORK_ID).content(lineAttachToSplitLineJson).contentType(MediaType.APPLICATION_JSON))
@@ -2629,11 +2627,9 @@ public class ModificationControllerTest {
         assertTrue(lineAttachToProperSplitLine.isPresent());
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
 
-
         mockMvc.perform(put("/v1/modifications/" + lineAttachToProperSplitLine.get().getUuid() + "/line-attach-to-split-line-creation").content(lineAttachToSplitLineJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
-
     }
 
     private void testNetworkModificationsCount(UUID groupUuid, int actualSize) throws Exception {
