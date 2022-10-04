@@ -2083,7 +2083,7 @@ public class ModificationControllerTest {
                                 .content(objectWriter.writeValueAsString(lineAttachToSplitLineInfos))
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        testNetworkModificationsCount(TEST_GROUP_ID, 4);
+        testNetworkModificationsCount(TEST_GROUP_ID, 6);
 
         //create a lineSplit
         String lineSplitUriString = "/v1/networks/{networkUuid}/line-splits?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
@@ -2105,14 +2105,14 @@ public class ModificationControllerTest {
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 7);
+        testNetworkModificationsCount(TEST_GROUP_ID, 8);
 
         //test copy group
         UUID newGroupUuid = UUID.randomUUID();
         uriString = "/v1/groups?groupUuid=" + newGroupUuid + "&duplicateFrom=" + TEST_GROUP_ID + "&reportUuid=" + UUID.randomUUID();
         mockMvc.perform(post(uriString)).andExpect(status().isOk());
 
-        testNetworkModificationsCount(newGroupUuid, 7);
+        testNetworkModificationsCount(newGroupUuid, 8);
     }
 
     @Test
