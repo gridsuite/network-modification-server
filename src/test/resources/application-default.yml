@@ -6,7 +6,9 @@ spring:
       hibernate:
         format_sql: true
         generate_statistics: true
-
+    hibernate:
+      #to turn off schema validation that fails (because of clob types) and blocks tests even if the the schema is compatible
+      ddl-auto: none
 logging:
   level:
     org.springframework.orm.jpa: DEBUG
