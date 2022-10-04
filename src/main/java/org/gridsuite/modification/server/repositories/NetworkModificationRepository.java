@@ -10,7 +10,7 @@ import com.powsybl.commons.PowsyblException;
 import com.powsybl.iidm.network.Country;
 import com.powsybl.iidm.network.EnergySource;
 import com.powsybl.iidm.network.LoadType;
-import org.gridsuite.modification.server.ModificationType;
+import lombok.NonNull;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.entities.equipment.modification.BranchStatusModificationEntity;
@@ -125,20 +125,6 @@ public class NetworkModificationRepository {
                 .collect(Collectors.toList());
     }
 
-    public ModificationEntity getModificationEntityEagerly(ModificationEntity modificationEntity) {
-        String type = modificationEntity.getType();
-        UUID modificationUuid = modificationEntity.getId();
-        if (type.equals(ModificationType.LINE_CREATION.name())) {
-            return modificationRepository.findLineCreationById(modificationUuid);
-        } else if (type.equals(ModificationType.TWO_WINDINGS_TRANSFORMER_CREATION.name())) {
-            return modificationRepository.find2wtCreationById(modificationUuid);
-        } else if (type.equals(ModificationType.LINE_ATTACH_TO_VOLTAGE_LEVEL.name())) {
-            return modificationRepository.findLineAttachToVoltageLevelEntityCreationById(modificationUuid);
-        } else {
-            return modificationEntity;
-        }
-    }
-
     @Transactional
     public List<ModificationInfos> getModifications(List<UUID> uuids) {
         return this.modificationRepository.findAllById(uuids).stream()
@@ -180,7 +166,7 @@ public class NetworkModificationRepository {
             .toModificationInfos();
     }
 
-    public Stream<ModificationEntity> getModificationList(UUID groupUuid) {
+    public Stream<ModificationEntity> getModificationEntityList(UUID groupUuid) {
         return getModificationGroup(groupUuid).getModifications().stream().filter(Objects::nonNull);
     }
 
@@ -203,7 +189,7 @@ public class NetworkModificationRepository {
     @Transactional // To have the find and delete in the same transaction (atomic)
     public int deleteModifications(UUID groupUuid, Set<UUID> uuids) {
         ModificationGroupEntity groupEntity = getModificationGroup(groupUuid);
-        List<ModificationEntity> modifications = getModificationList(groupUuid)
+        List<ModificationEntity> modifications = getModificationEntityList(groupUuid)
                 .filter(m -> uuids.contains(m.getId()))
                 .collect(Collectors.toList());
         modifications.forEach(groupEntity::removeModification);
@@ -291,7 +277,22 @@ public class NetworkModificationRepository {
 
     @Transactional(readOnly = true)
     public List<ModificationEntity> getModificationsEntities(List<UUID> groupUuids) {
-        return groupUuids.stream().flatMap(this::getModificationList).collect(Collectors.toList());
+        return groupUuids.stream().flatMap(this::getModificationEntityList).collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<ModificationEntity> cloneModificationEntity(UUID modificationUuid) {
+        Optional<ModificationEntity> entity = modificationRepository.findById(modificationUuid);
+        entity.ifPresent(ModificationEntity::cloneWithIdsToNull);
+        return entity;
+    }
+
+    @Transactional(readOnly = true)
+    public List<ModificationEntity> cloneModificationsEntities(@NonNull UUID groupUuid) {
+        return getModificationEntityList(groupUuid).map(entity -> {
+            entity.cloneWithIdsToNull();
+            return entity;
+        }).collect(Collectors.toList());
     }
 
     public ShuntCompensatorCreationEntity createShuntCompensatorEntity(ShuntCompensatorCreationInfos shuntCompensatorCreationInfos) {
