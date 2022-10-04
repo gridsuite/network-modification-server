@@ -1863,6 +1863,13 @@ public class NetworkModificationService {
                         }
                         break;
 
+                        case LINE_ATTACH_TO_SPLIT_LINE: {
+                            LineAttachToSplitLineInfos lineAttachToSplitLineInfos = (LineAttachToSplitLineInfos) infos;
+                            List<ModificationInfos> modificationInfos = execLineAttachToSplitLine(listener, lineAttachToSplitLineInfos, reportUuid);
+                            allModificationsInfos.addAll(modificationInfos);
+                        }
+                        break;
+
                         default:
                     }
                 } catch (PowsyblException e) {
@@ -2223,7 +2230,7 @@ public class NetworkModificationService {
         Network network = listener.getNetwork();
 
         ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
-        Reporter subReporter = reporter.createSubReporter("lineAttachToVoltageLevel", "Line attach to split line");
+        Reporter subReporter = reporter.createSubReporter("lineAttachToSplitLine", "Line attach to split line");
 
         List<ModificationInfos> inspectable = doAction(listener, () -> {
             if (listener.isApplyModifications()) {

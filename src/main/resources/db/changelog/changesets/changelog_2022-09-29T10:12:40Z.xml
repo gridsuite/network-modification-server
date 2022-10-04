@@ -19,22 +19,4 @@
     <changeSet author="bendaamerahm (generated)" id="1664446369530-8">
         <addForeignKeyConstraint baseColumnNames="id" baseTableName="line_attach_to_split_line" constraintName="FKmdog5d3q29d8aniobx4w7o2rj" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
     </changeSet>
-    <changeSet author="bendaamerahm (generated)" id="1664446369530-1">
-        <dropForeignKeyConstraint baseTableName="two_windings_transformer_creation" constraintName="current_limits_id1_fk"/>
-    </changeSet>
-    <changeSet author="bendaamerahm (generated)" id="1664446369530-2">
-        <addForeignKeyConstraint baseColumnNames="current_limits_id1" baseTableName="two_windings_transformer_creation" constraintName="current_limits_id1_fk" referencedColumnNames="id" referencedTableName="current_limits"/>
-    </changeSet>
-    <changeSet author="bendaamerahm (generated)" id="1664446369530-3">
-        <dropForeignKeyConstraint baseTableName="two_windings_transformer_creation" constraintName="current_limits_id2_fk"/>
-    </changeSet>
-    <changeSet author="bendaamerahm (generated)" id="1664446369530-4">
-        <addForeignKeyConstraint baseColumnNames="current_limits_id2" baseTableName="two_windings_transformer_creation" constraintName="current_limits_id2_fk" referencedColumnNames="id" referencedTableName="current_limits"/>
-    </changeSet>
-    <changeSet author="bendaamerahm (generated)" id="1664446369530-5">
-        <dropNotNullConstraint columnDataType="int" columnName="horiz_pos" tableName="voltage_level_creation_entity_busbar_sections"/>
-    </changeSet>
-    <changeSet author="bendaamerahm (generated)" id="1664446369530-6">
-        <dropNotNullConstraint columnDataType="int" columnName="vert_pos" tableName="voltage_level_creation_entity_busbar_sections"/>
-    </changeSet>
 </databaseChangeLog>

@@ -395,7 +395,7 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.createLineAttachToSplitLine(networkUuid, variantId, groupUuid, reportUuid, lineAttachToSplitLineInfos));
     }
 
-    @PutMapping(value = "/modifications/{modificationUuid}/line-attach-to-split-line", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/modifications/{modificationUuid}/line-attach-to-split-line-creation", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "update line attachment")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The line attachment to split line has been updated")})
     public ResponseEntity<Void> updateLineAttachToSplitLine(@PathVariable("modificationUuid") UUID modificationUuid,

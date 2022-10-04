@@ -53,7 +53,7 @@ public class LineAttachToSplitLineEntity extends ModificationEntity {
     private String newLine2Name;
 
     public LineAttachToSplitLineEntity(String lineToAttachTo1Id, String lineToAttachTo2Id, String attachedLineId, String existingVoltageLevelId, String bbsOrBusId, String newLine1Id, String newLine1Name, String newLine2Id, String newLine2Name) {
-        super(ModificationType.LINE_ATTACH_TO_VOLTAGE_LEVEL);
+        super(ModificationType.LINE_ATTACH_TO_SPLIT_LINE);
         this.lineToAttachTo1Id = lineToAttachTo1Id;
         this.lineToAttachTo2Id = lineToAttachTo2Id;
         this.attachedLineId = attachedLineId;
