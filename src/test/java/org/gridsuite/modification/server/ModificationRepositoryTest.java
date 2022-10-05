@@ -753,11 +753,11 @@ public class ModificationRepositoryTest {
 
         assertThat(getLinesAttachToSplitLinesModification(modificationInfos.get(0).getUuid()),
                 MatcherLinesAttachToSplitLinesInfos.createMatcherLinesAttachToSplitLinesInfos(
-                        linesAttachToEntity1.toLinesAttachToSplitLinesInfos()));
+                        linesAttachToEntity1.toModificationInfos()));
 
         assertThat(getLinesAttachToSplitLinesModification(modificationInfos.get(1).getUuid()),
                 MatcherLinesAttachToSplitLinesInfos.createMatcherLinesAttachToSplitLinesInfos(
-                        linesAttachToEntity2.toLinesAttachToSplitLinesInfos()));
+                        linesAttachToEntity2.toModificationInfos()));
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModifications(TEST_GROUP_ID, Set.of(linesAttachToEntity1.getId(),
