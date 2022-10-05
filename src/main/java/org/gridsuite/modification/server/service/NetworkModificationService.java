@@ -2242,7 +2242,7 @@ public class NetworkModificationService {
                         .withLineC2Name(linesAttachToSplitLinesInfos.getReplacingLine2Name())
                         .build();
 
-                algo.apply(network, subReporter);
+                algo.apply(network, true, subReporter);
             }
 
             listener.storeLinesAttachToSplitLinesInfos(linesAttachToSplitLinesInfos);
