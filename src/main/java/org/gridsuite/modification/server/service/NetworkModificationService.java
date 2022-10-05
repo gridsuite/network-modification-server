@@ -2244,6 +2244,7 @@ public class NetworkModificationService {
 
                 algo.apply(network, subReporter);
             }
+
             listener.storeLinesAttachToSplitLinesInfos(linesAttachToSplitLinesInfos);
         }, LINE_ATTACH_ERROR, reportUuid, reporter, subReporter).stream().map(ModificationInfos.class::cast)
                 .collect(Collectors.toList());
