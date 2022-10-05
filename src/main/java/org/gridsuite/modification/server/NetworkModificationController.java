@@ -385,7 +385,7 @@ public class NetworkModificationController {
     }
 
     @PostMapping(value = "/networks/{networkUuid}/lines-attach-to-split-lines", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "attach line to a split line")
+    @Operation(summary = "attach lines to a split lines")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The lines has been attached to split lines")})
     public ResponseEntity<List<ModificationInfos>> linesAttachToSplitLines(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
                                                                          @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
@@ -396,7 +396,7 @@ public class NetworkModificationController {
     }
 
     @PutMapping(value = "/modifications/{modificationUuid}/lines-attach-to-split-lines-creation", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "update line attachment")
+    @Operation(summary = "update attach lines to split lines")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The lines attachment to split lines has been updated")})
     public ResponseEntity<Void> updateLinesAttachToSplitLines(@PathVariable("modificationUuid") UUID modificationUuid,
                                                             @RequestBody LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos) {

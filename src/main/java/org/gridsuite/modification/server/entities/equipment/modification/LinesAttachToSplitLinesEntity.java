@@ -65,15 +65,6 @@ public class LinesAttachToSplitLinesEntity extends ModificationEntity {
         this.replacingLine2Name = replacingLine2Name;
     }
 
-    @Override
-    public LinesAttachToSplitLinesInfos toModificationInfos() {
-        return toLinesAttachToSplitLinesInfosBuilder().build();
-    }
-
-    public LinesAttachToSplitLinesInfos toLinesAttachToSplitLinesInfos() {
-        return toLinesAttachToSplitLinesInfosBuilder().build();
-    }
-
     private LinesAttachToSplitLinesInfos.LinesAttachToSplitLinesInfosBuilder toLinesAttachToSplitLinesInfosBuilder() {
         return LinesAttachToSplitLinesInfos
                 .builder()

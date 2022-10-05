@@ -2229,20 +2229,6 @@ public class NetworkModificationService {
 
         List<ModificationInfos> inspectable = doAction(listener, () -> {
             if (listener.isApplyModifications()) {
-                Line line1 = network.getLine(linesAttachToSplitLinesInfos.getLineToAttachTo1Id());
-                Line line2 = network.getLine(linesAttachToSplitLinesInfos.getLineToAttachTo2Id());
-                Line line = network.getLine(linesAttachToSplitLinesInfos.getAttachedLineId());
-                if (line1 == null) {
-                    throw new NetworkModificationException(LINE_NOT_FOUND, linesAttachToSplitLinesInfos.getLineToAttachTo1Id());
-                }
-                if (line2 == null) {
-                    throw new NetworkModificationException(LINE_NOT_FOUND, linesAttachToSplitLinesInfos.getLineToAttachTo2Id());
-                }
-
-                if (line == null) {
-                    throw new NetworkModificationException(LINE_NOT_FOUND, linesAttachToSplitLinesInfos.getAttachedLineId());
-                }
-
                 String voltageLevelId = linesAttachToSplitLinesInfos.getVoltageLevelId();
                 ReplaceTeePointByVoltageLevelOnLineBuilder builder = new ReplaceTeePointByVoltageLevelOnLineBuilder();
                 ReplaceTeePointByVoltageLevelOnLine algo = builder.withLine1ZId(linesAttachToSplitLinesInfos.getLineToAttachTo1Id())
@@ -2256,16 +2242,8 @@ public class NetworkModificationService {
                         .withLineC2Name(linesAttachToSplitLinesInfos.getReplacingLine2Name())
                         .build();
 
-                algo.apply(network);
-
-                subReporter.report(Report.builder()
-                        .withKey("linesAttachToSplitLines")
-                        .withDefaultMessage("Line ${id} was attached")
-                        .withValue("id", linesAttachToSplitLinesInfos.getAttachedLineId())
-                        .withSeverity(TypedValue.INFO_SEVERITY)
-                        .build());
+                algo.apply(network, subReporter);
             }
-
             listener.storeLinesAttachToSplitLinesInfos(linesAttachToSplitLinesInfos);
         }, LINE_ATTACH_ERROR, reportUuid, reporter, subReporter).stream().map(ModificationInfos.class::cast)
                 .collect(Collectors.toList());
