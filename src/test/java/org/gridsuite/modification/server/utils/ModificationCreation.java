@@ -69,7 +69,7 @@ public final class ModificationCreation {
             .regulatingTerminalType(regulatingTerminalType)
             .regulatingTerminalVlId(regulatingTerminalVlId)
             .reactiveCapabilityCurve(true)
-            .points(Arrays.asList(new ReactiveCapabilityCurveCreationInfos(2.0, 3.0, 3.1),
+            .reactiveCapabilityCurvePoints(Arrays.asList(new ReactiveCapabilityCurveCreationInfos(2.0, 3.0, 3.1),
                 new ReactiveCapabilityCurveCreationInfos(5.6, 9.8, 10.8)))
             .build();
     }
