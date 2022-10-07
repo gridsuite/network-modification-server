@@ -12,6 +12,7 @@ import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.creation.TwoWindingsTransformerCreationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.VoltageLevelCreationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.LineAttachToVoltageLevelEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.LineSplitWithVoltageLevelEntity;
@@ -234,21 +235,7 @@ public class NetworkStoreListener implements NetworkListener {
     }
 
     public void storeTwoWindingsTransformerCreation(TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
-        modifications.add(this.modificationRepository.createTwoWindingsTransformerEntity(twoWindingsTransformerCreationInfos.getEquipmentId(),
-                twoWindingsTransformerCreationInfos.getEquipmentName(),
-                twoWindingsTransformerCreationInfos.getSeriesResistance(),
-                twoWindingsTransformerCreationInfos.getSeriesReactance(),
-                twoWindingsTransformerCreationInfos.getMagnetizingConductance(),
-                twoWindingsTransformerCreationInfos.getMagnetizingSusceptance(),
-                twoWindingsTransformerCreationInfos.getRatedVoltage1(),
-                twoWindingsTransformerCreationInfos.getRatedVoltage2(),
-                twoWindingsTransformerCreationInfos.getVoltageLevelId1(),
-                twoWindingsTransformerCreationInfos.getBusOrBusbarSectionId1(),
-                twoWindingsTransformerCreationInfos.getVoltageLevelId2(),
-                twoWindingsTransformerCreationInfos.getBusOrBusbarSectionId2(),
-                twoWindingsTransformerCreationInfos.getCurrentLimits1() != null ? twoWindingsTransformerCreationInfos.getCurrentLimits1().getPermanentLimit() : null,
-                twoWindingsTransformerCreationInfos.getCurrentLimits2() != null ? twoWindingsTransformerCreationInfos.getCurrentLimits2().getPermanentLimit() : null)
-        );
+        modifications.add(TwoWindingsTransformerCreationEntity.toEntity(twoWindingsTransformerCreationInfos));
     }
 
     public void storeShuntCompensatorCreation(ShuntCompensatorCreationInfos shuntCompensatorCreationInfos) {

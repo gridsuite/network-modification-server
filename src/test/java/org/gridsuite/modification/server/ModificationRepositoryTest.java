@@ -6,10 +6,7 @@
  */
 package org.gridsuite.modification.server;
 
-import com.powsybl.iidm.network.Country;
-import com.powsybl.iidm.network.EnergySource;
-import com.powsybl.iidm.network.LoadType;
-import com.powsybl.iidm.network.SwitchKind;
+import com.powsybl.iidm.network.*;
 import com.vladmihalcea.sql.SQLStatementCountValidator;
 import nl.jqno.equalsverifier.EqualsVerifier;
 import org.gridsuite.modification.server.dto.*;
@@ -401,12 +398,22 @@ public class ModificationRepositoryTest {
 
     @Test
     public void testTwoWindingsTransformerCreation() {
-        var createTwoWindingsTransformerEntity1 = networkModificationRepository.createTwoWindingsTransformerEntity("id2wt1", "name2wt1", 1.0, 1.1, 10.0, 11.0, 100.0, 100.1, "vlId11", "busId11", "vlId12", "busId12", null, null);
-        var createTwoWindingsTransformerEntity2 = networkModificationRepository.createTwoWindingsTransformerEntity("id2wt2", "name2wt2", 2.0, 1.2, 11.0, 12.0, 101.0, 100.2, "vlId11", "busId11", "vlId12", "busId12", 480.0, 480.0);
-        var createTwoWindingsTransformerEntity3 = networkModificationRepository.createTwoWindingsTransformerEntity("id2wt3", "name2wt3", 1.0, 1.1, 10.0, 11.0, 100.0, 100.1, "vlId11", "busId11", "vlId12", "busId12", 485.0, 480.0);
-        var createTwoWindingsTransformerEntity4 = networkModificationRepository.createTwoWindingsTransformerEntity("id2wt4", "name2wt4", 2.0, 1.2, 11.0, 12.0, 101.0, 100.2, "vlId11", "busId11", "vlId12", "busId12", null, 490.0);
+        List<TapChangerStepCreationEmbeddable> phaseTapChangerStepCreationEmbeddables = new ArrayList<>();
+        phaseTapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.PHASE, 1, 1, 0, 0, 0, 0, 0.));
+        phaseTapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.PHASE, 2, 1, 0, 0, 0, 0, 0.));
+        phaseTapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.PHASE, 3, 1, 0, 0, 0, 0, 0.));
+        var createTwoWindingsTransformerEntity1 = networkModificationRepository.createTwoWindingsTransformerEntity("id2wt1", "name2wt1", 1.0, 1.1, 10.0, 11.0, 100.0, 100.1, -1, "vlId11", "busId11", "vlId12", "busId12", null, null,  1, 2, false, null, null, null, null, PhaseTapChanger.RegulationMode.CURRENT_LIMITER, null, null, null, null, null, null, null, null, null, null, phaseTapChangerStepCreationEmbeddables);
+
+        List<TapChangerStepCreationEmbeddable> ratioTapChangerStepCreationEmbeddables = new ArrayList<>();
+        ratioTapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.RATIO, 5, 1, 0, 0, 0, 0, null));
+        ratioTapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.RATIO, 6, 1, 0, 0, 0, 0, null));
+        ratioTapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.RATIO, 7, 1, 0, 0, 0, 0, null));
+        ratioTapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.RATIO, 8, 1, 0, 0, 0, 0, null));
+        var createTwoWindingsTransformerEntity2 = networkModificationRepository.createTwoWindingsTransformerEntity("id2wt2", "name2wt2", 2.0, 1.2, 11.0, 12.0, 101.0, 100.2, -1, "vlId11", "busId11", "vlId12", "busId12", 480.0, 480.0, null, null, null, null, null, null, null, null, null,  5, 6, true, 1., "v2load", "v2", "LOAD", true, 50., ratioTapChangerStepCreationEmbeddables);
+        var createTwoWindingsTransformerEntity3 = networkModificationRepository.createTwoWindingsTransformerEntity("id2wt3", "name2wt3", 1.0, 1.1, 10.0, 11.0, 100.0, 100.1, -1, "vlId11", "busId11", "vlId12", "busId12", 485.0, 480.0, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+        var createTwoWindingsTransformerEntity4 = networkModificationRepository.createTwoWindingsTransformerEntity("id2wt4", "name2wt4", 2.0, 1.2, 11.0, 12.0, 101.0, 100.2, -1, "vlId11", "busId11", "vlId12", "busId12", null, 490.0, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(createTwoWindingsTransformerEntity1, createTwoWindingsTransformerEntity2, createTwoWindingsTransformerEntity3, createTwoWindingsTransformerEntity4));
-        assertRequestsCount(1, 14, 4, 0);
+        assertRequestsCount(1, 21, 4, 0);
 
         List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
         assertEquals(4, modificationInfos.size());
@@ -424,7 +431,7 @@ public class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModifications(TEST_GROUP_ID, Set.of(createTwoWindingsTransformerEntity1.getId(), createTwoWindingsTransformerEntity2.getId()));
-        assertRequestsCount(4, 0, 2, 6);
+        assertRequestsCount(4, 0, 2, 8);
 
         SQLStatementCountValidator.reset();
         assertEquals(2, networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
@@ -432,7 +439,7 @@ public class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
-        assertRequestsCount(5, 0, 0, 8);
+        assertRequestsCount(5, 0, 0, 10);
 
         assertThrows(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage(),
             NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, true, true)

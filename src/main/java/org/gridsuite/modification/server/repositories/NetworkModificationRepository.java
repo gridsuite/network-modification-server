@@ -10,6 +10,7 @@ import com.powsybl.commons.PowsyblException;
 import com.powsybl.iidm.network.Country;
 import com.powsybl.iidm.network.EnergySource;
 import com.powsybl.iidm.network.LoadType;
+import com.powsybl.iidm.network.PhaseTapChanger;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
@@ -258,13 +259,51 @@ public class NetworkModificationRepository {
     }
 
     public EquipmentCreationEntity createTwoWindingsTransformerEntity(String id, String name, double seriesResistance, double seriesReactance,
-                                                    double magnetizingConductance, double magnetizingSusceptance, double ratedVoltage1, double ratedVoltage2,
-                                                    String voltageLevelId1, String busOrBusbarSectionId1, String voltageLevelId2, String busOrBusbarSectionId2,
-                                                    Double permanentCurrentLimit1, Double permanentCurrentLimit2) {
+                                                                      double magnetizingConductance, double magnetizingSusceptance, double ratedVoltage1, double ratedVoltage2, double ratedS,
+                                                                      String voltageLevelId1, String busOrBusbarSectionId1, String voltageLevelId2, String busOrBusbarSectionId2,
+                                                                      Double permanentCurrentLimit1, Double permanentCurrentLimit2,
+                                                                      Integer phaseTapChangerLowTapPosition,
+                                                                      Integer phaseTapChangerTapPosition,
+                                                                      Boolean phaseTapChangerRegulating,
+                                                                      Double phaseTapChangerTargetDeadband,
+                                                                      String phaseTapChangerTerminalRefConnectableId,
+                                                                      String phaseTapChangerTerminalRefVoltageLevelId,
+                                                                      String phaseTapChangerTerminalRefType,
+                                                                      PhaseTapChanger.RegulationMode phaseTapChangerRegulationMode,
+                                                                      Double phaseTapChangerRegulationValue,
+                                                                      Integer ratioTapChangerLowTapPosition,
+                                                                      Integer ratioTapChangerTapPosition,
+                                                                      Boolean ratioTapChangerRegulating,
+                                                                      Double ratioTapChangerTargetDeadband,
+                                                                      String ratioTapChangerTerminalRefConnectableId,
+                                                                      String ratioTapChangerTerminalRefVoltageLevelId,
+                                                                      String ratioTapChangerTerminalRefType,
+                                                                      Boolean ratioTapChangerLoadTapChangingCapabilities,
+                                                                      Double ratioTapChangerTargetV,
+                                                                      List<TapChangerStepCreationEmbeddable> tapChangerSteps) {
         return new TwoWindingsTransformerCreationEntity(id, name, seriesResistance, seriesReactance,
-                magnetizingConductance, magnetizingSusceptance, ratedVoltage1, ratedVoltage2,
+                magnetizingConductance, magnetizingSusceptance, ratedVoltage1, ratedVoltage2, ratedS,
                 voltageLevelId1, busOrBusbarSectionId1, voltageLevelId2, busOrBusbarSectionId2,
-                permanentCurrentLimit1, permanentCurrentLimit2);
+                permanentCurrentLimit1, permanentCurrentLimit2,
+                phaseTapChangerLowTapPosition,
+                phaseTapChangerTapPosition,
+                phaseTapChangerRegulating,
+                phaseTapChangerTargetDeadband,
+                phaseTapChangerTerminalRefConnectableId,
+                phaseTapChangerTerminalRefVoltageLevelId,
+                phaseTapChangerTerminalRefType,
+                phaseTapChangerRegulationMode,
+                phaseTapChangerRegulationValue,
+                ratioTapChangerLowTapPosition,
+                ratioTapChangerTapPosition,
+                ratioTapChangerRegulating,
+                ratioTapChangerTargetDeadband,
+                ratioTapChangerTerminalRefConnectableId,
+                ratioTapChangerTerminalRefVoltageLevelId,
+                ratioTapChangerTerminalRefType,
+                ratioTapChangerLoadTapChangingCapabilities,
+                ratioTapChangerTargetV,
+                tapChangerSteps);
     }
 
     public EquipmentCreationEntity createSubstationEntity(String id, String name, Country country) {
