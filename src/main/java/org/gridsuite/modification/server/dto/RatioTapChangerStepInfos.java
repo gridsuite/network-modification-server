@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
@@ -13,7 +14,9 @@ import lombok.experimental.SuperBuilder;
  * @author Hugo Marcellin <hugo.marcelin at rte-france.com>
  */
 @SuperBuilder
+@NoArgsConstructor
 @Getter
 @Setter
 @ToString(callSuper = true)
+@Schema(description = "RatioTapChangerStep attributes")
 public class RatioTapChangerStepInfos extends TapChangerStepInfos { }
