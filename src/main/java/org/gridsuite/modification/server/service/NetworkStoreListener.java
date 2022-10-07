@@ -7,24 +7,30 @@
 package org.gridsuite.modification.server.service;
 
 import com.powsybl.iidm.network.*;
-
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.TwoWindingsTransformerCreationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.VoltageLevelCreationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.LineAttachToVoltageLevelEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.LineSplitWithVoltageLevelEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.LinesAttachToSplitLinesEntity;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
-import java.util.stream.Collectors;
-
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.entities.equipment.creation.GeneratorCreationEntity.toEmbeddablePoints;
 
@@ -355,6 +361,21 @@ public class NetworkStoreListener implements NetworkListener {
                 lineAttachToVoltageLevelInfos.getNewLine1Name(),
                 lineAttachToVoltageLevelInfos.getNewLine2Id(),
                 lineAttachToVoltageLevelInfos.getNewLine2Name())
+        );
+    }
+
+    public void storeLinesAttachToSplitLinesInfos(LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos) {
+
+        modifications.add(LinesAttachToSplitLinesEntity.toEntity(
+                linesAttachToSplitLinesInfos.getLineToAttachTo1Id(),
+                linesAttachToSplitLinesInfos.getLineToAttachTo2Id(),
+                linesAttachToSplitLinesInfos.getAttachedLineId(),
+                linesAttachToSplitLinesInfos.getVoltageLevelId(),
+                linesAttachToSplitLinesInfos.getBbsBusId(),
+                linesAttachToSplitLinesInfos.getReplacingLine1Id(),
+                linesAttachToSplitLinesInfos.getReplacingLine1Name(),
+                linesAttachToSplitLinesInfos.getReplacingLine2Id(),
+                linesAttachToSplitLinesInfos.getReplacingLine2Name())
         );
     }
 }

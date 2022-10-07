@@ -10,13 +10,25 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.InjectableValues;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.commons.PowsyblException;
-import com.powsybl.commons.reporter.*;
+import com.powsybl.commons.reporter.Report;
+import com.powsybl.commons.reporter.Reporter;
+import com.powsybl.commons.reporter.ReporterModel;
+import com.powsybl.commons.reporter.ReporterModelDeserializer;
+import com.powsybl.commons.reporter.ReporterModelJsonModule;
+import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.iidm.modification.topology.ConnectVoltageLevelOnLine;
 import com.powsybl.iidm.modification.topology.CreateLineOnLine;
+import com.powsybl.iidm.modification.topology.ReplaceTeePointByVoltageLevelOnLine;
+import com.powsybl.iidm.modification.topology.ReplaceTeePointByVoltageLevelOnLineBuilder;
 import com.powsybl.iidm.modification.tripping.BranchTripping;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.Branch.Side;
-import com.powsybl.iidm.network.extensions.*;
+import com.powsybl.iidm.network.extensions.ActivePowerControlAdder;
+import com.powsybl.iidm.network.extensions.BranchStatus;
+import com.powsybl.iidm.network.extensions.BranchStatusAdder;
+import com.powsybl.iidm.network.extensions.BusbarSectionPositionAdder;
+import com.powsybl.iidm.network.extensions.GeneratorShortCircuitAdder;
+import com.powsybl.iidm.network.extensions.GeneratorStartupAdder;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.iidm.impl.extensions.GeneratorStartupAdderImpl;
 import groovy.lang.Binding;
@@ -34,6 +46,7 @@ import org.gridsuite.modification.server.entities.equipment.modification.Equipme
 import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.LineAttachToVoltageLevelEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.LineSplitWithVoltageLevelEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.LinesAttachToSplitLinesEntity;
 import org.gridsuite.modification.server.repositories.ModificationGroupRepository;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
@@ -51,7 +64,17 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -195,19 +218,6 @@ public class NetworkModificationService {
 
     public List<ModificationInfos> getModification(UUID modificationUuid) {
         return networkModificationRepository.getModifications(List.of(modificationUuid));
-    }
-
-    public void createModificationGroup(UUID sourceGroupUuid, UUID groupUuid, UUID reportUuid) {
-        List<ModificationEntity> entities = networkModificationRepository.getModificationsEntities(List.of(sourceGroupUuid))
-            .stream()
-            .map(networkModificationRepository::getModificationEntityEagerly)
-            .collect(Collectors.toList());
-        entities.forEach(ModificationEntity::setIdsToNull);
-        networkModificationRepository.saveModifications(groupUuid, entities);
-        if (!entities.isEmpty()) {
-            ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
-            sendReport(reportUuid, reporter);
-        }
     }
 
     private boolean disconnectLineBothSides(Network network, String lineId) {
@@ -1911,6 +1921,13 @@ public class NetworkModificationService {
                         }
                         break;
 
+                        case LINES_ATTACH_TO_SPLIT_LINES: {
+                            LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos = (LinesAttachToSplitLinesInfos) infos;
+                            List<ModificationInfos> modificationInfos = execLinesAttachToSplitLines(listener, linesAttachToSplitLinesInfos, reportUuid);
+                            allModificationsInfos.addAll(modificationInfos);
+                        }
+                        break;
+
                         default:
                     }
                 } catch (PowsyblException e) {
@@ -2037,21 +2054,30 @@ public class NetworkModificationService {
         networkModificationRepository.moveModifications(groupUuid, modificationsToMove, before);
     }
 
+    public void createModificationGroup(UUID sourceGroupUuid, UUID groupUuid, UUID reportUuid) {
+        try {
+            networkModificationRepository.saveModifications(groupUuid, networkModificationRepository.cloneModificationsEntities(sourceGroupUuid));
+        } catch (NetworkModificationException e) {
+            if (e.getType() == MODIFICATION_GROUP_NOT_FOUND) { // May not exist
+                return;
+            }
+            throw e;
+        }
+    }
+
+    // This function cannot be @Transactional because we clone all modifications resetting their id to null,
+    // which is not allowed by JPA if we still stay in the same Tx.
     public List<UUID> duplicateModifications(UUID targetGroupUuid, List<UUID> modificationsToDuplicate) {
-        // This function cannot be @Transactional because we clone all modifications resetting their id to null,
-        // which is not allowed by JPA if we still stay in the same Tx.
         List<ModificationEntity> newModificationList = new ArrayList<>();
         List<UUID> missingModificationList = new ArrayList<>();
         for (UUID modifyId : modificationsToDuplicate) {
-            Optional<ModificationEntity> clone = this.modificationRepository.findById(modifyId);
-            if (clone.isEmpty()) {
-                missingModificationList.add(modifyId);  // data no more available
-            } else {
-                clone.get().setId(null);
-                newModificationList.add(clone.get());
-            }
+            networkModificationRepository.cloneModificationEntity(modifyId).ifPresentOrElse(
+                newModificationList::add,
+                () -> missingModificationList.add(modifyId)  // data no more available
+            );
         }
         networkModificationRepository.saveModifications(targetGroupUuid, newModificationList);
+
         return missingModificationList;
     }
 
@@ -2068,7 +2094,6 @@ public class NetworkModificationService {
         updatedEntity.setId(modificationUuid);
         updatedEntity.setGroup(generatorModificationEntity.get().getGroup());
         this.networkModificationRepository.updateModification(updatedEntity);
-
     }
 
     private void assertLineSplitWithVoltageLevelInfosNotEmpty(LineSplitWithVoltageLevelInfos lineSplitWithVoltageLevelInfos) {
@@ -2183,6 +2208,13 @@ public class NetworkModificationService {
         }
     }
 
+    private void assertLinesAttachToSplitLinesInfosNotEmpty(LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos) {
+        if (linesAttachToSplitLinesInfos == null) {
+            throw new NetworkModificationException(LINE_ATTACH_ERROR,
+                    "Missing required attributes to attach lines to a split lines");
+        }
+    }
+
     private List<ModificationInfos> execLineAttachToVoltageLevel(NetworkStoreListener listener,
                                                                  LineAttachToVoltageLevelInfos lineAttachToVoltageLevelInfos,
                                                                  UUID reportUuid) {
@@ -2258,12 +2290,56 @@ public class NetworkModificationService {
         return inspectable;
     }
 
+    private List<ModificationInfos> execLinesAttachToSplitLines(NetworkStoreListener listener,
+                                                              LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos,
+                                                              UUID reportUuid) {
+        Network network = listener.getNetwork();
+
+        ReporterModel reporter = new ReporterModel(NETWORK_MODIFICATION_REPORT_KEY, NETWORK_MODIFICATION_REPORT_NAME);
+        Reporter subReporter = reporter.createSubReporter("linesAttachToSplitLines", "Lines attach to split lines");
+
+        List<ModificationInfos> inspectable = doAction(listener, () -> {
+            if (listener.isApplyModifications()) {
+                String voltageLevelId = linesAttachToSplitLinesInfos.getVoltageLevelId();
+                ReplaceTeePointByVoltageLevelOnLineBuilder builder = new ReplaceTeePointByVoltageLevelOnLineBuilder();
+                ReplaceTeePointByVoltageLevelOnLine algo = builder.withLine1ZId(linesAttachToSplitLinesInfos.getLineToAttachTo1Id())
+                        .withLineZ2Id(linesAttachToSplitLinesInfos.getLineToAttachTo2Id())
+                        .withLineZPId(linesAttachToSplitLinesInfos.getAttachedLineId())
+                        .withVoltageLevelId(voltageLevelId)
+                        .withBbsOrBusId(linesAttachToSplitLinesInfos.getBbsBusId())
+                        .withLine1CId(linesAttachToSplitLinesInfos.getReplacingLine1Id())
+                        .withLine1CName(linesAttachToSplitLinesInfos.getReplacingLine1Name())
+                        .withLineC2Id(linesAttachToSplitLinesInfos.getReplacingLine2Id())
+                        .withLineC2Name(linesAttachToSplitLinesInfos.getReplacingLine2Name())
+                        .build();
+
+                algo.apply(network, true, subReporter);
+            }
+
+            listener.storeLinesAttachToSplitLinesInfos(linesAttachToSplitLinesInfos);
+        }, LINE_NOT_FOUND, reportUuid, reporter, subReporter).stream().map(ModificationInfos.class::cast)
+                .collect(Collectors.toList());
+
+        if (!inspectable.isEmpty()) {
+            inspectable.addAll(listener.getDeletions());
+        }
+        return inspectable;
+    }
+
     public List<ModificationInfos> createLineAttachToVoltageLevel(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid,
                                                                   LineAttachToVoltageLevelInfos lineAttachToVoltageLevelInfos) {
         assertLineAttachToVoltageLevelInfosNotEmpty(lineAttachToVoltageLevelInfos);
         ModificationNetworkInfos networkInfos = getNetworkModificationInfos(networkUuid, variantId);
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
         return execLineAttachToVoltageLevel(listener, lineAttachToVoltageLevelInfos, reportUuid);
+    }
+
+    public List<ModificationInfos> createLinesAttachToSplitLines(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid,
+                                                               LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos) {
+        assertLinesAttachToSplitLinesInfosNotEmpty(linesAttachToSplitLinesInfos);
+        ModificationNetworkInfos networkInfos = getNetworkModificationInfos(networkUuid, variantId);
+        NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
+        return execLinesAttachToSplitLines(listener, linesAttachToSplitLinesInfos, reportUuid);
     }
 
     public void updateLineAttachToVoltageLevel(UUID modificationUuid, LineAttachToVoltageLevelInfos lineAttachToVoltageLevelInfos) {
@@ -2306,6 +2382,31 @@ public class NetworkModificationService {
         if (lineCreation != null) {
             this.modificationRepository.delete(lineCreation);
         }
+    }
+
+    public void updateLinesAttachToSplitLines(UUID modificationUuid, LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos) {
+        assertLinesAttachToSplitLinesInfosNotEmpty(linesAttachToSplitLinesInfos);
+
+        Optional<ModificationEntity> linesAttachToSplitLinesEntity = this.modificationRepository.findById(modificationUuid);
+
+        if (linesAttachToSplitLinesEntity.isEmpty()) {
+            throw new NetworkModificationException(LINE_ATTACH_NOT_FOUND, "Line attach to split line not found");
+        }
+
+        LinesAttachToSplitLinesEntity updatedEntity = LinesAttachToSplitLinesEntity.toEntity(
+                linesAttachToSplitLinesInfos.getLineToAttachTo1Id(),
+                linesAttachToSplitLinesInfos.getLineToAttachTo2Id(),
+                linesAttachToSplitLinesInfos.getAttachedLineId(),
+                linesAttachToSplitLinesInfos.getVoltageLevelId(),
+                linesAttachToSplitLinesInfos.getBbsBusId(),
+                linesAttachToSplitLinesInfos.getReplacingLine1Id(),
+                linesAttachToSplitLinesInfos.getReplacingLine1Name(),
+                linesAttachToSplitLinesInfos.getReplacingLine2Id(),
+                linesAttachToSplitLinesInfos.getReplacingLine2Name()
+        );
+        updatedEntity.setId(modificationUuid);
+        updatedEntity.setGroup(linesAttachToSplitLinesEntity.get().getGroup());
+        this.networkModificationRepository.updateModification(updatedEntity);
     }
 
     private Identifiable<?> getEquipmentByIdentifiableType(Network network, String type, String equipmentId) {
