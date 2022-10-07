@@ -19,26 +19,7 @@ import lombok.experimental.SuperBuilder;
 @Setter
 @ToString(callSuper = true)
 @Schema(description = "PhaseTapChangerStep attributes")
-public class PhaseTapChangerStepInfos {
-
-    @Schema(description = "index")
-    private int index;
-
-    @Schema(description = "rho")
-    private double rho;
-
-    @Schema(description = "r")
-    private double r;
-
-    @Schema(description = "x")
-    private double x;
-
-    @Schema(description = "g")
-    private double g;
-
-    @Schema(description = "b")
-    private double b;
-
+public class PhaseTapChangerStepInfos extends TapChangerStepInfos {
     @Schema(description = "alpha")
     private double alpha;
 }

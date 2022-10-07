@@ -288,7 +288,7 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
             builder.currentLimits2(getCurrentLimits2().toCurrentLimitsInfos());
         }
 
-        if (ratioTapChangerSteps.size() > 0) {
+        if (!ratioTapChangerSteps.isEmpty()) {
             List<RatioTapChangerStepInfos> ratioTapChangerStepInfos = ratioTapChangerSteps.stream().map(step -> RatioTapChangerStepInfos.builder().index(step.getIndex()).rho(step.getRho()).r(step.getR()).x(step.getX()).g(step.getG()).b(step.getB()).build()).collect(Collectors.toList());
             builder.ratioTapChanger(RatioTapChangerInfos.builder()
                     .lowTapPosition(getRatioTapChangerLowTapPosition())
@@ -304,7 +304,7 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
                     .build());
         }
 
-        if (phaseTapChangerSteps.size() > 0) {
+        if (!phaseTapChangerSteps.isEmpty()) {
             List<PhaseTapChangerStepInfos> phaseTapChangerStepInfos = phaseTapChangerSteps.stream().map(step -> PhaseTapChangerStepInfos.builder().index(step.getIndex()).rho(step.getRho()).r(step.getR()).x(step.getX()).g(step.getG()).b(step.getB()).alpha(step.getAlpha()).build()).collect(Collectors.toList());
             builder.phaseTapChanger(PhaseTapChangerInfos.builder()
                     .lowTapPosition(getPhaseTapChangerLowTapPosition())
