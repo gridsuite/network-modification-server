@@ -198,6 +198,7 @@ public class NetworkModificationRepository {
         return count;
     }
 
+    @Transactional
     public void updateModification(ModificationEntity modificationEntity) {
         this.modificationRepository.save(modificationEntity);
     }

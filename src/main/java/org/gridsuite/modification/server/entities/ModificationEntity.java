@@ -20,6 +20,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>

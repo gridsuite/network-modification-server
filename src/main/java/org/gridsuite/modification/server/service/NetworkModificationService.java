@@ -549,6 +549,7 @@ public class NetworkModificationService {
             .add();
     }
 
+
     public void updateGeneratorCreation(GeneratorCreationInfos generatorCreationInfos, UUID modificationUuid) {
         assertGeneratorCreationInfosNotEmpty(generatorCreationInfos);
 
@@ -933,7 +934,7 @@ public class NetworkModificationService {
                     .add();
         }
 
-        if (generatorCreationInfos.getReactiveCapabilityCurvePoints() != null) {
+        if (generatorCreationInfos.getReactiveCapabilityCurve()) {
             ReactiveCapabilityCurveAdder adder = generator.newReactiveCapabilityCurve();
             generatorCreationInfos.getReactiveCapabilityCurvePoints()
                     .forEach(point -> adder.beginPoint()
@@ -1003,7 +1004,7 @@ public class NetworkModificationService {
                     .add();
         }
 
-        if (generatorCreationInfos.getReactiveCapabilityCurvePoints() != null) {
+        if (generatorCreationInfos.getReactiveCapabilityCurve()) {
             ReactiveCapabilityCurveAdder adder = generator.newReactiveCapabilityCurve();
             generatorCreationInfos.getReactiveCapabilityCurvePoints()
                     .forEach(point -> adder.beginPoint()
