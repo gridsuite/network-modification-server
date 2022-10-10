@@ -141,6 +141,11 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
                         value.getP()))
                 .collect(Collectors.toList()) : null;
 
+        MinMaxReactiveLimits minMaxReactiveLimits = null;
+        if (getMinimumReactivePower() != null && getMaximumReactivePower() != null) {
+            minMaxReactiveLimits = new MinMaxReactiveLimits(getMinimumReactivePower(), getMaximumReactivePower());
+        }
+
         return GeneratorCreationInfos
             .builder()
             .uuid(getId())
@@ -159,7 +164,7 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
             .voltageRegulationOn(isVoltageRegulationOn())
             .voltageSetpoint(getVoltageSetpoint())
             .marginalCost(getMarginalCost())
-            .minMaxReactiveLimits(new MinMaxReactiveLimits(getMinimumReactivePower(), getMaximumReactivePower()))
+            .minMaxReactiveLimits(minMaxReactiveLimits)
             .participate(getParticipate())
             .droop(getDroop())
             .reactiveCapabilityCurvePoints(points)
