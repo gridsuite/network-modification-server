@@ -960,7 +960,7 @@ public class NetworkModificationService {
                     .add();
         }
 
-        if (generatorCreationInfos.getReactiveCapabilityCurve()) {
+        if (Boolean.TRUE.equals(generatorCreationInfos.getReactiveCapabilityCurve())) {
             ReactiveCapabilityCurveAdder adder = generator.newReactiveCapabilityCurve();
             generatorCreationInfos.getReactiveCapabilityCurvePoints()
                     .forEach(point -> adder.beginPoint()
@@ -1030,7 +1030,7 @@ public class NetworkModificationService {
                     .add();
         }
 
-        if (generatorCreationInfos.getReactiveCapabilityCurve()) {
+        if (Boolean.TRUE.equals(generatorCreationInfos.getReactiveCapabilityCurve())) {
             ReactiveCapabilityCurveAdder adder = generator.newReactiveCapabilityCurve();
             generatorCreationInfos.getReactiveCapabilityCurvePoints()
                     .forEach(point -> adder.beginPoint()
