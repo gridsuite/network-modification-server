@@ -161,7 +161,7 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
             .ratedNominalPower(getRatedNominalPower())
             .activePowerSetpoint(getActivePowerSetpoint())
             .reactivePowerSetpoint(getReactivePowerSetpoint())
-            .voltageRegulationOn(isVoltageRegulationOn())
+            .voltageRegulatorOn(isVoltageRegulationOn())
             .voltageSetpoint(getVoltageSetpoint())
             .marginalCost(getMarginalCost())
             .minMaxReactiveLimits(minMaxReactiveLimits)

@@ -602,7 +602,7 @@ public class NetworkModificationService {
                 generatorCreationInfos.getRatedNominalPower(),
                 generatorCreationInfos.getActivePowerSetpoint(),
                 generatorCreationInfos.getReactivePowerSetpoint(),
-                generatorCreationInfos.isVoltageRegulationOn(),
+                generatorCreationInfos.isVoltageRegulatorOn(),
                 generatorCreationInfos.getVoltageSetpoint(),
                 generatorCreationInfos.getMarginalCost(),
                 minimumReactivePower,
@@ -939,7 +939,7 @@ public class NetworkModificationService {
             .setRatedS(generatorCreationInfos.getRatedNominalPower() != null ? generatorCreationInfos.getRatedNominalPower() : Double.NaN)
             .setTargetP(generatorCreationInfos.getActivePowerSetpoint())
             .setTargetQ(generatorCreationInfos.getReactivePowerSetpoint() != null ? generatorCreationInfos.getReactivePowerSetpoint() : Double.NaN)
-            .setVoltageRegulatorOn(generatorCreationInfos.isVoltageRegulationOn())
+            .setVoltageRegulatorOn(generatorCreationInfos.isVoltageRegulatorOn())
             .setTargetV(generatorCreationInfos.getVoltageSetpoint() != null ? generatorCreationInfos.getVoltageSetpoint() : Double.NaN)
             .add();
 
@@ -1006,7 +1006,7 @@ public class NetworkModificationService {
             .setRatedS(generatorCreationInfos.getRatedNominalPower() != null ? generatorCreationInfos.getRatedNominalPower() : Double.NaN)
             .setTargetP(generatorCreationInfos.getActivePowerSetpoint())
             .setTargetQ(generatorCreationInfos.getReactivePowerSetpoint() != null ? generatorCreationInfos.getReactivePowerSetpoint() : Double.NaN)
-            .setVoltageRegulatorOn(generatorCreationInfos.isVoltageRegulationOn())
+            .setVoltageRegulatorOn(generatorCreationInfos.isVoltageRegulatorOn())
             .setTargetV(generatorCreationInfos.getVoltageSetpoint() != null ? generatorCreationInfos.getVoltageSetpoint() : Double.NaN)
             .add();
 

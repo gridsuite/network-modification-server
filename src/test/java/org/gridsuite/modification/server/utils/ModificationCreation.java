@@ -58,7 +58,7 @@ public final class ModificationCreation {
             .ratedNominalPower(10.)
             .activePowerSetpoint(400.)
             .reactivePowerSetpoint(50.)
-            .voltageRegulationOn(true)
+            .voltageRegulatorOn(true)
             .voltageSetpoint(225.)
             .stepUpTransformerReactance(60.0)
             .transientReactance(61.0)

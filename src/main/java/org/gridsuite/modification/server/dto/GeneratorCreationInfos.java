@@ -46,7 +46,7 @@ public class GeneratorCreationInfos extends InjectionCreationInfos {
     private Double reactivePowerSetpoint;
 
     @Schema(description = "Voltage regulation on")
-    private boolean voltageRegulationOn;
+    private boolean voltageRegulatorOn;
 
     @Schema(description = "Voltage set point")
     private Double voltageSetpoint;

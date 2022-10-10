@@ -42,7 +42,7 @@ public class MatcherGeneratorCreationInfos extends MatcherModificationInfos<Gene
             && Objects.equals(m.getRatedNominalPower(), reference.getRatedNominalPower())
             && m.getActivePowerSetpoint() == reference.getActivePowerSetpoint()
             && Objects.equals(m.getReactivePowerSetpoint(), reference.getReactivePowerSetpoint())
-            && m.isVoltageRegulationOn() == reference.isVoltageRegulationOn()
+            && m.isVoltageRegulatorOn() == reference.isVoltageRegulatorOn()
             && Objects.equals(m.getVoltageSetpoint(), reference.getVoltageSetpoint())
             && Objects.equals(m.getDroop(), reference.getDroop())
             && Objects.equals(m.getParticipate(), reference.getParticipate())

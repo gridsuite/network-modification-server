@@ -208,7 +208,7 @@ public class NetworkStoreListener implements NetworkListener {
             generatorCreationInfos.getRatedNominalPower(),
             generatorCreationInfos.getActivePowerSetpoint(),
             generatorCreationInfos.getReactivePowerSetpoint(),
-            generatorCreationInfos.isVoltageRegulationOn(),
+            generatorCreationInfos.isVoltageRegulatorOn(),
             generatorCreationInfos.getVoltageSetpoint(),
             generatorCreationInfos.getMarginalCost(),
             minimumReactivePower,
