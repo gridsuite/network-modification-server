@@ -11,6 +11,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.GeneratorCreationInfos;
+import org.gridsuite.modification.server.dto.MinMaxReactiveLimits;
 import org.gridsuite.modification.server.dto.ReactiveCapabilityCurveCreationInfos;
 
 import javax.persistence.*;
@@ -158,11 +159,10 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
             .voltageRegulationOn(isVoltageRegulationOn())
             .voltageSetpoint(getVoltageSetpoint())
             .marginalCost(getMarginalCost())
-            .minimumReactivePower(this.getMinimumReactivePower())
+            .minMaxReactiveLimits(new MinMaxReactiveLimits(getMinimumReactivePower(), getMaximumReactivePower()))
             .participate(getParticipate())
             .droop(getDroop())
-            .maximumReactivePower(this.getMaximumReactivePower())
-            .points(points)
+            .reactiveCapabilityCurvePoints(points)
             .regulatingTerminalId(getRegulatingTerminalId())
             .regulatingTerminalType(getRegulatingTerminalType())
             .regulatingTerminalVlId(getRegulatingTerminalVlId())

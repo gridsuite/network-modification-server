@@ -191,6 +191,13 @@ public class NetworkStoreListener implements NetworkListener {
     }
 
     public void storeGeneratorCreation(GeneratorCreationInfos generatorCreationInfos) {
+        Double minimumReactivePower = null;
+        Double maximumReactivePower = null;
+        if (generatorCreationInfos.getMinMaxReactiveLimits() != null) {
+            minimumReactivePower = generatorCreationInfos.getMinMaxReactiveLimits().getMinimumReactivePower();
+            maximumReactivePower = generatorCreationInfos.getMinMaxReactiveLimits().getMaximumReactivePower();
+        }
+
         modifications.add(this.modificationRepository.createGeneratorEntity(generatorCreationInfos.getEquipmentId(),
             generatorCreationInfos.getEquipmentName(),
             generatorCreationInfos.getEnergySource(),
@@ -204,8 +211,8 @@ public class NetworkStoreListener implements NetworkListener {
             generatorCreationInfos.isVoltageRegulationOn(),
             generatorCreationInfos.getVoltageSetpoint(),
             generatorCreationInfos.getMarginalCost(),
-            generatorCreationInfos.getMinimumReactivePower(),
-            generatorCreationInfos.getMaximumReactivePower(),
+            minimumReactivePower,
+            maximumReactivePower,
             generatorCreationInfos.getParticipate() != null && generatorCreationInfos.getParticipate(),
             generatorCreationInfos.getDroop(),
             generatorCreationInfos.getTransientReactance(),
@@ -214,7 +221,7 @@ public class NetworkStoreListener implements NetworkListener {
             generatorCreationInfos.getRegulatingTerminalType(),
             generatorCreationInfos.getRegulatingTerminalVlId(),
             generatorCreationInfos.getReactiveCapabilityCurve() == null || generatorCreationInfos.getReactiveCapabilityCurve(),
-            toEmbeddablePoints(generatorCreationInfos.getPoints())));
+            toEmbeddablePoints(generatorCreationInfos.getReactiveCapabilityCurvePoints())));
     }
 
     public void storeEquipmentDeletion(String equipmentId, String equipmentType) {

@@ -584,6 +584,12 @@ public class NetworkModificationService {
         if (!generatorModificationEntity.isPresent()) {
             throw new NetworkModificationException(CREATE_GENERATOR_ERROR, "Generator creation not found");
         }
+        Double minimumReactivePower = null;
+        Double maximumReactivePower = null;
+        if (generatorCreationInfos.getMinMaxReactiveLimits() != null) {
+            minimumReactivePower = generatorCreationInfos.getMinMaxReactiveLimits().getMinimumReactivePower();
+            maximumReactivePower = generatorCreationInfos.getMinMaxReactiveLimits().getMaximumReactivePower();
+        }
 
         EquipmentCreationEntity updatedEntity = this.networkModificationRepository.createGeneratorEntity(
                 generatorCreationInfos.getEquipmentId(),
@@ -599,8 +605,8 @@ public class NetworkModificationService {
                 generatorCreationInfos.isVoltageRegulationOn(),
                 generatorCreationInfos.getVoltageSetpoint(),
                 generatorCreationInfos.getMarginalCost(),
-                generatorCreationInfos.getMinimumReactivePower(),
-                generatorCreationInfos.getMaximumReactivePower(),
+                minimumReactivePower,
+                maximumReactivePower,
                 generatorCreationInfos.getParticipate(),
                 generatorCreationInfos.getDroop(),
                 generatorCreationInfos.getTransientReactance(),
@@ -609,7 +615,7 @@ public class NetworkModificationService {
                 generatorCreationInfos.getRegulatingTerminalType(),
                 generatorCreationInfos.getRegulatingTerminalVlId(),
                 generatorCreationInfos.getReactiveCapabilityCurve(),
-                toEmbeddablePoints(generatorCreationInfos.getPoints()));
+                toEmbeddablePoints(generatorCreationInfos.getReactiveCapabilityCurvePoints()));
 
         updatedEntity.setId(modificationUuid);
         updatedEntity.setGroup(generatorModificationEntity.get().getGroup());
@@ -960,9 +966,9 @@ public class NetworkModificationService {
                     .add();
         }
 
-        if (generatorCreationInfos.getPoints() != null) {
+        if (generatorCreationInfos.getReactiveCapabilityCurvePoints() != null) {
             ReactiveCapabilityCurveAdder adder = generator.newReactiveCapabilityCurve();
-            generatorCreationInfos.getPoints()
+            generatorCreationInfos.getReactiveCapabilityCurvePoints()
                     .forEach(point -> adder.beginPoint()
                             .setMaxQ(point.getQmaxP())
                             .setMinQ(point.getQminP())
@@ -971,9 +977,9 @@ public class NetworkModificationService {
             adder.add();
         }
 
-        if (generatorCreationInfos.getMinimumReactivePower() != null && generatorCreationInfos.getMaximumReactivePower() != null) {
-            generator.newMinMaxReactiveLimits().setMinQ(generatorCreationInfos.getMinimumReactivePower())
-                    .setMaxQ(generatorCreationInfos.getMaximumReactivePower())
+        if (generatorCreationInfos.getMinMaxReactiveLimits() != null) {
+            generator.newMinMaxReactiveLimits().setMinQ(generatorCreationInfos.getMinMaxReactiveLimits().getMinimumReactivePower())
+                    .setMaxQ(generatorCreationInfos.getMinMaxReactiveLimits().getMaximumReactivePower())
                     .add();
         }
 
@@ -1024,15 +1030,15 @@ public class NetworkModificationService {
                     .add();
         }
 
-        if (generatorCreationInfos.getMaximumReactivePower() != null && generatorCreationInfos.getMinimumReactivePower() != null) {
-            generator.newMinMaxReactiveLimits().setMinQ(generatorCreationInfos.getMinimumReactivePower())
-                    .setMaxQ(generatorCreationInfos.getMaximumReactivePower())
+        if (generatorCreationInfos.getMinMaxReactiveLimits() != null) {
+            generator.newMinMaxReactiveLimits().setMinQ(generatorCreationInfos.getMinMaxReactiveLimits().getMinimumReactivePower())
+                    .setMaxQ(generatorCreationInfos.getMinMaxReactiveLimits().getMaximumReactivePower())
                     .add();
         }
 
-        if (generatorCreationInfos.getPoints() != null) {
+        if (generatorCreationInfos.getReactiveCapabilityCurvePoints() != null) {
             ReactiveCapabilityCurveAdder adder = generator.newReactiveCapabilityCurve();
-            generatorCreationInfos.getPoints()
+            generatorCreationInfos.getReactiveCapabilityCurvePoints()
                     .forEach(point -> adder.beginPoint()
                             .setMaxQ(point.getQmaxP())
                             .setMinQ(point.getQminP())

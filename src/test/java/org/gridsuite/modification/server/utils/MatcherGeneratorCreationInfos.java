@@ -8,6 +8,7 @@ package org.gridsuite.modification.server.utils;
 
 import org.apache.commons.lang3.StringUtils;
 import org.gridsuite.modification.server.dto.GeneratorCreationInfos;
+import org.gridsuite.modification.server.dto.MinMaxReactiveLimits;
 import org.gridsuite.modification.server.dto.ReactiveCapabilityCurveCreationInfos;
 import org.hamcrest.Description;
 
@@ -48,13 +49,12 @@ public class MatcherGeneratorCreationInfos extends MatcherModificationInfos<Gene
             && Objects.equals(m.getRegulatingTerminalId(), reference.getRegulatingTerminalId())
             && Objects.equals(m.getRegulatingTerminalType(), reference.getRegulatingTerminalType())
             && Objects.equals(m.getRegulatingTerminalVlId(), reference.getRegulatingTerminalVlId())
-            && Objects.equals(m.getMaximumReactivePower(), reference.getMaximumReactivePower())
-            && Objects.equals(m.getMinimumReactivePower(), reference.getMinimumReactivePower())
+            && matchMinMaxReactiveLimits(m.getMinMaxReactiveLimits(), reference.getMinMaxReactiveLimits())
             && Objects.equals(m.getMarginalCost(), reference.getMarginalCost())
             && Objects.equals(m.getStepUpTransformerReactance(), reference.getStepUpTransformerReactance())
             && Objects.equals(m.getTransientReactance(), reference.getTransientReactance())
             && Objects.equals(m.getReactiveCapabilityCurve(), reference.getReactiveCapabilityCurve())
-            && matchesReactiveCapabilityCurvePoints(m.getPoints(), reference.getPoints());
+            && matchesReactiveCapabilityCurvePoints(m.getReactiveCapabilityCurvePoints(), reference.getReactiveCapabilityCurvePoints());
     }
 
     @Override
@@ -86,5 +86,12 @@ public class MatcherGeneratorCreationInfos extends MatcherModificationInfos<Gene
                 Objects.equals(point1.getP(), point2.getP()) &&
                 Objects.equals(point1.getQmaxP(), point2.getQmaxP()) &&
                 Objects.equals(point1.getQminP(), point2.getQminP()));
+    }
+
+    private static boolean matchMinMaxReactiveLimits(MinMaxReactiveLimits minMaxReactiveLimits1, MinMaxReactiveLimits minMaxReactiveLimits2) {
+        return (minMaxReactiveLimits1 == null && minMaxReactiveLimits2 == null) ||
+               (minMaxReactiveLimits1 != null && minMaxReactiveLimits2 != null &&
+                Objects.equals(minMaxReactiveLimits1.getMaximumReactivePower(), minMaxReactiveLimits2.getMaximumReactivePower()) &&
+                Objects.equals(minMaxReactiveLimits1.getMinimumReactivePower(), minMaxReactiveLimits2.getMinimumReactivePower()));
     }
 }
