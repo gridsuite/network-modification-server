@@ -383,6 +383,26 @@ public class NetworkModificationController {
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping(value = "/networks/{networkUuid}/lines-attach-to-split-lines", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "attach lines to a split lines")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The lines has been attached to split lines")})
+    public ResponseEntity<List<ModificationInfos>> linesAttachToSplitLines(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
+                                                                         @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
+                                                                         @RequestParam(value = "group", required = false) UUID groupUuid,
+                                                                         @RequestParam(value = "reportUuid") UUID reportUuid,
+                                                                         @RequestBody LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos) {
+        return ResponseEntity.ok().body(networkModificationService.createLinesAttachToSplitLines(networkUuid, variantId, groupUuid, reportUuid, linesAttachToSplitLinesInfos));
+    }
+
+    @PutMapping(value = "/modifications/{modificationUuid}/lines-attach-to-split-lines-creation", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "update attach lines to split lines")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The lines attachment to split lines has been updated")})
+    public ResponseEntity<Void> updateLinesAttachToSplitLines(@PathVariable("modificationUuid") UUID modificationUuid,
+                                                            @RequestBody LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos) {
+        networkModificationService.updateLinesAttachToSplitLines(modificationUuid, linesAttachToSplitLinesInfos);
+        return ResponseEntity.ok().build();
+    }
+
     @PostMapping(value = "/networks/{networkUuid}/build")
     @Operation(summary = "Build a network variant")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The build has been done")})
