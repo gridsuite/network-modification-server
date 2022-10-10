@@ -576,7 +576,6 @@ public class NetworkModificationService {
             .add();
     }
 
-
     public void updateGeneratorCreation(GeneratorCreationInfos generatorCreationInfos, UUID modificationUuid) {
         assertGeneratorCreationInfosNotEmpty(generatorCreationInfos);
 
