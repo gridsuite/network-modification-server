@@ -6,7 +6,6 @@
  */
 package org.gridsuite.modification.server.dto;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.powsybl.iidm.network.EnergySource;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
@@ -62,7 +61,6 @@ public class GeneratorCreationInfos extends InjectionCreationInfos {
     private Double maximumReactivePower;
 
     @Schema(description = "Reactive capability curve points")
-    @JsonInclude(JsonInclude.Include.NON_NULL)
     private List<ReactiveCapabilityCurveCreationInfos> reactiveCapabilityCurvePoints;
 
     @Schema(description = "Participate")
