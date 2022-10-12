@@ -8,7 +8,6 @@ package org.gridsuite.modification.server.entities.equipment.creation;
 
 import com.powsybl.iidm.network.LoadType;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
-import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.ModificationType;
@@ -38,10 +37,10 @@ public class LoadCreationEntity extends InjectionCreationEntity {
     @Column(name = "reactivePower")
     private double reactivePower;
 
-    @Schema(description = "Connection Name")
+    @Column(name = "connectionName")
     private String connectionName;
 
-    @Schema(description = "Connection Direction")
+    @Column(name = "connectionDirection")
     private ConnectablePosition.Direction connectionDirection;
 
     public LoadCreationEntity(String equipmentId, String equipmentName, LoadType loadType, String voltageLevelId, String busOrBusbarSectionId,
