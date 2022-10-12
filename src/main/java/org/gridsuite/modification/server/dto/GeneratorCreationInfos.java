@@ -61,7 +61,7 @@ public class GeneratorCreationInfos extends InjectionCreationInfos {
     private Double maximumReactivePower;
 
     @Schema(description = "Reactive capability curve points")
-    private List<ReactiveCapabilityCurveCreationInfos> points;
+    private List<ReactiveCapabilityCurveCreationInfos> reactiveCapabilityCurvePoints;
 
     @Schema(description = "Participate")
     private Boolean participate;
