@@ -162,7 +162,7 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
             .participate(getParticipate())
             .droop(getDroop())
             .maximumReactivePower(this.getMaximumReactivePower())
-            .points(points)
+            .reactiveCapabilityCurvePoints(points)
             .regulatingTerminalId(getRegulatingTerminalId())
             .regulatingTerminalType(getRegulatingTerminalType())
             .regulatingTerminalVlId(getRegulatingTerminalVlId())
