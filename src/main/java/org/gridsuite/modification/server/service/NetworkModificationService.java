@@ -17,6 +17,8 @@ import com.powsybl.commons.reporter.ReporterModelDeserializer;
 import com.powsybl.commons.reporter.ReporterModelJsonModule;
 import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.iidm.modification.topology.ConnectVoltageLevelOnLine;
+import com.powsybl.iidm.modification.topology.CreateFeederBay;
+import com.powsybl.iidm.modification.topology.CreateFeederBayBuilder;
 import com.powsybl.iidm.modification.topology.CreateLineOnLine;
 import com.powsybl.iidm.modification.topology.ReplaceTeePointByVoltageLevelOnLine;
 import com.powsybl.iidm.modification.topology.ReplaceTeePointByVoltageLevelOnLineBuilder;
@@ -27,6 +29,7 @@ import com.powsybl.iidm.network.extensions.ActivePowerControlAdder;
 import com.powsybl.iidm.network.extensions.BranchStatus;
 import com.powsybl.iidm.network.extensions.BranchStatusAdder;
 import com.powsybl.iidm.network.extensions.BusbarSectionPositionAdder;
+import com.powsybl.iidm.network.extensions.ConnectablePositionAdder;
 import com.powsybl.iidm.network.extensions.GeneratorShortCircuitAdder;
 import com.powsybl.iidm.network.extensions.GeneratorStartupAdder;
 import com.powsybl.network.store.client.NetworkStoreService;
@@ -609,7 +612,9 @@ public class NetworkModificationService {
                 generatorCreationInfos.getRegulatingTerminalType(),
                 generatorCreationInfos.getRegulatingTerminalVlId(),
                 generatorCreationInfos.getReactiveCapabilityCurve(),
-                toEmbeddablePoints(generatorCreationInfos.getReactiveCapabilityCurvePoints()));
+                toEmbeddablePoints(generatorCreationInfos.getReactiveCapabilityCurvePoints()),
+                generatorCreationInfos.getConnectionName(),
+                generatorCreationInfos.getConnectionDirection());
 
         updatedEntity.setId(modificationUuid);
         updatedEntity.setGroup(generatorModificationEntity.get().getGroup());
@@ -911,31 +916,24 @@ public class NetworkModificationService {
         this.reportServerRest = Objects.requireNonNull(reportServerRest, "reportServerRest can't be null");
     }
 
-    private Generator createGeneratorInNodeBreaker(VoltageLevel voltageLevel, GeneratorCreationInfos generatorCreationInfos) {
-        // create cell switches
-        int nodeNum = createNodeBreakerCellSwitches(voltageLevel, generatorCreationInfos.getBusOrBusbarSectionId(),
-            generatorCreationInfos.getEquipmentId(),
-            generatorCreationInfos.getEquipmentName());
-
+    private GeneratorAdder createGeneratorAdderInNodeBreaker(VoltageLevel voltageLevel, GeneratorCreationInfos generatorCreationInfos) {
         Terminal terminal = getTerminalFromIdentifiable(voltageLevel.getNetwork(),
                                                         generatorCreationInfos.getRegulatingTerminalId(),
                                                         generatorCreationInfos.getRegulatingTerminalType(),
                                                         generatorCreationInfos.getRegulatingTerminalVlId());
-
-        // creating the generator
-        Generator generator = voltageLevel.newGenerator()
+        // creating the generator adder
+        GeneratorAdder generator = voltageLevel.newGenerator()
             .setId(generatorCreationInfos.getEquipmentId())
             .setName(generatorCreationInfos.getEquipmentName())
             .setEnergySource(generatorCreationInfos.getEnergySource())
-            .setNode(nodeNum)
             .setMinP(generatorCreationInfos.getMinActivePower())
             .setMaxP(generatorCreationInfos.getMaxActivePower())
             .setRatedS(generatorCreationInfos.getRatedNominalPower() != null ? generatorCreationInfos.getRatedNominalPower() : Double.NaN)
             .setTargetP(generatorCreationInfos.getActivePowerSetpoint())
             .setTargetQ(generatorCreationInfos.getReactivePowerSetpoint() != null ? generatorCreationInfos.getReactivePowerSetpoint() : Double.NaN)
             .setVoltageRegulatorOn(generatorCreationInfos.isVoltageRegulationOn())
-            .setTargetV(generatorCreationInfos.getVoltageSetpoint() != null ? generatorCreationInfos.getVoltageSetpoint() : Double.NaN)
-            .add();
+            .setTargetV(generatorCreationInfos.getVoltageSetpoint() != null ? generatorCreationInfos.getVoltageSetpoint() : Double.NaN);
+
 
         if (terminal != null) {
             generator.setRegulatingTerminal(terminal);
@@ -944,24 +942,24 @@ public class NetworkModificationService {
         Boolean participate = generatorCreationInfos.getParticipate();
 
         if (generatorCreationInfos.getMarginalCost() != null) {
-            generator.newExtension(GeneratorStartupAdderImpl.class).withMarginalCost(generatorCreationInfos.getMarginalCost()).add();
+            generator.add().newExtension(GeneratorStartupAdderImpl.class).withMarginalCost(generatorCreationInfos.getMarginalCost()).add();
         }
 
         if (generatorCreationInfos.getParticipate() != null && generatorCreationInfos.getDroop() != null) {
-            generator.newExtension(ActivePowerControlAdder.class).withParticipate(participate)
+            generator.add().newExtension(ActivePowerControlAdder.class).withParticipate(participate)
                     .withDroop(generatorCreationInfos.getDroop())
                     .add();
         }
 
         if (generatorCreationInfos.getTransientReactance() != null && generatorCreationInfos.getStepUpTransformerReactance() != null) {
-            generator.newExtension(GeneratorShortCircuitAdder.class)
+            generator.add().newExtension(GeneratorShortCircuitAdder.class)
                     .withDirectTransX(generatorCreationInfos.getTransientReactance())
                     .withStepUpTransformerX(generatorCreationInfos.getStepUpTransformerReactance())
                     .add();
         }
 
         if (Boolean.TRUE.equals(generatorCreationInfos.getReactiveCapabilityCurve())) {
-            ReactiveCapabilityCurveAdder adder = generator.newReactiveCapabilityCurve();
+            ReactiveCapabilityCurveAdder adder = generator.add().newReactiveCapabilityCurve();
             generatorCreationInfos.getReactiveCapabilityCurvePoints()
                     .forEach(point -> adder.beginPoint()
                             .setMaxQ(point.getQmaxP())
@@ -972,7 +970,7 @@ public class NetworkModificationService {
         }
 
         if (generatorCreationInfos.getMinimumReactivePower() != null && generatorCreationInfos.getMaximumReactivePower() != null) {
-            generator.newMinMaxReactiveLimits().setMinQ(generatorCreationInfos.getMinimumReactivePower())
+            generator.add().newMinMaxReactiveLimits().setMinQ(generatorCreationInfos.getMinimumReactivePower())
                     .setMaxQ(generatorCreationInfos.getMaximumReactivePower())
                     .add();
         }
@@ -1041,6 +1039,13 @@ public class NetworkModificationService {
             adder.add();
         }
 
+        generator.newExtension(ConnectablePositionAdder.class)
+                .newFeeder()
+                .withName(generatorCreationInfos.getConnectionName())
+                .withDirection(generatorCreationInfos.getConnectionDirection())
+                .withOrder(0)
+                .add();
+
         return generator;
     }
 
@@ -1057,7 +1062,16 @@ public class NetworkModificationService {
                 // create the generator in the network
                 VoltageLevel voltageLevel = getVoltageLevel(network, generatorCreationInfos.getVoltageLevelId());
                 if (voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER) {
-                    createGeneratorInNodeBreaker(voltageLevel, generatorCreationInfos);
+                    GeneratorAdder generatorAdder = createGeneratorAdderInNodeBreaker(voltageLevel, generatorCreationInfos);
+
+                    CreateFeederBay algo = new CreateFeederBayBuilder()
+                            .withBbsId(generatorCreationInfos.getBusOrBusbarSectionId())
+                            .withInjectionDirection(generatorCreationInfos.getConnectionDirection())
+                            .withInjectionFeederName(generatorCreationInfos.getConnectionName())
+                            .withInjectionPositionOrder(0)
+                            .withInjectionAdder(generatorAdder)
+                            .build();
+                    algo.apply(network, false, subReporter);
                 } else {
                     createGeneratorInBusBreaker(voltageLevel, generatorCreationInfos);
                 }

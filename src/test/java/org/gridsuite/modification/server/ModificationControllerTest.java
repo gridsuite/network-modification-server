@@ -18,6 +18,7 @@ import com.powsybl.iidm.network.LoadType;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.SwitchKind;
 import com.powsybl.iidm.network.VariantManagerConstants;
+import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import com.powsybl.network.store.client.NetworkStoreService;
 import nl.jqno.equalsverifier.EqualsVerifier;
 import org.gridsuite.modification.server.dto.*;
@@ -1082,7 +1083,9 @@ public class ModificationControllerTest {
                 "v2load",
                 "LOAD",
                 "v2",
-                false)
+                false,
+                "top",
+                ConnectablePosition.Direction.TOP)
                 .toModificationInfos();
         generatorCreationInfos.setUuid(bsmlrGeneratorCreation.get(0).getUuid());
 
@@ -1111,7 +1114,9 @@ public class ModificationControllerTest {
                 "v2load",
                 "LOAD",
                 "v2",
-                false)
+                false,
+                "top",
+                ConnectablePosition.Direction.TOP)
                 .toModificationInfos();
         String generatorCreationUpdateJson = objectWriter.writeValueAsString(generatorCreationUpdate);
         String uriStringForUpdate = "/v1/modifications/" + bsmlrGeneratorCreation.get(0).getUuid() + "/generators-creation";
