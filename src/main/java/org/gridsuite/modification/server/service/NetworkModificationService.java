@@ -640,17 +640,16 @@ public class NetworkModificationService {
                             .withInjectionPositionOrder(0)
                             .withInjectionAdder(loadAdder)
                             .build();
-                    algo.apply(network, true, subReporter);
+                    algo.apply(network, false, subReporter);
                 } else {
                     createLoadInBusBreaker(voltageLevel, loadCreationInfos);
+                    subReporter.report(Report.builder()
+                            .withKey("loadCreated")
+                            .withDefaultMessage("New load with id=${id} created")
+                            .withValue("id", loadCreationInfos.getEquipmentId())
+                            .withSeverity(TypedValue.INFO_SEVERITY)
+                            .build());
                 }
-
-                subReporter.report(Report.builder()
-                    .withKey("loadCreated")
-                    .withDefaultMessage("New load with id=${id} created")
-                    .withValue("id", loadCreationInfos.getEquipmentId())
-                    .withSeverity(TypedValue.INFO_SEVERITY)
-                    .build());
             }
             // add the load creation entity to the listener
             listener.storeLoadCreation(loadCreationInfos);

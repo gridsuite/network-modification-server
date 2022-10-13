@@ -10,10 +10,4 @@
             <column name="connection_name" type="varchar(255)"/>
         </addColumn>
     </changeSet>
-    <changeSet author="bendaamerahm (generated)" id="1665153938947-5">
-        <dropNotNullConstraint columnDataType="int" columnName="horiz_pos" tableName="voltage_level_creation_entity_busbar_sections"/>
-    </changeSet>
-    <changeSet author="bendaamerahm (generated)" id="1665153938947-6">
-        <dropNotNullConstraint columnDataType="int" columnName="vert_pos" tableName="voltage_level_creation_entity_busbar_sections"/>
-    </changeSet>
 </databaseChangeLog>
