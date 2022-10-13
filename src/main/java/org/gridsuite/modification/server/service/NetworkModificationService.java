@@ -2280,8 +2280,7 @@ public class NetworkModificationService {
                         .withLineC2Id(linesAttachToSplitLinesInfos.getReplacingLine2Id())
                         .withLineC2Name(linesAttachToSplitLinesInfos.getReplacingLine2Name())
                         .build();
-
-                algo.apply(network, true, subReporter);
+                algo.apply(network, false, subReporter);
             }
 
             listener.storeLinesAttachToSplitLinesInfos(linesAttachToSplitLinesInfos);
