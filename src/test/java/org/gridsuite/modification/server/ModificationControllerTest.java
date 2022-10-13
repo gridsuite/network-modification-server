@@ -2644,21 +2644,15 @@ public class ModificationControllerTest {
         MvcResult mvcResult;
         String resultAsString;
         String linesAttachToSplitLinesUriString = "/v1/networks/{networkUuid}/lines-attach-to-split-lines?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
-        networkStoreService.getNetwork(TEST_NETWORK_ID);
         LinesAttachToSplitLinesInfos linesAttachToAbsentLine1 = new LinesAttachToSplitLinesInfos("absent_line_id", "line2", "line3", "v4", "1.A", "nl4", "NewLine4", "nl5", "NewLine4");
 
         String linesAttachToAbsentLine1Json = objectWriter.writeValueAsString(linesAttachToAbsentLine1);
 
-        Line prevL2 = network.getLine("line2");
-        Line prevL3 = network.getLine("line3");
-        VoltageLevel prevVl = network.getVoltageLevel("v4");
-
         mockMvc.perform(post(linesAttachToSplitLinesUriString, TEST_NETWORK_ID).content(linesAttachToAbsentLine1Json).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
-        assertEquals(prevL2.getId(), network.getLine("line2").getId());
-        assertEquals(prevL3.getId(), network.getLine("line3").getId());
-        assertNull(network.getLine("absent_line_id"));
-        assertEquals(prevVl.getId(), network.getVoltageLevel("v4").getId());
+        assertNotNull(network.getLine("line2"));
+        assertNotNull(network.getLine("line3"));
+        assertNotNull(network.getVoltageLevel("v4"));
         assertNull(network.getLine("nl4"));
         assertNull(network.getLine("nl5"));
 
