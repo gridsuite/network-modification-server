@@ -17,6 +17,8 @@ import com.powsybl.commons.reporter.ReporterModelDeserializer;
 import com.powsybl.commons.reporter.ReporterModelJsonModule;
 import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.iidm.modification.topology.ConnectVoltageLevelOnLine;
+import com.powsybl.iidm.modification.topology.CreateFeederBay;
+import com.powsybl.iidm.modification.topology.CreateFeederBayBuilder;
 import com.powsybl.iidm.modification.topology.CreateLineOnLine;
 import com.powsybl.iidm.modification.topology.ReplaceTeePointByVoltageLevelOnLine;
 import com.powsybl.iidm.modification.topology.ReplaceTeePointByVoltageLevelOnLineBuilder;
@@ -27,6 +29,7 @@ import com.powsybl.iidm.network.extensions.ActivePowerControlAdder;
 import com.powsybl.iidm.network.extensions.BranchStatus;
 import com.powsybl.iidm.network.extensions.BranchStatusAdder;
 import com.powsybl.iidm.network.extensions.BusbarSectionPositionAdder;
+import com.powsybl.iidm.network.extensions.ConnectablePositionAdder;
 import com.powsybl.iidm.network.extensions.GeneratorShortCircuitAdder;
 import com.powsybl.iidm.network.extensions.GeneratorStartupAdder;
 import com.powsybl.network.store.client.NetworkStoreService;
@@ -1929,32 +1932,43 @@ public class NetworkModificationService {
         }
     }
 
-    private void createShuntCompensator(VoltageLevel voltageLevel, ShuntCompensatorCreationInfos shuntCompensatorInfos, boolean isNodeBreaker) {
+    private ShuntCompensatorAdder createShuntInNodeBreaker(VoltageLevel voltageLevel, ShuntCompensatorCreationInfos shuntCompensatorInfos) {
         // creating the shunt compensator
-        var shunt = voltageLevel.newShuntCompensator()
-            .setId(shuntCompensatorInfos.getEquipmentId())
-            .setName(shuntCompensatorInfos.getEquipmentName())
-            .setSectionCount(shuntCompensatorInfos.getCurrentNumberOfSections());
-
-        /* connect it !*/
-        if (isNodeBreaker) {
-            // create cell switches
-            int nodeNum = createNodeBreakerCellSwitches(voltageLevel, shuntCompensatorInfos.getBusOrBusbarSectionId(),
-                shuntCompensatorInfos.getEquipmentId(),
-                shuntCompensatorInfos.getEquipmentName());
-            shunt.setNode(nodeNum);
-        } else {
-            Bus bus = getBusBreakerBus(voltageLevel, shuntCompensatorInfos.getBusOrBusbarSectionId());
-            shunt.setBus(bus.getId())
-                 .setConnectableBus(bus.getId());
-        }
+        ShuntCompensatorAdder shunt = voltageLevel.newShuntCompensator()
+                .setId(shuntCompensatorInfos.getEquipmentId())
+                .setName(shuntCompensatorInfos.getEquipmentName())
+                .setSectionCount(shuntCompensatorInfos.getCurrentNumberOfSections());
 
         /* when we create non linear shunt, this is where we branch ;) */
         shunt.newLinearModel()
-            .setBPerSection(shuntCompensatorInfos.getSusceptancePerSection())
-            .setMaximumSectionCount(shuntCompensatorInfos.getMaximumNumberOfSections()).add();
+                .setBPerSection(shuntCompensatorInfos.getSusceptancePerSection())
+                .setMaximumSectionCount(shuntCompensatorInfos.getMaximumNumberOfSections()).add();
 
         shunt.add();
+
+        return shunt;
+    }
+
+    private void createShuntInBusBreaker(VoltageLevel voltageLevel, ShuntCompensatorCreationInfos shuntCompensatorInfos) {
+        Bus bus = getBusBreakerBus(voltageLevel, shuntCompensatorInfos.getBusOrBusbarSectionId());
+        /* creating the shunt compensator */
+        ShuntCompensatorAdder shunt = voltageLevel.newShuntCompensator()
+                .setId(shuntCompensatorInfos.getEquipmentId())
+                .setName(shuntCompensatorInfos.getEquipmentName())
+                .setSectionCount(shuntCompensatorInfos.getCurrentNumberOfSections())
+                .setBus(bus.getId())
+                .setConnectableBus(bus.getId())
+                .newLinearModel()
+                .setBPerSection(shuntCompensatorInfos.getSusceptancePerSection())
+                .setMaximumSectionCount(shuntCompensatorInfos.getMaximumNumberOfSections())
+                .add();
+
+        shunt.add().newExtension(ConnectablePositionAdder.class)
+                .newFeeder()
+                .withName(shuntCompensatorInfos.getConnectionName())
+                .withDirection(shuntCompensatorInfos.getConnectionDirection())
+                .withOrder(0)
+                .add();
     }
 
     public void updateShuntCompensatorCreation(ShuntCompensatorCreationInfos shuntCompensatorCreationInfos, UUID modificationUuid) {
@@ -1984,7 +1998,19 @@ public class NetworkModificationService {
             if (listener.isApplyModifications()) {
                 // create the shunt compensator in the network
                 VoltageLevel voltageLevel = getVoltageLevel(network, shuntCompensatorCreationInfos.getVoltageLevelId());
-                createShuntCompensator(voltageLevel, shuntCompensatorCreationInfos, voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER);
+                if (voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER) {
+                    ShuntCompensatorAdder shuntCompensatorAdder = createShuntInNodeBreaker(voltageLevel, shuntCompensatorCreationInfos);
+                    CreateFeederBay algo = new CreateFeederBayBuilder()
+                            .withBbsId(shuntCompensatorCreationInfos.getBusOrBusbarSectionId())
+                            .withInjectionDirection(shuntCompensatorCreationInfos.getConnectionDirection())
+                            .withInjectionFeederName(shuntCompensatorCreationInfos.getConnectionName())
+                            .withInjectionPositionOrder(0)
+                            .withInjectionAdder(shuntCompensatorAdder)
+                            .build();
+                    algo.apply(network, false, subReporter);
+                } else {
+                    createShuntInBusBreaker(voltageLevel, shuntCompensatorCreationInfos);
+                }
 
                 subReporter.report(Report.builder()
                     .withKey("shuntCompensatorCreated")
