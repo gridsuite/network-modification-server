@@ -2649,7 +2649,7 @@ public class ModificationControllerTest {
         mvcResult = mockMvc.perform(post(linesAttachToSplitLinesUriString, TEST_NETWORK_ID).content(linesAttachToAbsentLine1Json).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().is4xxClientError()).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
-        assertEquals(resultAsString, "LINE_NOT_FOUND : Line absent_line_id is not found");
+        assertEquals("LINE_NOT_FOUND : Line absent_line_id is not found", resultAsString);
 
         LinesAttachToSplitLinesInfos linesAttachToSplitLines = new LinesAttachToSplitLinesInfos("line1", "line2", "line3", "v4", "1.A", "nl4", "NewLine4", "nl5", "NewLine4");
         String linesAttachToSplitLinesJson = objectWriter.writeValueAsString(linesAttachToSplitLines);
