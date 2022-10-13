@@ -640,7 +640,7 @@ public class NetworkModificationService {
                             .withInjectionPositionOrder(0)
                             .withInjectionAdder(loadAdder)
                             .build();
-                    algo.apply(network, false, subReporter);
+                    algo.apply(network, true, subReporter);
                 } else {
                     createLoadInBusBreaker(voltageLevel, loadCreationInfos);
                     subReporter.report(Report.builder()
