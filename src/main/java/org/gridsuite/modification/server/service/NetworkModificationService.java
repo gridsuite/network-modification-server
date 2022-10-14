@@ -942,7 +942,6 @@ public class NetworkModificationService {
             .setVoltageRegulatorOn(generatorCreationInfos.isVoltageRegulationOn())
             .setTargetV(generatorCreationInfos.getVoltageSetpoint() != null ? generatorCreationInfos.getVoltageSetpoint() : Double.NaN);
 
-
         if (terminal != null) {
             generator.setRegulatingTerminal(terminal);
         }
