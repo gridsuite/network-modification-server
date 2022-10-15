@@ -18,6 +18,7 @@ import com.powsybl.iidm.network.LoadType;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.SwitchKind;
 import com.powsybl.iidm.network.VariantManagerConstants;
+import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import com.powsybl.network.store.client.NetworkStoreService;
 import nl.jqno.equalsverifier.EqualsVerifier;
 import org.gridsuite.modification.server.dto.*;
@@ -584,6 +585,8 @@ public class ModificationControllerTest {
             .loadType(LoadType.AUXILIARY)
             .activePower(100.0)
             .reactivePower(60.0)
+            .connectionDirection(ConnectablePosition.Direction.TOP)
+            .connectionName("top")
             .build();
 
         String loadCreationInfosJson = objectWriter.writeValueAsString(loadCreationInfos);
@@ -615,7 +618,7 @@ public class ModificationControllerTest {
         loadCreationInfos.setBusOrBusbarSectionId("notFoundBusbarSection");
         loadCreationInfosJson = objectWriter.writeValueAsString(loadCreationInfos);
         mockMvc.perform(post(uriString, TEST_NETWORK_ID).content(loadCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpectAll(status().is4xxClientError(), content().string(new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "notFoundBusbarSection").getMessage())).andReturn();
+            .andExpectAll(status().is5xxServerError(), content().string(new NetworkModificationException(CREATE_LOAD_ERROR, "Busbar section notFoundBusbarSection not found.").getMessage())).andReturn();
 
         loadCreationInfos.setVoltageLevelId("v2");
         loadCreationInfos.setBusOrBusbarSectionId("1B");
@@ -659,6 +662,8 @@ public class ModificationControllerTest {
             .loadType(LoadType.FICTITIOUS)
             .activePower(200.0)
             .reactivePower(30.0)
+            .connectionName("top")
+            .connectionDirection(ConnectablePosition.Direction.TOP)
             .build();
 
         String loadCreationInfosJson = objectWriter.writeValueAsString(loadCreationInfos);
@@ -680,7 +685,7 @@ public class ModificationControllerTest {
                 "v12",
                 "bus12",
                 175.0,
-                60.0)
+                60.0, "top", ConnectablePosition.Direction.TOP)
                 .toModificationInfos();
         loadCreationInfos.setUuid(equipmentModificationInfos.getUuid());
 
@@ -691,7 +696,7 @@ public class ModificationControllerTest {
                 "v12",
                 "bus12",
                 175.0,
-                60.0)
+                60.0, "bot", ConnectablePosition.Direction.BOTTOM)
                 .toModificationInfos();
         String uriStringForUpdate = "/v1/modifications/" + equipmentModificationInfos.getUuid() + "/loads-creation";
         String loadCreationUpdateJson = objectWriter.writeValueAsString(loadCreationUpdate);
@@ -2472,6 +2477,8 @@ public class ModificationControllerTest {
                 .loadType(LoadType.AUXILIARY)
                 .activePower(100.0)
                 .reactivePower(60.0)
+                .connectionDirection(ConnectablePosition.Direction.BOTTOM)
+                .connectionName("bottom")
                 .build();
         String loadCreationInfosJson = objectWriter.writeValueAsString(loadCreationInfos);
         mockMvc.perform(post(uriString, TEST_NETWORK_ID).content(loadCreationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk());
@@ -2638,21 +2645,20 @@ public class ModificationControllerTest {
     }
 
     @Test
-    public void testLineAttachToSplitLine() throws Exception {
+    public void testAttachLinesToSplitLines() throws Exception {
         MvcResult mvcResult;
         String resultAsString;
         String linesAttachToSplitLinesUriString = "/v1/networks/{networkUuid}/lines-attach-to-split-lines?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
-
         LinesAttachToSplitLinesInfos linesAttachToAbsentLine1 = new LinesAttachToSplitLinesInfos("absent_line_id", "line2", "line3", "v4", "1.A", "nl4", "NewLine4", "nl5", "NewLine4");
 
         String linesAttachToAbsentLine1Json = objectWriter.writeValueAsString(linesAttachToAbsentLine1);
+
         mvcResult = mockMvc.perform(post(linesAttachToSplitLinesUriString, TEST_NETWORK_ID).content(linesAttachToAbsentLine1Json).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().is4xxClientError()).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
-        assertEquals(resultAsString, String.format("LINE_NOT_FOUND : Line %s is not found", "absent_line_id"));
+        assertEquals("LINE_NOT_FOUND : Line absent_line_id is not found", resultAsString);
 
         LinesAttachToSplitLinesInfos linesAttachToSplitLines = new LinesAttachToSplitLinesInfos("line1", "line2", "line3", "v4", "1.A", "nl4", "NewLine4", "nl5", "NewLine4");
-
         String linesAttachToSplitLinesJson = objectWriter.writeValueAsString(linesAttachToSplitLines);
         mvcResult = mockMvc.perform(post(linesAttachToSplitLinesUriString, TEST_NETWORK_ID).content(linesAttachToSplitLinesJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();

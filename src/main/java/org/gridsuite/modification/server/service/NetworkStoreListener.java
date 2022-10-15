@@ -172,7 +172,9 @@ public class NetworkStoreListener implements NetworkListener {
                 loadCreationInfos.getVoltageLevelId(),
                 loadCreationInfos.getBusOrBusbarSectionId(),
                 loadCreationInfos.getActivePower(),
-                loadCreationInfos.getReactivePower()));
+                loadCreationInfos.getReactivePower(),
+                loadCreationInfos.getConnectionName(),
+                loadCreationInfos.getConnectionDirection()));
     }
 
     public void storeLoadModification(LoadModificationInfos loadModificationInfos) {

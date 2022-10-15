@@ -17,6 +17,8 @@ import com.powsybl.commons.reporter.ReporterModelDeserializer;
 import com.powsybl.commons.reporter.ReporterModelJsonModule;
 import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.iidm.modification.topology.ConnectVoltageLevelOnLine;
+import com.powsybl.iidm.modification.topology.CreateFeederBay;
+import com.powsybl.iidm.modification.topology.CreateFeederBayBuilder;
 import com.powsybl.iidm.modification.topology.CreateLineOnLine;
 import com.powsybl.iidm.modification.topology.ReplaceTeePointByVoltageLevelOnLine;
 import com.powsybl.iidm.modification.topology.ReplaceTeePointByVoltageLevelOnLineBuilder;
@@ -27,6 +29,7 @@ import com.powsybl.iidm.network.extensions.ActivePowerControlAdder;
 import com.powsybl.iidm.network.extensions.BranchStatus;
 import com.powsybl.iidm.network.extensions.BranchStatusAdder;
 import com.powsybl.iidm.network.extensions.BusbarSectionPositionAdder;
+import com.powsybl.iidm.network.extensions.ConnectablePositionAdder;
 import com.powsybl.iidm.network.extensions.GeneratorShortCircuitAdder;
 import com.powsybl.iidm.network.extensions.GeneratorStartupAdder;
 import com.powsybl.network.store.client.NetworkStoreService;
@@ -549,36 +552,36 @@ public class NetworkModificationService {
         return newNode + 2;
     }
 
-    private Load createLoadInNodeBreaker(VoltageLevel voltageLevel, LoadCreationInfos loadCreationInfos) {
-        // create cell switches
-        int nodeNum = createNodeBreakerCellSwitches(voltageLevel, loadCreationInfos.getBusOrBusbarSectionId(),
-            loadCreationInfos.getEquipmentId(),
-            loadCreationInfos.getEquipmentName());
-
-        // creating the load
+    private LoadAdder createLoadAdderInNodeBreaker(VoltageLevel voltageLevel, LoadCreationInfos loadCreationInfos) {
+        // creating the load adder
         return voltageLevel.newLoad()
             .setId(loadCreationInfos.getEquipmentId())
             .setName(loadCreationInfos.getEquipmentName())
             .setLoadType(loadCreationInfos.getLoadType())
-            .setNode(nodeNum)
             .setP0(loadCreationInfos.getActivePower())
-            .setQ0(loadCreationInfos.getReactivePower())
-            .add();
+            .setQ0(loadCreationInfos.getReactivePower());
     }
 
     private Load createLoadInBusBreaker(VoltageLevel voltageLevel, LoadCreationInfos loadCreationInfos) {
         Bus bus = getBusBreakerBus(voltageLevel, loadCreationInfos.getBusOrBusbarSectionId());
 
         // creating the load
-        return voltageLevel.newLoad()
+        Load load =  voltageLevel.newLoad()
             .setId(loadCreationInfos.getEquipmentId())
             .setName(loadCreationInfos.getEquipmentName())
             .setLoadType(loadCreationInfos.getLoadType())
             .setBus(bus.getId())
             .setConnectableBus(bus.getId())
             .setP0(loadCreationInfos.getActivePower())
-            .setQ0(loadCreationInfos.getReactivePower())
-            .add();
+            .setQ0(loadCreationInfos.getReactivePower()).add();
+        // add ConnectablePosition extension to load
+        load.newExtension(ConnectablePositionAdder.class)
+                .newFeeder()
+                .withName(loadCreationInfos.getConnectionName())
+                .withDirection(loadCreationInfos.getConnectionDirection())
+                .withOrder(0)
+                .add();
+        return load;
     }
 
     public void updateGeneratorCreation(GeneratorCreationInfos generatorCreationInfos, UUID modificationUuid) {
@@ -635,19 +638,25 @@ public class NetworkModificationService {
                 // create the load in the network
                 VoltageLevel voltageLevel = getVoltageLevel(network, loadCreationInfos.getVoltageLevelId());
                 if (voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER) {
-                    createLoadInNodeBreaker(voltageLevel, loadCreationInfos);
+                    LoadAdder loadAdder = createLoadAdderInNodeBreaker(voltageLevel, loadCreationInfos);
+                    CreateFeederBay algo = new CreateFeederBayBuilder()
+                            .withBbsId(loadCreationInfos.getBusOrBusbarSectionId())
+                            .withInjectionDirection(loadCreationInfos.getConnectionDirection())
+                            .withInjectionFeederName(loadCreationInfos.getConnectionName())
+                            .withInjectionPositionOrder(0)
+                            .withInjectionAdder(loadAdder)
+                            .build();
+                    algo.apply(network, true, subReporter);
                 } else {
                     createLoadInBusBreaker(voltageLevel, loadCreationInfos);
+                    subReporter.report(Report.builder()
+                            .withKey("loadCreated")
+                            .withDefaultMessage("New load with id=${id} created")
+                            .withValue("id", loadCreationInfos.getEquipmentId())
+                            .withSeverity(TypedValue.INFO_SEVERITY)
+                            .build());
                 }
-
-                subReporter.report(Report.builder()
-                    .withKey("loadCreated")
-                    .withDefaultMessage("New load with id=${id} created")
-                    .withValue("id", loadCreationInfos.getEquipmentId())
-                    .withSeverity(TypedValue.INFO_SEVERITY)
-                    .build());
             }
-
             // add the load creation entity to the listener
             listener.storeLoadCreation(loadCreationInfos);
         }, CREATE_LOAD_ERROR, reportUuid, reporter, subReporter).stream().map(EquipmentModificationInfos.class::cast)
@@ -676,7 +685,9 @@ public class NetworkModificationService {
                 loadCreationInfos.getVoltageLevelId(),
                 loadCreationInfos.getBusOrBusbarSectionId(),
                 loadCreationInfos.getActivePower(),
-                loadCreationInfos.getReactivePower());
+                loadCreationInfos.getReactivePower(),
+                loadCreationInfos.getConnectionName(),
+                loadCreationInfos.getConnectionDirection());
         updatedEntity.setId(modificationUuid);
         updatedEntity.setGroup(loadModificationEntity.get().getGroup());
         this.networkModificationRepository.updateModification(updatedEntity);
@@ -2311,7 +2322,6 @@ public class NetworkModificationService {
                         .withLineC2Id(linesAttachToSplitLinesInfos.getReplacingLine2Id())
                         .withLineC2Name(linesAttachToSplitLinesInfos.getReplacingLine2Name())
                         .build();
-
                 algo.apply(network, true, subReporter);
             }
 
