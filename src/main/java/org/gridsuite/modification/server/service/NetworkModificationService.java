@@ -22,6 +22,7 @@ import com.powsybl.iidm.modification.topology.CreateFeederBayBuilder;
 import com.powsybl.iidm.modification.topology.CreateLineOnLine;
 import com.powsybl.iidm.modification.topology.ReplaceTeePointByVoltageLevelOnLine;
 import com.powsybl.iidm.modification.topology.ReplaceTeePointByVoltageLevelOnLineBuilder;
+import com.powsybl.iidm.modification.topology.TopologyModificationUtils;
 import com.powsybl.iidm.modification.tripping.BranchTripping;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.Branch.Side;
@@ -561,22 +562,15 @@ public class NetworkModificationService {
         Bus bus = getBusBreakerBus(voltageLevel, loadCreationInfos.getBusOrBusbarSectionId());
 
         // creating the load
-        Load load =  voltageLevel.newLoad()
-            .setId(loadCreationInfos.getEquipmentId())
-            .setName(loadCreationInfos.getEquipmentName())
-            .setLoadType(loadCreationInfos.getLoadType())
-            .setBus(bus.getId())
-            .setConnectableBus(bus.getId())
-            .setP0(loadCreationInfos.getActivePower())
-            .setQ0(loadCreationInfos.getReactivePower()).add();
-        // add ConnectablePosition extension to load
-        load.newExtension(ConnectablePositionAdder.class)
-                .newFeeder()
-                .withName(loadCreationInfos.getConnectionName())
-                .withDirection(loadCreationInfos.getConnectionDirection())
-                .withOrder(0)
+        return voltageLevel.newLoad()
+                .setId(loadCreationInfos.getEquipmentId())
+                .setName(loadCreationInfos.getEquipmentName())
+                .setLoadType(loadCreationInfos.getLoadType())
+                .setBus(bus.getId())
+                .setConnectableBus(bus.getId())
+                .setP0(loadCreationInfos.getActivePower())
+                .setQ0(loadCreationInfos.getReactivePower())
                 .add();
-        return load;
     }
 
     public void updateGeneratorCreation(GeneratorCreationInfos generatorCreationInfos, UUID modificationUuid) {
@@ -635,11 +629,12 @@ public class NetworkModificationService {
                 VoltageLevel voltageLevel = getVoltageLevel(network, loadCreationInfos.getVoltageLevelId());
                 if (voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER) {
                     LoadAdder loadAdder = createLoadAdderInNodeBreaker(voltageLevel, loadCreationInfos);
+                    int position = getPosition(loadCreationInfos.getBusOrBusbarSectionId(), network, voltageLevel);
                     CreateFeederBay algo = new CreateFeederBayBuilder()
                             .withBbsId(loadCreationInfos.getBusOrBusbarSectionId())
                             .withInjectionDirection(loadCreationInfos.getConnectionDirection())
-                            .withInjectionFeederName(loadCreationInfos.getConnectionName())
-                            .withInjectionPositionOrder(0)
+                            .withInjectionFeederName(loadCreationInfos.getConnectionName() != null ? loadCreationInfos.getConnectionName() : loadCreationInfos.getEquipmentId())
+                            .withInjectionPositionOrder(position)
                             .withInjectionAdder(loadAdder)
                             .build();
                     algo.apply(network, true, subReporter);
@@ -657,6 +652,24 @@ public class NetworkModificationService {
             listener.storeLoadCreation(loadCreationInfos);
         }, CREATE_LOAD_ERROR, reportUuid, reporter, subReporter).stream().map(EquipmentModificationInfos.class::cast)
             .collect(Collectors.toList());
+    }
+
+    private int getPosition(String busOrBusbarSectionId, Network network, VoltageLevel voltageLevel) {
+        var count = voltageLevel.getConnectableCount();
+        var position = 0;
+        var bbs = network.getBusbarSection(busOrBusbarSectionId);
+        if (count > 0) {
+            var rightRange = TopologyModificationUtils.getUnusedOrderPositionsAfter(bbs);
+            if (rightRange.isPresent()) {
+                position = rightRange.get().getMinimum();
+            } else {
+                var leftRange = TopologyModificationUtils.getUnusedOrderPositionsBefore(bbs);
+                if (leftRange.isPresent()) {
+                    position = leftRange.get().getMaximum();
+                }
+            }
+        }
+        return position;
     }
 
     public List<EquipmentModificationInfos> createLoad(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, LoadCreationInfos loadCreationInfos) {
@@ -930,7 +943,7 @@ public class NetworkModificationService {
                                                         generatorCreationInfos.getRegulatingTerminalType(),
                                                         generatorCreationInfos.getRegulatingTerminalVlId());
         // creating the generator adder
-        GeneratorAdder generator = voltageLevel.newGenerator()
+        GeneratorAdder generatorAdder = voltageLevel.newGenerator()
             .setId(generatorCreationInfos.getEquipmentId())
             .setName(generatorCreationInfos.getEquipmentName())
             .setEnergySource(generatorCreationInfos.getEnergySource())
@@ -943,30 +956,33 @@ public class NetworkModificationService {
             .setTargetV(generatorCreationInfos.getVoltageSetpoint() != null ? generatorCreationInfos.getVoltageSetpoint() : Double.NaN);
 
         if (terminal != null) {
-            generator.setRegulatingTerminal(terminal);
+            generatorAdder.setRegulatingTerminal(terminal);
         }
 
         Boolean participate = generatorCreationInfos.getParticipate();
-
+        var generator = generatorAdder.add();
         if (generatorCreationInfos.getMarginalCost() != null) {
-            generator.add().newExtension(GeneratorStartupAdderImpl.class).withMarginalCost(generatorCreationInfos.getMarginalCost()).add();
+            generator.newExtension(GeneratorStartupAdderImpl.class).withMarginalCost(generatorCreationInfos.getMarginalCost()).add();
         }
 
         if (generatorCreationInfos.getParticipate() != null && generatorCreationInfos.getDroop() != null) {
-            generator.add().newExtension(ActivePowerControlAdder.class).withParticipate(participate)
+            generator
+                    .newExtension(ActivePowerControlAdder.class)
+                    .withParticipate(participate)
                     .withDroop(generatorCreationInfos.getDroop())
                     .add();
         }
 
         if (generatorCreationInfos.getTransientReactance() != null && generatorCreationInfos.getStepUpTransformerReactance() != null) {
-            generator.add().newExtension(GeneratorShortCircuitAdder.class)
+            generator
+                    .newExtension(GeneratorShortCircuitAdder.class)
                     .withDirectTransX(generatorCreationInfos.getTransientReactance())
                     .withStepUpTransformerX(generatorCreationInfos.getStepUpTransformerReactance())
                     .add();
         }
 
         if (Boolean.TRUE.equals(generatorCreationInfos.getReactiveCapabilityCurve())) {
-            ReactiveCapabilityCurveAdder adder = generator.add().newReactiveCapabilityCurve();
+            ReactiveCapabilityCurveAdder adder = generator.newReactiveCapabilityCurve();
             generatorCreationInfos.getReactiveCapabilityCurvePoints()
                     .forEach(point -> adder.beginPoint()
                             .setMaxQ(point.getQmaxP())
@@ -977,15 +993,15 @@ public class NetworkModificationService {
         }
 
         if (generatorCreationInfos.getMinimumReactivePower() != null && generatorCreationInfos.getMaximumReactivePower() != null) {
-            generator.add().newMinMaxReactiveLimits().setMinQ(generatorCreationInfos.getMinimumReactivePower())
+            generator.newMinMaxReactiveLimits().setMinQ(generatorCreationInfos.getMinimumReactivePower())
                     .setMaxQ(generatorCreationInfos.getMaximumReactivePower())
                     .add();
         }
 
-        return generator;
+        return generatorAdder;
     }
 
-    private Generator createGeneratorInBusBreaker(VoltageLevel voltageLevel, GeneratorCreationInfos generatorCreationInfos) {
+    private void createGeneratorInBusBreaker(VoltageLevel voltageLevel, GeneratorCreationInfos generatorCreationInfos) {
         Bus bus = getBusBreakerBus(voltageLevel, generatorCreationInfos.getBusOrBusbarSectionId());
 
         Terminal terminal = getTerminalFromIdentifiable(voltageLevel.getNetwork(),
@@ -1052,8 +1068,6 @@ public class NetworkModificationService {
                 .withDirection(generatorCreationInfos.getConnectionDirection())
                 .withOrder(0)
                 .add();
-
-        return generator;
     }
 
     private List<EquipmentModificationInfos> execCreateGenerator(NetworkStoreListener listener,
@@ -1078,17 +1092,16 @@ public class NetworkModificationService {
                             .withInjectionPositionOrder(0)
                             .withInjectionAdder(generatorAdder)
                             .build();
-                    algo.apply(network, false, subReporter);
+                    algo.apply(network, true, subReporter);
                 } else {
                     createGeneratorInBusBreaker(voltageLevel, generatorCreationInfos);
+                    subReporter.report(Report.builder()
+                            .withKey("generatorCreated")
+                            .withDefaultMessage("New generator with id=${id} created")
+                            .withValue("id", generatorCreationInfos.getEquipmentId())
+                            .withSeverity(TypedValue.INFO_SEVERITY)
+                            .build());
                 }
-
-                subReporter.report(Report.builder()
-                    .withKey("generatorCreated")
-                    .withDefaultMessage("New generator with id=${id} created")
-                    .withValue("id", generatorCreationInfos.getEquipmentId())
-                    .withSeverity(TypedValue.INFO_SEVERITY)
-                    .build());
             }
 
             // add the generator creation entity to the listener
