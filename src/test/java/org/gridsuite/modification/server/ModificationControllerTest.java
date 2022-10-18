@@ -589,6 +589,17 @@ public class ModificationControllerTest {
             .connectionName("top")
             .build();
 
+        LoadCreationInfos loadCreationInfos1 = LoadCreationInfos.builder()
+                .equipmentId("idLoad2")
+                .equipmentName("nameLoad2")
+                .voltageLevelId("v2")
+                .busOrBusbarSectionId("1B")
+                .loadType(LoadType.AUXILIARY)
+                .activePower(100.0)
+                .reactivePower(60.0)
+                .connectionDirection(ConnectablePosition.Direction.UNDEFINED)
+                .build();
+
         String loadCreationInfosJson = objectWriter.writeValueAsString(loadCreationInfos);
         mvcResult = mockMvc.perform(post(uriString, TEST_NETWORK_ID).content(loadCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(status().isOk()).andReturn();
@@ -598,7 +609,10 @@ public class ModificationControllerTest {
 
         assertNotNull(network.getLoad("idLoad1"));  // load was created
         testNetworkModificationsCount(TEST_GROUP_ID, 1);  // new modification stored in the database
-
+        // create load without connection name and UNDEFINED direction
+        String loadCreationInfosJson1 = objectWriter.writeValueAsString(loadCreationInfos1);
+        mockMvc.perform(post(uriString, TEST_NETWORK_ID).content(loadCreationInfosJson1).contentType(MediaType.APPLICATION_JSON))
+                .andExpectAll(status().isOk()).andReturn();
         // create load with errors
         mockMvc.perform(post(uriString, NOT_FOUND_NETWORK_ID).content(loadCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(status().isNotFound(), content().string(new NetworkModificationException(NETWORK_NOT_FOUND, NOT_FOUND_NETWORK_ID.toString()).getMessage())).andReturn();
@@ -627,7 +641,7 @@ public class ModificationControllerTest {
         mockMvc.perform(post(uriString, TEST_NETWORK_ID).content(loadCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(status().is5xxServerError(), content().string(new NetworkModificationException(CREATE_LOAD_ERROR, "Load 'idLoad1': p0 is invalid").getMessage())).andReturn();
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 1);
+        testNetworkModificationsCount(TEST_GROUP_ID, 2);
 
         // Test create load on not yet existing variant VARIANT_NOT_EXISTING_ID :
         // Only the modification should be added in the database but the load cannot be created
@@ -644,7 +658,7 @@ public class ModificationControllerTest {
 
         assertTrue(bsmlrModification.isEmpty());  // no modifications returned
         assertNull(network.getLoad("idLoad3"));  // load was not created
-        testNetworkModificationsCount(TEST_GROUP_ID, 2);  // new modification stored in the database
+        testNetworkModificationsCount(TEST_GROUP_ID, 3);  // new modification stored in the database
     }
 
     @Test
@@ -666,6 +680,16 @@ public class ModificationControllerTest {
             .connectionDirection(ConnectablePosition.Direction.TOP)
             .build();
 
+        LoadCreationInfos loadCreationInfos1 = LoadCreationInfos.builder()
+                .equipmentId("idLoad2")
+                .equipmentName("nameLoad2")
+                .voltageLevelId("v1")
+                .busOrBusbarSectionId("bus1")
+                .loadType(LoadType.FICTITIOUS)
+                .activePower(200.0)
+                .reactivePower(30.0)
+                .build();
+
         String loadCreationInfosJson = objectWriter.writeValueAsString(loadCreationInfos);
         mvcResult = mockMvc.perform(post(uriString, TEST_NETWORK_BUS_BREAKER_ID).content(loadCreationInfosJson)
             .contentType(MediaType.APPLICATION_JSON))
@@ -676,7 +700,11 @@ public class ModificationControllerTest {
         assertThat(equipmentModificationInfos, createMatcherEquipmentModificationInfos(ModificationType.LOAD_CREATION, "idLoad1", Set.of("s1")));
 
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
-
+        // create load without connection name and direction
+        String loadCreationInfosJson1 = objectWriter.writeValueAsString(loadCreationInfos1);
+        mockMvc.perform(post(uriString, TEST_NETWORK_BUS_BREAKER_ID).content(loadCreationInfosJson1)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
         // Update load creation
         loadCreationInfos = new LoadCreationEntity(
                 "idLoad1edited",
@@ -703,7 +731,7 @@ public class ModificationControllerTest {
         mockMvc.perform(put(uriStringForUpdate).contentType(MediaType.APPLICATION_JSON).content(loadCreationUpdateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpectAll(status().isOk());
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 1);
+        testNetworkModificationsCount(TEST_GROUP_ID, 2);
         mvcResult = mockMvc.perform(get("/v1/modifications/" + equipmentModificationInfos.getUuid().toString()).contentType(MediaType.APPLICATION_JSON))
                 .andExpectAll(status().isOk()).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
@@ -716,7 +744,7 @@ public class ModificationControllerTest {
         mockMvc.perform(post(uriString, TEST_NETWORK_BUS_BREAKER_ID).content(loadCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(status().is4xxClientError(), content().string(new NetworkModificationException(BUS_NOT_FOUND, "notFoundBus").getMessage()));
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 1);
+        testNetworkModificationsCount(TEST_GROUP_ID, 2);
     }
 
     @Test
