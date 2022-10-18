@@ -22,14 +22,15 @@ import com.powsybl.iidm.modification.topology.CreateFeederBayBuilder;
 import com.powsybl.iidm.modification.topology.CreateLineOnLine;
 import com.powsybl.iidm.modification.topology.ReplaceTeePointByVoltageLevelOnLine;
 import com.powsybl.iidm.modification.topology.ReplaceTeePointByVoltageLevelOnLineBuilder;
+import com.powsybl.iidm.modification.topology.TopologyModificationUtils;
 import com.powsybl.iidm.modification.tripping.BranchTripping;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.Branch.Side;
 import com.powsybl.iidm.network.extensions.ActivePowerControlAdder;
 import com.powsybl.iidm.network.extensions.BranchStatus;
 import com.powsybl.iidm.network.extensions.BranchStatusAdder;
+import com.powsybl.iidm.network.extensions.BusbarSectionPosition;
 import com.powsybl.iidm.network.extensions.BusbarSectionPositionAdder;
-import com.powsybl.iidm.network.extensions.ConnectablePositionAdder;
 import com.powsybl.iidm.network.extensions.GeneratorShortCircuitAdder;
 import com.powsybl.iidm.network.extensions.GeneratorStartupAdder;
 import com.powsybl.network.store.client.NetworkStoreService;
@@ -561,7 +562,7 @@ public class NetworkModificationService {
         Bus bus = getBusBreakerBus(voltageLevel, loadCreationInfos.getBusOrBusbarSectionId());
 
         // creating the load
-        Load load =  voltageLevel.newLoad()
+        return voltageLevel.newLoad()
             .setId(loadCreationInfos.getEquipmentId())
             .setName(loadCreationInfos.getEquipmentName())
             .setLoadType(loadCreationInfos.getLoadType())
@@ -569,14 +570,6 @@ public class NetworkModificationService {
             .setConnectableBus(bus.getId())
             .setP0(loadCreationInfos.getActivePower())
             .setQ0(loadCreationInfos.getReactivePower()).add();
-        // add ConnectablePosition extension to load
-        load.newExtension(ConnectablePositionAdder.class)
-                .newFeeder()
-                .withName(loadCreationInfos.getConnectionName())
-                .withDirection(loadCreationInfos.getConnectionDirection())
-                .withOrder(0)
-                .add();
-        return load;
     }
 
     public void updateGeneratorCreation(GeneratorCreationInfos generatorCreationInfos, UUID modificationUuid) {
@@ -633,11 +626,13 @@ public class NetworkModificationService {
                 VoltageLevel voltageLevel = getVoltageLevel(network, loadCreationInfos.getVoltageLevelId());
                 if (voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER) {
                     LoadAdder loadAdder = createLoadAdderInNodeBreaker(voltageLevel, loadCreationInfos);
+                    var position = getPosition(loadCreationInfos.getBusOrBusbarSectionId(), network, voltageLevel);
+
                     CreateFeederBay algo = new CreateFeederBayBuilder()
                             .withBbsId(loadCreationInfos.getBusOrBusbarSectionId())
                             .withInjectionDirection(loadCreationInfos.getConnectionDirection())
-                            .withInjectionFeederName(loadCreationInfos.getConnectionName())
-                            .withInjectionPositionOrder(0)
+                            .withInjectionFeederName(loadCreationInfos.getConnectionName() != null ? loadCreationInfos.getConnectionName() : loadCreationInfos.getEquipmentId())
+                            .withInjectionPositionOrder(position)
                             .withInjectionAdder(loadAdder)
                             .build();
                     algo.apply(network, true, subReporter);
@@ -655,6 +650,26 @@ public class NetworkModificationService {
             listener.storeLoadCreation(loadCreationInfos);
         }, CREATE_LOAD_ERROR, reportUuid, reporter, subReporter).stream().map(EquipmentModificationInfos.class::cast)
             .collect(Collectors.toList());
+    }
+
+    private int getPosition(String busOrBusbarSectionId, Network network, VoltageLevel voltageLevel) {
+        var count = voltageLevel.getConnectableCount();
+        var position = 0;
+        var bbs = network.getBusbarSection(busOrBusbarSectionId);
+        if (count > 0) {
+            var rightRange = TopologyModificationUtils.getUnusedOrderPositionsAfter(bbs);
+            if (rightRange.isPresent()) {
+                position = rightRange.get().getMinimum();
+            } else {
+                var leftRange = TopologyModificationUtils.getUnusedOrderPositionsBefore(bbs);
+                if (leftRange.isPresent()) {
+                    position = leftRange.get().getMaximum();
+                } else {
+                    throw new NetworkModificationException(POSITION_ORDER_ERROR, "no available position");
+                }
+            }
+        }
+        return position;
     }
 
     public List<EquipmentModificationInfos> createLoad(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, LoadCreationInfos loadCreationInfos) {
