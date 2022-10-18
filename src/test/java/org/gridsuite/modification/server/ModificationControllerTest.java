@@ -431,6 +431,11 @@ public class ModificationControllerTest {
         assertThat(bsmlrbStatusInfos.get(0), createMatcherBranchStatusModificationInfos("line2", BranchStatusModificationInfos.ActionType.ENERGISE_END_TWO, Set.of("s1")));
 
         testNetworkModificationsCount(TEST_GROUP_ID, 6);
+
+        // invalid action case
+        mockMvc.perform(put(uriString, TEST_NETWORK_ID, "line2").contentType(MediaType.TEXT_PLAIN_VALUE).content("invalid_action")).andExpectAll(
+                status().is4xxClientError(),
+                content().string(new NetworkModificationException(BRANCH_ACTION_TYPE_UNKNOWN, "The branch action type : invalid_action is unknown").getMessage()));
     }
 
     @Test
