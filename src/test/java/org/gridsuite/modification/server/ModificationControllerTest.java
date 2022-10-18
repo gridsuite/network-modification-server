@@ -2685,4 +2685,12 @@ public class ModificationControllerTest {
         List<ModificationInfos> modificationsTestGroupId = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertEquals(actualSize, modificationsTestGroupId.size());
     }
+
+    @Test
+    public void testGetPosition() {
+        var networkTest = networkStoreService.getNetwork(TEST_NETWORK_ID);
+        var vl = networkTest.getVoltageLevel("v2");
+        var result = networkModificationService.getPosition("1B", network, vl);
+        assertEquals(6, result);
+    }
 }
