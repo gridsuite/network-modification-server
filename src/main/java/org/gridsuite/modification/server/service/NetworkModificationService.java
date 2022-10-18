@@ -31,6 +31,7 @@ import com.powsybl.iidm.network.extensions.BranchStatus;
 import com.powsybl.iidm.network.extensions.BranchStatusAdder;
 import com.powsybl.iidm.network.extensions.BusbarSectionPosition;
 import com.powsybl.iidm.network.extensions.BusbarSectionPositionAdder;
+import com.powsybl.iidm.network.extensions.ConnectablePositionAdder;
 import com.powsybl.iidm.network.extensions.GeneratorShortCircuitAdder;
 import com.powsybl.iidm.network.extensions.GeneratorStartupAdder;
 import com.powsybl.network.store.client.NetworkStoreService;
@@ -2295,7 +2296,6 @@ public class NetworkModificationService {
                         .withLineC2Id(linesAttachToSplitLinesInfos.getReplacingLine2Id())
                         .withLineC2Name(linesAttachToSplitLinesInfos.getReplacingLine2Name())
                         .build();
-
                 algo.apply(network, true, subReporter);
             }
 
