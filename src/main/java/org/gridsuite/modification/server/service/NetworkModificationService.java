@@ -670,7 +670,7 @@ public class NetworkModificationService {
                 }
             }
         } else {
-            throw new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "Bus bar section not found");
+            throw new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "Bus bar section " + busOrBusbarSectionId  + " not found");
         }
         return position;
     }

@@ -632,7 +632,7 @@ public class ModificationControllerTest {
         loadCreationInfos.setBusOrBusbarSectionId("notFoundBusbarSection");
         loadCreationInfosJson = objectWriter.writeValueAsString(loadCreationInfos);
         mockMvc.perform(post(uriString, TEST_NETWORK_ID).content(loadCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpectAll(status().is5xxServerError(), content().string(new NetworkModificationException(CREATE_LOAD_ERROR, "java.lang.NullPointerException").getMessage())).andReturn();
+            .andExpectAll(status().is4xxClientError(), content().string(new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "Bus bar section notFoundBusbarSection not found").getMessage())).andReturn();
 
         loadCreationInfos.setVoltageLevelId("v2");
         loadCreationInfos.setBusOrBusbarSectionId("1B");
@@ -2760,7 +2760,7 @@ public class ModificationControllerTest {
         assertEquals(6, result);
         assertEquals(0, result2);
 
-        assertThrows(new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "Bus bar section not found").getMessage(),
+        assertThrows(new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "Bus bar section invalidBbsId not found").getMessage(),
                 NetworkModificationException.class, () -> networkModificationService.getPosition("invalidBbsId", network, vl)
         );
     }
