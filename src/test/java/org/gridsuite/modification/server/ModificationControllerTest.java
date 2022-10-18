@@ -2756,9 +2756,13 @@ public class ModificationControllerTest {
         var vl = network.getVoltageLevel("v2");
         var vl2 = network2.getVoltageLevel("v2");
         var result = networkModificationService.getPosition("1B", network, vl);
-        var result2 = networkModificationService.getPosition("1B", network2, vl2);
+        var result2 = networkModificationService.getPosition("1.1", network2, vl2);
         assertEquals(6, result);
         assertEquals(0, result2);
+
+        assertThrows(new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "Bus bar section not found").getMessage(),
+                NetworkModificationException.class, () -> networkModificationService.getPosition("invalidBbsId", network, vl)
+        );
     }
 
 }

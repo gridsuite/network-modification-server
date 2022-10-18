@@ -336,7 +336,7 @@ public final class NetworkCreation {
 
     @SuppressWarnings("SameParameterValue")
     private static void createLoad(VoltageLevel vl, String id, String name,
-                                   int node, double p0, double q0, String feederName1, int feederOrder, ConnectablePosition.Direction direction) {
+                                   int node, double p0, double q0, String feederName, int feederOrder, ConnectablePosition.Direction direction) {
         var l = vl.newLoad()
             .setId(id)
             .setName(name)
@@ -346,7 +346,7 @@ public final class NetworkCreation {
             .add();
         l.newExtension(ConnectablePositionAdder.class)
                 .newFeeder1()
-                .withName(feederName1)
+                .withName(feederName)
                 .withOrder(feederOrder)
                 .withDirection(direction).add();
     }

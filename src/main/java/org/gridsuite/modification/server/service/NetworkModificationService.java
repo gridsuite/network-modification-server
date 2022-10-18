@@ -655,18 +655,22 @@ public class NetworkModificationService {
         var count = voltageLevel.getConnectableCount();
         var position = 0;
         var bbs = network.getBusbarSection(busOrBusbarSectionId);
-        if (count > 0) {
-            var rightRange = TopologyModificationUtils.getUnusedOrderPositionsAfter(bbs);
-            if (rightRange.isPresent()) {
-                position = rightRange.get().getMinimum();
-            } else {
-                var leftRange = TopologyModificationUtils.getUnusedOrderPositionsBefore(bbs);
-                if (leftRange.isPresent()) {
-                    position = leftRange.get().getMaximum();
+        if (bbs != null) {
+            if (count > 0) {
+                var rightRange = TopologyModificationUtils.getUnusedOrderPositionsAfter(bbs);
+                if (rightRange.isPresent()) {
+                    position = rightRange.get().getMinimum();
                 } else {
-                    throw new NetworkModificationException(POSITION_ORDER_ERROR, "no available position");
+                    var leftRange = TopologyModificationUtils.getUnusedOrderPositionsBefore(bbs);
+                    if (leftRange.isPresent()) {
+                        position = leftRange.get().getMaximum();
+                    } else {
+                        throw new NetworkModificationException(POSITION_ORDER_ERROR, "no available position");
+                    }
                 }
             }
+        } else {
+            throw new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "Bus bar section not found");
         }
         return position;
     }
