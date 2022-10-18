@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.reporter.ReporterModel;
+import com.powsybl.iidm.modification.topology.TopologyModificationUtils;
 import com.powsybl.iidm.network.Country;
 import com.powsybl.iidm.network.EnergySource;
 import com.powsybl.iidm.network.Generator;
@@ -2746,6 +2747,48 @@ public class ModificationControllerTest {
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<ModificationInfos> modificationsTestGroupId = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertEquals(actualSize, modificationsTestGroupId.size());
+    }
+
+    @Test
+    public void shouldGetPosition() {
+        var network = networkStoreService.getNetwork(TEST_NETWORK_ID);
+        var network2 = networkStoreService.getNetwork(TEST_NETWORK_MIXED_TOPOLOGY_ID);
+        var vl = network.getVoltageLevel("v2");
+        var vl2 = network2.getVoltageLevel("v2");
+        assertEquals(9, vl.getConnectableCount());
+        assertEquals(0, vl2.getConnectableCount());
+        assertNotNull(network.getBusbarSection("1B"));
+        assertNotNull(network.getBusbarSection("1.1"));
+
+        var result = networkModificationService.getPosition("1B", network, vl);
+        var result2 = networkModificationService.getPosition("1.1", network2, vl2);
+        assertEquals(6, result);
+        assertEquals(0, result2);
+    }
+
+    @Test
+    public void shouldThrowExceptionWhenInvalidBbsId() {
+        var network = networkStoreService.getNetwork(TEST_NETWORK_ID);
+        var vl = network.getVoltageLevel("v2");
+        assertThrows(new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "Bus bar section invalidBbsId not found").getMessage(),
+                NetworkModificationException.class, () -> networkModificationService.getPosition("invalidBbsId", network, vl)
+        );
+    }
+
+    @Test
+    public void shouldGetMaximumFromAfterRange() {
+        var network =  networkStoreService.getNetwork(TEST_NETWORK_ID);
+        var rightRange = TopologyModificationUtils.getUnusedOrderPositionsBefore(network.getBusbarSection("1B"));
+        assert rightRange.orElse(null) != null;
+        assertEquals(Optional.of(0), Optional.ofNullable(rightRange.orElse(null).getMaximum()));
+    }
+
+    @Test
+    public void shouldGetMinimumFromBeforeRange() {
+        var network =  networkStoreService.getNetwork(TEST_NETWORK_ID);
+        var leftRange = TopologyModificationUtils.getUnusedOrderPositionsAfter(network.getBusbarSection("1B"));
+        assert leftRange.orElse(null) != null;
+        assertEquals(Optional.of(6), Optional.ofNullable(leftRange.orElse(null).getMinimum()));
     }
 
 }
