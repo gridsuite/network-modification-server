@@ -641,6 +641,12 @@ public class ModificationControllerTest {
         mockMvc.perform(post(uriString, TEST_NETWORK_ID).content(loadCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(status().is5xxServerError(), content().string(new NetworkModificationException(CREATE_LOAD_ERROR, "Load 'idLoad1': p0 is invalid").getMessage())).andReturn();
 
+        loadCreationInfos1.setConnectionDirection(null);
+        loadCreationInfos1.setConnectionName(null);
+        loadCreationInfosJson1 = objectWriter.writeValueAsString(loadCreationInfos1);
+        mockMvc.perform(post(uriString, TEST_NETWORK_ID).content(loadCreationInfosJson1).contentType(MediaType.APPLICATION_JSON))
+                .andExpectAll(status().is5xxServerError(), content().string(new NetworkModificationException(CREATE_LOAD_ERROR, "java.lang.NullPointerException").getMessage())).andReturn();
+
         testNetworkModificationsCount(TEST_GROUP_ID, 2);
 
         // Test create load on not yet existing variant VARIANT_NOT_EXISTING_ID :
@@ -650,6 +656,9 @@ public class ModificationControllerTest {
         loadCreationInfos.setEquipmentName("nameLoad3");
         loadCreationInfos.setVoltageLevelId("v2");
         loadCreationInfos.setBusOrBusbarSectionId("1B");
+        loadCreationInfos.setConnectionName("cn3");
+        loadCreationInfos.setConnectionDirection(ConnectablePosition.Direction.BOTTOM);
+
         loadCreationInfosJson = objectWriter.writeValueAsString(loadCreationInfos);
         mvcResult = mockMvc.perform(post(uriString, TEST_NETWORK_ID).content(loadCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(status().isOk()).andReturn();
@@ -2716,9 +2725,13 @@ public class ModificationControllerTest {
 
     @Test
     public void testGetPosition() {
-        var networkTest = networkStoreService.getNetwork(TEST_NETWORK_ID);
-        var vl = networkTest.getVoltageLevel("v2");
+        var network1 = networkStoreService.getNetwork(TEST_NETWORK_ID);
+        var network2 = networkStoreService.getNetwork(TEST_NETWORK_MIXED_TOPOLOGY_ID);
+        var vl = network1.getVoltageLevel("v2");
+        var vl2 = network2.getVoltageLevel("v2");
         var result = networkModificationService.getPosition("1B", network, vl);
+        var result2 = networkModificationService.getPosition("1B", network, vl2);
         assertEquals(6, result);
+        assertEquals(0, result2);
     }
 }
