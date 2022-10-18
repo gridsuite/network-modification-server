@@ -668,6 +668,7 @@ public class ModificationControllerTest {
         assertTrue(bsmlrModification.isEmpty());  // no modifications returned
         assertNull(network.getLoad("idLoad3"));  // load was not created
         testNetworkModificationsCount(TEST_GROUP_ID, 3);  // new modification stored in the database
+
     }
 
     @Test
@@ -754,6 +755,32 @@ public class ModificationControllerTest {
             .andExpectAll(status().is4xxClientError(), content().string(new NetworkModificationException(BUS_NOT_FOUND, "notFoundBus").getMessage()));
 
         testNetworkModificationsCount(TEST_GROUP_ID, 2);
+    }
+
+    @Test
+    public void assertThrowsUpdateLoadCreation() {
+        LoadCreationInfos loadCreationInfos = LoadCreationInfos.builder()
+                .equipmentId("idLoad1")
+                .equipmentName("nameLoad1")
+                .voltageLevelId("v1")
+                .busOrBusbarSectionId("bus1")
+                .loadType(LoadType.FICTITIOUS)
+                .activePower(200.0)
+                .reactivePower(30.0)
+                .connectionName("top")
+                .connectionDirection(ConnectablePosition.Direction.TOP)
+                .build();
+
+        UUID modificationUuid = UUID.randomUUID();
+
+        assertThrows(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, modificationUuid.toString()).getMessage(),
+                NetworkModificationException.class, () -> networkModificationService.updateLoadCreation(loadCreationInfos, modificationUuid)
+        );
+
+        assertThrows(new NetworkModificationException(CREATE_LOAD_ERROR, "Load creation not found").getMessage(),
+                NetworkModificationException.class, () -> networkModificationService.updateLoadCreation(null, modificationUuid)
+        );
+
     }
 
     @Test
@@ -871,7 +898,6 @@ public class ModificationControllerTest {
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<LoadModificationInfos> bsmlrloadmodif = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertThat(bsmlrloadmodif.get(0), MatcherLoadModificationInfos.createMatcherLoadModificationInfos(loadModificationInfos));
-
     }
 
     @Test
@@ -2725,13 +2751,14 @@ public class ModificationControllerTest {
 
     @Test
     public void testGetPosition() {
-        var network1 = networkStoreService.getNetwork(TEST_NETWORK_ID);
+        var network = networkStoreService.getNetwork(TEST_NETWORK_ID);
         var network2 = networkStoreService.getNetwork(TEST_NETWORK_MIXED_TOPOLOGY_ID);
-        var vl = network1.getVoltageLevel("v2");
+        var vl = network.getVoltageLevel("v2");
         var vl2 = network2.getVoltageLevel("v2");
         var result = networkModificationService.getPosition("1B", network, vl);
-        var result2 = networkModificationService.getPosition("1B", network, vl2);
+        var result2 = networkModificationService.getPosition("1B", network2, vl2);
         assertEquals(6, result);
         assertEquals(0, result2);
     }
+
 }
