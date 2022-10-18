@@ -2769,31 +2769,10 @@ public class ModificationControllerTest {
         var result2 = networkModificationService.getPosition("1.1", network2, vl2);
         assertEquals(6, result);
         assertEquals(0, result2);
-    }
 
-    @Test
-    public void shouldThrowExceptionWhenInvalidBbsId() {
-        var network = networkStoreService.getNetwork(TEST_NETWORK_ID);
-        var vl = network.getVoltageLevel("v2");
         assertThrows(new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "Bus bar section invalidBbsId not found").getMessage(),
                 NetworkModificationException.class, () -> networkModificationService.getPosition("invalidBbsId", network, vl)
         );
-    }
-
-    @Test
-    public void shouldGetMaximumFromAfterRange() {
-        var network =  networkStoreService.getNetwork(TEST_NETWORK_ID);
-        var rightRange = TopologyModificationUtils.getUnusedOrderPositionsBefore(network.getBusbarSection("1B"));
-        assert rightRange.orElse(null) != null;
-        assertEquals(Optional.of(0), Optional.ofNullable(rightRange.orElse(null).getMaximum()));
-    }
-
-    @Test
-    public void shouldGetMinimumFromBeforeRange() {
-        var network =  networkStoreService.getNetwork(TEST_NETWORK_ID);
-        var leftRange = TopologyModificationUtils.getUnusedOrderPositionsAfter(network.getBusbarSection("1B"));
-        assert leftRange.orElse(null) != null;
-        assertEquals(Optional.of(6), Optional.ofNullable(leftRange.orElse(null).getMinimum()));
     }
 
 }
