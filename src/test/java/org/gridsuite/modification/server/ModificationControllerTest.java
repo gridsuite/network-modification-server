@@ -2211,13 +2211,30 @@ public class ModificationControllerTest {
             .andExpect(status().isOk());
 
         testNetworkModificationsCount(TEST_GROUP_ID, 8);
+        // create new load in voltage level with node/breaker topology (in voltage level "v2" and busbar section "1B")
+        uriString = "/v1/networks/{networkUuid}/loads?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
+        LoadCreationInfos loadCreationInfos = LoadCreationInfos.builder()
+                .equipmentId("idLoad1")
+                .equipmentName("nameLoad1")
+                .voltageLevelId("v2")
+                .busOrBusbarSectionId("1B")
+                .loadType(LoadType.AUXILIARY)
+                .activePower(100.0)
+                .reactivePower(60.0)
+                .connectionDirection(ConnectablePosition.Direction.TOP)
+                .connectionName("top")
+                .build();
 
+        String loadCreationInfosJson = objectWriter.writeValueAsString(loadCreationInfos);
+        mockMvc.perform(post(uriString, TEST_NETWORK_ID).content(loadCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpectAll(status().isOk()).andReturn();
+        testNetworkModificationsCount(TEST_GROUP_ID, 9);
         //test copy group
         UUID newGroupUuid = UUID.randomUUID();
         uriString = "/v1/groups?groupUuid=" + newGroupUuid + "&duplicateFrom=" + TEST_GROUP_ID + "&reportUuid=" + UUID.randomUUID();
         mockMvc.perform(post(uriString)).andExpect(status().isOk());
 
-        testNetworkModificationsCount(newGroupUuid, 8);
+        testNetworkModificationsCount(newGroupUuid, 9);
     }
 
     @Test
