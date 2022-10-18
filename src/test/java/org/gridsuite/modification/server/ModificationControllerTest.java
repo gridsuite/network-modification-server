@@ -2211,30 +2211,12 @@ public class ModificationControllerTest {
             .andExpect(status().isOk());
 
         testNetworkModificationsCount(TEST_GROUP_ID, 8);
-        // create new load in voltage level with node/breaker topology (in voltage level "v2" and busbar section "1B")
-        uriString = "/v1/networks/{networkUuid}/loads?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
-        LoadCreationInfos loadCreationInfos = LoadCreationInfos.builder()
-                .equipmentId("idLoad1")
-                .equipmentName("nameLoad1")
-                .voltageLevelId("v2")
-                .busOrBusbarSectionId("1B")
-                .loadType(LoadType.AUXILIARY)
-                .activePower(100.0)
-                .reactivePower(60.0)
-                .connectionDirection(ConnectablePosition.Direction.TOP)
-                .connectionName("top")
-                .build();
-
-        String loadCreationInfosJson = objectWriter.writeValueAsString(loadCreationInfos);
-        mockMvc.perform(post(uriString, TEST_NETWORK_ID).content(loadCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpectAll(status().isOk()).andReturn();
-        testNetworkModificationsCount(TEST_GROUP_ID, 9);
         //test copy group
         UUID newGroupUuid = UUID.randomUUID();
         uriString = "/v1/groups?groupUuid=" + newGroupUuid + "&duplicateFrom=" + TEST_GROUP_ID + "&reportUuid=" + UUID.randomUUID();
         mockMvc.perform(post(uriString)).andExpect(status().isOk());
 
-        testNetworkModificationsCount(newGroupUuid, 9);
+        testNetworkModificationsCount(newGroupUuid, 8);
     }
 
     @Test
@@ -2764,22 +2746,6 @@ public class ModificationControllerTest {
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<ModificationInfos> modificationsTestGroupId = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertEquals(actualSize, modificationsTestGroupId.size());
-    }
-
-    @Test
-    public void testGetPosition() {
-        var network = networkStoreService.getNetwork(TEST_NETWORK_ID);
-        var network2 = networkStoreService.getNetwork(TEST_NETWORK_MIXED_TOPOLOGY_ID);
-        var vl = network.getVoltageLevel("v2");
-        var vl2 = network2.getVoltageLevel("v2");
-        var result = networkModificationService.getPosition("1B", network, vl);
-        var result2 = networkModificationService.getPosition("1.1", network2, vl2);
-        assertEquals(6, result);
-        assertEquals(0, result2);
-
-        assertThrows(new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "Bus bar section invalidBbsId not found").getMessage(),
-                NetworkModificationException.class, () -> networkModificationService.getPosition("invalidBbsId", network, vl)
-        );
     }
 
 }

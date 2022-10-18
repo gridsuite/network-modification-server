@@ -651,7 +651,7 @@ public class NetworkModificationService {
             .collect(Collectors.toList());
     }
 
-    public int getPosition(String busOrBusbarSectionId, Network network, VoltageLevel voltageLevel) {
+    private int getPosition(String busOrBusbarSectionId, Network network, VoltageLevel voltageLevel) {
         var count = voltageLevel.getConnectableCount();
         var position = 0;
         var bbs = network.getBusbarSection(busOrBusbarSectionId);
