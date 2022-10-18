@@ -345,7 +345,7 @@ public final class NetworkCreation {
             .setQ0(q0)
             .add();
         l.newExtension(ConnectablePositionAdder.class)
-                .newFeeder1()
+                .newFeeder()
                 .withName(feederName)
                 .withOrder(feederOrder)
                 .withDirection(direction).add();
