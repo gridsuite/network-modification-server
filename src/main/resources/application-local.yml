@@ -17,7 +17,6 @@ spring:
       ## to fill if authentication is needed
       # user:
       # password:
-      enabled: true
 
 powsybl-ws:
   database:

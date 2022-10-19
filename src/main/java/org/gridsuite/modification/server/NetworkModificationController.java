@@ -402,10 +402,11 @@ public class NetworkModificationController {
     @Operation(summary = "attach lines to a split lines")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The lines has been attached to split lines")})
     public ResponseEntity<List<ModificationInfos>> linesAttachToSplitLines(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
-                                                                         @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
-                                                                         @RequestParam(value = "group", required = false) UUID groupUuid,
-                                                                         @RequestParam(value = "reportUuid") UUID reportUuid, @RequestParam(value = "reporterId") String reporterId,
-                                                                         @RequestBody LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos) {
+                                                                           @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
+                                                                           @RequestParam(value = "group", required = false) UUID groupUuid,
+                                                                           @RequestParam(value = "reportUuid") UUID reportUuid,
+                                                                           @RequestParam(value = "reporterId") String reporterId,
+                                                                           @RequestBody LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos) {
         return ResponseEntity.ok().body(networkModificationService.createLinesAttachToSplitLines(networkUuid, variantId, groupUuid, reportUuid, reporterId, linesAttachToSplitLinesInfos));
     }
 

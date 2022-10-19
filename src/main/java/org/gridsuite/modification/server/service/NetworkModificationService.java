@@ -10,28 +10,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.InjectableValues;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.commons.PowsyblException;
-import com.powsybl.commons.reporter.Report;
-import com.powsybl.commons.reporter.Reporter;
-import com.powsybl.commons.reporter.ReporterModel;
-import com.powsybl.commons.reporter.ReporterModelDeserializer;
-import com.powsybl.commons.reporter.ReporterModelJsonModule;
-import com.powsybl.commons.reporter.TypedValue;
-import com.powsybl.iidm.modification.topology.ConnectVoltageLevelOnLine;
-import com.powsybl.iidm.modification.topology.CreateFeederBay;
-import com.powsybl.iidm.modification.topology.CreateFeederBayBuilder;
-import com.powsybl.iidm.modification.topology.CreateLineOnLine;
-import com.powsybl.iidm.modification.topology.ReplaceTeePointByVoltageLevelOnLine;
-import com.powsybl.iidm.modification.topology.ReplaceTeePointByVoltageLevelOnLineBuilder;
+import com.powsybl.commons.reporter.*;
+import com.powsybl.iidm.modification.topology.*;
 import com.powsybl.iidm.modification.tripping.BranchTripping;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.Branch.Side;
-import com.powsybl.iidm.network.extensions.ActivePowerControlAdder;
-import com.powsybl.iidm.network.extensions.BranchStatus;
-import com.powsybl.iidm.network.extensions.BranchStatusAdder;
-import com.powsybl.iidm.network.extensions.BusbarSectionPositionAdder;
-import com.powsybl.iidm.network.extensions.ConnectablePositionAdder;
-import com.powsybl.iidm.network.extensions.GeneratorShortCircuitAdder;
-import com.powsybl.iidm.network.extensions.GeneratorStartupAdder;
+import com.powsybl.iidm.network.extensions.*;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.iidm.impl.extensions.GeneratorStartupAdderImpl;
 import groovy.lang.Binding;
@@ -44,44 +28,22 @@ import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.creation.BusbarConnectionCreationEmbeddable;
-import org.gridsuite.modification.server.entities.equipment.creation.BusbarSectionCreationEmbeddable;
-import org.gridsuite.modification.server.entities.equipment.creation.EquipmentCreationEntity;
-import org.gridsuite.modification.server.entities.equipment.creation.LineCreationEntity;
-import org.gridsuite.modification.server.entities.equipment.creation.VoltageLevelCreationEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.LineAttachToVoltageLevelEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.LineSplitWithVoltageLevelEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.LinesAttachToSplitLinesEntity;
-import org.gridsuite.modification.server.repositories.ModificationGroupRepository;
+import org.gridsuite.modification.server.entities.equipment.creation.*;
+import org.gridsuite.modification.server.entities.equipment.modification.*;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
-import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.DefaultUriBuilderFactory;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -101,14 +63,15 @@ public class NetworkModificationService {
     private final NetworkModificationRepository networkModificationRepository;
 
     // TO DO : transfer the use of repositories in NetworkModificationRepository
-    private final ModificationGroupRepository modificationGroupRepository;
     private final ModificationRepository modificationRepository;
 
     private final EquipmentInfosService equipmentInfosService;
 
     private final NotificationService notificationService;
 
-    private RestTemplate reportServerRest;
+    private RestTemplate reportServerRest = new RestTemplate();
+
+    private String reportServerBaseUri;
 
     private final ObjectMapper objectMapper;
 
@@ -119,22 +82,27 @@ public class NetworkModificationService {
 
     public NetworkModificationService(@Value("${backing-services.report-server.base-uri:http://report-server}") String reportServerURI,
                                       NetworkStoreService networkStoreService, NetworkModificationRepository networkModificationRepository,
-                                      @Lazy EquipmentInfosService equipmentInfosService, ModificationGroupRepository modificationGroupRepository,
-                                      ModificationRepository modificationRepository, NotificationService notificationService) {
+                                      @Lazy EquipmentInfosService equipmentInfosService,
+                                      ModificationRepository modificationRepository, NotificationService notificationService,
+                                      ObjectMapper objectMapper) {
         this.networkStoreService = networkStoreService;
         this.networkModificationRepository = networkModificationRepository;
         this.equipmentInfosService = equipmentInfosService;
-        this.modificationGroupRepository = modificationGroupRepository;
         this.modificationRepository = modificationRepository;
         this.notificationService = notificationService;
 
-        RestTemplateBuilder restTemplateBuilder = new RestTemplateBuilder();
-        reportServerRest = restTemplateBuilder.build();
-        reportServerRest.setUriTemplateHandler(new DefaultUriBuilderFactory(reportServerURI));
+        this.reportServerBaseUri = reportServerURI;
+        this.objectMapper = objectMapper;
+        this.objectMapper.registerModule(new ReporterModelJsonModule());
+        this.objectMapper.setInjectableValues(new InjectableValues.Std().addValue(ReporterModelDeserializer.DICTIONARY_VALUE_ID, null));
+    }
 
-        objectMapper = Jackson2ObjectMapperBuilder.json().build();
-        objectMapper.registerModule(new ReporterModelJsonModule());
-        objectMapper.setInjectableValues(new InjectableValues.Std().addValue(ReporterModelDeserializer.DICTIONARY_VALUE_ID, null));
+    public void setReportServerBaseUri(String reportServerBaseUri) {
+        this.reportServerBaseUri = reportServerBaseUri;
+    }
+
+    private String getReportServerURI() {
+        return this.reportServerBaseUri + DELIMITER + REPORT_API_VERSION + DELIMITER + "reports" + DELIMITER;
     }
 
     private List<ModificationInfos> execApplyGroovyScript(NetworkStoreListener listener,
@@ -915,12 +883,13 @@ public class NetworkModificationService {
     }
 
     private void sendReport(UUID reportUuid, ReporterModel reporter) {
+        var path = UriComponentsBuilder.fromPath("{reportUuid}")
+            .buildAndExpand(reportUuid)
+            .toUriString();
         var headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        var resourceUrl = DELIMITER + REPORT_API_VERSION + DELIMITER + "reports" + DELIMITER + reportUuid;
-        var uriBuilder = UriComponentsBuilder.fromPath(resourceUrl);
         try {
-            reportServerRest.exchange(uriBuilder.toUriString(), HttpMethod.PUT, new HttpEntity<>(objectMapper.writeValueAsString(reporter), headers), ReporterModel.class);
+            reportServerRest.exchange(this.getReportServerURI() + path, HttpMethod.PUT, new HttpEntity<>(objectMapper.writeValueAsString(reporter), headers), ReporterModel.class);
         } catch (JsonProcessingException error) {
             throw new PowsyblException("error creating report", error);
         }
@@ -1792,16 +1761,17 @@ public class NetworkModificationService {
 
             try {
                 modificationInfos = networkModificationRepository.getModificationsInfos(List.of(groupUuid));
-                if (modificationInfos.isEmpty()) {
-                    sendReport(buildInfos.getReportUuid(), new ReporterModel(reporterId, reporterId));
-                    continue;
-                }
             } catch (NetworkModificationException e) {
                 if (e.getType() == MODIFICATION_GROUP_NOT_FOUND) { // May not exist
-                    sendReport(buildInfos.getReportUuid(), new ReporterModel(reporterId, reporterId));
-                    continue;
+                    modificationInfos = List.of();
+                } else {
+                    throw e;
                 }
-                throw e;
+            }
+
+            if (modificationInfos.isEmpty()) {
+                sendReport(buildInfos.getReportUuid(), new ReporterModel(reporterId, reporterId));
+                continue;
             }
 
             modificationInfos.forEach(infos -> {
