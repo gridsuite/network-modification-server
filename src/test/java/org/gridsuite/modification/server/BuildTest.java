@@ -233,7 +233,11 @@ public class BuildTest {
         entities1.add(modificationRepository.createEquipmentAttributeModification("idGenerator", "targetP", 50.));
         entities1.add(modificationRepository.createEquipmentAttributeModification("trf1", "ratioTapChanger.tapPosition", 2));
         entities1.add(modificationRepository.createEquipmentAttributeModification("trf6", "phaseTapChanger1.tapPosition", 0));
-        entities1.add(modificationRepository.createLoadCreationEntity("newLoad", "newLoad", LoadType.AUXILIARY, "v1", "1.1", 10., 20., "Top", ConnectablePosition.Direction.TOP));
+        entities1.add(modificationRepository.createLoadCreationEntity("newLoad", "newLoad", LoadType.AUXILIARY, "v1", "1.1", 10., 20., "cn", ConnectablePosition.Direction.TOP));
+        entities1.add(modificationRepository.createLoadCreationEntity("newLoad1", "newLoad1", LoadType.AUXILIARY, "v1", "1.1", 10., 20., "cn1", ConnectablePosition.Direction.BOTTOM));
+        entities1.add(modificationRepository.createLoadCreationEntity("newLoad2", "newLoad2", LoadType.AUXILIARY, "v1", "1.1", 10., 20., "cn2", ConnectablePosition.Direction.UNDEFINED));
+        entities1.add(modificationRepository.createLoadCreationEntity("newLoad2", "newLoad2", LoadType.AUXILIARY, "v1", "1.1", 10., 20., null, ConnectablePosition.Direction.UNDEFINED));
+
         entities1.add(modificationRepository.createSubstationEntity("newSubstation", "newSubstation", Country.FR));
 
         List<ModificationEntity> entities2 = new ArrayList<>();
@@ -261,7 +265,7 @@ public class BuildTest {
         modificationRepository.saveModifications(TEST_GROUP_ID, entities1);
         modificationRepository.saveModifications(TEST_GROUP_ID_2, entities2);
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 7);
+        testNetworkModificationsCount(TEST_GROUP_ID, 10);
         testNetworkModificationsCount(TEST_GROUP_ID_2, 8);
 
         // build VARIANT_ID by cloning network initial variant and applying all modifications in all groups
@@ -297,6 +301,10 @@ public class BuildTest {
         assertEquals(LoadType.AUXILIARY, network.getLoad("newLoad").getLoadType());
         assertEquals(10., network.getLoad("newLoad").getP0(), 0.1);
         assertEquals(20., network.getLoad("newLoad").getQ0(), 0.1);
+        assertEquals(10., network.getLoad("newLoad1").getP0(), 0.1);
+        assertEquals(20., network.getLoad("newLoad1").getQ0(), 0.1);
+        assertEquals(10., network.getLoad("newLoad2").getP0(), 0.1);
+        assertEquals(20., network.getLoad("newLoad2").getQ0(), 0.1);
         assertEquals(EnergySource.HYDRO, network.getGenerator(NEW_GENERATOR_ID).getEnergySource());
         assertEquals("v2", network.getGenerator(NEW_GENERATOR_ID).getTerminal().getVoltageLevel().getId());
         assertEquals(500., network.getGenerator(NEW_GENERATOR_ID).getMaxP(), 0.1);
@@ -339,7 +347,7 @@ public class BuildTest {
         assertNull(network.getShuntCompensator("shunt9"));
 
         // No new modification entity should have been added to the database
-        testNetworkModificationsCount(TEST_GROUP_ID, 7);
+        testNetworkModificationsCount(TEST_GROUP_ID, 10);
         testNetworkModificationsCount(TEST_GROUP_ID_2, 8);
 
         // Execute another build starting from variant VARIANT_ID to variant VARIANT_ID_2

@@ -10,6 +10,7 @@ package org.gridsuite.modification.server.utils;
 import java.util.UUID;
 
 import com.powsybl.iidm.network.*;
+import com.powsybl.iidm.network.extensions.BusbarSectionPositionAdder;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import com.powsybl.iidm.network.extensions.ConnectablePositionAdder;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
@@ -27,7 +28,7 @@ public final class NetworkCreation {
         VoltageLevel v1 = createVoltageLevel(s1, "v1", "v1", TopologyKind.NODE_BREAKER, 380.0);
         createBusBarSection(v1, "1.1", "1.1", 0);
 
-        createLoad(v1, "v1load", "v1load", 2, 0., 0.);
+        createLoad(v1, "v1load", "v1load", 2, 0., 0., "cn1", 0, ConnectablePosition.Direction.BOTTOM);
         createSwitch(v1, "v1d1", "v1d1", SwitchKind.DISCONNECTOR, true, false, false, 0, 1);
         createSwitch(v1, "v1b1", "v1b1", SwitchKind.BREAKER, true, false, false, 1, 2);
 
@@ -42,7 +43,7 @@ public final class NetworkCreation {
         createSwitch(v2, "v2b1", "v2b1", SwitchKind.BREAKER, true, true, false, 2, 3);
         createSwitch(v2, "v2d2", "v2d2", SwitchKind.DISCONNECTOR, true, false, false, 3, 1);
 
-        createLoad(v2, "v2load", "v2load", 5, 0., 0.);
+        createLoad(v2, "v2load", "v2load", 5, 0., 0., "cn2", 2, ConnectablePosition.Direction.BOTTOM);
         createSwitch(v2, "v2dload", "v2dload", SwitchKind.DISCONNECTOR, true, false, false, 1, 4);
         createSwitch(v2, "v2bload", "v2bload", SwitchKind.BREAKER, true, false, false, 4, 5);
 
@@ -68,14 +69,14 @@ public final class NetworkCreation {
         Substation s3 = createSubstation(network, "s3", "s3", Country.FR);
         VoltageLevel v5 = createVoltageLevel(s3, "v5", "v5", TopologyKind.NODE_BREAKER, 380.0);
         createBusBarSection(v5, "1A1", "1A1", 0);
-        createLoad(v5, "v5load", "v5load", 2, 0., 0.);
+        createLoad(v5, "v5load", "v5load", 2, 0., 0., "cn5", 5, ConnectablePosition.Direction.TOP);
         createGenerator(v5, "v5generator", 3, 42.1, 1.0);
         createShuntCompensator(v5, "v5shunt", "v5shunt", 4, 225., 10, true, 3, 1, 2, 2);
         createStaticVarCompensator(v5, "v5Compensator", "v5Compensator", 5, StaticVarCompensator.RegulationMode.VOLTAGE, 380., 100, 2, 30);
 
         VoltageLevel v6 = createVoltageLevel(s3, "v6", "v6", TopologyKind.NODE_BREAKER, 380.0);
         createBusBarSection(v6, "1B1", "1B1", 0);
-        createLoad(v6, "v6load", "v6load", 2, 0., 0.);
+        createLoad(v6, "v6load", "v6load", 2, 0., 0., "cn6", 6, ConnectablePosition.Direction.BOTTOM);
         createGenerator(v6, "v6generator", 3, 42.1, 1.0);
         createShuntCompensator(v6, "v6shunt", "v6shunt", 4, 225., 10, true, 3, 1, 2, 2);
         createStaticVarCompensator(v6, "v6Compensator", "v6Compensator", 5, StaticVarCompensator.RegulationMode.VOLTAGE, 380., 100, 2, 30);
@@ -84,7 +85,7 @@ public final class NetworkCreation {
         VoltageLevel v3 = createVoltageLevel(s2, "v3", "v3", TopologyKind.NODE_BREAKER, 380.0);
         createBusBarSection(v3, "3A", "3A", 0);
 
-        createLoad(v3, "v3load", "v3load", 2, 0., 0.);
+        createLoad(v3, "v3load", "v3load", 2, 0., 0., "cn3", 3, ConnectablePosition.Direction.BOTTOM);
         createSwitch(v3, "v3d1", "v3d1", SwitchKind.DISCONNECTOR, true, false, false, 0, 1);
         createSwitch(v3, "v3b1", "v3b1", SwitchKind.BREAKER, true, false, false, 1, 2);
 
@@ -207,14 +208,14 @@ public final class NetworkCreation {
         createBusBarSection(v1Variant, "bbs1Variant", "bbs1Variant", 0);
         createSwitch(v1Variant, "disc1Variant", "disc1Variant", SwitchKind.DISCONNECTOR, true, true, false, 0, 1);
         createSwitch(v1Variant, "break1Variant", "break1Variant", SwitchKind.BREAKER, true, false, false, 1, 2);
-        createLoad(v1Variant, "load1Variant", "load1Variant", 2, 0., 0.);
+        createLoad(v1Variant, "load1Variant", "load1Variant", 2, 0., 0., "cn1", 0, ConnectablePosition.Direction.BOTTOM);
 
         Substation s2Variant = createSubstation(network, "s2Variant", "s2Variant", Country.FR);
         VoltageLevel v2Variant = createVoltageLevel(s2Variant, "v2Variant", "v2Variant", TopologyKind.NODE_BREAKER, 380.0);
         createBusBarSection(v2Variant, "bbs2Variant", "bbs2Variant", 0);
         createSwitch(v2Variant, "disc2Variant", "disc2Variant", SwitchKind.DISCONNECTOR, true, true, false, 0, 1);
         createSwitch(v2Variant, "break2Variant", "break2Variant", SwitchKind.BREAKER, true, false, false, 1, 2);
-        createLoad(v2Variant, "load2Variant", "load2Variant", 2, 0., 0.);
+        createLoad(v2Variant, "load2Variant", "load2Variant", 2, 0., 0., "cn1", 0, ConnectablePosition.Direction.BOTTOM);
 
         createSwitch(v1Variant, "disc11Variant", "disc11Variant", SwitchKind.DISCONNECTOR, true, false, false, 0, 3);
         createSwitch(v1Variant, "break11Variant", "break11Variant", SwitchKind.BREAKER, true, false, false, 3, 4);
@@ -253,7 +254,7 @@ public final class NetworkCreation {
         createBusBarSection(v1, "1.1", "1.1", 0);
         createSwitch(v1, "v1d1", "v1d1", SwitchKind.DISCONNECTOR, true, false, false, 0, 1);
         createSwitch(v1, "v1b1", "v1b1", SwitchKind.BREAKER, true, false, false, 1, 2);
-        createLoad(v1, "v1load", "v1load", 2, 0., 0.);
+        createLoad(v1, "v1load", "v1load", 2, 0., 0., "cn1", 0, ConnectablePosition.Direction.BOTTOM);
         createLccConverterStation(v1, "v1lcc", "v1lcc", 3, 0, 0);
         VoltageLevel v3 = createVoltageLevel(s1, "v3", "v3", TopologyKind.BUS_BREAKER, 450.0);
         createBus(v3, "bus3", "bus3");
@@ -286,11 +287,12 @@ public final class NetworkCreation {
     }
 
     private static void createBusBarSection(VoltageLevel vl, String id, String name, int node) {
-        vl.getNodeBreakerView().newBusbarSection()
+        var bbs = vl.getNodeBreakerView().newBusbarSection()
             .setId(id)
             .setName(name)
             .setNode(node)
             .add();
+        bbs.newExtension(BusbarSectionPositionAdder.class).add();
     }
 
     private static void createBus(VoltageLevel vl, String id, String name) {
@@ -334,14 +336,19 @@ public final class NetworkCreation {
 
     @SuppressWarnings("SameParameterValue")
     private static void createLoad(VoltageLevel vl, String id, String name,
-                                   int node, double p0, double q0) {
-        vl.newLoad()
+                                   int node, double p0, double q0, String feederName, int feederOrder, ConnectablePosition.Direction direction) {
+        var l = vl.newLoad()
             .setId(id)
             .setName(name)
             .setNode(node)
             .setP0(p0)
             .setQ0(q0)
             .add();
+        l.newExtension(ConnectablePositionAdder.class)
+                .newFeeder()
+                .withName(feederName)
+                .withOrder(feederOrder)
+                .withDirection(direction).add();
     }
 
     private static void createLccConverterStation(VoltageLevel vl, String id, String name,
