@@ -1143,7 +1143,7 @@ public class ModificationControllerTest {
                 .andExpect(status().isOk()).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<EquipmentModificationInfos> bsmlrShuntCompensator = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertEquals(bsmlrShuntCompensator.get(0).getEquipmentId(), "shuntTwoId");
+        assertEquals("shuntTwoId", bsmlrShuntCompensator.get(0).getEquipmentId());
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
 
         shunt1 = new ShuntCompensatorCreationEntity(shunt1).toModificationInfos();
