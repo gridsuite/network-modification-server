@@ -51,7 +51,7 @@ public final class NetworkCreation {
         createSwitch(v2, "v2bgenerator", "v2bgenerator", SwitchKind.BREAKER, true, false, false, 6, 7);
         createSwitch(v2, "v2dgenerator", "v2dgenerator", SwitchKind.DISCONNECTOR, true, false, false, 7, 1);
 
-        createShuntCompensator(v2, "v2shunt", "v2shunt", 8, 225., 10, true, 3, 1, 2, 2);
+        createShuntCompensator(v2, "v2shunt", "v2shunt", 8, 225., 10, true, 3, 1, 2, 2, "cn11", 22, ConnectablePosition.Direction.BOTTOM);
         createSwitch(v2, "v2bshunt", "v2bshunt", SwitchKind.BREAKER, true, false, false, 8, 9);
         createSwitch(v2, "v2dshunt", "v2dshunt", SwitchKind.DISCONNECTOR, true, false, false, 9, 0);
 
@@ -70,15 +70,15 @@ public final class NetworkCreation {
         VoltageLevel v5 = createVoltageLevel(s3, "v5", "v5", TopologyKind.NODE_BREAKER, 380.0);
         createBusBarSection(v5, "1A1", "1A1", 0);
         createLoad(v5, "v5load", "v5load", 2, 0., 0., "cn5", 5, ConnectablePosition.Direction.TOP);
+        createShuntCompensator(v5, "v5shunt", "v5shunt", 4, 225., 10, true, 3, 1, 2, 2, "cn22", 33, ConnectablePosition.Direction.BOTTOM);
         createGenerator(v5, "v5generator", 3, 42.1, 1.0, "cn10", 10, ConnectablePosition.Direction.TOP);
-        createShuntCompensator(v5, "v5shunt", "v5shunt", 4, 225., 10, true, 3, 1, 2, 2);
         createStaticVarCompensator(v5, "v5Compensator", "v5Compensator", 5, StaticVarCompensator.RegulationMode.VOLTAGE, 380., 100, 2, 30);
 
         VoltageLevel v6 = createVoltageLevel(s3, "v6", "v6", TopologyKind.NODE_BREAKER, 380.0);
         createBusBarSection(v6, "1B1", "1B1", 0);
         createLoad(v6, "v6load", "v6load", 2, 0., 0., "cn6", 6, ConnectablePosition.Direction.BOTTOM);
+        createShuntCompensator(v6, "v6shunt", "v6shunt", 4, 225., 10, true, 3, 1, 2, 2, "cn33", 44, ConnectablePosition.Direction.BOTTOM);
         createGenerator(v6, "v6generator", 3, 42.1, 1.0, "cn11", 11, ConnectablePosition.Direction.TOP);
-        createShuntCompensator(v6, "v6shunt", "v6shunt", 4, 225., 10, true, 3, 1, 2, 2);
         createStaticVarCompensator(v6, "v6Compensator", "v6Compensator", 5, StaticVarCompensator.RegulationMode.VOLTAGE, 380., 100, 2, 30);
 
         Substation s2 = createSubstation(network, "s2", "s2", Country.FR);
@@ -490,8 +490,8 @@ public final class NetworkCreation {
 
     private static void createShuntCompensator(VoltageLevel vl, String id, String name,
                                                int node, double targetV, double targetDeadband, boolean voltageRegulatorOn,
-                                               int maximumSectionCount, double bPerSection, double gPerSection, int sectionCount) {
-        vl.newShuntCompensator()
+                                               int maximumSectionCount, double bPerSection, double gPerSection, int sectionCount, String feederName, int feederOrder, ConnectablePosition.Direction direction) {
+        var sh = vl.newShuntCompensator()
             .setId(id)
             .setName(name)
             .setNode(node)
@@ -505,6 +505,11 @@ public final class NetworkCreation {
             .add()
             .setSectionCount(sectionCount)
             .add();
+        sh.newExtension(ConnectablePositionAdder.class)
+                .newFeeder()
+                .withName(feederName)
+                .withOrder(feederOrder)
+                .withDirection(direction).add();
     }
 
     private static void createStaticVarCompensator(VoltageLevel vl, String id, String name,

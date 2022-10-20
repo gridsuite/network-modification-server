@@ -1982,32 +1982,34 @@ public class NetworkModificationService {
         }
     }
 
-    private void createShuntCompensator(VoltageLevel voltageLevel, ShuntCompensatorCreationInfos shuntCompensatorInfos, boolean isNodeBreaker) {
+    private ShuntCompensatorAdder createShuntAdderInNodeBreaker(VoltageLevel voltageLevel, ShuntCompensatorCreationInfos shuntCompensatorInfos) {
         // creating the shunt compensator
-        var shunt = voltageLevel.newShuntCompensator()
-            .setId(shuntCompensatorInfos.getEquipmentId())
-            .setName(shuntCompensatorInfos.getEquipmentName())
-            .setSectionCount(shuntCompensatorInfos.getCurrentNumberOfSections());
-
-        /* connect it !*/
-        if (isNodeBreaker) {
-            // create cell switches
-            int nodeNum = createNodeBreakerCellSwitches(voltageLevel, shuntCompensatorInfos.getBusOrBusbarSectionId(),
-                shuntCompensatorInfos.getEquipmentId(),
-                shuntCompensatorInfos.getEquipmentName());
-            shunt.setNode(nodeNum);
-        } else {
-            Bus bus = getBusBreakerBus(voltageLevel, shuntCompensatorInfos.getBusOrBusbarSectionId());
-            shunt.setBus(bus.getId())
-                 .setConnectableBus(bus.getId());
-        }
+        ShuntCompensatorAdder shunt = voltageLevel.newShuntCompensator()
+                .setId(shuntCompensatorInfos.getEquipmentId())
+                .setName(shuntCompensatorInfos.getEquipmentName())
+                .setSectionCount(shuntCompensatorInfos.getCurrentNumberOfSections());
 
         /* when we create non linear shunt, this is where we branch ;) */
         shunt.newLinearModel()
-            .setBPerSection(shuntCompensatorInfos.getSusceptancePerSection())
-            .setMaximumSectionCount(shuntCompensatorInfos.getMaximumNumberOfSections()).add();
+                .setBPerSection(shuntCompensatorInfos.getSusceptancePerSection())
+                .setMaximumSectionCount(shuntCompensatorInfos.getMaximumNumberOfSections()).add();
 
-        shunt.add();
+        return shunt;
+    }
+
+    private void createShuntInBusBreaker(VoltageLevel voltageLevel, ShuntCompensatorCreationInfos shuntCompensatorInfos) {
+        Bus bus = getBusBreakerBus(voltageLevel, shuntCompensatorInfos.getBusOrBusbarSectionId());
+        /* creating the shunt compensator */
+        voltageLevel.newShuntCompensator()
+                .setId(shuntCompensatorInfos.getEquipmentId())
+                .setName(shuntCompensatorInfos.getEquipmentName())
+                .setSectionCount(shuntCompensatorInfos.getCurrentNumberOfSections())
+                .setBus(bus.getId())
+                .setConnectableBus(bus.getId())
+                .newLinearModel()
+                .setBPerSection(shuntCompensatorInfos.getSusceptancePerSection())
+                .setMaximumSectionCount(shuntCompensatorInfos.getMaximumNumberOfSections())
+                .add();
     }
 
     public void updateShuntCompensatorCreation(ShuntCompensatorCreationInfos shuntCompensatorCreationInfos, UUID modificationUuid) {
@@ -2037,14 +2039,26 @@ public class NetworkModificationService {
             if (listener.isApplyModifications()) {
                 // create the shunt compensator in the network
                 VoltageLevel voltageLevel = getVoltageLevel(network, shuntCompensatorCreationInfos.getVoltageLevelId());
-                createShuntCompensator(voltageLevel, shuntCompensatorCreationInfos, voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER);
-
-                subReporter.report(Report.builder()
-                    .withKey("shuntCompensatorCreated")
-                    .withDefaultMessage("New shunt compensator with id=${id} created")
-                    .withValue("id", shuntCompensatorCreationInfos.getEquipmentId())
-                    .withSeverity(TypedValue.INFO_SEVERITY)
-                    .build());
+                if (voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER) {
+                    ShuntCompensatorAdder shuntCompensatorAdder = createShuntAdderInNodeBreaker(voltageLevel, shuntCompensatorCreationInfos);
+                    var position = getPosition(shuntCompensatorCreationInfos.getBusOrBusbarSectionId(), network, voltageLevel);
+                    CreateFeederBay algo = new CreateFeederBayBuilder()
+                            .withBbsId(shuntCompensatorCreationInfos.getBusOrBusbarSectionId())
+                            .withInjectionDirection(shuntCompensatorCreationInfos.getConnectionDirection())
+                            .withInjectionFeederName(shuntCompensatorCreationInfos.getConnectionName())
+                            .withInjectionPositionOrder(position)
+                            .withInjectionAdder(shuntCompensatorAdder)
+                            .build();
+                    algo.apply(network, true, subReporter);
+                } else {
+                    createShuntInBusBreaker(voltageLevel, shuntCompensatorCreationInfos);
+                    subReporter.report(Report.builder()
+                            .withKey("shuntCompensatorCreated")
+                            .withDefaultMessage("New shunt compensator with id=${id} created")
+                            .withValue("id", shuntCompensatorCreationInfos.getEquipmentId())
+                            .withSeverity(TypedValue.INFO_SEVERITY)
+                            .build());
+                }
             }
 
             // add the shunt compensator creation entity to the listener

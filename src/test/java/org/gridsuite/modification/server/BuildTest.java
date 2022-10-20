@@ -260,6 +260,8 @@ public class BuildTest {
             .currentNumberOfSections(2)
             .susceptancePerSection(1.)
             .isIdenticalSection(true)
+            .connectionDirection(ConnectablePosition.Direction.UNDEFINED)
+            .connectionName("shunt9")
             .build()));
 
         modificationRepository.saveModifications(TEST_GROUP_ID, entities1);

@@ -1071,6 +1071,8 @@ public class ModificationControllerTest {
             .currentNumberOfSections(4).maximumNumberOfSections(9)
             .susceptancePerSection(1.).isIdenticalSection(true)
             .voltageLevelId("v2").busOrBusbarSectionId("1B")
+            .connectionName("cn1")
+            .connectionDirection(ConnectablePosition.Direction.UNDEFINED)
             .build();
 
         String shunt1Json = objectWriter.writeValueAsString(shunt1);
@@ -1119,6 +1121,75 @@ public class ModificationControllerTest {
         shunt1Json = objectWriter.writeValueAsString(shunt1);
         mockMvc.perform(post(uriString, TEST_NETWORK_ID).content(shunt1Json).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().is5xxServerError());
+    }
+
+    @Test
+    public void testCreateShuntCompensatorInBusBreaker() throws Exception {
+        MvcResult mvcResult;
+        String resultAsString;
+        String uriString = "/v1/networks/{networkUuid}/shunt-compensators?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
+
+        ShuntCompensatorCreationInfos shunt1 = ShuntCompensatorCreationInfos.builder()
+                .equipmentId("shuntTwoId").equipmentName("Shunt")
+                .currentNumberOfSections(4).maximumNumberOfSections(9)
+                .susceptancePerSection(1.).isIdenticalSection(true)
+                .voltageLevelId("v2").busOrBusbarSectionId("bus2")
+                .connectionName("cn2")
+                .connectionDirection(ConnectablePosition.Direction.UNDEFINED)
+                .build();
+
+        String shunt1Json = objectWriter.writeValueAsString(shunt1);
+        mvcResult = mockMvc.perform(post(uriString, TEST_NETWORK_BUS_BREAKER_ID).content(shunt1Json).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        resultAsString = mvcResult.getResponse().getContentAsString();
+        List<EquipmentModificationInfos> bsmlrShuntCompensator = mapper.readValue(resultAsString, new TypeReference<>() { });
+        assertEquals("shuntTwoId", bsmlrShuntCompensator.get(0).getEquipmentId());
+        testNetworkModificationsCount(TEST_GROUP_ID, 1);
+
+        shunt1 = new ShuntCompensatorCreationEntity(shunt1).toModificationInfos();
+        shunt1.setEquipmentId("shuntTwoIdEdited");
+        shunt1.setEquipmentName("shuntEdited");
+        shunt1.setIsIdenticalSection(false);
+        shunt1.setCurrentNumberOfSections(6);
+        shunt1.setMaximumNumberOfSections(12);
+        shunt1.setSusceptancePerSection(2.);
+        shunt1.setVoltageLevelId("v1");
+        shunt1.setBusOrBusbarSectionId("bus1");
+        shunt1.setUuid(bsmlrShuntCompensator.get(0).getUuid());
+        String uriStringForUpdate = "/v1/modifications/" + bsmlrShuntCompensator.get(0).getUuid() + "/shunt-compensators-creation";
+
+        // Update shunt compansator creation
+        ShuntCompensatorCreationInfos shuntUpdate = new ShuntCompensatorCreationEntity(shunt1).toModificationInfos();
+        shuntUpdate.setEquipmentId("shuntTwoIdEdited");
+        shuntUpdate.setEquipmentName("shuntEdited");
+        shuntUpdate.setIsIdenticalSection(false);
+        shuntUpdate.setCurrentNumberOfSections(6);
+        shuntUpdate.setMaximumNumberOfSections(12);
+        shuntUpdate.setSusceptancePerSection(2.);
+        shuntUpdate.setVoltageLevelId("v1");
+        shuntUpdate.setBusOrBusbarSectionId("bus1");
+        String shuntUpdateJson = objectWriter.writeValueAsString(shuntUpdate);
+        mockMvc.perform(put(uriStringForUpdate).content(shuntUpdateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        testNetworkModificationsCount(TEST_GROUP_ID, 1);
+        mvcResult = mockMvc.perform(get("/v1/modifications/" + bsmlrShuntCompensator.get(0).getUuid()).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        resultAsString = mvcResult.getResponse().getContentAsString();
+        List<ShuntCompensatorCreationInfos> bsmListResultGetModifications = mapper.readValue(resultAsString, new TypeReference<>() { });
+        assertThat(bsmListResultGetModifications.get(0), createMatcher(shunt1));
+
+        shunt1.setMaximumNumberOfSections(2);
+        shunt1Json = objectWriter.writeValueAsString(shunt1);
+        mockMvc.perform(post(uriString, TEST_NETWORK_BUS_BREAKER_ID).content(shunt1Json).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        // create shunt compensator with errors
+        shunt1.setBusOrBusbarSectionId("notFoundBus");
+        shunt1Json = objectWriter.writeValueAsString(shunt1);
+        mockMvc.perform(post(uriString, TEST_NETWORK_BUS_BREAKER_ID).content(shunt1Json).contentType(MediaType.APPLICATION_JSON))
+                .andExpectAll(status().is4xxClientError(), content().string(new NetworkModificationException(BUS_NOT_FOUND, "notFoundBus").getMessage()));
+
+        testNetworkModificationsCount(TEST_GROUP_ID, 2);
     }
 
     @Test
