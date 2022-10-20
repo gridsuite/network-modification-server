@@ -30,7 +30,6 @@ import com.powsybl.iidm.network.extensions.ActivePowerControlAdder;
 import com.powsybl.iidm.network.extensions.BranchStatus;
 import com.powsybl.iidm.network.extensions.BranchStatusAdder;
 import com.powsybl.iidm.network.extensions.BusbarSectionPositionAdder;
-import com.powsybl.iidm.network.extensions.ConnectablePositionAdder;
 import com.powsybl.iidm.network.extensions.GeneratorShortCircuitAdder;
 import com.powsybl.iidm.network.extensions.GeneratorStartupAdder;
 import com.powsybl.network.store.client.NetworkStoreService;
@@ -494,6 +493,14 @@ public class NetworkModificationService {
         return voltageLevel;
     }
 
+    private Generator getGenerator(Network network, String generatorId) {
+        Generator generator = network.getGenerator(generatorId);
+        if (generator == null) {
+            throw new NetworkModificationException(GENERATOR_NOT_FOUND, "Generator " + generatorId + " does not exist in network");
+        }
+        return generator;
+    }
+
     private Bus getBusBreakerBus(VoltageLevel voltageLevel, String busId) {
         VoltageLevel.BusBreakerView busBreakerView = voltageLevel.getBusBreakerView();
         Bus bus = busBreakerView.getBus(busId);
@@ -563,14 +570,13 @@ public class NetworkModificationService {
 
         // creating the load
         return voltageLevel.newLoad()
-                .setId(loadCreationInfos.getEquipmentId())
-                .setName(loadCreationInfos.getEquipmentName())
-                .setLoadType(loadCreationInfos.getLoadType())
-                .setBus(bus.getId())
-                .setConnectableBus(bus.getId())
-                .setP0(loadCreationInfos.getActivePower())
-                .setQ0(loadCreationInfos.getReactivePower())
-                .add();
+            .setId(loadCreationInfos.getEquipmentId())
+            .setName(loadCreationInfos.getEquipmentName())
+            .setLoadType(loadCreationInfos.getLoadType())
+            .setBus(bus.getId())
+            .setConnectableBus(bus.getId())
+            .setP0(loadCreationInfos.getActivePower())
+            .setQ0(loadCreationInfos.getReactivePower()).add();
     }
 
     public void updateGeneratorCreation(GeneratorCreationInfos generatorCreationInfos, UUID modificationUuid) {
@@ -629,7 +635,8 @@ public class NetworkModificationService {
                 VoltageLevel voltageLevel = getVoltageLevel(network, loadCreationInfos.getVoltageLevelId());
                 if (voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER) {
                     LoadAdder loadAdder = createLoadAdderInNodeBreaker(voltageLevel, loadCreationInfos);
-                    int position = getPosition(loadCreationInfos.getBusOrBusbarSectionId(), network, voltageLevel);
+                    var position = getPosition(loadCreationInfos.getBusOrBusbarSectionId(), network, voltageLevel);
+
                     CreateFeederBay algo = new CreateFeederBayBuilder()
                             .withBbsId(loadCreationInfos.getBusOrBusbarSectionId())
                             .withInjectionDirection(loadCreationInfos.getConnectionDirection())
@@ -654,20 +661,26 @@ public class NetworkModificationService {
             .collect(Collectors.toList());
     }
 
-    private int getPosition(String busOrBusbarSectionId, Network network, VoltageLevel voltageLevel) {
+    public int getPosition(String busOrBusbarSectionId, Network network, VoltageLevel voltageLevel) {
         var count = voltageLevel.getConnectableCount();
         var position = 0;
         var bbs = network.getBusbarSection(busOrBusbarSectionId);
-        if (count > 0) {
-            var rightRange = TopologyModificationUtils.getUnusedOrderPositionsAfter(bbs);
-            if (rightRange.isPresent()) {
-                position = rightRange.get().getMinimum();
-            } else {
-                var leftRange = TopologyModificationUtils.getUnusedOrderPositionsBefore(bbs);
-                if (leftRange.isPresent()) {
-                    position = leftRange.get().getMaximum();
+        if (bbs != null) {
+            if (count > 0) {
+                var rightRange = TopologyModificationUtils.getUnusedOrderPositionsAfter(bbs);
+                if (rightRange.isPresent()) {
+                    position = rightRange.get().getMinimum();
+                } else {
+                    var leftRange = TopologyModificationUtils.getUnusedOrderPositionsBefore(bbs);
+                    if (leftRange.isPresent()) {
+                        position = leftRange.get().getMaximum();
+                    } else {
+                        throw new NetworkModificationException(POSITION_ORDER_ERROR, "no available position");
+                    }
                 }
             }
+        } else {
+            throw new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "Bus bar section " + busOrBusbarSectionId  + " not found");
         }
         return position;
     }
@@ -838,11 +851,7 @@ public class NetworkModificationService {
         return doAction(listener, () -> {
             if (listener.isApplyModifications()) {
                 try {
-                    Generator generator = network.getGenerator(generatorModificationInfos.getEquipmentId());
-                    if (generator == null) {
-                        throw new NetworkModificationException(GENERATOR_NOT_FOUND, "Generator " + generatorModificationInfos.getEquipmentId() + " does not exist in network");
-                    }
-
+                    Generator generator = getGenerator(network, generatorModificationInfos.getEquipmentId());
                     // modify the generator in the network
                     modifyGenerator(generator, generatorModificationInfos, subReporter);
                 } catch (NetworkModificationException exc) {
@@ -937,12 +946,14 @@ public class NetworkModificationService {
         this.reportServerRest = Objects.requireNonNull(reportServerRest, "reportServerRest can't be null");
     }
 
-    private GeneratorAdder createGeneratorAdderInNodeBreaker(VoltageLevel voltageLevel, GeneratorCreationInfos generatorCreationInfos) {
+    private GeneratorAdder createGeneratorInNodeBreaker(VoltageLevel voltageLevel, GeneratorCreationInfos generatorCreationInfos) {
+
         Terminal terminal = getTerminalFromIdentifiable(voltageLevel.getNetwork(),
-                                                        generatorCreationInfos.getRegulatingTerminalId(),
-                                                        generatorCreationInfos.getRegulatingTerminalType(),
-                                                        generatorCreationInfos.getRegulatingTerminalVlId());
-        // creating the generator adder
+                generatorCreationInfos.getRegulatingTerminalId(),
+                generatorCreationInfos.getRegulatingTerminalType(),
+                generatorCreationInfos.getRegulatingTerminalVlId());
+
+        // creating the generator
         GeneratorAdder generatorAdder = voltageLevel.newGenerator()
             .setId(generatorCreationInfos.getEquipmentId())
             .setName(generatorCreationInfos.getEquipmentName())
@@ -959,23 +970,33 @@ public class NetworkModificationService {
             generatorAdder.setRegulatingTerminal(terminal);
         }
 
+        return generatorAdder;
+    }
+
+    private void addExtensionsToGenerator(GeneratorCreationInfos generatorCreationInfos, Generator generator, VoltageLevel voltageLevel) {
+        Terminal terminal = getTerminalFromIdentifiable(voltageLevel.getNetwork(),
+                generatorCreationInfos.getRegulatingTerminalId(),
+                generatorCreationInfos.getRegulatingTerminalType(),
+                generatorCreationInfos.getRegulatingTerminalVlId());
+
+        if (terminal != null) {
+            generator.setRegulatingTerminal(terminal);
+        }
+
         Boolean participate = generatorCreationInfos.getParticipate();
-        var generator = generatorAdder.add();
+
         if (generatorCreationInfos.getMarginalCost() != null) {
             generator.newExtension(GeneratorStartupAdderImpl.class).withMarginalCost(generatorCreationInfos.getMarginalCost()).add();
         }
 
         if (generatorCreationInfos.getParticipate() != null && generatorCreationInfos.getDroop() != null) {
-            generator
-                    .newExtension(ActivePowerControlAdder.class)
-                    .withParticipate(participate)
+            generator.newExtension(ActivePowerControlAdder.class).withParticipate(participate)
                     .withDroop(generatorCreationInfos.getDroop())
                     .add();
         }
 
         if (generatorCreationInfos.getTransientReactance() != null && generatorCreationInfos.getStepUpTransformerReactance() != null) {
-            generator
-                    .newExtension(GeneratorShortCircuitAdder.class)
+            generator.newExtension(GeneratorShortCircuitAdder.class)
                     .withDirectTransX(generatorCreationInfos.getTransientReactance())
                     .withStepUpTransformerX(generatorCreationInfos.getStepUpTransformerReactance())
                     .add();
@@ -997,17 +1018,15 @@ public class NetworkModificationService {
                     .setMaxQ(generatorCreationInfos.getMaximumReactivePower())
                     .add();
         }
-
-        return generatorAdder;
     }
 
-    private void createGeneratorInBusBreaker(VoltageLevel voltageLevel, GeneratorCreationInfos generatorCreationInfos) {
+    private Generator createGeneratorInBusBreaker(VoltageLevel voltageLevel, GeneratorCreationInfos generatorCreationInfos) {
         Bus bus = getBusBreakerBus(voltageLevel, generatorCreationInfos.getBusOrBusbarSectionId());
 
         Terminal terminal = getTerminalFromIdentifiable(voltageLevel.getNetwork(),
-                                                        generatorCreationInfos.getRegulatingTerminalId(),
-                                                        generatorCreationInfos.getRegulatingTerminalType(),
-                                                        generatorCreationInfos.getRegulatingTerminalVlId());
+                generatorCreationInfos.getRegulatingTerminalId(),
+                generatorCreationInfos.getRegulatingTerminalType(),
+                generatorCreationInfos.getRegulatingTerminalVlId());
 
         // creating the generator
         Generator generator = voltageLevel.newGenerator()
@@ -1062,12 +1081,7 @@ public class NetworkModificationService {
             adder.add();
         }
 
-        generator.newExtension(ConnectablePositionAdder.class)
-                .newFeeder()
-                .withName(generatorCreationInfos.getConnectionName())
-                .withDirection(generatorCreationInfos.getConnectionDirection())
-                .withOrder(0)
-                .add();
+        return generator;
     }
 
     private List<EquipmentModificationInfos> execCreateGenerator(NetworkStoreListener listener,
@@ -1083,16 +1097,22 @@ public class NetworkModificationService {
                 // create the generator in the network
                 VoltageLevel voltageLevel = getVoltageLevel(network, generatorCreationInfos.getVoltageLevelId());
                 if (voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER) {
-                    GeneratorAdder generatorAdder = createGeneratorAdderInNodeBreaker(voltageLevel, generatorCreationInfos);
+                    GeneratorAdder generatorAdder = createGeneratorInNodeBreaker(voltageLevel, generatorCreationInfos);
+                    var position = getPosition(generatorCreationInfos.getBusOrBusbarSectionId(), network, voltageLevel);
 
                     CreateFeederBay algo = new CreateFeederBayBuilder()
                             .withBbsId(generatorCreationInfos.getBusOrBusbarSectionId())
                             .withInjectionDirection(generatorCreationInfos.getConnectionDirection())
-                            .withInjectionFeederName(generatorCreationInfos.getConnectionName())
-                            .withInjectionPositionOrder(0)
+                            .withInjectionFeederName(generatorCreationInfos.getConnectionName() != null ? generatorCreationInfos.getConnectionName() : generatorCreationInfos.getEquipmentId())
+                            .withInjectionPositionOrder(position)
                             .withInjectionAdder(generatorAdder)
                             .build();
+
                     algo.apply(network, true, subReporter);
+
+                    // CreateFeederBayBuilder already create the generator using (withInjectionAdder(generatorAdder)) so then we can add extensions
+                    var generator = getGenerator(network, generatorCreationInfos.getEquipmentId());
+                    addExtensionsToGenerator(generatorCreationInfos, generator, voltageLevel);
                 } else {
                     createGeneratorInBusBreaker(voltageLevel, generatorCreationInfos);
                     subReporter.report(Report.builder()
@@ -1103,7 +1123,6 @@ public class NetworkModificationService {
                             .build());
                 }
             }
-
             // add the generator creation entity to the listener
             listener.storeGeneratorCreation(generatorCreationInfos);
         }, CREATE_GENERATOR_ERROR, reportUuid, reporter, subReporter).stream().map(EquipmentModificationInfos.class::cast)

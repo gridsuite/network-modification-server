@@ -11,15 +11,23 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.reporter.ReporterModel;
+import com.powsybl.iidm.network.BusbarSection;
 import com.powsybl.iidm.network.Country;
 import com.powsybl.iidm.network.EnergySource;
 import com.powsybl.iidm.network.Generator;
+import com.powsybl.iidm.network.Load;
 import com.powsybl.iidm.network.LoadType;
 import com.powsybl.iidm.network.Network;
+import com.powsybl.iidm.network.Substation;
 import com.powsybl.iidm.network.SwitchKind;
+import com.powsybl.iidm.network.TopologyKind;
 import com.powsybl.iidm.network.VariantManagerConstants;
+import com.powsybl.iidm.network.VoltageLevel;
+import com.powsybl.iidm.network.extensions.BusbarSectionPositionAdder;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
+import com.powsybl.iidm.network.extensions.ConnectablePositionAdder;
 import com.powsybl.network.store.client.NetworkStoreService;
+import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
 import nl.jqno.equalsverifier.EqualsVerifier;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
@@ -430,6 +438,11 @@ public class ModificationControllerTest {
         assertThat(bsmlrbStatusInfos.get(0), createMatcherBranchStatusModificationInfos("line2", BranchStatusModificationInfos.ActionType.ENERGISE_END_TWO, Set.of("s1")));
 
         testNetworkModificationsCount(TEST_GROUP_ID, 6);
+
+        // invalid action case
+        mockMvc.perform(put(uriString, TEST_NETWORK_ID, "line2").contentType(MediaType.TEXT_PLAIN_VALUE).content("invalid_action")).andExpectAll(
+                status().is4xxClientError(),
+                content().string(new NetworkModificationException(BRANCH_ACTION_TYPE_UNKNOWN, "The branch action type : invalid_action is unknown").getMessage()));
     }
 
     @Test
@@ -589,6 +602,17 @@ public class ModificationControllerTest {
             .connectionName("top")
             .build();
 
+        LoadCreationInfos loadCreationInfos1 = LoadCreationInfos.builder()
+                .equipmentId("idLoad2")
+                .equipmentName("nameLoad2")
+                .voltageLevelId("v2")
+                .busOrBusbarSectionId("1B")
+                .loadType(LoadType.AUXILIARY)
+                .activePower(100.0)
+                .reactivePower(60.0)
+                .connectionDirection(ConnectablePosition.Direction.UNDEFINED)
+                .build();
+
         String loadCreationInfosJson = objectWriter.writeValueAsString(loadCreationInfos);
         mvcResult = mockMvc.perform(post(uriString, TEST_NETWORK_ID).content(loadCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(status().isOk()).andReturn();
@@ -598,7 +622,10 @@ public class ModificationControllerTest {
 
         assertNotNull(network.getLoad("idLoad1"));  // load was created
         testNetworkModificationsCount(TEST_GROUP_ID, 1);  // new modification stored in the database
-
+        // create load without connection name and UNDEFINED direction
+        String loadCreationInfosJson1 = objectWriter.writeValueAsString(loadCreationInfos1);
+        mockMvc.perform(post(uriString, TEST_NETWORK_ID).content(loadCreationInfosJson1).contentType(MediaType.APPLICATION_JSON))
+                .andExpectAll(status().isOk()).andReturn();
         // create load with errors
         mockMvc.perform(post(uriString, NOT_FOUND_NETWORK_ID).content(loadCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(status().isNotFound(), content().string(new NetworkModificationException(NETWORK_NOT_FOUND, NOT_FOUND_NETWORK_ID.toString()).getMessage())).andReturn();
@@ -618,7 +645,7 @@ public class ModificationControllerTest {
         loadCreationInfos.setBusOrBusbarSectionId("notFoundBusbarSection");
         loadCreationInfosJson = objectWriter.writeValueAsString(loadCreationInfos);
         mockMvc.perform(post(uriString, TEST_NETWORK_ID).content(loadCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpectAll(status().is5xxServerError(), content().string(new NetworkModificationException(CREATE_LOAD_ERROR, "Busbar section notFoundBusbarSection not found.").getMessage())).andReturn();
+            .andExpectAll(status().is4xxClientError(), content().string(new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "Bus bar section notFoundBusbarSection not found").getMessage())).andReturn();
 
         loadCreationInfos.setVoltageLevelId("v2");
         loadCreationInfos.setBusOrBusbarSectionId("1B");
@@ -627,7 +654,13 @@ public class ModificationControllerTest {
         mockMvc.perform(post(uriString, TEST_NETWORK_ID).content(loadCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(status().is5xxServerError(), content().string(new NetworkModificationException(CREATE_LOAD_ERROR, "Load 'idLoad1': p0 is invalid").getMessage())).andReturn();
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 1);
+        loadCreationInfos1.setConnectionDirection(null);
+        loadCreationInfos1.setConnectionName(null);
+        loadCreationInfosJson1 = objectWriter.writeValueAsString(loadCreationInfos1);
+        mockMvc.perform(post(uriString, TEST_NETWORK_ID).content(loadCreationInfosJson1).contentType(MediaType.APPLICATION_JSON))
+                .andExpectAll(status().is5xxServerError(), content().string(new NetworkModificationException(CREATE_LOAD_ERROR, "java.lang.NullPointerException").getMessage())).andReturn();
+
+        testNetworkModificationsCount(TEST_GROUP_ID, 2);
 
         // Test create load on not yet existing variant VARIANT_NOT_EXISTING_ID :
         // Only the modification should be added in the database but the load cannot be created
@@ -636,6 +669,9 @@ public class ModificationControllerTest {
         loadCreationInfos.setEquipmentName("nameLoad3");
         loadCreationInfos.setVoltageLevelId("v2");
         loadCreationInfos.setBusOrBusbarSectionId("1B");
+        loadCreationInfos.setConnectionName("cn3");
+        loadCreationInfos.setConnectionDirection(ConnectablePosition.Direction.BOTTOM);
+
         loadCreationInfosJson = objectWriter.writeValueAsString(loadCreationInfos);
         mvcResult = mockMvc.perform(post(uriString, TEST_NETWORK_ID).content(loadCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(status().isOk()).andReturn();
@@ -644,7 +680,8 @@ public class ModificationControllerTest {
 
         assertTrue(bsmlrModification.isEmpty());  // no modifications returned
         assertNull(network.getLoad("idLoad3"));  // load was not created
-        testNetworkModificationsCount(TEST_GROUP_ID, 2);  // new modification stored in the database
+        testNetworkModificationsCount(TEST_GROUP_ID, 3);  // new modification stored in the database
+
     }
 
     @Test
@@ -666,17 +703,31 @@ public class ModificationControllerTest {
             .connectionDirection(ConnectablePosition.Direction.TOP)
             .build();
 
+        LoadCreationInfos loadCreationInfos1 = LoadCreationInfos.builder()
+                .equipmentId("idLoad2")
+                .equipmentName("nameLoad2")
+                .voltageLevelId("v1")
+                .busOrBusbarSectionId("bus1")
+                .loadType(LoadType.FICTITIOUS)
+                .activePower(200.0)
+                .reactivePower(30.0)
+                .build();
+
         String loadCreationInfosJson = objectWriter.writeValueAsString(loadCreationInfos);
         mvcResult = mockMvc.perform(post(uriString, TEST_NETWORK_BUS_BREAKER_ID).content(loadCreationInfosJson)
             .contentType(MediaType.APPLICATION_JSON))
-            .andExpectAll(status().isOk()).andReturn();
+            .andExpect(status().isOk()).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<EquipmentModificationInfos> bsmlrEquipmentModification = mapper.readValue(resultAsString, new TypeReference<>() { });
         EquipmentModificationInfos equipmentModificationInfos = bsmlrEquipmentModification.get(0);
         assertThat(equipmentModificationInfos, createMatcherEquipmentModificationInfos(ModificationType.LOAD_CREATION, "idLoad1", Set.of("s1")));
 
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
-
+        // create load without connection name and direction
+        String loadCreationInfosJson1 = objectWriter.writeValueAsString(loadCreationInfos1);
+        mockMvc.perform(post(uriString, TEST_NETWORK_BUS_BREAKER_ID).content(loadCreationInfosJson1)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
         // Update load creation
         loadCreationInfos = new LoadCreationEntity(
                 "idLoad1edited",
@@ -703,7 +754,7 @@ public class ModificationControllerTest {
         mockMvc.perform(put(uriStringForUpdate).contentType(MediaType.APPLICATION_JSON).content(loadCreationUpdateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpectAll(status().isOk());
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 1);
+        testNetworkModificationsCount(TEST_GROUP_ID, 2);
         mvcResult = mockMvc.perform(get("/v1/modifications/" + equipmentModificationInfos.getUuid().toString()).contentType(MediaType.APPLICATION_JSON))
                 .andExpectAll(status().isOk()).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
@@ -716,7 +767,33 @@ public class ModificationControllerTest {
         mockMvc.perform(post(uriString, TEST_NETWORK_BUS_BREAKER_ID).content(loadCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(status().is4xxClientError(), content().string(new NetworkModificationException(BUS_NOT_FOUND, "notFoundBus").getMessage()));
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 1);
+        testNetworkModificationsCount(TEST_GROUP_ID, 2);
+    }
+
+    @Test
+    public void assertThrowsUpdateLoadCreation() {
+        LoadCreationInfos loadCreationInfos = LoadCreationInfos.builder()
+                .equipmentId("idLoad1")
+                .equipmentName("nameLoad1")
+                .voltageLevelId("v1")
+                .busOrBusbarSectionId("bus1")
+                .loadType(LoadType.FICTITIOUS)
+                .activePower(200.0)
+                .reactivePower(30.0)
+                .connectionName("top")
+                .connectionDirection(ConnectablePosition.Direction.TOP)
+                .build();
+
+        UUID modificationUuid = UUID.randomUUID();
+
+        assertThrows(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, modificationUuid.toString()).getMessage(),
+                NetworkModificationException.class, () -> networkModificationService.updateLoadCreation(loadCreationInfos, modificationUuid)
+        );
+
+        assertThrows(new NetworkModificationException(CREATE_LOAD_ERROR, "Load creation not found").getMessage(),
+                NetworkModificationException.class, () -> networkModificationService.updateLoadCreation(null, modificationUuid)
+        );
+
     }
 
     @Test
@@ -834,7 +911,6 @@ public class ModificationControllerTest {
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<LoadModificationInfos> bsmlrloadmodif = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertThat(bsmlrloadmodif.get(0), MatcherLoadModificationInfos.createMatcherLoadModificationInfos(loadModificationInfos));
-
     }
 
     @Test
@@ -1052,7 +1128,7 @@ public class ModificationControllerTest {
         String uriString = "/v1/networks/{networkUuid}/generators?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
 
         // create new generator in voltage level with node/breaker topology (in voltage level "v2" and busbar section "1B")
-        GeneratorCreationInfos generatorCreationInfos = ModificationCreation.getCreationGenerator("v2", "idGenerator1", "nameGenerator1", "1B", "v2load", "LOAD", "v1");
+        GeneratorCreationInfos generatorCreationInfos = ModificationCreation.getCreationGenerator("v2", "idGenerator1", "idGenerator1", "1B", "v2load", "LOAD", "v1");
         String generatorCreationInfosJson = objectWriter.writeValueAsString(generatorCreationInfos);
         mvcResult = mockMvc.perform(post(uriString, TEST_NETWORK_ID).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
@@ -1088,7 +1164,7 @@ public class ModificationControllerTest {
                 "LOAD",
                 "v2",
                 false,
-                "top",
+                "top1",
                 ConnectablePosition.Direction.TOP)
                 .toModificationInfos();
         generatorCreationInfos.setUuid(bsmlrGeneratorCreation.get(0).getUuid());
@@ -1119,7 +1195,7 @@ public class ModificationControllerTest {
                 "LOAD",
                 "v2",
                 false,
-                "top",
+                "top11",
                 ConnectablePosition.Direction.TOP)
                 .toModificationInfos();
         String generatorCreationUpdateJson = objectWriter.writeValueAsString(generatorCreationUpdate);
@@ -1160,7 +1236,7 @@ public class ModificationControllerTest {
         mvcResult = mockMvc.perform(post(uriString, TEST_NETWORK_ID).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().is4xxClientError()).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
-        assertEquals(resultAsString, new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "notFoundBusbarSection").getMessage());
+        assertEquals(resultAsString, new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "Bus bar section notFoundBusbarSection not found").getMessage());
         generatorCreationInfos.setVoltageLevelId("v2");
         generatorCreationInfos.setBusOrBusbarSectionId("1B");
         generatorCreationInfos.setMinActivePower(Double.NaN);
@@ -2152,7 +2228,6 @@ public class ModificationControllerTest {
             .andExpect(status().isOk());
 
         testNetworkModificationsCount(TEST_GROUP_ID, 8);
-
         //test copy group
         UUID newGroupUuid = UUID.randomUUID();
         uriString = "/v1/groups?groupUuid=" + newGroupUuid + "&duplicateFrom=" + TEST_GROUP_ID + "&reportUuid=" + UUID.randomUUID();
@@ -2688,5 +2763,46 @@ public class ModificationControllerTest {
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<ModificationInfos> modificationsTestGroupId = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertEquals(actualSize, modificationsTestGroupId.size());
+    }
+
+    @Test
+    public void shouldGetPosition() {
+        var network = networkStoreService.getNetwork(TEST_NETWORK_ID);
+        var network2 = networkStoreService.getNetwork(TEST_NETWORK_MIXED_TOPOLOGY_ID);
+        var vl = network.getVoltageLevel("v2");
+        var vl2 = network2.getVoltageLevel("v2");
+        assertEquals(9, vl.getConnectableCount());
+        assertEquals(0, vl2.getConnectableCount());
+        assertNotNull(network.getBusbarSection("1B"));
+        assertNotNull(network.getBusbarSection("1.1"));
+
+        var result = networkModificationService.getPosition("1B", network, vl);
+        var result2 = networkModificationService.getPosition("1.1", network2, vl2);
+        assertEquals(6, result);
+        assertEquals(0, result2);
+
+        assertThrows(new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "Bus bar section invalidBbsId not found").getMessage(),
+                NetworkModificationException.class, () -> networkModificationService.getPosition("invalidBbsId", network, vl)
+        );
+    }
+
+    @Test
+    public void testGetPositionAfterAndBefore() {
+        Network testNetwork = new NetworkFactoryImpl().createNetwork("testNetwork", "test");
+        Substation s1 = testNetwork.newSubstation().setId("s1").setName("s1").setCountry(Country.FR).add();
+        VoltageLevel v1 = s1.newVoltageLevel().setId("v1").setName("v1").setTopologyKind(TopologyKind.NODE_BREAKER).setNominalV(380.).add();
+        BusbarSection bbs1 = v1.getNodeBreakerView().newBusbarSection().setId("bbs1").setName("bbs1").setNode(0).add();
+        bbs1.newExtension(BusbarSectionPositionAdder.class).withBusbarIndex(1).withSectionIndex(1).add();
+        BusbarSection bbs2 = v1.getNodeBreakerView().newBusbarSection().setId("bbs2").setName("bbs2").setNode(1).add();
+        bbs2.newExtension(BusbarSectionPositionAdder.class).withBusbarIndex(1).withSectionIndex(2).add();
+
+        Load load1 = v1.newLoad().setId("load1").setName("load1").setNode(2).setP0(1.).setQ0(1.).add();
+        load1.newExtension(ConnectablePositionAdder.class).newFeeder().withName("load1").withOrder(1).withDirection(ConnectablePosition.Direction.TOP).add().add();
+        v1.getNodeBreakerView().newSwitch().setId("switch1").setName("switch1").setKind(SwitchKind.BREAKER).setRetained(false).setOpen(false).setFictitious(false).setNode1(0).setNode2(2).add();
+        Load load2 = v1.newLoad().setId("load2").setName("load2").setNode(3).setP0(1.).setQ0(1.).add();
+        load2.newExtension(ConnectablePositionAdder.class).newFeeder().withName("load2").withOrder(2).withDirection(ConnectablePosition.Direction.TOP).add().add();
+        v1.getNodeBreakerView().newSwitch().setId("switch2").setName("switch2").setKind(SwitchKind.BREAKER).setRetained(false).setOpen(false).setFictitious(false).setNode1(1).setNode2(3).add();
+
+        assertEquals(0, networkModificationService.getPosition("bbs1", testNetwork, v1));
     }
 }

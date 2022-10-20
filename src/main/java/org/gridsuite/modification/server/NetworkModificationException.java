@@ -55,7 +55,8 @@ public class NetworkModificationException extends PowsyblException {
         LINE_ATTACH_NOT_FOUND(HttpStatus.NOT_FOUND),
         MODIFY_GENERATOR_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         TYPE_MISMATCH(HttpStatus.BAD_REQUEST),
-        MODIFICATION_OUT_OF_RANGE(HttpStatus.BAD_REQUEST);
+        MODIFICATION_OUT_OF_RANGE(HttpStatus.BAD_REQUEST),
+        POSITION_ORDER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR);
 
         public final HttpStatus status;
         private final String message;
