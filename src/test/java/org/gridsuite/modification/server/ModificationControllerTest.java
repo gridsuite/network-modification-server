@@ -1183,7 +1183,7 @@ public class ModificationControllerTest {
         mockMvc.perform(post(uriString, TEST_NETWORK_BUS_BREAKER_ID).content(shunt1Json).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
-        // create load with errors
+        // create shunt compensator with errors
         shunt1.setBusOrBusbarSectionId("notFoundBus");
         shunt1Json = objectWriter.writeValueAsString(shunt1);
         mockMvc.perform(post(uriString, TEST_NETWORK_BUS_BREAKER_ID).content(shunt1Json).contentType(MediaType.APPLICATION_JSON))

@@ -2025,7 +2025,7 @@ public class NetworkModificationService {
                             .withInjectionPositionOrder(position)
                             .withInjectionAdder(shuntCompensatorAdder)
                             .build();
-                    algo.apply(network, false, subReporter);
+                    algo.apply(network, true, subReporter);
                 } else {
                     createShuntInBusBreaker(voltageLevel, shuntCompensatorCreationInfos);
                     subReporter.report(Report.builder()
