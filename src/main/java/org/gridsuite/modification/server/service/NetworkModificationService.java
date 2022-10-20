@@ -2017,24 +2017,24 @@ public class NetworkModificationService {
                 VoltageLevel voltageLevel = getVoltageLevel(network, shuntCompensatorCreationInfos.getVoltageLevelId());
                 if (voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER) {
                     ShuntCompensatorAdder shuntCompensatorAdder = createShuntInNodeBreaker(voltageLevel, shuntCompensatorCreationInfos);
+                    var position = getPosition(shuntCompensatorCreationInfos.getBusOrBusbarSectionId(), network, voltageLevel);
                     CreateFeederBay algo = new CreateFeederBayBuilder()
                             .withBbsId(shuntCompensatorCreationInfos.getBusOrBusbarSectionId())
                             .withInjectionDirection(shuntCompensatorCreationInfos.getConnectionDirection())
                             .withInjectionFeederName(shuntCompensatorCreationInfos.getConnectionName())
-                            .withInjectionPositionOrder(0)
+                            .withInjectionPositionOrder(position)
                             .withInjectionAdder(shuntCompensatorAdder)
                             .build();
                     algo.apply(network, false, subReporter);
                 } else {
                     createShuntInBusBreaker(voltageLevel, shuntCompensatorCreationInfos);
+                    subReporter.report(Report.builder()
+                            .withKey("shuntCompensatorCreated")
+                            .withDefaultMessage("New shunt compensator with id=${id} created")
+                            .withValue("id", shuntCompensatorCreationInfos.getEquipmentId())
+                            .withSeverity(TypedValue.INFO_SEVERITY)
+                            .build());
                 }
-
-                subReporter.report(Report.builder()
-                    .withKey("shuntCompensatorCreated")
-                    .withDefaultMessage("New shunt compensator with id=${id} created")
-                    .withValue("id", shuntCompensatorCreationInfos.getEquipmentId())
-                    .withSeverity(TypedValue.INFO_SEVERITY)
-                    .build());
             }
 
             // add the shunt compensator creation entity to the listener
