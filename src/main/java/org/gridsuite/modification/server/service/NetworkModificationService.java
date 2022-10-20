@@ -411,7 +411,6 @@ public class NetworkModificationService {
                                             Reporter subReporter) {
         try {
             action.run();
-            return listener.isApplyModifications() ? listener.getModifications() : Collections.emptyList();
         } catch (PowsyblException e) {
             NetworkModificationException exc = e instanceof NetworkModificationException ? (NetworkModificationException) e : new NetworkModificationException(typeIfError, e);
             subReporter.report(Report.builder()
@@ -438,6 +437,7 @@ public class NetworkModificationService {
                 sendReport(reportUuid, reporter);
             }
         }
+        return listener.isApplyModifications() ? listener.getModifications() : Collections.emptyList();
     }
 
     private void saveModifications(NetworkStoreListener listener) {
