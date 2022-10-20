@@ -1958,7 +1958,7 @@ public class NetworkModificationService {
         }
     }
 
-    private ShuntCompensatorAdder createShuntInNodeBreaker(VoltageLevel voltageLevel, ShuntCompensatorCreationInfos shuntCompensatorInfos) {
+    private ShuntCompensatorAdder createShuntAdderInNodeBreaker(VoltageLevel voltageLevel, ShuntCompensatorCreationInfos shuntCompensatorInfos) {
         // creating the shunt compensator
         ShuntCompensatorAdder shunt = voltageLevel.newShuntCompensator()
                 .setId(shuntCompensatorInfos.getEquipmentId())
@@ -2016,7 +2016,7 @@ public class NetworkModificationService {
                 // create the shunt compensator in the network
                 VoltageLevel voltageLevel = getVoltageLevel(network, shuntCompensatorCreationInfos.getVoltageLevelId());
                 if (voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER) {
-                    ShuntCompensatorAdder shuntCompensatorAdder = createShuntInNodeBreaker(voltageLevel, shuntCompensatorCreationInfos);
+                    ShuntCompensatorAdder shuntCompensatorAdder = createShuntAdderInNodeBreaker(voltageLevel, shuntCompensatorCreationInfos);
                     var position = getPosition(shuntCompensatorCreationInfos.getBusOrBusbarSectionId(), network, voltageLevel);
                     CreateFeederBay algo = new CreateFeederBayBuilder()
                             .withBbsId(shuntCompensatorCreationInfos.getBusOrBusbarSectionId())
