@@ -946,7 +946,7 @@ public class NetworkModificationService {
         this.reportServerRest = Objects.requireNonNull(reportServerRest, "reportServerRest can't be null");
     }
 
-    private GeneratorAdder createGeneratorInNodeBreaker(VoltageLevel voltageLevel, GeneratorCreationInfos generatorCreationInfos) {
+    private GeneratorAdder createGeneratorAdderInNodeBreaker(VoltageLevel voltageLevel, GeneratorCreationInfos generatorCreationInfos) {
 
         Terminal terminal = getTerminalFromIdentifiable(voltageLevel.getNetwork(),
                 generatorCreationInfos.getRegulatingTerminalId(),
@@ -1097,7 +1097,7 @@ public class NetworkModificationService {
                 // create the generator in the network
                 VoltageLevel voltageLevel = getVoltageLevel(network, generatorCreationInfos.getVoltageLevelId());
                 if (voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER) {
-                    GeneratorAdder generatorAdder = createGeneratorInNodeBreaker(voltageLevel, generatorCreationInfos);
+                    GeneratorAdder generatorAdder = createGeneratorAdderInNodeBreaker(voltageLevel, generatorCreationInfos);
                     var position = getPosition(generatorCreationInfos.getBusOrBusbarSectionId(), network, voltageLevel);
 
                     CreateFeederBay algo = new CreateFeederBayBuilder()
