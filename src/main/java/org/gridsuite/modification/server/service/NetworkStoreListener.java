@@ -216,7 +216,9 @@ public class NetworkStoreListener implements NetworkListener {
             generatorCreationInfos.getRegulatingTerminalType(),
             generatorCreationInfos.getRegulatingTerminalVlId(),
             generatorCreationInfos.getReactiveCapabilityCurve() == null || generatorCreationInfos.getReactiveCapabilityCurve(),
-            toEmbeddablePoints(generatorCreationInfos.getReactiveCapabilityCurvePoints())));
+            toEmbeddablePoints(generatorCreationInfos.getReactiveCapabilityCurvePoints()),
+            generatorCreationInfos.getConnectionName(),
+            generatorCreationInfos.getConnectionDirection()));
     }
 
     public void storeEquipmentDeletion(String equipmentId, String equipmentType) {
