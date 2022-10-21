@@ -47,11 +47,11 @@ public final class NetworkCreation {
         createSwitch(v2, "v2dload", "v2dload", SwitchKind.DISCONNECTOR, true, false, false, 1, 4);
         createSwitch(v2, "v2bload", "v2bload", SwitchKind.BREAKER, true, false, false, 4, 5);
 
-        createGenerator(v2, "idGenerator", 6, 42.1, 1.0);
+        createGenerator(v2, "idGenerator", 6, 42.1, 1.0, "cn0", 3, ConnectablePosition.Direction.TOP);
         createSwitch(v2, "v2bgenerator", "v2bgenerator", SwitchKind.BREAKER, true, false, false, 6, 7);
         createSwitch(v2, "v2dgenerator", "v2dgenerator", SwitchKind.DISCONNECTOR, true, false, false, 7, 1);
 
-        createShuntCompensator(v2, "v2shunt", "v2shunt", 8, 225., 10, true, 3, 1, 2, 2);
+        createShuntCompensator(v2, "v2shunt", "v2shunt", 8, 225., 10, true, 3, 1, 2, 2, "cn11", 22, ConnectablePosition.Direction.BOTTOM);
         createSwitch(v2, "v2bshunt", "v2bshunt", SwitchKind.BREAKER, true, false, false, 8, 9);
         createSwitch(v2, "v2dshunt", "v2dshunt", SwitchKind.DISCONNECTOR, true, false, false, 9, 0);
 
@@ -70,15 +70,15 @@ public final class NetworkCreation {
         VoltageLevel v5 = createVoltageLevel(s3, "v5", "v5", TopologyKind.NODE_BREAKER, 380.0);
         createBusBarSection(v5, "1A1", "1A1", 0);
         createLoad(v5, "v5load", "v5load", 2, 0., 0., "cn5", 5, ConnectablePosition.Direction.TOP);
-        createGenerator(v5, "v5generator", 3, 42.1, 1.0);
-        createShuntCompensator(v5, "v5shunt", "v5shunt", 4, 225., 10, true, 3, 1, 2, 2);
+        createShuntCompensator(v5, "v5shunt", "v5shunt", 4, 225., 10, true, 3, 1, 2, 2, "cn22", 33, ConnectablePosition.Direction.BOTTOM);
+        createGenerator(v5, "v5generator", 3, 42.1, 1.0, "cn10", 10, ConnectablePosition.Direction.TOP);
         createStaticVarCompensator(v5, "v5Compensator", "v5Compensator", 5, StaticVarCompensator.RegulationMode.VOLTAGE, 380., 100, 2, 30);
 
         VoltageLevel v6 = createVoltageLevel(s3, "v6", "v6", TopologyKind.NODE_BREAKER, 380.0);
         createBusBarSection(v6, "1B1", "1B1", 0);
         createLoad(v6, "v6load", "v6load", 2, 0., 0., "cn6", 6, ConnectablePosition.Direction.BOTTOM);
-        createGenerator(v6, "v6generator", 3, 42.1, 1.0);
-        createShuntCompensator(v6, "v6shunt", "v6shunt", 4, 225., 10, true, 3, 1, 2, 2);
+        createShuntCompensator(v6, "v6shunt", "v6shunt", 4, 225., 10, true, 3, 1, 2, 2, "cn33", 44, ConnectablePosition.Direction.BOTTOM);
+        createGenerator(v6, "v6generator", 3, 42.1, 1.0, "cn11", 11, ConnectablePosition.Direction.TOP);
         createStaticVarCompensator(v6, "v6Compensator", "v6Compensator", 5, StaticVarCompensator.RegulationMode.VOLTAGE, 380., 100, 2, 30);
 
         Substation s2 = createSubstation(network, "s2", "s2", Country.FR);
@@ -236,9 +236,8 @@ public final class NetworkCreation {
         VoltageLevel v1 = createVoltageLevel(s1, "v1", "v1", TopologyKind.BUS_BREAKER, 380.0);
         VoltageLevel v12 = createVoltageLevel(s1, "v12", "v12", TopologyKind.BUS_BREAKER, 90.0);
         createBus(v1, "bus1", "bus1");
-        createBus(v12, "bus12", "bus12");
         createGeneratorOnBus(v1, "idGenerator1", "bus1", 42.1, 1.0);
-
+        createBus(v12, "bus12", "bus12");
         Substation s2 = createSubstation(network, "s2", "s2", Country.FR);
         VoltageLevel v2 = createVoltageLevel(s2, "v2", "v2", TopologyKind.BUS_BREAKER, 225.0);
         createBus(v2, "bus2", "bus2");
@@ -363,8 +362,8 @@ public final class NetworkCreation {
     }
 
     @SuppressWarnings("SameParameterValue")
-    private static void createGenerator(VoltageLevel vl, String id, int node, double targetP, double targetQ) {
-        vl.newGenerator()
+    private static void createGenerator(VoltageLevel vl, String id, int node, double targetP, double targetQ, String feederName, int feederOrder, ConnectablePosition.Direction direction) {
+        var g = vl.newGenerator()
             .setId(id)
             .setName(id)
             .setTargetP(targetP)
@@ -374,10 +373,16 @@ public final class NetworkCreation {
             .setMaxP(1000.0)
             .setVoltageRegulatorOn(false)
             .add();
+
+        g.newExtension(ConnectablePositionAdder.class)
+                .newFeeder()
+                .withName(feederName)
+                .withOrder(feederOrder)
+                .withDirection(direction).add();
     }
 
     private static void createGeneratorOnBus(VoltageLevel vl, String id, String busId, double targetP, double targetQ) {
-        vl.newGenerator()
+        var g = vl.newGenerator()
             .setId(id)
             .setName(id)
             .setTargetP(targetP)
@@ -485,8 +490,8 @@ public final class NetworkCreation {
 
     private static void createShuntCompensator(VoltageLevel vl, String id, String name,
                                                int node, double targetV, double targetDeadband, boolean voltageRegulatorOn,
-                                               int maximumSectionCount, double bPerSection, double gPerSection, int sectionCount) {
-        vl.newShuntCompensator()
+                                               int maximumSectionCount, double bPerSection, double gPerSection, int sectionCount, String feederName, int feederOrder, ConnectablePosition.Direction direction) {
+        var sh = vl.newShuntCompensator()
             .setId(id)
             .setName(name)
             .setNode(node)
@@ -500,6 +505,11 @@ public final class NetworkCreation {
             .add()
             .setSectionCount(sectionCount)
             .add();
+        sh.newExtension(ConnectablePositionAdder.class)
+                .newFeeder()
+                .withName(feederName)
+                .withOrder(feederOrder)
+                .withDirection(direction).add();
     }
 
     private static void createStaticVarCompensator(VoltageLevel vl, String id, String name,
