@@ -46,6 +46,7 @@ import org.gridsuite.modification.server.entities.equipment.creation.BusbarSecti
 import org.gridsuite.modification.server.entities.equipment.creation.EquipmentCreationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.LineCreationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.VoltageLevelCreationEntity;
+import org.gridsuite.modification.server.entities.equipment.deletion.EquipmentDeletionEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.LineAttachToVoltageLevelEntity;
@@ -893,6 +894,20 @@ public class NetworkModificationService {
         ModificationNetworkInfos networkInfos = getNetworkModificationInfos(networkUuid, variantId);
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
         return execDeleteEquipment(listener, equipmentType, equipmentId, reportUuid);
+    }
+
+    public void updateEquipmentDeletion(UUID modificationUuid, String equipmentType, String equipmentId) {
+
+        ModificationEntity equipmentDeletionEntity = this.modificationRepository
+                .findById(modificationUuid)
+                .orElseThrow(() -> new NetworkModificationException(DELETE_EQUIPMENT_ERROR, "Equipment deletion not found"));
+
+        EquipmentDeletionEntity updatedEntity = this.networkModificationRepository.createEquipmentDeletionEntity(
+                equipmentId,
+                equipmentType);
+        updatedEntity.setId(modificationUuid);
+        updatedEntity.setGroup(equipmentDeletionEntity.getGroup());
+        this.networkModificationRepository.updateModification(updatedEntity);
     }
 
     private void sendReport(UUID reportUuid, ReporterModel reporter) {
