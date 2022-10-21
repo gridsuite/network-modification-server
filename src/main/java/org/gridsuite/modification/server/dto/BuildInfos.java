@@ -31,9 +31,11 @@ public class BuildInfos {
 
     private String destinationVariantId;
 
+    private UUID reportUuid;
+
     private List<UUID> modificationGroupUuids = new ArrayList<>();
 
-    private List<UUID> reportUuids = new ArrayList<>();
+    private List<String> reporterIds = new ArrayList<>();
 
     private Set<UUID> modificationsToExclude = new HashSet<>();
 
