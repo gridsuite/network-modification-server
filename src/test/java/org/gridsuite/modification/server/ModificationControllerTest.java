@@ -1558,9 +1558,9 @@ public class ModificationControllerTest {
         assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v1b1", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
 
         // update equipment deletion
-        String uriStringForUpdate = "/v1/modifications/" + bsmlrEquipmentDeletion.get(0).getUuid() + "/equipments-deletion/type/"+ "GENERATOR" +"/id/" + "idGenerator";
-        mockMvc.perform(put(uriStringForUpdate).contentType(MediaType.APPLICATION_JSON))
-                .andExpectAll(status().isOk());
+        String uriStringForUpdate = "/v1/modifications/" + bsmlrEquipmentDeletion.get(0).getUuid()
+                + "/equipments-deletion/type/" + "GENERATOR" + "/id/" + "idGenerator";
+        mockMvc.perform(put(uriStringForUpdate).contentType(MediaType.APPLICATION_JSON)).andExpectAll(status().isOk());
 
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
         mvcResult = mockMvc.perform(get("/v1/modifications/" + bsmlrEquipmentDeletion.get(0).getUuid()).contentType(MediaType.APPLICATION_JSON))
