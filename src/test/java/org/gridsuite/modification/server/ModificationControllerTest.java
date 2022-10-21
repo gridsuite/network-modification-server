@@ -1127,7 +1127,7 @@ public class ModificationControllerTest {
     public void testCreateShuntCompensatorInBusBreaker() throws Exception {
         MvcResult mvcResult;
         String resultAsString;
-        String uriString = "/v1/networks/{networkUuid}/shunt-compensators?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
+        String uriString = "/v1/networks/{networkUuid}/shunt-compensators?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID  + "&reporterId=" + UUID.randomUUID();
 
         ShuntCompensatorCreationInfos shunt1 = ShuntCompensatorCreationInfos.builder()
                 .equipmentId("shuntTwoId").equipmentName("Shunt")

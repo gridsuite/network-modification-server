@@ -2180,13 +2180,6 @@ public class NetworkModificationService {
                     line);
 
                 algo.apply(network, false, reporter);
-
-                subReporter.report(Report.builder()
-                    .withKey("lineSplit")
-                    .withDefaultMessage("Line ${id} was split")
-                    .withValue("id", lineSplitWithVoltageLevelInfos.getLineToSplitId())
-                    .withSeverity(TypedValue.INFO_SEVERITY)
-                    .build());
             }
 
             listener.storeLineSplitWithVoltageLevelInfos(lineSplitWithVoltageLevelInfos);
