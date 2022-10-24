@@ -2179,7 +2179,7 @@ public class NetworkModificationService {
                     lineSplitWithVoltageLevelInfos.getNewLine2Name(),
                     line);
 
-                algo.apply(network, false, reporter);
+                algo.apply(network, false, subReporter);
             }
 
             listener.storeLineSplitWithVoltageLevelInfos(lineSplitWithVoltageLevelInfos);
