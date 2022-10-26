@@ -1557,6 +1557,18 @@ public class ModificationControllerTest {
         assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v1d1", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
         assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v1b1", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
 
+        // update equipment deletion
+        String uriStringForUpdate = "/v1/modifications/" + bsmlrEquipmentDeletion.get(0).getUuid()
+                + "/equipments-deletion/type/" + "GENERATOR" + "/id/" + "idGenerator";
+        mockMvc.perform(put(uriStringForUpdate).contentType(MediaType.APPLICATION_JSON)).andExpectAll(status().isOk());
+
+        testNetworkModificationsCount(TEST_GROUP_ID, 1);
+        mvcResult = mockMvc.perform(get("/v1/modifications/" + bsmlrEquipmentDeletion.get(0).getUuid()).contentType(MediaType.APPLICATION_JSON))
+                .andExpectAll(status().isOk()).andReturn();
+        resultAsString = mvcResult.getResponse().getContentAsString();
+        bsmlrEquipmentDeletion = mapper.readValue(resultAsString, new TypeReference<>() { });
+        assertThat(bsmlrEquipmentDeletion.get(0), createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "idGenerator", "GENERATOR", Set.of()));
+
         // Test delete load on not yet existing variant VARIANT_NOT_EXISTING_ID :
         // Only the modification should be added in the database but the load cannot be deleted
         String uriStringWithVariantNotExisting = "/v1/networks/{networkUuid}/equipments/type/{equipmentType}/id/{equipmentId}?variantId=" + VARIANT_NOT_EXISTING_ID + "&group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
