@@ -389,13 +389,13 @@ public class NetworkModificationService {
                                             NetworkModificationException.Type typeIfError,
                                             UUID reportUuid, ReporterModel reporter,
                                             Reporter subReporter) {
-        List<ModificationInfos> modificationInfos = List.of();
+        NetworkModificationException networkModificationException = null;
         try {
             if (listener.isApplyModifications()) {
                 action.run();
-                modificationInfos = listener.getModifications();
             }
         } catch (Exception e) {
+            networkModificationException = e instanceof NetworkModificationException ? (NetworkModificationException) e : new NetworkModificationException(typeIfError, e);
             if (!(e instanceof PowsyblException)) {
                 LOGGER.error(e.toString(), e);
             }
@@ -406,6 +406,7 @@ public class NetworkModificationService {
                 .withSeverity(TypedValue.ERROR_SEVERITY)
                 .build());
         }
+
         try {
             if (postAction != null) {
                 postAction.run();
@@ -420,7 +421,16 @@ public class NetworkModificationService {
                 sendReport(reportUuid, reporter);
             }
         }
-        return modificationInfos;
+
+        if (networkModificationException != null) {
+            if (listener.isBuild()) {
+                return List.of();
+            } else {
+                throw networkModificationException;
+            }
+        }
+
+        return listener.getModifications();
     }
 
     private void saveModifications(NetworkStoreListener listener) {
@@ -719,24 +729,13 @@ public class NetworkModificationService {
         Reporter subReporter = reporter.createSubReporter(subReportId, subReportId);
 
         return doAction(listener, () -> {
-
-            if (listener.isApplyModifications()) {
-                try {
-                    Load load = network.getLoad(loadModificationInfos.getEquipmentId());
-                    if (load == null) {
-                        throw new NetworkModificationException(LOAD_NOT_FOUND, "Load " + loadModificationInfos.getEquipmentId() + " does not exist in network");
-                    }
-                    // modify the load in the network
-                    modifyLoad(load, loadModificationInfos, subReporter);
-                } catch (NetworkModificationException exc) {
-                    subReporter.report(Report.builder()
-                        .withKey("loadModification")
-                        .withDefaultMessage(exc.getMessage())
-                        .withValue("id", loadModificationInfos.getEquipmentId())
-                        .withSeverity(TypedValue.ERROR_SEVERITY)
-                        .build());
-                }
+            Load load = network.getLoad(loadModificationInfos.getEquipmentId());
+            if (load == null) {
+                throw new NetworkModificationException(LOAD_NOT_FOUND, "Load " + loadModificationInfos.getEquipmentId() + " does not exist in network");
             }
+            // modify the load in the network
+            modifyLoad(load, loadModificationInfos, subReporter);
+
         }, () -> listener.storeLoadModification(loadModificationInfos), MODIFY_LOAD_ERROR, reportUuid, reporter, subReporter).stream().map(EquipmentModificationInfos.class::cast)
             .collect(Collectors.toList());
     }
