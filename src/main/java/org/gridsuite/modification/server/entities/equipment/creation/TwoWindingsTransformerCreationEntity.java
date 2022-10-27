@@ -184,37 +184,33 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
         return toTwoWindingsTransformerCreationInfosBuilder().build();
     }
 
-    public static List<TapChangerStepCreationEmbeddable> toEmbeddableRatioTapChangerSteps(List<TapChangerStepInfos> tapChangerStepsInfos) {
-        List<TapChangerStepCreationEmbeddable> ratioTapChangerSteps = new ArrayList<>();
-        if (tapChangerStepsInfos != null) {
-            for (TapChangerStepInfos ratioTapChangerStepInfos : tapChangerStepsInfos) {
-                ratioTapChangerSteps.add(new TapChangerStepCreationEmbeddable(TapChangerType.RATIO, ratioTapChangerStepInfos.getIndex(), ratioTapChangerStepInfos.getRho(), ratioTapChangerStepInfos.getR(), ratioTapChangerStepInfos.getX(), ratioTapChangerStepInfos.getG(), ratioTapChangerStepInfos.getB(), null));
-            }
-        }
-        return ratioTapChangerSteps;
+    public static List<TapChangerStepCreationEmbeddable> toEmbeddableRatioTapChangerSteps(List<TapChangerStepInfos> tapChangerSteps) {
+        return tapChangerSteps == null ? null :
+                tapChangerSteps.stream()
+                        .map(tapChangerStep -> new TapChangerStepCreationEmbeddable(TapChangerType.RATIO, tapChangerStep.getIndex(), tapChangerStep.getRho(), tapChangerStep.getR(), tapChangerStep.getX(), tapChangerStep.getG(), tapChangerStep.getB(), null))
+                        .collect(Collectors.toList());
     }
 
-    public static List<TapChangerStepCreationEmbeddable> toEmbeddablePhaseTapChangerSteps(List<TapChangerStepInfos> tapChangerStepsInfos) {
-        List<TapChangerStepCreationEmbeddable> phaseTapChangerSteps = new ArrayList<>();
-        if (tapChangerStepsInfos != null) {
-            for (TapChangerStepInfos phaseTapChangerStepInfos : tapChangerStepsInfos) {
-                phaseTapChangerSteps.add(new TapChangerStepCreationEmbeddable(TapChangerType.PHASE, phaseTapChangerStepInfos.getIndex(), phaseTapChangerStepInfos.getRho(), phaseTapChangerStepInfos.getR(), phaseTapChangerStepInfos.getX(), phaseTapChangerStepInfos.getG(), phaseTapChangerStepInfos.getB(), phaseTapChangerStepInfos.getAlpha()));
-            }
-        }
-        return phaseTapChangerSteps;
+    public static List<TapChangerStepCreationEmbeddable> toEmbeddablePhaseTapChangerSteps(List<TapChangerStepInfos> tapChangerSteps) {
+        return tapChangerSteps == null ? null :
+                tapChangerSteps.stream()
+                        .map(tapChangerStep -> new TapChangerStepCreationEmbeddable(TapChangerType.PHASE, tapChangerStep.getIndex(), tapChangerStep.getRho(), tapChangerStep.getR(), tapChangerStep.getX(), tapChangerStep.getG(), tapChangerStep.getB(), tapChangerStep.getAlpha()))
+                        .collect(Collectors.toList());
     }
 
     public static TwoWindingsTransformerCreationEntity toEntity(TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
         TwoWindingsTransformerCreationEntity twoWindingsTransformerCreationEntity;
         List<TapChangerStepCreationEmbeddable> tapChangerSteps = new ArrayList<>();
-        if (twoWindingsTransformerCreationInfos.getRatioTapChanger() != null) {
+
+        System.out.println(twoWindingsTransformerCreationInfos);
+        if (twoWindingsTransformerCreationInfos.getRatioTapChanger().getSteps() != null) {
             tapChangerSteps.addAll(toEmbeddableRatioTapChangerSteps(twoWindingsTransformerCreationInfos.getRatioTapChanger().getSteps()));
         }
-        if (twoWindingsTransformerCreationInfos.getPhaseTapChanger() != null) {
+        if (twoWindingsTransformerCreationInfos.getPhaseTapChanger().getSteps() != null) {
             tapChangerSteps.addAll(toEmbeddablePhaseTapChangerSteps(twoWindingsTransformerCreationInfos.getPhaseTapChanger().getSteps()));
         }
-        PhaseTapChangerInfos phaseTapChangerInfos = twoWindingsTransformerCreationInfos.getPhaseTapChanger();
-        RatioTapChangerInfos ratioTapChangerInfos = twoWindingsTransformerCreationInfos.getRatioTapChanger();
+        PhaseTapChangerInfos phaseTapChangerInfos = twoWindingsTransformerCreationInfos.getPhaseTapChanger().getSteps() != null ? twoWindingsTransformerCreationInfos.getPhaseTapChanger() : null;
+        RatioTapChangerInfos ratioTapChangerInfos = twoWindingsTransformerCreationInfos.getRatioTapChanger().getSteps() != null ? twoWindingsTransformerCreationInfos.getRatioTapChanger() : null;
 
         twoWindingsTransformerCreationEntity = new TwoWindingsTransformerCreationEntity(twoWindingsTransformerCreationInfos.getEquipmentId(),
                 twoWindingsTransformerCreationInfos.getEquipmentName(),

@@ -9,12 +9,12 @@ package org.gridsuite.modification.server.dto;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
-import lombok.experimental.SuperBuilder;
 
 /**
  * @author Hugo Marcellin <hugo.marcelin at rte-france.com>
  */
-@SuperBuilder
+@Builder
+@AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @Setter
