@@ -100,7 +100,7 @@ public final class NetworkCreation {
         TwoWindingsTransformer t2 = createTwoWindingsTransformer(s1, "trf1", "trf1", 2.0, 14.745, 0.0, 3.2E-5, 400.0, 225.0,
             4, 14, v1.getId(), v2.getId(),
             "trf1", 1, ConnectablePosition.Direction.TOP,
-            "trf1", 1, ConnectablePosition.Direction.TOP);
+            "trf1", 2, ConnectablePosition.Direction.TOP);
         t2.newRatioTapChanger()
             .setLowTapPosition(0)
             .setTapPosition(1)
@@ -177,19 +177,19 @@ public final class NetworkCreation {
             .add();
 
         // create lines
-        createLine(network, "line1", "line1", "v3", "v4", 8, 4, 1.0, 1.0, 1.0, 2.0, 1.0, 2.0);
+        createLine(network, "line1", "line1", "v3", "v4", 8, 4, 1.0, 1.0, 1.0, 2.0, 1.0, 2.0, "cn1line1", 1, ConnectablePosition.Direction.TOP, "cn2line1", 1, ConnectablePosition.Direction.TOP);
         createSwitch(v3, "v3dl1", "v3dl1", SwitchKind.DISCONNECTOR, true, false, false, 0, 7);
         createSwitch(v3, "v3bl1", "v3bl1", SwitchKind.BREAKER, true, false, false, 7, 8);
         createSwitch(v4, "v4dl1", "v4dl1", SwitchKind.DISCONNECTOR, true, false, false, 0, 3);
         createSwitch(v4, "v4bl1", "v4bl1", SwitchKind.BREAKER, true, false, false, 3, 4);
 
-        createLine(network, "line2", "line2", "v1", "v3", 31, 31, 10.0, 5.0, 3.5, 5.5, 4.5, 6.5);
+        createLine(network, "line2", "line2", "v1", "v3", 31, 31, 10.0, 5.0, 3.5, 5.5, 4.5, 6.5, "cn1line2", 2, ConnectablePosition.Direction.TOP, "cn2line2", 2, ConnectablePosition.Direction.TOP);
         createSwitch(v1, "v1dl2", "v1dl2", SwitchKind.DISCONNECTOR, true, false, false, 0, 30);
         createSwitch(v1, "v1bl2", "v1bl2", SwitchKind.BREAKER, true, false, false, 30, 31);
         createSwitch(v3, "v3dl2", "v3dl2", SwitchKind.DISCONNECTOR, true, false, false, 0, 30);
         createSwitch(v3, "v3bl2", "v3bl2", SwitchKind.BREAKER, true, false, false, 30, 31);
 
-        createLine(network, "line3", "line3", "v1", "v3", 10, 12, 12.0, 7.0, 5.5, 7.5, 6.5, 8.5);
+        createLine(network, "line3", "line3", "v1", "v3", 10, 12, 12.0, 7.0, 5.5, 7.5, 6.5, 8.5, "cn1line3", 3, ConnectablePosition.Direction.TOP, "cn2line3", 3, ConnectablePosition.Direction.TOP);
         createSwitch(v1, "v1dl3", "v1dl3", SwitchKind.DISCONNECTOR, true, false, false, 0, 9);
         createSwitch(v1, "v1bl3", "v1bl3", SwitchKind.BREAKER, true, false, true, 9, 10);
         createSwitch(v3, "v3dl3", "v3dl3", SwitchKind.DISCONNECTOR, true, false, false, 0, 11);
@@ -222,7 +222,7 @@ public final class NetworkCreation {
         createSwitch(v2Variant, "dsc21Variant", "disc21Variant", SwitchKind.DISCONNECTOR, true, false, false, 0, 3);
         createSwitch(v2Variant, "break21Variant", "break21Variant", SwitchKind.BREAKER, true, false, false, 3, 4);
 
-        createLine(network, "line1Variant", "line1Variant", "v1Variant", "v2Variant", 4, 4, 10.0, 5.0, 3.5, 5.5, 4.5, 6.5);
+        createLine(network, "line1Variant", "line1Variant", "v1Variant", "v2Variant", 4, 4, 10.0, 5.0, 3.5, 5.5, 4.5, 6.5, "cn1line1Variant", 1, ConnectablePosition.Direction.TOP, "cn2line1Variant", 1, ConnectablePosition.Direction.TOP);
 
         network.getVariantManager().setWorkingVariant(VariantManagerConstants.INITIAL_VARIANT_ID);
 
@@ -241,7 +241,6 @@ public final class NetworkCreation {
         Substation s2 = createSubstation(network, "s2", "s2", Country.FR);
         VoltageLevel v2 = createVoltageLevel(s2, "v2", "v2", TopologyKind.BUS_BREAKER, 225.0);
         createBus(v2, "bus2", "bus2");
-
         return network;
     }
 
@@ -257,7 +256,6 @@ public final class NetworkCreation {
         createLccConverterStation(v1, "v1lcc", "v1lcc", 3, 0, 0);
         VoltageLevel v3 = createVoltageLevel(s1, "v3", "v3", TopologyKind.BUS_BREAKER, 450.0);
         createBus(v3, "bus3", "bus3");
-
         Substation s2 = createSubstation(network, "s2", "s2", Country.FR);
         VoltageLevel v2 = createVoltageLevel(s2, "v2", "v2", TopologyKind.BUS_BREAKER, 225.0);
         createBus(v2, "bus2", "bus2");
@@ -316,8 +314,10 @@ public final class NetworkCreation {
     }
 
     private static void createLine(Network network, String id, String name, String voltageLevel1, String voltageLevel2, int node1, int node2,
-                                   double r, double x, double g1, double g2, double b1, double b2) {
-        network.newLine()
+                                   double r, double x, double g1, double g2, double b1, double b2,
+                                   String feederName1, int feederOrder1, ConnectablePosition.Direction direction1,
+                                   String feederName2, int feederOrder2, ConnectablePosition.Direction direction2) {
+        var l = network.newLine()
             .setId(id)
             .setName(name)
             .setR(r)
@@ -331,6 +331,17 @@ public final class NetworkCreation {
             .setNode1(node1)
             .setNode2(node2)
             .add();
+
+        l.newExtension(ConnectablePositionAdder.class)
+                .newFeeder1()
+                .withName(feederName1)
+                .withOrder(feederOrder1)
+                .withDirection(direction1).add()
+                .newFeeder2()
+                .withName(feederName2)
+                .withOrder(feederOrder2)
+                .withDirection(direction2).add()
+                .add();
     }
 
     @SuppressWarnings("SameParameterValue")
@@ -403,6 +414,7 @@ public final class NetworkCreation {
                                                                        String idVoltageLevel1, String idVoltageLevel2,
                                                                        String feederName1, int feederOrder1, ConnectablePosition.Direction direction1,
                                                                        String feederName2, int feederOrder2, ConnectablePosition.Direction direction2) {
+
         TwoWindingsTransformer t = s.newTwoWindingsTransformer()
             .setId(id)
             .setName(name)
@@ -417,6 +429,7 @@ public final class NetworkCreation {
             .setNode2(node2)
             .setVoltageLevel2(idVoltageLevel2)
             .add();
+
         t.newExtension(ConnectablePositionAdder.class)
             .newFeeder1()
             .withName(feederName1)
@@ -427,6 +440,32 @@ public final class NetworkCreation {
             .withOrder(feederOrder2)
             .withDirection(direction2).add()
             .add();
+
+        return t;
+    }
+
+    private static TwoWindingsTransformer createTwoWindingsTransformerOnBus(Substation s, String id, String name,
+                                                                       double r, double x, double g, double b,
+                                                                       double ratedU1, double ratedU2,
+                                                                       int node1, int node2,
+                                                                       String idVoltageLevel1, String idVoltageLevel2, String busId1, String busId2) {
+
+        TwoWindingsTransformer t = s.newTwoWindingsTransformer()
+                .setId(id)
+                .setName(name)
+                .setR(r)
+                .setX(x)
+                .setG(g)
+                .setB(b)
+                .setConnectableBus1(busId1)
+                .setConnectableBus2(busId2)
+                .setRatedU1(ratedU1)
+                .setRatedU2(ratedU2)
+                .setNode1(node1)
+                .setVoltageLevel1(idVoltageLevel1)
+                .setNode2(node2)
+                .setVoltageLevel2(idVoltageLevel2)
+                .add();
 
         return t;
     }
