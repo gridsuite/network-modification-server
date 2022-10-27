@@ -444,32 +444,6 @@ public final class NetworkCreation {
         return t;
     }
 
-    private static TwoWindingsTransformer createTwoWindingsTransformerOnBus(Substation s, String id, String name,
-                                                                       double r, double x, double g, double b,
-                                                                       double ratedU1, double ratedU2,
-                                                                       int node1, int node2,
-                                                                       String idVoltageLevel1, String idVoltageLevel2, String busId1, String busId2) {
-
-        TwoWindingsTransformer t = s.newTwoWindingsTransformer()
-                .setId(id)
-                .setName(name)
-                .setR(r)
-                .setX(x)
-                .setG(g)
-                .setB(b)
-                .setConnectableBus1(busId1)
-                .setConnectableBus2(busId2)
-                .setRatedU1(ratedU1)
-                .setRatedU2(ratedU2)
-                .setNode1(node1)
-                .setVoltageLevel1(idVoltageLevel1)
-                .setNode2(node2)
-                .setVoltageLevel2(idVoltageLevel2)
-                .add();
-
-        return t;
-    }
-
     @SuppressWarnings("SameParameterValue")
     private static ThreeWindingsTransformer createThreeWindingsTransformer(Substation s, String id, String name,
                                                                            String vl1, String vl2, String vl3,
