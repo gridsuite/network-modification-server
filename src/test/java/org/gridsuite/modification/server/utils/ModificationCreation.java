@@ -8,6 +8,7 @@
 package org.gridsuite.modification.server.utils;
 
 import com.powsybl.iidm.network.*;
+import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import org.gridsuite.modification.server.dto.*;
 
 import java.util.ArrayList;
@@ -69,8 +70,10 @@ public final class ModificationCreation {
             .regulatingTerminalType(regulatingTerminalType)
             .regulatingTerminalVlId(regulatingTerminalVlId)
             .reactiveCapabilityCurve(true)
-            .points(Arrays.asList(new ReactiveCapabilityCurveCreationInfos(2.0, 3.0, 3.1),
+            .reactiveCapabilityCurvePoints(Arrays.asList(new ReactiveCapabilityCurveCreationInfos(2.0, 3.0, 3.1),
                 new ReactiveCapabilityCurveCreationInfos(5.6, 9.8, 10.8)))
+            .connectionName("top")
+            .connectionDirection(ConnectablePosition.Direction.TOP)
             .build();
     }
 }

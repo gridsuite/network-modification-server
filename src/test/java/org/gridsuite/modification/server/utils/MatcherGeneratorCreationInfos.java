@@ -54,7 +54,7 @@ public class MatcherGeneratorCreationInfos extends MatcherModificationInfos<Gene
             && Objects.equals(m.getStepUpTransformerReactance(), reference.getStepUpTransformerReactance())
             && Objects.equals(m.getTransientReactance(), reference.getTransientReactance())
             && Objects.equals(m.getReactiveCapabilityCurve(), reference.getReactiveCapabilityCurve())
-            && matchesReactiveCapabilityCurvePoints(m.getPoints(), reference.getPoints());
+            && matchesReactiveCapabilityCurvePoints(m.getReactiveCapabilityCurvePoints(), reference.getReactiveCapabilityCurvePoints());
     }
 
     @Override

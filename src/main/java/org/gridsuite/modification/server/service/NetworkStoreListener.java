@@ -173,7 +173,9 @@ public class NetworkStoreListener implements NetworkListener {
                 loadCreationInfos.getVoltageLevelId(),
                 loadCreationInfos.getBusOrBusbarSectionId(),
                 loadCreationInfos.getActivePower(),
-                loadCreationInfos.getReactivePower()));
+                loadCreationInfos.getReactivePower(),
+                loadCreationInfos.getConnectionName(),
+                loadCreationInfos.getConnectionDirection()));
     }
 
     public void storeLoadModification(LoadModificationInfos loadModificationInfos) {
@@ -215,7 +217,9 @@ public class NetworkStoreListener implements NetworkListener {
             generatorCreationInfos.getRegulatingTerminalType(),
             generatorCreationInfos.getRegulatingTerminalVlId(),
             generatorCreationInfos.getReactiveCapabilityCurve() == null || generatorCreationInfos.getReactiveCapabilityCurve(),
-            toEmbeddablePoints(generatorCreationInfos.getPoints())));
+            toEmbeddablePoints(generatorCreationInfos.getReactiveCapabilityCurvePoints()),
+            generatorCreationInfos.getConnectionName(),
+            generatorCreationInfos.getConnectionDirection()));
     }
 
     public void storeEquipmentDeletion(String equipmentId, String equipmentType) {
