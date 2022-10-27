@@ -270,7 +270,7 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
         }
 
         if (!ratioTapChangerSteps.isEmpty()) {
-            List<TapChangerStepCreationInfos> ratioTapChangerStepCreationInfos = ratioTapChangerSteps.stream().map(step -> step.toModificationInfos()).collect(Collectors.toList());
+            List<TapChangerStepCreationInfos> ratioTapChangerStepCreationInfos = ratioTapChangerSteps.stream().map(TapChangerStepCreationEmbeddable::toModificationInfos).collect(Collectors.toList());
             builder.ratioTapChanger(RatioTapChangerCreationInfos.builder()
                     .lowTapPosition(getRatioTapChangerLowTapPosition())
                     .tapPosition(getRatioTapChangerTapPosition())
@@ -286,7 +286,7 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
         }
 
         if (!phaseTapChangerSteps.isEmpty()) {
-            List<TapChangerStepCreationInfos> phaseTapChangerStepCreationInfos = phaseTapChangerSteps.stream().map(step -> step.toModificationInfos()).collect(Collectors.toList());
+            List<TapChangerStepCreationInfos> phaseTapChangerStepCreationInfos = phaseTapChangerSteps.stream().map(TapChangerStepCreationEmbeddable::toModificationInfos).collect(Collectors.toList());
             builder.phaseTapChanger(PhaseTapChangerCreationInfos.builder()
                     .lowTapPosition(getPhaseTapChangerLowTapPosition())
                     .tapPosition(getPhaseTapChangerTapPosition())
