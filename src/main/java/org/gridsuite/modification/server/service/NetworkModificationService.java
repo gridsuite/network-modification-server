@@ -1323,7 +1323,7 @@ public class NetworkModificationService {
                     .setTapPosition(ratioTapChangerInfos.getTapPosition());
 
             if (ratioTapChangerInfos.getSteps() != null) {
-                for (RatioTapChangerStepInfos step : ratioTapChangerInfos.getSteps()) {
+                for (TapChangerStepInfos step : ratioTapChangerInfos.getSteps()) {
                     ratioTapChangerAdder.beginStep().setR(step.getR()).setX(step.getX()).setG(step.getG()).setB(step.getB()).setRho(step.getRho()).endStep();
                 }
 
@@ -1351,7 +1351,7 @@ public class NetworkModificationService {
                     .setTapPosition(phaseTapChangerInfos.getTapPosition());
 
             if (phaseTapChangerInfos.getSteps() != null) {
-                for (PhaseTapChangerStepInfos step : phaseTapChangerInfos.getSteps()) {
+                for (TapChangerStepInfos step : phaseTapChangerInfos.getSteps()) {
                     phaseTapChangerAdder.beginStep().setR(step.getR()).setX(step.getX()).setG(step.getG()).setB(step.getB()).setRho(step.getRho()).setAlpha(step.getAlpha()).endStep();
                 }
 

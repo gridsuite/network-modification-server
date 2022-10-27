@@ -10,8 +10,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
-import java.util.List;
-
 /**
  * @author Hugo Marcellin <hugo.marcelin at rte-france.com>
  */
@@ -22,9 +20,6 @@ import java.util.List;
 @ToString(callSuper = true)
 @Schema(description = "RatioTapChanger attributes")
 public class RatioTapChangerInfos extends TapChangerInfos {
-
-    @Schema(description = "steps")
-    private List<RatioTapChangerStepInfos> steps;
 
     @Schema(description = "loadTapChangingCapabilities")
     private boolean loadTapChangingCapabilities;

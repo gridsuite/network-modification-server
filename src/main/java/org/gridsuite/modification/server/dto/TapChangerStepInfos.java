@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -18,6 +19,7 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @Setter
 @ToString(callSuper = true)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class TapChangerStepInfos {
 
     @Schema(description = "index")
@@ -37,4 +39,7 @@ public class TapChangerStepInfos {
 
     @Schema(description = "b")
     private double b;
+
+    @Schema(description = "alpha")
+    private double alpha;
 }

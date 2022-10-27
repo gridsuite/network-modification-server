@@ -11,8 +11,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
-import java.util.List;
-
 /**
  * @author Hugo Marcellin <hugo.marcelin at rte-france.com>
  */
@@ -26,9 +24,6 @@ public class PhaseTapChangerInfos extends TapChangerInfos {
 
     @Schema(description = "regulationMode")
     private PhaseTapChanger.RegulationMode regulationMode;
-
-    @Schema(description = "steps")
-    private List<PhaseTapChangerStepInfos> steps;
 
     @Schema(description = "regulationValue")
     private Double regulationValue;

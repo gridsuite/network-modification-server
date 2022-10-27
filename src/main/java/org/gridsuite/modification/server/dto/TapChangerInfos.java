@@ -13,6 +13,8 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
+import java.util.List;
+
 /**
  * @author Hugo Marcellin <hugo.marcelin at rte-france.com>
  */
@@ -44,4 +46,7 @@ public class TapChangerInfos {
 
     @Schema(description = "Regulating terminal voltage level id")
     private String regulatingTerminalVlId;
+
+    @Schema(description = "steps")
+    private List<TapChangerStepInfos> steps;
 }

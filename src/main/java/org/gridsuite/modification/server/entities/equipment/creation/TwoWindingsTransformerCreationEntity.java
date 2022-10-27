@@ -184,20 +184,20 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
         return toTwoWindingsTransformerCreationInfosBuilder().build();
     }
 
-    public static List<TapChangerStepCreationEmbeddable> toEmbeddableRatioTapChangerSteps(List<RatioTapChangerStepInfos> tapChangerStepsInfos) {
+    public static List<TapChangerStepCreationEmbeddable> toEmbeddableRatioTapChangerSteps(List<TapChangerStepInfos> tapChangerStepsInfos) {
         List<TapChangerStepCreationEmbeddable> ratioTapChangerSteps = new ArrayList<>();
         if (tapChangerStepsInfos != null) {
-            for (RatioTapChangerStepInfos ratioTapChangerStepInfos : tapChangerStepsInfos) {
+            for (TapChangerStepInfos ratioTapChangerStepInfos : tapChangerStepsInfos) {
                 ratioTapChangerSteps.add(new TapChangerStepCreationEmbeddable(TapChangerType.RATIO, ratioTapChangerStepInfos.getIndex(), ratioTapChangerStepInfos.getRho(), ratioTapChangerStepInfos.getR(), ratioTapChangerStepInfos.getX(), ratioTapChangerStepInfos.getG(), ratioTapChangerStepInfos.getB(), null));
             }
         }
         return ratioTapChangerSteps;
     }
 
-    public static List<TapChangerStepCreationEmbeddable> toEmbeddablePhaseTapChangerSteps(List<PhaseTapChangerStepInfos> tapChangerStepsInfos) {
+    public static List<TapChangerStepCreationEmbeddable> toEmbeddablePhaseTapChangerSteps(List<TapChangerStepInfos> tapChangerStepsInfos) {
         List<TapChangerStepCreationEmbeddable> phaseTapChangerSteps = new ArrayList<>();
         if (tapChangerStepsInfos != null) {
-            for (PhaseTapChangerStepInfos phaseTapChangerStepInfos : tapChangerStepsInfos) {
+            for (TapChangerStepInfos phaseTapChangerStepInfos : tapChangerStepsInfos) {
                 phaseTapChangerSteps.add(new TapChangerStepCreationEmbeddable(TapChangerType.PHASE, phaseTapChangerStepInfos.getIndex(), phaseTapChangerStepInfos.getRho(), phaseTapChangerStepInfos.getR(), phaseTapChangerStepInfos.getX(), phaseTapChangerStepInfos.getG(), phaseTapChangerStepInfos.getB(), phaseTapChangerStepInfos.getAlpha()));
             }
         }
@@ -289,7 +289,7 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
         }
 
         if (!ratioTapChangerSteps.isEmpty()) {
-            List<RatioTapChangerStepInfos> ratioTapChangerStepInfos = ratioTapChangerSteps.stream().map(step -> RatioTapChangerStepInfos.builder().index(step.getIndex()).rho(step.getRho()).r(step.getR()).x(step.getX()).g(step.getG()).b(step.getB()).build()).collect(Collectors.toList());
+            List<TapChangerStepInfos> ratioTapChangerStepInfos = ratioTapChangerSteps.stream().map(step -> TapChangerStepInfos.builder().index(step.getIndex()).rho(step.getRho()).r(step.getR()).x(step.getX()).g(step.getG()).b(step.getB()).build()).collect(Collectors.toList());
             builder.ratioTapChanger(RatioTapChangerInfos.builder()
                     .lowTapPosition(getRatioTapChangerLowTapPosition())
                     .tapPosition(getRatioTapChangerTapPosition())
@@ -305,7 +305,7 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
         }
 
         if (!phaseTapChangerSteps.isEmpty()) {
-            List<PhaseTapChangerStepInfos> phaseTapChangerStepInfos = phaseTapChangerSteps.stream().map(step -> PhaseTapChangerStepInfos.builder().index(step.getIndex()).rho(step.getRho()).r(step.getR()).x(step.getX()).g(step.getG()).b(step.getB()).alpha(step.getAlpha()).build()).collect(Collectors.toList());
+            List<TapChangerStepInfos> phaseTapChangerStepInfos = phaseTapChangerSteps.stream().map(step -> TapChangerStepInfos.builder().index(step.getIndex()).rho(step.getRho()).r(step.getR()).x(step.getX()).g(step.getG()).b(step.getB()).alpha(step.getAlpha()).build()).collect(Collectors.toList());
             builder.phaseTapChanger(PhaseTapChangerInfos.builder()
                     .lowTapPosition(getPhaseTapChangerLowTapPosition())
                     .tapPosition(getPhaseTapChangerTapPosition())
