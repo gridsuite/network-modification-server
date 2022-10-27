@@ -41,9 +41,9 @@ public class TwoWindingsTransformerCreationInfos extends BranchCreationInfos {
     private Double ratedS;
 
     @Schema(description = "Ratio tap changer")
-    private RatioTapChangerInfos ratioTapChanger;
+    private RatioTapChangerCreationInfos ratioTapChanger;
 
     @Schema(description = "Phase tap changer")
-    private PhaseTapChangerInfos phaseTapChanger;
+    private PhaseTapChangerCreationInfos phaseTapChanger;
 
 }

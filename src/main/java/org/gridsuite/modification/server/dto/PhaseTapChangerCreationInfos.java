@@ -20,7 +20,7 @@ import lombok.experimental.SuperBuilder;
 @Setter
 @ToString(callSuper = true)
 @Schema(description = "PhaseTapChanger attributes")
-public class PhaseTapChangerInfos extends TapChangerInfos {
+public class PhaseTapChangerCreationInfos extends TapChangerCreationInfos {
 
     @Schema(description = "regulationMode")
     private PhaseTapChanger.RegulationMode regulationMode;

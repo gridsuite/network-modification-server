@@ -1356,7 +1356,7 @@ public class NetworkModificationService {
         TwoWindingsTransformer twoWindingsTransformer = twoWindingsTransformerAdder.add();
 
         if (twoWindingsTransformerCreationInfos.getRatioTapChanger() != null) {
-            RatioTapChangerInfos ratioTapChangerInfos = twoWindingsTransformerCreationInfos.getRatioTapChanger();
+            RatioTapChangerCreationInfos ratioTapChangerInfos = twoWindingsTransformerCreationInfos.getRatioTapChanger();
             RatioTapChangerAdder ratioTapChangerAdder = twoWindingsTransformer.newRatioTapChanger();
             Terminal terminal = getTerminalFromIdentifiable(network,
                     ratioTapChangerInfos.getRegulatingTerminalId(),
@@ -1375,7 +1375,7 @@ public class NetworkModificationService {
                     .setTapPosition(ratioTapChangerInfos.getTapPosition());
 
             if (ratioTapChangerInfos.getSteps() != null) {
-                for (TapChangerStepInfos step : ratioTapChangerInfos.getSteps()) {
+                for (TapChangerStepCreationInfos step : ratioTapChangerInfos.getSteps()) {
                     ratioTapChangerAdder.beginStep().setR(step.getR()).setX(step.getX()).setG(step.getG()).setB(step.getB()).setRho(step.getRho()).endStep();
                 }
 
@@ -1384,7 +1384,7 @@ public class NetworkModificationService {
         }
 
         if (twoWindingsTransformerCreationInfos.getPhaseTapChanger() != null) {
-            PhaseTapChangerInfos phaseTapChangerInfos = twoWindingsTransformerCreationInfos.getPhaseTapChanger();
+            PhaseTapChangerCreationInfos phaseTapChangerInfos = twoWindingsTransformerCreationInfos.getPhaseTapChanger();
             PhaseTapChangerAdder phaseTapChangerAdder = twoWindingsTransformer.newPhaseTapChanger();
             Terminal terminal = getTerminalFromIdentifiable(network,
                     phaseTapChangerInfos.getRegulatingTerminalId(),
@@ -1403,7 +1403,7 @@ public class NetworkModificationService {
                     .setTapPosition(phaseTapChangerInfos.getTapPosition());
 
             if (phaseTapChangerInfos.getSteps() != null) {
-                for (TapChangerStepInfos step : phaseTapChangerInfos.getSteps()) {
+                for (TapChangerStepCreationInfos step : phaseTapChangerInfos.getSteps()) {
                     phaseTapChangerAdder.beginStep().setR(step.getR()).setX(step.getX()).setG(step.getG()).setB(step.getB()).setRho(step.getRho()).setAlpha(step.getAlpha()).endStep();
                 }
 

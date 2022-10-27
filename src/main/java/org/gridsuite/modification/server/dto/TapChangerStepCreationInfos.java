@@ -20,7 +20,7 @@ import lombok.*;
 @Setter
 @ToString(callSuper = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class TapChangerStepInfos {
+public class TapChangerStepCreationInfos {
 
     @Schema(description = "index")
     private int index;

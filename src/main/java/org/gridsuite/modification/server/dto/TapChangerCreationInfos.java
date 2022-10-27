@@ -24,7 +24,7 @@ import java.util.List;
 @Setter
 @ToString(callSuper = true)
 @Schema(description = "RatioTapChanger attributes")
-public class TapChangerInfos {
+public class TapChangerCreationInfos {
 
     @Schema(description = "lowTapPosition")
     private int lowTapPosition;
@@ -48,5 +48,5 @@ public class TapChangerInfos {
     private String regulatingTerminalVlId;
 
     @Schema(description = "steps")
-    private List<TapChangerStepInfos> steps;
+    private List<TapChangerStepCreationInfos> steps;
 }

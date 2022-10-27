@@ -19,7 +19,7 @@ import lombok.experimental.SuperBuilder;
 @Setter
 @ToString(callSuper = true)
 @Schema(description = "RatioTapChanger attributes")
-public class RatioTapChangerInfos extends TapChangerInfos {
+public class RatioTapChangerCreationInfos extends TapChangerCreationInfos {
 
     @Schema(description = "loadTapChangingCapabilities")
     private boolean loadTapChangingCapabilities;

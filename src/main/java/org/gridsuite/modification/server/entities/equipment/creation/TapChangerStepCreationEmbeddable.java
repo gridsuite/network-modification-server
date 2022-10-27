@@ -10,8 +10,11 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.TapChangerType;
+import org.gridsuite.modification.server.dto.TapChangerStepCreationInfos;
 
 import javax.persistence.*;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author Hugo Marcellin <hugo.marcelin at rte-france.com>
@@ -46,4 +49,44 @@ public class TapChangerStepCreationEmbeddable {
 
     @Column(name = "alpha")
     private Double alpha;
+
+    public static List<TapChangerStepCreationEmbeddable> toEmbeddableRatioTapChangerSteps(List<TapChangerStepCreationInfos> tapChangerSteps) {
+        return tapChangerSteps == null ? null :
+                tapChangerSteps.stream()
+                        .map(tapChangerStep -> new TapChangerStepCreationEmbeddable(TapChangerType.RATIO, tapChangerStep.getIndex(), tapChangerStep.getRho(), tapChangerStep.getR(), tapChangerStep.getX(), tapChangerStep.getG(), tapChangerStep.getB(), null))
+                        .collect(Collectors.toList());
+    }
+
+    public static List<TapChangerStepCreationEmbeddable> toEmbeddablePhaseTapChangerSteps(List<TapChangerStepCreationInfos> tapChangerSteps) {
+        return tapChangerSteps == null ? null :
+                tapChangerSteps.stream()
+                        .map(tapChangerStep -> new TapChangerStepCreationEmbeddable(TapChangerType.PHASE, tapChangerStep.getIndex(), tapChangerStep.getRho(), tapChangerStep.getR(), tapChangerStep.getX(), tapChangerStep.getG(), tapChangerStep.getB(), tapChangerStep.getAlpha()))
+                        .collect(Collectors.toList());
+    }
+
+    public TapChangerStepCreationInfos toModificationInfos() {
+        return toTapChangerStepCreationInfosBuilder().build();
+    }
+
+    private TapChangerStepCreationInfos.TapChangerStepCreationInfosBuilder toTapChangerStepCreationInfosBuilder() {
+        if (getTapChangerType().equals(TapChangerType.PHASE)) {
+            return TapChangerStepCreationInfos.builder()
+                    .index(getIndex())
+                    .rho(getRho())
+                    .r(getR())
+                    .x(getX())
+                    .g(getG())
+                    .b(getB())
+                    .alpha(getAlpha());
+        } else if (getTapChangerType().equals(TapChangerType.RATIO)) {
+            return TapChangerStepCreationInfos.builder()
+                    .index(getIndex())
+                    .rho(getRho())
+                    .r(getR())
+                    .x(getX())
+                    .g(getG())
+                    .b(getB());
+        }
+        return TapChangerStepCreationInfos.builder();
+    }
 }
