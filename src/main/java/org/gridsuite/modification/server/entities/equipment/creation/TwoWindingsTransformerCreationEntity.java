@@ -202,15 +202,14 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
         TwoWindingsTransformerCreationEntity twoWindingsTransformerCreationEntity;
         List<TapChangerStepCreationEmbeddable> tapChangerSteps = new ArrayList<>();
 
-        System.out.println(twoWindingsTransformerCreationInfos);
-        if (twoWindingsTransformerCreationInfos.getRatioTapChanger().getSteps() != null) {
+        if (twoWindingsTransformerCreationInfos.getRatioTapChanger() != null) {
             tapChangerSteps.addAll(toEmbeddableRatioTapChangerSteps(twoWindingsTransformerCreationInfos.getRatioTapChanger().getSteps()));
         }
-        if (twoWindingsTransformerCreationInfos.getPhaseTapChanger().getSteps() != null) {
+        if (twoWindingsTransformerCreationInfos.getPhaseTapChanger() != null) {
             tapChangerSteps.addAll(toEmbeddablePhaseTapChangerSteps(twoWindingsTransformerCreationInfos.getPhaseTapChanger().getSteps()));
         }
-        PhaseTapChangerInfos phaseTapChangerInfos = twoWindingsTransformerCreationInfos.getPhaseTapChanger().getSteps() != null ? twoWindingsTransformerCreationInfos.getPhaseTapChanger() : null;
-        RatioTapChangerInfos ratioTapChangerInfos = twoWindingsTransformerCreationInfos.getRatioTapChanger().getSteps() != null ? twoWindingsTransformerCreationInfos.getRatioTapChanger() : null;
+        PhaseTapChangerInfos phaseTapChangerInfos = twoWindingsTransformerCreationInfos.getPhaseTapChanger();
+        RatioTapChangerInfos ratioTapChangerInfos = twoWindingsTransformerCreationInfos.getRatioTapChanger();
 
         twoWindingsTransformerCreationEntity = new TwoWindingsTransformerCreationEntity(twoWindingsTransformerCreationInfos.getEquipmentId(),
                 twoWindingsTransformerCreationInfos.getEquipmentName(),
