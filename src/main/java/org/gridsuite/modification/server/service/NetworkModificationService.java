@@ -29,6 +29,7 @@ import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.*;
+import org.gridsuite.modification.server.entities.equipment.deletion.*;
 import org.gridsuite.modification.server.entities.equipment.modification.*;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
@@ -918,6 +919,20 @@ public class NetworkModificationService {
         ModificationNetworkInfos networkInfos = getNetworkModificationInfos(networkUuid, variantId);
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
         return execDeleteEquipment(listener, equipmentType, equipmentId, reportUuid, reporterId);
+    }
+
+    public void updateEquipmentDeletion(UUID modificationUuid, String equipmentType, String equipmentId) {
+
+        ModificationEntity equipmentDeletionEntity = this.modificationRepository
+                .findById(modificationUuid)
+                .orElseThrow(() -> new NetworkModificationException(DELETE_EQUIPMENT_ERROR, "Equipment deletion not found"));
+
+        EquipmentDeletionEntity updatedEntity = this.networkModificationRepository.createEquipmentDeletionEntity(
+                equipmentId,
+                equipmentType);
+        updatedEntity.setId(modificationUuid);
+        updatedEntity.setGroup(equipmentDeletionEntity.getGroup());
+        this.networkModificationRepository.updateModification(updatedEntity);
     }
 
     private void sendReport(UUID reportUuid, ReporterModel reporter) {

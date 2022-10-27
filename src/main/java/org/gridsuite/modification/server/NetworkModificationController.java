@@ -345,7 +345,7 @@ public class NetworkModificationController {
 
     @DeleteMapping(value = "/networks/{networkUuid}/equipments/type/{equipmentType}/id/{equipmentId}")
     @Operation(summary = "Delete an equipment in a network variant")
-    @ApiResponse(responseCode = "200", description = "The equipment has been deleted")
+    @ApiResponse(responseCode = "200", description = "The equipment deletion was created")
     public ResponseEntity<List<EquipmentDeletionInfos>> deleteEquipment(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
                                                                         @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
                                                                         @Parameter(description = "Equipment type") @PathVariable("equipmentType") String equipmentType,
@@ -354,6 +354,16 @@ public class NetworkModificationController {
                                                                         @RequestParam(value = "reporterId") String reporterId,
                                                                         @RequestParam(value = "reportUuid") UUID reportUuid) {
         return ResponseEntity.ok().body(networkModificationService.deleteEquipment(networkUuid, variantId, groupUuid, reportUuid, reporterId, equipmentType, equipmentId));
+    }
+
+    @PutMapping(value = "/modifications/{modificationUuid}/equipments-deletion/type/{equipmentType}/id/{equipmentId}")
+    @Operation(summary = "Update an equipment deletion in a network variant")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The equipment deletion was updated")})
+    public ResponseEntity<Void> updateDeleteEquipment(@Parameter(description = "Modification UUID") @PathVariable("modificationUuid") UUID modificationUuid,
+                                                        @Parameter(description = "Equipment type") @PathVariable("equipmentType") String equipmentType,
+                                                        @Parameter(description = "Equipment id") @PathVariable("equipmentId") String equipmentId) {
+        networkModificationService.updateEquipmentDeletion(modificationUuid, equipmentType, equipmentId);
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping(value = "/networks/{networkUuid}/line-splits", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
