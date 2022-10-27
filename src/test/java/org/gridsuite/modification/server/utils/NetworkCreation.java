@@ -511,14 +511,14 @@ public final class NetworkCreation {
     }
 
     private static void createBattery(VoltageLevel vl, String id, String name,
-                                      int node, double minP, double maxP, double p0, double q0) {
+                                      int node, double minP, double maxP, double targetP, double targetQ) {
         vl.newBattery()
             .setId(id)
             .setName(name)
             .setMinP(minP)
             .setMaxP(maxP)
-            .setP0(p0)
-            .setQ0(q0)
+            .setTargetP(targetP)
+            .setTargetQ(targetQ)
             .setNode(node)
             .add();
     }
