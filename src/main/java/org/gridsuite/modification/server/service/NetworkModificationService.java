@@ -1276,24 +1276,20 @@ public class NetworkModificationService {
                             .withPositionOrder2(position2)
                             .withBranchAdder(lineAdder).build();
                     algo.apply(network, true, subReporter);
-
-                    // Set Permanent Current Limits if exist
-                    CurrentLimitsInfos currentLimitsInfos1 = lineCreationInfos.getCurrentLimits1();
-                    CurrentLimitsInfos currentLimitsInfos2 = lineCreationInfos.getCurrentLimits2();
-                    var line = getLine(network, lineCreationInfos.getEquipmentId());
-
-                    if (currentLimitsInfos1 != null && currentLimitsInfos1.getPermanentLimit() != null) {
-                        line.newCurrentLimits1().setPermanentLimit(currentLimitsInfos1.getPermanentLimit()).add();
-                    }
-                    if (currentLimitsInfos2 != null && currentLimitsInfos2.getPermanentLimit() != null) {
-                        line.newCurrentLimits2().setPermanentLimit(currentLimitsInfos2.getPermanentLimit()).add();
-                    }
-                } else if (voltageLevel1.getTopologyKind() == TopologyKind.NODE_BREAKER &&
-                        voltageLevel2.getTopologyKind() == TopologyKind.BUS_BREAKER) {
-                    addLineAndSubReporter(network, voltageLevel1, voltageLevel2, lineCreationInfos, true, false, subReporter);
                 } else {
-                    addLineAndSubReporter(network, voltageLevel1, voltageLevel2, lineCreationInfos, false, voltageLevel1.getTopologyKind() == TopologyKind.BUS_BREAKER &&
-                            voltageLevel2.getTopologyKind() == TopologyKind.NODE_BREAKER, subReporter);
+                    addLine(network, voltageLevel1, voltageLevel2, lineCreationInfos, true, true, subReporter);
+                }
+
+                // Set Permanent Current Limits if exist
+                CurrentLimitsInfos currentLimitsInfos1 = lineCreationInfos.getCurrentLimits1();
+                CurrentLimitsInfos currentLimitsInfos2 = lineCreationInfos.getCurrentLimits2();
+                var line = getLine(network, lineCreationInfos.getEquipmentId());
+
+                if (currentLimitsInfos1 != null && currentLimitsInfos1.getPermanentLimit() != null) {
+                    line.newCurrentLimits1().setPermanentLimit(currentLimitsInfos1.getPermanentLimit()).add();
+                }
+                if (currentLimitsInfos2 != null && currentLimitsInfos2.getPermanentLimit() != null) {
+                    line.newCurrentLimits2().setPermanentLimit(currentLimitsInfos2.getPermanentLimit()).add();
                 }
             }
             // add the line creation entity to the listener
@@ -1302,19 +1298,8 @@ public class NetworkModificationService {
             .collect(Collectors.toList());
     }
 
-    private void addLineAndSubReporter(Network network, VoltageLevel voltageLevel1, VoltageLevel voltageLevel2, LineCreationInfos lineCreationInfos, boolean withSwitch1, boolean withSwitch11, Reporter subReporter) {
-        Line line = createLineAdder(network, voltageLevel1, voltageLevel2, lineCreationInfos, withSwitch1, withSwitch11).add();
-
-        // Set Permanent Current Limits if exist
-        CurrentLimitsInfos currentLimitsInfos1 = lineCreationInfos.getCurrentLimits1();
-        CurrentLimitsInfos currentLimitsInfos2 = lineCreationInfos.getCurrentLimits2();
-
-        if (currentLimitsInfos1 != null && currentLimitsInfos1.getPermanentLimit() != null) {
-            line.newCurrentLimits1().setPermanentLimit(currentLimitsInfos1.getPermanentLimit()).add();
-        }
-        if (currentLimitsInfos2 != null && currentLimitsInfos2.getPermanentLimit() != null) {
-            line.newCurrentLimits2().setPermanentLimit(currentLimitsInfos2.getPermanentLimit()).add();
-        }
+    private void addLine(Network network, VoltageLevel voltageLevel1, VoltageLevel voltageLevel2, LineCreationInfos lineCreationInfos, boolean withSwitch1, boolean withSwitch2, Reporter subReporter) {
+        createLineAdder(network, voltageLevel1, voltageLevel2, lineCreationInfos, withSwitch1, withSwitch2).add();
 
         subReporter.report(Report.builder()
                 .withKey("lineCreated")
@@ -1369,12 +1354,8 @@ public class NetworkModificationService {
                             .withBranchAdder(twoWindingsTransformerAdder).build();
 
                     algo.apply(network, true, subReporter);
-                } else if (voltageLevel1.getTopologyKind() == TopologyKind.NODE_BREAKER &&
-                        voltageLevel2.getTopologyKind() == TopologyKind.BUS_BREAKER) {
-                    addTwoWindingsTransformerAndSubReporter(network, voltageLevel1, voltageLevel2, twoWindingsTransformerCreationInfos, true, false, subReporter);
                 } else {
-                    addTwoWindingsTransformerAndSubReporter(network, voltageLevel1, voltageLevel2, twoWindingsTransformerCreationInfos, false, voltageLevel1.getTopologyKind() == TopologyKind.BUS_BREAKER &&
-                            voltageLevel2.getTopologyKind() == TopologyKind.NODE_BREAKER, subReporter);
+                    addTwoWindingsTransformer(network, voltageLevel1, voltageLevel2, twoWindingsTransformerCreationInfos, true, true, subReporter);
                 }
             }
             // add the 2wt creation entity to the listener
@@ -1383,7 +1364,7 @@ public class NetworkModificationService {
             .collect(Collectors.toList());
     }
 
-    private void addTwoWindingsTransformerAndSubReporter(Network network, VoltageLevel voltageLevel1, VoltageLevel voltageLevel2, TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos, boolean withSwitch1, boolean withSwitch2, Reporter subReporter) {
+    private void addTwoWindingsTransformer(Network network, VoltageLevel voltageLevel1, VoltageLevel voltageLevel2, TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos, boolean withSwitch1, boolean withSwitch2, Reporter subReporter) {
         createTwoWindingsTransformerAdder(network, voltageLevel1, voltageLevel2, twoWindingsTransformerCreationInfos, withSwitch1, withSwitch2).add();
         subReporter.report(Report.builder()
                 .withKey("twoWindingsTransformerCreated")
