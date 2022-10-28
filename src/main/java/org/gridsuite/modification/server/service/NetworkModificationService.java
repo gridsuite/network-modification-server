@@ -261,20 +261,18 @@ public class NetworkModificationService {
                 if (listener.getNetwork().getLine(lineId) == null) {
                     throw new NetworkModificationException(LINE_NOT_FOUND, lineId);
                 }
-                if (listener.isApplyModifications()) {
-                    if (disconnectLineBothSides(network, lineId)) {
-                        network.getLine(lineId).newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.PLANNED_OUTAGE).add();
-                    } else {
-                        throw new NetworkModificationException(BRANCH_ACTION_ERROR, "Unable to disconnect both line ends");
-                    }
-
-                    subReporter.report(Report.builder()
-                        .withKey("lockoutLineApplied")
-                        .withDefaultMessage("Line ${id} (id) : lockout applied")
-                        .withValue("id", lineId)
-                        .withSeverity(TypedValue.INFO_SEVERITY)
-                        .build());
+                if (disconnectLineBothSides(network, lineId)) {
+                    network.getLine(lineId).newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.PLANNED_OUTAGE).add();
+                } else {
+                    throw new NetworkModificationException(BRANCH_ACTION_ERROR, "Unable to disconnect both line ends");
                 }
+
+                subReporter.report(Report.builder()
+                    .withKey("lockoutLineApplied")
+                    .withDefaultMessage("Line ${id} (id) : lockout applied")
+                    .withValue("id", lineId)
+                    .withSeverity(TypedValue.INFO_SEVERITY)
+                    .build());
             }, () -> listener.storeBranchStatusModification(lineId, BranchStatusModificationInfos.ActionType.LOCKOUT), MODIFICATION_ERROR, reportUuid, reporter, subReporter
         );
     }
@@ -326,25 +324,23 @@ public class NetworkModificationService {
                 if (listener.getNetwork().getLine(lineId) == null) {
                     throw new NetworkModificationException(LINE_NOT_FOUND, lineId);
                 }
-                if (listener.isApplyModifications()) {
-                    Terminal terminalToConnect = network.getLine(lineId).getTerminal(side);
-                    boolean isTerminalToConnectConnected = terminalToConnect.isConnected() || terminalToConnect.connect();
-                    Terminal terminalToDisconnect = network.getLine(lineId).getTerminal(side == Branch.Side.ONE ? Branch.Side.TWO : Branch.Side.ONE);
-                    boolean isTerminalToDisconnectDisconnected = !terminalToDisconnect.isConnected() || terminalToDisconnect.disconnect();
-                    if (isTerminalToConnectConnected && isTerminalToDisconnectDisconnected) {
-                        network.getLine(lineId).newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.IN_OPERATION).add();
-                    } else {
-                        throw new NetworkModificationException(BRANCH_ACTION_ERROR, "Unable to energise line end");
-                    }
-
-                    subReporter.report(Report.builder()
-                        .withKey("energiseLineEndApplied")
-                        .withDefaultMessage("Line ${id} (id) : energise the side ${side} applied")
-                        .withValue("id", lineId)
-                        .withValue("side", side.name())
-                        .withSeverity(TypedValue.INFO_SEVERITY)
-                        .build());
+                Terminal terminalToConnect = network.getLine(lineId).getTerminal(side);
+                boolean isTerminalToConnectConnected = terminalToConnect.isConnected() || terminalToConnect.connect();
+                Terminal terminalToDisconnect = network.getLine(lineId).getTerminal(side == Branch.Side.ONE ? Branch.Side.TWO : Branch.Side.ONE);
+                boolean isTerminalToDisconnectDisconnected = !terminalToDisconnect.isConnected() || terminalToDisconnect.disconnect();
+                if (isTerminalToConnectConnected && isTerminalToDisconnectDisconnected) {
+                    network.getLine(lineId).newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.IN_OPERATION).add();
+                } else {
+                    throw new NetworkModificationException(BRANCH_ACTION_ERROR, "Unable to energise line end");
                 }
+
+                subReporter.report(Report.builder()
+                    .withKey("energiseLineEndApplied")
+                    .withDefaultMessage("Line ${id} (id) : energise the side ${side} applied")
+                    .withValue("id", lineId)
+                    .withValue("side", side.name())
+                    .withSeverity(TypedValue.INFO_SEVERITY)
+                    .build());
             }, () -> listener.storeBranchStatusModification(lineId, side == Branch.Side.ONE ? BranchStatusModificationInfos.ActionType.ENERGISE_END_ONE : BranchStatusModificationInfos.ActionType.ENERGISE_END_TWO), MODIFICATION_ERROR, reportUuid, reporter, subReporter
         );
     }
@@ -359,24 +355,22 @@ public class NetworkModificationService {
                 if (listener.getNetwork().getLine(lineId) == null) {
                     throw new NetworkModificationException(LINE_NOT_FOUND, lineId);
                 }
-                if (listener.isApplyModifications()) {
-                    Terminal terminal1 = network.getLine(lineId).getTerminal1();
-                    boolean terminal1Connected = terminal1.isConnected() || terminal1.connect();
-                    Terminal terminal2 = network.getLine(lineId).getTerminal2();
-                    boolean terminal2Connected = terminal2.isConnected() || terminal2.connect();
-                    if (terminal1Connected && terminal2Connected) {
-                        network.getLine(lineId).newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.IN_OPERATION).add();
-                    } else {
-                        throw new NetworkModificationException(BRANCH_ACTION_ERROR, "Unable to connect both line ends");
-                    }
-
-                    subReporter.report(Report.builder()
-                        .withKey("switchOnLineApplied")
-                        .withDefaultMessage("Line ${id} (id) : switch on applied")
-                        .withValue("id", lineId)
-                        .withSeverity(TypedValue.INFO_SEVERITY)
-                        .build());
+                Terminal terminal1 = network.getLine(lineId).getTerminal1();
+                boolean terminal1Connected = terminal1.isConnected() || terminal1.connect();
+                Terminal terminal2 = network.getLine(lineId).getTerminal2();
+                boolean terminal2Connected = terminal2.isConnected() || terminal2.connect();
+                if (terminal1Connected && terminal2Connected) {
+                    network.getLine(lineId).newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.IN_OPERATION).add();
+                } else {
+                    throw new NetworkModificationException(BRANCH_ACTION_ERROR, "Unable to connect both line ends");
                 }
+
+                subReporter.report(Report.builder()
+                    .withKey("switchOnLineApplied")
+                    .withDefaultMessage("Line ${id} (id) : switch on applied")
+                    .withValue("id", lineId)
+                    .withSeverity(TypedValue.INFO_SEVERITY)
+                    .build());
             }, () -> listener.storeBranchStatusModification(lineId, BranchStatusModificationInfos.ActionType.SWITCH_ON), MODIFICATION_ERROR, reportUuid, reporter, subReporter
         );
     }
@@ -399,7 +393,7 @@ public class NetworkModificationService {
             if (!(e instanceof PowsyblException)) {
                 LOGGER.error(e.toString(), e);
             }
-            String errorMessage = e instanceof PowsyblException ? e.getMessage() : "Technical error: " + e.getMessage();
+            String errorMessage = e instanceof PowsyblException ? e.getMessage() : "Technical error: " + e.toString();
             subReporter.report(Report.builder()
                 .withKey(typeIfError.name())
                 .withDefaultMessage(errorMessage)
@@ -797,21 +791,12 @@ public class NetworkModificationService {
         Reporter subReporter = reporter.createSubReporter(subReportId, subReportId);
 
         return doAction(listener, () -> {
-            try {
-                Generator generator = network.getGenerator(generatorModificationInfos.getEquipmentId());
-                if (generator == null) {
-                    throw new NetworkModificationException(GENERATOR_NOT_FOUND, "Generator " + generatorModificationInfos.getEquipmentId() + " does not exist in network");
-                }
-                // modify the generator in the network
-                modifyGenerator(generator, generatorModificationInfos, subReporter);
-            } catch (NetworkModificationException exc) {
-                subReporter.report(Report.builder()
-                    .withKey("generatorModification")
-                    .withDefaultMessage(exc.getMessage())
-                    .withValue("id", generatorModificationInfos.getEquipmentId())
-                    .withSeverity(TypedValue.ERROR_SEVERITY)
-                    .build());
+            Generator generator = network.getGenerator(generatorModificationInfos.getEquipmentId());
+            if (generator == null) {
+                throw new NetworkModificationException(GENERATOR_NOT_FOUND, "Generator " + generatorModificationInfos.getEquipmentId() + " does not exist in network");
             }
+            // modify the generator in the network
+            modifyGenerator(generator, generatorModificationInfos, subReporter);
         }, () -> listener.storeGeneratorModification(generatorModificationInfos), MODIFY_GENERATOR_ERROR, repordId, reporter, subReporter).stream().map(EquipmentModificationInfos.class::cast)
             .collect(Collectors.toList());
     }
@@ -1660,38 +1645,36 @@ public class NetworkModificationService {
         AtomicReference<Reporter> subReporter = new AtomicReference<>();
 
         return doAction(listener, () -> {
-            if (listener.isApplyModifications()) {
-                Identifiable<?> identifiable = network.getIdentifiable(equipmentId);
-                if (identifiable == null) {
-                    throw new NetworkModificationException(EQUIPMENT_NOT_FOUND, equipmentId);
-                }
-                if (identifiable instanceof Switch) {
-                    String subReportId = "Switch '" + identifiable.getId() + "' state change";
+            Identifiable<?> identifiable = network.getIdentifiable(equipmentId);
+            if (identifiable == null) {
+                throw new NetworkModificationException(EQUIPMENT_NOT_FOUND, equipmentId);
+            }
+            if (identifiable instanceof Switch) {
+                String subReportId = "Switch '" + identifiable.getId() + "' state change";
+                subReporter.set(reporter.createSubReporter(subReportId, subReportId));
+                changeSwitchAttribute((Switch) identifiable, attributeName, attributeValue, subReporter.get());
+            } else if (identifiable instanceof Injection) {
+                if (identifiable instanceof Generator) {
+                    String subReportId = "Generator '" + identifiable.getId() + "' change";
                     subReporter.set(reporter.createSubReporter(subReportId, subReportId));
-                    changeSwitchAttribute((Switch) identifiable, attributeName, attributeValue, subReporter.get());
-                } else if (identifiable instanceof Injection) {
-                    if (identifiable instanceof Generator) {
-                        String subReportId = "Generator '" + identifiable.getId() + "' change";
-                        subReporter.set(reporter.createSubReporter(subReportId, subReportId));
-                        changeGeneratorAttribute((Generator) identifiable, attributeName, attributeValue, subReporter.get());
-                    }
-                } else if (identifiable instanceof Branch) {
-                    if (identifiable instanceof Line) {
-                        String subReportId = "Line '" + identifiable.getId() + "' change";
-                        subReporter.set(reporter.createSubReporter(subReportId, subReportId));
-                        changeLineAttribute((Line) identifiable, attributeName, attributeValue, subReporter.get());
-                    } else if (identifiable instanceof TwoWindingsTransformer) {
-                        String subReportId = "Two windings transformer '" + identifiable.getId() + "' change";
-                        subReporter.set(reporter.createSubReporter(subReportId, subReportId));
-                        changeTwoWindingsTransformerAttribute((TwoWindingsTransformer) identifiable, attributeName, attributeValue, subReporter.get());
-                    }
-                } else if (identifiable instanceof ThreeWindingsTransformer) {
-                    String subReportId = "Three windings transformer '" + identifiable.getId() + "' change";
-                    subReporter.set(reporter.createSubReporter(subReportId, subReportId));
-                    changeThreeWindingsTransformerAttribute((ThreeWindingsTransformer) identifiable, attributeName, attributeValue, subReporter.get());
-                } else if (identifiable instanceof HvdcLine) {
-                    // no hvdc line modifications yet
+                    changeGeneratorAttribute((Generator) identifiable, attributeName, attributeValue, subReporter.get());
                 }
+            } else if (identifiable instanceof Branch) {
+                if (identifiable instanceof Line) {
+                    String subReportId = "Line '" + identifiable.getId() + "' change";
+                    subReporter.set(reporter.createSubReporter(subReportId, subReportId));
+                    changeLineAttribute((Line) identifiable, attributeName, attributeValue, subReporter.get());
+                } else if (identifiable instanceof TwoWindingsTransformer) {
+                    String subReportId = "Two windings transformer '" + identifiable.getId() + "' change";
+                    subReporter.set(reporter.createSubReporter(subReportId, subReportId));
+                    changeTwoWindingsTransformerAttribute((TwoWindingsTransformer) identifiable, attributeName, attributeValue, subReporter.get());
+                }
+            } else if (identifiable instanceof ThreeWindingsTransformer) {
+                String subReportId = "Three windings transformer '" + identifiable.getId() + "' change";
+                subReporter.set(reporter.createSubReporter(subReportId, subReportId));
+                changeThreeWindingsTransformerAttribute((ThreeWindingsTransformer) identifiable, attributeName, attributeValue, subReporter.get());
+            } else if (identifiable instanceof HvdcLine) {
+                // no hvdc line modifications yet
             }
         }, null, MODIFICATION_ERROR, reportUuid, reporter, subReporter.get()).stream().map(EquipmentModificationInfos.class::cast)
             .collect(Collectors.toList());
