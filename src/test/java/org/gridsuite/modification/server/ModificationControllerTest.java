@@ -1407,7 +1407,11 @@ public class ModificationControllerTest {
                 "v1",
                 "bus1",
                 50.,
-                55.
+                55.,
+                "cn1",
+                ConnectablePosition.Direction.TOP,
+                "cn2",
+                ConnectablePosition.Direction.BOTTOM
                 )
                 .toModificationInfos();
         twoWindingsTransformerCreationInfos.setUuid(bsmlrTwoWindings.get(0).getUuid());
@@ -1427,7 +1431,11 @@ public class ModificationControllerTest {
                 "v1",
                 "bus1",
                 50.,
-                55.
+                55.,
+                "cn12",
+                ConnectablePosition.Direction.TOP,
+                "cn22",
+                ConnectablePosition.Direction.BOTTOM
         ).toModificationInfos();
         String twoWindingsTransformerCreationUpdateJson = objectWriter.writeValueAsString(twoWindingsTransformerCreationUpdate);
         String uriStringForUpdate = "/v1/modifications/" + bsmlrTwoWindings.get(0).getUuid() + "/two-windings-transformers-creation";
@@ -1470,6 +1478,10 @@ public class ModificationControllerTest {
                 .ratedVoltage2(1010)
                 .seriesReactance(300)
                 .seriesResistance(400)
+                .connectionName1("cnid2wt1")
+                .connectionDirection1(ConnectablePosition.Direction.TOP)
+                .connectionName2("cnid2wt2")
+                .connectionDirection2(ConnectablePosition.Direction.TOP)
                 .build();
         String twoWindingsTransformerCreationInfosJson = objectWriter.writeValueAsString(twoWindingsTransformerCreationInfos);
         mvcResult = mockMvc.perform(post(uriString, TEST_NETWORK_ID).content(twoWindingsTransformerCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
@@ -1517,6 +1529,10 @@ public class ModificationControllerTest {
                 .ratedVoltage2(1010)
                 .seriesReactance(300)
                 .seriesResistance(400)
+                .connectionName1("cnid2wt1")
+                .connectionDirection1(ConnectablePosition.Direction.TOP)
+                .connectionName2("cnid2wt2")
+                .connectionDirection2(ConnectablePosition.Direction.TOP)
                 .build();
 
         String twoWindingsTransformerCreationInfosJson = objectWriter.writeValueAsString(twoWindingsTransformerCreationInfos);
@@ -2005,10 +2021,14 @@ public class ModificationControllerTest {
             .busOrBusbarSectionId1("1.1")
             .voltageLevelId2("v2")
             .busOrBusbarSectionId2("1A")
+            .connectionName1("cn1Line4")
+            .connectionDirection1(ConnectablePosition.Direction.TOP)
+            .connectionName2("cn2Line4")
+            .connectionDirection2(ConnectablePosition.Direction.TOP)
             .build();
         String lineCreationInfosJson = objectWriter.writeValueAsString(lineCreationInfos);
 
-        assertEquals("LineCreationInfos(super=BranchCreationInfos(super=EquipmentCreationInfos(super=EquipmentModificationInfos(super=ModificationInfos(uuid=null, date=null, type=null, substationIds=[]), equipmentId=idLine4), equipmentName=nameLine4), seriesResistance=100.0, seriesReactance=100.0, voltageLevelId1=v1, voltageLevelId2=v2, busOrBusbarSectionId1=1.1, busOrBusbarSectionId2=1A, currentLimits1=null, currentLimits2=null), shuntConductance1=10.0, shuntSusceptance1=10.0, shuntConductance2=20.0, shuntSusceptance2=20.0)", lineCreationInfos.toString());
+        assertEquals("LineCreationInfos(super=BranchCreationInfos(super=EquipmentCreationInfos(super=EquipmentModificationInfos(super=ModificationInfos(uuid=null, date=null, type=null, substationIds=[]), equipmentId=idLine4), equipmentName=nameLine4), seriesResistance=100.0, seriesReactance=100.0, voltageLevelId1=v1, voltageLevelId2=v2, busOrBusbarSectionId1=1.1, busOrBusbarSectionId2=1A, currentLimits1=null, currentLimits2=null, connectionName1=cn1Line4, connectionDirection1=TOP, connectionName2=cn2Line4, connectionDirection2=TOP), shuntConductance1=10.0, shuntSusceptance1=10.0, shuntConductance2=20.0, shuntSusceptance2=20.0)", lineCreationInfos.toString());
         mvcResult = mockMvc.perform(post(uriString, TEST_NETWORK_ID).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
@@ -2031,7 +2051,11 @@ public class ModificationControllerTest {
                 "v1",
                 "1.1",
                 5.,
-                5.)
+                5.,
+                "cn13",
+                ConnectablePosition.Direction.TOP,
+                "cn23",
+                ConnectablePosition.Direction.BOTTOM)
                 .toModificationInfos();
         lineCreationInfos.setUuid(bsmlrLineCreation.get(0).getUuid());
         lineCreationInfosJson = objectWriter.writeValueAsString(lineCreationInfos);
@@ -2051,7 +2075,11 @@ public class ModificationControllerTest {
                 "v1",
                 "1.1",
                 5.,
-                5.).toModificationInfos();
+                5.,
+                "cn14",
+                ConnectablePosition.Direction.TOP,
+                "cn24",
+                ConnectablePosition.Direction.BOTTOM).toModificationInfos();
         String lineCreationUpdateJson = objectWriter.writeValueAsString(lineCreationUpdate);
         String uriStringForUpdate = "/v1/modifications/" + bsmlrLineCreation.get(0).getUuid() + "/lines-creation";
         mockMvc.perform(put(uriStringForUpdate).content(lineCreationUpdateJson).contentType(MediaType.APPLICATION_JSON))
@@ -2341,6 +2369,10 @@ public class ModificationControllerTest {
             .busOrBusbarSectionId1("1.1")
             .voltageLevelId2("v2")
             .busOrBusbarSectionId2("bus2")
+            .connectionName1("cn1Line1")
+            .connectionDirection1(ConnectablePosition.Direction.TOP)
+            .connectionName2("cn2Line1")
+            .connectionDirection2(ConnectablePosition.Direction.TOP)
             .build();
 
         String lineCreationInfosJson = objectWriter.writeValueAsString(lineCreationInfos);

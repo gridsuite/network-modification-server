@@ -467,6 +467,14 @@ public class NetworkModificationService {
         return voltageLevel;
     }
 
+    private Line getLine(Network network, String lineId) {
+        Line line = network.getLine(lineId);
+        if (line == null) {
+            throw new NetworkModificationException(LINE_NOT_FOUND, lineId);
+        }
+        return line;
+    }
+
     private Generator getGenerator(Network network, String generatorId) {
         Generator generator = network.getGenerator(generatorId);
         if (generator == null) {
@@ -640,7 +648,13 @@ public class NetworkModificationService {
         var count = voltageLevel.getConnectableCount();
         var position = 0;
         var bbs = network.getBusbarSection(busOrBusbarSectionId);
+
         if (bbs != null) {
+            var extensionExist = bbs.getExtension(BusbarSectionPosition.class) != null;
+            if (!extensionExist) {
+                return position;
+            }
+
             if (count > 0) {
                 var rightRange = TopologyModificationUtils.getUnusedOrderPositionsAfter(bbs);
                 if (rightRange.isPresent()) {
@@ -1135,7 +1149,7 @@ public class NetworkModificationService {
         }
     }
 
-    private void setBranchAdderNodeOrBus(BranchAdder<?> branchAdder, VoltageLevel voltageLevel, BranchCreationInfos branchCreationInfos, Side side) {
+    private void setBranchAdderNodeOrBus(BranchAdder<?> branchAdder, VoltageLevel voltageLevel, BranchCreationInfos branchCreationInfos, Side side, boolean withSwitch) {
         String currentBusBarSectionId = (side == Side.ONE) ? branchCreationInfos.getBusOrBusbarSectionId1() : branchCreationInfos.getBusOrBusbarSectionId2();
 
         if (voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER) {
@@ -1145,20 +1159,21 @@ public class NetworkModificationService {
             if (busbarSection == null) {
                 throw new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, currentBusBarSectionId);
             }
+            if (withSwitch) {
+                // create cell switches
+                String sideSuffix = side != null ? "_" + side.name() : "";
+                int nodeNum = createNodeBreakerCellSwitches(voltageLevel,
+                        currentBusBarSectionId,
+                        branchCreationInfos.getEquipmentId(),
+                        branchCreationInfos.getEquipmentName(),
+                        sideSuffix);
 
-            // create cell switches
-            String sideSuffix = side != null ? "_" + side.name() : "";
-            int nodeNum = createNodeBreakerCellSwitches(voltageLevel,
-                currentBusBarSectionId,
-                    branchCreationInfos.getEquipmentId(),
-                    branchCreationInfos.getEquipmentName(),
-                sideSuffix);
-
-            // complete the lineAdder
-            if (side == Side.ONE) {
-                branchAdder.setNode1(nodeNum);
-            } else {
-                branchAdder.setNode2(nodeNum);
+                // complete the lineAdder
+                if (side == Side.ONE) {
+                    branchAdder.setNode1(nodeNum);
+                } else {
+                    branchAdder.setNode2(nodeNum);
+                }
             }
         } else { // BUS BREAKER
             // busId is a bus id
@@ -1174,7 +1189,7 @@ public class NetworkModificationService {
 
     }
 
-    private Line createLine(Network network, VoltageLevel voltageLevel1, VoltageLevel voltageLevel2, LineCreationInfos lineCreationInfos) {
+    private LineAdder createLineAdder(Network network, VoltageLevel voltageLevel1, VoltageLevel voltageLevel2, LineCreationInfos lineCreationInfos, boolean withSwitch1, boolean withSwitch2) {
 
         // common settings
         LineAdder lineAdder = network.newLine()
@@ -1190,10 +1205,10 @@ public class NetworkModificationService {
                                 .setB2(lineCreationInfos.getShuntSusceptance2() != null ? lineCreationInfos.getShuntSusceptance2() : 0.0);
 
         // lineAdder completion by topology
-        setBranchAdderNodeOrBus(lineAdder, voltageLevel1, lineCreationInfos, Side.ONE);
-        setBranchAdderNodeOrBus(lineAdder, voltageLevel2, lineCreationInfos, Side.TWO);
+        setBranchAdderNodeOrBus(lineAdder, voltageLevel1, lineCreationInfos, Side.ONE, withSwitch1);
+        setBranchAdderNodeOrBus(lineAdder, voltageLevel2, lineCreationInfos, Side.TWO, withSwitch2);
 
-        return lineAdder.add();
+        return lineAdder;
     }
 
     public void updateLineCreation(LineCreationInfos lineCreationInfos, UUID modificationUuid) {
@@ -1219,7 +1234,11 @@ public class NetworkModificationService {
                 lineCreationInfos.getVoltageLevelId2(),
                 lineCreationInfos.getBusOrBusbarSectionId2(),
                 lineCreationInfos.getCurrentLimits1().getPermanentLimit(),
-                lineCreationInfos.getCurrentLimits2().getPermanentLimit());
+                lineCreationInfos.getCurrentLimits2().getPermanentLimit(),
+                lineCreationInfos.getConnectionName1(),
+                lineCreationInfos.getConnectionDirection1(),
+                lineCreationInfos.getConnectionName2(),
+                lineCreationInfos.getConnectionDirection2());
         updatedEntity.setId(modificationUuid);
         updatedEntity.setGroup(lineModificationEntity.get().getGroup());
         this.networkModificationRepository.updateModification(updatedEntity);
@@ -1240,31 +1259,54 @@ public class NetworkModificationService {
                 VoltageLevel voltageLevel1 = getVoltageLevel(network, lineCreationInfos.getVoltageLevelId1());
                 VoltageLevel voltageLevel2 = getVoltageLevel(network, lineCreationInfos.getVoltageLevelId2());
 
-                Line myLine = createLine(network, voltageLevel1, voltageLevel2, lineCreationInfos);
+                if (voltageLevel1.getTopologyKind() == TopologyKind.NODE_BREAKER &&
+                        voltageLevel2.getTopologyKind() == TopologyKind.NODE_BREAKER) {
+                    LineAdder lineAdder = createLineAdder(network, voltageLevel1, voltageLevel2, lineCreationInfos, false, false);
+                    var position1 = getPosition(lineCreationInfos.getBusOrBusbarSectionId1(), network, voltageLevel1);
+                    var position2 = getPosition(lineCreationInfos.getBusOrBusbarSectionId2(), network, voltageLevel2);
+
+                    CreateBranchFeederBays algo = new CreateBranchFeederBaysBuilder()
+                            .withBbsId1(lineCreationInfos.getBusOrBusbarSectionId1())
+                            .withBbsId2(lineCreationInfos.getBusOrBusbarSectionId2())
+                            .withFeederName1(lineCreationInfos.getConnectionName1() != null ? lineCreationInfos.getConnectionName1() : lineCreationInfos.getEquipmentId())
+                            .withFeederName2(lineCreationInfos.getConnectionName2() != null ? lineCreationInfos.getConnectionName2() : lineCreationInfos.getEquipmentId())
+                            .withDirection1(lineCreationInfos.getConnectionDirection1())
+                            .withDirection2(lineCreationInfos.getConnectionDirection2())
+                            .withPositionOrder1(position1)
+                            .withPositionOrder2(position2)
+                            .withBranchAdder(lineAdder).build();
+                    algo.apply(network, true, subReporter);
+                } else {
+                    addLine(network, voltageLevel1, voltageLevel2, lineCreationInfos, true, true, subReporter);
+                }
 
                 // Set Permanent Current Limits if exist
                 CurrentLimitsInfos currentLimitsInfos1 = lineCreationInfos.getCurrentLimits1();
                 CurrentLimitsInfos currentLimitsInfos2 = lineCreationInfos.getCurrentLimits2();
+                var line = getLine(network, lineCreationInfos.getEquipmentId());
 
                 if (currentLimitsInfos1 != null && currentLimitsInfos1.getPermanentLimit() != null) {
-                    myLine.newCurrentLimits1().setPermanentLimit(currentLimitsInfos1.getPermanentLimit()).add();
+                    line.newCurrentLimits1().setPermanentLimit(currentLimitsInfos1.getPermanentLimit()).add();
                 }
                 if (currentLimitsInfos2 != null && currentLimitsInfos2.getPermanentLimit() != null) {
-                    myLine.newCurrentLimits2().setPermanentLimit(currentLimitsInfos2.getPermanentLimit()).add();
+                    line.newCurrentLimits2().setPermanentLimit(currentLimitsInfos2.getPermanentLimit()).add();
                 }
-
-                subReporter.report(Report.builder()
-                    .withKey("lineCreated")
-                    .withDefaultMessage("New line with id=${id} created")
-                    .withValue("id", lineCreationInfos.getEquipmentId())
-                    .withSeverity(TypedValue.INFO_SEVERITY)
-                    .build());
             }
-
             // add the line creation entity to the listener
             listener.storeLineCreation(lineCreationInfos);
         }, CREATE_LINE_ERROR, reportUuid, reporter, subReporter).stream().map(EquipmentModificationInfos.class::cast)
             .collect(Collectors.toList());
+    }
+
+    private void addLine(Network network, VoltageLevel voltageLevel1, VoltageLevel voltageLevel2, LineCreationInfos lineCreationInfos, boolean withSwitch1, boolean withSwitch2, Reporter subReporter) {
+        createLineAdder(network, voltageLevel1, voltageLevel2, lineCreationInfos, withSwitch1, withSwitch2).add();
+
+        subReporter.report(Report.builder()
+                .withKey("lineCreated")
+                .withDefaultMessage("New line with id=${id} created")
+                .withValue("id", lineCreationInfos.getEquipmentId())
+                .withSeverity(TypedValue.INFO_SEVERITY)
+                .build());
     }
 
     public List<EquipmentModificationInfos> createLine(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId, LineCreationInfos lineCreationInfos) {
@@ -1294,21 +1336,42 @@ public class NetworkModificationService {
                 // create the 2wt in the network
                 VoltageLevel voltageLevel1 = getVoltageLevel(network, twoWindingsTransformerCreationInfos.getVoltageLevelId1());
                 VoltageLevel voltageLevel2 = getVoltageLevel(network, twoWindingsTransformerCreationInfos.getVoltageLevelId2());
+                if (voltageLevel1.getTopologyKind() == TopologyKind.NODE_BREAKER && voltageLevel2.getTopologyKind() == TopologyKind.NODE_BREAKER) {
+                    var twoWindingsTransformerAdder = createTwoWindingsTransformerAdder(network, voltageLevel1, voltageLevel2, twoWindingsTransformerCreationInfos, false, false);
 
-                createTwoWindingsTransformer(network, voltageLevel1, voltageLevel2, twoWindingsTransformerCreationInfos);
+                    var position1 = getPosition(twoWindingsTransformerCreationInfos.getBusOrBusbarSectionId1(), network, voltageLevel1);
+                    var position2 = getPosition(twoWindingsTransformerCreationInfos.getBusOrBusbarSectionId2(), network, voltageLevel2);
 
-                subReporter.report(Report.builder()
-                    .withKey("twoWindingsTransformerCreated")
-                    .withDefaultMessage("New two windings transformer with id=${id} created")
-                    .withValue("id", twoWindingsTransformerCreationInfos.getEquipmentId())
-                    .withSeverity(TypedValue.INFO_SEVERITY)
-                    .build());
+                    CreateBranchFeederBays algo = new CreateBranchFeederBaysBuilder()
+                            .withBbsId1(twoWindingsTransformerCreationInfos.getBusOrBusbarSectionId1())
+                            .withBbsId2(twoWindingsTransformerCreationInfos.getBusOrBusbarSectionId2())
+                            .withFeederName1(twoWindingsTransformerCreationInfos.getConnectionName1() != null ? twoWindingsTransformerCreationInfos.getConnectionName1() : twoWindingsTransformerCreationInfos.getEquipmentId())
+                            .withFeederName2(twoWindingsTransformerCreationInfos.getConnectionName2() != null ? twoWindingsTransformerCreationInfos.getConnectionName2() : twoWindingsTransformerCreationInfos.getEquipmentId())
+                            .withDirection1(twoWindingsTransformerCreationInfos.getConnectionDirection1())
+                            .withDirection2(twoWindingsTransformerCreationInfos.getConnectionDirection2())
+                            .withPositionOrder1(position1)
+                            .withPositionOrder2(position2)
+                            .withBranchAdder(twoWindingsTransformerAdder).build();
+
+                    algo.apply(network, true, subReporter);
+                } else {
+                    addTwoWindingsTransformer(network, voltageLevel1, voltageLevel2, twoWindingsTransformerCreationInfos, true, true, subReporter);
+                }
             }
-
             // add the 2wt creation entity to the listener
             listener.storeTwoWindingsTransformerCreation(twoWindingsTransformerCreationInfos);
         }, CREATE_TWO_WINDINGS_TRANSFORMER_ERROR, reportUuid, reporter, subReporter).stream().map(EquipmentModificationInfos.class::cast)
             .collect(Collectors.toList());
+    }
+
+    private void addTwoWindingsTransformer(Network network, VoltageLevel voltageLevel1, VoltageLevel voltageLevel2, TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos, boolean withSwitch1, boolean withSwitch2, Reporter subReporter) {
+        createTwoWindingsTransformerAdder(network, voltageLevel1, voltageLevel2, twoWindingsTransformerCreationInfos, withSwitch1, withSwitch2).add();
+        subReporter.report(Report.builder()
+                .withKey("twoWindingsTransformerCreated")
+                .withDefaultMessage("New two windings transformer with id=${id} created")
+                .withValue("id", twoWindingsTransformerCreationInfos.getEquipmentId())
+                .withSeverity(TypedValue.INFO_SEVERITY)
+                .build());
     }
 
     public List<EquipmentModificationInfos> createTwoWindingsTransformer(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId, TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
@@ -1318,8 +1381,7 @@ public class NetworkModificationService {
         return execCreateTwoWindingsTransformer(listener, twoWindingsTransformerCreationInfos, reportUuid, reporterId);
     }
 
-    private TwoWindingsTransformer createTwoWindingsTransformer(Network network, VoltageLevel voltageLevel1, VoltageLevel voltageLevel2, TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
-        TwoWindingsTransformerAdder twoWindingsTransformerAdder;
+    private TwoWindingsTransformerAdder createTwoWindingsTransformerAdder(Network network, VoltageLevel voltageLevel1, VoltageLevel voltageLevel2, TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos, boolean withSwitch1, boolean withSwitch2) {
         Optional<Substation> optS1 = voltageLevel1.getSubstation();
         Optional<Substation> optS2 = voltageLevel2.getSubstation();
         Substation s1 = optS1.orElse(null);
@@ -1334,7 +1396,7 @@ public class NetworkModificationService {
             branchAdder = network.newTwoWindingsTransformer();
         }
         // common settings
-        twoWindingsTransformerAdder = branchAdder.setId(twoWindingsTransformerCreationInfos.getEquipmentId())
+        TwoWindingsTransformerAdder twoWindingsTransformerAdder = branchAdder.setId(twoWindingsTransformerCreationInfos.getEquipmentId())
                 .setName(twoWindingsTransformerCreationInfos.getEquipmentName())
                 .setVoltageLevel1(twoWindingsTransformerCreationInfos.getVoltageLevelId1())
                 .setVoltageLevel2(twoWindingsTransformerCreationInfos.getVoltageLevelId2())
@@ -1346,10 +1408,10 @@ public class NetworkModificationService {
                 .setRatedU2(twoWindingsTransformerCreationInfos.getRatedVoltage2());
 
         // BranchAdder completion by topology
-        setBranchAdderNodeOrBus(branchAdder, voltageLevel1, twoWindingsTransformerCreationInfos, Side.ONE);
-        setBranchAdderNodeOrBus(branchAdder, voltageLevel2, twoWindingsTransformerCreationInfos, Side.TWO);
+        setBranchAdderNodeOrBus(branchAdder, voltageLevel1, twoWindingsTransformerCreationInfos, Side.ONE, withSwitch1);
+        setBranchAdderNodeOrBus(branchAdder, voltageLevel2, twoWindingsTransformerCreationInfos, Side.TWO, withSwitch2);
 
-        return twoWindingsTransformerAdder.add();
+        return twoWindingsTransformerAdder;
     }
 
     public void updateTwoWindingsTransformerCreation(TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos, UUID modificationUuid) {
@@ -1373,7 +1435,11 @@ public class NetworkModificationService {
                 twoWindingsTransformerCreationInfos.getVoltageLevelId2(),
                 twoWindingsTransformerCreationInfos.getBusOrBusbarSectionId2(),
                 twoWindingsTransformerCreationInfos.getCurrentLimits1() != null ? twoWindingsTransformerCreationInfos.getCurrentLimits1().getPermanentLimit() : null,
-                twoWindingsTransformerCreationInfos.getCurrentLimits2() != null ? twoWindingsTransformerCreationInfos.getCurrentLimits2().getPermanentLimit() : null
+                twoWindingsTransformerCreationInfos.getCurrentLimits2() != null ? twoWindingsTransformerCreationInfos.getCurrentLimits2().getPermanentLimit() : null,
+                twoWindingsTransformerCreationInfos.getConnectionName1(),
+                twoWindingsTransformerCreationInfos.getConnectionDirection1(),
+                twoWindingsTransformerCreationInfos.getConnectionName2(),
+                twoWindingsTransformerCreationInfos.getConnectionDirection2()
         );
         updatedEntity.setId(modificationUuid);
         updatedEntity.setGroup(twoWindingsTransformerModificationEntity.get().getGroup());
