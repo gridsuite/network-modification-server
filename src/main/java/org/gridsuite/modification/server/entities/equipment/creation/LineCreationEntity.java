@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.entities.equipment.creation;
 
+import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.ModificationType;
@@ -52,7 +53,11 @@ public class LineCreationEntity extends BranchCreationEntity {
                                 String voltageLevelId2,
                                 String busOrBusbarSectionId2,
                                 Double permanentCurrentLimit1,
-                                Double permanentCurrentLimit2
+                                Double permanentCurrentLimit2,
+                                String connectionName1,
+                                ConnectablePosition.Direction connectionDirection1,
+                                String connectionName2,
+                                ConnectablePosition.Direction connectionDirection2
     ) {
         super(ModificationType.LINE_CREATION,
                 equipmentId,
@@ -64,7 +69,11 @@ public class LineCreationEntity extends BranchCreationEntity {
                 busOrBusbarSectionId1,
                 busOrBusbarSectionId2,
                 permanentCurrentLimit1 != null ? new CurrentLimitsEntity(null, permanentCurrentLimit1) : null,
-                permanentCurrentLimit2 != null ? new CurrentLimitsEntity(null, permanentCurrentLimit2) : null
+                permanentCurrentLimit2 != null ? new CurrentLimitsEntity(null, permanentCurrentLimit2) : null,
+                connectionName1,
+                connectionDirection1,
+                connectionName2,
+                connectionDirection2
         );
         this.shuntConductance1 = shuntConductance1;
         this.shuntSusceptance1 = shuntSusceptance1;
@@ -81,7 +90,9 @@ public class LineCreationEntity extends BranchCreationEntity {
                 lineCreationInfos.getVoltageLevelId1(), lineCreationInfos.getBusOrBusbarSectionId1(),
                 lineCreationInfos.getVoltageLevelId2(), lineCreationInfos.getBusOrBusbarSectionId2(),
                 lineCreationInfos.getCurrentLimits1() != null ? lineCreationInfos.getCurrentLimits1().getPermanentLimit() : null,
-                lineCreationInfos.getCurrentLimits2() != null ? lineCreationInfos.getCurrentLimits2().getPermanentLimit() : null
+                lineCreationInfos.getCurrentLimits2() != null ? lineCreationInfos.getCurrentLimits2().getPermanentLimit() : null,
+                lineCreationInfos.getConnectionName1(), lineCreationInfos.getConnectionDirection1(),
+                lineCreationInfos.getConnectionName2(), lineCreationInfos.getConnectionDirection2()
         );
     }
 
@@ -107,7 +118,11 @@ public class LineCreationEntity extends BranchCreationEntity {
             .voltageLevelId1(getVoltageLevelId1())
             .busOrBusbarSectionId1(getBusOrBusbarSectionId1())
             .voltageLevelId2(getVoltageLevelId2())
-            .busOrBusbarSectionId2(getBusOrBusbarSectionId2());
+            .busOrBusbarSectionId2(getBusOrBusbarSectionId2())
+            .connectionName1(getConnectionName1())
+            .connectionDirection1(getConnectionDirection1())
+            .connectionName2(getConnectionName2())
+            .connectionDirection2(getConnectionDirection2());
 
         if (getCurrentLimits1() != null) {
             builder.currentLimits1(getCurrentLimits1().toCurrentLimitsInfos());

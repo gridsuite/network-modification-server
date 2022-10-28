@@ -7,6 +7,7 @@
 package org.gridsuite.modification.server.entities.equipment.creation;
 
 import com.powsybl.iidm.network.PhaseTapChanger;
+import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.ModificationType;
@@ -121,6 +122,10 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
                                                 String busOrBusbarSectionId2,
                                                 Double permanentCurrentLimit1,
                                                 Double permanentCurrentLimit2,
+                                                String connectionName1,
+                                                ConnectablePosition.Direction connectionDirection1,
+                                                String connectionName2,
+                                                ConnectablePosition.Direction connectionDirection2,
                                                 Integer phaseTapChangerLowTapPosition,
                                                 Integer phaseTapChangerTapPosition,
                                                 Boolean phaseTapChangerRegulating,
@@ -151,7 +156,11 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
                 busOrBusbarSectionId1,
                 busOrBusbarSectionId2,
                 permanentCurrentLimit1 != null ? new CurrentLimitsEntity(null, permanentCurrentLimit1) : null,
-                permanentCurrentLimit2 != null ? new CurrentLimitsEntity(null, permanentCurrentLimit2) : null);
+                permanentCurrentLimit2 != null ? new CurrentLimitsEntity(null, permanentCurrentLimit2) : null,
+                connectionName1,
+                connectionDirection1,
+                connectionName2,
+                connectionDirection2);
         this.magnetizingConductance = magnetizingConductance;
         this.magnetizingSusceptance = magnetizingSusceptance;
         this.ratedVoltage1 = ratedVoltage1;
@@ -212,6 +221,10 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
                 twoWindingsTransformerCreationInfos.getBusOrBusbarSectionId2(),
                 twoWindingsTransformerCreationInfos.getCurrentLimits1() != null ? twoWindingsTransformerCreationInfos.getCurrentLimits1().getPermanentLimit() : null,
                 twoWindingsTransformerCreationInfos.getCurrentLimits2() != null ? twoWindingsTransformerCreationInfos.getCurrentLimits2().getPermanentLimit() : null,
+                twoWindingsTransformerCreationInfos.getConnectionName1(),
+                twoWindingsTransformerCreationInfos.getConnectionDirection1(),
+                twoWindingsTransformerCreationInfos.getConnectionName2(),
+                twoWindingsTransformerCreationInfos.getConnectionDirection2(),
                 phaseTapChangerInfos != null ? phaseTapChangerInfos.getLowTapPosition() : null,
                 phaseTapChangerInfos != null ? phaseTapChangerInfos.getTapPosition() : null,
                 phaseTapChangerInfos != null ? phaseTapChangerInfos.isRegulating() : null,
@@ -260,7 +273,11 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
                 .voltageLevelId1(getVoltageLevelId1())
                 .busOrBusbarSectionId1(getBusOrBusbarSectionId1())
                 .voltageLevelId2(getVoltageLevelId2())
-                .busOrBusbarSectionId2(getBusOrBusbarSectionId2());
+                .busOrBusbarSectionId2(getBusOrBusbarSectionId2())
+                .connectionName1(getConnectionName1())
+                .connectionDirection1(getConnectionDirection1())
+                .connectionName2(getConnectionName2())
+                .connectionDirection2(getConnectionDirection2());
 
         if (getCurrentLimits1() != null) {
             builder.currentLimits1(getCurrentLimits1().toCurrentLimitsInfos());
