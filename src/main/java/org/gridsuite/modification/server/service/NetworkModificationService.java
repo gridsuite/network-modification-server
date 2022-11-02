@@ -424,7 +424,7 @@ public class NetworkModificationService {
             }
         }
 
-        return listener.getModifications();
+        return listener.isApplyModifications() ? listener.getModifications() : List.of();
     }
 
     private void saveModifications(NetworkStoreListener listener) {

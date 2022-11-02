@@ -543,7 +543,7 @@ public class ModificationControllerTest {
     public void testUndoModificationsOnNetworkFlushError() throws Exception {
         String uriString = "/v1/networks/{networkUuid}/groovy?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
         MvcResult mvcResult = mockMvc.perform(put(uriString, TEST_NETWORK_WITH_FLUSH_ERROR_ID).contentType(MediaType.TEXT_PLAIN_VALUE).content("network.getGenerator('idGenerator').targetP=10\nnetwork.getGenerator('idGenerator').targetP=20\n"))
-                                      .andReturn();
+            .andExpect(status().isOk()).andReturn();
         String resultAsString = mvcResult.getResponse().getContentAsString();
         assertEquals(resultAsString, new NetworkModificationException(GROOVY_SCRIPT_ERROR, PowsyblException.class.getName()).getMessage());
 
@@ -644,7 +644,7 @@ public class ModificationControllerTest {
 
         assertTrue(bsmlrModification.isEmpty());  // no modifications returned
         assertNull(network.getLoad("idLoad3"));  // load was not created
-        testNetworkModificationsCount(TEST_GROUP_ID, 2);  // new modification stored in the database
+        testNetworkModificationsCount(TEST_GROUP_ID, 6);  // new modification stored in the database
     }
 
     @Test
@@ -761,7 +761,7 @@ public class ModificationControllerTest {
         loadModificationInfos.setEquipmentId("unknownLoadId");
         loadModificationInfosJson = objectWriter.writeValueAsString(loadModificationInfos);
         mvcResult = mockMvc.perform(put(uriString, TEST_NETWORK_ID).content(loadModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().is4xxClientError()).andReturn();
+                .andExpect(status().isOk()).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<EquipmentModificationInfos> bsmlrModificationInfos = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertThat(bsmlrModificationInfos.get(0), createMatcherEquipmentModificationInfos(ModificationType.LOAD_MODIFICATION, "unknownLoadId", Set.of()));
@@ -878,7 +878,7 @@ public class ModificationControllerTest {
         generatorModificationInfos.setEquipmentId(anotherId);
         generatorModificationInfosJson = objectWriter.writeValueAsString(generatorModificationInfos);
         mvcResult = mockMvc.perform(put(uriString, TEST_NETWORK_ID).content(generatorModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().is4xxClientError()).andReturn();
+            .andExpect(status().isOk()).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<EquipmentModificationInfos> bsmlrGeneratoModification = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertThat(bsmlrGeneratoModification.get(0), createMatcherEquipmentModificationInfos(ModificationType.GENERATOR_MODIFICATION, anotherId, Set.of()));
@@ -1183,7 +1183,7 @@ public class ModificationControllerTest {
 
         assertTrue(modifications.isEmpty());  // no modifications returned
         assertNull(network.getGenerator("idGenerator3"));  // generator was not created
-        testNetworkModificationsCount(TEST_GROUP_ID, 2);  // new modification stored in the database
+        testNetworkModificationsCount(TEST_GROUP_ID, 6);  // new modification stored in the database
     }
 
     @Test
@@ -1341,7 +1341,7 @@ public class ModificationControllerTest {
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<EquipmentModificationInfos> modifications = mapper.readValue(resultAsString, new TypeReference<>() { });
 
-        //assertTrue(modifications.isEmpty());  // no modifications returned
+        assertTrue(modifications.isEmpty());  // no modifications returned
         assertNull(network.getTwoWindingsTransformer("id2wt3"));  // transformer was not created
         testNetworkModificationsCount(TEST_GROUP_ID, 2);  // new modification stored in the database
     }
@@ -1963,7 +1963,7 @@ public class ModificationControllerTest {
 
         assertTrue(modifications.isEmpty());  // no modifications returned
         assertNull(network.getLine("idLine5"));  // line was not created
-        testNetworkModificationsCount(TEST_GROUP_ID, 2);  // new modification stored in the database
+        testNetworkModificationsCount(TEST_GROUP_ID, 7);  // new modification stored in the database
     }
 
     @Test
@@ -2440,7 +2440,7 @@ public class ModificationControllerTest {
         mockMvc.perform(put(uriStringForUpdate).content(vluInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 1);
+        testNetworkModificationsCount(TEST_GROUP_ID, 3);
 
         mvcResult = mockMvc.perform(get("/v1/modifications/" + listModificationsVoltageLevelCreation.get(0).getUuid()).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
@@ -2461,7 +2461,7 @@ public class ModificationControllerTest {
         resultAsString = mvcResult.getResponse().getContentAsString();
         assertEquals(resultAsString, new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "Voltage level id is not set").getMessage());
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 1);
+        testNetworkModificationsCount(TEST_GROUP_ID, 4);
     }
 
     @Test
@@ -2591,7 +2591,8 @@ public class ModificationControllerTest {
 
         String lineAttachToVLJson = objectWriter.writeValueAsString(lineAttachToVL);
         mockMvc.perform(post(lineAttachUriString, TEST_NETWORK_ID).content(lineAttachToVLJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk()).andReturn();
+        testNetworkModificationsCount(TEST_GROUP_ID, 2);
 
         LineAttachToVoltageLevelInfos lineAttachToWithNewVL = new LineAttachToVoltageLevelInfos("line3",
                 10.0, "AttPointId", "attPointName", vl1, null,
