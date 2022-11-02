@@ -7,6 +7,7 @@
 
 package org.gridsuite.modification.server.entities.equipment.creation;
 
+import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.ModificationType;
@@ -38,6 +39,8 @@ public class ShuntCompensatorCreationEntity extends InjectionCreationEntity {
         currentNumberOfSections = creationInfos.getCurrentNumberOfSections();
         susceptancePerSection = creationInfos.getSusceptancePerSection();
         isIdenticalSections = creationInfos.getIsIdenticalSection();
+        connectionName = creationInfos.getConnectionName();
+        connectionDirection = creationInfos.getConnectionDirection();
     }
 
     @Column
@@ -51,6 +54,12 @@ public class ShuntCompensatorCreationEntity extends InjectionCreationEntity {
 
     @Column
     boolean isIdenticalSections;
+
+    @Column
+    private String connectionName;
+
+    @Column
+    private ConnectablePosition.Direction connectionDirection;
 
     @Override
     public ShuntCompensatorCreationInfos toModificationInfos() {
@@ -70,7 +79,9 @@ public class ShuntCompensatorCreationEntity extends InjectionCreationEntity {
             .isIdenticalSection(isIdenticalSections())
             .currentNumberOfSections(getCurrentNumberOfSections())
             .maximumNumberOfSections(getMaximumNumberOfSections())
-            .susceptancePerSection(getSusceptancePerSection());
+            .susceptancePerSection(getSusceptancePerSection())
+            .connectionName(getConnectionName())
+            .connectionDirection(getConnectionDirection());
     }
 
 }

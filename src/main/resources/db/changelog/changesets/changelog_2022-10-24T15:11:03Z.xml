@@ -1,0 +1,43 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-4.1.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
+    <changeSet author="bendaamerahm (generated)" id="1666624272402-7">
+        <addColumn tableName="line_creation">
+            <column name="connection_direction1" type="int4"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="bendaamerahm (generated)" id="1666624272402-8">
+        <addColumn tableName="two_windings_transformer_creation">
+            <column name="connection_direction1" type="int4"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="bendaamerahm (generated)" id="1666624272402-9">
+        <addColumn tableName="line_creation">
+            <column name="connection_direction2" type="int4"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="bendaamerahm (generated)" id="1666624272402-10">
+        <addColumn tableName="two_windings_transformer_creation">
+            <column name="connection_direction2" type="int4"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="bendaamerahm (generated)" id="1666624272402-11">
+        <addColumn tableName="line_creation">
+            <column name="connection_name1" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="bendaamerahm (generated)" id="1666624272402-12">
+        <addColumn tableName="two_windings_transformer_creation">
+            <column name="connection_name1" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="bendaamerahm (generated)" id="1666624272402-13">
+        <addColumn tableName="line_creation">
+            <column name="connection_name2" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="bendaamerahm (generated)" id="1666624272402-14">
+        <addColumn tableName="two_windings_transformer_creation">
+            <column name="connection_name2" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+</databaseChangeLog>
