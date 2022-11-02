@@ -1355,7 +1355,7 @@ public class NetworkModificationService {
                     algo.apply(network, true, subReporter);
 
                     var twt = network.getTwoWindingsTransformer(twoWindingsTransformerCreationInfos.getEquipmentId());
-                    addChangesToTwoWindingsTransformer(network, twoWindingsTransformerCreationInfos, twt);
+                    addTapChangersToTwoWindingsTransformer(network, twoWindingsTransformerCreationInfos, twt);
                 } else {
                     addTwoWindingsTransformer(network, voltageLevel1, voltageLevel2, twoWindingsTransformerCreationInfos, true, true, subReporter);
                 }
@@ -1366,7 +1366,7 @@ public class NetworkModificationService {
             .collect(Collectors.toList());
     }
 
-    private void addChangesToTwoWindingsTransformer(Network network, TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos, TwoWindingsTransformer twt) {
+    private void addTapChangersToTwoWindingsTransformer(Network network, TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos, TwoWindingsTransformer twt) {
         if (twoWindingsTransformerCreationInfos.getRatioTapChanger() != null) {
             RatioTapChangerCreationInfos ratioTapChangerInfos = twoWindingsTransformerCreationInfos.getRatioTapChanger();
             RatioTapChangerAdder ratioTapChangerAdder = twt.newRatioTapChanger();
@@ -1426,7 +1426,7 @@ public class NetworkModificationService {
 
     private void addTwoWindingsTransformer(Network network, VoltageLevel voltageLevel1, VoltageLevel voltageLevel2, TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos, boolean withSwitch1, boolean withSwitch2, Reporter subReporter) {
         var twt = createTwoWindingsTransformerAdder(network, voltageLevel1, voltageLevel2, twoWindingsTransformerCreationInfos, withSwitch1, withSwitch2).add();
-        addChangesToTwoWindingsTransformer(network, twoWindingsTransformerCreationInfos, twt);
+        addTapChangersToTwoWindingsTransformer(network, twoWindingsTransformerCreationInfos, twt);
         subReporter.report(Report.builder()
                 .withKey("twoWindingsTransformerCreated")
                 .withDefaultMessage("New two windings transformer with id=${id} created")
