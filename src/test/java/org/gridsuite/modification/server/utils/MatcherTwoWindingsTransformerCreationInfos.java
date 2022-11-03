@@ -35,12 +35,12 @@ public class MatcherTwoWindingsTransformerCreationInfos extends MatcherModificat
 
     private boolean matchesRatioTapChangerInfos(RatioTapChangerCreationInfos rt1, RatioTapChangerCreationInfos rt2) {
         return (rt1 == null && rt2 == null)
-                || (rt1 != null && rt2 != null && rt1.isLoadTapChangingCapabilities() == rt2.isLoadTapChangingCapabilities() && rt1.isRegulating() == rt2.isRegulating() && areDoublesEqual(rt1.getTargetV(), rt2.getTargetV()) && areDoublesEqual(rt1.getTargetDeadband(), rt2.getTargetDeadband()) && Objects.equals(rt1.getRegulatingTerminalVlId(), rt2.getRegulatingTerminalVlId()) && Objects.equals(rt1.getRegulatingTerminalType(), rt2.getRegulatingTerminalType()) && Objects.equals(rt1.getRegulatingTerminalId(), rt2.getRegulatingTerminalId()) && rt1.getLowTapPosition() == rt2.getLowTapPosition() && rt1.getTapPosition() == rt2.getTapPosition());
+                || (rt1 != null && rt2 != null && rt1.isLoadTapChangingCapabilities() == rt2.isLoadTapChangingCapabilities() && rt1.isRegulating() == rt2.isRegulating() && Objects.equals(rt1.getTargetV(), rt2.getTargetV()) && Objects.equals(rt1.getTargetDeadband(), rt2.getTargetDeadband()) && Objects.equals(rt1.getRegulatingTerminalVlId(), rt2.getRegulatingTerminalVlId()) && Objects.equals(rt1.getRegulatingTerminalType(), rt2.getRegulatingTerminalType()) && Objects.equals(rt1.getRegulatingTerminalId(), rt2.getRegulatingTerminalId()) && rt1.getLowTapPosition() == rt2.getLowTapPosition() && rt1.getTapPosition() == rt2.getTapPosition());
     }
 
     private boolean matchesPhaseTapChangerInfos(PhaseTapChangerCreationInfos pt1, PhaseTapChangerCreationInfos pt2) {
         return (pt1 == null && pt2 == null)
-                || (pt1 != null && pt2 != null && pt1.getRegulationMode().equals(pt2.getRegulationMode()) && pt1.isRegulating() == pt2.isRegulating() && pt1.getRegulationMode() == pt2.getRegulationMode() && areDoublesEqual(pt1.getRegulationValue(), pt2.getRegulationValue()) && areDoublesEqual(pt1.getTargetDeadband(), pt2.getTargetDeadband()) && Objects.equals(pt1.getRegulatingTerminalVlId(), pt2.getRegulatingTerminalVlId()) && Objects.equals(pt1.getRegulatingTerminalType(), pt2.getRegulatingTerminalType()) && Objects.equals(pt1.getRegulatingTerminalId(), pt2.getRegulatingTerminalId()) && pt1.getLowTapPosition() == pt2.getLowTapPosition() && pt1.getTapPosition() == pt2.getTapPosition());
+                || (pt1 != null && pt2 != null && pt1.getRegulationMode().equals(pt2.getRegulationMode()) && pt1.isRegulating() == pt2.isRegulating() && pt1.getRegulationMode() == pt2.getRegulationMode() && Objects.equals(pt1.getRegulationValue(), pt2.getRegulationValue()) && Objects.equals(pt1.getTargetDeadband(), pt2.getTargetDeadband()) && Objects.equals(pt1.getRegulatingTerminalVlId(), pt2.getRegulatingTerminalVlId()) && Objects.equals(pt1.getRegulatingTerminalType(), pt2.getRegulatingTerminalType()) && Objects.equals(pt1.getRegulatingTerminalId(), pt2.getRegulatingTerminalId()) && pt1.getLowTapPosition() == pt2.getLowTapPosition() && pt1.getTapPosition() == pt2.getTapPosition());
     }
 
     @Override
@@ -59,15 +59,11 @@ public class MatcherTwoWindingsTransformerCreationInfos extends MatcherModificat
                 && m.getMagnetizingConductance() == reference.getMagnetizingConductance()
                 && m.getSeriesReactance() == reference.getSeriesReactance()
                 && m.getSeriesResistance() == reference.getSeriesResistance()
-                && areDoublesEqual(m.getRatedS(), reference.getRatedS())
+                && Objects.equals(m.getRatedS(), reference.getRatedS())
                 && matchesCurrentLimitsInfos(m.getCurrentLimits1(), reference.getCurrentLimits1())
                 && matchesCurrentLimitsInfos(m.getCurrentLimits2(), reference.getCurrentLimits2())
                 && matchesRatioTapChangerInfos(m.getRatioTapChanger(), reference.getRatioTapChanger())
                 && matchesPhaseTapChangerInfos(m.getPhaseTapChanger(), reference.getPhaseTapChanger());
-    }
-
-    private boolean areDoublesEqual(Double a, Double b) {
-        return (a == null && b == null) || (a != null && b != null && (Math.abs(a - b) < EPSILON));
     }
 
     @Override
