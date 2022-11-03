@@ -543,7 +543,7 @@ public class ModificationControllerTest {
     public void testUndoModificationsOnNetworkFlushError() throws Exception {
         String uriString = "/v1/networks/{networkUuid}/groovy?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
         MvcResult mvcResult = mockMvc.perform(put(uriString, TEST_NETWORK_WITH_FLUSH_ERROR_ID).contentType(MediaType.TEXT_PLAIN_VALUE).content("network.getGenerator('idGenerator').targetP=10\nnetwork.getGenerator('idGenerator').targetP=20\n"))
-            .andExpect(status().isOk()).andReturn();
+            .andReturn();
         String resultAsString = mvcResult.getResponse().getContentAsString();
         assertEquals(resultAsString, new NetworkModificationException(GROOVY_SCRIPT_ERROR, PowsyblException.class.getName()).getMessage());
 
@@ -761,10 +761,9 @@ public class ModificationControllerTest {
         loadModificationInfos.setEquipmentId("unknownLoadId");
         loadModificationInfosJson = objectWriter.writeValueAsString(loadModificationInfos);
         mvcResult = mockMvc.perform(put(uriString, TEST_NETWORK_ID).content(loadModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
+                .andExpect(status().isNotFound()).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
-        List<EquipmentModificationInfos> bsmlrModificationInfos = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertThat(bsmlrModificationInfos.get(0), createMatcherEquipmentModificationInfos(ModificationType.LOAD_MODIFICATION, "unknownLoadId", Set.of()));
+        assertEquals(resultAsString, new NetworkModificationException(LOAD_NOT_FOUND, "Load " + loadModificationInfos.getEquipmentId() + " does not exist in network").getMessage());
         testNetworkModificationsCount(TEST_GROUP_ID, 2);  // new modification stored in the database
 
         // Modify all attributes of the load
@@ -827,7 +826,7 @@ public class ModificationControllerTest {
         mockMvc.perform(put(uriStringForUpdate).content(loadModificationUpdateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 3);
+        testNetworkModificationsCount(TEST_GROUP_ID, 4);
 
         mvcResult = mockMvc.perform(get("/v1/modifications/" + bsmlreModification.get(0).getUuid()).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
@@ -878,10 +877,11 @@ public class ModificationControllerTest {
         generatorModificationInfos.setEquipmentId(anotherId);
         generatorModificationInfosJson = objectWriter.writeValueAsString(generatorModificationInfos);
         mvcResult = mockMvc.perform(put(uriString, TEST_NETWORK_ID).content(generatorModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk()).andReturn();
+            .andExpect(status().isNotFound()).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
-        List<EquipmentModificationInfos> bsmlrGeneratoModification = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertThat(bsmlrGeneratoModification.get(0), createMatcherEquipmentModificationInfos(ModificationType.GENERATOR_MODIFICATION, anotherId, Set.of()));
+
+        assertEquals(resultAsString, new NetworkModificationException(GENERATOR_NOT_FOUND, "Generator " + generatorModificationInfos.getEquipmentId() + " does not exist in network").getMessage());
+
         testNetworkModificationsCount(TEST_GROUP_ID, 2);  // new modification stored in the database
 
         // Modify all attributes of the generator
@@ -1709,7 +1709,7 @@ public class ModificationControllerTest {
             .andExpect(status().isOk()).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<UUID> deletionsGroups = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertEquals(deletionsGroups, List.of());
+        assertEquals(List.of(),deletionsGroups );
     }
 
     private List<ModificationInfos> createSomeSwitchModifications(UUID groupId, int number) throws Exception {
@@ -2684,6 +2684,4 @@ public class ModificationControllerTest {
         List<ModificationInfos> modificationsTestGroupId = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertEquals(actualSize, modificationsTestGroupId.size());
     }
-
-
 }

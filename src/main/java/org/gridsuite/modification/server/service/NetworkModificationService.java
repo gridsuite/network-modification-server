@@ -389,28 +389,19 @@ public class NetworkModificationService {
                 action.run();
             }
         } catch (Exception e) {
-            networkModificationException = e instanceof NetworkModificationException ? (NetworkModificationException) e : new NetworkModificationException(typeIfError, e);
-            if (!(e instanceof PowsyblException)) {
-                LOGGER.error(e.toString(), e);
-            }
-            String errorMessage = e instanceof PowsyblException ? e.getMessage() : "Technical error: " + e.toString();
-            subReporter.report(Report.builder()
-                .withKey(typeIfError.name())
-                .withDefaultMessage(errorMessage)
-                .withSeverity(TypedValue.ERROR_SEVERITY)
-                .build());
+            networkModificationException = handlException(typeIfError, subReporter, e);
         }
 
         try {
             if (postAction != null) {
                 postAction.run();
             }
-        } catch (Exception e) {
-            throw new NetworkModificationException(typeIfError, e);
-        } finally {
             if (!listener.isBuild()) {
                 saveModifications(listener);
             }
+        } catch (Exception e) {
+            networkModificationException = handlException(typeIfError, subReporter, e);
+        } finally {
             if (listener.isApplyModifications()) {
                 sendReport(reportUuid, reporter);
             }
@@ -425,6 +416,21 @@ public class NetworkModificationService {
         }
 
         return listener.isApplyModifications() ? listener.getModifications() : List.of();
+    }
+
+    private NetworkModificationException handlException(NetworkModificationException.Type typeIfError, Reporter subReporter, Exception e) {
+        NetworkModificationException networkModificationException;
+        networkModificationException = e instanceof NetworkModificationException ? (NetworkModificationException) e : new NetworkModificationException(typeIfError, e);
+        if (!(e instanceof PowsyblException)) {
+            LOGGER.error(e.toString(), e);
+        }
+        String errorMessage = e instanceof PowsyblException ? e.getMessage() : "Technical error: " + e.toString();
+        subReporter.report(Report.builder()
+            .withKey(typeIfError.name())
+            .withDefaultMessage(errorMessage)
+            .withSeverity(TypedValue.ERROR_SEVERITY)
+            .build());
+        return networkModificationException;
     }
 
     private void saveModifications(NetworkStoreListener listener) {
