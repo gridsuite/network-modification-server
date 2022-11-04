@@ -23,7 +23,7 @@ import java.util.List;
 @Getter
 @Setter
 @ToString(callSuper = true)
-@Schema(description = "RatioTapChanger attributes")
+@Schema(description = "TapChanger attributes")
 public class TapChangerCreationInfos {
 
     @Schema(description = "lowTapPosition")
