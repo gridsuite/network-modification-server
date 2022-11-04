@@ -28,6 +28,7 @@ import org.gridsuite.modification.server.entities.ModificationGroupEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.BusbarConnectionCreationEmbeddable;
 import org.gridsuite.modification.server.entities.equipment.creation.BusbarSectionCreationEmbeddable;
 import org.gridsuite.modification.server.entities.equipment.creation.LoadCreationEntity;
+import org.gridsuite.modification.server.entities.equipment.creation.TapChangerStepCreationEmbeddable;
 import org.gridsuite.modification.server.entities.equipment.deletion.EquipmentDeletionEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.LineSplitWithVoltageLevelEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.EquipmentAttributeModificationEntity;
@@ -311,7 +312,17 @@ public class BuildTest {
         List<ModificationEntity> entities2 = new ArrayList<>();
         entities2.add(modificationRepository.createGeneratorEntity(NEW_GENERATOR_ID, NEW_GENERATOR_ID, EnergySource.HYDRO, "v2", "1A", 0., 500., 1., 100., 50., true, 225., 8., 20., 50., true, 9F, 35., 25., "v2load", "LOAD", "v2", false, List.of(), "Top", ConnectablePosition.Direction.TOP));
         entities2.add(modificationRepository.createLineEntity("newLine", "newLine", 1., 2., 3., 4., 5., 6., "v1", "1.1", "v2", "1B", null, null, "cn101", ConnectablePosition.Direction.TOP, "cn102", ConnectablePosition.Direction.TOP));
-        entities2.add(modificationRepository.createTwoWindingsTransformerEntity("new2wt", "new2wt", 1., 2., 3., 4., 5., 6., "v1", "1.1", "v2", "1A", null, null, "cn201", ConnectablePosition.Direction.TOP, "cn202", ConnectablePosition.Direction.TOP));
+
+        List<TapChangerStepCreationEmbeddable> tapChangerStepCreationEmbeddables = new ArrayList<>();
+        tapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.PHASE, 1, 1, 0, 0, 0, 0, 0.));
+        tapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.PHASE, 2, 1, 0, 0, 0, 0, 0.));
+        tapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.PHASE, 3, 1, 0, 0, 0, 0, 0.));
+        tapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.RATIO, 5, 1, 0, 0, 0, 0, null));
+        tapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.RATIO, 6, 1, 0, 0, 0, 0, null));
+        tapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.RATIO, 7, 1, 0, 0, 0, 0, null));
+        tapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.RATIO, 8, 1, 0, 0, 0, 0, null));
+
+        entities2.add(modificationRepository.createTwoWindingsTransformerEntity("new2wt", "new2wt", 1., 2., 3., 4., 5., 6., 1., "v1", "1.1", "v2", "1A", 3., 2., "cn201", ConnectablePosition.Direction.TOP, "cn202", ConnectablePosition.Direction.TOP, 1, 2, false, null, null, null, null, PhaseTapChanger.RegulationMode.CURRENT_LIMITER, null, 5, 6, true, 1., "v2load", "v2", "LOAD", true, 50., tapChangerStepCreationEmbeddables));
         entities2.add(modificationRepository.createEquipmentDeletionEntity("v2shunt", "SHUNT_COMPENSATOR"));
         entities2.add(modificationRepository.createGroovyScriptModificationEntity("network.getGenerator('idGenerator').targetP=55\n"));
         entities2.add(modificationRepository.createBranchStatusModificationEntity("line2", BranchStatusModificationInfos.ActionType.TRIP));
@@ -399,6 +410,10 @@ public class BuildTest {
         assertEquals("v2", network.getTwoWindingsTransformer("new2wt").getTerminal2().getVoltageLevel().getId());
         assertEquals(2., network.getTwoWindingsTransformer("new2wt").getX(), 0.1);
         assertEquals(5., network.getTwoWindingsTransformer("new2wt").getRatedU1(), 0.1);
+        assertEquals(1, network.getTwoWindingsTransformer("new2wt").getRatedS(), 0.1);
+        assertEquals(4, network.getTwoWindingsTransformer("new2wt").getRatioTapChanger().getStepCount());
+        assertEquals(3, network.getTwoWindingsTransformer("new2wt").getPhaseTapChanger().getStepCount());
+        assertEquals(PhaseTapChanger.RegulationMode.CURRENT_LIMITER, network.getTwoWindingsTransformer("new2wt").getPhaseTapChanger().getRegulationMode());
         assertNull(network.getShuntCompensator("v2shunt"));
         assertEquals(Country.FR, network.getSubstation("newSubstation").getCountry().orElse(Country.AF));
         assertNotNull(network.getVoltageLevel("vl9"));
@@ -509,6 +524,10 @@ public class BuildTest {
         assertEquals("v2", network.getTwoWindingsTransformer("new2wt").getTerminal2().getVoltageLevel().getId());
         assertEquals(2., network.getTwoWindingsTransformer("new2wt").getX(), 0.1);
         assertEquals(5., network.getTwoWindingsTransformer("new2wt").getRatedU1(), 0.1);
+        assertEquals(1, network.getTwoWindingsTransformer("new2wt").getRatedS(), 0.1);
+        assertEquals(4, network.getTwoWindingsTransformer("new2wt").getRatioTapChanger().getStepCount());
+        assertEquals(3, network.getTwoWindingsTransformer("new2wt").getPhaseTapChanger().getStepCount());
+        assertEquals(PhaseTapChanger.RegulationMode.CURRENT_LIMITER, network.getTwoWindingsTransformer("new2wt").getPhaseTapChanger().getRegulationMode());
         assertNotNull(network.getShuntCompensator("v2shunt"));
         assertEquals(Country.FR, network.getSubstation("newSubstation").getCountry().orElse(Country.AF));
         assertNotNull(network.getVoltageLevel("vl9"));

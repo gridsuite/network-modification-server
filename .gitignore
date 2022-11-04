@@ -10,3 +10,5 @@ target/
 # IntelliJ
 /.idea
 *.iml
+
+derby.log
