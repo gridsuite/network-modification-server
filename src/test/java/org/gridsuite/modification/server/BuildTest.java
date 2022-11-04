@@ -601,7 +601,8 @@ public class BuildTest {
         assertThat((String) message.getHeaders().get("message"), startsWith(FAIL_MESSAGE));
     }
 
-  /*  @Test
+    //TODO check when postAction is null
+    /*@Test
     public void doActionWithUncheckedExceptionTest() {
         Network networkTest = NetworkCreation.create(TEST_NETWORK_ID, true);
         NetworkStoreListener listener = NetworkStoreListener.create(networkTest, TEST_NETWORK_ID, null, modificationRepository, equipmentInfosService, true, true);
@@ -610,7 +611,7 @@ public class BuildTest {
         assertThrows("unexpected error", RuntimeException.class, () ->
             networkModificationService.doAction(listener, () -> {
                 throw new RuntimeException("unexpected error");
-            }, null, MODIFICATION_ERROR, TEST_NETWORK_ID, reporter, subReporter)
+            }, null, NetworkModificationException.Type.MODIFICATION_ERROR, TEST_NETWORK_ID, reporter, subReporter)
         );
 
         assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches("/v1/reports/.*")));
