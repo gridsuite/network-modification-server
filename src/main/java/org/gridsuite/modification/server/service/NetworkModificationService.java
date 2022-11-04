@@ -29,8 +29,8 @@ import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.*;
-import org.gridsuite.modification.server.entities.equipment.deletion.*;
 import org.gridsuite.modification.server.entities.equipment.modification.*;
+import org.gridsuite.modification.server.entities.equipment.deletion.*;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.slf4j.Logger;
@@ -1322,17 +1322,79 @@ public class NetworkModificationService {
                     .withPositionOrder1(position1)
                     .withPositionOrder2(position2)
                     .withBranchAdder(twoWindingsTransformerAdder).build();
-
                 algo.apply(network, true, subReporter);
+
+                var twt = network.getTwoWindingsTransformer(twoWindingsTransformerCreationInfos.getEquipmentId());
+                addTapChangersToTwoWindingsTransformer(network, twoWindingsTransformerCreationInfos, twt);
             } else {
                 addTwoWindingsTransformer(network, voltageLevel1, voltageLevel2, twoWindingsTransformerCreationInfos, true, true, subReporter);
             }
+
         }, () -> listener.storeTwoWindingsTransformerCreation(twoWindingsTransformerCreationInfos), CREATE_TWO_WINDINGS_TRANSFORMER_ERROR, reportUuid, reporter, subReporter).stream().map(EquipmentModificationInfos.class::cast)
             .collect(Collectors.toList());
     }
 
+    private void addTapChangersToTwoWindingsTransformer(Network network, TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos, TwoWindingsTransformer twt) {
+        if (twoWindingsTransformerCreationInfos.getRatioTapChanger() != null) {
+            RatioTapChangerCreationInfos ratioTapChangerInfos = twoWindingsTransformerCreationInfos.getRatioTapChanger();
+            RatioTapChangerAdder ratioTapChangerAdder = twt.newRatioTapChanger();
+            Terminal terminal = getTerminalFromIdentifiable(network,
+                    ratioTapChangerInfos.getRegulatingTerminalId(),
+                    ratioTapChangerInfos.getRegulatingTerminalType(),
+                    ratioTapChangerInfos.getRegulatingTerminalVlId());
+
+            if (ratioTapChangerInfos.isRegulating()) {
+                ratioTapChangerAdder.setTargetV(ratioTapChangerInfos.getTargetV())
+                        .setTargetDeadband(ratioTapChangerInfos.getTargetDeadband() != null ? ratioTapChangerInfos.getTargetDeadband() : Double.NaN)
+                        .setRegulationTerminal(terminal);
+            }
+
+            ratioTapChangerAdder.setRegulating(ratioTapChangerInfos.isRegulating())
+                    .setLoadTapChangingCapabilities(ratioTapChangerInfos.isLoadTapChangingCapabilities())
+                    .setLowTapPosition(ratioTapChangerInfos.getLowTapPosition())
+                    .setTapPosition(ratioTapChangerInfos.getTapPosition());
+
+            if (ratioTapChangerInfos.getSteps() != null) {
+                for (TapChangerStepCreationInfos step : ratioTapChangerInfos.getSteps()) {
+                    ratioTapChangerAdder.beginStep().setR(step.getR()).setX(step.getX()).setG(step.getG()).setB(step.getB()).setRho(step.getRho()).endStep();
+                }
+
+                ratioTapChangerAdder.add();
+            }
+        }
+
+        if (twoWindingsTransformerCreationInfos.getPhaseTapChanger() != null) {
+            PhaseTapChangerCreationInfos phaseTapChangerInfos = twoWindingsTransformerCreationInfos.getPhaseTapChanger();
+            PhaseTapChangerAdder phaseTapChangerAdder = twt.newPhaseTapChanger();
+            Terminal terminal = getTerminalFromIdentifiable(network,
+                    phaseTapChangerInfos.getRegulatingTerminalId(),
+                    phaseTapChangerInfos.getRegulatingTerminalType(),
+                    phaseTapChangerInfos.getRegulatingTerminalVlId());
+
+            if (phaseTapChangerInfos.isRegulating()) {
+                phaseTapChangerAdder.setRegulationValue(phaseTapChangerInfos.getRegulationValue())
+                        .setTargetDeadband(phaseTapChangerInfos.getTargetDeadband() != null ? phaseTapChangerInfos.getTargetDeadband() : Double.NaN)
+                        .setRegulationTerminal(terminal);
+            }
+
+            phaseTapChangerAdder.setRegulating(phaseTapChangerInfos.isRegulating())
+                    .setRegulationMode(phaseTapChangerInfos.getRegulationMode())
+                    .setLowTapPosition(phaseTapChangerInfos.getLowTapPosition())
+                    .setTapPosition(phaseTapChangerInfos.getTapPosition());
+
+            if (phaseTapChangerInfos.getSteps() != null) {
+                for (TapChangerStepCreationInfos step : phaseTapChangerInfos.getSteps()) {
+                    phaseTapChangerAdder.beginStep().setR(step.getR()).setX(step.getX()).setG(step.getG()).setB(step.getB()).setRho(step.getRho()).setAlpha(step.getAlpha()).endStep();
+                }
+
+                phaseTapChangerAdder.add();
+            }
+        }
+    }
+
     private void addTwoWindingsTransformer(Network network, VoltageLevel voltageLevel1, VoltageLevel voltageLevel2, TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos, boolean withSwitch1, boolean withSwitch2, Reporter subReporter) {
-        createTwoWindingsTransformerAdder(network, voltageLevel1, voltageLevel2, twoWindingsTransformerCreationInfos, withSwitch1, withSwitch2).add();
+        var twt = createTwoWindingsTransformerAdder(network, voltageLevel1, voltageLevel2, twoWindingsTransformerCreationInfos, withSwitch1, withSwitch2).add();
+        addTapChangersToTwoWindingsTransformer(network, twoWindingsTransformerCreationInfos, twt);
         subReporter.report(Report.builder()
                 .withKey("twoWindingsTransformerCreated")
                 .withDefaultMessage("New two windings transformer with id=${id} created")
@@ -1374,6 +1436,10 @@ public class NetworkModificationService {
             .setRatedU1(twoWindingsTransformerCreationInfos.getRatedVoltage1())
             .setRatedU2(twoWindingsTransformerCreationInfos.getRatedVoltage2());
 
+        if (twoWindingsTransformerCreationInfos.getRatedS() != null) {
+            twoWindingsTransformerAdder.setRatedS(twoWindingsTransformerCreationInfos.getRatedS());
+        }
+
         // BranchAdder completion by topology
         setBranchAdderNodeOrBus(branchAdder, voltageLevel1, twoWindingsTransformerCreationInfos, Side.ONE, withSwitch1);
         setBranchAdderNodeOrBus(branchAdder, voltageLevel2, twoWindingsTransformerCreationInfos, Side.TWO, withSwitch2);
@@ -1388,26 +1454,7 @@ public class NetworkModificationService {
         if (!twoWindingsTransformerModificationEntity.isPresent()) {
             throw new NetworkModificationException(CREATE_TWO_WINDINGS_TRANSFORMER_ERROR, "Two windings transformer creation not found");
         }
-        EquipmentCreationEntity updatedEntity = this.networkModificationRepository.createTwoWindingsTransformerEntity(
-            twoWindingsTransformerCreationInfos.getEquipmentId(),
-            twoWindingsTransformerCreationInfos.getEquipmentName(),
-            twoWindingsTransformerCreationInfos.getSeriesResistance(),
-            twoWindingsTransformerCreationInfos.getSeriesReactance(),
-            twoWindingsTransformerCreationInfos.getMagnetizingConductance(),
-            twoWindingsTransformerCreationInfos.getMagnetizingSusceptance(),
-            twoWindingsTransformerCreationInfos.getRatedVoltage1(),
-            twoWindingsTransformerCreationInfos.getRatedVoltage2(),
-            twoWindingsTransformerCreationInfos.getVoltageLevelId1(),
-            twoWindingsTransformerCreationInfos.getBusOrBusbarSectionId1(),
-            twoWindingsTransformerCreationInfos.getVoltageLevelId2(),
-            twoWindingsTransformerCreationInfos.getBusOrBusbarSectionId2(),
-            twoWindingsTransformerCreationInfos.getCurrentLimits1() != null ? twoWindingsTransformerCreationInfos.getCurrentLimits1().getPermanentLimit() : null,
-            twoWindingsTransformerCreationInfos.getCurrentLimits2() != null ? twoWindingsTransformerCreationInfos.getCurrentLimits2().getPermanentLimit() : null,
-                twoWindingsTransformerCreationInfos.getConnectionName1(),
-                twoWindingsTransformerCreationInfos.getConnectionDirection1(),
-                twoWindingsTransformerCreationInfos.getConnectionName2(),
-                twoWindingsTransformerCreationInfos.getConnectionDirection2()
-        );
+        EquipmentCreationEntity updatedEntity = TwoWindingsTransformerCreationEntity.toEntity(twoWindingsTransformerCreationInfos);
         updatedEntity.setId(modificationUuid);
         updatedEntity.setGroup(twoWindingsTransformerModificationEntity.get().getGroup());
         this.networkModificationRepository.updateModification(updatedEntity);

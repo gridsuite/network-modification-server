@@ -1385,6 +1385,7 @@ public class ModificationControllerTest {
                 .ratedVoltage2(1010)
                 .seriesReactance(300)
                 .seriesResistance(400)
+                .ratedS(200.)
                 .build();
         String twoWindingsTransformerCreationInfosJson = objectWriter.writeValueAsString(twoWindingsTransformerCreationInfos);
         mvcResult = mockMvc.perform(post(uriString, TEST_NETWORK_BUS_BREAKER_ID).content(twoWindingsTransformerCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
@@ -1404,6 +1405,7 @@ public class ModificationControllerTest {
                 1015.,
                 350.,
                 450.,
+                200.,
                 "v12",
                 "bus12",
                 "v1",
@@ -1413,7 +1415,26 @@ public class ModificationControllerTest {
                 "cn1",
                 ConnectablePosition.Direction.TOP,
                 "cn2",
-                ConnectablePosition.Direction.BOTTOM
+                ConnectablePosition.Direction.BOTTOM,
+                null,
+                null,
+                false,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
                 )
                 .toModificationInfos();
         twoWindingsTransformerCreationInfos.setUuid(bsmlrTwoWindings.get(0).getUuid());
@@ -1428,6 +1449,7 @@ public class ModificationControllerTest {
                 1015.,
                 350.,
                 450.,
+                200.,
                 "v12",
                 "bus12",
                 "v1",
@@ -1437,7 +1459,26 @@ public class ModificationControllerTest {
                 "cn12",
                 ConnectablePosition.Direction.TOP,
                 "cn22",
-                ConnectablePosition.Direction.BOTTOM
+                ConnectablePosition.Direction.BOTTOM,
+                null,
+                null,
+                false,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
         ).toModificationInfos();
         String twoWindingsTransformerCreationUpdateJson = objectWriter.writeValueAsString(twoWindingsTransformerCreationUpdate);
         String uriStringForUpdate = "/v1/modifications/" + bsmlrTwoWindings.get(0).getUuid() + "/two-windings-transformers-creation";

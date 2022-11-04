@@ -36,4 +36,14 @@ public class TwoWindingsTransformerCreationInfos extends BranchCreationInfos {
 
     @Schema(description = "side 2 rated voltage")
     private double ratedVoltage2;
+
+    @Schema(description = "Rated conductance in Siemens")
+    private Double ratedS;
+
+    @Schema(description = "Ratio tap changer")
+    private RatioTapChangerCreationInfos ratioTapChanger;
+
+    @Schema(description = "Phase tap changer")
+    private PhaseTapChangerCreationInfos phaseTapChanger;
+
 }
