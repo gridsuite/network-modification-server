@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.dto;
 
+import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -47,4 +48,16 @@ public class BranchCreationInfos extends EquipmentCreationInfos {
 
     @Schema(description = "Current limits Side 2")
     private CurrentLimitsInfos currentLimits2;
+
+    @Schema(description = "Connection Name 1")
+    private String connectionName1;
+
+    @Schema(description = "Connection Direction 1")
+    private ConnectablePosition.Direction connectionDirection1;
+
+    @Schema(description = "Connection Name 2")
+    private String connectionName2;
+
+    @Schema(description = "Connection Direction 2")
+    private ConnectablePosition.Direction connectionDirection2;
 }

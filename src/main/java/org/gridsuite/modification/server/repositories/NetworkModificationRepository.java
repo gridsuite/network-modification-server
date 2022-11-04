@@ -227,31 +227,38 @@ public class NetworkModificationRepository {
                                                          Double transientReactance, Double stepUpTransformerReactance,
                                                          String regulatingTerminalId, String regulatingTerminalType, String regulatingTerminalVlId,
                                                          boolean reactiveCapabilityCurve,
-                                                         List<ReactiveCapabilityCurveCreationEmbeddable> reactiveCapabilityCurvePoints) {
+                                                         List<ReactiveCapabilityCurveCreationEmbeddable> reactiveCapabilityCurvePoints, String connectionName,
+                                                         ConnectablePosition.Direction connectionDirection) {
         return new GeneratorCreationEntity(generatorId, generatorName, energySource, voltageLevelId, busOrBusbarSectionId, minActivePower,
             maxActivePower, ratedNominalPower, activePowerSetpoint, reactivePowerSetpoint, voltageRegulationOn, voltageSetpoint, marginalCost, minQ, maxQ,
             participate, droop,  transientReactance, stepUpTransformerReactance, reactiveCapabilityCurvePoints, regulatingTerminalId, regulatingTerminalType,
-            regulatingTerminalVlId, reactiveCapabilityCurve);
+            regulatingTerminalVlId, reactiveCapabilityCurve, connectionName, connectionDirection);
     }
 
     public EquipmentCreationEntity createLineEntity(String lineId, String lineName, double seriesResistance, double seriesReactance,
                                                     Double shuntConductance1, Double shuntSusceptance1, Double shuntConductance2, Double shuntSusceptance2,
                                                     String voltageLevelId1, String busOrBusbarSectionId1, String voltageLevelId2, String busOrBusbarSectionId2,
-                                                    Double permanentCurrentLimit1, Double permanentCurrentLimit2) {
+                                                    Double permanentCurrentLimit1, Double permanentCurrentLimit2, String connectionName1, ConnectablePosition.Direction connectionDirection1, String connectionName2,
+                                                    ConnectablePosition.Direction connectionDirection2) {
         return new LineCreationEntity(lineId, lineName, seriesResistance, seriesReactance,
                                         shuntConductance1, shuntSusceptance1, shuntConductance2, shuntSusceptance2,
                                         voltageLevelId1, busOrBusbarSectionId1, voltageLevelId2, busOrBusbarSectionId2,
-                                        permanentCurrentLimit1, permanentCurrentLimit2);
+                                        permanentCurrentLimit1, permanentCurrentLimit2, connectionName1, connectionDirection1,
+                                        connectionName2, connectionDirection2);
     }
 
     public EquipmentCreationEntity createTwoWindingsTransformerEntity(String id, String name, double seriesResistance, double seriesReactance,
                                                     double magnetizingConductance, double magnetizingSusceptance, double ratedVoltage1, double ratedVoltage2,
                                                     String voltageLevelId1, String busOrBusbarSectionId1, String voltageLevelId2, String busOrBusbarSectionId2,
-                                                    Double permanentCurrentLimit1, Double permanentCurrentLimit2) {
+                                                    Double permanentCurrentLimit1, Double permanentCurrentLimit2,
+                                                    String connectionName1, ConnectablePosition.Direction connectionDirection1, String connectionName2,
+                                                    ConnectablePosition.Direction connectionDirection2) {
         return new TwoWindingsTransformerCreationEntity(id, name, seriesResistance, seriesReactance,
                 magnetizingConductance, magnetizingSusceptance, ratedVoltage1, ratedVoltage2,
                 voltageLevelId1, busOrBusbarSectionId1, voltageLevelId2, busOrBusbarSectionId2,
-                permanentCurrentLimit1, permanentCurrentLimit2);
+                permanentCurrentLimit1, permanentCurrentLimit2, connectionName1, connectionDirection1,
+                connectionName2, connectionDirection2
+        );
     }
 
     public EquipmentCreationEntity createSubstationEntity(String id, String name, Country country) {
