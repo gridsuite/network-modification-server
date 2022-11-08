@@ -669,12 +669,12 @@ public class NetworkModificationService {
                 }
             }
         } else {
-            throw new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "Bus bar section " + busOrBusbarSectionId  + " not found");
+            throw new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "Bus bar section " + busOrBusbarSectionId + " not found");
         }
         return position;
     }
 
-    public List<EquipmentModificationInfos> createLoad(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId, LoadCreationInfos loadCreationInfos) {
+    public List<EquipmentModificationInfos> createLoadCreation(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId, LoadCreationInfos loadCreationInfos) {
         assertLoadCreationInfosNotEmpty(loadCreationInfos);
         ModificationNetworkInfos networkInfos = getNetworkModificationInfos(networkUuid, variantId);
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
@@ -822,7 +822,7 @@ public class NetworkModificationService {
         // TODO connectivity modification
     }
 
-    public List<EquipmentModificationInfos> modifyLoad(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId, LoadModificationInfos loadModificationInfos) {
+    public List<EquipmentModificationInfos> createLoadModification(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId, LoadModificationInfos loadModificationInfos) {
         assertEquipmentModificationInfosOk(loadModificationInfos, MODIFY_LOAD_ERROR);
         ModificationNetworkInfos networkInfos = getNetworkModificationInfos(networkUuid, variantId);
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
@@ -860,7 +860,7 @@ public class NetworkModificationService {
             .collect(Collectors.toList());
     }
 
-    public List<EquipmentModificationInfos> modifyGenerator(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId, GeneratorModificationInfos generatorModificationInfo) {
+    public List<EquipmentModificationInfos> createGeneratorModification(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId, GeneratorModificationInfos generatorModificationInfo) {
         assertEquipmentModificationInfosOk(generatorModificationInfo, MODIFY_GENERATOR_ERROR);
         ModificationNetworkInfos networkInfos = getNetworkModificationInfos(networkUuid, variantId);
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
@@ -915,7 +915,7 @@ public class NetworkModificationService {
             .collect(Collectors.toList());
     }
 
-    public List<EquipmentDeletionInfos> deleteEquipment(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId, String equipmentType, String equipmentId) {
+    public List<EquipmentDeletionInfos> createEquipmentDeletion(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId, String equipmentType, String equipmentId) {
         ModificationNetworkInfos networkInfos = getNetworkModificationInfos(networkUuid, variantId);
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
         return execDeleteEquipment(listener, equipmentType, equipmentId, reportUuid, reporterId);
@@ -1136,7 +1136,7 @@ public class NetworkModificationService {
             .collect(Collectors.toList());
     }
 
-    public List<EquipmentModificationInfos> createGenerator(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId, GeneratorCreationInfos generatorCreationInfos) {
+    public List<EquipmentModificationInfos> createGeneratorCreation(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId, GeneratorCreationInfos generatorCreationInfos) {
         assertGeneratorCreationInfosNotEmpty(generatorCreationInfos);
         ModificationNetworkInfos networkInfos = getNetworkModificationInfos(networkUuid, variantId);
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
@@ -1309,7 +1309,7 @@ public class NetworkModificationService {
                 .build());
     }
 
-    public List<EquipmentModificationInfos> createLine(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId, LineCreationInfos lineCreationInfos) {
+    public List<EquipmentModificationInfos> createLineCreation(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId, LineCreationInfos lineCreationInfos) {
         assertLineCreationInfosNotEmpty(lineCreationInfos);
         ModificationNetworkInfos networkInfos = getNetworkModificationInfos(networkUuid, variantId);
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
@@ -1435,7 +1435,7 @@ public class NetworkModificationService {
                 .build());
     }
 
-    public List<EquipmentModificationInfos> createTwoWindingsTransformer(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId, TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
+    public List<EquipmentModificationInfos> createTwoWindingsTransformerCreation(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId, TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
         assertTwoWindingsTransformerCreationInfosNotEmpty(twoWindingsTransformerCreationInfos);
         ModificationNetworkInfos networkInfos = getNetworkModificationInfos(networkUuid, variantId);
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
@@ -1529,7 +1529,7 @@ public class NetworkModificationService {
             .collect(Collectors.toList());
     }
 
-    public List<EquipmentModificationInfos> createSubstation(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId, SubstationCreationInfos substationCreationInfos) {
+    public List<EquipmentModificationInfos> createSubstationCreation(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId, SubstationCreationInfos substationCreationInfos) {
         assertSubstationCreationInfosNotEmpty(substationCreationInfos);
         ModificationNetworkInfos networkInfos = getNetworkModificationInfos(networkUuid, variantId);
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
@@ -1696,8 +1696,8 @@ public class NetworkModificationService {
             .build());
     }
 
-    public List<EquipmentModificationInfos> createVoltageLevel(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId,
-           VoltageLevelCreationInfos voltageLevelCreationInfos) {
+    public List<EquipmentModificationInfos> createVoltageLevelCreation(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId,
+                                                                       VoltageLevelCreationInfos voltageLevelCreationInfos) {
         assertVoltageLevelCreationInfosNotEmpty(voltageLevelCreationInfos);
         ModificationNetworkInfos networkInfos = getNetworkModificationInfos(networkUuid, variantId);
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid,
@@ -2210,7 +2210,7 @@ public class NetworkModificationService {
             .collect(Collectors.toList());
     }
 
-    public List<EquipmentModificationInfos> createShuntCompensator(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId, ShuntCompensatorCreationInfos shuntCompensatorCreationInfos) {
+    public List<EquipmentModificationInfos> createShuntCompensatorCreation(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId, ShuntCompensatorCreationInfos shuntCompensatorCreationInfos) {
         assertShuntCompensatorCreationInfosNotEmpty(shuntCompensatorCreationInfos);
         ModificationNetworkInfos networkInfos = getNetworkModificationInfos(networkUuid, variantId);
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
@@ -2249,7 +2249,7 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public void updateModifyGenerator(UUID modificationUuid, GeneratorModificationInfos generatorModificationInfos) {
+    public void updateGeneratorModification(UUID modificationUuid, GeneratorModificationInfos generatorModificationInfos) {
         assertEquipmentModificationInfosOk(generatorModificationInfos, MODIFICATION_NOT_FOUND);
 
         Optional<ModificationEntity> generatorModificationEntity = this.modificationRepository.findById(modificationUuid);
@@ -2319,15 +2319,15 @@ public class NetworkModificationService {
         return inspectable;
     }
 
-    public List<ModificationInfos> splitLineWithVoltageLevel(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId,
-        LineSplitWithVoltageLevelInfos lineSplitWithVoltageLevelInfos) {
+    public List<ModificationInfos> createLineSplitWithVoltageLevelCreation(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId,
+                                                                           LineSplitWithVoltageLevelInfos lineSplitWithVoltageLevelInfos) {
         assertLineSplitWithVoltageLevelInfosNotEmpty(lineSplitWithVoltageLevelInfos);
         ModificationNetworkInfos networkInfos = getNetworkModificationInfos(networkUuid, variantId);
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
         return execSplitLineWithVoltageLevel(listener, lineSplitWithVoltageLevelInfos, reportUuid, reporterId);
     }
 
-    public void updateLineSplitWithVoltageLevel(UUID modificationUuid, LineSplitWithVoltageLevelInfos lineSplitWithVoltageLevelInfos) {
+    public void updateLineSplitWithVoltageLevelCreation(UUID modificationUuid, LineSplitWithVoltageLevelInfos lineSplitWithVoltageLevelInfos) {
         assertLineSplitWithVoltageLevelInfosNotEmpty(lineSplitWithVoltageLevelInfos);
 
         Optional<ModificationEntity> lineSplitWithVoltageLevelEntity = this.modificationRepository.findById(modificationUuid);
@@ -2481,23 +2481,23 @@ public class NetworkModificationService {
         return inspectable;
     }
 
-    public List<ModificationInfos> createLineAttachToVoltageLevel(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId,
-                                                                  LineAttachToVoltageLevelInfos lineAttachToVoltageLevelInfos) {
+    public List<ModificationInfos> createLineAttachToVoltageLevelCreation(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId,
+                                                                          LineAttachToVoltageLevelInfos lineAttachToVoltageLevelInfos) {
         assertLineAttachToVoltageLevelInfosNotEmpty(lineAttachToVoltageLevelInfos);
         ModificationNetworkInfos networkInfos = getNetworkModificationInfos(networkUuid, variantId);
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
         return execLineAttachToVoltageLevel(listener, lineAttachToVoltageLevelInfos, reportUuid, reporterId);
     }
 
-    public List<ModificationInfos> createLinesAttachToSplitLines(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId,
-                                                               LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos) {
+    public List<ModificationInfos> createLinesAttachToSplitLinesCreation(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId,
+                                                                         LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos) {
         assertLinesAttachToSplitLinesInfosNotEmpty(linesAttachToSplitLinesInfos);
         ModificationNetworkInfos networkInfos = getNetworkModificationInfos(networkUuid, variantId);
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
         return execLinesAttachToSplitLines(listener, linesAttachToSplitLinesInfos, reportUuid, reporterId);
     }
 
-    public void updateLineAttachToVoltageLevel(UUID modificationUuid, LineAttachToVoltageLevelInfos lineAttachToVoltageLevelInfos) {
+    public void updateLineAttachToVoltageLevelCreation(UUID modificationUuid, LineAttachToVoltageLevelInfos lineAttachToVoltageLevelInfos) {
         assertLineAttachToVoltageLevelInfosNotEmpty(lineAttachToVoltageLevelInfos);
 
         Optional<ModificationEntity> lineAttachToVoltageLevelEntity = this.modificationRepository.findById(modificationUuid);
@@ -2539,7 +2539,7 @@ public class NetworkModificationService {
         }
     }
 
-    public void updateLinesAttachToSplitLines(UUID modificationUuid, LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos) {
+    public void updateLinesAttachToSplitLinesCreation(UUID modificationUuid, LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos) {
         assertLinesAttachToSplitLinesInfosNotEmpty(linesAttachToSplitLinesInfos);
 
         Optional<ModificationEntity> linesAttachToSplitLinesEntity = this.modificationRepository.findById(modificationUuid);

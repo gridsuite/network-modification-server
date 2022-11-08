@@ -163,7 +163,7 @@ public class NetworkModificationController {
                                                                        @RequestParam(value = "reportUuid") UUID reportUuid,
                                                                        @RequestParam(value = "reporterId") String reporterId,
                                                                        @RequestBody LoadCreationInfos loadCreationInfos) {
-        return ResponseEntity.ok().body(networkModificationService.createLoad(networkUuid, variantId, groupUuid, reportUuid, reporterId, loadCreationInfos));
+        return ResponseEntity.ok().body(networkModificationService.createLoadCreation(networkUuid, variantId, groupUuid, reportUuid, reporterId, loadCreationInfos));
     }
 
     @PutMapping(value = "/modifications/{modificationUuid}/loads-creation", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -193,7 +193,7 @@ public class NetworkModificationController {
                                                                        @RequestParam(value = "reportUuid") UUID reportUuid,
                                                                        @RequestParam(value = "reporterId") String reporterId,
                                                                        @RequestBody LoadModificationInfos loadModificationInfos) {
-        return ResponseEntity.ok().body(networkModificationService.modifyLoad(networkUuid, variantId, groupUuid, reportUuid, reporterId, loadModificationInfos));
+        return ResponseEntity.ok().body(networkModificationService.createLoadModification(networkUuid, variantId, groupUuid, reportUuid, reporterId, loadModificationInfos));
     }
 
     @PutMapping(value = "/modifications/{modificationUuid}/generators-modification", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -201,7 +201,7 @@ public class NetworkModificationController {
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The generator modification  has been modified")})
     public ResponseEntity<Void> modifyGeneratorModification(@Parameter(description = "Modification UUID") @PathVariable("modificationUuid") UUID modificationUuid,
                                                                        @RequestBody GeneratorModificationInfos generatorModificationInfos) {
-        networkModificationService.updateModifyGenerator(modificationUuid, generatorModificationInfos);
+        networkModificationService.updateGeneratorModification(modificationUuid, generatorModificationInfos);
         return ResponseEntity.ok().build();
     }
 
@@ -214,7 +214,7 @@ public class NetworkModificationController {
                                                                             @RequestParam(value = "reportUuid") UUID reportUuid,
                                                                             @RequestParam(value = "reporterId") String reporterId,
                                                                             @RequestBody GeneratorModificationInfos generatorModificationInfos) {
-        return ResponseEntity.ok().body(networkModificationService.modifyGenerator(networkUuid, variantId, groupUuid, reportUuid, reporterId, generatorModificationInfos));
+        return ResponseEntity.ok().body(networkModificationService.createGeneratorModification(networkUuid, variantId, groupUuid, reportUuid, reporterId, generatorModificationInfos));
     }
 
     @PostMapping(value = "/networks/{networkUuid}/generators", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -226,7 +226,7 @@ public class NetworkModificationController {
                                                                             @RequestParam(value = "reportUuid") UUID reportUuid,
                                                                             @RequestParam(value = "reporterId") String reporterId,
                                                                             @RequestBody GeneratorCreationInfos generatorCreationInfos) {
-        return ResponseEntity.ok().body(networkModificationService.createGenerator(networkUuid, variantId, groupUuid, reportUuid, reporterId, generatorCreationInfos));
+        return ResponseEntity.ok().body(networkModificationService.createGeneratorCreation(networkUuid, variantId, groupUuid, reportUuid, reporterId, generatorCreationInfos));
     }
 
     @PutMapping(value = "/modifications/{modificationUuid}/generators-creation", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -247,7 +247,7 @@ public class NetworkModificationController {
                                                                                    @RequestParam(value = "reportUuid") UUID reportUuid,
                                                                                    @RequestParam(value = "reporterId") String reporterId,
                                                                                    @RequestBody ShuntCompensatorCreationInfos shuntCompensatorCreationInfos) {
-        return ResponseEntity.ok().body(networkModificationService.createShuntCompensator(networkUuid, variantId, groupUuid, reportUuid, reporterId, shuntCompensatorCreationInfos));
+        return ResponseEntity.ok().body(networkModificationService.createShuntCompensatorCreation(networkUuid, variantId, groupUuid, reportUuid, reporterId, shuntCompensatorCreationInfos));
     }
 
     @PutMapping(value = "/modifications/{modificationUuid}/shunt-compensators-creation", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -268,7 +268,7 @@ public class NetworkModificationController {
                                                                        @RequestParam(value = "reportUuid") UUID reportUuid,
                                                                        @RequestParam(value = "reporterId") String reporterId,
                                                                        @RequestBody LineCreationInfos lineCreationInfos) {
-        return ResponseEntity.ok().body(networkModificationService.createLine(networkUuid, variantId, groupUuid, reportUuid, reporterId, lineCreationInfos));
+        return ResponseEntity.ok().body(networkModificationService.createLineCreation(networkUuid, variantId, groupUuid, reportUuid, reporterId, lineCreationInfos));
     }
 
     @PutMapping(value = "/modifications/{modificationUuid}/lines-creation", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -289,7 +289,7 @@ public class NetworkModificationController {
                                                                                          @RequestParam(value = "reportUuid") UUID reportUuid,
                                                                                          @RequestParam(value = "reporterId") String reporterId,
                                                                                          @RequestBody TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
-        return ResponseEntity.ok().body(networkModificationService.createTwoWindingsTransformer(networkUuid, variantId, groupUuid, reportUuid, reporterId, twoWindingsTransformerCreationInfos));
+        return ResponseEntity.ok().body(networkModificationService.createTwoWindingsTransformerCreation(networkUuid, variantId, groupUuid, reportUuid, reporterId, twoWindingsTransformerCreationInfos));
     }
 
     @PutMapping(value = "/modifications/{modificationUuid}/two-windings-transformers-creation", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -310,7 +310,7 @@ public class NetworkModificationController {
                                                                              @RequestParam(value = "reportUuid") UUID reportUuid,
                                                                              @RequestParam(value = "reporterId") String reporterId,
                                                                              @RequestBody SubstationCreationInfos substationCreationInfos) {
-        return ResponseEntity.ok().body(networkModificationService.createSubstation(networkUuid, variantId, groupUuid, reportUuid, reporterId, substationCreationInfos));
+        return ResponseEntity.ok().body(networkModificationService.createSubstationCreation(networkUuid, variantId, groupUuid, reportUuid, reporterId, substationCreationInfos));
     }
 
     @PutMapping(value = "/modifications/{modificationUuid}/substations-creation", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -331,7 +331,7 @@ public class NetworkModificationController {
                                                                                @RequestParam(value = "reportUuid") UUID reportUuid,
                                                                                @RequestParam(value = "reporterId") String reporterId,
                                                                                @RequestBody VoltageLevelCreationInfos voltageLevelCreationInfos) {
-        return ResponseEntity.ok().body(networkModificationService.createVoltageLevel(networkUuid, variantId, groupUuid, reportUuid, reporterId, voltageLevelCreationInfos));
+        return ResponseEntity.ok().body(networkModificationService.createVoltageLevelCreation(networkUuid, variantId, groupUuid, reportUuid, reporterId, voltageLevelCreationInfos));
     }
 
     @PutMapping(value = "/modifications/{modificationUuid}/voltage-levels-creation", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -353,7 +353,7 @@ public class NetworkModificationController {
                                                                         @RequestParam(value = "group", required = false) UUID groupUuid,
                                                                         @RequestParam(value = "reporterId") String reporterId,
                                                                         @RequestParam(value = "reportUuid") UUID reportUuid) {
-        return ResponseEntity.ok().body(networkModificationService.deleteEquipment(networkUuid, variantId, groupUuid, reportUuid, reporterId, equipmentType, equipmentId));
+        return ResponseEntity.ok().body(networkModificationService.createEquipmentDeletion(networkUuid, variantId, groupUuid, reportUuid, reporterId, equipmentType, equipmentId));
     }
 
     @PutMapping(value = "/modifications/{modificationUuid}/equipments-deletion/type/{equipmentType}/id/{equipmentId}")
@@ -375,7 +375,7 @@ public class NetworkModificationController {
                                                                              @RequestParam(value = "reportUuid") UUID reportUuid,
                                                                              @RequestParam(value = "reporterId") String reporterId,
                                                                              @RequestBody LineSplitWithVoltageLevelInfos lineSplitWithVoltageLevelInfos) {
-        return ResponseEntity.ok().body(networkModificationService.splitLineWithVoltageLevel(networkUuid, variantId, groupUuid, reportUuid, reporterId, lineSplitWithVoltageLevelInfos));
+        return ResponseEntity.ok().body(networkModificationService.createLineSplitWithVoltageLevelCreation(networkUuid, variantId, groupUuid, reportUuid, reporterId, lineSplitWithVoltageLevelInfos));
     }
 
     @PutMapping(value = "/modifications/{modificationUuid}/line-splits", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -383,7 +383,7 @@ public class NetworkModificationController {
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The line split at voltage level has been updated")})
     public ResponseEntity<Void> updateLineSplitWithVoltageLevel(@PathVariable("modificationUuid") UUID modificationUuid,
         @RequestBody LineSplitWithVoltageLevelInfos lineSplitWithVoltageLevelInfos) {
-        networkModificationService.updateLineSplitWithVoltageLevel(modificationUuid, lineSplitWithVoltageLevelInfos);
+        networkModificationService.updateLineSplitWithVoltageLevelCreation(modificationUuid, lineSplitWithVoltageLevelInfos);
         return ResponseEntity.ok().build();
     }
 
@@ -396,7 +396,7 @@ public class NetworkModificationController {
                                                                             @RequestParam(value = "reportUuid") UUID reportUuid,
                                                                             @RequestParam(value = "reporterId") String reporterId,
                                                                             @RequestBody LineAttachToVoltageLevelInfos lineAttachToVoltageLevelInfos) {
-        return ResponseEntity.ok().body(networkModificationService.createLineAttachToVoltageLevel(networkUuid, variantId, groupUuid, reportUuid, reporterId, lineAttachToVoltageLevelInfos));
+        return ResponseEntity.ok().body(networkModificationService.createLineAttachToVoltageLevelCreation(networkUuid, variantId, groupUuid, reportUuid, reporterId, lineAttachToVoltageLevelInfos));
     }
 
     @PutMapping(value = "/modifications/{modificationUuid}/line-attach-creation", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -404,7 +404,7 @@ public class NetworkModificationController {
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The line attachment to voltage level has been updated")})
     public ResponseEntity<Void> updateLineAttachToVoltageLevel(@PathVariable("modificationUuid") UUID modificationUuid,
                                                                      @RequestBody LineAttachToVoltageLevelInfos lineAttachToVoltageLevelInfos) {
-        networkModificationService.updateLineAttachToVoltageLevel(modificationUuid, lineAttachToVoltageLevelInfos);
+        networkModificationService.updateLineAttachToVoltageLevelCreation(modificationUuid, lineAttachToVoltageLevelInfos);
         return ResponseEntity.ok().build();
     }
 
@@ -417,7 +417,7 @@ public class NetworkModificationController {
                                                                            @RequestParam(value = "reportUuid") UUID reportUuid,
                                                                            @RequestParam(value = "reporterId") String reporterId,
                                                                            @RequestBody LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos) {
-        return ResponseEntity.ok().body(networkModificationService.createLinesAttachToSplitLines(networkUuid, variantId, groupUuid, reportUuid, reporterId, linesAttachToSplitLinesInfos));
+        return ResponseEntity.ok().body(networkModificationService.createLinesAttachToSplitLinesCreation(networkUuid, variantId, groupUuid, reportUuid, reporterId, linesAttachToSplitLinesInfos));
     }
 
     @PutMapping(value = "/modifications/{modificationUuid}/lines-attach-to-split-lines-creation", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -425,7 +425,7 @@ public class NetworkModificationController {
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The lines attachment to split lines has been updated")})
     public ResponseEntity<Void> updateLinesAttachToSplitLines(@PathVariable("modificationUuid") UUID modificationUuid,
                                                             @RequestBody LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos) {
-        networkModificationService.updateLinesAttachToSplitLines(modificationUuid, linesAttachToSplitLinesInfos);
+        networkModificationService.updateLinesAttachToSplitLinesCreation(modificationUuid, linesAttachToSplitLinesInfos);
         return ResponseEntity.ok().build();
     }
 
