@@ -10,6 +10,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.powsybl.commons.exceptions.UncheckedInterruptedException;
+import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.*;
@@ -34,6 +35,7 @@ import org.gridsuite.modification.server.entities.equipment.modification.attribu
 import org.gridsuite.modification.server.repositories.ModificationGroupRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.NetworkModificationService;
+import org.gridsuite.modification.server.service.NetworkStoreListener;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.gridsuite.modification.server.utils.TestUtils;
 import org.jetbrains.annotations.NotNull;
@@ -602,20 +604,30 @@ public class BuildTest {
     }
 
     //TODO check when postAction is null
-    /*@Test
+    @Test
     public void doActionWithUncheckedExceptionTest() {
         Network networkTest = NetworkCreation.create(TEST_NETWORK_ID, true);
-        NetworkStoreListener listener = NetworkStoreListener.create(networkTest, TEST_NETWORK_ID, null, modificationRepository, equipmentInfosService, true, true);
+        NetworkStoreListener listener1 = NetworkStoreListener.create(networkTest, TEST_NETWORK_ID, null, modificationRepository, equipmentInfosService, true, true);
         ReporterModel reporter = new ReporterModel("reportKey", "reportName");
         Reporter subReporter = reporter.createSubReporter("AttributeModification", "Attribute modification");
-        assertThrows("unexpected error", RuntimeException.class, () ->
-            networkModificationService.doAction(listener, () -> {
+
+        //first case: error during the build we catch no exception
+        assertEquals(List.of(),
+            networkModificationService.doAction(listener1, () -> {
                 throw new RuntimeException("unexpected error");
             }, null, NetworkModificationException.Type.MODIFICATION_ERROR, TEST_NETWORK_ID, reporter, subReporter)
         );
 
-        assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches("/v1/reports/.*")));
-    }*/
+        // incremental error: we throw the exception
+        NetworkStoreListener listener2  = NetworkStoreListener.create(networkTest, TEST_NETWORK_ID, null, modificationRepository, equipmentInfosService, false, true);
+        assertThrows("unexpected error", RuntimeException.class, () ->
+            networkModificationService.doAction(listener2, () -> {
+                throw new RuntimeException("unexpected error");
+            }, null, NetworkModificationException.Type.MODIFICATION_ERROR, TEST_NETWORK_ID, reporter, subReporter)
+        );
+
+        assertTrue(TestUtils.getRequestsDone(2, server).stream().anyMatch(r -> r.matches("/v1/reports/.*")));
+    }
 
     private void testNetworkModificationsCount(UUID groupUuid, int actualSize) throws Exception {
         // get all modifications for the given group of a network
