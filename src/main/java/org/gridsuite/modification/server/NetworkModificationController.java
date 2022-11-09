@@ -44,7 +44,7 @@ public class NetworkModificationController {
     @PutMapping(value = "/networks/{networkUuid}/switches/{switchId}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "change a switch state in a network variant")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The switch state has been changed")})
-    public ResponseEntity<List<EquipmentModificationInfos>> changeSwitchState(
+    public ResponseEntity<List<EquipmentModificationInfos>> createSwitchStateModification(
             @Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
             @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
             @Parameter(description = "Switch ID") @PathVariable("switchId") String switchId,
@@ -52,20 +52,20 @@ public class NetworkModificationController {
             @RequestParam(value = "reportUuid") UUID reportUuid,
             @RequestParam(value = "reporterId") String reporterId,
             @RequestParam("open") String open) {
-        return ResponseEntity.ok().body(networkModificationService.changeSwitchState(networkUuid, variantId, groupUuid, reportUuid, reporterId, switchId, Boolean.parseBoolean(open)));
+        return ResponseEntity.ok().body(networkModificationService.createSwitchStateModification(networkUuid, variantId, groupUuid, reportUuid, reporterId, switchId, Boolean.parseBoolean(open)));
     }
 
     @PutMapping(value = "/networks/{networkUuid}/groovy", consumes = MediaType.TEXT_PLAIN_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "change an equipment state in a network variant")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The equipment state has been changed"),
                            @ApiResponse(responseCode = "404", description = "the network or equipment not found")})
-    public ResponseEntity<List<ModificationInfos>> applyGroovyScript(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
-                                                                     @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
-                                                                     @RequestParam(value = "group", required = false) UUID groupUuid,
-                                                                     @RequestParam(value = "reportUuid") UUID reportUuid,
-                                                                     @RequestParam(value = "reporterId") String reporterId,
-                                                                     @RequestBody String groovyScript) {
-        return ResponseEntity.ok().body(networkModificationService.applyGroovyScript(networkUuid, variantId, groupUuid, reportUuid, reporterId, groovyScript));
+    public ResponseEntity<List<ModificationInfos>> createGroovyScript(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
+                                                                      @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
+                                                                      @RequestParam(value = "group", required = false) UUID groupUuid,
+                                                                      @RequestParam(value = "reportUuid") UUID reportUuid,
+                                                                      @RequestParam(value = "reporterId") String reporterId,
+                                                                      @RequestBody String groovyScript) {
+        return ResponseEntity.ok().body(networkModificationService.createGroovyScript(networkUuid, variantId, groupUuid, reportUuid, reporterId, groovyScript));
     }
 
     @GetMapping(value = "/groups/{groupUuid}/modifications", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -143,7 +143,7 @@ public class NetworkModificationController {
         @ApiResponse(responseCode = "404", description = "The network or line is not found"),
         @ApiResponse(responseCode = "400", description = "The modification action is incorrect")
     })
-    public ResponseEntity<List<ModificationInfos>> changeLineStatus(
+    public ResponseEntity<List<ModificationInfos>> createLineStatusModification(
             @Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
             @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
             @Parameter(description = "Line ID") @PathVariable("lineId") String lineId,
@@ -151,7 +151,7 @@ public class NetworkModificationController {
             @RequestParam(value = "reportUuid") UUID reportUuid,
             @RequestParam(value = "reporterId") String reporterId,
             @RequestBody(required = false) String action) {
-        return ResponseEntity.ok().body(networkModificationService.changeLineStatus(networkUuid, variantId, groupUuid, reportUuid, lineId, reporterId, action));
+        return ResponseEntity.ok().body(networkModificationService.createLineStatusModification(networkUuid, variantId, groupUuid, reportUuid, lineId, reporterId, action));
     }
 
     @PostMapping(value = "/networks/{networkUuid}/loads", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)

@@ -135,7 +135,7 @@ public class NetworkModificationService {
         }, GROOVY_SCRIPT_ERROR, reportUuid, reporter, subReporter);
     }
 
-    public List<ModificationInfos> applyGroovyScript(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId, String groovyScript) {
+    public List<ModificationInfos> createGroovyScript(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId, String groovyScript) {
         assertGroovyScriptNotEmpty(groovyScript);
         ModificationNetworkInfos networkInfos = getNetworkModificationInfos(networkUuid, variantId);
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
@@ -179,7 +179,7 @@ public class NetworkModificationService {
             .collect(Collectors.toList());
     }
 
-    public List<EquipmentModificationInfos> changeSwitchState(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId, String switchId, boolean open) {
+    public List<EquipmentModificationInfos> createSwitchStateModification(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId, String switchId, boolean open) {
         ModificationNetworkInfos networkInfos = getNetworkModificationInfos(networkUuid, variantId);
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
         return execChangeSwitchState(listener, switchId, open, reportUuid, reporterId);
@@ -205,7 +205,7 @@ public class NetworkModificationService {
         return terminal1Disconnected && terminal2Disconnected;
     }
 
-    public List<ModificationInfos> changeLineStatus(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String lineId, String reporterId, String action) {
+    public List<ModificationInfos> createLineStatusModification(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String lineId, String reporterId, String action) {
         assertBranchActionValid(action);
         ModificationNetworkInfos networkInfos = getNetworkModificationInfos(networkUuid, variantId);
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
