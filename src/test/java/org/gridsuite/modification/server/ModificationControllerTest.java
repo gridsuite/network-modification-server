@@ -1234,6 +1234,8 @@ public class ModificationControllerTest {
                 "v2load",
                 "LOAD",
                 "v2",
+                true,
+                25.,
                 false,
                 "top1",
                 ConnectablePosition.Direction.TOP)
@@ -1265,6 +1267,8 @@ public class ModificationControllerTest {
                 "v2load",
                 "LOAD",
                 "v2",
+                true,
+                25.,
                 false,
                 "top11",
                 ConnectablePosition.Direction.TOP)

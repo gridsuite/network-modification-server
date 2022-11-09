@@ -593,6 +593,8 @@ public class NetworkModificationService {
                 generatorCreationInfos.getRegulatingTerminalId(),
                 generatorCreationInfos.getRegulatingTerminalType(),
                 generatorCreationInfos.getRegulatingTerminalVlId(),
+                generatorCreationInfos.getRemoteReactivePowerControlEnabled(),
+                generatorCreationInfos.getQPercent(),
                 generatorCreationInfos.getReactiveCapabilityCurve(),
                 toEmbeddablePoints(generatorCreationInfos.getReactiveCapabilityCurvePoints()),
                 generatorCreationInfos.getConnectionName(),

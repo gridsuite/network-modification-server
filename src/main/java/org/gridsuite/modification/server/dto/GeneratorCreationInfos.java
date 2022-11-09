@@ -85,6 +85,12 @@ public class GeneratorCreationInfos extends InjectionCreationInfos {
     @Schema(description = "Regulating terminal voltage level id")
     private String regulatingTerminalVlId;
 
+    @Schema(name = "Remote reactive power control enabled")
+    private Boolean remoteReactivePowerControlEnabled;
+
+    @Schema(name = "Q percent")
+    private Double qPercent;
+
     @Schema(description = "Reactive capability curve")
     private Boolean reactiveCapabilityCurve;
 
