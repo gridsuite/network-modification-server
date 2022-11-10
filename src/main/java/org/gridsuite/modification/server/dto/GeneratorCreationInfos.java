@@ -80,7 +80,7 @@ public class GeneratorCreationInfos extends InjectionCreationInfos {
     private String regulatingTerminalId;
 
     @Schema(description = "Regulating terminal equipment type")
-        private String regulatingTerminalType;
+    private String regulatingTerminalType;
 
     @Schema(description = "Regulating terminal voltage level id")
     private String regulatingTerminalVlId;
