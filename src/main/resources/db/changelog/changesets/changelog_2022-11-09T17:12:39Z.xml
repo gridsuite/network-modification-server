@@ -5,9 +5,4 @@
             <column name="q_percent" type="float8"/>
         </addColumn>
     </changeSet>
-    <changeSet author="homereti (generated)" id="1668013977565-8">
-        <addColumn tableName="generator_creation">
-            <column name="remote_reactive_power_control_enabled" type="boolean"/>
-        </addColumn>
-    </changeSet>
 </databaseChangeLog>
