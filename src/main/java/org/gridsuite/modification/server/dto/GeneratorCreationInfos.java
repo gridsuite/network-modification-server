@@ -85,7 +85,7 @@ public class GeneratorCreationInfos extends InjectionCreationInfos {
     @Schema(description = "Regulating terminal voltage level id")
     private String regulatingTerminalVlId;
 
-    @Schema(name = "Q percent")
+    @Schema(description = "Q percent")
     private Double qPercent;
 
     @Schema(description = "Reactive capability curve")
