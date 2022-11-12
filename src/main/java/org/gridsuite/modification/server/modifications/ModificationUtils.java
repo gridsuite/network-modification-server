@@ -29,7 +29,7 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
 // TODO transfer to powsybl-core (com.powsybl.iidm.modification)
-// TODO remove public word for all methods
+// TODO remove public qualifier for all methods
 public final class ModificationUtils {
 
     private ModificationUtils() {
@@ -84,11 +84,6 @@ public final class ModificationUtils {
             throw new NetworkModificationException(BUS_NOT_FOUND, busId);
         }
         return bus;
-    }
-
-    public int createNodeBreakerCellSwitches(VoltageLevel voltageLevel, String busBarSectionId, String equipmentId,
-                                             String equipmentName) {
-        return createNodeBreakerCellSwitches(voltageLevel, busBarSectionId, equipmentId, equipmentName, "");
     }
 
     public int createNodeBreakerCellSwitches(VoltageLevel voltageLevel, String busBarSectionId, String equipmentId,
