@@ -9,8 +9,10 @@ package org.gridsuite.modification.server.modifications;
 import com.powsybl.commons.reporter.Report;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.TypedValue;
+import com.powsybl.iidm.modification.topology.TopologyModificationUtils;
 import com.powsybl.iidm.network.*;
-import com.powsybl.sld.iidm.extensions.BusbarSectionPositionAdder;
+import com.powsybl.iidm.network.extensions.BusbarSectionPosition;
+import com.powsybl.iidm.network.extensions.BusbarSectionPositionAdder;
 import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.BusbarConnectionCreationInfos;
@@ -27,6 +29,7 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
 // TODO transfer to powsybl-core (com.powsybl.iidm.modification)
+// TODO remove public word for all methods
 public final class ModificationUtils {
 
     private ModificationUtils() {
@@ -44,7 +47,37 @@ public final class ModificationUtils {
         return voltageLevel;
     }
 
-    Bus getBusBreakerBus(VoltageLevel voltageLevel, String busId) {
+    public int getPosition(String busOrBusbarSectionId, Network network, VoltageLevel voltageLevel) {
+        var count = voltageLevel.getConnectableCount();
+        var position = 0;
+        var bbs = network.getBusbarSection(busOrBusbarSectionId);
+
+        if (bbs != null) {
+            var extensionExist = bbs.getExtension(BusbarSectionPosition.class) != null;
+            if (!extensionExist) {
+                return position;
+            }
+
+            if (count > 0) {
+                var rightRange = TopologyModificationUtils.getUnusedOrderPositionsAfter(bbs);
+                if (rightRange.isPresent()) {
+                    position = rightRange.get().getMinimum();
+                } else {
+                    var leftRange = TopologyModificationUtils.getUnusedOrderPositionsBefore(bbs);
+                    if (leftRange.isPresent()) {
+                        position = leftRange.get().getMaximum();
+                    } else {
+                        throw new NetworkModificationException(POSITION_ORDER_ERROR, "no available position");
+                    }
+                }
+            }
+        } else {
+            throw new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "Bus bar section " + busOrBusbarSectionId + " not found");
+        }
+        return position;
+    }
+
+    public Bus getBusBreakerBus(VoltageLevel voltageLevel, String busId) {
         VoltageLevel.BusBreakerView busBreakerView = voltageLevel.getBusBreakerView();
         Bus bus = busBreakerView.getBus(busId);
         if (bus == null) {
@@ -99,8 +132,8 @@ public final class ModificationUtils {
     }
 
     private Pair<Integer, Integer> addBusbarConnectionTo(VoltageLevelCreationInfos voltageLevelCreationInfos,
-                                                 BusbarConnectionCreationInfos bbsci, Map<String, Integer> idToNodeRank, Pair<Integer, Integer> ranks,
-                                                 VoltageLevel voltageLevel) {
+                                                         BusbarConnectionCreationInfos bbsci, Map<String, Integer> idToNodeRank, Pair<Integer, Integer> ranks,
+                                                         VoltageLevel voltageLevel) {
 
         String fromBBSId = bbsci.getFromBBS();
         Integer rank1 = idToNodeRank.get(fromBBSId);
@@ -173,7 +206,7 @@ public final class ModificationUtils {
     }
 
     public void createVoltageLevelAction(VoltageLevelCreationInfos voltageLevelCreationInfos,
-                                          Reporter subReporter, Network network) {
+                                         Reporter subReporter, Network network) {
         String substationId = voltageLevelCreationInfos.getSubstationId();
         Substation substation = network.getSubstation(substationId);
         if (substation == null) {

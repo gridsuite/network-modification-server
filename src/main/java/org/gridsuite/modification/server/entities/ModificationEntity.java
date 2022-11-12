@@ -89,7 +89,7 @@ public class ModificationEntity {
         return getClass().hashCode();
     }
 
-    public void setIdsToNull() {
+    public void cloneWithIdsToNull() {
         this.setId(null);
     }
 }

@@ -7,6 +7,7 @@
 package org.gridsuite.modification.server.entities.equipment.creation;
 
 import com.powsybl.iidm.network.LoadType;
+import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.ModificationType;
@@ -37,12 +38,20 @@ public class LoadCreationEntity extends InjectionCreationEntity {
     @Column(name = "reactivePower")
     private double reactivePower;
 
+    @Column(name = "connectionName")
+    private String connectionName;
+
+    @Column(name = "connectionDirection")
+    private ConnectablePosition.Direction connectionDirection;
+
     public LoadCreationEntity(String equipmentId, String equipmentName, LoadType loadType, String voltageLevelId, String busOrBusbarSectionId,
-                              double activePower, double reactivePower) {
+                              double activePower, double reactivePower, String connectionName, ConnectablePosition.Direction connectionDirection) {
         super(ModificationType.LOAD_CREATION, equipmentId, equipmentName, voltageLevelId, busOrBusbarSectionId);
         this.loadType = loadType;
         this.activePower = activePower;
         this.reactivePower = reactivePower;
+        this.connectionDirection = connectionDirection;
+        this.connectionName = connectionName;
     }
 
     @Override
@@ -52,6 +61,8 @@ public class LoadCreationEntity extends InjectionCreationEntity {
         loadType = loadCreationInfos.getLoadType();
         activePower = loadCreationInfos.getActivePower();
         reactivePower = loadCreationInfos.getReactivePower();
+        connectionName = loadCreationInfos.getConnectionName();
+        connectionDirection = loadCreationInfos.getConnectionDirection();
     }
 
     @Override
@@ -71,6 +82,8 @@ public class LoadCreationEntity extends InjectionCreationEntity {
             .busOrBusbarSectionId(getBusOrBusbarSectionId())
             .loadType(getLoadType())
             .activePower(getActivePower())
-            .reactivePower(getReactivePower());
+            .reactivePower(getReactivePower())
+            .connectionName(getConnectionName())
+            .connectionDirection(getConnectionDirection());
     }
 }

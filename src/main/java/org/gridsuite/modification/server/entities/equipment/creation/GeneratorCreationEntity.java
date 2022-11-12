@@ -7,6 +7,7 @@
 package org.gridsuite.modification.server.entities.equipment.creation;
 
 import com.powsybl.iidm.network.EnergySource;
+import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.ModificationType;
@@ -14,6 +15,7 @@ import org.gridsuite.modification.server.dto.GeneratorCreationInfos;
 import org.gridsuite.modification.server.dto.ReactiveCapabilityCurveCreationInfos;
 
 import javax.persistence.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -83,6 +85,12 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
     @Column(name = "reactiveCapabilityCurve")
     private Boolean reactiveCapabilityCurve;
 
+    @Column(name = "connectionName")
+    private String connectionName;
+
+    @Column(name = "connectionDirection")
+    private ConnectablePosition.Direction connectionDirection;
+
     @ElementCollection
     @CollectionTable
     private List<ReactiveCapabilityCurveCreationEmbeddable> reactiveCapabilityCurvePoints;
@@ -92,7 +100,7 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
                                    Double reactivePowerSetpoint, boolean voltageRegulationOn, Double voltageSetpoint, Double marginalCost, Double minQ,
                                    Double maxQ, boolean participate, Float droop, Double transientReactance, Double stepUpTransformerReactance,
                                    List<ReactiveCapabilityCurveCreationEmbeddable> reactiveCapabilityCurvePoints, String regulatingTerminalId,
-                                   String regulatingTerminalType, String regulatingTerminalVlId, Boolean reactiveCapabilityCurve) {
+                                   String regulatingTerminalType, String regulatingTerminalVlId, Boolean reactiveCapabilityCurve, String connectionName, ConnectablePosition.Direction connectionDirection) {
         super(ModificationType.GENERATOR_CREATION, equipmentId, equipmentName, voltageLevelId, busOrBusbarSectionId);
         this.energySource = energySource;
         this.minActivePower = minActivePower;
@@ -114,6 +122,8 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
         this.regulatingTerminalType = regulatingTerminalType;
         this.regulatingTerminalVlId = regulatingTerminalVlId;
         this.reactiveCapabilityCurve = reactiveCapabilityCurve;
+        this.connectionDirection = connectionDirection;
+        this.connectionName = connectionName;
     }
 
     public static List<ReactiveCapabilityCurveCreationEmbeddable> toEmbeddablePoints(
@@ -161,12 +171,20 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
             .participate(getParticipate())
             .droop(getDroop())
             .maximumReactivePower(this.getMaximumReactivePower())
-            .points(points)
+            .reactiveCapabilityCurvePoints(points)
             .regulatingTerminalId(getRegulatingTerminalId())
             .regulatingTerminalType(getRegulatingTerminalType())
             .regulatingTerminalVlId(getRegulatingTerminalVlId())
             .reactiveCapabilityCurve(getReactiveCapabilityCurve())
             .transientReactance(getTransientReactance())
-            .stepUpTransformerReactance(getStepUpTransformerReactance());
+            .stepUpTransformerReactance(getStepUpTransformerReactance())
+            .connectionName(getConnectionName())
+            .connectionDirection(getConnectionDirection());
+    }
+
+    @Override
+    public void cloneWithIdsToNull() {
+        super.cloneWithIdsToNull();
+        this.reactiveCapabilityCurvePoints = new ArrayList<>(reactiveCapabilityCurvePoints);
     }
 }

@@ -10,8 +10,8 @@ import com.powsybl.commons.reporter.Report;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.iidm.network.*;
-import com.powsybl.sld.iidm.extensions.BranchStatus;
-import com.powsybl.sld.iidm.extensions.BranchStatusAdder;
+import com.powsybl.iidm.network.extensions.BranchStatus;
+import com.powsybl.iidm.network.extensions.BranchStatusAdder;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.EquipmentAttributeModificationInfos;
 
@@ -21,7 +21,7 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
-public class EquipmentAttributeModification implements Modification {
+public class EquipmentAttributeModification extends AbstractModification {
 
     private final EquipmentAttributeModificationInfos modificationInfos;
 

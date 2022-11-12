@@ -20,6 +20,7 @@ import java.util.Set;
  */
 public class MatcherModificationInfos<T extends ModificationInfos> extends TypeSafeMatcher<T> {
     T reference;
+    protected static final double EPSILON = .001;
 
     public static MatcherModificationInfos<ModificationInfos> createMatcherModificationInfos(ModificationType modificationType, Set<String> substationIds) {
         return new MatcherModificationInfos<>(ModificationInfos.builder()

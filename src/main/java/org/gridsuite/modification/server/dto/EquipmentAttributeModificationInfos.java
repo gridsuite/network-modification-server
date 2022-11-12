@@ -17,10 +17,9 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.*;
+import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.EquipmentAttributeModification;
-import org.gridsuite.modification.server.modifications.Modification;
 
 import java.util.Map;
 
@@ -43,7 +42,7 @@ public class EquipmentAttributeModificationInfos extends EquipmentModificationIn
     private IdentifiableType equipmentType;
 
     @Override
-    public Modification toModification() {
+    public AbstractModification toModification() {
         return new EquipmentAttributeModification(this);
     }
 
@@ -59,7 +58,7 @@ public class EquipmentAttributeModificationInfos extends EquipmentModificationIn
     }
 
     @Override
-    public ModificationEntity toEntity() {
+    public EquipmentAttributeModificationEntity toEntity() {
         return createEquipmentAttributeModification();
     }
 

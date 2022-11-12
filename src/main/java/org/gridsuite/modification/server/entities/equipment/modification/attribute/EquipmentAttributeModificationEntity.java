@@ -48,10 +48,6 @@ public class EquipmentAttributeModificationEntity<T> extends EquipmentModificati
         return toModificationInfosBuilder().build();
     }
 
-    public EquipmentAttributeModificationInfos toEquipmentAttributeModificationInfos() {
-        return toModificationInfosBuilder().build();
-    }
-
     private EquipmentAttributeModificationInfos.EquipmentAttributeModificationInfosBuilder<?, ?> toModificationInfosBuilder() {
         return EquipmentAttributeModificationInfos
             .builder()

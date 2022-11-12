@@ -13,7 +13,7 @@ import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.entities.equipment.modification.LineSplitWithVoltageLevelEntity;
-import org.gridsuite.modification.server.modifications.Modification;
+import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.SplitLineWithVoltageLevel;
 
 /**
@@ -71,7 +71,7 @@ public class LineSplitWithVoltageLevelInfos extends ModificationInfos {
     }
 
     @Override
-    public Modification toModification() {
+    public AbstractModification toModification() {
         return new SplitLineWithVoltageLevel(this);
     }
 

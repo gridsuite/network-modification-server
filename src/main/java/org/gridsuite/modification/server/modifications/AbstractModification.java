@@ -8,19 +8,15 @@ package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.computation.ComputationManager;
+import com.powsybl.iidm.modification.AbstractNetworkModification;
 import com.powsybl.iidm.network.Network;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
-public interface Modification extends com.powsybl.iidm.modification.NetworkModification {
+public abstract class AbstractModification extends AbstractNetworkModification {
     @Override
-    default void apply(Network network, ComputationManager computationManager) {
-        apply(network);
-    }
-
-    @Override
-    default void apply(Network network) {
-        apply(network, Reporter.NO_OP);
+    public void apply(Network network, boolean throwException, ComputationManager computationManager, Reporter reporter) {
+        apply(network, reporter);
     }
 }

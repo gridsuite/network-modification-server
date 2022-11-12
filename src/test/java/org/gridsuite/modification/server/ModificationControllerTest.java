@@ -12,12 +12,17 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.iidm.network.*;
+import com.powsybl.iidm.network.extensions.BusbarSectionPositionAdder;
+import com.powsybl.iidm.network.extensions.ConnectablePosition;
+import com.powsybl.iidm.network.extensions.ConnectablePositionAdder;
 import com.powsybl.network.store.client.NetworkStoreService;
+import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
 import nl.jqno.equalsverifier.EqualsVerifier;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.equipment.creation.*;
 import org.gridsuite.modification.server.entities.equipment.modification.LoadModificationEntity;
+import org.gridsuite.modification.server.modifications.ModificationUtils;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.NetworkModificationService;
 import org.gridsuite.modification.server.utils.*;
@@ -168,7 +173,7 @@ public class ModificationControllerTest {
         assertEquals("EquipmentAttributeModificationInfos(super=EquipmentModificationInfos(super=ModificationInfos(uuid=7928181c-7977-4592-ba19-88027e4254e4, date=2021-02-19T00:00Z, type=EQUIPMENT_ATTRIBUTE_MODIFICATION, substationIds=[substationId]), equipmentId=equipmentId), equipmentAttributeName=equipmentAttributeName, equipmentAttributeValue=equipmentAttributeValue, equipmentType=VOLTAGE_LEVEL)", modificationInfos.toString());
 
         // switch opening
-        mvcResult = mockMvc.perform(put("/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID + "&open=true" + "&reportUuid=" + TEST_REPORT_ID, TEST_NETWORK_ID, "v1b1")).andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON)).andReturn();
+        mvcResult = mockMvc.perform(put("/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID + "&open=true" + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID(), TEST_NETWORK_ID, "v1b1")).andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON)).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<EquipmentAttributeModificationInfos> equipmentAttributeModificationInfosList = mapper.readValue(resultAsString, new TypeReference<>() { });
         EquipmentAttributeModificationInfos modificationSwitchInfos =
@@ -177,7 +182,7 @@ public class ModificationControllerTest {
         org.hamcrest.MatcherAssert.assertThat(modificationSwitchInfos, MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v1b1", Set.of("s1"), "open", true));
 
         // switch in variant VARIANT_ID opening
-        mvcResult = mockMvc.perform(put("/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID + "&open=true" + "&variantId=" + NetworkCreation.VARIANT_ID + "&reportUuid=" + TEST_REPORT_ID, TEST_NETWORK_ID, "break1Variant")).andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON)).andReturn();
+        mvcResult = mockMvc.perform(put("/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID + "&open=true" + "&variantId=" + NetworkCreation.VARIANT_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID(), TEST_NETWORK_ID, "break1Variant")).andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON)).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<EquipmentAttributeModificationInfos> equipmentAttributeModificationInfosListSwitch = mapper.readValue(resultAsString, new TypeReference<>() { });
         modificationSwitchInfos = Objects.requireNonNull(equipmentAttributeModificationInfosListSwitch).get(0);
@@ -194,7 +199,7 @@ public class ModificationControllerTest {
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<UUID> bsicListResult = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertEquals(bsicListResult, List.of());
-        mvcResult = mockMvc.perform(put("/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID + "&open=true" + "&reportUuid=" + TEST_REPORT_ID, TEST_NETWORK_ID, "v1b1"))
+        mvcResult = mockMvc.perform(put("/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID + "&open=true" + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID(), TEST_NETWORK_ID, "v1b1"))
          .andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON)).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<EquipmentAttributeModificationInfos> bsiListResultModificationInfos = mapper.readValue(resultAsString, new TypeReference<>() { });
@@ -287,7 +292,7 @@ public class ModificationControllerTest {
 
     @Test
     public void testSwitch() throws Exception {
-        String uriString = "/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
+        String uriString = "/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
 
         // switches modifications on initial variant
         switchModifications(uriString, "v1b1", "disc1Variant", "v2b1", "v3b1", Set.of("s1"), Set.of("s2"), 4);
@@ -298,7 +303,7 @@ public class ModificationControllerTest {
 
     @Test
     public void testDeleteModification() throws Exception {
-        MvcResult mvcResult = mockMvc.perform(put("/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID + "&open=true" + "&reportUuid=" + TEST_REPORT_ID, TEST_NETWORK_ID, "v1b1")).andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON)).andReturn();
+        MvcResult mvcResult = mockMvc.perform(put("/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID + "&open=true" + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID(), TEST_NETWORK_ID, "v1b1")).andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON)).andReturn();
         List<ModificationInfos> modifications = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertNotNull(modifications);
         assertEquals(1, modifications.size());
@@ -323,7 +328,7 @@ public class ModificationControllerTest {
 
     @Test
     public void testNetworkOrVariantNotFound() throws Exception {
-        String uriString = "/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
+        String uriString = "/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
 
         // network not existing
         mockMvc.perform(put(uriString + "&open=true", NOT_FOUND_NETWORK_ID, "v1b1")).andExpectAll(
@@ -335,7 +340,7 @@ public class ModificationControllerTest {
     public void testLineStatusModification() throws Exception {
         MvcResult mvcResult;
         String resultAsString;
-        String uriString = "/v1/networks/{networkUuid}/lines/{lineId}/status?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
+        String uriString = "/v1/networks/{networkUuid}/lines/{lineId}/status?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
 
         // line lockout
         mvcResult = mockMvc.perform(put(uriString, TEST_NETWORK_ID, "line2").contentType(MediaType.TEXT_PLAIN_VALUE).content("lockout")).andExpect(status().isOk())
@@ -380,11 +385,16 @@ public class ModificationControllerTest {
         assertThat(bsmlrbStatusInfos.get(0), createMatcherBranchStatusModificationInfos("line2", BranchStatusModificationInfos.ActionType.ENERGISE_END_TWO, Set.of("s1")));
 
         testNetworkModificationsCount(TEST_GROUP_ID, 6);
+
+        // invalid action case
+        mockMvc.perform(put(uriString, TEST_NETWORK_ID, "line2").contentType(MediaType.TEXT_PLAIN_VALUE).content("invalid_action")).andExpectAll(
+                status().is4xxClientError(),
+                content().string(new NetworkModificationException(BRANCH_ACTION_TYPE_UNKNOWN, "The branch action type : invalid_action is unknown").getMessage()));
     }
 
     @Test
     public void testLineStatusModificationWithErrors() throws Exception {
-        String uriString = "/v1/networks/{networkUuid}/lines/{lineId}/status?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
+        String uriString = "/v1/networks/{networkUuid}/lines/{lineId}/status?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
 
         // network not existing
         mockMvc.perform(put(uriString, NOT_FOUND_NETWORK_ID, "line2").contentType(MediaType.TEXT_PLAIN_VALUE).content("lockout")).andExpectAll(
@@ -421,7 +431,7 @@ public class ModificationControllerTest {
 
     @Test
     public void testGroovyWithErrors() throws Exception {
-        String uriString = "/v1/networks/{networkUuid}/groovy?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
+        String uriString = "/v1/networks/{networkUuid}/groovy?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
 
         // apply empty groovy script
         mockMvc.perform(put(uriString, TEST_NETWORK_ID).contentType(MediaType.TEXT_PLAIN_VALUE).content("")).andExpectAll(
@@ -442,7 +452,7 @@ public class ModificationControllerTest {
     public void testGroovy() throws Exception {
         MvcResult mvcResult;
         String resultAsString;
-        String uriString = "/v1/networks/{networkUuid}/groovy?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
+        String uriString = "/v1/networks/{networkUuid}/groovy?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
 
         // apply groovy script with generator target P modification
         mvcResult = mockMvc.perform(put(uriString, TEST_NETWORK_ID).contentType(MediaType.TEXT_PLAIN_VALUE).content("network.getGenerator('idGenerator').targetP=12\n")).andExpect(status().isOk())
@@ -491,7 +501,7 @@ public class ModificationControllerTest {
 
     @Test
     public void testUndoModificationsOnNetworkFlushError() throws Exception {
-        String uriString = "/v1/networks/{networkUuid}/groovy?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
+        String uriString = "/v1/networks/{networkUuid}/groovy?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
         MvcResult mvcResult = mockMvc.perform(put(uriString, TEST_NETWORK_WITH_FLUSH_ERROR_ID).contentType(MediaType.TEXT_PLAIN_VALUE).content("network.getGenerator('idGenerator').targetP=10\nnetwork.getGenerator('idGenerator').targetP=20\n"))
                                       .andReturn();
         String resultAsString = mvcResult.getResponse().getContentAsString();
@@ -503,7 +513,7 @@ public class ModificationControllerTest {
 
     @Test
     public void testMultipleModificationsWithError() throws Exception {
-        String uriString = "/v1/networks/{networkUuid}/groovy?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
+        String uriString = "/v1/networks/{networkUuid}/groovy?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
 
         // apply groovy script without error
         mockMvc.perform(put(uriString, TEST_NETWORK_ID).contentType(MediaType.TEXT_PLAIN_VALUE).content("network.getGenerator('idGenerator').targetP=10\nnetwork.getGenerator('idGenerator').targetP=20\n"))
@@ -524,7 +534,7 @@ public class ModificationControllerTest {
     public void testCreateLoadInNodeBreaker() throws Exception {
         MvcResult mvcResult;
         String resultAsString;
-        String uriString = "/v1/networks/{networkUuid}/loads?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
+        String uriString = "/v1/networks/{networkUuid}/loads?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
 
         // create new load in voltage level with node/breaker topology (in voltage level "v2" and busbar section "1B")
         LoadCreationInfos loadCreationInfos = LoadCreationInfos.builder()
@@ -536,7 +546,20 @@ public class ModificationControllerTest {
             .loadType(LoadType.AUXILIARY)
             .activePower(100.0)
             .reactivePower(60.0)
+            .connectionDirection(ConnectablePosition.Direction.TOP)
+            .connectionName("top")
             .build();
+
+        LoadCreationInfos loadCreationInfos1 = LoadCreationInfos.builder()
+                .equipmentId("idLoad2")
+                .equipmentName("nameLoad2")
+                .voltageLevelId("v2")
+                .busOrBusbarSectionId("1B")
+                .loadType(LoadType.AUXILIARY)
+                .activePower(100.0)
+                .reactivePower(60.0)
+                .connectionDirection(ConnectablePosition.Direction.UNDEFINED)
+                .build();
 
         String loadCreationInfosJson = objectWriter.writeValueAsString(loadCreationInfos);
         mvcResult = mockMvc.perform(post(uriString, TEST_NETWORK_ID).content(loadCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
@@ -547,7 +570,10 @@ public class ModificationControllerTest {
 
         assertNotNull(network.getLoad("idLoad1"));  // load was created
         testNetworkModificationsCount(TEST_GROUP_ID, 1);  // new modification stored in the database
-
+        // create load without connection name and UNDEFINED direction
+        String loadCreationInfosJson1 = objectWriter.writeValueAsString(loadCreationInfos1);
+        mockMvc.perform(post(uriString, TEST_NETWORK_ID).content(loadCreationInfosJson1).contentType(MediaType.APPLICATION_JSON))
+                .andExpectAll(status().isOk()).andReturn();
         // create load with errors
         mockMvc.perform(post(uriString, NOT_FOUND_NETWORK_ID).content(loadCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(status().isNotFound(), content().string(new NetworkModificationException(NETWORK_NOT_FOUND, NOT_FOUND_NETWORK_ID.toString()).getMessage())).andReturn();
@@ -567,7 +593,7 @@ public class ModificationControllerTest {
         loadCreationInfos.setBusOrBusbarSectionId("notFoundBusbarSection");
         loadCreationInfosJson = objectWriter.writeValueAsString(loadCreationInfos);
         mockMvc.perform(post(uriString, TEST_NETWORK_ID).content(loadCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpectAll(status().is4xxClientError(), content().string(new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "notFoundBusbarSection").getMessage())).andReturn();
+            .andExpectAll(status().is4xxClientError(), content().string(new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "Bus bar section notFoundBusbarSection not found").getMessage())).andReturn();
 
         loadCreationInfos.setVoltageLevelId("v2");
         loadCreationInfos.setBusOrBusbarSectionId("1B");
@@ -576,15 +602,24 @@ public class ModificationControllerTest {
         mockMvc.perform(post(uriString, TEST_NETWORK_ID).content(loadCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(status().is5xxServerError(), content().string(new NetworkModificationException(CREATE_LOAD_ERROR, "Load 'idLoad1': p0 is invalid").getMessage())).andReturn();
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 1);
+        loadCreationInfos1.setConnectionDirection(null);
+        loadCreationInfos1.setConnectionName(null);
+        loadCreationInfosJson1 = objectWriter.writeValueAsString(loadCreationInfos1);
+        mockMvc.perform(post(uriString, TEST_NETWORK_ID).content(loadCreationInfosJson1).contentType(MediaType.APPLICATION_JSON))
+                .andExpectAll(status().is5xxServerError(), content().string(new NetworkModificationException(CREATE_LOAD_ERROR, "java.lang.NullPointerException").getMessage())).andReturn();
+
+        testNetworkModificationsCount(TEST_GROUP_ID, 2);
 
         // Test create load on not yet existing variant VARIANT_NOT_EXISTING_ID :
         // Only the modification should be added in the database but the load cannot be created
-        uriString = "/v1/networks/{networkUuid}/loads?variantId=" + VARIANT_NOT_EXISTING_ID + "&group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
+        uriString = "/v1/networks/{networkUuid}/loads?variantId=" + VARIANT_NOT_EXISTING_ID + "&group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
         loadCreationInfos.setEquipmentId("idLoad3");
         loadCreationInfos.setEquipmentName("nameLoad3");
         loadCreationInfos.setVoltageLevelId("v2");
         loadCreationInfos.setBusOrBusbarSectionId("1B");
+        loadCreationInfos.setConnectionName("cn3");
+        loadCreationInfos.setConnectionDirection(ConnectablePosition.Direction.BOTTOM);
+
         loadCreationInfosJson = objectWriter.writeValueAsString(loadCreationInfos);
         mvcResult = mockMvc.perform(post(uriString, TEST_NETWORK_ID).content(loadCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(status().isOk()).andReturn();
@@ -593,14 +628,15 @@ public class ModificationControllerTest {
 
         assertTrue(bsmlrModification.isEmpty());  // no modifications returned
         assertNull(network.getLoad("idLoad3"));  // load was not created
-        testNetworkModificationsCount(TEST_GROUP_ID, 2);  // new modification stored in the database
+        testNetworkModificationsCount(TEST_GROUP_ID, 3);  // new modification stored in the database
+
     }
 
     @Test
     public void testCreateLoadInBusBreaker() throws Exception {
         MvcResult mvcResult;
         String resultAsString;
-        String uriString = "/v1/networks/{networkUuid}/loads?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
+        String uriString = "/v1/networks/{networkUuid}/loads?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
 
         // create new load in voltage level with bus/breaker topology (in voltage level "VLGEN" and bus "NGEN")
         LoadCreationInfos loadCreationInfos = LoadCreationInfos.builder()
@@ -612,12 +648,24 @@ public class ModificationControllerTest {
             .loadType(LoadType.FICTITIOUS)
             .activePower(200.0)
             .reactivePower(30.0)
+            .connectionName("top")
+            .connectionDirection(ConnectablePosition.Direction.TOP)
             .build();
+
+        LoadCreationInfos loadCreationInfos1 = LoadCreationInfos.builder()
+                .equipmentId("idLoad2")
+                .equipmentName("nameLoad2")
+                .voltageLevelId("v1")
+                .busOrBusbarSectionId("bus1")
+                .loadType(LoadType.FICTITIOUS)
+                .activePower(200.0)
+                .reactivePower(30.0)
+                .build();
 
         String loadCreationInfosJson = objectWriter.writeValueAsString(loadCreationInfos);
         mvcResult = mockMvc.perform(post(uriString, TEST_NETWORK_BUS_BREAKER_ID).content(loadCreationInfosJson)
             .contentType(MediaType.APPLICATION_JSON))
-            .andExpectAll(status().isOk()).andReturn();
+            .andExpect(status().isOk()).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<EquipmentModificationInfos> bsmlrEquipmentModification = mapper.readValue(resultAsString, new TypeReference<>() { });
         EquipmentModificationInfos equipmentModificationInfos = bsmlrEquipmentModification.get(0);
@@ -627,6 +675,12 @@ public class ModificationControllerTest {
 
         var listModifications = modificationRepository.getModifications(TEST_GROUP_ID, true, true);
 
+        // create load without connection name and direction
+        String loadCreationInfosJson1 = objectWriter.writeValueAsString(loadCreationInfos1);
+        mockMvc.perform(post(uriString, TEST_NETWORK_BUS_BREAKER_ID).content(loadCreationInfosJson1)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+
         // Update load creation
         loadCreationInfos = new LoadCreationEntity(
                 "idLoad1edited",
@@ -635,7 +689,7 @@ public class ModificationControllerTest {
                 "v12",
                 "bus12",
                 175.0,
-                60.0)
+                60.0, "top", ConnectablePosition.Direction.TOP)
                 .toModificationInfos();
         loadCreationInfos.setUuid(listModifications.get(0).getUuid());
 
@@ -646,14 +700,14 @@ public class ModificationControllerTest {
                 "v12",
                 "bus12",
                 175.0,
-                60.0)
+                60.0, "bot", ConnectablePosition.Direction.BOTTOM)
                 .toModificationInfos();
         String uriStringForUpdate = "/v1/modifications/" + listModifications.get(0).getUuid() + "/loads-creation";
         String loadCreationUpdateJson = objectWriter.writeValueAsString(loadCreationUpdate);
         mockMvc.perform(put(uriStringForUpdate).contentType(MediaType.APPLICATION_JSON).content(loadCreationUpdateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpectAll(status().isOk());
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 1);
+        testNetworkModificationsCount(TEST_GROUP_ID, 2);
         mvcResult = mockMvc.perform(get("/v1/modifications/" + listModifications.get(0).getUuid()).contentType(MediaType.APPLICATION_JSON))
                 .andExpectAll(status().isOk()).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
@@ -666,7 +720,29 @@ public class ModificationControllerTest {
         mockMvc.perform(post(uriString, TEST_NETWORK_BUS_BREAKER_ID).content(loadCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(status().is4xxClientError(), content().string(new NetworkModificationException(BUS_NOT_FOUND, "notFoundBus").getMessage()));
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 1);
+        testNetworkModificationsCount(TEST_GROUP_ID, 2);
+    }
+
+    @Test
+    public void assertThrowsUpdateLoadCreation() {
+        LoadCreationInfos loadCreationInfos = LoadCreationInfos.builder()
+                .equipmentId("idLoad1")
+                .equipmentName("nameLoad1")
+                .voltageLevelId("v1")
+                .busOrBusbarSectionId("bus1")
+                .loadType(LoadType.FICTITIOUS)
+                .activePower(200.0)
+                .reactivePower(30.0)
+                .connectionName("top")
+                .connectionDirection(ConnectablePosition.Direction.TOP)
+                .build();
+
+        UUID modificationUuid = UUID.randomUUID();
+
+        String errorMessage = assertThrows(NetworkModificationException.class, () -> networkModificationService.updateLoadCreation(loadCreationInfos, modificationUuid)).getMessage();
+        assertEquals(new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format("Modification (%s) not found", modificationUuid)).getMessage(), errorMessage);
+
+        assertThrows(NullPointerException.class, () -> networkModificationService.updateLoadCreation(null, modificationUuid));
     }
 
     @Test
@@ -675,7 +751,7 @@ public class ModificationControllerTest {
         String resultAsString;
         EqualsVerifier.simple().forClass(AttributeModification.class).verify();
 
-        String uriString = "/v1/networks/{networkUuid}/loads-modification?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
+        String uriString = "/v1/networks/{networkUuid}/loads-modification?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
 
         LoadModificationInfos loadModificationInfos = LoadModificationInfos.builder()
                 .equipmentId("v1load")
@@ -784,14 +860,13 @@ public class ModificationControllerTest {
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<LoadModificationInfos> bsmlrloadmodif = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertThat(bsmlrloadmodif.get(0), MatcherLoadModificationInfos.createMatcherLoadModificationInfos(loadModificationInfos));
-
     }
 
     @Test
     public void testModifyGenerator() throws Exception {
         MvcResult mvcResult;
         String resultAsString;
-        String uriString = "/v1/networks/{networkUuid}/generators-modification?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
+        String uriString = "/v1/networks/{networkUuid}/generators-modification?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
         String generatorId = "idGenerator";
         GeneratorModificationInfos generatorModificationInfos = GeneratorModificationInfos.builder()
             .equipmentId(generatorId)
@@ -889,7 +964,7 @@ public class ModificationControllerTest {
     public void testUpdateModifyGenerator() throws Exception {
         MvcResult mvcResult;
         String resultAsString;
-        String uriString = "/v1/networks/{networkUuid}/generators-modification?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
+        String uriString = "/v1/networks/{networkUuid}/generators-modification?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
         String generatorId = "idGenerator";
         GeneratorModificationInfos generatorModificationInfos = GeneratorModificationInfos.builder()
             .equipmentId(generatorId)
@@ -938,13 +1013,15 @@ public class ModificationControllerTest {
     public void testCreateShuntCompensator() throws Exception {
         MvcResult mvcResult;
         String resultAsString;
-        String uriString = "/v1/networks/{networkUuid}/shunt-compensators?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
+        String uriString = "/v1/networks/{networkUuid}/shunt-compensators?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
 
         ShuntCompensatorCreationInfos shunt1 = ShuntCompensatorCreationInfos.builder()
             .equipmentId("shuntOneId").equipmentName("hop")
             .currentNumberOfSections(4).maximumNumberOfSections(9)
             .susceptancePerSection(1.).isIdenticalSection(true)
             .voltageLevelId("v2").busOrBusbarSectionId("1B")
+            .connectionName("cn1")
+            .connectionDirection(ConnectablePosition.Direction.UNDEFINED)
             .build();
 
         String shunt1Json = objectWriter.writeValueAsString(shunt1);
@@ -996,38 +1073,82 @@ public class ModificationControllerTest {
     }
 
     @Test
+    public void testCreateShuntCompensatorInBusBreaker() throws Exception {
+        MvcResult mvcResult;
+        String resultAsString;
+        String uriString = "/v1/networks/{networkUuid}/shunt-compensators?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID  + "&reporterId=" + UUID.randomUUID();
+
+        ShuntCompensatorCreationInfos shunt1 = ShuntCompensatorCreationInfos.builder()
+                .equipmentId("shuntTwoId").equipmentName("Shunt")
+                .currentNumberOfSections(4).maximumNumberOfSections(9)
+                .susceptancePerSection(1.).isIdenticalSection(true)
+                .voltageLevelId("v2").busOrBusbarSectionId("bus2")
+                .connectionName("cn2")
+                .connectionDirection(ConnectablePosition.Direction.UNDEFINED)
+                .build();
+
+        String shunt1Json = objectWriter.writeValueAsString(shunt1);
+        mvcResult = mockMvc.perform(post(uriString, TEST_NETWORK_BUS_BREAKER_ID).content(shunt1Json).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        resultAsString = mvcResult.getResponse().getContentAsString();
+        List<EquipmentModificationInfos> bsmlrShuntCompensator = mapper.readValue(resultAsString, new TypeReference<>() { });
+        assertEquals("shuntTwoId", bsmlrShuntCompensator.get(0).getEquipmentId());
+        testNetworkModificationsCount(TEST_GROUP_ID, 1);
+
+        shunt1 = new ShuntCompensatorCreationEntity(shunt1).toModificationInfos();
+        shunt1.setEquipmentId("shuntTwoIdEdited");
+        shunt1.setEquipmentName("shuntEdited");
+        shunt1.setIsIdenticalSection(false);
+        shunt1.setCurrentNumberOfSections(6);
+        shunt1.setMaximumNumberOfSections(12);
+        shunt1.setSusceptancePerSection(2.);
+        shunt1.setVoltageLevelId("v1");
+        shunt1.setBusOrBusbarSectionId("bus1");
+        shunt1.setUuid(bsmlrShuntCompensator.get(0).getUuid());
+        String uriStringForUpdate = "/v1/modifications/" + bsmlrShuntCompensator.get(0).getUuid() + "/shunt-compensators-creation";
+
+        // Update shunt compansator creation
+        ShuntCompensatorCreationInfos shuntUpdate = new ShuntCompensatorCreationEntity(shunt1).toModificationInfos();
+        shuntUpdate.setEquipmentId("shuntTwoIdEdited");
+        shuntUpdate.setEquipmentName("shuntEdited");
+        shuntUpdate.setIsIdenticalSection(false);
+        shuntUpdate.setCurrentNumberOfSections(6);
+        shuntUpdate.setMaximumNumberOfSections(12);
+        shuntUpdate.setSusceptancePerSection(2.);
+        shuntUpdate.setVoltageLevelId("v1");
+        shuntUpdate.setBusOrBusbarSectionId("bus1");
+        String shuntUpdateJson = objectWriter.writeValueAsString(shuntUpdate);
+        mockMvc.perform(put(uriStringForUpdate).content(shuntUpdateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        testNetworkModificationsCount(TEST_GROUP_ID, 1);
+        mvcResult = mockMvc.perform(get("/v1/modifications/" + bsmlrShuntCompensator.get(0).getUuid()).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        resultAsString = mvcResult.getResponse().getContentAsString();
+        List<ShuntCompensatorCreationInfos> bsmListResultGetModifications = mapper.readValue(resultAsString, new TypeReference<>() { });
+        assertThat(bsmListResultGetModifications.get(0), createMatcher(shunt1));
+
+        shunt1.setMaximumNumberOfSections(2);
+        shunt1Json = objectWriter.writeValueAsString(shunt1);
+        mockMvc.perform(post(uriString, TEST_NETWORK_BUS_BREAKER_ID).content(shunt1Json).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        // create shunt compensator with errors
+        shunt1.setBusOrBusbarSectionId("notFoundBus");
+        shunt1Json = objectWriter.writeValueAsString(shunt1);
+        mockMvc.perform(post(uriString, TEST_NETWORK_BUS_BREAKER_ID).content(shunt1Json).contentType(MediaType.APPLICATION_JSON))
+                .andExpectAll(status().is4xxClientError(), content().string(new NetworkModificationException(BUS_NOT_FOUND, "notFoundBus").getMessage()));
+
+        testNetworkModificationsCount(TEST_GROUP_ID, 2);
+    }
+
+    @Test
     public void testCreateGeneratorInNodeBreaker() throws Exception {
         MvcResult mvcResult;
         String resultAsString;
-        String uriString = "/v1/networks/{networkUuid}/generators?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
+        String uriString = "/v1/networks/{networkUuid}/generators?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
 
         // create new generator in voltage level with node/breaker topology (in voltage level "v2" and busbar section "1B")
-        GeneratorCreationInfos generatorCreationInfos = GeneratorCreationInfos.builder()
-            .equipmentId("idGenerator1")
-            .equipmentName("nameGenerator1")
-            .voltageLevelId("v2")
-            .busOrBusbarSectionId("1B")
-            .energySource(EnergySource.HYDRO)
-            .minActivePower(100.0)
-            .maxActivePower(600.0)
-            .ratedNominalPower(10.)
-            .activePowerSetpoint(400.)
-            .reactivePowerSetpoint(50.)
-            .voltageRegulationOn(true)
-            .voltageSetpoint(225.)
-            .stepUpTransformerReactance(60.0)
-            .transientReactance(61.0)
-            .minimumReactivePower(20.0)
-            .maximumReactivePower(25.0)
-            .droop(5f)
-            .participate(true)
-            .regulatingTerminalId("v2load")
-            .regulatingTerminalType("LOAD")
-            .regulatingTerminalVlId("v1")
-            .reactiveCapabilityCurve(true)
-            .points(Arrays.asList(new ReactiveCapabilityCurveCreationInfos(2.0, 3.0, 3.1),
-                                  new ReactiveCapabilityCurveCreationInfos(5.6, 9.8, 10.8)))
-            .build();
+        GeneratorCreationInfos generatorCreationInfos = ModificationCreation.getCreationGenerator("v2", "idGenerator1", "idGenerator1", "1B", "v2load", "LOAD", "v1");
         String generatorCreationInfosJson = objectWriter.writeValueAsString(generatorCreationInfos);
         mvcResult = mockMvc.perform(post(uriString, TEST_NETWORK_ID).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
@@ -1062,7 +1183,9 @@ public class ModificationControllerTest {
                 "v2load",
                 "LOAD",
                 "v2",
-                false)
+                false,
+                "top1",
+                ConnectablePosition.Direction.TOP)
                 .toModificationInfos();
         generatorCreationInfos.setUuid(bsmlrGeneratorCreation.get(0).getUuid());
 
@@ -1091,7 +1214,9 @@ public class ModificationControllerTest {
                 "v2load",
                 "LOAD",
                 "v2",
-                false)
+                false,
+                "top11",
+                ConnectablePosition.Direction.TOP)
                 .toModificationInfos();
         String generatorCreationUpdateJson = objectWriter.writeValueAsString(generatorCreationUpdate);
         String uriStringForUpdate = "/v1/modifications/" + bsmlrGeneratorCreation.get(0).getUuid() + "/generators-creation";
@@ -1131,7 +1256,7 @@ public class ModificationControllerTest {
         mvcResult = mockMvc.perform(post(uriString, TEST_NETWORK_ID).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().is4xxClientError()).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
-        assertEquals(resultAsString, new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "notFoundBusbarSection").getMessage());
+        assertEquals(resultAsString, new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "Bus bar section notFoundBusbarSection not found").getMessage());
         generatorCreationInfos.setVoltageLevelId("v2");
         generatorCreationInfos.setBusOrBusbarSectionId("1B");
         generatorCreationInfos.setMinActivePower(Double.NaN);
@@ -1145,7 +1270,7 @@ public class ModificationControllerTest {
 
         // Test create generator on not yet existing variant VARIANT_NOT_EXISTING_ID :
         // Only the modification should be added in the database but the generator cannot be created
-        uriString = "/v1/networks/{networkUuid}/generators?variantId=" + VARIANT_NOT_EXISTING_ID + "&group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
+        uriString = "/v1/networks/{networkUuid}/generators?variantId=" + VARIANT_NOT_EXISTING_ID + "&group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
         generatorCreationInfos.setEquipmentId("idGenerator3");
         generatorCreationInfos.setEquipmentName("nameGenerator3");
         generatorCreationInfos.setVoltageLevelId("v2");
@@ -1165,35 +1290,10 @@ public class ModificationControllerTest {
     public void testCreateGeneratorInBusBreaker() throws Exception {
         MvcResult mvcResult;
         String resultAsString;
-        String uriString = "/v1/networks/{networkUuid}/generators?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
+        String uriString = "/v1/networks/{networkUuid}/generators?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
 
-        // create new generator in voltage level with bus/breaker topology (in voltage level "VLGEN" and bus "NGEN")
-        GeneratorCreationInfos generatorCreationInfos = GeneratorCreationInfos.builder()
-            .equipmentId("idGenerator2")
-            .equipmentName("nameGenerator2")
-            .voltageLevelId("v1")
-            .busOrBusbarSectionId("bus1")
-            .energySource(EnergySource.HYDRO)
-            .minActivePower(100.0)
-            .maxActivePower(600.0)
-            .ratedNominalPower(10.)
-            .activePowerSetpoint(400.)
-            .reactivePowerSetpoint(50.)
-            .voltageRegulationOn(true)
-            .voltageSetpoint(225.)
-            .stepUpTransformerReactance(60.0)
-            .transientReactance(61.0)
-            .minimumReactivePower(20.0)
-            .maximumReactivePower(25.0)
-            .droop(5f)
-            .participate(true)
-            .regulatingTerminalId("idGenerator1")
-            .regulatingTerminalType("GENERATOR")
-            .regulatingTerminalVlId("v1")
-            .reactiveCapabilityCurve(false)
-            .points(Arrays.asList(new ReactiveCapabilityCurveCreationInfos(2.0, 3.0, 3.1),
-                                  new ReactiveCapabilityCurveCreationInfos(20.7, 14.5, 18.9)))
-            .build();
+        // create new generator in voltage level with bus/breaker topology
+        GeneratorCreationInfos generatorCreationInfos = ModificationCreation.getCreationGenerator("v1", "idGenerator2", "nameGenerator2", "bus1", "idGenerator1", "GENERATOR", "v1");
         String generatorCreationInfosJson = objectWriter.writeValueAsString(generatorCreationInfos);
         mvcResult = mockMvc.perform(post(uriString, TEST_NETWORK_BUS_BREAKER_ID).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
@@ -1216,7 +1316,7 @@ public class ModificationControllerTest {
     public void testCreateTwoWindingsTransformerInBusBreaker() throws Exception {
         MvcResult mvcResult;
         String resultAsString;
-        String uriString = "/v1/networks/{networkUuid}/two-windings-transformers?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
+        String uriString = "/v1/networks/{networkUuid}/two-windings-transformers?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
 
         // create new 2wt in voltage level with bus/breaker topology
         TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos = TwoWindingsTransformerCreationInfos.builder()
@@ -1232,6 +1332,7 @@ public class ModificationControllerTest {
                 .ratedVoltage2(1010)
                 .seriesReactance(300)
                 .seriesResistance(400)
+                .ratedS(200.)
                 .build();
         String twoWindingsTransformerCreationInfosJson = objectWriter.writeValueAsString(twoWindingsTransformerCreationInfos);
         mvcResult = mockMvc.perform(post(uriString, TEST_NETWORK_BUS_BREAKER_ID).content(twoWindingsTransformerCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
@@ -1251,12 +1352,36 @@ public class ModificationControllerTest {
                 1015.,
                 350.,
                 450.,
+                200.,
                 "v12",
                 "bus12",
                 "v1",
                 "bus1",
                 50.,
-                55.
+                55.,
+                "cn1",
+                ConnectablePosition.Direction.TOP,
+                "cn2",
+                ConnectablePosition.Direction.BOTTOM,
+                null,
+                null,
+                false,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
                 )
                 .toModificationInfos();
         twoWindingsTransformerCreationInfos.setUuid(bsmlrTwoWindings.get(0).getUuid());
@@ -1271,12 +1396,36 @@ public class ModificationControllerTest {
                 1015.,
                 350.,
                 450.,
+                200.,
                 "v12",
                 "bus12",
                 "v1",
                 "bus1",
                 50.,
-                55.
+                55.,
+                "cn12",
+                ConnectablePosition.Direction.TOP,
+                "cn22",
+                ConnectablePosition.Direction.BOTTOM,
+                null,
+                null,
+                false,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
         ).toModificationInfos();
         String twoWindingsTransformerCreationUpdateJson = objectWriter.writeValueAsString(twoWindingsTransformerCreationUpdate);
         String uriStringForUpdate = "/v1/modifications/" + bsmlrTwoWindings.get(0).getUuid() + "/two-windings-transformers-creation";
@@ -1303,7 +1452,7 @@ public class ModificationControllerTest {
     public void testCreateTwoWindingsTransformerInNodeBreaker() throws Exception {
         MvcResult mvcResult;
         String resultAsString;
-        String uriString = "/v1/networks/{networkUuid}/two-windings-transformers?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
+        String uriString = "/v1/networks/{networkUuid}/two-windings-transformers?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
 
         // create new 2wt in voltage level with Node/breaker topology
         TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos = TwoWindingsTransformerCreationInfos.builder()
@@ -1319,6 +1468,10 @@ public class ModificationControllerTest {
                 .ratedVoltage2(1010)
                 .seriesReactance(300)
                 .seriesResistance(400)
+                .connectionName1("cnid2wt1")
+                .connectionDirection1(ConnectablePosition.Direction.TOP)
+                .connectionName2("cnid2wt2")
+                .connectionDirection2(ConnectablePosition.Direction.TOP)
                 .build();
         String twoWindingsTransformerCreationInfosJson = objectWriter.writeValueAsString(twoWindingsTransformerCreationInfos);
         mvcResult = mockMvc.perform(post(uriString, TEST_NETWORK_ID).content(twoWindingsTransformerCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
@@ -1332,7 +1485,7 @@ public class ModificationControllerTest {
 
         // Test create transformer on not yet existing variant VARIANT_NOT_EXISTING_ID :
         // Only the modification should be added in the database but the transformer cannot be created
-        uriString = "/v1/networks/{networkUuid}/two-windings-transformers?variantId=" + VARIANT_NOT_EXISTING_ID + "&group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
+        uriString = "/v1/networks/{networkUuid}/two-windings-transformers?variantId=" + VARIANT_NOT_EXISTING_ID + "&group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
         twoWindingsTransformerCreationInfos.setEquipmentId("id2wt3");
         twoWindingsTransformerCreationInfos.setEquipmentName("name2wt3");
         twoWindingsTransformerCreationInfosJson = objectWriter.writeValueAsString(twoWindingsTransformerCreationInfos);
@@ -1350,7 +1503,7 @@ public class ModificationControllerTest {
     public void testCreateTwoWindingsTransformerInMixedTopology() throws Exception {
         MvcResult mvcResult;
         String resultAsString;
-        String uriString = "/v1/networks/{networkUuid}/two-windings-transformers?group=" + TEST_NETWORK_MIXED_TOPOLOGY_ID + "&reportUuid=" + TEST_REPORT_ID;
+        String uriString = "/v1/networks/{networkUuid}/two-windings-transformers?group=" + TEST_NETWORK_MIXED_TOPOLOGY_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
 
         // create new 2wt in voltage level with mixed topology
         TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos = TwoWindingsTransformerCreationInfos.builder()
@@ -1366,6 +1519,10 @@ public class ModificationControllerTest {
                 .ratedVoltage2(1010)
                 .seriesReactance(300)
                 .seriesResistance(400)
+                .connectionName1("cnid2wt1")
+                .connectionDirection1(ConnectablePosition.Direction.TOP)
+                .connectionName2("cnid2wt2")
+                .connectionDirection2(ConnectablePosition.Direction.TOP)
                 .build();
 
         String twoWindingsTransformerCreationInfosJson = objectWriter.writeValueAsString(twoWindingsTransformerCreationInfos);
@@ -1382,7 +1539,7 @@ public class ModificationControllerTest {
     public void testDeleteEquipment() throws Exception {
         MvcResult mvcResult;
         String resultAsString;
-        String uriString = "/v1/networks/{networkUuid}/equipments/type/{equipmentType}/id/{equipmentId}?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
+        String uriString = "/v1/networks/{networkUuid}/equipments/type/{equipmentType}/id/{equipmentId}?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
 
         assertTrue(equipmentInfosService.findAllEquipmentInfos(TEST_NETWORK_ID).isEmpty());
         assertTrue(equipmentInfosService.findAllEquipmentInfos(TEST_NETWORK_ID_2).isEmpty());
@@ -1406,9 +1563,21 @@ public class ModificationControllerTest {
         assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v1d1", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
         assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v1b1", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
 
+        // update equipment deletion
+        String uriStringForUpdate = "/v1/modifications/" + bsmlrEquipmentDeletion.get(0).getUuid()
+                + "/equipments-deletion/type/" + "GENERATOR" + "/id/" + "idGenerator";
+        mockMvc.perform(put(uriStringForUpdate).contentType(MediaType.APPLICATION_JSON)).andExpectAll(status().isOk());
+
+        testNetworkModificationsCount(TEST_GROUP_ID, 1);
+        mvcResult = mockMvc.perform(get("/v1/modifications/" + bsmlrEquipmentDeletion.get(0).getUuid()).contentType(MediaType.APPLICATION_JSON))
+                .andExpectAll(status().isOk()).andReturn();
+        resultAsString = mvcResult.getResponse().getContentAsString();
+        bsmlrEquipmentDeletion = mapper.readValue(resultAsString, new TypeReference<>() { });
+        assertThat(bsmlrEquipmentDeletion.get(0), createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "idGenerator", "GENERATOR", Set.of()));
+
         // Test delete load on not yet existing variant VARIANT_NOT_EXISTING_ID :
         // Only the modification should be added in the database but the load cannot be deleted
-        String uriStringWithVariantNotExisting = "/v1/networks/{networkUuid}/equipments/type/{equipmentType}/id/{equipmentId}?variantId=" + VARIANT_NOT_EXISTING_ID + "&group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
+        String uriStringWithVariantNotExisting = "/v1/networks/{networkUuid}/equipments/type/{equipmentType}/id/{equipmentId}?variantId=" + VARIANT_NOT_EXISTING_ID + "&group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
         mvcResult = mockMvc.perform(delete(uriStringWithVariantNotExisting, TEST_NETWORK_ID, "LOAD", "v3load").contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
@@ -1698,7 +1867,7 @@ public class ModificationControllerTest {
     public void testErrorRemovingDanglingSwitches() throws Exception {
         MvcResult mvcResult;
         String resultAsString;
-        String uriString = "/v1/networks/{networkUuid}/equipments/type/{equipmentType}/id/{equipmentId}?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
+        String uriString = "/v1/networks/{networkUuid}/equipments/type/{equipmentType}/id/{equipmentId}?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
 
         // delete load with error removing dangling switches, because the load connection node is not linked to any other node
         mvcResult = mockMvc.perform(delete(uriString, TEST_NETWORK_ID, "LOAD", "v5load").contentType(MediaType.APPLICATION_JSON))
@@ -1716,7 +1885,7 @@ public class ModificationControllerTest {
     private List<ModificationInfos> createSomeSwitchModifications(UUID groupId, int number) throws Exception {
         List<String> openStates = List.of("true", "false");
         for (int i = 0; i < number; i++) {
-            mockMvc.perform(put("/v1/networks/{networkUuid}/switches/{switchId}?group=" + groupId + "&open=" + openStates.get(i % 2) + "&reportUuid=" + TEST_REPORT_ID, TEST_NETWORK_ID, "v1b1"))
+            mockMvc.perform(put("/v1/networks/{networkUuid}/switches/{switchId}?group=" + groupId + "&open=" + openStates.get(i % 2) + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID(), TEST_NETWORK_ID, "v1b1"))
                 .andExpect(status().isOk());
         }
         var modificationList = modificationRepository.getModifications(groupId, true, true);
@@ -1824,7 +1993,7 @@ public class ModificationControllerTest {
     public void testCreateLineInNodeBreaker() throws Exception {
         MvcResult mvcResult;
         String resultAsString;
-        String uriString = "/v1/networks/{networkUuid}/lines?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
+        String uriString = "/v1/networks/{networkUuid}/lines?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
 
         // create new line in voltage levels with node/breaker topology
         // between voltage level "v1" and busbar section "1.1" and
@@ -1842,10 +2011,14 @@ public class ModificationControllerTest {
             .busOrBusbarSectionId1("1.1")
             .voltageLevelId2("v2")
             .busOrBusbarSectionId2("1A")
+            .connectionName1("cn1Line4")
+            .connectionDirection1(ConnectablePosition.Direction.TOP)
+            .connectionName2("cn2Line4")
+            .connectionDirection2(ConnectablePosition.Direction.TOP)
             .build();
         String lineCreationInfosJson = objectWriter.writeValueAsString(lineCreationInfos);
 
-        assertEquals("LineCreationInfos(super=BranchCreationInfos(super=EquipmentCreationInfos(super=EquipmentModificationInfos(super=ModificationInfos(uuid=null, date=null, type=null, substationIds=[]), equipmentId=idLine4), equipmentName=nameLine4), seriesResistance=100.0, seriesReactance=100.0, voltageLevelId1=v1, voltageLevelId2=v2, busOrBusbarSectionId1=1.1, busOrBusbarSectionId2=1A, currentLimits1=null, currentLimits2=null), shuntConductance1=10.0, shuntSusceptance1=10.0, shuntConductance2=20.0, shuntSusceptance2=20.0)", lineCreationInfos.toString());
+        assertEquals("LineCreationInfos(super=BranchCreationInfos(super=EquipmentCreationInfos(super=EquipmentModificationInfos(super=ModificationInfos(uuid=null, date=null, type=null, substationIds=[]), equipmentId=idLine4), equipmentName=nameLine4), seriesResistance=100.0, seriesReactance=100.0, voltageLevelId1=v1, voltageLevelId2=v2, busOrBusbarSectionId1=1.1, busOrBusbarSectionId2=1A, currentLimits1=null, currentLimits2=null, connectionName1=cn1Line4, connectionDirection1=TOP, connectionName2=cn2Line4, connectionDirection2=TOP), shuntConductance1=10.0, shuntSusceptance1=10.0, shuntConductance2=20.0, shuntSusceptance2=20.0)", lineCreationInfos.toString());
         mvcResult = mockMvc.perform(post(uriString, TEST_NETWORK_ID).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
@@ -1868,7 +2041,11 @@ public class ModificationControllerTest {
                 "v1",
                 "1.1",
                 5.,
-                5.)
+                5.,
+                "cn13",
+                ConnectablePosition.Direction.TOP,
+                "cn23",
+                ConnectablePosition.Direction.BOTTOM)
                 .toModificationInfos();
         lineCreationInfos.setUuid(bsmlrLineCreation.get(0).getUuid());
         lineCreationInfosJson = objectWriter.writeValueAsString(lineCreationInfos);
@@ -1888,7 +2065,11 @@ public class ModificationControllerTest {
                 "v1",
                 "1.1",
                 5.,
-                5.).toModificationInfos();
+                5.,
+                "cn14",
+                ConnectablePosition.Direction.TOP,
+                "cn24",
+                ConnectablePosition.Direction.BOTTOM).toModificationInfos();
         String lineCreationUpdateJson = objectWriter.writeValueAsString(lineCreationUpdate);
         String uriStringForUpdate = "/v1/modifications/" + bsmlrLineCreation.get(0).getUuid() + "/lines-creation";
         mockMvc.perform(put(uriStringForUpdate).content(lineCreationUpdateJson).contentType(MediaType.APPLICATION_JSON))
@@ -1953,7 +2134,7 @@ public class ModificationControllerTest {
 
         // Test create line on not yet existing variant VARIANT_NOT_EXISTING_ID :
         // Only the modification should be added in the database but the line cannot be created
-        uriString = "/v1/networks/{networkUuid}/lines?variantId=" + VARIANT_NOT_EXISTING_ID + "&group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
+        uriString = "/v1/networks/{networkUuid}/lines?variantId=" + VARIANT_NOT_EXISTING_ID + "&group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
         lineCreationInfos.setEquipmentId("idLine5");
         lineCreationInfos.setEquipmentName("nameLine5");
         mvcResult = mockMvc.perform(post(uriString, TEST_NETWORK_ID).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
@@ -1971,7 +2152,7 @@ public class ModificationControllerTest {
     public void testCreateLineInBusBreaker() throws Exception {
         MvcResult mvcResult;
         String resultAsString;
-        String uriString = "/v1/networks/{networkUuid}/lines?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
+        String uriString = "/v1/networks/{networkUuid}/lines?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
 
         // create new line in voltage levels with node/breaker topology
         // between voltage level "v1" and busbar section "bus1" and
@@ -2013,7 +2194,23 @@ public class ModificationControllerTest {
 
     @Test
     public void testDuplicateModificationGroup() throws Exception {
-        String uriString = "/v1/networks/{networkUuid}/lines?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
+        String uriString = "/v1/networks/{networkUuid}/voltage-levels?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
+
+        VoltageLevelCreationInfos vl1 = ModificationCreation.getCreationVoltageLevel("s1", "vl1Id", "vl1Name");
+        mockMvc.perform(
+                post(uriString, TEST_NETWORK_BUS_BREAKER_ID)
+                    .content(objectWriter.writeValueAsString(vl1))
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString();
+
+        VoltageLevelCreationInfos vl2 = ModificationCreation.getCreationVoltageLevel("s1", "vl2Id", "vl2Name");
+        mockMvc.perform(
+                post(uriString, TEST_NETWORK_BUS_BREAKER_ID)
+                    .content(objectWriter.writeValueAsString(vl2))
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString();
 
         // create new line in voltage levels with node/breaker topology
         // between voltage level "v1" and busbar section "bus1" and
@@ -2039,6 +2236,7 @@ public class ModificationControllerTest {
                 .currentLimits2(c2)
                 .build();
 
+        uriString = "/v1/networks/{networkUuid}/lines?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
         String resultAsString = mockMvc.perform(
             post(uriString, TEST_NETWORK_BUS_BREAKER_ID)
                 .content(objectWriter.writeValueAsString(lineCreationInfos))
@@ -2049,9 +2247,9 @@ public class ModificationControllerTest {
         List<EquipmentModificationInfos> modifications = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertThat(modifications.get(0), createMatcherEquipmentModificationInfos(ModificationType.LINE_CREATION, "idLine1", Set.of("s1", "s2")));
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 1);
+        testNetworkModificationsCount(TEST_GROUP_ID, 3);
 
-        uriString = "/v1/networks/{networkUuid}/two-windings-transformers?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
+        uriString = "/v1/networks/{networkUuid}/two-windings-transformers?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
 
         // create new 2wt in voltage level with bus/breaker topology
         TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos = TwoWindingsTransformerCreationInfos.builder()
@@ -2077,10 +2275,10 @@ public class ModificationControllerTest {
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 2);
+        testNetworkModificationsCount(TEST_GROUP_ID, 4);
 
         //create a lineAttached
-        String lineAttachUriString = "/v1/networks/{networkUuid}/line-attach?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
+        String lineAttachUriString = "/v1/networks/{networkUuid}/line-attach?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
         LineCreationInfos attachmentLine = LineCreationInfos.builder()
                 .equipmentId("attachmentLine")
                 .seriesResistance(50.6)
@@ -2097,19 +2295,21 @@ public class ModificationControllerTest {
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 3);
+        testNetworkModificationsCount(TEST_GROUP_ID, 5);
+
+        //Attach lines to split lines
+        String attachLinesToSplitLinesUriString = "/v1/networks/{networkUuid}/lines-attach-to-split-lines?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
+        LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos = new LinesAttachToSplitLinesInfos("line1", "line2", "line3", "v4", "1.A", "nl4", "NewLine4", "nl5", "NewLine4");
+
+        mockMvc.perform(
+                        post(attachLinesToSplitLinesUriString, TEST_NETWORK_ID)
+                                .content(objectWriter.writeValueAsString(linesAttachToSplitLinesInfos))
+                                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        testNetworkModificationsCount(TEST_GROUP_ID, 6);
 
         //create a lineSplit
-        String lineSplitUriString = "/v1/networks/{networkUuid}/line-splits?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
-        VoltageLevelCreationInfos vl1 = VoltageLevelCreationInfos.builder()
-                .equipmentId("vl1")
-                .equipmentName("NewVoltageLevel")
-                .nominalVoltage(379.3)
-                .substationId("s1")
-                .busbarSections(List.of(new BusbarSectionCreationInfos("v1bbs", "BBS1", 1, 1)))
-                .busbarConnections(List.of())
-                .build();
-
+        String lineSplitUriString = "/v1/networks/{networkUuid}/line-splits?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
         LineSplitWithVoltageLevelInfos lineSplitWoVL = new LineSplitWithVoltageLevelInfos("line3", 10.0, null, "v4", "1.A",
                 "nl1", "NewLine1", "nl2", "NewLine2");
 
@@ -2119,21 +2319,29 @@ public class ModificationControllerTest {
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 4);
+        //create a generator
+        uriString = "/v1/networks/{networkUuid}/generators?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
+        GeneratorCreationInfos generatorCreationInfos = ModificationCreation.getCreationGenerator("v2", "idGenerator1", "nameGenerator1", "1B", "v2load", "LOAD", "v1");
+        mockMvc.perform(
+                post(uriString, TEST_NETWORK_ID)
+                    .content(objectWriter.writeValueAsString(generatorCreationInfos))
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
 
+        testNetworkModificationsCount(TEST_GROUP_ID, 8);
         //test copy group
         UUID newGroupUuid = UUID.randomUUID();
         uriString = "/v1/groups?groupUuid=" + newGroupUuid + "&duplicateFrom=" + TEST_GROUP_ID + "&reportUuid=" + UUID.randomUUID();
         mockMvc.perform(post(uriString)).andExpect(status().isOk());
 
-        testNetworkModificationsCount(newGroupUuid, 4);
+        testNetworkModificationsCount(newGroupUuid, 8);
     }
 
     @Test
     public void testCreateLineInMixedTypology() throws Exception {
         MvcResult mvcResult;
         String resultAsString;
-        String uriString = "/v1/networks/{networkUuid}/lines?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
+        String uriString = "/v1/networks/{networkUuid}/lines?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
 
         // create new line in voltage levels with node breaker topology and bus breaker topology
         // between voltage level "v1" and busbar section "1.1" type NODE_BREAKER and
@@ -2151,6 +2359,10 @@ public class ModificationControllerTest {
             .busOrBusbarSectionId1("1.1")
             .voltageLevelId2("v2")
             .busOrBusbarSectionId2("bus2")
+            .connectionName1("cn1Line1")
+            .connectionDirection1(ConnectablePosition.Direction.TOP)
+            .connectionName2("cn2Line1")
+            .connectionDirection2(ConnectablePosition.Direction.TOP)
             .build();
 
         String lineCreationInfosJson = objectWriter.writeValueAsString(lineCreationInfos);
@@ -2187,7 +2399,7 @@ public class ModificationControllerTest {
     public void testCreateLineOptionalParameters() throws Exception {
         MvcResult mvcResult;
         String resultAsString;
-        String uriString = "/v1/networks/{networkUuid}/lines?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
+        String uriString = "/v1/networks/{networkUuid}/lines?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
 
         // create new line without shunt conductance or reactance
         LineCreationInfos lineCreationInfosNoShunt = LineCreationInfos.builder()
@@ -2274,13 +2486,29 @@ public class ModificationControllerTest {
         assertEquals(resultAsString, new NetworkModificationException(CREATE_LINE_ERROR, "AC Line 'idLine2': permanent limit must be defined and be > 0").getMessage());
 
         testNetworkModificationsCount(TEST_GROUP_ID, 4);
+
+        LineCreationInfos lineCreationInfosOK = LineCreationInfos.builder()
+                .equipmentId("idLine3")
+                .equipmentName("nameLine3")
+                .seriesResistance(100.0)
+                .seriesReactance(100.0)
+                .voltageLevelId1("v1")
+                .busOrBusbarSectionId1("bus1")
+                .voltageLevelId2("v2")
+                .busOrBusbarSectionId2("bus2")
+                .currentLimits2(CurrentLimitsInfos.builder().permanentLimit(1.0).build())
+                .build();
+
+        String lineCreationInfosJson = objectWriter.writeValueAsString(lineCreationInfosOK);
+        mockMvc.perform(post(uriString, TEST_NETWORK_BUS_BREAKER_ID).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
     }
 
     @Test
     public void testCreateSubstation() throws Exception {
         MvcResult mvcResult;
         String resultAsString;
-        String uriString = "/v1/networks/{networkUuid}/substations?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
+        String uriString = "/v1/networks/{networkUuid}/substations?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
 
         // create new substation
         SubstationCreationInfos substationCreationInfos = SubstationCreationInfos.builder()
@@ -2344,46 +2572,17 @@ public class ModificationControllerTest {
     public void testCreateVoltageLevel() throws Exception {
         MvcResult mvcResult;
         String resultAsString;
-        String uriString = "/v1/networks/{networkUuid}/voltage-levels?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
+        String uriString = "/v1/networks/{networkUuid}/voltage-levels?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
 
-        List<BusbarSectionCreationInfos> busbarSectionInfos = new ArrayList<>();
-        busbarSectionInfos.add(BusbarSectionCreationInfos.builder().id("bbs.nw").name("SJB NO").vertPos(1).horizPos(1).build());
-        busbarSectionInfos.add(BusbarSectionCreationInfos.builder().id("bbs.ne").name("SJB NE").vertPos(1).horizPos(2).build());
-        busbarSectionInfos.add(BusbarSectionCreationInfos.builder().id("bbs.sw").name("SJB SW").vertPos(2).horizPos(1).build());
-
-        List<BusbarConnectionCreationInfos> busbarConnectionInfos = new ArrayList<>();
-        busbarConnectionInfos.add(
-            BusbarConnectionCreationInfos.builder().fromBBS("bbs.nw").toBBS("bbs.ne").switchKind(SwitchKind.BREAKER).build());
-        busbarConnectionInfos.add(
-            BusbarConnectionCreationInfos.builder().fromBBS("bbs.nw").toBBS("bbs.sw").switchKind(SwitchKind.DISCONNECTOR).build());
-        busbarConnectionInfos.add(
-            BusbarConnectionCreationInfos.builder().fromBBS("bbs.ne").toBBS("bbs.ne").switchKind(SwitchKind.DISCONNECTOR).build());
-
-        VoltageLevelCreationInfos vli;
-
-        vli = VoltageLevelCreationInfos.builder()
-            .equipmentId("VoltageLevelId")
-            .equipmentName("VoltageLevelName")
-            .nominalVoltage(379.1)
-            .substationId("absent_station")
-            .busbarSections(busbarSectionInfos)
-            .busbarConnections(busbarConnectionInfos)
-            .build();
-
+        VoltageLevelCreationInfos vli = ModificationCreation.getCreationVoltageLevel("absent_station", "vlId", "vlName");
         String vliJson = objectWriter.writeValueAsString(vli);
         mvcResult = mockMvc.perform(post(uriString, TEST_NETWORK_ID).content(vliJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().is4xxClientError()).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
         assertEquals(resultAsString, new NetworkModificationException(SUBSTATION_NOT_FOUND, "absent_station").getMessage());
 
-        vli = VoltageLevelCreationInfos.builder()
-            .equipmentId("VoltageLevelId")
-            .equipmentName("VoltageLevelName")
-            .nominalVoltage(379.1)
-            .substationId("s1")
-            .busbarSections(busbarSectionInfos)
-            .busbarConnections(busbarConnectionInfos)
-            .build();
+        vli = ModificationCreation.getCreationVoltageLevel("s1", "vlId", "vlName");
+        vli.getBusbarConnections().add(BusbarConnectionCreationInfos.builder().fromBBS("bbs.ne").toBBS("bbs.ne").switchKind(SwitchKind.DISCONNECTOR).build());
         String vliJsonObject = objectWriter.writeValueAsString(vli);
         mvcResult = mockMvc.perform(post(uriString, TEST_NETWORK_ID).content(vliJsonObject).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().is5xxServerError()).andReturn();
@@ -2391,22 +2590,13 @@ public class ModificationControllerTest {
         assertEquals(resultAsString, new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "Disconnector between same bus bar section 'bbs.ne'").getMessage());
 
         // then success
-        busbarConnectionInfos.remove(2);
-        vli = VoltageLevelCreationInfos.builder()
-            .equipmentId("VoltageLevelId")
-            .equipmentName("VoltageLevelName")
-            .nominalVoltage(379.1)
-            .substationId("s1")
-            .busbarSections(busbarSectionInfos)
-            .busbarConnections(busbarConnectionInfos)
-            .build();
-
+        vli = ModificationCreation.getCreationVoltageLevel("s1", "vlId", "vlName");
         String vliJsonS1Object = objectWriter.writeValueAsString(vli);
         mvcResult = mockMvc.perform(post(uriString, TEST_NETWORK_ID).content(vliJsonS1Object).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<EquipmentModificationInfos> listModificationsVoltageLevelCreation = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertThat(listModificationsVoltageLevelCreation.get(0), createMatcherEquipmentModificationInfos(ModificationType.VOLTAGE_LEVEL_CREATION, "VoltageLevelId", Set.of("s1")));
+        assertThat(listModificationsVoltageLevelCreation.get(0), createMatcherEquipmentModificationInfos(ModificationType.VOLTAGE_LEVEL_CREATION, "vlId", Set.of("s1")));
 
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
 
@@ -2461,7 +2651,7 @@ public class ModificationControllerTest {
 
     @Test
     public void testGroupDuplication() throws Exception {
-        String uriString = "/v1/networks/{networkUuid}/loads?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
+        String uriString = "/v1/networks/{networkUuid}/loads?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
         // create new load in voltage level with node/breaker topology (in voltage level "v2" and busbar section "1B")
         LoadCreationInfos loadCreationInfos = LoadCreationInfos.builder()
                 .equipmentId("idLoad1")
@@ -2471,6 +2661,8 @@ public class ModificationControllerTest {
                 .loadType(LoadType.AUXILIARY)
                 .activePower(100.0)
                 .reactivePower(60.0)
+                .connectionDirection(ConnectablePosition.Direction.BOTTOM)
+                .connectionName("bottom")
                 .build();
         String loadCreationInfosJson = objectWriter.writeValueAsString(loadCreationInfos);
         mockMvc.perform(post(uriString, TEST_NETWORK_ID).content(loadCreationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk());
@@ -2478,19 +2670,19 @@ public class ModificationControllerTest {
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
 
         UUID duplicatedGroupUuid = UUID.randomUUID();
-        uriString = "/v1/groups?duplicateFrom=" + TEST_GROUP_ID + "&groupUuid=" + duplicatedGroupUuid + "&reportUuid=" + TEST_REPORT_ID;
+        uriString = "/v1/groups?duplicateFrom=" + TEST_GROUP_ID + "&groupUuid=" + duplicatedGroupUuid + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
         mockMvc.perform(post(uriString)).andExpect(status().isOk());
         testNetworkModificationsCount(duplicatedGroupUuid, 1);
 
-        uriString = "/v1/groups?duplicateFrom=" + UUID.randomUUID() + "&groupUuid=" + UUID.randomUUID() + "&reportUuid=" + TEST_REPORT_ID;
-        mockMvc.perform(post(uriString).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isNotFound());
+        uriString = "/v1/groups?duplicateFrom=" + UUID.randomUUID() + "&groupUuid=" + UUID.randomUUID() + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
+        mockMvc.perform(post(uriString).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk());
     }
 
     @Test
     public void testLineSplitWithVoltageLevel() throws Exception {
         MvcResult mvcResult;
         String resultAsString;
-        String lineSplitUriString = "/v1/networks/{networkUuid}/line-splits?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
+        String lineSplitUriString = "/v1/networks/{networkUuid}/line-splits?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
 
         VoltageLevelCreationInfos vl1 = VoltageLevelCreationInfos.builder()
                 .equipmentId("vl1")
@@ -2560,7 +2752,7 @@ public class ModificationControllerTest {
     public void testLineAttachToVoltageLevel() throws Exception {
         MvcResult mvcResult;
         String resultAsString;
-        String lineAttachUriString = "/v1/networks/{networkUuid}/line-attach?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID;
+        String lineAttachUriString = "/v1/networks/{networkUuid}/line-attach?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
 
         VoltageLevelCreationInfos vl1 = VoltageLevelCreationInfos.builder()
                 .equipmentId("vl1")
@@ -2644,6 +2836,37 @@ public class ModificationControllerTest {
 
     }
 
+    @Test
+    public void testAttachLinesToSplitLines() throws Exception {
+        MvcResult mvcResult;
+        String resultAsString;
+        String linesAttachToSplitLinesUriString = "/v1/networks/{networkUuid}/lines-attach-to-split-lines?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
+        LinesAttachToSplitLinesInfos linesAttachToAbsentLine1 = new LinesAttachToSplitLinesInfos("absent_line_id", "line2", "line3", "v4", "1.A", "nl4", "NewLine4", "nl5", "NewLine4");
+
+        String linesAttachToAbsentLine1Json = objectWriter.writeValueAsString(linesAttachToAbsentLine1);
+
+        mvcResult = mockMvc.perform(post(linesAttachToSplitLinesUriString, TEST_NETWORK_ID).content(linesAttachToAbsentLine1Json).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().is4xxClientError()).andReturn();
+        resultAsString = mvcResult.getResponse().getContentAsString();
+        assertEquals("LINE_NOT_FOUND : Line absent_line_id is not found", resultAsString);
+
+        LinesAttachToSplitLinesInfos linesAttachToSplitLines = new LinesAttachToSplitLinesInfos("line1", "line2", "line3", "v4", "1.A", "nl4", "NewLine4", "nl5", "NewLine4");
+        String linesAttachToSplitLinesJson = objectWriter.writeValueAsString(linesAttachToSplitLines);
+        mvcResult = mockMvc.perform(post(linesAttachToSplitLinesUriString, TEST_NETWORK_ID).content(linesAttachToSplitLinesJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        resultAsString = mvcResult.getResponse().getContentAsString();
+
+        List<EquipmentModificationInfos> result = mapper.readValue(resultAsString, new TypeReference<>() { });
+        assertNotNull(result);
+        Optional<EquipmentModificationInfos> linesAttachToProperSplitLines = result.stream().filter(r -> r.getType() == ModificationType.LINES_ATTACH_TO_SPLIT_LINES).findFirst();
+        assertTrue(linesAttachToProperSplitLines.isPresent());
+        testNetworkModificationsCount(TEST_GROUP_ID, 1);
+
+        mockMvc.perform(put("/v1/modifications/" + linesAttachToProperSplitLines.get().getUuid() + "/lines-attach-to-split-lines-creation").content(linesAttachToSplitLinesJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        testNetworkModificationsCount(TEST_GROUP_ID, 1);
+    }
+
     private void testNetworkModificationsCount(UUID groupUuid, int actualSize) throws Exception {
         MvcResult mvcResult;
         String resultAsString;
@@ -2653,5 +2876,46 @@ public class ModificationControllerTest {
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<ModificationInfos> modificationsTestGroupId = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertEquals(actualSize, modificationsTestGroupId.size());
+    }
+
+    @Test
+    public void shouldGetPosition() {
+        var network = networkStoreService.getNetwork(TEST_NETWORK_ID);
+        var network2 = networkStoreService.getNetwork(TEST_NETWORK_MIXED_TOPOLOGY_ID);
+        var vl = network.getVoltageLevel("v2");
+        var vl2 = network2.getVoltageLevel("v2");
+        assertEquals(9, vl.getConnectableCount());
+        assertEquals(0, vl2.getConnectableCount());
+        assertNotNull(network.getBusbarSection("1B"));
+        assertNotNull(network.getBusbarSection("1.1"));
+
+        var result = ModificationUtils.getInstance().getPosition("1B", network, vl);
+        var result2 = ModificationUtils.getInstance().getPosition("1.1", network2, vl2);
+        assertEquals(6, result);
+        assertEquals(0, result2);
+
+        assertThrows(new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "Bus bar section invalidBbsId not found").getMessage(),
+                NetworkModificationException.class, () -> ModificationUtils.getInstance().getPosition("invalidBbsId", network, vl)
+        );
+    }
+
+    @Test
+    public void testGetPositionAfterAndBefore() {
+        Network testNetwork = new NetworkFactoryImpl().createNetwork("testNetwork", "test");
+        Substation s1 = testNetwork.newSubstation().setId("s1").setName("s1").setCountry(Country.FR).add();
+        VoltageLevel v1 = s1.newVoltageLevel().setId("v1").setName("v1").setTopologyKind(TopologyKind.NODE_BREAKER).setNominalV(380.).add();
+        BusbarSection bbs1 = v1.getNodeBreakerView().newBusbarSection().setId("bbs1").setName("bbs1").setNode(0).add();
+        bbs1.newExtension(BusbarSectionPositionAdder.class).withBusbarIndex(1).withSectionIndex(1).add();
+        BusbarSection bbs2 = v1.getNodeBreakerView().newBusbarSection().setId("bbs2").setName("bbs2").setNode(1).add();
+        bbs2.newExtension(BusbarSectionPositionAdder.class).withBusbarIndex(1).withSectionIndex(2).add();
+
+        Load load1 = v1.newLoad().setId("load1").setName("load1").setNode(2).setP0(1.).setQ0(1.).add();
+        load1.newExtension(ConnectablePositionAdder.class).newFeeder().withName("load1").withOrder(1).withDirection(ConnectablePosition.Direction.TOP).add().add();
+        v1.getNodeBreakerView().newSwitch().setId("switch1").setName("switch1").setKind(SwitchKind.BREAKER).setRetained(false).setOpen(false).setFictitious(false).setNode1(0).setNode2(2).add();
+        Load load2 = v1.newLoad().setId("load2").setName("load2").setNode(3).setP0(1.).setQ0(1.).add();
+        load2.newExtension(ConnectablePositionAdder.class).newFeeder().withName("load2").withOrder(2).withDirection(ConnectablePosition.Direction.TOP).add().add();
+        v1.getNodeBreakerView().newSwitch().setId("switch2").setName("switch2").setKind(SwitchKind.BREAKER).setRetained(false).setOpen(false).setFictitious(false).setNode1(1).setNode2(3).add();
+
+        assertEquals(0, ModificationUtils.getInstance().getPosition("bbs1", testNetwork, v1));
     }
 }

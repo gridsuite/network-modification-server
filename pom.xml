@@ -45,7 +45,7 @@
 
     <properties>
         <java.version>11</java.version>
-        <gridsuite-dependencies.version>18</gridsuite-dependencies.version>
+        <gridsuite-dependencies.version>20</gridsuite-dependencies.version>
         <db-util.version>1.0.5</db-util.version>
         <commons-lang3.version>3.9</commons-lang3.version>
         <log4j2-mock-version>0.0.2</log4j2-mock-version>
@@ -250,6 +250,17 @@
         <dependency>
             <groupId>de.dentrassi.elasticsearch</groupId>
             <artifactId>log4j2-mock</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>mockwebserver</artifactId>
             <scope>test</scope>
         </dependency>
 

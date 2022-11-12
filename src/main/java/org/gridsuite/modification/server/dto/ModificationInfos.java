@@ -14,7 +14,7 @@ import lombok.experimental.SuperBuilder;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.entities.ModificationEntity;
-import org.gridsuite.modification.server.modifications.Modification;
+import org.gridsuite.modification.server.modifications.AbstractModification;
 
 import java.time.ZonedDateTime;
 import java.util.Set;
@@ -47,7 +47,7 @@ public class ModificationInfos {
         return null;
     }
 
-    public Modification toModification() {
+    public AbstractModification toModification() {
         return null;
     }
 

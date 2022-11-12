@@ -28,8 +28,6 @@ import java.util.stream.Stream;
  */
 @Service
 public class ModificationApplicator {
-
-    // TODO create a network damage object for each modification from the listener
     protected List<ModificationInfos> getNetworkDamage(ModificationInfos modificationInfos, NetworkStoreListener listener) {
         modificationInfos.setSubstationIds(listener.getSubstationsIds());
         modificationInfos.setDate(ZonedDateTime.now(ZoneOffset.UTC));

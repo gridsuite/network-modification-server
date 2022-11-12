@@ -11,9 +11,11 @@ import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.creation.TwoWindingsTransformerCreationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.VoltageLevelCreationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.LineAttachToVoltageLevelEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.LinesAttachToSplitLinesEntity;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -188,7 +190,9 @@ public class NetworkStoreListener implements NetworkListener {
             generatorCreationInfos.getRegulatingTerminalType(),
             generatorCreationInfos.getRegulatingTerminalVlId(),
             generatorCreationInfos.getReactiveCapabilityCurve() == null || generatorCreationInfos.getReactiveCapabilityCurve(),
-            toEmbeddablePoints(generatorCreationInfos.getPoints())));
+            toEmbeddablePoints(generatorCreationInfos.getReactiveCapabilityCurvePoints()),
+            generatorCreationInfos.getConnectionName(),
+            generatorCreationInfos.getConnectionDirection()));
     }
 
     public void storeEquipmentDeletion(String equipmentId, String equipmentType) {
@@ -209,26 +213,16 @@ public class NetworkStoreListener implements NetworkListener {
             lineCreationInfos.getVoltageLevelId2(),
             lineCreationInfos.getBusOrBusbarSectionId2(),
             lineCreationInfos.getCurrentLimits1() != null ? lineCreationInfos.getCurrentLimits1().getPermanentLimit() : null,
-            lineCreationInfos.getCurrentLimits2() != null ? lineCreationInfos.getCurrentLimits2().getPermanentLimit() : null
+            lineCreationInfos.getCurrentLimits2() != null ? lineCreationInfos.getCurrentLimits2().getPermanentLimit() : null,
+            lineCreationInfos.getConnectionName1(),
+            lineCreationInfos.getConnectionDirection1(),
+            lineCreationInfos.getConnectionName2(),
+            lineCreationInfos.getConnectionDirection2()
         ));
     }
 
     public void storeTwoWindingsTransformerCreation(TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
-        modifications.add(this.modificationRepository.createTwoWindingsTransformerEntity(twoWindingsTransformerCreationInfos.getEquipmentId(),
-                twoWindingsTransformerCreationInfos.getEquipmentName(),
-                twoWindingsTransformerCreationInfos.getSeriesResistance(),
-                twoWindingsTransformerCreationInfos.getSeriesReactance(),
-                twoWindingsTransformerCreationInfos.getMagnetizingConductance(),
-                twoWindingsTransformerCreationInfos.getMagnetizingSusceptance(),
-                twoWindingsTransformerCreationInfos.getRatedVoltage1(),
-                twoWindingsTransformerCreationInfos.getRatedVoltage2(),
-                twoWindingsTransformerCreationInfos.getVoltageLevelId1(),
-                twoWindingsTransformerCreationInfos.getBusOrBusbarSectionId1(),
-                twoWindingsTransformerCreationInfos.getVoltageLevelId2(),
-                twoWindingsTransformerCreationInfos.getBusOrBusbarSectionId2(),
-                twoWindingsTransformerCreationInfos.getCurrentLimits1() != null ? twoWindingsTransformerCreationInfos.getCurrentLimits1().getPermanentLimit() : null,
-                twoWindingsTransformerCreationInfos.getCurrentLimits2() != null ? twoWindingsTransformerCreationInfos.getCurrentLimits2().getPermanentLimit() : null)
-        );
+        modifications.add(TwoWindingsTransformerCreationEntity.toEntity(twoWindingsTransformerCreationInfos));
     }
 
     public void storeShuntCompensatorCreation(ShuntCompensatorCreationInfos shuntCompensatorCreationInfos) {
@@ -332,6 +326,21 @@ public class NetworkStoreListener implements NetworkListener {
                 lineAttachToVoltageLevelInfos.getNewLine1Name(),
                 lineAttachToVoltageLevelInfos.getNewLine2Id(),
                 lineAttachToVoltageLevelInfos.getNewLine2Name())
+        );
+    }
+
+    public void storeLinesAttachToSplitLinesInfos(LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos) {
+
+        modifications.add(LinesAttachToSplitLinesEntity.toEntity(
+                linesAttachToSplitLinesInfos.getLineToAttachTo1Id(),
+                linesAttachToSplitLinesInfos.getLineToAttachTo2Id(),
+                linesAttachToSplitLinesInfos.getAttachedLineId(),
+                linesAttachToSplitLinesInfos.getVoltageLevelId(),
+                linesAttachToSplitLinesInfos.getBbsBusId(),
+                linesAttachToSplitLinesInfos.getReplacingLine1Id(),
+                linesAttachToSplitLinesInfos.getReplacingLine1Name(),
+                linesAttachToSplitLinesInfos.getReplacingLine2Id(),
+                linesAttachToSplitLinesInfos.getReplacingLine2Name())
         );
     }
 }

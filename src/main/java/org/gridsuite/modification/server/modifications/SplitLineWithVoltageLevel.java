@@ -6,9 +6,8 @@
  */
 package org.gridsuite.modification.server.modifications;
 
-import com.powsybl.commons.reporter.Report;
 import com.powsybl.commons.reporter.Reporter;
-import com.powsybl.commons.reporter.TypedValue;
+import com.powsybl.iidm.modification.topology.ConnectVoltageLevelOnLine;
 import com.powsybl.iidm.network.Line;
 import com.powsybl.iidm.network.Network;
 import org.gridsuite.modification.server.NetworkModificationException;
@@ -20,12 +19,12 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
-public class SplitLineWithVoltageLevel implements Modification {
+public class SplitLineWithVoltageLevel extends AbstractModification {
 
     private final LineSplitWithVoltageLevelInfos modificationInfos;
 
-    public SplitLineWithVoltageLevel(LineSplitWithVoltageLevelInfos lineSplitWithVoltageLevelInfos) {
-        this.modificationInfos = lineSplitWithVoltageLevelInfos;
+    public SplitLineWithVoltageLevel(LineSplitWithVoltageLevelInfos modificationInfos) {
+        this.modificationInfos = modificationInfos;
     }
 
     @Override
@@ -44,7 +43,7 @@ public class SplitLineWithVoltageLevel implements Modification {
             voltageLeveId = modificationInfos.getExistingVoltageLevelId();
         }
 
-        CopyAttachVoltageLevelOnLine algo = new CopyAttachVoltageLevelOnLine(
+        ConnectVoltageLevelOnLine algo = new ConnectVoltageLevelOnLine(
             modificationInfos.getPercent(),
             voltageLeveId,
             modificationInfos.getBbsOrBusId(),
@@ -54,13 +53,6 @@ public class SplitLineWithVoltageLevel implements Modification {
             modificationInfos.getNewLine2Name(),
             line);
 
-        algo.apply(network);
-
-        subReporter.report(Report.builder()
-            .withKey("lineSplit")
-            .withDefaultMessage("Line ${id} was split")
-            .withValue("id", modificationInfos.getLineToSplitId())
-            .withSeverity(TypedValue.INFO_SEVERITY)
-            .build());
+        algo.apply(network, false, subReporter);
     }
 }

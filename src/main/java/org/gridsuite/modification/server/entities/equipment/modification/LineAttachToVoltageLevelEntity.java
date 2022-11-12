@@ -137,21 +137,14 @@ public class LineAttachToVoltageLevelEntity extends ModificationEntity {
     }
 
     @Override
-    public void setIdsToNull() {
+    public void cloneWithIdsToNull() {
+        super.cloneWithIdsToNull();
         if (this.getLineCreation() != null) {
-            LineCreationEntity lineCreationEntity = this.getLineCreation();
-            lineCreationEntity.setId(null);
-            if (lineCreationEntity.getCurrentLimits1() != null) {
-                lineCreationEntity.getCurrentLimits1().setId(null);
-            }
-            if (lineCreationEntity.getCurrentLimits2() != null) {
-                lineCreationEntity.getCurrentLimits2().setId(null);
-            }
+            this.getLineCreation().cloneWithIdsToNull();
         }
         if (this.getMayVoltageLevelCreation() != null) {
-            this.getMayVoltageLevelCreation().setId(null);
+            this.getMayVoltageLevelCreation().cloneWithIdsToNull();
         }
-        super.setIdsToNull();
     }
 
 }
