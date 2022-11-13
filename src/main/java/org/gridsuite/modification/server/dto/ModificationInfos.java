@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -43,19 +44,23 @@ public class ModificationInfos {
     @Builder.Default
     private Set<String> substationIds = Set.of();
 
+    @JsonIgnore
     public ModificationEntity toEntity() {
-        return null;
+        throw new UnsupportedOperationException("TODO");
     }
 
+    @JsonIgnore
     public AbstractModification toModification() {
-        return null;
+        throw new UnsupportedOperationException("TODO");
     }
 
+    @JsonIgnore
     public Reporter createSubReporter(ReporterModel reporter) {
-        return null;
+        throw new UnsupportedOperationException("TODO");
     }
 
+    @JsonIgnore
     public NetworkModificationException.Type getErrorType() {
-        return null;
+        throw new UnsupportedOperationException("TODO");
     }
 }

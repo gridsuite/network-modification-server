@@ -280,7 +280,9 @@ public class BuildTest {
         String expectedBody = mapper.writeValueAsString(new ReporterModel(TEST_SUB_REPORTER_ID_1, TEST_SUB_REPORTER_ID_1));
 
         // Group does not exist
-        networkModificationService.applyModifications(network, TEST_NETWORK_ID, buildInfos);
+        String uriString = "/v1/networks/{networkUuid}/build?receiver=me";
+        mockMvc.perform(post(uriString, TEST_NETWORK_ID).contentType(MediaType.APPLICATION_JSON).content(mapper.writeValueAsString(buildInfos)))
+            .andExpect(status().isOk());
         RecordedRequest request = server.takeRequest(TIMEOUT, TimeUnit.MILLISECONDS);
         assertNotNull(request);
         assertEquals(expectedBody, request.getBody().readUtf8());
@@ -291,6 +293,12 @@ public class BuildTest {
         request = server.takeRequest(TIMEOUT, TimeUnit.MILLISECONDS);
         assertNotNull(request);
         assertEquals(expectedBody, request.getBody().readUtf8());
+
+        assertNotNull(output.receive(TIMEOUT, consumeBuildDestination));
+        assertNull(output.receive(TIMEOUT, buildResultDestination));
+        Message<byte[]> message = output.receive(TIMEOUT * 3, buildFailedDestination);
+        assertEquals("me", message.getHeaders().get("receiver"));
+        assertThat((String) message.getHeaders().get("message"), startsWith(FAIL_MESSAGE));
     }
 
     public ModificationEntity createEquipmentAttributeModificationEntity(String equipmentId, String attributeName, Object attributeValue, IdentifiableType equipmentType) {

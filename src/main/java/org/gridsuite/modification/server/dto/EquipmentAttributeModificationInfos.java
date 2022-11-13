@@ -59,10 +59,10 @@ public class EquipmentAttributeModificationInfos extends EquipmentModificationIn
 
     @Override
     public EquipmentAttributeModificationEntity toEntity() {
-        return createEquipmentAttributeModification();
+        return createEntity();
     }
 
-    public <T> EquipmentAttributeModificationEntity<T> createEquipmentAttributeModification() {
+    private <T> EquipmentAttributeModificationEntity<T> createEntity() {
         EquipmentAttributeModificationEntity<?> modification;
         if (equipmentAttributeValue == null) {
             modification = new StringEquipmentAttributeModificationEntity(getEquipmentId(), equipmentAttributeName, null, equipmentType);
