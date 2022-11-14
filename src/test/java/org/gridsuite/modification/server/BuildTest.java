@@ -670,7 +670,7 @@ public class BuildTest {
                 }, NetworkModificationException.Type.MODIFICATION_ERROR, TEST_NETWORK_ID, reporter, subReporter)
         );
 
-        // //Building mode : Error sent with exception in the postAction part
+        //Building mode : Error sent with exception in the postAction part
         NetworkStoreListener listener8 = NetworkStoreListener.create(networkTest, TEST_NETWORK_ID, null, modificationRepository, equipmentInfosService, true, false);
         assertEquals(List.of(),
             networkModificationService.doAction(listener8, () -> {
