@@ -24,6 +24,7 @@ import groovy.lang.GroovyShell;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.groovy.control.CompilerConfiguration;
+import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
@@ -155,7 +156,7 @@ public class NetworkModificationService {
     public List<EquipmentAttributeModificationInfos> createSwitchStateModification(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId, String switchId, boolean open) {
         ModificationNetworkInfos networkInfos = getNetworkModificationInfos(networkUuid, variantId);
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
-        EquipmentAttributeModificationInfos modificationInfos = EquipmentAttributeModificationInfos.builder().equipmentType(IdentifiableType.SWITCH).equipmentId(switchId).equipmentAttributeName("open").equipmentAttributeValue(open).build();
+        EquipmentAttributeModificationInfos modificationInfos = EquipmentAttributeModificationInfos.builder().type(ModificationType.EQUIPMENT_ATTRIBUTE_MODIFICATION).equipmentType(IdentifiableType.SWITCH).equipmentId(switchId).equipmentAttributeName("open").equipmentAttributeValue(open).build();
         return handleModification(modificationInfos, listener, groupUuid, reportUuid, reporterId).stream().map(EquipmentAttributeModificationInfos.class::cast).collect(Collectors.toList());
     }
 
@@ -614,7 +615,7 @@ public class NetworkModificationService {
 
             // add the load modification entity to the listener
             listener.storeLoadModification(loadModificationInfos);
-        }, MODIFY_LOAD_ERROR, reportUuid, reporter, subReporter).stream().collect(Collectors.toList());
+        }, MODIFY_LOAD_ERROR, reportUuid, reporter, subReporter);
     }
 
     private static <T> void applyElementaryModifications(Consumer<T> setter, Supplier<T> getter,

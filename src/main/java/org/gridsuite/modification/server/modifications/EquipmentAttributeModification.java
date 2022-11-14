@@ -15,8 +15,7 @@ import com.powsybl.iidm.network.extensions.BranchStatusAdder;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.EquipmentAttributeModificationInfos;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.EQUIPMENT_NOT_FOUND;
-import static org.gridsuite.modification.server.NetworkModificationException.Type.WRONG_EQUIPMENT_TYPE;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -58,16 +57,20 @@ public class EquipmentAttributeModification extends AbstractModification {
     }
 
     private void changeSwitchAttribute(Switch aSwitch, String attributeName, Object attributeValue, Reporter reporter) {
-        if (attributeName.equals("open") && Boolean.TRUE.equals(aSwitch.isOpen() != (Boolean) attributeValue)) {
-            aSwitch.setOpen((Boolean) attributeValue);
-            reporter.report(Report.builder()
-                .withKey("switchChanged")
-                .withDefaultMessage("${operation} switch '${id}' in voltage level ${voltageLevelId}")
-                .withValue("id", aSwitch.getId())
-                .withValue("operation", Boolean.TRUE.equals(attributeValue)  ? "Opening" : "Closing")
-                .withValue("voltageLevelId", aSwitch.getVoltageLevel().getId())
-                .withSeverity(TypedValue.INFO_SEVERITY)
-                .build());
+        if (attributeName.equals("open")) {
+            if (Boolean.TRUE.equals(aSwitch.isOpen() != (Boolean) attributeValue)) {
+                aSwitch.setOpen((Boolean) attributeValue);
+                reporter.report(Report.builder()
+                    .withKey("switchChanged")
+                    .withDefaultMessage("${operation} switch '${id}' in voltage level ${voltageLevelId}")
+                    .withValue("id", aSwitch.getId())
+                    .withValue("operation", Boolean.TRUE.equals(attributeValue) ? "Opening" : "Closing")
+                    .withValue("voltageLevelId", aSwitch.getVoltageLevel().getId())
+                    .withSeverity(TypedValue.INFO_SEVERITY)
+                    .build());
+            }
+        } else {
+            throw NetworkModificationException.createEquipementAttributeNotEditable(aSwitch.getType(), attributeName);
         }
     }
 
@@ -80,6 +83,8 @@ public class EquipmentAttributeModification extends AbstractModification {
                 .withValue("id", generator.getId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .build());
+        } else {
+            throw NetworkModificationException.createEquipementAttributeNotEditable(generator.getType(), attributeName);
         }
     }
 
@@ -92,33 +97,40 @@ public class EquipmentAttributeModification extends AbstractModification {
                 .withValue("id", line.getId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .build());
+        } else {
+            throw NetworkModificationException.createEquipementAttributeNotEditable(line.getType(), attributeName);
         }
     }
 
     private void changeTwoWindingsTransformerAttribute(TwoWindingsTransformer transformer, String attributeName, Object attributeValue, Reporter reporter) {
-        String reportKey = null;
-        String reportDefaultMessage = null;
-        if (attributeName.equals("ratioTapChanger.tapPosition")) {
-            transformer.getOptionalRatioTapChanger().ifPresent(r -> r.setTapPosition((Integer) attributeValue));
-            reportKey = "ratioTapPositionChanged";
-            reportDefaultMessage = "2WT with id=${id} ratio tap changer position changed";
-        } else if (attributeName.equals("phaseTapChanger.tapPosition")) {
-            reportKey = "phaseTapPositionChanged";
-            reportDefaultMessage = "2WT with id=${id} phase tap changer position changed";
+        String reportKey;
+        String reportDefaultMessage;
+
+        switch (attributeName) {
+            case "ratioTapChanger.tapPosition":
+                transformer.getOptionalRatioTapChanger().ifPresent(r -> r.setTapPosition((Integer) attributeValue));
+                reportKey = "ratioTapPositionChanged";
+                reportDefaultMessage = "2WT with id=${id} ratio tap changer position changed";
+                break;
+            case "phaseTapChanger.tapPosition":
+                reportKey = "phaseTapPositionChanged";
+                reportDefaultMessage = "2WT with id=${id} phase tap changer position changed";
+                break;
+            default:
+                throw NetworkModificationException.createEquipementAttributeNotEditable(transformer.getType(), attributeName);
         }
-        if (reportKey != null) {
-            reporter.report(Report.builder()
-                .withKey(reportKey)
-                .withDefaultMessage(reportDefaultMessage)
-                .withValue("id", transformer.getId())
-                .withSeverity(TypedValue.INFO_SEVERITY)
-                .build());
-        }
+
+        reporter.report(Report.builder()
+            .withKey(reportKey)
+            .withDefaultMessage(reportDefaultMessage)
+            .withValue("id", transformer.getId())
+            .withSeverity(TypedValue.INFO_SEVERITY)
+            .build());
     }
 
     private void changeThreeWindingsTransformerAttribute(ThreeWindingsTransformer transformer, String attributeName, Object attributeValue, Reporter reporter) {
-        String reportKey = null;
-        String reportDefaultMessage = null;
+        String reportKey;
+        String reportDefaultMessage;
 
         switch (attributeName) {
             case "ratioTapChanger1.tapPosition":
@@ -151,14 +163,15 @@ public class EquipmentAttributeModification extends AbstractModification {
                 reportKey = "phaseTapChanger3.tapPosition";
                 reportDefaultMessage = "3WT with id=${id} phase tap changer 3 position changed";
                 break;
+            default:
+                throw NetworkModificationException.createEquipementAttributeNotEditable(transformer.getType(), attributeName);
         }
-        if (reportKey != null) {
-            reporter.report(Report.builder()
-                .withKey(reportKey)
-                .withDefaultMessage(reportDefaultMessage)
-                .withValue("id", transformer.getId())
-                .withSeverity(TypedValue.INFO_SEVERITY)
-                .build());
-        }
+
+        reporter.report(Report.builder()
+            .withKey(reportKey)
+            .withDefaultMessage(reportDefaultMessage)
+            .withValue("id", transformer.getId())
+            .withSeverity(TypedValue.INFO_SEVERITY)
+            .build());
     }
 }

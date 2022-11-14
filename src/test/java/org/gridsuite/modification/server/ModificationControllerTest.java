@@ -179,7 +179,7 @@ public class ModificationControllerTest {
         EquipmentAttributeModificationInfos modificationSwitchInfos =
                 Objects.requireNonNull(equipmentAttributeModificationInfosList).get(0);
 
-        org.hamcrest.MatcherAssert.assertThat(modificationSwitchInfos, MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v1b1", Set.of("s1"), "open", true));
+        org.hamcrest.MatcherAssert.assertThat(modificationSwitchInfos, MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v1b1", Set.of("s1"), "open", true, IdentifiableType.SWITCH));
 
         // switch in variant VARIANT_ID opening
         mvcResult = mockMvc.perform(put("/v1/networks/{networkUuid}/switches/{switchId}?group=" + TEST_GROUP_ID + "&open=true" + "&variantId=" + NetworkCreation.VARIANT_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID(), TEST_NETWORK_ID, "break1Variant")).andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON)).andReturn();
@@ -187,7 +187,7 @@ public class ModificationControllerTest {
         List<EquipmentAttributeModificationInfos> equipmentAttributeModificationInfosListSwitch = mapper.readValue(resultAsString, new TypeReference<>() { });
         modificationSwitchInfos = Objects.requireNonNull(equipmentAttributeModificationInfosListSwitch).get(0);
 
-        org.hamcrest.MatcherAssert.assertThat(modificationSwitchInfos, MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("break1Variant", Set.of("s1Variant"), "open", true));
+        org.hamcrest.MatcherAssert.assertThat(modificationSwitchInfos, MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("break1Variant", Set.of("s1Variant"), "open", true, IdentifiableType.SWITCH));
     }
 
     @Test
@@ -203,7 +203,7 @@ public class ModificationControllerTest {
          .andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON)).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<EquipmentAttributeModificationInfos> bsiListResultModificationInfos = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertThat(bsiListResultModificationInfos.get(0), createMatcherEquipmentAttributeModificationInfos("v1b1", Set.of("s1"), "open", true));
+        assertThat(bsiListResultModificationInfos.get(0), createMatcherEquipmentAttributeModificationInfos("v1b1", Set.of("s1"), "open", true, IdentifiableType.SWITCH));
 
          // switch opening to create the default group
         mvcResult = mockMvc.perform(get("/v1/groups")).andExpectAll(
@@ -258,6 +258,10 @@ public class ModificationControllerTest {
                 status().isNotFound(),
                 content().string(new NetworkModificationException(EQUIPMENT_NOT_FOUND, switchNotFoundId).getMessage()));
 
+        // parameter not existing
+        assertEquals("Required request parameter 'open' for method parameter type String is not present",
+            mockMvc.perform(put(uriString + "&foo=true", TEST_NETWORK_ID, switchId1)).andExpectAll(status().isBadRequest()).andReturn().getResponse().getErrorMessage());
+
         // switch closing when already closed
         mvcResult = mockMvc.perform(put(uriString + "&open=false", TEST_NETWORK_ID, switchId1))
             .andExpectAll(
@@ -266,18 +270,18 @@ public class ModificationControllerTest {
             .andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<EquipmentAttributeModificationInfos> bsiListResultAttributeModificationInfos = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertThat(bsiListResultAttributeModificationInfos.get(0), createMatcherEquipmentAttributeModificationInfos(switchId1, Set.of(), "open", false));
+        assertThat(bsiListResultAttributeModificationInfos.get(0), createMatcherEquipmentAttributeModificationInfos(switchId1, Set.of(), "open", false, IdentifiableType.SWITCH));
 
         // switch opening
         mvcResult = mockMvc.perform(put(uriString + "&open=true", TEST_NETWORK_ID, switchId1)).andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON)).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<EquipmentAttributeModificationInfos> bsiListResultSwitchOpening = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertThat(bsiListResultSwitchOpening.get(0), createMatcherEquipmentAttributeModificationInfos(switchId1, substationsIds, "open", true));
+        assertThat(bsiListResultSwitchOpening.get(0), createMatcherEquipmentAttributeModificationInfos(switchId1, substationsIds, "open", true, IdentifiableType.SWITCH));
         // switch closing
         mvcResult = mockMvc.perform(put(uriString + "&open=false", TEST_NETWORK_ID, switchId2)).andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON)).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<EquipmentAttributeModificationInfos> bsiListResultami = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertThat(bsiListResultami.get(0), createMatcherEquipmentAttributeModificationInfos(switchId2, substationsIds, "open", false));
+        assertThat(bsiListResultami.get(0), createMatcherEquipmentAttributeModificationInfos(switchId2, substationsIds, "open", false, IdentifiableType.SWITCH));
 
         // switch opening on another substation
         mvcResult = mockMvc.perform(put(uriString + "&open=true", TEST_NETWORK_ID, switchId3))
@@ -285,7 +289,7 @@ public class ModificationControllerTest {
             content().contentType(MediaType.APPLICATION_JSON)).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<EquipmentAttributeModificationInfos> bsiListResultAttributemi = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertThat(bsiListResultAttributemi.get(0), createMatcherEquipmentAttributeModificationInfos(switchId3, otherSubstationsIds, "open", true));
+        assertThat(bsiListResultAttributemi.get(0), createMatcherEquipmentAttributeModificationInfos(switchId3, otherSubstationsIds, "open", true, IdentifiableType.SWITCH));
 
         testNetworkModificationsCount(TEST_GROUP_ID, modificationsCount);
     }
@@ -2894,8 +2898,9 @@ public class ModificationControllerTest {
         assertEquals(6, result);
         assertEquals(0, result2);
 
+        ModificationUtils modificationUtils = ModificationUtils.getInstance();
         assertThrows(new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "Bus bar section invalidBbsId not found").getMessage(),
-                NetworkModificationException.class, () -> ModificationUtils.getInstance().getPosition("invalidBbsId", network, vl)
+                NetworkModificationException.class, () -> modificationUtils.getPosition("invalidBbsId", network, vl)
         );
     }
 

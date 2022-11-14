@@ -27,7 +27,4 @@ import lombok.experimental.SuperBuilder;
 public class EquipmentModificationInfos extends ModificationInfos {
     @Schema(description = "Equipment ID")
     private String equipmentId;
-
-
-
 }

@@ -7,11 +7,14 @@
 package org.gridsuite.modification.server;
 
 import com.powsybl.commons.PowsyblException;
+import com.powsybl.iidm.network.IdentifiableType;
 import lombok.NonNull;
 import org.gridsuite.modification.server.dto.BranchStatusModificationInfos;
 import org.springframework.http.HttpStatus;
 
 import java.util.Objects;
+
+import static org.gridsuite.modification.server.NetworkModificationException.Type.ATTRIBUTE_NOT_EDITABLE;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -41,7 +44,7 @@ public class NetworkModificationException extends PowsyblException {
         CREATE_SHUNT_COMPENSATOR_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         DELETE_EQUIPMENT_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         EQUIPMENT_NOT_FOUND(HttpStatus.NOT_FOUND),
-        ATTRIBUTE_NOT_FOUND(HttpStatus.NOT_FOUND),
+        ATTRIBUTE_NOT_EDITABLE(HttpStatus.BAD_REQUEST),
         CREATE_LINE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         CREATE_TWO_WINDINGS_TRANSFORMER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         CREATE_SUBSTATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
@@ -108,5 +111,9 @@ public class NetworkModificationException extends PowsyblException {
 
     public static NetworkModificationException createBranchActionTypeUnknown(@NonNull String type) {
         return new NetworkModificationException(Type.BRANCH_ACTION_TYPE_UNKNOWN, "The branch action type : " + type + " is unknown");
+    }
+
+    public static NetworkModificationException createEquipementAttributeNotEditable(@NonNull IdentifiableType equipmentType, @NonNull String attributeName) {
+        throw new NetworkModificationException(ATTRIBUTE_NOT_EDITABLE, equipmentType.name() + " attribute '" + attributeName + "' not editable");
     }
 }
