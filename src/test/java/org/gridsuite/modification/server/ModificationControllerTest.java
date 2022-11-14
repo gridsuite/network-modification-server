@@ -955,7 +955,6 @@ public class ModificationControllerTest {
             .andExpect(status().isOk()).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
 
-        resultAsString = mvcResult.getResponse().getContentAsString();
         List<EquipmentModificationInfos> bsmlrGeneratoModification = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertThat(bsmlrGeneratoModification.get(0), createMatcherEquipmentModificationInfos(ModificationType.GENERATOR_MODIFICATION, anotherId, Set.of()));
 
@@ -1930,8 +1929,8 @@ public class ModificationControllerTest {
                 content().contentType(MediaType.APPLICATION_JSON))
             .andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
-        List<ModificationInfos> modificationsTestGroupId = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertEquals(1, modificationsTestGroupId.size());
+        List<ModificationInfos> modifications = mapper.readValue(resultAsString, new TypeReference<>() { });
+        assertEquals(1, modifications.size());
 
     }
 

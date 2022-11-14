@@ -610,14 +610,14 @@ public class BuildTest {
         ReporterModel reporter = new ReporterModel("reportKey", "reportName");
         Reporter subReporter = reporter.createSubReporter("AttributeModification", "Attribute modification");
 
-        //error during the build we catch no exception
+        //Building mode : No error send with exception in the action part
         assertEquals(List.of(),
             networkModificationService.doAction(listener1, () -> {
                 throw new RuntimeException("unexpected error");
             }, null, NetworkModificationException.Type.MODIFICATION_ERROR, TEST_NETWORK_ID, reporter, subReporter)
         );
 
-        // incremental error: we throw the exception  on the Action  and we are in iterative mode, not builded node
+        //Incremental mode : Error send with exception in the action part
         NetworkStoreListener listener2 = NetworkStoreListener.create(networkTest, TEST_NETWORK_ID, null, modificationRepository, equipmentInfosService, false, true);
         assertThrows("unexpected error", RuntimeException.class, () ->
             networkModificationService.doAction(listener2, () -> {
@@ -625,38 +625,34 @@ public class BuildTest {
             }, null, NetworkModificationException.Type.MODIFICATION_ERROR, TEST_NETWORK_ID, reporter, subReporter)
         );
 
-        // node building with exception caught in postAction
-        NetworkStoreListener listener3 = NetworkStoreListener.create(networkTest, TEST_NETWORK_ID, null, modificationRepository, equipmentInfosService, true, true);
+        //Save mode only : No error send with exception in the action part
+        NetworkStoreListener listener3 = NetworkStoreListener.create(networkTest, TEST_NETWORK_ID, null, modificationRepository, equipmentInfosService, false, false);
         assertEquals(List.of(),
             networkModificationService.doAction(listener3, () -> {
-                return;
-            }, () -> {
-                    throw new RuntimeException("unexpected error");
-                }, NetworkModificationException.Type.MODIFICATION_ERROR, TEST_NETWORK_ID, reporter, subReporter)
-        );
-
-        // iterative build with exception in the postAction
-        NetworkStoreListener listener4 = NetworkStoreListener.create(networkTest, TEST_NETWORK_ID, null, modificationRepository, equipmentInfosService, false, true);
-        assertThrows("unexpected error", RuntimeException.class, () ->
-            networkModificationService.doAction(listener4, () -> {
-                return;
-            }, () -> {
-                    throw new RuntimeException("unexpected error");
-                }, NetworkModificationException.Type.MODIFICATION_ERROR, TEST_NETWORK_ID, reporter, subReporter)
-        );
-
-        assertTrue(TestUtils.getRequestsDone(4, server).stream().anyMatch(r -> r.matches("/v1/reports/.*")));
-
-        //Not built node, postAction is null so we will not send log report
-        NetworkStoreListener listener5 = NetworkStoreListener.create(networkTest, TEST_NETWORK_ID, null, modificationRepository, equipmentInfosService, false, false);
-        assertEquals(List.of(),
-            networkModificationService.doAction(listener5, () -> {
                 throw new RuntimeException("unexpected error");
             }, null, NetworkModificationException.Type.MODIFICATION_ERROR, TEST_NETWORK_ID, reporter, subReporter)
         );
 
-        // not built node we throw the exception on the postAction so we will not send log report
-        NetworkStoreListener listener6 = NetworkStoreListener.create(networkTest, TEST_NETWORK_ID, null, modificationRepository, equipmentInfosService, false, false);
+        //Building mode : Error sent with exception in the action part
+        NetworkStoreListener listener4 = NetworkStoreListener.create(networkTest, TEST_NETWORK_ID, null, modificationRepository, equipmentInfosService, true, false);
+        assertEquals(List.of(),
+            networkModificationService.doAction(listener4, () -> {
+                throw new RuntimeException("unexpected error");
+            }, null, NetworkModificationException.Type.MODIFICATION_ERROR, TEST_NETWORK_ID, reporter, subReporter)
+        );
+
+        // Building mode : No error with exception in the postAction part
+        NetworkStoreListener listener5 = NetworkStoreListener.create(networkTest, TEST_NETWORK_ID, null, modificationRepository, equipmentInfosService, true, true);
+        assertEquals(List.of(),
+            networkModificationService.doAction(listener5, () -> {
+
+            }, () -> {
+                    throw new RuntimeException("unexpected error");
+                }, NetworkModificationException.Type.MODIFICATION_ERROR, TEST_NETWORK_ID, reporter, subReporter)
+        );
+
+        // Incremental mode : Error send with exception in the postAction part
+        NetworkStoreListener listener6 = NetworkStoreListener.create(networkTest, TEST_NETWORK_ID, null, modificationRepository, equipmentInfosService, false, true);
         assertThrows("unexpected error", RuntimeException.class, () ->
             networkModificationService.doAction(listener6, () -> {
                 return;
@@ -664,6 +660,27 @@ public class BuildTest {
                     throw new RuntimeException("unexpected error");
                 }, NetworkModificationException.Type.MODIFICATION_ERROR, TEST_NETWORK_ID, reporter, subReporter)
         );
+
+        // not built node we throw the exception on the postAction so we will not send log report
+        NetworkStoreListener listener7 = NetworkStoreListener.create(networkTest, TEST_NETWORK_ID, null, modificationRepository, equipmentInfosService, false, false);
+        assertThrows("unexpected error", RuntimeException.class, () ->
+            networkModificationService.doAction(listener7, () -> {
+            }, () -> {
+                    throw new RuntimeException("unexpected error");
+                }, NetworkModificationException.Type.MODIFICATION_ERROR, TEST_NETWORK_ID, reporter, subReporter)
+        );
+
+        // //Building mode : Error sent with exception in the postAction part
+        NetworkStoreListener listener8 = NetworkStoreListener.create(networkTest, TEST_NETWORK_ID, null, modificationRepository, equipmentInfosService, true, false);
+        assertEquals(List.of(),
+            networkModificationService.doAction(listener8, () -> {
+
+            }, () -> {
+                    throw new RuntimeException("unexpected error");
+                }, NetworkModificationException.Type.MODIFICATION_ERROR, TEST_NETWORK_ID, reporter, subReporter)
+        );
+
+        assertTrue(TestUtils.getRequestsDone(4, server).stream().anyMatch(r -> r.matches("/v1/reports/.*")));
     }
 
     private void testNetworkModificationsCount(UUID groupUuid, int actualSize) throws Exception {
