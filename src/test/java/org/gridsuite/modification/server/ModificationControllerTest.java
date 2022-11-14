@@ -958,7 +958,6 @@ public class ModificationControllerTest {
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<EquipmentModificationInfos> bsmlrGeneratoModification = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertThat(bsmlrGeneratoModification.get(0), createMatcherEquipmentModificationInfos(ModificationType.GENERATOR_MODIFICATION, anotherId, Set.of()));
-        //assertEquals(resultAsString, new NetworkModificationException(GENERATOR_NOT_FOUND, "Generator " + generatorModificationInfos.getEquipmentId() + " does not exist in network").getMessage());
 
         testNetworkModificationsCount(TEST_GROUP_ID, 2);  // new modification stored in the database
 
