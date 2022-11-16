@@ -654,7 +654,7 @@ public class NetworkModificationService {
                 return position;
             }
 
-            if (voltageLevel.getConnectableStream().filter(c -> !(c instanceof BusbarSection)).count() > 0) {
+            if (voltageLevel.getConnectableStream().anyMatch(c -> !(c instanceof BusbarSection))) {
                 var rightRange = TopologyModificationUtils.getUnusedOrderPositionsAfter(bbs);
                 if (rightRange.isPresent()) {
                     position = rightRange.get().getMinimum();
