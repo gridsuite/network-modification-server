@@ -1,8 +1,6 @@
 spring:
   application:
-    name: netork-modification-server
-  main:
-    allow-circular-references: true
+    name: network-modification-server
 
   jpa:
     open-in-view: false

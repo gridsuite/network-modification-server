@@ -19,11 +19,11 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
-public class SplitLineWithVoltageLevel extends AbstractModification {
+public class LineSplitWithVoltageLevel extends AbstractModification {
 
     private final LineSplitWithVoltageLevelInfos modificationInfos;
 
-    public SplitLineWithVoltageLevel(LineSplitWithVoltageLevelInfos modificationInfos) {
+    public LineSplitWithVoltageLevel(LineSplitWithVoltageLevelInfos modificationInfos) {
         this.modificationInfos = modificationInfos;
     }
 
@@ -53,6 +53,6 @@ public class SplitLineWithVoltageLevel extends AbstractModification {
             modificationInfos.getNewLine2Name(),
             line);
 
-        algo.apply(network, false, subReporter);
+        algo.apply(network, true, subReporter);
     }
 }
