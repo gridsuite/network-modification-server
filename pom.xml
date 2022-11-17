@@ -88,6 +88,13 @@
         <dependencies>
             <!-- overrides of imports -->
 
+            <!-- HOT FIX for createFeederBay fixes: TO REMOVE WHEN UPGRADING TO GridSuite dependencies version (21) -->
+            <dependency>
+                <groupId>com.powsybl</groupId>
+                <artifactId>powsybl-iidm-modification</artifactId>
+                <version>4.10.2</version>
+            </dependency>
+
             <!-- imports -->
             <dependency>
                 <groupId>org.gridsuite</groupId>
