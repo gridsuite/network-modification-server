@@ -103,8 +103,4 @@ public class NetworkModificationException extends PowsyblException {
     public static NetworkModificationException createBranchActionTypeUnsupported(@NonNull BranchStatusModificationInfos.ActionType type) {
         return new NetworkModificationException(Type.BRANCH_ACTION_TYPE_UNSUPPORTED, "The branch action type : " + type + " is unsupported");
     }
-
-    public static NetworkModificationException createBranchActionTypeUnknown(@NonNull String type) {
-        return new NetworkModificationException(Type.BRANCH_ACTION_TYPE_UNKNOWN, "The branch action type : " + type + " is unknown");
-    }
 }

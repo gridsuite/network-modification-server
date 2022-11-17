@@ -31,6 +31,7 @@ import org.gridsuite.modification.server.ModificationType;
     visible = true
 )
 @JsonSubTypes({
+    @JsonSubTypes.Type(value = GroovyScriptModificationInfos.class, name = "GROOVY_SCRIPT"),
     @JsonSubTypes.Type(value = LoadCreationInfos.class, name = "LOAD_CREATION"),
     @JsonSubTypes.Type(value = LoadModificationInfos.class, name = "LOAD_MODIFICATION"),
     @JsonSubTypes.Type(value = GeneratorCreationInfos.class, name = "GENERATOR_CREATION"),
@@ -44,7 +45,8 @@ import org.gridsuite.modification.server.ModificationType;
     @JsonSubTypes.Type(value = LineSplitWithVoltageLevelInfos.class, name = "LINE_SPLIT_WITH_VOLTAGE_LEVEL"),
     @JsonSubTypes.Type(value = LineAttachToVoltageLevelInfos.class, name = "LINE_ATTACH_TO_VOLTAGE_LEVEL"),
     @JsonSubTypes.Type(value = LinesAttachToSplitLinesInfos.class, name = "LINES_ATTACH_TO_SPLIT_LINES"),
-    @JsonSubTypes.Type(value = BranchStatusModificationInfos.class, name = "BRANCH_STATUS")
+    @JsonSubTypes.Type(value = BranchStatusModificationInfos.class, name = "BRANCH_STATUS"),
+    @JsonSubTypes.Type(value = EquipmentAttributeModificationInfos.class, name = "EQUIPMENT_ATTRIBUTE_MODIFICATION")
 })
 @SuperBuilder
 @NoArgsConstructor

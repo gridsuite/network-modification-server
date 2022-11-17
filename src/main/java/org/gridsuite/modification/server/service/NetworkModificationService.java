@@ -214,6 +214,9 @@ public class NetworkModificationService {
     private List<ModificationInfos> execCreateBranchStatusModification(NetworkStoreListener listener, BranchStatusModificationInfos branchStatusModificationInfos, UUID reportUuid, String reporterId) {
         String lineId = branchStatusModificationInfos.getEquipmentId();
         BranchStatusModificationInfos.ActionType action = branchStatusModificationInfos.getAction();
+        if (action == null) {
+            throw new NetworkModificationException(BRANCH_ACTION_TYPE_EMPTY);
+        }
         switch (action) {
             case LOCKOUT:
                 return execCreateLockoutLine(listener, lineId, reportUuid, reporterId);
@@ -446,17 +449,6 @@ public class NetworkModificationService {
     private void assertGroovyScriptNotEmpty(String groovyScript) {
         if (StringUtils.isBlank(groovyScript)) {
             throw new NetworkModificationException(GROOVY_SCRIPT_EMPTY);
-        }
-    }
-
-    private void assertBranchActionValid(String action) {
-        if (StringUtils.isBlank(action)) {
-            throw new NetworkModificationException(BRANCH_ACTION_TYPE_EMPTY);
-        }
-        try {
-            BranchStatusModificationInfos.ActionType.valueOf(action.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw NetworkModificationException.createBranchActionTypeUnknown(action);
         }
     }
 
@@ -716,30 +708,43 @@ public class NetworkModificationService {
         switch (modificationInfos.getType()) {
             case LOAD_CREATION:
                 updateLoadCreation(modificationUuid, (LoadCreationInfos) modificationInfos);
+                break;
             case LOAD_MODIFICATION:
                 updateLoadModification(modificationUuid, (LoadModificationInfos) modificationInfos);
+                break;
             case GENERATOR_CREATION:
                 updateGeneratorCreation(modificationUuid, (GeneratorCreationInfos) modificationInfos);
+                break;
             case GENERATOR_MODIFICATION:
                 updateGeneratorModification(modificationUuid, (GeneratorModificationInfos) modificationInfos);
+                break;
             case LINE_CREATION:
                 updateLineCreation(modificationUuid, (LineCreationInfos) modificationInfos);
+                break;
             case SUBSTATION_CREATION:
                 updateSubstationCreation(modificationUuid, (SubstationCreationInfos) modificationInfos);
+                break;
             case VOLTAGE_LEVEL_CREATION:
                 updateVoltageLevelCreation(modificationUuid, (VoltageLevelCreationInfos) modificationInfos);
+                break;
             case SHUNT_COMPENSATOR_CREATION:
                 updateShuntCompensatorCreation(modificationUuid, (ShuntCompensatorCreationInfos) modificationInfos);
+                break;
             case TWO_WINDINGS_TRANSFORMER_CREATION:
                 updateTwoWindingsTransformerCreation(modificationUuid, (TwoWindingsTransformerCreationInfos) modificationInfos);
+                break;
             case EQUIPMENT_DELETION:
                 updateEquipmentDeletion(modificationUuid, (EquipmentDeletionInfos) modificationInfos);
+                break;
             case LINE_SPLIT_WITH_VOLTAGE_LEVEL:
                 updateLineSplitWithVoltageLevelCreation(modificationUuid, (LineSplitWithVoltageLevelInfos) modificationInfos);
+                break;
             case LINE_ATTACH_TO_VOLTAGE_LEVEL:
                 updateLineAttachToVoltageLevelCreation(modificationUuid, (LineAttachToVoltageLevelInfos) modificationInfos);
+                break;
             case LINES_ATTACH_TO_SPLIT_LINES:
                 updateLinesAttachToSplitLinesCreation(modificationUuid, (LinesAttachToSplitLinesInfos) modificationInfos);
+                break;
             default:
                 throw new NetworkModificationException(TYPE_MISMATCH);
         }

@@ -9,6 +9,7 @@ package org.gridsuite.modification.server.utils;
 
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
+import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.*;
 
 import java.util.ArrayList;
@@ -36,6 +37,7 @@ public final class ModificationCreation {
             BusbarConnectionCreationInfos.builder().fromBBS("bbs.nw").toBBS("bbs.sw").switchKind(SwitchKind.DISCONNECTOR).build());
 
         return VoltageLevelCreationInfos.builder()
+            .type(ModificationType.VOLTAGE_LEVEL_CREATION)
             .equipmentId(voltageLevelId)
             .equipmentName(voltageLevelName)
             .nominalVoltage(379.1)
@@ -48,6 +50,7 @@ public final class ModificationCreation {
     public static GeneratorCreationInfos getCreationGenerator(String vlId, String generatorId, String generatorName, String busOrBusbarSectionId,
                                                               String regulatingTerminalId, String regulatingTerminalType, String regulatingTerminalVlId) {
         return GeneratorCreationInfos.builder()
+            .type(ModificationType.GENERATOR_CREATION)
             .equipmentId(generatorId)
             .equipmentName(generatorName)
             .voltageLevelId(vlId)
