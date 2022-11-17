@@ -193,8 +193,8 @@ public class NetworkModificationService {
         return networkModificationRepository.getModifications(groupUuid, onlyMetadata, errorOnGroupNotFound);
     }
 
-    public List<ModificationInfos> getNetworkModification(UUID networkModificationUuid) {
-        return networkModificationRepository.getModifications(List.of(networkModificationUuid));
+    public List<ModificationInfos> getNetworkModifications(Set<UUID> networkModificationUuid) {
+        return networkModificationRepository.getModifications(networkModificationUuid);
     }
 
     private boolean disconnectLineBothSides(Network network, String lineId) {

@@ -129,7 +129,7 @@ public class NetworkModificationRepository {
     }
 
     @Transactional
-    public List<ModificationInfos> getModifications(List<UUID> uuids) {
+    public List<ModificationInfos> getModifications(Set<UUID> uuids) {
         return this.modificationRepository.findAllById(uuids).stream()
             .map(ModificationEntity::toModificationInfos)
             .collect(Collectors.toList());
