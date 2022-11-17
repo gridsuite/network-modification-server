@@ -48,7 +48,6 @@ public final class ModificationUtils {
     }
 
     public int getPosition(String busOrBusbarSectionId, Network network, VoltageLevel voltageLevel) {
-        var count = voltageLevel.getConnectableCount();
         var position = 0;
         var bbs = network.getBusbarSection(busOrBusbarSectionId);
 
@@ -58,7 +57,7 @@ public final class ModificationUtils {
                 return position;
             }
 
-            if (count > 0) {
+            if (voltageLevel.getConnectableStream().anyMatch(c -> !(c instanceof BusbarSection))) {
                 var rightRange = TopologyModificationUtils.getUnusedOrderPositionsAfter(bbs);
                 if (rightRange.isPresent()) {
                     position = rightRange.get().getMinimum();
