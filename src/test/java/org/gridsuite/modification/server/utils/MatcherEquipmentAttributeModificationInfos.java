@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.utils;
 
+import com.powsybl.iidm.network.IdentifiableType;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.EquipmentAttributeModificationInfos;
 import org.hamcrest.Description;
@@ -21,7 +22,8 @@ import java.util.Set;
 public class MatcherEquipmentAttributeModificationInfos extends MatcherModificationInfos<EquipmentAttributeModificationInfos> {
 
     public static MatcherEquipmentAttributeModificationInfos createMatcherEquipmentAttributeModificationInfos(String equipmentId, Set<String> substationIds,
-                                                                                                              String equipmentAttributeName, Object equipmentAttributeValue) {
+                                                                                                              String equipmentAttributeName, Object equipmentAttributeValue,
+                                                                                                              IdentifiableType equipmentType) {
         return new MatcherEquipmentAttributeModificationInfos(EquipmentAttributeModificationInfos.builder()
                 .date(ZonedDateTime.now(ZoneOffset.UTC))
                 .type(ModificationType.EQUIPMENT_ATTRIBUTE_MODIFICATION)
@@ -29,6 +31,7 @@ public class MatcherEquipmentAttributeModificationInfos extends MatcherModificat
                 .substationIds(substationIds)
                 .equipmentAttributeName(equipmentAttributeName)
                 .equipmentAttributeValue(equipmentAttributeValue)
+                .equipmentType(equipmentType)
                 .build());
     }
 
@@ -44,6 +47,7 @@ public class MatcherEquipmentAttributeModificationInfos extends MatcherModificat
     public boolean matchesSafely(EquipmentAttributeModificationInfos m) {
         return super.matchesSafely(m)
                 && m.getEquipmentId().equals(reference.getEquipmentId())
+                && m.getEquipmentType().equals(reference.getEquipmentType())
                 && m.getSubstationIds().equals(reference.getSubstationIds())
                 && m.getEquipmentAttributeName().equals(reference.getEquipmentAttributeName())
                 && Objects.equals(m.getEquipmentAttributeValue(), reference.getEquipmentAttributeValue());

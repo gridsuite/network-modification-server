@@ -6,6 +6,8 @@
  */
 package org.gridsuite.modification.server.dto;
 
+import com.powsybl.commons.reporter.Reporter;
+import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.iidm.network.LoadType;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -14,6 +16,10 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
+import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.entities.equipment.creation.LoadCreationEntity;
+import org.gridsuite.modification.server.modifications.AbstractModification;
+import org.gridsuite.modification.server.modifications.LoadCreation;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -40,4 +46,27 @@ public class LoadCreationInfos extends InjectionCreationInfos {
 
     @Schema(description = "Connection Direction")
     private ConnectablePosition.Direction connectionDirection;
+
+    @Override
+    public LoadCreationEntity toEntity() {
+        return new LoadCreationEntity(getEquipmentId(), getEquipmentName(), getLoadType(),
+            getVoltageLevelId(), getBusOrBusbarSectionId(),
+            getActivePower(), getReactivePower(), getConnectionName(), getConnectionDirection());
+    }
+
+    @Override
+    public AbstractModification toModification() {
+        return new LoadCreation(this);
+    }
+
+    @Override
+    public NetworkModificationException.Type getErrorType() {
+        return NetworkModificationException.Type.CREATE_LOAD_ERROR;
+    }
+
+    @Override
+    public Reporter createSubReporter(ReporterModel reporter) {
+        String subReportId = "Load creation " + getEquipmentId();
+        return reporter.createSubReporter(subReportId, subReportId);
+    }
 }
