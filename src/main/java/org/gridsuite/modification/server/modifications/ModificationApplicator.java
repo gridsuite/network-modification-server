@@ -28,7 +28,7 @@ import java.util.stream.Stream;
  */
 @Service
 public class ModificationApplicator {
-    protected List<ModificationInfos> getNetworkDamage(ModificationInfos modificationInfos, NetworkStoreListener listener) {
+    private static List<ModificationInfos> getNetworkDamage(ModificationInfos modificationInfos, NetworkStoreListener listener) {
         modificationInfos.setSubstationIds(listener.getSubstationsIds());
         modificationInfos.setDate(ZonedDateTime.now(ZoneOffset.UTC));
         return Stream
