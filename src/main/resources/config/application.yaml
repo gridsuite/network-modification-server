@@ -1,6 +1,6 @@
 spring:
   application:
-    name: netork-modification-server
+    name: network-modification-server
 
   jpa:
     open-in-view: false

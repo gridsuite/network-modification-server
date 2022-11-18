@@ -6,13 +6,15 @@
  */
 package org.gridsuite.modification.server.dto;
 
+import com.powsybl.commons.reporter.Reporter;
+import com.powsybl.commons.reporter.ReporterModel;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 import lombok.experimental.SuperBuilder;
+import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.entities.equipment.modification.LineSplitWithVoltageLevelEntity;
+import org.gridsuite.modification.server.modifications.AbstractModification;
+import org.gridsuite.modification.server.modifications.LineSplitWithVoltageLevel;
 
 /**
  * @author Laurent GARNIER <laurent.garnier at rte-france.com>
@@ -52,4 +54,34 @@ public class LineSplitWithVoltageLevelInfos extends ModificationInfos {
 
     @Schema(description = "new line 2 name")
     private String newLine2Name;
+
+    @Override
+    public LineSplitWithVoltageLevelEntity toEntity() {
+        return LineSplitWithVoltageLevelEntity.toEntity(
+            getLineToSplitId(),
+            getPercent(),
+            getMayNewVoltageLevelInfos(),
+            getExistingVoltageLevelId(),
+            getBbsOrBusId(),
+            getNewLine1Id(),
+            getNewLine1Name(),
+            getNewLine2Id(),
+            getNewLine2Name()
+        );
+    }
+
+    @Override
+    public AbstractModification toModification() {
+        return new LineSplitWithVoltageLevel(this);
+    }
+
+    @Override
+    public NetworkModificationException.Type getErrorType() {
+        return NetworkModificationException.Type.LINE_SPLIT_ERROR;
+    }
+
+    @Override
+    public Reporter createSubReporter(ReporterModel reporter) {
+        return reporter.createSubReporter("lineSplitWithVoltageLevel", "Line split with voltage level");
+    }
 }

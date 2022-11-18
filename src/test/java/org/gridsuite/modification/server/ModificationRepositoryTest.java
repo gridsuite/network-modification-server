@@ -6,11 +6,7 @@
  */
 package org.gridsuite.modification.server;
 
-import com.powsybl.iidm.network.Country;
-import com.powsybl.iidm.network.EnergySource;
-import com.powsybl.iidm.network.LoadType;
-import com.powsybl.iidm.network.SwitchKind;
-import com.powsybl.iidm.network.PhaseTapChanger;
+import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import com.vladmihalcea.sql.SQLStatementCountValidator;
 import nl.jqno.equalsverifier.EqualsVerifier;
@@ -127,12 +123,12 @@ public class ModificationRepositoryTest {
         );
         assertEquals(0, networkModificationRepository.getModifications(TEST_GROUP_ID, true, false).size());
 
-        var nullModifEntity = networkModificationRepository.createEquipmentAttributeModification("id0", "attribute", null);
-        var stringModifEntity = networkModificationRepository.createEquipmentAttributeModification("id1", "attribute", "foo");
-        var boolModifEntity = networkModificationRepository.createEquipmentAttributeModification("id2", "attribute", true);
-        var intModifEntity = networkModificationRepository.createEquipmentAttributeModification("id3", "attribute", 1);
-        var floatModifEntity = networkModificationRepository.createEquipmentAttributeModification("id4", "attribute", 2F);
-        var doubleModifEntity = networkModificationRepository.createEquipmentAttributeModification("id5", "attribute", 3D);
+        var nullModifEntity = EquipmentAttributeModificationInfos.builder().equipmentId("id0").equipmentAttributeName("attribute").equipmentAttributeValue(null).equipmentType(IdentifiableType.VOLTAGE_LEVEL).build().toEntity();
+        var stringModifEntity = EquipmentAttributeModificationInfos.builder().equipmentId("id1").equipmentAttributeName("attribute").equipmentAttributeValue("foo").equipmentType(IdentifiableType.VOLTAGE_LEVEL).build().toEntity();
+        var boolModifEntity = EquipmentAttributeModificationInfos.builder().equipmentId("id2").equipmentAttributeName("attribute").equipmentAttributeValue(true).equipmentType(IdentifiableType.VOLTAGE_LEVEL).build().toEntity();
+        var intModifEntity = EquipmentAttributeModificationInfos.builder().equipmentId("id3").equipmentAttributeName("attribute").equipmentAttributeValue(1).equipmentType(IdentifiableType.VOLTAGE_LEVEL).build().toEntity();
+        var floatModifEntity = EquipmentAttributeModificationInfos.builder().equipmentId("id4").equipmentAttributeName("attribute").equipmentAttributeValue(2F).equipmentType(IdentifiableType.VOLTAGE_LEVEL).build().toEntity();
+        var doubleModifEntity = EquipmentAttributeModificationInfos.builder().equipmentId("id5").equipmentAttributeName("attribute").equipmentAttributeValue(3D).equipmentType(IdentifiableType.VOLTAGE_LEVEL).build().toEntity();
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(nullModifEntity, stringModifEntity, boolModifEntity, intModifEntity, floatModifEntity, doubleModifEntity));
 
@@ -140,17 +136,17 @@ public class ModificationRepositoryTest {
         assertEquals(6, modificationEntities.size());
         // Order is also checked
         assertThat(getEquipmentAttributeModification(modificationEntities.get(0).getUuid()),
-            MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos(nullModifEntity.toEquipmentAttributeModificationInfos()));
+            MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos(nullModifEntity.toModificationInfos()));
         assertThat(getEquipmentAttributeModification(modificationEntities.get(1).getUuid()),
-            MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos(stringModifEntity.toEquipmentAttributeModificationInfos()));
+            MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos(stringModifEntity.toModificationInfos()));
         assertThat(getEquipmentAttributeModification(modificationEntities.get(2).getUuid()),
-            MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos(boolModifEntity.toEquipmentAttributeModificationInfos()));
+            MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos(boolModifEntity.toModificationInfos()));
         assertThat(getEquipmentAttributeModification(modificationEntities.get(3).getUuid()),
-            MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos(intModifEntity.toEquipmentAttributeModificationInfos()));
+            MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos(intModifEntity.toModificationInfos()));
         assertThat(getEquipmentAttributeModification(modificationEntities.get(4).getUuid()),
-            MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos(floatModifEntity.toEquipmentAttributeModificationInfos()));
+            MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos(floatModifEntity.toModificationInfos()));
         assertThat(getEquipmentAttributeModification(modificationEntities.get(5).getUuid()),
-            MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos(doubleModifEntity.toEquipmentAttributeModificationInfos()));
+            MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos(doubleModifEntity.toModificationInfos()));
 
         assertEquals(6, networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
         assertEquals(List.of(TEST_GROUP_ID), this.networkModificationRepository.getModificationGroupsUuids());
@@ -177,8 +173,8 @@ public class ModificationRepositoryTest {
 
     @Test
     public void testCreateModificationQueryCount() {
-        var modifEntity1 = networkModificationRepository.createEquipmentAttributeModification("id1", "attribute", "foo");
-        var modifEntity2 = networkModificationRepository.createEquipmentAttributeModification("id2", "attribute", "foo");
+        var modifEntity1 = EquipmentAttributeModificationInfos.builder().equipmentId("id1").equipmentAttributeName("attribute").equipmentAttributeValue("foo").equipmentType(IdentifiableType.VOLTAGE_LEVEL).build().toEntity();
+        var modifEntity2 = EquipmentAttributeModificationInfos.builder().equipmentId("id2").equipmentAttributeName("attribute").equipmentAttributeValue("foo").equipmentType(IdentifiableType.VOLTAGE_LEVEL).build().toEntity();
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(modifEntity1, modifEntity2));
 
         assertRequestsCount(1, 5, 2, 0);
@@ -186,9 +182,9 @@ public class ModificationRepositoryTest {
 
     @Test
     public void testGetModificationQueryCount() {
-        var modifEntity1 = networkModificationRepository.createEquipmentAttributeModification("id1", "attribute", "foo");
-        var modifEntity2 = networkModificationRepository.createEquipmentAttributeModification("id2", "attribute", "foo");
-        var modifEntity3 = networkModificationRepository.createEquipmentAttributeModification("id3", "attribute", "foo");
+        var modifEntity1 = EquipmentAttributeModificationInfos.builder().equipmentId("id1").equipmentAttributeName("attribute").equipmentAttributeValue("foo").equipmentType(IdentifiableType.VOLTAGE_LEVEL).build().toEntity();
+        var modifEntity2 = EquipmentAttributeModificationInfos.builder().equipmentId("id2").equipmentAttributeName("attribute").equipmentAttributeValue("foo").equipmentType(IdentifiableType.VOLTAGE_LEVEL).build().toEntity();
+        var modifEntity3 = EquipmentAttributeModificationInfos.builder().equipmentId("id3").equipmentAttributeName("attribute").equipmentAttributeValue("foo").equipmentType(IdentifiableType.VOLTAGE_LEVEL).build().toEntity();
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(modifEntity1, modifEntity2, modifEntity3));
 
         SQLStatementCountValidator.reset();
@@ -211,8 +207,8 @@ public class ModificationRepositoryTest {
 
     @Test
     public void testDeleteModificationQueryCount() {
-        EquipmentAttributeModificationEntity<String> modifEntity1 = networkModificationRepository.createEquipmentAttributeModification("id1", "attribute", "foo");
-        EquipmentAttributeModificationEntity<String> modifEntity2 = networkModificationRepository.createEquipmentAttributeModification("id2", "attribute", "foo");
+        var modifEntity1 = EquipmentAttributeModificationInfos.builder().equipmentId("id2").equipmentAttributeName("attribute").equipmentAttributeValue("foo").equipmentType(IdentifiableType.VOLTAGE_LEVEL).build().toEntity();
+        var modifEntity2 = EquipmentAttributeModificationInfos.builder().equipmentId("id2").equipmentAttributeName("attribute").equipmentAttributeValue("foo").equipmentType(IdentifiableType.VOLTAGE_LEVEL).build().toEntity();
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(modifEntity1, modifEntity2));
 
         SQLStatementCountValidator.reset();
@@ -231,9 +227,9 @@ public class ModificationRepositoryTest {
 
     @Test
     public void testLoadCreation() {
-        var createLoadEntity1 = networkModificationRepository.createLoadCreationEntity("idLoad1", "nameLoad1", LoadType.AUXILIARY, "vlId1", "busId1", 100.0, 20.0, "top1", ConnectablePosition.Direction.TOP);
-        var createLoadEntity2 = networkModificationRepository.createLoadCreationEntity("idLoad2", "nameLoad2", LoadType.FICTITIOUS, "vlId2", "busId2", 80.0, 30.0, "bottom1", ConnectablePosition.Direction.BOTTOM);
-        var createLoadEntity3 = networkModificationRepository.createLoadCreationEntity("idLoad3", "nameLoad3", LoadType.UNDEFINED, "vlId3", "busId3", 50.0, 90.0, "top2", ConnectablePosition.Direction.TOP);
+        var createLoadEntity1 = LoadCreationInfos.builder().equipmentId("idLoad1").equipmentName("nameLoad1").loadType(LoadType.AUXILIARY).voltageLevelId("vlId1").busOrBusbarSectionId("busId1").activePower(100.).reactivePower(20.).connectionName("top1").connectionDirection(ConnectablePosition.Direction.TOP).build().toEntity();
+        var createLoadEntity2 = LoadCreationInfos.builder().equipmentId("idLoad2").equipmentName("nameLoad2").loadType(LoadType.FICTITIOUS).voltageLevelId("vlId2").busOrBusbarSectionId("busId2").activePower(80.).reactivePower(30.).connectionName("bottom1").connectionDirection(ConnectablePosition.Direction.BOTTOM).build().toEntity();
+        var createLoadEntity3 = LoadCreationInfos.builder().equipmentId("idLoad3").equipmentName("nameLoad3").loadType(LoadType.FICTITIOUS).voltageLevelId("vlId3").busOrBusbarSectionId("busId3").activePower(50.).reactivePower(90.).connectionName("top2").connectionDirection(ConnectablePosition.Direction.TOP).build().toEntity();
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(createLoadEntity1, createLoadEntity2, createLoadEntity3));
         assertRequestsCount(1, 7, 3, 0);

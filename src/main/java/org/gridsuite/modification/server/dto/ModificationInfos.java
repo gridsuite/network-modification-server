@@ -6,18 +6,20 @@
  */
 package org.gridsuite.modification.server.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.powsybl.commons.reporter.Reporter;
+import com.powsybl.commons.reporter.ReporterModel;
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
+import org.gridsuite.modification.server.ModificationType;
+import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.entities.ModificationEntity;
+import org.gridsuite.modification.server.modifications.AbstractModification;
+
 import java.time.ZonedDateTime;
 import java.util.Set;
 import java.util.UUID;
-
-import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
-import lombok.experimental.SuperBuilder;
-import org.gridsuite.modification.server.ModificationType;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -41,4 +43,24 @@ public class ModificationInfos {
     @Schema(description = "Substations ID")
     @Builder.Default
     private Set<String> substationIds = Set.of();
+
+    @JsonIgnore
+    public ModificationEntity toEntity() {
+        throw new UnsupportedOperationException("TODO");
+    }
+
+    @JsonIgnore
+    public AbstractModification toModification() {
+        throw new UnsupportedOperationException("TODO");
+    }
+
+    @JsonIgnore
+    public Reporter createSubReporter(ReporterModel reporter) {
+        throw new UnsupportedOperationException("TODO");
+    }
+
+    @JsonIgnore
+    public NetworkModificationException.Type getErrorType() {
+        throw new UnsupportedOperationException("TODO");
+    }
 }
