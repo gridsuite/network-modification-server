@@ -530,19 +530,28 @@ public class ModificationControllerTest {
 
     @Test
     public void testGroovyWithErrors() throws Exception {
-        String uriString = "/v1/networks/{networkUuid}/groovy?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
+
+        GroovyScriptModificationInfos groovyScriptModificationInfos = GroovyScriptModificationInfos.builder()
+                .type(ModificationType.GROOVY_SCRIPT)
+                .script("")
+                .build();
+        String groovyScriptModificationInfosJson = objectWriter.writeValueAsString(groovyScriptModificationInfos);
 
         // apply empty groovy script
-        mockMvc.perform(put(uriString, TEST_NETWORK_ID).contentType(MediaType.TEXT_PLAIN_VALUE).content("")).andExpectAll(
+        mockMvc.perform(post(URI_NETWORK_MODIF).content(groovyScriptModificationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpectAll(
                 status().isBadRequest());
 
+        groovyScriptModificationInfos.setScript("      ");
+        groovyScriptModificationInfosJson = objectWriter.writeValueAsString(groovyScriptModificationInfos);
         // apply empty groovy script
-        mockMvc.perform(put(uriString, TEST_NETWORK_ID).contentType(MediaType.TEXT_PLAIN_VALUE).content("      ")).andExpectAll(
+        mockMvc.perform(post(URI_NETWORK_MODIF).content(groovyScriptModificationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpectAll(
                 status().isBadRequest(),
                 content().string(new NetworkModificationException(GROOVY_SCRIPT_EMPTY).getMessage()));
 
+        groovyScriptModificationInfos.setScript("network.getGenerator('there is no generator').targetP=12\n");
+        groovyScriptModificationInfosJson = objectWriter.writeValueAsString(groovyScriptModificationInfos);
         // apply groovy script with unknown generator
-        mockMvc.perform(put(uriString, TEST_NETWORK_ID).contentType(MediaType.TEXT_PLAIN_VALUE).content("network.getGenerator('there is no generator').targetP=12\n")).andExpectAll(
+        mockMvc.perform(post(URI_NETWORK_MODIF).content(groovyScriptModificationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpectAll(
                 status().isBadRequest(),
                 content().string(new NetworkModificationException(GROOVY_SCRIPT_ERROR, "Cannot set property 'targetP' on null object").getMessage()));
     }
@@ -551,45 +560,60 @@ public class ModificationControllerTest {
     public void testGroovy() throws Exception {
         MvcResult mvcResult;
         String resultAsString;
-        String uriString = "/v1/networks/{networkUuid}/groovy?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
+
+        GroovyScriptModificationInfos groovyScriptModificationInfos = GroovyScriptModificationInfos.builder()
+                .type(ModificationType.GROOVY_SCRIPT)
+                .script("network.getGenerator('idGenerator').targetP=12\n")
+                .build();
+        String groovyScriptModificationInfosJson = objectWriter.writeValueAsString(groovyScriptModificationInfos);
 
         // apply groovy script with generator target P modification
-        mvcResult = mockMvc.perform(put(uriString, TEST_NETWORK_ID).contentType(MediaType.TEXT_PLAIN_VALUE).content("network.getGenerator('idGenerator').targetP=12\n")).andExpect(status().isOk())
+        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(groovyScriptModificationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk())
                 .andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<ModificationInfos> bsmlrbStatusInfos = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertThat(bsmlrbStatusInfos.get(0), MatcherModificationInfos.createMatcherModificationInfos(ModificationType.GROOVY_SCRIPT, Set.of("s1")));
 
         // apply groovy script with load type modification
-        mvcResult = mockMvc.perform(put(uriString, TEST_NETWORK_ID).contentType(MediaType.TEXT_PLAIN_VALUE).content("network.getLoad('v1load').loadType=com.powsybl.iidm.network.LoadType.FICTITIOUS\n")).andExpect(status().isOk())
+        groovyScriptModificationInfos.setScript("network.getLoad('v1load').loadType=com.powsybl.iidm.network.LoadType.FICTITIOUS\n");
+        groovyScriptModificationInfosJson = objectWriter.writeValueAsString(groovyScriptModificationInfos);
+        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(groovyScriptModificationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk())
                 .andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<ModificationInfos> bsmlrBranchStatusInfos = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertThat(bsmlrBranchStatusInfos.get(0), MatcherModificationInfos.createMatcherModificationInfos(ModificationType.GROOVY_SCRIPT, Set.of("s1")));
 
         // apply groovy script with lcc converter station power factor modification
-        mvcResult = mockMvc.perform(put(uriString, TEST_NETWORK_ID).contentType(MediaType.TEXT_PLAIN_VALUE).content("network.getLccConverterStation('v1lcc').powerFactor=1\n")).andExpect(status().isOk())
+        groovyScriptModificationInfos.setScript("network.getLccConverterStation('v1lcc').powerFactor=1\n");
+        groovyScriptModificationInfosJson = objectWriter.writeValueAsString(groovyScriptModificationInfos);
+        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(groovyScriptModificationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk())
                 .andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<ModificationInfos> bsmListResultBranchStatusInfos = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertThat(bsmListResultBranchStatusInfos.get(0), MatcherModificationInfos.createMatcherModificationInfos(ModificationType.GROOVY_SCRIPT, Set.of("s1")));
 
         // apply groovy script with line R modification
-        mvcResult = mockMvc.perform(put(uriString, TEST_NETWORK_ID).contentType(MediaType.TEXT_PLAIN_VALUE).content("network.getLine('line1').r=2\n")).andExpect(status().isOk())
+        groovyScriptModificationInfos.setScript("network.getLine('line1').r=2\n");
+        groovyScriptModificationInfosJson = objectWriter.writeValueAsString(groovyScriptModificationInfos);
+        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(groovyScriptModificationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk())
                 .andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<ModificationInfos> bsmlrbInfos = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertThat(bsmlrbInfos.get(0), MatcherModificationInfos.createMatcherModificationInfos(ModificationType.GROOVY_SCRIPT, Set.of("s1", "s2")));
 
         // apply groovy script with two windings transformer ratio tap modification
-        mvcResult = mockMvc.perform(put(uriString, TEST_NETWORK_ID).contentType(MediaType.TEXT_PLAIN_VALUE).content("network.getTwoWindingsTransformer('trf1').getRatioTapChanger().tapPosition=2\n")).andExpect(status().isOk())
+        groovyScriptModificationInfos.setScript("network.getTwoWindingsTransformer('trf1').getRatioTapChanger().tapPosition=2\n");
+        groovyScriptModificationInfosJson = objectWriter.writeValueAsString(groovyScriptModificationInfos);
+        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(groovyScriptModificationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk())
                 .andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<ModificationInfos> bsmlrbsInfos = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertThat(bsmlrbsInfos.get(0), MatcherModificationInfos.createMatcherModificationInfos(ModificationType.GROOVY_SCRIPT, Set.of("s1")));
 
         // apply groovy script with three windings transformer phase tap modification
-        mvcResult = mockMvc.perform(put(uriString, TEST_NETWORK_ID).contentType(MediaType.TEXT_PLAIN_VALUE).content("network.getThreeWindingsTransformer('trf6').getLeg1().getPhaseTapChanger().tapPosition=0\n")).andExpect(status().isOk())
+        groovyScriptModificationInfos.setScript("network.getThreeWindingsTransformer('trf6').getLeg1().getPhaseTapChanger().tapPosition=0\n");
+        groovyScriptModificationInfosJson = objectWriter.writeValueAsString(groovyScriptModificationInfos);
+        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(groovyScriptModificationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk())
                 .andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<ModificationInfos> bsmlrStatusInfos = mapper.readValue(resultAsString, new TypeReference<>() { });
@@ -600,8 +624,15 @@ public class ModificationControllerTest {
 
     @Test
     public void testUndoModificationsOnNetworkFlushError() throws Exception {
-        String uriString = "/v1/networks/{networkUuid}/groovy?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
-        MvcResult mvcResult = mockMvc.perform(put(uriString, TEST_NETWORK_WITH_FLUSH_ERROR_ID).contentType(MediaType.TEXT_PLAIN_VALUE).content("network.getGenerator('idGenerator').targetP=10\nnetwork.getGenerator('idGenerator').targetP=20\n"))
+        String uriString = URI_NETWORK_MODIF_BASE + "?networkUuid=" + TEST_NETWORK_WITH_FLUSH_ERROR_ID + URI_NETWORK_MODIF_PARAMS;
+
+        GroovyScriptModificationInfos groovyScriptModificationInfos = GroovyScriptModificationInfos.builder()
+                .type(ModificationType.GROOVY_SCRIPT)
+                .script("network.getGenerator('idGenerator').targetP=10\nnetwork.getGenerator('idGenerator').targetP=20\n")
+                .build();
+        String groovyScriptModificationInfosJson = objectWriter.writeValueAsString(groovyScriptModificationInfos);
+
+        MvcResult mvcResult = mockMvc.perform(post(uriString).content(groovyScriptModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
                                       .andReturn();
         String resultAsString = mvcResult.getResponse().getContentAsString();
         assertEquals(resultAsString, new NetworkModificationException(GROOVY_SCRIPT_ERROR, PowsyblException.class.getName()).getMessage());
@@ -612,15 +643,21 @@ public class ModificationControllerTest {
 
     @Test
     public void testMultipleModificationsWithError() throws Exception {
-        String uriString = "/v1/networks/{networkUuid}/groovy?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
+        GroovyScriptModificationInfos groovyScriptModificationInfos = GroovyScriptModificationInfos.builder()
+                .type(ModificationType.GROOVY_SCRIPT)
+                .script("network.getGenerator('idGenerator').targetP=10\nnetwork.getGenerator('idGenerator').targetP=20\n")
+                .build();
+        String groovyScriptModificationInfosJson = objectWriter.writeValueAsString(groovyScriptModificationInfos);
 
         // apply groovy script without error
-        mockMvc.perform(put(uriString, TEST_NETWORK_ID).contentType(MediaType.TEXT_PLAIN_VALUE).content("network.getGenerator('idGenerator').targetP=10\nnetwork.getGenerator('idGenerator').targetP=20\n"))
+        mockMvc.perform(post(URI_NETWORK_MODIF).content(groovyScriptModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
 
         // apply groovy script with error ont the second
-        MvcResult mvcResult = mockMvc.perform(put(uriString, TEST_NETWORK_ID).contentType(MediaType.TEXT_PLAIN_VALUE).content("network.getGenerator('idGenerator').targetP=30\nnetwork.getGenerator('there is no generator').targetP=40\n"))
+        groovyScriptModificationInfos.setScript("network.getGenerator('idGenerator').targetP=30\nnetwork.getGenerator('there is no generator').targetP=40\n");
+        groovyScriptModificationInfosJson = objectWriter.writeValueAsString(groovyScriptModificationInfos);
+        MvcResult mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(groovyScriptModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isBadRequest()).andReturn();
         String resultAsString = mvcResult.getResponse().getContentAsString();
         assertEquals(resultAsString, new NetworkModificationException(GROOVY_SCRIPT_ERROR, "Cannot set property 'targetP' on null object").getMessage());

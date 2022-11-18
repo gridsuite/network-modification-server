@@ -135,11 +135,11 @@ public class NetworkModificationService {
         }, GROOVY_SCRIPT_ERROR, reportUuid, reporter, subReporter);
     }
 
-    public List<ModificationInfos> createGroovyScript(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId, String groovyScript) {
+    public List<ModificationInfos> createGroovyScript(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId, GroovyScriptModificationInfos groovyScript) {
         assertGroovyScriptNotEmpty(groovyScript);
         ModificationNetworkInfos networkInfos = getNetworkModificationInfos(networkUuid, variantId);
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
-        return execCreateGroovyScript(listener, groovyScript, reportUuid, reporterId);
+        return execCreateGroovyScript(listener, groovyScript.getScript(), reportUuid, reporterId);
     }
 
     private List<EquipmentModificationInfos> execCreateSwitchStateModification(NetworkStoreListener listener,
@@ -446,8 +446,8 @@ public class NetworkModificationService {
         return new ModificationNetworkInfos(network, applyModifications);
     }
 
-    private void assertGroovyScriptNotEmpty(String groovyScript) {
-        if (StringUtils.isBlank(groovyScript)) {
+    private void assertGroovyScriptNotEmpty(GroovyScriptModificationInfos groovyScript) {
+        if (StringUtils.isBlank(groovyScript.getScript())) {
             throw new NetworkModificationException(GROOVY_SCRIPT_EMPTY);
         }
     }
@@ -670,6 +670,8 @@ public class NetworkModificationService {
     public List<? extends ModificationInfos> createNetworkModification(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId, ModificationInfos modificationInfos) {
 
         switch (modificationInfos.getType()) {
+            case GROOVY_SCRIPT:
+                return createGroovyScript(networkUuid, variantId, groupUuid, reportUuid, reporterId, (GroovyScriptModificationInfos) modificationInfos);
             case LOAD_CREATION:
                 return createLoadCreation(networkUuid, variantId, groupUuid, reportUuid, reporterId, (LoadCreationInfos) modificationInfos);
             case LOAD_MODIFICATION:

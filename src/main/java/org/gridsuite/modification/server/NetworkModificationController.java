@@ -55,19 +55,6 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.createSwitchStateModification(networkUuid, variantId, groupUuid, reportUuid, reporterId, switchId, Boolean.parseBoolean(open)));
     }
 
-    @PutMapping(value = "/networks/{networkUuid}/groovy", consumes = MediaType.TEXT_PLAIN_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "change an equipment state in a network variant")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The equipment state has been changed"),
-                           @ApiResponse(responseCode = "404", description = "the network or equipment not found")})
-    public ResponseEntity<List<ModificationInfos>> createGroovyScript(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
-                                                                      @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
-                                                                      @RequestParam(value = "group", required = false) UUID groupUuid,
-                                                                      @RequestParam(value = "reportUuid") UUID reportUuid,
-                                                                      @RequestParam(value = "reporterId") String reporterId,
-                                                                      @RequestBody String groovyScript) {
-        return ResponseEntity.ok().body(networkModificationService.createGroovyScript(networkUuid, variantId, groupUuid, reportUuid, reporterId, groovyScript));
-    }
-
     @GetMapping(value = "/groups/{groupUuid}/modifications", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Get modifications list of a group")
     @ApiResponse(responseCode = "200", description = "List of modifications of the group")
