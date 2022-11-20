@@ -89,6 +89,7 @@ public class NetworkModificationService {
     private static final String DELIMITER = "/";
 
     private static final String NETWORK_MODIFICATION_TYPE_REPORT = "NetworkModification";
+    private static final String LINE_ID = "lineId";
 
     public NetworkModificationService(@Value("${backing-services.report-server.base-uri:http://report-server}") String reportServerURI,
                                       NetworkStoreService networkStoreService, NetworkModificationRepository networkModificationRepository,
@@ -208,7 +209,7 @@ public class NetworkModificationService {
         Network network = listener.getNetwork();
         String rootReporterId = reporterId + "@" + NETWORK_MODIFICATION_TYPE_REPORT;
         ReporterModel reporter = new ReporterModel(rootReporterId, rootReporterId);
-        Reporter subReporter = reporter.createSubReporter(ModificationType.LOCKOUT_LINE_CREATION.name(), "Lockout line ${lineId}", "lineId", lineId);
+        Reporter subReporter = reporter.createSubReporter(ModificationType.LOCKOUT_LINE_CREATION.name(), "Lockout line ${lineId}", LINE_ID, lineId);
 
         return doAction(listener, () -> {
                 if (listener.getNetwork().getLine(lineId) == null) {
@@ -239,7 +240,7 @@ public class NetworkModificationService {
         Network network = listener.getNetwork();
         String rootReporterId = reporterId + "@" + NETWORK_MODIFICATION_TYPE_REPORT;
         ReporterModel reporter = new ReporterModel(rootReporterId, rootReporterId);
-        Reporter subReporter = reporter.createSubReporter(ModificationType.TRIP_LINE_CREATION.name(), "Trip line ${lineId}", "lineId", lineId);
+        Reporter subReporter = reporter.createSubReporter(ModificationType.TRIP_LINE_CREATION.name(), "Trip line ${lineId}", LINE_ID, lineId);
 
         return doAction(listener, () -> {
                 if (listener.getNetwork().getLine(lineId) == null) {
@@ -279,7 +280,7 @@ public class NetworkModificationService {
         Network network = listener.getNetwork();
         String rootReporterId = reporterId + "@" + NETWORK_MODIFICATION_TYPE_REPORT;
         ReporterModel reporter = new ReporterModel(rootReporterId, rootReporterId);
-        Reporter subReporter = reporter.createSubReporter(ModificationType.ENERGISE_LINE_END_CREATION.name(), "Energise line ${lineId}", "lineId", lineId);
+        Reporter subReporter = reporter.createSubReporter(ModificationType.ENERGISE_LINE_END_CREATION.name(), "Energise line ${lineId}", LINE_ID, lineId);
 
         return doAction(listener, () -> {
             if (listener.getNetwork().getLine(lineId) == null) {
@@ -315,7 +316,7 @@ public class NetworkModificationService {
         Network network = listener.getNetwork();
         String rootReporterId = reporterId + "@" + NETWORK_MODIFICATION_TYPE_REPORT;
         ReporterModel reporter = new ReporterModel(rootReporterId, rootReporterId);
-        Reporter subReporter = reporter.createSubReporter(ModificationType.SWITCH_ON_LINE_CREATION.name(), "Switch on line ${lineId}", "lineId", lineId);
+        Reporter subReporter = reporter.createSubReporter(ModificationType.SWITCH_ON_LINE_CREATION.name(), "Switch on line ${lineId}", LINE_ID, lineId);
 
         return doAction(listener, () -> {
             if (listener.getNetwork().getLine(lineId) == null) {
@@ -1075,7 +1076,7 @@ public class NetworkModificationService {
         Network network = listener.getNetwork();
         String rootReporterId = reporterId + "@" + NETWORK_MODIFICATION_TYPE_REPORT;
         ReporterModel reporter = new ReporterModel(rootReporterId, rootReporterId);
-        Reporter subReporter = reporter.createSubReporter(ModificationType.LINE_CREATION.name(), "Line creation ${lineId}", "lineId", lineCreationInfos.getEquipmentId());
+        Reporter subReporter = reporter.createSubReporter(ModificationType.LINE_CREATION.name(), "Line creation ${lineId}", LINE_ID, lineCreationInfos.getEquipmentId());
 
         return doAction(listener, () -> {
             if (listener.isApplyModifications()) {
