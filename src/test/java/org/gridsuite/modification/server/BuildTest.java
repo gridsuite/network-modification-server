@@ -27,11 +27,8 @@ import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationGroupEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.BusbarConnectionCreationEmbeddable;
 import org.gridsuite.modification.server.entities.equipment.creation.BusbarSectionCreationEmbeddable;
-import org.gridsuite.modification.server.entities.equipment.creation.LoadCreationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.TapChangerStepCreationEmbeddable;
-import org.gridsuite.modification.server.entities.equipment.deletion.EquipmentDeletionEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.LineSplitWithVoltageLevelEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.attribute.EquipmentAttributeModificationEntity;
 import org.gridsuite.modification.server.repositories.ModificationGroupRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.NetworkModificationService;
@@ -287,18 +284,15 @@ public class BuildTest {
         assertNotNull(request);
         assertEquals(expectedBody, request.getBody().readUtf8());
 
+        assertNotNull(output.receive(TIMEOUT, consumeBuildDestination));
+        assertNotNull(output.receive(TIMEOUT, buildResultDestination));
+
         // Group is empty
         modificationGroupRepository.save(new ModificationGroupEntity(TEST_GROUP_ID));
         networkModificationService.applyModifications(network, TEST_NETWORK_ID, buildInfos);
         request = server.takeRequest(TIMEOUT, TimeUnit.MILLISECONDS);
         assertNotNull(request);
         assertEquals(expectedBody, request.getBody().readUtf8());
-
-        assertNotNull(output.receive(TIMEOUT, consumeBuildDestination));
-        assertNull(output.receive(TIMEOUT, buildResultDestination));
-        Message<byte[]> message = output.receive(TIMEOUT * 3, buildFailedDestination);
-        assertEquals("me", message.getHeaders().get("receiver"));
-        assertThat((String) message.getHeaders().get("message"), startsWith(FAIL_MESSAGE));
     }
 
     public ModificationEntity createEquipmentAttributeModificationEntity(String equipmentId, String attributeName, Object attributeValue, IdentifiableType equipmentType) {
@@ -328,7 +322,7 @@ public class BuildTest {
         entities1.add(modificationRepository.createSubstationEntity("newSubstation", "newSubstation", Country.FR));
 
         List<ModificationEntity> entities2 = new ArrayList<>();
-        entities2.add(modificationRepository.createGeneratorEntity(NEW_GENERATOR_ID, NEW_GENERATOR_ID, EnergySource.HYDRO, "v2", "1A", 0., 500., 1., 100., 50., true, 225., 8., 20., 50., true, 9F, 35., 25., "v2load", "LOAD", "v2", false, List.of(), "Top", ConnectablePosition.Direction.TOP));
+        entities2.add(modificationRepository.createGeneratorEntity(NEW_GENERATOR_ID, NEW_GENERATOR_ID, EnergySource.HYDRO, "v2", "1A", 0., 500., 1., 100., 50., true, 225., 8., 20., 50., true, 9F, 35., 25., "v2load", "LOAD", "v2", 25., false, List.of(), "Top", ConnectablePosition.Direction.TOP));
         entities2.add(modificationRepository.createLineEntity("newLine", "newLine", 1., 2., 3., 4., 5., 6., "v1", "1.1", "v2", "1B", null, null, "cn101", ConnectablePosition.Direction.TOP, "cn102", ConnectablePosition.Direction.TOP));
 
         List<TapChangerStepCreationEmbeddable> tapChangerStepCreationEmbeddables = new ArrayList<>();
@@ -491,18 +485,20 @@ public class BuildTest {
         AtomicReference<UUID> lineModificationEntityUuid = new AtomicReference<>();
         AtomicReference<UUID> loadCreationEntityUuid = new AtomicReference<>();
         AtomicReference<UUID> equipmentDeletionEntityUuid = new AtomicReference<>();
-        modificationRepository.getModificationsEntities(List.of(TEST_GROUP_ID, TEST_GROUP_ID_2)).forEach(entity -> {
-            if (entity.getType().equals(ModificationType.EQUIPMENT_ATTRIBUTE_MODIFICATION.name())) {
-                if (((EquipmentAttributeModificationEntity<?>) entity).getEquipmentId().equals("line1")) {
-                    lineModificationEntityUuid.set(entity.getId());
+        List<ModificationInfos> modificationsInfos = networkModificationService.getModifications(TEST_GROUP_ID, false, true);
+        modificationsInfos.addAll(networkModificationService.getModifications(TEST_GROUP_ID_2, false, true));
+        modificationsInfos.forEach(modificationInfos -> {
+            if (modificationInfos.getType().equals(ModificationType.EQUIPMENT_ATTRIBUTE_MODIFICATION)) {
+                if (((EquipmentAttributeModificationInfos) modificationInfos).getEquipmentId().equals("line1")) {
+                    lineModificationEntityUuid.set(modificationInfos.getUuid());
                 }
-            } else if (entity.getType().equals(ModificationType.LOAD_CREATION.name())) {
-                if (((LoadCreationEntity) entity).getEquipmentId().equals("newLoad")) {
-                    loadCreationEntityUuid.set(entity.getId());
+            } else if (modificationInfos.getType().equals(ModificationType.LOAD_CREATION)) {
+                if (((LoadCreationInfos) modificationInfos).getEquipmentId().equals("newLoad")) {
+                    loadCreationEntityUuid.set(modificationInfos.getUuid());
                 }
-            } else if (entity.getType().equals(ModificationType.EQUIPMENT_DELETION.name())) {
-                if (((EquipmentDeletionEntity) entity).getEquipmentId().equals("v2shunt")) {
-                    equipmentDeletionEntityUuid.set(entity.getId());
+            } else if (modificationInfos.getType().equals(ModificationType.EQUIPMENT_DELETION)) {
+                if (((EquipmentDeletionInfos) modificationInfos).getEquipmentId().equals("v2shunt")) {
+                    equipmentDeletionEntityUuid.set(modificationInfos.getUuid());
                 }
             }
         });

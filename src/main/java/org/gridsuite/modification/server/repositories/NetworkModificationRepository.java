@@ -113,7 +113,6 @@ public class NetworkModificationRepository {
                 .collect(Collectors.toList());
     }
 
-    @Transactional
     public List<ModificationInfos> getModifications(List<UUID> uuids) {
         return this.modificationRepository.findAllById(uuids).stream()
             .map(ModificationEntity::toModificationInfos)
@@ -147,7 +146,6 @@ public class NetworkModificationRepository {
             .collect(Collectors.toList());
     }
 
-    @Transactional(readOnly = true)
     public List<ModificationInfos> getModificationsInfos(List<UUID> groupUuids) {
         return this.getModificationsEntities(groupUuids).stream().map(ModificationEntity::toModificationInfos)
             .collect(Collectors.toList());
@@ -215,13 +213,13 @@ public class NetworkModificationRepository {
                                                          Double marginalCost, Double minQ, Double maxQ, boolean participate, Float droop,
                                                          Double transientReactance, Double stepUpTransformerReactance,
                                                          String regulatingTerminalId, String regulatingTerminalType, String regulatingTerminalVlId,
-                                                         boolean reactiveCapabilityCurve,
+                                                         Double qPercent, boolean reactiveCapabilityCurve,
                                                          List<ReactiveCapabilityCurveCreationEmbeddable> reactiveCapabilityCurvePoints, String connectionName,
                                                          ConnectablePosition.Direction connectionDirection) {
         return new GeneratorCreationEntity(generatorId, generatorName, energySource, voltageLevelId, busOrBusbarSectionId, minActivePower,
             maxActivePower, ratedNominalPower, activePowerSetpoint, reactivePowerSetpoint, voltageRegulationOn, voltageSetpoint, marginalCost, minQ, maxQ,
             participate, droop,  transientReactance, stepUpTransformerReactance, reactiveCapabilityCurvePoints, regulatingTerminalId, regulatingTerminalType,
-            regulatingTerminalVlId, reactiveCapabilityCurve, connectionName, connectionDirection);
+            regulatingTerminalVlId, qPercent, reactiveCapabilityCurve, connectionName, connectionDirection);
     }
 
     public EquipmentCreationEntity createLineEntity(String lineId, String lineName, double seriesResistance, double seriesReactance,
@@ -312,8 +310,7 @@ public class NetworkModificationRepository {
         return new BranchStatusModificationEntity(lineId, action);
     }
 
-    @Transactional(readOnly = true)
-    public List<ModificationEntity> getModificationsEntities(List<UUID> groupUuids) {
+    private List<ModificationEntity> getModificationsEntities(List<UUID> groupUuids) {
         return groupUuids.stream().flatMap(this::getModificationEntityList).collect(Collectors.toList());
     }
 

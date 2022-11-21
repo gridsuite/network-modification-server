@@ -82,6 +82,9 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
     @Column(name = "regulatingTerminalVlId")
     private String regulatingTerminalVlId;
 
+    @Column(name = "qPercent")
+    private Double qPercent;
+
     @Column(name = "reactiveCapabilityCurve")
     private Boolean reactiveCapabilityCurve;
 
@@ -99,8 +102,8 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
                                    double minActivePower, double maxActivePower, Double ratedNominalPower, double activePowerSetpoint,
                                    Double reactivePowerSetpoint, boolean voltageRegulationOn, Double voltageSetpoint, Double marginalCost, Double minQ,
                                    Double maxQ, boolean participate, Float droop, Double transientReactance, Double stepUpTransformerReactance,
-                                   List<ReactiveCapabilityCurveCreationEmbeddable> reactiveCapabilityCurvePoints, String regulatingTerminalId,
-                                   String regulatingTerminalType, String regulatingTerminalVlId, Boolean reactiveCapabilityCurve, String connectionName, ConnectablePosition.Direction connectionDirection) {
+                                   List<ReactiveCapabilityCurveCreationEmbeddable> reactiveCapabilityCurvePoints, String regulatingTerminalId, String regulatingTerminalType, String regulatingTerminalVlId,
+                                   Double qPercent, Boolean reactiveCapabilityCurve, String connectionName, ConnectablePosition.Direction connectionDirection) {
         super(ModificationType.GENERATOR_CREATION, equipmentId, equipmentName, voltageLevelId, busOrBusbarSectionId);
         this.energySource = energySource;
         this.minActivePower = minActivePower;
@@ -121,6 +124,7 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
         this.regulatingTerminalId = regulatingTerminalId;
         this.regulatingTerminalType = regulatingTerminalType;
         this.regulatingTerminalVlId = regulatingTerminalVlId;
+        this.qPercent = qPercent;
         this.reactiveCapabilityCurve = reactiveCapabilityCurve;
         this.connectionDirection = connectionDirection;
         this.connectionName = connectionName;
@@ -175,6 +179,7 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
             .regulatingTerminalId(getRegulatingTerminalId())
             .regulatingTerminalType(getRegulatingTerminalType())
             .regulatingTerminalVlId(getRegulatingTerminalVlId())
+            .qPercent(getQPercent())
             .reactiveCapabilityCurve(getReactiveCapabilityCurve())
             .transientReactance(getTransientReactance())
             .stepUpTransformerReactance(getStepUpTransformerReactance())

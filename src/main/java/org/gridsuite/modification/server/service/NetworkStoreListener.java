@@ -189,6 +189,7 @@ public class NetworkStoreListener implements NetworkListener {
             generatorCreationInfos.getRegulatingTerminalId(),
             generatorCreationInfos.getRegulatingTerminalType(),
             generatorCreationInfos.getRegulatingTerminalVlId(),
+            generatorCreationInfos.getQPercent(),
             generatorCreationInfos.getReactiveCapabilityCurve() == null || generatorCreationInfos.getReactiveCapabilityCurve(),
             toEmbeddablePoints(generatorCreationInfos.getReactiveCapabilityCurvePoints()),
             generatorCreationInfos.getConnectionName(),
