@@ -18,6 +18,7 @@ import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.Branch.Side;
 import com.powsybl.iidm.network.extensions.*;
 import com.powsybl.network.store.client.NetworkStoreService;
+import com.powsybl.network.store.iidm.impl.extensions.CoordinatedReactiveControlAdderImpl;
 import com.powsybl.network.store.iidm.impl.extensions.GeneratorStartupAdderImpl;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
@@ -487,6 +488,7 @@ public class NetworkModificationService {
                 generatorCreationInfos.getRegulatingTerminalId(),
                 generatorCreationInfos.getRegulatingTerminalType(),
                 generatorCreationInfos.getRegulatingTerminalVlId(),
+                generatorCreationInfos.getQPercent(),
                 generatorCreationInfos.getReactiveCapabilityCurve(),
                 toEmbeddablePoints(generatorCreationInfos.getReactiveCapabilityCurvePoints()),
                 generatorCreationInfos.getConnectionName(),
@@ -851,6 +853,11 @@ public class NetworkModificationService {
         if (generatorCreationInfos.getMinimumReactivePower() != null && generatorCreationInfos.getMaximumReactivePower() != null) {
             generator.newMinMaxReactiveLimits().setMinQ(generatorCreationInfos.getMinimumReactivePower())
                     .setMaxQ(generatorCreationInfos.getMaximumReactivePower())
+                    .add();
+        }
+
+        if (generatorCreationInfos.getQPercent() != null) {
+            generator.newExtension(CoordinatedReactiveControlAdderImpl.class).withQPercent(generatorCreationInfos.getQPercent())
                     .add();
         }
     }
