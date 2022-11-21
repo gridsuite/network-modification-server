@@ -41,20 +41,6 @@ public class NetworkModificationController {
         this.networkModificationService = networkModificationService;
     }
 
-    @PutMapping(value = "/networks/{networkUuid}/switches/{switchId}", produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "change a switch state in a network variant")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The switch state has been changed")})
-    public ResponseEntity<List<EquipmentModificationInfos>> createSwitchStateModification(
-            @Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
-            @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
-            @Parameter(description = "Switch ID") @PathVariable("switchId") String switchId,
-            @RequestParam(value = "group", required = false) UUID groupUuid,
-            @RequestParam(value = "reportUuid") UUID reportUuid,
-            @RequestParam(value = "reporterId") String reporterId,
-            @RequestParam("open") String open) {
-        return ResponseEntity.ok().body(networkModificationService.createSwitchStateModification(networkUuid, variantId, groupUuid, reportUuid, reporterId, switchId, Boolean.parseBoolean(open)));
-    }
-
     @GetMapping(value = "/groups/{groupUuid}/modifications", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Get modifications list of a group")
     @ApiResponse(responseCode = "200", description = "List of modifications of the group")

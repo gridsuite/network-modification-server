@@ -26,6 +26,7 @@ public class NetworkModificationException extends PowsyblException {
         MODIFICATION_GROUP_NOT_FOUND(HttpStatus.NOT_FOUND),
         MODIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND),
         SWITCH_NOT_FOUND(HttpStatus.NOT_FOUND),
+        SWITCH_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         LINE_NOT_FOUND(HttpStatus.NOT_FOUND),
         LOAD_NOT_FOUND(HttpStatus.NOT_FOUND),
         GENERATOR_NOT_FOUND(HttpStatus.NOT_FOUND),
@@ -56,7 +57,9 @@ public class NetworkModificationException extends PowsyblException {
         MODIFY_GENERATOR_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         TYPE_MISMATCH(HttpStatus.BAD_REQUEST),
         MODIFICATION_OUT_OF_RANGE(HttpStatus.BAD_REQUEST),
-        POSITION_ORDER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR);
+        POSITION_ORDER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
+        EQUIPMENT_ATTRIBUTE_NAME_ERROR(HttpStatus.BAD_REQUEST),
+        EQUIPMENT_ATTRIBUTE_VALUE_ERROR(HttpStatus.BAD_REQUEST);
 
         public final HttpStatus status;
         private final String message;

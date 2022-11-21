@@ -9,6 +9,7 @@ package org.gridsuite.modification.server.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
@@ -18,12 +19,13 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @NoArgsConstructor
 @Getter
+@Setter
 @ToString(callSuper = true)
 @Schema(description = "Equipment attribute modification")
 public class EquipmentAttributeModificationInfos extends EquipmentModificationInfos {
     @Schema(description = "Equipment attribute name")
-    private String equipmentAttributeName;
+    protected String equipmentAttributeName;
 
     @Schema(description = "Equipment attribute value")
-    private Object equipmentAttributeValue;
+    protected Object equipmentAttributeValue;
 }

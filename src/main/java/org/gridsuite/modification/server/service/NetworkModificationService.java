@@ -179,10 +179,11 @@ public class NetworkModificationService {
             .collect(Collectors.toList());
     }
 
-    public List<EquipmentModificationInfos> createSwitchStateModification(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId, String switchId, boolean open) {
+    public List<EquipmentModificationInfos> createSwitchStateModification(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId, SwitchStatusModificationInfos switchStatusModificationInfos) {
+        checkSwitchStatusModificationInfos(switchStatusModificationInfos);
         ModificationNetworkInfos networkInfos = getNetworkModificationInfos(networkUuid, variantId);
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
-        return execCreateSwitchStateModification(listener, switchId, open, reportUuid, reporterId);
+        return execCreateSwitchStateModification(listener, switchStatusModificationInfos.getEquipmentId(), (boolean) switchStatusModificationInfos.getEquipmentAttributeValue(), reportUuid, reporterId);
     }
 
     public List<UUID> getModificationGroups() {
@@ -700,6 +701,8 @@ public class NetworkModificationService {
                 return createLinesAttachToSplitLinesCreation(networkUuid, variantId, groupUuid, reportUuid, reporterId, (LinesAttachToSplitLinesInfos) modificationInfos);
             case BRANCH_STATUS:
                 return createLineStatusModification(networkUuid, variantId, groupUuid, reportUuid, reporterId, (BranchStatusModificationInfos) modificationInfos);
+            case SWITCH_STATUS:
+                return createSwitchStateModification(networkUuid, variantId, groupUuid, reportUuid, reporterId, (SwitchStatusModificationInfos) modificationInfos);
             default:
                 throw new NetworkModificationException(TYPE_MISMATCH);
         }
@@ -1574,6 +1577,19 @@ public class NetworkModificationService {
     private void assertTwoWindingsTransformerCreationInfosNotEmpty(TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
         if (twoWindingsTransformerCreationInfos == null) {
             throw new NetworkModificationException(CREATE_TWO_WINDINGS_TRANSFORMER_ERROR, "Missing required attributes to create the two windings transformer");
+        }
+    }
+
+    private void checkSwitchStatusModificationInfos(SwitchStatusModificationInfos switchStatusModificationInfos) {
+        if (switchStatusModificationInfos == null) {
+            throw new NetworkModificationException(SWITCH_ERROR, "Missing required attributes to create the switch status modification");
+        }
+        if (!switchStatusModificationInfos.getEquipmentAttributeName().equals("open")) {
+            throw new NetworkModificationException(EQUIPMENT_ATTRIBUTE_NAME_ERROR, "For switch status, the attribute name is only 'open'");
+        }
+        Set possibleValues = Set.of(true, false);
+        if (!possibleValues.contains(switchStatusModificationInfos.getEquipmentAttributeValue())) {
+            throw new NetworkModificationException(EQUIPMENT_ATTRIBUTE_VALUE_ERROR, "For switch status, the attribute values are only " + possibleValues);
         }
     }
 
