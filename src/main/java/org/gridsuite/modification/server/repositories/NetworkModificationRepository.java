@@ -71,12 +71,13 @@ public class NetworkModificationRepository {
         Map<UUID, ModificationEntity> originModifications = modificationRepository.findAllBaseByGroupId(originModificationGroupEntity.getId()).stream()
                 .collect(Collectors.toMap(ModificationEntity::getId, Function.identity(), (x, y) -> y, LinkedHashMap::new));
 
-        if (originModificationGroupEntity.getId() == null) {
+        UUID originalModificationUUID = originModificationGroupEntity.getId();
+        if (originalModificationUUID == null) {
             throw new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND);
         }
 
         // if moving within the same group
-        if (originModificationGroupEntity.getId().equals(destinationGroupUuid)) {
+        if (originalModificationUUID.equals(destinationGroupUuid)) {
             if (!originModifications.keySet().containsAll(modifications) || referenceModificationUuid != null && !originModifications.containsKey(referenceModificationUuid)) {
                 throw new NetworkModificationException(MODIFICATION_NOT_FOUND);
             }
