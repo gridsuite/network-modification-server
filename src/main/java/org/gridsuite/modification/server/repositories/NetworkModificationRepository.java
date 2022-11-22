@@ -90,7 +90,6 @@ public class NetworkModificationRepository {
                 .collect(Collectors.toList());
     }
 
-    @Transactional
     public List<ModificationInfos> getModifications(List<UUID> uuids) {
         return this.modificationRepository.findAllById(uuids).stream()
             .map(ModificationEntity::toModificationInfos)
@@ -117,7 +116,6 @@ public class NetworkModificationRepository {
             .collect(Collectors.toList());
     }
 
-    @Transactional(readOnly = true)
     public List<ModificationInfos> getModificationsInfos(List<UUID> groupUuids) {
         return this.getModificationsEntities(groupUuids).stream().map(ModificationEntity::toModificationInfos)
             .collect(Collectors.toList());
@@ -282,8 +280,7 @@ public class NetworkModificationRepository {
         return new BranchStatusModificationEntity(lineId, action);
     }
 
-    @Transactional(readOnly = true)
-    public List<ModificationEntity> getModificationsEntities(List<UUID> groupUuids) {
+    private List<ModificationEntity> getModificationsEntities(List<UUID> groupUuids) {
         return groupUuids.stream().flatMap(this::getModificationEntityList).collect(Collectors.toList());
     }
 
