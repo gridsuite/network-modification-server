@@ -19,6 +19,7 @@ import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
 import nl.jqno.equalsverifier.EqualsVerifier;
 import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.server.dto.LoadCreationInfos.LoadCreationInfosBuilder;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.equipment.creation.*;
 import org.gridsuite.modification.server.entities.equipment.modification.LoadModificationEntity;
@@ -159,8 +160,10 @@ public class ModificationControllerTest {
     @Test
     public void testEquipmentIdNonNull() {
         String errorMessage = "equipmentId is marked non-null but is null";
-        assertEquals(errorMessage, assertThrows(NullPointerException.class, () -> LoadCreationInfos.builder().build()).getMessage());
-        assertEquals(errorMessage, assertThrows(NullPointerException.class, () -> LoadCreationInfos.builder().equipmentId(null).build()).getMessage());
+        LoadCreationInfosBuilder<?, ?> loadCreationBuilder = LoadCreationInfos.builder();
+        assertEquals(errorMessage, assertThrows(NullPointerException.class, () -> loadCreationBuilder.build()).getMessage());
+        LoadCreationInfosBuilder<?, ?> loadCreationBuilder1 = loadCreationBuilder.equipmentId(null);
+        assertEquals(errorMessage, assertThrows(NullPointerException.class, () -> loadCreationBuilder1.build()).getMessage());
         LoadCreationInfos loadCreationInfos = LoadCreationInfos.builder().type(ModificationType.LOAD_CREATION).equipmentId("idLoad").build();
         assertEquals(errorMessage, assertThrows(NullPointerException.class, () -> loadCreationInfos.setEquipmentId(null)).getMessage());
     }

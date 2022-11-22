@@ -715,7 +715,7 @@ public class NetworkModificationService {
     }
 
     private void assertEquipmentModificationInfosOk(BasicEquipmentModificationInfos equipmentModificationInfos, NetworkModificationException.Type type) {
-        if (equipmentModificationInfos == null || equipmentModificationInfos.getEquipmentId() == null) {
+        if (equipmentModificationInfos == null) {
             throw new NetworkModificationException(type, "Missing required attributes to modify the equipment");
         }
     }
