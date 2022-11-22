@@ -64,23 +64,28 @@ public class NetworkModificationRepository {
     }
 
     @Transactional // To have all move in the same transaction (atomic)
-    public void moveModifications(UUID destinationGroupUuid, List<UUID> modifications, UUID before) {
+    //when we move modifications, we move them right before referenceModification when it is defined, at the end of list otherwise
+    public void moveModifications(UUID destinationGroupUuid, List<UUID> modifications, UUID referenceModificationUuid) {
         ModificationGroupEntity originModificationGroupEntity = getGroupFromModificationUuid(modifications.get(0));
 
         Map<UUID, ModificationEntity> originModifications = modificationRepository.findAllBaseByGroupId(originModificationGroupEntity.getId()).stream()
                 .collect(Collectors.toMap(ModificationEntity::getId, Function.identity(), (x, y) -> y, LinkedHashMap::new));
 
+        if (originModificationGroupEntity.getId() == null) {
+            throw new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND);
+        }
+
         // if moving within the same group
         if (originModificationGroupEntity.getId().equals(destinationGroupUuid)) {
-            if (!originModifications.keySet().containsAll(modifications) || before != null && !originModifications.containsKey(before)) {
+            if (!originModifications.keySet().containsAll(modifications) || referenceModificationUuid != null && !originModifications.containsKey(referenceModificationUuid)) {
                 throw new NetworkModificationException(MODIFICATION_NOT_FOUND);
             }
 
             List<ModificationEntity> movedModifications = modifications.stream().map(originModifications::remove).collect(Collectors.toList());
 
             List<ModificationEntity> newDestinationModificationList = new ArrayList<>(originModifications.values());
-            /* when before == null we move at the end of list */
-            int index =  before == null ? newDestinationModificationList.size() : newDestinationModificationList.indexOf(originModifications.get(before));
+            /* when referenceModification == null we move at the end of list */
+            int index =  referenceModificationUuid == null ? newDestinationModificationList.size() : newDestinationModificationList.indexOf(originModifications.get(referenceModificationUuid));
             newDestinationModificationList.addAll(index, movedModifications);
 
             originModificationGroupEntity.setModifications(newDestinationModificationList);
@@ -91,15 +96,15 @@ public class NetworkModificationRepository {
                                                                          .collect(Collectors.toMap(ModificationEntity::getId, Function.identity(), (x, y) -> y, LinkedHashMap::new));
 
             // moved modifications must all belong to the origin modification group, and before must belong to destination one
-            if (!originModifications.keySet().containsAll(modifications) || before != null && !destinationModifications.containsKey(before)) {
+            if (!originModifications.keySet().containsAll(modifications) || referenceModificationUuid != null && !destinationModifications.containsKey(referenceModificationUuid)) {
                 throw new NetworkModificationException(MODIFICATION_NOT_FOUND);
             }
 
             List<ModificationEntity> movedModifications = modifications.stream().map(originModifications::remove).collect(Collectors.toList());
 
             List<ModificationEntity> newDestinationModificationList = new ArrayList<>(destinationModifications.values());
-            /* when before == null we move at the end of list */
-            int index =  before == null ? newDestinationModificationList.size() : newDestinationModificationList.indexOf(destinationModifications.get(before));
+            /* when referenceModification == null we move at the end of list */
+            int index =  referenceModificationUuid == null ? newDestinationModificationList.size() : newDestinationModificationList.indexOf(destinationModifications.get(referenceModificationUuid));
             newDestinationModificationList.addAll(index, movedModifications);
 
             originModificationGroupEntity.setModifications(new ArrayList<>(originModifications.values()));
