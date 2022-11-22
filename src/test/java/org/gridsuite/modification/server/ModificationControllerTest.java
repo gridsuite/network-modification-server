@@ -157,6 +157,15 @@ public class ModificationControllerTest {
     }
 
     @Test
+    public void testEquipmentIdNonNull() {
+        String errorMessage = "equipmentId is marked non-null but is null";
+        assertEquals(errorMessage, assertThrows(NullPointerException.class, () -> LoadCreationInfos.builder().build()).getMessage());
+        assertEquals(errorMessage, assertThrows(NullPointerException.class, () -> LoadCreationInfos.builder().equipmentId(null).build()).getMessage());
+        LoadCreationInfos loadCreationInfos = LoadCreationInfos.builder().type(ModificationType.LOAD_CREATION).equipmentId("idLoad").build();
+        assertEquals(errorMessage, assertThrows(NullPointerException.class, () -> loadCreationInfos.setEquipmentId(null)).getMessage());
+    }
+
+    @Test
     public void testEquipmentAttributeModificationInfos() throws Exception {
         MvcResult mvcResult;
         String resultAsString;
@@ -781,13 +790,6 @@ public class ModificationControllerTest {
         resultAsString = mvcResult.getResponse().getContentAsString();
         assertEquals(resultAsString, new NetworkModificationException(NETWORK_NOT_FOUND, NOT_FOUND_NETWORK_ID.toString()).getMessage());
 
-        loadModificationInfos.setEquipmentId(null);
-        loadModificationInfosJson = objectWriter.writeValueAsString(loadModificationInfos);
-        mvcResult = mockMvc.perform(put(uriString, TEST_NETWORK_ID).content(loadModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().is5xxServerError()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        assertEquals(resultAsString, new NetworkModificationException(MODIFY_LOAD_ERROR, "Missing required attributes to modify the equipment").getMessage());
-
         loadModificationInfos.setEquipmentId("unknownLoadId");
         loadModificationInfosJson = objectWriter.writeValueAsString(loadModificationInfos);
         mvcResult = mockMvc.perform(put(uriString, TEST_NETWORK_ID).content(loadModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
@@ -895,13 +897,6 @@ public class ModificationControllerTest {
             .andExpect(status().isNotFound()).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
         assertEquals(resultAsString, new NetworkModificationException(NETWORK_NOT_FOUND, NOT_FOUND_NETWORK_ID.toString()).getMessage());
-
-        generatorModificationInfos.setEquipmentId(null);
-        generatorModificationInfosJson = objectWriter.writeValueAsString(generatorModificationInfos);
-        mvcResult = mockMvc.perform(put(uriString, TEST_NETWORK_ID).content(generatorModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().is5xxServerError()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        assertEquals(resultAsString, new NetworkModificationException(MODIFY_GENERATOR_ERROR, "Missing required attributes to modify the equipment").getMessage());
 
         String anotherId = "unknownGeneratorId";
         generatorModificationInfos.setEquipmentId(anotherId);
