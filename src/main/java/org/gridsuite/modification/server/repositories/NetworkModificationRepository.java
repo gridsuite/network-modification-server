@@ -33,6 +33,7 @@ import java.util.stream.Stream;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_GROUP_NOT_FOUND;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_NOT_FOUND;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.MOVE_MODIFICATION_ERROR;;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -65,57 +66,54 @@ public class NetworkModificationRepository {
 
     @Transactional // To have all move in the same transaction (atomic)
     //when we move modifications, we move them right before referenceModification when it is defined, at the end of list otherwise
-    public void moveModifications(UUID destinationGroupUuid, List<UUID> modifications, UUID referenceModificationUuid) {
-        ModificationGroupEntity originModificationGroupEntity = getGroupFromModificationUuid(modifications.get(0));
+    public void moveModifications(UUID destinationGroupUuid, List<UUID> modificationsUuid, UUID referenceModificationUuid) {
+        ModificationGroupEntity originModificationGroupEntity = getGroupFromModificationUuid(modificationsUuid.get(0));
 
-        Map<UUID, ModificationEntity> originModifications = modificationRepository.findAllBaseByGroupId(originModificationGroupEntity.getId()).stream()
-                .collect(Collectors.toMap(ModificationEntity::getId, Function.identity(), (x, y) -> y, LinkedHashMap::new));
-
-        UUID originalModificationUUID = originModificationGroupEntity.getId();
-        if (originalModificationUUID == null) {
+        UUID originalModificationGroupUUID = originModificationGroupEntity.getId();
+        if (originalModificationGroupUUID == null) {
             throw new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND);
         }
 
+        Map<UUID, ModificationEntity> originModifications = modificationRepository.findAllBaseByGroupId(originalModificationGroupUUID).stream()
+                .collect(Collectors.toMap(ModificationEntity::getId, Function.identity(), (x, y) -> y, LinkedHashMap::new));
+
         // if moving within the same group
-        if (originalModificationUUID.equals(destinationGroupUuid)) {
-            if (!originModifications.keySet().containsAll(modifications) || referenceModificationUuid != null && !originModifications.containsKey(referenceModificationUuid)) {
-                throw new NetworkModificationException(MODIFICATION_NOT_FOUND);
+        if (originalModificationGroupUUID.equals(destinationGroupUuid)) {
+            if (!originModifications.keySet().containsAll(modificationsUuid) || referenceModificationUuid != null && !originModifications.containsKey(referenceModificationUuid)) {
+                throw new NetworkModificationException(MOVE_MODIFICATION_ERROR);
             }
 
-            List<ModificationEntity> movedModifications = modifications.stream().map(originModifications::remove).collect(Collectors.toList());
-
-            List<ModificationEntity> newDestinationModificationList = new ArrayList<>(originModifications.values());
-            /* when referenceModification == null we move at the end of list */
-            int index =  referenceModificationUuid == null ? newDestinationModificationList.size() : newDestinationModificationList.indexOf(originModifications.get(referenceModificationUuid));
-            newDestinationModificationList.addAll(index, movedModifications);
+            List<ModificationEntity> newDestinationModificationList = updateModificationList(modificationsUuid, originModifications, originModifications, referenceModificationUuid);
 
             originModificationGroupEntity.setModifications(newDestinationModificationList);
         } else {
-            ModificationGroupEntity destinationModificationGroupEntity;
-            try {
-                destinationModificationGroupEntity = getModificationGroup(destinationGroupUuid);
-            } catch (NetworkModificationException e) {
-                destinationModificationGroupEntity = modificationGroupRepository.save(new ModificationGroupEntity(destinationGroupUuid));
-            }
+            //if destination is empty, group does not exist, we create it here if needed
+            ModificationGroupEntity destinationModificationGroupEntity = getOrCreateModificationGroup(destinationGroupUuid);
 
             Map<UUID, ModificationEntity> destinationModifications = modificationRepository.findAllBaseByGroupId(destinationGroupUuid).stream()
                                                                          .collect(Collectors.toMap(ModificationEntity::getId, Function.identity(), (x, y) -> y, LinkedHashMap::new));
 
-            // moved modifications must all belong to the origin modification group, and before must belong to destination one
-            if (!originModifications.keySet().containsAll(modifications) || referenceModificationUuid != null && !destinationModifications.containsKey(referenceModificationUuid)) {
-                throw new NetworkModificationException(MODIFICATION_NOT_FOUND);
+            // moved modifications must all belong to the origin modification group, and referenceModificationUuid must belong to destination one
+            if (!originModifications.keySet().containsAll(modificationsUuid) || referenceModificationUuid != null && !destinationModifications.containsKey(referenceModificationUuid)) {
+                throw new NetworkModificationException(MOVE_MODIFICATION_ERROR);
             }
 
-            List<ModificationEntity> movedModifications = modifications.stream().map(originModifications::remove).collect(Collectors.toList());
-
-            List<ModificationEntity> newDestinationModificationList = new ArrayList<>(destinationModifications.values());
-            /* when referenceModification == null we move at the end of list */
-            int index =  referenceModificationUuid == null ? newDestinationModificationList.size() : newDestinationModificationList.indexOf(destinationModifications.get(referenceModificationUuid));
-            newDestinationModificationList.addAll(index, movedModifications);
+            List<ModificationEntity> newDestinationModificationList = updateModificationList(modificationsUuid, originModifications, destinationModifications, referenceModificationUuid);
 
             originModificationGroupEntity.setModifications(new ArrayList<>(originModifications.values()));
             destinationModificationGroupEntity.setModifications(newDestinationModificationList);
         }
+    }
+
+    public List<ModificationEntity> updateModificationList(List<UUID> modificationsToMoveUuid, Map<UUID, ModificationEntity> originModifications, Map<UUID, ModificationEntity> destinationModifications, UUID referenceModificationUuid) {
+        List<ModificationEntity> movedModifications = modificationsToMoveUuid.stream().map(originModifications::remove).collect(Collectors.toList());
+
+        List<ModificationEntity> newDestinationModificationList = new ArrayList<>(destinationModifications.values());
+        /* when referenceModification == null we move at the end of list */
+        int index =  referenceModificationUuid == null ? newDestinationModificationList.size() : newDestinationModificationList.indexOf(destinationModifications.get(referenceModificationUuid));
+        newDestinationModificationList.addAll(index, movedModifications);
+
+        return newDestinationModificationList;
     }
 
     public List<UUID> getModificationGroupsUuids() {
@@ -208,6 +206,10 @@ public class NetworkModificationRepository {
 
     private ModificationGroupEntity getModificationGroup(UUID groupUuid) {
         return this.modificationGroupRepository.findById(groupUuid).orElseThrow(() -> new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, groupUuid.toString()));
+    }
+
+    private ModificationGroupEntity getOrCreateModificationGroup(UUID groupUuid) {
+        return this.modificationGroupRepository.findById(groupUuid).orElseGet(() -> modificationGroupRepository.save(new ModificationGroupEntity(groupUuid)));
     }
 
     public EquipmentModificationEntity createLoadModificationEntity(String loadId, AttributeModification<String> loadName, AttributeModification<LoadType> loadType,
