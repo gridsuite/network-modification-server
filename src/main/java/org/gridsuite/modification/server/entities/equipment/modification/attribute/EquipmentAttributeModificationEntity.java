@@ -7,8 +7,11 @@
 package org.gridsuite.modification.server.entities.equipment.modification.attribute;
 
 import javax.persistence.Column;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.MappedSuperclass;
 
+import com.powsybl.iidm.network.IdentifiableType;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.ModificationType;
@@ -29,10 +32,15 @@ public class EquipmentAttributeModificationEntity<T> extends EquipmentModificati
     @Column(name = "attributeValue")
     private T attributeValue;
 
-    protected EquipmentAttributeModificationEntity(String equipmentId, String attributeName, T attributeValue) {
+    @Column(name = "equipmentType")
+    @Enumerated(EnumType.STRING)
+    private IdentifiableType equipmentType;
+
+    protected EquipmentAttributeModificationEntity(String equipmentId, String attributeName, T attributeValue, IdentifiableType equipmentType) {
         super(equipmentId, ModificationType.EQUIPMENT_ATTRIBUTE_MODIFICATION);
         this.attributeName = attributeName;
         this.attributeValue = attributeValue;
+        this.equipmentType = equipmentType;
     }
 
     @Override
@@ -40,18 +48,15 @@ public class EquipmentAttributeModificationEntity<T> extends EquipmentModificati
         return toModificationInfosBuilder().build();
     }
 
-    public EquipmentAttributeModificationInfos toEquipmentAttributeModificationInfos() {
-        return toModificationInfosBuilder().build();
-    }
-
     private EquipmentAttributeModificationInfos.EquipmentAttributeModificationInfosBuilder<?, ?> toModificationInfosBuilder() {
         return EquipmentAttributeModificationInfos
-                .builder()
-                .uuid(getId())
-                .date(getDate())
-                .type(ModificationType.valueOf(getType()))
-                .equipmentId(getEquipmentId())
-                .equipmentAttributeName(getAttributeName())
-                .equipmentAttributeValue(getAttributeValue());
+            .builder()
+            .uuid(getId())
+            .date(getDate())
+            .type(ModificationType.valueOf(getType()))
+            .equipmentId(getEquipmentId())
+            .equipmentAttributeName(getAttributeName())
+            .equipmentAttributeValue(getAttributeValue())
+            .equipmentType(getEquipmentType());
     }
 }

@@ -20,7 +20,6 @@ import java.util.Set;
  */
 public class MatcherModificationInfos<T extends ModificationInfos> extends TypeSafeMatcher<T> {
     T reference;
-    protected static final double EPSILON = .001;
 
     public static MatcherModificationInfos<ModificationInfos> createMatcherModificationInfos(ModificationType modificationType, Set<String> substationIds) {
         return new MatcherModificationInfos<>(ModificationInfos.builder()
@@ -37,8 +36,8 @@ public class MatcherModificationInfos<T extends ModificationInfos> extends TypeS
     @Override
     public boolean matchesSafely(T m) {
         return m.getType() == reference.getType()
-                && m.getSubstationIds().equals(reference.getSubstationIds())
-                && m.getDate().toEpochSecond() - reference.getDate().toEpochSecond() < 2;
+            && m.getSubstationIds().equals(reference.getSubstationIds())
+            && m.getDate().toEpochSecond() - reference.getDate().toEpochSecond() < 2;
     }
 
     @Override

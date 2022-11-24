@@ -6,31 +6,23 @@
  */
 package org.gridsuite.modification.server.repositories;
 
-import com.powsybl.commons.PowsyblException;
 import com.powsybl.iidm.network.Country;
 import com.powsybl.iidm.network.EnergySource;
 import com.powsybl.iidm.network.LoadType;
 import com.powsybl.iidm.network.PhaseTapChanger;
-
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.NonNull;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
-import org.gridsuite.modification.server.entities.equipment.modification.BranchStatusModificationEntity;
 import org.gridsuite.modification.server.entities.GroovyScriptModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationGroupEntity;
+import org.gridsuite.modification.server.entities.equipment.creation.*;
+import org.gridsuite.modification.server.entities.equipment.deletion.EquipmentDeletionEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.BranchStatusModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.LoadModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.attribute.BooleanEquipmentAttributeModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleEquipmentAttributeModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.attribute.EquipmentAttributeModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.attribute.FloatEquipmentAttributeModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.attribute.IntegerEquipmentAttributeModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.attribute.StringEquipmentAttributeModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.creation.*;
-import org.gridsuite.modification.server.entities.equipment.deletion.EquipmentDeletionEntity;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,7 +31,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_GROUP_NOT_FOUND;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_NOT_FOUND;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -60,37 +53,6 @@ public class NetworkModificationRepository {
     public void deleteAll() {
         modificationRepository.deleteAll();
         modificationGroupRepository.deleteAll();
-    }
-
-    public <T> EquipmentAttributeModificationEntity<T> createEquipmentAttributeModification(String equipmentId, String attributeName, T attributeValue) {
-        EquipmentAttributeModificationEntity<?> modification;
-        if (attributeValue == null) {
-            modification = new StringEquipmentAttributeModificationEntity(equipmentId, attributeName, null);
-        } else if (attributeValue.getClass().isEnum()) {
-            modification = new StringEquipmentAttributeModificationEntity(equipmentId, attributeName, attributeValue.toString());
-        } else {
-            switch (attributeValue.getClass().getSimpleName()) {
-                case "String":
-                    modification = new StringEquipmentAttributeModificationEntity(equipmentId, attributeName, (String) attributeValue);
-                    break;
-                case "Boolean":
-                    modification = new BooleanEquipmentAttributeModificationEntity(equipmentId, attributeName, (boolean) attributeValue);
-                    break;
-                case "Integer":
-                    modification = new IntegerEquipmentAttributeModificationEntity(equipmentId, attributeName, (int) attributeValue);
-                    break;
-                case "Float":
-                    modification = new FloatEquipmentAttributeModificationEntity(equipmentId, attributeName, (float) attributeValue);
-                    break;
-                case "Double":
-                    modification = new DoubleEquipmentAttributeModificationEntity(equipmentId, attributeName, (double) attributeValue);
-                    break;
-                default:
-                    throw new PowsyblException("Value type invalid : " + attributeValue.getClass().getSimpleName());
-            }
-        }
-
-        return (EquipmentAttributeModificationEntity<T>) modification;
     }
 
     @Transactional // To have all create in the same transaction (atomic)
@@ -128,7 +90,6 @@ public class NetworkModificationRepository {
                 .collect(Collectors.toList());
     }
 
-    @Transactional
     public List<ModificationInfos> getModifications(List<UUID> uuids) {
         return this.modificationRepository.findAllById(uuids).stream()
             .map(ModificationEntity::toModificationInfos)
@@ -155,7 +116,6 @@ public class NetworkModificationRepository {
             .collect(Collectors.toList());
     }
 
-    @Transactional(readOnly = true)
     public List<ModificationInfos> getModificationsInfos(List<UUID> groupUuids) {
         return this.getModificationsEntities(groupUuids).stream().map(ModificationEntity::toModificationInfos)
             .collect(Collectors.toList());
@@ -209,11 +169,6 @@ public class NetworkModificationRepository {
         return this.modificationGroupRepository.findById(groupUuid).orElseThrow(() -> new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, groupUuid.toString()));
     }
 
-    public EquipmentCreationEntity createLoadCreationEntity(String loadId, String loadName, LoadType loadType,
-                                                            String voltageLevelId, String busOrBusbarSectionId, double activePower, double reactivePower, String connectionName, ConnectablePosition.Direction connectionDirection, Integer connectionPosition) {
-        return new LoadCreationEntity(loadId, loadName, loadType, voltageLevelId, busOrBusbarSectionId, activePower, reactivePower, connectionName, connectionDirection, connectionPosition);
-    }
-
     public EquipmentModificationEntity createLoadModificationEntity(String loadId, AttributeModification<String> loadName, AttributeModification<LoadType> loadType,
                                                                     AttributeModification<String> voltageLevelId, AttributeModification<String> busOrBusbarSectionId,
                                                                     AttributeModification<Double> activePower, AttributeModification<Double> reactivePower) {
@@ -228,14 +183,14 @@ public class NetworkModificationRepository {
                                                          Double marginalCost, Double minQ, Double maxQ, boolean participate, Float droop,
                                                          Double transientReactance, Double stepUpTransformerReactance,
                                                          String regulatingTerminalId, String regulatingTerminalType, String regulatingTerminalVlId,
-                                                         boolean reactiveCapabilityCurve,
+                                                         Double qPercent, boolean reactiveCapabilityCurve,
                                                          List<ReactiveCapabilityCurveCreationEmbeddable> reactiveCapabilityCurvePoints, String connectionName,
                                                          ConnectablePosition.Direction connectionDirection,
                                                          Integer connectionPosition) {
         return new GeneratorCreationEntity(generatorId, generatorName, energySource, voltageLevelId, busOrBusbarSectionId, minActivePower,
             maxActivePower, ratedNominalPower, activePowerSetpoint, reactivePowerSetpoint, voltageRegulationOn, voltageSetpoint, marginalCost, minQ, maxQ,
             participate, droop,  transientReactance, stepUpTransformerReactance, reactiveCapabilityCurvePoints, regulatingTerminalId, regulatingTerminalType,
-            regulatingTerminalVlId, reactiveCapabilityCurve, connectionName, connectionDirection, connectionPosition);
+            regulatingTerminalVlId, qPercent, reactiveCapabilityCurve, connectionName, connectionDirection, connectionPosition);
     }
 
     public EquipmentCreationEntity createLineEntity(String lineId, String lineName, double seriesResistance, double seriesReactance,
@@ -326,8 +281,7 @@ public class NetworkModificationRepository {
         return new BranchStatusModificationEntity(lineId, action);
     }
 
-    @Transactional(readOnly = true)
-    public List<ModificationEntity> getModificationsEntities(List<UUID> groupUuids) {
+    private List<ModificationEntity> getModificationsEntities(List<UUID> groupUuids) {
         return groupUuids.stream().flatMap(this::getModificationEntityList).collect(Collectors.toList());
     }
 

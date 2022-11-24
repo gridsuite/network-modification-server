@@ -18,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
@@ -35,7 +36,7 @@ public class NetworkModificationController {
         MOVE, DUPLICATE
     }
 
-    private NetworkModificationService networkModificationService;
+    private final NetworkModificationService networkModificationService;
 
     public NetworkModificationController(NetworkModificationService networkModificationService) {
         this.networkModificationService = networkModificationService;
@@ -44,7 +45,7 @@ public class NetworkModificationController {
     @PutMapping(value = "/networks/{networkUuid}/switches/{switchId}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "change a switch state in a network variant")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The switch state has been changed")})
-    public ResponseEntity<List<EquipmentModificationInfos>> createSwitchStateModification(
+    public ResponseEntity<List<EquipmentAttributeModificationInfos>> createSwitchStateModification(
             @Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
             @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
             @Parameter(description = "Switch ID") @PathVariable("switchId") String switchId,
@@ -170,8 +171,8 @@ public class NetworkModificationController {
     @Operation(summary = "update a load creation in the network")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The load creation has been updated")})
     public ResponseEntity<Void> updateLoadCreation(@PathVariable("modificationUuid") UUID modificationUuid,
-                                                         @RequestBody LoadCreationInfos loadCreationInfos) {
-        networkModificationService.updateLoadCreation(loadCreationInfos, modificationUuid);
+                                                   @RequestBody LoadCreationInfos loadCreationInfos) {
+        networkModificationService.updateLoadCreation(Objects.requireNonNull(loadCreationInfos), Objects.requireNonNull(modificationUuid));
         return ResponseEntity.ok().build();
     }
 

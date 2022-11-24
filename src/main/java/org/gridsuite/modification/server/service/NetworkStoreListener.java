@@ -15,21 +15,13 @@ import org.gridsuite.modification.server.entities.equipment.creation.TwoWindings
 import org.gridsuite.modification.server.entities.equipment.creation.VoltageLevelCreationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.LineAttachToVoltageLevelEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.LineSplitWithVoltageLevelEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.LinesAttachToSplitLinesEntity;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.entities.equipment.creation.GeneratorCreationEntity.toEmbeddablePoints;
@@ -54,11 +46,15 @@ public class NetworkStoreListener implements NetworkListener {
 
     private final Set<String> substationsIds = new HashSet<>();
 
-    private final List<EquipmentDeletionInfos> deletions = new ArrayList<>();
+    private final List<EquipmentDeletionInfos> deletions = new LinkedList<>();
 
     private final boolean isBuild;
 
     private final boolean isApplyModifications;
+
+    public Set<String> getSubstationsIds() {
+        return substationsIds;
+    }
 
     protected NetworkStoreListener(Network network, UUID networkUuid, UUID groupUuid,
                                    NetworkModificationRepository modificationRepository, EquipmentInfosService equipmentInfosService,
@@ -77,27 +73,28 @@ public class NetworkStoreListener implements NetworkListener {
                                               EquipmentInfosService equipmentInfosService,
                                               boolean isBuild, boolean isApplyModifications) {
         var listener = new NetworkStoreListener(network, networkUuid, groupUuid, modificationRepository, equipmentInfosService,
-            isBuild, isApplyModifications);
+                isBuild, isApplyModifications);
         network.addListener(listener);
         return listener;
     }
 
-    public static Set<String> getSubstationIds(Identifiable identifiable) {
+    public static Set<String> getSubstationIds(Identifiable<?> identifiable) {
         Set<String> ids = new HashSet<>();
+        // TODO implement getVoltageLevels in powsybl
         if (identifiable instanceof Switch) {
-            ids.add(((Switch) identifiable).getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
+            ids.add(((Switch) identifiable).getVoltageLevel().getSubstation().orElseThrow().getId());
         } else if (identifiable instanceof Injection) {
-            ids.add(((Injection<?>) identifiable).getTerminal().getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
+            ids.add(((Injection<?>) identifiable).getTerminal().getVoltageLevel().getSubstation().orElseThrow().getId());
         } else if (identifiable instanceof Branch) {
-            ids.add(((Branch<?>) identifiable).getTerminal1().getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
-            ids.add(((Branch<?>) identifiable).getTerminal2().getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
+            ids.add(((Branch<?>) identifiable).getTerminal1().getVoltageLevel().getSubstation().orElseThrow().getId());
+            ids.add(((Branch<?>) identifiable).getTerminal2().getVoltageLevel().getSubstation().orElseThrow().getId());
         } else if (identifiable instanceof ThreeWindingsTransformer) {
-            ids.add(((ThreeWindingsTransformer) identifiable).getTerminal(ThreeWindingsTransformer.Side.ONE).getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
-            ids.add(((ThreeWindingsTransformer) identifiable).getTerminal(ThreeWindingsTransformer.Side.TWO).getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
-            ids.add(((ThreeWindingsTransformer) identifiable).getTerminal(ThreeWindingsTransformer.Side.THREE).getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
+            ids.add(((ThreeWindingsTransformer) identifiable).getTerminal(ThreeWindingsTransformer.Side.ONE).getVoltageLevel().getSubstation().orElseThrow().getId());
+            ids.add(((ThreeWindingsTransformer) identifiable).getTerminal(ThreeWindingsTransformer.Side.TWO).getVoltageLevel().getSubstation().orElseThrow().getId());
+            ids.add(((ThreeWindingsTransformer) identifiable).getTerminal(ThreeWindingsTransformer.Side.THREE).getVoltageLevel().getSubstation().orElseThrow().getId());
         } else if (identifiable instanceof HvdcLine) {
-            ids.add(((HvdcLine) identifiable).getConverterStation1().getTerminal().getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
-            ids.add(((HvdcLine) identifiable).getConverterStation2().getTerminal().getVoltageLevel().getSubstation().orElseThrow().getId()); // TODO
+            ids.add(((HvdcLine) identifiable).getConverterStation1().getTerminal().getVoltageLevel().getSubstation().orElseThrow().getId());
+            ids.add(((HvdcLine) identifiable).getConverterStation2().getTerminal().getVoltageLevel().getSubstation().orElseThrow().getId());
         } else if (identifiable instanceof Substation) {
             ids.add(identifiable.getId());
         } else if (identifiable instanceof VoltageLevel) {
@@ -106,29 +103,25 @@ public class NetworkStoreListener implements NetworkListener {
         return ids;
     }
 
-    Network getNetwork() {
+    public Network getNetwork() {
         return network;
     }
 
-    UUID getNetworkUuid() {
-        return networkUuid;
-    }
-
-    boolean isBuild() {
+    public boolean isBuild() {
         return isBuild;
     }
 
-    boolean isApplyModifications() {
+    public boolean isApplyModifications() {
         return isApplyModifications;
     }
 
     public List<ModificationInfos> getModifications() {
         List<ModificationInfos> modificationInfos = modifications.stream()
-            .map(m -> {
-                ModificationInfos infos = m.toModificationInfos();
-                infos.setSubstationIds(substationsIds);
-                return infos;
-            })
+                .map(m -> {
+                    ModificationInfos infos = m.toModificationInfos();
+                    infos.setSubstationIds(substationsIds);
+                    return infos;
+                })
                 .collect(Collectors.toList());
         modifications.clear();
         return modificationInfos;
@@ -137,46 +130,25 @@ public class NetworkStoreListener implements NetworkListener {
     public void saveModifications() {
         if (groupUuid != null) {
             modificationRepository.saveModifications(groupUuid,
-                modifications
-                    .stream()
-                    .map(ModificationEntity.class::cast)
-                    .collect(Collectors.toList()));
+                    modifications
+                            .stream()
+                            .map(ModificationEntity.class::cast)
+                            .collect(Collectors.toList()));
         }
     }
 
     public void deleteModifications() {
         if (groupUuid != null) {
             modificationRepository.deleteModifications(groupUuid,
-                modifications
-                    .stream()
-                    .map(ModificationEntity::getId)
-                    .collect(Collectors.toSet()));
+                    modifications
+                            .stream()
+                            .map(ModificationEntity::getId)
+                            .collect(Collectors.toSet()));
         }
     }
 
-    public Collection<EquipmentDeletionInfos> getDeletions() {
-        return Collections.unmodifiableCollection(deletions);
-    }
-
-    public void storeEquipmentAttributeModification(Identifiable<?> identifiable, String attributeName, Object attributeValue) {
-        modifications.add(this.modificationRepository.createEquipmentAttributeModification(identifiable.getId(), attributeName, attributeValue));
-    }
-
-    public void storeEquipmentAttributeModification(String equipmentId, String attributeName, Object attributeValue) {
-        modifications.add(this.modificationRepository.createEquipmentAttributeModification(equipmentId, attributeName, attributeValue));
-    }
-
-    public void storeLoadCreation(LoadCreationInfos loadCreationInfos) {
-        modifications.add(this.modificationRepository.createLoadCreationEntity(loadCreationInfos.getEquipmentId(),
-                loadCreationInfos.getEquipmentName(),
-                loadCreationInfos.getLoadType(),
-                loadCreationInfos.getVoltageLevelId(),
-                loadCreationInfos.getBusOrBusbarSectionId(),
-                loadCreationInfos.getActivePower(),
-                loadCreationInfos.getReactivePower(),
-                loadCreationInfos.getConnectionName(),
-                loadCreationInfos.getConnectionDirection(),
-                loadCreationInfos.getConnectionPosition()));
+    public List<EquipmentDeletionInfos> getDeletions() {
+        return deletions;
     }
 
     public void storeLoadModification(LoadModificationInfos loadModificationInfos) {
@@ -196,32 +168,33 @@ public class NetworkStoreListener implements NetworkListener {
 
     public void storeGeneratorCreation(GeneratorCreationInfos generatorCreationInfos) {
         modifications.add(this.modificationRepository.createGeneratorEntity(generatorCreationInfos.getEquipmentId(),
-            generatorCreationInfos.getEquipmentName(),
-            generatorCreationInfos.getEnergySource(),
-            generatorCreationInfos.getVoltageLevelId(),
-            generatorCreationInfos.getBusOrBusbarSectionId(),
-            generatorCreationInfos.getMinActivePower(),
-            generatorCreationInfos.getMaxActivePower(),
-            generatorCreationInfos.getRatedNominalPower(),
-            generatorCreationInfos.getActivePowerSetpoint(),
-            generatorCreationInfos.getReactivePowerSetpoint(),
-            generatorCreationInfos.isVoltageRegulationOn(),
-            generatorCreationInfos.getVoltageSetpoint(),
-            generatorCreationInfos.getMarginalCost(),
-            generatorCreationInfos.getMinimumReactivePower(),
-            generatorCreationInfos.getMaximumReactivePower(),
-            generatorCreationInfos.getParticipate() != null && generatorCreationInfos.getParticipate(),
-            generatorCreationInfos.getDroop(),
-            generatorCreationInfos.getTransientReactance(),
-            generatorCreationInfos.getStepUpTransformerReactance(),
-            generatorCreationInfos.getRegulatingTerminalId(),
-            generatorCreationInfos.getRegulatingTerminalType(),
-            generatorCreationInfos.getRegulatingTerminalVlId(),
-            generatorCreationInfos.getReactiveCapabilityCurve() == null || generatorCreationInfos.getReactiveCapabilityCurve(),
-            toEmbeddablePoints(generatorCreationInfos.getReactiveCapabilityCurvePoints()),
-            generatorCreationInfos.getConnectionName(),
-            generatorCreationInfos.getConnectionDirection(),
-            generatorCreationInfos.getConnectionPosition()));
+                generatorCreationInfos.getEquipmentName(),
+                generatorCreationInfos.getEnergySource(),
+                generatorCreationInfos.getVoltageLevelId(),
+                generatorCreationInfos.getBusOrBusbarSectionId(),
+                generatorCreationInfos.getMinActivePower(),
+                generatorCreationInfos.getMaxActivePower(),
+                generatorCreationInfos.getRatedNominalPower(),
+                generatorCreationInfos.getActivePowerSetpoint(),
+                generatorCreationInfos.getReactivePowerSetpoint(),
+                generatorCreationInfos.isVoltageRegulationOn(),
+                generatorCreationInfos.getVoltageSetpoint(),
+                generatorCreationInfos.getMarginalCost(),
+                generatorCreationInfos.getMinimumReactivePower(),
+                generatorCreationInfos.getMaximumReactivePower(),
+                generatorCreationInfos.getParticipate() != null && generatorCreationInfos.getParticipate(),
+                generatorCreationInfos.getDroop(),
+                generatorCreationInfos.getTransientReactance(),
+                generatorCreationInfos.getStepUpTransformerReactance(),
+                generatorCreationInfos.getRegulatingTerminalId(),
+                generatorCreationInfos.getRegulatingTerminalType(),
+                generatorCreationInfos.getRegulatingTerminalVlId(),
+                generatorCreationInfos.getQPercent(),
+                generatorCreationInfos.getReactiveCapabilityCurve() == null || generatorCreationInfos.getReactiveCapabilityCurve(),
+                toEmbeddablePoints(generatorCreationInfos.getReactiveCapabilityCurvePoints()),
+                generatorCreationInfos.getConnectionName(),
+                generatorCreationInfos.getConnectionDirection(),
+                generatorCreationInfos.getConnectionPosition()));
     }
 
     public void storeEquipmentDeletion(String equipmentId, String equipmentType) {
@@ -230,23 +203,23 @@ public class NetworkStoreListener implements NetworkListener {
 
     public void storeLineCreation(LineCreationInfos lineCreationInfos) {
         modifications.add(this.modificationRepository.createLineEntity(lineCreationInfos.getEquipmentId(),
-            lineCreationInfos.getEquipmentName(),
-            lineCreationInfos.getSeriesResistance(),
-            lineCreationInfos.getSeriesReactance(),
-            lineCreationInfos.getShuntConductance1(),
-            lineCreationInfos.getShuntSusceptance1(),
-            lineCreationInfos.getShuntConductance2(),
-            lineCreationInfos.getShuntSusceptance2(),
-            lineCreationInfos.getVoltageLevelId1(),
-            lineCreationInfos.getBusOrBusbarSectionId1(),
-            lineCreationInfos.getVoltageLevelId2(),
-            lineCreationInfos.getBusOrBusbarSectionId2(),
-            lineCreationInfos.getCurrentLimits1() != null ? lineCreationInfos.getCurrentLimits1().getPermanentLimit() : null,
-            lineCreationInfos.getCurrentLimits2() != null ? lineCreationInfos.getCurrentLimits2().getPermanentLimit() : null,
-            lineCreationInfos.getConnectionName1(),
-            lineCreationInfos.getConnectionDirection1(),
-            lineCreationInfos.getConnectionName2(),
-            lineCreationInfos.getConnectionDirection2()
+                lineCreationInfos.getEquipmentName(),
+                lineCreationInfos.getSeriesResistance(),
+                lineCreationInfos.getSeriesReactance(),
+                lineCreationInfos.getShuntConductance1(),
+                lineCreationInfos.getShuntSusceptance1(),
+                lineCreationInfos.getShuntConductance2(),
+                lineCreationInfos.getShuntSusceptance2(),
+                lineCreationInfos.getVoltageLevelId1(),
+                lineCreationInfos.getBusOrBusbarSectionId1(),
+                lineCreationInfos.getVoltageLevelId2(),
+                lineCreationInfos.getBusOrBusbarSectionId2(),
+                lineCreationInfos.getCurrentLimits1() != null ? lineCreationInfos.getCurrentLimits1().getPermanentLimit() : null,
+                lineCreationInfos.getCurrentLimits2() != null ? lineCreationInfos.getCurrentLimits2().getPermanentLimit() : null,
+                lineCreationInfos.getConnectionName1(),
+                lineCreationInfos.getConnectionDirection1(),
+                lineCreationInfos.getConnectionName2(),
+                lineCreationInfos.getConnectionDirection2()
         ));
     }
 
@@ -293,27 +266,27 @@ public class NetworkStoreListener implements NetworkListener {
     public void onCreation(Identifiable identifiable) {
         substationsIds.addAll(getSubstationIds(identifiable));
         equipmentInfosService.addEquipmentInfos(
-            EquipmentInfos.builder()
-                .networkUuid(networkUuid)
-                .variantId(network.getVariantManager().getWorkingVariantId())
-                .id(identifiable.getId())
-                .name(identifiable.getNameOrId())
-                .type(identifiable.getType().name())
-                .voltageLevels(EquipmentInfos.getVoltageLevels(identifiable))
-                .build()
+                EquipmentInfos.builder()
+                        .networkUuid(networkUuid)
+                        .variantId(network.getVariantManager().getWorkingVariantId())
+                        .id(identifiable.getId())
+                        .name(identifiable.getNameOrId())
+                        .type(identifiable.getType().name())
+                        .voltageLevels(EquipmentInfos.getVoltageLevels(identifiable))
+                        .build()
         );
     }
 
     @Override
     public void beforeRemoval(Identifiable identifiable) {
         EquipmentDeletionInfos di = EquipmentDeletionInfos
-            .builder()
-            .uuid(null) // not in "this" db, transient
-            .date(ZonedDateTime.now(ZoneOffset.UTC))
-            .type(ModificationType.EQUIPMENT_DELETION)
-            .equipmentId(identifiable.getId())
-            .equipmentType(identifiable.getType().name())
-            .build();
+                .builder()
+                .uuid(null) // not in "this" db, transient
+                .date(ZonedDateTime.now(ZoneOffset.UTC))
+                .type(ModificationType.EQUIPMENT_DELETION)
+                .equipmentId(identifiable.getId())
+                .equipmentType(identifiable.getType().name())
+                .build();
         addSubstationsIds(identifiable);
         this.deletions.add(di);
     }
@@ -325,33 +298,17 @@ public class NetworkStoreListener implements NetworkListener {
             equipmentInfosService.deleteEquipmentInfos(id, networkUuid, variantId);
         } else {
             equipmentInfosService.addTombstonedEquipmentInfos(
-                TombstonedEquipmentInfos.builder()
-                    .networkUuid(networkUuid)
-                    .variantId(variantId)
-                    .id(id)
-                    .build()
+                    TombstonedEquipmentInfos.builder()
+                            .networkUuid(networkUuid)
+                            .variantId(variantId)
+                            .id(id)
+                            .build()
             );
         }
     }
 
-    public void addSubstationsIds(Identifiable identifiable) {
+    private void addSubstationsIds(Identifiable<?> identifiable) {
         substationsIds.addAll(getSubstationIds(identifiable));
-    }
-
-    public void storeLineSplitWithVoltageLevelInfos(LineSplitWithVoltageLevelInfos lineSplitWithVoltageLevelInfos) {
-        VoltageLevelCreationInfos mayNewVoltageLevelInfos = lineSplitWithVoltageLevelInfos.getMayNewVoltageLevelInfos();
-
-        modifications.add(LineSplitWithVoltageLevelEntity.toEntity(
-            lineSplitWithVoltageLevelInfos.getLineToSplitId(),
-            lineSplitWithVoltageLevelInfos.getPercent(),
-            mayNewVoltageLevelInfos,
-            lineSplitWithVoltageLevelInfos.getExistingVoltageLevelId(),
-            lineSplitWithVoltageLevelInfos.getBbsOrBusId(),
-            lineSplitWithVoltageLevelInfos.getNewLine1Id(),
-            lineSplitWithVoltageLevelInfos.getNewLine1Name(),
-            lineSplitWithVoltageLevelInfos.getNewLine2Id(),
-            lineSplitWithVoltageLevelInfos.getNewLine2Name())
-        );
     }
 
     public void storeLineAttachToVoltageLevelInfos(LineAttachToVoltageLevelInfos lineAttachToVoltageLevelInfos) {
