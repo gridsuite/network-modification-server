@@ -492,7 +492,7 @@ public class ModificationRepositoryTest {
         var groovyScriptModificationEntity3 = networkModificationRepository.createGroovyScriptModificationEntity("script3");
         var groovyScriptModificationEntity4 = networkModificationRepository.createGroovyScriptModificationEntity("script4");
         var groovyScriptModificationEntity5 = networkModificationRepository.createGroovyScriptModificationEntity("script5");
-        var groovyScriptModificationEntity6 = networkModificationRepository.createGroovyScriptModificationEntity("scriptSaucisse");
+        var groovyScriptModificationEntity6 = networkModificationRepository.createGroovyScriptModificationEntity("script6");
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(groovyScriptModificationEntity1, groovyScriptModificationEntity2,
                 groovyScriptModificationEntity3, groovyScriptModificationEntity4));
@@ -517,6 +517,20 @@ public class ModificationRepositoryTest {
 
         assertEquals(getIds(expected1), getIds(modification1));
         assertEquals(getIds(expected2), getIds(modification2));
+
+        // cutting and pasting to non existing group should work
+        SQLStatementCountValidator.reset();
+        networkModificationRepository.moveModifications(TEST_GROUP_ID_3, List.of(expected2.get(0).getUuid(), expected2.get(1).getUuid()), null);
+        assertRequestsCount(5, 1, 6, 0);
+
+        modification2 = networkModificationRepository.getModifications(TEST_GROUP_ID_2, true, true);
+        var modification3 = networkModificationRepository.getModifications(TEST_GROUP_ID_3, true, true);
+
+        expected2 = List.of(modificationOriginal1.get(1), modificationOriginal1.get(2));
+        var expected3 = List.of(modificationOriginal2.get(0), modificationOriginal2.get(1));
+
+        assertEquals(getIds(modification2), getIds(expected2));
+        assertEquals(getIds(expected3), getIds(modification3));
     }
 
     @Test
@@ -526,7 +540,7 @@ public class ModificationRepositoryTest {
         var groovyScriptModificationEntity3 = networkModificationRepository.createGroovyScriptModificationEntity("script3");
         var groovyScriptModificationEntity4 = networkModificationRepository.createGroovyScriptModificationEntity("script4");
         var groovyScriptModificationEntity5 = networkModificationRepository.createGroovyScriptModificationEntity("script5");
-        var groovyScriptModificationEntity6 = networkModificationRepository.createGroovyScriptModificationEntity("scriptSaucisse");
+        var groovyScriptModificationEntity6 = networkModificationRepository.createGroovyScriptModificationEntity("script6");
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(groovyScriptModificationEntity1, groovyScriptModificationEntity2,
                 groovyScriptModificationEntity3, groovyScriptModificationEntity4));
@@ -551,7 +565,6 @@ public class ModificationRepositoryTest {
 
         assertEquals(getIds(expected1), getIds(modification1));
         assertEquals(getIds(expected2), getIds(modification2));
-
     }
 
     @Test
@@ -561,7 +574,7 @@ public class ModificationRepositoryTest {
         var groovyScriptModificationEntity3 = networkModificationRepository.createGroovyScriptModificationEntity("script3");
         var groovyScriptModificationEntity4 = networkModificationRepository.createGroovyScriptModificationEntity("script4");
         var groovyScriptModificationEntity5 = networkModificationRepository.createGroovyScriptModificationEntity("script5");
-        var groovyScriptModificationEntity6 = networkModificationRepository.createGroovyScriptModificationEntity("scriptSaucisse");
+        var groovyScriptModificationEntity6 = networkModificationRepository.createGroovyScriptModificationEntity("script6");
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(groovyScriptModificationEntity1, groovyScriptModificationEntity2));
         assertRequestsCount(1, 5, 2, 0);

@@ -91,7 +91,12 @@ public class NetworkModificationRepository {
 
             originModificationGroupEntity.setModifications(newDestinationModificationList);
         } else {
-            ModificationGroupEntity destinationModificationGroupEntity = getModificationGroup(destinationGroupUuid);
+            ModificationGroupEntity destinationModificationGroupEntity;
+            try {
+                destinationModificationGroupEntity = getModificationGroup(destinationGroupUuid);
+            } catch (NetworkModificationException e) {
+                destinationModificationGroupEntity = modificationGroupRepository.save(new ModificationGroupEntity(destinationGroupUuid));
+            }
 
             Map<UUID, ModificationEntity> destinationModifications = modificationRepository.findAllBaseByGroupId(destinationGroupUuid).stream()
                                                                          .collect(Collectors.toMap(ModificationEntity::getId, Function.identity(), (x, y) -> y, LinkedHashMap::new));
