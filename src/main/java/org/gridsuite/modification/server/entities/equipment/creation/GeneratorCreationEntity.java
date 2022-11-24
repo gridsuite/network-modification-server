@@ -91,6 +91,9 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
     @Column(name = "connectionDirection")
     private ConnectablePosition.Direction connectionDirection;
 
+    @Column(name = "connectionPosition")
+    private Integer connectionPosition;
+
     @ElementCollection
     @CollectionTable
     private List<ReactiveCapabilityCurveCreationEmbeddable> reactiveCapabilityCurvePoints;
@@ -100,7 +103,7 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
                                    Double reactivePowerSetpoint, boolean voltageRegulationOn, Double voltageSetpoint, Double marginalCost, Double minQ,
                                    Double maxQ, boolean participate, Float droop, Double transientReactance, Double stepUpTransformerReactance,
                                    List<ReactiveCapabilityCurveCreationEmbeddable> reactiveCapabilityCurvePoints, String regulatingTerminalId,
-                                   String regulatingTerminalType, String regulatingTerminalVlId, Boolean reactiveCapabilityCurve, String connectionName, ConnectablePosition.Direction connectionDirection) {
+                                   String regulatingTerminalType, String regulatingTerminalVlId, Boolean reactiveCapabilityCurve, String connectionName, ConnectablePosition.Direction connectionDirection, Integer connectionPosition) {
         super(ModificationType.GENERATOR_CREATION, equipmentId, equipmentName, voltageLevelId, busOrBusbarSectionId);
         this.energySource = energySource;
         this.minActivePower = minActivePower;
@@ -124,6 +127,7 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
         this.reactiveCapabilityCurve = reactiveCapabilityCurve;
         this.connectionDirection = connectionDirection;
         this.connectionName = connectionName;
+        this.connectionPosition = connectionPosition;
     }
 
     public static List<ReactiveCapabilityCurveCreationEmbeddable> toEmbeddablePoints(
@@ -179,7 +183,8 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
             .transientReactance(getTransientReactance())
             .stepUpTransformerReactance(getStepUpTransformerReactance())
             .connectionName(getConnectionName())
-            .connectionDirection(getConnectionDirection());
+            .connectionDirection(getConnectionDirection())
+            .connectionPosition(getConnectionPosition());
     }
 
     @Override

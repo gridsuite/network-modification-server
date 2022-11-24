@@ -175,7 +175,8 @@ public class NetworkStoreListener implements NetworkListener {
                 loadCreationInfos.getActivePower(),
                 loadCreationInfos.getReactivePower(),
                 loadCreationInfos.getConnectionName(),
-                loadCreationInfos.getConnectionDirection()));
+                loadCreationInfos.getConnectionDirection(),
+                loadCreationInfos.getConnectionPosition()));
     }
 
     public void storeLoadModification(LoadModificationInfos loadModificationInfos) {
@@ -219,7 +220,8 @@ public class NetworkStoreListener implements NetworkListener {
             generatorCreationInfos.getReactiveCapabilityCurve() == null || generatorCreationInfos.getReactiveCapabilityCurve(),
             toEmbeddablePoints(generatorCreationInfos.getReactiveCapabilityCurvePoints()),
             generatorCreationInfos.getConnectionName(),
-            generatorCreationInfos.getConnectionDirection()));
+            generatorCreationInfos.getConnectionDirection(),
+            generatorCreationInfos.getConnectionPosition()));
     }
 
     public void storeEquipmentDeletion(String equipmentId, String equipmentType) {

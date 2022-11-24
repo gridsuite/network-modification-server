@@ -736,7 +736,7 @@ public class ModificationControllerTest {
                 "v12",
                 "bus12",
                 175.0,
-                60.0, "top", ConnectablePosition.Direction.TOP)
+                60.0, "top", ConnectablePosition.Direction.TOP, 0)
                 .toModificationInfos();
         loadCreationInfos.setUuid(equipmentModificationInfos.getUuid());
 
@@ -747,7 +747,7 @@ public class ModificationControllerTest {
                 "v12",
                 "bus12",
                 175.0,
-                60.0, "bot", ConnectablePosition.Direction.BOTTOM)
+                60.0, "bot", ConnectablePosition.Direction.BOTTOM, 1)
                 .toModificationInfos();
         String uriStringForUpdate = "/v1/modifications/" + equipmentModificationInfos.getUuid() + "/loads-creation";
         String loadCreationUpdateJson = objectWriter.writeValueAsString(loadCreationUpdate);
@@ -1236,7 +1236,8 @@ public class ModificationControllerTest {
                 "v2",
                 false,
                 "top1",
-                ConnectablePosition.Direction.TOP)
+                ConnectablePosition.Direction.TOP,
+                20)
                 .toModificationInfos();
         generatorCreationInfos.setUuid(bsmlrGeneratorCreation.get(0).getUuid());
 
@@ -1267,7 +1268,8 @@ public class ModificationControllerTest {
                 "v2",
                 false,
                 "top11",
-                ConnectablePosition.Direction.TOP)
+                ConnectablePosition.Direction.TOP,
+                21)
                 .toModificationInfos();
         String generatorCreationUpdateJson = objectWriter.writeValueAsString(generatorCreationUpdate);
         String uriStringForUpdate = "/v1/modifications/" + bsmlrGeneratorCreation.get(0).getUuid() + "/generators-creation";
@@ -1305,9 +1307,9 @@ public class ModificationControllerTest {
         generatorCreationInfos.setBusOrBusbarSectionId("notFoundBusbarSection");
         generatorCreationInfosJson = objectWriter.writeValueAsString(generatorCreationInfos);
         mvcResult = mockMvc.perform(post(uriString, TEST_NETWORK_ID).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().is4xxClientError()).andReturn();
+            .andExpect(status().is5xxServerError()).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
-        assertEquals(resultAsString, new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "Bus bar section notFoundBusbarSection not found").getMessage());
+        assertEquals(resultAsString, new NetworkModificationException(CREATE_GENERATOR_ERROR, "Busbar section notFoundBusbarSection not found.").getMessage());
         generatorCreationInfos.setVoltageLevelId("v2");
         generatorCreationInfos.setBusOrBusbarSectionId("1B");
         generatorCreationInfos.setMinActivePower(Double.NaN);

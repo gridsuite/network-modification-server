@@ -43,14 +43,18 @@ public class LoadCreationEntity extends InjectionCreationEntity {
     @Column(name = "connectionDirection")
     private ConnectablePosition.Direction connectionDirection;
 
+    @Column(name = "connectionPosition")
+    private Integer connectionPosition;
+
     public LoadCreationEntity(String equipmentId, String equipmentName, LoadType loadType, String voltageLevelId, String busOrBusbarSectionId,
-                              double activePower, double reactivePower, String connectionName, ConnectablePosition.Direction connectionDirection) {
+                              double activePower, double reactivePower, String connectionName, ConnectablePosition.Direction connectionDirection, Integer connectionPosition) {
         super(ModificationType.LOAD_CREATION, equipmentId, equipmentName, voltageLevelId, busOrBusbarSectionId);
         this.loadType = loadType;
         this.activePower = activePower;
         this.reactivePower = reactivePower;
         this.connectionDirection = connectionDirection;
         this.connectionName = connectionName;
+        this.connectionPosition = connectionPosition;
     }
 
     @Override
@@ -72,6 +76,7 @@ public class LoadCreationEntity extends InjectionCreationEntity {
             .activePower(getActivePower())
             .reactivePower(getReactivePower())
             .connectionName(getConnectionName())
-            .connectionDirection(getConnectionDirection());
+            .connectionDirection(getConnectionDirection())
+            .connectionPosition(getConnectionPosition());
     }
 }

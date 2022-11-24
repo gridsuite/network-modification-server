@@ -210,8 +210,8 @@ public class NetworkModificationRepository {
     }
 
     public EquipmentCreationEntity createLoadCreationEntity(String loadId, String loadName, LoadType loadType,
-                                                            String voltageLevelId, String busOrBusbarSectionId, double activePower, double reactivePower, String connectionName, ConnectablePosition.Direction connectionDirection) {
-        return new LoadCreationEntity(loadId, loadName, loadType, voltageLevelId, busOrBusbarSectionId, activePower, reactivePower, connectionName, connectionDirection);
+                                                            String voltageLevelId, String busOrBusbarSectionId, double activePower, double reactivePower, String connectionName, ConnectablePosition.Direction connectionDirection, Integer connectionPosition) {
+        return new LoadCreationEntity(loadId, loadName, loadType, voltageLevelId, busOrBusbarSectionId, activePower, reactivePower, connectionName, connectionDirection, connectionPosition);
     }
 
     public EquipmentModificationEntity createLoadModificationEntity(String loadId, AttributeModification<String> loadName, AttributeModification<LoadType> loadType,
@@ -230,11 +230,12 @@ public class NetworkModificationRepository {
                                                          String regulatingTerminalId, String regulatingTerminalType, String regulatingTerminalVlId,
                                                          boolean reactiveCapabilityCurve,
                                                          List<ReactiveCapabilityCurveCreationEmbeddable> reactiveCapabilityCurvePoints, String connectionName,
-                                                         ConnectablePosition.Direction connectionDirection) {
+                                                         ConnectablePosition.Direction connectionDirection,
+                                                         Integer connectionPosition) {
         return new GeneratorCreationEntity(generatorId, generatorName, energySource, voltageLevelId, busOrBusbarSectionId, minActivePower,
             maxActivePower, ratedNominalPower, activePowerSetpoint, reactivePowerSetpoint, voltageRegulationOn, voltageSetpoint, marginalCost, minQ, maxQ,
             participate, droop,  transientReactance, stepUpTransformerReactance, reactiveCapabilityCurvePoints, regulatingTerminalId, regulatingTerminalType,
-            regulatingTerminalVlId, reactiveCapabilityCurve, connectionName, connectionDirection);
+            regulatingTerminalVlId, reactiveCapabilityCurve, connectionName, connectionDirection, connectionPosition);
     }
 
     public EquipmentCreationEntity createLineEntity(String lineId, String lineName, double seriesResistance, double seriesReactance,

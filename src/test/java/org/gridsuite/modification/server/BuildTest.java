@@ -302,15 +302,15 @@ public class BuildTest {
         entities1.add(modificationRepository.createEquipmentAttributeModification("idGenerator", "targetP", 50.));
         entities1.add(modificationRepository.createEquipmentAttributeModification("trf1", "ratioTapChanger.tapPosition", 2));
         entities1.add(modificationRepository.createEquipmentAttributeModification("trf6", "phaseTapChanger1.tapPosition", 0));
-        entities1.add(modificationRepository.createLoadCreationEntity("newLoad", "newLoad", LoadType.AUXILIARY, "v1", "1.1", 10., 20., "cn", ConnectablePosition.Direction.TOP));
-        entities1.add(modificationRepository.createLoadCreationEntity("newLoad1", "newLoad1", LoadType.AUXILIARY, "v1", "1.1", 10., 20., "cn1", ConnectablePosition.Direction.BOTTOM));
-        entities1.add(modificationRepository.createLoadCreationEntity("newLoad2", "newLoad2", LoadType.AUXILIARY, "v1", "1.1", 10., 20., "cn2", ConnectablePosition.Direction.UNDEFINED));
-        entities1.add(modificationRepository.createLoadCreationEntity("newLoad2", "newLoad2", LoadType.AUXILIARY, "v1", "1.1", 10., 20., null, ConnectablePosition.Direction.UNDEFINED));
+        entities1.add(modificationRepository.createLoadCreationEntity("newLoad", "newLoad", LoadType.AUXILIARY, "v1", "1.1", 10., 20., "cn", ConnectablePosition.Direction.TOP, 0));
+        entities1.add(modificationRepository.createLoadCreationEntity("newLoad1", "newLoad1", LoadType.AUXILIARY, "v1", "1.1", 10., 20., "cn1", ConnectablePosition.Direction.BOTTOM, 1));
+        entities1.add(modificationRepository.createLoadCreationEntity("newLoad2", "newLoad2", LoadType.AUXILIARY, "v1", "1.1", 10., 20., "cn2", ConnectablePosition.Direction.UNDEFINED, 2));
+        entities1.add(modificationRepository.createLoadCreationEntity("newLoad2", "newLoad2", LoadType.AUXILIARY, "v1", "1.1", 10., 20., null, ConnectablePosition.Direction.UNDEFINED, 3));
 
         entities1.add(modificationRepository.createSubstationEntity("newSubstation", "newSubstation", Country.FR));
 
         List<ModificationEntity> entities2 = new ArrayList<>();
-        entities2.add(modificationRepository.createGeneratorEntity(NEW_GENERATOR_ID, NEW_GENERATOR_ID, EnergySource.HYDRO, "v2", "1A", 0., 500., 1., 100., 50., true, 225., 8., 20., 50., true, 9F, 35., 25., "v2load", "LOAD", "v2", false, List.of(), "Top", ConnectablePosition.Direction.TOP));
+        entities2.add(modificationRepository.createGeneratorEntity(NEW_GENERATOR_ID, NEW_GENERATOR_ID, EnergySource.HYDRO, "v2", "1A", 0., 500., 1., 100., 50., true, 225., 8., 20., 50., true, 9F, 35., 25., "v2load", "LOAD", "v2", false, List.of(), "Top", ConnectablePosition.Direction.TOP, 0));
         entities2.add(modificationRepository.createLineEntity("newLine", "newLine", 1., 2., 3., 4., 5., 6., "v1", "1.1", "v2", "1B", null, null, "cn101", ConnectablePosition.Direction.TOP, "cn102", ConnectablePosition.Direction.TOP));
 
         List<TapChangerStepCreationEmbeddable> tapChangerStepCreationEmbeddables = new ArrayList<>();
