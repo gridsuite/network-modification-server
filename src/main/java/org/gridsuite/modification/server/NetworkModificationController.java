@@ -33,7 +33,7 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
 public class NetworkModificationController {
 
     enum GroupModificationAction {
-        MOVE, DUPLICATE
+        MOVE, COPY
     }
 
     private final NetworkModificationService networkModificationService;
@@ -102,7 +102,7 @@ public class NetworkModificationController {
                                                               @Parameter(description = "the modification Uuid to move before (MOVE option, empty means moving at the end)") @RequestParam(value = "before", required = false) UUID before,
                                                               @RequestBody List<UUID> modificationsUuidList) {
         switch (action) {
-            case DUPLICATE:
+            case COPY:
                 return ResponseEntity.ok().body(networkModificationService.duplicateModifications(groupUuid, modificationsUuidList));
             case MOVE:
                 networkModificationService.moveModifications(groupUuid, before, modificationsUuidList);
