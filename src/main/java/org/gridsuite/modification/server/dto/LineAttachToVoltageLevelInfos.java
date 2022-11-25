@@ -6,9 +6,15 @@
  */
 package org.gridsuite.modification.server.dto;
 
+import com.powsybl.commons.reporter.Reporter;
+import com.powsybl.commons.reporter.ReporterModel;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.entities.equipment.modification.LineAttachToVoltageLevelEntity;
+import org.gridsuite.modification.server.modifications.AbstractModification;
+import org.gridsuite.modification.server.modifications.LineAttachToVoltageLevel;
 
 /**
  * @author Nicolas NOIR <nicolas.noir at rte-france.com>
@@ -57,4 +63,37 @@ public class LineAttachToVoltageLevelInfos extends ModificationInfos {
 
     @Schema(description = "new line 2 name")
     private String newLine2Name;
+
+    @Override
+    public LineAttachToVoltageLevelEntity toEntity() {
+        return LineAttachToVoltageLevelEntity.toEntity(
+                getLineToAttachToId(),
+                getPercent(),
+                getAttachmentPointId(),
+                getAttachmentPointName(),
+                getMayNewVoltageLevelInfos(),
+                getExistingVoltageLevelId(),
+                getBbsOrBusId(),
+                getAttachmentLine(),
+                getNewLine1Id(),
+                getNewLine1Name(),
+                getNewLine2Id(),
+                getNewLine2Name()
+        );
+    }
+
+    @Override
+    public AbstractModification toModification() {
+        return new LineAttachToVoltageLevel(this);
+    }
+
+    @Override
+    public NetworkModificationException.Type getErrorType() {
+        return NetworkModificationException.Type.LINE_ATTACH_ERROR;
+    }
+
+    @Override
+    public Reporter createSubReporter(ReporterModel reporter) {
+        return reporter.createSubReporter("LineAttachToVoltageLevel", "Line attach to voltage level");
+    }
 }
