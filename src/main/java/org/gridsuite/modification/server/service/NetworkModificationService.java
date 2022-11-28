@@ -1169,32 +1169,6 @@ public class NetworkModificationService {
         }
     }
 
-    class NullDeadBandChecker {
-        private boolean nullForRatioTapChanger = false;
-        private boolean nullForPhaseTapChanger = false;
-        private static final double DEADBAND_NULL_VALUE = 0.;
-
-        public NullDeadBandChecker(TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
-            if (twoWindingsTransformerCreationInfos.getRatioTapChanger() != null && twoWindingsTransformerCreationInfos.getRatioTapChanger().getTargetDeadband() == null) {
-                nullForRatioTapChanger = true;
-                twoWindingsTransformerCreationInfos.getRatioTapChanger().setTargetDeadband(DEADBAND_NULL_VALUE);
-            }
-            if (twoWindingsTransformerCreationInfos.getPhaseTapChanger() != null && twoWindingsTransformerCreationInfos.getPhaseTapChanger().getTargetDeadband() == null) {
-                nullForPhaseTapChanger = true;
-                twoWindingsTransformerCreationInfos.getPhaseTapChanger().setTargetDeadband(DEADBAND_NULL_VALUE);
-            }
-        }
-
-        public void restore(TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
-            if (nullForRatioTapChanger) {
-                twoWindingsTransformerCreationInfos.getRatioTapChanger().setTargetDeadband(null);
-            }
-            if (nullForPhaseTapChanger) {
-                twoWindingsTransformerCreationInfos.getPhaseTapChanger().setTargetDeadband(null);
-            }
-        }
-    }
-
     private List<ModificationInfos> execCreateTwoWindingsTransformerCreation(NetworkStoreListener listener, TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos,
                                                                      UUID reportUuid, String reporterId) {
         Network network = listener.getNetwork();
@@ -1204,13 +1178,6 @@ public class NetworkModificationService {
 
         return doAction(listener, () -> {
             if (listener.isApplyModifications()) {
-                // Next is a hack to allow the creation of a 2WT without a specific deadband (null). As the network-store
-                // currently does not accept null value, we just pass 0 here before the equipment creation in the network,
-                // cf addXXXTransformer() below.
-                // Later we switch back to null, so the network modification still has null value in its entity.
-                // TODO This hack should be removed when Powsybl will support optional value for the deadband.
-                NullDeadBandChecker nullDeadBandChecker = new NullDeadBandChecker(twoWindingsTransformerCreationInfos);
-
                 // create the 2wt in the network
                 VoltageLevel voltageLevel1 = getVoltageLevel(network, twoWindingsTransformerCreationInfos.getVoltageLevelId1());
                 VoltageLevel voltageLevel2 = getVoltageLevel(network, twoWindingsTransformerCreationInfos.getVoltageLevelId2());
@@ -1237,7 +1204,6 @@ public class NetworkModificationService {
                 } else {
                     addTwoWindingsTransformer(network, voltageLevel1, voltageLevel2, twoWindingsTransformerCreationInfos, true, true, subReporter);
                 }
-                nullDeadBandChecker.restore(twoWindingsTransformerCreationInfos);
             }
             // add the 2wt creation entity to the listener
             listener.storeTwoWindingsTransformerCreation(twoWindingsTransformerCreationInfos);
@@ -1255,7 +1221,7 @@ public class NetworkModificationService {
 
             if (ratioTapChangerInfos.isRegulating()) {
                 ratioTapChangerAdder.setTargetV(ratioTapChangerInfos.getTargetV())
-                        .setTargetDeadband(ratioTapChangerInfos.getTargetDeadband() != null ? ratioTapChangerInfos.getTargetDeadband() : Double.NaN)
+                        .setTargetDeadband(ratioTapChangerInfos.getTargetDeadband() != null ? ratioTapChangerInfos.getTargetDeadband() : 0.)
                         .setRegulationTerminal(terminal);
             }
 
@@ -1283,7 +1249,7 @@ public class NetworkModificationService {
 
             if (phaseTapChangerInfos.isRegulating()) {
                 phaseTapChangerAdder.setRegulationValue(phaseTapChangerInfos.getRegulationValue())
-                        .setTargetDeadband(phaseTapChangerInfos.getTargetDeadband() != null ? phaseTapChangerInfos.getTargetDeadband() : Double.NaN)
+                        .setTargetDeadband(phaseTapChangerInfos.getTargetDeadband() != null ? phaseTapChangerInfos.getTargetDeadband() : 0.)
                         .setRegulationTerminal(terminal);
             }
 
