@@ -19,6 +19,7 @@ import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
 import nl.jqno.equalsverifier.EqualsVerifier;
 import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.server.dto.LoadCreationInfos.LoadCreationInfosBuilder;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.equipment.creation.*;
 import org.gridsuite.modification.server.entities.equipment.modification.LoadModificationEntity;
@@ -154,6 +155,17 @@ public class ModificationControllerTest {
         assertEquals(new NetworkModificationException(MODIFICATION_ERROR).getMessage(), MODIFICATION_ERROR.name());
         assertEquals(new NetworkModificationException(MODIFICATION_ERROR, "Error message").getMessage(), MODIFICATION_ERROR.name() + " : Error message");
         assertEquals(new NetworkModificationException(MODIFICATION_ERROR, new IllegalArgumentException("Error message")).getMessage(), MODIFICATION_ERROR.name() +  " : Error message");
+    }
+
+    @Test
+    public void testEquipmentIdNonNull() {
+        String errorMessage = "equipmentId is marked non-null but is null";
+        LoadCreationInfosBuilder<?, ?> loadCreationBuilder = LoadCreationInfos.builder();
+        assertEquals(errorMessage, assertThrows(NullPointerException.class, () -> loadCreationBuilder.build()).getMessage());
+        LoadCreationInfosBuilder<?, ?> loadCreationBuilder1 = loadCreationBuilder.equipmentId(null);
+        assertEquals(errorMessage, assertThrows(NullPointerException.class, () -> loadCreationBuilder1.build()).getMessage());
+        LoadCreationInfos loadCreationInfos = LoadCreationInfos.builder().type(ModificationType.LOAD_CREATION).equipmentId("idLoad").build();
+        assertEquals(errorMessage, assertThrows(NullPointerException.class, () -> loadCreationInfos.setEquipmentId(null)).getMessage());
     }
 
     @Test
@@ -582,10 +594,10 @@ public class ModificationControllerTest {
         mockMvc.perform(post(uriString, NOT_FOUND_NETWORK_ID).content(loadCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(status().isNotFound(), content().string(new NetworkModificationException(NETWORK_NOT_FOUND, NOT_FOUND_NETWORK_ID.toString()).getMessage())).andReturn();
 
-        loadCreationInfos.setEquipmentId(null);
+        loadCreationInfos.setEquipmentId("");
         loadCreationInfosJson = objectWriter.writeValueAsString(loadCreationInfos);
         mockMvc.perform(post(uriString, TEST_NETWORK_ID).content(loadCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpectAll(status().is5xxServerError(), content().string(new NetworkModificationException(CREATE_LOAD_ERROR, "Load id is not set").getMessage())).andReturn();
+            .andExpectAll(status().is5xxServerError(), content().string(new NetworkModificationException(CREATE_LOAD_ERROR, "Invalid id ''").getMessage())).andReturn();
 
         loadCreationInfos.setEquipmentId("idLoad1");
         loadCreationInfos.setVoltageLevelId("notFoundVoltageLevelId");
@@ -781,13 +793,6 @@ public class ModificationControllerTest {
         resultAsString = mvcResult.getResponse().getContentAsString();
         assertEquals(resultAsString, new NetworkModificationException(NETWORK_NOT_FOUND, NOT_FOUND_NETWORK_ID.toString()).getMessage());
 
-        loadModificationInfos.setEquipmentId(null);
-        loadModificationInfosJson = objectWriter.writeValueAsString(loadModificationInfos);
-        mvcResult = mockMvc.perform(put(uriString, TEST_NETWORK_ID).content(loadModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().is5xxServerError()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        assertEquals(resultAsString, new NetworkModificationException(MODIFY_LOAD_ERROR, "Missing required attributes to modify the equipment").getMessage());
-
         loadModificationInfos.setEquipmentId("unknownLoadId");
         loadModificationInfosJson = objectWriter.writeValueAsString(loadModificationInfos);
         mvcResult = mockMvc.perform(put(uriString, TEST_NETWORK_ID).content(loadModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
@@ -895,13 +900,6 @@ public class ModificationControllerTest {
             .andExpect(status().isNotFound()).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
         assertEquals(resultAsString, new NetworkModificationException(NETWORK_NOT_FOUND, NOT_FOUND_NETWORK_ID.toString()).getMessage());
-
-        generatorModificationInfos.setEquipmentId(null);
-        generatorModificationInfosJson = objectWriter.writeValueAsString(generatorModificationInfos);
-        mvcResult = mockMvc.perform(put(uriString, TEST_NETWORK_ID).content(generatorModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().is5xxServerError()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        assertEquals(resultAsString, new NetworkModificationException(MODIFY_GENERATOR_ERROR, "Missing required attributes to modify the equipment").getMessage());
 
         String anotherId = "unknownGeneratorId";
         generatorModificationInfos.setEquipmentId(anotherId);
@@ -1241,12 +1239,12 @@ public class ModificationControllerTest {
         resultAsString = mvcResult.getResponse().getContentAsString();
         assertEquals(resultAsString, new NetworkModificationException(NETWORK_NOT_FOUND, NOT_FOUND_NETWORK_ID.toString()).getMessage());
 
-        generatorCreationInfos.setEquipmentId(null);
+        generatorCreationInfos.setEquipmentId("");
         generatorCreationInfosJson = objectWriter.writeValueAsString(generatorCreationInfos);
         mvcResult = mockMvc.perform(post(uriString, TEST_NETWORK_ID).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().is5xxServerError()).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
-        assertEquals(resultAsString, new NetworkModificationException(CREATE_GENERATOR_ERROR, "Generator id is not set").getMessage());
+        assertEquals(resultAsString, new NetworkModificationException(CREATE_GENERATOR_ERROR, "Invalid id ''").getMessage());
 
         generatorCreationInfos.setEquipmentId("idGenerator1");
         generatorCreationInfos.setVoltageLevelId("notFoundVoltageLevelId");
@@ -2213,12 +2211,12 @@ public class ModificationControllerTest {
         resultAsString  = mvcResult.getResponse().getContentAsString();
         assertEquals(resultAsString, new NetworkModificationException(NETWORK_NOT_FOUND, NOT_FOUND_NETWORK_ID.toString()).getMessage());
 
-        lineCreationInfos.setEquipmentId(null);
+        lineCreationInfos.setEquipmentId("");
         lineCreationInfosJson = objectWriter.writeValueAsString(lineCreationInfos);
         mvcResult = mockMvc.perform(post(uriString, TEST_NETWORK_ID).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().is5xxServerError()).andReturn();
         resultAsString  = mvcResult.getResponse().getContentAsString();
-        assertEquals(resultAsString, new NetworkModificationException(CREATE_LINE_ERROR, "AC Line id is not set").getMessage());
+        assertEquals(resultAsString, new NetworkModificationException(CREATE_LINE_ERROR, "Invalid id ''").getMessage());
 
         lineCreationInfos.setEquipmentId("idLine4");
         lineCreationInfos.setVoltageLevelId1("notFoundVoltageLevelId1");
@@ -2683,12 +2681,12 @@ public class ModificationControllerTest {
         resultAsString = mvcResult.getResponse().getContentAsString();
         assertEquals(resultAsString, new NetworkModificationException(NETWORK_NOT_FOUND, NOT_FOUND_NETWORK_ID.toString()).getMessage());
 
-        substationCreationInfos.setEquipmentId(null);
+        substationCreationInfos.setEquipmentId("");
         substationCreationInfosJson = objectWriter.writeValueAsString(substationCreationInfos);
         mvcResult = mockMvc.perform(post(uriString, TEST_NETWORK_ID).content(substationCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().is5xxServerError()).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
-        assertEquals(resultAsString, new NetworkModificationException(CREATE_SUBSTATION_ERROR, "Substation id is not set").getMessage());
+        assertEquals(resultAsString, new NetworkModificationException(CREATE_SUBSTATION_ERROR, "Invalid id ''").getMessage());
 
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
     }
@@ -2764,12 +2762,12 @@ public class ModificationControllerTest {
         resultAsString = mvcResult.getResponse().getContentAsString();
         assertEquals(resultAsString, new NetworkModificationException(NETWORK_NOT_FOUND, NOT_FOUND_NETWORK_ID.toString()).getMessage());
 
-        vli.setEquipmentId(null);
+        vli.setEquipmentId("");
         vliJsonS2Object = objectWriter.writeValueAsString(vli);
         mvcResult = mockMvc.perform(post(uriString, TEST_NETWORK_ID).content(vliJsonS2Object).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().is5xxServerError()).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
-        assertEquals(resultAsString, new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "Voltage level id is not set").getMessage());
+        assertEquals(resultAsString, new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "Invalid id ''").getMessage());
 
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
     }

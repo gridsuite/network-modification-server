@@ -16,6 +16,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
+
+import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.*;
 import org.gridsuite.modification.server.modifications.AbstractModification;
@@ -53,7 +55,7 @@ public class EquipmentAttributeModificationInfos extends EquipmentModificationIn
 
     @Override
     public Reporter createSubReporter(ReporterModel reporter) {
-        return reporter.createSubReporter("EquipmentAttributeModification", "${EquipmentType} '${EquipmentId}' change",
+        return reporter.createSubReporter(ModificationType.EQUIPMENT_ATTRIBUTE_MODIFICATION.name(), "${EquipmentType} '${EquipmentId}' change",
             Map.of("EquipmentType", new TypedValue(equipmentType.name(), TypedValue.UNTYPED), "EquipmentId", new TypedValue(getEquipmentId(), TypedValue.UNTYPED)));
     }
 
