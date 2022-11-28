@@ -1982,7 +1982,7 @@ public class ModificationControllerTest {
         // swap modifications: move [1] before [0]
         List<UUID> movingModificationUuidList = Collections.singletonList(modificationUuidList.get(1));
         mockMvc.perform(
-            put("/v1/groups/" + TEST_GROUP_ID + "?action=MOVE&before=" + modificationUuidList.get(0))
+            put("/v1/groups/" + TEST_GROUP_ID + "?action=MOVE&originGroupUuid=" + TEST_GROUP_ID + "&before=" + modificationUuidList.get(0))
                     .content(objectWriter.writeValueAsString(movingModificationUuidList))
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
