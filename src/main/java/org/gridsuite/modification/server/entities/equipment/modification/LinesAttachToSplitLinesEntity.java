@@ -10,6 +10,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.LinesAttachToSplitLinesInfos;
+import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 
 import javax.persistence.Column;
@@ -63,6 +64,21 @@ public class LinesAttachToSplitLinesEntity extends ModificationEntity {
         this.replacingLine1Name = replacingLine1Name;
         this.replacingLine2Id = replacingLine2Id;
         this.replacingLine2Name = replacingLine2Name;
+    }
+
+    @Override
+    public void update(ModificationInfos modificationInfos) {
+        super.update(modificationInfos);
+        LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos = (LinesAttachToSplitLinesInfos) modificationInfos;
+        lineToAttachTo1Id = linesAttachToSplitLinesInfos.getLineToAttachTo1Id();
+        lineToAttachTo2Id = linesAttachToSplitLinesInfos.getLineToAttachTo2Id();
+        attachedLineId = linesAttachToSplitLinesInfos.getAttachedLineId();
+        voltageLevelId = linesAttachToSplitLinesInfos.getVoltageLevelId();
+        bbsBusId = linesAttachToSplitLinesInfos.getBbsBusId();
+        replacingLine1Id = linesAttachToSplitLinesInfos.getReplacingLine1Id();
+        replacingLine1Name = linesAttachToSplitLinesInfos.getReplacingLine1Name();
+        replacingLine2Id = linesAttachToSplitLinesInfos.getReplacingLine2Id();
+        replacingLine2Name = linesAttachToSplitLinesInfos.getReplacingLine2Name();
     }
 
     @Override

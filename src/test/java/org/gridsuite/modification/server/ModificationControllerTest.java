@@ -2845,16 +2845,37 @@ public class ModificationControllerTest {
         MvcResult mvcResult;
         String resultAsString;
         String linesAttachToSplitLinesUriString = "/v1/networks/{networkUuid}/lines-attach-to-split-lines?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
-        LinesAttachToSplitLinesInfos linesAttachToAbsentLine1 = new LinesAttachToSplitLinesInfos("absent_line_id", "line2", "line3", "v4", "1.A", "nl4", "NewLine4", "nl5", "NewLine4");
+        LinesAttachToSplitLinesInfos linesAttachToAbsentLine1 = LinesAttachToSplitLinesInfos.builder()
+                .type(ModificationType.LINES_ATTACH_TO_SPLIT_LINES)
+                .lineToAttachTo1Id("absent_line_id")
+                .lineToAttachTo2Id("line2")
+                .attachedLineId("line3")
+                .voltageLevelId("v4")
+                .bbsBusId("1.A")
+                .replacingLine1Id("nl4")
+                .replacingLine1Name("NewLine4")
+                .replacingLine2Id("nl5")
+                .replacingLine2Name("NewLine5")
+                .build();
 
         String linesAttachToAbsentLine1Json = objectWriter.writeValueAsString(linesAttachToAbsentLine1);
-
         mvcResult = mockMvc.perform(post(linesAttachToSplitLinesUriString, TEST_NETWORK_ID).content(linesAttachToAbsentLine1Json).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().is4xxClientError()).andReturn();
+                .andExpect(status().is5xxServerError()).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
-        assertEquals("LINE_NOT_FOUND : Line absent_line_id is not found", resultAsString);
+        assertEquals(new NetworkModificationException(LINE_ATTACH_ERROR, "Line absent_line_id is not found").getMessage(), resultAsString);
 
-        LinesAttachToSplitLinesInfos linesAttachToSplitLines = new LinesAttachToSplitLinesInfos("line1", "line2", "line3", "v4", "1.A", "nl4", "NewLine4", "nl5", "NewLine4");
+        LinesAttachToSplitLinesInfos linesAttachToSplitLines = LinesAttachToSplitLinesInfos.builder()
+                .type(ModificationType.LINES_ATTACH_TO_SPLIT_LINES)
+                .lineToAttachTo1Id("line1")
+                .lineToAttachTo2Id("line2")
+                .attachedLineId("line3")
+                .voltageLevelId("v4")
+                .bbsBusId("1.A")
+                .replacingLine1Id("nl4")
+                .replacingLine1Name("NewLine4")
+                .replacingLine2Id("nl5")
+                .replacingLine2Name("NewLine5")
+                .build();
         String linesAttachToSplitLinesJson = objectWriter.writeValueAsString(linesAttachToSplitLines);
         mvcResult = mockMvc.perform(post(linesAttachToSplitLinesUriString, TEST_NETWORK_ID).content(linesAttachToSplitLinesJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
@@ -2866,9 +2887,49 @@ public class ModificationControllerTest {
         assertTrue(linesAttachToProperSplitLines.isPresent());
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
 
-        mockMvc.perform(put("/v1/modifications/" + linesAttachToProperSplitLines.get().getUuid() + "/lines-attach-to-split-lines-creation").content(linesAttachToSplitLinesJson).contentType(MediaType.APPLICATION_JSON))
+        var modifications = modificationRepository.getModifications(TEST_GROUP_ID, false, true)
+                .stream().map(LinesAttachToSplitLinesInfos.class::cast).collect(Collectors.toList());
+        assertEquals(1, modifications.size());
+        LinesAttachToSplitLinesInfos modification = modifications.get(0);
+        assertEquals("line1", modification.getLineToAttachTo1Id());
+        assertEquals("line2", modification.getLineToAttachTo2Id());
+        assertEquals("line3", modification.getAttachedLineId());
+        assertEquals("v4", modification.getVoltageLevelId());
+        assertEquals("NewLine4", modification.getReplacingLine1Name());
+        assertEquals("NewLine5", modification.getReplacingLine2Name());
+
+        LinesAttachToSplitLinesInfos linesAttachToSplitLinesUpdate = LinesAttachToSplitLinesInfos.builder()
+                .type(ModificationType.LINES_ATTACH_TO_SPLIT_LINES)
+                .lineToAttachTo1Id("line1")
+                .lineToAttachTo2Id("line2")
+                .attachedLineId("line3")
+                .voltageLevelId("v4")
+                .bbsBusId("1.A")
+                .replacingLine1Id("nl4")
+                .replacingLine1Name("new line4")
+                .replacingLine2Id("nl5")
+                .replacingLine2Name("new line5")
+                .build();
+        String linesAttachToSplitLinesUpdateJson = objectWriter.writeValueAsString(linesAttachToSplitLinesUpdate);
+
+        // update on bad uuid
+        UUID uuidNotFound = UUID.randomUUID();
+        mvcResult = mockMvc.perform(put("/v1/modifications/" + uuidNotFound + "/lines-attach-to-split-lines-creation").content(linesAttachToSplitLinesUpdateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().is4xxClientError()).andReturn();
+        resultAsString = mvcResult.getResponse().getContentAsString();
+        assertEquals(resultAsString, new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format("Modification (%s) not found", uuidNotFound)).getMessage());
+
+        // update the single existing modification
+        mockMvc.perform(put("/v1/modifications/" + modification.getUuid() + "/lines-attach-to-split-lines-creation").content(linesAttachToSplitLinesUpdateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
+
+        modifications = modificationRepository.getModifications(TEST_GROUP_ID, false, true)
+                .stream().map(LinesAttachToSplitLinesInfos.class::cast).collect(Collectors.toList());
+        assertEquals(1, modifications.size());
+        modification = modifications.get(0);
+        assertEquals("new line4", modification.getReplacingLine1Name());
+        assertEquals("new line5", modification.getReplacingLine2Name());
     }
 
     private void testNetworkModificationsCount(UUID groupUuid, int actualSize) throws Exception {
