@@ -1849,7 +1849,7 @@ public class NetworkModificationService {
                                                                           @NonNull String reporterId, @NonNull LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos) {
         ModificationNetworkInfos networkInfos = getNetworkModificationInfos(networkUuid, variantId);
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
-        return handleModification(linesAttachToSplitLinesInfos, listener, groupUuid, reportUuid, reporterId).stream().map(ModificationInfos.class::cast).collect(Collectors.toList());
+        return handleModification(linesAttachToSplitLinesInfos, listener, groupUuid, reportUuid, reporterId);
     }
 
     @Transactional
