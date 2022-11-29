@@ -8,7 +8,6 @@ package org.gridsuite.modification.server.elasticsearch;
 
 import org.elasticsearch.client.RestHighLevelClient;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
@@ -49,15 +48,8 @@ public class ESConfig extends AbstractElasticsearchConfiguration {
     private Optional<String> password;
 
     @Bean
-    @ConditionalOnExpression("'${spring.data.elasticsearch.enabled:false}' == 'true'")
     public EquipmentInfosService equipmentInfosServiceImpl(EquipmentInfosRepository equipmentInfosRepository, TombstonedEquipmentInfosRepository tombstonedEquipmentInfosRepository) {
         return new EquipmentInfosServiceImpl(equipmentInfosRepository, tombstonedEquipmentInfosRepository);
-    }
-
-    @Bean
-    @ConditionalOnExpression("'${spring.data.elasticsearch.enabled:false}' == 'false'")
-    public EquipmentInfosService equipmentInfosServiceMock() {
-        return new EquipmentInfosServiceMock();
     }
 
     @Bean
