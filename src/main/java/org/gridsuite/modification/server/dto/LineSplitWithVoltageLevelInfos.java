@@ -11,6 +11,8 @@ import com.powsybl.commons.reporter.ReporterModel;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+
+import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.entities.equipment.modification.LineSplitWithVoltageLevelEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
@@ -82,6 +84,6 @@ public class LineSplitWithVoltageLevelInfos extends ModificationInfos {
 
     @Override
     public Reporter createSubReporter(ReporterModel reporter) {
-        return reporter.createSubReporter("lineSplitWithVoltageLevel", "Line split with voltage level");
+        return reporter.createSubReporter(ModificationType.LINE_SPLIT_WITH_VOLTAGE_LEVEL.name(), "Line split with voltage level");
     }
 }
