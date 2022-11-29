@@ -11,6 +11,7 @@ import com.powsybl.commons.reporter.ReporterModel;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.entities.equipment.modification.LineAttachToVoltageLevelEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
@@ -94,6 +95,6 @@ public class LineAttachToVoltageLevelInfos extends ModificationInfos {
 
     @Override
     public Reporter createSubReporter(ReporterModel reporter) {
-        return reporter.createSubReporter("LineAttachToVoltageLevel", "Line attach to voltage level");
+        return reporter.createSubReporter(ModificationType.LINE_ATTACH_TO_VOLTAGE_LEVEL.name(), "Line attach to voltage level");
     }
 }
