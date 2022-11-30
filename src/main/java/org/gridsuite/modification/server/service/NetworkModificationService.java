@@ -1221,7 +1221,7 @@ public class NetworkModificationService {
 
             if (ratioTapChangerInfos.isRegulating()) {
                 ratioTapChangerAdder.setTargetV(ratioTapChangerInfos.getTargetV())
-                        .setTargetDeadband(ratioTapChangerInfos.getTargetDeadband() != null ? ratioTapChangerInfos.getTargetDeadband() : Double.NaN)
+                        .setTargetDeadband(ratioTapChangerInfos.getTargetDeadband() != null ? ratioTapChangerInfos.getTargetDeadband() : 0.)
                         .setRegulationTerminal(terminal);
             }
 
@@ -1249,7 +1249,7 @@ public class NetworkModificationService {
 
             if (phaseTapChangerInfos.isRegulating()) {
                 phaseTapChangerAdder.setRegulationValue(phaseTapChangerInfos.getRegulationValue())
-                        .setTargetDeadband(phaseTapChangerInfos.getTargetDeadband() != null ? phaseTapChangerInfos.getTargetDeadband() : Double.NaN)
+                        .setTargetDeadband(phaseTapChangerInfos.getTargetDeadband() != null ? phaseTapChangerInfos.getTargetDeadband() : 0.)
                         .setRegulationTerminal(terminal);
             }
 
