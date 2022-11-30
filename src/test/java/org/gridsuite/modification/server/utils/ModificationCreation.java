@@ -72,6 +72,7 @@ public final class ModificationCreation {
             .regulatingTerminalId(regulatingTerminalId)
             .regulatingTerminalType(regulatingTerminalType)
             .regulatingTerminalVlId(regulatingTerminalVlId)
+            .qPercent(25.)
             .reactiveCapabilityCurve(true)
             .reactiveCapabilityCurvePoints(Arrays.asList(new ReactiveCapabilityCurveCreationInfos(2.0, 3.0, 3.1),
                 new ReactiveCapabilityCurveCreationInfos(5.6, 9.8, 10.8)))

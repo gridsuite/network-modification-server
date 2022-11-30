@@ -18,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
@@ -35,7 +36,7 @@ public class NetworkModificationController {
         MOVE, DUPLICATE
     }
 
-    private NetworkModificationService networkModificationService;
+    private final NetworkModificationService networkModificationService;
 
     public NetworkModificationController(NetworkModificationService networkModificationService) {
         this.networkModificationService = networkModificationService;
@@ -99,6 +100,7 @@ public class NetworkModificationController {
         @ApiResponse(responseCode = "200", description = "The network modification was created"),
         @ApiResponse(responseCode = "404", description = "The network or equipment was not found")
     })
+
     public ResponseEntity<List<? extends ModificationInfos>> createNetworkModification(
             @Parameter(description = "Network ID") @RequestParam("networkUuid") UUID networkUuid,
             @Parameter(description = "Variant ID") @RequestParam(name = "variantId", required = false) String variantId,
