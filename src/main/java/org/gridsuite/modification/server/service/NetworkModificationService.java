@@ -1220,7 +1220,7 @@ public class NetworkModificationService {
 
             if (ratioTapChangerInfos.isRegulating()) {
                 ratioTapChangerAdder.setTargetV(ratioTapChangerInfos.getTargetV())
-                        .setTargetDeadband(ratioTapChangerInfos.getTargetDeadband() != null ? ratioTapChangerInfos.getTargetDeadband() : Double.NaN)
+                        .setTargetDeadband(ratioTapChangerInfos.getTargetDeadband() != null ? ratioTapChangerInfos.getTargetDeadband() : 0.)
                         .setRegulationTerminal(terminal);
             }
 
@@ -1248,7 +1248,7 @@ public class NetworkModificationService {
 
             if (phaseTapChangerInfos.isRegulating()) {
                 phaseTapChangerAdder.setRegulationValue(phaseTapChangerInfos.getRegulationValue())
-                        .setTargetDeadband(phaseTapChangerInfos.getTargetDeadband() != null ? phaseTapChangerInfos.getTargetDeadband() : Double.NaN)
+                        .setTargetDeadband(phaseTapChangerInfos.getTargetDeadband() != null ? phaseTapChangerInfos.getTargetDeadband() : 0.)
                         .setRegulationTerminal(terminal);
             }
 
@@ -1701,8 +1701,8 @@ public class NetworkModificationService {
             .stream().map(EquipmentModificationInfos.class::cast).collect(Collectors.toList());
     }
 
-    public void moveModifications(UUID groupUuid, UUID before, List<UUID> modificationsToMove) {
-        networkModificationRepository.moveModifications(groupUuid, modificationsToMove, before);
+    public void moveModifications(UUID groupUuid, UUID originGroupUuid, UUID before, List<UUID> modificationsToMove) {
+        networkModificationRepository.moveModifications(groupUuid, originGroupUuid, modificationsToMove, before);
     }
 
     public void createModificationGroup(UUID sourceGroupUuid, UUID groupUuid) {

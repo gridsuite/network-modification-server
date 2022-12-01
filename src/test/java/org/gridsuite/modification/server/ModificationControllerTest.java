@@ -1503,6 +1503,125 @@ public class ModificationControllerTest {
         testNetworkModificationsCount(TEST_GROUP_ID, 2);  // new modification stored in the database
     }
 
+    private List<TapChangerStepCreationInfos> getTapChangerSteps() {
+        return List.of(
+                TapChangerStepCreationInfos.builder()
+                        .r(39.78473)
+                        .x(39.784725)
+                        .g(0.)
+                        .b(0.)
+                        .rho(1.)
+                        .build(),
+                TapChangerStepCreationInfos.builder()
+                        .r(39.78474)
+                        .x(39.784726)
+                        .g(0.)
+                        .b(0.)
+                        .rho(1.)
+                        .build(),
+                TapChangerStepCreationInfos.builder()
+                        .r(39.78475)
+                        .x(39.784727)
+                        .g(0.)
+                        .b(0.)
+                        .rho(1.)
+                        .build()
+        );
+    }
+
+    private void testCreateTwoWindingsTransformerInNodeBreaker(TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) throws Exception {
+        MvcResult mvcResult;
+        String resultAsString;
+        String uriString = "/v1/networks/{networkUuid}/two-windings-transformers?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
+        final String transformerId = twoWindingsTransformerCreationInfos.getEquipmentId();
+
+        String twoWindingsTransformerCreationInfosJson = objectWriter.writeValueAsString(twoWindingsTransformerCreationInfos);
+        mvcResult = mockMvc.perform(post(uriString, TEST_NETWORK_ID).content(twoWindingsTransformerCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        resultAsString = mvcResult.getResponse().getContentAsString();
+        List<EquipmentModificationInfos> bsmlrTwoWindingsTransformer = mapper.readValue(resultAsString, new TypeReference<>() { });
+        assertThat(bsmlrTwoWindingsTransformer.get(0), createMatcherEquipmentModificationInfos(ModificationType.TWO_WINDINGS_TRANSFORMER_CREATION, transformerId, Set.of("s1")));
+
+        assertNotNull(network.getTwoWindingsTransformer(transformerId));  // transformer was created
+        testNetworkModificationsCount(TEST_GROUP_ID, 1);
+    }
+
+    @Test
+    public void testCreateTwoWindingsTransformerWithRatioTapChangerInNodeBreaker() throws Exception {
+        final String transformerId = "id2wt1WithRatioTapChanger";
+        // create new 2wt in voltage level with Node/breaker topology, having a RatioTapChanger
+        RatioTapChangerCreationInfos ratioTapChangerCreationInfos = RatioTapChangerCreationInfos.builder()
+                .lowTapPosition(0)
+                .tapPosition(1)
+                .regulating(true)
+                .targetDeadband(null)
+                .regulatingTerminalVlId("v1")
+                .regulatingTerminalId("v1load")
+                .regulatingTerminalType("LOAD")
+                .loadTapChangingCapabilities(true)
+                .targetV(220.)
+                .steps(getTapChangerSteps())
+                .build();
+        TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos = TwoWindingsTransformerCreationInfos.builder()
+                .equipmentId(transformerId)
+                .equipmentName("2wtName")
+                .voltageLevelId1("v1")
+                .busOrBusbarSectionId1("1.1")
+                .voltageLevelId2("v2")
+                .busOrBusbarSectionId2("1A")
+                .magnetizingConductance(100.0)
+                .magnetizingSusceptance(200.0)
+                .ratedVoltage1(1000)
+                .ratedVoltage2(1010)
+                .seriesReactance(300)
+                .seriesResistance(400)
+                .connectionName1("cnid2wt1")
+                .connectionDirection1(ConnectablePosition.Direction.TOP)
+                .connectionName2("cnid2wt2")
+                .connectionDirection2(ConnectablePosition.Direction.TOP)
+                .ratioTapChanger(ratioTapChangerCreationInfos)
+                .build();
+        testCreateTwoWindingsTransformerInNodeBreaker(twoWindingsTransformerCreationInfos);
+    }
+
+    @Test
+    public void testCreateTwoWindingsTransformerWithPhaseTapChangerInNodeBreaker() throws Exception {
+        final String transformerId = "id2wt1WithPhaseTapChanger";
+        // create new 2wt in voltage level with Node/breaker topology, having a PhaseTapChanger
+        PhaseTapChangerCreationInfos phaseTapChangerCreationInfos = PhaseTapChangerCreationInfos.builder()
+                .lowTapPosition(0)
+                .tapPosition(1)
+                .regulating(true)
+                .targetDeadband(null)
+                .regulationMode(PhaseTapChanger.RegulationMode.ACTIVE_POWER_CONTROL)
+                .regulationValue(10.0)
+                .regulatingTerminalVlId("v1")
+                .regulatingTerminalId("v1load")
+                .regulatingTerminalType("LOAD")
+                .steps(getTapChangerSteps())
+                .build();
+        TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos = TwoWindingsTransformerCreationInfos.builder()
+                .equipmentId(transformerId)
+                .equipmentName("2wtName")
+                .voltageLevelId1("v1")
+                .busOrBusbarSectionId1("1.1")
+                .voltageLevelId2("v2")
+                .busOrBusbarSectionId2("1A")
+                .magnetizingConductance(100.0)
+                .magnetizingSusceptance(200.0)
+                .ratedVoltage1(1000)
+                .ratedVoltage2(1010)
+                .seriesReactance(300)
+                .seriesResistance(400)
+                .connectionName1("cnid2wt1")
+                .connectionDirection1(ConnectablePosition.Direction.TOP)
+                .connectionName2("cnid2wt2")
+                .connectionDirection2(ConnectablePosition.Direction.TOP)
+                .phaseTapChanger(phaseTapChangerCreationInfos)
+                .build();
+        testCreateTwoWindingsTransformerInNodeBreaker(twoWindingsTransformerCreationInfos);
+    }
+
     @Test
     public void testCreateTwoWindingsTransformerInMixedTopology() throws Exception {
         MvcResult mvcResult;
@@ -1910,7 +2029,7 @@ public class ModificationControllerTest {
         duplicateModificationUuidList.addAll(badModificationUuidList);
 
         MvcResult mvcResult = mockMvc.perform(
-            put("/v1/groups/" + TEST_GROUP_ID + "?action=DUPLICATE")
+            put("/v1/groups/" + TEST_GROUP_ID + "?action=COPY")
                 .content(objectWriter.writeValueAsString(duplicateModificationUuidList))
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
@@ -1950,7 +2069,7 @@ public class ModificationControllerTest {
         // Duplicate the same modifications, and append them at the end of this new group modification list.
         duplicateModificationUuidList = new ArrayList<>(modificationUuidList.subList(0, 2));
         mvcResult = mockMvc.perform(
-                put("/v1/groups/" + otherGroupId + "?action=DUPLICATE")
+                put("/v1/groups/" + otherGroupId + "?action=COPY")
                     .content(objectWriter.writeValueAsString(duplicateModificationUuidList))
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
@@ -1980,7 +2099,7 @@ public class ModificationControllerTest {
         // swap modifications: move [1] before [0]
         List<UUID> movingModificationUuidList = Collections.singletonList(modificationUuidList.get(1));
         mockMvc.perform(
-            put("/v1/groups/" + TEST_GROUP_ID + "?action=MOVE&before=" + modificationUuidList.get(0))
+            put("/v1/groups/" + TEST_GROUP_ID + "?action=MOVE&originGroupUuid=" + TEST_GROUP_ID + "&before=" + modificationUuidList.get(0))
                     .content(objectWriter.writeValueAsString(movingModificationUuidList))
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
