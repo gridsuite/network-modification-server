@@ -128,13 +128,6 @@ public class NetworkModificationRepository {
             .collect(Collectors.toList());
     }
 
-    @Transactional
-    public ModificationGroupEntity getGroupFromModificationUuid(UUID modificationUuid) {
-        return this.modificationRepository.findById(modificationUuid)
-            .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString()))
-            .getGroup();
-    }
-
     @Transactional(readOnly = true)
     public List<ModificationInfos> getModifications(UUID groupUuid, boolean onlyMetadata, boolean errorOnGroupNotFound) {
         try {
