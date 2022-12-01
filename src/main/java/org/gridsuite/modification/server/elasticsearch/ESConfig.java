@@ -48,8 +48,8 @@ public class ESConfig extends AbstractElasticsearchConfiguration {
     private Optional<String> password;
 
     @Bean
-    public EquipmentInfosService equipmentInfosServiceImpl(EquipmentInfosRepository equipmentInfosRepository, TombstonedEquipmentInfosRepository tombstonedEquipmentInfosRepository) {
-        return new EquipmentInfosServiceImpl(equipmentInfosRepository, tombstonedEquipmentInfosRepository);
+    public EquipmentInfosService equipmentInfosService(EquipmentInfosRepository equipmentInfosRepository, TombstonedEquipmentInfosRepository tombstonedEquipmentInfosRepository) {
+        return new EquipmentInfosService(equipmentInfosRepository, tombstonedEquipmentInfosRepository);
     }
 
     @Bean
