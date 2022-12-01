@@ -18,7 +18,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
@@ -120,7 +119,16 @@ public class NetworkModificationController {
     public ResponseEntity<Void> updateNetworkModification(
             @Parameter(description = "Network modification ID") @PathVariable("networkModificationUuid") UUID networkModificationUuid,
             @RequestBody ModificationInfos modificationInfos) {
-        networkModificationService.updateNetworkModification(networkModificationUuid, modificationInfos);
+        // temporary switch, should be removed when all kind of modification will use the generic updateModification
+        // PS : the switch can't be in the service because of @Transactional that need to be called from outside the class
+        switch (modificationInfos.getType()) {
+            case LOAD_CREATION:
+            case LINE_SPLIT_WITH_VOLTAGE_LEVEL:
+                networkModificationService.updateModification(networkModificationUuid, modificationInfos);
+                break;
+            default:
+                networkModificationService.updateNetworkModification(networkModificationUuid, modificationInfos);
+        }
         return ResponseEntity.ok().build();
     }
 

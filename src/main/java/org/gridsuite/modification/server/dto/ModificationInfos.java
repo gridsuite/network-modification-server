@@ -6,7 +6,6 @@
  */
 package org.gridsuite.modification.server.dto;
 
-
 import java.time.ZonedDateTime;
 import java.util.Set;
 import java.util.UUID;
@@ -22,10 +21,6 @@ import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
-
-import java.time.ZonedDateTime;
-import java.util.Set;
-import java.util.UUID;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -52,7 +47,6 @@ import java.util.UUID;
     @JsonSubTypes.Type(value = LineAttachToVoltageLevelInfos.class, name = "LINE_ATTACH_TO_VOLTAGE_LEVEL"),
     @JsonSubTypes.Type(value = LinesAttachToSplitLinesInfos.class, name = "LINES_ATTACH_TO_SPLIT_LINES"),
     @JsonSubTypes.Type(value = BranchStatusModificationInfos.class, name = "BRANCH_STATUS"),
-    @JsonSubTypes.Type(value = SwitchStatusModificationInfos.class, name = "SWITCH_STATUS"),
     @JsonSubTypes.Type(value = EquipmentAttributeModificationInfos.class, name = "EQUIPMENT_ATTRIBUTE_MODIFICATION")
 })
 @SuperBuilder

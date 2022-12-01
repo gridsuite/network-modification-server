@@ -23,6 +23,7 @@ import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.*;
 import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.EquipmentAttributeModification;
+import org.springframework.lang.NonNull;
 
 import java.util.Map;
 
@@ -44,6 +45,7 @@ public class EquipmentAttributeModificationInfos extends EquipmentModificationIn
     private Object equipmentAttributeValue;
 
     @Schema(description = "Equipment type")
+    @NonNull
     private IdentifiableType equipmentType;
 
     @Override
