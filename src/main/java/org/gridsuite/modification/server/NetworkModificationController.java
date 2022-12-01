@@ -22,6 +22,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import static org.gridsuite.modification.server.NetworkModificationException.Type.TYPE_MISMATCH;
 
 /**
@@ -33,7 +35,7 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
 public class NetworkModificationController {
 
     enum GroupModificationAction {
-        MOVE, DUPLICATE
+        MOVE, COPY
     }
 
     private final NetworkModificationService networkModificationService;
@@ -66,12 +68,13 @@ public class NetworkModificationController {
     public ResponseEntity<List<UUID>> updateModificationGroup(@Parameter(description = "group UUID") @PathVariable("groupUuid") UUID groupUuid,
                                                               @Parameter(description = "kind of modification", required = true) @RequestParam(value = "action") GroupModificationAction action,
                                                               @Parameter(description = "the modification Uuid to move before (MOVE option, empty means moving at the end)") @RequestParam(value = "before", required = false) UUID before,
-                                                              @RequestBody List<UUID> modificationsUuidList) {
+                                                              @RequestBody List<UUID> modificationsUuidList,
+                                                              @Nullable @RequestParam UUID originGroupUuid) {
         switch (action) {
-            case DUPLICATE:
+            case COPY:
                 return ResponseEntity.ok().body(networkModificationService.duplicateModifications(groupUuid, modificationsUuidList));
             case MOVE:
-                networkModificationService.moveModifications(groupUuid, before, modificationsUuidList);
+                networkModificationService.moveModifications(groupUuid, originGroupUuid, before, modificationsUuidList);
                 return ResponseEntity.ok().body(List.of());
             default:
                 throw new NetworkModificationException(TYPE_MISMATCH);

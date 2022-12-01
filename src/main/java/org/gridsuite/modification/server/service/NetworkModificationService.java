@@ -2026,8 +2026,8 @@ public class NetworkModificationService {
             .stream().map(EquipmentModificationInfos.class::cast).collect(Collectors.toList());
     }
 
-    public void moveModifications(UUID groupUuid, UUID before, List<UUID> modificationsToMove) {
-        networkModificationRepository.moveModifications(groupUuid, modificationsToMove, before);
+    public void moveModifications(UUID groupUuid, UUID originGroupUuid, UUID before, List<UUID> modificationsToMove) {
+        networkModificationRepository.moveModifications(groupUuid, originGroupUuid, modificationsToMove, before);
     }
 
     public void createModificationGroup(UUID sourceGroupUuid, UUID groupUuid) {

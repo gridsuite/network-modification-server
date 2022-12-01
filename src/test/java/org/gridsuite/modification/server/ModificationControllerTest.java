@@ -2254,7 +2254,7 @@ public class ModificationControllerTest {
         duplicateModificationUuidList.addAll(badModificationUuidList);
 
         MvcResult mvcResult = mockMvc.perform(
-            put("/v1/groups/" + TEST_GROUP_ID + "?action=DUPLICATE")
+            put("/v1/groups/" + TEST_GROUP_ID + "?action=COPY")
                 .content(objectWriter.writeValueAsString(duplicateModificationUuidList))
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
@@ -2294,7 +2294,7 @@ public class ModificationControllerTest {
         // Duplicate the same modifications, and append them at the end of this new group modification list.
         duplicateModificationUuidList = new ArrayList<>(modificationUuidList.subList(0, 2));
         mvcResult = mockMvc.perform(
-                put("/v1/groups/" + otherGroupId + "?action=DUPLICATE")
+                put("/v1/groups/" + otherGroupId + "?action=COPY")
                     .content(objectWriter.writeValueAsString(duplicateModificationUuidList))
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
@@ -2324,7 +2324,7 @@ public class ModificationControllerTest {
         // swap modifications: move [1] before [0]
         List<UUID> movingModificationUuidList = Collections.singletonList(modificationUuidList.get(1));
         mockMvc.perform(
-            put("/v1/groups/" + TEST_GROUP_ID + "?action=MOVE&before=" + modificationUuidList.get(0))
+            put("/v1/groups/" + TEST_GROUP_ID + "?action=MOVE&originGroupUuid=" + TEST_GROUP_ID + "&before=" + modificationUuidList.get(0))
                     .content(objectWriter.writeValueAsString(movingModificationUuidList))
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
