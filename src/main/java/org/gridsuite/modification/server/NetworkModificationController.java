@@ -430,6 +430,27 @@ public class NetworkModificationController {
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping(value = "/networks/{networkUuid}/delete-voltage-level-on-line", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "delete voltage level on line")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The voltage level on line has been deleted")})
+    public ResponseEntity<List<ModificationInfos>> createDeleteVoltageLevelOnLineCreation(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
+                                                                                         @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
+                                                                                         @RequestParam(value = "group", required = false) UUID groupUuid,
+                                                                                         @RequestParam(value = "reportUuid") UUID reportUuid,
+                                                                                         @RequestParam(value = "reporterId") String reporterId,
+                                                                                         @RequestBody DeleteVoltageLevelOnLineInfos deleteVoltageLevelOnLineInfos) {
+        return ResponseEntity.ok().body(networkModificationService.createDeleteVoltageLevelOnLineCreation(networkUuid, variantId, groupUuid, reportUuid, reporterId, deleteVoltageLevelOnLineInfos));
+    }
+
+    @PutMapping(value = "/modifications/{modificationUuid}/delete-voltage-level-on-line-creation", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "update delete voltage level on line")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "the deletion of the voltage level on line has been updated")})
+    public ResponseEntity<Void> updateDeletionVoltageLevelOnLineCreation(@PathVariable("modificationUuid") UUID modificationUuid,
+                                                                      @RequestBody DeleteVoltageLevelOnLineInfos deleteVoltageLevelOnLineInfos) {
+        networkModificationService.updateDeleteVoltageLevelOnLineCreation(modificationUuid, deleteVoltageLevelOnLineInfos);
+        return ResponseEntity.ok().build();
+    }
+
     @PostMapping(value = "/networks/{networkUuid}/build")
     @Operation(summary = "Build a network variant")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The build has been done")})

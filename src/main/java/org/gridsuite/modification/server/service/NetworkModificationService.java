@@ -33,6 +33,7 @@ import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.*;
 import org.gridsuite.modification.server.entities.equipment.deletion.EquipmentDeletionEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.DeleteVoltageLevelOnLineEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.LineAttachToVoltageLevelEntity;
@@ -1520,6 +1521,7 @@ public class NetworkModificationService {
                 case EQUIPMENT_ATTRIBUTE_MODIFICATION:
                 case LOAD_CREATION:
                 case LINE_SPLIT_WITH_VOLTAGE_LEVEL:
+                case DELETE_VOLTAGE_LEVEL_ON_LINE:
                     // Generic form
                     return handleModification(infos, listener, groupUuid, reportUuid, reporterId);
 
@@ -1778,6 +1780,13 @@ public class NetworkModificationService {
         }
     }
 
+    private void assertDeleteVoltageLevelOnLineInfosNotEmpty(DeleteVoltageLevelOnLineInfos deleteVoltageLevelOnLineInfos) {
+        if (deleteVoltageLevelOnLineInfos == null) {
+            throw new NetworkModificationException(DELETE_VOLTAGE_LEVEL_ON_LINE_ERROR,
+                    "Missing required attributes to delete voltage level on line");
+        }
+    }
+
     private List<ModificationInfos> execCreateLineAttachToVoltageLevelCreation(NetworkStoreListener listener,
                                                                                LineAttachToVoltageLevelInfos lineAttachToVoltageLevelInfos,
                                                                                UUID reportUuid, String reporterId) {
@@ -1899,6 +1908,14 @@ public class NetworkModificationService {
         return execCreateLinesAttachToSplitLinesCreation(listener, linesAttachToSplitLinesInfos, reportUuid, reporterId);
     }
 
+    public List<ModificationInfos> createDeleteVoltageLevelOnLineCreation(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId,
+                                                            DeleteVoltageLevelOnLineInfos deleteVoltageLevelOnLineInfos) {
+        assertDeleteVoltageLevelOnLineInfosNotEmpty(deleteVoltageLevelOnLineInfos);
+        ModificationNetworkInfos networkInfos = getNetworkModificationInfos(networkUuid, variantId);
+        NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
+        return handleModification(deleteVoltageLevelOnLineInfos, listener, groupUuid, reportUuid, reporterId).stream().map(ModificationInfos.class::cast).collect(Collectors.toList());
+    }
+
     public void updateLineAttachToVoltageLevelCreation(UUID modificationUuid, LineAttachToVoltageLevelInfos lineAttachToVoltageLevelInfos) {
         assertLineAttachToVoltageLevelInfosNotEmpty(lineAttachToVoltageLevelInfos);
 
@@ -1963,6 +1980,27 @@ public class NetworkModificationService {
         );
         updatedEntity.setId(modificationUuid);
         updatedEntity.setGroup(linesAttachToSplitLinesEntity.get().getGroup());
+        this.networkModificationRepository.updateModification(updatedEntity);
+    }
+
+    public void updateDeleteVoltageLevelOnLineCreation(UUID modificationUuid, DeleteVoltageLevelOnLineInfos deleteVoltageLevelOnLineInfos) {
+        assertDeleteVoltageLevelOnLineInfosNotEmpty(deleteVoltageLevelOnLineInfos);
+
+        Optional<ModificationEntity>  deleteVoltageLevelOnLineEntity = this.modificationRepository.findById(modificationUuid);
+
+        if (deleteVoltageLevelOnLineEntity.isEmpty()) {
+            throw new NetworkModificationException(DELETE_VOLTAGE_LEVEL_ON_LINE_NOT_FOUND, "Delete voltage level on line not found");
+        }
+
+        DeleteVoltageLevelOnLineEntity updatedEntity = DeleteVoltageLevelOnLineEntity.toEntity(
+                deleteVoltageLevelOnLineInfos.getLineToAttachTo1Id(),
+                deleteVoltageLevelOnLineInfos.getLineToAttachTo2Id(),
+                deleteVoltageLevelOnLineInfos.getAttachedLineId(),
+                deleteVoltageLevelOnLineInfos.getReplacingLine1Id(),
+                deleteVoltageLevelOnLineInfos.getReplacingLine1Name()
+        );
+        updatedEntity.setId(modificationUuid);
+        updatedEntity.setGroup(deleteVoltageLevelOnLineEntity.get().getGroup());
         this.networkModificationRepository.updateModification(updatedEntity);
     }
 

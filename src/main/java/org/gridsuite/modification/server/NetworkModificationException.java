@@ -61,7 +61,9 @@ public class NetworkModificationException extends PowsyblException {
         MODIFY_GENERATOR_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         TYPE_MISMATCH(HttpStatus.BAD_REQUEST),
         MODIFICATION_OUT_OF_RANGE(HttpStatus.BAD_REQUEST),
-        POSITION_ORDER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR);
+        POSITION_ORDER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
+        DELETE_VOLTAGE_LEVEL_ON_LINE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
+        DELETE_VOLTAGE_LEVEL_ON_LINE_NOT_FOUND(HttpStatus.NOT_FOUND);
 
         public final HttpStatus status;
         private final String message;
