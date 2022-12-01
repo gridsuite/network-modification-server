@@ -8,17 +8,25 @@
 package org.gridsuite.modification.server.utils;
 
 import com.powsybl.commons.exceptions.UncheckedInterruptedException;
+import com.powsybl.iidm.network.SwitchKind;
 import okhttp3.mockwebserver.MockWebServer;
+import org.gridsuite.modification.server.dto.BusbarConnectionCreationInfos;
+import org.gridsuite.modification.server.dto.BusbarSectionCreationInfos;
+import org.gridsuite.modification.server.dto.VoltageLevelCreationInfos;
 import org.springframework.cloud.stream.binder.test.OutputDestination;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
+import static com.vladmihalcea.sql.SQLStatementCountValidator.*;
+import static com.vladmihalcea.sql.SQLStatementCountValidator.assertDeleteCount;
 import static org.junit.Assert.assertNull;
 
 /**
@@ -73,5 +81,40 @@ public final class TestUtils {
         }
 
         assertNull("Should not be any http requests : ", httpRequest);
+    }
+
+    public static void assertRequestsCount(long select, long insert, long update, long delete) {
+        assertSelectCount(select);
+        assertInsertCount(insert);
+        assertUpdateCount(update);
+        assertDeleteCount(delete);
+    }
+
+    public static  VoltageLevelCreationInfos makeAVoltageLevelInfos(int nbBBSs, int nbCnxs) {
+        List<BusbarSectionCreationInfos> bbses;
+        if (nbBBSs < 0) {
+            bbses = null;
+        } else {
+            bbses = new ArrayList<>();
+            Stream.iterate(1, n -> n + 1).limit(nbBBSs + 1).forEach(i -> bbses.add(new BusbarSectionCreationInfos("bbs" + i, "NW", 1 + i, 1)));
+        }
+
+        List<BusbarConnectionCreationInfos> cnxes;
+        if (nbCnxs < 0) {
+            cnxes = null;
+        } else {
+            cnxes = new ArrayList<>();
+            Stream.iterate(0, n -> n + 1).limit(nbBBSs).forEach(i -> {
+                cnxes.add(new BusbarConnectionCreationInfos("bbs.nw", "bbs.ne", SwitchKind.BREAKER));
+                cnxes.add(new BusbarConnectionCreationInfos("bbs.nw", "bbs.ne", SwitchKind.DISCONNECTOR));
+            });
+        }
+
+        VoltageLevelCreationInfos createVoltLvlEntity1 = VoltageLevelCreationInfos.builder()
+                .substationId("s1").nominalVoltage(379.0).equipmentId("idVL1").equipmentName("VLName")
+                .busbarSections(bbses).busbarConnections(cnxes)
+                .build();
+
+        return createVoltLvlEntity1;
     }
 }

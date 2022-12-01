@@ -11,7 +11,9 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.iidm.network.*;
 import com.powsybl.network.store.client.NetworkStoreService;
+import com.vladmihalcea.sql.SQLStatementCountValidator;
 import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.server.entities.equipment.modification.LineAttachToVoltageLevelEntity;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.NetworkModificationService;
 import org.gridsuite.modification.server.utils.*;
@@ -33,6 +35,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.web.client.RestTemplate;
 import java.util.*;
 import java.util.stream.Collectors;
+
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.eq;
@@ -56,7 +59,7 @@ public class LineAttachToVoltageLevelTest {
     private static final String CREATE_URI_STRING = "/v1/networks/{networkUuid}/line-attach?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
     private static final String UPDATE_URI_STRING = "/v1/modifications/%s/line-attach-creation";
     private static final String DELETE_URI_STRING = "/v1/groups/" + TEST_GROUP_ID + "/modifications";
-    private static final String DUPLICATE_URI_STRING = "/v1/groups/" + TEST_GROUP_ID + "?action=DUPLICATE";
+    private static final String COPY_URI_STRING = "/v1/groups/" + TEST_GROUP_ID + "?action=COPY";
 
     private static final  String NEW_LINE_NAME = "attachmentLine";
     private static final  String NEW_VL_NAME = "AttPointId";
@@ -80,17 +83,17 @@ public class LineAttachToVoltageLevelTest {
     @Autowired
     private NetworkModificationService networkModificationService;
 
+    @Autowired
+    private NetworkModificationRepository networkModificationRepository;
+
     private ObjectWriter objectWriter;
     private Network network;
 
     @Before
     public void setUp() {
         objectWriter = mapper.writer().withDefaultPrettyPrinter();
-        // /!\ create a new network for each invocation (answer)
-        when(networkStoreService.getNetwork(TEST_NETWORK_ID)).then((Answer<Network>) invocation -> {
-            network = NetworkCreation.create(TEST_NETWORK_ID, true);
-            return network;
-        });
+        network = NetworkCreation.create(TEST_NETWORK_ID, true);
+        when(networkStoreService.getNetwork(TEST_NETWORK_ID)).then((Answer<Network>) invocation -> network);
         networkModificationService.setReportServerRest(reportServerRest);
         given(reportServerRest.exchange(eq("/v1/reports/" + TEST_REPORT_ID), eq(HttpMethod.PUT), ArgumentMatchers.any(HttpEntity.class), eq(ReporterModel.class)))
             .willReturn(new ResponseEntity<>(HttpStatus.OK));
@@ -105,17 +108,21 @@ public class LineAttachToVoltageLevelTest {
         modificationRepository.deleteAll();
     }
 
-    private LineCreationInfos getAttachmentLine() {
+    private LineAttachToVoltageLevelInfos getLineAttachToVoltageLevelModification(UUID modificationUuid) {
+        return (LineAttachToVoltageLevelInfos) networkModificationRepository.getModificationInfo(modificationUuid);
+    }
+
+    private LineCreationInfos getAttachmentLine(String lineName) {
         return LineCreationInfos.builder()
-                .equipmentId(NEW_LINE_NAME)
+                .equipmentId(lineName)
                 .seriesResistance(50.6)
                 .seriesReactance(25.3)
                 .build();
     }
 
-    private VoltageLevelCreationInfos getNewVoltageLevel() {
+    private VoltageLevelCreationInfos getNewVoltageLevel(String vlName) {
         return VoltageLevelCreationInfos.builder()
-                .equipmentId(NEW_ADDITIONAL_VL_NAME)
+                .equipmentId(vlName)
                 .equipmentName("NewVoltageLevel")
                 .nominalVoltage(379.3)
                 .substationId("s1")
@@ -129,52 +136,154 @@ public class LineAttachToVoltageLevelTest {
                 .stream().map(LineAttachToVoltageLevelInfos.class::cast).collect(Collectors.toList());
     }
 
-    private void createWithExistingVoltageLevel() throws Exception {
-        LineAttachToVoltageLevelInfos lineAttachToVL = LineAttachToVoltageLevelInfos.builder()
-                .type(ModificationType.LINE_ATTACH_TO_VOLTAGE_LEVEL)
-                .lineToAttachToId("line3")
-                .percent(10.0)
-                .attachmentPointId(NEW_VL_NAME)   // created VL
-                .attachmentPointName("attPointName")
-                .mayNewVoltageLevelInfos(null)
-                .existingVoltageLevelId("v4")     // use existing VL
-                .bbsOrBusId("1.A")
-                .attachmentLine(getAttachmentLine())   // created Line
-                .newLine1Id("nl1")
-                .newLine1Name("NewLine1")
-                .newLine2Id("nl2")
-                .newLine2Name("NewLine2")
+    private LineAttachToVoltageLevelInfos getCreateWithExistingVoltageLevelInfos() {
+        return LineAttachToVoltageLevelInfos.builder()
+            .type(ModificationType.LINE_ATTACH_TO_VOLTAGE_LEVEL)
+            .lineToAttachToId("line3")
+            .percent(10.0)
+            .attachmentPointId(NEW_VL_NAME)   // created VL
+            .attachmentPointName("attPointName")
+            .mayNewVoltageLevelInfos(null)
+            .existingVoltageLevelId("v4")     // use existing VL
+            .bbsOrBusId("1.A")
+            .attachmentLine(getAttachmentLine(NEW_LINE_NAME))   // created Line
+            .newLine1Id("nl1")
+            .newLine1Name("NewLine1")
+            .newLine2Id("nl2")
+            .newLine2Name("NewLine2")
+            .build();
+    }
+
+    private void checkCreationWithExistingVoltageLevel(LineAttachToVoltageLevelInfos modification) {
+        assertNotNull(modification);
+        assertEquals("line3", modification.getLineToAttachToId());
+        assertEquals(10., modification.getPercent(), 0.);
+        assertEquals("AttPointId", modification.getAttachmentPointId());
+        assertEquals("attPointName", modification.getAttachmentPointName());
+        assertNull(modification.getMayNewVoltageLevelInfos());
+        assertEquals("v4", modification.getExistingVoltageLevelId());
+        assertEquals("1.A", modification.getBbsOrBusId());
+        assertEquals("attachmentLine", modification.getAttachmentLine().getEquipmentId());
+        assertEquals("nl1", modification.getNewLine1Id());
+        assertEquals("nl2", modification.getNewLine2Id());
+        assertEquals("NewLine1", modification.getNewLine1Name());
+        assertEquals("NewLine2", modification.getNewLine2Name());
+    }
+
+    private void saveEntityWithExistingVoltageLevel() {
+        // this is a creation using directly the Repository
+        LineAttachToVoltageLevelInfos lineAttachToVL = getCreateWithExistingVoltageLevelInfos();
+        networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(lineAttachToVL.toEntity()));
+    }
+
+    private void checkCreationWithNewVoltageLevel(LineAttachToVoltageLevelInfos modification) {
+        assertNotNull(modification);
+        assertEquals("line3", modification.getLineToAttachToId());
+        assertEquals(20., modification.getPercent(), 0.);
+        assertEquals("AttPointId", modification.getAttachmentPointId());
+        assertEquals("attPointName", modification.getAttachmentPointName());
+        assertNull(modification.getExistingVoltageLevelId());
+        assertEquals("vl1", modification.getMayNewVoltageLevelInfos().getEquipmentId());
+        assertEquals("1.A", modification.getBbsOrBusId());
+        assertEquals("attachmentLine", modification.getAttachmentLine().getEquipmentId());
+        assertEquals("nl1", modification.getNewLine1Id());
+        assertEquals("nl2", modification.getNewLine2Id());
+        assertEquals("NewLine1", modification.getNewLine1Name());
+        assertEquals("NewLine2", modification.getNewLine2Name());
+    }
+
+    @Test
+    public void testModificationRepository() {
+        LineCreationInfos attachmentLine = LineCreationInfos.builder()
+                .equipmentId("attachmentLineId")
+                .seriesResistance(50.6)
+                .seriesReactance(25.3)
                 .build();
+
+        LineAttachToVoltageLevelEntity lineAttachToEntity1 = LineAttachToVoltageLevelEntity.toEntity(
+                "lineId0", 40.0, "AttachmentPointId", null, null, "vl1", "bbsId", attachmentLine, "line1Id", "line1Name", "line2Id", "line2Name"
+        );
+        VoltageLevelCreationInfos voltageLevelCreationInfos = TestUtils.makeAVoltageLevelInfos(1, 0);
+        LineAttachToVoltageLevelEntity lineAttachToEntity2 = LineAttachToVoltageLevelEntity.toEntity(
+                "lineId1", 40.0, "AttachmentPointId", null, voltageLevelCreationInfos, null, "bbsId", attachmentLine, "line1Id", "line1Name", "line2Id", "line2Name"
+        );
+        networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(lineAttachToEntity1, lineAttachToEntity2));
+
+        List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
+        assertEquals(2, modificationInfos.size());
+
+        assertThat(getLineAttachToVoltageLevelModification(modificationInfos.get(0).getUuid()),
+                MatcherLineAttachToVoltageLevelInfos.createMatcherLineAttachToVoltageLevelInfos(
+                        lineAttachToEntity1.toLineAttachToVoltageLevelInfos()));
+
+        assertThat(getLineAttachToVoltageLevelModification(modificationInfos.get(1).getUuid()),
+                MatcherLineAttachToVoltageLevelInfos.createMatcherLineAttachToVoltageLevelInfos(
+                        lineAttachToEntity2.toLineAttachToVoltageLevelInfos()));
+
+        SQLStatementCountValidator.reset();
+        networkModificationRepository.deleteModifications(TEST_GROUP_ID, Set.of(lineAttachToEntity1.getId(),
+                lineAttachToEntity2.getId()));
+        TestUtils.assertRequestsCount(2, 0, 0, 12);
+
+        SQLStatementCountValidator.reset();
+        networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
+        TestUtils.assertRequestsCount(2, 0, 0, 1);
+
+        assertThrows(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage(),
+                NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true)
+        );
+    }
+
+    @Test
+    public void testCreateWithExistingVoltageLevel() throws Exception {
+        LineAttachToVoltageLevelInfos lineAttachToVL = getCreateWithExistingVoltageLevelInfos();
+
+        assertNotNull(network.getLine("line3"));
 
         String lineAttachToVLJson = objectWriter.writeValueAsString(lineAttachToVL);
         mockMvc.perform(post(CREATE_URI_STRING, TEST_NETWORK_ID).content(lineAttachToVLJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
+
+        List<LineAttachToVoltageLevelInfos> modifications = getModifications();
+        assertEquals(1, modifications.size());
+        checkCreationWithExistingVoltageLevel(modifications.get(0));
+
         // new equipments in the network:
         assertNotNull(network.getLine(NEW_LINE_NAME));
         assertNotNull(network.getLine("nl1"));
         assertNotNull(network.getLine("nl2"));
         assertNotNull(network.getVoltageLevel(NEW_VL_NAME));
+        // replaced line is gone
+        assertNull(network.getLine("line3"));
     }
 
-    private void createWithNewVoltageLevel() throws Exception {
+    @Test
+    public void testCreateWithNewVoltageLevel() throws Exception {
         LineAttachToVoltageLevelInfos lineAttachToWithNewVL = LineAttachToVoltageLevelInfos.builder()
                 .type(ModificationType.LINE_ATTACH_TO_VOLTAGE_LEVEL)
                 .lineToAttachToId("line3")
                 .percent(20.0)
                 .attachmentPointId(NEW_VL_NAME)
                 .attachmentPointName("attPointName")
-                .mayNewVoltageLevelInfos(getNewVoltageLevel())  // create another new VL
+                .mayNewVoltageLevelInfos(getNewVoltageLevel(NEW_ADDITIONAL_VL_NAME))  // create another new VL
                 .existingVoltageLevelId(null)
                 .bbsOrBusId("1.A")
-                .attachmentLine(getAttachmentLine())
+                .attachmentLine(getAttachmentLine(NEW_LINE_NAME))
                 .newLine1Id("nl1")
                 .newLine1Name("NewLine1")
                 .newLine2Id("nl2")
                 .newLine2Name("NewLine2")
                 .build();
+
+        assertNotNull(network.getLine("line3"));
+
         String lineAttachToWithNewVLJson = objectWriter.writeValueAsString(lineAttachToWithNewVL);
         mockMvc.perform(post(CREATE_URI_STRING, TEST_NETWORK_ID).content(lineAttachToWithNewVLJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
+
+        List<LineAttachToVoltageLevelInfos> modifications = getModifications();
+        assertEquals(1, modifications.size());
+        checkCreationWithNewVoltageLevel(modifications.get(0));
 
         // new equipments in the network:
         assertNotNull(network.getLine(NEW_LINE_NAME));
@@ -182,69 +291,60 @@ public class LineAttachToVoltageLevelTest {
         assertNotNull(network.getLine("nl2"));
         assertNotNull(network.getVoltageLevel(NEW_VL_NAME));
         assertNotNull(network.getVoltageLevel(NEW_ADDITIONAL_VL_NAME));
-    }
-
-    @Test
-    public void testCreateWithExistingVoltageLevel() throws Exception {
-        createWithExistingVoltageLevel();
-        assertEquals(1, getModifications().size());
-    }
-
-    @Test
-    public void testCreateWithNewVoltageLevel() throws Exception {
-        createWithNewVoltageLevel();
-        assertEquals(1, getModifications().size());
+        // replaced line is gone
+        assertNull(network.getLine("line3"));
     }
 
     @Test
     public void testUpdate() throws Exception {
-        // 1- First create a modification
-        createWithExistingVoltageLevel();
+        // 1- First create a modification in database
+        saveEntityWithExistingVoltageLevel();
 
-        List<LineAttachToVoltageLevelInfos> modifications = getModifications();
-        assertEquals(1, modifications.size());
-        LineAttachToVoltageLevelInfos firstModification = modifications.get(0);
-        assertEquals("line3", firstModification.getLineToAttachToId());
-        assertEquals("attPointName", firstModification.getAttachmentPointName());
-        assertEquals(NEW_VL_NAME, firstModification.getAttachmentPointId());
-        assertEquals(10., firstModification.getPercent(), 0.);
+        List<LineAttachToVoltageLevelInfos> modificationsAfterCreate = getModifications();
+        assertEquals(1, modificationsAfterCreate.size());
+        UUID modificationToUpdate = modificationsAfterCreate.get(0).getUuid();
 
         // 2- Then update it
         LineAttachToVoltageLevelInfos lineAttachWithNewVLUpd = LineAttachToVoltageLevelInfos.builder()
                 .type(ModificationType.LINE_ATTACH_TO_VOLTAGE_LEVEL)
                 .lineToAttachToId("line2")
                 .percent(30.0)
-                .attachmentPointId(NEW_VL_NAME)
+                .attachmentPointId("newAttPointId")
                 .attachmentPointName("newAttPointName")
-                .mayNewVoltageLevelInfos(getNewVoltageLevel())
+                .mayNewVoltageLevelInfos(getNewVoltageLevel("newVlName"))
                 .existingVoltageLevelId(null)
-                .bbsOrBusId("1.A")
-                .attachmentLine(getAttachmentLine())
+                .bbsOrBusId("2.A")
+                .attachmentLine(getAttachmentLine("newLineName"))
                 .newLine1Id("newLine1Id")
                 .newLine1Name("newLine1Name")
                 .newLine2Id("newLine2Id")
                 .newLine2Name("newLine2Name")
                 .build();
         String lineAttachWithNewVLUpdJson = objectWriter.writeValueAsString(lineAttachWithNewVLUpd);
-        mockMvc.perform(put(String.format(UPDATE_URI_STRING, firstModification.getUuid())).content(lineAttachWithNewVLUpdJson).contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(put(String.format(UPDATE_URI_STRING, modificationToUpdate)).content(lineAttachWithNewVLUpdJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
-        modifications = getModifications();
+        List<LineAttachToVoltageLevelInfos> modifications = getModifications();
         assertEquals(1, modifications.size());
-        firstModification = modifications.get(0);
+        LineAttachToVoltageLevelInfos firstModification = modifications.get(0);
         // modification has changed
+        assertEquals("line2", firstModification.getLineToAttachToId());
         assertEquals(30., firstModification.getPercent(), 0.);
+        assertEquals("newAttPointId", firstModification.getAttachmentPointId());
+        assertEquals("newAttPointName", firstModification.getAttachmentPointName());
+        assertEquals("newVlName", firstModification.getMayNewVoltageLevelInfos().getEquipmentId());
+        assertEquals("2.A", firstModification.getBbsOrBusId());
+        assertEquals("newLineName", firstModification.getAttachmentLine().getEquipmentId());
         assertEquals("newLine1Id", firstModification.getNewLine1Id());
         assertEquals("newLine2Id", firstModification.getNewLine2Id());
         assertEquals("newLine1Name", firstModification.getNewLine1Name());
         assertEquals("newLine2Name", firstModification.getNewLine2Name());
-        assertEquals("newAttPointName", firstModification.getAttachmentPointName());
     }
 
     @Test
-    public void testDeletion() throws Exception {
-        // 1- First create a modification
-        createWithExistingVoltageLevel();
+    public void testDelete() throws Exception {
+        // 1- First create a modification in database
+        saveEntityWithExistingVoltageLevel();
 
         List<LineAttachToVoltageLevelInfos> modifications = getModifications();
         assertEquals(1, modifications.size());
@@ -256,26 +356,24 @@ public class LineAttachToVoltageLevelTest {
     }
 
     @Test
-    public void testDuplicate() throws Exception {
-        // 1- First create 2 modifications
-        createWithExistingVoltageLevel();
-        createWithNewVoltageLevel();
+    public void testCopy() throws Exception {
+        // 1- First create a modification in database
+        saveEntityWithExistingVoltageLevel();
 
         List<LineAttachToVoltageLevelInfos> modifications = getModifications();
-        assertEquals(2, modifications.size());
+        assertEquals(1, modifications.size());
         assertEquals(1, modifications.stream().filter(r -> r.getPercent() == 10.).count());
-        assertEquals(1, modifications.stream().filter(r -> r.getPercent() == 20.).count());
 
-        // 2- Then duplicate them in current group
-        List<UUID> duplicateModificationUuidList = modifications.stream().map(LineAttachToVoltageLevelInfos::getUuid).collect(Collectors.toList());
-        mockMvc.perform(put(DUPLICATE_URI_STRING)
-                        .content(objectWriter.writeValueAsString(duplicateModificationUuidList))
+        // 2- Then copy it in current group
+        List<UUID> copyModificationUuidList = modifications.stream().map(LineAttachToVoltageLevelInfos::getUuid).collect(Collectors.toList());
+        mockMvc.perform(put(COPY_URI_STRING)
+                        .content(objectWriter.writeValueAsString(copyModificationUuidList))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         modifications = getModifications();
-        assertEquals(4, modifications.size());
-        assertEquals(2, modifications.stream().filter(r -> r.getPercent() == 10.).count());
-        assertEquals(2, modifications.stream().filter(r -> r.getPercent() == 20.).count());
+        assertEquals(2, modifications.size());
+        checkCreationWithExistingVoltageLevel(modifications.get(0));
+        checkCreationWithExistingVoltageLevel(modifications.get(1));
     }
 
     @Test
@@ -292,7 +390,7 @@ public class LineAttachToVoltageLevelTest {
                 .mayNewVoltageLevelInfos(null)
                 .existingVoltageLevelId("v4")
                 .bbsOrBusId("v1bbs")
-                .attachmentLine(getAttachmentLine())
+                .attachmentLine(getAttachmentLine(NEW_LINE_NAME))
                 .newLine1Id("nl1")
                 .newLine1Name("NewLine1")
                 .newLine2Id("nl2")
@@ -341,10 +439,10 @@ public class LineAttachToVoltageLevelTest {
                 .percent(30.0)
                 .attachmentPointId(NEW_VL_NAME)
                 .attachmentPointName("attPointName")
-                .mayNewVoltageLevelInfos(getNewVoltageLevel())
+                .mayNewVoltageLevelInfos(getNewVoltageLevel(NEW_ADDITIONAL_VL_NAME))
                 .existingVoltageLevelId(null)
                 .bbsOrBusId("1.A")
-                .attachmentLine(getAttachmentLine())
+                .attachmentLine(getAttachmentLine(NEW_LINE_NAME))
                 .newLine1Id("nl1")
                 .newLine1Name("NewLine1")
                 .newLine2Id("nl2")

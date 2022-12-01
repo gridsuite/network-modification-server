@@ -82,6 +82,6 @@ public class LineAttachToVoltageLevel extends AbstractModification {
                 lineAdder
         );
 
-        algo.apply(network, false, subReporter);
+        algo.apply(network, true, subReporter);
     }
 }
