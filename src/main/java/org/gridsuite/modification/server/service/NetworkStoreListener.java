@@ -73,7 +73,7 @@ public class NetworkStoreListener implements NetworkListener {
                                               EquipmentInfosService equipmentInfosService,
                                               boolean isBuild, boolean isApplyModifications) {
         var listener = new NetworkStoreListener(network, networkUuid, groupUuid, modificationRepository, equipmentInfosService,
-                isBuild, isApplyModifications);
+            isBuild, isApplyModifications);
         network.addListener(listener);
         return listener;
     }
@@ -117,12 +117,11 @@ public class NetworkStoreListener implements NetworkListener {
 
     public List<ModificationInfos> getModifications() {
         List<ModificationInfos> modificationInfos = modifications.stream()
-                .map(m -> {
-                    ModificationInfos infos = m.toModificationInfos();
-                    infos.setSubstationIds(substationsIds);
-                    return infos;
-                })
-                .collect(Collectors.toList());
+            .map(m -> {
+                ModificationInfos infos = m.toModificationInfos();
+                infos.setSubstationIds(substationsIds);
+                return infos;
+            }).collect(Collectors.toList());
         modifications.clear();
         return modificationInfos;
     }
@@ -130,20 +129,20 @@ public class NetworkStoreListener implements NetworkListener {
     public void saveModifications() {
         if (groupUuid != null) {
             modificationRepository.saveModifications(groupUuid,
-                    modifications
-                            .stream()
-                            .map(ModificationEntity.class::cast)
-                            .collect(Collectors.toList()));
+                modifications
+                    .stream()
+                    .map(ModificationEntity.class::cast)
+                    .collect(Collectors.toList()));
         }
     }
 
     public void deleteModifications() {
         if (groupUuid != null) {
             modificationRepository.deleteModifications(groupUuid,
-                    modifications
-                            .stream()
-                            .map(ModificationEntity::getId)
-                            .collect(Collectors.toSet()));
+                modifications
+                    .stream()
+                    .map(ModificationEntity::getId)
+                    .collect(Collectors.toSet()));
         }
     }
 
@@ -168,33 +167,33 @@ public class NetworkStoreListener implements NetworkListener {
 
     public void storeGeneratorCreation(GeneratorCreationInfos generatorCreationInfos) {
         modifications.add(this.modificationRepository.createGeneratorEntity(generatorCreationInfos.getEquipmentId(),
-                generatorCreationInfos.getEquipmentName(),
-                generatorCreationInfos.getEnergySource(),
-                generatorCreationInfos.getVoltageLevelId(),
-                generatorCreationInfos.getBusOrBusbarSectionId(),
-                generatorCreationInfos.getMinActivePower(),
-                generatorCreationInfos.getMaxActivePower(),
-                generatorCreationInfos.getRatedNominalPower(),
-                generatorCreationInfos.getActivePowerSetpoint(),
-                generatorCreationInfos.getReactivePowerSetpoint(),
-                generatorCreationInfos.isVoltageRegulationOn(),
-                generatorCreationInfos.getVoltageSetpoint(),
-                generatorCreationInfos.getMarginalCost(),
-                generatorCreationInfos.getMinimumReactivePower(),
-                generatorCreationInfos.getMaximumReactivePower(),
-                generatorCreationInfos.getParticipate() != null && generatorCreationInfos.getParticipate(),
-                generatorCreationInfos.getDroop(),
-                generatorCreationInfos.getTransientReactance(),
-                generatorCreationInfos.getStepUpTransformerReactance(),
-                generatorCreationInfos.getRegulatingTerminalId(),
-                generatorCreationInfos.getRegulatingTerminalType(),
-                generatorCreationInfos.getRegulatingTerminalVlId(),
-                generatorCreationInfos.getQPercent(),
-                generatorCreationInfos.getReactiveCapabilityCurve() == null || generatorCreationInfos.getReactiveCapabilityCurve(),
-                toEmbeddablePoints(generatorCreationInfos.getReactiveCapabilityCurvePoints()),
-                generatorCreationInfos.getConnectionName(),
-                generatorCreationInfos.getConnectionDirection(),
-                generatorCreationInfos.getConnectionPosition()));
+            generatorCreationInfos.getEquipmentName(),
+            generatorCreationInfos.getEnergySource(),
+            generatorCreationInfos.getVoltageLevelId(),
+            generatorCreationInfos.getBusOrBusbarSectionId(),
+            generatorCreationInfos.getMinActivePower(),
+            generatorCreationInfos.getMaxActivePower(),
+            generatorCreationInfos.getRatedNominalPower(),
+            generatorCreationInfos.getActivePowerSetpoint(),
+            generatorCreationInfos.getReactivePowerSetpoint(),
+            generatorCreationInfos.isVoltageRegulationOn(),
+            generatorCreationInfos.getVoltageSetpoint(),
+            generatorCreationInfos.getMarginalCost(),
+            generatorCreationInfos.getMinimumReactivePower(),
+            generatorCreationInfos.getMaximumReactivePower(),
+            generatorCreationInfos.getParticipate() != null && generatorCreationInfos.getParticipate(),
+            generatorCreationInfos.getDroop(),
+            generatorCreationInfos.getTransientReactance(),
+            generatorCreationInfos.getStepUpTransformerReactance(),
+            generatorCreationInfos.getRegulatingTerminalId(),
+            generatorCreationInfos.getRegulatingTerminalType(),
+            generatorCreationInfos.getRegulatingTerminalVlId(),
+            generatorCreationInfos.getQPercent(),
+            generatorCreationInfos.getReactiveCapabilityCurve() == null || generatorCreationInfos.getReactiveCapabilityCurve(),
+            toEmbeddablePoints(generatorCreationInfos.getReactiveCapabilityCurvePoints()),
+            generatorCreationInfos.getConnectionName(),
+            generatorCreationInfos.getConnectionDirection(),
+            generatorCreationInfos.getConnectionPosition()));
     }
 
     public void storeEquipmentDeletion(String equipmentId, String equipmentType) {
@@ -203,23 +202,23 @@ public class NetworkStoreListener implements NetworkListener {
 
     public void storeLineCreation(LineCreationInfos lineCreationInfos) {
         modifications.add(this.modificationRepository.createLineEntity(lineCreationInfos.getEquipmentId(),
-                lineCreationInfos.getEquipmentName(),
-                lineCreationInfos.getSeriesResistance(),
-                lineCreationInfos.getSeriesReactance(),
-                lineCreationInfos.getShuntConductance1(),
-                lineCreationInfos.getShuntSusceptance1(),
-                lineCreationInfos.getShuntConductance2(),
-                lineCreationInfos.getShuntSusceptance2(),
-                lineCreationInfos.getVoltageLevelId1(),
-                lineCreationInfos.getBusOrBusbarSectionId1(),
-                lineCreationInfos.getVoltageLevelId2(),
-                lineCreationInfos.getBusOrBusbarSectionId2(),
-                lineCreationInfos.getCurrentLimits1() != null ? lineCreationInfos.getCurrentLimits1().getPermanentLimit() : null,
-                lineCreationInfos.getCurrentLimits2() != null ? lineCreationInfos.getCurrentLimits2().getPermanentLimit() : null,
-                lineCreationInfos.getConnectionName1(),
-                lineCreationInfos.getConnectionDirection1(),
-                lineCreationInfos.getConnectionName2(),
-                lineCreationInfos.getConnectionDirection2()
+            lineCreationInfos.getEquipmentName(),
+            lineCreationInfos.getSeriesResistance(),
+            lineCreationInfos.getSeriesReactance(),
+            lineCreationInfos.getShuntConductance1(),
+            lineCreationInfos.getShuntSusceptance1(),
+            lineCreationInfos.getShuntConductance2(),
+            lineCreationInfos.getShuntSusceptance2(),
+            lineCreationInfos.getVoltageLevelId1(),
+            lineCreationInfos.getBusOrBusbarSectionId1(),
+            lineCreationInfos.getVoltageLevelId2(),
+            lineCreationInfos.getBusOrBusbarSectionId2(),
+            lineCreationInfos.getCurrentLimits1() != null ? lineCreationInfos.getCurrentLimits1().getPermanentLimit() : null,
+            lineCreationInfos.getCurrentLimits2() != null ? lineCreationInfos.getCurrentLimits2().getPermanentLimit() : null,
+            lineCreationInfos.getConnectionName1(),
+            lineCreationInfos.getConnectionDirection1(),
+            lineCreationInfos.getConnectionName2(),
+            lineCreationInfos.getConnectionDirection2()
         ));
     }
 
@@ -266,27 +265,27 @@ public class NetworkStoreListener implements NetworkListener {
     public void onCreation(Identifiable identifiable) {
         substationsIds.addAll(getSubstationIds(identifiable));
         equipmentInfosService.addEquipmentInfos(
-                EquipmentInfos.builder()
-                        .networkUuid(networkUuid)
-                        .variantId(network.getVariantManager().getWorkingVariantId())
-                        .id(identifiable.getId())
-                        .name(identifiable.getNameOrId())
-                        .type(identifiable.getType().name())
-                        .voltageLevels(EquipmentInfos.getVoltageLevels(identifiable))
-                        .build()
+            EquipmentInfos.builder()
+                .networkUuid(networkUuid)
+                .variantId(network.getVariantManager().getWorkingVariantId())
+                .id(identifiable.getId())
+                .name(identifiable.getNameOrId())
+                .type(identifiable.getType().name())
+                .voltageLevels(EquipmentInfos.getVoltageLevels(identifiable))
+                .build()
         );
     }
 
     @Override
     public void beforeRemoval(Identifiable identifiable) {
         EquipmentDeletionInfos di = EquipmentDeletionInfos
-                .builder()
-                .uuid(null) // not in "this" db, transient
-                .date(ZonedDateTime.now(ZoneOffset.UTC))
-                .type(ModificationType.EQUIPMENT_DELETION)
-                .equipmentId(identifiable.getId())
-                .equipmentType(identifiable.getType().name())
-                .build();
+            .builder()
+            .uuid(null) // not in "this" db, transient
+            .date(ZonedDateTime.now(ZoneOffset.UTC))
+            .type(ModificationType.EQUIPMENT_DELETION)
+            .equipmentId(identifiable.getId())
+            .equipmentType(identifiable.getType().name())
+            .build();
         addSubstationsIds(identifiable);
         this.deletions.add(di);
     }
@@ -298,11 +297,11 @@ public class NetworkStoreListener implements NetworkListener {
             equipmentInfosService.deleteEquipmentInfos(id, networkUuid, variantId);
         } else {
             equipmentInfosService.addTombstonedEquipmentInfos(
-                    TombstonedEquipmentInfos.builder()
-                            .networkUuid(networkUuid)
-                            .variantId(variantId)
-                            .id(id)
-                            .build()
+                TombstonedEquipmentInfos.builder()
+                    .networkUuid(networkUuid)
+                    .variantId(variantId)
+                    .id(id)
+                    .build()
             );
         }
     }

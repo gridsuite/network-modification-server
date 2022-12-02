@@ -1680,7 +1680,7 @@ public class NetworkModificationService {
                     CreateFeederBay algo = new CreateFeederBayBuilder()
                             .withBbsId(shuntCompensatorCreationInfos.getBusOrBusbarSectionId())
                             .withInjectionDirection(shuntCompensatorCreationInfos.getConnectionDirection())
-                            .withInjectionFeederName(shuntCompensatorCreationInfos.getConnectionName())
+                            .withInjectionFeederName(shuntCompensatorCreationInfos.getConnectionName() != null ? shuntCompensatorCreationInfos.getConnectionName() : shuntCompensatorCreationInfos.getEquipmentId())
                             .withInjectionPositionOrder(position)
                             .withInjectionAdder(shuntCompensatorAdder)
                             .build();
