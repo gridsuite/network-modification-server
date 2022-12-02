@@ -100,9 +100,7 @@ public class NetworkModificationController {
     @Operation(summary = "Create a network modification")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "The network modification was created"),
-        @ApiResponse(responseCode = "404", description = "The network or equipment was not found")
-    })
-
+        @ApiResponse(responseCode = "404", description = "The network or equipment was not found")})
     public ResponseEntity<List<? extends ModificationInfos>> createNetworkModification(
             @Parameter(description = "Network ID") @RequestParam("networkUuid") UUID networkUuid,
             @Parameter(description = "Variant ID") @RequestParam(name = "variantId", required = false) String variantId,
