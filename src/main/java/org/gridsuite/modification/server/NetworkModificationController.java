@@ -110,7 +110,16 @@ public class NetworkModificationController {
             @Parameter(description = "Report ID") @RequestParam("reportUuid") UUID reportUuid,
             @Parameter(description = "Reporter ID") @RequestParam("reporterId") String reporterId,
             @RequestBody ModificationInfos modificationInfos) {
-        return ResponseEntity.ok().body(networkModificationService.createNetworkModification(networkUuid, variantId, groupUuid, reportUuid, reporterId, modificationInfos));
+        // temporary switch, should be removed when all kind of modification will use the generic updateModification
+        // PS : the switch can't be in the service because of @Transactional that need to be called from outside the class
+        switch (modificationInfos.getType()) {
+            case LOAD_CREATION:
+            case LINE_SPLIT_WITH_VOLTAGE_LEVEL:
+            case EQUIPMENT_ATTRIBUTE_MODIFICATION:
+                return ResponseEntity.ok().body(networkModificationService.createModification(networkUuid, variantId, groupUuid, reportUuid, reporterId, modificationInfos));
+            default:
+                return ResponseEntity.ok().body(networkModificationService.createNetworkModification(networkUuid, variantId, groupUuid, reportUuid, reporterId, modificationInfos));
+        }
     }
 
     @PutMapping(value = "/network-modifications/{networkModificationUuid}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
