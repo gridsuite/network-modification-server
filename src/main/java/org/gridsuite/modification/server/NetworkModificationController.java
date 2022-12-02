@@ -109,7 +109,8 @@ public class NetworkModificationController {
             @Parameter(description = "Reporter ID") @RequestParam("reporterId") String reporterId,
             @RequestBody ModificationInfos modificationInfos) {
         // temporary switch, should be removed when all kind of modification will use the generic updateModification
-        // PS : the switch can't be in the service because of @Transactional that need to be called from outside the class
+        // PS : same for the wildcard return type (code smell)
+        // PS 2 : the switch can't be in the service because of @Transactional that need to be called from outside the class
         switch (modificationInfos.getType()) {
             case LOAD_CREATION:
             case LINE_SPLIT_WITH_VOLTAGE_LEVEL:

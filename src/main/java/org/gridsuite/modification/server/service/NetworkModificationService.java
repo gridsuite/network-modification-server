@@ -519,6 +519,7 @@ public class NetworkModificationService {
         }
     }
 
+    // temporary wildcard code smell (method to be deleted)
     public List<? extends ModificationInfos> createNetworkModification(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId, ModificationInfos modificationInfos) {
 
         switch (modificationInfos.getType()) {
@@ -1420,7 +1421,7 @@ public class NetworkModificationService {
         if (!switchStatusModificationInfos.getEquipmentAttributeName().equals("open")) {
             throw new NetworkModificationException(EQUIPMENT_ATTRIBUTE_NAME_ERROR, "For switch status, the attribute name is only 'open'");
         }
-        Set possibleValues = Set.of(true, false);
+        Set<Boolean> possibleValues = Set.of(true, false);
         if (!possibleValues.contains(switchStatusModificationInfos.getEquipmentAttributeValue())) {
             throw new NetworkModificationException(EQUIPMENT_ATTRIBUTE_VALUE_ERROR, "For switch status, the attribute values are only " + possibleValues);
         }
