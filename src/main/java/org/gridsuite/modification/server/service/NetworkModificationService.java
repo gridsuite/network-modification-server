@@ -1820,7 +1820,6 @@ public class NetworkModificationService {
         return missingModificationList;
     }
 
-    @Transactional
     public void updateGeneratorModification(UUID modificationUuid, GeneratorModificationInfos generatorModificationInfos) {
         assertEquipmentModificationInfosOk(generatorModificationInfos, MODIFICATION_NOT_FOUND);
 
