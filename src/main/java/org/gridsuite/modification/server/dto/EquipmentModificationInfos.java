@@ -6,6 +6,8 @@
  */
 package org.gridsuite.modification.server.dto;
 
+import org.springframework.lang.NonNull;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -26,5 +28,6 @@ import lombok.experimental.SuperBuilder;
 
 public class EquipmentModificationInfos extends ModificationInfos {
     @Schema(description = "Equipment ID")
+    @NonNull
     private String equipmentId;
 }
