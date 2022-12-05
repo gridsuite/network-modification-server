@@ -15,8 +15,10 @@ import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.BusbarSectionPositionAdder;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import com.powsybl.iidm.network.extensions.ConnectablePositionAdder;
+import com.powsybl.nad.NetworkAreaDiagram;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
+import com.powsybl.sld.SingleLineDiagram;
 import nl.jqno.equalsverifier.EqualsVerifier;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.LoadCreationInfos.LoadCreationInfosBuilder;
@@ -45,6 +47,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.NestedServletException;
 
+import java.nio.file.Path;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.*;
@@ -81,6 +84,7 @@ public class ModificationControllerTest {
 
     private static final UUID TEST_NETWORK_ID = UUID.fromString("7928181c-7977-4592-ba19-88027e4254e4");
     private static final UUID TEST_NETWORK_ID_2 = UUID.fromString("7928181e-7977-4592-ba19-88027e4254e4");
+    private static final UUID TEST_NETWORK_WITH_TEE_POINT_ID = UUID.fromString("1928181e-7974-4592-ba19-88027e4254e4");
     private static final UUID NOT_FOUND_NETWORK_ID = UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
     private static final UUID TEST_NETWORK_WITH_FLUSH_ERROR_ID = UUID.fromString("eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee");
     private static final UUID TEST_GROUP_ID = UUID.randomUUID();
@@ -115,18 +119,28 @@ public class ModificationControllerTest {
 
     private Network network2;
 
+    private Network networkWithTeePoint;
+
     @Before
     public void setUp() {
         objectWriter = mapper.writer().withDefaultPrettyPrinter();
         // /!\ create a new network for each invocation (answer)
         when(networkStoreService.getNetwork(TEST_NETWORK_ID)).then((Answer<Network>) invocation -> {
+            System.out.println("TOTO");
             network = NetworkCreation.create(TEST_NETWORK_ID, true);
+            SingleLineDiagram.draw(network, "s1", "/tmp/s1.svg");
+            new NetworkAreaDiagram(network)
+                    .draw(Path.of("/tmp/nad.svg"));
             return network;
         });
         when(networkStoreService.getNetwork(TEST_NETWORK_ID_2)).then((Answer<Network>) invocation -> {
             network2 = NetworkCreation.create(TEST_NETWORK_ID_2, false);
             return network2;
         });
+
+        networkWithTeePoint = NetworkWithTeePoint.create(TEST_NETWORK_WITH_TEE_POINT_ID);
+        when(networkStoreService.getNetwork(TEST_NETWORK_WITH_TEE_POINT_ID)).then((Answer<Network>) invocation -> networkWithTeePoint);
+
         when(networkStoreService.getNetwork(NOT_FOUND_NETWORK_ID)).thenThrow(new PowsyblException());
         when(networkStoreService.getNetwork(TEST_NETWORK_WITH_FLUSH_ERROR_ID)).then((Answer<Network>) invocation -> NetworkCreation.create(TEST_NETWORK_WITH_FLUSH_ERROR_ID, true));
         when(networkStoreService.getNetwork(TEST_NETWORK_BUS_BREAKER_ID)).then((Answer<Network>) invocation -> NetworkCreation.createBusBreaker(TEST_NETWORK_BUS_BREAKER_ID));
@@ -1789,12 +1803,12 @@ public class ModificationControllerTest {
         assertNull(network.getTwoWindingsTransformer("trf1"));
         assertNull(network.getSwitch("v1btrf1"));
         // disconnector 'v1dtrf1' was not removed (2wt 'trf1' in double feeder with 3wt 'trf6' in voltage level 'v1')
-        assertNotNull(network.getSwitch("v1dtrf1"));
+        assertNull(network.getSwitch("v1dtrf1"));
         assertNull(network.getSwitch("v2btrf1"));
         assertNull(network.getSwitch("v2dtrf1"));
         assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("trf1", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
         assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v1btrf1", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertFalse(equipmentInfosService.existTombstonedEquipmentInfos("v1dtrf1", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v1dtrf1", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
         assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v2btrf1", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
         assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v2dtrf1", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
 
@@ -1818,8 +1832,8 @@ public class ModificationControllerTest {
         assertNull(network.getSwitch("v4btrf6"));
         assertNull(network.getSwitch("v4dtrf6"));
         assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("trf6", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertFalse(equipmentInfosService.existTombstonedEquipmentInfos("v1btrf6", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertFalse(equipmentInfosService.existTombstonedEquipmentInfos("v1dtrf6", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v1btrf6", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v1dtrf6", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
         assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v2btrf6", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
         assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v2dtrf6", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
         assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v4btrf6", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
@@ -1982,27 +1996,20 @@ public class ModificationControllerTest {
 
         assertTrue(equipmentInfosService.findAllEquipmentInfos(TEST_NETWORK_ID).isEmpty());
         assertTrue(equipmentInfosService.findAllEquipmentInfos(TEST_NETWORK_ID_2).isEmpty());
-        assertEquals(52, equipmentInfosService.findAllTombstonedEquipmentInfos(TEST_NETWORK_ID).size());
+        assertEquals(55, equipmentInfosService.findAllTombstonedEquipmentInfos(TEST_NETWORK_ID).size());
         assertEquals(6, equipmentInfosService.findAllTombstonedEquipmentInfos(TEST_NETWORK_ID_2).size());
     }
 
     @Test
-    public void testErrorRemovingDanglingSwitches() throws Exception {
-        MvcResult mvcResult;
-        String resultAsString;
+    public void testOkWhenRemovingIsolatedEquipment() throws Exception {
         String uriString = "/v1/networks/{networkUuid}/equipments/type/{equipmentType}/id/{equipmentId}?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
 
-        // delete load with error removing dangling switches, because the load connection node is not linked to any other node
-        mvcResult = mockMvc.perform(delete(uriString, TEST_NETWORK_ID, "LOAD", "v5load").contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().is5xxServerError()).andReturn();
-        resultAsString  = mvcResult.getResponse().getContentAsString();
-        assertEquals("DELETE_EQUIPMENT_ERROR : no such vertex in graph: 2", resultAsString);
-        // no modifications added
-        mvcResult = mockMvc.perform(get("/v1/groups").contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        List<UUID> deletionsGroups = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertEquals(deletionsGroups, List.of());
+        mockMvc.perform(delete(uriString, TEST_NETWORK_ID, "LOAD", "v5load").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        var v5 = network.getVoltageLevel("v5");
+        assertNull(v5.getNodeBreakerView().getTerminal(2));
     }
 
     private List<ModificationInfos> createSomeSwitchModifications(UUID groupId, int number) throws Exception {
@@ -2420,17 +2427,6 @@ public class ModificationControllerTest {
 
         testNetworkModificationsCount(TEST_GROUP_ID, 5);
 
-        //Attach lines to split lines
-        String attachLinesToSplitLinesUriString = "/v1/networks/{networkUuid}/lines-attach-to-split-lines?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
-        LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos = new LinesAttachToSplitLinesInfos("line1", "line2", "line3", "v4", "1.A", "nl4", "NewLine4", "nl5", "NewLine4");
-
-        mockMvc.perform(
-                        post(attachLinesToSplitLinesUriString, TEST_NETWORK_ID)
-                                .content(objectWriter.writeValueAsString(linesAttachToSplitLinesInfos))
-                                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
-        testNetworkModificationsCount(TEST_GROUP_ID, 6);
-
         //create a lineSplit
         String lineSplitUriString = "/v1/networks/{networkUuid}/line-splits?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
         LineSplitWithVoltageLevelInfos lineSplitWoVL = new LineSplitWithVoltageLevelInfos("line3", 10.0, null, "v4", "1.A",
@@ -2451,13 +2447,35 @@ public class ModificationControllerTest {
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 8);
+        testNetworkModificationsCount(TEST_GROUP_ID, 7);
+
         //test copy group
         UUID newGroupUuid = UUID.randomUUID();
         uriString = "/v1/groups?groupUuid=" + newGroupUuid + "&duplicateFrom=" + TEST_GROUP_ID + "&reportUuid=" + UUID.randomUUID();
         mockMvc.perform(post(uriString)).andExpect(status().isOk());
 
-        testNetworkModificationsCount(newGroupUuid, 8);
+        testNetworkModificationsCount(newGroupUuid, 7);
+    }
+
+    @Test
+    public void replaceTeePointByVoltageLevelOnLineDuplicateModificationGroupTest() throws Exception  {
+        String attachLinesToSplitLinesUriString = "/v1/networks/{networkUuid}/lines-attach-to-split-lines?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
+        LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos = new LinesAttachToSplitLinesInfos("l1", "l2", "l3", "v4", "bbs2", "nl1", "NewLine1", "nl2", "NewLine2");
+
+        mockMvc.perform(post(attachLinesToSplitLinesUriString, TEST_NETWORK_WITH_TEE_POINT_ID)
+                                .content(objectWriter.writeValueAsString(linesAttachToSplitLinesInfos))
+                                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        testNetworkModificationsCount(TEST_GROUP_ID, 1);
+
+        // test copy group
+        UUID newGroupUuid = UUID.randomUUID();
+        String copyGroupUriString = "/v1/groups?groupUuid=" + newGroupUuid + "&duplicateFrom=" + TEST_GROUP_ID + "&reportUuid=" + UUID.randomUUID();
+        mockMvc.perform(post(copyGroupUriString))
+                .andExpect(status().isOk());
+
+        testNetworkModificationsCount(newGroupUuid, 1);
     }
 
     @Test
@@ -2961,31 +2979,54 @@ public class ModificationControllerTest {
 
     @Test
     public void testAttachLinesToSplitLines() throws Exception {
-        MvcResult mvcResult;
-        String resultAsString;
+        assertNotNull(networkWithTeePoint.getLine("l2"));
+        assertNotNull(networkWithTeePoint.getLine("l3"));
+        assertEquals(3, networkWithTeePoint.getLineCount());
+        assertNotNull(networkWithTeePoint.getVoltageLevel("v2"));
+        assertNotNull(networkWithTeePoint.getVoltageLevel("v4"));
+        assertEquals(4, networkWithTeePoint.getVoltageLevelCount());
+
         String linesAttachToSplitLinesUriString = "/v1/networks/{networkUuid}/lines-attach-to-split-lines?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
-        LinesAttachToSplitLinesInfos linesAttachToAbsentLine1 = new LinesAttachToSplitLinesInfos("absent_line_id", "line2", "line3", "v4", "1.A", "nl4", "NewLine4", "nl5", "NewLine4");
+        LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos = new LinesAttachToSplitLinesInfos("absent_line_id", "l2", "l3", "v4", "bbs2", "nl1", "NewLine1", "nl2", "NewLine2");
 
-        String linesAttachToAbsentLine1Json = objectWriter.writeValueAsString(linesAttachToAbsentLine1);
+        String linesAttachToAbsentLine1Json = objectWriter.writeValueAsString(linesAttachToSplitLinesInfos);
 
-        mvcResult = mockMvc.perform(post(linesAttachToSplitLinesUriString, TEST_NETWORK_ID).content(linesAttachToAbsentLine1Json).contentType(MediaType.APPLICATION_JSON))
+        MvcResult mvcResult = mockMvc.perform(post(linesAttachToSplitLinesUriString, TEST_NETWORK_WITH_TEE_POINT_ID)
+                        .content(linesAttachToAbsentLine1Json)
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().is4xxClientError()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
+        String resultAsString = mvcResult.getResponse().getContentAsString();
         assertEquals("LINE_NOT_FOUND : Line absent_line_id is not found", resultAsString);
 
-        LinesAttachToSplitLinesInfos linesAttachToSplitLines = new LinesAttachToSplitLinesInfos("line1", "line2", "line3", "v4", "1.A", "nl4", "NewLine4", "nl5", "NewLine4");
-        String linesAttachToSplitLinesJson = objectWriter.writeValueAsString(linesAttachToSplitLines);
-        mvcResult = mockMvc.perform(post(linesAttachToSplitLinesUriString, TEST_NETWORK_ID).content(linesAttachToSplitLinesJson).contentType(MediaType.APPLICATION_JSON))
+        // fix to have to correct modification
+        linesAttachToSplitLinesInfos.setLineToAttachTo1Id("l1");
+        String linesAttachToSplitLinesJson = objectWriter.writeValueAsString(linesAttachToSplitLinesInfos);
+        mvcResult = mockMvc.perform(post(linesAttachToSplitLinesUriString, TEST_NETWORK_WITH_TEE_POINT_ID)
+                        .content(linesAttachToSplitLinesJson)
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
 
         List<EquipmentModificationInfos> result = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertNotNull(result);
-        Optional<EquipmentModificationInfos> linesAttachToProperSplitLines = result.stream().filter(r -> r.getType() == ModificationType.LINES_ATTACH_TO_SPLIT_LINES).findFirst();
-        assertTrue(linesAttachToProperSplitLines.isPresent());
+        assertEquals(18, result.size()); // FIXME why ??? we get a result for this modification and all individual deletion
+        EquipmentModificationInfos linesAttachToProperSplitLines = result.stream().filter(r -> r.getType() == ModificationType.LINES_ATTACH_TO_SPLIT_LINES).findFirst().orElseThrow();
+        assertNull(linesAttachToProperSplitLines.getEquipmentId());
+        assertEquals(Set.of("s3", "s4", "s1", "s2"), linesAttachToProperSplitLines.getSubstationIds());
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
 
-        mockMvc.perform(put("/v1/modifications/" + linesAttachToProperSplitLines.get().getUuid() + "/lines-attach-to-split-lines-creation").content(linesAttachToSplitLinesJson).contentType(MediaType.APPLICATION_JSON))
+        assertNull(networkWithTeePoint.getLine("l1"));
+        assertNull(networkWithTeePoint.getLine("l2"));
+        assertNotNull(networkWithTeePoint.getLine("nl1"));
+        assertNotNull(networkWithTeePoint.getLine("nl2"));
+        assertNull(networkWithTeePoint.getLine("l3"));
+        assertEquals(2, networkWithTeePoint.getLineCount());
+        assertNull(networkWithTeePoint.getVoltageLevel("v2"));
+        assertNotNull(networkWithTeePoint.getVoltageLevel("v4"));
+        assertEquals(3, networkWithTeePoint.getVoltageLevelCount());
+
+        // check re-update
+        mockMvc.perform(put("/v1/modifications/" + linesAttachToProperSplitLines.getUuid() + "/lines-attach-to-split-lines-creation").content(linesAttachToSplitLinesJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
     }
