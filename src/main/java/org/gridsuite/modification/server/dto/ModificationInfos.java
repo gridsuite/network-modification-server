@@ -88,4 +88,8 @@ public class ModificationInfos {
     public NetworkModificationException.Type getErrorType() {
         throw new UnsupportedOperationException("TODO");
     }
+
+    @JsonIgnore
+    public void checkItself() {
+    }
 }

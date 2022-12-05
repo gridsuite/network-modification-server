@@ -26,6 +26,9 @@ import org.gridsuite.modification.server.modifications.EquipmentAttributeModific
 import org.springframework.lang.NonNull;
 
 import java.util.Map;
+import java.util.Set;
+
+import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -98,5 +101,22 @@ public class EquipmentAttributeModificationInfos extends EquipmentModificationIn
         }
 
         return (EquipmentAttributeModificationEntity<T>) modification;
+    }
+
+    @Override
+    public void checkItself() {
+        if (equipmentType == IdentifiableType.SWITCH) {
+            checkSwitchStatusModificationInfos();
+        }
+    }
+
+    private void checkSwitchStatusModificationInfos() {
+        if (!equipmentAttributeName.equals("open")) {
+            throw new NetworkModificationException(EQUIPMENT_ATTRIBUTE_NAME_ERROR, "For switch status, the attribute name is only 'open'");
+        }
+        Set<Boolean> possibleValues = Set.of(true, false);
+        if (!possibleValues.contains(equipmentAttributeValue)) {
+            throw new NetworkModificationException(EQUIPMENT_ATTRIBUTE_VALUE_ERROR, "For switch status, the attribute values are only " + possibleValues);
+        }
     }
 }

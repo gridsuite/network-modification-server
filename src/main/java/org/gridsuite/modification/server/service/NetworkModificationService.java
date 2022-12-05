@@ -613,7 +613,7 @@ public class NetworkModificationService {
 
     @Transactional
     public List<ModificationInfos> createModification(@NonNull UUID networkUuid, String variantId, @NonNull UUID groupUuid, @NonNull UUID reportUuid, @NonNull String reporterId, @NonNull ModificationInfos modificationInfos) {
-        checkNetworkModification(modificationInfos);
+        modificationInfos.checkItself();
         ModificationNetworkInfos networkInfos = getNetworkModificationInfos(networkUuid, variantId);
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
         return handleModification(modificationInfos, listener, groupUuid, reportUuid, reporterId);
@@ -1401,29 +1401,6 @@ public class NetworkModificationService {
     private void assertTwoWindingsTransformerCreationInfosNotEmpty(TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
         if (twoWindingsTransformerCreationInfos == null) {
             throw new NetworkModificationException(CREATE_TWO_WINDINGS_TRANSFORMER_ERROR, "Missing required attributes to create the two windings transformer");
-        }
-    }
-
-    private void checkNetworkModification(ModificationInfos modificationInfos) {
-        // to complete
-        if (modificationInfos.getType() == ModificationType.EQUIPMENT_ATTRIBUTE_MODIFICATION) {
-            EquipmentAttributeModificationInfos equipmentAttributeModificationInfos = (EquipmentAttributeModificationInfos) modificationInfos;
-            if (equipmentAttributeModificationInfos.getEquipmentType() == IdentifiableType.SWITCH) {
-                checkSwitchStatusModificationInfos(equipmentAttributeModificationInfos);
-            }
-        }
-    }
-
-    private void checkSwitchStatusModificationInfos(EquipmentAttributeModificationInfos switchStatusModificationInfos) {
-        if (switchStatusModificationInfos == null) {
-            throw new NetworkModificationException(SWITCH_ERROR, "Missing required attributes to create the switch status modification");
-        }
-        if (!switchStatusModificationInfos.getEquipmentAttributeName().equals("open")) {
-            throw new NetworkModificationException(EQUIPMENT_ATTRIBUTE_NAME_ERROR, "For switch status, the attribute name is only 'open'");
-        }
-        Set<Boolean> possibleValues = Set.of(true, false);
-        if (!possibleValues.contains(switchStatusModificationInfos.getEquipmentAttributeValue())) {
-            throw new NetworkModificationException(EQUIPMENT_ATTRIBUTE_VALUE_ERROR, "For switch status, the attribute values are only " + possibleValues);
         }
     }
 
