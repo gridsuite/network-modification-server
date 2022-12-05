@@ -41,7 +41,7 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
 @Schema(description = "Equipment attribute modification")
 public class EquipmentAttributeModificationInfos extends EquipmentModificationInfos {
     @Schema(description = "Equipment attribute name")
-    protected String equipmentAttributeName;
+    private String equipmentAttributeName;
 
     @Schema(description = "Equipment attribute value")
 
