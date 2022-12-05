@@ -6,6 +6,9 @@
  */
 package org.gridsuite.modification.server.dto;
 
+import java.util.Map;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.powsybl.iidm.network.Country;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
@@ -28,4 +31,8 @@ public class SubstationCreationInfos extends EquipmentCreationInfos {
 
     @Schema(description = "Substation country")
     private Country substationCountry;
+
+    @Schema(description = "free properties")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Map<String, String> properties;
 }
