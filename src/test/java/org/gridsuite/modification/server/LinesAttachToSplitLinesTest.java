@@ -173,7 +173,7 @@ public class LinesAttachToSplitLinesTest {
     }
 
     @Test
-    public void testDeletion() throws Exception {
+    public void testDelete() throws Exception {
         // 1- First create a modification
         createModification();
 
