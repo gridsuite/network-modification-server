@@ -775,7 +775,7 @@ public class ModificationRepositoryTest {
         assertRequestsCount(1, 11, 5, 0);
 
         List<BranchStatusModificationInfos> modificationInfos = networkModificationRepository.getModifications(
-                entities.stream().map(ModificationEntity::getId).collect(Collectors.toSet())
+                entities.stream().map(ModificationEntity::getId).collect(Collectors.toList())
             )
             .stream()
             .map(BranchStatusModificationInfos.class::cast)
