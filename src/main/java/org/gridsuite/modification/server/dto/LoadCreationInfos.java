@@ -16,6 +16,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
+import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.entities.equipment.creation.LoadCreationEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
@@ -69,7 +70,6 @@ public class LoadCreationInfos extends InjectionCreationInfos {
 
     @Override
     public Reporter createSubReporter(ReporterModel reporter) {
-        String subReportId = "Load creation " + getEquipmentId();
-        return reporter.createSubReporter(subReportId, subReportId);
+        return reporter.createSubReporter(ModificationType.LOAD_CREATION.name(), "Load creation ${loadId}", "loadId", getEquipmentId());
     }
 }
