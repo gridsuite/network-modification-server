@@ -105,10 +105,8 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
                                    double minActivePower, double maxActivePower, Double ratedNominalPower, double activePowerSetpoint,
                                    Double reactivePowerSetpoint, boolean voltageRegulationOn, Double voltageSetpoint, Double marginalCost, Double minQ,
                                    Double maxQ, boolean participate, Float droop, Double transientReactance, Double stepUpTransformerReactance,
-
                                    List<ReactiveCapabilityCurveCreationEmbeddable> reactiveCapabilityCurvePoints, String regulatingTerminalId, String regulatingTerminalType, String regulatingTerminalVlId,
                                    Double qPercent, Boolean reactiveCapabilityCurve, String connectionName, ConnectablePosition.Direction connectionDirection, Integer connectionPosition) {
-
         super(ModificationType.GENERATOR_CREATION, equipmentId, equipmentName, voltageLevelId, busOrBusbarSectionId);
         this.energySource = energySource;
         this.minActivePower = minActivePower;
