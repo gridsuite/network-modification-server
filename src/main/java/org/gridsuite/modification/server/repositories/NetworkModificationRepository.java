@@ -33,6 +33,7 @@ import java.util.stream.Stream;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_GROUP_NOT_FOUND;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_NOT_FOUND;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.MOVE_MODIFICATION_ERROR;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -64,24 +65,55 @@ public class NetworkModificationRepository {
     }
 
     @Transactional // To have all move in the same transaction (atomic)
-    public void moveModifications(UUID groupUuid, List<UUID> modifications, UUID before) {
-        /* when before == null we move at the end of list */
-        var modificationGroupEntity = getModificationGroup(groupUuid);
+    //when we move modifications, we move them right before referenceModification when it is defined, at the end of list otherwise
+    public List<UUID> moveModifications(UUID destinationGroupUuid, UUID originGroupUuid, List<UUID> modificationsUuid, UUID referenceModificationUuid) {
+        ModificationGroupEntity originModificationGroupEntity = getModificationGroup(originGroupUuid);
 
-        Map<UUID, ModificationEntity> originalModifications = modificationRepository.findAllBaseByGroupId(groupUuid).stream()
-            .collect(Collectors.toMap(ModificationEntity::getId, Function.identity(), (x, y) -> y, LinkedHashMap::new));
+        Map<UUID, ModificationEntity> originModifications = modificationRepository.findAllBaseByGroupId(originGroupUuid).stream()
+                .collect(Collectors.toMap(ModificationEntity::getId, Function.identity(), (x, y) -> y, LinkedHashMap::new));
 
-        if (!originalModifications.keySet().containsAll(modifications) || (before != null && !originalModifications.containsKey(before))) {
-            throw new NetworkModificationException(MODIFICATION_NOT_FOUND);
+        List<UUID> modificationsInErrorUUID = modificationsUuid.stream().filter(mUuid -> !originModifications.containsKey(mUuid)).collect(Collectors.toList());
+        List<UUID> modificationsToMoveUUID = modificationsUuid.stream().filter(originModifications::containsKey).collect(Collectors.toList());
+
+        // if moving within the same group
+        if (originGroupUuid.equals(destinationGroupUuid)) {
+            if (referenceModificationUuid != null && !originModifications.containsKey(referenceModificationUuid)) {
+                throw new NetworkModificationException(MOVE_MODIFICATION_ERROR);
+            }
+
+            List<ModificationEntity> newDestinationModificationList = updateModificationList(modificationsToMoveUUID, originModifications, originModifications, referenceModificationUuid);
+
+            originModificationGroupEntity.setModifications(newDestinationModificationList);
+        } else {
+            //if destination is empty, group does not exist, we create it here if needed
+            ModificationGroupEntity destinationModificationGroupEntity = getOrCreateModificationGroup(destinationGroupUuid);
+
+            Map<UUID, ModificationEntity> destinationModifications = modificationRepository.findAllBaseByGroupId(destinationGroupUuid).stream()
+                                                                         .collect(Collectors.toMap(ModificationEntity::getId, Function.identity(), (x, y) -> y, LinkedHashMap::new));
+
+            // referenceModificationUuid must belong to destination one
+            if (referenceModificationUuid != null && !destinationModifications.containsKey(referenceModificationUuid)) {
+                throw new NetworkModificationException(MOVE_MODIFICATION_ERROR);
+            }
+
+            List<ModificationEntity> newDestinationModificationList = updateModificationList(modificationsToMoveUUID, originModifications, destinationModifications, referenceModificationUuid);
+
+            originModificationGroupEntity.setModifications(new ArrayList<>(originModifications.values()));
+            destinationModificationGroupEntity.setModifications(newDestinationModificationList);
         }
 
-        List<ModificationEntity> modificationsToMove = modifications.stream().map(originalModifications::remove).collect(Collectors.toList());
+        return modificationsInErrorUUID;
+    }
 
-        List<ModificationEntity> newModificationList = new ArrayList<>(originalModifications.values());
-        int index =  before == null ? newModificationList.size() : newModificationList.indexOf(originalModifications.get(before));
-        newModificationList.addAll(index, modificationsToMove);
+    public List<ModificationEntity> updateModificationList(List<UUID> modificationsToMoveUuid, Map<UUID, ModificationEntity> originModifications, Map<UUID, ModificationEntity> destinationModifications, UUID referenceModificationUuid) {
+        List<ModificationEntity> movedModifications = modificationsToMoveUuid.stream().map(originModifications::remove).collect(Collectors.toList());
 
-        modificationGroupEntity.setModifications(newModificationList);
+        List<ModificationEntity> newDestinationModificationList = new ArrayList<>(destinationModifications.values());
+        /* when referenceModification == null we move at the end of list */
+        int index =  referenceModificationUuid == null ? newDestinationModificationList.size() : newDestinationModificationList.indexOf(destinationModifications.get(referenceModificationUuid));
+        newDestinationModificationList.addAll(index, movedModifications);
+
+        return newDestinationModificationList;
     }
 
     public List<UUID> getModificationGroupsUuids() {
@@ -167,6 +199,10 @@ public class NetworkModificationRepository {
 
     private ModificationGroupEntity getModificationGroup(UUID groupUuid) {
         return this.modificationGroupRepository.findById(groupUuid).orElseThrow(() -> new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, groupUuid.toString()));
+    }
+
+    private ModificationGroupEntity getOrCreateModificationGroup(UUID groupUuid) {
+        return this.modificationGroupRepository.findById(groupUuid).orElseGet(() -> modificationGroupRepository.save(new ModificationGroupEntity(groupUuid)));
     }
 
     public EquipmentModificationEntity createLoadModificationEntity(String loadId, AttributeModification<String> loadName, AttributeModification<LoadType> loadType,

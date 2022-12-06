@@ -14,7 +14,6 @@ import java.util.UUID;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -32,7 +31,7 @@ public class ModificationGroupEntity extends AbstractManuallyAssignedIdentifierE
             mappedBy = "group",
             cascade = CascadeType.ALL
     )
-    @Setter
+
     @OrderColumn
     private List<ModificationEntity> modifications = new ArrayList<>();
 
@@ -48,5 +47,12 @@ public class ModificationGroupEntity extends AbstractManuallyAssignedIdentifierE
     public void removeModification(ModificationEntity modification) {
         modifications.remove(modification);
         modification.setGroup(null);
+    }
+
+    public void setModifications(List<ModificationEntity> modifications) {
+        this.modifications = modifications;
+        modifications.forEach(modification ->
+            modification.setGroup(this)
+        );
     }
 }

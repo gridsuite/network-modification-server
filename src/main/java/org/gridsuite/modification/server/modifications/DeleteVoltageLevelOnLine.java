@@ -24,7 +24,7 @@ public class DeleteVoltageLevelOnLine extends AbstractModification {
     @Override
     public void apply(Network network, Reporter subReporter) {
         /***
-         * waiting nex version of powsybl
+         * waiting next version of powsybl
          */
 //        RevertCreateLineOnLineBuilder builder = new RevertCreateLineOnLineBuilder();
 //        RevertCreateLineOnLine algo = builder.withLineToBeMerged1Id(modificationInfos.getLineToAttachTo1Id())
