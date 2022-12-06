@@ -104,7 +104,8 @@ public class EquipmentAttributeModificationInfos extends EquipmentModificationIn
     }
 
     @Override
-    public void checkItself() {
+    public void check() {
+        super.check();
         if (equipmentType == IdentifiableType.SWITCH) {
             checkSwitchStatusModificationInfos();
         }

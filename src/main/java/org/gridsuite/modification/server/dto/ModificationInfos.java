@@ -90,7 +90,7 @@ public class ModificationInfos {
     }
 
     @JsonIgnore
-    public void checkItself() {
+    public void check() {
         // nothing to check here, maybe if type == null ?
     }
 }
