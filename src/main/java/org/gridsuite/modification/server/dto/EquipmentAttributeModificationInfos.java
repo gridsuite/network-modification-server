@@ -44,7 +44,6 @@ public class EquipmentAttributeModificationInfos extends EquipmentModificationIn
     private String equipmentAttributeName;
 
     @Schema(description = "Equipment attribute value")
-
     private Object equipmentAttributeValue;
 
     @Schema(description = "Equipment type")

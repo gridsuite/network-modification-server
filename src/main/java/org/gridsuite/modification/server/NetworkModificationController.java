@@ -102,10 +102,10 @@ public class NetworkModificationController {
         @ApiResponse(responseCode = "200", description = "The network modification was created"),
         @ApiResponse(responseCode = "404", description = "The network or equipment was not found")})
     public ResponseEntity<List<? extends ModificationInfos>> createNetworkModification(
-            @Parameter(description = "Network ID") @RequestParam("networkUuid") UUID networkUuid,
+            @Parameter(description = "Network UUID") @RequestParam("networkUuid") UUID networkUuid,
             @Parameter(description = "Variant ID") @RequestParam(name = "variantId", required = false) String variantId,
-            @Parameter(description = "Group ID") @RequestParam(name = "groupUuid", required = false) UUID groupUuid,
-            @Parameter(description = "Report ID") @RequestParam("reportUuid") UUID reportUuid,
+            @Parameter(description = "Group UUID") @RequestParam(name = "groupUuid", required = false) UUID groupUuid,
+            @Parameter(description = "Report UUID") @RequestParam("reportUuid") UUID reportUuid,
             @Parameter(description = "Reporter ID") @RequestParam("reporterId") String reporterId,
             @RequestBody ModificationInfos modificationInfos) {
         // temporary switch, should be removed when all kind of modification will use the generic updateModification
@@ -125,7 +125,7 @@ public class NetworkModificationController {
     @Operation(summary = "Update a network modification")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The network modification was updated")})
     public ResponseEntity<Void> updateNetworkModification(
-            @Parameter(description = "Network modification ID") @PathVariable("networkModificationUuid") UUID networkModificationUuid,
+            @Parameter(description = "Network modification UUID") @PathVariable("networkModificationUuid") UUID networkModificationUuid,
             @RequestBody ModificationInfos modificationInfos) {
         // temporary switch, should be removed when all kind of modification will use the generic updateModification
         // PS : the switch can't be in the service because of @Transactional that need to be called from outside the class
@@ -144,7 +144,7 @@ public class NetworkModificationController {
     @Operation(summary = "Get network modifications")
     @ApiResponse(responseCode = "200", description = "The network modifications were returned")
     public ResponseEntity<List<ModificationInfos>> getNetworkModifications(
-            @Parameter(description = "Network modification IDs") @PathVariable(name = "networkModificationUuids") Set<UUID> networkModificationUuids) {
+            @Parameter(description = "Network modification UUIDs") @PathVariable(name = "networkModificationUuids") Set<UUID> networkModificationUuids) {
         return ResponseEntity.ok().body(networkModificationService.getNetworkModifications(networkModificationUuids));
     }
 
@@ -152,7 +152,7 @@ public class NetworkModificationController {
     @Operation(summary = "Delete network modifications")
     @ApiResponse(responseCode = "200", description = "The network modifications were deleted")
     public ResponseEntity<Void> deleteNetworkModifications(
-            @Parameter(description = "Network modification IDs", required = true) @PathVariable(value = "networkModificationUuids") Set<UUID> networkModificationUuids,
+            @Parameter(description = "Network modification UUIDs", required = true) @PathVariable(value = "networkModificationUuids") Set<UUID> networkModificationUuids,
             @Parameter(description = "Group UUID") @RequestParam("groupUuid") UUID groupUuid) {
         networkModificationService.deleteNetworkModifications(groupUuid, networkModificationUuids);
         return ResponseEntity.ok().build();
