@@ -53,7 +53,7 @@ public abstract class AbstractNetworkModificationTest {
     protected static final UUID TEST_GROUP_ID = UUID.randomUUID();
     protected static final UUID TEST_NETWORK_BUS_BREAKER_ID = UUID.fromString("11111111-7977-4592-ba19-88027e4254e4");
     protected static final UUID TEST_NETWORK_MIXED_TOPOLOGY_ID = UUID.fromString("22222222-7977-4592-ba19-88027e4254e4");
-    public static final String VARIANT_NOT_EXISTING_ID = "variant_not_existing";
+    protected static final String VARIANT_NOT_EXISTING_ID = "variant_not_existing";
     protected static final UUID TEST_REPORT_ID = UUID.randomUUID();
 
     protected static final String URI_NETWORK_MODIF_BASE = "/v1/network-modifications";
