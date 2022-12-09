@@ -1088,28 +1088,6 @@ public class NetworkModificationService {
 
     }
 
-    private LineAdder createLineAdder(Network network, VoltageLevel voltageLevel1, VoltageLevel voltageLevel2, LineCreationInfos lineCreationInfos, boolean withSwitch1, boolean withSwitch2) {
-
-        // common settings
-        LineAdder lineAdder = network.newLine()
-                                .setId(lineCreationInfos.getEquipmentId())
-                                .setName(lineCreationInfos.getEquipmentName())
-                                .setVoltageLevel1(lineCreationInfos.getVoltageLevelId1())
-                                .setVoltageLevel2(lineCreationInfos.getVoltageLevelId2())
-                                .setR(lineCreationInfos.getSeriesResistance())
-                                .setX(lineCreationInfos.getSeriesReactance())
-                                .setG1(lineCreationInfos.getShuntConductance1() != null ? lineCreationInfos.getShuntConductance1() : 0.0)
-                                .setB1(lineCreationInfos.getShuntSusceptance1() != null ? lineCreationInfos.getShuntSusceptance1() : 0.0)
-                                .setG2(lineCreationInfos.getShuntConductance2() != null ? lineCreationInfos.getShuntConductance2() : 0.0)
-                                .setB2(lineCreationInfos.getShuntSusceptance2() != null ? lineCreationInfos.getShuntSusceptance2() : 0.0);
-
-        // lineAdder completion by topology
-        setBranchAdderNodeOrBus(lineAdder, voltageLevel1, lineCreationInfos, Side.ONE, withSwitch1);
-        setBranchAdderNodeOrBus(lineAdder, voltageLevel2, lineCreationInfos, Side.TWO, withSwitch2);
-
-        return lineAdder;
-    }
-
     private List<ModificationInfos> execCreateTwoWindingsTransformerCreation(NetworkStoreListener listener, TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos,
                                                                      UUID reportUuid, String reporterId) {
         Network network = listener.getNetwork();
