@@ -165,9 +165,8 @@ public class NetworkModificationService {
     }
 
     @Transactional(readOnly = true)
-    // Need a transaction for collections lazy loading
-    public List<ModificationInfos> getNetworkModifications(Set<UUID> networkModificationUuid) {
-        return networkModificationRepository.getModifications(networkModificationUuid);
+    public ModificationInfos getNetworkModification(UUID networkModificationUuid) {
+        return networkModificationRepository.getModification(networkModificationUuid);
     }
 
     private boolean disconnectLineBothSides(Network network, String lineId) {
@@ -1664,7 +1663,7 @@ public class NetworkModificationService {
         notificationService.emitCancelBuildMessage(receiver);
     }
 
-    public void deleteNetworkModifications(UUID groupUuid, Set<UUID> modificationsUuids) {
+    public void deleteNetworkModifications(UUID groupUuid, List<UUID> modificationsUuids) {
         if (networkModificationRepository.deleteModifications(groupUuid, modificationsUuids) == 0) {
             throw new NetworkModificationException(MODIFICATION_NOT_FOUND);
         }

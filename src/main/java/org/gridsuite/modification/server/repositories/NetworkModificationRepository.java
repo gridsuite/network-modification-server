@@ -122,7 +122,11 @@ public class NetworkModificationRepository {
                 .collect(Collectors.toList());
     }
 
-    public List<ModificationInfos> getModifications(Collection<UUID> uuids) {
+    public ModificationInfos getModification(UUID uuid) {
+        return this.modificationRepository.findById(uuid).get().toModificationInfos();
+    }
+
+    public List<ModificationInfos> getModifications(List<UUID> uuids) {
         return this.modificationRepository.findAllById(uuids).stream()
             .map(ModificationEntity::toModificationInfos)
             .collect(Collectors.toList());
@@ -182,7 +186,7 @@ public class NetworkModificationRepository {
     }
 
     @Transactional // To have the find and delete in the same transaction (atomic)
-    public int deleteModifications(UUID groupUuid, Set<UUID> uuids) {
+    public int deleteModifications(UUID groupUuid, List<UUID> uuids) {
         ModificationGroupEntity groupEntity = getModificationGroup(groupUuid);
         List<ModificationEntity> modifications = getModificationEntityList(groupUuid)
                 .filter(m -> uuids.contains(m.getId()))

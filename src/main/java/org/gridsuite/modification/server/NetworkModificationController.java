@@ -11,17 +11,16 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.server.dto.BuildInfos;
+import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.service.NetworkModificationService;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-
 import javax.annotation.Nullable;
+import java.util.List;
+import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.TYPE_MISMATCH;
 
@@ -121,11 +120,11 @@ public class NetworkModificationController {
         }
     }
 
-    @PutMapping(value = "/network-modifications/{networkModificationUuid}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/network-modifications/{uuid}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Update a network modification")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The network modification was updated")})
     public ResponseEntity<Void> updateNetworkModification(
-            @Parameter(description = "Network modification UUID") @PathVariable("networkModificationUuid") UUID networkModificationUuid,
+            @Parameter(description = "Network modification UUID") @PathVariable("uuid") UUID networkModificationUuid,
             @RequestBody ModificationInfos modificationInfos) {
         // temporary switch, should be removed when all kind of modification will use the generic updateModification
         // PS : the switch can't be in the service because of @Transactional that need to be called from outside the class
@@ -140,19 +139,19 @@ public class NetworkModificationController {
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping(value = "/network-modifications/{networkModificationUuids}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/network-modifications/{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Get network modifications")
     @ApiResponse(responseCode = "200", description = "The network modifications were returned")
-    public ResponseEntity<List<ModificationInfos>> getNetworkModifications(
-            @Parameter(description = "Network modification UUIDs") @PathVariable(name = "networkModificationUuids") Set<UUID> networkModificationUuids) {
-        return ResponseEntity.ok().body(networkModificationService.getNetworkModifications(networkModificationUuids));
+    public ResponseEntity<ModificationInfos> getNetworkModifications(
+            @Parameter(description = "Network modification UUID") @PathVariable("uuid") UUID networkModificationUuid) {
+        return ResponseEntity.ok().body(networkModificationService.getNetworkModification(networkModificationUuid));
     }
 
-    @DeleteMapping(value = "/network-modifications/{networkModificationUuids}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @DeleteMapping(value = "/network-modifications", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Delete network modifications")
     @ApiResponse(responseCode = "200", description = "The network modifications were deleted")
     public ResponseEntity<Void> deleteNetworkModifications(
-            @Parameter(description = "Network modification UUIDs", required = true) @PathVariable(value = "networkModificationUuids") Set<UUID> networkModificationUuids,
+            @Parameter(description = "Network modification UUIDs") @RequestParam("uuids") List<UUID> networkModificationUuids,
             @Parameter(description = "Group UUID") @RequestParam("groupUuid") UUID groupUuid) {
         networkModificationService.deleteNetworkModifications(groupUuid, networkModificationUuids);
         return ResponseEntity.ok().build();
