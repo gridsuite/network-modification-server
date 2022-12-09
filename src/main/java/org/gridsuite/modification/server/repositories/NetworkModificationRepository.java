@@ -122,10 +122,6 @@ public class NetworkModificationRepository {
                 .collect(Collectors.toList());
     }
 
-    public ModificationInfos getModification(UUID uuid) {
-        return this.modificationRepository.findById(uuid).get().toModificationInfos();
-    }
-
     public List<ModificationInfos> getModifications(List<UUID> uuids) {
         return this.modificationRepository.findAllById(uuids).stream()
             .map(ModificationEntity::toModificationInfos)
