@@ -15,10 +15,8 @@ import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.BusbarSectionPositionAdder;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import com.powsybl.iidm.network.extensions.ConnectablePositionAdder;
-import com.powsybl.nad.NetworkAreaDiagram;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
-import com.powsybl.sld.SingleLineDiagram;
 import nl.jqno.equalsverifier.EqualsVerifier;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.LoadCreationInfos.LoadCreationInfosBuilder;
@@ -47,7 +45,6 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.NestedServletException;
 
-import java.nio.file.Path;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.*;
@@ -126,11 +123,7 @@ public class ModificationControllerTest {
         objectWriter = mapper.writer().withDefaultPrettyPrinter();
         // /!\ create a new network for each invocation (answer)
         when(networkStoreService.getNetwork(TEST_NETWORK_ID)).then((Answer<Network>) invocation -> {
-            System.out.println("TOTO");
             network = NetworkCreation.create(TEST_NETWORK_ID, true);
-            SingleLineDiagram.draw(network, "s1", "/tmp/s1.svg");
-            new NetworkAreaDiagram(network)
-                    .draw(Path.of("/tmp/nad.svg"));
             return network;
         });
         when(networkStoreService.getNetwork(TEST_NETWORK_ID_2)).then((Answer<Network>) invocation -> {
