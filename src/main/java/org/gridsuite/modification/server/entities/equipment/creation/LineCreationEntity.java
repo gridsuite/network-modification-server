@@ -11,12 +11,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.LineCreationInfos;
+import org.gridsuite.modification.server.dto.ModificationInfos;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.ForeignKey;
-import javax.persistence.PrimaryKeyJoinColumn;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 /**
  * @author Sylvain Bouzols <sylvain.bouzols at rte-france.com>
@@ -79,6 +76,16 @@ public class LineCreationEntity extends BranchCreationEntity {
         this.shuntSusceptance1 = shuntSusceptance1;
         this.shuntConductance2 = shuntConductance2;
         this.shuntSusceptance2 = shuntSusceptance2;
+    }
+
+    @Override
+    public void update(ModificationInfos modificationInfos) {
+        super.update(modificationInfos);
+        LineCreationInfos lineCreationInfos = (LineCreationInfos) modificationInfos;
+        shuntConductance1 = lineCreationInfos.getShuntConductance1();
+        shuntSusceptance1 = lineCreationInfos.getShuntSusceptance1();
+        shuntConductance2 = lineCreationInfos.getShuntConductance2();
+        shuntSusceptance2 = lineCreationInfos.getShuntSusceptance2();
     }
 
     public static LineCreationEntity toEntity(LineCreationInfos lineCreationInfos) {

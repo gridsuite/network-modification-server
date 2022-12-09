@@ -530,14 +530,10 @@ public class NetworkModificationService {
                 return createGeneratorCreation(networkUuid, variantId, groupUuid, reportUuid, reporterId, (GeneratorCreationInfos) modificationInfos);
             case GENERATOR_MODIFICATION:
                 return createGeneratorModification(networkUuid, variantId, groupUuid, reportUuid, reporterId, (GeneratorModificationInfos) modificationInfos);
-            case LINE_CREATION:
-                return createLineCreation(networkUuid, variantId, groupUuid, reportUuid, reporterId, (LineCreationInfos) modificationInfos);
             case SUBSTATION_CREATION:
                 return createSubstationCreation(networkUuid, variantId, groupUuid, reportUuid, reporterId, (SubstationCreationInfos) modificationInfos);
             case VOLTAGE_LEVEL_CREATION:
                 return createVoltageLevelCreation(networkUuid, variantId, groupUuid, reportUuid, reporterId, (VoltageLevelCreationInfos) modificationInfos);
-            case SHUNT_COMPENSATOR_CREATION:
-                return createShuntCompensatorCreation(networkUuid, variantId, groupUuid, reportUuid, reporterId, (ShuntCompensatorCreationInfos) modificationInfos);
             case TWO_WINDINGS_TRANSFORMER_CREATION:
                 return createTwoWindingsTransformerCreation(networkUuid, variantId, groupUuid, reportUuid, reporterId, (TwoWindingsTransformerCreationInfos) modificationInfos);
             case EQUIPMENT_DELETION:
@@ -565,17 +561,11 @@ public class NetworkModificationService {
             case GENERATOR_MODIFICATION:
                 updateGeneratorModification(modificationUuid, (GeneratorModificationInfos) modificationInfos);
                 break;
-            case LINE_CREATION:
-                updateLineCreation(modificationUuid, (LineCreationInfos) modificationInfos);
-                break;
             case SUBSTATION_CREATION:
                 updateSubstationCreation(modificationUuid, (SubstationCreationInfos) modificationInfos);
                 break;
             case VOLTAGE_LEVEL_CREATION:
                 updateVoltageLevelCreation(modificationUuid, (VoltageLevelCreationInfos) modificationInfos);
-                break;
-            case SHUNT_COMPENSATOR_CREATION:
-                updateShuntCompensatorCreation(modificationUuid, (ShuntCompensatorCreationInfos) modificationInfos);
                 break;
             case TWO_WINDINGS_TRANSFORMER_CREATION:
                 updateTwoWindingsTransformerCreation(modificationUuid, (TwoWindingsTransformerCreationInfos) modificationInfos);
@@ -1120,115 +1110,6 @@ public class NetworkModificationService {
         return lineAdder;
     }
 
-    public void updateLineCreation(UUID modificationUuid, LineCreationInfos lineCreationInfos) {
-        assertLineCreationInfosNotEmpty(lineCreationInfos);
-
-        Optional<ModificationEntity> lineModificationEntity = this.modificationRepository.findById(modificationUuid);
-
-        if (!lineModificationEntity.isPresent()) {
-            throw new NetworkModificationException(CREATE_LINE_ERROR, "Line creation not found");
-        }
-
-        EquipmentCreationEntity updatedEntity = this.networkModificationRepository.createLineEntity(
-                lineCreationInfos.getEquipmentId(),
-                lineCreationInfos.getEquipmentName(),
-                lineCreationInfos.getSeriesResistance(),
-                lineCreationInfos.getSeriesReactance(),
-                lineCreationInfos.getShuntConductance1(),
-                lineCreationInfos.getShuntSusceptance1(),
-                lineCreationInfos.getShuntConductance2(),
-                lineCreationInfos.getShuntSusceptance2(),
-                lineCreationInfos.getVoltageLevelId1(),
-                lineCreationInfos.getBusOrBusbarSectionId1(),
-                lineCreationInfos.getVoltageLevelId2(),
-                lineCreationInfos.getBusOrBusbarSectionId2(),
-                lineCreationInfos.getCurrentLimits1().getPermanentLimit(),
-                lineCreationInfos.getCurrentLimits2().getPermanentLimit(),
-                lineCreationInfos.getConnectionName1(),
-                lineCreationInfos.getConnectionDirection1(),
-                lineCreationInfos.getConnectionName2(),
-                lineCreationInfos.getConnectionDirection2());
-        updatedEntity.setId(modificationUuid);
-        updatedEntity.setGroup(lineModificationEntity.get().getGroup());
-        this.networkModificationRepository.updateModification(updatedEntity);
-    }
-
-    private List<ModificationInfos> execCreateLineCreation(NetworkStoreListener listener, LineCreationInfos lineCreationInfos,
-                                                   UUID reportUuid, String reporterId) {
-        Network network = listener.getNetwork();
-        String rootReporterId = reporterId + "@" + NETWORK_MODIFICATION_TYPE_REPORT;
-        ReporterModel reporter = new ReporterModel(rootReporterId, rootReporterId);
-        Reporter subReporter = reporter.createSubReporter(ModificationType.LINE_CREATION.name(), "Line creation ${lineId}", LINE_ID_PARAMETER, lineCreationInfos.getEquipmentId());
-
-        return doAction(listener, () -> {
-            if (listener.isApplyModifications()) {
-                // create the line in the network
-                VoltageLevel voltageLevel1 = getVoltageLevel(network, lineCreationInfos.getVoltageLevelId1());
-                VoltageLevel voltageLevel2 = getVoltageLevel(network, lineCreationInfos.getVoltageLevelId2());
-
-                if (voltageLevel1.getTopologyKind() == TopologyKind.NODE_BREAKER &&
-                        voltageLevel2.getTopologyKind() == TopologyKind.NODE_BREAKER) {
-                    LineAdder lineAdder = createLineAdder(network, voltageLevel1, voltageLevel2, lineCreationInfos, false, false);
-                    var position1 = ModificationUtils.getInstance().getPosition(lineCreationInfos.getBusOrBusbarSectionId1(), network, voltageLevel1);
-                    var position2 = ModificationUtils.getInstance().getPosition(lineCreationInfos.getBusOrBusbarSectionId2(), network, voltageLevel2);
-
-                    CreateBranchFeederBays algo = new CreateBranchFeederBaysBuilder()
-                            .withBbsId1(lineCreationInfos.getBusOrBusbarSectionId1())
-                            .withBbsId2(lineCreationInfos.getBusOrBusbarSectionId2())
-                            .withFeederName1(lineCreationInfos.getConnectionName1() != null ? lineCreationInfos.getConnectionName1() : lineCreationInfos.getEquipmentId())
-                            .withFeederName2(lineCreationInfos.getConnectionName2() != null ? lineCreationInfos.getConnectionName2() : lineCreationInfos.getEquipmentId())
-                            .withDirection1(lineCreationInfos.getConnectionDirection1())
-                            .withDirection2(lineCreationInfos.getConnectionDirection2())
-                            .withPositionOrder1(position1)
-                            .withPositionOrder2(position2)
-                            .withBranchAdder(lineAdder).build();
-                    algo.apply(network, true, subReporter);
-                } else {
-                    addLine(network, voltageLevel1, voltageLevel2, lineCreationInfos, true, true, subReporter);
-                }
-
-                // Set Permanent Current Limits if exist
-                CurrentLimitsInfos currentLimitsInfos1 = lineCreationInfos.getCurrentLimits1();
-                CurrentLimitsInfos currentLimitsInfos2 = lineCreationInfos.getCurrentLimits2();
-                var line = getLine(network, lineCreationInfos.getEquipmentId());
-
-                if (currentLimitsInfos1 != null && currentLimitsInfos1.getPermanentLimit() != null) {
-                    line.newCurrentLimits1().setPermanentLimit(currentLimitsInfos1.getPermanentLimit()).add();
-                }
-                if (currentLimitsInfos2 != null && currentLimitsInfos2.getPermanentLimit() != null) {
-                    line.newCurrentLimits2().setPermanentLimit(currentLimitsInfos2.getPermanentLimit()).add();
-                }
-            }
-            // add the line creation entity to the listener
-            listener.storeLineCreation(lineCreationInfos);
-        }, CREATE_LINE_ERROR, reportUuid, reporter, subReporter);
-    }
-
-    private void addLine(Network network, VoltageLevel voltageLevel1, VoltageLevel voltageLevel2, LineCreationInfos lineCreationInfos, boolean withSwitch1, boolean withSwitch2, Reporter subReporter) {
-        createLineAdder(network, voltageLevel1, voltageLevel2, lineCreationInfos, withSwitch1, withSwitch2).add();
-
-        subReporter.report(Report.builder()
-                .withKey("lineCreated")
-                .withDefaultMessage("New line with id=${id} created")
-                .withValue("id", lineCreationInfos.getEquipmentId())
-                .withSeverity(TypedValue.INFO_SEVERITY)
-                .build());
-    }
-
-    public List<EquipmentModificationInfos> createLineCreation(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId, LineCreationInfos lineCreationInfos) {
-        assertLineCreationInfosNotEmpty(lineCreationInfos);
-        ModificationNetworkInfos networkInfos = getNetworkModificationInfos(networkUuid, variantId);
-        NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
-        return execCreateLineCreation(listener, lineCreationInfos, reportUuid, reporterId)
-            .stream().map(EquipmentModificationInfos.class::cast).collect(Collectors.toList());
-    }
-
-    private void assertLineCreationInfosNotEmpty(LineCreationInfos lineCreationInfos) {
-        if (lineCreationInfos == null) {
-            throw new NetworkModificationException(CREATE_LINE_ERROR, "Missing required attributes to create the line");
-        }
-    }
-
     private List<ModificationInfos> execCreateTwoWindingsTransformerCreation(NetworkStoreListener listener, TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos,
                                                                      UUID reportUuid, String reporterId) {
         Network network = listener.getNetwork();
@@ -1581,6 +1462,8 @@ public class NetworkModificationService {
                 case EQUIPMENT_ATTRIBUTE_MODIFICATION:
                 case LOAD_CREATION:
                 case LINE_SPLIT_WITH_VOLTAGE_LEVEL:
+                case SHUNT_COMPENSATOR_CREATION:
+                case LINE_CREATION:
                     // Generic form
                     return handleModification(infos, listener, groupUuid, reportUuid, reporterId);
 
@@ -1595,10 +1478,6 @@ public class NetworkModificationService {
                 case GENERATOR_MODIFICATION:
                     var generatorModificationInfos = (GeneratorModificationInfos) infos;
                     return execCreateGeneratorModification(listener, generatorModificationInfos, reportUuid, reporterId);
-
-                case LINE_CREATION:
-                    LineCreationInfos lineCreationInfos = (LineCreationInfos) infos;
-                    return execCreateLineCreation(listener, lineCreationInfos, reportUuid, reporterId);
 
                 case TWO_WINDINGS_TRANSFORMER_CREATION:
                     TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos = (TwoWindingsTransformerCreationInfos) infos;
@@ -1623,10 +1502,6 @@ public class NetworkModificationService {
                 case BRANCH_STATUS:
                     BranchStatusModificationInfos branchStatusModificationInfos = (BranchStatusModificationInfos) infos;
                     return execCreateBranchStatusModification(listener, branchStatusModificationInfos, reportUuid, reporterId);
-
-                case SHUNT_COMPENSATOR_CREATION:
-                    ShuntCompensatorCreationInfos shuntCompensatorCreationInfos = (ShuntCompensatorCreationInfos) infos;
-                    return execCreateShuntCompensatorCreation(listener, shuntCompensatorCreationInfos, reportUuid, reporterId);
 
                 case LINE_ATTACH_TO_VOLTAGE_LEVEL:
                     LineAttachToVoltageLevelInfos lineAttachToVoltageLevelInfos = (LineAttachToVoltageLevelInfos) infos;
@@ -1667,103 +1542,6 @@ public class NetworkModificationService {
         if (networkModificationRepository.deleteModifications(groupUuid, modificationsUuids) == 0) {
             throw new NetworkModificationException(MODIFICATION_NOT_FOUND);
         }
-    }
-
-    private void assertShuntCompensatorCreationInfosNotEmpty(ShuntCompensatorCreationInfos shuntCompensatorCreationInfos) {
-        if (shuntCompensatorCreationInfos == null) {
-            throw new NetworkModificationException(CREATE_SHUNT_COMPENSATOR_ERROR, "Missing required attributes to create the shunt Compensator");
-        }
-    }
-
-    private ShuntCompensatorAdder createShuntAdderInNodeBreaker(VoltageLevel voltageLevel, ShuntCompensatorCreationInfos shuntCompensatorInfos) {
-        // creating the shunt compensator
-        ShuntCompensatorAdder shunt = voltageLevel.newShuntCompensator()
-                .setId(shuntCompensatorInfos.getEquipmentId())
-                .setName(shuntCompensatorInfos.getEquipmentName())
-                .setSectionCount(shuntCompensatorInfos.getCurrentNumberOfSections());
-
-        /* when we create non linear shunt, this is where we branch ;) */
-        shunt.newLinearModel()
-                .setBPerSection(shuntCompensatorInfos.getSusceptancePerSection())
-                .setMaximumSectionCount(shuntCompensatorInfos.getMaximumNumberOfSections()).add();
-
-        return shunt;
-    }
-
-    private void createShuntInBusBreaker(VoltageLevel voltageLevel, ShuntCompensatorCreationInfos shuntCompensatorInfos) {
-        Bus bus = ModificationUtils.getInstance().getBusBreakerBus(voltageLevel, shuntCompensatorInfos.getBusOrBusbarSectionId());
-        /* creating the shunt compensator */
-        voltageLevel.newShuntCompensator()
-                .setId(shuntCompensatorInfos.getEquipmentId())
-                .setName(shuntCompensatorInfos.getEquipmentName())
-                .setSectionCount(shuntCompensatorInfos.getCurrentNumberOfSections())
-                .setBus(bus.getId())
-                .setConnectableBus(bus.getId())
-                .newLinearModel()
-                .setBPerSection(shuntCompensatorInfos.getSusceptancePerSection())
-                .setMaximumSectionCount(shuntCompensatorInfos.getMaximumNumberOfSections())
-                .add();
-    }
-
-    public void updateShuntCompensatorCreation(UUID modificationUuid, ShuntCompensatorCreationInfos shuntCompensatorCreationInfos) {
-        assertShuntCompensatorCreationInfosNotEmpty(shuntCompensatorCreationInfos);
-
-        Optional<ModificationEntity> shuntCompensatorModificationEntity = this.modificationRepository.findById(modificationUuid);
-
-        if (!shuntCompensatorModificationEntity.isPresent()) {
-            throw new NetworkModificationException(CREATE_SHUNT_COMPENSATOR_ERROR, "Shunt compensator creation not found");
-        }
-
-        EquipmentCreationEntity updatedEntity = this.networkModificationRepository.createShuntCompensatorEntity(shuntCompensatorCreationInfos);
-        updatedEntity.setId(modificationUuid);
-        updatedEntity.setGroup(shuntCompensatorModificationEntity.get().getGroup());
-        this.networkModificationRepository.updateModification(updatedEntity);
-    }
-
-    private List<ModificationInfos> execCreateShuntCompensatorCreation(NetworkStoreListener listener, ShuntCompensatorCreationInfos shuntCompensatorCreationInfos,
-                                                               UUID reportUuid, String reporterId) {
-        Network network = listener.getNetwork();
-        String rootReporterId = reporterId + "@" + NETWORK_MODIFICATION_TYPE_REPORT;
-        ReporterModel reporter = new ReporterModel(rootReporterId, rootReporterId);
-        Reporter subReporter = reporter.createSubReporter(ModificationType.SHUNT_COMPENSATOR_CREATION.name(), "Shunt compensator creation ${shuntCompensatorId}", "shuntCompensatorId", shuntCompensatorCreationInfos.getEquipmentId());
-
-        return doAction(listener, () -> {
-            if (listener.isApplyModifications()) {
-                // create the shunt compensator in the network
-                VoltageLevel voltageLevel = getVoltageLevel(network, shuntCompensatorCreationInfos.getVoltageLevelId());
-                if (voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER) {
-                    ShuntCompensatorAdder shuntCompensatorAdder = createShuntAdderInNodeBreaker(voltageLevel, shuntCompensatorCreationInfos);
-                    var position = ModificationUtils.getInstance().getPosition(shuntCompensatorCreationInfos.getBusOrBusbarSectionId(), network, voltageLevel);
-                    CreateFeederBay algo = new CreateFeederBayBuilder()
-                            .withBbsId(shuntCompensatorCreationInfos.getBusOrBusbarSectionId())
-                            .withInjectionDirection(shuntCompensatorCreationInfos.getConnectionDirection())
-                            .withInjectionFeederName(shuntCompensatorCreationInfos.getConnectionName())
-                            .withInjectionPositionOrder(position)
-                            .withInjectionAdder(shuntCompensatorAdder)
-                            .build();
-                    algo.apply(network, true, subReporter);
-                } else {
-                    createShuntInBusBreaker(voltageLevel, shuntCompensatorCreationInfos);
-                    subReporter.report(Report.builder()
-                            .withKey("shuntCompensatorCreated")
-                            .withDefaultMessage("New shunt compensator with id=${id} created")
-                            .withValue("id", shuntCompensatorCreationInfos.getEquipmentId())
-                            .withSeverity(TypedValue.INFO_SEVERITY)
-                            .build());
-                }
-            }
-
-            // add the shunt compensator creation entity to the listener
-            listener.storeShuntCompensatorCreation(shuntCompensatorCreationInfos);
-        }, CREATE_SHUNT_COMPENSATOR_ERROR, reportUuid, reporter, subReporter);
-    }
-
-    public List<EquipmentModificationInfos> createShuntCompensatorCreation(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId, ShuntCompensatorCreationInfos shuntCompensatorCreationInfos) {
-        assertShuntCompensatorCreationInfosNotEmpty(shuntCompensatorCreationInfos);
-        ModificationNetworkInfos networkInfos = getNetworkModificationInfos(networkUuid, variantId);
-        NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
-        return execCreateShuntCompensatorCreation(listener, shuntCompensatorCreationInfos, reportUuid, reporterId)
-            .stream().map(EquipmentModificationInfos.class::cast).collect(Collectors.toList());
     }
 
     public void moveModifications(UUID groupUuid, UUID originGroupUuid, UUID before, List<UUID> modificationsToMove) {

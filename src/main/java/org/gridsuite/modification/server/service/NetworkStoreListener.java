@@ -226,10 +226,6 @@ public class NetworkStoreListener implements NetworkListener {
         modifications.add(TwoWindingsTransformerCreationEntity.toEntity(twoWindingsTransformerCreationInfos));
     }
 
-    public void storeShuntCompensatorCreation(ShuntCompensatorCreationInfos shuntCompensatorCreationInfos) {
-        modifications.add(this.modificationRepository.createShuntCompensatorEntity(shuntCompensatorCreationInfos));
-    }
-
     public void storeGroovyScriptModification(String script) {
         modifications.add(this.modificationRepository.createGroovyScriptModificationEntity(script));
     }

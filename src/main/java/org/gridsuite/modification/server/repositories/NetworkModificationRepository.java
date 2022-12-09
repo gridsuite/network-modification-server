@@ -339,10 +339,6 @@ public class NetworkModificationRepository {
         }).collect(Collectors.toList());
     }
 
-    public ShuntCompensatorCreationEntity createShuntCompensatorEntity(ShuntCompensatorCreationInfos shuntCompensatorCreationInfos) {
-        return new ShuntCompensatorCreationEntity(shuntCompensatorCreationInfos);
-    }
-
     public GeneratorModificationEntity createGeneratorModificationEntity(GeneratorModificationInfos generatorModificationInfos) {
         return new GeneratorModificationEntity(generatorModificationInfos);
     }

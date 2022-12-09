@@ -321,8 +321,8 @@ public class ModificationRepositoryTest {
             .voltageLevelId("vlId1").busOrBusbarSectionId("busId1")
             .build();
 
-        var createShuntCompensatorEntity1 = networkModificationRepository.createShuntCompensatorEntity(shunt1);
-        var createShuntCompensatorEntity2 = networkModificationRepository.createShuntCompensatorEntity(shunt2);
+        var createShuntCompensatorEntity1 = shunt1.toEntity();
+        var createShuntCompensatorEntity2 = shunt2.toEntity();
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(createShuntCompensatorEntity1, createShuntCompensatorEntity2));
         assertRequestsCount(1, 5, 2, 0);

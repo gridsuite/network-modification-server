@@ -342,7 +342,7 @@ public class BuildTest {
             List.of(new BusbarSectionCreationEmbeddable("1.1", "1.1", 1, 1),
                 new BusbarSectionCreationEmbeddable("1.2", "1.2", 1, 2)),
             List.of(new BusbarConnectionCreationEmbeddable("1.1", "1.2", SwitchKind.BREAKER))));
-        entities2.add(modificationRepository.createShuntCompensatorEntity(ShuntCompensatorCreationInfos.builder()
+        entities2.add(ShuntCompensatorCreationInfos.builder()
             .equipmentId("shunt9")
             .equipmentName("shunt9")
             .voltageLevelId("v2")
@@ -353,7 +353,7 @@ public class BuildTest {
             .isIdenticalSection(true)
             .connectionDirection(ConnectablePosition.Direction.UNDEFINED)
             .connectionName("shunt9")
-            .build()));
+            .build().toEntity());
         entities2.add(modificationRepository.createLoadModificationEntity("newLoad",
             new AttributeModification<>("newLoadName", OperationType.SET), null, null, null, null, null));
         entities2.add(modificationRepository.createGeneratorModificationEntity(GeneratorModificationInfos.builder().equipmentId("newGenerator")
