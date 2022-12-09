@@ -737,7 +737,7 @@ public class NetworkModificationService {
                 }
 
                 if (identifiable instanceof Connectable) {
-                    new RemoveFeederBay(equipmentId).apply(network, false, reporter);
+                    new RemoveFeederBay(equipmentId).apply(network, true, reporter);
                 } else if (identifiable instanceof HvdcLine) {
                     ((HvdcLine) identifiable).remove();
                 } else if (identifiable instanceof VoltageLevel) {
