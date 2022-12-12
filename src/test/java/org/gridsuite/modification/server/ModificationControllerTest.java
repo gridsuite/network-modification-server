@@ -1053,6 +1053,17 @@ public class ModificationControllerTest {
 
         assertEquals(1, modifications.size());
         checkUpdatedGeneratorModification((GeneratorModificationInfos) modifications.get(0));
+
+        //Test Generator Modification duplication
+        mockMvc.perform(
+            put("/v1/groups/" + TEST_GROUP_ID + "?action=COPY")
+                .content(objectWriter.writeValueAsString(List.of(modifications.get(0).getUuid())))
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk()).andReturn();
+        var modifications2 = modificationRepository.getModifications(TEST_GROUP_ID, false, true);
+
+        assertEquals(2, modifications2.size());
+
     }
 
     @Test
