@@ -7,7 +7,6 @@
 
 package org.gridsuite.modification.server.entities.equipment.modification.attribute;
 
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import org.gridsuite.modification.server.dto.AttributeModification;
 import org.gridsuite.modification.server.dto.OperationType;
@@ -21,7 +20,6 @@ import javax.persistence.Enumerated;
  */
 
 @Embeddable
-@EqualsAndHashCode
 @Getter
 public class FloatModificationEmbedded implements IAttributeModificationEmbeddable<Float> {
 
