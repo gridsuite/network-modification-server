@@ -147,19 +147,11 @@ public class NetworkModificationService {
         }, GROOVY_SCRIPT_ERROR, reportUuid, reporter, subReporter);
     }
 
-    public List<ModificationInfos> createGroovyScript(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId, String groovyScript) {
+    public List<ModificationInfos> createGroovyScript(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId, GroovyScriptModificationInfos groovyScript) {
         assertGroovyScriptNotEmpty(groovyScript);
         ModificationNetworkInfos networkInfos = getNetworkModificationInfos(networkUuid, variantId);
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
-        return execCreateGroovyScript(listener, groovyScript, reportUuid, reporterId);
-    }
-
-    @Transactional
-    public List<EquipmentAttributeModificationInfos> createSwitchStateModification(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId, String switchId, boolean open) {
-        ModificationNetworkInfos networkInfos = getNetworkModificationInfos(networkUuid, variantId);
-        NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
-        EquipmentAttributeModificationInfos modificationInfos = EquipmentAttributeModificationInfos.builder().type(ModificationType.EQUIPMENT_ATTRIBUTE_MODIFICATION).equipmentType(IdentifiableType.SWITCH).equipmentId(switchId).equipmentAttributeName("open").equipmentAttributeValue(open).build();
-        return handleModification(modificationInfos, listener, groupUuid, reportUuid, reporterId).stream().map(EquipmentAttributeModificationInfos.class::cast).collect(Collectors.toList());
+        return execCreateGroovyScript(listener, groovyScript.getScript(), reportUuid, reporterId);
     }
 
     public List<UUID> getModificationGroups() {
@@ -168,14 +160,13 @@ public class NetworkModificationService {
 
     @Transactional(readOnly = true)
     // Need a transaction for collections lazy loading
-    public List<ModificationInfos> getModifications(UUID groupUuid, boolean onlyMetadata, boolean errorOnGroupNotFound) {
+    public List<ModificationInfos> getNetworkModifications(UUID groupUuid, boolean onlyMetadata, boolean errorOnGroupNotFound) {
         return networkModificationRepository.getModifications(groupUuid, onlyMetadata, errorOnGroupNotFound);
     }
 
     @Transactional(readOnly = true)
-    // Need a transaction for collections lazy loading
-    public List<ModificationInfos> getModification(UUID modificationUuid) {
-        return networkModificationRepository.getModifications(List.of(modificationUuid));
+    public ModificationInfos getNetworkModification(UUID networkModificationUuid) {
+        return networkModificationRepository.getModificationInfo(networkModificationUuid);
     }
 
     private boolean disconnectLineBothSides(Network network, String lineId) {
@@ -186,14 +177,18 @@ public class NetworkModificationService {
         return terminal1Disconnected && terminal2Disconnected;
     }
 
-    public List<ModificationInfos> createLineStatusModification(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String lineId, String reporterId, String action) {
-        assertBranchActionValid(action);
+    public List<ModificationInfos> createLineStatusModification(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId, BranchStatusModificationInfos branchStatusModificationInfos) {
         ModificationNetworkInfos networkInfos = getNetworkModificationInfos(networkUuid, variantId);
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
-        return execCreateBranchStatusModification(listener, lineId, BranchStatusModificationInfos.ActionType.valueOf(action.toUpperCase()), reportUuid, reporterId);
+        return execCreateBranchStatusModification(listener, branchStatusModificationInfos, reportUuid, reporterId);
     }
 
-    private List<ModificationInfos> execCreateBranchStatusModification(NetworkStoreListener listener, String lineId, BranchStatusModificationInfos.ActionType action, UUID reportUuid, String reporterId) {
+    private List<ModificationInfos> execCreateBranchStatusModification(NetworkStoreListener listener, BranchStatusModificationInfos branchStatusModificationInfos, UUID reportUuid, String reporterId) {
+        String lineId = branchStatusModificationInfos.getEquipmentId();
+        BranchStatusModificationInfos.ActionType action = branchStatusModificationInfos.getAction();
+        if (action == null) {
+            throw new NetworkModificationException(BRANCH_ACTION_TYPE_EMPTY);
+        }
         switch (action) {
             case LOCKOUT:
                 return execCreateLockoutLine(listener, lineId, reportUuid, reporterId);
@@ -430,20 +425,9 @@ public class NetworkModificationService {
         return new ModificationNetworkInfos(network, applyModifications);
     }
 
-    private void assertGroovyScriptNotEmpty(String groovyScript) {
-        if (StringUtils.isBlank(groovyScript)) {
+    private void assertGroovyScriptNotEmpty(GroovyScriptModificationInfos groovyScript) {
+        if (StringUtils.isBlank(groovyScript.getScript())) {
             throw new NetworkModificationException(GROOVY_SCRIPT_EMPTY);
-        }
-    }
-
-    private void assertBranchActionValid(String action) {
-        if (StringUtils.isBlank(action)) {
-            throw new NetworkModificationException(BRANCH_ACTION_TYPE_EMPTY);
-        }
-        try {
-            BranchStatusModificationInfos.ActionType.valueOf(action.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw NetworkModificationException.createBranchActionTypeUnknown(action);
         }
     }
 
@@ -471,7 +455,7 @@ public class NetworkModificationService {
         return generator;
     }
 
-    public void updateGeneratorCreation(GeneratorCreationInfos generatorCreationInfos, UUID modificationUuid) {
+    public void updateGeneratorCreation(UUID modificationUuid, GeneratorCreationInfos generatorCreationInfos) {
         assertGeneratorCreationInfosNotEmpty(generatorCreationInfos);
 
         Optional<ModificationEntity> generatorModificationEntity = this.modificationRepository.findById(modificationUuid);
@@ -534,6 +518,82 @@ public class NetworkModificationService {
         }
     }
 
+    // temporary wildcard code smell (method to be deleted)
+    public List<? extends ModificationInfos> createNetworkModification(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId, ModificationInfos modificationInfos) {
+
+        switch (modificationInfos.getType()) {
+            case GROOVY_SCRIPT:
+                return createGroovyScript(networkUuid, variantId, groupUuid, reportUuid, reporterId, (GroovyScriptModificationInfos) modificationInfos);
+            case LOAD_MODIFICATION:
+                return createLoadModification(networkUuid, variantId, groupUuid, reportUuid, reporterId, (LoadModificationInfos) modificationInfos);
+            case GENERATOR_CREATION:
+                return createGeneratorCreation(networkUuid, variantId, groupUuid, reportUuid, reporterId, (GeneratorCreationInfos) modificationInfos);
+            case GENERATOR_MODIFICATION:
+                return createGeneratorModification(networkUuid, variantId, groupUuid, reportUuid, reporterId, (GeneratorModificationInfos) modificationInfos);
+            case LINE_CREATION:
+                return createLineCreation(networkUuid, variantId, groupUuid, reportUuid, reporterId, (LineCreationInfos) modificationInfos);
+            case SUBSTATION_CREATION:
+                return createSubstationCreation(networkUuid, variantId, groupUuid, reportUuid, reporterId, (SubstationCreationInfos) modificationInfos);
+            case VOLTAGE_LEVEL_CREATION:
+                return createVoltageLevelCreation(networkUuid, variantId, groupUuid, reportUuid, reporterId, (VoltageLevelCreationInfos) modificationInfos);
+            case SHUNT_COMPENSATOR_CREATION:
+                return createShuntCompensatorCreation(networkUuid, variantId, groupUuid, reportUuid, reporterId, (ShuntCompensatorCreationInfos) modificationInfos);
+            case TWO_WINDINGS_TRANSFORMER_CREATION:
+                return createTwoWindingsTransformerCreation(networkUuid, variantId, groupUuid, reportUuid, reporterId, (TwoWindingsTransformerCreationInfos) modificationInfos);
+            case EQUIPMENT_DELETION:
+                return createEquipmentDeletion(networkUuid, variantId, groupUuid, reportUuid, reporterId, (EquipmentDeletionInfos) modificationInfos);
+            case LINE_ATTACH_TO_VOLTAGE_LEVEL:
+                return createLineAttachToVoltageLevelCreation(networkUuid, variantId, groupUuid, reportUuid, reporterId, (LineAttachToVoltageLevelInfos) modificationInfos);
+            case LINES_ATTACH_TO_SPLIT_LINES:
+                return createLinesAttachToSplitLinesCreation(networkUuid, variantId, groupUuid, reportUuid, reporterId, (LinesAttachToSplitLinesInfos) modificationInfos);
+            case BRANCH_STATUS:
+                return createLineStatusModification(networkUuid, variantId, groupUuid, reportUuid, reporterId, (BranchStatusModificationInfos) modificationInfos);
+            default:
+                throw new NetworkModificationException(TYPE_MISMATCH);
+        }
+    }
+
+    public void updateNetworkModification(UUID modificationUuid, ModificationInfos modificationInfos) {
+
+        switch (modificationInfos.getType()) {
+            case LOAD_MODIFICATION:
+                updateLoadModification(modificationUuid, (LoadModificationInfos) modificationInfos);
+                break;
+            case GENERATOR_CREATION:
+                updateGeneratorCreation(modificationUuid, (GeneratorCreationInfos) modificationInfos);
+                break;
+            case GENERATOR_MODIFICATION:
+                updateGeneratorModification(modificationUuid, (GeneratorModificationInfos) modificationInfos);
+                break;
+            case LINE_CREATION:
+                updateLineCreation(modificationUuid, (LineCreationInfos) modificationInfos);
+                break;
+            case SUBSTATION_CREATION:
+                updateSubstationCreation(modificationUuid, (SubstationCreationInfos) modificationInfos);
+                break;
+            case VOLTAGE_LEVEL_CREATION:
+                updateVoltageLevelCreation(modificationUuid, (VoltageLevelCreationInfos) modificationInfos);
+                break;
+            case SHUNT_COMPENSATOR_CREATION:
+                updateShuntCompensatorCreation(modificationUuid, (ShuntCompensatorCreationInfos) modificationInfos);
+                break;
+            case TWO_WINDINGS_TRANSFORMER_CREATION:
+                updateTwoWindingsTransformerCreation(modificationUuid, (TwoWindingsTransformerCreationInfos) modificationInfos);
+                break;
+            case EQUIPMENT_DELETION:
+                updateEquipmentDeletion(modificationUuid, (EquipmentDeletionInfos) modificationInfos);
+                break;
+            case LINE_ATTACH_TO_VOLTAGE_LEVEL:
+                updateLineAttachToVoltageLevelCreation(modificationUuid, (LineAttachToVoltageLevelInfos) modificationInfos);
+                break;
+            case LINES_ATTACH_TO_SPLIT_LINES:
+                updateLinesAttachToSplitLinesCreation(modificationUuid, (LinesAttachToSplitLinesInfos) modificationInfos);
+                break;
+            default:
+                throw new NetworkModificationException(TYPE_MISMATCH);
+        }
+    }
+
     private void saveModifications(NetworkStoreListener listener, UUID groupUuid, ModificationEntity modificationEntity) {
         networkModificationRepository.saveModifications(groupUuid, List.of(modificationEntity));
         if (listener.isApplyModifications()) {
@@ -542,7 +602,8 @@ public class NetworkModificationService {
     }
 
     // Generic form
-    private void updateModification(ModificationInfos modificationInfos, UUID modificationUuid) {
+    @Transactional
+    public void updateModification(@NonNull UUID modificationUuid, @NonNull ModificationInfos modificationInfos) {
         ModificationEntity modificationEntity = this.modificationRepository.findById(modificationUuid)
             .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format("Modification (%s) not found", modificationUuid)));
 
@@ -550,15 +611,11 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public List<EquipmentModificationInfos> createLoadCreation(@NonNull UUID networkUuid, String variantId, @NonNull UUID groupUuid, @NonNull UUID reportUuid, @NonNull String reporterId, @NonNull LoadCreationInfos loadCreationInfos) {
+    public List<ModificationInfos> createModification(@NonNull UUID networkUuid, String variantId, @NonNull UUID groupUuid, @NonNull UUID reportUuid, @NonNull String reporterId, @NonNull ModificationInfos modificationInfos) {
+        modificationInfos.check();
         ModificationNetworkInfos networkInfos = getNetworkModificationInfos(networkUuid, variantId);
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
-        return handleModification(loadCreationInfos, listener, groupUuid, reportUuid, reporterId).stream().map(EquipmentModificationInfos.class::cast).collect(Collectors.toList());
-    }
-
-    @Transactional
-    public void updateLoadCreation(@NonNull LoadCreationInfos loadCreationInfos, @NonNull UUID modificationUuid) {
-        updateModification(loadCreationInfos, modificationUuid);
+        return handleModification(modificationInfos, listener, groupUuid, reportUuid, reporterId);
     }
 
     private void modifyLoad(Load load, LoadModificationInfos loadModificationInfos, Reporter subReporter) {
@@ -577,7 +634,7 @@ public class NetworkModificationService {
         // TODO connectivity modification
     }
 
-    public void updateLoadModification(LoadModificationInfos loadModificationInfos, UUID modificationUuid) {
+    public void updateLoadModification(UUID modificationUuid, LoadModificationInfos loadModificationInfos) {
         assertEquipmentModificationInfosOk(loadModificationInfos, MODIFY_LOAD_ERROR);
 
         Optional<ModificationEntity> loadModificationEntity = this.modificationRepository.findById(modificationUuid);
@@ -722,8 +779,11 @@ public class NetworkModificationService {
         }
     }
 
-    private List<ModificationInfos> execCreateEquipmentDeletion(NetworkStoreListener listener, String equipmentType, String equipmentId,
-                                                        UUID reportUuid, String reporterId) {
+    private List<ModificationInfos> execCreateEquipmentDeletion(NetworkStoreListener listener,
+                                                                EquipmentDeletionInfos equipmentDeletionInfos,
+                                                                UUID reportUuid, String reporterId) {
+        String equipmentId = equipmentDeletionInfos.getEquipmentId();
+        String equipmentType = equipmentDeletionInfos.getEquipmentType();
         Network network = listener.getNetwork();
         String rootReporterId = reporterId + "@" + NETWORK_MODIFICATION_TYPE_REPORT;
         ReporterModel reporter = new ReporterModel(rootReporterId, rootReporterId);
@@ -760,22 +820,22 @@ public class NetworkModificationService {
         }, DELETE_EQUIPMENT_ERROR, reportUuid, reporter, subReporter);
     }
 
-    public List<EquipmentDeletionInfos> createEquipmentDeletion(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId, String equipmentType, String equipmentId) {
+    public List<EquipmentDeletionInfos> createEquipmentDeletion(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId, EquipmentDeletionInfos equipmentDeletionInfos) {
         ModificationNetworkInfos networkInfos = getNetworkModificationInfos(networkUuid, variantId);
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
-        return execCreateEquipmentDeletion(listener, equipmentType, equipmentId, reportUuid, reporterId)
-            .stream().map(EquipmentDeletionInfos.class::cast).collect(Collectors.toList());
+        return execCreateEquipmentDeletion(listener, equipmentDeletionInfos, reportUuid, reporterId)
+                .stream().map(EquipmentDeletionInfos.class::cast).collect(Collectors.toList());
     }
 
-    public void updateEquipmentDeletion(UUID modificationUuid, String equipmentType, String equipmentId) {
+    public void updateEquipmentDeletion(UUID modificationUuid, EquipmentDeletionInfos equipmentDeletionInfos) {
 
         ModificationEntity equipmentDeletionEntity = this.modificationRepository
                 .findById(modificationUuid)
                 .orElseThrow(() -> new NetworkModificationException(DELETE_EQUIPMENT_ERROR, "Equipment deletion not found"));
 
         EquipmentDeletionEntity updatedEntity = this.networkModificationRepository.createEquipmentDeletionEntity(
-                equipmentId,
-                equipmentType);
+                equipmentDeletionInfos.getEquipmentId(),
+                equipmentDeletionInfos.getEquipmentType());
         updatedEntity.setId(modificationUuid);
         updatedEntity.setGroup(equipmentDeletionEntity.getGroup());
         this.networkModificationRepository.updateModification(updatedEntity);
@@ -1060,7 +1120,7 @@ public class NetworkModificationService {
         return lineAdder;
     }
 
-    public void updateLineCreation(LineCreationInfos lineCreationInfos, UUID modificationUuid) {
+    public void updateLineCreation(UUID modificationUuid, LineCreationInfos lineCreationInfos) {
         assertLineCreationInfosNotEmpty(lineCreationInfos);
 
         Optional<ModificationEntity> lineModificationEntity = this.modificationRepository.findById(modificationUuid);
@@ -1324,7 +1384,7 @@ public class NetworkModificationService {
         return twoWindingsTransformerAdder;
     }
 
-    public void updateTwoWindingsTransformerCreation(TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos, UUID modificationUuid) {
+    public void updateTwoWindingsTransformerCreation(UUID modificationUuid, TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
         assertTwoWindingsTransformerCreationInfosNotEmpty(twoWindingsTransformerCreationInfos);
         Optional<ModificationEntity> twoWindingsTransformerModificationEntity = this.modificationRepository.findById(modificationUuid);
 
@@ -1343,8 +1403,9 @@ public class NetworkModificationService {
         }
     }
 
-    private List<ModificationInfos> execCreateSubstationCreation(NetworkStoreListener listener, SubstationCreationInfos substationCreationInfos,
-                                                         UUID reportUuid, String reporterId) {
+    private List<ModificationInfos> execCreateSubstationCreation(NetworkStoreListener listener,
+                                                                          SubstationCreationInfos substationCreationInfos,
+                                                                          UUID reportUuid, String reporterId) {
         Network network = listener.getNetwork();
         String rootReporterId = reporterId + "@" + NETWORK_MODIFICATION_TYPE_REPORT;
         ReporterModel reporter = new ReporterModel(rootReporterId, rootReporterId);
@@ -1379,7 +1440,7 @@ public class NetworkModificationService {
             .stream().map(EquipmentModificationInfos.class::cast).collect(Collectors.toList());
     }
 
-    public void updateSubstationCreation(SubstationCreationInfos substationCreationInfos, UUID modificationUuid) {
+    public void updateSubstationCreation(UUID modificationUuid, SubstationCreationInfos substationCreationInfos) {
         Optional<ModificationEntity> substationModificationEntity = this.modificationRepository.findById(modificationUuid);
 
         if (!substationModificationEntity.isPresent()) {
@@ -1424,7 +1485,7 @@ public class NetworkModificationService {
             .stream().map(EquipmentModificationInfos.class::cast).collect(Collectors.toList());
     }
 
-    public void updateVoltageLevelCreation(VoltageLevelCreationInfos voltageLevelCreationInfos, UUID modificationUuid) {
+    public void updateVoltageLevelCreation(UUID modificationUuid, VoltageLevelCreationInfos voltageLevelCreationInfos) {
         assertVoltageLevelCreationInfosNotEmpty(voltageLevelCreationInfos);
 
         Optional<ModificationEntity> voltageLevelModificationEntity = this.modificationRepository.findById(modificationUuid);
@@ -1545,7 +1606,7 @@ public class NetworkModificationService {
 
                 case EQUIPMENT_DELETION:
                     EquipmentDeletionInfos deletionInfos = (EquipmentDeletionInfos) infos;
-                    return execCreateEquipmentDeletion(listener, deletionInfos.getEquipmentType(), deletionInfos.getEquipmentId(), reportUuid, reporterId);
+                    return execCreateEquipmentDeletion(listener, deletionInfos, reportUuid, reporterId);
 
                 case GROOVY_SCRIPT:
                     GroovyScriptModificationInfos groovyModificationInfos = (GroovyScriptModificationInfos) infos;
@@ -1561,7 +1622,7 @@ public class NetworkModificationService {
 
                 case BRANCH_STATUS:
                     BranchStatusModificationInfos branchStatusModificationInfos = (BranchStatusModificationInfos) infos;
-                    return execCreateBranchStatusModification(listener, branchStatusModificationInfos.getEquipmentId(), branchStatusModificationInfos.getAction(), reportUuid, reporterId);
+                    return execCreateBranchStatusModification(listener, branchStatusModificationInfos, reportUuid, reporterId);
 
                 case SHUNT_COMPENSATOR_CREATION:
                     ShuntCompensatorCreationInfos shuntCompensatorCreationInfos = (ShuntCompensatorCreationInfos) infos;
@@ -1602,7 +1663,7 @@ public class NetworkModificationService {
         notificationService.emitCancelBuildMessage(receiver);
     }
 
-    public void deleteModifications(UUID groupUuid, Set<UUID> modificationsUuids) {
+    public void deleteNetworkModifications(UUID groupUuid, List<UUID> modificationsUuids) {
         if (networkModificationRepository.deleteModifications(groupUuid, modificationsUuids) == 0) {
             throw new NetworkModificationException(MODIFICATION_NOT_FOUND);
         }
@@ -1644,7 +1705,7 @@ public class NetworkModificationService {
                 .add();
     }
 
-    public void updateShuntCompensatorCreation(ShuntCompensatorCreationInfos shuntCompensatorCreationInfos, UUID modificationUuid) {
+    public void updateShuntCompensatorCreation(UUID modificationUuid, ShuntCompensatorCreationInfos shuntCompensatorCreationInfos) {
         assertShuntCompensatorCreationInfosNotEmpty(shuntCompensatorCreationInfos);
 
         Optional<ModificationEntity> shuntCompensatorModificationEntity = this.modificationRepository.findById(modificationUuid);
@@ -1736,7 +1797,6 @@ public class NetworkModificationService {
         return missingModificationList;
     }
 
-    @Transactional
     public void updateGeneratorModification(UUID modificationUuid, GeneratorModificationInfos generatorModificationInfos) {
         assertEquipmentModificationInfosOk(generatorModificationInfos, MODIFICATION_NOT_FOUND);
 
@@ -1749,19 +1809,6 @@ public class NetworkModificationService {
         updatedEntity.setId(modificationUuid);
         updatedEntity.setGroup(generatorModificationEntity.get().getGroup());
         this.networkModificationRepository.updateModification(updatedEntity);
-    }
-
-    @Transactional
-    public List<ModificationInfos> createLineSplitWithVoltageLevelCreation(@NonNull UUID networkUuid, String variantId, @NonNull UUID groupUuid, @NonNull UUID reportUuid, @NonNull String reporterId,
-                                                                           @NonNull LineSplitWithVoltageLevelInfos lineSplitWithVoltageLevelInfos) {
-        ModificationNetworkInfos networkInfos = getNetworkModificationInfos(networkUuid, variantId);
-        NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
-        return handleModification(lineSplitWithVoltageLevelInfos, listener, groupUuid, reportUuid, reporterId).stream().map(ModificationInfos.class::cast).collect(Collectors.toList());
-    }
-
-    @Transactional
-    public void updateLineSplitWithVoltageLevelCreation(@NonNull UUID modificationUuid, @NonNull LineSplitWithVoltageLevelInfos lineSplitWithVoltageLevelInfos) {
-        updateModification(lineSplitWithVoltageLevelInfos, modificationUuid);
     }
 
     private void assertLineAttachToVoltageLevelInfosNotEmpty(LineAttachToVoltageLevelInfos lineAttachToVoltageLevelInfos) {

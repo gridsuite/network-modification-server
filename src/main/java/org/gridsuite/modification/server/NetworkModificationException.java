@@ -62,6 +62,8 @@ public class NetworkModificationException extends PowsyblException {
         TYPE_MISMATCH(HttpStatus.BAD_REQUEST),
         MODIFICATION_OUT_OF_RANGE(HttpStatus.BAD_REQUEST),
         POSITION_ORDER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
+        EQUIPMENT_ATTRIBUTE_NAME_ERROR(HttpStatus.BAD_REQUEST),
+        EQUIPMENT_ATTRIBUTE_VALUE_ERROR(HttpStatus.BAD_REQUEST),
         MOVE_MODIFICATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR);
 
         public final HttpStatus status;

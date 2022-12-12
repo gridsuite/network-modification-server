@@ -143,7 +143,7 @@ public class NetworkStoreListener implements NetworkListener {
                 modifications
                     .stream()
                     .map(ModificationEntity::getId)
-                    .collect(Collectors.toSet()));
+                    .collect(Collectors.toList()));
         }
     }
 
