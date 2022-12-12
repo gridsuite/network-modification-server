@@ -439,14 +439,6 @@ public class NetworkModificationService {
         return voltageLevel;
     }
 
-    private Line getLine(Network network, String lineId) {
-        Line line = network.getLine(lineId);
-        if (line == null) {
-            throw new NetworkModificationException(LINE_NOT_FOUND, lineId);
-        }
-        return line;
-    }
-
     private Generator getGenerator(Network network, String generatorId) {
         Generator generator = network.getGenerator(generatorId);
         if (generator == null) {
