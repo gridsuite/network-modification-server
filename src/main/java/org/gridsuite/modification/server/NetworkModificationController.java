@@ -140,9 +140,9 @@ public class NetworkModificationController {
     }
 
     @GetMapping(value = "/network-modifications/{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Get network modifications")
+    @Operation(summary = "Get a network modification")
     @ApiResponse(responseCode = "200", description = "The network modifications were returned")
-    public ResponseEntity<ModificationInfos> getNetworkModifications(
+    public ResponseEntity<ModificationInfos> getNetworkModification(
             @Parameter(description = "Network modification UUID") @PathVariable("uuid") UUID networkModificationUuid) {
         return ResponseEntity.ok().body(networkModificationService.getNetworkModification(networkModificationUuid));
     }
