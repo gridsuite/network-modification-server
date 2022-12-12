@@ -101,6 +101,8 @@ public class ModificationControllerTest {
     private static final String URI_NETWORK_MODIF_BAD_NETWORK = URI_NETWORK_MODIF_BASE + "?networkUuid=" + NOT_FOUND_NETWORK_ID + URI_NETWORK_MODIF_PARAMS;
     private static final String URI_NETWORK_MODIF_BAD_VARIANT = URI_NETWORK_MODIF + "&variantId=" + VARIANT_NOT_EXISTING_ID;
 
+    private static final String URI_NETWORK_WITH_TEE_POINT_MODIF = URI_NETWORK_MODIF_BASE + "?networkUuid=" + TEST_NETWORK_WITH_TEE_POINT_ID + URI_NETWORK_MODIF_PARAMS;
+
     @Autowired
     private MockMvc mockMvc;
 
@@ -2669,10 +2671,10 @@ public class ModificationControllerTest {
 
     @Test
     public void replaceTeePointByVoltageLevelOnLineDuplicateModificationGroupTest() throws Exception  {
-        String attachLinesToSplitLinesUriString = "/v1/networks/{networkUuid}/lines-attach-to-split-lines?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
         LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos = new LinesAttachToSplitLinesInfos("l1", "l2", "l3", "v4", "bbs2", "nl1", "NewLine1", "nl2", "NewLine2");
+        linesAttachToSplitLinesInfos.setType(ModificationType.LINES_ATTACH_TO_SPLIT_LINES);
 
-        mockMvc.perform(post(attachLinesToSplitLinesUriString, TEST_NETWORK_WITH_TEE_POINT_ID)
+        mockMvc.perform(post(URI_NETWORK_WITH_TEE_POINT_MODIF)
                                 .content(objectWriter.writeValueAsString(linesAttachToSplitLinesInfos))
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
@@ -3234,7 +3236,7 @@ public class ModificationControllerTest {
         linesAttachToAbsentLine1.setType(ModificationType.LINES_ATTACH_TO_SPLIT_LINES);
         String linesAttachToAbsentLine1Json = objectWriter.writeValueAsString(linesAttachToAbsentLine1);
 
-        MvcResult mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(linesAttachToAbsentLine1Json).contentType(MediaType.APPLICATION_JSON))
+        MvcResult mvcResult = mockMvc.perform(post(URI_NETWORK_WITH_TEE_POINT_MODIF).content(linesAttachToAbsentLine1Json).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().is4xxClientError()).andReturn();
         String resultAsString = mvcResult.getResponse().getContentAsString();
         assertEquals("LINE_NOT_FOUND : Line absent_line_id is not found", resultAsString);
@@ -3242,15 +3244,14 @@ public class ModificationControllerTest {
         // fix to have to correct modification
         linesAttachToAbsentLine1.setLineToAttachTo1Id("l1");
         String linesAttachToSplitLinesJson = objectWriter.writeValueAsString(linesAttachToAbsentLine1);
-        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(linesAttachToSplitLinesJson).contentType(MediaType.APPLICATION_JSON))
+        mvcResult = mockMvc.perform(post(URI_NETWORK_WITH_TEE_POINT_MODIF).content(linesAttachToSplitLinesJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
 
         List<ModificationInfos> result = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertNotNull(result);
         assertEquals(18, result.size()); // FIXME why ??? we get a result for this modification and all individual deletion
-        EquipmentModificationInfos linesAttachToProperSplitLines = result.stream().filter(r -> r.getType() == ModificationType.LINES_ATTACH_TO_SPLIT_LINES).findFirst().orElseThrow();
-        assertNull(linesAttachToProperSplitLines.getEquipmentId());
+        ModificationInfos linesAttachToProperSplitLines = result.stream().filter(r -> r.getType() == ModificationType.LINES_ATTACH_TO_SPLIT_LINES).findFirst().orElseThrow();
         assertEquals(Set.of("s3", "s4", "s1", "s2"), linesAttachToProperSplitLines.getSubstationIds());
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
 
@@ -3264,10 +3265,8 @@ public class ModificationControllerTest {
         assertNotNull(networkWithTeePoint.getVoltageLevel("v4"));
         assertEquals(3, networkWithTeePoint.getVoltageLevelCount());
 
-        // check re-update
         mockMvc.perform(put(URI_NETWORK_MODIF_GET_PUT + linesAttachToProperSplitLines.getUuid()).content(linesAttachToSplitLinesJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andReturn();
+                .andExpect(status().isOk()).andReturn();
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
     }
 
