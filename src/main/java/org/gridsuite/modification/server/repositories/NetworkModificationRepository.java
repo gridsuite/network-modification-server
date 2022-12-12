@@ -13,7 +13,10 @@ import com.powsybl.iidm.network.PhaseTapChanger;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.NonNull;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.server.dto.AttributeModification;
+import org.gridsuite.modification.server.dto.BranchStatusModificationInfos;
+import org.gridsuite.modification.server.dto.GeneratorModificationInfos;
+import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.GroovyScriptModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationGroupEntity;
@@ -31,9 +34,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_GROUP_NOT_FOUND;
-import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_NOT_FOUND;
-import static org.gridsuite.modification.server.NetworkModificationException.Type.MOVE_MODIFICATION_ERROR;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -120,10 +121,6 @@ public class NetworkModificationRepository {
         return this.modificationGroupRepository.findAll().stream()
                 .map(ModificationGroupEntity::getId)
                 .collect(Collectors.toList());
-    }
-
-    public ModificationInfos getModification(UUID uuid) {
-        return this.modificationRepository.findById(uuid).get().toModificationInfos();
     }
 
     public List<ModificationInfos> getModifications(List<UUID> uuids) {

@@ -200,28 +200,6 @@ public class NetworkStoreListener implements NetworkListener {
         modifications.add(this.modificationRepository.createEquipmentDeletionEntity(equipmentId, equipmentType));
     }
 
-    public void storeLineCreation(LineCreationInfos lineCreationInfos) {
-        modifications.add(this.modificationRepository.createLineEntity(lineCreationInfos.getEquipmentId(),
-            lineCreationInfos.getEquipmentName(),
-            lineCreationInfos.getSeriesResistance(),
-            lineCreationInfos.getSeriesReactance(),
-            lineCreationInfos.getShuntConductance1(),
-            lineCreationInfos.getShuntSusceptance1(),
-            lineCreationInfos.getShuntConductance2(),
-            lineCreationInfos.getShuntSusceptance2(),
-            lineCreationInfos.getVoltageLevelId1(),
-            lineCreationInfos.getBusOrBusbarSectionId1(),
-            lineCreationInfos.getVoltageLevelId2(),
-            lineCreationInfos.getBusOrBusbarSectionId2(),
-            lineCreationInfos.getCurrentLimits1() != null ? lineCreationInfos.getCurrentLimits1().getPermanentLimit() : null,
-            lineCreationInfos.getCurrentLimits2() != null ? lineCreationInfos.getCurrentLimits2().getPermanentLimit() : null,
-            lineCreationInfos.getConnectionName1(),
-            lineCreationInfos.getConnectionDirection1(),
-            lineCreationInfos.getConnectionName2(),
-            lineCreationInfos.getConnectionDirection2()
-        ));
-    }
-
     public void storeTwoWindingsTransformerCreation(TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
         modifications.add(TwoWindingsTransformerCreationEntity.toEntity(twoWindingsTransformerCreationInfos));
     }
