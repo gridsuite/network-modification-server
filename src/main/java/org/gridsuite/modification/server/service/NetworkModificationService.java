@@ -797,7 +797,7 @@ public class NetworkModificationService {
                 }
 
                 if (identifiable instanceof Connectable) {
-                    ((Connectable) identifiable).remove(true);
+                    new RemoveFeederBay(equipmentId).apply(network, true, reporter);
                 } else if (identifiable instanceof HvdcLine) {
                     ((HvdcLine) identifiable).remove();
                 } else if (identifiable instanceof VoltageLevel) {
@@ -1864,22 +1864,20 @@ public class NetworkModificationService {
                         .setG2(attachmentLineInfos.getShuntConductance2() != null ? attachmentLineInfos.getShuntConductance2() : 0.0)
                         .setB2(attachmentLineInfos.getShuntSusceptance2() != null ? attachmentLineInfos.getShuntSusceptance2() : 0.0);
 
-                CreateLineOnLine algo = new CreateLineOnLine(
-                        lineAttachToVoltageLevelInfos.getPercent(),
-                        voltageLevelId,
-                        lineAttachToVoltageLevelInfos.getBbsOrBusId(),
-                        lineAttachToVoltageLevelInfos.getAttachmentPointId(),
-                        lineAttachToVoltageLevelInfos.getAttachmentPointName(),
-                        true,
-                        lineAttachToVoltageLevelInfos.getAttachmentPointId() + "_substation",
-                        null,
-                        lineAttachToVoltageLevelInfos.getNewLine1Id(),
-                        lineAttachToVoltageLevelInfos.getNewLine1Name(),
-                        lineAttachToVoltageLevelInfos.getNewLine2Id(),
-                        lineAttachToVoltageLevelInfos.getNewLine2Name(),
-                        line,
-                        lineAdder
-                );
+                CreateLineOnLine algo = new CreateLineOnLineBuilder()
+                        .withPositionPercent(lineAttachToVoltageLevelInfos.getPercent())
+                        .withBusbarSectionOrBusId(lineAttachToVoltageLevelInfos.getBbsOrBusId())
+                        .withFictitiousVoltageLevelId(lineAttachToVoltageLevelInfos.getAttachmentPointId())
+                        .withFictitiousVoltageLevelName(lineAttachToVoltageLevelInfos.getAttachmentPointName())
+                        .withCreateFictitiousSubstation(true)
+                        .withFictitiousSubstationId(lineAttachToVoltageLevelInfos.getAttachmentPointId() + "_substation")
+                        .withLine1Id(lineAttachToVoltageLevelInfos.getNewLine1Id())
+                        .withLine1Name(lineAttachToVoltageLevelInfos.getNewLine1Name())
+                        .withLine2Id(lineAttachToVoltageLevelInfos.getNewLine2Id())
+                        .withLine2Name(lineAttachToVoltageLevelInfos.getNewLine2Name())
+                        .withLine(line)
+                        .withLineAdder(lineAdder)
+                        .build();
 
                 algo.apply(network, false, subReporter);
             }
@@ -1905,17 +1903,15 @@ public class NetworkModificationService {
 
         List<ModificationInfos> inspectable = doAction(listener, () -> {
             if (listener.isApplyModifications()) {
-                String voltageLevelId = linesAttachToSplitLinesInfos.getVoltageLevelId();
-                ReplaceTeePointByVoltageLevelOnLineBuilder builder = new ReplaceTeePointByVoltageLevelOnLineBuilder();
-                ReplaceTeePointByVoltageLevelOnLine algo = builder.withLine1ZId(linesAttachToSplitLinesInfos.getLineToAttachTo1Id())
-                        .withLineZ2Id(linesAttachToSplitLinesInfos.getLineToAttachTo2Id())
-                        .withLineZPId(linesAttachToSplitLinesInfos.getAttachedLineId())
-                        .withVoltageLevelId(voltageLevelId)
+                ReplaceTeePointByVoltageLevelOnLine algo = new ReplaceTeePointByVoltageLevelOnLineBuilder()
+                        .withTeePointLine1(linesAttachToSplitLinesInfos.getLineToAttachTo1Id())
+                        .withTeePointLine2(linesAttachToSplitLinesInfos.getLineToAttachTo2Id())
+                        .withTeePointLineToRemove(linesAttachToSplitLinesInfos.getAttachedLineId())
                         .withBbsOrBusId(linesAttachToSplitLinesInfos.getBbsBusId())
-                        .withLine1CId(linesAttachToSplitLinesInfos.getReplacingLine1Id())
-                        .withLine1CName(linesAttachToSplitLinesInfos.getReplacingLine1Name())
-                        .withLineC2Id(linesAttachToSplitLinesInfos.getReplacingLine2Id())
-                        .withLineC2Name(linesAttachToSplitLinesInfos.getReplacingLine2Name())
+                        .withNewLine1Id(linesAttachToSplitLinesInfos.getReplacingLine1Id())
+                        .withNewLine1Name(linesAttachToSplitLinesInfos.getReplacingLine1Name())
+                        .withNewLine2Id(linesAttachToSplitLinesInfos.getReplacingLine2Id())
+                        .withNewLine2Name(linesAttachToSplitLinesInfos.getReplacingLine2Name())
                         .build();
                 algo.apply(network, true, subReporter);
             }
