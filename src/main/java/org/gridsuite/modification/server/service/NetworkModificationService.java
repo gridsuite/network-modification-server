@@ -166,7 +166,7 @@ public class NetworkModificationService {
 
     @Transactional(readOnly = true)
     public ModificationInfos getNetworkModification(UUID networkModificationUuid) {
-        return networkModificationRepository.getModification(networkModificationUuid);
+        return networkModificationRepository.getModificationInfo(networkModificationUuid);
     }
 
     private boolean disconnectLineBothSides(Network network, String lineId) {
