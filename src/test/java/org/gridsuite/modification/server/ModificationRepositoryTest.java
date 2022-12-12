@@ -605,7 +605,7 @@ public class ModificationRepositoryTest {
         // moving modifications from a wrong group should work but return their UUID in response
         SQLStatementCountValidator.reset();
         List<UUID> modificationsToMoveUuid = List.of(groovyScriptModificationEntity1.getId(), groovyScriptModificationEntity3.getId());
-        assertEquals(List.of(groovyScriptModificationEntity3.getId()), networkModificationRepository.moveModifications(TEST_GROUP_ID_3, TEST_GROUP_ID, modificationsToMoveUuid, null));
+        assertEquals(List.of(groovyScriptModificationEntity3.getId()), networkModificationRepository.moveModifications(TEST_GROUP_ID_3, TEST_GROUP_ID, modificationsToMoveUuid, null).getRight());
         assertRequestsCount(4, 0, 5, 0);
 
         // moving modification with reference node not in destination group shoud throw exception

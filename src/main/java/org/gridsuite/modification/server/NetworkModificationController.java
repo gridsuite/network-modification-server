@@ -18,7 +18,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import javax.annotation.Nullable;
 import java.util.List;
 import java.util.UUID;
 
@@ -63,16 +62,24 @@ public class NetworkModificationController {
     @PutMapping(value = "/groups/{groupUuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "For a list of network modifications passed in body, Move them before another one or at the end of the list, or Duplicate them at the end of the list")
     @ApiResponse(responseCode = "200", description = "The modification list of the group has been updated. Missing modifications are returned.")
-    public ResponseEntity<List<UUID>> updateModificationGroup(@Parameter(description = "group UUID") @PathVariable("groupUuid") UUID groupUuid,
+    public ResponseEntity<List<UUID>> updateModificationGroup(@Parameter(description = "updated group UUID, where modifications are pasted") @PathVariable("groupUuid") UUID groupUuid,
                                                               @Parameter(description = "kind of modification", required = true) @RequestParam(value = "action") GroupModificationAction action,
+                                                              @Parameter(description = "the network uuid", required = true) @RequestParam(value = "networkUuid") UUID networkUuid,
+                                                              @Parameter(description = "the report uuid", required = true) @RequestParam(value = "reportUuid") UUID reportUuid,
+                                                              @Parameter(description = "the reporter id", required = true) @RequestParam(value = "reporterId") UUID reporterId,
+                                                              @Parameter(description = "the variant id", required = true) @RequestParam(value = "variantId") UUID variantId,
                                                               @Parameter(description = "the modification Uuid to move before (MOVE option, empty means moving at the end)") @RequestParam(value = "before", required = false) UUID before,
-                                                              @RequestBody List<UUID> modificationsUuidList,
-                                                              @Nullable @RequestParam UUID originGroupUuid) {
+                                                              @Parameter(description = "origin group UUID, where modifications are copied or cut") @RequestParam(value = "originGroupUuid", required = false) UUID originGroupUuid,
+                                                              @Parameter(description = "destination node can be built (default is true)") @RequestParam(value = "build", required = false) Boolean build,
+                                                              @RequestBody List<UUID> modificationsUuidList) {
         switch (action) {
             case COPY:
-                return ResponseEntity.ok().body(networkModificationService.duplicateModifications(groupUuid, modificationsUuidList));
+                return ResponseEntity.ok().body(networkModificationService.duplicateModifications(groupUuid, networkUuid, reportUuid, reporterId, variantId, modificationsUuidList));
             case MOVE:
-                networkModificationService.moveModifications(groupUuid, originGroupUuid, before, modificationsUuidList);
+                // 2 params are optional
+                UUID sourceGroupUuid = originGroupUuid == null ? groupUuid : originGroupUuid;
+                boolean canBuildNode = build == null || build;
+                networkModificationService.moveModifications(groupUuid, sourceGroupUuid, before, networkUuid, reportUuid, reporterId, variantId, modificationsUuidList, canBuildNode);
                 return ResponseEntity.ok().body(List.of());
             default:
                 throw new NetworkModificationException(TYPE_MISMATCH);
