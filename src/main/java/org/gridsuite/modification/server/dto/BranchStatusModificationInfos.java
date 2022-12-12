@@ -12,6 +12,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
+import org.gridsuite.modification.server.NetworkModificationException;
+
+import static org.gridsuite.modification.server.NetworkModificationException.Type.BRANCH_ACTION_TYPE_EMPTY;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -33,5 +36,13 @@ public class BranchStatusModificationInfos extends EquipmentModificationInfos {
         SWITCH_ON,
         ENERGISE_END_ONE,
         ENERGISE_END_TWO
+    }
+
+    @Override
+    public void check() {
+        super.check();
+        if (action == null) {
+            throw new NetworkModificationException(BRANCH_ACTION_TYPE_EMPTY);
+        }
     }
 }
