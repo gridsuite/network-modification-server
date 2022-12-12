@@ -962,6 +962,62 @@ public class ModificationControllerTest {
 
     }
 
+    GeneratorModificationInfos buildGeneratorModificationUpdateInfos(UUID uuid) {
+        return GeneratorModificationInfos.builder()
+            .equipmentId("idGeneratorModified")
+            .energySource(new AttributeModification<>(EnergySource.SOLAR, OperationType.SET))
+            .equipmentName(new AttributeModification<>("newV1Generator", OperationType.SET))
+            .activePowerSetpoint(new AttributeModification<>(80.0, OperationType.SET))
+            .reactivePowerSetpoint(new AttributeModification<>(40.0, OperationType.SET))
+            .voltageSetpoint(new AttributeModification<>(48.0, OperationType.SET))
+            .voltageRegulationOn(new AttributeModification<>(true, OperationType.SET))
+            .minActivePower(new AttributeModification<>(0., OperationType.SET))
+            .maxActivePower(new AttributeModification<>(100., OperationType.SET))
+            .ratedNominalPower(new AttributeModification<>(220., OperationType.SET))
+            .marginalCost(new AttributeModification<>(0.1, OperationType.SET))
+            .minimumReactivePower(new AttributeModification<>(-100., OperationType.SET))
+            .maximumReactivePower(new AttributeModification<>(100., OperationType.SET))
+            .reactiveCapabilityCurvePoints(List.of(
+                new ReactiveCapabilityCurveCreationInfos(0., 100., 0.1),
+                new ReactiveCapabilityCurveCreationInfos(0., 100., 0.1)))
+            .participate(new AttributeModification<>(true, OperationType.SET))
+            .transientReactance(new AttributeModification<>(0.1, OperationType.SET))
+            .stepUpTransformerReactance(new AttributeModification<>(0.1, OperationType.SET))
+            .regulatingTerminalId(new AttributeModification<>("idTerminal", OperationType.SET))
+            .regulatingTerminalType(new AttributeModification<>("regTerminalType", OperationType.SET))
+            .regulatingTerminalVlId(new AttributeModification<>("idVl", OperationType.SET))
+            .qPercent(new AttributeModification<>(0.1, OperationType.SET))
+            .reactiveCapabilityCurve(new AttributeModification<>(true, OperationType.SET))
+            .uuid(uuid)
+            .type(ModificationType.GENERATOR_MODIFICATION)
+            .build();
+    }
+
+    private void checkUpdatedGeneratorModification(GeneratorModificationInfos modification) {
+        assertNotNull(modification);
+        assertEquals("idGeneratorModified", modification.getEquipmentId());
+        assertEquals(EnergySource.SOLAR, modification.getEnergySource().getValue());
+        assertEquals("newV1Generator", modification.getEquipmentName().getValue());
+        assertEquals(80.0, modification.getActivePowerSetpoint().getValue(), .1);
+        assertEquals(40.0, modification.getReactivePowerSetpoint().getValue(), .1);
+        assertEquals(48.0, modification.getVoltageSetpoint().getValue(), .1);
+        assertTrue(modification.getVoltageRegulationOn().getValue());
+        assertEquals(0.0, modification.getMinActivePower().getValue(), .1);
+        assertEquals(100.0, modification.getMaxActivePower().getValue(), .1);
+        assertEquals(220.0, modification.getRatedNominalPower().getValue(), .1);
+        assertEquals(0.1, modification.getMarginalCost().getValue(), .1);
+        assertEquals(-100.0, modification.getMinimumReactivePower().getValue(), .1);
+        assertEquals(100.0, modification.getMaximumReactivePower().getValue(), .1);
+        assertEquals(2, modification.getReactiveCapabilityCurvePoints().size());
+        assertEquals(0.1, modification.getTransientReactance().getValue(), .1);
+        assertEquals(0.1, modification.getStepUpTransformerReactance().getValue(), .1);
+        assertEquals("idTerminal", modification.getRegulatingTerminalId().getValue());
+        assertEquals("regTerminalType", modification.getRegulatingTerminalType().getValue());
+        assertEquals("idVl", modification.getRegulatingTerminalVlId().getValue());
+        assertEquals(0.1, modification.getQPercent().getValue(), .1);
+        assertTrue(modification.getReactiveCapabilityCurve().getValue());
+    }
+
     @Test
     public void testUpdateModifyGenerator() throws Exception {
         MvcResult mvcResult;
@@ -984,20 +1040,7 @@ public class ModificationControllerTest {
         var listModifications = modificationRepository.getModifications(TEST_GROUP_ID, true, true);
         assertEquals(1, listModifications.size());
 
-        generatorModificationInfos = GeneratorModificationInfos.builder()
-            .equipmentId(generatorId)
-            .energySource(new AttributeModification<>(EnergySource.SOLAR, OperationType.SET))
-            .equipmentName(new AttributeModification<>("newV1Generator", OperationType.SET))
-            .activePowerSetpoint(new AttributeModification<>(80.0, OperationType.SET))
-            .reactivePowerSetpoint(new AttributeModification<>(40.0, OperationType.SET))
-            .voltageSetpoint(new AttributeModification<>(48.0, OperationType.SET))
-            .voltageRegulationOn(new AttributeModification<>(true, OperationType.SET))
-            .minActivePower(new AttributeModification<>(0., OperationType.SET))
-            .maxActivePower(new AttributeModification<>(100., OperationType.SET))
-            .ratedNominalPower(new AttributeModification<>(220., OperationType.SET))
-            .uuid(listModifications.get(0).getUuid())
-            .type(ModificationType.GENERATOR_MODIFICATION)
-            .build();
+        generatorModificationInfos = buildGeneratorModificationUpdateInfos(listModifications.get(0).getUuid());
         generatorModificationInfosJson = objectWriter.writeValueAsString(generatorModificationInfos);
         uriString = "/v1/modifications/{modificationUUID}/generators-modification";
 
@@ -1007,8 +1050,7 @@ public class ModificationControllerTest {
         var modifications = modificationRepository.getModifications(TEST_GROUP_ID, false, true);
 
         assertEquals(1, modifications.size());
-        modifications.get(0).setDate(listModifications.get(0).getDate()); // this one is modified by sql database
-        assertEquals(generatorModificationInfos, modifications.get(0));
+        checkUpdatedGeneratorModification((GeneratorModificationInfos) modifications.get(0));
     }
 
     @Test
