@@ -980,6 +980,7 @@ public class ModificationControllerTest {
             .reactiveCapabilityCurvePoints(List.of(
                 new ReactiveCapabilityCurveCreationInfos(0., 100., 0.1),
                 new ReactiveCapabilityCurveCreationInfos(0., 100., 0.1)))
+            .droop(new AttributeModification<>(0.1f, OperationType.SET))
             .participate(new AttributeModification<>(true, OperationType.SET))
             .transientReactance(new AttributeModification<>(0.1, OperationType.SET))
             .stepUpTransformerReactance(new AttributeModification<>(0.1, OperationType.SET))
@@ -1015,6 +1016,7 @@ public class ModificationControllerTest {
         assertEquals("regTerminalType", modification.getRegulatingTerminalType().getValue());
         assertEquals("idVl", modification.getRegulatingTerminalVlId().getValue());
         assertEquals(0.1, modification.getQPercent().getValue(), .1);
+        assertEquals(0.1, modification.getDroop().getValue(), .1);
         assertTrue(modification.getReactiveCapabilityCurve().getValue());
     }
 
