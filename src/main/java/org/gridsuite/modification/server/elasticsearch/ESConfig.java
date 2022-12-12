@@ -10,7 +10,6 @@ import org.elasticsearch.client.RestHighLevelClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
 import org.springframework.data.elasticsearch.client.ClientConfiguration.TerminalClientConfigurationBuilder;
 import org.springframework.data.elasticsearch.client.RestClients;
@@ -29,7 +28,6 @@ import java.util.Optional;
 
 @Configuration
 @EnableElasticsearchRepositories
-@Lazy
 public class ESConfig extends AbstractElasticsearchConfiguration {
 
     @Value("#{'${spring.data.elasticsearch.embedded:false}' ? 'localhost' : '${spring.data.elasticsearch.host}'}")
