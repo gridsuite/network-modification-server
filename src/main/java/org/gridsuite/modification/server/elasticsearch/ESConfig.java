@@ -46,11 +46,6 @@ public class ESConfig extends AbstractElasticsearchConfiguration {
     private Optional<String> password;
 
     @Bean
-    public EquipmentInfosService equipmentInfosService(EquipmentInfosRepository equipmentInfosRepository, TombstonedEquipmentInfosRepository tombstonedEquipmentInfosRepository) {
-        return new EquipmentInfosService(equipmentInfosRepository, tombstonedEquipmentInfosRepository);
-    }
-
-    @Bean
     @Override
     @SuppressWarnings("squid:S2095")
     @Nonnull

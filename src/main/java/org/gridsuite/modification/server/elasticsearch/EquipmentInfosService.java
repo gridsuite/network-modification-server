@@ -11,6 +11,7 @@ import org.gridsuite.modification.server.dto.EquipmentInfos;
 import org.gridsuite.modification.server.dto.TombstonedEquipmentInfos;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.lang.NonNull;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
@@ -22,6 +23,8 @@ import java.util.stream.Collectors;
  * @author Slimane Amar <slimane.amar at rte-france.com>
  * @author Nicolas Noir <nicolas.noir at rte-france.com>
  */
+
+@Service
 public class EquipmentInfosService {
     private final EquipmentInfosRepository equipmentInfosRepository;
 
