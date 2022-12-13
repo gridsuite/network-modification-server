@@ -1414,7 +1414,7 @@ public class ModificationControllerTest {
         generatorCreationInfos.setBusOrBusbarSectionId("notFoundBusbarSection");
         generatorCreationInfosJson = objectWriter.writeValueAsString(generatorCreationInfos);
         mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().is4xxClientError()).andReturn();
+            .andExpect(status().is5xxServerError()).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
         assertEquals(resultAsString, new NetworkModificationException(CREATE_GENERATOR_ERROR, "Busbar section notFoundBusbarSection not found.").getMessage());
         generatorCreationInfos.setVoltageLevelId("v2");
