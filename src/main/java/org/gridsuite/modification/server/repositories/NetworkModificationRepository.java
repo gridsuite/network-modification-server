@@ -182,7 +182,7 @@ public class NetworkModificationRepository {
     }
 
     @Transactional // To have the find and delete in the same transaction (atomic)
-    public int deleteModifications(UUID groupUuid, Set<UUID> uuids) {
+    public int deleteModifications(UUID groupUuid, List<UUID> uuids) {
         ModificationGroupEntity groupEntity = getModificationGroup(groupUuid);
         List<ModificationEntity> modifications = getModificationEntityList(groupUuid)
                 .filter(m -> uuids.contains(m.getId()))

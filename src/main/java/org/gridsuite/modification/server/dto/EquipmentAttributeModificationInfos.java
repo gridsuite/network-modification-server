@@ -14,6 +14,7 @@ import com.powsybl.iidm.network.IdentifiableType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
@@ -22,8 +23,12 @@ import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.*;
 import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.EquipmentAttributeModification;
+import org.springframework.lang.NonNull;
 
 import java.util.Map;
+import java.util.Set;
+
+import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -31,6 +36,7 @@ import java.util.Map;
 @SuperBuilder
 @NoArgsConstructor
 @Getter
+@Setter
 @ToString(callSuper = true)
 @Schema(description = "Equipment attribute modification")
 public class EquipmentAttributeModificationInfos extends EquipmentModificationInfos {
@@ -41,6 +47,7 @@ public class EquipmentAttributeModificationInfos extends EquipmentModificationIn
     private Object equipmentAttributeValue;
 
     @Schema(description = "Equipment type")
+    @NonNull
     private IdentifiableType equipmentType;
 
     @Override
@@ -93,5 +100,23 @@ public class EquipmentAttributeModificationInfos extends EquipmentModificationIn
         }
 
         return (EquipmentAttributeModificationEntity<T>) modification;
+    }
+
+    @Override
+    public void check() {
+        super.check();
+        if (equipmentType == IdentifiableType.SWITCH) {
+            checkSwitchStatusModificationInfos();
+        }
+    }
+
+    private void checkSwitchStatusModificationInfos() {
+        if (!equipmentAttributeName.equals("open")) {
+            throw new NetworkModificationException(EQUIPMENT_ATTRIBUTE_NAME_ERROR, "For switch status, the attribute name is only 'open'");
+        }
+        Set<Boolean> possibleValues = Set.of(true, false);
+        if (!possibleValues.contains(equipmentAttributeValue)) {
+            throw new NetworkModificationException(EQUIPMENT_ATTRIBUTE_VALUE_ERROR, "For switch status, the attribute values are only " + possibleValues);
+        }
     }
 }

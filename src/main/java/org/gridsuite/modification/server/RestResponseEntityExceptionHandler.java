@@ -20,14 +20,13 @@ public class RestResponseEntityExceptionHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RestResponseEntityExceptionHandler.class);
 
-    @ExceptionHandler(value = {NetworkModificationException.class})
-    protected ResponseEntity<Object> handleException(RuntimeException exception) {
+    @ExceptionHandler(NetworkModificationException.class)
+    protected ResponseEntity<Object> handleNetworkModificationException(NetworkModificationException exception) {
         if (LOGGER.isErrorEnabled()) {
             LOGGER.error(exception.getMessage(), exception);
         }
-        var networkModificationException = (NetworkModificationException) exception;
         return ResponseEntity
-                .status(networkModificationException.getType().getStatus())
-                .body(networkModificationException.getMessage());
+                .status(exception.getType().getStatus())
+                .body(exception.getMessage());
     }
 }
