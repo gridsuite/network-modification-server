@@ -732,6 +732,7 @@ public class ModificationControllerTest {
                 .reactivePower(60.0)
                 .connectionDirection(ConnectablePosition.Direction.UNDEFINED)
                 .build();
+
         String loadCreationInfosJson = objectWriter.writeValueAsString(loadCreationInfos);
         mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(loadCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();

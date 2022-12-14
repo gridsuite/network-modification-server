@@ -277,5 +277,4 @@
             <classifier>test-binder</classifier>
         </dependency>
     </dependencies>
-
 </project>
