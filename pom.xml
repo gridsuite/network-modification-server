@@ -45,7 +45,7 @@
 
     <properties>
         <java.version>11</java.version>
-        <gridsuite-dependencies.version>20</gridsuite-dependencies.version>
+        <gridsuite-dependencies.version>21</gridsuite-dependencies.version>
         <db-util.version>1.0.5</db-util.version>
         <commons-lang3.version>3.9</commons-lang3.version>
         <log4j2-mock-version>0.0.2</log4j2-mock-version>
@@ -88,13 +88,6 @@
     <dependencyManagement>
         <dependencies>
             <!-- overrides of imports -->
-
-            <!-- HOT FIX for createFeederBay fixes: TO REMOVE WHEN UPGRADING TO GridSuite dependencies version (21) -->
-            <dependency>
-                <groupId>com.powsybl</groupId>
-                <artifactId>powsybl-iidm-modification</artifactId>
-                <version>4.10.2</version>
-            </dependency>
 
             <!-- imports -->
             <dependency>

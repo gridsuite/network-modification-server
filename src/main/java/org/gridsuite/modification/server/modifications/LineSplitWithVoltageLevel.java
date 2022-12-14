@@ -8,6 +8,7 @@ package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.iidm.modification.topology.ConnectVoltageLevelOnLine;
+import com.powsybl.iidm.modification.topology.ConnectVoltageLevelOnLineBuilder;
 import com.powsybl.iidm.network.Line;
 import com.powsybl.iidm.network.Network;
 import org.gridsuite.modification.server.NetworkModificationException;
@@ -35,23 +36,19 @@ public class LineSplitWithVoltageLevel extends AbstractModification {
         }
 
         VoltageLevelCreationInfos mayNewVL = modificationInfos.getMayNewVoltageLevelInfos();
-        String voltageLeveId;
         if (mayNewVL != null) {
             ModificationUtils.getInstance().createVoltageLevelAction(mayNewVL, subReporter, network);
-            voltageLeveId = mayNewVL.getEquipmentId();
-        } else {
-            voltageLeveId = modificationInfos.getExistingVoltageLevelId();
         }
 
-        ConnectVoltageLevelOnLine algo = new ConnectVoltageLevelOnLine(
-            modificationInfos.getPercent(),
-            voltageLeveId,
-            modificationInfos.getBbsOrBusId(),
-            modificationInfos.getNewLine1Id(),
-            modificationInfos.getNewLine1Name(),
-            modificationInfos.getNewLine2Id(),
-            modificationInfos.getNewLine2Name(),
-            line);
+        ConnectVoltageLevelOnLine algo = new ConnectVoltageLevelOnLineBuilder()
+                .withPositionPercent(modificationInfos.getPercent())
+                .withBusbarSectionOrBusId(modificationInfos.getBbsOrBusId())
+                .withLine1Id(modificationInfos.getNewLine1Id())
+                .withLine1Name(modificationInfos.getNewLine1Name())
+                .withLine2Id(modificationInfos.getNewLine2Id())
+                .withLine2Name(modificationInfos.getNewLine2Name())
+                .withLine(line)
+                .build();
 
         algo.apply(network, true, subReporter);
     }

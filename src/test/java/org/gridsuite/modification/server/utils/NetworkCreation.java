@@ -7,13 +7,13 @@
 
 package org.gridsuite.modification.server.utils;
 
+import com.powsybl.iidm.network.*;
+import com.powsybl.iidm.network.extensions.ConnectablePosition;
+import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
+
 import java.util.UUID;
 
-import com.powsybl.iidm.network.*;
-import com.powsybl.iidm.network.extensions.BusbarSectionPositionAdder;
-import com.powsybl.iidm.network.extensions.ConnectablePosition;
-import com.powsybl.iidm.network.extensions.ConnectablePositionAdder;
-import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
+import static org.gridsuite.modification.server.utils.NetworkUtil.*;
 
 public final class NetworkCreation {
     public static final String VARIANT_ID = "variant_1";
@@ -22,7 +22,11 @@ public final class NetworkCreation {
     }
 
     public static Network create(UUID uuid, boolean createHvdcLine) {
-        Network network = new NetworkFactoryImpl().createNetwork(uuid.toString(), "test");
+        return create(uuid, createHvdcLine, new NetworkFactoryImpl());
+    }
+
+    public static Network create(UUID uuid, boolean createHvdcLine, NetworkFactory networkFactory) {
+        Network network = networkFactory.createNetwork(uuid.toString(), "test");
 
         Substation s1 = createSubstation(network, "s1", "s1", Country.FR);
         VoltageLevel v1 = createVoltageLevel(s1, "v1", "v1", TopologyKind.NODE_BREAKER, 380.0);
@@ -194,7 +198,6 @@ public final class NetworkCreation {
         createSwitch(v1, "v1bl3", "v1bl3", SwitchKind.BREAKER, true, false, true, 9, 10);
         createSwitch(v3, "v3dl3", "v3dl3", SwitchKind.DISCONNECTOR, true, false, false, 0, 11);
         createSwitch(v3, "v3bl3", "v3bl3", SwitchKind.BREAKER, true, false, true, 11, 12);
-
         if (createHvdcLine) {
             createHvdcLine(network, "hvdcLine", "hvdcLine", 1, 100, HvdcLine.ConvertersMode.SIDE_1_INVERTER_SIDE_2_RECTIFIER, 225, 500, "v1lcc", "v2vsc");
         }
@@ -261,342 +264,5 @@ public final class NetworkCreation {
         createBus(v2, "bus2", "bus2");
 
         return network;
-    }
-
-    @SuppressWarnings("SameParameterValue")
-    private static Substation createSubstation(Network n, String id, String name, Country country) {
-        return n.newSubstation()
-            .setId(id)
-            .setName(name)
-            .setCountry(country)
-            .add();
-    }
-
-    @SuppressWarnings("SameParameterValue")
-    private static VoltageLevel createVoltageLevel(Substation s, String id, String name,
-                                                   TopologyKind topology, double vNom) {
-        return s.newVoltageLevel()
-            .setId(id)
-            .setName(name)
-            .setTopologyKind(topology)
-            .setNominalV(vNom)
-            .add();
-    }
-
-    private static void createBusBarSection(VoltageLevel vl, String id, String name, int node) {
-        var bbs = vl.getNodeBreakerView().newBusbarSection()
-            .setId(id)
-            .setName(name)
-            .setNode(node)
-            .add();
-        bbs.newExtension(BusbarSectionPositionAdder.class).add();
-    }
-
-    private static void createBus(VoltageLevel vl, String id, String name) {
-        vl.getBusBreakerView().newBus()
-            .setId(id)
-            .setName(name)
-            .add();
-    }
-
-    @SuppressWarnings("SameParameterValue")
-    private static void createSwitch(VoltageLevel vl, String id, String name, SwitchKind kind, boolean retained, boolean open, boolean fictitious, int node1, int node2) {
-        vl.getNodeBreakerView().newSwitch()
-            .setId(id)
-            .setName(name)
-            .setKind(kind)
-            .setRetained(retained)
-            .setOpen(open)
-            .setFictitious(fictitious)
-            .setNode1(node1)
-            .setNode2(node2)
-            .add();
-    }
-
-    private static void createLine(Network network, String id, String name, String voltageLevel1, String voltageLevel2, int node1, int node2,
-                                   double r, double x, double g1, double g2, double b1, double b2,
-                                   String feederName1, int feederOrder1, ConnectablePosition.Direction direction1,
-                                   String feederName2, int feederOrder2, ConnectablePosition.Direction direction2) {
-        var l = network.newLine()
-            .setId(id)
-            .setName(name)
-            .setR(r)
-            .setX(x)
-            .setG1(g1)
-            .setG2(g2)
-            .setB1(b1)
-            .setB2(b2)
-            .setVoltageLevel1(voltageLevel1)
-            .setVoltageLevel2(voltageLevel2)
-            .setNode1(node1)
-            .setNode2(node2)
-            .add();
-
-        l.newExtension(ConnectablePositionAdder.class)
-                .newFeeder1()
-                .withName(feederName1)
-                .withOrder(feederOrder1)
-                .withDirection(direction1).add()
-                .newFeeder2()
-                .withName(feederName2)
-                .withOrder(feederOrder2)
-                .withDirection(direction2).add()
-                .add();
-    }
-
-    @SuppressWarnings("SameParameterValue")
-    private static void createLoad(VoltageLevel vl, String id, String name,
-                                   int node, double p0, double q0, String feederName, int feederOrder, ConnectablePosition.Direction direction) {
-        var l = vl.newLoad()
-            .setId(id)
-            .setName(name)
-            .setNode(node)
-            .setP0(p0)
-            .setQ0(q0)
-            .add();
-        l.newExtension(ConnectablePositionAdder.class)
-                .newFeeder()
-                .withName(feederName)
-                .withOrder(feederOrder)
-                .withDirection(direction).add();
-    }
-
-    private static void createLccConverterStation(VoltageLevel vl, String id, String name,
-                                                  int node, float powerFactor, float lossFactor) {
-        vl.newLccConverterStation()
-            .setId(id)
-            .setName(name)
-            .setNode(node)
-            .setLossFactor(lossFactor)
-            .setPowerFactor(powerFactor)
-            .add();
-    }
-
-    @SuppressWarnings("SameParameterValue")
-    private static void createGenerator(VoltageLevel vl, String id, int node, double targetP, double targetQ, String feederName, int feederOrder, ConnectablePosition.Direction direction) {
-        var g = vl.newGenerator()
-            .setId(id)
-            .setName(id)
-            .setTargetP(targetP)
-            .setTargetQ(targetQ)
-            .setNode(node)
-            .setMinP(-1.1)
-            .setMaxP(1000.0)
-            .setVoltageRegulatorOn(false)
-            .add();
-
-        g.newExtension(ConnectablePositionAdder.class)
-                .newFeeder()
-                .withName(feederName)
-                .withOrder(feederOrder)
-                .withDirection(direction).add();
-    }
-
-    private static void createGeneratorOnBus(VoltageLevel vl, String id, String busId, double targetP, double targetQ) {
-        var g = vl.newGenerator()
-            .setId(id)
-            .setName(id)
-            .setTargetP(targetP)
-            .setTargetQ(targetQ)
-            .setBus(busId)
-            .setConnectableBus(busId)
-            .setMinP(-1.1)
-            .setMaxP(1000.0)
-            .setVoltageRegulatorOn(false)
-            .add();
-    }
-
-    @SuppressWarnings("SameParameterValue")
-    private static TwoWindingsTransformer createTwoWindingsTransformer(Substation s, String id, String name,
-                                                                       double r, double x, double g, double b,
-                                                                       double ratedU1, double ratedU2,
-                                                                       int node1, int node2,
-                                                                       String idVoltageLevel1, String idVoltageLevel2,
-                                                                       String feederName1, int feederOrder1, ConnectablePosition.Direction direction1,
-                                                                       String feederName2, int feederOrder2, ConnectablePosition.Direction direction2) {
-
-        TwoWindingsTransformer t = s.newTwoWindingsTransformer()
-            .setId(id)
-            .setName(name)
-            .setR(r)
-            .setX(x)
-            .setG(g)
-            .setB(b)
-            .setRatedU1(ratedU1)
-            .setRatedU2(ratedU2)
-            .setNode1(node1)
-            .setVoltageLevel1(idVoltageLevel1)
-            .setNode2(node2)
-            .setVoltageLevel2(idVoltageLevel2)
-            .add();
-
-        t.newExtension(ConnectablePositionAdder.class)
-            .newFeeder1()
-            .withName(feederName1)
-            .withOrder(feederOrder1)
-            .withDirection(direction1).add()
-            .newFeeder2()
-            .withName(feederName2)
-            .withOrder(feederOrder2)
-            .withDirection(direction2).add()
-            .add();
-
-        return t;
-    }
-
-    @SuppressWarnings("SameParameterValue")
-    private static ThreeWindingsTransformer createThreeWindingsTransformer(Substation s, String id, String name,
-                                                                           String vl1, String vl2, String vl3,
-                                                                           double r1, double r2, double r3,
-                                                                           double x1, double x2, double x3,
-                                                                           double g1, double b1,
-                                                                           double ratedU1, double ratedU2, double ratedU3,
-                                                                           int node1, int node2, int node3,
-                                                                           String feederName1, int feederOrder1, ConnectablePosition.Direction direction1,
-                                                                           String feederName2, int feederOrder2, ConnectablePosition.Direction direction2,
-                                                                           String feederName3, int feederOrder3, ConnectablePosition.Direction direction3) {
-        ThreeWindingsTransformer t = s.newThreeWindingsTransformer()
-            .setId(id)
-            .setName(name)
-            .newLeg1()
-            .setR(r1)
-            .setX(x1)
-            .setG(g1)
-            .setB(b1)
-            .setRatedU(ratedU1)
-            .setVoltageLevel(vl1)
-            .setNode(node1)
-            .add()
-            .newLeg2()
-            .setR(r2)
-            .setX(x2)
-            .setRatedU(ratedU2)
-            .setVoltageLevel(vl2)
-            .setNode(node2)
-            .add()
-            .newLeg3()
-            .setR(r3)
-            .setX(x3)
-            .setRatedU(ratedU3)
-            .setVoltageLevel(vl3)
-            .setNode(node3)
-            .add()
-            .add();
-
-        t.newExtension(ConnectablePositionAdder.class)
-            .newFeeder1()
-            .withName(feederName1)
-            .withOrder(feederOrder1)
-            .withDirection(direction1).add()
-            .newFeeder2()
-            .withName(feederName2)
-            .withOrder(feederOrder2)
-            .withDirection(direction2).add()
-            .newFeeder3()
-            .withName(feederName3)
-            .withOrder(feederOrder3)
-            .withDirection(direction3).add()
-            .add();
-
-        return t;
-    }
-
-    private static void createShuntCompensator(VoltageLevel vl, String id, String name,
-                                               int node, double targetV, double targetDeadband, boolean voltageRegulatorOn,
-                                               int maximumSectionCount, double bPerSection, double gPerSection, int sectionCount, String feederName, int feederOrder, ConnectablePosition.Direction direction) {
-        var sh = vl.newShuntCompensator()
-            .setId(id)
-            .setName(name)
-            .setNode(node)
-            .setTargetV(targetV)
-            .setTargetDeadband(targetDeadband)
-            .setVoltageRegulatorOn(voltageRegulatorOn)
-            .newLinearModel()
-            .setMaximumSectionCount(maximumSectionCount)
-            .setBPerSection(bPerSection)
-            .setGPerSection(gPerSection)
-            .add()
-            .setSectionCount(sectionCount)
-            .add();
-        sh.newExtension(ConnectablePositionAdder.class)
-                .newFeeder()
-                .withName(feederName)
-                .withOrder(feederOrder)
-                .withDirection(direction).add();
-    }
-
-    private static void createStaticVarCompensator(VoltageLevel vl, String id, String name,
-                                                   int node, StaticVarCompensator.RegulationMode regulationMode, double voltageSetpoint,
-                                                   double reactivePowerSetpoint, double bMin, double bMax) {
-        vl.newStaticVarCompensator()
-            .setId(id)
-            .setName(name)
-            .setRegulationMode(regulationMode)
-            .setVoltageSetpoint(voltageSetpoint)
-            .setReactivePowerSetpoint(reactivePowerSetpoint)
-            .setBmin(bMin)
-            .setBmax(bMax)
-            .setNode(node)
-            .add();
-    }
-
-    private static void createBattery(VoltageLevel vl, String id, String name,
-                                      int node, double minP, double maxP, double targetP, double targetQ) {
-        vl.newBattery()
-            .setId(id)
-            .setName(name)
-            .setMinP(minP)
-            .setMaxP(maxP)
-            .setTargetP(targetP)
-            .setTargetQ(targetQ)
-            .setNode(node)
-            .add();
-    }
-
-    private static void createDanglingLine(VoltageLevel vl, String id, String name,
-                                           int node, double r, double x, double b, double g, double p0, double q0, String ucteXnodeCode) {
-        vl.newDanglingLine()
-            .setId(id)
-            .setName(name)
-            .setR(r)
-            .setX(x)
-            .setB(b)
-            .setG(g)
-            .setP0(p0)
-            .setQ0(q0)
-            .setUcteXnodeCode(ucteXnodeCode)
-            .setNode(node)
-            .add();
-    }
-
-    private static void createVscConverterStation(VoltageLevel vl, String id, String name,
-                                                  int node, float lossFactor,
-                                                  double reactivePowerSetpoint, boolean voltageRegulatorOn, double voltageSetpoint) {
-        vl.newVscConverterStation()
-            .setId(id)
-            .setName(name)
-            .setNode(node)
-            .setLossFactor(lossFactor)
-            .setReactivePowerSetpoint(reactivePowerSetpoint)
-            .setVoltageRegulatorOn(voltageRegulatorOn)
-            .setVoltageSetpoint(voltageSetpoint)
-            .add();
-    }
-
-    private static void createHvdcLine(Network network, String id, String name,
-                                       double r, double maxP, HvdcLine.ConvertersMode hvdcLineConvertersMode,
-                                       double nominalV, double activePowerSetpoint,
-                                       String converterStationId1, String converterStationId2) {
-        network.newHvdcLine()
-            .setId(id)
-            .setName(name)
-            .setR(r)
-            .setMaxP(maxP)
-            .setConvertersMode(hvdcLineConvertersMode)
-            .setNominalV(nominalV)
-            .setActivePowerSetpoint(activePowerSetpoint)
-            .setConverterStationId1(converterStationId1)
-            .setConverterStationId2(converterStationId2)
-            .add();
     }
 }

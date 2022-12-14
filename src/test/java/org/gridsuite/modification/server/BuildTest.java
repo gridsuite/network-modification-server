@@ -485,8 +485,8 @@ public class BuildTest {
         AtomicReference<UUID> lineModificationEntityUuid = new AtomicReference<>();
         AtomicReference<UUID> loadCreationEntityUuid = new AtomicReference<>();
         AtomicReference<UUID> equipmentDeletionEntityUuid = new AtomicReference<>();
-        List<ModificationInfos> modificationsInfos = networkModificationService.getModifications(TEST_GROUP_ID, false, true);
-        modificationsInfos.addAll(networkModificationService.getModifications(TEST_GROUP_ID_2, false, true));
+        List<ModificationInfos> modificationsInfos = networkModificationService.getNetworkModifications(TEST_GROUP_ID, false, true);
+        modificationsInfos.addAll(networkModificationService.getNetworkModifications(TEST_GROUP_ID_2, false, true));
         modificationsInfos.forEach(modificationInfos -> {
             if (modificationInfos.getType().equals(ModificationType.EQUIPMENT_ATTRIBUTE_MODIFICATION)) {
                 if (((EquipmentAttributeModificationInfos) modificationInfos).getEquipmentId().equals("line1")) {

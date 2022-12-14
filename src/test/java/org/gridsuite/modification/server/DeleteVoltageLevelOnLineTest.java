@@ -1,8 +1,18 @@
+/**
+ * Copyright (c) 2022, RTE (http://www.rte-france.com)
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 package org.gridsuite.modification.server;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.powsybl.commons.reporter.ReporterModel;
+import com.powsybl.iidm.modification.NetworkModification;
+import com.powsybl.iidm.modification.topology.CreateLineOnLineBuilder;
+import com.powsybl.iidm.network.Line;
+import com.powsybl.iidm.network.LineAdder;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.vladmihalcea.sql.SQLStatementCountValidator;
@@ -12,7 +22,7 @@ import org.gridsuite.modification.server.entities.equipment.modification.DeleteV
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.NetworkModificationService;
 import org.gridsuite.modification.server.utils.MatcherDeleteVoltageLevelOnLineInfos;
-import org.gridsuite.modification.server.utils.NetworkCreation;
+import org.gridsuite.modification.server.utils.NetworkWithTeePoint;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -35,7 +45,6 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -43,7 +52,7 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
 import static org.gridsuite.modification.server.utils.TestUtils.assertRequestsCount;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
@@ -53,6 +62,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+/**
+ * @author bendaamerahm <ahmed.bendaamer at rte-france.com>
+ */
 @RunWith(SpringRunner.class)
 @AutoConfigureMockMvc
 @SpringBootTest()
@@ -60,11 +72,11 @@ public class DeleteVoltageLevelOnLineTest {
     private static final UUID TEST_NETWORK_ID = UUID.fromString("7928181c-7977-4592-ba19-88027e4254e4");
     private static final UUID TEST_GROUP_ID = UUID.randomUUID();
     private static final UUID TEST_REPORT_ID = UUID.randomUUID();
-    public static final String CREATE_URI_STRING = "/v1/networks/{networkUuid}/delete-voltage-level-on-line?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
-    private static final String UPDATE_URI_STRING = "/v1/modifications/%s/delete-voltage-level-on-line-creation";
-    private static final String DELETE_URI_STRING = "/v1/groups/" + TEST_GROUP_ID + "/modifications";
     private static final String COPY_URI_STRING = "/v1/groups/" + TEST_GROUP_ID + "?action=COPY";
-
+    private static final String URI_NETWORK_MODIF_BASE = "/v1/network-modifications";
+    private static final String URI_NETWORK_MODIF_PARAMS = "&groupUuid=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
+    private static final String URI_NETWORK_MODIF = URI_NETWORK_MODIF_BASE + "?networkUuid=" + TEST_NETWORK_ID + URI_NETWORK_MODIF_PARAMS;
+    protected static final String URI_NETWORK_MODIF_GET_PUT = URI_NETWORK_MODIF_BASE + "/";
     @Autowired
     private MockMvc mockMvc;
 
@@ -92,8 +104,11 @@ public class DeleteVoltageLevelOnLineTest {
     @Before
     public void setUp() {
         objectWriter = mapper.writer().withDefaultPrettyPrinter();
-        network = NetworkCreation.create(TEST_NETWORK_ID, true);
-        when(networkStoreService.getNetwork(TEST_NETWORK_ID)).then((Answer<Network>) invocation -> network);
+        when(networkStoreService.getNetwork(TEST_NETWORK_ID)).then((Answer<Network>) invocation -> {
+            network = NetworkWithTeePoint.create(TEST_NETWORK_ID);
+            return network;
+        });
+
         networkModificationService.setReportServerRest(reportServerRest);
         given(reportServerRest.exchange(eq("/v1/reports/" + TEST_REPORT_ID), eq(HttpMethod.PUT), ArgumentMatchers.any(HttpEntity.class), eq(ReporterModel.class)))
                 .willReturn(new ResponseEntity<>(HttpStatus.OK));
@@ -110,19 +125,41 @@ public class DeleteVoltageLevelOnLineTest {
     }
 
     @Test
-    public void createTest() throws Exception {
+    public void createWithInvalidLineIdTest() throws Exception {
         MvcResult mvcResult;
         String resultAsString;
-
-        // test create
-        createDeleteVoltageLevelOnLine();
         // test create with absent_line_id
-        DeleteVoltageLevelOnLineInfos deleteVoltageLevelOnAbsentLineInfos = new DeleteVoltageLevelOnLineInfos("absent_line_id", "line2", "line3", "nl4", "NewLine4");
-        String deleteVoltageLevelOnAbsentLineInfosJson = objectWriter.writeValueAsString(deleteVoltageLevelOnAbsentLineInfos);
-        mvcResult = mockMvc.perform(post(CREATE_URI_STRING, TEST_NETWORK_ID).content(deleteVoltageLevelOnAbsentLineInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
+        DeleteVoltageLevelOnLineInfos deleteVoltageLevelOnLineInfos = DeleteVoltageLevelOnLineInfos.builder()
+                .type(ModificationType.DELETE_VOLTAGE_LEVEL_ON_LINE)
+                .lineToAttachTo1Id("l1")
+                .lineToAttachTo2Id("l2")
+                .attachedLineId("absent_line_id")
+                .replacingLine1Id("replacementLineId")
+                .build();
+        String json = objectWriter.writeValueAsString(deleteVoltageLevelOnLineInfos);
+        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(json).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().is5xxServerError()).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
-        //assertEquals("LINE_NOT_FOUND : Line absent_line_id is not found", resultAsString);
+        assertEquals("DELETE_VOLTAGE_LEVEL_ON_LINE_ERROR : Line absent_line_id is not found", resultAsString);
+    }
+
+    @Test
+    public void createWithNoAttachmentPointTest() throws Exception {
+        MvcResult mvcResult;
+        String resultAsString;
+        // test create with no attachment point
+        DeleteVoltageLevelOnLineInfos deleteVoltageLevelOnLineInfos = DeleteVoltageLevelOnLineInfos.builder()
+                .type(ModificationType.DELETE_VOLTAGE_LEVEL_ON_LINE)
+                .lineToAttachTo1Id("l1")
+                .lineToAttachTo2Id("l1")
+                .attachedLineId("l1")
+                .replacingLine1Id("replacementLineId")
+                .build();
+        String json = objectWriter.writeValueAsString(deleteVoltageLevelOnLineInfos);
+        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(json).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().is5xxServerError()).andReturn();
+        resultAsString = mvcResult.getResponse().getContentAsString();
+        assertEquals("DELETE_VOLTAGE_LEVEL_ON_LINE_ERROR : Unable to find the attachment point and the tapped voltage level from lines l1, l1 and l1", resultAsString);
     }
 
     @Test
@@ -136,7 +173,7 @@ public class DeleteVoltageLevelOnLineTest {
 
         // 2- Then update it
         DeleteVoltageLevelOnLineInfos deleteVoltageLevelOnLineInfos = DeleteVoltageLevelOnLineInfos.builder()
-                .type(ModificationType.LINE_ATTACH_TO_VOLTAGE_LEVEL)
+                .type(ModificationType.DELETE_VOLTAGE_LEVEL_ON_LINE)
                 .lineToAttachTo1Id("line00")
                 .lineToAttachTo2Id("line11")
                 .attachedLineId("line22")
@@ -144,7 +181,7 @@ public class DeleteVoltageLevelOnLineTest {
                 .replacingLine1Name("replacingLine2")
                 .build();
         String json = objectWriter.writeValueAsString(deleteVoltageLevelOnLineInfos);
-        mockMvc.perform(put(String.format(UPDATE_URI_STRING, modificationToUpdate)).content(json).contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(put(URI_NETWORK_MODIF_GET_PUT + modificationToUpdate).content(json).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
         List<DeleteVoltageLevelOnLineInfos> modifications = getModifications();
@@ -165,10 +202,13 @@ public class DeleteVoltageLevelOnLineTest {
 
         List<DeleteVoltageLevelOnLineInfos> modifications = getModifications();
         assertEquals(1, modifications.size());
-        DeleteVoltageLevelOnLineInfos firstModification = modifications.get(0);
+        UUID modificationUuid = modificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0).getUuid();
 
         // 2- then remove it
-        mockMvc.perform(delete(DELETE_URI_STRING).queryParam("modificationsUuids", firstModification.getUuid().toString())).andExpect(status().isOk());
+        mockMvc.perform(delete(URI_NETWORK_MODIF)
+                        .queryParam("groupUuid", TEST_GROUP_ID.toString())
+                        .queryParam("uuids", modificationUuid.toString()))
+                .andExpect(status().isOk()).andReturn();
         assertEquals(0, getModifications().size());
     }
 
@@ -210,7 +250,7 @@ public class DeleteVoltageLevelOnLineTest {
                         deleteVoltageLevelOnLineToEntity2.toModificationInfos()));
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.deleteModifications(TEST_GROUP_ID, Set.of(deleteVoltageLevelOnLineToEntity1.getId(),
+        networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(deleteVoltageLevelOnLineToEntity1.getId(),
                 deleteVoltageLevelOnLineToEntity2.getId()));
         assertRequestsCount(2, 0, 0, 4);
 
@@ -224,22 +264,37 @@ public class DeleteVoltageLevelOnLineTest {
     }
 
     private void createDeleteVoltageLevelOnLine() throws Exception {
-        DeleteVoltageLevelOnLineInfos lineAttachToVL = DeleteVoltageLevelOnLineInfos.builder()
-                .type(ModificationType.LINE_ATTACH_TO_VOLTAGE_LEVEL)
-                .lineToAttachTo1Id("line1")
-                .lineToAttachTo2Id("line2")
-                .attachedLineId("line3")
-                .replacingLine1Id("replacingLine1")
-                .replacingLine1Name("replacingLine1")
-                .build();
+        var network = networkStoreService.getNetwork(TEST_NETWORK_ID);
+        LineAdder lineAdder = network.newLine()
+                .setId("testLineId1")
+                .setName("testLine")
+                .setVoltageLevel1("v1")
+                .setVoltageLevel2("v2")
+                .setNode1(1)
+                .setNode2(2)
+                .setR(10)
+                .setX(12)
+                .setG1(0.0)
+                .setB1(0.0)
+                .setG2(0.0)
+                .setB2(0.0);
+        Line line = network.getLine("l3");
 
-        String json = objectWriter.writeValueAsString(lineAttachToVL);
-        mockMvc.perform(post(CREATE_URI_STRING, TEST_NETWORK_ID).content(json).contentType(MediaType.APPLICATION_JSON))
+        NetworkModification modification = new CreateLineOnLineBuilder().withBusbarSectionOrBusId("bbs2").withLine(line).withLineAdder(lineAdder).build();
+        modification.apply(network);
+
+        DeleteVoltageLevelOnLineInfos deleteVoltageLevelOnLineInfos = DeleteVoltageLevelOnLineInfos.builder()
+                .type(ModificationType.DELETE_VOLTAGE_LEVEL_ON_LINE)
+                .lineToAttachTo1Id("l1")
+                .lineToAttachTo2Id("l2")
+                .attachedLineId("l3")
+                .replacingLine1Id("replacementLineId")
+                .build();
+        String json = objectWriter.writeValueAsString(deleteVoltageLevelOnLineInfos);
+        mockMvc.perform(post(URI_NETWORK_MODIF).content(json).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         // new equipments in the network:
-        assertNotNull(network.getLine("line1"));
-        assertNotNull(network.getLine("line2"));
-        assertNotNull(network.getLine("line3"));
+        assertNull(network.getLine("l3"));
     }
 
     private List<DeleteVoltageLevelOnLineInfos> getModifications() {
@@ -250,5 +305,4 @@ public class DeleteVoltageLevelOnLineTest {
     private DeleteVoltageLevelOnLineInfos getDeleteVoltageLevelOnLineModification(UUID modificationUuid) {
         return (DeleteVoltageLevelOnLineInfos) networkModificationRepository.getModificationInfo(modificationUuid);
     }
-
 }

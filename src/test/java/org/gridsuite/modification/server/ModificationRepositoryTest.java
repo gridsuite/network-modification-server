@@ -15,7 +15,6 @@ import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationGroupEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.*;
 import org.gridsuite.modification.server.entities.equipment.modification.BranchStatusModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.DeleteVoltageLevelOnLineEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.LinesAttachToSplitLinesEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.LineAttachToVoltageLevelEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.LineSplitWithVoltageLevelEntity;
@@ -155,9 +154,9 @@ public class ModificationRepositoryTest {
         assertEquals(6, networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
         assertEquals(List.of(TEST_GROUP_ID), this.networkModificationRepository.getModificationGroupsUuids());
 
-        networkModificationRepository.deleteModifications(TEST_GROUP_ID, Set.of());
+        networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of());
         assertEquals(6, networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
-        networkModificationRepository.deleteModifications(TEST_GROUP_ID, Set.of(stringModifEntity.getId(), boolModifEntity.getId()));
+        networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(stringModifEntity.getId(), boolModifEntity.getId()));
         assertEquals(4, networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
 
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
@@ -216,7 +215,7 @@ public class ModificationRepositoryTest {
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(modifEntity1, modifEntity2));
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.deleteModifications(TEST_GROUP_ID, Set.of(modifEntity1.getId()));
+        networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(modifEntity1.getId()));
         assertRequestsCount(2, 0, 1, 2);
 
         SQLStatementCountValidator.reset();
@@ -252,7 +251,7 @@ public class ModificationRepositoryTest {
         assertEquals(List.of(TEST_GROUP_ID), this.networkModificationRepository.getModificationGroupsUuids());
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.deleteModifications(TEST_GROUP_ID, Set.of(createLoadEntity2.getId(), createLoadEntity3.getId()));
+        networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(createLoadEntity2.getId(), createLoadEntity3.getId()));
         assertRequestsCount(2, 0, 1, 4);
 
         SQLStatementCountValidator.reset();
@@ -292,7 +291,7 @@ public class ModificationRepositoryTest {
         assertEquals(List.of(TEST_GROUP_ID), this.networkModificationRepository.getModificationGroupsUuids());
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.deleteModifications(TEST_GROUP_ID, Set.of(createGeneratorEntity2.getId(), createGeneratorEntity3.getId()));
+        networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(createGeneratorEntity2.getId(), createGeneratorEntity3.getId()));
         assertRequestsCount(2, 0, 1, 6);
 
         SQLStatementCountValidator.reset();
@@ -341,7 +340,7 @@ public class ModificationRepositoryTest {
         assertEquals(List.of(TEST_GROUP_ID), this.networkModificationRepository.getModificationGroupsUuids());
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.deleteModifications(TEST_GROUP_ID, Set.of(createShuntCompensatorEntity2.getId()));
+        networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(createShuntCompensatorEntity2.getId()));
         assertRequestsCount(2, 0, 1, 2);
 
         SQLStatementCountValidator.reset();
@@ -383,7 +382,7 @@ public class ModificationRepositoryTest {
         assertEquals(List.of(TEST_GROUP_ID), this.networkModificationRepository.getModificationGroupsUuids());
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.deleteModifications(TEST_GROUP_ID, Set.of(createLineEntity2.getId(), createLineEntity3.getId()));
+        networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(createLineEntity2.getId(), createLineEntity3.getId()));
         assertRequestsCount(4, 0, 2, 6);
 
         SQLStatementCountValidator.reset();
@@ -433,7 +432,7 @@ public class ModificationRepositoryTest {
         assertEquals(List.of(TEST_GROUP_ID), this.networkModificationRepository.getModificationGroupsUuids());
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.deleteModifications(TEST_GROUP_ID, Set.of(createTwoWindingsTransformerEntity1.getId(), createTwoWindingsTransformerEntity2.getId()));
+        networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(createTwoWindingsTransformerEntity1.getId(), createTwoWindingsTransformerEntity2.getId()));
         assertRequestsCount(4, 0, 2, 8);
 
         SQLStatementCountValidator.reset();
@@ -645,7 +644,7 @@ public class ModificationRepositoryTest {
         assertEquals(List.of(TEST_GROUP_ID), this.networkModificationRepository.getModificationGroupsUuids());
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.deleteModifications(TEST_GROUP_ID, Set.of(groovyScriptModificationEntity2.getId(), groovyScriptModificationEntity3.getId()));
+        networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(groovyScriptModificationEntity2.getId(), groovyScriptModificationEntity3.getId()));
         assertRequestsCount(2, 0, 1, 4);
 
         SQLStatementCountValidator.reset();
@@ -684,7 +683,7 @@ public class ModificationRepositoryTest {
         assertEquals(List.of(TEST_GROUP_ID), this.networkModificationRepository.getModificationGroupsUuids());
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.deleteModifications(TEST_GROUP_ID, Set.of(createSubstationEntity2.getId(), createSubstationEntity3.getId()));
+        networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(createSubstationEntity2.getId(), createSubstationEntity3.getId()));
         assertRequestsCount(2, 0, 1, 4);
 
         SQLStatementCountValidator.reset();
@@ -723,7 +722,7 @@ public class ModificationRepositoryTest {
             MatcherVoltageLevelCreationInfos.createMatcherVoltageLevelCreationInfos(createVoltLvlEntity1.toVoltageLevelCreationInfos()));
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.deleteModifications(TEST_GROUP_ID, Set.of(createVoltLvlEntity1.getId()));
+        networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(createVoltLvlEntity1.getId()));
         assertRequestsCount(2, 0, 0, 4);
 
         SQLStatementCountValidator.reset();
@@ -825,7 +824,7 @@ public class ModificationRepositoryTest {
                         lineSplitEntity2.toLineSplitWithVoltageLevelInfos()));
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.deleteModifications(TEST_GROUP_ID, Set.of(lineSplitEntity1.getId(),
+        networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(lineSplitEntity1.getId(),
                 voltageLevelCreationEntity.getId(),
                 lineSplitEntity2.getId()));
         assertRequestsCount(3, 0, 0, 12);
@@ -868,7 +867,7 @@ public class ModificationRepositoryTest {
                         lineAttachToEntity2.toLineAttachToVoltageLevelInfos()));
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.deleteModifications(TEST_GROUP_ID, Set.of(lineAttachToEntity1.getId(),
+        networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(lineAttachToEntity1.getId(),
                 lineAttachToEntity2.getId()));
         assertRequestsCount(2, 0, 0, 12);
 
@@ -903,7 +902,7 @@ public class ModificationRepositoryTest {
                         linesAttachToEntity2.toModificationInfos()));
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.deleteModifications(TEST_GROUP_ID, Set.of(linesAttachToEntity1.getId(),
+        networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(linesAttachToEntity1.getId(),
                 linesAttachToEntity2.getId()));
         assertRequestsCount(2, 0, 0, 4);
 
