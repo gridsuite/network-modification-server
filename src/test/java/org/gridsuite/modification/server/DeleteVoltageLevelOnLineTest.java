@@ -6,7 +6,6 @@
  */
 package org.gridsuite.modification.server;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.powsybl.commons.reporter.ReporterModel;
@@ -22,7 +21,6 @@ import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.DeleteVoltageLevelOnLineEntity;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.NetworkModificationService;
-import org.gridsuite.modification.server.utils.MatcherDeleteVoltageLevelOnLineInfos;
 import org.gridsuite.modification.server.utils.NetworkWithTeePoint;
 import org.junit.After;
 import org.junit.Before;
