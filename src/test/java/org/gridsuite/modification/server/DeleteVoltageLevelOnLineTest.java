@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.powsybl.commons.reporter.ReporterModel;
@@ -49,6 +50,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_GROUP_NOT_FOUND;
+import static org.gridsuite.modification.server.utils.MatcherDeleteVoltageLevelOnLineInfos.createMatcherDeleteVoltageLevelOnLineInfos;
 import static org.gridsuite.modification.server.utils.TestUtils.assertRequestsCount;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
@@ -61,7 +63,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 /**
  * @author bendaamerahm <ahmed.bendaamer at rte-france.com>
  */
@@ -77,6 +79,7 @@ public class DeleteVoltageLevelOnLineTest {
     private static final String URI_NETWORK_MODIF_PARAMS = "&groupUuid=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
     private static final String URI_NETWORK_MODIF = URI_NETWORK_MODIF_BASE + "?networkUuid=" + TEST_NETWORK_ID + URI_NETWORK_MODIF_PARAMS;
     protected static final String URI_NETWORK_MODIF_GET_PUT = URI_NETWORK_MODIF_BASE + "/";
+
     @Autowired
     private MockMvc mockMvc;
 
@@ -165,7 +168,7 @@ public class DeleteVoltageLevelOnLineTest {
     @Test
     public void testUpdate() throws Exception {
         // 1- First create a modification
-        createDeleteVoltageLevelOnLine();
+        createTest();
 
         List<DeleteVoltageLevelOnLineInfos> modificationsAfterCreate = getModifications();
         assertEquals(1, modificationsAfterCreate.size());
@@ -198,7 +201,7 @@ public class DeleteVoltageLevelOnLineTest {
     @Test
     public void testDelete() throws Exception {
         // 1- First create a modification
-        createDeleteVoltageLevelOnLine();
+        createTest();
 
         List<DeleteVoltageLevelOnLineInfos> modifications = getModifications();
         assertEquals(1, modifications.size());
@@ -215,7 +218,7 @@ public class DeleteVoltageLevelOnLineTest {
     @Test
     public void testCopy() throws Exception {
         // 1- First create 1 modification
-        createDeleteVoltageLevelOnLine();
+        createTest();
 
         List<DeleteVoltageLevelOnLineInfos> modifications = getModifications();
         assertEquals(1, modifications.size());
@@ -242,11 +245,11 @@ public class DeleteVoltageLevelOnLineTest {
         assertEquals(2, modificationInfos.size());
 
         assertThat(getDeleteVoltageLevelOnLineModification(modificationInfos.get(0).getUuid()),
-                MatcherDeleteVoltageLevelOnLineInfos.createMatcherDeleteVoltageLevelOnLineInfos(
+                createMatcherDeleteVoltageLevelOnLineInfos(
                         deleteVoltageLevelOnLineToEntity1.toModificationInfos()));
 
         assertThat(getDeleteVoltageLevelOnLineModification(modificationInfos.get(1).getUuid()),
-                MatcherDeleteVoltageLevelOnLineInfos.createMatcherDeleteVoltageLevelOnLineInfos(
+                createMatcherDeleteVoltageLevelOnLineInfos(
                         deleteVoltageLevelOnLineToEntity2.toModificationInfos()));
 
         SQLStatementCountValidator.reset();
@@ -263,7 +266,27 @@ public class DeleteVoltageLevelOnLineTest {
         );
     }
 
-    private void createDeleteVoltageLevelOnLine() throws Exception {
+    @Test
+    public void readTest() throws Exception {
+        // 1- First create 1 modification
+        createTest();
+        DeleteVoltageLevelOnLineInfos toCompareWith = DeleteVoltageLevelOnLineInfos.builder()
+                .type(ModificationType.DELETE_VOLTAGE_LEVEL_ON_LINE)
+                .lineToAttachTo1Id("l1")
+                .lineToAttachTo2Id("l2")
+                .attachedLineId("l3")
+                .replacingLine1Id("replacementLineId")
+                .build();
+        List<DeleteVoltageLevelOnLineInfos> modifications = getModifications();
+        assertEquals(1, modifications.size());
+        UUID modificationUuid = modificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0).getUuid();
+        // 2- Perform get request to get modification
+        mockMvc.perform(get(URI_NETWORK_MODIF_GET_PUT + modificationUuid))
+                .andExpect(status().isOk()).andReturn();
+    }
+
+    @Test
+    public void createTest() throws Exception {
         var network = networkStoreService.getNetwork(TEST_NETWORK_ID);
         LineAdder lineAdder = network.newLine()
                 .setId("testLineId1")
