@@ -33,6 +33,7 @@ import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.*;
 import org.gridsuite.modification.server.entities.equipment.deletion.EquipmentDeletionEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.DeleteAttachingLineEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.DeleteVoltageLevelOnLineEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
@@ -551,6 +552,8 @@ public class NetworkModificationService {
                 return createLineStatusModification(networkUuid, variantId, groupUuid, reportUuid, reporterId, (BranchStatusModificationInfos) modificationInfos);
             case DELETE_VOLTAGE_LEVEL_ON_LINE:
                 return createDeleteVoltageLevelOnLineCreation(networkUuid, variantId, groupUuid, reportUuid, reporterId, (DeleteVoltageLevelOnLineInfos) modificationInfos);
+            case DELETE_ATTACHING_LINE:
+                return createDeleteAttachingLineCreation(networkUuid, variantId, groupUuid, reportUuid, reporterId, (DeleteAttachingLineInfos) modificationInfos);
             default:
                 throw new NetworkModificationException(TYPE_MISMATCH);
         }
@@ -594,6 +597,9 @@ public class NetworkModificationService {
                 break;
             case DELETE_VOLTAGE_LEVEL_ON_LINE:
                 updateDeleteVoltageLevelOnLineCreation(modificationUuid, (DeleteVoltageLevelOnLineInfos) modificationInfos);
+                break;
+            case DELETE_ATTACHING_LINE:
+                updateDeleteAttachingLineCreation(modificationUuid, (DeleteAttachingLineInfos) modificationInfos);
                 break;
             default:
                 throw new NetworkModificationException(TYPE_MISMATCH);
@@ -1588,6 +1594,7 @@ public class NetworkModificationService {
                 case LOAD_CREATION:
                 case LINE_SPLIT_WITH_VOLTAGE_LEVEL:
                 case DELETE_VOLTAGE_LEVEL_ON_LINE:
+                case DELETE_ATTACHING_LINE:
                     // Generic form
                     return handleModification(infos, listener, groupUuid, reportUuid, reporterId);
 
@@ -1839,6 +1846,13 @@ public class NetworkModificationService {
         }
     }
 
+    private void assertDeleteAttachingLineInfosNotEmpty(DeleteAttachingLineInfos deleteAttachingLineInfos) {
+        if (deleteAttachingLineInfos == null) {
+            throw new NetworkModificationException(DELETE_ATTACHING_LINE_ERROR,
+                    "Missing required attributes to delete attaching line");
+        }
+    }
+
     private List<ModificationInfos> execCreateLineAttachToVoltageLevelCreation(NetworkStoreListener listener,
                                                                                LineAttachToVoltageLevelInfos lineAttachToVoltageLevelInfos,
                                                                                UUID reportUuid, String reporterId) {
@@ -1964,6 +1978,14 @@ public class NetworkModificationService {
         return handleModification(deleteVoltageLevelOnLineInfos, listener, groupUuid, reportUuid, reporterId).stream().map(ModificationInfos.class::cast).collect(Collectors.toList());
     }
 
+    public List<ModificationInfos> createDeleteAttachingLineCreation(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId,
+                                                                          DeleteAttachingLineInfos deleteAttachingLineInfos) {
+        assertDeleteAttachingLineInfosNotEmpty(deleteAttachingLineInfos);
+        ModificationNetworkInfos networkInfos = getNetworkModificationInfos(networkUuid, variantId);
+        NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
+        return handleModification(deleteAttachingLineInfos, listener, groupUuid, reportUuid, reporterId).stream().map(ModificationInfos.class::cast).collect(Collectors.toList());
+    }
+
     public void updateLineAttachToVoltageLevelCreation(UUID modificationUuid, LineAttachToVoltageLevelInfos lineAttachToVoltageLevelInfos) {
         assertLineAttachToVoltageLevelInfosNotEmpty(lineAttachToVoltageLevelInfos);
 
@@ -2043,12 +2065,32 @@ public class NetworkModificationService {
         DeleteVoltageLevelOnLineEntity updatedEntity = DeleteVoltageLevelOnLineEntity.toEntity(
                 deleteVoltageLevelOnLineInfos.getLineToAttachTo1Id(),
                 deleteVoltageLevelOnLineInfos.getLineToAttachTo2Id(),
-                deleteVoltageLevelOnLineInfos.getAttachedLineId(),
                 deleteVoltageLevelOnLineInfos.getReplacingLine1Id(),
                 deleteVoltageLevelOnLineInfos.getReplacingLine1Name()
         );
         updatedEntity.setId(modificationUuid);
         updatedEntity.setGroup(deleteVoltageLevelOnLineEntity.get().getGroup());
+        this.networkModificationRepository.updateModification(updatedEntity);
+    }
+
+    public void updateDeleteAttachingLineCreation(UUID modificationUuid, DeleteAttachingLineInfos deleteAttachingLineInfos) {
+        assertDeleteAttachingLineInfosNotEmpty(deleteAttachingLineInfos);
+
+        Optional<ModificationEntity>  deleteAttachingLineEntity = this.modificationRepository.findById(modificationUuid);
+
+        if (deleteAttachingLineEntity.isEmpty()) {
+            throw new NetworkModificationException(DELETE_ATTACHING_LINE_NOT_FOUND, "Delete attaching line not found");
+        }
+
+        DeleteAttachingLineEntity updatedEntity = DeleteAttachingLineEntity.toEntity(
+                deleteAttachingLineInfos.getLineToAttachTo1Id(),
+                deleteAttachingLineInfos.getLineToAttachTo2Id(),
+                deleteAttachingLineInfos.getAttachedLineId(),
+                deleteAttachingLineInfos.getReplacingLine1Id(),
+                deleteAttachingLineInfos.getReplacingLine1Name()
+        );
+        updatedEntity.setId(modificationUuid);
+        updatedEntity.setGroup(deleteAttachingLineEntity.get().getGroup());
         this.networkModificationRepository.updateModification(updatedEntity);
     }
 

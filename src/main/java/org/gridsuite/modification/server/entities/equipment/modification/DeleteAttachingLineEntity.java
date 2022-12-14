@@ -9,7 +9,7 @@ package org.gridsuite.modification.server.entities.equipment.modification;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.ModificationType;
-import org.gridsuite.modification.server.dto.DeleteVoltageLevelOnLineInfos;
+import org.gridsuite.modification.server.dto.DeleteAttachingLineInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 
@@ -23,8 +23,8 @@ import javax.persistence.Table;
 @NoArgsConstructor
 @Getter
 @Entity
-@Table(name = "DeleteVoltageLevelOnLine")
-public class DeleteVoltageLevelOnLineEntity extends ModificationEntity {
+@Table(name = "DeleteAttachingLine")
+public class DeleteAttachingLineEntity extends ModificationEntity {
 
     @Column
     private String lineToAttachTo1Id;
@@ -33,15 +33,19 @@ public class DeleteVoltageLevelOnLineEntity extends ModificationEntity {
     private String lineToAttachTo2Id;
 
     @Column
+    private String attachedLineId;
+
+    @Column
     private String replacingLine1Id;
 
     @Column
     private String replacingLine1Name;
 
-    public DeleteVoltageLevelOnLineEntity(String lineToAttachTo1Id, String lineToAttachTo2Id, String replacingLine1Id, String replacingLine1Name) {
-        super(ModificationType.DELETE_VOLTAGE_LEVEL_ON_LINE);
+    public DeleteAttachingLineEntity(String lineToAttachTo1Id, String lineToAttachTo2Id, String attachedLineId, String replacingLine1Id, String replacingLine1Name) {
+        super(ModificationType.DELETE_ATTACHING_LINE);
         this.lineToAttachTo1Id = lineToAttachTo1Id;
         this.lineToAttachTo2Id = lineToAttachTo2Id;
+        this.attachedLineId = attachedLineId;
         this.replacingLine1Id = replacingLine1Id;
         this.replacingLine1Name = replacingLine1Name;
     }
@@ -49,32 +53,34 @@ public class DeleteVoltageLevelOnLineEntity extends ModificationEntity {
     @Override
     public void update(ModificationInfos modificationInfos) {
         super.update(modificationInfos);
-        DeleteVoltageLevelOnLineInfos deleteVoltageLevelOnLineInfos = (DeleteVoltageLevelOnLineInfos) modificationInfos;
+        DeleteAttachingLineInfos deleteAttachingLineInfos = (DeleteAttachingLineInfos) modificationInfos;
 
-        lineToAttachTo1Id = deleteVoltageLevelOnLineInfos.getLineToAttachTo1Id();
-        lineToAttachTo2Id = deleteVoltageLevelOnLineInfos.getLineToAttachTo2Id();
-        replacingLine1Id = deleteVoltageLevelOnLineInfos.getReplacingLine1Id();
-        replacingLine1Name = deleteVoltageLevelOnLineInfos.getReplacingLine1Name();
+        lineToAttachTo1Id = deleteAttachingLineInfos.getLineToAttachTo1Id();
+        lineToAttachTo2Id = deleteAttachingLineInfos.getLineToAttachTo2Id();
+        attachedLineId = deleteAttachingLineInfos.getAttachedLineId();
+        replacingLine1Id = deleteAttachingLineInfos.getReplacingLine1Id();
+        replacingLine1Name = deleteAttachingLineInfos.getReplacingLine1Name();
     }
 
     @Override
-    public DeleteVoltageLevelOnLineInfos toModificationInfos() {
-        return toDeleteVoltageLevelOnLineInfosBuilder().build();
+    public DeleteAttachingLineInfos toModificationInfos() {
+        return toDeleteAttachingLineInfosBuilder().build();
     }
 
-    private DeleteVoltageLevelOnLineInfos.DeleteVoltageLevelOnLineInfosBuilder<?, ?> toDeleteVoltageLevelOnLineInfosBuilder() {
-        return DeleteVoltageLevelOnLineInfos
+    private DeleteAttachingLineInfos.DeleteAttachingLineInfosBuilder<?, ?> toDeleteAttachingLineInfosBuilder() {
+        return DeleteAttachingLineInfos
                 .builder()
                 .uuid(getId())
                 .date(getDate())
                 .type(ModificationType.valueOf(getType()))
                 .lineToAttachTo1Id(getLineToAttachTo1Id())
                 .lineToAttachTo2Id(getLineToAttachTo2Id())
+                .attachedLineId(getAttachedLineId())
                 .replacingLine1Id(getReplacingLine1Id())
                 .replacingLine1Name(getReplacingLine1Name());
     }
 
-    public static DeleteVoltageLevelOnLineEntity toEntity(String lineToAttachTo1Id, String lineToAttachTo2Id, String replacingLine1Id, String replacingLine1Name) {
-        return new DeleteVoltageLevelOnLineEntity(lineToAttachTo1Id, lineToAttachTo2Id, replacingLine1Id, replacingLine1Name);
+    public static DeleteAttachingLineEntity toEntity(String lineToAttachTo1Id, String lineToAttachTo2Id, String attachedLineId, String replacingLine1Id, String replacingLine1Name) {
+        return new DeleteAttachingLineEntity(lineToAttachTo1Id, lineToAttachTo2Id, attachedLineId, replacingLine1Id, replacingLine1Name);
     }
 }

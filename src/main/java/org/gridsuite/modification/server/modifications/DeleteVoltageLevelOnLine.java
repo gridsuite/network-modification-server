@@ -7,8 +7,8 @@
 package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.commons.reporter.Reporter;
-import com.powsybl.iidm.modification.topology.RevertCreateLineOnLine;
-import com.powsybl.iidm.modification.topology.RevertCreateLineOnLineBuilder;
+import com.powsybl.iidm.modification.topology.RevertConnectVoltageLevelOnLine;
+import com.powsybl.iidm.modification.topology.RevertConnectVoltageLevelOnLineBuilder;
 import com.powsybl.iidm.network.Network;
 import org.gridsuite.modification.server.dto.DeleteVoltageLevelOnLineInfos;
 
@@ -25,12 +25,11 @@ public class DeleteVoltageLevelOnLine extends AbstractModification {
 
     @Override
     public void apply(Network network, Reporter subReporter) {
-        RevertCreateLineOnLineBuilder builder = new RevertCreateLineOnLineBuilder();
-        RevertCreateLineOnLine algo = builder.withLineToBeMerged1Id(modificationInfos.getLineToAttachTo1Id())
-                .withLineToBeMerged2Id(modificationInfos.getLineToAttachTo2Id())
-                .withLineToBeDeletedId(modificationInfos.getAttachedLineId())
-                .withMergedLineId(modificationInfos.getReplacingLine1Id())
-                .withMergedLineName(modificationInfos.getReplacingLine1Name())
+        RevertConnectVoltageLevelOnLineBuilder builder = new RevertConnectVoltageLevelOnLineBuilder();
+        RevertConnectVoltageLevelOnLine algo = builder.withLine1Id(modificationInfos.getLineToAttachTo1Id())
+                .withLine2Id(modificationInfos.getLineToAttachTo2Id())
+                .withLineId(modificationInfos.getReplacingLine1Id())
+                .withLineName(modificationInfos.getReplacingLine1Name())
                 .build();
         algo.apply(network, true, subReporter);
     }

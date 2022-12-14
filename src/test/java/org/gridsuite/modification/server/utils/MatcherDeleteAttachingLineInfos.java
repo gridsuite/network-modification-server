@@ -7,26 +7,27 @@
 
 package org.gridsuite.modification.server.utils;
 
-import org.gridsuite.modification.server.dto.DeleteVoltageLevelOnLineInfos;
+import org.gridsuite.modification.server.dto.DeleteAttachingLineInfos;
 
 import java.util.Objects;
 
 /**
  * @author bendaamerahm <ahmed.bendaamer at rte-france.com>
  */
-public class MatcherDeleteVoltageLevelOnLineInfos extends MatcherModificationInfos<DeleteVoltageLevelOnLineInfos> {
-    protected MatcherDeleteVoltageLevelOnLineInfos(DeleteVoltageLevelOnLineInfos ref) {
+public class MatcherDeleteAttachingLineInfos extends MatcherModificationInfos<DeleteAttachingLineInfos> {
+    protected MatcherDeleteAttachingLineInfos(DeleteAttachingLineInfos ref) {
         super(ref);
     }
 
-    public static MatcherDeleteVoltageLevelOnLineInfos createMatcherDeleteVoltageLevelOnLineInfos(DeleteVoltageLevelOnLineInfos toDeleteVoltageLevelOnLineInfos) {
-        return new MatcherDeleteVoltageLevelOnLineInfos(toDeleteVoltageLevelOnLineInfos);
+    public static MatcherDeleteAttachingLineInfos createMatcherDeleteAttachingLineInfos(DeleteAttachingLineInfos toDeleteAttachingLineInfos) {
+        return new MatcherDeleteAttachingLineInfos(toDeleteAttachingLineInfos);
     }
 
-    public boolean matchesSafely(DeleteVoltageLevelOnLineInfos m) {
+    public boolean matchesSafely(DeleteAttachingLineInfos m) {
         return super.matchesSafely(m)
                 && Objects.equals(reference.getLineToAttachTo1Id(), m.getLineToAttachTo1Id())
                 && Objects.equals(reference.getLineToAttachTo2Id(), m.getLineToAttachTo2Id())
+                && Objects.equals(reference.getAttachedLineId(), m.getAttachedLineId())
                 && Objects.equals(reference.getReplacingLine1Id(), m.getReplacingLine1Id())
                 && Objects.equals(reference.getReplacingLine1Name(), m.getReplacingLine1Name());
     }

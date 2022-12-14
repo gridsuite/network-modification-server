@@ -13,7 +13,6 @@ import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.TwoWindingsTransformerCreationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.VoltageLevelCreationEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.DeleteVoltageLevelOnLineEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.LineAttachToVoltageLevelEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.LinesAttachToSplitLinesEntity;
@@ -346,13 +345,4 @@ public class NetworkStoreListener implements NetworkListener {
         );
     }
 
-    public void storeDeleteVoltageLevelOnLineInfos(DeleteVoltageLevelOnLineInfos deleteVoltageLevelOnLineInfos) {
-
-        modifications.add(DeleteVoltageLevelOnLineEntity.toEntity(
-                deleteVoltageLevelOnLineInfos.getLineToAttachTo1Id(),
-                deleteVoltageLevelOnLineInfos.getLineToAttachTo2Id(),
-                deleteVoltageLevelOnLineInfos.getAttachedLineId(),
-                deleteVoltageLevelOnLineInfos.getReplacingLine1Id(),
-                deleteVoltageLevelOnLineInfos.getReplacingLine1Name()));
-    }
 }
