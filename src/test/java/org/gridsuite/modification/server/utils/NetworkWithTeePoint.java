@@ -107,45 +107,6 @@ public final class NetworkWithTeePoint {
         createSwitch(v4, "l3d4", null, SwitchKind.DISCONNECTOR, true, false, false, 0, 5);
         createSwitch(v4, "l3br4", null, SwitchKind.BREAKER, true, false, true, 5, 4);
 
-        /********************************/
-
-//        VoltageLevel vl1 = createVoltageLevel(s1, "vl1", "vl1", TopologyKind.NODE_BREAKER, 225.0);
-//        createBusBarSection(vl1, "vl11A", "vl1A", 0);
-//        createBusBarSection(vl1, "vl11B", "vl1B", 1);
-//        VoltageLevel vl2 = createVoltageLevel(s1, "vl2", "vl2", TopologyKind.NODE_BREAKER, 225.0);
-//        createBusBarSection(vl2, "vl21A", "vl21A", 0);
-//        createBusBarSection(vl2, "vl21B", "vl21B", 1);
-//        VoltageLevel vl3 = createVoltageLevel(s1, "vl3", "vl3", TopologyKind.NODE_BREAKER, 225.0);
-//        createBusBarSection(vl3, "vl31A", "vl31A", 0);
-//        createBusBarSection(vl3, "vl31B", "vl31B", 1);
-//        VoltageLevel vl4 = createVoltageLevel(s1, "vl4", "vl4", TopologyKind.NODE_BREAKER, 225.0);
-//        createBusBarSection(vl4, "vl41A", "vl41A", 0);
-//        createBusBarSection(vl4, "vl41B", "vl41B", 1);
-//
-//        createLine(network, "l1", "l1", "vl2", "vl4", 8, 4, 1.0, 1.0, 1.0, 2.0, 1.0, 2.0, "cn1line1", 1, ConnectablePosition.Direction.TOP, "cn2line1", 1, ConnectablePosition.Direction.TOP);
-//        createSwitch(vl1, "vl3dl1", "vl3dl1", SwitchKind.DISCONNECTOR, true, false, false, 0, 7);
-//        createSwitch(vl1, "vl3bl1", "vl3bl1", SwitchKind.BREAKER, true, false, false, 7, 8);
-//        createSwitch(vl4, "vl4dl1", "vl4dl1", SwitchKind.DISCONNECTOR, true, false, false, 0, 3);
-//        createSwitch(vl4, "vl4bl1", "vl4bl1", SwitchKind.BREAKER, true, false, false, 3, 4);
-//
-//        createLine(network, "l2", "l2", "vl1", "vl4", 31, 31, 10.0, 5.0, 3.5, 5.5, 4.5, 6.5, "cn1line2", 2, ConnectablePosition.Direction.TOP, "cn2line2", 2, ConnectablePosition.Direction.TOP);
-//        createSwitch(vl1, "vl1dl2", "vl1dl2", SwitchKind.DISCONNECTOR, true, false, false, 0, 30);
-//        createSwitch(vl1, "vl1bl2", "vl1bl2", SwitchKind.BREAKER, true, false, false, 30, 31);
-//        createSwitch(vl4, "vl3dl2", "vl3dl2", SwitchKind.DISCONNECTOR, true, false, false, 0, 30);
-//        createSwitch(vl4, "vl3bl2", "vl3bl2", SwitchKind.BREAKER, true, false, false, 30, 31);
-//
-//        createLine(network, "l3", "l3", "vl1", "vl3", 10, 12, 12.0, 7.0, 5.5, 7.5, 6.5, 8.5, "cn1line3", 3, ConnectablePosition.Direction.TOP, "cn2line3", 3, ConnectablePosition.Direction.TOP);
-//        createSwitch(vl1, "vl1dl3", "vl1dl3", SwitchKind.DISCONNECTOR, true, false, false, 0, 9);
-//        createSwitch(vl1, "vl1bl3", "vl1bl3", SwitchKind.BREAKER, true, false, true, 9, 10);
-//        createSwitch(vl3, "vl3dl3", "vl3dl3", SwitchKind.DISCONNECTOR, true, false, false, 0, 11);
-//        createSwitch(vl3, "vl3bl3", "vl3bl3", SwitchKind.BREAKER, true, false, true, 11, 12);
-//
-//        createLine(network, "attachedLineId", "attachedLine", "vl3", "vl2", 10, 12, 12.0, 7.0, 5.5, 7.5, 6.5, 8.5, "cn1line3", 3, ConnectablePosition.Direction.TOP, "cn2line3", 3, ConnectablePosition.Direction.TOP);
-//        createSwitch(vl3, "v1dal", "v1dal", SwitchKind.DISCONNECTOR, true, false, false, 0, 20);
-//        createSwitch(vl3, "v1bal", "v1bal", SwitchKind.BREAKER, true, false, true, 20, 21);
-//        createSwitch(vl2, "v3dal", "v3dal", SwitchKind.DISCONNECTOR, true, false, false, 0, 20);
-//        createSwitch(vl2, "v3bal", "v3bal", SwitchKind.BREAKER, true, false, true, 20, 21);
-        /************************************************/
         return network;
     }
 }

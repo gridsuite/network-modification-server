@@ -198,6 +198,7 @@ public final class NetworkCreation {
         createSwitch(v1, "v1bl3", "v1bl3", SwitchKind.BREAKER, true, false, true, 9, 10);
         createSwitch(v3, "v3dl3", "v3dl3", SwitchKind.DISCONNECTOR, true, false, false, 0, 11);
         createSwitch(v3, "v3bl3", "v3bl3", SwitchKind.BREAKER, true, false, true, 11, 12);
+
         if (createHvdcLine) {
             createHvdcLine(network, "hvdcLine", "hvdcLine", 1, 100, HvdcLine.ConvertersMode.SIDE_1_INVERTER_SIDE_2_RECTIFIER, 225, 500, "v1lcc", "v2vsc");
         }
