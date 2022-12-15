@@ -56,16 +56,16 @@ public class LineSplitWithVoltageLevelEntity  extends ModificationEntity {
 
     public LineSplitWithVoltageLevelEntity(@NonNull LineSplitWithVoltageLevelInfos splitWithVoltageLevelInfos) {
         super(ModificationType.LINE_SPLIT_WITH_VOLTAGE_LEVEL);
-        init(splitWithVoltageLevelInfos);
+        assignAttributes(splitWithVoltageLevelInfos);
     }
 
     @Override
     public void update(@NonNull ModificationInfos modificationInfos) {
         super.update(modificationInfos);
-        init((LineSplitWithVoltageLevelInfos) modificationInfos);
+        assignAttributes((LineSplitWithVoltageLevelInfos) modificationInfos);
     }
 
-    private void init(LineSplitWithVoltageLevelInfos splitWithVoltageLevelInfos) {
+    private void assignAttributes(LineSplitWithVoltageLevelInfos splitWithVoltageLevelInfos) {
         lineToSplitId = splitWithVoltageLevelInfos.getLineToSplitId();
         percent = splitWithVoltageLevelInfos.getPercent();
         mayVoltageLevelCreation = null; // Need for the update

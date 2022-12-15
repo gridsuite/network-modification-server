@@ -38,17 +38,17 @@ public class LineCreationEntity extends BranchCreationEntity {
 
     public LineCreationEntity(LineCreationInfos lineCreationInfos) {
         super(lineCreationInfos);
-        init(lineCreationInfos);
+        assignAttributes(lineCreationInfos);
     }
 
     @Override
     public void update(ModificationInfos modificationInfos) {
         super.update(modificationInfos);
         LineCreationInfos lineCreationInfos = (LineCreationInfos) modificationInfos;
-        init(lineCreationInfos);
+        assignAttributes(lineCreationInfos);
     }
 
-    private void init(LineCreationInfos lineCreationInfos) {
+    private void assignAttributes(LineCreationInfos lineCreationInfos) {
         shuntConductance1 = lineCreationInfos.getShuntConductance1();
         shuntSusceptance1 = lineCreationInfos.getShuntSusceptance1();
         shuntConductance2 = lineCreationInfos.getShuntConductance2();

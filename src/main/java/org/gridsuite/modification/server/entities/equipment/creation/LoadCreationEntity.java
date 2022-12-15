@@ -15,11 +15,7 @@ import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.LoadCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.ForeignKey;
-import javax.persistence.PrimaryKeyJoinColumn;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -47,16 +43,16 @@ public class LoadCreationEntity extends InjectionCreationEntity {
 
     public LoadCreationEntity(@NonNull LoadCreationInfos loadCreationInfos) {
         super(ModificationType.LOAD_CREATION, loadCreationInfos.getEquipmentId(), loadCreationInfos.getEquipmentName(), loadCreationInfos.getVoltageLevelId(), loadCreationInfos.getBusOrBusbarSectionId());
-        init(loadCreationInfos);
+        assignAttributes(loadCreationInfos);
     }
 
     @Override
     public void update(@NonNull ModificationInfos modificationInfos) {
         super.update(modificationInfos);
-        init((LoadCreationInfos) modificationInfos);
+        assignAttributes((LoadCreationInfos) modificationInfos);
     }
 
-    private void init(LoadCreationInfos loadCreationInfos) {
+    private void assignAttributes(LoadCreationInfos loadCreationInfos) {
         loadType = loadCreationInfos.getLoadType();
         activePower = loadCreationInfos.getActivePower();
         reactivePower = loadCreationInfos.getReactivePower();

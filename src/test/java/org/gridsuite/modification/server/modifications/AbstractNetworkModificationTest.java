@@ -1,3 +1,10 @@
+/**
+ * Copyright (c) 2022, RTE (http://www.rte-france.com)
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
 package org.gridsuite.modification.server.modifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -135,6 +142,11 @@ public abstract class AbstractNetworkModificationTest {
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<ModificationInfos> modificationsTestGroupId = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertEquals(actualSize, modificationsTestGroupId.size());
+    }
+
+    protected UUID addModificationToRepository(ModificationInfos modificationInfos) {
+        modificationRepository.saveModifications(TEST_GROUP_ID, List.of(modificationInfos.toEntity()));
+        return modificationRepository.getModifications(TEST_GROUP_ID, true, true).get(0).getUuid();
     }
 
 }

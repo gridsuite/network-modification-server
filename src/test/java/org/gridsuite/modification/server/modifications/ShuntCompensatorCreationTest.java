@@ -1,3 +1,10 @@
+/**
+ * Copyright (c) 2022, RTE (http://www.rte-france.com)
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
 package org.gridsuite.modification.server.modifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -59,8 +66,7 @@ public class ShuntCompensatorCreationTest extends AbstractNetworkModificationTes
 
         ShuntCompensatorCreationInfos modificationToRead = buildShuntCompensatorCreationInfos();
 
-        modificationRepository.saveModifications(TEST_GROUP_ID, List.of(modificationToRead.toEntity()));
-        UUID modificationUuid = modificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0).getUuid();
+        UUID modificationUuid = addModificationToRepository(modificationToRead);
 
         MvcResult mvcResult = mockMvc.perform(get(URI_NETWORK_MODIF_GET_PUT + modificationUuid))
                 .andExpect(status().isOk()).andReturn();
@@ -76,8 +82,7 @@ public class ShuntCompensatorCreationTest extends AbstractNetworkModificationTes
 
         ShuntCompensatorCreationInfos modificationToUpdate = buildShuntCompensatorCreationInfos();
 
-        modificationRepository.saveModifications(TEST_GROUP_ID, List.of(modificationToUpdate.toEntity()));
-        UUID modificationUuid = modificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0).getUuid();
+        UUID modificationUuid = addModificationToRepository(modificationToUpdate);
 
         modificationToUpdate = buildShuntCompensatorCreationInfosUpdate();
 
@@ -97,8 +102,7 @@ public class ShuntCompensatorCreationTest extends AbstractNetworkModificationTes
 
         ShuntCompensatorCreationInfos modificationToDelete = buildShuntCompensatorCreationInfos();
 
-        modificationRepository.saveModifications(TEST_GROUP_ID, List.of(modificationToDelete.toEntity()));
-        UUID modificationUuid = modificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0).getUuid();
+        UUID modificationUuid = addModificationToRepository(modificationToDelete);
 
         mockMvc.perform(delete(URI_NETWORK_MODIF)
                         .queryParam("groupUuid", TEST_GROUP_ID.toString())
@@ -116,8 +120,7 @@ public class ShuntCompensatorCreationTest extends AbstractNetworkModificationTes
 
         ShuntCompensatorCreationInfos modificationToCopy = buildShuntCompensatorCreationInfos();
 
-        modificationRepository.saveModifications(TEST_GROUP_ID, List.of(modificationToCopy.toEntity()));
-        UUID modificationUuid = modificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0).getUuid();
+        UUID modificationUuid = addModificationToRepository(modificationToCopy);
 
         mockMvc.perform(put(URI_NETWORK_MODIF_COPY)
                         .content(mapper.writeValueAsString(List.of(modificationUuid)))

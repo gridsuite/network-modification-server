@@ -71,7 +71,7 @@ public class BranchCreationEntity extends EquipmentCreationEntity {
 
     protected BranchCreationEntity(BranchCreationInfos branchCreationInfos) {
         super(branchCreationInfos);
-        init(branchCreationInfos);
+        assignAttributes(branchCreationInfos);
     }
 
     //TODO : remove when refactoring on TwoWindingTransformer will be done
@@ -109,10 +109,10 @@ public class BranchCreationEntity extends EquipmentCreationEntity {
     public void update(ModificationInfos modificationInfos) {
         super.update(modificationInfos);
         BranchCreationInfos branchCreationInfos = (BranchCreationInfos) modificationInfos;
-        init(branchCreationInfos);
+        assignAttributes(branchCreationInfos);
     }
 
-    private void init(BranchCreationInfos branchCreationInfos) {
+    private void assignAttributes(BranchCreationInfos branchCreationInfos) {
         seriesReactance = branchCreationInfos.getSeriesReactance();
         seriesResistance = branchCreationInfos.getSeriesResistance();
         voltageLevelId1 = branchCreationInfos.getVoltageLevelId1();
