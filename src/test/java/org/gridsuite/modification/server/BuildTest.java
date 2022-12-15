@@ -319,7 +319,8 @@ public class BuildTest {
         entities1.add(LoadCreationInfos.builder().equipmentId("newLoad2").equipmentName("newLoad2").loadType(LoadType.AUXILIARY).voltageLevelId("v1").busOrBusbarSectionId("1.1").activePower(10.).reactivePower(20.).connectionName("cn2").connectionDirection(ConnectablePosition.Direction.UNDEFINED).build().toEntity());
         entities1.add(LoadCreationInfos.builder().equipmentId("newLoad2").equipmentName("newLoad2").loadType(LoadType.AUXILIARY).voltageLevelId("v1").busOrBusbarSectionId("1.1").activePower(10.).reactivePower(20.).connectionName(null).connectionDirection(ConnectablePosition.Direction.UNDEFINED).build().toEntity());
 
-        entities1.add(modificationRepository.createSubstationEntity("newSubstation", "newSubstation", Country.FR));
+        Map<String, String> properties = Map.of("DEMO", "Demo1");
+        entities1.add(modificationRepository.createSubstationEntity("newSubstation", "newSubstation", Country.FR, properties));
 
         List<ModificationEntity> entities2 = new ArrayList<>();
         entities2.add(modificationRepository.createGeneratorEntity(NEW_GENERATOR_ID, NEW_GENERATOR_ID, EnergySource.HYDRO, "v2", "1A", 0., 500., 1., 100., 50., true, 225., 8., 20., 50., true, 9F, 35., 25., "v2load", "LOAD", "v2", 25., false, List.of(), "Top", ConnectablePosition.Direction.TOP));
@@ -427,7 +428,9 @@ public class BuildTest {
         assertEquals(3, network.getTwoWindingsTransformer("new2wt").getPhaseTapChanger().getStepCount());
         assertEquals(PhaseTapChanger.RegulationMode.CURRENT_LIMITER, network.getTwoWindingsTransformer("new2wt").getPhaseTapChanger().getRegulationMode());
         assertNull(network.getShuntCompensator("v2shunt"));
-        assertEquals(Country.FR, network.getSubstation("newSubstation").getCountry().orElse(Country.AF));
+        Substation newSubstation = network.getSubstation("newSubstation");
+        assertEquals(Country.FR, newSubstation.getCountry().orElse(Country.AF));
+        assertEquals("Demo1", network.getSubstation("newSubstation").getProperty("DEMO"));
         assertNotNull(network.getVoltageLevel("vl9"));
         assertNotNull(network.getShuntCompensator("shunt9"));
 
