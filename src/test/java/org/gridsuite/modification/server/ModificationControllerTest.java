@@ -860,7 +860,8 @@ public class ModificationControllerTest {
             .activePower(175.0)
             .reactivePower(60.0)
             .connectionName("top")
-            .connectionDirection(ConnectablePosition.Direction.TOP, 0)
+            .connectionDirection(ConnectablePosition.Direction.TOP)
+            .connectionPosition(0)
             .build();
         loadCreationInfos.setUuid(listModifications.get(0).getUuid());
         loadCreationInfos.setType(ModificationType.LOAD_CREATION);
