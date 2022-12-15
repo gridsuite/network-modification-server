@@ -709,17 +709,17 @@ public class ModificationControllerTest {
 
         // create new load in voltage level with node/breaker topology (in voltage level "v2" and busbar section "1B")
         LoadCreationInfos loadCreationInfos = LoadCreationInfos.builder()
-                .type(ModificationType.LOAD_CREATION)
-                .equipmentId("idLoad1")
-                .equipmentName("nameLoad1")
-                .voltageLevelId("v2")
-                .busOrBusbarSectionId("1B")
-                .loadType(LoadType.AUXILIARY)
-                .activePower(100.0)
-                .reactivePower(60.0)
-                .connectionDirection(ConnectablePosition.Direction.TOP)
-                .connectionName("top")
-                .build();
+            .type(ModificationType.LOAD_CREATION)
+            .equipmentId("idLoad1")
+            .equipmentName("nameLoad1")
+            .voltageLevelId("v2")
+            .busOrBusbarSectionId("1B")
+            .loadType(LoadType.AUXILIARY)
+            .activePower(100.0)
+            .reactivePower(60.0)
+            .connectionDirection(ConnectablePosition.Direction.TOP)
+            .connectionName("top")
+            .build();
 
         LoadCreationInfos loadCreationInfos1 = LoadCreationInfos.builder()
                 .type(ModificationType.LOAD_CREATION)
@@ -810,17 +810,17 @@ public class ModificationControllerTest {
 
         // create new load in voltage level with bus/breaker topology (in voltage level "VLGEN" and bus "NGEN")
         LoadCreationInfos loadCreationInfos = LoadCreationInfos.builder()
-                .type(ModificationType.LOAD_CREATION)
-                .equipmentId("idLoad1")
-                .equipmentName("nameLoad1")
-                .voltageLevelId("v1")
-                .busOrBusbarSectionId("bus1")
-                .loadType(LoadType.FICTITIOUS)
-                .activePower(200.0)
-                .reactivePower(30.0)
-                .connectionName("top")
-                .connectionDirection(ConnectablePosition.Direction.TOP)
-                .build();
+            .type(ModificationType.LOAD_CREATION)
+            .equipmentId("idLoad1")
+            .equipmentName("nameLoad1")
+            .voltageLevelId("v1")
+            .busOrBusbarSectionId("bus1")
+            .loadType(LoadType.FICTITIOUS)
+            .activePower(200.0)
+            .reactivePower(30.0)
+            .connectionName("top")
+            .connectionDirection(ConnectablePosition.Direction.TOP)
+            .build();
 
         LoadCreationInfos loadCreationInfos1 = LoadCreationInfos.builder()
                 .type(ModificationType.LOAD_CREATION)
@@ -2875,7 +2875,7 @@ public class ModificationControllerTest {
                 .substationCountry(Country.AF)
                 .build();
         String substationCreationInfosJson = objectWriter.writeValueAsString(substationCreationInfos);
-        assertEquals("SubstationCreationInfos(super=EquipmentCreationInfos(super=EquipmentModificationInfos(super=ModificationInfos(uuid=null, date=null, type=SUBSTATION_CREATION, substationIds=[]), equipmentId=SubstationId), equipmentName=SubstationName), substationCountry=AF)", substationCreationInfos.toString());
+        assertEquals("SubstationCreationInfos(super=EquipmentCreationInfos(super=EquipmentModificationInfos(super=ModificationInfos(uuid=null, date=null, type=SUBSTATION_CREATION, substationIds=[]), equipmentId=SubstationId), equipmentName=SubstationName), substationCountry=AF, properties=null)", substationCreationInfos.toString());
         mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(substationCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
@@ -2887,7 +2887,8 @@ public class ModificationControllerTest {
         substationCreationInfos = new SubstationCreationEntity(
                 "SubstationIdEdited",
                 "SubstationNameEdited",
-                Country.CI)
+                Country.CI,
+                Map.of("DEMO", "Demo1"))
                 .toModificationInfos();
         substationCreationInfos.setUuid(modificationsSubstationCreation.get(0).getUuid());
         substationCreationInfosJson = objectWriter.writeValueAsString(substationCreationInfos);
@@ -2896,7 +2897,9 @@ public class ModificationControllerTest {
         SubstationCreationInfos substationCreationUpdate = new SubstationCreationEntity(
                 "SubstationIdEdited",
                 "SubstationNameEdited",
-                Country.CI).toModificationInfos();
+                Country.CI,
+               Map.of("DEMO", "Demo1")
+            ).toModificationInfos();
         String substationCreationUpdateJson = objectWriter.writeValueAsString(substationCreationUpdate);
         mockMvc.perform(put(URI_NETWORK_MODIF_GET_PUT + modificationsSubstationCreation.get(0).getUuid()).content(substationCreationUpdateJson).contentType(MediaType.APPLICATION_JSON))
                 .andReturn();

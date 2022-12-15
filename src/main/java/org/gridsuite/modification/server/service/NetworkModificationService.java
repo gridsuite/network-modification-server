@@ -1415,11 +1415,16 @@ public class NetworkModificationService {
 
         return doAction(listener, () -> {
             if (listener.isApplyModifications()) {
-                network.newSubstation()
+                Substation substation = network.newSubstation()
                     .setId(substationCreationInfos.getEquipmentId())
                     .setName(substationCreationInfos.getEquipmentName())
                     .setCountry(substationCreationInfos.getSubstationCountry())
                     .add();
+                //substation.setProperty()
+                Map<String, String> properties = substationCreationInfos.getProperties();
+                if (properties != null) {
+                    properties.forEach(substation::setProperty);
+                }
 
                 subReporter.report(Report.builder()
                     .withKey("substationCreated")
@@ -1449,7 +1454,8 @@ public class NetworkModificationService {
             throw new NetworkModificationException(CREATE_SUBSTATION_ERROR, "Substation creation not found");
         }
 
-        EquipmentCreationEntity updatedEntity = this.networkModificationRepository.createSubstationEntity(substationCreationInfos.getEquipmentId(), substationCreationInfos.getEquipmentName(), substationCreationInfos.getSubstationCountry());
+        EquipmentCreationEntity updatedEntity = this.networkModificationRepository.createSubstationEntity(substationCreationInfos.getEquipmentId(),
+            substationCreationInfos.getEquipmentName(), substationCreationInfos.getSubstationCountry(), substationCreationInfos.getProperties());
         updatedEntity.setId(modificationUuid);
         updatedEntity.setGroup(substationModificationEntity.get().getGroup());
         this.networkModificationRepository.updateModification(updatedEntity);

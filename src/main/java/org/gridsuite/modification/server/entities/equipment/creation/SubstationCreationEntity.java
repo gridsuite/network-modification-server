@@ -6,6 +6,9 @@
  */
 package org.gridsuite.modification.server.entities.equipment.creation;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.powsybl.iidm.network.Country;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -27,11 +30,18 @@ public class SubstationCreationEntity extends EquipmentCreationEntity {
     @Column(name = "country")
     private Country country;
 
-    public SubstationCreationEntity(String equipmentId, String equipmentName, Country country) {
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable
+    private Map<String, String> properties;
+
+    public SubstationCreationEntity(String equipmentId, String equipmentName, Country country,
+        Map<String, String> properties) {
+
         super(ModificationType.SUBSTATION_CREATION,
-                equipmentId,
-                equipmentName);
+            equipmentId,
+            equipmentName);
         this.country = country;
+        this.properties = properties == null ? null : new HashMap<>(properties);
     }
 
     @Override
@@ -51,7 +61,7 @@ public class SubstationCreationEntity extends EquipmentCreationEntity {
                 .type(ModificationType.valueOf(getType()))
                 .equipmentId(getEquipmentId())
                 .equipmentName(getEquipmentName())
-                .substationCountry(getCountry());
+                .substationCountry(getCountry()).properties(getProperties());
     }
 }
 
