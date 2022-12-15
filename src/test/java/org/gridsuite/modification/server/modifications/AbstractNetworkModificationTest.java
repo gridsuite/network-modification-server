@@ -1,4 +1,4 @@
-package org.gridsuite.modification.server;
+package org.gridsuite.modification.server.modifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -42,7 +42,7 @@ Class to extend if you want to test a network modification.
 Each modification should have it own class and at least implement the 4 CRUD operations.
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(properties = {"spring.data.elasticsearch.enabled=true"})
+@SpringBootTest
 @AutoConfigureMockMvc
 public abstract class AbstractNetworkModificationTest {
 
@@ -62,6 +62,7 @@ public abstract class AbstractNetworkModificationTest {
     protected static final String URI_NETWORK_MODIF_MIXED_TOPO = URI_NETWORK_MODIF_BASE + "?networkUuid=" + TEST_NETWORK_MIXED_TOPOLOGY_ID + URI_NETWORK_MODIF_PARAMS;
     protected static final String URI_NETWORK_MODIF_BAD_NETWORK = URI_NETWORK_MODIF_BASE + "?networkUuid=" + NOT_FOUND_NETWORK_ID + URI_NETWORK_MODIF_PARAMS;
     protected static final String URI_NETWORK_MODIF_BAD_VARIANT = URI_NETWORK_MODIF + "&variantId=" + VARIANT_NOT_EXISTING_ID;
+    protected static final String COPY_URI_STRING = "/v1/groups/" + TEST_GROUP_ID + "?action=COPY";
 
     @Autowired
     protected MockMvc mockMvc;
@@ -122,6 +123,9 @@ public abstract class AbstractNetworkModificationTest {
 
     @Test
     public abstract void testDelete() throws Exception;
+
+    @Test
+    public abstract void testCopy() throws Exception;
 
     protected void testNetworkModificationsCount(UUID groupUuid, int actualSize) throws Exception {
         MvcResult mvcResult;

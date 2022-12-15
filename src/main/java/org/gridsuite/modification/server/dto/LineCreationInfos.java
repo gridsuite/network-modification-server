@@ -46,7 +46,7 @@ public class LineCreationInfos extends BranchCreationInfos {
 
     @Override
     public LineCreationEntity toEntity() {
-        return LineCreationEntity.toEntity(this);
+        return new LineCreationEntity(this);
     }
 
     @Override

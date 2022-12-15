@@ -69,6 +69,12 @@ public class BranchCreationEntity extends EquipmentCreationEntity {
         ), nullable = true)
     private CurrentLimitsEntity currentLimits2;
 
+    protected BranchCreationEntity(BranchCreationInfos branchCreationInfos) {
+        super(branchCreationInfos);
+        init(branchCreationInfos);
+    }
+
+    //TODO : remove when refactoring on TwoWindingTransformer will be done
     protected BranchCreationEntity(ModificationType modificationType,
                                     String equipmentId,
                                     String equipmentName,
@@ -102,27 +108,31 @@ public class BranchCreationEntity extends EquipmentCreationEntity {
     @Override
     public void update(ModificationInfos modificationInfos) {
         super.update(modificationInfos);
-        BranchCreationInfos lineCreationInfos = (BranchCreationInfos) modificationInfos;
-        seriesReactance = lineCreationInfos.getSeriesReactance();
-        seriesResistance = lineCreationInfos.getSeriesResistance();
-        voltageLevelId1 = lineCreationInfos.getVoltageLevelId1();
-        voltageLevelId2 = lineCreationInfos.getVoltageLevelId2();
-        busOrBusbarSectionId1 = lineCreationInfos.getBusOrBusbarSectionId1();
-        busOrBusbarSectionId2 = lineCreationInfos.getBusOrBusbarSectionId2();
-        if (lineCreationInfos.getCurrentLimits1() == null) {
+        BranchCreationInfos branchCreationInfos = (BranchCreationInfos) modificationInfos;
+        init(branchCreationInfos);
+    }
+
+    private void init(BranchCreationInfos branchCreationInfos) {
+        seriesReactance = branchCreationInfos.getSeriesReactance();
+        seriesResistance = branchCreationInfos.getSeriesResistance();
+        voltageLevelId1 = branchCreationInfos.getVoltageLevelId1();
+        voltageLevelId2 = branchCreationInfos.getVoltageLevelId2();
+        busOrBusbarSectionId1 = branchCreationInfos.getBusOrBusbarSectionId1();
+        busOrBusbarSectionId2 = branchCreationInfos.getBusOrBusbarSectionId2();
+        if (branchCreationInfos.getCurrentLimits1() == null) {
             currentLimits1 = null;
         } else {
-            currentLimits1 = lineCreationInfos.getCurrentLimits1().toEntity();
+            currentLimits1 = branchCreationInfos.getCurrentLimits1().toEntity();
         }
-        if (lineCreationInfos.getCurrentLimits2() == null) {
+        if (branchCreationInfos.getCurrentLimits2() == null) {
             currentLimits2 = null;
         } else {
-            currentLimits2 = lineCreationInfos.getCurrentLimits2().toEntity();
+            currentLimits2 = branchCreationInfos.getCurrentLimits2().toEntity();
         }
-        connectionDirection1 = lineCreationInfos.getConnectionDirection1();
-        connectionName1 = lineCreationInfos.getConnectionName1();
-        connectionDirection2 = lineCreationInfos.getConnectionDirection2();
-        connectionName2 = lineCreationInfos.getConnectionName2();
+        connectionDirection1 = branchCreationInfos.getConnectionDirection1();
+        connectionName1 = branchCreationInfos.getConnectionName1();
+        connectionDirection2 = branchCreationInfos.getConnectionDirection2();
+        connectionName2 = branchCreationInfos.getConnectionName2();
     }
 
     @Override

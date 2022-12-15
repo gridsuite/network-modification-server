@@ -1,7 +1,9 @@
-package org.gridsuite.modification.server;
+package org.gridsuite.modification.server.modifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
+import org.gridsuite.modification.server.ModificationType;
+import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.ShuntCompensatorCreationInfos;
 import org.junit.Test;
@@ -22,6 +24,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 public class ShuntCompensatorCreationTest extends AbstractNetworkModificationTest {
 
+    @Override
     public void testCreate() throws Exception {
 
         ShuntCompensatorCreationInfos modificationToCreate = buildShuntCompensatorCreationInfos();
@@ -50,6 +53,7 @@ public class ShuntCompensatorCreationTest extends AbstractNetworkModificationTes
                 .andExpect(status().is5xxServerError());
     }
 
+    @Override
     public void testRead() throws Exception {
 
         ShuntCompensatorCreationInfos modificationToRead = buildShuntCompensatorCreationInfos();
@@ -66,6 +70,7 @@ public class ShuntCompensatorCreationTest extends AbstractNetworkModificationTes
         assertThat(receivedModification, createMatcher(modificationToRead));
     }
 
+    @Override
     public void testUpdate() throws Exception {
 
         ShuntCompensatorCreationInfos modificationToUpdate = buildShuntCompensatorCreationInfos();
@@ -73,8 +78,8 @@ public class ShuntCompensatorCreationTest extends AbstractNetworkModificationTes
         modificationRepository.saveModifications(TEST_GROUP_ID, List.of(modificationToUpdate.toEntity()));
         UUID modificationUuid = modificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0).getUuid();
 
-        modificationToUpdate.setEquipmentId("shuntOneIdEdited");
-        modificationToUpdate.setEquipmentName("hopEdited");
+        modificationToUpdate = buildShuntCompensatorCreationInfosUpdate();
+
         String modificationToUpdateJson = mapper.writeValueAsString(modificationToUpdate);
 
         mockMvc.perform(put(URI_NETWORK_MODIF_GET_PUT + modificationUuid).content(modificationToUpdateJson).contentType(MediaType.APPLICATION_JSON))
@@ -83,11 +88,10 @@ public class ShuntCompensatorCreationTest extends AbstractNetworkModificationTes
         ShuntCompensatorCreationInfos updatedModification = (ShuntCompensatorCreationInfos) modificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
 
         assertThat(updatedModification, createMatcher(modificationToUpdate));
-        //TODO is it normal ?
-//        assertNotNull(network.getShuntCompensator("shuntOneIdEdited"));
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
     }
 
+    @Override
     public void testDelete() throws Exception {
 
         ShuntCompensatorCreationInfos modificationToDelete = buildShuntCompensatorCreationInfos();
@@ -104,6 +108,11 @@ public class ShuntCompensatorCreationTest extends AbstractNetworkModificationTes
 
         assertTrue(storedModifications.isEmpty());
         assertNull(network.getShuntCompensator("shuntOneId"));
+    }
+
+    @Override
+    public void testCopy() throws Exception {
+        //TODO
     }
 
     // old test moved here
@@ -174,7 +183,7 @@ public class ShuntCompensatorCreationTest extends AbstractNetworkModificationTes
                 .build();
     }
 
-    private ShuntCompensatorCreationInfos buildShuntCompensatorCreationInfosBis() {
+    private ShuntCompensatorCreationInfos buildShuntCompensatorCreationInfosUpdate() {
         return ShuntCompensatorCreationInfos.builder()
                 .type(ModificationType.SHUNT_COMPENSATOR_CREATION)
                 .date(ZonedDateTime.now())

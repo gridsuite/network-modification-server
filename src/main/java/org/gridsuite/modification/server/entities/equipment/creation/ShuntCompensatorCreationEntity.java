@@ -27,19 +27,6 @@ import javax.persistence.*;
 @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "shuntCompensatorCreation_id_fk_constraint"))
 public class ShuntCompensatorCreationEntity extends InjectionCreationEntity {
 
-    public ShuntCompensatorCreationEntity(ShuntCompensatorCreationInfos creationInfos) {
-        super(ModificationType.SHUNT_COMPENSATOR_CREATION,
-            creationInfos.getEquipmentId(), creationInfos.getEquipmentName(),
-            creationInfos.getVoltageLevelId(), creationInfos.getBusOrBusbarSectionId());
-
-        maximumNumberOfSections = creationInfos.getMaximumNumberOfSections();
-        currentNumberOfSections = creationInfos.getCurrentNumberOfSections();
-        susceptancePerSection = creationInfos.getSusceptancePerSection();
-        isIdenticalSections = creationInfos.getIsIdenticalSection();
-        connectionName = creationInfos.getConnectionName();
-        connectionDirection = creationInfos.getConnectionDirection();
-    }
-
     @Column
     int maximumNumberOfSections;
 
@@ -57,6 +44,16 @@ public class ShuntCompensatorCreationEntity extends InjectionCreationEntity {
 
     @Column
     private ConnectablePosition.Direction connectionDirection;
+
+    public ShuntCompensatorCreationEntity(ShuntCompensatorCreationInfos creationInfos) {
+        super(creationInfos);
+        maximumNumberOfSections = creationInfos.getMaximumNumberOfSections();
+        currentNumberOfSections = creationInfos.getCurrentNumberOfSections();
+        susceptancePerSection = creationInfos.getSusceptancePerSection();
+        isIdenticalSections = creationInfos.getIsIdenticalSection();
+        connectionName = creationInfos.getConnectionName();
+        connectionDirection = creationInfos.getConnectionDirection();
+    }
 
     @Override
     public void update(ModificationInfos modificationInfos) {

@@ -215,18 +215,37 @@ public class BuildTest {
     @Test
     public void runBuildForLineSplits() throws  Exception {
         List<ModificationEntity> entities1 = List.of(
-            modificationRepository.createLineEntity("newLine", "newLine", 1., 2., 3., 4., 5., 6., "v1", "1.1", "v2", "1B", null, null, "cn11", ConnectablePosition.Direction.TOP, "cn22", ConnectablePosition.Direction.TOP),
-            LineSplitWithVoltageLevelInfos.builder().type(ModificationType.LINE_SPLIT_WITH_VOLTAGE_LEVEL)
-                .lineToSplitId("line3")
-                .percent(0.32)
-                .mayNewVoltageLevelInfos(null)
-                .existingVoltageLevelId("vl1")
-                .bbsOrBusId("sjb1")
-                .newLine1Id("un")
-                .newLine1Name("One")
-                .newLine2Id("deux")
-                .newLine2Name("Two")
-                .build().toEntity()
+                LineCreationInfos.builder()
+                        .type(ModificationType.LINE_CREATION)
+                        .equipmentId("newLine")
+                        .equipmentName("newLine")
+                        .seriesResistance(1.0)
+                        .seriesReactance(2.0)
+                        .shuntConductance1(3.0)
+                        .shuntSusceptance1(4.0)
+                        .shuntConductance2(5.0)
+                        .shuntSusceptance2(6.0)
+                        .voltageLevelId1("v1")
+                        .busOrBusbarSectionId1("1.1")
+                        .voltageLevelId2("v2")
+                        .busOrBusbarSectionId2("1B")
+                        .connectionName1("cn11")
+                        .connectionDirection1(ConnectablePosition.Direction.TOP)
+                        .connectionName2("cn22")
+                        .connectionDirection2(ConnectablePosition.Direction.TOP)
+                        .build().toEntity(),
+                LineSplitWithVoltageLevelInfos.builder()
+                        .type(ModificationType.LINE_SPLIT_WITH_VOLTAGE_LEVEL)
+                        .lineToSplitId("line3")
+                        .percent(0.32)
+                        .mayNewVoltageLevelInfos(null)
+                        .existingVoltageLevelId("vl1")
+                        .bbsOrBusId("sjb1")
+                        .newLine1Id("un")
+                        .newLine1Name("One")
+                        .newLine2Id("deux")
+                        .newLine2Name("Two")
+                        .build().toEntity()
         );
         modificationRepository.saveModifications(TEST_GROUP_ID, entities1);
 
@@ -334,7 +353,7 @@ public class BuildTest {
 
         List<ModificationEntity> entities2 = new ArrayList<>();
         entities2.add(modificationRepository.createGeneratorEntity(NEW_GENERATOR_ID, NEW_GENERATOR_ID, EnergySource.HYDRO, "v2", "1A", 0., 500., 1., 100., 50., true, 225., 8., 20., 50., true, 9F, 35., 25., "v2load", "LOAD", "v2", 25., false, List.of(), "Top", ConnectablePosition.Direction.TOP));
-        entities2.add(modificationRepository.createLineEntity("newLine", "newLine", 1., 2., 3., 4., 5., 6., "v1", "1.1", "v2", "1B", null, null, "cn101", ConnectablePosition.Direction.TOP, "cn102", ConnectablePosition.Direction.TOP));
+        entities2.add(LineCreationInfos.builder().type(ModificationType.LINE_CREATION).equipmentId("newLine").equipmentName("newLine").seriesResistance(1.0).seriesReactance(2.0).shuntConductance1(3.0).shuntSusceptance1(4.0).shuntConductance2(5.0).shuntSusceptance2(6.0).voltageLevelId1("v1").busOrBusbarSectionId1("1.1").voltageLevelId2("v2").busOrBusbarSectionId2("1B").currentLimits1(null).currentLimits2(null).connectionName1("cn101").connectionDirection1(ConnectablePosition.Direction.TOP).connectionName2("cn102").connectionDirection2(ConnectablePosition.Direction.TOP).build().toEntity());
 
         List<TapChangerStepCreationEmbeddable> tapChangerStepCreationEmbeddables = new ArrayList<>();
         tapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.PHASE, 1, 1, 0, 0, 0, 0, 0.));
@@ -354,6 +373,7 @@ public class BuildTest {
                 new BusbarSectionCreationEmbeddable("1.2", "1.2", 1, 2)),
             List.of(new BusbarConnectionCreationEmbeddable("1.1", "1.2", SwitchKind.BREAKER))));
         entities2.add(ShuntCompensatorCreationInfos.builder()
+            .type(ModificationType.SHUNT_COMPENSATOR_CREATION)
             .equipmentId("shunt9")
             .equipmentName("shunt9")
             .voltageLevelId("v2")

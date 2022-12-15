@@ -1,19 +1,20 @@
-package org.gridsuite.modification.server;
+package org.gridsuite.modification.server.modifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
+import org.gridsuite.modification.server.ModificationType;
+import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.CurrentLimitsInfos;
 import org.gridsuite.modification.server.dto.EquipmentModificationInfos;
 import org.gridsuite.modification.server.dto.LineCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.entities.equipment.creation.LineCreationEntity;
 import org.junit.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
-import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.utils.MatcherLineCreationInfos.createMatcherLineCreationInfos;
@@ -24,6 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 public class LineCreationTest extends AbstractNetworkModificationTest {
 
+    @Override
     public void testCreate() throws Exception {
 
         // create new line in voltage levels with node/breaker topology
@@ -55,6 +57,7 @@ public class LineCreationTest extends AbstractNetworkModificationTest {
         testNetworkModificationsCount(TEST_GROUP_ID, 2);  // new modification stored in the database
     }
 
+    @Override
     public void testRead() throws Exception {
 
         LineCreationInfos modificationToRead = buildLineCreationInfos();
@@ -71,6 +74,7 @@ public class LineCreationTest extends AbstractNetworkModificationTest {
         assertThat(receivedModification, createMatcherLineCreationInfos(modificationToRead));
     }
 
+    @Override
     public void testUpdate() throws Exception {
 
         LineCreationInfos modificationToUpdate = buildLineCreationInfos();
@@ -87,11 +91,10 @@ public class LineCreationTest extends AbstractNetworkModificationTest {
         LineCreationInfos updatedModification = (LineCreationInfos) modificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
 
         assertThat(updatedModification, createMatcherLineCreationInfos(modificationToUpdate));
-        //TODO is it normal ?
-//        assertNotNull(network.getLine("idLineEdited"));
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
     }
 
+    @Override
     public void testDelete() throws Exception {
 
         LineCreationInfos modificationToDelete = buildLineCreationInfos();
@@ -110,34 +113,35 @@ public class LineCreationTest extends AbstractNetworkModificationTest {
         assertNull(network.getLine("idLine"));
     }
 
+    @Override
+    public void testCopy() throws Exception {
+
+        LineCreationInfos modificationToCopy = buildLineCreationInfos();
+
+        modificationRepository.saveModifications(TEST_GROUP_ID, List.of(modificationToCopy.toEntity()));
+        UUID modificationUuid = modificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0).getUuid();
+
+        mockMvc.perform(put(COPY_URI_STRING)
+                        .content(mapper.writeValueAsString(List.of(modificationUuid)))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+
+        List<LineCreationInfos> modifications = modificationRepository
+                .getModifications(TEST_GROUP_ID, false, true)
+                .stream().map(LineCreationInfos.class::cast).collect(Collectors.toList());
+
+        assertEquals(2, modifications.size());
+        assertThat(modifications.get(0), createMatcherLineCreationInfos(modificationToCopy));
+        assertThat(modifications.get(1), createMatcherLineCreationInfos(modificationToCopy));
+    }
+
     // old tests moved here
     @Test
     public void testCreateWithErrors() throws Exception {
         MvcResult mvcResult;
         String resultAsString;
 
-        LineCreationInfos lineCreationInfos = new LineCreationEntity(
-                "idLine4edited",
-                "nameLine4edited",
-                110.0,
-                110.0,
-                15.0,
-                15.,
-                25.,
-                25.,
-                "v2",
-                "1A",
-                "v1",
-                "1.1",
-                5.,
-                5.,
-                "cn13",
-                ConnectablePosition.Direction.TOP,
-                "cn23",
-                ConnectablePosition.Direction.BOTTOM)
-                .toModificationInfos();
-        lineCreationInfos.setType(ModificationType.LINE_CREATION);
-        lineCreationInfos.setDate(ZonedDateTime.now());
+        LineCreationInfos lineCreationInfos = buildLineCreationInfos();
 
         String lineCreationInfosJson = mapper.writeValueAsString(lineCreationInfos);
         mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF_BAD_NETWORK).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
@@ -194,7 +198,6 @@ public class LineCreationTest extends AbstractNetworkModificationTest {
         //         voltage level "v2" and busbar section "bus2"
         LineCreationInfos lineCreationInfos = LineCreationInfos.builder()
                 .type(ModificationType.LINE_CREATION)
-                .date(ZonedDateTime.now())
                 .equipmentId("idLine1")
                 .equipmentName("nameLine1")
                 .seriesResistance(100.0)
@@ -225,7 +228,6 @@ public class LineCreationTest extends AbstractNetworkModificationTest {
 
         LineCreationInfos lineCreationInfos = LineCreationInfos.builder()
                 .type(ModificationType.LINE_CREATION)
-                .date(ZonedDateTime.now())
                 .equipmentId("idLine1")
                 .equipmentName("nameLine1")
                 .seriesResistance(100.0)
@@ -255,7 +257,6 @@ public class LineCreationTest extends AbstractNetworkModificationTest {
         //         voltage level "v2" and busbar section "bus2 type BUS_BREAKER"
         LineCreationInfos lineCreationInfos = LineCreationInfos.builder()
                 .type(ModificationType.LINE_CREATION)
-                .date(ZonedDateTime.now())
                 .equipmentId("idLine1")
                 .equipmentName("nameLine1")
                 .seriesResistance(100.0)
@@ -290,7 +291,6 @@ public class LineCreationTest extends AbstractNetworkModificationTest {
 
         LineCreationInfos lineCreationInfos = LineCreationInfos.builder()
                 .type(ModificationType.LINE_CREATION)
-                .date(ZonedDateTime.now())
                 .equipmentId("idLine1")
                 .equipmentName("nameLine1")
                 .seriesResistance(100.0)
@@ -332,7 +332,6 @@ public class LineCreationTest extends AbstractNetworkModificationTest {
         // create new line without shunt conductance or reactance
         LineCreationInfos lineCreationInfosNoShunt = LineCreationInfos.builder()
                 .type(ModificationType.LINE_CREATION)
-                .date(ZonedDateTime.now())
                 .equipmentId("idLine1")
                 .equipmentName("nameLine1")
                 .seriesResistance(100.0)
@@ -358,7 +357,6 @@ public class LineCreationTest extends AbstractNetworkModificationTest {
         // create new line without shunt conductance or reactance
         LineCreationInfos lineCreationInfosNoShunt = LineCreationInfos.builder()
                 .type(ModificationType.LINE_CREATION)
-                .date(ZonedDateTime.now())
                 .equipmentId("idLine1")
                 .equipmentName("nameLine1")
                 .seriesResistance(100.0)
@@ -388,7 +386,6 @@ public class LineCreationTest extends AbstractNetworkModificationTest {
 
         LineCreationInfos lineCreationInfosPermanentLimitOK = LineCreationInfos.builder()
                 .type(ModificationType.LINE_CREATION)
-                .date(ZonedDateTime.now())
                 .equipmentId("idLine2")
                 .equipmentName("nameLine2")
                 .seriesResistance(100.0)
@@ -415,7 +412,6 @@ public class LineCreationTest extends AbstractNetworkModificationTest {
 
         LineCreationInfos lineCreationInfosPermanentLimitOK = LineCreationInfos.builder()
                 .type(ModificationType.LINE_CREATION)
-                .date(ZonedDateTime.now())
                 .equipmentId("idLine2")
                 .equipmentName("nameLine2")
                 .seriesResistance(100.0)
@@ -425,7 +421,7 @@ public class LineCreationTest extends AbstractNetworkModificationTest {
                 .voltageLevelId2("v2")
                 .busOrBusbarSectionId2("bus2")
                 .currentLimits1(CurrentLimitsInfos.builder().permanentLimit(5.0).build())
-                .currentLimits2(CurrentLimitsInfos.builder().permanentLimit(null).build())
+                .currentLimits2(null)
                 .build();
 
         String lineCreationInfosPermanentLimitOKJson = mapper.writeValueAsString(lineCreationInfosPermanentLimitOK);
@@ -446,7 +442,6 @@ public class LineCreationTest extends AbstractNetworkModificationTest {
 
         LineCreationInfos lineCreationInfosPermanentLimitNOK = LineCreationInfos.builder()
                 .type(ModificationType.LINE_CREATION)
-                .date(ZonedDateTime.now())
                 .equipmentId("idLine2")
                 .equipmentName("nameLine2")
                 .seriesResistance(100.0)
@@ -469,7 +464,6 @@ public class LineCreationTest extends AbstractNetworkModificationTest {
 
         LineCreationInfos lineCreationInfosOK = LineCreationInfos.builder()
                 .type(ModificationType.LINE_CREATION)
-                .date(ZonedDateTime.now())
                 .equipmentId("idLine3")
                 .equipmentName("nameLine3")
                 .seriesResistance(100.0)
@@ -489,7 +483,6 @@ public class LineCreationTest extends AbstractNetworkModificationTest {
     private LineCreationInfos buildLineCreationInfos() {
         return LineCreationInfos.builder()
                 .type(ModificationType.LINE_CREATION)
-                .date(ZonedDateTime.now())
                 .equipmentId("idLine")
                 .equipmentName("nameLine")
                 .seriesResistance(100.0)
@@ -512,7 +505,6 @@ public class LineCreationTest extends AbstractNetworkModificationTest {
     private LineCreationInfos buildLineCreationInfosBis() {
         return LineCreationInfos.builder()
                 .type(ModificationType.LINE_CREATION)
-                .date(ZonedDateTime.now())
                 .equipmentId("idLineEdited")
                 .equipmentName("nameLineEdited")
                 .seriesResistance(110.0)
