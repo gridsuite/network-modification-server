@@ -1429,9 +1429,8 @@ public class NetworkModificationService {
         return allModificationsInfos;
     }
 
-    @Transactional(readOnly = true)
-    public void applyModifications(List<UUID> modificationsUuidList, UUID groupUuid, UUID networkUuid, UUID reportUuid, UUID reporterId, UUID variantId) {
-        ModificationNetworkInfos networkInfos = getNetworkModificationInfos(networkUuid, variantId.toString());
+    public void applyModifications(List<UUID> modificationsUuidList, UUID groupUuid, UUID networkUuid, UUID reportUuid, UUID reporterId, String variantId) {
+        ModificationNetworkInfos networkInfos = getNetworkModificationInfos(networkUuid, variantId);
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, true, networkInfos.isApplyModifications());
 
         for (UUID modification : modificationsUuidList) {
@@ -1535,7 +1534,7 @@ public class NetworkModificationService {
         }
     }
 
-    public void moveModifications(UUID groupUuid, UUID originGroupUuid, UUID before, UUID networkUuid, UUID reportUuid, UUID reporterId, UUID variantId, List<UUID> modificationsToMove, boolean canBuildNode) {
+    public void moveModifications(UUID groupUuid, UUID originGroupUuid, UUID before, UUID networkUuid, UUID reportUuid, UUID reporterId, String variantId, List<UUID> modificationsToMove, boolean canBuildNode) {
         List<UUID> movedModifications = networkModificationRepository.moveModifications(groupUuid, originGroupUuid, modificationsToMove, before).getLeft();
         if (canBuildNode && !movedModifications.isEmpty()) {
             // try to apply the moved modifications (incremental mode)
@@ -1556,21 +1555,21 @@ public class NetworkModificationService {
 
     // This function cannot be @Transactional because we clone all modifications resetting their id to null,
     // which is not allowed by JPA if we still stay in the same Tx.
-    public List<UUID> duplicateModifications(UUID targetGroupUuid, UUID networkUuid, UUID reportUuid, UUID reporterId, UUID variantId, List<UUID> modificationsUuidList) {
-        List<ModificationEntity> newModificationList = new ArrayList<>();
+    public List<UUID> duplicateModifications(UUID targetGroupUuid, UUID networkUuid, UUID reportUuid, UUID reporterId, String variantId, List<UUID> modificationsUuidList) {
+        List<ModificationEntity> duplicatedModificationEntityList = new ArrayList<>();
         List<UUID> missingModificationList = new ArrayList<>();
         for (UUID modifyId : modificationsUuidList) {
             networkModificationRepository.cloneModificationEntity(modifyId).ifPresentOrElse(
-                newModificationList::add,
+                duplicatedModificationEntityList::add,
                 () -> missingModificationList.add(modifyId)  // data no more available
             );
         }
-        if (!newModificationList.isEmpty()) {
-            networkModificationRepository.saveModifications(targetGroupUuid, newModificationList);
+        if (!duplicatedModificationEntityList.isEmpty()) {
+            networkModificationRepository.saveModifications(targetGroupUuid, duplicatedModificationEntityList);
             // try to apply the duplicated modifications (incremental mode)
-            applyModifications(modificationsUuidList, targetGroupUuid, networkUuid, reportUuid, reporterId, variantId);
+            List<UUID> duplicatedModificationList = duplicatedModificationEntityList.stream().map(ModificationEntity::getId).collect(Collectors.toList());
+            applyModifications(duplicatedModificationList, targetGroupUuid, networkUuid, reportUuid, reporterId, variantId);
         }
-
         return missingModificationList;
     }
 

@@ -67,7 +67,7 @@ public class NetworkModificationController {
                                                               @Parameter(description = "the network uuid", required = true) @RequestParam(value = "networkUuid") UUID networkUuid,
                                                               @Parameter(description = "the report uuid", required = true) @RequestParam(value = "reportUuid") UUID reportUuid,
                                                               @Parameter(description = "the reporter id", required = true) @RequestParam(value = "reporterId") UUID reporterId,
-                                                              @Parameter(description = "the variant id", required = true) @RequestParam(value = "variantId") UUID variantId,
+                                                              @Parameter(description = "the variant id", required = true) @RequestParam(value = "variantId") String variantId,
                                                               @Parameter(description = "the modification Uuid to move before (MOVE option, empty means moving at the end)") @RequestParam(value = "before", required = false) UUID before,
                                                               @Parameter(description = "origin group UUID, where modifications are copied or cut") @RequestParam(value = "originGroupUuid", required = false) UUID originGroupUuid,
                                                               @Parameter(description = "destination node can be built (default is true)") @RequestParam(value = "build", required = false) Boolean build,
