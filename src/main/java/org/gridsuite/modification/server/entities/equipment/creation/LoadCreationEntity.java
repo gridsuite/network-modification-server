@@ -41,6 +41,9 @@ public class LoadCreationEntity extends InjectionCreationEntity {
     @Column(name = "connectionDirection")
     private ConnectablePosition.Direction connectionDirection;
 
+    @Column(name = "connectionPosition")
+    private Integer connectionPosition;
+
     public LoadCreationEntity(@NonNull LoadCreationInfos loadCreationInfos) {
         super(ModificationType.LOAD_CREATION, loadCreationInfos.getEquipmentId(), loadCreationInfos.getEquipmentName(), loadCreationInfos.getVoltageLevelId(), loadCreationInfos.getBusOrBusbarSectionId());
         assignAttributes(loadCreationInfos);
@@ -58,6 +61,7 @@ public class LoadCreationEntity extends InjectionCreationEntity {
         reactivePower = loadCreationInfos.getReactivePower();
         connectionName = loadCreationInfos.getConnectionName();
         connectionDirection = loadCreationInfos.getConnectionDirection();
+        connectionPosition = loadCreationInfos.getConnectionPosition();
     }
 
     @Override
@@ -79,6 +83,7 @@ public class LoadCreationEntity extends InjectionCreationEntity {
             .activePower(getActivePower())
             .reactivePower(getReactivePower())
             .connectionName(getConnectionName())
-            .connectionDirection(getConnectionDirection());
+            .connectionDirection(getConnectionDirection())
+            .connectionPosition(getConnectionPosition());
     }
 }

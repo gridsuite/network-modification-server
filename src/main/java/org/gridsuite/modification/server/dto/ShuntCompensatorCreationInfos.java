@@ -50,6 +50,9 @@ public class ShuntCompensatorCreationInfos extends InjectionCreationInfos {
     @Schema(description = "Connection Direction")
     private ConnectablePosition.Direction connectionDirection;
 
+    @Schema(description = "Connection Position")
+    private Integer connectionPosition;
+
     @Override
     public ShuntCompensatorCreationEntity toEntity() {
         return new ShuntCompensatorCreationEntity(this);
