@@ -10,6 +10,7 @@ import com.powsybl.iidm.network.LoadType;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.LoadCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
@@ -44,20 +45,18 @@ public class LoadCreationEntity extends InjectionCreationEntity {
     @Column(name = "connectionDirection")
     private ConnectablePosition.Direction connectionDirection;
 
-    public LoadCreationEntity(String equipmentId, String equipmentName, LoadType loadType, String voltageLevelId, String busOrBusbarSectionId,
-                              double activePower, double reactivePower, String connectionName, ConnectablePosition.Direction connectionDirection) {
-        super(ModificationType.LOAD_CREATION, equipmentId, equipmentName, voltageLevelId, busOrBusbarSectionId);
-        this.loadType = loadType;
-        this.activePower = activePower;
-        this.reactivePower = reactivePower;
-        this.connectionDirection = connectionDirection;
-        this.connectionName = connectionName;
+    public LoadCreationEntity(@NonNull LoadCreationInfos loadCreationInfos) {
+        super(ModificationType.LOAD_CREATION, loadCreationInfos.getEquipmentId(), loadCreationInfos.getEquipmentName(), loadCreationInfos.getVoltageLevelId(), loadCreationInfos.getBusOrBusbarSectionId());
+        init(loadCreationInfos);
     }
 
     @Override
-    public void update(ModificationInfos modificationInfos) {
+    public void update(@NonNull ModificationInfos modificationInfos) {
         super.update(modificationInfos);
-        LoadCreationInfos loadCreationInfos = (LoadCreationInfos) modificationInfos;
+        init((LoadCreationInfos) modificationInfos);
+    }
+
+    private void init(LoadCreationInfos loadCreationInfos) {
         loadType = loadCreationInfos.getLoadType();
         activePower = loadCreationInfos.getActivePower();
         reactivePower = loadCreationInfos.getReactivePower();

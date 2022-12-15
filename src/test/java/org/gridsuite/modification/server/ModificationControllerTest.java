@@ -851,27 +851,31 @@ public class ModificationControllerTest {
                 .andExpect(status().isOk()).andReturn();
 
         // Update load creation
-        loadCreationInfos = new LoadCreationEntity(
-                "idLoad1edited",
-                "nameLoad1edited",
-                LoadType.AUXILIARY,
-                "v12",
-                "bus12",
-                175.0,
-                60.0, "top", ConnectablePosition.Direction.TOP)
-                .toModificationInfos();
+        loadCreationInfos = LoadCreationInfos.builder()
+            .equipmentId("idLoad1edited")
+            .equipmentName("nameLoad1edited")
+            .loadType(LoadType.AUXILIARY)
+            .voltageLevelId("v12")
+            .busOrBusbarSectionId("bus12")
+            .activePower(175.0)
+            .reactivePower(60.0)
+            .connectionName("top")
+            .connectionDirection(ConnectablePosition.Direction.TOP)
+            .build();
         loadCreationInfos.setUuid(listModifications.get(0).getUuid());
         loadCreationInfos.setType(ModificationType.LOAD_CREATION);
 
-        LoadCreationInfos loadCreationUpdate = new LoadCreationEntity(
-                "idLoad1edited",
-                "nameLoad1edited",
-                LoadType.AUXILIARY,
-                "v12",
-                "bus12",
-                175.0,
-                60.0, "bot", ConnectablePosition.Direction.BOTTOM)
-                .toModificationInfos();
+        LoadCreationInfos loadCreationUpdate = LoadCreationInfos.builder()
+            .equipmentId("idLoad1edited")
+            .equipmentName("nameLoad1edited")
+            .loadType(LoadType.AUXILIARY)
+            .voltageLevelId("v12")
+            .busOrBusbarSectionId("bus12")
+            .activePower(175.0)
+            .reactivePower(60.0)
+            .connectionName("bot")
+            .connectionDirection(ConnectablePosition.Direction.TOP)
+            .build();
         loadCreationUpdate.setType(ModificationType.LOAD_CREATION);
         String loadCreationUpdateJson = objectWriter.writeValueAsString(loadCreationUpdate);
         mockMvc.perform(put(URI_NETWORK_MODIF_GET_PUT + listModifications.get(0).getUuid()).content(loadCreationUpdateJson).contentType(MediaType.APPLICATION_JSON))

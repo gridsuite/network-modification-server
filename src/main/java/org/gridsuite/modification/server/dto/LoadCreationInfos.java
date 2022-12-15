@@ -50,9 +50,7 @@ public class LoadCreationInfos extends InjectionCreationInfos {
 
     @Override
     public LoadCreationEntity toEntity() {
-        return new LoadCreationEntity(getEquipmentId(), getEquipmentName(), getLoadType(),
-            getVoltageLevelId(), getBusOrBusbarSectionId(),
-            getActivePower(), getReactivePower(), getConnectionName(), getConnectionDirection());
+        return new LoadCreationEntity(this);
     }
 
     @Override
