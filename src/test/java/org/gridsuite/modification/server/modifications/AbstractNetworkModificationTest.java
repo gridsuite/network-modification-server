@@ -62,7 +62,7 @@ public abstract class AbstractNetworkModificationTest {
     protected static final String URI_NETWORK_MODIF_MIXED_TOPO = URI_NETWORK_MODIF_BASE + "?networkUuid=" + TEST_NETWORK_MIXED_TOPOLOGY_ID + URI_NETWORK_MODIF_PARAMS;
     protected static final String URI_NETWORK_MODIF_BAD_NETWORK = URI_NETWORK_MODIF_BASE + "?networkUuid=" + NOT_FOUND_NETWORK_ID + URI_NETWORK_MODIF_PARAMS;
     protected static final String URI_NETWORK_MODIF_BAD_VARIANT = URI_NETWORK_MODIF + "&variantId=" + VARIANT_NOT_EXISTING_ID;
-    protected static final String COPY_URI_STRING = "/v1/groups/" + TEST_GROUP_ID + "?action=COPY";
+    protected static final String URI_NETWORK_MODIF_COPY = "/v1/groups/" + TEST_GROUP_ID + "?action=COPY";
 
     @Autowired
     protected MockMvc mockMvc;
@@ -71,7 +71,6 @@ public abstract class AbstractNetworkModificationTest {
     @Qualifier("reportServer")
     protected RestTemplate reportServerRest;
 
-    //    @SpyBean
     @MockBean
     protected NetworkStoreService networkStoreService;
 

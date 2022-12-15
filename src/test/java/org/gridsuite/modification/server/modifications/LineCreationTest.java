@@ -121,7 +121,7 @@ public class LineCreationTest extends AbstractNetworkModificationTest {
         modificationRepository.saveModifications(TEST_GROUP_ID, List.of(modificationToCopy.toEntity()));
         UUID modificationUuid = modificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0).getUuid();
 
-        mockMvc.perform(put(COPY_URI_STRING)
+        mockMvc.perform(put(URI_NETWORK_MODIF_COPY)
                         .content(mapper.writeValueAsString(List.of(modificationUuid)))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
