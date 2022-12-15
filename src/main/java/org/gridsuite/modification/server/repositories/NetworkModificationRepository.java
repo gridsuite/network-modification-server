@@ -295,8 +295,8 @@ public class NetworkModificationRepository {
                 tapChangerSteps);
     }
 
-    public EquipmentCreationEntity createSubstationEntity(String id, String name, Country country) {
-        return new SubstationCreationEntity(id, name, country);
+    public EquipmentCreationEntity createSubstationEntity(String id, String name, Country country, Map<String, String> properties) {
+        return new SubstationCreationEntity(id, name, country, properties);
     }
 
     public VoltageLevelCreationEntity createVoltageLevelEntity(String id, String name, double nominalVoltage, String substationId,

@@ -216,7 +216,8 @@ public class NetworkStoreListener implements NetworkListener {
         modifications.add(this.modificationRepository.createSubstationEntity(
                 substationCreationInfos.getEquipmentId(),
                 substationCreationInfos.getEquipmentName(),
-                substationCreationInfos.getSubstationCountry()
+                substationCreationInfos.getSubstationCountry(),
+                substationCreationInfos.getProperties()
         ));
     }
 
