@@ -49,11 +49,16 @@ public class LineCreationTest extends AbstractNetworkModificationTest {
         assertThat(createdModification, createMatcherLineCreationInfos(modificationToCreate));
         assertNotNull(network.getLine("idLine"));  // line was created
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
+    }
+
+    public void testCreateWithNoLine() throws Exception {
 
         // Test create line on not yet existing variant VARIANT_NOT_EXISTING_ID :
         // Only the modification should be added in the database but the line cannot be created
+        LineCreationInfos modificationToCreate = buildLineCreationInfos();
         modificationToCreate.setEquipmentId("idLine2");
         modificationToCreate.setEquipmentName("nameLine2");
+        String modificationToCreateJson = mapper.writeValueAsString(modificationToCreate);
         MvcResult mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF_BAD_VARIANT).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         String resultAsString = mvcResult.getResponse().getContentAsString();
