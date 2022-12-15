@@ -41,6 +41,7 @@ public class ShuntCompensatorCreationEntity extends InjectionCreationEntity {
         isIdenticalSections = creationInfos.getIsIdenticalSection();
         connectionName = creationInfos.getConnectionName();
         connectionDirection = creationInfos.getConnectionDirection();
+        connectionPosition = creationInfos.getConnectionPosition();
     }
 
     @Column
@@ -60,6 +61,9 @@ public class ShuntCompensatorCreationEntity extends InjectionCreationEntity {
 
     @Column
     private ConnectablePosition.Direction connectionDirection;
+
+    @Column(name = "connectionPosition")
+    private Integer connectionPosition;
 
     @Override
     public ShuntCompensatorCreationInfos toModificationInfos() {
@@ -81,7 +85,8 @@ public class ShuntCompensatorCreationEntity extends InjectionCreationEntity {
             .maximumNumberOfSections(getMaximumNumberOfSections())
             .susceptancePerSection(getSusceptancePerSection())
             .connectionName(getConnectionName())
-            .connectionDirection(getConnectionDirection());
+            .connectionDirection(getConnectionDirection())
+            .connectionPosition(getConnectionPosition());
     }
 
 }

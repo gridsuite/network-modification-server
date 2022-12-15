@@ -121,8 +121,7 @@ public class NetworkStoreListener implements NetworkListener {
                 ModificationInfos infos = m.toModificationInfos();
                 infos.setSubstationIds(substationsIds);
                 return infos;
-            })
-                .collect(Collectors.toList());
+            }).collect(Collectors.toList());
         modifications.clear();
         return modificationInfos;
     }
@@ -193,7 +192,8 @@ public class NetworkStoreListener implements NetworkListener {
             generatorCreationInfos.getReactiveCapabilityCurve() == null || generatorCreationInfos.getReactiveCapabilityCurve(),
             toEmbeddablePoints(generatorCreationInfos.getReactiveCapabilityCurvePoints()),
             generatorCreationInfos.getConnectionName(),
-            generatorCreationInfos.getConnectionDirection()));
+            generatorCreationInfos.getConnectionDirection(),
+            generatorCreationInfos.getConnectionPosition()));
     }
 
     public void storeEquipmentDeletion(String equipmentId, String equipmentType) {

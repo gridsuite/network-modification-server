@@ -221,11 +221,12 @@ public class NetworkModificationRepository {
                                                          String regulatingTerminalId, String regulatingTerminalType, String regulatingTerminalVlId,
                                                          Double qPercent, boolean reactiveCapabilityCurve,
                                                          List<ReactiveCapabilityCurveCreationEmbeddable> reactiveCapabilityCurvePoints, String connectionName,
-                                                         ConnectablePosition.Direction connectionDirection) {
+                                                         ConnectablePosition.Direction connectionDirection,
+                                                         Integer connectionPosition) {
         return new GeneratorCreationEntity(generatorId, generatorName, energySource, voltageLevelId, busOrBusbarSectionId, minActivePower,
             maxActivePower, ratedNominalPower, activePowerSetpoint, reactivePowerSetpoint, voltageRegulationOn, voltageSetpoint, marginalCost, minQ, maxQ,
             participate, droop,  transientReactance, stepUpTransformerReactance, reactiveCapabilityCurvePoints, regulatingTerminalId, regulatingTerminalType,
-            regulatingTerminalVlId, qPercent, reactiveCapabilityCurve, connectionName, connectionDirection);
+            regulatingTerminalVlId, qPercent, reactiveCapabilityCurve, connectionName, connectionDirection, connectionPosition);
     }
 
     public EquipmentCreationEntity createLineEntity(String lineId, String lineName, double seriesResistance, double seriesReactance,

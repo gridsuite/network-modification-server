@@ -491,7 +491,8 @@ public class NetworkModificationService {
                 generatorCreationInfos.getReactiveCapabilityCurve(),
                 toEmbeddablePoints(generatorCreationInfos.getReactiveCapabilityCurvePoints()),
                 generatorCreationInfos.getConnectionName(),
-                generatorCreationInfos.getConnectionDirection());
+                generatorCreationInfos.getConnectionDirection(),
+                generatorCreationInfos.getConnectionPosition());
 
         updatedEntity.setId(modificationUuid);
         updatedEntity.setGroup(generatorModificationEntity.get().getGroup());
@@ -1014,7 +1015,8 @@ public class NetworkModificationService {
                 VoltageLevel voltageLevel = getVoltageLevel(network, generatorCreationInfos.getVoltageLevelId());
                 if (voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER) {
                     GeneratorAdder generatorAdder = createGeneratorAdderInNodeBreaker(voltageLevel, generatorCreationInfos);
-                    var position = ModificationUtils.getInstance().getPosition(generatorCreationInfos.getBusOrBusbarSectionId(), network, voltageLevel);
+                    var position = generatorCreationInfos.getConnectionPosition() != null ? generatorCreationInfos.getConnectionPosition() :
+                            ModificationUtils.getInstance().getPosition(generatorCreationInfos.getBusOrBusbarSectionId(), network, voltageLevel);
 
                     CreateFeederBay algo = new CreateFeederBayBuilder()
                             .withBbsId(generatorCreationInfos.getBusOrBusbarSectionId())
@@ -1739,11 +1741,12 @@ public class NetworkModificationService {
                 VoltageLevel voltageLevel = getVoltageLevel(network, shuntCompensatorCreationInfos.getVoltageLevelId());
                 if (voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER) {
                     ShuntCompensatorAdder shuntCompensatorAdder = createShuntAdderInNodeBreaker(voltageLevel, shuntCompensatorCreationInfos);
-                    var position = ModificationUtils.getInstance().getPosition(shuntCompensatorCreationInfos.getBusOrBusbarSectionId(), network, voltageLevel);
+                    var position = shuntCompensatorCreationInfos.getConnectionPosition() != null ? shuntCompensatorCreationInfos.getConnectionPosition() :
+                            ModificationUtils.getInstance().getPosition(shuntCompensatorCreationInfos.getBusOrBusbarSectionId(), network, voltageLevel);
                     CreateFeederBay algo = new CreateFeederBayBuilder()
                             .withBbsId(shuntCompensatorCreationInfos.getBusOrBusbarSectionId())
                             .withInjectionDirection(shuntCompensatorCreationInfos.getConnectionDirection())
-                            .withInjectionFeederName(shuntCompensatorCreationInfos.getConnectionName())
+                            .withInjectionFeederName(shuntCompensatorCreationInfos.getConnectionName() != null ? shuntCompensatorCreationInfos.getConnectionName() : shuntCompensatorCreationInfos.getEquipmentId())
                             .withInjectionPositionOrder(position)
                             .withInjectionAdder(shuntCompensatorAdder)
                             .build();

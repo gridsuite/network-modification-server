@@ -48,11 +48,14 @@ public class LoadCreationInfos extends InjectionCreationInfos {
     @Schema(description = "Connection Direction")
     private ConnectablePosition.Direction connectionDirection;
 
+    @Schema(description = "Connection Position")
+    private Integer connectionPosition;
+
     @Override
     public LoadCreationEntity toEntity() {
         return new LoadCreationEntity(getEquipmentId(), getEquipmentName(), getLoadType(),
             getVoltageLevelId(), getBusOrBusbarSectionId(),
-            getActivePower(), getReactivePower(), getConnectionName(), getConnectionDirection());
+            getActivePower(), getReactivePower(), getConnectionName(), getConnectionDirection(), getConnectionPosition());
     }
 
     @Override

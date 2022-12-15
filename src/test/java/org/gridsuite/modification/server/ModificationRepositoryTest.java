@@ -229,9 +229,9 @@ public class ModificationRepositoryTest {
 
     @Test
     public void testLoadCreation() {
-        var createLoadEntity1 = LoadCreationInfos.builder().equipmentId("idLoad1").equipmentName("nameLoad1").loadType(LoadType.AUXILIARY).voltageLevelId("vlId1").busOrBusbarSectionId("busId1").activePower(100.).reactivePower(20.).connectionName("top1").connectionDirection(ConnectablePosition.Direction.TOP).build().toEntity();
-        var createLoadEntity2 = LoadCreationInfos.builder().equipmentId("idLoad2").equipmentName("nameLoad2").loadType(LoadType.FICTITIOUS).voltageLevelId("vlId2").busOrBusbarSectionId("busId2").activePower(80.).reactivePower(30.).connectionName("bottom1").connectionDirection(ConnectablePosition.Direction.BOTTOM).build().toEntity();
-        var createLoadEntity3 = LoadCreationInfos.builder().equipmentId("idLoad3").equipmentName("nameLoad3").loadType(LoadType.FICTITIOUS).voltageLevelId("vlId3").busOrBusbarSectionId("busId3").activePower(50.).reactivePower(90.).connectionName("top2").connectionDirection(ConnectablePosition.Direction.TOP).build().toEntity();
+        var createLoadEntity1 = LoadCreationInfos.builder().equipmentId("idLoad1").equipmentName("nameLoad1").loadType(LoadType.AUXILIARY).voltageLevelId("vlId1").busOrBusbarSectionId("busId1").activePower(100.).reactivePower(20.).connectionName("top1").connectionDirection(ConnectablePosition.Direction.TOP).connectionPosition(11).build().toEntity();
+        var createLoadEntity2 = LoadCreationInfos.builder().equipmentId("idLoad2").equipmentName("nameLoad2").loadType(LoadType.FICTITIOUS).voltageLevelId("vlId2").busOrBusbarSectionId("busId2").activePower(80.).reactivePower(30.).connectionName("bottom1").connectionDirection(ConnectablePosition.Direction.BOTTOM).connectionPosition(11).build().toEntity();
+        var createLoadEntity3 = LoadCreationInfos.builder().equipmentId("idLoad3").equipmentName("nameLoad3").loadType(LoadType.FICTITIOUS).voltageLevelId("vlId3").busOrBusbarSectionId("busId3").activePower(50.).reactivePower(90.).connectionName("top2").connectionDirection(ConnectablePosition.Direction.TOP).connectionPosition(12).build().toEntity();
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(createLoadEntity1, createLoadEntity2, createLoadEntity3));
         assertRequestsCount(1, 7, 3, 0);
@@ -268,10 +268,10 @@ public class ModificationRepositoryTest {
 
     @Test
     public void testGeneratorCreation() {
-        var createGeneratorEntity1 = networkModificationRepository.createGeneratorEntity("idGenerator1", "nameGenerator1", EnergySource.HYDRO, "vlId1", "busId1", 100.0, 800.0, 10., 500., 50., true, 225., 20., 30., 50., true, 8f, 37., 46., "testTerminalId1", "LINE", "idVlTest1", 25., false, List.of(), "Top", ConnectablePosition.Direction.TOP);
-        var createGeneratorEntity2 = networkModificationRepository.createGeneratorEntity("idGenerator2", "nameGenerator2", EnergySource.SOLAR, "vlId2", "busId2", 0., 300., 5., 150., 30., false, 380.0, 30., 10., 20., false, null, 37., 46., null, null, "idVlTest2", 25., false, List.of(), "Bot", ConnectablePosition.Direction.BOTTOM);
+        var createGeneratorEntity1 = networkModificationRepository.createGeneratorEntity("idGenerator1", "nameGenerator1", EnergySource.HYDRO, "vlId1", "busId1", 100.0, 800.0, 10., 500., 50., true, 225., 20., 30., 50., true, 8f, 37., 46., "testTerminalId1", "LINE", "idVlTest1", 25., false, List.of(), "Top", ConnectablePosition.Direction.TOP, 1);
+        var createGeneratorEntity2 = networkModificationRepository.createGeneratorEntity("idGenerator2", "nameGenerator2", EnergySource.SOLAR, "vlId2", "busId2", 0., 300., 5., 150., 30., false, 380.0, 30., 10., 20., false, null, 37., 46., null, null, "idVlTest2", 25., false, List.of(), "Bot", ConnectablePosition.Direction.BOTTOM, 2);
         var createGeneratorEntity3 = networkModificationRepository.createGeneratorEntity("idGenerator3", "nameGenerator3", EnergySource.OTHER, "vlId3", "busId3", 10., 900., 5., 250., 20., true, 150.0, null, null, null, false, null, 37., null, "testTerminalId2", "BATTERY", "idVlTest3", 25., true,
-                List.of(new ReactiveCapabilityCurveCreationEmbeddable(33., 44., 55.)), "Top", ConnectablePosition.Direction.TOP);
+                List.of(new ReactiveCapabilityCurveCreationEmbeddable(33., 44., 55.)), "Top", ConnectablePosition.Direction.TOP, 3);
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(createGeneratorEntity1, createGeneratorEntity2, createGeneratorEntity3));
         assertRequestsCount(1, 8, 3, 0);
