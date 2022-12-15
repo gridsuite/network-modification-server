@@ -832,17 +832,17 @@ public class ModificationRepositoryTest {
 
         assertThat(getLineSplitWithVoltageLevelModification(modificationInfos.get(0).getUuid()),
                 MatcherLineSplitWithVoltageLevelInfos.createMatcherLineSplitWithVoltageLevelInfos(
-                        lineSplitEntity1.toLineSplitWithVoltageLevelInfos()));
+                        lineSplitEntity1.toModificationInfos()));
 
         assertThat(getLineSplitWithVoltageLevelModification(modificationInfos.get(2).getUuid()),
                 MatcherLineSplitWithVoltageLevelInfos.createMatcherLineSplitWithVoltageLevelInfos(
-                        lineSplitEntity2.toLineSplitWithVoltageLevelInfos()));
+                        lineSplitEntity2.toModificationInfos()));
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(lineSplitEntity1.getId(),
                 voltageLevelCreationEntity.getId(),
                 lineSplitEntity2.getId()));
-        assertRequestsCount(2, 0, 0, 8);
+        assertRequestsCount(3, 0, 0, 12);
 
         modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
         assertEquals(0, modificationInfos.size());

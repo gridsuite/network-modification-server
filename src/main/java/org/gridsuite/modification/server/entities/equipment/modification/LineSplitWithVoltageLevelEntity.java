@@ -70,7 +70,7 @@ public class LineSplitWithVoltageLevelEntity  extends ModificationEntity {
         percent = splitWithVoltageLevelInfos.getPercent();
         mayVoltageLevelCreation = null; // Need for the update
         if (splitWithVoltageLevelInfos.getMayNewVoltageLevelInfos() != null) {
-            VoltageLevelCreationEntity.toEntity(splitWithVoltageLevelInfos.getMayNewVoltageLevelInfos()); // TODO use VoltageLevelCreationInfos.toEntity
+            mayVoltageLevelCreation = VoltageLevelCreationEntity.toEntity(splitWithVoltageLevelInfos.getMayNewVoltageLevelInfos()); // TODO use VoltageLevelCreationInfos.toEntity
         }
         existingVoltageLevelId = splitWithVoltageLevelInfos.getExistingVoltageLevelId();
         bbsOrBusId = splitWithVoltageLevelInfos.getBbsOrBusId();
@@ -82,10 +82,6 @@ public class LineSplitWithVoltageLevelEntity  extends ModificationEntity {
 
     @Override
     public LineSplitWithVoltageLevelInfos toModificationInfos() {
-        return toLineSplitWithVoltageLevelInfosBuilder().build();
-    }
-
-    public LineSplitWithVoltageLevelInfos toLineSplitWithVoltageLevelInfos() {
         return toLineSplitWithVoltageLevelInfosBuilder().build();
     }
 
