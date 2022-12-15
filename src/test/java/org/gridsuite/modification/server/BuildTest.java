@@ -28,7 +28,6 @@ import org.gridsuite.modification.server.entities.ModificationGroupEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.BusbarConnectionCreationEmbeddable;
 import org.gridsuite.modification.server.entities.equipment.creation.BusbarSectionCreationEmbeddable;
 import org.gridsuite.modification.server.entities.equipment.creation.TapChangerStepCreationEmbeddable;
-import org.gridsuite.modification.server.entities.equipment.modification.LineSplitWithVoltageLevelEntity;
 import org.gridsuite.modification.server.repositories.ModificationGroupRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.NetworkModificationService;
@@ -215,9 +214,20 @@ public class BuildTest {
 
     @Test
     public void runBuildForLineSplits() throws  Exception {
-        List<ModificationEntity> entities1 = new ArrayList<>();
-        entities1.add(modificationRepository.createLineEntity("newLine", "newLine", 1., 2., 3., 4., 5., 6., "v1", "1.1", "v2", "1B", null, null, "cn11", ConnectablePosition.Direction.TOP, "cn22", ConnectablePosition.Direction.TOP));
-        entities1.add(LineSplitWithVoltageLevelEntity.toEntity("line3", 0.32, null, "vl1", "sjb1", "un", "One", "deux", "Two"));
+        List<ModificationEntity> entities1 = List.of(
+            modificationRepository.createLineEntity("newLine", "newLine", 1., 2., 3., 4., 5., 6., "v1", "1.1", "v2", "1B", null, null, "cn11", ConnectablePosition.Direction.TOP, "cn22", ConnectablePosition.Direction.TOP),
+            LineSplitWithVoltageLevelInfos.builder().type(ModificationType.LINE_SPLIT_WITH_VOLTAGE_LEVEL)
+                .lineToSplitId("line3")
+                .percent(0.32)
+                .mayNewVoltageLevelInfos(null)
+                .existingVoltageLevelId("vl1")
+                .bbsOrBusId("sjb1")
+                .newLine1Id("un")
+                .newLine1Name("One")
+                .newLine2Id("deux")
+                .newLine2Name("Two")
+                .build().toEntity()
+        );
         modificationRepository.saveModifications(TEST_GROUP_ID, entities1);
 
         List<ModificationEntity> entities2 = new ArrayList<>();

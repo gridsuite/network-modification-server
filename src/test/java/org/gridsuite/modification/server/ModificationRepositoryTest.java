@@ -801,13 +801,29 @@ public class ModificationRepositoryTest {
 
     @Test
     public void testLineSplitWithVoltageLevel() {
-        LineSplitWithVoltageLevelEntity lineSplitEntity1 = LineSplitWithVoltageLevelEntity.toEntity(
-                "lineId0", 30.0, null, "vl1", "bbsId", "line1id", "line1Name", "line2Id", "line2Name"
-        );
+        LineSplitWithVoltageLevelEntity lineSplitEntity1 = LineSplitWithVoltageLevelInfos.builder().type(ModificationType.LINE_SPLIT_WITH_VOLTAGE_LEVEL)
+            .lineToSplitId("lineId0")
+            .percent(30.0)
+            .mayNewVoltageLevelInfos(null)
+            .existingVoltageLevelId("vl1")
+            .bbsOrBusId("bbsId")
+            .newLine1Id("line1id")
+            .newLine1Name("line1Name")
+            .newLine2Id("line2Id")
+            .newLine2Name("line2Name")
+            .build().toEntity();
         VoltageLevelCreationInfos voltageLevelCreationInfos = makeAVoltageLevelInfos(1, 0);
-        LineSplitWithVoltageLevelEntity lineSplitEntity2 = LineSplitWithVoltageLevelEntity.toEntity(
-                "lineId1", 30.0, voltageLevelCreationInfos, null, "bbsId", "line1id", "line1Name", "line2Id", "line2Name"
-        );
+        LineSplitWithVoltageLevelEntity lineSplitEntity2 = LineSplitWithVoltageLevelInfos.builder().type(ModificationType.LINE_SPLIT_WITH_VOLTAGE_LEVEL)
+            .lineToSplitId("lineId1")
+            .percent(30.0)
+            .mayNewVoltageLevelInfos(voltageLevelCreationInfos)
+            .existingVoltageLevelId(null)
+            .bbsOrBusId("bbsId")
+            .newLine1Id("line1id")
+            .newLine1Name("line1Name")
+            .newLine2Id("line2Id")
+            .newLine2Name("line2Name")
+            .build().toEntity();
         VoltageLevelCreationEntity voltageLevelCreationEntity = VoltageLevelCreationEntity.toEntity(voltageLevelCreationInfos);
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(lineSplitEntity1, voltageLevelCreationEntity, lineSplitEntity2));
 
@@ -826,7 +842,10 @@ public class ModificationRepositoryTest {
         networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(lineSplitEntity1.getId(),
                 voltageLevelCreationEntity.getId(),
                 lineSplitEntity2.getId()));
-        assertRequestsCount(3, 0, 0, 12);
+        assertRequestsCount(2, 0, 0, 8);
+
+        modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
+        assertEquals(0, modificationInfos.size());
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
