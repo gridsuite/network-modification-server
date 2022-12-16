@@ -7,46 +7,27 @@
 
 package org.gridsuite.modification.server.modifications;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.ShuntCompensatorCreationInfos;
+import org.gridsuite.modification.server.utils.MatcherModificationInfos;
+import org.gridsuite.modification.server.utils.MatcherShuntCompensatorCreationInfos;
 import org.junit.Test;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MvcResult;
 
 import java.time.ZonedDateTime;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.BUS_NOT_FOUND;
-import static org.gridsuite.modification.server.utils.MatcherShuntCompensatorCreationInfos.createMatcher;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class ShuntCompensatorCreationTest extends AbstractNetworkModificationTest {
-
-    @Override
-    public void testCreate() throws Exception {
-
-        ShuntCompensatorCreationInfos modificationToCreate = buildShuntCompensatorCreationInfos();
-        String modificationToCreateJson = mapper.writeValueAsString(modificationToCreate);
-
-        mockMvc.perform(post(URI_NETWORK_MODIF).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
-
-        ShuntCompensatorCreationInfos createdModification = (ShuntCompensatorCreationInfos) modificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
-
-        assertThat(createdModification, createMatcher(modificationToCreate));
-        assertNotNull(network.getShuntCompensator("shuntOneId"));  // shunt compensator was created
-        testNetworkModificationsCount(TEST_GROUP_ID, 1);
-    }
 
     public void testCreateWithError() throws Exception {
 
@@ -59,81 +40,6 @@ public class ShuntCompensatorCreationTest extends AbstractNetworkModificationTes
 
         mockMvc.perform(post(URI_NETWORK_MODIF).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().is5xxServerError());
-    }
-
-    @Override
-    public void testRead() throws Exception {
-
-        ShuntCompensatorCreationInfos modificationToRead = buildShuntCompensatorCreationInfos();
-
-        UUID modificationUuid = addModificationToRepository(modificationToRead);
-
-        MvcResult mvcResult = mockMvc.perform(get(URI_NETWORK_MODIF_GET_PUT + modificationUuid))
-                .andExpect(status().isOk()).andReturn();
-        String resultAsString = mvcResult.getResponse().getContentAsString();
-        ShuntCompensatorCreationInfos receivedModification = mapper.readValue(resultAsString, new TypeReference<>() {
-        });
-
-        assertThat(receivedModification, createMatcher(modificationToRead));
-    }
-
-    @Override
-    public void testUpdate() throws Exception {
-
-        ShuntCompensatorCreationInfos modificationToUpdate = buildShuntCompensatorCreationInfos();
-
-        UUID modificationUuid = addModificationToRepository(modificationToUpdate);
-
-        modificationToUpdate = buildShuntCompensatorCreationInfosUpdate();
-
-        String modificationToUpdateJson = mapper.writeValueAsString(modificationToUpdate);
-
-        mockMvc.perform(put(URI_NETWORK_MODIF_GET_PUT + modificationUuid).content(modificationToUpdateJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
-
-        ShuntCompensatorCreationInfos updatedModification = (ShuntCompensatorCreationInfos) modificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
-
-        assertThat(updatedModification, createMatcher(modificationToUpdate));
-        testNetworkModificationsCount(TEST_GROUP_ID, 1);
-    }
-
-    @Override
-    public void testDelete() throws Exception {
-
-        ShuntCompensatorCreationInfos modificationToDelete = buildShuntCompensatorCreationInfos();
-
-        UUID modificationUuid = addModificationToRepository(modificationToDelete);
-
-        mockMvc.perform(delete(URI_NETWORK_MODIF)
-                        .queryParam("groupUuid", TEST_GROUP_ID.toString())
-                        .queryParam("uuids", modificationUuid.toString()))
-                .andExpect(status().isOk()).andReturn();
-
-        List<ModificationInfos> storedModifications = modificationRepository.getModifications(TEST_GROUP_ID, false, true);
-
-        assertTrue(storedModifications.isEmpty());
-        assertNull(network.getShuntCompensator("shuntOneId"));
-    }
-
-    @Override
-    public void testCopy() throws Exception {
-
-        ShuntCompensatorCreationInfos modificationToCopy = buildShuntCompensatorCreationInfos();
-
-        UUID modificationUuid = addModificationToRepository(modificationToCopy);
-
-        mockMvc.perform(put(URI_NETWORK_MODIF_COPY)
-                        .content(mapper.writeValueAsString(List.of(modificationUuid)))
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
-
-        List<ShuntCompensatorCreationInfos> modifications = modificationRepository
-                .getModifications(TEST_GROUP_ID, false, true)
-                .stream().map(ShuntCompensatorCreationInfos.class::cast).collect(Collectors.toList());
-
-        assertEquals(2, modifications.size());
-        assertThat(modifications.get(0), createMatcher(modificationToCopy));
-        assertThat(modifications.get(1), createMatcher(modificationToCopy));
     }
 
     // old test moved here
@@ -160,7 +66,7 @@ public class ShuntCompensatorCreationTest extends AbstractNetworkModificationTes
                 .andExpect(status().isOk()).andReturn();
 
         ShuntCompensatorCreationInfos bsmlrShuntCompensator = (ShuntCompensatorCreationInfos) modificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
-        assertThat(bsmlrShuntCompensator, createMatcher(shunt));
+        assertThat(bsmlrShuntCompensator, MatcherShuntCompensatorCreationInfos.createMatcher(shunt));
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
 
         shunt.setEquipmentId("shuntTwoId");
@@ -219,6 +125,52 @@ public class ShuntCompensatorCreationTest extends AbstractNetworkModificationTes
                 .connectionName("cnEdited")
                 .connectionDirection(ConnectablePosition.Direction.UNDEFINED)
                 .build();
+    }
+
+    protected ModificationInfos buildModification() {
+        return ShuntCompensatorCreationInfos.builder()
+                .type(ModificationType.SHUNT_COMPENSATOR_CREATION)
+                .date(ZonedDateTime.now())
+                .equipmentId("shuntOneId")
+                .equipmentName("hop")
+                .currentNumberOfSections(4)
+                .maximumNumberOfSections(9)
+                .susceptancePerSection(1.)
+                .isIdenticalSection(true)
+                .voltageLevelId("v2")
+                .busOrBusbarSectionId("1B")
+                .connectionName("cn")
+                .connectionDirection(ConnectablePosition.Direction.UNDEFINED)
+                .build();
+    }
+
+    protected ModificationInfos buildModificationUpdate() {
+        return ShuntCompensatorCreationInfos.builder()
+                .type(ModificationType.SHUNT_COMPENSATOR_CREATION)
+                .date(ZonedDateTime.now())
+                .equipmentId("shuntOneIdEdited")
+                .equipmentName("hopEdited")
+                .currentNumberOfSections(6)
+                .maximumNumberOfSections(12)
+                .susceptancePerSection(1.)
+                .isIdenticalSection(false)
+                .voltageLevelId("v4")
+                .busOrBusbarSectionId("1.A")
+                .connectionName("cnEdited")
+                .connectionDirection(ConnectablePosition.Direction.UNDEFINED)
+                .build();
+    }
+
+    protected MatcherModificationInfos createMatcher(ModificationInfos modificationInfos) {
+        return MatcherShuntCompensatorCreationInfos.createMatcher((ShuntCompensatorCreationInfos) modificationInfos);
+    }
+
+    protected void assertNetworkAfterCreation() {
+        assertNotNull(network.getShuntCompensator("shuntOneId"));
+    }
+
+    protected void assertNetworkAfterDeletion() {
+        assertNull(network.getShuntCompensator("shuntOneId"));
     }
 
 }

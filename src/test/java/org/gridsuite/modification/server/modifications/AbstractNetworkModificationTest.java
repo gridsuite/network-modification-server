@@ -16,6 +16,7 @@ import com.powsybl.network.store.client.NetworkStoreService;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.NetworkModificationService;
+import org.gridsuite.modification.server.utils.MatcherModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.After;
 import org.junit.Before;
@@ -37,11 +38,13 @@ import org.springframework.web.client.RestTemplate;
 import java.util.List;
 import java.util.UUID;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /*
@@ -119,19 +122,94 @@ public abstract class AbstractNetworkModificationTest {
     }
 
     @Test
-    public abstract void testCreate() throws Exception;
+    public void testCreate() throws Exception {
+
+        ModificationInfos modificationToCreate = buildModification();
+        String modificationToCreateJson = mapper.writeValueAsString(modificationToCreate);
+
+        mockMvc.perform(post(URI_NETWORK_MODIF).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+
+        ModificationInfos createdModification = modificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
+
+        assertThat(createdModification, createMatcher(modificationToCreate));
+        testNetworkModificationsCount(TEST_GROUP_ID, 1);
+        assertNetworkAfterCreation();
+    }
 
     @Test
-    public abstract void testRead() throws Exception;
+    public void testRead() throws Exception {
+
+        ModificationInfos modificationToRead = buildModification();
+
+        UUID modificationUuid = addModificationToRepository(modificationToRead);
+
+        MvcResult mvcResult = mockMvc.perform(get(URI_NETWORK_MODIF_GET_PUT + modificationUuid))
+                .andExpect(status().isOk()).andReturn();
+        String resultAsString = mvcResult.getResponse().getContentAsString();
+        ModificationInfos receivedModification = mapper.readValue(resultAsString, new TypeReference<>() {
+        });
+
+        assertThat(receivedModification, createMatcher(modificationToRead));
+    }
 
     @Test
-    public abstract void testUpdate() throws Exception;
+    public void testUpdate() throws Exception {
+
+        ModificationInfos modificationToUpdate = buildModification();
+
+        UUID modificationUuid = addModificationToRepository(modificationToUpdate);
+
+        modificationToUpdate = buildModificationUpdate();
+
+        String modificationToUpdateJson = mapper.writeValueAsString(modificationToUpdate);
+
+        mockMvc.perform(put(URI_NETWORK_MODIF_GET_PUT + modificationUuid).content(modificationToUpdateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        ModificationInfos updatedModification = modificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
+
+        assertThat(updatedModification, createMatcher(modificationToUpdate));
+        testNetworkModificationsCount(TEST_GROUP_ID, 1);
+    }
 
     @Test
-    public abstract void testDelete() throws Exception;
+    public void testDelete() throws Exception {
+
+        ModificationInfos modificationToDelete = buildModification();
+
+        UUID modificationUuid = addModificationToRepository(modificationToDelete);
+
+        mockMvc.perform(delete(URI_NETWORK_MODIF)
+                        .queryParam("groupUuid", TEST_GROUP_ID.toString())
+                        .queryParam("uuids", modificationUuid.toString()))
+                .andExpect(status().isOk()).andReturn();
+
+        List<ModificationInfos> storedModifications = modificationRepository.getModifications(TEST_GROUP_ID, false, true);
+
+        assertTrue(storedModifications.isEmpty());
+        assertNetworkAfterDeletion();
+    }
 
     @Test
-    public abstract void testCopy() throws Exception;
+    public void testCopy() throws Exception {
+
+        ModificationInfos modificationToCopy = buildModification();
+
+        UUID modificationUuid = addModificationToRepository(modificationToCopy);
+
+        mockMvc.perform(put(URI_NETWORK_MODIF_COPY)
+                        .content(mapper.writeValueAsString(List.of(modificationUuid)))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+
+        List<ModificationInfos> modifications = modificationRepository
+                .getModifications(TEST_GROUP_ID, false, true);
+
+        assertEquals(2, modifications.size());
+        assertThat(modifications.get(0), createMatcher(modificationToCopy));
+        assertThat(modifications.get(1), createMatcher(modificationToCopy));
+    }
 
     protected void testNetworkModificationsCount(UUID groupUuid, int actualSize) throws Exception {
         MvcResult mvcResult;
@@ -148,5 +226,13 @@ public abstract class AbstractNetworkModificationTest {
         modificationRepository.saveModifications(TEST_GROUP_ID, List.of(modificationInfos.toEntity()));
         return modificationRepository.getModifications(TEST_GROUP_ID, true, true).get(0).getUuid();
     }
+    protected abstract ModificationInfos buildModification();
 
+    protected abstract ModificationInfos buildModificationUpdate();
+
+    protected abstract MatcherModificationInfos createMatcher(ModificationInfos modificationInfos);
+
+    protected abstract void assertNetworkAfterCreation();
+
+    protected abstract void assertNetworkAfterDeletion();
 }

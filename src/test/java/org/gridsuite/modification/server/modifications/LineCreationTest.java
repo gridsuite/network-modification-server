@@ -15,41 +15,21 @@ import org.gridsuite.modification.server.dto.CurrentLimitsInfos;
 import org.gridsuite.modification.server.dto.EquipmentModificationInfos;
 import org.gridsuite.modification.server.dto.LineCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.utils.MatcherModificationInfos;
 import org.junit.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.utils.MatcherLineCreationInfos.createMatcherLineCreationInfos;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class LineCreationTest extends AbstractNetworkModificationTest {
-
-    @Override
-    public void testCreate() throws Exception {
-
-        // create new line in voltage levels with node/breaker topology
-        // between voltage level "v1" and busbar section "1.1" and
-        //         voltage level "v2" and busbar section "1.A"
-        LineCreationInfos modificationToCreate = buildLineCreationInfos();
-        String modificationToCreateJson = mapper.writeValueAsString(modificationToCreate);
-
-        mockMvc.perform(post(URI_NETWORK_MODIF).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
-
-        LineCreationInfos createdModification = (LineCreationInfos) modificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
-
-        assertThat(createdModification, createMatcherLineCreationInfos(modificationToCreate));
-        assertNotNull(network.getLine("idLine"));  // line was created
-        testNetworkModificationsCount(TEST_GROUP_ID, 1);
-    }
 
     public void testCreateWithNoLine() throws Exception {
 
@@ -67,80 +47,6 @@ public class LineCreationTest extends AbstractNetworkModificationTest {
         assertTrue(modifications.isEmpty());  // no modifications returned
         assertNull(network.getLine("idLine2"));  // line was not created
         testNetworkModificationsCount(TEST_GROUP_ID, 2);  // new modification stored in the database
-    }
-
-    @Override
-    public void testRead() throws Exception {
-
-        LineCreationInfos modificationToRead = buildLineCreationInfos();
-
-        UUID modificationUuid = addModificationToRepository(modificationToRead);
-
-        MvcResult mvcResult = mockMvc.perform(get(URI_NETWORK_MODIF_GET_PUT + modificationUuid))
-                .andExpect(status().isOk()).andReturn();
-        String resultAsString = mvcResult.getResponse().getContentAsString();
-        LineCreationInfos receivedModification = mapper.readValue(resultAsString, new TypeReference<>() {
-        });
-
-        assertThat(receivedModification, createMatcherLineCreationInfos(modificationToRead));
-    }
-
-    @Override
-    public void testUpdate() throws Exception {
-
-        LineCreationInfos modificationToUpdate = buildLineCreationInfos();
-
-        UUID modificationUuid = addModificationToRepository(modificationToUpdate);
-
-        modificationToUpdate = buildLineCreationInfosBis();
-        String modificationToUpdateJson = mapper.writeValueAsString(modificationToUpdate);
-
-        mockMvc.perform(put(URI_NETWORK_MODIF_GET_PUT + modificationUuid).content(modificationToUpdateJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
-
-        LineCreationInfos updatedModification = (LineCreationInfos) modificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
-
-        assertThat(updatedModification, createMatcherLineCreationInfos(modificationToUpdate));
-        testNetworkModificationsCount(TEST_GROUP_ID, 1);
-    }
-
-    @Override
-    public void testDelete() throws Exception {
-
-        LineCreationInfos modificationToDelete = buildLineCreationInfos();
-
-        UUID modificationUuid = addModificationToRepository(modificationToDelete);
-
-        mockMvc.perform(delete(URI_NETWORK_MODIF)
-                        .queryParam("groupUuid", TEST_GROUP_ID.toString())
-                        .queryParam("uuids", modificationUuid.toString()))
-                .andExpect(status().isOk()).andReturn();
-
-        List<ModificationInfos> storedModifications = modificationRepository.getModifications(TEST_GROUP_ID, false, true);
-
-        assertTrue(storedModifications.isEmpty());
-        assertNull(network.getLine("idLine"));
-    }
-
-    @Override
-    public void testCopy() throws Exception {
-
-        LineCreationInfos modificationToCopy = buildLineCreationInfos();
-
-        UUID modificationUuid = addModificationToRepository(modificationToCopy);
-
-        mockMvc.perform(put(URI_NETWORK_MODIF_COPY)
-                        .content(mapper.writeValueAsString(List.of(modificationUuid)))
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
-
-        List<LineCreationInfos> modifications = modificationRepository
-                .getModifications(TEST_GROUP_ID, false, true)
-                .stream().map(LineCreationInfos.class::cast).collect(Collectors.toList());
-
-        assertEquals(2, modifications.size());
-        assertThat(modifications.get(0), createMatcherLineCreationInfos(modificationToCopy));
-        assertThat(modifications.get(1), createMatcherLineCreationInfos(modificationToCopy));
     }
 
     // old tests moved here
@@ -532,5 +438,63 @@ public class LineCreationTest extends AbstractNetworkModificationTest {
                 .connectionName2("cn2LineEdited")
                 .connectionDirection2(ConnectablePosition.Direction.TOP)
                 .build();
+    }
+
+    protected ModificationInfos buildModification() {
+        return LineCreationInfos.builder()
+                .type(ModificationType.LINE_CREATION)
+                .equipmentId("idLine")
+                .equipmentName("nameLine")
+                .seriesResistance(100.0)
+                .seriesReactance(100.0)
+                .shuntConductance1(10.0)
+                .shuntSusceptance1(10.0)
+                .shuntConductance2(20.0)
+                .shuntSusceptance2(20.0)
+                .voltageLevelId1("v1")
+                .busOrBusbarSectionId1("1.1")
+                .voltageLevelId2("v2")
+                .busOrBusbarSectionId2("1A")
+                .connectionName1("cn1Line")
+                .connectionDirection1(ConnectablePosition.Direction.TOP)
+                .connectionName2("cn2Line")
+                .connectionDirection2(ConnectablePosition.Direction.BOTTOM)
+                .build();
+    }
+
+    protected ModificationInfos buildModificationUpdate() {
+        return LineCreationInfos.builder()
+                .type(ModificationType.LINE_CREATION)
+                .equipmentId("idLineEdited")
+                .equipmentName("nameLineEdited")
+                .seriesResistance(110.0)
+                .seriesReactance(110.0)
+                .shuntConductance1(15.0)
+                .shuntSusceptance1(15.0)
+                .shuntConductance2(25.0)
+                .shuntSusceptance2(25.0)
+                .voltageLevelId1("v2")
+                .busOrBusbarSectionId1("1A")
+                .voltageLevelId2("v1")
+                .busOrBusbarSectionId2("1.1")
+                .currentLimits1(CurrentLimitsInfos.builder().permanentLimit(5.).build())
+                .currentLimits2(CurrentLimitsInfos.builder().permanentLimit(5.).build())
+                .connectionName1("cn1LineEdited")
+                .connectionDirection1(ConnectablePosition.Direction.BOTTOM)
+                .connectionName2("cn2LineEdited")
+                .connectionDirection2(ConnectablePosition.Direction.TOP)
+                .build();
+    }
+
+    protected MatcherModificationInfos createMatcher(ModificationInfos modificationInfos) {
+        return createMatcherLineCreationInfos((LineCreationInfos) modificationInfos);
+    }
+
+    protected void assertNetworkAfterCreation() {
+        assertNotNull(network.getLine("idLine"));
+    }
+
+    protected void assertNetworkAfterDeletion() {
+        assertNull(network.getLine("idLine"));
     }
 }
