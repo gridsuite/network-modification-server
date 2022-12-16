@@ -1535,7 +1535,7 @@ public class NetworkModificationService {
     }
 
     public void moveModifications(UUID groupUuid, UUID originGroupUuid, UUID before, UUID networkUuid, UUID reportUuid, UUID reporterId, String variantId, List<UUID> modificationsToMove, boolean canBuildNode) {
-        List<UUID> movedModifications = networkModificationRepository.moveModifications(groupUuid, originGroupUuid, modificationsToMove, before).getLeft();
+        List<UUID> movedModifications = networkModificationRepository.moveModifications(groupUuid, originGroupUuid, modificationsToMove, before).getModificationsMoved();
         if (canBuildNode && !movedModifications.isEmpty()) {
             // try to apply the moved modifications (incremental mode)
             applyModifications(movedModifications, groupUuid, networkUuid, reportUuid, reporterId, variantId);
