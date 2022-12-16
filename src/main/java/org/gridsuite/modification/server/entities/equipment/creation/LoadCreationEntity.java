@@ -67,6 +67,7 @@ public class LoadCreationEntity extends InjectionCreationEntity {
         reactivePower = loadCreationInfos.getReactivePower();
         connectionName = loadCreationInfos.getConnectionName();
         connectionDirection = loadCreationInfos.getConnectionDirection();
+        connectionPosition = loadCreationInfos.getConnectionPosition();
     }
 
     @Override
