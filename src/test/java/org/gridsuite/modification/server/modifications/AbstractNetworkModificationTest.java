@@ -226,6 +226,7 @@ public abstract class AbstractNetworkModificationTest {
         modificationRepository.saveModifications(TEST_GROUP_ID, List.of(modificationInfos.toEntity()));
         return modificationRepository.getModifications(TEST_GROUP_ID, true, true).get(0).getUuid();
     }
+
     protected abstract ModificationInfos buildModification();
 
     protected abstract ModificationInfos buildModificationUpdate();
