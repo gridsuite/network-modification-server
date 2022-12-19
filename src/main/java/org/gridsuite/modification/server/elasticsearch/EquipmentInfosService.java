@@ -103,7 +103,7 @@ public class EquipmentInfosService {
     }
 
     public boolean existTombstonedEquipmentInfos(String equipmentId, UUID networkUuid, String variantId) {
-        return tombstonedEquipmentInfosRepository.findByIdAndNetworkUuidAndVariantId(equipmentId, networkUuid, variantId).size() > 0;
+        return !tombstonedEquipmentInfosRepository.findByIdAndNetworkUuidAndVariantId(equipmentId, networkUuid, variantId).isEmpty();
     }
 
     public void deleteAll() {
