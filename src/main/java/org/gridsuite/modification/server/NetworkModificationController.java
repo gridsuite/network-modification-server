@@ -133,6 +133,7 @@ public class NetworkModificationController {
         switch (modificationInfos.getType()) {
             case LOAD_CREATION:
             case LINE_SPLIT_WITH_VOLTAGE_LEVEL:
+            case EQUIPMENT_ATTRIBUTE_MODIFICATION:
             case SHUNT_COMPENSATOR_CREATION:
             case LINE_CREATION:
                 networkModificationService.updateModification(networkModificationUuid, modificationInfos);

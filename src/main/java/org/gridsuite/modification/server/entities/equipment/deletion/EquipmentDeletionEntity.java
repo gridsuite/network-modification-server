@@ -32,6 +32,7 @@ public class EquipmentDeletionEntity extends EquipmentModificationEntity {
     @Column(name = "equipmentType")
     private String equipmentType;
 
+    //TODO : remove
     public EquipmentDeletionEntity(String equipmentId, String equipmentType) {
         super(equipmentId, EQUIPMENT_DELETION);
         this.equipmentType = equipmentType;

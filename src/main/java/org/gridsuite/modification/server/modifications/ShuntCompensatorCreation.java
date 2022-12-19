@@ -61,31 +61,32 @@ public class ShuntCompensatorCreation extends AbstractModification {
 
     private ShuntCompensatorAdder createShuntAdderInNodeBreaker(VoltageLevel voltageLevel, ShuntCompensatorCreationInfos shuntCompensatorInfos) {
         // creating the shunt compensator
-        ShuntCompensatorAdder shunt = voltageLevel.newShuntCompensator()
+        ShuntCompensatorAdder shuntAdder = voltageLevel.newShuntCompensator()
                 .setId(shuntCompensatorInfos.getEquipmentId())
                 .setName(shuntCompensatorInfos.getEquipmentName())
                 .setSectionCount(shuntCompensatorInfos.getCurrentNumberOfSections());
 
         /* when we create non linear shunt, this is where we branch ;) */
-        shunt.newLinearModel()
+        shuntAdder.newLinearModel()
                 .setBPerSection(shuntCompensatorInfos.getSusceptancePerSection())
                 .setMaximumSectionCount(shuntCompensatorInfos.getMaximumNumberOfSections()).add();
 
-        return shunt;
+        return shuntAdder;
     }
 
     private void createShuntInBusBreaker(VoltageLevel voltageLevel, ShuntCompensatorCreationInfos shuntCompensatorInfos) {
         Bus bus = ModificationUtils.getInstance().getBusBreakerBus(voltageLevel, shuntCompensatorInfos.getBusOrBusbarSectionId());
         /* creating the shunt compensator */
         voltageLevel.newShuntCompensator()
-                .setId(shuntCompensatorInfos.getEquipmentId())
-                .setName(shuntCompensatorInfos.getEquipmentName())
-                .setSectionCount(shuntCompensatorInfos.getCurrentNumberOfSections())
-                .setBus(bus.getId())
-                .setConnectableBus(bus.getId())
-                .newLinearModel()
-                .setBPerSection(shuntCompensatorInfos.getSusceptancePerSection())
-                .setMaximumSectionCount(shuntCompensatorInfos.getMaximumNumberOfSections())
-                .add();
+            .setId(shuntCompensatorInfos.getEquipmentId())
+            .setName(shuntCompensatorInfos.getEquipmentName())
+            .setSectionCount(shuntCompensatorInfos.getCurrentNumberOfSections())
+            .setBus(bus.getId())
+            .setConnectableBus(bus.getId())
+            .newLinearModel()
+            .setBPerSection(shuntCompensatorInfos.getSusceptancePerSection())
+            .setMaximumSectionCount(shuntCompensatorInfos.getMaximumNumberOfSections())
+            .add()
+            .add();
     }
 }

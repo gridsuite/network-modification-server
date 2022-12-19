@@ -9,10 +9,12 @@ package org.gridsuite.modification.server.modifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.client.NetworkStoreService;
+import lombok.SneakyThrows;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.NetworkModificationService;
@@ -59,22 +61,16 @@ If you want to add a test specific to a modification, add it in its own class.
 @AutoConfigureMockMvc
 public abstract class AbstractNetworkModificationTest {
 
-    protected static final UUID TEST_NETWORK_ID = UUID.fromString("7928181c-7977-4592-ba19-88027e4254e4");
-    protected static final UUID NOT_FOUND_NETWORK_ID = UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
+    protected static final UUID TEST_NETWORK_ID = UUID.randomUUID();
+    protected static final UUID NOT_FOUND_NETWORK_ID = UUID.randomUUID();
     protected static final UUID TEST_GROUP_ID = UUID.randomUUID();
-    protected static final UUID TEST_NETWORK_BUS_BREAKER_ID = UUID.fromString("11111111-7977-4592-ba19-88027e4254e4");
-    protected static final UUID TEST_NETWORK_MIXED_TOPOLOGY_ID = UUID.fromString("22222222-7977-4592-ba19-88027e4254e4");
-    protected static final String VARIANT_NOT_EXISTING_ID = "variant_not_existing";
-    protected static final UUID TEST_REPORT_ID = UUID.randomUUID();
+    protected static final UUID TEST_NETWORK_BUS_BREAKER_ID = UUID.randomUUID();
+    protected static final UUID TEST_NETWORK_MIXED_TOPOLOGY_ID = UUID.randomUUID();
+    private static final UUID TEST_REPORT_ID = UUID.randomUUID();
 
-    protected static final String URI_NETWORK_MODIF_BASE = "/v1/network-modifications";
+    private static final String URI_NETWORK_MODIF_BASE = "/v1/network-modifications";
     protected static final String URI_NETWORK_MODIF_GET_PUT = URI_NETWORK_MODIF_BASE + "/";
-    protected static final String URI_NETWORK_MODIF_PARAMS = "&groupUuid=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
-    protected static final String URI_NETWORK_MODIF = URI_NETWORK_MODIF_BASE + "?networkUuid=" + TEST_NETWORK_ID + URI_NETWORK_MODIF_PARAMS;
-    protected static final String URI_NETWORK_MODIF_BUS_BREAKER = URI_NETWORK_MODIF_BASE + "?networkUuid=" + TEST_NETWORK_BUS_BREAKER_ID + URI_NETWORK_MODIF_PARAMS;
-    protected static final String URI_NETWORK_MODIF_MIXED_TOPO = URI_NETWORK_MODIF_BASE + "?networkUuid=" + TEST_NETWORK_MIXED_TOPOLOGY_ID + URI_NETWORK_MODIF_PARAMS;
-    protected static final String URI_NETWORK_MODIF_BAD_NETWORK = URI_NETWORK_MODIF_BASE + "?networkUuid=" + NOT_FOUND_NETWORK_ID + URI_NETWORK_MODIF_PARAMS;
-    protected static final String URI_NETWORK_MODIF_BAD_VARIANT = URI_NETWORK_MODIF + "&variantId=" + VARIANT_NOT_EXISTING_ID;
+    private static final String URI_NETWORK_MODIF_PARAMS = "&groupUuid=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
     protected static final String URI_NETWORK_MODIF_COPY = "/v1/groups/" + TEST_GROUP_ID + "?action=COPY";
 
     @Autowired
@@ -96,12 +92,16 @@ public abstract class AbstractNetworkModificationTest {
     @Autowired
     protected ObjectMapper mapper;
 
-    protected Network network;
-    protected Network networkBusBreaker;
+    private Network network;
+    private Network networkBusBreaker;
     protected Network networkMixedTopology;
+
+    protected ObjectWriter objectWriter; // TODO remove it
 
     @Before
     public void setUp() {
+        objectWriter = mapper.writer().withDefaultPrettyPrinter();
+
         // creating networks
         network = NetworkCreation.create(TEST_NETWORK_ID, true);
         networkBusBreaker = NetworkCreation.createBusBreaker(TEST_NETWORK_BUS_BREAKER_ID);
@@ -124,13 +124,26 @@ public abstract class AbstractNetworkModificationTest {
         modificationRepository.deleteAll();
     }
 
+    protected Network getNetwork() {
+        return networkStoreService.getNetwork(getNetworkUuid());
+    }
+
+    protected String getNetworkModificationUri() {
+        return URI_NETWORK_MODIF_BASE + "?networkUuid=" + getNetworkUuid() + URI_NETWORK_MODIF_PARAMS;
+    }
+
+    protected String getNetworkModificationUriWithBadVariant() {
+        return getNetworkModificationUri() + "&variantId=variant_not_existing";
+    }
+
     @Test
-    public void testCreate() throws Exception {
+    @SneakyThrows
+    public void testCreate() {
 
         ModificationInfos modificationToCreate = buildModification();
         String modificationToCreateJson = mapper.writeValueAsString(modificationToCreate);
 
-        mockMvc.perform(post(URI_NETWORK_MODIF).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
         ModificationInfos createdModification = modificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
@@ -141,11 +154,12 @@ public abstract class AbstractNetworkModificationTest {
     }
 
     @Test
-    public void testRead() throws Exception {
+    @SneakyThrows
+    public void testRead() {
 
         ModificationInfos modificationToRead = buildModification();
 
-        UUID modificationUuid = addModificationToRepository(modificationToRead);
+        UUID modificationUuid = saveModification(modificationToRead);
 
         MvcResult mvcResult = mockMvc.perform(get(URI_NETWORK_MODIF_GET_PUT + modificationUuid))
                 .andExpect(status().isOk()).andReturn();
@@ -157,11 +171,12 @@ public abstract class AbstractNetworkModificationTest {
     }
 
     @Test
-    public void testUpdate() throws Exception {
+    @SneakyThrows
+    public void testUpdate() {
 
         ModificationInfos modificationToUpdate = buildModification();
 
-        UUID modificationUuid = addModificationToRepository(modificationToUpdate);
+        UUID modificationUuid = saveModification(modificationToUpdate);
 
         modificationToUpdate = buildModificationUpdate();
 
@@ -170,6 +185,9 @@ public abstract class AbstractNetworkModificationTest {
         mockMvc.perform(put(URI_NETWORK_MODIF_GET_PUT + modificationUuid).content(modificationToUpdateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
+        // TODO Need a test for substations impacted
+        //assertThat(bsmListResult.get(0), createMatcherEquipmentModificationInfos(ModificationType.LOAD_CREATION, "idLoad1", Set.of("s1")));
+
         ModificationInfos updatedModification = modificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
 
         assertThat(updatedModification, createMatcher(modificationToUpdate));
@@ -177,13 +195,14 @@ public abstract class AbstractNetworkModificationTest {
     }
 
     @Test
-    public void testDelete() throws Exception {
+    @SneakyThrows
+    public void testDelete() {
 
         ModificationInfos modificationToDelete = buildModification();
 
-        UUID modificationUuid = addModificationToRepository(modificationToDelete);
+        UUID modificationUuid = saveModification(modificationToDelete);
 
-        mockMvc.perform(delete(URI_NETWORK_MODIF)
+        mockMvc.perform(delete(getNetworkModificationUri())
                         .queryParam("groupUuid", TEST_GROUP_ID.toString())
                         .queryParam("uuids", modificationUuid.toString()))
                 .andExpect(status().isOk()).andReturn();
@@ -195,11 +214,12 @@ public abstract class AbstractNetworkModificationTest {
     }
 
     @Test
-    public void testCopy() throws Exception {
+    @SneakyThrows
+    public void testCopy() {
 
         ModificationInfos modificationToCopy = buildModification();
 
-        UUID modificationUuid = addModificationToRepository(modificationToCopy);
+        UUID modificationUuid = saveModification(modificationToCopy);
 
         mockMvc.perform(put(URI_NETWORK_MODIF_COPY)
                         .content(mapper.writeValueAsString(List.of(modificationUuid)))
@@ -214,7 +234,8 @@ public abstract class AbstractNetworkModificationTest {
         assertThat(modifications.get(1), createMatcher(modificationToCopy));
     }
 
-    protected void testNetworkModificationsCount(UUID groupUuid, int actualSize) throws Exception {
+    @SneakyThrows
+    protected void testNetworkModificationsCount(UUID groupUuid, int actualSize) {
         MvcResult mvcResult;
         String resultAsString;
         // get all modifications for the given group of a network
@@ -226,10 +247,12 @@ public abstract class AbstractNetworkModificationTest {
     }
 
     /** Save a network modification into the repository and return its UUID. */
-    protected UUID addModificationToRepository(ModificationInfos modificationInfos) {
+    protected UUID saveModification(ModificationInfos modificationInfos) {
         modificationRepository.saveModifications(TEST_GROUP_ID, List.of(modificationInfos.toEntity()));
         return modificationRepository.getModifications(TEST_GROUP_ID, true, true).get(0).getUuid();
     }
+
+    protected abstract UUID getNetworkUuid();
 
     protected abstract ModificationInfos buildModification();
 
