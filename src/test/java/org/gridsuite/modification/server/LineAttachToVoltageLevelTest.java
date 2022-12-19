@@ -56,14 +56,15 @@ public class LineAttachToVoltageLevelTest {
     private static final UUID TEST_GROUP_ID = UUID.randomUUID();
     private static final UUID TEST_REPORT_ID = UUID.randomUUID();
 
-    private static final String CREATE_URI_STRING = "/v1/networks/{networkUuid}/line-attach?group=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
-    private static final String UPDATE_URI_STRING = "/v1/modifications/%s/line-attach-creation";
-    private static final String DELETE_URI_STRING = "/v1/groups/" + TEST_GROUP_ID + "/modifications";
-    private static final String COPY_URI_STRING = "/v1/groups/" + TEST_GROUP_ID + "?action=COPY";
-
     private static final  String NEW_LINE_NAME = "attachmentLine";
     private static final  String NEW_VL_NAME = "AttPointId";
     private static final  String NEW_ADDITIONAL_VL_NAME = "vl1";
+
+    private static final String COPY_URI_STRING = "/v1/groups/" + TEST_GROUP_ID + "?action=COPY";
+    private static final String URI_NETWORK_MODIF_BASE = "/v1/network-modifications";
+    private static final String URI_NETWORK_MODIF_GET_PUT = URI_NETWORK_MODIF_BASE + "/";
+    private static final String URI_NETWORK_MODIF_PARAMS = "&groupUuid=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
+    private static final String URI_NETWORK_MODIF = URI_NETWORK_MODIF_BASE + "?networkUuid=" + TEST_NETWORK_ID + URI_NETWORK_MODIF_PARAMS;
 
     @Autowired
     private MockMvc mockMvc;
@@ -114,6 +115,7 @@ public class LineAttachToVoltageLevelTest {
 
     private LineCreationInfos getAttachmentLine(String lineName) {
         return LineCreationInfos.builder()
+                .type(ModificationType.LINE_CREATION)
                 .equipmentId(lineName)
                 .seriesResistance(50.6)
                 .seriesReactance(25.3)
@@ -122,6 +124,7 @@ public class LineAttachToVoltageLevelTest {
 
     private VoltageLevelCreationInfos getNewVoltageLevel(String vlName) {
         return VoltageLevelCreationInfos.builder()
+                .type(ModificationType.VOLTAGE_LEVEL_CREATION)
                 .equipmentId(vlName)
                 .equipmentName("NewVoltageLevel")
                 .nominalVoltage(379.3)
@@ -195,6 +198,7 @@ public class LineAttachToVoltageLevelTest {
     @Test
     public void testModificationRepository() {
         LineCreationInfos attachmentLine = LineCreationInfos.builder()
+                .type(ModificationType.LINE_CREATION)
                 .equipmentId("attachmentLineId")
                 .seriesResistance(50.6)
                 .seriesReactance(25.3)
@@ -221,7 +225,7 @@ public class LineAttachToVoltageLevelTest {
                         lineAttachToEntity2.toLineAttachToVoltageLevelInfos()));
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.deleteModifications(TEST_GROUP_ID, Set.of(lineAttachToEntity1.getId(),
+        networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(lineAttachToEntity1.getId(),
                 lineAttachToEntity2.getId()));
         TestUtils.assertRequestsCount(2, 0, 0, 12);
 
@@ -241,7 +245,7 @@ public class LineAttachToVoltageLevelTest {
         assertNotNull(network.getLine("line3"));
 
         String lineAttachToVLJson = objectWriter.writeValueAsString(lineAttachToVL);
-        mockMvc.perform(post(CREATE_URI_STRING, TEST_NETWORK_ID).content(lineAttachToVLJson).contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(post(URI_NETWORK_MODIF).content(lineAttachToVLJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
         List<LineAttachToVoltageLevelInfos> modifications = getModifications();
@@ -278,7 +282,7 @@ public class LineAttachToVoltageLevelTest {
         assertNotNull(network.getLine("line3"));
 
         String lineAttachToWithNewVLJson = objectWriter.writeValueAsString(lineAttachToWithNewVL);
-        mockMvc.perform(post(CREATE_URI_STRING, TEST_NETWORK_ID).content(lineAttachToWithNewVLJson).contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(post(URI_NETWORK_MODIF).content(lineAttachToWithNewVLJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
         List<LineAttachToVoltageLevelInfos> modifications = getModifications();
@@ -321,7 +325,7 @@ public class LineAttachToVoltageLevelTest {
                 .newLine2Name("newLine2Name")
                 .build();
         String lineAttachWithNewVLUpdJson = objectWriter.writeValueAsString(lineAttachWithNewVLUpd);
-        mockMvc.perform(put(String.format(UPDATE_URI_STRING, modificationToUpdate)).content(lineAttachWithNewVLUpdJson).contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(put(URI_NETWORK_MODIF_GET_PUT + modificationToUpdate).content(lineAttachWithNewVLUpdJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
         List<LineAttachToVoltageLevelInfos> modifications = getModifications();
@@ -351,7 +355,11 @@ public class LineAttachToVoltageLevelTest {
         LineAttachToVoltageLevelInfos firstModification = modifications.get(0);
 
         // 2- then remove it
-        mockMvc.perform(delete(DELETE_URI_STRING).queryParam("modificationsUuids", firstModification.getUuid().toString())).andExpect(status().isOk());
+        mockMvc.perform(delete(URI_NETWORK_MODIF_BASE)
+                        .queryParam("groupUuid", TEST_GROUP_ID.toString())
+                        .queryParam("uuids", firstModification.getUuid().toString()))
+                .andExpect(status().isOk());
+
         assertEquals(0, getModifications().size());
     }
 
@@ -398,7 +406,8 @@ public class LineAttachToVoltageLevelTest {
                 .build();
 
         String lineAttachToAbsentLineJson = objectWriter.writeValueAsString(lineAttachToAbsentLine);
-        mvcResult = mockMvc.perform(post(CREATE_URI_STRING, TEST_NETWORK_ID).content(lineAttachToAbsentLineJson).contentType(MediaType.APPLICATION_JSON))                .andExpect(status().is4xxClientError()).andReturn();
+        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(lineAttachToAbsentLineJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().is4xxClientError()).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
         assertEquals(resultAsString, new NetworkModificationException(LINE_NOT_FOUND, "absent_line_id").getMessage());
     }
@@ -425,7 +434,7 @@ public class LineAttachToVoltageLevelTest {
                 .build();
 
         String incompleteLineAttachToVLJson = objectWriter.writeValueAsString(incompleteLineAttachToVL);
-        mvcResult = mockMvc.perform(post(CREATE_URI_STRING, TEST_NETWORK_ID).content(incompleteLineAttachToVLJson).contentType(MediaType.APPLICATION_JSON))
+        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(incompleteLineAttachToVLJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().is5xxServerError()).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
         assertEquals(resultAsString, new NetworkModificationException(LINE_ATTACH_ERROR, "Missing required attachment line description").getMessage());
@@ -450,7 +459,7 @@ public class LineAttachToVoltageLevelTest {
                 .build();
         String lineAttachWithNewVLUpdJson = objectWriter.writeValueAsString(lineAttachWithNewVLUpd);
         UUID uuidNotFound = UUID.randomUUID();
-        MvcResult mvcResult = mockMvc.perform(put(String.format(UPDATE_URI_STRING, uuidNotFound)).content(lineAttachWithNewVLUpdJson).contentType(MediaType.APPLICATION_JSON))
+        MvcResult mvcResult = mockMvc.perform(put(URI_NETWORK_MODIF_GET_PUT + uuidNotFound).content(lineAttachWithNewVLUpdJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().is4xxClientError()).andReturn();
         String resultAsString = mvcResult.getResponse().getContentAsString();
         assertEquals(resultAsString, new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format("Modification (%s) not found", uuidNotFound)).getMessage());

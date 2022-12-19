@@ -8,6 +8,7 @@ package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.iidm.modification.topology.CreateLineOnLine;
+import com.powsybl.iidm.modification.topology.CreateLineOnLineBuilder;
 import com.powsybl.iidm.network.Line;
 import com.powsybl.iidm.network.LineAdder;
 import com.powsybl.iidm.network.Network;
@@ -65,22 +66,20 @@ public class LineAttachToVoltageLevel extends AbstractModification {
                 .setG2(zeroIfNull(attachmentLineInfos.getShuntConductance2()))
                 .setB2(zeroIfNull(attachmentLineInfos.getShuntSusceptance2()));
 
-        CreateLineOnLine algo = new CreateLineOnLine(
-                modificationInfos.getPercent(),
-                voltageLevelId,
-                modificationInfos.getBbsOrBusId(),
-                modificationInfos.getAttachmentPointId(),
-                modificationInfos.getAttachmentPointName(),
-                true,
-                modificationInfos.getAttachmentPointId() + "_substation",
-                null,
-                modificationInfos.getNewLine1Id(),
-                modificationInfos.getNewLine1Name(),
-                modificationInfos.getNewLine2Id(),
-                modificationInfos.getNewLine2Name(),
-                line,
-                lineAdder
-        );
+        CreateLineOnLine algo = new CreateLineOnLineBuilder()
+                .withPositionPercent(modificationInfos.getPercent())
+                .withBusbarSectionOrBusId(modificationInfos.getBbsOrBusId())
+                .withFictitiousVoltageLevelId(modificationInfos.getAttachmentPointId())
+                .withFictitiousVoltageLevelName(modificationInfos.getAttachmentPointName())
+                .withCreateFictitiousSubstation(true)
+                .withFictitiousSubstationId(modificationInfos.getAttachmentPointId() + "_substation")
+                .withLine1Id(modificationInfos.getNewLine1Id())
+                .withLine1Name(modificationInfos.getNewLine1Name())
+                .withLine2Id(modificationInfos.getNewLine2Id())
+                .withLine2Name(modificationInfos.getNewLine2Name())
+                .withLine(line)
+                .withLineAdder(lineAdder)
+                .build();
 
         algo.apply(network, true, subReporter);
     }

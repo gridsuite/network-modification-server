@@ -10,6 +10,7 @@ package org.gridsuite.modification.server.utils;
 import com.powsybl.commons.exceptions.UncheckedInterruptedException;
 import com.powsybl.iidm.network.SwitchKind;
 import okhttp3.mockwebserver.MockWebServer;
+import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.BusbarConnectionCreationInfos;
 import org.gridsuite.modification.server.dto.BusbarSectionCreationInfos;
 import org.gridsuite.modification.server.dto.VoltageLevelCreationInfos;
@@ -111,6 +112,7 @@ public final class TestUtils {
         }
 
         VoltageLevelCreationInfos createVoltLvlEntity1 = VoltageLevelCreationInfos.builder()
+                .type(ModificationType.VOLTAGE_LEVEL_CREATION)
                 .substationId("s1").nominalVoltage(379.0).equipmentId("idVL1").equipmentName("VLName")
                 .busbarSections(bbses).busbarConnections(cnxes)
                 .build();
