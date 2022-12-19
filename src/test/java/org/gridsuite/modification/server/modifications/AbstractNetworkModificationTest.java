@@ -49,7 +49,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /*
 Class to extend if you want to test a network modification.
-Each modification should have it own class and at least implement the 4 CRUD operations.
+Each modification should have its own class and implements the abstract methods.
+It will automatically run the tests present in this class with the implemented methods.
+If you want to add a test that can be applied to every modification, add it here.
+If you want to add a test specific for a modification, add it in its subclass.
  */
 @RunWith(SpringRunner.class)
 @SpringBootTest
