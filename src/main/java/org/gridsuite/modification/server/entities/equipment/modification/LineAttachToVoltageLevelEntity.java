@@ -127,7 +127,7 @@ public class LineAttachToVoltageLevelEntity extends ModificationEntity {
 
         LineCreationEntity lineCreationEntity = null;
         if (lineCreationInfos != null) {
-            lineCreationEntity = LineCreationEntity.toEntity(lineCreationInfos);
+            lineCreationEntity = lineCreationInfos.toEntity();
         }
 
         return new LineAttachToVoltageLevelEntity(

@@ -74,28 +74,30 @@ public class EquipmentAttributeModificationInfos extends EquipmentModificationIn
     private <T> EquipmentAttributeModificationEntity<T> createEntity() {
         EquipmentAttributeModificationEntity<?> modification;
         if (equipmentAttributeValue == null) {
-            modification = new StringEquipmentAttributeModificationEntity(getEquipmentId(), equipmentAttributeName, null, equipmentType);
-        } else if (equipmentAttributeValue.getClass().isEnum()) {
-            modification = new StringEquipmentAttributeModificationEntity(getEquipmentId(), equipmentAttributeName, equipmentAttributeValue.toString(), equipmentType);
+            modification = new StringEquipmentAttributeModificationEntity(this);
         } else {
             switch (equipmentAttributeValue.getClass().getSimpleName()) {
                 case "String":
-                    modification = new StringEquipmentAttributeModificationEntity(getEquipmentId(), equipmentAttributeName, (String) equipmentAttributeValue, equipmentType);
+                    modification = new StringEquipmentAttributeModificationEntity(this);
                     break;
                 case "Boolean":
-                    modification = new BooleanEquipmentAttributeModificationEntity(getEquipmentId(), equipmentAttributeName, (boolean) equipmentAttributeValue, equipmentType);
+                    modification = new BooleanEquipmentAttributeModificationEntity(this);
                     break;
                 case "Integer":
-                    modification = new IntegerEquipmentAttributeModificationEntity(getEquipmentId(), equipmentAttributeName, (int) equipmentAttributeValue, equipmentType);
+                    modification = new IntegerEquipmentAttributeModificationEntity(this);
                     break;
                 case "Float":
-                    modification = new FloatEquipmentAttributeModificationEntity(getEquipmentId(), equipmentAttributeName, (float) equipmentAttributeValue, equipmentType);
+                    modification = new FloatEquipmentAttributeModificationEntity(this);
                     break;
                 case "Double":
-                    modification = new DoubleEquipmentAttributeModificationEntity(getEquipmentId(), equipmentAttributeName, (double) equipmentAttributeValue, equipmentType);
+                    modification = new DoubleEquipmentAttributeModificationEntity(this);
                     break;
                 default:
-                    throw new PowsyblException("Value type invalid : " + equipmentAttributeValue.getClass().getSimpleName());
+                    if (equipmentAttributeValue.getClass().isEnum()) {
+                        modification = new StringEquipmentAttributeModificationEntity(this);
+                    } else {
+                        throw new PowsyblException("Value type invalid : " + equipmentAttributeValue.getClass().getSimpleName());
+                    }
             }
         }
 

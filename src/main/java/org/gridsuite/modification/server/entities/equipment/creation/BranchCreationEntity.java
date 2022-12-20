@@ -9,16 +9,11 @@ package org.gridsuite.modification.server.entities.equipment.creation;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
 import org.gridsuite.modification.server.ModificationType;
+import org.gridsuite.modification.server.dto.BranchCreationInfos;
+import org.gridsuite.modification.server.dto.ModificationInfos;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.FetchType;
-import javax.persistence.ForeignKey;
-import javax.persistence.JoinColumn;
-import javax.persistence.MappedSuperclass;
-import javax.persistence.OneToOne;
+import javax.persistence.*;
 
 /**
  * @author Sylvain Bouzols <sylvain.bouzols at rte-france.com>
@@ -74,6 +69,12 @@ public class BranchCreationEntity extends EquipmentCreationEntity {
         ), nullable = true)
     private CurrentLimitsEntity currentLimits2;
 
+    protected BranchCreationEntity(BranchCreationInfos branchCreationInfos) {
+        super(branchCreationInfos);
+        assignAttributes(branchCreationInfos);
+    }
+
+    //TODO : remove when refactoring on TwoWindingTransformer will be done
     protected BranchCreationEntity(ModificationType modificationType,
                                     String equipmentId,
                                     String equipmentName,
@@ -102,6 +103,36 @@ public class BranchCreationEntity extends EquipmentCreationEntity {
         this.connectionName1 = connectionName1;
         this.connectionDirection2 = connectionDirection2;
         this.connectionName2 = connectionName2;
+    }
+
+    @Override
+    public void update(ModificationInfos modificationInfos) {
+        super.update(modificationInfos);
+        BranchCreationInfos branchCreationInfos = (BranchCreationInfos) modificationInfos;
+        assignAttributes(branchCreationInfos);
+    }
+
+    private void assignAttributes(BranchCreationInfos branchCreationInfos) {
+        seriesReactance = branchCreationInfos.getSeriesReactance();
+        seriesResistance = branchCreationInfos.getSeriesResistance();
+        voltageLevelId1 = branchCreationInfos.getVoltageLevelId1();
+        voltageLevelId2 = branchCreationInfos.getVoltageLevelId2();
+        busOrBusbarSectionId1 = branchCreationInfos.getBusOrBusbarSectionId1();
+        busOrBusbarSectionId2 = branchCreationInfos.getBusOrBusbarSectionId2();
+        if (branchCreationInfos.getCurrentLimits1() == null) {
+            currentLimits1 = null;
+        } else {
+            currentLimits1 = branchCreationInfos.getCurrentLimits1().toEntity();
+        }
+        if (branchCreationInfos.getCurrentLimits2() == null) {
+            currentLimits2 = null;
+        } else {
+            currentLimits2 = branchCreationInfos.getCurrentLimits2().toEntity();
+        }
+        connectionDirection1 = branchCreationInfos.getConnectionDirection1();
+        connectionName1 = branchCreationInfos.getConnectionName1();
+        connectionDirection2 = branchCreationInfos.getConnectionDirection2();
+        connectionName2 = branchCreationInfos.getConnectionName2();
     }
 
     @Override

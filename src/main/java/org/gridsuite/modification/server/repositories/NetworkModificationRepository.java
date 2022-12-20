@@ -13,7 +13,10 @@ import com.powsybl.iidm.network.PhaseTapChanger;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.NonNull;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.server.dto.AttributeModification;
+import org.gridsuite.modification.server.dto.BranchStatusModificationInfos;
+import org.gridsuite.modification.server.dto.GeneratorModificationInfos;
+import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.GroovyScriptModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationGroupEntity;
@@ -31,9 +34,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_GROUP_NOT_FOUND;
-import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_NOT_FOUND;
-import static org.gridsuite.modification.server.NetworkModificationException.Type.MOVE_MODIFICATION_ERROR;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -229,18 +230,6 @@ public class NetworkModificationRepository {
             regulatingTerminalVlId, qPercent, reactiveCapabilityCurve, connectionName, connectionDirection, connectionPosition);
     }
 
-    public EquipmentCreationEntity createLineEntity(String lineId, String lineName, double seriesResistance, double seriesReactance,
-                                                    Double shuntConductance1, Double shuntSusceptance1, Double shuntConductance2, Double shuntSusceptance2,
-                                                    String voltageLevelId1, String busOrBusbarSectionId1, String voltageLevelId2, String busOrBusbarSectionId2,
-                                                    Double permanentCurrentLimit1, Double permanentCurrentLimit2, String connectionName1, ConnectablePosition.Direction connectionDirection1, String connectionName2,
-                                                    ConnectablePosition.Direction connectionDirection2) {
-        return new LineCreationEntity(lineId, lineName, seriesResistance, seriesReactance,
-                                        shuntConductance1, shuntSusceptance1, shuntConductance2, shuntSusceptance2,
-                                        voltageLevelId1, busOrBusbarSectionId1, voltageLevelId2, busOrBusbarSectionId2,
-                                        permanentCurrentLimit1, permanentCurrentLimit2, connectionName1, connectionDirection1,
-                                        connectionName2, connectionDirection2);
-    }
-
     public EquipmentCreationEntity createTwoWindingsTransformerEntity(String id, String name, double seriesResistance, double seriesReactance,
                                                                       double magnetizingConductance, double magnetizingSusceptance, double ratedVoltage1, double ratedVoltage2, double ratedS,
                                                                       String voltageLevelId1, String busOrBusbarSectionId1, String voltageLevelId2, String busOrBusbarSectionId2,
@@ -334,10 +323,6 @@ public class NetworkModificationRepository {
             entity.cloneWithIdsToNull();
             return entity;
         }).collect(Collectors.toList());
-    }
-
-    public ShuntCompensatorCreationEntity createShuntCompensatorEntity(ShuntCompensatorCreationInfos shuntCompensatorCreationInfos) {
-        return new ShuntCompensatorCreationEntity(shuntCompensatorCreationInfos);
     }
 
     public GeneratorModificationEntity createGeneratorModificationEntity(GeneratorModificationInfos generatorModificationInfos) {
