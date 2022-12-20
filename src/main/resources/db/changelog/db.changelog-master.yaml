@@ -46,6 +46,9 @@ databaseChangeLog:
       file: changesets/changelog_2022-10-04T23:22:37Z.xml
       relativeToChangelogFile: true
   - include:
+      file: changesets/changelog_2022-10-06T14:36:27Z.xml
+      relativeToChangelogFile: true
+  - include:
       file: changesets/changelog_2022-10-07T14:45:29Z.xml
       relativeToChangelogFile: true
   - include:
@@ -56,4 +59,16 @@ databaseChangeLog:
       relativeToChangelogFile: true
   - include:
       file: changesets/changelog_2022-10-24T15:11:03Z.xml
+      relativeToChangelogFile: true
+  - include:
+      file: changesets/changelog_2022-11-09T17:12:39Z.xml
+      relativeToChangelogFile: true
+  - include:
+      file: changesets/changelog_2022-08-17T10:56:45Z.xml
+      relativeToChangelogFile: true
+  - include:
+      file: changesets/changelog_2022-11-23T08:03:54Z.xml
+      relativeToChangelogFile: true
+  - include:
+      file: changesets/changelog_2022-12-05T09:21:25Z.xml
       relativeToChangelogFile: true

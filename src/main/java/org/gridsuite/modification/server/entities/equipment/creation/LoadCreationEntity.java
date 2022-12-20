@@ -12,6 +12,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.LoadCreationInfos;
+import org.gridsuite.modification.server.dto.ModificationInfos;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -43,14 +44,30 @@ public class LoadCreationEntity extends InjectionCreationEntity {
     @Column(name = "connectionDirection")
     private ConnectablePosition.Direction connectionDirection;
 
+    @Column(name = "connectionPosition")
+    private Integer connectionPosition;
+
     public LoadCreationEntity(String equipmentId, String equipmentName, LoadType loadType, String voltageLevelId, String busOrBusbarSectionId,
-                              double activePower, double reactivePower, String connectionName, ConnectablePosition.Direction connectionDirection) {
+                              double activePower, double reactivePower, String connectionName, ConnectablePosition.Direction connectionDirection, Integer connectionPosition) {
         super(ModificationType.LOAD_CREATION, equipmentId, equipmentName, voltageLevelId, busOrBusbarSectionId);
         this.loadType = loadType;
         this.activePower = activePower;
         this.reactivePower = reactivePower;
         this.connectionDirection = connectionDirection;
         this.connectionName = connectionName;
+        this.connectionPosition = connectionPosition;
+    }
+
+    @Override
+    public void update(ModificationInfos modificationInfos) {
+        super.update(modificationInfos);
+        LoadCreationInfos loadCreationInfos = (LoadCreationInfos) modificationInfos;
+        loadType = loadCreationInfos.getLoadType();
+        activePower = loadCreationInfos.getActivePower();
+        reactivePower = loadCreationInfos.getReactivePower();
+        connectionName = loadCreationInfos.getConnectionName();
+        connectionDirection = loadCreationInfos.getConnectionDirection();
+        connectionPosition = loadCreationInfos.getConnectionPosition();
     }
 
     @Override
@@ -72,6 +89,7 @@ public class LoadCreationEntity extends InjectionCreationEntity {
             .activePower(getActivePower())
             .reactivePower(getReactivePower())
             .connectionName(getConnectionName())
-            .connectionDirection(getConnectionDirection());
+            .connectionDirection(getConnectionDirection())
+            .connectionPosition(getConnectionPosition());
     }
 }

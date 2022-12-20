@@ -6,11 +6,29 @@
  */
 package org.gridsuite.modification.server.dto;
 
+import com.powsybl.commons.PowsyblException;
+import com.powsybl.commons.reporter.Reporter;
+import com.powsybl.commons.reporter.ReporterModel;
+import com.powsybl.commons.reporter.TypedValue;
+import com.powsybl.iidm.network.IdentifiableType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
+
+import org.gridsuite.modification.server.ModificationType;
+import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.entities.equipment.modification.attribute.*;
+import org.gridsuite.modification.server.modifications.AbstractModification;
+import org.gridsuite.modification.server.modifications.EquipmentAttributeModification;
+import org.springframework.lang.NonNull;
+
+import java.util.Map;
+import java.util.Set;
+
+import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -18,6 +36,7 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @NoArgsConstructor
 @Getter
+@Setter
 @ToString(callSuper = true)
 @Schema(description = "Equipment attribute modification")
 public class EquipmentAttributeModificationInfos extends EquipmentModificationInfos {
@@ -26,4 +45,78 @@ public class EquipmentAttributeModificationInfos extends EquipmentModificationIn
 
     @Schema(description = "Equipment attribute value")
     private Object equipmentAttributeValue;
+
+    @Schema(description = "Equipment type")
+    @NonNull
+    private IdentifiableType equipmentType;
+
+    @Override
+    public AbstractModification toModification() {
+        return new EquipmentAttributeModification(this);
+    }
+
+    @Override
+    public NetworkModificationException.Type getErrorType() {
+        return NetworkModificationException.Type.MODIFICATION_ERROR;
+    }
+
+    @Override
+    public Reporter createSubReporter(ReporterModel reporter) {
+        return reporter.createSubReporter(ModificationType.EQUIPMENT_ATTRIBUTE_MODIFICATION.name(), "${EquipmentType} '${EquipmentId}' change",
+            Map.of("EquipmentType", new TypedValue(equipmentType.name(), TypedValue.UNTYPED), "EquipmentId", new TypedValue(getEquipmentId(), TypedValue.UNTYPED)));
+    }
+
+    @Override
+    public EquipmentAttributeModificationEntity toEntity() {
+        return createEntity();
+    }
+
+    private <T> EquipmentAttributeModificationEntity<T> createEntity() {
+        EquipmentAttributeModificationEntity<?> modification;
+        if (equipmentAttributeValue == null) {
+            modification = new StringEquipmentAttributeModificationEntity(getEquipmentId(), equipmentAttributeName, null, equipmentType);
+        } else if (equipmentAttributeValue.getClass().isEnum()) {
+            modification = new StringEquipmentAttributeModificationEntity(getEquipmentId(), equipmentAttributeName, equipmentAttributeValue.toString(), equipmentType);
+        } else {
+            switch (equipmentAttributeValue.getClass().getSimpleName()) {
+                case "String":
+                    modification = new StringEquipmentAttributeModificationEntity(getEquipmentId(), equipmentAttributeName, (String) equipmentAttributeValue, equipmentType);
+                    break;
+                case "Boolean":
+                    modification = new BooleanEquipmentAttributeModificationEntity(getEquipmentId(), equipmentAttributeName, (boolean) equipmentAttributeValue, equipmentType);
+                    break;
+                case "Integer":
+                    modification = new IntegerEquipmentAttributeModificationEntity(getEquipmentId(), equipmentAttributeName, (int) equipmentAttributeValue, equipmentType);
+                    break;
+                case "Float":
+                    modification = new FloatEquipmentAttributeModificationEntity(getEquipmentId(), equipmentAttributeName, (float) equipmentAttributeValue, equipmentType);
+                    break;
+                case "Double":
+                    modification = new DoubleEquipmentAttributeModificationEntity(getEquipmentId(), equipmentAttributeName, (double) equipmentAttributeValue, equipmentType);
+                    break;
+                default:
+                    throw new PowsyblException("Value type invalid : " + equipmentAttributeValue.getClass().getSimpleName());
+            }
+        }
+
+        return (EquipmentAttributeModificationEntity<T>) modification;
+    }
+
+    @Override
+    public void check() {
+        super.check();
+        if (equipmentType == IdentifiableType.SWITCH) {
+            checkSwitchStatusModificationInfos();
+        }
+    }
+
+    private void checkSwitchStatusModificationInfos() {
+        if (!equipmentAttributeName.equals("open")) {
+            throw new NetworkModificationException(EQUIPMENT_ATTRIBUTE_NAME_ERROR, "For switch status, the attribute name is only 'open'");
+        }
+        Set<Boolean> possibleValues = Set.of(true, false);
+        if (!possibleValues.contains(equipmentAttributeValue)) {
+            throw new NetworkModificationException(EQUIPMENT_ATTRIBUTE_VALUE_ERROR, "For switch status, the attribute values are only " + possibleValues);
+        }
+    }
 }

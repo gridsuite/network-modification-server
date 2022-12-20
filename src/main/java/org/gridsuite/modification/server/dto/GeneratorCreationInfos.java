@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.powsybl.iidm.network.EnergySource;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -85,6 +86,12 @@ public class GeneratorCreationInfos extends InjectionCreationInfos {
     @Schema(description = "Regulating terminal voltage level id")
     private String regulatingTerminalVlId;
 
+    // As this attribute has only one lower case letter at its start (xXXXX), the getters is parsed as getQPercent and the field for Jackson is parsed as qpercent
+    // while we expect qPercent. JsonProperty let fix the json field to qPercent
+    @JsonProperty("qPercent")
+    @Schema(description = "Q percent")
+    private Double qPercent;
+
     @Schema(description = "Reactive capability curve")
     private Boolean reactiveCapabilityCurve;
 
@@ -93,4 +100,7 @@ public class GeneratorCreationInfos extends InjectionCreationInfos {
 
     @Schema(description = "Connection Direction")
     private ConnectablePosition.Direction connectionDirection;
+
+    @Schema(description = "Connection Position")
+    private Integer connectionPosition;
 }

@@ -7,11 +7,14 @@
 package org.gridsuite.modification.server;
 
 import com.powsybl.commons.PowsyblException;
+import com.powsybl.iidm.network.IdentifiableType;
 import lombok.NonNull;
 import org.gridsuite.modification.server.dto.BranchStatusModificationInfos;
 import org.springframework.http.HttpStatus;
 
 import java.util.Objects;
+
+import static org.gridsuite.modification.server.NetworkModificationException.Type.ATTRIBUTE_NOT_EDITABLE;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -30,6 +33,7 @@ public class NetworkModificationException extends PowsyblException {
         LOAD_NOT_FOUND(HttpStatus.NOT_FOUND),
         GENERATOR_NOT_FOUND(HttpStatus.NOT_FOUND),
         UNKNOWN_EQUIPMENT_TYPE(HttpStatus.INTERNAL_SERVER_ERROR),
+        WRONG_EQUIPMENT_TYPE(HttpStatus.INTERNAL_SERVER_ERROR),
         MODIFICATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         VOLTAGE_LEVEL_NOT_FOUND(HttpStatus.NOT_FOUND),
         CREATE_LOAD_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
@@ -40,6 +44,7 @@ public class NetworkModificationException extends PowsyblException {
         CREATE_SHUNT_COMPENSATOR_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         DELETE_EQUIPMENT_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         EQUIPMENT_NOT_FOUND(HttpStatus.NOT_FOUND),
+        ATTRIBUTE_NOT_EDITABLE(HttpStatus.BAD_REQUEST),
         CREATE_LINE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         CREATE_TWO_WINDINGS_TRANSFORMER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         CREATE_SUBSTATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
@@ -56,7 +61,10 @@ public class NetworkModificationException extends PowsyblException {
         MODIFY_GENERATOR_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         TYPE_MISMATCH(HttpStatus.BAD_REQUEST),
         MODIFICATION_OUT_OF_RANGE(HttpStatus.BAD_REQUEST),
-        POSITION_ORDER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR);
+        POSITION_ORDER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
+        EQUIPMENT_ATTRIBUTE_NAME_ERROR(HttpStatus.BAD_REQUEST),
+        EQUIPMENT_ATTRIBUTE_VALUE_ERROR(HttpStatus.BAD_REQUEST),
+        MOVE_MODIFICATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR);
 
         public final HttpStatus status;
         private final String message;
@@ -106,5 +114,9 @@ public class NetworkModificationException extends PowsyblException {
 
     public static NetworkModificationException createBranchActionTypeUnknown(@NonNull String type) {
         return new NetworkModificationException(Type.BRANCH_ACTION_TYPE_UNKNOWN, "The branch action type : " + type + " is unknown");
+    }
+
+    public static NetworkModificationException createEquipementAttributeNotEditable(@NonNull IdentifiableType equipmentType, @NonNull String attributeName) {
+        throw new NetworkModificationException(ATTRIBUTE_NOT_EDITABLE, equipmentType.name() + " attribute '" + attributeName + "' not editable");
     }
 }
