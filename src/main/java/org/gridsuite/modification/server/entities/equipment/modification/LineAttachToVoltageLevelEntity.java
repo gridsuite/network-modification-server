@@ -91,6 +91,7 @@ public class LineAttachToVoltageLevelEntity extends ModificationEntity {
         percent = lineAttachToVoltageLevelInfos.getPercent();
         attachmentPointId = lineAttachToVoltageLevelInfos.getAttachmentPointId();
         attachmentPointName = lineAttachToVoltageLevelInfos.getAttachmentPointName();
+        mayVoltageLevelCreation = null; // Needed for the update
         if (lineAttachToVoltageLevelInfos.getMayNewVoltageLevelInfos() != null) {
             mayVoltageLevelCreation = lineAttachToVoltageLevelInfos.toEntity().getMayVoltageLevelCreation();
         }
