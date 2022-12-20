@@ -56,29 +56,29 @@ public final class ModificationUtils {
     public int getPosition(String busOrBusbarSectionId, Network network, VoltageLevel voltageLevel) {
         var position = 0;
         var bbs = network.getBusbarSection(busOrBusbarSectionId);
+        if (bbs == null) {
+            throw new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, busOrBusbarSectionId);
+        }
 
-        if (bbs != null) {
-            var extensionExist = bbs.getExtension(BusbarSectionPosition.class) != null;
-            if (!extensionExist) {
-                return position;
-            }
+        var extensionExist = bbs.getExtension(BusbarSectionPosition.class) != null;
+        if (!extensionExist) {
+            return position;
+        }
 
-            if (voltageLevel.getConnectableStream().anyMatch(c -> !(c instanceof BusbarSection))) {
-                var rightRange = TopologyModificationUtils.getUnusedOrderPositionsAfter(bbs);
-                if (rightRange.isPresent()) {
-                    position = rightRange.get().getMinimum();
+        if (voltageLevel.getConnectableStream().anyMatch(c -> !(c instanceof BusbarSection))) {
+            var rightRange = TopologyModificationUtils.getUnusedOrderPositionsAfter(bbs);
+            if (rightRange.isPresent()) {
+                position = rightRange.get().getMinimum();
+            } else {
+                var leftRange = TopologyModificationUtils.getUnusedOrderPositionsBefore(bbs);
+                if (leftRange.isPresent()) {
+                    position = leftRange.get().getMaximum();
                 } else {
-                    var leftRange = TopologyModificationUtils.getUnusedOrderPositionsBefore(bbs);
-                    if (leftRange.isPresent()) {
-                        position = leftRange.get().getMaximum();
-                    } else {
-                        throw new NetworkModificationException(POSITION_ORDER_ERROR, "no available position");
-                    }
+                    throw new NetworkModificationException(POSITION_ORDER_ERROR, "no available position");
                 }
             }
-        } else {
-            throw new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "Bus bar section " + busOrBusbarSectionId + " not found");
         }
+
         return position;
     }
 
@@ -276,44 +276,45 @@ public final class ModificationUtils {
         return lineAdder;
     }
 
-    private void setBranchAdderNodeOrBus(BranchAdder<?> branchAdder, VoltageLevel voltageLevel, BranchCreationInfos branchCreationInfos, Branch.Side side, boolean withSwitch) {
-        String currentBusBarSectionId = (side == Branch.Side.ONE) ? branchCreationInfos.getBusOrBusbarSectionId1() : branchCreationInfos.getBusOrBusbarSectionId2();
-
-        if (voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER) {
-            VoltageLevel.NodeBreakerView nodeBreakerView = voltageLevel.getNodeBreakerView();
-            // busId is a busbar section id
-            BusbarSection busbarSection = nodeBreakerView.getBusbarSection(currentBusBarSectionId);
-            if (busbarSection == null) {
-                throw new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, currentBusBarSectionId);
-            }
-            if (withSwitch) {
-                // create cell switches
-                String sideSuffix = side != null ? "_" + side.name() : "";
-                int nodeNum = ModificationUtils.getInstance().createNodeBreakerCellSwitches(voltageLevel,
-                        currentBusBarSectionId,
-                        branchCreationInfos.getEquipmentId(),
-                        branchCreationInfos.getEquipmentName(),
-                        sideSuffix);
-
-                // complete the lineAdder
-                if (side == Branch.Side.ONE) {
-                    branchAdder.setNode1(nodeNum);
-                } else {
-                    branchAdder.setNode2(nodeNum);
-                }
-            }
-        } else { // BUS BREAKER
-            // busId is a bus id
-            Bus bus = ModificationUtils.getInstance().getBusBreakerBus(voltageLevel, currentBusBarSectionId);
-
-            // complete the lineAdder
-            if (side == Branch.Side.ONE) {
-                branchAdder.setBus1(bus.getId()).setConnectableBus1(bus.getId());
-            } else {
-                branchAdder.setBus2(bus.getId()).setConnectableBus2(bus.getId());
-            }
+    private void setBranchAdderNodeOrBus(BranchAdder<?> branchAdder, VoltageLevel voltageLevel, BranchCreationInfos branchCreationInfos,
+                                         Branch.Side side, boolean withSwitch) {
+        String busOrBusbarSectionId = (side == Branch.Side.ONE) ? branchCreationInfos.getBusOrBusbarSectionId1() : branchCreationInfos.getBusOrBusbarSectionId2();
+        if (voltageLevel.getTopologyKind() == TopologyKind.BUS_BREAKER) {
+            setBranchAdderBusBreaker(branchAdder, voltageLevel, side, busOrBusbarSectionId);
+        } else if (withSwitch) { // NODE_BREAKER
+            setBranchAdderNodeBreaker(branchAdder, voltageLevel, branchCreationInfos, side, busOrBusbarSectionId);
         }
-
     }
+
+    private void setBranchAdderBusBreaker(BranchAdder<?> branchAdder, VoltageLevel voltageLevel, Branch.Side side, String busId) {
+        Bus bus = ModificationUtils.getInstance().getBusBreakerBus(voltageLevel, busId);
+
+        // complete the lineAdder
+        if (side == Branch.Side.ONE) {
+            branchAdder.setBus1(bus.getId()).setConnectableBus1(bus.getId());
+        } else {
+            branchAdder.setBus2(bus.getId()).setConnectableBus2(bus.getId());
+        }
+    }
+
+    private void setBranchAdderNodeBreaker(BranchAdder<?> branchAdder, VoltageLevel voltageLevel,
+                                           BranchCreationInfos branchCreationInfos, Branch.Side side,
+                                           String currentBusBarSectionId) {
+        // create cell switches
+        String sideSuffix = side != null ? "_" + side.name() : "";
+        int nodeNum = ModificationUtils.getInstance().createNodeBreakerCellSwitches(voltageLevel,
+            currentBusBarSectionId,
+            branchCreationInfos.getEquipmentId(),
+            branchCreationInfos.getEquipmentName(),
+            sideSuffix);
+
+        // complete the lineAdder
+        if (side == Branch.Side.ONE) {
+            branchAdder.setNode1(nodeNum);
+        } else {
+            branchAdder.setNode2(nodeNum);
+        }
+    }
+
 }
 

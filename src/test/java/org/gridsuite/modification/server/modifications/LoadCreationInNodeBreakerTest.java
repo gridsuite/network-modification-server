@@ -66,15 +66,13 @@ public class LoadCreationInNodeBreakerTest extends AbstractNetworkModificationTe
         loadCreationInfos.setBusOrBusbarSectionId("notFoundBusbarSection");
         loadCreationInfosJson = objectWriter.writeValueAsString(loadCreationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(loadCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpectAll(status().is4xxClientError(), content().string(new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "Bus bar section notFoundBusbarSection not found").getMessage())).andReturn();
+            .andExpectAll(status().is4xxClientError(), content().string(new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "notFoundBusbarSection").getMessage())).andReturn();
 
         loadCreationInfos.setBusOrBusbarSectionId("1B");
         loadCreationInfos.setActivePower(Double.NaN);
         loadCreationInfosJson = objectWriter.writeValueAsString(loadCreationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(loadCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(status().is5xxServerError(), content().string(new NetworkModificationException(CREATE_LOAD_ERROR, "Load 'idLoad1': p0 is invalid").getMessage())).andReturn();
-
-        //testNetworkModificationsCount(TEST_GROUP_ID, 0);
 
         loadCreationInfosJson = objectWriter.writeValueAsString(loadCreationInfos);
         MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUriWithBadVariant()).content(loadCreationInfosJson).contentType(MediaType.APPLICATION_JSON))

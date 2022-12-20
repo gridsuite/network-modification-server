@@ -42,7 +42,6 @@ public class EquipmentAttributeModificationTest extends AbstractNetworkModificat
         return TEST_NETWORK_ID;
     }
 
-    // Old tests
     @SneakyThrows
     @Test
     public void testEquipmentAttributeModificationInfos() {
@@ -109,8 +108,6 @@ public class EquipmentAttributeModificationTest extends AbstractNetworkModificat
         String resultAsString;
 
         EquipmentAttributeModificationInfos switchStatusModificationInfos = buildModification();
-
-        //String switchStatusModificationInfosJson = objectWriter.writeValueAsString(switchStatusModificationInfos);
 
         // switch not existing
         switchStatusModificationInfos.setEquipmentId(switchNotFoundId);
