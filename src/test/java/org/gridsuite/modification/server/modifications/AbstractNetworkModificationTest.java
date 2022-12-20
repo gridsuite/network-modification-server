@@ -94,9 +94,9 @@ public abstract class AbstractNetworkModificationTest {
 
     private Network network;
     private Network networkBusBreaker;
-    protected Network networkMixedTopology;
+    private Network networkMixedTopology;
 
-    protected ObjectWriter objectWriter; // TODO remove it
+    protected ObjectWriter objectWriter;
 
     @Before
     public void setUp() {

@@ -26,6 +26,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
 
+    @Override
     protected UUID getNetworkUuid() {
         return TEST_NETWORK_ID;
     }

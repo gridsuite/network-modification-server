@@ -221,6 +221,8 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
             .shuntSusceptance2(20.0)
             .voltageLevelId1("v1")
             .busOrBusbarSectionId1("bus1")
+            .currentLimits1(CurrentLimitsInfos.builder().permanentLimit(5.).build())
+            .currentLimits2(CurrentLimitsInfos.builder().permanentLimit(5.).build())
             .voltageLevelId2("v2")
             .busOrBusbarSectionId2("bus2")
             .build();
