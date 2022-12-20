@@ -15,6 +15,8 @@ import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationGroupEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.*;
 import org.gridsuite.modification.server.entities.equipment.modification.BranchStatusModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.DeleteAttachingLineEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.DeleteVoltageLevelOnLineEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.LineAttachToVoltageLevelEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.LineSplitWithVoltageLevelEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.LinesAttachToSplitLinesEntity;
@@ -40,9 +42,10 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.vladmihalcea.sql.SQLStatementCountValidator.*;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_GROUP_NOT_FOUND;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_NOT_FOUND;
+import static org.gridsuite.modification.server.utils.MatcherDeleteAttachingLineInfos.createMatcherDeleteAttachingLineInfos;
+import static org.gridsuite.modification.server.utils.MatcherDeleteVoltageLevelOnLineInfos.createMatcherDeleteVoltageLevelOnLineInfos;
 import static org.gridsuite.modification.server.utils.TestUtils.assertRequestsCount;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
@@ -122,6 +125,14 @@ public class ModificationRepositoryTest {
 
     private LinesAttachToSplitLinesInfos getLinesAttachToSplitLinesModification(UUID modificationUuid) {
         return (LinesAttachToSplitLinesInfos) networkModificationRepository.getModificationInfo(modificationUuid);
+    }
+
+    private DeleteAttachingLineInfos getDeleteAttachingLineModification(UUID modificationUuid) {
+        return (DeleteAttachingLineInfos) networkModificationRepository.getModificationInfo(modificationUuid);
+    }
+
+    private DeleteVoltageLevelOnLineInfos getDeleteVoltageLevelOnLineModification(UUID modificationUuid) {
+        return (DeleteVoltageLevelOnLineInfos) networkModificationRepository.getModificationInfo(modificationUuid);
     }
 
     @Test
@@ -935,6 +946,72 @@ public class ModificationRepositoryTest {
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(linesAttachToEntity1.getId(),
                 linesAttachToEntity2.getId()));
+        assertRequestsCount(2, 0, 0, 4);
+
+        SQLStatementCountValidator.reset();
+        networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
+        assertRequestsCount(2, 0, 0, 1);
+
+        assertThrows(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage(),
+                NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true)
+        );
+    }
+
+    @Test
+    public void testDeleteAttachingLine() {
+        DeleteAttachingLineEntity deleteAttachingLineEntity = DeleteAttachingLineEntity.toEntity(
+                "lineId0", "lineId1", "lineId3", "line1Id", "line1Name");
+        DeleteAttachingLineEntity deleteAttachingLineEntity2 = DeleteAttachingLineEntity.toEntity(
+                "lineId4", "lineId5", "lineId6", "line3Id", "line3Name");
+        networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(deleteAttachingLineEntity, deleteAttachingLineEntity2));
+
+        List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
+        assertEquals(2, modificationInfos.size());
+
+        assertThat(getDeleteAttachingLineModification(modificationInfos.get(0).getUuid()),
+                createMatcherDeleteAttachingLineInfos(
+                        deleteAttachingLineEntity.toModificationInfos()));
+
+        assertThat(getDeleteAttachingLineModification(modificationInfos.get(1).getUuid()),
+                createMatcherDeleteAttachingLineInfos(
+                        deleteAttachingLineEntity2.toModificationInfos()));
+
+        SQLStatementCountValidator.reset();
+        networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(deleteAttachingLineEntity.getId(),
+                deleteAttachingLineEntity2.getId()));
+        assertRequestsCount(2, 0, 0, 4);
+
+        SQLStatementCountValidator.reset();
+        networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
+        assertRequestsCount(2, 0, 0, 1);
+
+        assertThrows(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage(),
+                NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true)
+        );
+    }
+
+    @Test
+    public void testDeleteVoltageLevelOnLine() {
+        DeleteVoltageLevelOnLineEntity deleteVoltageLevelOnLineToEntity1 = DeleteVoltageLevelOnLineEntity.toEntity(
+                "lineId0", "lineId1", "line1Id", "line1Name");
+        DeleteVoltageLevelOnLineEntity deleteVoltageLevelOnLineToEntity2 = DeleteVoltageLevelOnLineEntity.toEntity(
+                "lineId4", "lineId5", "line3Id", "line3Name");
+        networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(deleteVoltageLevelOnLineToEntity1, deleteVoltageLevelOnLineToEntity2));
+
+        List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
+        assertEquals(2, modificationInfos.size());
+
+        assertThat(getDeleteVoltageLevelOnLineModification(modificationInfos.get(0).getUuid()),
+                createMatcherDeleteVoltageLevelOnLineInfos(
+                        deleteVoltageLevelOnLineToEntity1.toModificationInfos()));
+
+        assertThat(getDeleteVoltageLevelOnLineModification(modificationInfos.get(1).getUuid()),
+                createMatcherDeleteVoltageLevelOnLineInfos(
+                        deleteVoltageLevelOnLineToEntity2.toModificationInfos()));
+
+        SQLStatementCountValidator.reset();
+        networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(deleteVoltageLevelOnLineToEntity1.getId(),
+                deleteVoltageLevelOnLineToEntity2.getId()));
         assertRequestsCount(2, 0, 0, 4);
 
         SQLStatementCountValidator.reset();
