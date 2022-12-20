@@ -83,8 +83,8 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
         lineCreationInfosJson = mapper.writeValueAsString(lineCreationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(
-                status().is4xxClientError(),
-                content().string(new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "notFoundBusbarSection1").getMessage())
+                status().is5xxServerError(),
+                content().string(new NetworkModificationException(CREATE_LINE_ERROR, "Busbar section notFoundBusbarSection1 not found.").getMessage())
             );
 
         lineCreationInfos.setVoltageLevelId1("v1");
@@ -127,6 +127,8 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
                 .connectionDirection1(ConnectablePosition.Direction.TOP)
                 .connectionName2("cn2Line")
                 .connectionDirection2(ConnectablePosition.Direction.BOTTOM)
+                .connectionPosition1(0)
+                .connectionPosition2(0)
                 .build();
     }
 
@@ -152,6 +154,8 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
                 .connectionDirection1(ConnectablePosition.Direction.BOTTOM)
                 .connectionName2("cn2LineEdited")
                 .connectionDirection2(ConnectablePosition.Direction.TOP)
+                .connectionPosition1(0)
+                .connectionPosition2(0)
                 .build();
     }
 

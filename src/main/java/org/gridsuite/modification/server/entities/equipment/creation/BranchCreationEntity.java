@@ -53,6 +53,12 @@ public class BranchCreationEntity extends EquipmentCreationEntity {
     @Column(name = "connectionDirection2")
     private ConnectablePosition.Direction connectionDirection2;
 
+    @Column(name = "connectionPosition1")
+    private Integer connectionPosition1;
+
+    @Column(name = "connectionPosition2")
+    private Integer connectionPosition2;
+
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JoinColumn(name  =  "current_limits_id1",
         referencedColumnName  =  "id",
@@ -89,7 +95,9 @@ public class BranchCreationEntity extends EquipmentCreationEntity {
                                     String connectionName1,
                                     ConnectablePosition.Direction connectionDirection1,
                                     String connectionName2,
-                                    ConnectablePosition.Direction connectionDirection2) {
+                                    ConnectablePosition.Direction connectionDirection2,
+                                    Integer connectionPosition1,
+                                    Integer connectionPosition2) {
         super(modificationType, equipmentId, equipmentName);
         this.seriesReactance = seriesReactance;
         this.seriesResistance = seriesResistance;
@@ -103,6 +111,8 @@ public class BranchCreationEntity extends EquipmentCreationEntity {
         this.connectionName1 = connectionName1;
         this.connectionDirection2 = connectionDirection2;
         this.connectionName2 = connectionName2;
+        this.connectionPosition1 = connectionPosition1;
+        this.connectionPosition2 = connectionPosition2;
     }
 
     @Override
@@ -133,6 +143,8 @@ public class BranchCreationEntity extends EquipmentCreationEntity {
         connectionName1 = branchCreationInfos.getConnectionName1();
         connectionDirection2 = branchCreationInfos.getConnectionDirection2();
         connectionName2 = branchCreationInfos.getConnectionName2();
+        connectionPosition1 = branchCreationInfos.getConnectionPosition1();
+        connectionPosition2 = branchCreationInfos.getConnectionPosition2();
     }
 
     @Override
