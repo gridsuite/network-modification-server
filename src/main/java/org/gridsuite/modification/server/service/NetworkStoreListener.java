@@ -121,8 +121,7 @@ public class NetworkStoreListener implements NetworkListener {
                 ModificationInfos infos = m.toModificationInfos();
                 infos.setSubstationIds(substationsIds);
                 return infos;
-            })
-                .collect(Collectors.toList());
+            }).collect(Collectors.toList());
         modifications.clear();
         return modificationInfos;
     }
@@ -193,41 +192,16 @@ public class NetworkStoreListener implements NetworkListener {
             generatorCreationInfos.getReactiveCapabilityCurve() == null || generatorCreationInfos.getReactiveCapabilityCurve(),
             toEmbeddablePoints(generatorCreationInfos.getReactiveCapabilityCurvePoints()),
             generatorCreationInfos.getConnectionName(),
-            generatorCreationInfos.getConnectionDirection()));
+            generatorCreationInfos.getConnectionDirection(),
+            generatorCreationInfos.getConnectionPosition()));
     }
 
     public void storeEquipmentDeletion(String equipmentId, String equipmentType) {
         modifications.add(this.modificationRepository.createEquipmentDeletionEntity(equipmentId, equipmentType));
     }
 
-    public void storeLineCreation(LineCreationInfos lineCreationInfos) {
-        modifications.add(this.modificationRepository.createLineEntity(lineCreationInfos.getEquipmentId(),
-            lineCreationInfos.getEquipmentName(),
-            lineCreationInfos.getSeriesResistance(),
-            lineCreationInfos.getSeriesReactance(),
-            lineCreationInfos.getShuntConductance1(),
-            lineCreationInfos.getShuntSusceptance1(),
-            lineCreationInfos.getShuntConductance2(),
-            lineCreationInfos.getShuntSusceptance2(),
-            lineCreationInfos.getVoltageLevelId1(),
-            lineCreationInfos.getBusOrBusbarSectionId1(),
-            lineCreationInfos.getVoltageLevelId2(),
-            lineCreationInfos.getBusOrBusbarSectionId2(),
-            lineCreationInfos.getCurrentLimits1() != null ? lineCreationInfos.getCurrentLimits1().getPermanentLimit() : null,
-            lineCreationInfos.getCurrentLimits2() != null ? lineCreationInfos.getCurrentLimits2().getPermanentLimit() : null,
-            lineCreationInfos.getConnectionName1(),
-            lineCreationInfos.getConnectionDirection1(),
-            lineCreationInfos.getConnectionName2(),
-            lineCreationInfos.getConnectionDirection2()
-        ));
-    }
-
     public void storeTwoWindingsTransformerCreation(TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
         modifications.add(TwoWindingsTransformerCreationEntity.toEntity(twoWindingsTransformerCreationInfos));
-    }
-
-    public void storeShuntCompensatorCreation(ShuntCompensatorCreationInfos shuntCompensatorCreationInfos) {
-        modifications.add(this.modificationRepository.createShuntCompensatorEntity(shuntCompensatorCreationInfos));
     }
 
     public void storeGroovyScriptModification(String script) {
@@ -242,7 +216,8 @@ public class NetworkStoreListener implements NetworkListener {
         modifications.add(this.modificationRepository.createSubstationEntity(
                 substationCreationInfos.getEquipmentId(),
                 substationCreationInfos.getEquipmentName(),
-                substationCreationInfos.getSubstationCountry()
+                substationCreationInfos.getSubstationCountry(),
+                substationCreationInfos.getProperties()
         ));
     }
 

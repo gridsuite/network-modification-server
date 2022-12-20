@@ -9,10 +9,10 @@ package org.gridsuite.modification.server.entities.equipment.modification;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.LineSplitWithVoltageLevelInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.dto.VoltageLevelCreationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.VoltageLevelCreationEntity;
 
@@ -54,32 +54,23 @@ public class LineSplitWithVoltageLevelEntity  extends ModificationEntity {
     @Column
     private String newLine2Name;
 
-    public LineSplitWithVoltageLevelEntity(String lineToSplitId, double percent,
-        VoltageLevelCreationEntity mayVoltageLevelCreation,
-        String existingVoltageLevelId, String bbsOrBusId,
-        String newLine1Id, String newLine1Name, String newLine2Id, String newLine2Name) {
+    public LineSplitWithVoltageLevelEntity(@NonNull LineSplitWithVoltageLevelInfos splitWithVoltageLevelInfos) {
         super(ModificationType.LINE_SPLIT_WITH_VOLTAGE_LEVEL);
-
-        this.lineToSplitId = lineToSplitId;
-        this.percent = percent;
-        this.mayVoltageLevelCreation = mayVoltageLevelCreation;
-        this.existingVoltageLevelId = existingVoltageLevelId;
-        this.bbsOrBusId = bbsOrBusId;
-        this.newLine1Id = newLine1Id;
-        this.newLine1Name = newLine1Name;
-        this.newLine2Id = newLine2Id;
-        this.newLine2Name = newLine2Name;
+        assignAttributes(splitWithVoltageLevelInfos);
     }
 
     @Override
-    public void update(ModificationInfos modificationInfos) {
+    public void update(@NonNull ModificationInfos modificationInfos) {
         super.update(modificationInfos);
-        LineSplitWithVoltageLevelInfos splitWithVoltageLevelInfos = (LineSplitWithVoltageLevelInfos) modificationInfos;
+        assignAttributes((LineSplitWithVoltageLevelInfos) modificationInfos);
+    }
+
+    private void assignAttributes(LineSplitWithVoltageLevelInfos splitWithVoltageLevelInfos) {
         lineToSplitId = splitWithVoltageLevelInfos.getLineToSplitId();
         percent = splitWithVoltageLevelInfos.getPercent();
+        mayVoltageLevelCreation = null; // Need for the update
         if (splitWithVoltageLevelInfos.getMayNewVoltageLevelInfos() != null) {
-            // TODO use VoltageLevelCreationInfos.toEntity
-            mayVoltageLevelCreation = VoltageLevelCreationEntity.toEntity(splitWithVoltageLevelInfos.getMayNewVoltageLevelInfos());
+            mayVoltageLevelCreation = VoltageLevelCreationEntity.toEntity(splitWithVoltageLevelInfos.getMayNewVoltageLevelInfos()); // TODO use VoltageLevelCreationInfos.toEntity
         }
         existingVoltageLevelId = splitWithVoltageLevelInfos.getExistingVoltageLevelId();
         bbsOrBusId = splitWithVoltageLevelInfos.getBbsOrBusId();
@@ -91,10 +82,6 @@ public class LineSplitWithVoltageLevelEntity  extends ModificationEntity {
 
     @Override
     public LineSplitWithVoltageLevelInfos toModificationInfos() {
-        return toLineSplitWithVoltageLevelInfosBuilder().build();
-    }
-
-    public LineSplitWithVoltageLevelInfos toLineSplitWithVoltageLevelInfos() {
         return toLineSplitWithVoltageLevelInfosBuilder().build();
     }
 
@@ -113,18 +100,6 @@ public class LineSplitWithVoltageLevelEntity  extends ModificationEntity {
             .newLine1Name(getNewLine1Name())
             .newLine2Id(getNewLine2Id())
             .newLine2Name(getNewLine2Name());
-    }
-
-    public static LineSplitWithVoltageLevelEntity toEntity(String lineToSplitId, double percent,
-        VoltageLevelCreationInfos mayVoltageLevelCreationInfos, String existingVoltageLevelId, String bbsOrBusId, String newLine1Id, String newLine1Name,
-        String newLine2Id, String newLine2Name) {
-        VoltageLevelCreationEntity voltageLevelCreationEntity = null;
-        if (mayVoltageLevelCreationInfos != null) {
-            voltageLevelCreationEntity = VoltageLevelCreationEntity.toEntity(mayVoltageLevelCreationInfos);
-        }
-        return new LineSplitWithVoltageLevelEntity(
-            lineToSplitId, percent, voltageLevelCreationEntity, existingVoltageLevelId, bbsOrBusId, newLine1Id, newLine1Name, newLine2Id, newLine2Name
-        );
     }
 
     @Override
