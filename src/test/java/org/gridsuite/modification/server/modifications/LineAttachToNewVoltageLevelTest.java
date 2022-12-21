@@ -20,7 +20,7 @@ import static org.junit.Assert.assertNull;
 /**
  * @author David Braquart <david.braquart at rte-france.com>
  */
-public class LineAttachToVoltageLevelWithNewVoltageLevelTest extends AbstractNetworkModificationTest {
+public class LineAttachToNewVoltageLevelTest extends AbstractNetworkModificationTest {
 
     private LineCreationInfos getAttachmentLine() {
         return LineCreationInfos.builder()
