@@ -67,20 +67,7 @@ public class LineAttachToVoltageLevelInfos extends ModificationInfos {
 
     @Override
     public LineAttachToVoltageLevelEntity toEntity() {
-        return LineAttachToVoltageLevelEntity.toEntity(
-                getLineToAttachToId(),
-                getPercent(),
-                getAttachmentPointId(),
-                getAttachmentPointName(),
-                getMayNewVoltageLevelInfos(),
-                getExistingVoltageLevelId(),
-                getBbsOrBusId(),
-                getAttachmentLine(),
-                getNewLine1Id(),
-                getNewLine1Name(),
-                getNewLine2Id(),
-                getNewLine2Name()
-        );
+        return new LineAttachToVoltageLevelEntity(this);
     }
 
     @Override

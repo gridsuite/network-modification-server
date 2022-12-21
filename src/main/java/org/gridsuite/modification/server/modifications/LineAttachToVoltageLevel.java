@@ -31,10 +31,6 @@ public class LineAttachToVoltageLevel extends AbstractModification {
         this.modificationInfos = modificationInfos;
     }
 
-    private Double zeroIfNull(Double d) {
-        return d != null ? d : 0.0;
-    }
-
     @Override
     public void apply(Network network, Reporter subReporter) {
         LineCreationInfos attachmentLineInfos = modificationInfos.getAttachmentLine();
@@ -47,13 +43,9 @@ public class LineAttachToVoltageLevel extends AbstractModification {
             throw new NetworkModificationException(LINE_NOT_FOUND, modificationInfos.getLineToAttachToId());
         }
 
-        String voltageLevelId;
         VoltageLevelCreationInfos mayNewVL = modificationInfos.getMayNewVoltageLevelInfos();
         if (mayNewVL != null) {
             ModificationUtils.getInstance().createVoltageLevelAction(mayNewVL, subReporter, network);
-            voltageLevelId = mayNewVL.getEquipmentId();
-        } else {
-            voltageLevelId = modificationInfos.getExistingVoltageLevelId();
         }
 
         LineAdder lineAdder = network.newLine()
@@ -61,10 +53,10 @@ public class LineAttachToVoltageLevel extends AbstractModification {
                 .setName(attachmentLineInfos.getEquipmentName())
                 .setR(attachmentLineInfos.getSeriesResistance())
                 .setX(attachmentLineInfos.getSeriesReactance())
-                .setG1(zeroIfNull(attachmentLineInfos.getShuntConductance1()))
-                .setB1(zeroIfNull(attachmentLineInfos.getShuntSusceptance1()))
-                .setG2(zeroIfNull(attachmentLineInfos.getShuntConductance2()))
-                .setB2(zeroIfNull(attachmentLineInfos.getShuntSusceptance2()));
+                .setG1(ModificationUtils.getInstance().zeroIfNull(attachmentLineInfos.getShuntConductance1()))
+                .setB1(ModificationUtils.getInstance().zeroIfNull(attachmentLineInfos.getShuntSusceptance1()))
+                .setG2(ModificationUtils.getInstance().zeroIfNull(attachmentLineInfos.getShuntConductance2()))
+                .setB2(ModificationUtils.getInstance().zeroIfNull(attachmentLineInfos.getShuntSusceptance2()));
 
         CreateLineOnLine algo = new CreateLineOnLineBuilder()
                 .withPositionPercent(modificationInfos.getPercent())
