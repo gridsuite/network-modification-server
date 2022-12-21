@@ -10,6 +10,7 @@ import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.VariationType;
 import org.gridsuite.modification.server.entities.equipment.modification.GeneratorScalingEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.GeneratorScaling;
@@ -26,7 +27,7 @@ public class GeneratorScalableInfos extends ModificationInfos{
 
     private List<GeneratorScalingVariation> generatorScalingVariations;
     private boolean isIterative;
-    private boolean isDeltaP;
+    private VariationType variationType;
 
     @Override
     public GeneratorScalingEntity toEntity() {

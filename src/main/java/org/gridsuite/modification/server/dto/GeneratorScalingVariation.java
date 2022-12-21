@@ -17,5 +17,5 @@ import org.gridsuite.modification.server.VariationMode;
 public class GeneratorScalingVariation {
     FilterInfos filterInfos;
     VariationMode variationMode;
-    Double coefficient;
+    Double variationValue;
 }

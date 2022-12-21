@@ -5,6 +5,7 @@ import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.iidm.modification.scalable.Scalable;
 import com.powsybl.iidm.network.Generator;
 import com.powsybl.iidm.network.Network;
+import org.gridsuite.modification.server.VariationType;
 import org.gridsuite.modification.server.dto.GeneratorScalableInfos;
 import org.gridsuite.modification.server.dto.GeneratorScalingVariation;
 
@@ -56,7 +57,9 @@ public class GeneratorScaling extends AbstractModification {
                     scalables.add(getScalable(id));
                 });
                 var proportionalScalable = Scalable.proportional(percentages, scalables, isIterative);
-                proportionalScalable.scale(network, 200, Scalable.ScalingConvention.GENERATOR);
+                proportionalScalable.scale(network,
+                        getAsked(generatorScalingVariation, sum),
+                        Scalable.ScalingConvention.GENERATOR);
                 break;
             case PROPORTIONAL_TO_PMAX:
                 generatorScalingVariation.getFilterInfos().getEquipments()
@@ -73,27 +76,41 @@ public class GeneratorScaling extends AbstractModification {
                     scalables.add(getScalable(id));
                 });
                 Scalable.proportional(percentages, scalables, isIterative);
+
+                var proportionalToPmaxScalable = Scalable.proportional(percentages, scalables, isIterative);
+                proportionalToPmaxScalable.scale(network,
+                        getAsked(generatorScalingVariation, sum),
+                        Scalable.ScalingConvention.GENERATOR);
                 break;
             case REGULAR_DISTRIBUTION:
                 scalables.addAll(generatorScalingVariation.getFilterInfos().getEquipments()
                         .stream()
-                        .map(equipment -> getScalable(equipment.getId()))
+                        .map(equipment -> {
+                            sum.set(sum.get() + network.getGenerator(equipment.getId()).getTargetP());
+                            return getScalable(equipment.getId());
+                        })
                         .collect(Collectors.toList()));
                 if (scalables.size() > 0) {
                     for (Scalable scalable : scalables) {
                         percentages.add((float) (100 / scalables.size()));
                     }
                 }
-                Scalable.proportional(percentages, scalables, isIterative);
+
+
+                var regularDistributionScalable = Scalable.proportional(percentages, scalables, isIterative);
+                regularDistributionScalable.scale(network,
+                        getAsked(generatorScalingVariation, sum),
+                        Scalable.ScalingConvention.GENERATOR);
             case VENTILATION:
-                Double coeff = generatorScalingVariation.getCoefficient();
+                Double variationValue = generatorScalingVariation.getVariationValue();
                 generatorScalingVariation.getFilterInfos().getEquipments()
                         .stream()
                         .forEach(equipment -> {
-                            var availableCoieff = coeff;
+                            var availableCoieff = variationValue;
                             while (availableCoieff != 0) {
                                 Generator generator = network.getGenerator(equipment.getId());
                                 if (generator != null) {
+                                    sum.set(sum.get() + generator.getTargetP());
                                     var availableUp = generator.getMaxP() - generator.getTargetP();
                                     var addedValue = availableCoieff <= availableUp ? availableCoieff : availableUp;
                                     availableCoieff = availableCoieff - addedValue;
@@ -102,16 +119,26 @@ public class GeneratorScaling extends AbstractModification {
                             }
                         });
                 targetPMap.forEach((id, p) -> {
-                    percentages.add((float) ((p / coeff) * 100));
+                    percentages.add((float) ((p / variationValue) * 100));
                     scalables.add(getScalable(id));
                 });
                 Scalable.proportional(percentages, scalables, isIterative);
+                var ventilationScalable = Scalable.proportional(percentages, scalables, isIterative);
+                ventilationScalable.scale(network,
+                        getAsked(generatorScalingVariation, sum),
+                        Scalable.ScalingConvention.GENERATOR);
                 break;
             case STACKING_UP:
                 Scalable.stack(generatorScalingVariation.getFilterInfos().getEquipments().toArray(new String[0]));
             default:
                 throw new PowsyblException("");
         }
+    }
+
+    private double getAsked(GeneratorScalingVariation generatorScalingVariation, AtomicReference<Double> sum) {
+        return generatorScalableInfos.getVariationType() == VariationType.DELTA_P
+                ? generatorScalingVariation.getVariationValue()
+                : generatorScalingVariation.getVariationValue() - sum.get();
     }
 
     private Scalable getScalable(String id) {
