@@ -30,7 +30,7 @@ public class MatcherLineAttachToVoltageLevelInfos extends MatcherModificationInf
                 && Objects.equals(reference.getAttachmentPointId(), m.getAttachmentPointId())
                 && Objects.equals(reference.getAttachmentPointName(), m.getAttachmentPointName())
                 && ((reference.getMayNewVoltageLevelInfos() == null && m.getMayNewVoltageLevelInfos() == null)
-                || new MatcherVoltageLevelCreationInfos(reference.getMayNewVoltageLevelInfos()).matchesSafely(m.getMayNewVoltageLevelInfos()))
+                || (reference.getMayNewVoltageLevelInfos() != null && m.getMayNewVoltageLevelInfos() != null && new MatcherVoltageLevelCreationInfos(reference.getMayNewVoltageLevelInfos()).matchesSafely(m.getMayNewVoltageLevelInfos())))
                 && Objects.equals(reference.getExistingVoltageLevelId(), m.getExistingVoltageLevelId())
                 && Objects.equals(reference.getBbsOrBusId(), m.getBbsOrBusId())
                 && ((reference.getAttachmentLine() == null && m.getAttachmentLine() == null)

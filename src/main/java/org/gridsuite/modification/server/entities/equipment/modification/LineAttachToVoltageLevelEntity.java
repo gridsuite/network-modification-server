@@ -8,10 +8,9 @@ package org.gridsuite.modification.server.entities.equipment.modification;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 import org.gridsuite.modification.server.ModificationType;
-import org.gridsuite.modification.server.dto.LineAttachToVoltageLevelInfos;
-import org.gridsuite.modification.server.dto.LineCreationInfos;
-import org.gridsuite.modification.server.dto.VoltageLevelCreationInfos;
+import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.LineCreationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.VoltageLevelCreationEntity;
@@ -39,7 +38,7 @@ public class LineAttachToVoltageLevelEntity extends ModificationEntity {
     @Column
     private String attachmentPointName;
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     private VoltageLevelCreationEntity mayVoltageLevelCreation;
 
     @Column
@@ -48,7 +47,7 @@ public class LineAttachToVoltageLevelEntity extends ModificationEntity {
     @Column
     private String bbsOrBusId;
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     private LineCreationEntity lineCreation;
 
     @Column
@@ -63,34 +62,37 @@ public class LineAttachToVoltageLevelEntity extends ModificationEntity {
     @Column
     private String newLine2Name;
 
-    public LineAttachToVoltageLevelEntity(String lineToAttachToId, double percent,
-                                          String attachmentPointId, String attachmentPointName,
-                                          VoltageLevelCreationEntity mayVoltageLevelCreation,
-                                          String existingVoltageLevelId, String bbsOrBusId,
-                                          LineCreationEntity lineCreation,
-                                          String newLine1Id, String newLine1Name, String newLine2Id, String newLine2Name) {
+    public LineAttachToVoltageLevelEntity(@NonNull LineAttachToVoltageLevelInfos lineAttachToVoltageLevelInfos) {
         super(ModificationType.LINE_ATTACH_TO_VOLTAGE_LEVEL);
+        assignAttributes(lineAttachToVoltageLevelInfos);
+    }
 
-        this.lineToAttachToId = lineToAttachToId;
-        this.percent = percent;
-        this.attachmentPointId = attachmentPointId;
-        this.attachmentPointName = attachmentPointName;
-        this.mayVoltageLevelCreation = mayVoltageLevelCreation;
-        this.existingVoltageLevelId = existingVoltageLevelId;
-        this.bbsOrBusId = bbsOrBusId;
-        this.lineCreation = lineCreation;
-        this.newLine1Id = newLine1Id;
-        this.newLine1Name = newLine1Name;
-        this.newLine2Id = newLine2Id;
-        this.newLine2Name = newLine2Name;
+    @Override
+    public void update(@NonNull ModificationInfos modificationInfos) {
+        super.update(modificationInfos);
+        assignAttributes((LineAttachToVoltageLevelInfos) modificationInfos);
+    }
+
+    private void assignAttributes(LineAttachToVoltageLevelInfos lineAttachToVoltageLevelInfos) {
+        lineToAttachToId = lineAttachToVoltageLevelInfos.getLineToAttachToId();
+        percent = lineAttachToVoltageLevelInfos.getPercent();
+        attachmentPointId = lineAttachToVoltageLevelInfos.getAttachmentPointId();
+        attachmentPointName = lineAttachToVoltageLevelInfos.getAttachmentPointName();
+        mayVoltageLevelCreation = null; // Needed for the update
+        if (lineAttachToVoltageLevelInfos.getMayNewVoltageLevelInfos() != null) {
+            mayVoltageLevelCreation = VoltageLevelCreationEntity.toEntity(lineAttachToVoltageLevelInfos.getMayNewVoltageLevelInfos());
+        }
+        existingVoltageLevelId = lineAttachToVoltageLevelInfos.getExistingVoltageLevelId();
+        bbsOrBusId = lineAttachToVoltageLevelInfos.getBbsOrBusId();
+        lineCreation = new LineCreationEntity(lineAttachToVoltageLevelInfos.getAttachmentLine());
+        newLine1Id = lineAttachToVoltageLevelInfos.getNewLine1Id();
+        newLine1Name = lineAttachToVoltageLevelInfos.getNewLine1Name();
+        newLine2Id = lineAttachToVoltageLevelInfos.getNewLine2Id();
+        newLine2Name = lineAttachToVoltageLevelInfos.getNewLine2Name();
     }
 
     @Override
     public LineAttachToVoltageLevelInfos toModificationInfos() {
-        return toLineAttachToVoltageLevelInfosBuilder().build();
-    }
-
-    public LineAttachToVoltageLevelInfos toLineAttachToVoltageLevelInfos() {
         return toLineAttachToVoltageLevelInfosBuilder().build();
     }
 
@@ -112,28 +114,6 @@ public class LineAttachToVoltageLevelEntity extends ModificationEntity {
                 .newLine1Name(getNewLine1Name())
                 .newLine2Id(getNewLine2Id())
                 .newLine2Name(getNewLine2Name());
-    }
-
-    public static LineAttachToVoltageLevelEntity toEntity(String lineToAttachToId, double percent,
-                                                          String attachmentPointId, String attachmentPointName,
-                                                          VoltageLevelCreationInfos mayVoltageLevelCreationInfos,
-                                                          String existingVoltageLevelId, String bbsOrBusId,
-                                                          LineCreationInfos lineCreationInfos,
-                                                          String newLine1Id, String newLine1Name, String newLine2Id, String newLine2Name) {
-        VoltageLevelCreationEntity voltageLevelCreationEntity = null;
-        if (mayVoltageLevelCreationInfos != null) {
-            voltageLevelCreationEntity = VoltageLevelCreationEntity.toEntity(mayVoltageLevelCreationInfos);
-        }
-
-        LineCreationEntity lineCreationEntity = null;
-        if (lineCreationInfos != null) {
-            lineCreationEntity = LineCreationEntity.toEntity(lineCreationInfos);
-        }
-
-        return new LineAttachToVoltageLevelEntity(
-                lineToAttachToId, percent, attachmentPointId, attachmentPointName, voltageLevelCreationEntity, existingVoltageLevelId,
-                bbsOrBusId, lineCreationEntity, newLine1Id, newLine1Name, newLine2Id, newLine2Name
-        );
     }
 
     @Override

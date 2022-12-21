@@ -22,13 +22,12 @@ public class MatcherLineSplitWithVoltageLevelInfos extends MatcherModificationIn
     public static MatcherLineSplitWithVoltageLevelInfos createMatcherLineSplitWithVoltageLevelInfos(LineSplitWithVoltageLevelInfos toLineSplitWithVoltageLevelInfos) {
         return new MatcherLineSplitWithVoltageLevelInfos(toLineSplitWithVoltageLevelInfos);
     }
-    //createMatcherLineSplitWithVoltageLevelInfos
 
     public boolean matchesSafely(LineSplitWithVoltageLevelInfos m) {
         return super.matchesSafely(m)
             && Math.abs(reference.getPercent() - m.getPercent()) < 0.2
             && Objects.equals(reference.getLineToSplitId(), m.getLineToSplitId())
-            && ((reference.getMayNewVoltageLevelInfos() == null && m.getMayNewVoltageLevelInfos() == null)
+            && (reference.getMayNewVoltageLevelInfos() == null && m.getMayNewVoltageLevelInfos() == null
               || new MatcherVoltageLevelCreationInfos(reference.getMayNewVoltageLevelInfos()).matchesSafely(m.getMayNewVoltageLevelInfos()))
             && Objects.equals(reference.getExistingVoltageLevelId(), m.getExistingVoltageLevelId())
             && Objects.equals(reference.getBbsOrBusId(), m.getBbsOrBusId())
