@@ -880,49 +880,6 @@ public class ModificationRepositoryTest {
     }
 
     @Test
-    public void testLineAttachToVoltageLevel() {
-        LineCreationInfos attachmentLine = LineCreationInfos.builder()
-                .type(ModificationType.LINE_CREATION)
-                .equipmentId("attachmentLineId")
-                .seriesResistance(50.6)
-                .seriesReactance(25.3)
-                .build();
-
-        LineAttachToVoltageLevelEntity lineAttachToEntity1 = LineAttachToVoltageLevelEntity.toEntity(
-                "lineId0", 40.0, "AttachmentPointId", null, null, "vl1", "bbsId", attachmentLine, "line1Id", "line1Name", "line2Id", "line2Name"
-        );
-        VoltageLevelCreationInfos voltageLevelCreationInfos = makeAVoltageLevelInfos(1, 0);
-        LineAttachToVoltageLevelEntity lineAttachToEntity2 = LineAttachToVoltageLevelEntity.toEntity(
-                "lineId1", 40.0, "AttachmentPointId", null, voltageLevelCreationInfos, null, "bbsId", attachmentLine, "line1Id", "line1Name", "line2Id", "line2Name"
-        );
-        networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(lineAttachToEntity1, lineAttachToEntity2));
-
-        List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
-        assertEquals(2, modificationInfos.size());
-
-        assertThat(getLineAttachToVoltageLevelModification(modificationInfos.get(0).getUuid()),
-                MatcherLineAttachToVoltageLevelInfos.createMatcherLineAttachToVoltageLevelInfos(
-                        lineAttachToEntity1.toLineAttachToVoltageLevelInfos()));
-
-        assertThat(getLineAttachToVoltageLevelModification(modificationInfos.get(1).getUuid()),
-                MatcherLineAttachToVoltageLevelInfos.createMatcherLineAttachToVoltageLevelInfos(
-                        lineAttachToEntity2.toLineAttachToVoltageLevelInfos()));
-
-        SQLStatementCountValidator.reset();
-        networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(lineAttachToEntity1.getId(),
-                lineAttachToEntity2.getId()));
-        assertRequestsCount(2, 0, 0, 12);
-
-        SQLStatementCountValidator.reset();
-        networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
-        assertRequestsCount(2, 0, 0, 1);
-
-        assertThrows(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage(),
-                NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true)
-        );
-    }
-
-    @Test
     public void testLinesAttachToSplitLines() {
         LinesAttachToSplitLinesEntity linesAttachToEntity1 = LinesAttachToSplitLinesEntity.toEntity(
                 "lineId0", "lineId1", "lineId3", "vl1", "bbsId", "line1Id", "line1Name", "line2Id", "line2Name"

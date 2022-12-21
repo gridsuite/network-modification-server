@@ -126,8 +126,9 @@ public abstract class AbstractNetworkModificationTest {
         given(reportServerRest.exchange(eq("/v1/reports/" + TEST_REPORT_ID), eq(HttpMethod.PUT), ArgumentMatchers.any(HttpEntity.class), eq(ReporterModel.class)))
                 .willReturn(new ResponseEntity<>(HttpStatus.OK));
 
-        // setting service variable
         networkModificationService.setReportServerRest(reportServerRest);
+
+        modificationRepository.deleteAll();
     }
 
     @After
