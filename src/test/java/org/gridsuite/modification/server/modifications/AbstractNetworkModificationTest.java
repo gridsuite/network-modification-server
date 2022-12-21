@@ -20,6 +20,8 @@ import org.gridsuite.modification.server.repositories.NetworkModificationReposit
 import org.gridsuite.modification.server.service.NetworkModificationService;
 import org.gridsuite.modification.server.utils.MatcherModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
+import org.gridsuite.modification.server.utils.NetworkForDeleteVoltageLevelOnLine;
+import org.gridsuite.modification.server.utils.NetworkWithTeePoint;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -66,6 +68,9 @@ public abstract class AbstractNetworkModificationTest {
     protected static final UUID TEST_GROUP_ID = UUID.randomUUID();
     protected static final UUID TEST_NETWORK_BUS_BREAKER_ID = UUID.randomUUID();
     protected static final UUID TEST_NETWORK_MIXED_TOPOLOGY_ID = UUID.randomUUID();
+    protected static final UUID TEST_NETWORK_DELETE_ATTACHING_LINE_ID = UUID.randomUUID();
+    protected static final UUID TEST_NETWORK_DELETE_VOLTAGE_LEVEL_ON_LINE_ID = UUID.randomUUID();
+
     private static final UUID TEST_REPORT_ID = UUID.randomUUID();
 
     private static final String URI_NETWORK_MODIF_BASE = "/v1/network-modifications";
@@ -95,7 +100,8 @@ public abstract class AbstractNetworkModificationTest {
     private Network network;
     private Network networkBusBreaker;
     private Network networkMixedTopology;
-
+    private Network networkForDeleteAttachingLine;
+    private Network networkForDeleteVoltageLevelOnLine;
     protected ObjectWriter objectWriter;
 
     @Before
@@ -106,12 +112,17 @@ public abstract class AbstractNetworkModificationTest {
         network = NetworkCreation.create(TEST_NETWORK_ID, true);
         networkBusBreaker = NetworkCreation.createBusBreaker(TEST_NETWORK_BUS_BREAKER_ID);
         networkMixedTopology = NetworkCreation.createMixedTopology(TEST_NETWORK_MIXED_TOPOLOGY_ID);
+        networkForDeleteAttachingLine = NetworkWithTeePoint.create(TEST_NETWORK_DELETE_ATTACHING_LINE_ID);
+        networkForDeleteVoltageLevelOnLine = NetworkForDeleteVoltageLevelOnLine.create(TEST_NETWORK_DELETE_VOLTAGE_LEVEL_ON_LINE_ID);
 
         // mocking
         when(networkStoreService.getNetwork(NOT_FOUND_NETWORK_ID)).thenThrow(new PowsyblException());
         when(networkStoreService.getNetwork(TEST_NETWORK_ID)).then((Answer<Network>) invocation -> network);
         when(networkStoreService.getNetwork(TEST_NETWORK_BUS_BREAKER_ID)).then((Answer<Network>) invocation -> networkBusBreaker);
         when(networkStoreService.getNetwork(TEST_NETWORK_MIXED_TOPOLOGY_ID)).then((Answer<Network>) invocation -> networkMixedTopology);
+        when(networkStoreService.getNetwork(TEST_NETWORK_DELETE_ATTACHING_LINE_ID)).then((Answer<Network>) invocation -> networkForDeleteAttachingLine);
+        when(networkStoreService.getNetwork(TEST_NETWORK_DELETE_VOLTAGE_LEVEL_ON_LINE_ID)).then((Answer<Network>) invocation -> networkForDeleteVoltageLevelOnLine);
+
         given(reportServerRest.exchange(eq("/v1/reports/" + TEST_REPORT_ID), eq(HttpMethod.PUT), ArgumentMatchers.any(HttpEntity.class), eq(ReporterModel.class)))
                 .willReturn(new ResponseEntity<>(HttpStatus.OK));
 
