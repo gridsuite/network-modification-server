@@ -721,11 +721,74 @@ public class NetworkModificationService {
         applyElementaryModifications(generator::setMaxP, generator::getMaxP, modificationInfos.getMaxActivePower(), subReporter, "Max active power");
         applyElementaryModifications(generator::setRatedS, generator::getRatedS, modificationInfos.getRatedNominalPower(), subReporter, "Rated nominal power");
         applyElementaryModifications(generator::setTargetP, generator::getTargetP, modificationInfos.getActivePowerSetpoint(), subReporter, "Active power set point");
-        applyElementaryModifications(generator::setTargetQ, generator::getTargetQ, modificationInfos.getReactivePowerSetpoint(), subReporter, "Reactive power set point");
         applyElementaryModifications(generator::setTargetV, generator::getTargetV, modificationInfos.getVoltageSetpoint(), subReporter, "Voltage set point");
-        applyElementaryModifications(generator::setVoltageRegulatorOn, generator::isVoltageRegulatorOn, modificationInfos.getVoltageRegulationOn(), subReporter, "Voltage regulation on");
 
-        // TODO connectivity modification
+        boolean isVoltageRegulationOn = modificationInfos.getVoltageRegulationOn() != null
+                ? modificationInfos.getVoltageRegulationOn().getValue()
+                : generator.isVoltageRegulatorOn();
+        generator.setVoltageRegulatorOn(isVoltageRegulationOn);
+
+        if (isVoltageRegulationOn) {
+            Terminal terminal = null;
+            if (modificationInfos.getRegulatingTerminalId() != null
+                    && modificationInfos.getRegulatingTerminalType() != null
+                    && modificationInfos.getRegulatingTerminalVlId() != null) {
+                terminal = getTerminalFromIdentifiable(generator.getNetwork(),
+                        modificationInfos.getRegulatingTerminalId().getValue(),
+                        modificationInfos.getRegulatingTerminalType().getValue(),
+                        modificationInfos.getRegulatingTerminalVlId().getValue());
+            }
+
+            generator.setRegulatingTerminal(terminal);
+
+            if (modificationInfos.getQPercent() != null) {
+                generator.newExtension(CoordinatedReactiveControlAdderImpl.class).withQPercent(modificationInfos.getQPercent().getValue())
+                        .add();
+            }
+        } else {
+            if (modificationInfos.getReactivePowerSetpoint() != null) {
+                applyElementaryModifications(generator::setTargetQ, generator::getTargetQ, modificationInfos.getReactivePowerSetpoint(), subReporter, "Reactive power set point");
+            }
+        }
+
+        if (modificationInfos.getTransientReactance() != null
+                && modificationInfos.getStepUpTransformerReactance() != null) {
+            generator.newExtension(GeneratorShortCircuitAdder.class)
+                    .withDirectTransX(modificationInfos.getTransientReactance().getValue())
+                    .withStepUpTransformerX(modificationInfos.getStepUpTransformerReactance().getValue())
+                    .add();
+        }
+
+        if (modificationInfos.getMarginalCost() != null) {
+            generator.newExtension(GeneratorStartupAdder.class)
+                    .withMarginalCost(modificationInfos.getMarginalCost().getValue()).add();
+        }
+        boolean participate = modificationInfos.getParticipate() != null ? modificationInfos.getParticipate().getValue()
+                : modificationInfos.getDroop() != null ? true : false;
+        if (participate) {
+            generator.newExtension(ActivePowerControlAdder.class)
+                    .withParticipate(participate).withDroop(modificationInfos.getDroop().getValue())
+                    .add();
+        } else {
+            generator.newExtension(ActivePowerControlAdder.class)
+                    .withParticipate(participate).add();
+        }
+
+        if (Boolean.TRUE.equals(modificationInfos.getReactiveCapabilityCurve().getValue() && modificationInfos.getReactiveCapabilityCurvePoints() != null)) {
+
+            ReactiveCapabilityCurveAdder adder = generator.newReactiveCapabilityCurve();
+            modificationInfos.getReactiveCapabilityCurvePoints()
+                    .forEach(point -> adder.beginPoint()
+                            .setMaxQ(point.getQmaxP() != null ? point.getQmaxP() : point.getOldQmaxP())
+                            .setMinQ(point.getQminP() != null ? point.getQminP() : point.getOldQminP())
+                            .setP(point.getP() != null ? point.getP() : point.getOldP())
+                            .endPoint());
+            adder.add();
+        } else if (Boolean.FALSE.equals(modificationInfos.getReactiveCapabilityCurve().getValue()) && modificationInfos.getMinimumReactivePower() != null && modificationInfos.getMaximumReactivePower() != null) {
+            generator.newMinMaxReactiveLimits().setMinQ(modificationInfos.getMinimumReactivePower().getValue())
+                    .setMaxQ(modificationInfos.getMaximumReactivePower().getValue())
+                    .add();
+        }
     }
 
     public List<EquipmentModificationInfos> createLoadModification(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId, LoadModificationInfos loadModificationInfos) {

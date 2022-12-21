@@ -133,4 +133,19 @@
     <changeSet author="labidiayo (generated)" id="1670332480617-32">
         <addForeignKeyConstraint baseColumnNames="generator_modification_entity_id" baseTableName="generator_modification_entity_reactive_capability_curve_points" constraintName="FK8oavb06bho2kt3mjqcufsjd50" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="generator_modification" validate="true"/>
     </changeSet>
+    <changeSet author="labidiayo (generated)" id="1671465514231-7">
+        <addColumn tableName="generator_modification_entity_reactive_capability_curve_points">
+            <column name="old_qmaxp" type="float8"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="labidiayo (generated)" id="1671465514231-8">
+        <addColumn tableName="generator_modification_entity_reactive_capability_curve_points">
+            <column name="old_qminp" type="float8"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="labidiayo (generated)" id="1671465514231-9">
+        <addColumn tableName="generator_modification_entity_reactive_capability_curve_points">
+            <column name="oldp" type="float8"/>
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>

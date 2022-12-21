@@ -12,8 +12,7 @@ import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.AttributeModification;
 import org.gridsuite.modification.server.dto.GeneratorModificationInfos;
-import org.gridsuite.modification.server.dto.ReactiveCapabilityCurveCreationInfos;
-import org.gridsuite.modification.server.entities.equipment.creation.ReactiveCapabilityCurveCreationEmbeddable;
+import org.gridsuite.modification.server.dto.ReactiveCapabilityCurveModificationInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.BooleanModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.EnumModificationEmbedded;
@@ -189,7 +188,7 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
 
     @ElementCollection
     @CollectionTable
-    private List<ReactiveCapabilityCurveCreationEmbeddable> reactiveCapabilityCurvePoints;
+    private List<ReactiveCapabilityCurveModificationEmbeddable> reactiveCapabilityCurvePoints;
 
     public GeneratorModificationEntity(String equipmentId, AttributeModification<String> equipmentName,
             AttributeModification<String> voltageLevelId, AttributeModification<String> busOrBusbarSectionId,
@@ -206,7 +205,7 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
             AttributeModification<String> regulatingTerminalVlId,
             AttributeModification<Double> qPercent,
             AttributeModification<Boolean> reactiveCapabilityCurve,
-            List<ReactiveCapabilityCurveCreationEmbeddable> reactiveCapabilityCurvePoints) {
+            List<ReactiveCapabilityCurveModificationEmbeddable> reactiveCapabilityCurvePoints) {
         super(ModificationType.GENERATOR_MODIFICATION, equipmentId, equipmentName, voltageLevelId, busOrBusbarSectionId);
         this.energySource = new EnumModificationEmbedded<>(energySource);
         this.minActivePower = new DoubleModificationEmbedded(minActivePower);
@@ -231,13 +230,13 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
         this.reactiveCapabilityCurvePoints = reactiveCapabilityCurvePoints;
     }
 
-    public static List<ReactiveCapabilityCurveCreationEmbeddable> toEmbeddablePoints(
-            List<ReactiveCapabilityCurveCreationInfos> points) {
+    public static List<ReactiveCapabilityCurveModificationEmbeddable> toEmbeddablePoints(
+            List<ReactiveCapabilityCurveModificationInfos> points) {
         return points == null ? null
                 : points.stream()
-                        .map(point -> new ReactiveCapabilityCurveCreationEmbeddable(point.getQminP(),
-                                point.getQmaxP(),
-                                point.getP()))
+                        .map(point -> new ReactiveCapabilityCurveModificationEmbeddable(point.getQminP(), point.getOldQminP(),
+                                point.getQmaxP(), point.getOldQmaxP(), point.getP(),
+                                point.getOldP()))
                         .collect(Collectors.toList());
     }
 
@@ -258,12 +257,12 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
     }
 
     private GeneratorModificationInfos.GeneratorModificationInfosBuilder<?, ?> toGeneratorModificationInfosBuilder() {
-        List<ReactiveCapabilityCurveCreationEmbeddable> pointsEmbeddable = getReactiveCapabilityCurvePoints();
-        List<ReactiveCapabilityCurveCreationInfos> points = pointsEmbeddable != null ? getReactiveCapabilityCurvePoints()
+        List<ReactiveCapabilityCurveModificationEmbeddable> pointsEmbeddable = getReactiveCapabilityCurvePoints();
+        List<ReactiveCapabilityCurveModificationInfos> points = pointsEmbeddable != null ? getReactiveCapabilityCurvePoints()
                 .stream()
-                .map(value -> new ReactiveCapabilityCurveCreationInfos(value.getQminP(),
-                        value.getQmaxP(),
-                        value.getP()))
+                .map(value -> new ReactiveCapabilityCurveModificationInfos(value.getQminP(), value.getOldQminP(),
+                        value.getQmaxP(), value.getOldQmaxP(),
+                        value.getP(), value.getOldP()))
                 .collect(Collectors.toList()) : null;
         return GeneratorModificationInfos
                 .builder()

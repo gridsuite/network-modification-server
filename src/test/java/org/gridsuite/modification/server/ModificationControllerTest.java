@@ -1137,8 +1137,8 @@ public class ModificationControllerTest {
             .minimumReactivePower(new AttributeModification<>(-100., OperationType.SET))
             .maximumReactivePower(new AttributeModification<>(100., OperationType.SET))
             .reactiveCapabilityCurvePoints(List.of(
-                new ReactiveCapabilityCurveCreationInfos(0., 100., 0.1),
-                new ReactiveCapabilityCurveCreationInfos(0., 100., 0.1)))
+                new ReactiveCapabilityCurveModificationInfos(0., 0., 100., 100., 0.1, 0.1),
+                new ReactiveCapabilityCurveModificationInfos(0., 0., 100., 100., 0.1, 0.1)))
             .droop(new AttributeModification<>(0.1f, OperationType.SET))
             .participate(new AttributeModification<>(true, OperationType.SET))
             .transientReactance(new AttributeModification<>(0.1, OperationType.SET))
