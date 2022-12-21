@@ -78,7 +78,7 @@ public class NetworkModificationController {
             case MOVE:
                 UUID sourceGroupUuid = originGroupUuid == null ? targetGroupUuid : originGroupUuid;
                 boolean canBuildNode = build;
-                if (sourceGroupUuid.equals(originGroupUuid)) {
+                if (sourceGroupUuid.equals(targetGroupUuid)) {
                     canBuildNode = false;
                 }
                 networkModificationService.moveModifications(targetGroupUuid, sourceGroupUuid, before, networkUuid, reportUuid, reporterId, variantId, modificationsUuidList, canBuildNode);
