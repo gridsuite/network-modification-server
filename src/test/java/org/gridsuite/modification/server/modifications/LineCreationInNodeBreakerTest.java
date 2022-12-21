@@ -8,6 +8,7 @@
 package org.gridsuite.modification.server.modifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.ModificationType;
@@ -17,12 +18,12 @@ import org.gridsuite.modification.server.dto.EquipmentModificationInfos;
 import org.gridsuite.modification.server.dto.LineCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.utils.MatcherLineCreationInfos;
+import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.List;
-import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.utils.MatcherLineCreationInfos.createMatcherLineCreationInfos;
@@ -34,8 +35,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
 
     @Override
-    protected UUID getNetworkUuid() {
-        return TEST_NETWORK_ID;
+    protected Network createNetwork() {
+        return NetworkCreation.create(TEST_NETWORK_ID, true);
     }
 
     @Test

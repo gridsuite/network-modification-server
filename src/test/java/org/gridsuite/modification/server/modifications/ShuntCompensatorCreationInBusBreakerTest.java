@@ -7,6 +7,7 @@
 
 package org.gridsuite.modification.server.modifications;
 
+import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.ModificationType;
@@ -14,11 +15,11 @@ import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.ShuntCompensatorCreationInfos;
 import org.gridsuite.modification.server.utils.MatcherShuntCompensatorCreationInfos;
+import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
 import org.springframework.http.MediaType;
 
 import java.time.ZonedDateTime;
-import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.BUS_NOT_FOUND;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.CREATE_SHUNT_COMPENSATOR_ERROR;
@@ -31,8 +32,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class ShuntCompensatorCreationInBusBreakerTest extends AbstractNetworkModificationTest {
 
     @Override
-    protected UUID getNetworkUuid() {
-        return TEST_NETWORK_BUS_BREAKER_ID;
+    protected Network createNetwork() {
+        return NetworkCreation.createBusBreaker(TEST_NETWORK_ID);
     }
 
     @SneakyThrows

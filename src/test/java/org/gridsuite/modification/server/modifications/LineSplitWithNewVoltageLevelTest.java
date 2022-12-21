@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.modifications;
 
+import com.powsybl.iidm.network.Network;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
@@ -14,11 +15,11 @@ import org.gridsuite.modification.server.dto.LineSplitWithVoltageLevelInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.VoltageLevelCreationInfos;
 import org.gridsuite.modification.server.utils.MatcherModificationInfos;
+import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
 import org.springframework.http.MediaType;
 
 import java.util.List;
-import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_NOT_FOUND;
 import static org.gridsuite.modification.server.utils.MatcherLineSplitWithVoltageLevelInfos.createMatcherLineSplitWithVoltageLevelInfos;
@@ -30,8 +31,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 public class LineSplitWithNewVoltageLevelTest extends AbstractNetworkModificationTest {
     @Override
-    protected UUID getNetworkUuid() {
-        return TEST_NETWORK_ID;
+    protected Network createNetwork() {
+        return NetworkCreation.create(TEST_NETWORK_ID, true);
     }
 
     @SneakyThrows
@@ -39,7 +40,7 @@ public class LineSplitWithNewVoltageLevelTest extends AbstractNetworkModificatio
     public void testCreateWithErrors() {
         LineSplitWithVoltageLevelInfos lineSplitAbsentLine = (LineSplitWithVoltageLevelInfos) buildModification();
         lineSplitAbsentLine.setLineToSplitId("absent_line_id");
-        String lineSplitAbsentLineJson = objectWriter.writeValueAsString(lineSplitAbsentLine);
+        String lineSplitAbsentLineJson = mapper.writeValueAsString(lineSplitAbsentLine);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineSplitAbsentLineJson).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(
                 status().is4xxClientError(),

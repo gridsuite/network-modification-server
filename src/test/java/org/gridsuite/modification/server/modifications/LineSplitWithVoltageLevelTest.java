@@ -6,15 +6,16 @@
  */
 package org.gridsuite.modification.server.modifications;
 
+import com.powsybl.iidm.network.Network;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.BusbarSectionCreationInfos;
 import org.gridsuite.modification.server.dto.LineSplitWithVoltageLevelInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.VoltageLevelCreationInfos;
 import org.gridsuite.modification.server.utils.MatcherModificationInfos;
+import org.gridsuite.modification.server.utils.NetworkCreation;
 
 import java.util.List;
-import java.util.UUID;
 
 import static org.gridsuite.modification.server.utils.MatcherLineSplitWithVoltageLevelInfos.createMatcherLineSplitWithVoltageLevelInfos;
 import static org.junit.Assert.assertNotNull;
@@ -23,8 +24,8 @@ import static org.junit.Assert.assertNull;
 public class LineSplitWithVoltageLevelTest extends AbstractNetworkModificationTest {
 
     @Override
-    protected UUID getNetworkUuid() {
-        return TEST_NETWORK_ID;
+    protected Network createNetwork() {
+        return NetworkCreation.create(TEST_NETWORK_ID, true);
     }
 
     @Override

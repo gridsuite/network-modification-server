@@ -9,7 +9,6 @@ package org.gridsuite.modification.server.modifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.iidm.network.Network;
@@ -19,7 +18,6 @@ import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.NetworkModificationService;
 import org.gridsuite.modification.server.utils.MatcherModificationInfos;
-import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -64,8 +62,6 @@ public abstract class AbstractNetworkModificationTest {
     protected static final UUID TEST_NETWORK_ID = UUID.randomUUID();
     protected static final UUID NOT_FOUND_NETWORK_ID = UUID.randomUUID();
     protected static final UUID TEST_GROUP_ID = UUID.randomUUID();
-    protected static final UUID TEST_NETWORK_BUS_BREAKER_ID = UUID.randomUUID();
-    protected static final UUID TEST_NETWORK_MIXED_TOPOLOGY_ID = UUID.randomUUID();
     private static final UUID TEST_REPORT_ID = UUID.randomUUID();
 
     private static final String URI_NETWORK_MODIF_BASE = "/v1/network-modifications";
@@ -93,25 +89,16 @@ public abstract class AbstractNetworkModificationTest {
     protected ObjectMapper mapper;
 
     private Network network;
-    private Network networkBusBreaker;
-    private Network networkMixedTopology;
-
-    protected ObjectWriter objectWriter;
 
     @Before
     public void setUp() {
-        objectWriter = mapper.writer().withDefaultPrettyPrinter();
 
-        // creating networks
-        network = NetworkCreation.create(TEST_NETWORK_ID, true);
-        networkBusBreaker = NetworkCreation.createBusBreaker(TEST_NETWORK_BUS_BREAKER_ID);
-        networkMixedTopology = NetworkCreation.createMixedTopology(TEST_NETWORK_MIXED_TOPOLOGY_ID);
+        // creating the network
+        network = createNetwork();
 
         // mocking
         when(networkStoreService.getNetwork(NOT_FOUND_NETWORK_ID)).thenThrow(new PowsyblException());
         when(networkStoreService.getNetwork(TEST_NETWORK_ID)).then((Answer<Network>) invocation -> network);
-        when(networkStoreService.getNetwork(TEST_NETWORK_BUS_BREAKER_ID)).then((Answer<Network>) invocation -> networkBusBreaker);
-        when(networkStoreService.getNetwork(TEST_NETWORK_MIXED_TOPOLOGY_ID)).then((Answer<Network>) invocation -> networkMixedTopology);
         given(reportServerRest.exchange(eq("/v1/reports/" + TEST_REPORT_ID), eq(HttpMethod.PUT), ArgumentMatchers.any(HttpEntity.class), eq(ReporterModel.class)))
                 .willReturn(new ResponseEntity<>(HttpStatus.OK));
 
@@ -125,11 +112,11 @@ public abstract class AbstractNetworkModificationTest {
     }
 
     protected Network getNetwork() {
-        return networkStoreService.getNetwork(getNetworkUuid());
+        return networkStoreService.getNetwork(TEST_NETWORK_ID);
     }
 
     protected String getNetworkModificationUri() {
-        return URI_NETWORK_MODIF_BASE + "?networkUuid=" + getNetworkUuid() + URI_NETWORK_MODIF_PARAMS;
+        return URI_NETWORK_MODIF_BASE + "?networkUuid=" + TEST_NETWORK_ID + URI_NETWORK_MODIF_PARAMS;
     }
 
     protected String getNetworkModificationUriWithBadVariant() {
@@ -252,7 +239,7 @@ public abstract class AbstractNetworkModificationTest {
         return modificationRepository.getModifications(TEST_GROUP_ID, true, true).get(0).getUuid();
     }
 
-    protected abstract UUID getNetworkUuid();
+    protected abstract Network createNetwork();
 
     protected abstract ModificationInfos buildModification();
 
