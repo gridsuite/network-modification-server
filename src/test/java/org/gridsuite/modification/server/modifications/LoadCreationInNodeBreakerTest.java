@@ -24,6 +24,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.List;
+import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.junit.Assert.*;
@@ -32,11 +33,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class LoadCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
-
-    @Override
-    protected Network createNetwork() {
-        return NetworkCreation.create(TEST_NETWORK_ID, true);
-    }
 
     @SneakyThrows
     @Test
@@ -84,6 +80,11 @@ public class LoadCreationInNodeBreakerTest extends AbstractNetworkModificationTe
         assertTrue(bsmlrModification.isEmpty());  // no modifications returned
         assertNull(getNetwork().getLoad("idLoad1"));  // load was not created
         testNetworkModificationsCount(TEST_GROUP_ID, 1);  // new modification stored in the database
+    }
+
+    @Override
+    protected Network createNetwork(UUID networkUuid) {
+        return NetworkCreation.create(networkUuid, true);
     }
 
     @Override

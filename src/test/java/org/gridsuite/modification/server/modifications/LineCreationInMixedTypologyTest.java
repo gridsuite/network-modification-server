@@ -15,6 +15,8 @@ import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.utils.MatcherLineCreationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 
+import java.util.UUID;
+
 import static org.gridsuite.modification.server.utils.MatcherLineCreationInfos.createMatcherLineCreationInfos;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -22,8 +24,8 @@ import static org.junit.Assert.assertNull;
 public class LineCreationInMixedTypologyTest extends AbstractNetworkModificationTest {
 
     @Override
-    protected Network createNetwork() {
-        return NetworkCreation.createMixedTopology(TEST_NETWORK_ID);
+    protected Network createNetwork(UUID networkUuid) {
+        return NetworkCreation.createMixedTopology(networkUuid);
     }
 
     @Override

@@ -16,13 +16,15 @@ import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.utils.MatcherLoadCreationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 
+import java.util.UUID;
+
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 public class LoadCreationInBusBreakerTest extends AbstractNetworkModificationTest {
     @Override
-    protected Network createNetwork() {
-        return NetworkCreation.createBusBreaker(TEST_NETWORK_ID);
+    protected Network createNetwork(UUID networkUuid) {
+        return NetworkCreation.createBusBreaker(networkUuid);
     }
 
     @Override

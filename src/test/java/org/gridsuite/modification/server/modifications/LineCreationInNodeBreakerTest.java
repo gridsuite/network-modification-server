@@ -24,6 +24,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.List;
+import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.utils.MatcherLineCreationInfos.createMatcherLineCreationInfos;
@@ -33,11 +34,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
-
-    @Override
-    protected Network createNetwork() {
-        return NetworkCreation.create(TEST_NETWORK_ID, true);
-    }
 
     @Test
     @SneakyThrows
@@ -106,6 +102,11 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
                 status().is5xxServerError(),
                 content().string(new NetworkModificationException(CREATE_LINE_ERROR, "AC Line 'idLine4': x is invalid").getMessage())
             );
+    }
+
+    @Override
+    protected Network createNetwork(UUID networkUuid) {
+        return NetworkCreation.create(networkUuid, true);
     }
 
     @Override

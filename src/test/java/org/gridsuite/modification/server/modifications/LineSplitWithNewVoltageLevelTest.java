@@ -20,6 +20,7 @@ import org.junit.Test;
 import org.springframework.http.MediaType;
 
 import java.util.List;
+import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_NOT_FOUND;
 import static org.gridsuite.modification.server.utils.MatcherLineSplitWithVoltageLevelInfos.createMatcherLineSplitWithVoltageLevelInfos;
@@ -30,10 +31,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class LineSplitWithNewVoltageLevelTest extends AbstractNetworkModificationTest {
-    @Override
-    protected Network createNetwork() {
-        return NetworkCreation.create(TEST_NETWORK_ID, true);
-    }
 
     @SneakyThrows
     @Test
@@ -46,6 +43,11 @@ public class LineSplitWithNewVoltageLevelTest extends AbstractNetworkModificatio
                 status().is4xxClientError(),
                 content().string(new NetworkModificationException(LINE_NOT_FOUND, "absent_line_id").getMessage())
             );
+    }
+
+    @Override
+    protected Network createNetwork(UUID networkUuid) {
+        return NetworkCreation.create(networkUuid, true);
     }
 
     @Override

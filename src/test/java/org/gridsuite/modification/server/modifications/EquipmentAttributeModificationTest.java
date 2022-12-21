@@ -38,11 +38,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 public class EquipmentAttributeModificationTest extends AbstractNetworkModificationTest {
 
-    @Override
-    protected Network createNetwork() {
-        return NetworkCreation.create(TEST_NETWORK_ID, true);
-    }
-
     @SneakyThrows
     @Test
     public void testEquipmentAttributeModificationInfos() {
@@ -180,6 +175,11 @@ public class EquipmentAttributeModificationTest extends AbstractNetworkModificat
             .andExpectAll(
                 status().isBadRequest(),
                 content().string(new NetworkModificationException(EQUIPMENT_ATTRIBUTE_VALUE_ERROR, "For switch status, the attribute values are only " + Set.of(true, false)).getMessage()));
+    }
+
+    @Override
+    protected Network createNetwork(UUID networkUuid) {
+        return NetworkCreation.create(networkUuid, true);
     }
 
     @Override

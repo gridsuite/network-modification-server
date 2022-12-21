@@ -16,6 +16,7 @@ import org.gridsuite.modification.server.utils.MatcherModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 
 import java.util.List;
+import java.util.UUID;
 
 import static org.gridsuite.modification.server.utils.MatcherLineSplitWithVoltageLevelInfos.createMatcherLineSplitWithVoltageLevelInfos;
 import static org.junit.Assert.assertNotNull;
@@ -24,8 +25,8 @@ import static org.junit.Assert.assertNull;
 public class LineSplitWithVoltageLevelTest extends AbstractNetworkModificationTest {
 
     @Override
-    protected Network createNetwork() {
-        return NetworkCreation.create(TEST_NETWORK_ID, true);
+    protected Network createNetwork(UUID networkUuid) {
+        return NetworkCreation.create(networkUuid, true);
     }
 
     @Override

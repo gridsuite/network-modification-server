@@ -19,6 +19,7 @@ import org.junit.Test;
 import org.springframework.http.MediaType;
 
 import java.time.ZonedDateTime;
+import java.util.UUID;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -26,11 +27,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
-
-    @Override
-    protected Network createNetwork() {
-        return NetworkCreation.create(TEST_NETWORK_ID, true);
-    }
 
     @SneakyThrows
     @Test
@@ -44,6 +40,11 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().is5xxServerError());
+    }
+
+    @Override
+    protected Network createNetwork(UUID networkUuid) {
+        return NetworkCreation.create(networkUuid, true);
     }
 
     @Override

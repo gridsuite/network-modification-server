@@ -59,15 +59,15 @@ If you want to add a test specific to a modification, add it in its own class.
 @AutoConfigureMockMvc
 public abstract class AbstractNetworkModificationTest {
 
-    protected static final UUID TEST_NETWORK_ID = UUID.randomUUID();
-    protected static final UUID NOT_FOUND_NETWORK_ID = UUID.randomUUID();
+    private static final UUID TEST_NETWORK_ID = UUID.randomUUID();
+    private static final UUID NOT_FOUND_NETWORK_ID = UUID.randomUUID();
     protected static final UUID TEST_GROUP_ID = UUID.randomUUID();
     private static final UUID TEST_REPORT_ID = UUID.randomUUID();
 
     private static final String URI_NETWORK_MODIF_BASE = "/v1/network-modifications";
-    protected static final String URI_NETWORK_MODIF_GET_PUT = URI_NETWORK_MODIF_BASE + "/";
+    private static final String URI_NETWORK_MODIF_GET_PUT = URI_NETWORK_MODIF_BASE + "/";
     private static final String URI_NETWORK_MODIF_PARAMS = "&groupUuid=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
-    protected static final String URI_NETWORK_MODIF_COPY = "/v1/groups/" + TEST_GROUP_ID + "?action=COPY";
+    private static final String URI_NETWORK_MODIF_COPY = "/v1/groups/" + TEST_GROUP_ID + "?action=COPY";
 
     @Autowired
     protected MockMvc mockMvc;
@@ -94,7 +94,7 @@ public abstract class AbstractNetworkModificationTest {
     public void setUp() {
 
         // creating the network
-        network = createNetwork();
+        network = createNetwork(TEST_NETWORK_ID);
 
         // mocking
         when(networkStoreService.getNetwork(NOT_FOUND_NETWORK_ID)).thenThrow(new PowsyblException());
@@ -109,18 +109,6 @@ public abstract class AbstractNetworkModificationTest {
     @After
     public void tearOff() {
         modificationRepository.deleteAll();
-    }
-
-    protected Network getNetwork() {
-        return networkStoreService.getNetwork(TEST_NETWORK_ID);
-    }
-
-    protected String getNetworkModificationUri() {
-        return URI_NETWORK_MODIF_BASE + "?networkUuid=" + TEST_NETWORK_ID + URI_NETWORK_MODIF_PARAMS;
-    }
-
-    protected String getNetworkModificationUriWithBadVariant() {
-        return getNetworkModificationUri() + "&variantId=variant_not_existing";
     }
 
     @Test
@@ -239,7 +227,19 @@ public abstract class AbstractNetworkModificationTest {
         return modificationRepository.getModifications(TEST_GROUP_ID, true, true).get(0).getUuid();
     }
 
-    protected abstract Network createNetwork();
+    protected Network getNetwork() {
+        return network;
+    }
+
+    protected String getNetworkModificationUri() {
+        return URI_NETWORK_MODIF_BASE + "?networkUuid=" + TEST_NETWORK_ID + URI_NETWORK_MODIF_PARAMS;
+    }
+
+    protected String getNetworkModificationUriWithBadVariant() {
+        return getNetworkModificationUri() + "&variantId=variant_not_existing";
+    }
+
+    protected abstract Network createNetwork(UUID networkUuid);
 
     protected abstract ModificationInfos buildModification();
 

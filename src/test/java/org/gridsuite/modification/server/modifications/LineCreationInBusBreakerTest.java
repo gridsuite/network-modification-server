@@ -20,6 +20,8 @@ import org.junit.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
+import java.util.UUID;
+
 import static org.gridsuite.modification.server.NetworkModificationException.Type.BUS_NOT_FOUND;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.CREATE_LINE_ERROR;
 import static org.gridsuite.modification.server.utils.MatcherLineCreationInfos.createMatcherLineCreationInfos;
@@ -30,11 +32,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTest {
-
-    @Override
-    protected Network createNetwork() {
-        return NetworkCreation.createBusBreaker(TEST_NETWORK_ID);
-    }
 
     @Test
     @SneakyThrows
@@ -202,6 +199,11 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
         String lineCreationInfosJson = mapper.writeValueAsString(lineCreationInfosOK);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
+    }
+
+    @Override
+    protected Network createNetwork(UUID networkUuid) {
+        return NetworkCreation.createBusBreaker(networkUuid);
     }
 
     @Override

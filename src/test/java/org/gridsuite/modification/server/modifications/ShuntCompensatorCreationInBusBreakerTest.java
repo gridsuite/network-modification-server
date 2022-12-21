@@ -20,6 +20,7 @@ import org.junit.Test;
 import org.springframework.http.MediaType;
 
 import java.time.ZonedDateTime;
+import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.BUS_NOT_FOUND;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.CREATE_SHUNT_COMPENSATOR_ERROR;
@@ -30,11 +31,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class ShuntCompensatorCreationInBusBreakerTest extends AbstractNetworkModificationTest {
-
-    @Override
-    protected Network createNetwork() {
-        return NetworkCreation.createBusBreaker(TEST_NETWORK_ID);
-    }
 
     @SneakyThrows
     @Test
@@ -50,6 +46,11 @@ public class ShuntCompensatorCreationInBusBreakerTest extends AbstractNetworkMod
         shuntJson = mapper.writeValueAsString(shunt);
         mockMvc.perform(post(getNetworkModificationUri()).content(shuntJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpectAll(status().isNotFound(), content().string(new NetworkModificationException(BUS_NOT_FOUND, "notFoundBus").getMessage()));
+    }
+
+    @Override
+    protected Network createNetwork(UUID networkUuid) {
+        return NetworkCreation.createBusBreaker(networkUuid);
     }
 
     @Override
