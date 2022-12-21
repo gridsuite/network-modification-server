@@ -30,11 +30,18 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
 // TODO remove public qualifier for all methods
 public final class ModificationUtils {
 
+    public static final String DISCONNECTOR = "disconnector_";
+    public static final String BREAKER = "breaker_";
+
     private ModificationUtils() {
     }
 
     public static ModificationUtils getInstance() {
         return new ModificationUtils();
+    }
+
+    public Double zeroIfNull(Double d) {
+        return d != null ? d : 0.0;
     }
 
     VoltageLevel getVoltageLevel(Network network, String voltageLevelId) {
@@ -101,8 +108,8 @@ public final class ModificationUtils {
 
         // creating the disconnector
         int newNode = nodeBreakerView.getMaximumNodeIndex();
-        String disconnectorId = "disconnector_" + equipmentId + sideSuffix;
-        String disconnectorName = equipmentName != null ? "disconnector_" + equipmentName + sideSuffix : null;
+        String disconnectorId = DISCONNECTOR + equipmentId + sideSuffix;
+        String disconnectorName = equipmentName != null ? DISCONNECTOR + equipmentName + sideSuffix : null;
         nodeBreakerView.newSwitch()
             .setId(disconnectorId)
             .setName(disconnectorName)
@@ -115,8 +122,8 @@ public final class ModificationUtils {
             .add();
 
         // creating the breaker
-        String breakerId = "breaker_" + equipmentId + sideSuffix;
-        String breakerName = equipmentName != null ? "breaker_" + equipmentName + sideSuffix : null;
+        String breakerId = BREAKER + equipmentId + sideSuffix;
+        String breakerName = equipmentName != null ? BREAKER + equipmentName + sideSuffix : null;
         nodeBreakerView.newSwitch()
             .setId(breakerId)
             .setName(breakerName)
@@ -159,7 +166,7 @@ public final class ModificationUtils {
         if (switchKind == SwitchKind.DISCONNECTOR) {
             voltageLevel.getNodeBreakerView().newDisconnector()
                 .setKind(switchKind)
-                .setId("disconnector_" + infix + cnxRank++)
+                .setId(DISCONNECTOR + infix + cnxRank++)
                 .setNode1(rank1)
                 .setNode2(rank2)
                 .setFictitious(false)
@@ -171,7 +178,7 @@ public final class ModificationUtils {
             int postBreakerRank = nodeRank++;
             voltageLevel.getNodeBreakerView().newDisconnector()
                 .setKind(SwitchKind.DISCONNECTOR)
-                .setId("disconnector_" + infix + cnxRank++)
+                .setId(DISCONNECTOR + infix + cnxRank++)
                 .setNode1(rank1)
                 .setNode2(preBreakerRank)
                 .setFictitious(false)
@@ -181,7 +188,7 @@ public final class ModificationUtils {
 
             voltageLevel.getNodeBreakerView().newBreaker()
                 .setKind(switchKind)
-                .setId("breaker_" + infix + cnxRank++)
+                .setId(BREAKER + infix + cnxRank++)
                 .setNode1(preBreakerRank)
                 .setNode2(postBreakerRank)
                 .setFictitious(false)
@@ -191,7 +198,7 @@ public final class ModificationUtils {
 
             voltageLevel.getNodeBreakerView().newDisconnector()
                 .setKind(SwitchKind.DISCONNECTOR)
-                .setId("disconnector_" + infix + cnxRank++)
+                .setId(DISCONNECTOR + infix + cnxRank++)
                 .setNode1(postBreakerRank)
                 .setNode2(rank2)
                 .setFictitious(false)
