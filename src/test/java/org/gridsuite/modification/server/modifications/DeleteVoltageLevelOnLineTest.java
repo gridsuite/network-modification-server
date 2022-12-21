@@ -6,16 +6,24 @@
  */
 package org.gridsuite.modification.server.modifications;
 
+import lombok.SneakyThrows;
 import org.gridsuite.modification.server.ModificationType;
+import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.DeleteVoltageLevelOnLineInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.utils.MatcherModificationInfos;
+import org.junit.Test;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.util.UUID;
 
+import static org.gridsuite.modification.server.NetworkModificationException.Type.DELETE_VOLTAGE_LEVEL_ON_LINE_ERROR;
 import static org.gridsuite.modification.server.utils.MatcherDeleteVoltageLevelOnLineInfos.createMatcherDeleteVoltageLevelOnLineInfos;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * @author bendaamerahm <ahmed.bendaamer at rte-france.com>
@@ -66,5 +74,23 @@ public class DeleteVoltageLevelOnLineTest extends AbstractNetworkModificationTes
         assertNotNull(getNetwork().getLine("l1"));
         assertNotNull(getNetwork().getLine("l2"));
         assertNull(getNetwork().getLine("replacementLineId"));
+    }
+
+    @SneakyThrows
+    @Test
+    public void createWithInvalidLineIdTest() {
+        // test create with incorrect line id
+        DeleteVoltageLevelOnLineInfos deleteVoltageLevelOnLineInfos = DeleteVoltageLevelOnLineInfos.builder()
+                .type(ModificationType.DELETE_VOLTAGE_LEVEL_ON_LINE)
+                .lineToAttachTo1Id("l1")
+                .lineToAttachTo2Id("ll")
+                .replacingLine1Id("replacementLineId")
+                .build();
+        String json = objectWriter.writeValueAsString(deleteVoltageLevelOnLineInfos);
+        mockMvc.perform(MockMvcRequestBuilders.post(getNetworkModificationUri()).content(json).contentType(MediaType.APPLICATION_JSON))
+            .andExpectAll(
+                    status().is5xxServerError(),
+                    content().string(new NetworkModificationException(DELETE_VOLTAGE_LEVEL_ON_LINE_ERROR, "Line ll is not found").getMessage())
+            );
     }
 }

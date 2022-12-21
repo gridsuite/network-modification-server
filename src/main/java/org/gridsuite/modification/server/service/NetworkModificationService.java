@@ -11,12 +11,27 @@ import com.fasterxml.jackson.databind.InjectableValues;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Streams;
 import com.powsybl.commons.PowsyblException;
-import com.powsybl.commons.reporter.*;
-import com.powsybl.iidm.modification.topology.*;
+import com.powsybl.commons.reporter.Report;
+import com.powsybl.commons.reporter.Reporter;
+import com.powsybl.commons.reporter.ReporterModel;
+import com.powsybl.commons.reporter.ReporterModelDeserializer;
+import com.powsybl.commons.reporter.ReporterModelJsonModule;
+import com.powsybl.commons.reporter.TypedValue;
+import com.powsybl.iidm.modification.topology.CreateBranchFeederBays;
+import com.powsybl.iidm.modification.topology.CreateBranchFeederBaysBuilder;
+import com.powsybl.iidm.modification.topology.CreateFeederBay;
+import com.powsybl.iidm.modification.topology.CreateFeederBayBuilder;
+import com.powsybl.iidm.modification.topology.RemoveFeederBay;
+import com.powsybl.iidm.modification.topology.ReplaceTeePointByVoltageLevelOnLine;
+import com.powsybl.iidm.modification.topology.ReplaceTeePointByVoltageLevelOnLineBuilder;
 import com.powsybl.iidm.modification.tripping.BranchTripping;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.Branch.Side;
-import com.powsybl.iidm.network.extensions.*;
+import com.powsybl.iidm.network.extensions.ActivePowerControlAdder;
+import com.powsybl.iidm.network.extensions.BranchStatus;
+import com.powsybl.iidm.network.extensions.BranchStatusAdder;
+import com.powsybl.iidm.network.extensions.GeneratorShortCircuitAdder;
+import com.powsybl.iidm.network.extensions.GeneratorStartupAdder;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.iidm.impl.extensions.CoordinatedReactiveControlAdderImpl;
 import com.powsybl.network.store.iidm.impl.extensions.GeneratorStartupAdderImpl;
@@ -31,10 +46,11 @@ import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.BranchStatusModificationInfos.ActionType;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.creation.*;
+import org.gridsuite.modification.server.entities.equipment.creation.BusbarConnectionCreationEmbeddable;
+import org.gridsuite.modification.server.entities.equipment.creation.BusbarSectionCreationEmbeddable;
+import org.gridsuite.modification.server.entities.equipment.creation.EquipmentCreationEntity;
+import org.gridsuite.modification.server.entities.equipment.creation.TwoWindingsTransformerCreationEntity;
 import org.gridsuite.modification.server.entities.equipment.deletion.EquipmentDeletionEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.DeleteAttachingLineEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.DeleteVoltageLevelOnLineEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.LinesAttachToSplitLinesEntity;
@@ -53,7 +69,15 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -536,10 +560,6 @@ public class NetworkModificationService {
                 return createLinesAttachToSplitLinesCreation(networkUuid, variantId, groupUuid, reportUuid, reporterId, (LinesAttachToSplitLinesInfos) modificationInfos);
             case BRANCH_STATUS:
                 return createLineStatusModification(networkUuid, variantId, groupUuid, reportUuid, reporterId, (BranchStatusModificationInfos) modificationInfos);
-            case DELETE_VOLTAGE_LEVEL_ON_LINE:
-                return createDeleteVoltageLevelOnLineCreation(networkUuid, variantId, groupUuid, reportUuid, reporterId, (DeleteVoltageLevelOnLineInfos) modificationInfos);
-            case DELETE_ATTACHING_LINE:
-                return createDeleteAttachingLineCreation(networkUuid, variantId, groupUuid, reportUuid, reporterId, (DeleteAttachingLineInfos) modificationInfos);
             default:
                 throw new NetworkModificationException(TYPE_MISMATCH);
         }
@@ -571,12 +591,6 @@ public class NetworkModificationService {
                 break;
             case LINES_ATTACH_TO_SPLIT_LINES:
                 updateLinesAttachToSplitLinesCreation(modificationUuid, (LinesAttachToSplitLinesInfos) modificationInfos);
-                break;
-            case DELETE_VOLTAGE_LEVEL_ON_LINE:
-                updateDeleteVoltageLevelOnLineCreation(modificationUuid, (DeleteVoltageLevelOnLineInfos) modificationInfos);
-                break;
-            case DELETE_ATTACHING_LINE:
-                updateDeleteAttachingLineCreation(modificationUuid, (DeleteAttachingLineInfos) modificationInfos);
                 break;
             default:
                 throw new NetworkModificationException(TYPE_MISMATCH);
@@ -1643,47 +1657,6 @@ public class NetworkModificationService {
         );
         updatedEntity.setId(modificationUuid);
         updatedEntity.setGroup(linesAttachToSplitLinesEntity.get().getGroup());
-        this.networkModificationRepository.updateModification(updatedEntity);
-    }
-
-    public void updateDeleteVoltageLevelOnLineCreation(UUID modificationUuid, DeleteVoltageLevelOnLineInfos deleteVoltageLevelOnLineInfos) {
-        assertDeleteVoltageLevelOnLineInfosNotEmpty(deleteVoltageLevelOnLineInfos);
-
-        Optional<ModificationEntity>  deleteVoltageLevelOnLineEntity = this.modificationRepository.findById(modificationUuid);
-
-        if (deleteVoltageLevelOnLineEntity.isEmpty()) {
-            throw new NetworkModificationException(DELETE_VOLTAGE_LEVEL_ON_LINE_NOT_FOUND, "Delete voltage level on line not found");
-        }
-
-        DeleteVoltageLevelOnLineEntity updatedEntity = DeleteVoltageLevelOnLineEntity.toEntity(
-                deleteVoltageLevelOnLineInfos.getLineToAttachTo1Id(),
-                deleteVoltageLevelOnLineInfos.getLineToAttachTo2Id(),
-                deleteVoltageLevelOnLineInfos.getReplacingLine1Id(),
-                deleteVoltageLevelOnLineInfos.getReplacingLine1Name()
-        );
-        updatedEntity.setId(modificationUuid);
-        updatedEntity.setGroup(deleteVoltageLevelOnLineEntity.get().getGroup());
-        this.networkModificationRepository.updateModification(updatedEntity);
-    }
-
-    public void updateDeleteAttachingLineCreation(UUID modificationUuid, DeleteAttachingLineInfos deleteAttachingLineInfos) {
-        assertDeleteAttachingLineInfosNotEmpty(deleteAttachingLineInfos);
-
-        Optional<ModificationEntity>  deleteAttachingLineEntity = this.modificationRepository.findById(modificationUuid);
-
-        if (deleteAttachingLineEntity.isEmpty()) {
-            throw new NetworkModificationException(DELETE_ATTACHING_LINE_NOT_FOUND, "Delete attaching line not found");
-        }
-
-        DeleteAttachingLineEntity updatedEntity = DeleteAttachingLineEntity.toEntity(
-                deleteAttachingLineInfos.getLineToAttachTo1Id(),
-                deleteAttachingLineInfos.getLineToAttachTo2Id(),
-                deleteAttachingLineInfos.getAttachedLineId(),
-                deleteAttachingLineInfos.getReplacingLine1Id(),
-                deleteAttachingLineInfos.getReplacingLine1Name()
-        );
-        updatedEntity.setId(modificationUuid);
-        updatedEntity.setGroup(deleteAttachingLineEntity.get().getGroup());
         this.networkModificationRepository.updateModification(updatedEntity);
     }
 
