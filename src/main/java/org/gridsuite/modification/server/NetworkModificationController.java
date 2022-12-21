@@ -113,6 +113,7 @@ public class NetworkModificationController {
         switch (modificationInfos.getType()) {
             case LOAD_CREATION:
             case LINE_SPLIT_WITH_VOLTAGE_LEVEL:
+            case GENERATOR_SCALING:
             case EQUIPMENT_ATTRIBUTE_MODIFICATION:
                 return ResponseEntity.ok().body(networkModificationService.createModification(networkUuid, variantId, groupUuid, reportUuid, reporterId, modificationInfos));
             default:
@@ -130,6 +131,7 @@ public class NetworkModificationController {
         // PS : the switch can't be in the service because of @Transactional that need to be called from outside the class
         switch (modificationInfos.getType()) {
             case LOAD_CREATION:
+            case GENERATOR_SCALING:
             case LINE_SPLIT_WITH_VOLTAGE_LEVEL:
                 networkModificationService.updateModification(networkModificationUuid, modificationInfos);
                 break;

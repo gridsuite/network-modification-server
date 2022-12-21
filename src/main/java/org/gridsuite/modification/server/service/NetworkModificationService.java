@@ -1588,6 +1588,7 @@ public class NetworkModificationService {
             switch (infos.getType()) {
                 case EQUIPMENT_ATTRIBUTE_MODIFICATION:
                 case LOAD_CREATION:
+                case GENERATOR_SCALING:
                 case LINE_SPLIT_WITH_VOLTAGE_LEVEL:
                     // Generic form
                     return handleModification(infos, listener, groupUuid, reportUuid, reporterId);
