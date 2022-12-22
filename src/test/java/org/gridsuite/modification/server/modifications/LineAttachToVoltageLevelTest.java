@@ -130,6 +130,7 @@ public class LineAttachToVoltageLevelTest extends AbstractNetworkModificationTes
                     status().is4xxClientError(),
                     content().string(new NetworkModificationException(LINE_NOT_FOUND, "absent_line_id").getMessage())
             );
+        //testNetworkModificationsCount(TEST_GROUP_ID, 1);
 
         LineAttachToVoltageLevelInfos lineMissingLine = (LineAttachToVoltageLevelInfos) buildModification();
         lineMissingLine.setAttachmentLine(null); // we omit a mandatory input data
@@ -139,5 +140,6 @@ public class LineAttachToVoltageLevelTest extends AbstractNetworkModificationTes
                     status().is5xxServerError(),
                     content().string(new NetworkModificationException(LINE_ATTACH_ERROR, "Missing required attachment line description").getMessage())
             );
+        //testNetworkModificationsCount(TEST_GROUP_ID, 2);
     }
 }

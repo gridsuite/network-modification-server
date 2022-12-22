@@ -47,6 +47,7 @@ public class LoadCreationInNodeBreakerTest extends AbstractNetworkModificationTe
         String loadCreationInfosJson1 = objectWriter.writeValueAsString(loadCreationInfos1);
         mockMvc.perform(post(getNetworkModificationUri()).content(loadCreationInfosJson1).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(status().is5xxServerError(), content().string(new NetworkModificationException(CREATE_LOAD_ERROR, "java.lang.NullPointerException").getMessage())).andReturn();
+        //testNetworkModificationsCount(TEST_GROUP_ID, 1);
 
         // Equipment Id invalid
         LoadCreationInfos loadCreationInfos = (LoadCreationInfos) buildModification();
