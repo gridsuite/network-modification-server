@@ -72,7 +72,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @RunWith(SpringRunner.class)
 @AutoConfigureMockMvc
-@SpringBootTest(properties = {"spring.data.elasticsearch.enabled=true"})
+@SpringBootTest(properties = {"test.elasticsearch.enabled=true"})
 public class ModificationControllerTest {
 
     private static final UUID TEST_NETWORK_ID = UUID.fromString("7928181c-7977-4592-ba19-88027e4254e4");
@@ -2277,100 +2277,6 @@ public class ModificationControllerTest {
 
         uriStringGroups = "/v1/groups?duplicateFrom=" + UUID.randomUUID() + "&groupUuid=" + UUID.randomUUID() + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
         mockMvc.perform(post(uriStringGroups).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk());
-    }
-
-    @Test
-    public void testLineAttachToVoltageLevel() throws Exception {
-        MvcResult mvcResult;
-        String resultAsString;
-
-        VoltageLevelCreationInfos vl1 = VoltageLevelCreationInfos.builder()
-                .type(ModificationType.VOLTAGE_LEVEL_CREATION)
-                .equipmentId("vl1")
-                .equipmentName("NewVoltageLevel")
-                .nominalVoltage(379.3)
-                .substationId("s1")
-                .busbarSections(List.of(new BusbarSectionCreationInfos("v1bbs", "BBS1", 1, 1)))
-                .busbarConnections(List.of())
-                .build();
-
-        LineCreationInfos attachmentLine = LineCreationInfos.builder()
-                .type(ModificationType.LINE_CREATION)
-                .equipmentId("attachmentLine")
-                .seriesResistance(50.6)
-                .seriesReactance(25.3)
-                .build();
-
-        LineAttachToVoltageLevelInfos lineAttachToAbsentLine = new LineAttachToVoltageLevelInfos("absent_line_id",
-                10.0, "AttPointId", "attPointName", vl1, null,
-                "v1bbs", attachmentLine, "nl1", "NewLine1", "nl2", "NewLine2");
-        lineAttachToAbsentLine.setType(ModificationType.LINE_ATTACH_TO_VOLTAGE_LEVEL);
-        String lineAttachToAbsentLineJson = objectWriter.writeValueAsString(lineAttachToAbsentLine);
-        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(lineAttachToAbsentLineJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().is4xxClientError()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        assertEquals(resultAsString, new NetworkModificationException(LINE_NOT_FOUND, "absent_line_id").getMessage());
-
-        LineAttachToVoltageLevelInfos lineAttachToVL = new LineAttachToVoltageLevelInfos("line3",
-                10.0, "AttPointId", "attPointName", null, "v4",
-                "1.A", attachmentLine, "nl1", "NewLine1", "nl2", "NewLine2");
-        lineAttachToVL.setType(ModificationType.LINE_ATTACH_TO_VOLTAGE_LEVEL);
-
-        String lineAttachToVLJson = objectWriter.writeValueAsString(lineAttachToVL);
-        mockMvc.perform(post(URI_NETWORK_MODIF).content(lineAttachToVLJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
-        testNetworkModificationsCount(TEST_GROUP_ID, 1);
-
-        LineAttachToVoltageLevelInfos lineAttachToWithNewVL = new LineAttachToVoltageLevelInfos("line3",
-                10.0, "AttPointId", "attPointName", vl1, null,
-                "1.A", attachmentLine, "nl1", "NewLine1", "nl2", "NewLine2");
-        lineAttachToWithNewVL.setType(ModificationType.LINE_ATTACH_TO_VOLTAGE_LEVEL);
-        String lineAttachToWithNewVLJson = objectWriter.writeValueAsString(lineAttachToWithNewVL);
-        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(lineAttachToWithNewVLJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        List<ModificationInfos> result = mapper.readValue(resultAsString, new TypeReference<>() { });
-        testNetworkModificationsCount(TEST_GROUP_ID, 2);
-
-        assertNotNull(result);
-        Optional<ModificationInfos> lineAttachToProper = result.stream().filter(r -> r.getType() == ModificationType.LINE_ATTACH_TO_VOLTAGE_LEVEL).findFirst();
-        assertTrue(lineAttachToProper.isPresent());
-        assertEquals(3, lineAttachToProper.get().getSubstationIds().size());
-        assertTrue(lineAttachToProper.get().getSubstationIds().contains("s1"));
-        assertTrue(lineAttachToProper.get().getSubstationIds().contains("s2"));
-        assertTrue(lineAttachToProper.get().getSubstationIds().contains("AttPointId_substation"));
-
-        Optional<ModificationInfos> lineDeletion = result.stream().filter(r -> r.getType() == ModificationType.EQUIPMENT_DELETION).findFirst();
-        assertTrue(lineDeletion.isPresent());
-        assertEquals("line3", ((EquipmentModificationInfos) lineDeletion.get()).getEquipmentId());
-
-        LineAttachToVoltageLevelInfos incompleteLineAttachToVL = new LineAttachToVoltageLevelInfos("line3",
-                10.0, "AttPointId", "attPointName", null, "v4",
-                "1.A", null, "nl1", "NewLine1", "nl2", "NewLine2");
-        incompleteLineAttachToVL.setType(ModificationType.LINE_ATTACH_TO_VOLTAGE_LEVEL);
-
-        String incompleteLineAttachToVLJson = objectWriter.writeValueAsString(incompleteLineAttachToVL);
-        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(incompleteLineAttachToVLJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().is5xxServerError()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        assertEquals(resultAsString, new NetworkModificationException(LINE_ATTACH_ERROR, "Missing required attachment line description").getMessage());
-        testNetworkModificationsCount(TEST_GROUP_ID, 2);
-
-        LineAttachToVoltageLevelInfos lineAttachWithNewVLUpd = new LineAttachToVoltageLevelInfos("line2",
-                10.0, "AttPointId", "attPointName", vl1, null,
-                "1.A", attachmentLine, "nl1", "NewLine1", "nl2", "NewLine2");
-        lineAttachWithNewVLUpd.setType(ModificationType.LINE_ATTACH_TO_VOLTAGE_LEVEL);
-        String lineAttachWithNewVLUpdJson = objectWriter.writeValueAsString(lineAttachWithNewVLUpd);
-        mvcResult = mockMvc.perform(put(URI_NETWORK_MODIF_GET_PUT + new UUID(128, 16)).content(lineAttachWithNewVLUpdJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().is4xxClientError()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        assertEquals(resultAsString, new NetworkModificationException(LINE_ATTACH_NOT_FOUND, "Line attach not found").getMessage());
-        testNetworkModificationsCount(TEST_GROUP_ID, 2);
-
-        mockMvc.perform(put(URI_NETWORK_MODIF_GET_PUT + lineAttachToProper.get().getUuid()).content(lineAttachWithNewVLUpdJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
-        testNetworkModificationsCount(TEST_GROUP_ID, 2);
-
     }
 
     @Test
