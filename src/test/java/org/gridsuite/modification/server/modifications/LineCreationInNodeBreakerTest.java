@@ -8,6 +8,7 @@
 package org.gridsuite.modification.server.modifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.ModificationType;
@@ -17,6 +18,7 @@ import org.gridsuite.modification.server.dto.EquipmentModificationInfos;
 import org.gridsuite.modification.server.dto.LineCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.utils.MatcherLineCreationInfos;
+import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
@@ -32,11 +34,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
-
-    @Override
-    protected UUID getNetworkUuid() {
-        return TEST_NETWORK_ID;
-    }
 
     @Test
     @SneakyThrows
@@ -54,7 +51,7 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
         assertNotNull(modifications);
         assertTrue(modifications.isEmpty());  // no modifications returned
         assertNull(getNetwork().getLine("idLine2"));  // line was not created
-        testNetworkModificationsCount(TEST_GROUP_ID, 1);  // new modification stored in the database
+        testNetworkModificationsCount(getGroupId(), 1);  // new modification stored in the database
     }
 
     @Test
@@ -105,6 +102,11 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
                 status().is5xxServerError(),
                 content().string(new NetworkModificationException(CREATE_LINE_ERROR, "AC Line 'idLine4': x is invalid").getMessage())
             );
+    }
+
+    @Override
+    protected Network createNetwork(UUID networkUuid) {
+        return NetworkCreation.create(networkUuid, true);
     }
 
     @Override

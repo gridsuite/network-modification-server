@@ -7,6 +7,7 @@
 
 package org.gridsuite.modification.server.modifications;
 
+import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.ModificationType;
@@ -14,6 +15,7 @@ import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.ShuntCompensatorCreationInfos;
 import org.gridsuite.modification.server.utils.MatcherShuntCompensatorCreationInfos;
+import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
 import org.springframework.http.MediaType;
 
@@ -30,11 +32,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 public class ShuntCompensatorCreationInBusBreakerTest extends AbstractNetworkModificationTest {
 
-    @Override
-    protected UUID getNetworkUuid() {
-        return TEST_NETWORK_BUS_BREAKER_ID;
-    }
-
     @SneakyThrows
     @Test
     public void testCreateWithErrors() {
@@ -49,6 +46,11 @@ public class ShuntCompensatorCreationInBusBreakerTest extends AbstractNetworkMod
         shuntJson = mapper.writeValueAsString(shunt);
         mockMvc.perform(post(getNetworkModificationUri()).content(shuntJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpectAll(status().isNotFound(), content().string(new NetworkModificationException(BUS_NOT_FOUND, "notFoundBus").getMessage()));
+    }
+
+    @Override
+    protected Network createNetwork(UUID networkUuid) {
+        return NetworkCreation.createBusBreaker(networkUuid);
     }
 
     @Override
