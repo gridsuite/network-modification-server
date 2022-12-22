@@ -18,6 +18,7 @@ import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.NetworkModificationService;
 import org.gridsuite.modification.server.utils.MatcherModificationInfos;
+import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
