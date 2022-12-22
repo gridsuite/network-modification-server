@@ -6,9 +6,11 @@
  */
 package org.gridsuite.modification.server.modifications;
 
+import com.powsybl.iidm.network.Network;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.utils.MatcherModificationInfos;
+import org.gridsuite.modification.server.utils.NetworkCreation;
 
 import java.util.List;
 import java.util.UUID;
@@ -44,8 +46,8 @@ public class LineAttachToNewVoltageLevelTest extends AbstractNetworkModification
     }
 
     @Override
-    protected UUID getNetworkUuid() {
-        return TEST_NETWORK_ID;
+    protected Network createNetwork(UUID networkUuid) {
+        return NetworkCreation.create(networkUuid, true);
     }
 
     @Override

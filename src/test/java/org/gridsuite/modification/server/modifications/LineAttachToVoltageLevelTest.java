@@ -6,11 +6,13 @@
  */
 package org.gridsuite.modification.server.modifications;
 
+import com.powsybl.iidm.network.Network;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.utils.MatcherModificationInfos;
+import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
 import org.springframework.http.MediaType;
 
@@ -20,7 +22,8 @@ import java.util.UUID;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_ATTACH_ERROR;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_NOT_FOUND;
 import static org.gridsuite.modification.server.utils.MatcherLineAttachToVoltageLevelInfos.createMatcherLineAttachToVoltageLevelInfos;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -52,8 +55,8 @@ public class LineAttachToVoltageLevelTest extends AbstractNetworkModificationTes
     }
 
     @Override
-    protected UUID getNetworkUuid() {
-        return TEST_NETWORK_ID;
+    protected Network createNetwork(UUID networkUuid) {
+        return NetworkCreation.create(networkUuid, true);
     }
 
     @Override
@@ -124,7 +127,7 @@ public class LineAttachToVoltageLevelTest extends AbstractNetworkModificationTes
     public void testCreateWithErrors() {
         LineAttachToVoltageLevelInfos lineAttachToAbsentLine = (LineAttachToVoltageLevelInfos) buildModification();
         lineAttachToAbsentLine.setLineToAttachToId("absent_line_id");
-        String lineAttachToAbsentLineJson = objectWriter.writeValueAsString(lineAttachToAbsentLine);
+        String lineAttachToAbsentLineJson = mapper.writeValueAsString(lineAttachToAbsentLine);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineAttachToAbsentLineJson).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(
                     status().is4xxClientError(),
@@ -133,7 +136,7 @@ public class LineAttachToVoltageLevelTest extends AbstractNetworkModificationTes
 
         LineAttachToVoltageLevelInfos lineMissingLine = (LineAttachToVoltageLevelInfos) buildModification();
         lineMissingLine.setAttachmentLine(null); // we omit a mandatory input data
-        String lineMissingLineJson = objectWriter.writeValueAsString(lineMissingLine);
+        String lineMissingLineJson = mapper.writeValueAsString(lineMissingLine);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineMissingLineJson).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(
                     status().is5xxServerError(),

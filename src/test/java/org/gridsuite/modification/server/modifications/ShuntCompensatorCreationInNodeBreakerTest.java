@@ -7,12 +7,14 @@
 
 package org.gridsuite.modification.server.modifications;
 
+import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.ShuntCompensatorCreationInfos;
 import org.gridsuite.modification.server.utils.MatcherShuntCompensatorCreationInfos;
+import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
 import org.springframework.http.MediaType;
 
@@ -26,11 +28,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
 
-    @Override
-    protected UUID getNetworkUuid() {
-        return TEST_NETWORK_ID;
-    }
-
     @SneakyThrows
     @Test
     public void testCreateWithError() {
@@ -43,6 +40,11 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().is5xxServerError());
+    }
+
+    @Override
+    protected Network createNetwork(UUID networkUuid) {
+        return NetworkCreation.create(networkUuid, true);
     }
 
     @Override
