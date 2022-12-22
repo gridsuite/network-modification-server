@@ -99,7 +99,6 @@ public class ModificationControllerTest {
     private static final String URI_NETWORK_MODIF_BAD_NETWORK = URI_NETWORK_MODIF_BASE + "?networkUuid=" + NOT_FOUND_NETWORK_ID + URI_NETWORK_MODIF_PARAMS;
     private static final String URI_NETWORK_MODIF_BAD_VARIANT = URI_NETWORK_MODIF + "&variantId=" + VARIANT_NOT_EXISTING_ID;
     private static final String URI_NETWORK_WITH_TEE_POINT_MODIF = URI_NETWORK_MODIF_BASE + "?networkUuid=" + TEST_NETWORK_WITH_TEE_POINT_ID + URI_NETWORK_MODIF_PARAMS;
-    private static final String URI_NETWORK_MODIF_3 = URI_NETWORK_MODIF_BASE + "?networkUuid=" + TEST_NETWORK_ID_3 + URI_NETWORK_MODIF_PARAMS;
 
     @Autowired
     private MockMvc mockMvc;
@@ -129,8 +128,6 @@ public class ModificationControllerTest {
 
     private Network networkWithTeePoint;
 
-    private Network network3;
-
     @Before
     public void setUp() {
         objectWriter = mapper.writer().withDefaultPrettyPrinter();
@@ -146,9 +143,6 @@ public class ModificationControllerTest {
 
         networkWithTeePoint = NetworkWithTeePoint.create(TEST_NETWORK_WITH_TEE_POINT_ID);
         when(networkStoreService.getNetwork(TEST_NETWORK_WITH_TEE_POINT_ID)).then((Answer<Network>) invocation -> networkWithTeePoint);
-
-        network3 = createNetworkForDeleteVoltageLevelOnLine(TEST_NETWORK_ID_3);
-        when(networkStoreService.getNetwork(TEST_NETWORK_ID_3)).then((Answer<Network>) invocation -> network3);
 
         when(networkStoreService.getNetwork(NOT_FOUND_NETWORK_ID)).thenThrow(new PowsyblException());
         when(networkStoreService.getNetwork(TEST_NETWORK_WITH_FLUSH_ERROR_ID)).then((Answer<Network>) invocation -> NetworkCreation.create(TEST_NETWORK_WITH_FLUSH_ERROR_ID, true));
@@ -2002,41 +1996,6 @@ public class ModificationControllerTest {
             .andExpect(status().isOk());
 
         testNetworkModificationsCount(TEST_GROUP_ID, 7);
-
-        //create a deleteAttachingLine
-        DeleteAttachingLineInfos deleteAttachingLineInfos = DeleteAttachingLineInfos.builder()
-                .type(ModificationType.DELETE_ATTACHING_LINE)
-                .lineToAttachTo1Id("l1")
-                .lineToAttachTo2Id("l2")
-                .attachedLineId("l3")
-                .replacingLine1Id("replacingLineId")
-                .replacingLine1Name("replacingLine")
-                .build();
-
-        mockMvc.perform(
-                        post(URI_NETWORK_WITH_TEE_POINT_MODIF)
-                                .content(objectWriter.writeValueAsString(deleteAttachingLineInfos))
-                                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
-
-        testNetworkModificationsCount(TEST_GROUP_ID, 8);
-
-        //create a deleteVoltageLevelOnLine
-        DeleteVoltageLevelOnLineInfos deleteVoltageLevelOnLineInfos = DeleteVoltageLevelOnLineInfos.builder()
-                .type(ModificationType.DELETE_VOLTAGE_LEVEL_ON_LINE)
-                .lineToAttachTo1Id("l1")
-                .lineToAttachTo2Id("l2")
-                .replacingLine1Id("replacingLineId")
-                .replacingLine1Name("replacingLine")
-                .build();
-
-        mockMvc.perform(
-                        post(URI_NETWORK_MODIF_3)
-                                .content(objectWriter.writeValueAsString(deleteVoltageLevelOnLineInfos))
-                                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
-
-        testNetworkModificationsCount(TEST_GROUP_ID, 9);
 
         //test copy group
         UUID newGroupUuid = UUID.randomUUID();
