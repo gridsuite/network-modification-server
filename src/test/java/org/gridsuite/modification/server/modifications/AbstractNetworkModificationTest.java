@@ -56,7 +56,7 @@ If you want to add a test that can be applied to every modification, add it here
 If you want to add a test specific to a modification, add it in its own class.
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest
+@SpringBootTest(properties = {"test.elasticsearch.enabled=true"})
 @AutoConfigureMockMvc
 public abstract class AbstractNetworkModificationTest {
 
