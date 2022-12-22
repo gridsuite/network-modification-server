@@ -356,7 +356,7 @@ public class NetworkModificationService {
         networkModificationRepository.deleteModificationGroup(groupUuid, errorOnGroupNotFound);
     }
 
-    private NetworkModificationException handlException(NetworkModificationException.Type typeIfError, Reporter subReporter, Exception e) {
+    private NetworkModificationException handleException(NetworkModificationException.Type typeIfError, Reporter subReporter, Exception e) {
         NetworkModificationException networkModificationException;
         networkModificationException = e instanceof NetworkModificationException ? (NetworkModificationException) e : new NetworkModificationException(typeIfError, e);
         if (!(e instanceof PowsyblException) && LOGGER.isErrorEnabled()) {
@@ -381,7 +381,7 @@ public class NetworkModificationService {
                 action.run();
             }
         } catch (Exception e) {
-            networkModificationException = handlException(typeIfError, subReporter, e);
+            networkModificationException = handleException(typeIfError, subReporter, e);
         }
 
         try {
@@ -392,7 +392,7 @@ public class NetworkModificationService {
                 saveModifications(listener);
             }
         } catch (Exception e) {
-            networkModificationException = handlException(typeIfError, subReporter, e);
+            networkModificationException = handleException(typeIfError, subReporter, e);
         } finally {
             if (listener.isApplyModifications()) {
                 sendReport(reportUuid, reporter);
@@ -509,20 +509,32 @@ public class NetworkModificationService {
                                                        UUID reportUuid, String reporterId) {
         String rootReporterId = reporterId + "@" + NETWORK_MODIFICATION_TYPE_REPORT;
         ReporterModel reporter = new ReporterModel(rootReporterId, rootReporterId);
+        Reporter subReporter = modificationInfos.createSubReporter(reporter);
+
         List<ModificationInfos> networkModifications = List.of();
         try {
-            if (listener.isApplyModifications()) {
-                networkModifications = modificationApplicator.apply(modificationInfos, reporter, listener);
+            if (!listener.isBuild()) { // Save network modification in DB
+                networkModificationRepository.saveModifications(groupUuid, List.of(modificationInfos.toEntity()));
             }
+
+            if (listener.isApplyModifications()) { // Apply modification on the network
+                networkModifications = modificationApplicator.apply(modificationInfos, subReporter, listener);
+            }
+
+            if (!listener.isBuild()) { // Save network in DB
+                networkStoreService.flush(listener.getNetwork());
+            }
+        } catch (Exception e) {
             if (!listener.isBuild()) {
-                saveModifications(listener, groupUuid, modificationInfos.toEntity());
+                throw handleException(modificationInfos.getErrorType(), subReporter, e);
             }
-            return networkModifications;
         } finally {
             if (listener.isApplyModifications()) {
                 sendReport(reportUuid, reporter);
             }
         }
+
+        return networkModifications;
     }
 
     // temporary wildcard code smell (method to be deleted)
@@ -583,13 +595,6 @@ public class NetworkModificationService {
                 break;
             default:
                 throw new NetworkModificationException(TYPE_MISMATCH);
-        }
-    }
-
-    private void saveModifications(NetworkStoreListener listener, UUID groupUuid, ModificationEntity modificationEntity) {
-        networkModificationRepository.saveModifications(groupUuid, List.of(modificationEntity));
-        if (listener.isApplyModifications()) {
-            networkStoreService.flush(listener.getNetwork());
         }
     }
 
