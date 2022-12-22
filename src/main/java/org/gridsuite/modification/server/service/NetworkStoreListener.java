@@ -14,7 +14,6 @@ import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.TwoWindingsTransformerCreationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.VoltageLevelCreationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.LineAttachToVoltageLevelEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.LinesAttachToSplitLinesEntity;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.springframework.transaction.annotation.Transactional;
@@ -200,34 +199,8 @@ public class NetworkStoreListener implements NetworkListener {
         modifications.add(this.modificationRepository.createEquipmentDeletionEntity(equipmentId, equipmentType));
     }
 
-    public void storeLineCreation(LineCreationInfos lineCreationInfos) {
-        modifications.add(this.modificationRepository.createLineEntity(lineCreationInfos.getEquipmentId(),
-            lineCreationInfos.getEquipmentName(),
-            lineCreationInfos.getSeriesResistance(),
-            lineCreationInfos.getSeriesReactance(),
-            lineCreationInfos.getShuntConductance1(),
-            lineCreationInfos.getShuntSusceptance1(),
-            lineCreationInfos.getShuntConductance2(),
-            lineCreationInfos.getShuntSusceptance2(),
-            lineCreationInfos.getVoltageLevelId1(),
-            lineCreationInfos.getBusOrBusbarSectionId1(),
-            lineCreationInfos.getVoltageLevelId2(),
-            lineCreationInfos.getBusOrBusbarSectionId2(),
-            lineCreationInfos.getCurrentLimits1() != null ? lineCreationInfos.getCurrentLimits1().getPermanentLimit() : null,
-            lineCreationInfos.getCurrentLimits2() != null ? lineCreationInfos.getCurrentLimits2().getPermanentLimit() : null,
-            lineCreationInfos.getConnectionName1(),
-            lineCreationInfos.getConnectionDirection1(),
-            lineCreationInfos.getConnectionName2(),
-            lineCreationInfos.getConnectionDirection2()
-        ));
-    }
-
     public void storeTwoWindingsTransformerCreation(TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
         modifications.add(TwoWindingsTransformerCreationEntity.toEntity(twoWindingsTransformerCreationInfos));
-    }
-
-    public void storeShuntCompensatorCreation(ShuntCompensatorCreationInfos shuntCompensatorCreationInfos) {
-        modifications.add(this.modificationRepository.createShuntCompensatorEntity(shuntCompensatorCreationInfos));
     }
 
     public void storeGroovyScriptModification(String script) {
@@ -309,26 +282,6 @@ public class NetworkStoreListener implements NetworkListener {
 
     private void addSubstationsIds(Identifiable<?> identifiable) {
         substationsIds.addAll(getSubstationIds(identifiable));
-    }
-
-    public void storeLineAttachToVoltageLevelInfos(LineAttachToVoltageLevelInfos lineAttachToVoltageLevelInfos) {
-        VoltageLevelCreationInfos mayNewVoltageLevelInfos = lineAttachToVoltageLevelInfos.getMayNewVoltageLevelInfos();
-        LineCreationInfos attachmentLine = lineAttachToVoltageLevelInfos.getAttachmentLine();
-
-        modifications.add(LineAttachToVoltageLevelEntity.toEntity(
-                lineAttachToVoltageLevelInfos.getLineToAttachToId(),
-                lineAttachToVoltageLevelInfos.getPercent(),
-                lineAttachToVoltageLevelInfos.getAttachmentPointId(),
-                lineAttachToVoltageLevelInfos.getAttachmentPointName(),
-                mayNewVoltageLevelInfos,
-                lineAttachToVoltageLevelInfos.getExistingVoltageLevelId(),
-                lineAttachToVoltageLevelInfos.getBbsOrBusId(),
-                attachmentLine,
-                lineAttachToVoltageLevelInfos.getNewLine1Id(),
-                lineAttachToVoltageLevelInfos.getNewLine1Name(),
-                lineAttachToVoltageLevelInfos.getNewLine2Id(),
-                lineAttachToVoltageLevelInfos.getNewLine2Name())
-        );
     }
 
     public void storeLinesAttachToSplitLinesInfos(LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos) {

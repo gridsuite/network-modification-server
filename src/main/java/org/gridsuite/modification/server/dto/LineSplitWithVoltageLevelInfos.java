@@ -59,17 +59,7 @@ public class LineSplitWithVoltageLevelInfos extends ModificationInfos {
 
     @Override
     public LineSplitWithVoltageLevelEntity toEntity() {
-        return LineSplitWithVoltageLevelEntity.toEntity(
-            getLineToSplitId(),
-            getPercent(),
-            getMayNewVoltageLevelInfos(),
-            getExistingVoltageLevelId(),
-            getBbsOrBusId(),
-            getNewLine1Id(),
-            getNewLine1Name(),
-            getNewLine2Id(),
-            getNewLine2Name()
-        );
+        return new LineSplitWithVoltageLevelEntity(this);
     }
 
     @Override

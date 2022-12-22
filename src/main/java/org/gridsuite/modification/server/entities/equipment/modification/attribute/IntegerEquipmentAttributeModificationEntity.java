@@ -6,14 +6,14 @@
  */
 package org.gridsuite.modification.server.entities.equipment.modification.attribute;
 
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import org.gridsuite.modification.server.dto.EquipmentAttributeModificationInfos;
+
 import javax.persistence.Entity;
 import javax.persistence.ForeignKey;
 import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
-
-import com.powsybl.iidm.network.IdentifiableType;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -24,7 +24,10 @@ import lombok.NoArgsConstructor;
 @Table(name = "integerEquipmentAttributeModification")
 @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "integer_equipment_attribute_modification_id_fk_constraint"))
 public class IntegerEquipmentAttributeModificationEntity extends EquipmentAttributeModificationEntity<Integer> {
-    public IntegerEquipmentAttributeModificationEntity(String equipmentId, String attributeName, Integer attributeValue, IdentifiableType equipmentType) {
-        super(equipmentId, attributeName, attributeValue, equipmentType);
+    public IntegerEquipmentAttributeModificationEntity(EquipmentAttributeModificationInfos equipmentAttributeModificationInfos) {
+        super(equipmentAttributeModificationInfos.getEquipmentId(),
+            equipmentAttributeModificationInfos.getEquipmentAttributeName(),
+            (int) equipmentAttributeModificationInfos.getEquipmentAttributeValue(),
+            equipmentAttributeModificationInfos.getEquipmentType());
     }
 }
