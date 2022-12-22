@@ -8,11 +8,13 @@
 package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.iidm.network.LoadType;
+import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.LoadCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.utils.MatcherLoadCreationInfos;
+import org.gridsuite.modification.server.utils.NetworkCreation;
 
 import java.util.UUID;
 
@@ -21,8 +23,8 @@ import static org.junit.Assert.assertNull;
 
 public class LoadCreationInBusBreakerTest extends AbstractNetworkModificationTest {
     @Override
-    protected UUID getNetworkUuid() {
-        return TEST_NETWORK_BUS_BREAKER_ID;
+    protected Network createNetwork(UUID networkUuid) {
+        return NetworkCreation.createBusBreaker(networkUuid);
     }
 
     @Override

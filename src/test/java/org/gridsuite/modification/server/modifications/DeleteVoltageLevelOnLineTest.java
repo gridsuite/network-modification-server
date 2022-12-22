@@ -6,12 +6,14 @@
  */
 package org.gridsuite.modification.server.modifications;
 
+import com.powsybl.iidm.network.Network;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.DeleteVoltageLevelOnLineInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.utils.MatcherModificationInfos;
+import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -31,8 +33,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class DeleteVoltageLevelOnLineTest extends AbstractNetworkModificationTest {
 
     @Override
-    protected UUID getNetworkUuid() {
-        return TEST_NETWORK_DELETE_VOLTAGE_LEVEL_ON_LINE_ID;
+    protected Network createNetwork(UUID networkUuid) {
+        return NetworkCreation.createForDeleteVoltageLevelOnLine(networkUuid);
     }
 
     @Override
@@ -86,6 +88,7 @@ public class DeleteVoltageLevelOnLineTest extends AbstractNetworkModificationTes
                 .lineToAttachTo2Id("ll")
                 .replacingLine1Id("replacementLineId")
                 .build();
+        var objectWriter = mapper.writer().withDefaultPrettyPrinter();
         String json = objectWriter.writeValueAsString(deleteVoltageLevelOnLineInfos);
         mockMvc.perform(MockMvcRequestBuilders.post(getNetworkModificationUri()).content(json).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(

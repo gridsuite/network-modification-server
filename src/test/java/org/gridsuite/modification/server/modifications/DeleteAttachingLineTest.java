@@ -6,12 +6,14 @@
  */
 package org.gridsuite.modification.server.modifications;
 
+import com.powsybl.iidm.network.Network;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.DeleteAttachingLineInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.utils.MatcherModificationInfos;
+import org.gridsuite.modification.server.utils.NetworkWithTeePoint;
 import org.junit.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -31,8 +33,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class DeleteAttachingLineTest extends AbstractNetworkModificationTest {
 
     @Override
-    protected UUID getNetworkUuid() {
-        return TEST_NETWORK_DELETE_ATTACHING_LINE_ID;
+    protected Network createNetwork(UUID networkUuid) {
+        return NetworkWithTeePoint.create(networkUuid);
     }
 
     @Override
@@ -89,6 +91,7 @@ public class DeleteAttachingLineTest extends AbstractNetworkModificationTest {
                 .attachedLineId("l2")
                 .replacingLine1Id("replacementLineId")
                 .build();
+        var objectWriter = mapper.writer().withDefaultPrettyPrinter();
         String json = objectWriter.writeValueAsString(deleteAttachingLineInfos);
         mockMvc.perform(MockMvcRequestBuilders.post(getNetworkModificationUri()).content(json).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(
@@ -107,6 +110,7 @@ public class DeleteAttachingLineTest extends AbstractNetworkModificationTest {
                 .attachedLineId("l1")
                 .replacingLine1Id("replacementLineId")
                 .build();
+        var objectWriter = mapper.writer().withDefaultPrettyPrinter();
         String json = objectWriter.writeValueAsString(deleteAttachingLineInfos);
         mockMvc.perform(MockMvcRequestBuilders.post(getNetworkModificationUri()).content(json).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(
