@@ -146,7 +146,7 @@ public class EquipmentAttributeModificationTest extends AbstractNetworkModificat
         List<EquipmentAttributeModificationInfos> bsiListResultAttributemi = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertThat(bsiListResultAttributemi.get(0), createMatcherEquipmentAttributeModificationInfos(switchId3, otherSubstationsIds, "open", true, IdentifiableType.SWITCH));
 
-        testNetworkModificationsCount(TEST_GROUP_ID, modificationsCount);
+        testNetworkModificationsCount(getGroupId(), modificationsCount);
     }
 
     @SneakyThrows

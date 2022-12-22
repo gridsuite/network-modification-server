@@ -51,7 +51,7 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
         assertNotNull(modifications);
         assertTrue(modifications.isEmpty());  // no modifications returned
         assertNull(getNetwork().getLine("idLine2"));  // line was not created
-        testNetworkModificationsCount(TEST_GROUP_ID, 1);  // new modification stored in the database
+        testNetworkModificationsCount(getGroupId(), 1);  // new modification stored in the database
     }
 
     @Test

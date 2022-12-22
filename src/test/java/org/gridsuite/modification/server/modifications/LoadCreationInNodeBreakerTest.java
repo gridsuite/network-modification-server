@@ -79,7 +79,7 @@ public class LoadCreationInNodeBreakerTest extends AbstractNetworkModificationTe
 
         assertTrue(bsmlrModification.isEmpty());  // no modifications returned
         assertNull(getNetwork().getLoad("idLoad1"));  // load was not created
-        testNetworkModificationsCount(TEST_GROUP_ID, 1);  // new modification stored in the database
+        testNetworkModificationsCount(getGroupId(), 1);  // new modification stored in the database
     }
 
     @Override

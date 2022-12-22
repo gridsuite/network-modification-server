@@ -65,10 +65,10 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
         String lineCreationInfosNoShuntJson = mapper.writeValueAsString(lineCreationInfosNoShunt);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosNoShuntJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
-        LineCreationInfos createdModification = (LineCreationInfos) modificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
+        LineCreationInfos createdModification = (LineCreationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
         assertThat(createdModification, createMatcherLineCreationInfos(lineCreationInfosNoShunt));
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 1);
+        testNetworkModificationsCount(getGroupId(), 1);
     }
 
     @Test
@@ -95,10 +95,10 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
         String lineCreationInfosNoShuntJson = mapper.writeValueAsString(lineCreationInfosNoShunt);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosNoShuntJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
-        LineCreationInfos createdModification = (LineCreationInfos) modificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
+        LineCreationInfos createdModification = (LineCreationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
         assertThat(createdModification, createMatcherLineCreationInfos(lineCreationInfosNoShunt));
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 1);
+        testNetworkModificationsCount(getGroupId(), 1);
     }
 
     @Test
@@ -121,10 +121,10 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosPermanentLimitOKJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
-        LineCreationInfos createdModification = (LineCreationInfos) modificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
+        LineCreationInfos createdModification = (LineCreationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
         assertThat(createdModification, createMatcherLineCreationInfos(lineCreationInfosPermanentLimitOK));
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 1);
+        testNetworkModificationsCount(getGroupId(), 1);
     }
 
     @Test
@@ -149,10 +149,10 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
                 .andExpect(status().isOk()).andReturn();
 
         lineCreationInfosPermanentLimitOK.setCurrentLimits2(null); // if permanentLimit is null then no currentLimit created
-        LineCreationInfos createdModification = (LineCreationInfos) modificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
+        LineCreationInfos createdModification = (LineCreationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
         assertThat(createdModification, createMatcherLineCreationInfos(lineCreationInfosPermanentLimitOK));
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 1);
+        testNetworkModificationsCount(getGroupId(), 1);
     }
 
     @Test
