@@ -96,12 +96,25 @@ public class GeneratorScaling extends AbstractModification {
                     }
                 }
 
-
                 var regularDistributionScalable = Scalable.proportional(percentages, scalables, isIterative);
                 regularDistributionScalable.scale(network,
                         getAsked(generatorScalingVariation, sum),
                         Scalable.ScalingConvention.GENERATOR);
             case VENTILATION:
+                var distributionKeys = generatorScalingVariation.getFilterInfos().getEquipments().stream()
+                        .mapToDouble(equipment -> equipment.getDistributionKey())
+                        .sum();
+                generatorScalingVariation.getFilterInfos().getEquipments().forEach(equipment -> {
+                    scalables.add(getScalable(equipment.getId()));
+                    percentages.add((float) ((equipment.getDistributionKey() / distributionKeys) * 100));
+                });
+                Scalable.proportional(percentages, scalables, isIterative);
+                var ventilationScalable = Scalable.proportional(percentages, scalables, isIterative);
+                ventilationScalable.scale(network,
+                        getAsked(generatorScalingVariation, sum),
+                        Scalable.ScalingConvention.GENERATOR);
+                break;
+            case STACKING_UP:
                 Double variationValue = generatorScalingVariation.getVariationValue();
                 generatorScalingVariation.getFilterInfos().getEquipments()
                         .stream()
@@ -122,13 +135,6 @@ public class GeneratorScaling extends AbstractModification {
                     percentages.add((float) ((p / variationValue) * 100));
                     scalables.add(getScalable(id));
                 });
-                Scalable.proportional(percentages, scalables, isIterative);
-                var ventilationScalable = Scalable.proportional(percentages, scalables, isIterative);
-                ventilationScalable.scale(network,
-                        getAsked(generatorScalingVariation, sum),
-                        Scalable.ScalingConvention.GENERATOR);
-                break;
-            case STACKING_UP:
                 Scalable.stack(generatorScalingVariation.getFilterInfos().getEquipments().toArray(new String[0]));
             default:
                 throw new PowsyblException("");
