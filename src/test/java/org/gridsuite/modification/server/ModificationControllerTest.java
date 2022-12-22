@@ -2001,7 +2001,7 @@ public class ModificationControllerTest {
         String uriStringGroups = "/v1/groups?groupUuid=" + newGroupUuid + "&duplicateFrom=" + TEST_GROUP_ID + "&reportUuid=" + UUID.randomUUID();
         mockMvc.perform(post(uriStringGroups)).andExpect(status().isOk());
 
-        testNetworkModificationsCount(newGroupUuid, 9);
+        testNetworkModificationsCount(newGroupUuid, 7);
     }
 
     @Test
