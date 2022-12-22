@@ -298,5 +298,4 @@ public class NetworkStoreListener implements NetworkListener {
                 linesAttachToSplitLinesInfos.getReplacingLine2Name())
         );
     }
-
 }
