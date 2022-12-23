@@ -26,15 +26,24 @@ public class EquipmentModificationEntity extends ModificationEntity {
     @Column(name = "equipmentId")
     private String equipmentId;
 
+    //TODO : remove
     protected EquipmentModificationEntity(String equipmentId, ModificationType modificationType) {
         super(modificationType);
         this.equipmentId = equipmentId;
     }
 
+    protected EquipmentModificationEntity(EquipmentModificationInfos equipmentModificationInfos) {
+        super(equipmentModificationInfos);
+        assignAttributes(equipmentModificationInfos);
+    }
+
     @Override
     public void update(ModificationInfos modificationInfos) {
         super.update(modificationInfos);
-        EquipmentModificationInfos equipmentModificationInfos = (EquipmentModificationInfos) modificationInfos;
+        assignAttributes((EquipmentModificationInfos) modificationInfos);
+    }
+
+    private void assignAttributes(EquipmentModificationInfos equipmentModificationInfos) {
         equipmentId = equipmentModificationInfos.getEquipmentId();
     }
 }

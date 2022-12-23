@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
+import org.gridsuite.modification.server.entities.equipment.creation.CurrentLimitsEntity;
 
 /**
  * @author Sylvain Bouzols <sylvain.bouzols at rte-france.com>
@@ -27,4 +28,8 @@ public class CurrentLimitsInfos {
 
     @Schema(description = "Permanent current limit")
     private Double permanentLimit;
+
+    public CurrentLimitsEntity toEntity() {
+        return new CurrentLimitsEntity(null, permanentLimit);
+    }
 }
