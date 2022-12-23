@@ -74,6 +74,9 @@ public class GeneratorModificationInfos extends InjectionModificationInfos {
     @Schema(description = "Step up transformer reactance")
     private AttributeModification<Double> stepUpTransformerReactance;
 
+    @Schema(description = "Voltage Regulation type")
+    private AttributeModification<VoltageRegulationType> voltageRegulationType;
+
     @Schema(description = "Regulating terminal equipment id")
     private AttributeModification<String> regulatingTerminalId;
 

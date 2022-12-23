@@ -13,6 +13,7 @@ import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.AttributeModification;
 import org.gridsuite.modification.server.dto.GeneratorModificationInfos;
 import org.gridsuite.modification.server.dto.ReactiveCapabilityCurveModificationInfos;
+import org.gridsuite.modification.server.dto.VoltageRegulationType;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.BooleanModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.EnumModificationEmbedded;
@@ -153,6 +154,13 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
 
     @Embedded
     @AttributeOverrides(value = {
+        @AttributeOverride(name = "value", column = @Column(name = "voltageRegulationType")),
+        @AttributeOverride(name = "opType", column = @Column(name = "voltageRegulationTypeOp"))
+    })
+    EnumModificationEmbedded<VoltageRegulationType> voltageRegulationType;
+
+    @Embedded
+    @AttributeOverrides(value = {
         @AttributeOverride(name = "value", column = @Column(name = "regulatingTerminalId")),
         @AttributeOverride(name = "opType", column = @Column(name = "regulatingTerminalIdOp"))
     })
@@ -200,7 +208,7 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
             AttributeModification<Double> marginalCost, AttributeModification<Double> minimumReactivePower,
             AttributeModification<Double> maximumReactivePower, AttributeModification<Boolean> participate,
             AttributeModification<Float> droop, AttributeModification<Double> transientReactance,
-            AttributeModification<Double> stepUpTransformerReactance,
+            AttributeModification<Double> stepUpTransformerReactance, AttributeModification<VoltageRegulationType> voltageRegulationType,
             AttributeModification<String> regulatingTerminalId, AttributeModification<String> regulatingTerminalType,
             AttributeModification<String> regulatingTerminalVlId,
             AttributeModification<Double> qPercent,
@@ -222,6 +230,7 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
         this.droop = new FloatModificationEmbedded(droop);
         this.transientReactance = new DoubleModificationEmbedded(transientReactance);
         this.stepUpTransformerReactance = new DoubleModificationEmbedded(stepUpTransformerReactance);
+        this.voltageRegulationType = new EnumModificationEmbedded<>(voltageRegulationType);
         this.regulatingTerminalId = new StringModificationEmbedded(regulatingTerminalId);
         this.regulatingTerminalType = new StringModificationEmbedded(regulatingTerminalType);
         this.regulatingTerminalVlId = new StringModificationEmbedded(regulatingTerminalVlId);
@@ -247,7 +256,7 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
                 infos.getMinActivePower(), infos.getMaxActivePower(), infos.getRatedNominalPower(),
                 infos.getActivePowerSetpoint(), infos.getReactivePowerSetpoint(), infos.getVoltageRegulationOn(),
                 infos.getVoltageSetpoint(), infos.getMarginalCost(), infos.getMinimumReactivePower(), infos.getMaximumReactivePower(), infos.getParticipate(),
-                infos.getDroop(), infos.getTransientReactance(), infos.getStepUpTransformerReactance(), infos.getRegulatingTerminalId(), infos.getRegulatingTerminalType(),
+                infos.getDroop(), infos.getTransientReactance(), infos.getStepUpTransformerReactance(), infos.getVoltageRegulationType(), infos.getRegulatingTerminalId(), infos.getRegulatingTerminalType(),
                 infos.getRegulatingTerminalVlId(), infos.getQPercent(), infos.getReactiveCapabilityCurve(), toEmbeddablePoints(infos.getReactiveCapabilityCurvePoints()));
     }
 
@@ -289,6 +298,7 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
             .droop(toAttributeModification(getDroop()))
             .transientReactance(toAttributeModification(getTransientReactance()))
             .stepUpTransformerReactance(toAttributeModification(getStepUpTransformerReactance()))
+            .voltageRegulationType(toAttributeModification(getVoltageRegulationType()))
             .regulatingTerminalId(toAttributeModification(getRegulatingTerminalId()))
             .regulatingTerminalType(toAttributeModification(getRegulatingTerminalType()))
             .regulatingTerminalVlId(toAttributeModification(getRegulatingTerminalVlId()))

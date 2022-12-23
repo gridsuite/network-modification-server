@@ -148,4 +148,14 @@
             <column name="oldp" type="float8"/>
         </addColumn>
     </changeSet>
+    <changeSet author="labidiayo (generated)" id="1671719699601-7">
+        <addColumn tableName="generator_modification">
+            <column name="voltage_regulation_type" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="labidiayo (generated)" id="1671719699601-8">
+        <addColumn tableName="generator_modification">
+            <column name="voltage_regulation_type_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>

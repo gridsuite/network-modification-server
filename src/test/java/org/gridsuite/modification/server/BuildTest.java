@@ -356,8 +356,11 @@ public class BuildTest {
             .build()));
         entities2.add(modificationRepository.createLoadModificationEntity("newLoad",
             new AttributeModification<>("newLoadName", OperationType.SET), null, null, null, null, null));
-        entities2.add(modificationRepository.createGeneratorModificationEntity(GeneratorModificationInfos.builder().equipmentId("newGenerator")
-            .equipmentName(new AttributeModification<>("newGeneratorName", OperationType.SET)).build()));
+        entities2.add(modificationRepository.createGeneratorModificationEntity(GeneratorModificationInfos.builder()
+                .equipmentId("newGenerator")
+                .equipmentName(new AttributeModification<>("newGeneratorName", OperationType.SET))
+                .voltageRegulationType(new AttributeModification<>(VoltageRegulationType.LOCAL, OperationType.SET))
+                .reactiveCapabilityCurve(new AttributeModification<>(false, OperationType.SET)).build()));
 
         modificationRepository.saveModifications(TEST_GROUP_ID, entities1);
         modificationRepository.saveModifications(TEST_GROUP_ID_2, entities2);

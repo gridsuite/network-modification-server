@@ -1035,11 +1035,14 @@ public class ModificationControllerTest {
         String resultAsString;
         String generatorId = "idGenerator";
         GeneratorModificationInfos generatorModificationInfos = GeneratorModificationInfos.builder()
-            .type(ModificationType.GENERATOR_MODIFICATION)
-            .equipmentId(generatorId)
-            .energySource(new AttributeModification<>(EnergySource.HYDRO, OperationType.SET))
-            .maxActivePower(new AttributeModification<>(100.0, OperationType.SET))
-            .build();
+                        .type(ModificationType.GENERATOR_MODIFICATION)
+                        .equipmentId(generatorId)
+                        .energySource(new AttributeModification<>(EnergySource.HYDRO, OperationType.SET))
+                        .maxActivePower(new AttributeModification<>(100.0, OperationType.SET))
+                        .reactiveCapabilityCurve(new AttributeModification<>(false, OperationType.SET))
+                        .voltageRegulationType(
+                                        new AttributeModification<>(VoltageRegulationType.LOCAL, OperationType.SET))
+                        .build();
 
         String generatorModificationInfosJson = objectWriter.writeValueAsString(generatorModificationInfos);
         mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(generatorModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
@@ -1071,18 +1074,21 @@ public class ModificationControllerTest {
 
         // Modify all attributes of the generator
         generatorModificationInfos = GeneratorModificationInfos.builder()
-            .type(ModificationType.GENERATOR_MODIFICATION)
-            .energySource(new AttributeModification<>(EnergySource.SOLAR, OperationType.SET))
-            .equipmentName(new AttributeModification<>("newV1Generator", OperationType.SET))
-            .activePowerSetpoint(new AttributeModification<>(80.0, OperationType.SET))
-            .reactivePowerSetpoint(new AttributeModification<>(40.0, OperationType.SET))
-            .voltageSetpoint(new AttributeModification<>(48.0, OperationType.SET))
-            .voltageRegulationOn(new AttributeModification<>(true, OperationType.SET))
-            .minActivePower(new AttributeModification<>(0., OperationType.SET))
-            .maxActivePower(new AttributeModification<>(100., OperationType.SET))
-            .ratedNominalPower(new AttributeModification<>(220., OperationType.SET))
-            .equipmentId(generatorId)
-            .build();
+                        .type(ModificationType.GENERATOR_MODIFICATION)
+                        .energySource(new AttributeModification<>(EnergySource.SOLAR, OperationType.SET))
+                        .equipmentName(new AttributeModification<>("newV1Generator", OperationType.SET))
+                        .activePowerSetpoint(new AttributeModification<>(80.0, OperationType.SET))
+                        .reactivePowerSetpoint(new AttributeModification<>(40.0, OperationType.SET))
+                        .voltageSetpoint(new AttributeModification<>(48.0, OperationType.SET))
+                        .voltageRegulationOn(new AttributeModification<>(false, OperationType.SET))
+                        .minActivePower(new AttributeModification<>(0., OperationType.SET))
+                        .maxActivePower(new AttributeModification<>(100., OperationType.SET))
+                        .ratedNominalPower(new AttributeModification<>(220., OperationType.SET))
+                        .reactiveCapabilityCurve(new AttributeModification<>(false, OperationType.SET))
+                        .voltageRegulationType(
+                                        new AttributeModification<>(VoltageRegulationType.LOCAL, OperationType.SET))
+                        .equipmentId(generatorId)
+                        .build();
 
         generatorModificationInfosJson = objectWriter.writeValueAsString(generatorModificationInfos);
         mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).contentType(MediaType.APPLICATION_JSON).content(generatorModificationInfosJson))
@@ -1098,7 +1104,7 @@ public class ModificationControllerTest {
         assertEquals(80.0, equipment.getTargetP(), .1);
         assertEquals(40.0, equipment.getTargetQ(), .1);
         assertEquals(48.0, equipment.getTargetV(), .1);
-        assertTrue(equipment.isVoltageRegulatorOn());
+        assertFalse(equipment.isVoltageRegulatorOn());
         assertEquals(0.0, equipment.getMinP(), .1);
         assertEquals(100.0, equipment.getMaxP(), .1);
         assertEquals(220.0, equipment.getRatedS(), .1);
@@ -1185,11 +1191,14 @@ public class ModificationControllerTest {
         String resultAsString;
         String generatorId = "idGenerator";
         GeneratorModificationInfos generatorModificationInfos = GeneratorModificationInfos.builder()
-            .type(ModificationType.GENERATOR_MODIFICATION)
-            .equipmentId(generatorId)
-            .energySource(new AttributeModification<>(EnergySource.HYDRO, OperationType.SET))
-            .maxActivePower(new AttributeModification<>(100.0, OperationType.SET))
-            .build();
+                        .type(ModificationType.GENERATOR_MODIFICATION)
+                        .equipmentId(generatorId)
+                        .energySource(new AttributeModification<>(EnergySource.HYDRO, OperationType.SET))
+                        .maxActivePower(new AttributeModification<>(100.0, OperationType.SET))
+                        .reactiveCapabilityCurve(new AttributeModification<>(false, OperationType.SET))
+                        .voltageRegulationType(
+                                        new AttributeModification<>(VoltageRegulationType.LOCAL, OperationType.SET))
+                        .build();
 
         String generatorModificationInfosJson = objectWriter.writeValueAsString(generatorModificationInfos);
         mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(generatorModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
