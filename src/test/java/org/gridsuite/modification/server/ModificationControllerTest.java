@@ -876,7 +876,11 @@ public class ModificationControllerTest {
 
         //Test Generator Modification duplication
         mockMvc.perform(
-            put("/v1/groups/" + TEST_GROUP_ID + "?action=COPY")
+            put("/v1/groups/" + TEST_GROUP_ID + "?action=COPY"
+                    + "&networkUuid=" + TEST_NETWORK_ID
+                    + "&reportUuid=" + TEST_REPORT_ID
+                    + "&reporterId=" + UUID.randomUUID()
+                    + "&variantId=" + NetworkCreation.VARIANT_ID)
                 .content(objectWriter.writeValueAsString(List.of(modifications.get(0).getUuid())))
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
