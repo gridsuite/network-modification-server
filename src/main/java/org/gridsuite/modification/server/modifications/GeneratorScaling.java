@@ -6,136 +6,138 @@ import com.powsybl.iidm.modification.scalable.Scalable;
 import com.powsybl.iidm.network.Generator;
 import com.powsybl.iidm.network.Network;
 import org.gridsuite.modification.server.VariationType;
-import org.gridsuite.modification.server.dto.GeneratorScalableInfos;
+import org.gridsuite.modification.server.dto.FilterAttributes;
+import org.gridsuite.modification.server.dto.GeneratorScalingInfos;
 import org.gridsuite.modification.server.dto.GeneratorScalingVariation;
+import org.gridsuite.modification.server.service.FilterService;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 public class GeneratorScaling extends AbstractModification {
-    private final GeneratorScalableInfos generatorScalableInfos;
+    private final GeneratorScalingInfos generatorScalableInfos;
 
-    public GeneratorScaling(GeneratorScalableInfos generatorScalableInfos) {
+    public GeneratorScaling(GeneratorScalingInfos generatorScalableInfos) {
         this.generatorScalableInfos = generatorScalableInfos;
     }
 
     @Override
     public void apply(Network network, Reporter subReporter) {
-        generatorScalableInfos.getGeneratorScalingVariations()
-                .stream()
-                .forEach(variation -> variation.getFilterInfos().getEquipments()
-                        .stream()
-                        .forEach(equipment -> Scalable.onGenerator(equipment.getId())));
+        boolean isIterative = generatorScalableInfos.isIterative();
+        List<GeneratorScalingVariation> generatorScalingVariations = generatorScalableInfos.getGeneratorScalingVariations();
+        List<String> filterIds = generatorScalingVariations.stream()
+                .map(GeneratorScalingVariation::getFilterId)
+                .collect(Collectors.toList());
+        List<FilterAttributes> filters = new FilterService(null, null).getFiltersMetadata(filterIds);
+
+        for (GeneratorScalingVariation generatorScalingVariation : generatorScalingVariations) {
+            var filter = filters.stream()
+                    .filter(f -> Objects.equals(generatorScalingVariation.getFilterId(), f.getId()))
+                    .findFirst();
+            if (filter.isPresent()) {
+                applyVariation(network, filter.get(), generatorScalingVariation, isIterative);
+            }
+        }
     }
 
-    private void applyVariation(Network network, GeneratorScalingVariation generatorScalingVariation, boolean isIterative) {
-        var scalableList = generatorScalingVariation.getFilterInfos().getEquipments()
-                .stream()
-                .map(equipment -> getScalable(equipment.getId()))
-                .collect(Collectors.toList());
+    private void applyVariation(Network network,
+                                FilterAttributes filter,
+                                GeneratorScalingVariation generatorScalingVariation,
+                                boolean isIterative) {
+
         AtomicReference<Double> sum = new AtomicReference<>(0D);
         Map<String, Double> targetPMap = new HashMap<>();
         List<Float> percentages = new ArrayList<>();
         List<Scalable> scalables = new ArrayList<>();
         switch (generatorScalingVariation.getVariationMode()) {
             case PROPORTIONAL:
-                generatorScalingVariation.getFilterInfos().getEquipments()
-                                .stream()
-                                .forEach(equipment -> {
-                                    Generator generator = network.getGenerator(equipment.getId());
-                                    if (generator != null) {
-                                        targetPMap.put(generator.getId(), generator.getTargetP());
-                                        sum.set(sum.get() + generator.getTargetP());
-                                    }
-                                });
+                filter.getFilterEquipmentsAttributes()
+                    .stream()
+                    .forEach(equipment -> {
+                        Generator generator = network.getGenerator(equipment.getEquipmentID());
+                        if (generator != null) {
+                            targetPMap.put(generator.getId(), generator.getTargetP());
+                            sum.set(sum.get() + generator.getTargetP());
+                        }
+                    });
                 targetPMap.forEach((id, p) -> {
                     percentages.add((float) ((p / sum.get()) * 100));
                     scalables.add(getScalable(id));
                 });
-                var proportionalScalable = Scalable.proportional(percentages, scalables, isIterative);
+                Scalable proportionalScalable = Scalable.proportional(percentages, scalables, isIterative);
                 proportionalScalable.scale(network,
                         getAsked(generatorScalingVariation, sum),
                         Scalable.ScalingConvention.GENERATOR);
                 break;
             case PROPORTIONAL_TO_PMAX:
-                generatorScalingVariation.getFilterInfos().getEquipments()
-                        .stream()
-                        .forEach(equipment -> {
-                            Generator generator = network.getGenerator(equipment.getId());
-                            if (generator != null) {
-                                targetPMap.put(generator.getId(), generator.getMaxP());
-                                sum.set(sum.get() + generator.getMaxP());
-                            }
-                        });
+                filter.getFilterEquipmentsAttributes()
+                    .stream()
+                    .forEach(equipment -> {
+                        Generator generator = network.getGenerator(equipment.getEquipmentID());
+                        if (generator != null) {
+                            targetPMap.put(generator.getId(), generator.getMaxP());
+                            sum.set(sum.get() + generator.getMaxP());
+                        }
+                    });
                 targetPMap.forEach((id, p) -> {
                     percentages.add((float) ((p / sum.get()) * 100));
                     scalables.add(getScalable(id));
                 });
                 Scalable.proportional(percentages, scalables, isIterative);
 
-                var proportionalToPmaxScalable = Scalable.proportional(percentages, scalables, isIterative);
+                Scalable proportionalToPmaxScalable = Scalable.proportional(percentages, scalables, isIterative);
                 proportionalToPmaxScalable.scale(network,
                         getAsked(generatorScalingVariation, sum),
                         Scalable.ScalingConvention.GENERATOR);
                 break;
             case REGULAR_DISTRIBUTION:
-                scalables.addAll(generatorScalingVariation.getFilterInfos().getEquipments()
+                scalables.addAll(filter.getFilterEquipmentsAttributes()
                         .stream()
                         .map(equipment -> {
-                            sum.set(sum.get() + network.getGenerator(equipment.getId()).getTargetP());
-                            return getScalable(equipment.getId());
+                            Generator generator = network.getGenerator(equipment.getEquipmentID());
+                            if (generator != null) {
+                                sum.set(sum.get() + generator.getTargetP());
+                                return getScalable(equipment.getEquipmentID());
+                            }
+                            return null;
                         })
+                        .filter(scalable -> scalable != null)
                         .collect(Collectors.toList()));
                 if (scalables.size() > 0) {
                     for (Scalable scalable : scalables) {
                         percentages.add((float) (100 / scalables.size()));
                     }
-                }
 
-                var regularDistributionScalable = Scalable.proportional(percentages, scalables, isIterative);
-                regularDistributionScalable.scale(network,
-                        getAsked(generatorScalingVariation, sum),
-                        Scalable.ScalingConvention.GENERATOR);
+                    Scalable regularDistributionScalable = Scalable.proportional(percentages, scalables, isIterative);
+                    regularDistributionScalable.scale(network,
+                            getAsked(generatorScalingVariation, sum));
+                }
+                break;
             case VENTILATION:
-                var distributionKeys = generatorScalingVariation.getFilterInfos().getEquipments().stream()
+                var distributionKeys = filter.getFilterEquipmentsAttributes().stream()
                         .mapToDouble(equipment -> equipment.getDistributionKey())
                         .sum();
-                generatorScalingVariation.getFilterInfos().getEquipments().forEach(equipment -> {
-                    scalables.add(getScalable(equipment.getId()));
-                    percentages.add((float) ((equipment.getDistributionKey() / distributionKeys) * 100));
-                });
-                Scalable.proportional(percentages, scalables, isIterative);
-                var ventilationScalable = Scalable.proportional(percentages, scalables, isIterative);
-                ventilationScalable.scale(network,
-                        getAsked(generatorScalingVariation, sum),
-                        Scalable.ScalingConvention.GENERATOR);
+                if (distributionKeys != 0) {
+                    filter.getFilterEquipmentsAttributes().forEach(equipment -> {
+                        scalables.add(getScalable(equipment.getEquipmentID()));
+                        percentages.add((float) ((equipment.getDistributionKey() / distributionKeys) * 100));
+                    });
+                    Scalable ventilationScalable = Scalable.proportional(percentages, scalables, isIterative);
+                    ventilationScalable.scale(network, getAsked(generatorScalingVariation, sum));
+                }
                 break;
             case STACKING_UP:
-                Double variationValue = generatorScalingVariation.getVariationValue();
-                generatorScalingVariation.getFilterInfos().getEquipments()
+                Scalable stackingUpScalable = Scalable.stack(filter.getFilterEquipmentsAttributes()
                         .stream()
-                        .forEach(equipment -> {
-                            var availableCoieff = variationValue;
-                            while (availableCoieff != 0) {
-                                Generator generator = network.getGenerator(equipment.getId());
-                                if (generator != null) {
-                                    sum.set(sum.get() + generator.getTargetP());
-                                    var availableUp = generator.getMaxP() - generator.getTargetP();
-                                    var addedValue = availableCoieff <= availableUp ? availableCoieff : availableUp;
-                                    availableCoieff = availableCoieff - addedValue;
-                                    targetPMap.put(generator.getId(), addedValue);
-                                }
-                            }
-                        });
-                targetPMap.forEach((id, p) -> {
-                    percentages.add((float) ((p / variationValue) * 100));
-                    scalables.add(getScalable(id));
-                });
-                Scalable.stack(generatorScalingVariation.getFilterInfos().getEquipments().toArray(new String[0]));
+                        .map(equipment -> getScalable(equipment.getEquipmentID()))
+                        .collect(Collectors.toList()).toArray(new Scalable[0]));
+                stackingUpScalable.scale(network, getAsked(generatorScalingVariation, sum));
+                break;
             default:
                 throw new PowsyblException("");
         }

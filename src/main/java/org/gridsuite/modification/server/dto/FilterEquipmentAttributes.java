@@ -1,5 +1,6 @@
 package org.gridsuite.modification.server.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -10,6 +11,9 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @Setter
 public class FilterEquipmentAttributes {
-    private String id;
+    @Schema(description = "Equipment ID")
+    private String equipmentID;
+
+    @Schema(description = "Distribution Key")
     private Double distributionKey;
 }

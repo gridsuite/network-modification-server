@@ -23,7 +23,7 @@ import java.util.List;
 @Setter
 @ToString(callSuper = true)
 @Schema(description = "Generator scaling creation")
-public class GeneratorScalableInfos extends ModificationInfos{
+public class GeneratorScalingInfos extends ModificationInfos {
 
     private List<GeneratorScalingVariation> generatorScalingVariations;
     private boolean isIterative;

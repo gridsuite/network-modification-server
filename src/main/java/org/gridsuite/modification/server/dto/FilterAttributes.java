@@ -5,13 +5,17 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
+import java.util.Date;
 import java.util.List;
 
 @SuperBuilder
 @NoArgsConstructor
 @Getter
 @Setter
-public class FilterInfos {
+public class FilterAttributes {
     private String id;
-    private List<FilterEquipmentAttributes> equipments;
+    private Date modificationDate;
+    private String equipmentType;
+    private Double distributionKey;
+    private List<FilterEquipmentAttributes> filterEquipmentsAttributes;
 }

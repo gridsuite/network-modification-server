@@ -15,7 +15,7 @@ import org.gridsuite.modification.server.VariationMode;
 @ToString(callSuper = true)
 @Schema(description = "Generator scaling variation")
 public class GeneratorScalingVariation {
-    FilterInfos filterInfos;
+    String filterId;
     VariationMode variationMode;
     Double variationValue;
 }
