@@ -737,7 +737,6 @@ public class ModificationControllerTest {
                         .minActivePower(new AttributeModification<>(0., OperationType.SET))
                         .maxActivePower(new AttributeModification<>(100., OperationType.SET))
                         .ratedNominalPower(new AttributeModification<>(220., OperationType.SET))
-                        .reactiveCapabilityCurve(new AttributeModification<>(false, OperationType.SET))
                         .voltageRegulationType(
                                         new AttributeModification<>(VoltageRegulationType.LOCAL, OperationType.SET))
                         .marginalCost(new AttributeModification<>(0.1, OperationType.SET))
@@ -779,6 +778,18 @@ public class ModificationControllerTest {
 
         // TODO check connectivity when it will be implemented
         testNetworkModificationsCount(TEST_GROUP_ID, 3);  // new modification stored in the database
+        generatorModificationInfos.setReactiveCapabilityCurve(new AttributeModification<>(false, OperationType.SET));
+        generatorModificationInfos.setTransientReactance(null);
+        generatorModificationInfosJson = objectWriter.writeValueAsString(generatorModificationInfos);
+        mockMvc.perform(post(URI_NETWORK_MODIF).contentType(MediaType.APPLICATION_JSON).content(generatorModificationInfosJson))
+                .andExpect(status().isOk()).andReturn();
+
+        generatorModificationInfos.setVoltageRegulationType(new AttributeModification<>(VoltageRegulationType.DISTANT, OperationType.SET));
+        generatorModificationInfos.setMaximumReactivePower(null);
+        generatorModificationInfos.setMinimumReactivePower(null);
+        generatorModificationInfosJson = objectWriter.writeValueAsString(generatorModificationInfos);
+        mockMvc.perform(post(URI_NETWORK_MODIF).contentType(MediaType.APPLICATION_JSON).content(generatorModificationInfosJson))
+                .andExpect(status().isOk()).andReturn();
 
         // Unset an attribute that should not be null
         generatorModificationInfos = GeneratorModificationInfos.builder()
