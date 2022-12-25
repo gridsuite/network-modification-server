@@ -749,9 +749,9 @@ public class ModificationControllerTest {
                         .participate(new AttributeModification<>(true, OperationType.SET))
                         .transientReactance(new AttributeModification<>(0.1, OperationType.SET))
                         .stepUpTransformerReactance(new AttributeModification<>(0.1, OperationType.SET))
-                        .regulatingTerminalId(new AttributeModification<>("idTerminal", OperationType.SET))
-                        .regulatingTerminalType(new AttributeModification<>("regTerminalType", OperationType.SET))
-                        .regulatingTerminalVlId(new AttributeModification<>("idVl", OperationType.SET))
+                        .regulatingTerminalId(new AttributeModification<>("v1load", OperationType.SET))
+                        .regulatingTerminalType(new AttributeModification<>("LOAD", OperationType.SET))
+                        .regulatingTerminalVlId(new AttributeModification<>("v1", OperationType.SET))
                         .qPercent(new AttributeModification<>(0.1, OperationType.SET))
                         .reactiveCapabilityCurve(new AttributeModification<>(true, OperationType.SET))
                         .equipmentId(generatorId)
@@ -778,18 +778,29 @@ public class ModificationControllerTest {
 
         // TODO check connectivity when it will be implemented
         testNetworkModificationsCount(TEST_GROUP_ID, 3);  // new modification stored in the database
+
+        //regulating
+        generatorModificationInfos.setVoltageRegulationOn(new AttributeModification<>(true, OperationType.SET));
         generatorModificationInfos.setReactiveCapabilityCurve(new AttributeModification<>(false, OperationType.SET));
         generatorModificationInfos.setTransientReactance(null);
         generatorModificationInfosJson = objectWriter.writeValueAsString(generatorModificationInfos);
         mockMvc.perform(post(URI_NETWORK_MODIF).contentType(MediaType.APPLICATION_JSON).content(generatorModificationInfosJson))
                 .andExpect(status().isOk()).andReturn();
+        List<EquipmentModificationInfos> bsmlrGeneratorModification = mapper.readValue(resultAsString, new TypeReference<>() { });
+        assertThat(bsmlrGeneratorModification.get(0), createMatcherEquipmentModificationInfos(ModificationType.GENERATOR_MODIFICATION, generatorId, Set.of("s1")));
 
+        generatorModificationInfos.setTransientReactance(new AttributeModification<>(0.1, OperationType.SET));
+        generatorModificationInfos.setStepUpTransformerReactance(null);
+        generatorModificationInfos.setParticipate(null);
         generatorModificationInfos.setVoltageRegulationType(new AttributeModification<>(VoltageRegulationType.DISTANT, OperationType.SET));
         generatorModificationInfos.setMaximumReactivePower(null);
         generatorModificationInfos.setMinimumReactivePower(null);
         generatorModificationInfosJson = objectWriter.writeValueAsString(generatorModificationInfos);
         mockMvc.perform(post(URI_NETWORK_MODIF).contentType(MediaType.APPLICATION_JSON).content(generatorModificationInfosJson))
                 .andExpect(status().isOk()).andReturn();
+
+        List<EquipmentModificationInfos> bsmlrGeneratorModification1 = mapper.readValue(resultAsString, new TypeReference<>() { });
+        assertThat(bsmlrGeneratorModification1.get(0), createMatcherEquipmentModificationInfos(ModificationType.GENERATOR_MODIFICATION, generatorId, Set.of("s1")));
 
         // Unset an attribute that should not be null
         generatorModificationInfos = GeneratorModificationInfos.builder()
