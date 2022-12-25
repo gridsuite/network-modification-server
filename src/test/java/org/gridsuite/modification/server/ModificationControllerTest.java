@@ -740,6 +740,21 @@ public class ModificationControllerTest {
                         .reactiveCapabilityCurve(new AttributeModification<>(false, OperationType.SET))
                         .voltageRegulationType(
                                         new AttributeModification<>(VoltageRegulationType.LOCAL, OperationType.SET))
+                        .marginalCost(new AttributeModification<>(0.1, OperationType.SET))
+                        .minimumReactivePower(new AttributeModification<>(-100., OperationType.SET))
+                        .maximumReactivePower(new AttributeModification<>(100., OperationType.SET))
+                        .reactiveCapabilityCurvePoints(List.of(
+                                        new ReactiveCapabilityCurveModificationInfos(0., 0., 100., 100., 0., 0.2),
+                                        new ReactiveCapabilityCurveModificationInfos(10., 0., 100., 100., 200., 100.)))
+                        .droop(new AttributeModification<>(0.1f, OperationType.SET))
+                        .participate(new AttributeModification<>(true, OperationType.SET))
+                        .transientReactance(new AttributeModification<>(0.1, OperationType.SET))
+                        .stepUpTransformerReactance(new AttributeModification<>(0.1, OperationType.SET))
+                        .regulatingTerminalId(new AttributeModification<>("idTerminal", OperationType.SET))
+                        .regulatingTerminalType(new AttributeModification<>("regTerminalType", OperationType.SET))
+                        .regulatingTerminalVlId(new AttributeModification<>("idVl", OperationType.SET))
+                        .qPercent(new AttributeModification<>(0.1, OperationType.SET))
+                        .reactiveCapabilityCurve(new AttributeModification<>(true, OperationType.SET))
                         .equipmentId(generatorId)
                         .build();
 
