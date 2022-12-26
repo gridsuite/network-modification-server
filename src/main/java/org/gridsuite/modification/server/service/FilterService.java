@@ -5,12 +5,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
+import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
+@Service
 public class FilterService {
     private static final String FILTER_SERVER_API_VERSION = "v1";
 
@@ -18,21 +19,21 @@ public class FilterService {
 
     private String filterServerBaseUri;
 
-    private final RestTemplate restTemplate;
+    private RestTemplate restTemplate;
 
     @Autowired
-    public FilterService(@Value("${backing-services.filter-server.base-uri:http://filter-server/}") String filterServerBaseUri, RestTemplate restTemplate) {
+    public FilterService(@Value("http://localhost:5027") String filterServerBaseUri) {
         this.filterServerBaseUri = filterServerBaseUri;
-        this.restTemplate = restTemplate;
+        restTemplate = new RestTemplate();
     }
 
     public void setFilterServerBaseUri(String filterServerBaseUri) {
         this.filterServerBaseUri = filterServerBaseUri;
     }
 
-    public List<FilterAttributes> getFiltersMetadata(List<String> filtersUuids) {
+    public List<FilterAttributes> getFilters(List<String> filtersUuids) {
         var ids = filtersUuids != null && filtersUuids.size() > 0 ?
-                "?ids=" + filtersUuids.stream().collect(Collectors.joining(",")) : "";
+                "?ids=" + String.join(",", filtersUuids) : "";
         String path = UriComponentsBuilder.fromPath(DELIMITER + FILTER_SERVER_API_VERSION + "/filters/data" + ids)
                 .buildAndExpand()
                 .toUriString();

@@ -31,7 +31,7 @@ public class GeneratorScalingInfos extends ModificationInfos {
 
     @Override
     public GeneratorScalingEntity toEntity() {
-        return GeneratorScalingEntity.toEntity();
+        return new GeneratorScalingEntity(this);
     }
 
     @Override
@@ -46,6 +46,7 @@ public class GeneratorScalingInfos extends ModificationInfos {
 
     @Override
     public Reporter createSubReporter(ReporterModel reporter) {
+        System.out.println();
         return reporter.createSubReporter(ModificationType.GENERATOR_SCALING.name(), "Generator scaling");
     }
 }

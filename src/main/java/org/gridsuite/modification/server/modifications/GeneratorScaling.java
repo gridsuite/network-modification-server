@@ -7,19 +7,25 @@ import com.powsybl.iidm.network.Generator;
 import com.powsybl.iidm.network.Network;
 import org.gridsuite.modification.server.VariationType;
 import org.gridsuite.modification.server.dto.FilterAttributes;
+import org.gridsuite.modification.server.dto.FilterInfo;
 import org.gridsuite.modification.server.dto.GeneratorScalingInfos;
 import org.gridsuite.modification.server.dto.GeneratorScalingVariation;
 import org.gridsuite.modification.server.service.FilterService;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 public class GeneratorScaling extends AbstractModification {
+
+    @Autowired
+    FilterService filterService;
+
     private final GeneratorScalingInfos generatorScalableInfos;
 
     public GeneratorScaling(GeneratorScalingInfos generatorScalableInfos) {
@@ -30,17 +36,19 @@ public class GeneratorScaling extends AbstractModification {
     public void apply(Network network, Reporter subReporter) {
         boolean isIterative = generatorScalableInfos.isIterative();
         List<GeneratorScalingVariation> generatorScalingVariations = generatorScalableInfos.getGeneratorScalingVariations();
-        List<String> filterIds = generatorScalingVariations.stream()
-                .map(GeneratorScalingVariation::getFilterId)
-                .collect(Collectors.toList());
-        List<FilterAttributes> filters = new FilterService(null, null).getFiltersMetadata(filterIds);
+        List<String> filterIds = new ArrayList<>();
+        generatorScalingVariations.forEach(variation -> {
+            filterIds.addAll(variation.getFilters().stream().map(FilterInfo::getId).collect(Collectors.toList()));
+        });
+
+        List<FilterAttributes> filters = new FilterService("http://localhost:5027").getFilters(filterIds);
 
         for (GeneratorScalingVariation generatorScalingVariation : generatorScalingVariations) {
-            var filter = filters.stream()
-                    .filter(f -> Objects.equals(generatorScalingVariation.getFilterId(), f.getId()))
-                    .findFirst();
-            if (filter.isPresent()) {
-                applyVariation(network, filter.get(), generatorScalingVariation, isIterative);
+            var filterList = filters.stream()
+                    .filter(f -> generatorScalingVariation.getFilters().contains(f.getId()))
+                    .collect(Collectors.toList());
+            if (!filterList.isEmpty()) {
+                filterList.forEach(filter -> applyVariation(network, filter, generatorScalingVariation, isIterative));
             }
         }
     }
@@ -71,8 +79,7 @@ public class GeneratorScaling extends AbstractModification {
                 });
                 Scalable proportionalScalable = Scalable.proportional(percentages, scalables, isIterative);
                 proportionalScalable.scale(network,
-                        getAsked(generatorScalingVariation, sum),
-                        Scalable.ScalingConvention.GENERATOR);
+                        getAsked(generatorScalingVariation, sum));
                 break;
             case PROPORTIONAL_TO_PMAX:
                 filter.getFilterEquipmentsAttributes()
@@ -108,10 +115,9 @@ public class GeneratorScaling extends AbstractModification {
                         })
                         .filter(scalable -> scalable != null)
                         .collect(Collectors.toList()));
-                if (scalables.size() > 0) {
-                    for (Scalable scalable : scalables) {
-                        percentages.add((float) (100 / scalables.size()));
-                    }
+
+                if (!scalables.isEmpty()) {
+                    percentages.addAll(Collections.nCopies(scalables.size(), (float)(100 / scalables.size())));
 
                     Scalable regularDistributionScalable = Scalable.proportional(percentages, scalables, isIterative);
                     regularDistributionScalable.scale(network,
