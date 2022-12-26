@@ -126,6 +126,7 @@ public class NetworkModificationController {
             case SHUNT_COMPENSATOR_CREATION:
             case LINE_CREATION:
             case LINE_ATTACH_TO_VOLTAGE_LEVEL:
+            case LOAD_SCALING:
                 return ResponseEntity.ok().body(networkModificationService.createModification(networkUuid, variantId, groupUuid, reportUuid, reporterId, modificationInfos));
             default:
                 return ResponseEntity.ok().body(networkModificationService.createNetworkModification(networkUuid, variantId, groupUuid, reportUuid, reporterId, modificationInfos));
@@ -147,6 +148,7 @@ public class NetworkModificationController {
             case SHUNT_COMPENSATOR_CREATION:
             case LINE_CREATION:
             case LINE_ATTACH_TO_VOLTAGE_LEVEL:
+            case LOAD_SCALING:
                 networkModificationService.updateModification(networkModificationUuid, modificationInfos);
                 break;
             default:
