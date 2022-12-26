@@ -8,6 +8,7 @@ package org.gridsuite.modification.server.entities.equipment.modification;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.DeleteVoltageLevelOnLineInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
@@ -38,23 +39,15 @@ public class DeleteVoltageLevelOnLineEntity extends ModificationEntity {
     @Column
     private String replacingLine1Name;
 
-    public DeleteVoltageLevelOnLineEntity(String lineToAttachTo1Id, String lineToAttachTo2Id, String replacingLine1Id, String replacingLine1Name) {
+    public DeleteVoltageLevelOnLineEntity(@NonNull DeleteVoltageLevelOnLineInfos deleteVoltageLevelOnLineInfos) {
         super(ModificationType.DELETE_VOLTAGE_LEVEL_ON_LINE);
-        this.lineToAttachTo1Id = lineToAttachTo1Id;
-        this.lineToAttachTo2Id = lineToAttachTo2Id;
-        this.replacingLine1Id = replacingLine1Id;
-        this.replacingLine1Name = replacingLine1Name;
+        assignAttributes(deleteVoltageLevelOnLineInfos);
     }
 
     @Override
     public void update(ModificationInfos modificationInfos) {
         super.update(modificationInfos);
-        DeleteVoltageLevelOnLineInfos deleteVoltageLevelOnLineInfos = (DeleteVoltageLevelOnLineInfos) modificationInfos;
-
-        lineToAttachTo1Id = deleteVoltageLevelOnLineInfos.getLineToAttachTo1Id();
-        lineToAttachTo2Id = deleteVoltageLevelOnLineInfos.getLineToAttachTo2Id();
-        replacingLine1Id = deleteVoltageLevelOnLineInfos.getReplacingLine1Id();
-        replacingLine1Name = deleteVoltageLevelOnLineInfos.getReplacingLine1Name();
+        assignAttributes((DeleteVoltageLevelOnLineInfos) modificationInfos);
     }
 
     @Override
@@ -74,7 +67,10 @@ public class DeleteVoltageLevelOnLineEntity extends ModificationEntity {
                 .replacingLine1Name(getReplacingLine1Name());
     }
 
-    public static DeleteVoltageLevelOnLineEntity toEntity(String lineToAttachTo1Id, String lineToAttachTo2Id, String replacingLine1Id, String replacingLine1Name) {
-        return new DeleteVoltageLevelOnLineEntity(lineToAttachTo1Id, lineToAttachTo2Id, replacingLine1Id, replacingLine1Name);
+    private void assignAttributes(DeleteVoltageLevelOnLineInfos deleteVoltageLevelOnLineInfos) {
+        lineToAttachTo1Id = deleteVoltageLevelOnLineInfos.getLineToAttachTo1Id();
+        lineToAttachTo2Id = deleteVoltageLevelOnLineInfos.getLineToAttachTo2Id();
+        replacingLine1Id = deleteVoltageLevelOnLineInfos.getReplacingLine1Id();
+        replacingLine1Name = deleteVoltageLevelOnLineInfos.getReplacingLine1Name();
     }
 }

@@ -77,7 +77,7 @@ public class DeleteAttachingLineTest extends AbstractNetworkModificationTest {
     protected void assertNetworkAfterDeletion() {
         assertNotNull(getNetwork().getLine("l1"));
         assertNotNull(getNetwork().getLine("l2"));
-        assertNull(getNetwork().getLine("replacingLineIdEdited"));
+        assertNull(getNetwork().getLine("replacingLineId"));
     }
 
     @SneakyThrows

@@ -44,12 +44,7 @@ public class DeleteVoltageLevelOnLineInfos extends ModificationInfos {
 
     @Override
     public DeleteVoltageLevelOnLineEntity toEntity() {
-        return DeleteVoltageLevelOnLineEntity.toEntity(
-                getLineToAttachTo1Id(),
-                getLineToAttachTo2Id(),
-                getReplacingLine1Id(),
-                getReplacingLine1Name()
-        );
+        return new DeleteVoltageLevelOnLineEntity(this);
     }
 
     @Override

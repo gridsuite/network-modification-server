@@ -920,10 +920,22 @@ public class ModificationRepositoryTest {
 
     @Test
     public void testDeleteAttachingLine() {
-        DeleteAttachingLineEntity deleteAttachingLineEntity = DeleteAttachingLineEntity.toEntity(
-                "lineId0", "lineId1", "lineId3", "line1Id", "line1Name");
-        DeleteAttachingLineEntity deleteAttachingLineEntity2 = DeleteAttachingLineEntity.toEntity(
-                "lineId4", "lineId5", "lineId6", "line3Id", "line3Name");
+        DeleteAttachingLineEntity deleteAttachingLineEntity = DeleteAttachingLineInfos.builder().type(ModificationType.DELETE_ATTACHING_LINE)
+                .lineToAttachTo1Id("lineId0")
+                .lineToAttachTo2Id("lineId1")
+                .attachedLineId("lineId3")
+                .replacingLine1Id("vl1")
+                .replacingLine1Name("line1Name")
+                .build().toEntity();
+
+        DeleteAttachingLineEntity deleteAttachingLineEntity2 = DeleteAttachingLineInfos.builder().type(ModificationType.DELETE_ATTACHING_LINE)
+                .lineToAttachTo1Id("lineId4")
+                .lineToAttachTo2Id("lineId5")
+                .attachedLineId("lineId6")
+                .replacingLine1Id("line3Id")
+                .replacingLine1Name("line3Name")
+                .build().toEntity();
+
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(deleteAttachingLineEntity, deleteAttachingLineEntity2));
 
         List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
@@ -953,10 +965,20 @@ public class ModificationRepositoryTest {
 
     @Test
     public void testDeleteVoltageLevelOnLine() {
-        DeleteVoltageLevelOnLineEntity deleteVoltageLevelOnLineToEntity1 = DeleteVoltageLevelOnLineEntity.toEntity(
-                "lineId0", "lineId1", "line1Id", "line1Name");
-        DeleteVoltageLevelOnLineEntity deleteVoltageLevelOnLineToEntity2 = DeleteVoltageLevelOnLineEntity.toEntity(
-                "lineId4", "lineId5", "line3Id", "line3Name");
+        DeleteVoltageLevelOnLineEntity deleteVoltageLevelOnLineToEntity1 = DeleteVoltageLevelOnLineInfos.builder().type(ModificationType.DELETE_VOLTAGE_LEVEL_ON_LINE)
+                .lineToAttachTo1Id("lineId0")
+                .lineToAttachTo2Id("lineId1")
+                .replacingLine1Id("line1Id")
+                .replacingLine1Name("line1Name")
+                .build().toEntity();
+
+        DeleteVoltageLevelOnLineEntity deleteVoltageLevelOnLineToEntity2 = DeleteVoltageLevelOnLineInfos.builder().type(ModificationType.DELETE_VOLTAGE_LEVEL_ON_LINE)
+                .lineToAttachTo1Id("lineId4")
+                .lineToAttachTo2Id("lineId5")
+                .replacingLine1Id("line3Id")
+                .replacingLine1Name("line3Name")
+                .build().toEntity();
+
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(deleteVoltageLevelOnLineToEntity1, deleteVoltageLevelOnLineToEntity2));
 
         List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);

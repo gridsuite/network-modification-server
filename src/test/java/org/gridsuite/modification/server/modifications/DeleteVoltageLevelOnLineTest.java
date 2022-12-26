@@ -66,6 +66,8 @@ public class DeleteVoltageLevelOnLineTest extends AbstractNetworkModificationTes
 
     @Override
     protected void assertNetworkAfterCreation() {
+        assertNull(getNetwork().getVoltageLevel("v1"));
+        assertNull(getNetwork().getSubstation("s1"));
         assertNull(getNetwork().getLine("l1"));
         assertNull(getNetwork().getLine("l2"));
         assertNotNull(getNetwork().getLine("replacementLineId"));
@@ -73,6 +75,8 @@ public class DeleteVoltageLevelOnLineTest extends AbstractNetworkModificationTes
 
     @Override
     protected void assertNetworkAfterDeletion() {
+        assertNotNull(getNetwork().getVoltageLevel("v1"));
+        assertNotNull(getNetwork().getSubstation("s1"));
         assertNotNull(getNetwork().getLine("l1"));
         assertNotNull(getNetwork().getLine("l2"));
         assertNull(getNetwork().getLine("replacementLineId"));

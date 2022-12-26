@@ -50,13 +50,7 @@ public class DeleteAttachingLineInfos extends ModificationInfos {
 
     @Override
     public DeleteAttachingLineEntity toEntity() {
-        return DeleteAttachingLineEntity.toEntity(
-                getLineToAttachTo1Id(),
-                getLineToAttachTo2Id(),
-                getAttachedLineId(),
-                getReplacingLine1Id(),
-                getReplacingLine1Name()
-        );
+        return new DeleteAttachingLineEntity(this);
     }
 
     @Override

@@ -41,25 +41,15 @@ public class DeleteAttachingLineEntity extends ModificationEntity {
     @Column
     private String replacingLine1Name;
 
-    public DeleteAttachingLineEntity(String lineToAttachTo1Id, String lineToAttachTo2Id, String attachedLineId, String replacingLine1Id, String replacingLine1Name) {
+    public DeleteAttachingLineEntity(DeleteAttachingLineInfos deleteAttachingLineInfos) {
         super(ModificationType.DELETE_ATTACHING_LINE);
-        this.lineToAttachTo1Id = lineToAttachTo1Id;
-        this.lineToAttachTo2Id = lineToAttachTo2Id;
-        this.attachedLineId = attachedLineId;
-        this.replacingLine1Id = replacingLine1Id;
-        this.replacingLine1Name = replacingLine1Name;
+        assignAttributes(deleteAttachingLineInfos);
     }
 
     @Override
     public void update(ModificationInfos modificationInfos) {
         super.update(modificationInfos);
-        DeleteAttachingLineInfos deleteAttachingLineInfos = (DeleteAttachingLineInfos) modificationInfos;
-
-        lineToAttachTo1Id = deleteAttachingLineInfos.getLineToAttachTo1Id();
-        lineToAttachTo2Id = deleteAttachingLineInfos.getLineToAttachTo2Id();
-        attachedLineId = deleteAttachingLineInfos.getAttachedLineId();
-        replacingLine1Id = deleteAttachingLineInfos.getReplacingLine1Id();
-        replacingLine1Name = deleteAttachingLineInfos.getReplacingLine1Name();
+        assignAttributes((DeleteAttachingLineInfos) modificationInfos);
     }
 
     @Override
@@ -80,7 +70,11 @@ public class DeleteAttachingLineEntity extends ModificationEntity {
                 .replacingLine1Name(getReplacingLine1Name());
     }
 
-    public static DeleteAttachingLineEntity toEntity(String lineToAttachTo1Id, String lineToAttachTo2Id, String attachedLineId, String replacingLine1Id, String replacingLine1Name) {
-        return new DeleteAttachingLineEntity(lineToAttachTo1Id, lineToAttachTo2Id, attachedLineId, replacingLine1Id, replacingLine1Name);
+    private void assignAttributes(DeleteAttachingLineInfos deleteAttachingLineInfos) {
+        lineToAttachTo1Id = deleteAttachingLineInfos.getLineToAttachTo1Id();
+        lineToAttachTo2Id = deleteAttachingLineInfos.getLineToAttachTo2Id();
+        attachedLineId = deleteAttachingLineInfos.getAttachedLineId();
+        replacingLine1Id = deleteAttachingLineInfos.getReplacingLine1Id();
+        replacingLine1Name = deleteAttachingLineInfos.getReplacingLine1Name();
     }
 }
