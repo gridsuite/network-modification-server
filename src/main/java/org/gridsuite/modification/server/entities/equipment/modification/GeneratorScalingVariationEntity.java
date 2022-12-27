@@ -28,9 +28,8 @@ public class GeneratorScalingVariationEntity {
     @Column(name = "id")
     private UUID id;
 
-    @ElementCollection
-    @CollectionTable(name = "ScalingFilterIds")
-    private List<String> filterIds;
+    @OneToMany(cascade = CascadeType.ALL)
+    private List<VariationFilterEntity> filters;
 
     @Column(name = "variationValue")
     private double variationValue;
@@ -43,8 +42,8 @@ public class GeneratorScalingVariationEntity {
         return GeneratorScalingVariation.builder()
                 .variationMode(getVariationMode())
                 .variationValue(getVariationValue())
-                .filters(getFilterIds().stream()
-                        .map(FilterInfo::new)
+                .filters(this.getFilters().stream()
+                        .map(filter -> new FilterInfo(filter.getId().toString(), filter.getName()))
                         .collect(Collectors.toList()))
                 .build();
     }

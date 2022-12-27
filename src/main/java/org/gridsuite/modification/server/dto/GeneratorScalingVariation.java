@@ -8,8 +8,10 @@ import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 import org.gridsuite.modification.server.VariationMode;
 import org.gridsuite.modification.server.entities.equipment.modification.GeneratorScalingVariationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.VariationFilterEntity;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @SuperBuilder
@@ -25,7 +27,13 @@ public class GeneratorScalingVariation {
 
     public GeneratorScalingVariationEntity toEntity() {
         return GeneratorScalingVariationEntity.builder()
-                .filterIds(getFilters().stream().map(FilterInfo::getId).collect(Collectors.toList()))
+                .filters(getFilters()
+                        .stream()
+                        .map(info -> VariationFilterEntity.builder()
+                            .filterId(UUID.fromString(info.getId()))
+                            .name(info.getName())
+                        .build())
+                        .collect(Collectors.toList()))
                 .variationValue(getVariationValue())
                 .variationMode(getVariationMode())
                 .build();

@@ -2,15 +2,18 @@ package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.reporter.Reporter;
+import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.iidm.modification.scalable.Scalable;
 import com.powsybl.iidm.network.Generator;
 import com.powsybl.iidm.network.Network;
 import org.gridsuite.modification.server.VariationType;
 import org.gridsuite.modification.server.dto.FilterAttributes;
+import org.gridsuite.modification.server.dto.FilterEquipmentAttributes;
 import org.gridsuite.modification.server.dto.FilterInfo;
 import org.gridsuite.modification.server.dto.GeneratorScalingInfos;
 import org.gridsuite.modification.server.dto.GeneratorScalingVariation;
 import org.gridsuite.modification.server.service.FilterService;
+import org.gridsuite.modification.server.utils.ScalingUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
@@ -18,8 +21,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
+
+import static org.gridsuite.modification.server.utils.ScalingUtils.createReport;
 
 public class GeneratorScaling extends AbstractModification {
 
@@ -44,11 +50,12 @@ public class GeneratorScaling extends AbstractModification {
         List<FilterAttributes> filters = new FilterService("http://localhost:5027").getFilters(filterIds);
 
         for (GeneratorScalingVariation generatorScalingVariation : generatorScalingVariations) {
+            var filterIdsList = generatorScalingVariation.getFilters().stream().map(FilterInfo::getId).collect(Collectors.toList());
             var filterList = filters.stream()
-                    .filter(f -> generatorScalingVariation.getFilters().contains(f.getId()))
+                    .filter(f -> filterIdsList.contains(f.getId()))
                     .collect(Collectors.toList());
             if (!filterList.isEmpty()) {
-                filterList.forEach(filter -> applyVariation(network, filter, generatorScalingVariation, isIterative));
+                filterList.forEach(filter -> applyVariation(network, filter, generatorScalingVariation, isIterative, subReporter));
             }
         }
     }
@@ -56,7 +63,8 @@ public class GeneratorScaling extends AbstractModification {
     private void applyVariation(Network network,
                                 FilterAttributes filter,
                                 GeneratorScalingVariation generatorScalingVariation,
-                                boolean isIterative) {
+                                boolean isIterative,
+                                Reporter subReporter) {
 
         AtomicReference<Double> sum = new AtomicReference<>(0D);
         Map<String, Double> targetPMap = new HashMap<>();
@@ -77,6 +85,7 @@ public class GeneratorScaling extends AbstractModification {
                     percentages.add((float) ((p / sum.get()) * 100));
                     scalables.add(getScalable(id));
                 });
+
                 Scalable proportionalScalable = Scalable.proportional(percentages, scalables, isIterative);
                 proportionalScalable.scale(network,
                         getAsked(generatorScalingVariation, sum));
@@ -95,7 +104,6 @@ public class GeneratorScaling extends AbstractModification {
                     percentages.add((float) ((p / sum.get()) * 100));
                     scalables.add(getScalable(id));
                 });
-                Scalable.proportional(percentages, scalables, isIterative);
 
                 Scalable proportionalToPmaxScalable = Scalable.proportional(percentages, scalables, isIterative);
                 proportionalToPmaxScalable.scale(network,
@@ -113,7 +121,7 @@ public class GeneratorScaling extends AbstractModification {
                             }
                             return null;
                         })
-                        .filter(scalable -> scalable != null)
+                        .filter(Objects::nonNull)
                         .collect(Collectors.toList()));
 
                 if (!scalables.isEmpty()) {
@@ -126,7 +134,7 @@ public class GeneratorScaling extends AbstractModification {
                 break;
             case VENTILATION:
                 var distributionKeys = filter.getFilterEquipmentsAttributes().stream()
-                        .mapToDouble(equipment -> equipment.getDistributionKey())
+                        .mapToDouble(FilterEquipmentAttributes::getDistributionKey)
                         .sum();
                 if (distributionKeys != 0) {
                     filter.getFilterEquipmentsAttributes().forEach(equipment -> {
@@ -135,6 +143,8 @@ public class GeneratorScaling extends AbstractModification {
                     });
                     Scalable ventilationScalable = Scalable.proportional(percentages, scalables, isIterative);
                     ventilationScalable.scale(network, getAsked(generatorScalingVariation, sum));
+                } else {
+                    throw new PowsyblException("");
                 }
                 break;
             case STACKING_UP:
@@ -147,6 +157,7 @@ public class GeneratorScaling extends AbstractModification {
             default:
                 throw new PowsyblException("");
         }
+        createReport(subReporter,"loadScalingCreated","new load scaling created", TypedValue.INFO_SEVERITY);
     }
 
     private double getAsked(GeneratorScalingVariation generatorScalingVariation, AtomicReference<Double> sum) {
