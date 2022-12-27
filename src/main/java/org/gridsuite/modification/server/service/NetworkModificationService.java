@@ -358,10 +358,11 @@ public class NetworkModificationService {
     private NetworkModificationException handleException(NetworkModificationException.Type typeIfError, Reporter subReporter, Exception e) {
         NetworkModificationException networkModificationException;
         networkModificationException = e instanceof NetworkModificationException ? (NetworkModificationException) e : new NetworkModificationException(typeIfError, e);
-        if (!(e instanceof PowsyblException) && LOGGER.isErrorEnabled()) {
+        boolean isApplicationException = PowsyblException.class.isAssignableFrom(e.getClass());
+        if (!isApplicationException && LOGGER.isErrorEnabled()) {
             LOGGER.error(e.toString(), e);
         }
-        String errorMessage = e instanceof PowsyblException ? e.getMessage() : "Technical error: " + e;
+        String errorMessage = isApplicationException ? e.getMessage() : "Technical error: " + e;
         subReporter.report(Report.builder()
             .withKey(typeIfError.name())
             .withDefaultMessage(errorMessage)
@@ -370,10 +371,9 @@ public class NetworkModificationService {
         return networkModificationException;
     }
 
-    public List<ModificationInfos> doAction(NetworkStoreListener listener, Runnable action, Runnable postAction,
-                                            NetworkModificationException.Type typeIfError,
-                                            UUID reportUuid, ReporterModel reporter,
-                                            Reporter subReporter) {
+    private List<ModificationInfos> doAction(NetworkStoreListener listener, Runnable action, Runnable postAction,
+                                             NetworkModificationException.Type typeIfError,
+                                             UUID reportUuid, ReporterModel reporter, Reporter subReporter) {
         NetworkModificationException networkModificationException = null;
         try {
             if (listener.isApplyModifications() && action != null) {
@@ -504,8 +504,8 @@ public class NetworkModificationService {
     }
 
     // Generic form
-    private List<ModificationInfos> handleModification(ModificationInfos modificationInfos, NetworkStoreListener listener, UUID groupUuid,
-                                                       UUID reportUuid, String reporterId) {
+    List<ModificationInfos> handleModification(ModificationInfos modificationInfos, NetworkStoreListener listener, UUID groupUuid,
+                                               UUID reportUuid, String reporterId) {
         String rootReporterId = reporterId + "@" + NETWORK_MODIFICATION_TYPE_REPORT;
         ReporterModel reporter = new ReporterModel(rootReporterId, rootReporterId);
         Reporter subReporter = modificationInfos.createSubReporter(reporter);
@@ -524,8 +524,9 @@ public class NetworkModificationService {
                 networkStoreService.flush(listener.getNetwork());
             }
         } catch (Exception e) {
+            NetworkModificationException networkModificationException = handleException(modificationInfos.getErrorType(), subReporter, e);
             if (!listener.isBuild()) {
-                throw handleException(modificationInfos.getErrorType(), subReporter, e);
+                throw networkModificationException;
             }
         } finally {
             if (listener.isApplyModifications()) {
@@ -606,7 +607,8 @@ public class NetworkModificationService {
         modificationEntity.update(modificationInfos);
     }
 
-    @Transactional
+    // No transactional because we need to save modification in DB also in case of error
+    // Transaction made in 'saveModifications' method
     public List<ModificationInfos> createModification(@NonNull UUID networkUuid, String variantId, @NonNull UUID groupUuid, @NonNull UUID reportUuid, @NonNull String reporterId, @NonNull ModificationInfos modificationInfos) {
         modificationInfos.check();
         ModificationNetworkInfos networkInfos = getNetworkModificationInfos(networkUuid, variantId);
@@ -970,8 +972,8 @@ public class NetworkModificationService {
         }
     }
 
-    private List<ModificationInfos> execCreateGeneratorCreation(NetworkStoreListener listener, GeneratorCreationInfos generatorCreationInfos,
-                                                                UUID reportUuid, String reporterId) {
+    List<ModificationInfos> execCreateGeneratorCreation(NetworkStoreListener listener, GeneratorCreationInfos generatorCreationInfos,
+                                                        UUID reportUuid, String reporterId) {
         String rootReporterId = reporterId + "@" + NETWORK_MODIFICATION_TYPE_REPORT;
         ReporterModel reporter = new ReporterModel(rootReporterId, rootReporterId);
         Reporter subReporter = reporter.createSubReporter(ModificationType.GENERATOR_CREATION.name(), "Generator creation ${generatorId}", "generatorId", generatorCreationInfos.getEquipmentId());
@@ -1411,7 +1413,7 @@ public class NetworkModificationService {
         return allModificationsInfos;
     }
 
-    public void applyModifications(List<UUID> modificationsUuidList, UUID groupUuid, UUID networkUuid, UUID reportUuid, UUID reporterId, String variantId) {
+    private void applyModifications(List<UUID> modificationsUuidList, UUID groupUuid, UUID networkUuid, UUID reportUuid, UUID reporterId, String variantId) {
         ModificationNetworkInfos networkInfos = getNetworkModificationInfos(networkUuid, variantId);
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, true, networkInfos.isApplyModifications());
 
@@ -1425,75 +1427,63 @@ public class NetworkModificationService {
 
     private List<ModificationInfos> applyModification(NetworkStoreListener listener, Set<UUID> modificationsToExclude, UUID groupUuid,
                                                       UUID reportUuid, String reporterId, ModificationInfos infos) {
-        try {
-            if (modificationsToExclude.contains(infos.getUuid())) {
-                return List.of();
-            }
-
-            switch (infos.getType()) {
-                case EQUIPMENT_ATTRIBUTE_MODIFICATION:
-                case LOAD_CREATION:
-                case LINE_SPLIT_WITH_VOLTAGE_LEVEL:
-                case SHUNT_COMPENSATOR_CREATION:
-                case LINE_CREATION:
-                case LINE_ATTACH_TO_VOLTAGE_LEVEL:
-                    // Generic form
-                    return handleModification(infos, listener, groupUuid, reportUuid, reporterId);
-
-                case LOAD_MODIFICATION:
-                    LoadModificationInfos loadModificationInfos = (LoadModificationInfos) infos;
-                    return execCreateLoadModification(listener, loadModificationInfos, reportUuid, reporterId);
-
-                case GENERATOR_CREATION:
-                    GeneratorCreationInfos generatorCreationInfos = (GeneratorCreationInfos) infos;
-                    return execCreateGeneratorCreation(listener, generatorCreationInfos, reportUuid, reporterId);
-
-                case GENERATOR_MODIFICATION:
-                    var generatorModificationInfos = (GeneratorModificationInfos) infos;
-                    return execCreateGeneratorModification(listener, generatorModificationInfos, reportUuid, reporterId);
-
-                case TWO_WINDINGS_TRANSFORMER_CREATION:
-                    TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos = (TwoWindingsTransformerCreationInfos) infos;
-                    return execCreateTwoWindingsTransformerCreation(listener, twoWindingsTransformerCreationInfos, reportUuid, reporterId);
-
-                case EQUIPMENT_DELETION:
-                    EquipmentDeletionInfos deletionInfos = (EquipmentDeletionInfos) infos;
-                    return execCreateEquipmentDeletion(listener, deletionInfos, reportUuid, reporterId);
-
-                case GROOVY_SCRIPT:
-                    GroovyScriptModificationInfos groovyModificationInfos = (GroovyScriptModificationInfos) infos;
-                    return execCreateGroovyScript(listener, groovyModificationInfos.getScript(), reportUuid, reporterId);
-
-                case SUBSTATION_CREATION:
-                    SubstationCreationInfos substationCreationInfos = (SubstationCreationInfos) infos;
-                    return execCreateSubstationCreation(listener, substationCreationInfos, reportUuid, reporterId);
-
-                case VOLTAGE_LEVEL_CREATION:
-                    VoltageLevelCreationInfos voltageLevelCreationInfos = (VoltageLevelCreationInfos) infos;
-                    return execCreateVoltageLevelCreation(listener, voltageLevelCreationInfos, reportUuid, reporterId);
-
-                case BRANCH_STATUS:
-                    BranchStatusModificationInfos branchStatusModificationInfos = (BranchStatusModificationInfos) infos;
-                    return execCreateBranchStatusModification(listener, branchStatusModificationInfos, reportUuid, reporterId);
-
-                case LINES_ATTACH_TO_SPLIT_LINES:
-                    LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos = (LinesAttachToSplitLinesInfos) infos;
-                    return execCreateLinesAttachToSplitLinesCreation(listener, linesAttachToSplitLinesInfos, reportUuid, reporterId);
-
-                default:
-            }
-        } catch (PowsyblException e) {
-            NetworkModificationException exc = e instanceof NetworkModificationException ? (NetworkModificationException) e : new NetworkModificationException(MODIFICATION_ERROR, e);
-            ReporterModel reporter = new ReporterModel(reporterId, "Building node");
-            reporter.report(Report.builder()
-                .withKey(MODIFICATION_ERROR.name())
-                .withDefaultMessage(exc.getMessage())
-                .withSeverity(TypedValue.ERROR_SEVERITY)
-                .build());
-            sendReport(reportUuid, reporter);
+        if (modificationsToExclude.contains(infos.getUuid())) {
+            return List.of();
         }
 
-        return List.of();
+        switch (infos.getType()) {
+            case EQUIPMENT_ATTRIBUTE_MODIFICATION:
+            case LOAD_CREATION:
+            case LINE_SPLIT_WITH_VOLTAGE_LEVEL:
+            case SHUNT_COMPENSATOR_CREATION:
+            case LINE_CREATION:
+            case LINE_ATTACH_TO_VOLTAGE_LEVEL:
+                // Generic form
+                return handleModification(infos, listener, groupUuid, reportUuid, reporterId);
+
+            case LOAD_MODIFICATION:
+                LoadModificationInfos loadModificationInfos = (LoadModificationInfos) infos;
+                return execCreateLoadModification(listener, loadModificationInfos, reportUuid, reporterId);
+
+            case GENERATOR_CREATION:
+                GeneratorCreationInfos generatorCreationInfos = (GeneratorCreationInfos) infos;
+                return execCreateGeneratorCreation(listener, generatorCreationInfos, reportUuid, reporterId);
+
+            case GENERATOR_MODIFICATION:
+                var generatorModificationInfos = (GeneratorModificationInfos) infos;
+                return execCreateGeneratorModification(listener, generatorModificationInfos, reportUuid, reporterId);
+
+            case TWO_WINDINGS_TRANSFORMER_CREATION:
+                TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos = (TwoWindingsTransformerCreationInfos) infos;
+                return execCreateTwoWindingsTransformerCreation(listener, twoWindingsTransformerCreationInfos, reportUuid, reporterId);
+
+            case EQUIPMENT_DELETION:
+                EquipmentDeletionInfos deletionInfos = (EquipmentDeletionInfos) infos;
+                return execCreateEquipmentDeletion(listener, deletionInfos, reportUuid, reporterId);
+
+            case GROOVY_SCRIPT:
+                GroovyScriptModificationInfos groovyModificationInfos = (GroovyScriptModificationInfos) infos;
+                return execCreateGroovyScript(listener, groovyModificationInfos.getScript(), reportUuid, reporterId);
+
+            case SUBSTATION_CREATION:
+                SubstationCreationInfos substationCreationInfos = (SubstationCreationInfos) infos;
+                return execCreateSubstationCreation(listener, substationCreationInfos, reportUuid, reporterId);
+
+            case VOLTAGE_LEVEL_CREATION:
+                VoltageLevelCreationInfos voltageLevelCreationInfos = (VoltageLevelCreationInfos) infos;
+                return execCreateVoltageLevelCreation(listener, voltageLevelCreationInfos, reportUuid, reporterId);
+
+            case BRANCH_STATUS:
+                BranchStatusModificationInfos branchStatusModificationInfos = (BranchStatusModificationInfos) infos;
+                return execCreateBranchStatusModification(listener, branchStatusModificationInfos, reportUuid, reporterId);
+
+            case LINES_ATTACH_TO_SPLIT_LINES:
+                LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos = (LinesAttachToSplitLinesInfos) infos;
+                return execCreateLinesAttachToSplitLinesCreation(listener, linesAttachToSplitLinesInfos, reportUuid, reporterId);
+
+            default:
+                throw new NetworkModificationException(UNKNOWN_MODIFICATION_TYPE, String.format("The modification type '%s' is unknown", infos.getType()));
+        }
     }
 
     /*

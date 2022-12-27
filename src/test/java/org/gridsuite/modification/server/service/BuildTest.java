@@ -4,13 +4,11 @@
   License, v. 2.0. If a copy of the MPL was not distributed with this
   file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package org.gridsuite.modification.server;
+package org.gridsuite.modification.server.service;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.powsybl.commons.exceptions.UncheckedInterruptedException;
-import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.*;
@@ -21,6 +19,10 @@ import okhttp3.mockwebserver.Dispatcher;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
+import org.gridsuite.modification.server.ModificationType;
+import org.gridsuite.modification.server.NetworkModificationApplication;
+import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.TapChangerType;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
@@ -30,8 +32,6 @@ import org.gridsuite.modification.server.entities.equipment.creation.BusbarSecti
 import org.gridsuite.modification.server.entities.equipment.creation.TapChangerStepCreationEmbeddable;
 import org.gridsuite.modification.server.repositories.ModificationGroupRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
-import org.gridsuite.modification.server.service.NetworkModificationService;
-import org.gridsuite.modification.server.service.NetworkStoreListener;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.gridsuite.modification.server.utils.TestUtils;
 import org.jetbrains.annotations.NotNull;
@@ -57,7 +57,6 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.ContextHierarchy;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 
 import java.io.IOException;
 import java.util.*;
@@ -72,7 +71,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -323,17 +323,9 @@ public class BuildTest {
         assertEquals(expectedBody, request.getBody().readUtf8());
     }
 
-    public ModificationEntity createEquipmentAttributeModificationEntity(String equipmentId, String attributeName, Object attributeValue, IdentifiableType equipmentType) {
-        return EquipmentAttributeModificationInfos.builder()
-            .equipmentId(equipmentId)
-            .equipmentAttributeName(attributeName)
-            .equipmentAttributeValue(attributeValue)
-            .equipmentType(equipmentType)
-            .build().toEntity();
-    }
-
+    @SneakyThrows
     @Test
-    public void runBuildTest() throws Exception {
+    public void runBuildTest() {
         // create modification entities in the database
         List<ModificationEntity> entities1 = new ArrayList<>();
         entities1.add(EquipmentAttributeModificationInfos.builder().equipmentId("v1d1").equipmentAttributeName("open").equipmentAttributeValue(true).equipmentType(IdentifiableType.SWITCH).build().toEntity());
@@ -624,8 +616,9 @@ public class BuildTest {
         assertEquals(CANCEL_MESSAGE, message.getHeaders().get("message"));
     }
 
+    @SneakyThrows
     @Test
-    public void runBuildWithReportErrorTest() throws Exception {
+    public void runBuildWithReportErrorTest() {
         modificationRepository.saveModifications(TEST_GROUP_ID, List.of(EquipmentAttributeModificationInfos.builder().equipmentId("v1d1").equipmentAttributeName("open").equipmentAttributeValue(true).equipmentType(IdentifiableType.SWITCH).build().toEntity()));
 
         // build VARIANT_ID by cloning network initial variant and applying all modifications in all groups
@@ -651,75 +644,49 @@ public class BuildTest {
     }
 
     @Test
-    public void testDoActionWithErrors() {
-        Network networkTest = NetworkCreation.create(TEST_NETWORK_ID, true);
+    public void testApplyModificationWithErrors() {
+        Network network = NetworkCreation.create(TEST_NETWORK_ID, true);
         ReporterModel reporter = new ReporterModel("reportKey", "reportName");
-        Reporter subReporter = reporter.createSubReporter("AttributeModification", "Attribute modification");
+        LoadCreationInfos loadCreationInfos = LoadCreationInfos.builder().voltageLevelId("unknownVoltageLevelId").equipmentId("loadId").build();
+        GeneratorCreationInfos generatorCreationInfos = GeneratorCreationInfos.builder().voltageLevelId("unknownVoltageLevelId").equipmentId("generatorId").build();
+        UUID groupUuid = UUID.randomUUID();
+        UUID reportUuid = UUID.randomUUID();
+        String reporterId = UUID.randomUUID().toString();
 
         // Building mode : No error send with exception in the action part
-        NetworkStoreListener listener1 = NetworkStoreListener.create(networkTest, TEST_NETWORK_ID, null, modificationRepository, equipmentInfosService, true, true);
-        assertEquals(List.of(),
-            networkModificationService.doAction(listener1, () -> {
-                throw new RuntimeException("unexpected error");
-            }, null, NetworkModificationException.Type.MODIFICATION_ERROR, TEST_NETWORK_ID, reporter, subReporter)
-        );
-        assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches("/v1/reports/.*")));
+        NetworkStoreListener listener1 = NetworkStoreListener.create(network, TEST_NETWORK_ID, groupUuid, modificationRepository, equipmentInfosService, true, true);
+        assertEquals(List.of(), networkModificationService.handleModification(loadCreationInfos, listener1, groupUuid, reportUuid, reporterId));
+        assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches(String.format("/v1/reports/%s", reportUuid))));
+        assertEquals(List.of(), networkModificationService.execCreateGeneratorCreation(listener1, generatorCreationInfos, reportUuid, reporterId));
+        assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches(String.format("/v1/reports/%s", reportUuid))));
 
         // Incremental mode : Error send with exception in the action part
-        NetworkStoreListener listener2 = NetworkStoreListener.create(networkTest, TEST_NETWORK_ID, null, modificationRepository, equipmentInfosService, false, true);
-        assertThrows("unexpected error", RuntimeException.class, () ->
-            networkModificationService.doAction(listener2, () -> {
-                throw new RuntimeException("unexpected error");
-            }, null, NetworkModificationException.Type.MODIFICATION_ERROR, TEST_NETWORK_ID, reporter, subReporter)
+        NetworkStoreListener listener2 = NetworkStoreListener.create(network, TEST_NETWORK_ID, groupUuid, modificationRepository, equipmentInfosService, false, true);
+        assertEquals("VOLTAGE_LEVEL_NOT_FOUND : unknownVoltageLevelId",
+            assertThrows(NetworkModificationException.class,
+                () -> networkModificationService.handleModification(loadCreationInfos, listener2, groupUuid, reportUuid, reporterId)
+            ).getMessage()
         );
-        assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches("/v1/reports/.*")));
-
-        // Building mode : No error with exception in the postAction part
-        NetworkStoreListener listener3 = NetworkStoreListener.create(networkTest, TEST_NETWORK_ID, null, modificationRepository, equipmentInfosService, true, true);
-        assertEquals(List.of(),
-            networkModificationService.doAction(listener3, null,
-                () -> {
-                    throw new RuntimeException("unexpected error");
-                }, NetworkModificationException.Type.MODIFICATION_ERROR, TEST_NETWORK_ID, reporter, subReporter)
+        assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches(String.format("/v1/reports/%s", reportUuid))));
+        testNetworkModificationsCount(groupUuid, 1);
+        assertEquals("VOLTAGE_LEVEL_NOT_FOUND : unknownVoltageLevelId",
+            assertThrows(NetworkModificationException.class,
+                () -> networkModificationService.execCreateGeneratorCreation(listener2, generatorCreationInfos, reportUuid, reporterId)
+            ).getMessage()
         );
-        assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches("/v1/reports/.*")));
-
-        // Incremental mode : Error send with exception in the postAction part
-        NetworkStoreListener listener4 = NetworkStoreListener.create(networkTest, TEST_NETWORK_ID, null, modificationRepository, equipmentInfosService, false, true);
-        assertThrows("unexpected error", RuntimeException.class, () ->
-            networkModificationService.doAction(listener4, null,
-                () -> {
-                    throw new RuntimeException("unexpected error");
-                },
-                NetworkModificationException.Type.MODIFICATION_ERROR, TEST_NETWORK_ID, reporter, subReporter)
-        );
-        assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches("/v1/reports/.*")));
+        assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches(String.format("/v1/reports/%s", reportUuid))));
+        testNetworkModificationsCount(groupUuid, 2);
 
         // Save mode only : No log and no error send with exception in the action part
-        NetworkStoreListener listener5 = NetworkStoreListener.create(networkTest, TEST_NETWORK_ID, null, modificationRepository, equipmentInfosService, false, false);
-        assertEquals(List.of(),
-            networkModificationService.doAction(listener5, () -> {
-                throw new RuntimeException("unexpected error");
-            }, null, NetworkModificationException.Type.MODIFICATION_ERROR, TEST_NETWORK_ID, reporter, subReporter)
-        );
-
-        // Save mode only : No log and error send with exception in the postAction part
-        NetworkStoreListener listener6 = NetworkStoreListener.create(networkTest, TEST_NETWORK_ID, null, modificationRepository, equipmentInfosService, false, false);
-        assertThrows("unexpected error", RuntimeException.class, () ->
-            networkModificationService.doAction(listener6, null,
-                () -> {
-                    throw new RuntimeException("unexpected error");
-                },
-                NetworkModificationException.Type.MODIFICATION_ERROR, TEST_NETWORK_ID, reporter, subReporter)
-        );
+        NetworkStoreListener listener3 = NetworkStoreListener.create(network, TEST_NETWORK_ID, groupUuid, modificationRepository, equipmentInfosService, false, false);
+        assertEquals(List.of(), networkModificationService.execCreateGeneratorCreation(listener3, generatorCreationInfos, reportUuid, reporterId));
+        testNetworkModificationsCount(groupUuid, 3);
+        assertEquals(List.of(), networkModificationService.handleModification(loadCreationInfos, listener3, groupUuid, reportUuid, reporterId));
+        testNetworkModificationsCount(groupUuid, 4);
     }
 
-    private void testNetworkModificationsCount(UUID groupUuid, int actualSize) throws Exception {
-        // get all modifications for the given group of a network
-        MvcResult mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/modifications", groupUuid)).andExpect(status().isOk()).andReturn();
-        String resultAsString = mvcResult.getResponse().getContentAsString();
-        List<ModificationInfos> modificationInfos = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertEquals(actualSize, modificationInfos.size());
+    private void testNetworkModificationsCount(UUID groupUuid, int actualSize) {
+        assertEquals(actualSize, modificationRepository.getModifications(groupUuid, true, true).size());
     }
 
     @After

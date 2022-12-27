@@ -32,6 +32,7 @@ public class NetworkModificationException extends PowsyblException {
         LINE_NOT_FOUND(HttpStatus.NOT_FOUND),
         LOAD_NOT_FOUND(HttpStatus.NOT_FOUND),
         GENERATOR_NOT_FOUND(HttpStatus.NOT_FOUND),
+        UNKNOWN_MODIFICATION_TYPE(HttpStatus.INTERNAL_SERVER_ERROR),
         UNKNOWN_EQUIPMENT_TYPE(HttpStatus.INTERNAL_SERVER_ERROR),
         WRONG_EQUIPMENT_TYPE(HttpStatus.INTERNAL_SERVER_ERROR),
         MODIFICATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
@@ -111,10 +112,6 @@ public class NetworkModificationException extends PowsyblException {
 
     public static NetworkModificationException createBranchActionTypeUnsupported(@NonNull BranchStatusModificationInfos.ActionType type) {
         return new NetworkModificationException(Type.BRANCH_ACTION_TYPE_UNSUPPORTED, "The branch action type : " + type + " is unsupported");
-    }
-
-    public static NetworkModificationException createBranchActionTypeUnknown(@NonNull String type) {
-        return new NetworkModificationException(Type.BRANCH_ACTION_TYPE_UNKNOWN, "The branch action type : " + type + " is unknown");
     }
 
     public static NetworkModificationException createEquipementAttributeNotEditable(@NonNull IdentifiableType equipmentType, @NonNull String attributeName) {

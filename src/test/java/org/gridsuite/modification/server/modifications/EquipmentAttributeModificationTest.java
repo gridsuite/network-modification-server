@@ -90,10 +90,10 @@ public class EquipmentAttributeModificationTest extends AbstractNetworkModificat
     @Test
     public void testSwitch() {
         // switches modifications on initial variant
-        switchModifications("", "v1b1", "disc1Variant", "v2b1", "v3b1", Set.of("s1"), Set.of("s2"), 4);
+        switchModifications("", "v1b1", "disc1Variant", "v2b1", "v3b1", Set.of("s1"), Set.of("s2"), 5);
 
         // switches modifications on variant VARIANT_ID
-        switchModifications("&variantId=" + NetworkCreation.VARIANT_ID, "break1Variant", "notFound", "disc1Variant", "break2Variant", Set.of("s1Variant"), Set.of("s2Variant"), 8);
+        switchModifications("&variantId=" + NetworkCreation.VARIANT_ID, "break1Variant", "notFound", "disc1Variant", "break2Variant", Set.of("s1Variant"), Set.of("s2Variant"), 10);
     }
 
     @SneakyThrows

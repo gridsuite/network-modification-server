@@ -4,14 +4,16 @@
   License, v. 2.0. If a copy of the MPL was not distributed with this
   file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package org.gridsuite.modification.server;
+package org.gridsuite.modification.server.service;
 
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import com.vladmihalcea.sql.SQLStatementCountValidator;
 import nl.jqno.equalsverifier.EqualsVerifier;
+import org.gridsuite.modification.server.ModificationType;
+import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.TapChangerType;
 import org.gridsuite.modification.server.dto.*;
-import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationGroupEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.*;
@@ -31,7 +33,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.ArrayList;
@@ -67,9 +68,6 @@ public class ModificationRepositoryTest {
 
     @Autowired
     private ModificationRepository modificationRepository;
-
-    @MockBean
-    private EquipmentInfosService equipmentInfosService;
 
     @Before
     public void setUp() {
@@ -116,10 +114,6 @@ public class ModificationRepositoryTest {
 
     private LineSplitWithVoltageLevelInfos getLineSplitWithVoltageLevelModification(UUID modificationUuid) {
         return (LineSplitWithVoltageLevelInfos) networkModificationRepository.getModificationInfo(modificationUuid);
-    }
-
-    private LineAttachToVoltageLevelInfos getLineAttachToVoltageLevelModification(UUID modificationUuid) {
-        return (LineAttachToVoltageLevelInfos) networkModificationRepository.getModificationInfo(modificationUuid);
     }
 
     private LinesAttachToSplitLinesInfos getLinesAttachToSplitLinesModification(UUID modificationUuid) {
