@@ -2147,7 +2147,7 @@ public class ModificationControllerTest {
 
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
 
-        mvcResult = mockMvc.perform(get(URI_NETWORK_MODIF_GET_PUT + modificationsSubstationCreation.get(0).getUuid()))
+        mvcResult = mockMvc.perform(get(URI_NETWORK_MODIF_GET_PUT + modificationsSubstationCreation.get(0).getUuid()).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
         SubstationCreationInfos listModificationsSubstationCreation = mapper.readValue(resultAsString, new TypeReference<>() { });

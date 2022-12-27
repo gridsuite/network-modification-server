@@ -677,9 +677,10 @@ public class ModificationRepositoryTest {
 
     @Test
     public void testSubstationCreation() {
-        var createSubstationEntity1 = networkModificationRepository.createSubstationEntity("idSubstation1", "nameSubstation1", Country.AR, null);
-        var createSubstationEntity2 = networkModificationRepository.createSubstationEntity("idSubstation2", "nameSubstation2", Country.TD, null);
-        var createSubstationEntity3 = networkModificationRepository.createSubstationEntity("idSubstation3", "nameSubstation3", Country.KG, null);
+
+        var createSubstationEntity1 = new SubstationCreationEntity("idSubstation1", "nameSubstation1", Country.AR, null);
+        var createSubstationEntity2 = new SubstationCreationEntity("idSubstation2", "nameSubstation2", Country.TD, null);
+        var createSubstationEntity3 = new SubstationCreationEntity("idSubstation3", "nameSubstation3", Country.KG, null);
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(createSubstationEntity1, createSubstationEntity2, createSubstationEntity3));
         assertRequestsCount(1, 7, 3, 0);

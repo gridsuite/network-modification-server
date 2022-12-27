@@ -44,6 +44,14 @@ public class SubstationCreationEntity extends EquipmentCreationEntity {
         this.properties = properties == null ? null : new HashMap<>(properties);
     }
 
+    public SubstationCreationEntity(SubstationCreationInfos substationCreationInfos) {
+        super(ModificationType.SUBSTATION_CREATION,
+                substationCreationInfos.getEquipmentId(),
+                substationCreationInfos.getEquipmentName());
+        this.country = substationCreationInfos.getSubstationCountry();
+        this.properties = substationCreationInfos.getProperties() == null ? null : new HashMap<>(substationCreationInfos.getProperties());
+    }
+
     @Override
     public SubstationCreationInfos toModificationInfos() {
         return toSubstationCreationInfosBuilder().build();
