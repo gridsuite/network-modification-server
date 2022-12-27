@@ -6,17 +6,22 @@
  */
 package org.gridsuite.modification.server.modifications;
 
+import com.powsybl.commons.reporter.Report;
 import com.powsybl.commons.reporter.Reporter;
+import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.iidm.modification.scalable.Scalable;
 import com.powsybl.iidm.network.Load;
 import com.powsybl.iidm.network.Network;
+import org.apache.commons.collections4.CollectionUtils;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.VariationType;
 import org.gridsuite.modification.server.dto.FilterAttributes;
 import org.gridsuite.modification.server.dto.FilterEquipmentAttributes;
+import org.gridsuite.modification.server.dto.FilterInfos;
 import org.gridsuite.modification.server.dto.LoadScalingInfos;
 import org.gridsuite.modification.server.dto.LoadScalingVariation;
 import org.gridsuite.modification.server.service.FilterService;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -31,31 +36,39 @@ import java.util.stream.Collectors;
  * @author bendaamerahm <ahmed.bendaamer at rte-france.com>
  */
 public class LoadScaling extends AbstractModification {
-    private final LoadScalingInfos loadScalableInfos;
 
+    private final LoadScalingInfos loadScalingInfos;
+
+    @Autowired
     public LoadScaling(LoadScalingInfos loadScalableInfos) {
-        this.loadScalableInfos = loadScalableInfos;
+        this.loadScalingInfos = loadScalableInfos;
     }
 
     @Override
     public void apply(Network network, Reporter subReporter) {
-        List<LoadScalingVariation> loadScalingVariations = loadScalableInfos.getLoadScalingVariations();
-        List<String> filterIds = loadScalingVariations.stream()
-                .map(LoadScalingVariation::getFilterId)
-                .collect(Collectors.toList());
-        List<FilterAttributes> filters = new FilterService(null, null).getFiltersMetadata(filterIds);
+        List<LoadScalingVariation> loadScalingVariations = loadScalingInfos.getLoadScalingVariations();
+        List<String> filterIds = new ArrayList<>();
+        loadScalingVariations.forEach(l -> filterIds.addAll(l.getFilters().stream().filter(Objects::nonNull).map(FilterInfos::getId).collect(Collectors.toList())));
+        List<FilterAttributes> filters = new FilterService("http://localhost:5027").getFilters(filterIds);
 
-        for (LoadScalingVariation generatorScalingVariation : loadScalingVariations) {
-            var filter = filters.stream()
-                    .filter(f -> Objects.equals(generatorScalingVariation.getFilterId(), f.getId()))
-                    .findFirst();
-            filter.ifPresent(filterAttributes -> applyVariation(network, filterAttributes, generatorScalingVariation));
-        }
+        loadScalingVariations.forEach(loadScalingVariation -> {
+            var filtersList = filters.stream()
+                    .filter(f -> loadScalingVariation.getFilters().stream().map(FilterInfos::getId).collect(Collectors.toList()).contains(f.getId()))
+                    .collect(Collectors.toList());
+
+            if (!CollectionUtils.isEmpty(filtersList)) {
+                filtersList.forEach(filter -> applyVariation(network, filter, loadScalingVariation, subReporter));
+            } else {
+                createReport(subReporter,NetworkModificationException.Type.LOAD_SCALING_ERROR.name(),"Filters list is empty",TypedValue.ERROR_SEVERITY);
+                throw new NetworkModificationException(NetworkModificationException.Type.LOAD_SCALING_ERROR, "Filters list is empty");
+            }
+        });
+        createReport(subReporter,"loadScalingCreated","new load scaling created",TypedValue.INFO_SEVERITY);
     }
 
     private void applyVariation(Network network,
                                 FilterAttributes filter,
-                                LoadScalingVariation loadScalingVariation) {
+                                LoadScalingVariation loadScalingVariation, Reporter subReporter) {
 
         AtomicReference<Double> sum = new AtomicReference<>(0D);
         Map<String, Double> targetPMap = new HashMap<>();
@@ -69,6 +82,8 @@ public class LoadScaling extends AbstractModification {
                             if (load != null) {
                                 targetPMap.put(load.getId(), load.getP0());
                                 sum.set(sum.get() + load.getP0());
+                            } else {
+                                createReport(subReporter,NetworkModificationException.Type.LOAD_SCALING_ERROR.name(),"load " + equipment.getEquipmentID() + " not found",TypedValue.ERROR_SEVERITY);
                             }
                         });
                 targetPMap.forEach((id, p) -> {
@@ -95,6 +110,9 @@ public class LoadScaling extends AbstractModification {
                     percentages.addAll(Collections.nCopies(scalables.size(), 100 / (float) scalables.size()));
                     Scalable regularDistributionScalable = Scalable.proportional(percentages, scalables);
                     scale(network, loadScalingVariation, sum, regularDistributionScalable);
+                } else {
+                    createReport(subReporter,NetworkModificationException.Type.LOAD_SCALING_ERROR.name(),"load scalable list is empty",TypedValue.WARN_SEVERITY);
+
                 }
                 break;
             case VENTILATION:
@@ -133,13 +151,21 @@ public class LoadScaling extends AbstractModification {
     }
 
     private double getAsked(LoadScalingVariation loadScalingVariation, AtomicReference<Double> sum) {
-        if (loadScalableInfos.getVariationType() == VariationType.DELTA_P) {
+        if (loadScalingInfos.getVariationType() == VariationType.DELTA_P) {
             return loadScalingVariation.getVariationValue();
-        } else if (loadScalableInfos.getVariationType() == VariationType.TARGET_P) {
+        } else if (loadScalingInfos.getVariationType() == VariationType.TARGET_P) {
             return loadScalingVariation.getVariationValue() - sum.get();
         } else {
             throw new NetworkModificationException(NetworkModificationException.Type.LOAD_SCALING_ERROR, "variation type not found");
         }
+    }
+
+    static void createReport(Reporter reporter, String reporterKey, String message, TypedValue errorSeverity) {
+        reporter.report(Report.builder()
+                .withKey(reporterKey)
+                .withDefaultMessage(message)
+                .withSeverity(errorSeverity)
+                .build());
     }
 
     private Scalable getScalable(String id) {

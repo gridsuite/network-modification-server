@@ -6,23 +6,36 @@
  */
 package org.gridsuite.modification.server.entities.equipment.modification;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.gridsuite.modification.server.ReactiveVariationMode;
 import org.gridsuite.modification.server.VariationMode;
+import org.gridsuite.modification.server.dto.FilterInfos;
+import org.gridsuite.modification.server.dto.LoadScalingVariation;
 
+import javax.persistence.CollectionTable;
 import javax.persistence.Column;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * @author bendaamerahm <ahmed.bendaamer at rte-france.com>
  */
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Getter
 @Setter
 @Entity
@@ -30,11 +43,13 @@ import javax.persistence.Table;
 public class LoadScalingVariationEntity {
 
     @Id
-    @Column(name = "id", nullable = false)
-    private String id;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(name = "id")
+    private UUID id;
 
-    @Column(name = "filterId")
-    private String filterId;
+    @ElementCollection
+    @CollectionTable(name = "ScalingFilterIds")
+    private List<String> filterIds;
 
     @Column(name = "variationValue")
     private double variationValue;
@@ -46,4 +61,14 @@ public class LoadScalingVariationEntity {
     @Column(name = "reactiveVariationMode")
     @Enumerated(EnumType.STRING)
     private ReactiveVariationMode reactiveVariationMode;
+
+    public LoadScalingVariation toLoadScalingVariation() {
+        return LoadScalingVariation.builder()
+                .variationValue(getVariationValue())
+                .activeVariationMode(getActiveVariationMode())
+                .reactiveVariationMode(getReactiveVariationMode())
+                .filters(getFilterIds().stream().map(FilterInfos::new)
+                .collect(Collectors.toList()))
+                .build();
+    }
 }

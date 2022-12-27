@@ -14,6 +14,10 @@ import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 import org.gridsuite.modification.server.ReactiveVariationMode;
 import org.gridsuite.modification.server.VariationMode;
+import org.gridsuite.modification.server.entities.equipment.modification.LoadScalingVariationEntity;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author bendaamerahm <ahmed.bendaamer at rte-france.com>
@@ -25,8 +29,17 @@ import org.gridsuite.modification.server.VariationMode;
 @ToString(callSuper = true)
 @Schema(description = "Load scaling variation")
 public class LoadScalingVariation {
-    String filterId;
+    List<FilterInfos> filters;
     VariationMode activeVariationMode;
     ReactiveVariationMode reactiveVariationMode;
     Double variationValue;
+
+    public LoadScalingVariationEntity toEntity() {
+        return LoadScalingVariationEntity.builder()
+                .variationValue(getVariationValue())
+                .activeVariationMode(getActiveVariationMode())
+                .reactiveVariationMode(getReactiveVariationMode())
+                .filterIds(getFilters().stream().map(FilterInfos::getId).collect(Collectors.toList()))
+                .build();
+    }
 }

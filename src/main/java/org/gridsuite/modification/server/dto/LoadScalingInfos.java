@@ -42,7 +42,7 @@ public class LoadScalingInfos extends ModificationInfos {
 
     @Override
     public LoadScalingEntity toEntity() {
-        return LoadScalingEntity.toEntity();
+        return new LoadScalingEntity(this);
     }
 
     @Override
@@ -57,6 +57,6 @@ public class LoadScalingInfos extends ModificationInfos {
 
     @Override
     public Reporter createSubReporter(ReporterModel reporter) {
-        return reporter.createSubReporter(ModificationType.LOAD_SCALING.name(), "Load scaling");
+        return reporter.createSubReporter(ModificationType.LOAD_SCALING.name(), "Load Scaling");
     }
 }

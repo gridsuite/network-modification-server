@@ -8,8 +8,14 @@ package org.gridsuite.modification.server.entities.equipment.modification;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 import lombok.Setter;
+import org.apache.commons.collections4.CollectionUtils;
+import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.VariationType;
+import org.gridsuite.modification.server.dto.LoadScalingInfos;
+import org.gridsuite.modification.server.dto.LoadScalingVariation;
+import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.hibernate.Hibernate;
 
@@ -22,6 +28,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * @author bendaamerahm <ahmed.bendaamer at rte-france.com>
@@ -40,8 +47,39 @@ public class LoadScalingEntity extends ModificationEntity {
     @OneToMany(cascade = CascadeType.ALL)
     private List<LoadScalingVariationEntity> variations;
 
-    public static LoadScalingEntity toEntity() {
-        return new LoadScalingEntity();
+    public LoadScalingEntity(@NonNull LoadScalingInfos loadScalingInfos) {
+        super(ModificationType.LOAD_SCALING);
+        assignAttributes(loadScalingInfos);
+    }
+
+    @Override
+    public void update(@NonNull ModificationInfos modificationInfos) {
+        super.update(modificationInfos);
+        assignAttributes((LoadScalingInfos) modificationInfos);
+    }
+
+    private void assignAttributes(LoadScalingInfos loadScalingInfos) {
+        variationType = loadScalingInfos.getVariationType();
+        if (CollectionUtils.isNotEmpty(loadScalingInfos.getLoadScalingVariations())) {
+            variations = loadScalingInfos.getLoadScalingVariations().stream()
+                    .map(LoadScalingVariation::toEntity)
+                    .collect(Collectors.toList());
+        }
+    }
+
+    @Override
+    public LoadScalingInfos toModificationInfos() {
+        return toLoadScalingInfosBuilder().build();
+    }
+
+    private LoadScalingInfos.LoadScalingInfosBuilder<?, ?> toLoadScalingInfosBuilder() {
+        return LoadScalingInfos
+                .builder()
+                .uuid(getId())
+                .date(getDate())
+                .type(ModificationType.valueOf(getType()))
+                .variationType(getVariationType())
+                .loadScalingVariations(getVariations().stream().map(LoadScalingVariationEntity::toLoadScalingVariation).collect(Collectors.toList()));
     }
 
     @Override
