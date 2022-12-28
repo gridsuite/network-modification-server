@@ -1,0 +1,80 @@
+[
+  {
+    "id": "bdefd63f-6cd8-4686-b57b-6bc7aaffa202",
+    "modificationDate": "2022-12-12T15:00:26.911+00:00",
+    "equipmentType": "GENERATOR",
+    "filterEquipmentsAttributes": [
+      {
+        "equipmentID": "idGenerator",
+        "distributionKey": 1
+      },
+      {
+        "equipmentID": "gen5",
+        "distributionKey": 2
+      }
+    ],
+    "type": "IDENTIFIER_LIST"
+  },
+  {
+    "id": "bdfad63f-6fe6-4686-b57b-6bc7aa11a202",
+    "modificationDate": "2022-12-12T15:00:27.911+00:00",
+    "equipmentType": "GENERATOR",
+    "filterEquipmentsAttributes": [
+      {
+        "equipmentID": "gen4"
+      },
+      {
+        "equipmentID": "gen7"
+      }
+    ],
+    "type": "IDENTIFIER_LIST"
+  },
+  {
+    "id": "bd063f-611f-4686-b57b-6bc7aa00a202",
+    "modificationDate": "2022-12-12T15:00:28.911+00:00",
+    "equipmentType": "GENERATOR",
+    "filterEquipmentsAttributes": [
+      {
+        "equipmentID": "gen6",
+        "distributionKey": 1
+      },
+      {
+        "equipmentID": "v6generator",
+        "distributionKey": 0
+      }
+    ],
+    "type": "IDENTIFIER_LIST"
+  },
+  {
+    "id": "6f11d63f-6f06-4686-b57b-6bc7aa66a202",
+    "modificationDate": "2022-12-12T15:00:26.911+00:00",
+    "equipmentType": "GENERATOR",
+    "filterEquipmentsAttributes": [
+      {
+        "equipmentID": "gen8",
+        "distributionKey": 1
+      },
+      {
+        "equipmentID": "v5generator",
+        "distributionKey": 2
+      }
+    ],
+    "type": "IDENTIFIER_LIST"
+  },
+  {
+    "id": "7100163f-60f1-4686-b57b-6bc7aa77a202",
+    "modificationDate": "2022-12-12T15:00:26.911+00:00",
+    "equipmentType": "GENERATOR",
+    "filterEquipmentsAttributes": [
+      {
+        "equipmentID": "gen9",
+        "distributionKey": 1
+      },
+      {
+        "equipmentID": "gen10",
+        "distributionKey": 2
+      }
+    ],
+    "type": "IDENTIFIER_LIST"
+  }
+]

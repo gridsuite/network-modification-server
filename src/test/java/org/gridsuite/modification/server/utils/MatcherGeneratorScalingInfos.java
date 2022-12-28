@@ -5,6 +5,7 @@ import org.gridsuite.modification.server.dto.GeneratorScalingInfos;
 import org.gridsuite.modification.server.dto.GeneratorScalingVariation;
 import org.gridsuite.modification.server.dto.LineSplitWithVoltageLevelInfos;
 
+import java.util.List;
 import java.util.Objects;
 
 public class MatcherGeneratorScalingInfos extends MatcherModificationInfos<GeneratorScalingInfos>{
@@ -19,17 +20,54 @@ public class MatcherGeneratorScalingInfos extends MatcherModificationInfos<Gener
     public boolean matchesSafely(GeneratorScalingInfos m) {
         return super.matchesSafely(m)
                 && Objects.equals(reference.getVariationType(), m.getVariationType())
-                && Objects.equals(reference.isIterative(), m.isIterative());
+                && Objects.equals(reference.isIterative(), m.isIterative())
+                && matchesVariations(m.getGeneratorScalingVariations());
+    }
+
+    private boolean matchesVariations(List<GeneratorScalingVariation> generatorScalingVariations) {
+        if (!matchesList(reference.getGeneratorScalingVariations(), generatorScalingVariations)) {
+            return false;
+        }
+
+        for (int index = 0; index < generatorScalingVariations.size(); index++) {
+            if (!matchesVariation(reference.getGeneratorScalingVariations().get(index),
+                    generatorScalingVariations.get(index))) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private boolean matchesVariation(GeneratorScalingVariation variation1, GeneratorScalingVariation variation2) {
         return Objects.equals(variation1.getVariationValue(), variation2.getVariationValue())
                 && Objects.equals(variation1.getVariationMode(), variation2.getVariationMode())
-                && (variation1.getFilters() == null && variation2.getFilters() == null);
+                && matchesFilters(variation1.getFilters(), variation2.getFilters());
     }
 
-    private boolean matchesFilters(FilterInfo filter1, FilterInfo filter2) {
-        return Objects.equals(filter1.getId(), filter2.getId())
-                && Objects.equals(filter1.getName(), filter2.getName());
+    private boolean matchesFilters(List<FilterInfo> filterList1, List<FilterInfo> filterList2) {
+        if (!matchesList(filterList1, filterList2)) {
+            return false;
+        }
+
+        for (int index = 0; index < filterList1.size(); index++) {
+            if (!matchesFilter(filterList1.get(index), filterList2.get(index))) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private boolean matchesFilter(FilterInfo filter1, FilterInfo filter2) {
+        return Objects.equals(filter1.getName(), filter2.getName());
+    }
+
+    private boolean matchesList(List<?> list1, List<?> list2) {
+        if ((list1 == null) != (list2 == null)) {
+            return false;
+        }
+
+        return list1 == null || list1.size() == list2.size();
     }
 }
