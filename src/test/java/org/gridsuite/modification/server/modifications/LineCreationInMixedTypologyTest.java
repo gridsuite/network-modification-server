@@ -7,11 +7,13 @@
 
 package org.gridsuite.modification.server.modifications;
 
+import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.LineCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.utils.MatcherLineCreationInfos;
+import org.gridsuite.modification.server.utils.NetworkCreation;
 
 import java.util.UUID;
 
@@ -22,8 +24,8 @@ import static org.junit.Assert.assertNull;
 public class LineCreationInMixedTypologyTest extends AbstractNetworkModificationTest {
 
     @Override
-    protected UUID getNetworkUuid() {
-        return TEST_NETWORK_MIXED_TOPOLOGY_ID;
+    protected Network createNetwork(UUID networkUuid) {
+        return NetworkCreation.createMixedTopology(networkUuid);
     }
 
     @Override
@@ -49,6 +51,8 @@ public class LineCreationInMixedTypologyTest extends AbstractNetworkModification
             .connectionDirection1(ConnectablePosition.Direction.TOP)
             .connectionName2("cn2Line1")
             .connectionDirection2(ConnectablePosition.Direction.TOP)
+            .connectionPosition1(0)
+            .connectionPosition2(0)
             .build();
     }
 
@@ -72,6 +76,8 @@ public class LineCreationInMixedTypologyTest extends AbstractNetworkModification
             .connectionDirection1(ConnectablePosition.Direction.BOTTOM)
             .connectionName2("cn4Line1")
             .connectionDirection2(ConnectablePosition.Direction.BOTTOM)
+            .connectionPosition1(0)
+            .connectionPosition2(0)
             .build();
     }
 

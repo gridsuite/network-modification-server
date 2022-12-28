@@ -41,7 +41,6 @@ import org.gridsuite.modification.server.modifications.ModificationUtils;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -94,7 +93,7 @@ public class NetworkModificationService {
 
     public NetworkModificationService(@Value("${backing-services.report-server.base-uri:http://report-server}") String reportServerURI,
                                       NetworkStoreService networkStoreService, NetworkModificationRepository networkModificationRepository,
-                                      @Lazy EquipmentInfosService equipmentInfosService,
+                                      EquipmentInfosService equipmentInfosService,
                                       ModificationRepository modificationRepository, NotificationService notificationService,
                                       ModificationApplicator modificationApplicator, ObjectMapper objectMapper) {
         this.networkStoreService = networkStoreService;
@@ -1091,8 +1090,8 @@ public class NetworkModificationService {
                 if (voltageLevel1.getTopologyKind() == TopologyKind.NODE_BREAKER && voltageLevel2.getTopologyKind() == TopologyKind.NODE_BREAKER) {
                     var twoWindingsTransformerAdder = createTwoWindingsTransformerAdder(network, voltageLevel1, voltageLevel2, twoWindingsTransformerCreationInfos, false, false);
 
-                    var position1 = ModificationUtils.getInstance().getPosition(twoWindingsTransformerCreationInfos.getBusOrBusbarSectionId1(), network, voltageLevel1);
-                    var position2 = ModificationUtils.getInstance().getPosition(twoWindingsTransformerCreationInfos.getBusOrBusbarSectionId2(), network, voltageLevel2);
+                    var position1 = twoWindingsTransformerCreationInfos.getConnectionPosition1() != null ? twoWindingsTransformerCreationInfos.getConnectionPosition1() : ModificationUtils.getInstance().getPosition(twoWindingsTransformerCreationInfos.getBusOrBusbarSectionId1(), network, voltageLevel1);
+                    var position2 = twoWindingsTransformerCreationInfos.getConnectionPosition2() != null ? twoWindingsTransformerCreationInfos.getConnectionPosition2() : ModificationUtils.getInstance().getPosition(twoWindingsTransformerCreationInfos.getBusOrBusbarSectionId2(), network, voltageLevel2);
 
                     CreateBranchFeederBays algo = new CreateBranchFeederBaysBuilder()
                             .withBbsId1(twoWindingsTransformerCreationInfos.getBusOrBusbarSectionId1())
@@ -1423,6 +1422,18 @@ public class NetworkModificationService {
         return allModificationsInfos;
     }
 
+    public void applyModifications(List<UUID> modificationsUuidList, UUID groupUuid, UUID networkUuid, UUID reportUuid, UUID reporterId, String variantId) {
+        ModificationNetworkInfos networkInfos = getNetworkModificationInfos(networkUuid, variantId);
+        NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, true, networkInfos.isApplyModifications());
+
+        for (UUID modification : modificationsUuidList) {
+            ModificationInfos modificationInfos = networkModificationRepository.getModificationInfo(modification);
+            applyModification(listener, Set.of(), groupUuid, reportUuid, reporterId.toString(), modificationInfos);
+        }
+
+        networkStoreService.flush(listener.getNetwork());
+    }
+
     private List<ModificationInfos> applyModification(NetworkStoreListener listener, Set<UUID> modificationsToExclude, UUID groupUuid,
                                                       UUID reportUuid, String reporterId, ModificationInfos infos) {
         try {
@@ -1514,8 +1525,12 @@ public class NetworkModificationService {
         }
     }
 
-    public void moveModifications(UUID groupUuid, UUID originGroupUuid, UUID before, List<UUID> modificationsToMove) {
-        networkModificationRepository.moveModifications(groupUuid, originGroupUuid, modificationsToMove, before);
+    public void moveModifications(UUID groupUuid, UUID originGroupUuid, UUID before, UUID networkUuid, UUID reportUuid, UUID reporterId, String variantId, List<UUID> modificationsToMove, boolean canBuildNode) {
+        List<UUID> movedModifications = networkModificationRepository.moveModifications(groupUuid, originGroupUuid, modificationsToMove, before).getModificationsMoved();
+        if (canBuildNode && !movedModifications.isEmpty()) {
+            // try to apply the moved modifications (incremental mode)
+            applyModifications(movedModifications, groupUuid, networkUuid, reportUuid, reporterId, variantId);
+        }
     }
 
     public void createModificationGroup(UUID sourceGroupUuid, UUID groupUuid) {
@@ -1531,17 +1546,21 @@ public class NetworkModificationService {
 
     // This function cannot be @Transactional because we clone all modifications resetting their id to null,
     // which is not allowed by JPA if we still stay in the same Tx.
-    public List<UUID> duplicateModifications(UUID targetGroupUuid, List<UUID> modificationsToDuplicate) {
-        List<ModificationEntity> newModificationList = new ArrayList<>();
+    public List<UUID> duplicateModifications(UUID targetGroupUuid, UUID networkUuid, UUID reportUuid, UUID reporterId, String variantId, List<UUID> modificationsUuidList) {
+        List<ModificationEntity> duplicatedModificationEntityList = new ArrayList<>();
         List<UUID> missingModificationList = new ArrayList<>();
-        for (UUID modifyId : modificationsToDuplicate) {
+        for (UUID modifyId : modificationsUuidList) {
             networkModificationRepository.cloneModificationEntity(modifyId).ifPresentOrElse(
-                newModificationList::add,
+                duplicatedModificationEntityList::add,
                 () -> missingModificationList.add(modifyId)  // data no more available
             );
         }
-        networkModificationRepository.saveModifications(targetGroupUuid, newModificationList);
-
+        if (!duplicatedModificationEntityList.isEmpty()) {
+            networkModificationRepository.saveModifications(targetGroupUuid, duplicatedModificationEntityList);
+            // try to apply the duplicated modifications (incremental mode)
+            List<UUID> duplicatedModificationList = duplicatedModificationEntityList.stream().map(ModificationEntity::getId).collect(Collectors.toList());
+            applyModifications(duplicatedModificationList, targetGroupUuid, networkUuid, reportUuid, reporterId, variantId);
+        }
         return missingModificationList;
     }
 

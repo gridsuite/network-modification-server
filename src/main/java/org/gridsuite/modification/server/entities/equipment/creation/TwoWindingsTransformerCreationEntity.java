@@ -144,7 +144,9 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
                                                 String ratioTapChangerTerminalRefType,
                                                 Boolean ratioTapChangerLoadTapChangingCapabilities,
                                                 Double ratioTapChangerTargetV,
-                                                List<TapChangerStepCreationEmbeddable> tapChangerSteps
+                                                List<TapChangerStepCreationEmbeddable> tapChangerSteps,
+                                                Integer connectionPosition1,
+                                                Integer connectionPosition2
     ) {
         super(ModificationType.TWO_WINDINGS_TRANSFORMER_CREATION,
                 equipmentId,
@@ -160,7 +162,9 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
                 connectionName1,
                 connectionDirection1,
                 connectionName2,
-                connectionDirection2);
+                connectionDirection2,
+                connectionPosition1,
+                connectionPosition2);
         this.magnetizingConductance = magnetizingConductance;
         this.magnetizingSusceptance = magnetizingSusceptance;
         this.ratedVoltage1 = ratedVoltage1;
@@ -243,7 +247,9 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
                 ratioTapChangerInfos != null ? ratioTapChangerInfos.getRegulatingTerminalType() : null,
                 ratioTapChangerInfos != null ? ratioTapChangerInfos.isLoadTapChangingCapabilities() : null,
                 ratioTapChangerInfos != null ? ratioTapChangerInfos.getTargetV() : null,
-                tapChangerSteps);
+                tapChangerSteps,
+                twoWindingsTransformerCreationInfos.getConnectionPosition1(),
+                twoWindingsTransformerCreationInfos.getConnectionPosition2());
 
         return twoWindingsTransformerCreationEntity;
     }
@@ -277,7 +283,9 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
                 .connectionName1(getConnectionName1())
                 .connectionDirection1(getConnectionDirection1())
                 .connectionName2(getConnectionName2())
-                .connectionDirection2(getConnectionDirection2());
+                .connectionDirection2(getConnectionDirection2())
+                .connectionPosition1(getConnectionPosition1())
+                .connectionPosition2(getConnectionPosition2());
 
         if (getCurrentLimits1() != null) {
             builder.currentLimits1(getCurrentLimits1().toCurrentLimitsInfos());
