@@ -14,6 +14,7 @@ import org.gridsuite.modification.server.dto.FilterInfo;
 import org.gridsuite.modification.server.dto.GeneratorScalingInfos;
 import org.gridsuite.modification.server.dto.GeneratorScalingVariation;
 import org.gridsuite.modification.server.service.FilterService;
+import org.gridsuite.modification.server.service.SpringContext;
 import org.gridsuite.modification.server.utils.ScalingUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -30,13 +31,17 @@ import static org.gridsuite.modification.server.utils.ScalingUtils.createReport;
 
 public class GeneratorScaling extends AbstractModification {
 
-    @Autowired
     FilterService filterService;
 
     private final GeneratorScalingInfos generatorScalableInfos;
 
     public GeneratorScaling(GeneratorScalingInfos generatorScalableInfos) {
         this.generatorScalableInfos = generatorScalableInfos;
+    }
+
+    @Autowired
+    public void setFilterService(FilterService filterService) {
+        this.filterService = filterService;
     }
 
     @Override
@@ -48,7 +53,8 @@ public class GeneratorScaling extends AbstractModification {
             filterIds.addAll(variation.getFilters().stream().map(FilterInfo::getId).collect(Collectors.toList()));
         });
 
-        List<FilterAttributes> filters = new FilterService("http://localhost:5027").getFilters(filterIds);
+        List<String> distinctFilterIds = filterIds.stream().distinct().collect(Collectors.toList());
+        List<FilterAttributes> filters = SpringContext.getBean(FilterService.class).getFilters(distinctFilterIds);
 
         if (!filters.isEmpty()) {
             for (GeneratorScalingVariation generatorScalingVariation : generatorScalingVariations) {

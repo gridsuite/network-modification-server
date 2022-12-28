@@ -17,18 +17,18 @@ public class FilterService {
 
     private static final String DELIMITER = "/";
 
-    private String filterServerBaseUri;
+    private static String filterServerBaseUri;
 
     private RestTemplate restTemplate;
 
     @Autowired
     public FilterService(@Value("http://localhost:5027") String filterServerBaseUri) {
-        this.filterServerBaseUri = filterServerBaseUri;
+        FilterService.filterServerBaseUri = filterServerBaseUri;
         restTemplate = new RestTemplate();
     }
 
     public void setFilterServerBaseUri(String filterServerBaseUri) {
-        this.filterServerBaseUri = filterServerBaseUri;
+        FilterService.filterServerBaseUri = filterServerBaseUri;
     }
 
     public List<FilterAttributes> getFilters(List<String> filtersUuids) {

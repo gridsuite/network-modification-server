@@ -3,6 +3,7 @@ package org.gridsuite.modification.server.modifications;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.google.common.io.ByteStreams;
+import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.SneakyThrows;
 import okhttp3.mockwebserver.Dispatcher;
@@ -11,20 +12,29 @@ import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
 import okio.Buffer;
 import org.gridsuite.modification.server.ModificationType;
+import org.gridsuite.modification.server.NetworkModificationApplication;
 import org.gridsuite.modification.server.VariationMode;
 import org.gridsuite.modification.server.VariationType;
 import org.gridsuite.modification.server.dto.FilterInfo;
 import org.gridsuite.modification.server.dto.GeneratorScalingInfos;
 import org.gridsuite.modification.server.dto.GeneratorScalingVariation;
 import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.service.FilterService;
 import org.gridsuite.modification.server.utils.MatcherGeneratorScalingInfos;
 import org.gridsuite.modification.server.utils.MatcherModificationInfos;
+import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.gridsuite.modification.server.utils.SendInput;
 import org.jetbrains.annotations.NotNull;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.stream.binder.test.InputDestination;
+import org.springframework.cloud.stream.binder.test.TestChannelBinderConfiguration;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -37,6 +47,10 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMoc
 import static org.gridsuite.modification.server.utils.NetworkUtil.createGenerator;
 import static org.junit.Assert.assertEquals;
 
+@RunWith(SpringRunner.class)
+@AutoConfigureMockMvc
+@SpringBootTest
+@ContextConfiguration(classes = {NetworkModificationApplication.class, TestChannelBinderConfiguration.class})
 public class GeneratorScalingModificationTest extends AbstractNetworkModificationTest{
 
     private static final UUID GENERATOR_SCALING_ID = UUID.randomUUID();
@@ -63,10 +77,8 @@ public class GeneratorScalingModificationTest extends AbstractNetworkModificatio
 
     private MockWebServer server;
 
-    @Override
-    protected UUID getNetworkUuid() {
-        return TEST_NETWORK_ID;
-    }
+    @Autowired
+    private FilterService filterService;
 
     @Before
     public void specificSetUp() throws IOException {
@@ -83,6 +95,8 @@ public class GeneratorScalingModificationTest extends AbstractNetworkModificatio
         var jsonBody = resourceToString("/Filter_equipments.json");
         server.start();
 
+        var uri = "http://" + server.getHostName() + ":" + server.getPort();
+        filterService.setFilterServerBaseUri(uri);
         final Dispatcher dispatcher = new Dispatcher() {
 
             @SneakyThrows
@@ -98,7 +112,7 @@ public class GeneratorScalingModificationTest extends AbstractNetworkModificatio
                             .addHeader("Content-Type", "application/json; charset=utf-8")
                             .setBody(test);
                 }
-                return new MockResponse().setResponseCode(418);
+                return new MockResponse().setResponseCode(418).setBody(path);
             }
         };
         /*input = new InputDestination();
@@ -110,6 +124,11 @@ public class GeneratorScalingModificationTest extends AbstractNetworkModificatio
                         .withBody(resourceToString("/Filter_equipments.json"))
                         .withHeader("Content-Type", "application/json")));*/
         server.setDispatcher(dispatcher);
+    }
+
+    @Override
+    protected Network createNetwork(UUID networkUuid) {
+        return NetworkCreation.create(networkUuid, true);
     }
 
     @Override
@@ -209,6 +228,20 @@ public class GeneratorScalingModificationTest extends AbstractNetworkModificatio
 
     @Override
     protected void assertNetworkAfterCreation() {
+        assertEquals(getNetwork().getGenerator(GENERATOR_ID_1).getTargetP(), 68.82, 0.01D);
+        assertEquals(getNetwork().getGenerator(GENERATOR_ID_2).getTargetP(), 75.43, 0.01D);
+        assertEquals(getNetwork().getGenerator(GENERATOR_ID_3).getTargetP(), 42.1, 0.01D);
+        assertEquals(getNetwork().getGenerator(GENERATOR_ID_4).getTargetP(), 125.0, 0.01D);
+        assertEquals(getNetwork().getGenerator(GENERATOR_ID_5).getTargetP(), 273.27, 0.01D);
+        assertEquals(getNetwork().getGenerator(GENERATOR_ID_6).getTargetP(), 150, 0.01D);
+        assertEquals(getNetwork().getGenerator(GENERATOR_ID_7).getTargetP(), 225, 0.01D);
+        assertEquals(getNetwork().getGenerator(GENERATOR_ID_8).getTargetP(), 116.66, 0.01D);
+        assertEquals(getNetwork().getGenerator(GENERATOR_ID_9).getTargetP(), 233.33, 0.01D);
+        assertEquals(getNetwork().getGenerator(GENERATOR_ID_10).getTargetP(), 116.66, 0.01D);
+    }
+
+    @Override
+    protected void assertNetworkAfterDeletion() {
         assertEquals(getNetwork().getGenerator(GENERATOR_ID_1).getTargetP(), 42.1, 0);
         assertEquals(getNetwork().getGenerator(GENERATOR_ID_2).getTargetP(), 42.1, 0);
         assertEquals(getNetwork().getGenerator(GENERATOR_ID_3).getTargetP(), 42.1, 0);
@@ -219,20 +252,6 @@ public class GeneratorScalingModificationTest extends AbstractNetworkModificatio
         assertEquals(getNetwork().getGenerator(GENERATOR_ID_8).getTargetP(), 100, 0);
         assertEquals(getNetwork().getGenerator(GENERATOR_ID_9).getTargetP(), 200, 0);
         assertEquals(getNetwork().getGenerator(GENERATOR_ID_10).getTargetP(), 100, 0);
-    }
-
-    @Override
-    protected void assertNetworkAfterDeletion() {
-        assertEquals(getNetwork().getGenerator(GENERATOR_ID_1).getTargetP(), 34, 0);
-        assertEquals(getNetwork().getGenerator(GENERATOR_ID_2).getTargetP(), 34, 0);
-        assertEquals(getNetwork().getGenerator(GENERATOR_ID_3).getTargetP(), 34, 0);
-        assertEquals(getNetwork().getGenerator(GENERATOR_ID_4).getTargetP(), 34, 0);
-        assertEquals(getNetwork().getGenerator(GENERATOR_ID_5).getTargetP(), 34, 0);
-        assertEquals(getNetwork().getGenerator(GENERATOR_ID_6).getTargetP(), 34, 0);
-        assertEquals(getNetwork().getGenerator(GENERATOR_ID_7).getTargetP(), 34, 0);
-        assertEquals(getNetwork().getGenerator(GENERATOR_ID_8).getTargetP(), 34, 0);
-        assertEquals(getNetwork().getGenerator(GENERATOR_ID_9).getTargetP(), 34, 0);
-        assertEquals(getNetwork().getGenerator(GENERATOR_ID_10).getTargetP(), 34, 0);
     }
 
     private String resourceToString(String resource) throws IOException {
