@@ -463,12 +463,12 @@ public class ModificationRepositoryTest {
 
     @Test
     public void insertModificationTest() {
-        var groovyScriptModificationEntity1 = networkModificationRepository.createGroovyScriptModificationEntity("script1");
-        var groovyScriptModificationEntity2 = networkModificationRepository.createGroovyScriptModificationEntity("script2");
-        var groovyScriptModificationEntity3 = networkModificationRepository.createGroovyScriptModificationEntity("script3");
-        var groovyScriptModificationEntity4 = networkModificationRepository.createGroovyScriptModificationEntity("script4");
-        var groovyScriptModificationEntity5 = networkModificationRepository.createGroovyScriptModificationEntity("script5");
-        var groovyScriptModificationEntity6 = networkModificationRepository.createGroovyScriptModificationEntity("scriptSaucisse");
+        var groovyScriptModificationEntity1 = GroovyScriptModificationInfos.builder().script("script1").build().toEntity();
+        var groovyScriptModificationEntity2 = GroovyScriptModificationInfos.builder().script("script2").build().toEntity();
+        var groovyScriptModificationEntity3 = GroovyScriptModificationInfos.builder().script("script3").build().toEntity();
+        var groovyScriptModificationEntity4 = GroovyScriptModificationInfos.builder().script("script4").build().toEntity();
+        var groovyScriptModificationEntity5 = GroovyScriptModificationInfos.builder().script("script5").build().toEntity();
+        var groovyScriptModificationEntity6 = GroovyScriptModificationInfos.builder().script("scriptSaucisse").build().toEntity();
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(groovyScriptModificationEntity1, groovyScriptModificationEntity2,
             groovyScriptModificationEntity3, groovyScriptModificationEntity4, groovyScriptModificationEntity5, groovyScriptModificationEntity6));
@@ -501,12 +501,12 @@ public class ModificationRepositoryTest {
 
     @Test
     public void testMoveModificationsBetweenTwoGroups() {
-        var groovyScriptModificationEntity1 = networkModificationRepository.createGroovyScriptModificationEntity("script1");
-        var groovyScriptModificationEntity2 = networkModificationRepository.createGroovyScriptModificationEntity("script2");
-        var groovyScriptModificationEntity3 = networkModificationRepository.createGroovyScriptModificationEntity("script3");
-        var groovyScriptModificationEntity4 = networkModificationRepository.createGroovyScriptModificationEntity("script4");
-        var groovyScriptModificationEntity5 = networkModificationRepository.createGroovyScriptModificationEntity("script5");
-        var groovyScriptModificationEntity6 = networkModificationRepository.createGroovyScriptModificationEntity("script6");
+        var groovyScriptModificationEntity1 = GroovyScriptModificationInfos.builder().script("script1").build().toEntity();
+        var groovyScriptModificationEntity2 = GroovyScriptModificationInfos.builder().script("script2").build().toEntity();
+        var groovyScriptModificationEntity3 = GroovyScriptModificationInfos.builder().script("script3").build().toEntity();
+        var groovyScriptModificationEntity4 = GroovyScriptModificationInfos.builder().script("script4").build().toEntity();
+        var groovyScriptModificationEntity5 = GroovyScriptModificationInfos.builder().script("script5").build().toEntity();
+        var groovyScriptModificationEntity6 = GroovyScriptModificationInfos.builder().script("script6").build().toEntity();
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(groovyScriptModificationEntity1, groovyScriptModificationEntity2,
                 groovyScriptModificationEntity3, groovyScriptModificationEntity4));
@@ -549,12 +549,12 @@ public class ModificationRepositoryTest {
 
     @Test
     public void testMoveModificationsBetweenTwoGroupsWithReferenceNode() {
-        var groovyScriptModificationEntity1 = networkModificationRepository.createGroovyScriptModificationEntity("script1");
-        var groovyScriptModificationEntity2 = networkModificationRepository.createGroovyScriptModificationEntity("script2");
-        var groovyScriptModificationEntity3 = networkModificationRepository.createGroovyScriptModificationEntity("script3");
-        var groovyScriptModificationEntity4 = networkModificationRepository.createGroovyScriptModificationEntity("script4");
-        var groovyScriptModificationEntity5 = networkModificationRepository.createGroovyScriptModificationEntity("script5");
-        var groovyScriptModificationEntity6 = networkModificationRepository.createGroovyScriptModificationEntity("script6");
+        var groovyScriptModificationEntity1 = GroovyScriptModificationInfos.builder().script("script1").build().toEntity();
+        var groovyScriptModificationEntity2 = GroovyScriptModificationInfos.builder().script("script2").build().toEntity();
+        var groovyScriptModificationEntity3 = GroovyScriptModificationInfos.builder().script("script3").build().toEntity();
+        var groovyScriptModificationEntity4 = GroovyScriptModificationInfos.builder().script("script4").build().toEntity();
+        var groovyScriptModificationEntity5 = GroovyScriptModificationInfos.builder().script("script5").build().toEntity();
+        var groovyScriptModificationEntity6 = GroovyScriptModificationInfos.builder().script("script6").build().toEntity();
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(groovyScriptModificationEntity1, groovyScriptModificationEntity2,
                 groovyScriptModificationEntity3, groovyScriptModificationEntity4));
@@ -583,12 +583,12 @@ public class ModificationRepositoryTest {
 
     @Test
     public void testMoveModificationsBetweenMoreThanTwoGroups() {
-        var groovyScriptModificationEntity1 = networkModificationRepository.createGroovyScriptModificationEntity("script1");
-        var groovyScriptModificationEntity2 = networkModificationRepository.createGroovyScriptModificationEntity("script2");
-        var groovyScriptModificationEntity3 = networkModificationRepository.createGroovyScriptModificationEntity("script3");
-        var groovyScriptModificationEntity4 = networkModificationRepository.createGroovyScriptModificationEntity("script4");
-        var groovyScriptModificationEntity5 = networkModificationRepository.createGroovyScriptModificationEntity("script5");
-        var groovyScriptModificationEntity6 = networkModificationRepository.createGroovyScriptModificationEntity("script6");
+        var groovyScriptModificationEntity1 = GroovyScriptModificationInfos.builder().script("script1").build().toEntity();
+        var groovyScriptModificationEntity2 = GroovyScriptModificationInfos.builder().script("script2").build().toEntity();
+        var groovyScriptModificationEntity3 = GroovyScriptModificationInfos.builder().script("script3").build().toEntity();
+        var groovyScriptModificationEntity4 = GroovyScriptModificationInfos.builder().script("script4").build().toEntity();
+        var groovyScriptModificationEntity5 = GroovyScriptModificationInfos.builder().script("script5").build().toEntity();
+        var groovyScriptModificationEntity6 = GroovyScriptModificationInfos.builder().script("script6").build().toEntity();
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(groovyScriptModificationEntity1, groovyScriptModificationEntity2));
         assertRequestsCount(1, 5, 2, 0);
@@ -615,7 +615,7 @@ public class ModificationRepositoryTest {
         SQLStatementCountValidator.reset();
         List <UUID> modificationsToMoveUuid2 = List.of(groovyScriptModificationEntity1.getId());
         UUID referenceNodeUuid = groovyScriptModificationEntity2.getId();
-        NetworkModificationRepository.MoveModificationResult result =  networkModificationRepository.moveModifications(TEST_GROUP_ID_2, TEST_GROUP_ID, modificationsToMoveUuid2, referenceNodeUuid);
+        NetworkModificationRepository.MoveModificationResult result = networkModificationRepository.moveModifications(TEST_GROUP_ID_2, TEST_GROUP_ID, modificationsToMoveUuid2, referenceNodeUuid);
         assertTrue(result.getModificationsMoved().isEmpty()); // nothing moved
         assertEquals(modificationsToMoveUuid2, result.getModificationsInError());
         assertRequestsCount(2, 0, 0, 0);
@@ -638,9 +638,9 @@ public class ModificationRepositoryTest {
 
     @Test
     public void testGroovyScript() {
-        var groovyScriptModificationEntity1 = networkModificationRepository.createGroovyScriptModificationEntity("script1");
-        var groovyScriptModificationEntity2 = networkModificationRepository.createGroovyScriptModificationEntity("script2");
-        var groovyScriptModificationEntity3 = networkModificationRepository.createGroovyScriptModificationEntity("script3");
+        var groovyScriptModificationEntity1 = GroovyScriptModificationInfos.builder().script("script1").build().toEntity();
+        var groovyScriptModificationEntity2 = GroovyScriptModificationInfos.builder().script("script2").build().toEntity();
+        var groovyScriptModificationEntity3 = GroovyScriptModificationInfos.builder().script("script3").build().toEntity();
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(groovyScriptModificationEntity1, groovyScriptModificationEntity2, groovyScriptModificationEntity3));
         assertRequestsCount(1, 7, 3, 0);

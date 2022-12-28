@@ -8,8 +8,11 @@ package org.gridsuite.modification.server.entities;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
+
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.GroovyScriptModificationInfos;
+import org.gridsuite.modification.server.dto.ModificationInfos;
 
 import javax.persistence.*;
 import java.util.Set;
@@ -26,9 +29,19 @@ public class GroovyScriptModificationEntity extends ModificationEntity {
     @Column(name = "script", columnDefinition = "CLOB")
     private String script;
 
-    public GroovyScriptModificationEntity(String script) {
+    public GroovyScriptModificationEntity(GroovyScriptModificationInfos groovyScriptModificationInfos) {
         super(ModificationType.GROOVY_SCRIPT);
-        this.script = script;
+        assignAttributes(groovyScriptModificationInfos);
+    }
+
+    @Override
+    public void update(@NonNull ModificationInfos modificationInfos) {
+        super.update(modificationInfos);
+        assignAttributes((GroovyScriptModificationInfos) modificationInfos);
+    }
+
+    void assignAttributes(GroovyScriptModificationInfos modificationInfos) {
+        this.script = modificationInfos.getScript();
     }
 
     @Override

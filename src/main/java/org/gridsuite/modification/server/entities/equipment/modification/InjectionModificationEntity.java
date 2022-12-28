@@ -10,6 +10,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.AttributeModification;
+import org.gridsuite.modification.server.dto.InjectionModificationInfos;
+import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.OperationType;
 
 import javax.persistence.Column;
@@ -38,14 +40,33 @@ public class InjectionModificationEntity extends BasicEquipmentModificationEntit
     @Enumerated(EnumType.STRING)
     private OperationType busOrBusbarSectionIdOp;
 
+    //TODO : Remove when generator refactoring is done
     protected InjectionModificationEntity(ModificationType modificationType, String equipmentId,
-                                          AttributeModification<String> equipmentName,
-                                          AttributeModification<String> voltageLevelId,
-                                          AttributeModification<String> busOrBusbarSectionId) {
+            AttributeModification<String> equipmentName,
+            AttributeModification<String> voltageLevelId,
+            AttributeModification<String> busOrBusbarSectionId) {
         super(modificationType, equipmentId, equipmentName);
         this.voltageLevelIdValue = voltageLevelId != null ? voltageLevelId.getValue() : null;
         this.voltageLevelIdOp = voltageLevelId != null ? voltageLevelId.getOp() : null;
         this.busOrBusbarSectionIdValue = busOrBusbarSectionId != null ? busOrBusbarSectionId.getValue() : null;
         this.busOrBusbarSectionIdOp = busOrBusbarSectionId != null ? busOrBusbarSectionId.getOp() : null;
+    }
+
+    protected InjectionModificationEntity(InjectionModificationInfos modificationInfos) {
+        super(modificationInfos);
+        assignAttributes(modificationInfos);
+    }
+
+    @Override
+    public void update(ModificationInfos modificationInfos) {
+        super.update(modificationInfos);
+        assignAttributes((InjectionModificationInfos) modificationInfos);
+    }
+
+    protected void assignAttributes(InjectionModificationInfos modificationInfos) {
+        this.voltageLevelIdValue = modificationInfos.getVoltageLevelId() != null ? modificationInfos.getVoltageLevelId().getValue() : null;
+        this.voltageLevelIdOp = modificationInfos.getVoltageLevelId() != null ? modificationInfos.getVoltageLevelId().getOp() : null;
+        this.busOrBusbarSectionIdValue = modificationInfos.getBusOrBusbarSectionId() != null ? modificationInfos.getBusOrBusbarSectionId().getValue() : null;
+        this.busOrBusbarSectionIdOp = modificationInfos.getBusOrBusbarSectionId() != null ? modificationInfos.getBusOrBusbarSectionId().getOp() : null;
     }
 }

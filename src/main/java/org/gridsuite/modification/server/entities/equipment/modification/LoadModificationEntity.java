@@ -9,9 +9,12 @@ package org.gridsuite.modification.server.entities.equipment.modification;
 import com.powsybl.iidm.network.LoadType;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
+
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.AttributeModification;
 import org.gridsuite.modification.server.dto.LoadModificationInfos;
+import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.OperationType;
 
 import javax.persistence.*;
@@ -46,16 +49,24 @@ public class LoadModificationEntity extends InjectionModificationEntity {
     @Enumerated(EnumType.STRING)
     private OperationType reactivePowerOp;
 
-    public LoadModificationEntity(String equipmentId, AttributeModification<String> equipmentName, AttributeModification<LoadType> loadType,
-                              AttributeModification  voltageLevelId, AttributeModification<String> busOrBusbarSectionId,
-                              AttributeModification<Double> activePower, AttributeModification<Double> reactivePower) {
-        super(ModificationType.LOAD_MODIFICATION, equipmentId, equipmentName, voltageLevelId, busOrBusbarSectionId);
-        this.loadTypeValue = loadType != null ? loadType.getValue() : null;
-        this.loadTypeOp = loadType != null ? loadType.getOp() : null;
-        this.activePowerValue = activePower != null ? activePower.getValue() : null;
-        this.activePowerOp = activePower != null ? activePower.getOp() : null;
-        this.reactivePowerValue = reactivePower != null ? reactivePower.getValue() : null;
-        this.reactivePowerOp = reactivePower != null ? reactivePower.getOp() : null;
+    public LoadModificationEntity(@NonNull LoadModificationInfos loadModificationInfos) {
+        super(loadModificationInfos);
+        assignAttributes(loadModificationInfos);
+    }
+
+    @Override
+    public void update(@NonNull ModificationInfos modificationInfos) {
+        super.update(modificationInfos);
+        assignAttributes((LoadModificationInfos) modificationInfos);
+    }
+
+    void assignAttributes(LoadModificationInfos loadModificationInfos) {
+        this.loadTypeValue = loadModificationInfos.getLoadType() != null ? loadModificationInfos.getLoadType().getValue() : null;
+        this.loadTypeOp = loadModificationInfos.getLoadType() != null ? loadModificationInfos.getLoadType().getOp() : null;
+        this.activePowerValue = loadModificationInfos.getActivePower() != null ? loadModificationInfos.getActivePower().getValue() : null;
+        this.activePowerOp = loadModificationInfos.getActivePower() != null ? loadModificationInfos.getActivePower().getOp() : null;
+        this.reactivePowerValue = loadModificationInfos.getReactivePower() != null ? loadModificationInfos.getReactivePower().getValue() : null;
+        this.reactivePowerOp = loadModificationInfos.getReactivePower() != null ? loadModificationInfos.getReactivePower().getOp() : null;
     }
 
     @Override

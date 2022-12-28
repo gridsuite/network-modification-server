@@ -6,6 +6,13 @@
  */
 package org.gridsuite.modification.server.dto;
 
+import org.gridsuite.modification.server.ModificationType;
+import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.entities.GroovyScriptModificationEntity;
+import org.gridsuite.modification.server.modifications.AbstractModification;
+import org.gridsuite.modification.server.modifications.GroovyScriptModification;
+import com.powsybl.commons.reporter.Reporter;
+import com.powsybl.commons.reporter.ReporterModel;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -25,4 +32,24 @@ import lombok.experimental.SuperBuilder;
 public class GroovyScriptModificationInfos extends ModificationInfos {
     @Schema(description = "Groovy script")
     private String script;
+
+    @Override
+    public GroovyScriptModificationEntity toEntity() {
+        return new GroovyScriptModificationEntity(this);
+    }
+
+    @Override
+    public AbstractModification toModification() {
+        return new GroovyScriptModification(this);
+    }
+
+    @Override
+    public NetworkModificationException.Type getErrorType() {
+        return NetworkModificationException.Type.GROOVY_SCRIPT_ERROR;
+    }
+
+    @Override
+    public Reporter createSubReporter(ReporterModel reporter) {
+        return reporter.createSubReporter(ModificationType.GROOVY_SCRIPT.name(), "Apply groovy script");
+    }
 }
