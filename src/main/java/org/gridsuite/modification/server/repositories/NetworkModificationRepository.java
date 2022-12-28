@@ -255,7 +255,9 @@ public class NetworkModificationRepository {
                                                                       String ratioTapChangerTerminalRefType,
                                                                       Boolean ratioTapChangerLoadTapChangingCapabilities,
                                                                       Double ratioTapChangerTargetV,
-                                                                      List<TapChangerStepCreationEmbeddable> tapChangerSteps) {
+                                                                      List<TapChangerStepCreationEmbeddable> tapChangerSteps,
+                                                                      Integer connectionPosition1,
+                                                                      Integer connectionPosition2) {
         return new TwoWindingsTransformerCreationEntity(id, name, seriesResistance, seriesReactance,
                 magnetizingConductance, magnetizingSusceptance, ratedVoltage1, ratedVoltage2, ratedS,
                 voltageLevelId1, busOrBusbarSectionId1, voltageLevelId2, busOrBusbarSectionId2,
@@ -280,7 +282,9 @@ public class NetworkModificationRepository {
                 ratioTapChangerTerminalRefType,
                 ratioTapChangerLoadTapChangingCapabilities,
                 ratioTapChangerTargetV,
-                tapChangerSteps);
+                tapChangerSteps,
+                connectionPosition1,
+                connectionPosition2);
     }
 
     public EquipmentCreationEntity createSubstationEntity(String id, String name, Country country, Map<String, String> properties) {

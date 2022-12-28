@@ -917,7 +917,9 @@ public class ModificationControllerTest {
                 null,
                 null,
                 null,
-                null
+                null,
+                0,
+                1
                 )
                 .toModificationInfos();
         twoWindingsTransformerCreationInfos.setUuid(bsmlrTwoWindings.get(0).getUuid());
@@ -961,7 +963,9 @@ public class ModificationControllerTest {
                 null,
                 null,
                 null,
-                null
+                null,
+                2,
+                3
         ).toModificationInfos();
         String twoWindingsTransformerCreationUpdateJson = objectWriter.writeValueAsString(twoWindingsTransformerCreationUpdate);
         mockMvc.perform(put(URI_NETWORK_MODIF_GET_PUT + bsmlrTwoWindings.get(0).getUuid()).content(twoWindingsTransformerCreationUpdateJson).contentType(MediaType.APPLICATION_JSON))
