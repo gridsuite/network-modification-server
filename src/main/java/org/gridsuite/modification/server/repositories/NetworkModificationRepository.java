@@ -228,7 +228,9 @@ public class NetworkModificationRepository {
                                                          double minActivePower, double maxActivePower,
                                                          Double ratedNominalPower, double activePowerSetpoint,
                                                          Double reactivePowerSetpoint, boolean voltageRegulationOn, Double voltageSetpoint,
-                                                         Double marginalCost, Double minQ, Double maxQ, boolean participate, Float droop,
+                                                         Double plannedActivePowerSetPoint, Double startupCost,
+                                                         Double marginalCost, Double plannedOutageRate, Double forcedOutageRate,
+                                                         Double minQ, Double maxQ, boolean participate, Float droop,
                                                          Double transientReactance, Double stepUpTransformerReactance,
                                                          String regulatingTerminalId, String regulatingTerminalType, String regulatingTerminalVlId,
                                                          Double qPercent, boolean reactiveCapabilityCurve,
@@ -236,7 +238,8 @@ public class NetworkModificationRepository {
                                                          ConnectablePosition.Direction connectionDirection,
                                                          Integer connectionPosition) {
         return new GeneratorCreationEntity(generatorId, generatorName, energySource, voltageLevelId, busOrBusbarSectionId, minActivePower,
-            maxActivePower, ratedNominalPower, activePowerSetpoint, reactivePowerSetpoint, voltageRegulationOn, voltageSetpoint, marginalCost, minQ, maxQ,
+            maxActivePower, ratedNominalPower, activePowerSetpoint, reactivePowerSetpoint, voltageRegulationOn, voltageSetpoint, plannedActivePowerSetPoint, startupCost,
+            marginalCost, plannedOutageRate, forcedOutageRate, minQ, maxQ,
             participate, droop,  transientReactance, stepUpTransformerReactance, reactiveCapabilityCurvePoints, regulatingTerminalId, regulatingTerminalType,
             regulatingTerminalVlId, qPercent, reactiveCapabilityCurve, connectionName, connectionDirection, connectionPosition);
     }

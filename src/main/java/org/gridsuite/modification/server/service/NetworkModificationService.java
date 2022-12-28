@@ -16,7 +16,10 @@ import com.powsybl.iidm.modification.topology.*;
 import com.powsybl.iidm.modification.tripping.BranchTripping;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.Branch.Side;
-import com.powsybl.iidm.network.extensions.*;
+import com.powsybl.iidm.network.extensions.ActivePowerControlAdder;
+import com.powsybl.iidm.network.extensions.BranchStatus;
+import com.powsybl.iidm.network.extensions.BranchStatusAdder;
+import com.powsybl.iidm.network.extensions.GeneratorShortCircuitAdder;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.iidm.impl.extensions.CoordinatedReactiveControlAdderImpl;
 import com.powsybl.network.store.iidm.impl.extensions.GeneratorStartupAdderImpl;
@@ -31,7 +34,10 @@ import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.BranchStatusModificationInfos.ActionType;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.creation.*;
+import org.gridsuite.modification.server.entities.equipment.creation.BusbarConnectionCreationEmbeddable;
+import org.gridsuite.modification.server.entities.equipment.creation.BusbarSectionCreationEmbeddable;
+import org.gridsuite.modification.server.entities.equipment.creation.EquipmentCreationEntity;
+import org.gridsuite.modification.server.entities.equipment.creation.TwoWindingsTransformerCreationEntity;
 import org.gridsuite.modification.server.entities.equipment.deletion.EquipmentDeletionEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
@@ -467,7 +473,11 @@ public class NetworkModificationService {
                 generatorCreationInfos.getReactivePowerSetpoint(),
                 generatorCreationInfos.isVoltageRegulationOn(),
                 generatorCreationInfos.getVoltageSetpoint(),
+                generatorCreationInfos.getPlannedActivePowerSetPoint(),
+                generatorCreationInfos.getStartupCost(),
                 generatorCreationInfos.getMarginalCost(),
+                generatorCreationInfos.getPlannedOutageRate(),
+                generatorCreationInfos.getForcedOutageRate(),
                 generatorCreationInfos.getMinimumReactivePower(),
                 generatorCreationInfos.getMaximumReactivePower(),
                 generatorCreationInfos.getParticipate(),
@@ -873,8 +883,19 @@ public class NetworkModificationService {
 
         Boolean participate = generatorCreationInfos.getParticipate();
 
-        if (generatorCreationInfos.getMarginalCost() != null) {
-            generator.newExtension(GeneratorStartupAdderImpl.class).withMarginalCost(generatorCreationInfos.getMarginalCost()).add();
+        //TODO waiting for answer on #1474
+        if (generatorCreationInfos.getPlannedActivePowerSetPoint() != null
+                && generatorCreationInfos.getStartupCost() != null
+                && generatorCreationInfos.getMarginalCost() != null
+                && generatorCreationInfos.getPlannedOutageRate() != null
+                && generatorCreationInfos.getForcedOutageRate() != null) {
+            generator.newExtension(GeneratorStartupAdderImpl.class)
+                    .withPlannedActivePowerSetpoint(generatorCreationInfos.getPlannedActivePowerSetPoint())
+                    .withStartupCost(generatorCreationInfos.getStartupCost())
+                    .withMarginalCost(generatorCreationInfos.getMarginalCost())
+                    .withPlannedOutageRate(generatorCreationInfos.getPlannedOutageRate())
+                    .withForcedOutageRate(generatorCreationInfos.getForcedOutageRate())
+                    .add();
         }
 
         if (generatorCreationInfos.getParticipate() != null && generatorCreationInfos.getDroop() != null) {
@@ -947,8 +968,19 @@ public class NetworkModificationService {
                     .add();
         }
 
-        if (generatorCreationInfos.getMarginalCost() != null) {
-            generator.newExtension(GeneratorStartupAdder.class).withMarginalCost(generatorCreationInfos.getMarginalCost()).add();
+        //TODO waiting for answer on #1474
+        if (generatorCreationInfos.getPlannedActivePowerSetPoint() != null
+                && generatorCreationInfos.getStartupCost() != null
+                && generatorCreationInfos.getMarginalCost() != null
+                && generatorCreationInfos.getPlannedOutageRate() != null
+                && generatorCreationInfos.getForcedOutageRate() != null) {
+            generator.newExtension(GeneratorStartupAdderImpl.class)
+                    .withPlannedActivePowerSetpoint(generatorCreationInfos.getPlannedActivePowerSetPoint())
+                    .withStartupCost(generatorCreationInfos.getStartupCost())
+                    .withMarginalCost(generatorCreationInfos.getMarginalCost())
+                    .withPlannedOutageRate(generatorCreationInfos.getPlannedOutageRate())
+                    .withForcedOutageRate(generatorCreationInfos.getForcedOutageRate())
+                    .add();
         }
 
         if (generatorCreationInfos.getParticipate() != null && generatorCreationInfos.getDroop() != null) {

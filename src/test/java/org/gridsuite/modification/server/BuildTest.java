@@ -352,7 +352,7 @@ public class BuildTest {
         entities1.add(modificationRepository.createSubstationEntity("newSubstation", "newSubstation", Country.FR, properties));
 
         List<ModificationEntity> entities2 = new ArrayList<>();
-        entities2.add(modificationRepository.createGeneratorEntity(NEW_GENERATOR_ID, NEW_GENERATOR_ID, EnergySource.HYDRO, "v2", "1A", 0., 500., 1., 100., 50., true, 225., 8., 20., 50., true, 9F, 35., 25., "v2load", "LOAD", "v2", 25., false, List.of(), "Top", ConnectablePosition.Direction.TOP, 0));
+        entities2.add(modificationRepository.createGeneratorEntity(NEW_GENERATOR_ID, NEW_GENERATOR_ID, EnergySource.HYDRO, "v2", "1A", 0., 500., 1., 100., 50., true, 225., 80., 8., 8., 100., 100., 20., 50., true, 9F, 35., 25., "v2load", "LOAD", "v2", 25., false, List.of(), "Top", ConnectablePosition.Direction.TOP, 0));
         entities2.add(LineCreationInfos.builder().type(ModificationType.LINE_CREATION).equipmentId("newLine").equipmentName("newLine").seriesResistance(1.0).seriesReactance(2.0).shuntConductance1(3.0).shuntSusceptance1(4.0).shuntConductance2(5.0).shuntSusceptance2(6.0).voltageLevelId1("v1").busOrBusbarSectionId1("1.1").voltageLevelId2("v2").busOrBusbarSectionId2("1B").currentLimits1(null).currentLimits2(null).connectionName1("cn101").connectionDirection1(ConnectablePosition.Direction.TOP).connectionName2("cn102").connectionDirection2(ConnectablePosition.Direction.TOP).build().toEntity());
 
         List<TapChangerStepCreationEmbeddable> tapChangerStepCreationEmbeddables = new ArrayList<>();
@@ -438,7 +438,11 @@ public class BuildTest {
         assertEquals("v2", network.getGenerator(NEW_GENERATOR_ID).getTerminal().getVoltageLevel().getId());
         assertEquals(500., network.getGenerator(NEW_GENERATOR_ID).getMaxP(), 0.1);
         assertEquals(100., network.getGenerator(NEW_GENERATOR_ID).getTargetP(), 0.1);
+        assertEquals(80., network.getGenerator(NEW_GENERATOR_ID).getExtension(GeneratorStartup.class).getPlannedActivePowerSetpoint(), 0);
+        assertEquals(8., network.getGenerator(NEW_GENERATOR_ID).getExtension(GeneratorStartup.class).getStartupCost(), 0);
         assertEquals(8., network.getGenerator(NEW_GENERATOR_ID).getExtension(GeneratorStartup.class).getMarginalCost(), 0);
+        assertEquals(100., network.getGenerator(NEW_GENERATOR_ID).getExtension(GeneratorStartup.class).getPlannedOutageRate(), 0);
+        assertEquals(100., network.getGenerator(NEW_GENERATOR_ID).getExtension(GeneratorStartup.class).getForcedOutageRate(), 0);
         assertTrue(network.getGenerator(NEW_GENERATOR_ID).getExtension(ActivePowerControl.class).isParticipate());
         assertEquals(9F, network.getGenerator(NEW_GENERATOR_ID).getExtension(ActivePowerControl.class).getDroop(), 0);
         assertEquals(35., network.getGenerator(NEW_GENERATOR_ID).getExtension(GeneratorShortCircuit.class).getDirectTransX(), 0);

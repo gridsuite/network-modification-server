@@ -52,8 +52,20 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
     @Column(name = "voltageSetpoint")
     private Double voltageSetpoint;
 
+    @Column(name = "plannedActivePowerSetPoint")
+    private Double plannedActivePowerSetPoint;
+
+    @Column(name = "startupCost")
+    private Double startupCost;
+
     @Column(name = "marginalCost")
     private Double marginalCost;
+
+    @Column(name = "plannedOutageRate")
+    private Double plannedOutageRate;
+
+    @Column(name = "forcedOutageRate")
+    private Double forcedOutageRate;
 
     @Column(name = "minimumReactivePower")
     private Double minimumReactivePower;
@@ -103,7 +115,8 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
 
     public GeneratorCreationEntity(String equipmentId, String equipmentName, EnergySource energySource, String voltageLevelId, String busOrBusbarSectionId,
                                    double minActivePower, double maxActivePower, Double ratedNominalPower, double activePowerSetpoint,
-                                   Double reactivePowerSetpoint, boolean voltageRegulationOn, Double voltageSetpoint, Double marginalCost, Double minQ,
+                                   Double reactivePowerSetpoint, boolean voltageRegulationOn, Double voltageSetpoint, Double plannedActivePowerSetPoint, Double startupCost,
+                                   Double marginalCost, Double plannedOutageRate, Double forcedOutageRate, Double minQ,
                                    Double maxQ, boolean participate, Float droop, Double transientReactance, Double stepUpTransformerReactance,
                                    List<ReactiveCapabilityCurveCreationEmbeddable> reactiveCapabilityCurvePoints, String regulatingTerminalId, String regulatingTerminalType, String regulatingTerminalVlId,
                                    Double qPercent, Boolean reactiveCapabilityCurve, String connectionName, ConnectablePosition.Direction connectionDirection, Integer connectionPosition) {
@@ -116,7 +129,11 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
         this.reactivePowerSetpoint = reactivePowerSetpoint;
         this.voltageRegulationOn = voltageRegulationOn;
         this.voltageSetpoint = voltageSetpoint;
+        this.plannedActivePowerSetPoint = plannedActivePowerSetPoint;
+        this.startupCost = startupCost;
         this.marginalCost = marginalCost;
+        this.plannedOutageRate = plannedOutageRate;
+        this.forcedOutageRate = forcedOutageRate;
         this.minimumReactivePower = minQ;
         this.maximumReactivePower = maxQ;
         this.participate = participate;
@@ -174,7 +191,11 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
             .reactivePowerSetpoint(getReactivePowerSetpoint())
             .voltageRegulationOn(isVoltageRegulationOn())
             .voltageSetpoint(getVoltageSetpoint())
+            .plannedActivePowerSetPoint(getPlannedActivePowerSetPoint())
+            .startupCost(getStartupCost())
             .marginalCost(getMarginalCost())
+            .plannedOutageRate(getPlannedOutageRate())
+            .forcedOutageRate(getForcedOutageRate())
             .minimumReactivePower(this.getMinimumReactivePower())
             .participate(getParticipate())
             .droop(getDroop())
