@@ -21,6 +21,7 @@ import javax.persistence.Enumerated;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -44,9 +45,6 @@ public class GeneratorScalingEntity extends ModificationEntity {
     public GeneratorScalingEntity(@NotNull GeneratorScalingInfos generatorScalingInfos) {
         super(ModificationType.GENERATOR_SCALING);
         assignAttributes(generatorScalingInfos);
-    }
-    public static GeneratorScalingEntity toEntity() {
-        return new GeneratorScalingEntity();
     }
 
     @Override
@@ -80,6 +78,15 @@ public class GeneratorScalingEntity extends ModificationEntity {
 
     @Override
     public void cloneWithIdsToNull() {
-
+        setId(null);
+        getVariations().forEach(variation -> {
+            variation.setId(null);
+            variation.getFilters().forEach(filter -> filter.setId(null));
+        });
+        this.variations = new ArrayList<>(variations.stream()
+                .map(variation -> {
+                    variation.setFilters(new ArrayList<>(variation.getFilters()));
+                    return variation;
+                }).collect(Collectors.toList()));
     }
 }

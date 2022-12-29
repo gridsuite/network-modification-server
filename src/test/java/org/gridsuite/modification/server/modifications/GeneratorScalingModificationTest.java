@@ -2,6 +2,7 @@ package org.gridsuite.modification.server.modifications;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.google.common.io.ByteStreams;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
@@ -82,7 +83,6 @@ public class GeneratorScalingModificationTest extends AbstractNetworkModificatio
 
     @Before
     public void specificSetUp() throws IOException {
-        server = new MockWebServer();
         createGenerator(getNetwork().getVoltageLevel("v1"), GENERATOR_ID_4, 3, 100, 1.0, "cn10", 11, ConnectablePosition.Direction.TOP, 500, -1);
         createGenerator(getNetwork().getVoltageLevel("v1"), GENERATOR_ID_5, 20, 200, 1.0, "cn10", 12, ConnectablePosition.Direction.TOP, 2000, -1);
         createGenerator(getNetwork().getVoltageLevel("v2"), GENERATOR_ID_6, 11, 100, 1.0, "cn10", 13, ConnectablePosition.Direction.TOP, 500, -1);
@@ -91,39 +91,14 @@ public class GeneratorScalingModificationTest extends AbstractNetworkModificatio
         createGenerator(getNetwork().getVoltageLevel("v4"), GENERATOR_ID_9, 10, 200, 1.0, "cn10", 16, ConnectablePosition.Direction.TOP, 2000, -1);
         createGenerator(getNetwork().getVoltageLevel("v5"), GENERATOR_ID_10, 10, 100, 1.0, "cn10", 17, ConnectablePosition.Direction.TOP, 500, -1);
 
-        var test = "[{\"id\":\"bdefd63f-6cd8-4686-b57b-6bc7aaffa202\",\"modificationDate\":\"2022-12-12T15:00:26.911+00:00\",\"equipmentType\":\"GENERATOR\",\"filterEquipmentsAttributes\":[{\"equipmentID\":\"idGenerator\",\"distributionKey\":1},{\"equipmentID\":\"gen5\",\"distributionKey\":2}],\"type\":\"IDENTIFIER_LIST\"},{\"id\":\"bdfad63f-6fe6-4686-b57b-6bc7aa11a202\",\"modificationDate\":\"2022-12-12T15:00:27.911+00:00\",\"equipmentType\":\"GENERATOR\",\"filterEquipmentsAttributes\":[{\"equipmentID\":\"gen4\"},{\"equipmentID\":\"gen7\"}],\"type\":\"IDENTIFIER_LIST\"},{\"id\":\"bd063f-611f-4686-b57b-6bc7aa00a202\",\"modificationDate\":\"2022-12-12T15:00:28.911+00:00\",\"equipmentType\":\"GENERATOR\",\"filterEquipmentsAttributes\":[{\"equipmentID\":\"gen6\",\"distributionKey\":1},{\"equipmentID\":\"v6generator\",\"distributionKey\":0}],\"type\":\"IDENTIFIER_LIST\"},{\"id\":\"6f11d63f-6f06-4686-b57b-6bc7aa66a202\",\"modificationDate\":\"2022-12-12T15:00:26.911+00:00\",\"equipmentType\":\"GENERATOR\",\"filterEquipmentsAttributes\":[{\"equipmentID\":\"gen8\",\"distributionKey\":1},{\"equipmentID\":\"v5generator\",\"distributionKey\":2}],\"type\":\"IDENTIFIER_LIST\"},{\"id\":\"7100163f-60f1-4686-b57b-6bc7aa77a202\",\"modificationDate\":\"2022-12-12T15:00:26.911+00:00\",\"equipmentType\":\"GENERATOR\",\"filterEquipmentsAttributes\":[{\"equipmentID\":\"gen9\",\"distributionKey\":1},{\"equipmentID\":\"gen10\",\"distributionKey\":2}],\"type\":\"IDENTIFIER_LIST\"}]";
-        var jsonBody = resourceToString("/Filter_equipments.json");
-        server.start();
-
-        var uri = "http://" + server.getHostName() + ":" + server.getPort();
-        filterService.setFilterServerBaseUri(uri);
-        final Dispatcher dispatcher = new Dispatcher() {
-
-            @SneakyThrows
-            @Override
-            public MockResponse dispatch(RecordedRequest recordedRequest) {
-                String path = Objects.requireNonNull(recordedRequest.getPath());
-                Buffer body = recordedRequest.getBody();
-
-                String params = String.join(",", List.of(FILTER_ID_1, FILTER_ID_2, FILTER_ID_3, FILTER_ID_4, FILTER_ID_5));
-                if (path.matches("/v1/filters/data\\?ids=" + params) && "GET".equals(recordedRequest.getMethod())) {
-                    return new MockResponse()
-                            .setResponseCode(200)
-                            .addHeader("Content-Type", "application/json; charset=utf-8")
-                            .setBody(test);
-                }
-                return new MockResponse().setResponseCode(418).setBody(path);
-            }
-        };
-        /*input = new InputDestination();
-        wireMock = new WireMockServer(wireMockConfig().dynamicPort().extensions(new SendInput(input)));
+        wireMock = new WireMockServer(wireMockConfig().dynamicPort());
         wireMock.start();
         String params = String.join(",", List.of(FILTER_ID_1, FILTER_ID_2, FILTER_ID_3, FILTER_ID_4, FILTER_ID_5));
-        var test = wireMock.stubFor(WireMock.get(WireMock.urlPathEqualTo("/v1/filters/data?ids=" + params))
+        wireMock.stubFor(WireMock.get(WireMock.urlMatching("/v1/filters/data.*"))
                 .willReturn(WireMock.ok()
                         .withBody(resourceToString("/Filter_equipments.json"))
-                        .withHeader("Content-Type", "application/json")));*/
-        server.setDispatcher(dispatcher);
+                        .withHeader("Content-Type", "application/json")));
+        filterService.setFilterServerBaseUri(wireMock.baseUrl());
     }
 
     @Override
@@ -260,7 +235,6 @@ public class GeneratorScalingModificationTest extends AbstractNetworkModificatio
 
     @After
     public void shutDown() throws IOException {
-        //wireMock.shutdown();
-        server.shutdown();
+        wireMock.shutdown();
     }
 }
