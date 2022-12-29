@@ -127,20 +127,16 @@ public final class NetworkUtil {
             .add();
     }
 
-    public static void createGenerator(VoltageLevel vl, String id, int node, double targetP, double targetQ, String feederName, int feederOrder, ConnectablePosition.Direction direction) {
-        createGenerator(vl, id, node, targetP, targetQ, feederName, feederOrder, direction, 1000.0, -1.1);
-    }
-
     @SuppressWarnings("SameParameterValue")
-    public static void createGenerator(VoltageLevel vl, String id, int node, double targetP, double targetQ, String feederName, int feederOrder, ConnectablePosition.Direction direction, double maxP, double minP) {
+    public static void createGenerator(VoltageLevel vl, String id, int node, double targetP, double targetQ, String feederName, int feederOrder, ConnectablePosition.Direction direction) {
         var g = vl.newGenerator()
             .setId(id)
             .setName(id)
             .setTargetP(targetP)
             .setTargetQ(targetQ)
             .setNode(node)
-            .setMinP(minP)
-            .setMaxP(maxP)
+            .setMinP(-1.1)
+            .setMaxP(1000.0)
             .setVoltageRegulatorOn(false)
             .add();
 

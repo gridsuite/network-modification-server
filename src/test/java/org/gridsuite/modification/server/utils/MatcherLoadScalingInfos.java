@@ -12,8 +12,8 @@ public class MatcherLoadScalingInfos extends MatcherModificationInfos<LoadScalin
         super(ref);
     }
 
-    public static MatcherLoadScalingInfos createMatcherLoadScalingInfos(LoadScalingInfos generatorScalingInfos) {
-        return new MatcherLoadScalingInfos(generatorScalingInfos);
+    public static MatcherLoadScalingInfos createMatcherLoadScalingInfos(LoadScalingInfos loadScalingInfos) {
+        return new MatcherLoadScalingInfos(loadScalingInfos);
     }
 
     public boolean matchesSafely(LoadScalingInfos m) {
@@ -23,14 +23,14 @@ public class MatcherLoadScalingInfos extends MatcherModificationInfos<LoadScalin
 
     }
 
-    private boolean matchesVariations(List<LoadScalingVariation> generatorScalingVariations) {
-        if (!matchesList(reference.getLoadScalingVariations(), generatorScalingVariations)) {
+    private boolean matchesVariations(List<LoadScalingVariation> loadScalingVariations) {
+        if (!matchesList(reference.getLoadScalingVariations(), loadScalingVariations)) {
             return false;
         }
 
-        for (int index = 0; index < generatorScalingVariations.size(); index++) {
+        for (int index = 0; index < loadScalingVariations.size(); index++) {
             if (!matchesVariation(reference.getLoadScalingVariations().get(index),
-                    generatorScalingVariations.get(index))) {
+                    loadScalingVariations.get(index))) {
                 return false;
             }
         }
