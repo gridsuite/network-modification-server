@@ -551,9 +551,6 @@ public class NetworkModificationService {
             case SUBSTATION_CREATION:
                 updateSubstationCreation(modificationUuid, (SubstationCreationInfos) modificationInfos);
                 break;
-            case VOLTAGE_LEVEL_CREATION:
-                updateVoltageLevelCreation(modificationUuid, (VoltageLevelCreationInfos) modificationInfos);
-                break;
             case TWO_WINDINGS_TRANSFORMER_CREATION:
                 updateTwoWindingsTransformerCreation(modificationUuid, (TwoWindingsTransformerCreationInfos) modificationInfos);
                 break;
@@ -1306,42 +1303,6 @@ public class NetworkModificationService {
     private void assertSubstationCreationInfosNotEmpty(SubstationCreationInfos substationCreationInfos) {
         if (substationCreationInfos == null) {
             throw new NetworkModificationException(CREATE_SUBSTATION_ERROR, "Missing required attributes to create the substation");
-        }
-    }
-
-    public void updateVoltageLevelCreation(UUID modificationUuid, VoltageLevelCreationInfos voltageLevelCreationInfos) {
-        assertVoltageLevelCreationInfosNotEmpty(voltageLevelCreationInfos);
-
-        Optional<ModificationEntity> voltageLevelModificationEntity = this.modificationRepository.findById(modificationUuid);
-
-        if (!voltageLevelModificationEntity.isPresent()) {
-            throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "Voltage level creation not found");
-        }
-
-        List<BusbarSectionCreationInfos> busbarSections = voltageLevelCreationInfos.getBusbarSections().stream().map(bbsi ->
-                new BusbarSectionCreationInfos(bbsi.getId(), bbsi.getName(), bbsi.getVertPos(), bbsi.getHorizPos())
-        ).collect(Collectors.toList());
-        List<BusbarConnectionCreationInfos> busbarConnections = voltageLevelCreationInfos.getBusbarConnections().stream().map(cnxi ->
-                new BusbarConnectionCreationInfos(cnxi.getFromBBS(), cnxi.getToBBS(), cnxi.getSwitchKind())
-        ).collect(Collectors.toList());
-
-        EquipmentCreationEntity updatedEntity = VoltageLevelCreationInfos.builder()
-                .type(ModificationType.VOLTAGE_LEVEL_CREATION)
-                .equipmentId(voltageLevelCreationInfos.getEquipmentId())
-                .equipmentName(voltageLevelCreationInfos.getEquipmentName())
-                .nominalVoltage(voltageLevelCreationInfos.getNominalVoltage())
-                .substationId(voltageLevelCreationInfos.getSubstationId())
-                .busbarSections(busbarSections)
-                .busbarConnections(busbarConnections)
-                .build().toEntity();
-        updatedEntity.setId(modificationUuid);
-        updatedEntity.setGroup(voltageLevelModificationEntity.get().getGroup());
-        this.networkModificationRepository.updateModification(updatedEntity);
-    }
-
-    private void assertVoltageLevelCreationInfosNotEmpty(VoltageLevelCreationInfos voltageLevelCreationInfos) {
-        if (voltageLevelCreationInfos == null) {
-            throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "Missing required attributes to create the voltage level");
         }
     }
 
