@@ -61,7 +61,7 @@ If you want to add a test specific to a modification, add it in its own class.
 public abstract class AbstractNetworkModificationTest {
 
     private static final UUID TEST_NETWORK_ID = UUID.randomUUID();
-    private static final UUID NOT_FOUND_NETWORK_ID = UUID.randomUUID();
+    static final UUID NOT_FOUND_NETWORK_ID = UUID.randomUUID();
     private static final UUID TEST_GROUP_ID = UUID.randomUUID();
     private static final UUID TEST_REPORT_ID = UUID.randomUUID();
 

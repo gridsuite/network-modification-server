@@ -83,13 +83,13 @@ public class ModificationControllerTest {
     private static final UUID TEST_GROUP_ID = UUID.randomUUID();
     private static final UUID TEST_NETWORK_BUS_BREAKER_ID = UUID.fromString("11111111-7977-4592-ba19-88027e4254e4");
     private static final UUID TEST_NETWORK_MIXED_TOPOLOGY_ID = UUID.fromString("22222222-7977-4592-ba19-88027e4254e4");
-    public static final String VARIANT_NOT_EXISTING_ID = "variant_not_existing";
+    private static final String VARIANT_NOT_EXISTING_ID = "variant_not_existing";
     private static final UUID TEST_REPORT_ID = UUID.randomUUID();
 
     private static final String URI_NETWORK_MODIF_BASE = "/v1/network-modifications";
     private static final String URI_NETWORK_MODIF_GET_PUT = URI_NETWORK_MODIF_BASE + "/";
     private static final String URI_NETWORK_MODIF_PARAMS = "&groupUuid=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
-    private static final String URI_NETWORK_MODIF = URI_NETWORK_MODIF_BASE + "?networkUuid=" + TEST_NETWORK_ID + URI_NETWORK_MODIF_PARAMS;
+    public static final String URI_NETWORK_MODIF = URI_NETWORK_MODIF_BASE + "?networkUuid=" + TEST_NETWORK_ID + URI_NETWORK_MODIF_PARAMS;
     private static final String URI_NETWORK_MODIF_2 = URI_NETWORK_MODIF_BASE + "?networkUuid=" + TEST_NETWORK_ID_2 + URI_NETWORK_MODIF_PARAMS;
     private static final String URI_NETWORK_MODIF_BUS_BREAKER = URI_NETWORK_MODIF_BASE + "?networkUuid=" + TEST_NETWORK_BUS_BREAKER_ID + URI_NETWORK_MODIF_PARAMS;
     private static final String URI_NETWORK_MODIF_FULL_MIXED_TOPO = URI_NETWORK_MODIF_BASE + "?networkUuid=" + TEST_NETWORK_MIXED_TOPOLOGY_ID + "&groupUuid=" + TEST_NETWORK_MIXED_TOPOLOGY_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
@@ -2165,87 +2165,6 @@ public class ModificationControllerTest {
                 .andExpect(status().is5xxServerError()).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
         assertEquals(resultAsString, new NetworkModificationException(CREATE_SUBSTATION_ERROR, "Invalid id ''").getMessage());
-
-        testNetworkModificationsCount(TEST_GROUP_ID, 1);
-    }
-
-    @Test
-    public void testCreateVoltageLevel() throws Exception {
-        MvcResult mvcResult;
-        String resultAsString;
-
-        VoltageLevelCreationInfos vli = ModificationCreation.getCreationVoltageLevel("absent_station", "vlId", "vlName");
-        String vliJson = objectWriter.writeValueAsString(vli);
-        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(vliJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().is4xxClientError()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        assertEquals(resultAsString, new NetworkModificationException(SUBSTATION_NOT_FOUND, "absent_station").getMessage());
-
-        vli = ModificationCreation.getCreationVoltageLevel("s1", "vlId", "vlName");
-        vli.getBusbarConnections().add(BusbarConnectionCreationInfos.builder().fromBBS("bbs.ne").toBBS("bbs.ne").switchKind(SwitchKind.DISCONNECTOR).build());
-        String vliJsonObject = objectWriter.writeValueAsString(vli);
-        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(vliJsonObject).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().is5xxServerError()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        assertEquals(resultAsString, new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "Disconnector between same bus bar section 'bbs.ne'").getMessage());
-
-        // then success
-        vli = ModificationCreation.getCreationVoltageLevel("s1", "vlId", "vlName");
-        String vliJsonS1Object = objectWriter.writeValueAsString(vli);
-        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(vliJsonS1Object).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        List<EquipmentModificationInfos> listModificationsVoltageLevelCreation = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertThat(listModificationsVoltageLevelCreation.get(0), createMatcherEquipmentModificationInfos(ModificationType.VOLTAGE_LEVEL_CREATION, "vlId", Set.of("s1")));
-
-        testNetworkModificationsCount(TEST_GROUP_ID, 1);
-
-        vli = new VoltageLevelCreationEntity(
-                "VoltageLevelIdEdited",
-                "VoltageLevelEdited",
-                385.,
-                "s2",
-                List.of(),
-                List.of())
-                .toModificationInfos();
-        vli.setUuid(listModificationsVoltageLevelCreation.get(0).getUuid());
-        vli.setType(ModificationType.VOLTAGE_LEVEL_CREATION);
-        String vliJsonS2Object = objectWriter.writeValueAsString(vli);
-
-        // Update voltage level creation
-        VoltageLevelCreationInfos vlu = new VoltageLevelCreationEntity(
-                "VoltageLevelIdEdited",
-                "VoltageLevelEdited",
-                385.,
-                "s2",
-                List.of(),
-                List.of())
-                .toModificationInfos();
-        vlu.setType(ModificationType.VOLTAGE_LEVEL_CREATION);
-        String vluInfosJson = objectWriter.writeValueAsString(vlu);
-        mockMvc.perform(put(URI_NETWORK_MODIF_GET_PUT + listModificationsVoltageLevelCreation.get(0).getUuid()).content(vluInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
-
-        testNetworkModificationsCount(TEST_GROUP_ID, 1);
-
-        mvcResult = mockMvc.perform(get(URI_NETWORK_MODIF_GET_PUT + listModificationsVoltageLevelCreation.get(0).getUuid()).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        VoltageLevelCreationInfos listModificationsCreatMatcher = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertThat(listModificationsCreatMatcher, MatcherVoltageLevelCreationInfos.createMatcherVoltageLevelCreationInfos(vli));
-
-        // create substation with errors
-        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF_BAD_NETWORK).content(vliJsonS2Object).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isNotFound()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        assertEquals(resultAsString, new NetworkModificationException(NETWORK_NOT_FOUND, NOT_FOUND_NETWORK_ID.toString()).getMessage());
-
-        vli.setEquipmentId("");
-        vliJsonS2Object = objectWriter.writeValueAsString(vli);
-        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(vliJsonS2Object).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().is5xxServerError()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        assertEquals(resultAsString, new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "Invalid id ''").getMessage());
 
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
     }

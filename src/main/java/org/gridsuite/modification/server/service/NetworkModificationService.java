@@ -523,8 +523,6 @@ public class NetworkModificationService {
                 return createGeneratorModification(networkUuid, variantId, groupUuid, reportUuid, reporterId, (GeneratorModificationInfos) modificationInfos);
             case SUBSTATION_CREATION:
                 return createSubstationCreation(networkUuid, variantId, groupUuid, reportUuid, reporterId, (SubstationCreationInfos) modificationInfos);
-            case VOLTAGE_LEVEL_CREATION:
-                return createVoltageLevelCreation(networkUuid, variantId, groupUuid, reportUuid, reporterId, (VoltageLevelCreationInfos) modificationInfos);
             case TWO_WINDINGS_TRANSFORMER_CREATION:
                 return createTwoWindingsTransformerCreation(networkUuid, variantId, groupUuid, reportUuid, reporterId, (TwoWindingsTransformerCreationInfos) modificationInfos);
             case EQUIPMENT_DELETION:
@@ -1311,32 +1309,6 @@ public class NetworkModificationService {
         }
     }
 
-    private List<ModificationInfos> execCreateVoltageLevelCreation(NetworkStoreListener listener, VoltageLevelCreationInfos voltageLevelCreationInfos,
-                                                           UUID reportUuid, String reporterId) {
-
-        Network network = listener.getNetwork();
-        String rootReporterId = reporterId + "@" + NETWORK_MODIFICATION_TYPE_REPORT;
-        ReporterModel reporter = new ReporterModel(rootReporterId, rootReporterId);
-        Reporter subReporter = reporter.createSubReporter(ModificationType.VOLTAGE_LEVEL_CREATION.name(), "VoltageLevel creation ${voltageLevelId}", "voltageLevelId", voltageLevelCreationInfos.getEquipmentId());
-
-        return doAction(listener, () -> {
-            if (listener.isApplyModifications()) {
-                ModificationUtils.getInstance().createVoltageLevelAction(voltageLevelCreationInfos, subReporter, network);
-            }
-            listener.storeVoltageLevelCreation(voltageLevelCreationInfos);
-        }, CREATE_VOLTAGE_LEVEL_ERROR, reportUuid, reporter, subReporter);
-    }
-
-    public List<EquipmentModificationInfos> createVoltageLevelCreation(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId,
-                                                                       VoltageLevelCreationInfos voltageLevelCreationInfos) {
-        assertVoltageLevelCreationInfosNotEmpty(voltageLevelCreationInfos);
-        ModificationNetworkInfos networkInfos = getNetworkModificationInfos(networkUuid, variantId);
-        NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid,
-                networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
-        return execCreateVoltageLevelCreation(listener, voltageLevelCreationInfos, reportUuid, reporterId)
-            .stream().map(EquipmentModificationInfos.class::cast).collect(Collectors.toList());
-    }
-
     public void updateVoltageLevelCreation(UUID modificationUuid, VoltageLevelCreationInfos voltageLevelCreationInfos) {
         assertVoltageLevelCreationInfosNotEmpty(voltageLevelCreationInfos);
 
@@ -1346,20 +1318,21 @@ public class NetworkModificationService {
             throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "Voltage level creation not found");
         }
 
-        List<BusbarSectionCreationEmbeddable> busbarSections = voltageLevelCreationInfos.getBusbarSections().stream().map(bbsi ->
-                new BusbarSectionCreationEmbeddable(bbsi.getId(), bbsi.getName(), bbsi.getVertPos(), bbsi.getHorizPos())
+        List<BusbarSectionCreationInfos> busbarSections = voltageLevelCreationInfos.getBusbarSections().stream().map(bbsi ->
+                new BusbarSectionCreationInfos(bbsi.getId(), bbsi.getName(), bbsi.getVertPos(), bbsi.getHorizPos())
         ).collect(Collectors.toList());
-        List<BusbarConnectionCreationEmbeddable> busbarConnections = voltageLevelCreationInfos.getBusbarConnections().stream().map(cnxi ->
-                new BusbarConnectionCreationEmbeddable(cnxi.getFromBBS(), cnxi.getToBBS(), cnxi.getSwitchKind())
+        List<BusbarConnectionCreationInfos> busbarConnections = voltageLevelCreationInfos.getBusbarConnections().stream().map(cnxi ->
+                new BusbarConnectionCreationInfos(cnxi.getFromBBS(), cnxi.getToBBS(), cnxi.getSwitchKind())
         ).collect(Collectors.toList());
 
-        EquipmentCreationEntity updatedEntity = this.networkModificationRepository.createVoltageLevelEntity(
-                voltageLevelCreationInfos.getEquipmentId(),
-                voltageLevelCreationInfos.getEquipmentName(),
-                voltageLevelCreationInfos.getNominalVoltage(),
-                voltageLevelCreationInfos.getSubstationId(),
-                busbarSections,
-                busbarConnections);
+        EquipmentCreationEntity updatedEntity = VoltageLevelCreationInfos.builder()
+                .equipmentId(voltageLevelCreationInfos.getEquipmentId())
+                .equipmentName(voltageLevelCreationInfos.getEquipmentName())
+                .nominalVoltage(voltageLevelCreationInfos.getNominalVoltage())
+                .substationId(voltageLevelCreationInfos.getSubstationId())
+                .busbarSections(busbarSections)
+                .busbarConnections(busbarConnections)
+                .build().toEntity();
         updatedEntity.setId(modificationUuid);
         updatedEntity.setGroup(voltageLevelModificationEntity.get().getGroup());
         this.networkModificationRepository.updateModification(updatedEntity);
@@ -1448,6 +1421,7 @@ public class NetworkModificationService {
                 case SHUNT_COMPENSATOR_CREATION:
                 case LINE_CREATION:
                 case LINE_ATTACH_TO_VOLTAGE_LEVEL:
+                case VOLTAGE_LEVEL_CREATION:
                     // Generic form
                     return handleModification(infos, listener, groupUuid, reportUuid, reporterId);
 
@@ -1478,10 +1452,6 @@ public class NetworkModificationService {
                 case SUBSTATION_CREATION:
                     SubstationCreationInfos substationCreationInfos = (SubstationCreationInfos) infos;
                     return execCreateSubstationCreation(listener, substationCreationInfos, reportUuid, reporterId);
-
-                case VOLTAGE_LEVEL_CREATION:
-                    VoltageLevelCreationInfos voltageLevelCreationInfos = (VoltageLevelCreationInfos) infos;
-                    return execCreateVoltageLevelCreation(listener, voltageLevelCreationInfos, reportUuid, reporterId);
 
                 case BRANCH_STATUS:
                     BranchStatusModificationInfos branchStatusModificationInfos = (BranchStatusModificationInfos) infos;

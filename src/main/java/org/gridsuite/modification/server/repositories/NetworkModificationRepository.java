@@ -14,11 +14,9 @@ import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NonNull;
+import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.AttributeModification;
-import org.gridsuite.modification.server.dto.BranchStatusModificationInfos;
-import org.gridsuite.modification.server.dto.GeneratorModificationInfos;
-import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.entities.GroovyScriptModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationGroupEntity;
@@ -300,9 +298,17 @@ public class NetworkModificationRepository {
     }
 
     public VoltageLevelCreationEntity createVoltageLevelEntity(String id, String name, double nominalVoltage, String substationId,
-        List<BusbarSectionCreationEmbeddable> busbarSections,
-        List<BusbarConnectionCreationEmbeddable> busbarConnections) {
-        return new VoltageLevelCreationEntity(id, name, nominalVoltage, substationId, busbarSections, busbarConnections);
+        List<BusbarSectionCreationInfos> busbarSections,
+        List<BusbarConnectionCreationInfos> busbarConnections) {
+        return VoltageLevelCreationInfos.builder()
+                .equipmentId(id)
+                .equipmentName(name)
+                .nominalVoltage(nominalVoltage)
+                .substationId(substationId)
+                .busbarSections(busbarSections)
+                .busbarConnections(busbarConnections)
+                .type(ModificationType.VOLTAGE_LEVEL_CREATION)
+                .build().toEntity();
     }
 
     public EquipmentDeletionEntity createEquipmentDeletionEntity(String equipmentId, String equipmentType) {

@@ -12,7 +12,6 @@ import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.TwoWindingsTransformerCreationEntity;
-import org.gridsuite.modification.server.entities.equipment.creation.VoltageLevelCreationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.LinesAttachToSplitLinesEntity;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
@@ -218,11 +217,6 @@ public class NetworkStoreListener implements NetworkListener {
                 substationCreationInfos.getSubstationCountry(),
                 substationCreationInfos.getProperties()
         ));
-    }
-
-    public void storeVoltageLevelCreation(VoltageLevelCreationInfos voltageLevelCreationInfos) {
-        VoltageLevelCreationEntity voltageLevelEntity = VoltageLevelCreationEntity.toEntity(voltageLevelCreationInfos);
-        modifications.add(voltageLevelEntity);
     }
 
     @Override
