@@ -16,15 +16,15 @@ import org.gridsuite.modification.server.VariationMode;
 import org.gridsuite.modification.server.dto.FilterInfos;
 import org.gridsuite.modification.server.dto.LoadScalingVariation;
 
-import javax.persistence.CollectionTable;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
-import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import java.util.List;
 import java.util.UUID;
@@ -47,9 +47,8 @@ public class LoadScalingVariationEntity {
     @Column(name = "id")
     private UUID id;
 
-    @ElementCollection
-    @CollectionTable(name = "ScalingFilterIds")
-    private List<String> filterIds;
+    @OneToMany(cascade = CascadeType.ALL)
+    private List<VariationFilterEntity> filters;
 
     @Column(name = "variationValue")
     private double variationValue;
@@ -67,8 +66,9 @@ public class LoadScalingVariationEntity {
                 .variationValue(getVariationValue())
                 .activeVariationMode(getActiveVariationMode())
                 .reactiveVariationMode(getReactiveVariationMode())
-                .filters(getFilterIds().stream().map(FilterInfos::new)
-                .collect(Collectors.toList()))
+                .filters(this.getFilters().stream()
+                        .map(filter -> new FilterInfos(filter.getId().toString(), filter.getName()))
+                        .collect(Collectors.toList()))
                 .build();
     }
 }

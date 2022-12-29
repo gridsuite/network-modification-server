@@ -21,6 +21,7 @@ import org.gridsuite.modification.server.dto.FilterInfos;
 import org.gridsuite.modification.server.dto.LoadScalingInfos;
 import org.gridsuite.modification.server.dto.LoadScalingVariation;
 import org.gridsuite.modification.server.service.FilterService;
+import org.gridsuite.modification.server.service.SpringContext;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
@@ -48,22 +49,26 @@ public class LoadScaling extends AbstractModification {
     public void apply(Network network, Reporter subReporter) {
         List<LoadScalingVariation> loadScalingVariations = loadScalingInfos.getLoadScalingVariations();
         List<String> filterIds = new ArrayList<>();
-        loadScalingVariations.forEach(l -> filterIds.addAll(l.getFilters().stream().filter(Objects::nonNull).map(FilterInfos::getId).collect(Collectors.toList())));
-        List<FilterAttributes> filters = new FilterService("http://localhost:5027").getFilters(filterIds);
+        loadScalingVariations.forEach(l -> filterIds.addAll(l.getFilters().stream().map(FilterInfos::getId).collect(Collectors.toList())));
+        List<String> distinctFilterIds = filterIds.stream().distinct().collect(Collectors.toList());
+        List<FilterAttributes> filters = SpringContext.getBean(FilterService.class).getFilters(distinctFilterIds);
 
-        loadScalingVariations.forEach(loadScalingVariation -> {
-            var filtersList = filters.stream()
-                    .filter(f -> loadScalingVariation.getFilters().stream().map(FilterInfos::getId).collect(Collectors.toList()).contains(f.getId()))
-                    .collect(Collectors.toList());
-
-            if (!CollectionUtils.isEmpty(filtersList)) {
-                filtersList.forEach(filter -> applyVariation(network, filter, loadScalingVariation, subReporter));
-            } else {
-                createReport(subReporter,NetworkModificationException.Type.LOAD_SCALING_ERROR.name(),"Filters list is empty",TypedValue.ERROR_SEVERITY);
-                throw new NetworkModificationException(NetworkModificationException.Type.LOAD_SCALING_ERROR, "Filters list is empty");
-            }
-        });
-        createReport(subReporter,"loadScalingCreated","new load scaling created",TypedValue.INFO_SEVERITY);
+        if (!CollectionUtils.isEmpty(filters)) {
+            loadScalingVariations.forEach(loadScalingVariation -> {
+                var filterIdsList = loadScalingVariation.getFilters().stream().map(FilterInfos::getId).collect(Collectors.toList());
+                var filterList = filters.stream()
+                        .filter(f -> filterIdsList.contains(f.getId()))
+                        .collect(Collectors.toList());
+                if (!filterList.isEmpty()) {
+                    filterList.forEach(filter -> applyVariation(network, filter, loadScalingVariation, subReporter));
+                } else {
+                    throw new NetworkModificationException(NetworkModificationException.Type.LOAD_SCALING_ERROR, "Filters list is Empty");
+                }
+            });
+        } else {
+            throw new NetworkModificationException(NetworkModificationException.Type.LOAD_SCALING_ERROR, "Filters list is Empty");
+        }
+        createReport(subReporter, "loadScalingCreated", "new load scaling created", TypedValue.INFO_SEVERITY);
     }
 
     private void applyVariation(Network network,
@@ -74,63 +79,76 @@ public class LoadScaling extends AbstractModification {
         Map<String, Double> targetPMap = new HashMap<>();
         List<Float> percentages = new ArrayList<>();
         List<Scalable> scalables = new ArrayList<>();
+
         switch (loadScalingVariation.getActiveVariationMode()) {
             case PROPORTIONAL:
-                filter.getFilterEquipmentsAttributes()
-                        .forEach(equipment -> {
-                            Load load = network.getLoad(equipment.getEquipmentID());
-                            if (load != null) {
-                                targetPMap.put(load.getId(), load.getP0());
-                                sum.set(sum.get() + load.getP0());
-                            } else {
-                                createReport(subReporter,NetworkModificationException.Type.LOAD_SCALING_ERROR.name(),"load " + equipment.getEquipmentID() + " not found",TypedValue.ERROR_SEVERITY);
-                            }
-                        });
-                targetPMap.forEach((id, p) -> {
-                    percentages.add((float) ((p / sum.get()) * 100));
-                    scalables.add(getScalable(id));
-                });
-                Scalable proportionalScalable = Scalable.proportional(percentages, scalables);
-                scale(network, loadScalingVariation, sum, proportionalScalable);
+                scaleWithProportionalMode(network, filter, loadScalingVariation, subReporter, sum, targetPMap, percentages, scalables);
                 break;
             case REGULAR_DISTRIBUTION:
-                scalables.addAll(filter.getFilterEquipmentsAttributes()
-                        .stream()
-                        .map(equipment -> {
-                            Load load = network.getLoad(equipment.getEquipmentID());
-                            if (load != null) {
-                                sum.set(sum.get() + load.getP0());
-                                return getScalable(equipment.getEquipmentID());
-                            }
-                            return null;
-                        })
-                        .filter(Objects::nonNull)
-                        .collect(Collectors.toList()));
-                if (!scalables.isEmpty()) {
-                    percentages.addAll(Collections.nCopies(scalables.size(), 100 / (float) scalables.size()));
-                    Scalable regularDistributionScalable = Scalable.proportional(percentages, scalables);
-                    scale(network, loadScalingVariation, sum, regularDistributionScalable);
-                } else {
-                    createReport(subReporter,NetworkModificationException.Type.LOAD_SCALING_ERROR.name(),"load scalable list is empty",TypedValue.WARN_SEVERITY);
-
-                }
+                scaleWithRegularMode(network, filter, loadScalingVariation, subReporter, sum, percentages, scalables);
                 break;
             case VENTILATION:
-                var distributionKeys = filter.getFilterEquipmentsAttributes().stream()
-                        .mapToDouble(FilterEquipmentAttributes::getDistributionKey)
-                        .sum();
-                if (distributionKeys != 0) {
-                    filter.getFilterEquipmentsAttributes().forEach(equipment -> {
-                        scalables.add(getScalable(equipment.getEquipmentID()));
-                        percentages.add((float) ((equipment.getDistributionKey() / distributionKeys) * 100));
-                    });
-                    Scalable ventilationScalable = Scalable.proportional(percentages, scalables);
-                    scale(network, loadScalingVariation, sum, ventilationScalable);
-                }
+                scaleWithVentilationMode(network, filter, loadScalingVariation, sum, percentages, scalables);
                 break;
             default:
                 throw new NetworkModificationException(NetworkModificationException.Type.LOAD_SCALING_ERROR, "Active Variation mode not recognised");
         }
+    }
+
+    private void scaleWithVentilationMode(Network network, FilterAttributes filter, LoadScalingVariation loadScalingVariation, AtomicReference<Double> sum, List<Float> percentages, List<Scalable> scalables) {
+        var distributionKeys = filter.getFilterEquipmentsAttributes().stream()
+                .mapToDouble(FilterEquipmentAttributes::getDistributionKey)
+                .sum();
+        if (distributionKeys != 0) {
+            filter.getFilterEquipmentsAttributes().forEach(equipment -> {
+                scalables.add(getScalable(equipment.getEquipmentID()));
+                percentages.add((float) ((equipment.getDistributionKey() / distributionKeys) * 100));
+            });
+            Scalable ventilationScalable = Scalable.proportional(percentages, scalables);
+            scale(network, loadScalingVariation, sum, ventilationScalable);
+        }
+    }
+
+    private void scaleWithRegularMode(Network network, FilterAttributes filter, LoadScalingVariation loadScalingVariation, Reporter subReporter, AtomicReference<Double> sum, List<Float> percentages, List<Scalable> scalables) {
+        scalables.addAll(filter.getFilterEquipmentsAttributes()
+                .stream()
+                .map(equipment -> {
+                    Load load = network.getLoad(equipment.getEquipmentID());
+                    if (load != null) {
+                        sum.set(sum.get() + load.getP0());
+                        return getScalable(equipment.getEquipmentID());
+                    }
+                    return null;
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList()));
+        if (!scalables.isEmpty()) {
+            percentages.addAll(Collections.nCopies(scalables.size(), 100 / (float) scalables.size()));
+            Scalable regularDistributionScalable = Scalable.proportional(percentages, scalables);
+            scale(network, loadScalingVariation, sum, regularDistributionScalable);
+        } else {
+            createReport(subReporter, NetworkModificationException.Type.LOAD_SCALING_ERROR.name(), "load scalable list is empty", TypedValue.WARN_SEVERITY);
+
+        }
+    }
+
+    private void scaleWithProportionalMode(Network network, FilterAttributes filter, LoadScalingVariation loadScalingVariation, Reporter subReporter, AtomicReference<Double> sum, Map<String, Double> targetPMap, List<Float> percentages, List<Scalable> scalables) {
+        filter.getFilterEquipmentsAttributes()
+                .forEach(equipment -> {
+                    Load load = network.getLoad(equipment.getEquipmentID());
+                    if (load != null) {
+                        targetPMap.put(load.getId(), load.getP0());
+                        sum.set(sum.get() + load.getP0());
+                    } else {
+                        createReport(subReporter, NetworkModificationException.Type.LOAD_SCALING_ERROR.name(), "load " + equipment.getEquipmentID() + " not found", TypedValue.ERROR_SEVERITY);
+                    }
+                });
+        targetPMap.forEach((id, p) -> {
+            percentages.add((float) ((p / sum.get()) * 100));
+            scalables.add(getScalable(id));
+        });
+        Scalable proportionalScalable = Scalable.proportional(percentages, scalables);
+        scale(network, loadScalingVariation, sum, proportionalScalable);
     }
 
     private void scale(Network network, LoadScalingVariation loadScalingVariation, AtomicReference<Double> sum, Scalable proportionalScalable) {

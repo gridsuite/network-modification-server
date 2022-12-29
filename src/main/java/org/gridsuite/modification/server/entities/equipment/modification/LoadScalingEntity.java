@@ -26,6 +26,7 @@ import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -97,5 +98,19 @@ public class LoadScalingEntity extends ModificationEntity {
     @Override
     public int hashCode() {
         return getClass().hashCode();
+    }
+
+    @Override
+    public void cloneWithIdsToNull() {
+        setId(null);
+        this.variations = getVariations()
+                .stream()
+                .peek(variation -> {
+                    variation.setId(null);
+                    variation.setFilters(new ArrayList<>(variation.getFilters()
+                            .stream()
+                            .peek(filter -> filter.setId(null))
+                            .collect(Collectors.toList())));
+                }).collect(Collectors.toList());
     }
 }
