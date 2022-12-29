@@ -1326,6 +1326,7 @@ public class NetworkModificationService {
         ).collect(Collectors.toList());
 
         EquipmentCreationEntity updatedEntity = VoltageLevelCreationInfos.builder()
+                .type(ModificationType.VOLTAGE_LEVEL_CREATION)
                 .equipmentId(voltageLevelCreationInfos.getEquipmentId())
                 .equipmentName(voltageLevelCreationInfos.getEquipmentName())
                 .nominalVoltage(voltageLevelCreationInfos.getNominalVoltage())
