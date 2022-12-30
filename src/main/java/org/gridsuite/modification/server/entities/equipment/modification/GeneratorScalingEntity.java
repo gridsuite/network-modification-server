@@ -79,14 +79,19 @@ public class GeneratorScalingEntity extends ModificationEntity {
     @Override
     public void cloneWithIdsToNull() {
         setId(null);
-        getVariations().forEach(variation -> {
-            variation.setId(null);
-            variation.getFilters().forEach(filter -> filter.setId(null));
-        });
-        this.variations = new ArrayList<>(variations.stream()
+        this.variations = new ArrayList<>(getVariations()
+                .stream()
                 .map(variation -> {
-                    variation.setFilters(new ArrayList<>(variation.getFilters()));
+                    variation.setId(null);
+                    variation.setFilters(new ArrayList<>(variation.getFilters()
+                            .stream()
+                            .map(filter -> {
+                                filter.setId(null);
+                                return filter;
+                            })
+                            .collect(Collectors.toList())));
                     return variation;
-                }).collect(Collectors.toList()));
+                })
+                .collect(Collectors.toList()));
     }
 }
