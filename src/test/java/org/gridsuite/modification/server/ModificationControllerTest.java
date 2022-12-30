@@ -54,7 +54,6 @@ import static org.gridsuite.modification.server.utils.MatcherBranchStatusModific
 import static org.gridsuite.modification.server.utils.MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos;
 import static org.gridsuite.modification.server.utils.MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos;
 import static org.gridsuite.modification.server.utils.MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos;
-import static org.gridsuite.modification.server.utils.MatcherGeneratorCreationInfos.createMatcherGeneratorCreationInfos;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.argThat;
@@ -823,177 +822,6 @@ public class ModificationControllerTest {
     }
 
     @Test
-    public void testCreateGeneratorInNodeBreaker() throws Exception {
-        MvcResult mvcResult;
-        String resultAsString;
-
-        // create new generator in voltage level with node/breaker topology (in voltage level "v2" and busbar section "1B")
-        GeneratorCreationInfos generatorCreationInfos = ModificationCreation.getCreationGenerator("v2", "idGenerator1", "idGenerator1", "1B", "v2load", "LOAD", "v1");
-        String generatorCreationInfosJson = objectWriter.writeValueAsString(generatorCreationInfos);
-        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        List<EquipmentModificationInfos> bsmlrGeneratorCreation = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertThat(bsmlrGeneratorCreation.get(0), createMatcherEquipmentModificationInfos(ModificationType.GENERATOR_CREATION, "idGenerator1", Set.of("s1")));
-
-        assertNotNull(network.getGenerator("idGenerator1"));  // generator was created
-        testNetworkModificationsCount(TEST_GROUP_ID, 1);
-
-        generatorCreationInfos = new GeneratorCreationEntity(
-                "idGenerator1Edited",
-                "nameGenerator1Edited",
-                EnergySource.SOLAR,
-                "v1",
-                "1A",
-                150.,
-                300.,
-                15.,
-                450.,
-                55.,
-                false,
-                235.,
-                80.,
-                30.,
-                300.,
-                true,
-                10f,
-                25.,
-                44.,
-                List.of(new ReactiveCapabilityCurveCreationEmbeddable(45., 85., 77.)),
-                "v2load",
-                "LOAD",
-                "v2",
-                25.,
-                false,
-                "top1",
-                ConnectablePosition.Direction.TOP,
-                20)
-                .toModificationInfos();
-        generatorCreationInfos.setUuid(bsmlrGeneratorCreation.get(0).getUuid());
-
-        // Update generator creation
-        GeneratorCreationInfos generatorCreationUpdate = new GeneratorCreationEntity(
-                "idGenerator1Edited",
-                "nameGenerator1Edited",
-                EnergySource.SOLAR,
-                "v1",
-                "1A",
-                150.,
-                300.,
-                15.,
-                450.,
-                55.,
-                false,
-                235.,
-                80.,
-                30.,
-                300.,
-                true,
-                10f,
-                25.,
-                44.,
-                List.of(new ReactiveCapabilityCurveCreationEmbeddable(45., 85., 77.)),
-                "v2load",
-                "LOAD",
-                "v2",
-                25.,
-                false,
-                "top11",
-                ConnectablePosition.Direction.TOP,
-                21)
-                .toModificationInfos();
-        String generatorCreationUpdateJson = objectWriter.writeValueAsString(generatorCreationUpdate);
-        mockMvc.perform(put(URI_NETWORK_MODIF_GET_PUT + bsmlrGeneratorCreation.get(0).getUuid()).content(generatorCreationUpdateJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
-        testNetworkModificationsCount(TEST_GROUP_ID, 1);
-        mvcResult = mockMvc.perform(get(URI_NETWORK_MODIF_GET_PUT + bsmlrGeneratorCreation.get(0).getUuid()).contentType(MediaType.APPLICATION_JSON))
-                 .andExpect(status().isOk()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        GeneratorCreationInfos bsmlrCreationInfos = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertThat(bsmlrCreationInfos, createMatcherGeneratorCreationInfos(generatorCreationInfos));
-
-        // create generator with errors
-        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF_BAD_NETWORK).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isNotFound()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        assertEquals(resultAsString, new NetworkModificationException(NETWORK_NOT_FOUND, NOT_FOUND_NETWORK_ID.toString()).getMessage());
-
-        generatorCreationInfos.setEquipmentId("");
-        generatorCreationInfosJson = objectWriter.writeValueAsString(generatorCreationInfos);
-        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().is5xxServerError()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        assertEquals(resultAsString, new NetworkModificationException(CREATE_GENERATOR_ERROR, "Invalid id ''").getMessage());
-
-        generatorCreationInfos.setEquipmentId("idGenerator1");
-        generatorCreationInfos.setVoltageLevelId("notFoundVoltageLevelId");
-        generatorCreationInfosJson = objectWriter.writeValueAsString(generatorCreationInfos);
-        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().is4xxClientError()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        assertEquals(resultAsString, new NetworkModificationException(VOLTAGE_LEVEL_NOT_FOUND, "notFoundVoltageLevelId").getMessage());
-
-        generatorCreationInfos.setVoltageLevelId("v2");
-        generatorCreationInfos.setBusOrBusbarSectionId("notFoundBusbarSection");
-        generatorCreationInfosJson = objectWriter.writeValueAsString(generatorCreationInfos);
-        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().is5xxServerError()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        assertEquals(resultAsString, new NetworkModificationException(CREATE_GENERATOR_ERROR, "Busbar section notFoundBusbarSection not found.").getMessage());
-        generatorCreationInfos.setVoltageLevelId("v2");
-        generatorCreationInfos.setBusOrBusbarSectionId("1B");
-        generatorCreationInfos.setMinActivePower(Double.NaN);
-        generatorCreationInfosJson = objectWriter.writeValueAsString(generatorCreationInfos);
-        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().is5xxServerError()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        assertEquals(resultAsString, new NetworkModificationException(CREATE_GENERATOR_ERROR, "Generator 'idGenerator1': invalid value (NaN) for minimum P").getMessage());
-
-        testNetworkModificationsCount(TEST_GROUP_ID, 1);
-
-        // Test create generator on not yet existing variant VARIANT_NOT_EXISTING_ID :
-        // Only the modification should be added in the database but the generator cannot be created
-        generatorCreationInfos.setEquipmentId("idGenerator3");
-        generatorCreationInfos.setEquipmentName("nameGenerator3");
-        generatorCreationInfos.setVoltageLevelId("v2");
-        generatorCreationInfos.setBusOrBusbarSectionId("1B");
-        generatorCreationInfosJson = objectWriter.writeValueAsString(generatorCreationInfos);
-        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF_BAD_VARIANT).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        List<EquipmentModificationInfos> modifications = mapper.readValue(resultAsString, new TypeReference<>() { });
-
-        assertTrue(modifications.isEmpty());  // no modifications returned
-        assertNull(network.getGenerator("idGenerator3"));  // generator was not created
-        testNetworkModificationsCount(TEST_GROUP_ID, 2);  // new modification stored in the database
-    }
-
-    @Test
-    public void testCreateGeneratorInBusBreaker() throws Exception {
-        MvcResult mvcResult;
-        String resultAsString;
-
-        // create new generator in voltage level with bus/breaker topology
-        GeneratorCreationInfos generatorCreationInfos = ModificationCreation.getCreationGenerator("v1", "idGenerator2", "nameGenerator2", "bus1", "idGenerator1", "GENERATOR", "v1");
-        String generatorCreationInfosJson = objectWriter.writeValueAsString(generatorCreationInfos);
-        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF_BUS_BREAKER).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        List<EquipmentModificationInfos> bsmlrCreationGenerator = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertThat(bsmlrCreationGenerator.get(0), createMatcherEquipmentModificationInfos(ModificationType.GENERATOR_CREATION, "idGenerator2", Set.of("s1")));
-        testNetworkModificationsCount(TEST_GROUP_ID, 1);
-
-        // create generator with errors
-        generatorCreationInfos.setBusOrBusbarSectionId("notFoundBus");
-        generatorCreationInfosJson = objectWriter.writeValueAsString(generatorCreationInfos);
-        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF_BUS_BREAKER).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().is4xxClientError()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        assertEquals(resultAsString, new NetworkModificationException(BUS_NOT_FOUND, "notFoundBus").getMessage());
-        testNetworkModificationsCount(TEST_GROUP_ID, 1);
-    }
-
-    @Test
     public void testCreateTwoWindingsTransformerInBusBreaker() throws Exception {
         MvcResult mvcResult;
         String resultAsString;
@@ -1404,7 +1232,7 @@ public class ModificationControllerTest {
         equipmentDeletionInfosJson = objectWriter.writeValueAsString(equipmentDeletionInfos);
         mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF_BAD_NETWORK).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isNotFound()).andReturn();
-        resultAsString  = mvcResult.getResponse().getContentAsString();
+        resultAsString = mvcResult.getResponse().getContentAsString();
         assertEquals(resultAsString, new NetworkModificationException(NETWORK_NOT_FOUND, NOT_FOUND_NETWORK_ID.toString()).getMessage());
 
         equipmentDeletionInfos.setEquipmentType("LOAD");
@@ -1412,7 +1240,7 @@ public class ModificationControllerTest {
         equipmentDeletionInfosJson = objectWriter.writeValueAsString(equipmentDeletionInfos);
         mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isNotFound()).andReturn();
-        resultAsString  = mvcResult.getResponse().getContentAsString();
+        resultAsString = mvcResult.getResponse().getContentAsString();
         assertEquals(resultAsString, new NetworkModificationException(EQUIPMENT_NOT_FOUND, "Equipment with id=notFoundLoad not found or of bad type").getMessage());
 
         testNetworkModificationsCount(TEST_GROUP_ID, 2);

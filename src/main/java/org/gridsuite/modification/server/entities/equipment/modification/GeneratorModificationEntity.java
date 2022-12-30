@@ -9,9 +9,12 @@ package org.gridsuite.modification.server.entities.equipment.modification;
 import com.powsybl.iidm.network.EnergySource;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
+
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.AttributeModification;
 import org.gridsuite.modification.server.dto.GeneratorModificationInfos;
+import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.BooleanModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.EnumModificationEmbedded;
@@ -93,26 +96,26 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
     })
     DoubleModificationEmbedded voltageSetpoint;
 
-    public GeneratorModificationEntity(String equipmentId, AttributeModification<String> equipmentName, AttributeModification<String> voltageLevelId, AttributeModification<String> busOrBusbarSectionId,
-                                       AttributeModification<EnergySource> energySource,
-                                       AttributeModification<Double> minActivePower, AttributeModification<Double> maxActivePower, AttributeModification<Double> ratedNominalPower,
-                                       AttributeModification<Double> activePowerSetpoint, AttributeModification<Double> reactivePowerSetpoint, AttributeModification<Boolean> voltageRegulationOn, AttributeModification<Double> voltageSetpoint) {
-        super(ModificationType.GENERATOR_MODIFICATION, equipmentId, equipmentName, voltageLevelId, busOrBusbarSectionId);
-        this.energySource = new EnumModificationEmbedded<>(energySource);
-        this.minActivePower = new DoubleModificationEmbedded(minActivePower);
-        this.maxActivePower = new DoubleModificationEmbedded(maxActivePower);
-        this.ratedNominalPower = new DoubleModificationEmbedded(ratedNominalPower);
-        this.activePowerSetpoint = new DoubleModificationEmbedded(activePowerSetpoint);
-        this.reactivePowerSetpoint = new DoubleModificationEmbedded(reactivePowerSetpoint);
-        this.voltageRegulationOn = new BooleanModificationEmbedded(voltageRegulationOn);
-        this.voltageSetpoint = new DoubleModificationEmbedded(voltageSetpoint);
+    public GeneratorModificationEntity(@NonNull GeneratorModificationInfos generatorModificationInfos) {
+        super(generatorModificationInfos);
+        assignAttributes(generatorModificationInfos);
     }
 
-    public GeneratorModificationEntity(GeneratorModificationInfos infos) {
-        this(infos.getEquipmentId(), infos.getEquipmentName(), infos.getVoltageLevelId(), infos.getBusOrBusbarSectionId(),
-            infos.getEnergySource(),
-            infos.getMinActivePower(), infos.getMaxActivePower(), infos.getRatedNominalPower(),
-            infos.getActivePowerSetpoint(), infos.getReactivePowerSetpoint(), infos.getVoltageRegulationOn(), infos.getVoltageSetpoint());
+    @Override
+    public void update(@NonNull ModificationInfos modificationInfos) {
+        super.update(modificationInfos);
+        assignAttributes((GeneratorModificationInfos) modificationInfos);
+    }
+
+    void assignAttributes(GeneratorModificationInfos generatorModificationInfos) {
+        this.energySource = new EnumModificationEmbedded<>(generatorModificationInfos.getEnergySource());
+        this.minActivePower = new DoubleModificationEmbedded(generatorModificationInfos.getMinActivePower());
+        this.maxActivePower = new DoubleModificationEmbedded(generatorModificationInfos.getMaxActivePower());
+        this.ratedNominalPower = new DoubleModificationEmbedded(generatorModificationInfos.getRatedNominalPower());
+        this.activePowerSetpoint = new DoubleModificationEmbedded(generatorModificationInfos.getActivePowerSetpoint());
+        this.reactivePowerSetpoint = new DoubleModificationEmbedded(generatorModificationInfos.getReactivePowerSetpoint());
+        this.voltageRegulationOn = new BooleanModificationEmbedded(generatorModificationInfos.getVoltageRegulationOn());
+        this.voltageSetpoint = new DoubleModificationEmbedded(generatorModificationInfos.getVoltageSetpoint());
     }
 
     @Override

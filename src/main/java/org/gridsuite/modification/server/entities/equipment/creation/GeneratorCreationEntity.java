@@ -10,8 +10,11 @@ import com.powsybl.iidm.network.EnergySource;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
+
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.GeneratorCreationInfos;
+import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.ReactiveCapabilityCurveCreationInfos;
 
 import javax.persistence.*;
@@ -101,37 +104,42 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
     @CollectionTable
     private List<ReactiveCapabilityCurveCreationEmbeddable> reactiveCapabilityCurvePoints;
 
-    public GeneratorCreationEntity(String equipmentId, String equipmentName, EnergySource energySource, String voltageLevelId, String busOrBusbarSectionId,
-                                   double minActivePower, double maxActivePower, Double ratedNominalPower, double activePowerSetpoint,
-                                   Double reactivePowerSetpoint, boolean voltageRegulationOn, Double voltageSetpoint, Double marginalCost, Double minQ,
-                                   Double maxQ, boolean participate, Float droop, Double transientReactance, Double stepUpTransformerReactance,
-                                   List<ReactiveCapabilityCurveCreationEmbeddable> reactiveCapabilityCurvePoints, String regulatingTerminalId, String regulatingTerminalType, String regulatingTerminalVlId,
-                                   Double qPercent, Boolean reactiveCapabilityCurve, String connectionName, ConnectablePosition.Direction connectionDirection, Integer connectionPosition) {
-        super(ModificationType.GENERATOR_CREATION, equipmentId, equipmentName, voltageLevelId, busOrBusbarSectionId);
-        this.energySource = energySource;
-        this.minActivePower = minActivePower;
-        this.maxActivePower = maxActivePower;
-        this.ratedNominalPower = ratedNominalPower;
-        this.activePowerSetpoint = activePowerSetpoint;
-        this.reactivePowerSetpoint = reactivePowerSetpoint;
-        this.voltageRegulationOn = voltageRegulationOn;
-        this.voltageSetpoint = voltageSetpoint;
-        this.marginalCost = marginalCost;
-        this.minimumReactivePower = minQ;
-        this.maximumReactivePower = maxQ;
-        this.participate = participate;
-        this.droop = droop;
-        this.transientReactance = transientReactance;
-        this.stepUpTransformerReactance = stepUpTransformerReactance;
-        this.reactiveCapabilityCurvePoints = reactiveCapabilityCurvePoints;
-        this.regulatingTerminalId = regulatingTerminalId;
-        this.regulatingTerminalType = regulatingTerminalType;
-        this.regulatingTerminalVlId = regulatingTerminalVlId;
-        this.qPercent = qPercent;
-        this.reactiveCapabilityCurve = reactiveCapabilityCurve;
-        this.connectionDirection = connectionDirection;
-        this.connectionName = connectionName;
-        this.connectionPosition = connectionPosition;
+    public GeneratorCreationEntity(@NonNull GeneratorCreationInfos generatorCreationInfos) {
+        super(generatorCreationInfos);
+        assignAttributes(generatorCreationInfos);
+    }
+
+    @Override
+    public void update(@NonNull ModificationInfos modificationInfos) {
+        super.update(modificationInfos);
+        assignAttributes((GeneratorCreationInfos) modificationInfos);
+    }
+
+    void assignAttributes(GeneratorCreationInfos generatorCreationInfos) {
+        this.energySource = generatorCreationInfos.getEnergySource();
+        this.minActivePower = generatorCreationInfos.getMinActivePower();
+        this.maxActivePower = generatorCreationInfos.getMaxActivePower();
+        this.ratedNominalPower = generatorCreationInfos.getRatedNominalPower();
+        this.activePowerSetpoint = generatorCreationInfos.getActivePowerSetpoint();
+        this.reactivePowerSetpoint = generatorCreationInfos.getReactivePowerSetpoint();
+        this.voltageRegulationOn = generatorCreationInfos.isVoltageRegulationOn();
+        this.voltageSetpoint = generatorCreationInfos.getVoltageSetpoint();
+        this.marginalCost = generatorCreationInfos.getMarginalCost();
+        this.minimumReactivePower = generatorCreationInfos.getMinimumReactivePower();
+        this.maximumReactivePower = generatorCreationInfos.getMaximumReactivePower();
+        this.participate = generatorCreationInfos.getParticipate();
+        this.droop = generatorCreationInfos.getDroop();
+        this.transientReactance = generatorCreationInfos.getTransientReactance();
+        this.stepUpTransformerReactance = generatorCreationInfos.getStepUpTransformerReactance();
+        this.reactiveCapabilityCurvePoints = toEmbeddablePoints(generatorCreationInfos.getReactiveCapabilityCurvePoints());
+        this.regulatingTerminalId = generatorCreationInfos.getRegulatingTerminalId();
+        this.regulatingTerminalType = generatorCreationInfos.getRegulatingTerminalType();
+        this.regulatingTerminalVlId = generatorCreationInfos.getRegulatingTerminalVlId();
+        this.qPercent = generatorCreationInfos.getQPercent();
+        this.reactiveCapabilityCurve = generatorCreationInfos.getReactiveCapabilityCurve();
+        this.connectionDirection = generatorCreationInfos.getConnectionDirection();
+        this.connectionName = generatorCreationInfos.getConnectionName();
+        this.connectionPosition = generatorCreationInfos.getConnectionPosition();
     }
 
     public static List<ReactiveCapabilityCurveCreationEmbeddable> toEmbeddablePoints(
