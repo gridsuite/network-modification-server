@@ -92,7 +92,7 @@ public class EquipmentInfosService {
     }
 
     public boolean existEquipmentInfos(String equipmentId, UUID networkUuid, String variantId) {
-        return equipmentInfosRepository.findByIdAndNetworkUuidAndVariantId(equipmentId, networkUuid, variantId).size() > 0;
+        return !equipmentInfosRepository.findByIdAndNetworkUuidAndVariantId(equipmentId, networkUuid, variantId).isEmpty();
     }
 
     public List<EquipmentInfos> findAllEquipmentInfos(@NonNull UUID networkUuid) {
