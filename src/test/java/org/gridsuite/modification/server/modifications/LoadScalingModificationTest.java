@@ -6,6 +6,7 @@ import com.google.common.io.ByteStreams;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import org.gridsuite.modification.server.ModificationType;
+import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.ReactiveVariationMode;
 import org.gridsuite.modification.server.VariationMode;
 import org.gridsuite.modification.server.VariationType;
@@ -19,7 +20,9 @@ import org.gridsuite.modification.server.utils.MatcherModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -29,8 +32,11 @@ import java.util.Objects;
 import java.util.UUID;
 
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.LOAD_SCALING_ERROR;
 import static org.gridsuite.modification.server.utils.NetworkUtil.createLoad;
 import static org.junit.Assert.assertEquals;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class LoadScalingModificationTest extends AbstractNetworkModificationTest {
 
@@ -39,8 +45,7 @@ public class LoadScalingModificationTest extends AbstractNetworkModificationTest
     private static final String FILTER_ID_3 = "bd063f-611f-4686-b57b-6bc7aa00a202";
     private static final String FILTER_ID_4 = "6f11d63f-6f06-4686-b57b-6bc7aa66a202";
     private static final String FILTER_ID_5 = "7100163f-60f1-4686-b57b-6bc7aa77a202";
-    private static final String FILTER_ID_6 = "7200163f-60f1-4686-b57b-6bc7aa77a202";
-    private static final String FILTER_ID_7 = "7300163f-60f1-4686-b57b-6bc7aa77a202";
+
     private static final String LOAD_ID_1 = "v1load";
     private static final String LOAD_ID_2 = "v5load";
     private static final String LOAD_ID_3 = "v6load";
@@ -67,7 +72,7 @@ public class LoadScalingModificationTest extends AbstractNetworkModificationTest
         createLoad(getNetwork().getVoltageLevel("v3"), LOAD_ID_8, LOAD_ID_8, 10, 100, 1.0, "cn10", 15, ConnectablePosition.Direction.TOP);
         createLoad(getNetwork().getVoltageLevel("v4"), LOAD_ID_9, LOAD_ID_9, 10, 200, 1.0, "cn10", 16, ConnectablePosition.Direction.TOP);
         createLoad(getNetwork().getVoltageLevel("v5"), LOAD_ID_10, LOAD_ID_10, 12, 100, 1.0, "cn10", 17, ConnectablePosition.Direction.TOP);
-
+        // to avoid changes on global network, we can set anything before any test
         getNetwork().getLoad("v5load").setQ0(10);
         getNetwork().getLoad("v5load").setP0(100);
         wireMock = new WireMockServer(wireMockConfig().dynamicPort());
@@ -170,6 +175,81 @@ public class LoadScalingModificationTest extends AbstractNetworkModificationTest
                 .variationType(VariationType.DELTA_P)
                 .loadScalingVariations(List.of(variation5))
                 .build();
+    }
+
+    @Test
+    public void errorWhenScalingWithInvalidFiltersTest() throws Exception {
+        var filter1 = FilterInfos.builder()
+                .id(FILTER_ID_1)
+                .name("filter 1")
+                .build();
+
+        var filter3 = FilterInfos.builder()
+                .id(FILTER_ID_3)
+                .name("filter 3")
+                .build();
+
+        var variation1 = LoadScalingVariation.builder()
+                .activeVariationMode(VariationMode.PROPORTIONAL)
+                .reactiveVariationMode(ReactiveVariationMode.TAN_FIXED)
+                .variationValue(100D)
+                .filters(List.of())
+                .build();
+
+        var variation2 = LoadScalingVariation.builder()
+                .activeVariationMode(VariationMode.REGULAR_DISTRIBUTION)
+                .reactiveVariationMode(ReactiveVariationMode.TAN_FIXED)
+                .variationValue(50D)
+                .filters(List.of(filter1, filter3))
+                .build();
+
+        ModificationInfos modificationToCreate = LoadScalingInfos.builder()
+                .uuid(LOAD_SCALING_ID)
+                .date(ZonedDateTime.now())
+                .type(ModificationType.LOAD_SCALING)
+                .variationType(VariationType.DELTA_P)
+                .loadScalingVariations(List.of(variation1, variation2))
+                .build();
+
+        String modificationToCreateJson = mapper.writeValueAsString(modificationToCreate);
+
+        var result = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().is5xxServerError()).andReturn().getResponse().getContentAsString();
+        assertEquals(new NetworkModificationException(LOAD_SCALING_ERROR, "One of the variations does not have a correct filters").getMessage(), result);
+    }
+
+    @Test
+    public void errorWhenScalingInVentilationModeWithoutDistributionIdsTest() throws Exception {
+        var filter1 = FilterInfos.builder()
+                .id(FILTER_ID_1)
+                .name("filter 1")
+                .build();
+
+        var filter2 = FilterInfos.builder()
+                .id(FILTER_ID_2)
+                .name("filter 2")
+                .build();
+
+        var variation1 = LoadScalingVariation.builder()
+                .activeVariationMode(VariationMode.VENTILATION)
+                .reactiveVariationMode(ReactiveVariationMode.TAN_FIXED)
+                .variationValue(100D)
+                .filters(List.of(filter1, filter2))
+                .build();
+
+        ModificationInfos modificationToCreate = LoadScalingInfos.builder()
+                .uuid(LOAD_SCALING_ID)
+                .date(ZonedDateTime.now())
+                .type(ModificationType.LOAD_SCALING)
+                .variationType(VariationType.DELTA_P)
+                .loadScalingVariations(List.of(variation1))
+                .build();
+
+        String modificationToCreateJson = mapper.writeValueAsString(modificationToCreate);
+
+        var result = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().is5xxServerError()).andReturn().getResponse().getContentAsString();
+        assertEquals(new NetworkModificationException(LOAD_SCALING_ERROR, "This mode is available only for equipment with distribution key").getMessage(), result);
     }
 
     @Override
