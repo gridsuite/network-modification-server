@@ -44,11 +44,7 @@ public class ModificationApplicator {
             return getNetworkDamage(modificationInfos, listener);
         } catch (PowsyblException e) {
             NetworkModificationException exc = e instanceof NetworkModificationException ? (NetworkModificationException) e : new NetworkModificationException(modificationInfos.getErrorType(), e);
-            subReporter.report(Report.builder()
-                .withKey(modificationInfos.getErrorType().name())
-                .withDefaultMessage(exc.getMessage())
-                .withSeverity(TypedValue.ERROR_SEVERITY)
-                .build());
+
             if (!listener.isBuild()) {
                 throw exc;
             }
