@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 @Schema(description = "Generator scaling variation")
 public class GeneratorScalingVariation {
     UUID id;
-    List<FilterInfo> filters;
+    List<FilterInfos> filters;
     VariationMode variationMode;
     Double variationValue;
 

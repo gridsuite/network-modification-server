@@ -6,7 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.gridsuite.modification.server.VariationMode;
-import org.gridsuite.modification.server.dto.FilterInfo;
+import org.gridsuite.modification.server.dto.FilterInfos;
 import org.gridsuite.modification.server.dto.GeneratorScalingVariation;
 
 import javax.persistence.*;
@@ -28,7 +28,7 @@ public class GeneratorScalingVariationEntity {
     @Column(name = "id")
     private UUID id;
 
-    @OneToMany(cascade = CascadeType.ALL)
+    @ManyToMany(cascade = CascadeType.ALL)
     private List<VariationFilterEntity> filters;
 
     @Column(name = "variationValue")
@@ -43,7 +43,7 @@ public class GeneratorScalingVariationEntity {
                 .variationMode(getVariationMode())
                 .variationValue(getVariationValue())
                 .filters(this.getFilters().stream()
-                        .map(filter -> new FilterInfo(filter.getId().toString(), filter.getName()))
+                        .map(filter -> new FilterInfos(filter.getFilterId().toString(), filter.getName()))
                         .collect(Collectors.toList()))
                 .build();
     }

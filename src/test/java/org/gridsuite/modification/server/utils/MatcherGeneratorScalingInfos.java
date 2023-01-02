@@ -1,9 +1,8 @@
 package org.gridsuite.modification.server.utils;
 
-import org.gridsuite.modification.server.dto.FilterInfo;
+import org.gridsuite.modification.server.dto.FilterInfos;
 import org.gridsuite.modification.server.dto.GeneratorScalingInfos;
 import org.gridsuite.modification.server.dto.GeneratorScalingVariation;
-import org.gridsuite.modification.server.dto.LineSplitWithVoltageLevelInfos;
 
 import java.util.List;
 import java.util.Objects;
@@ -45,7 +44,7 @@ public class MatcherGeneratorScalingInfos extends MatcherModificationInfos<Gener
                 && matchesFilters(variation1.getFilters(), variation2.getFilters());
     }
 
-    private boolean matchesFilters(List<FilterInfo> filterList1, List<FilterInfo> filterList2) {
+    private boolean matchesFilters(List<FilterInfos> filterList1, List<FilterInfos> filterList2) {
         if (!matchesList(filterList1, filterList2)) {
             return false;
         }
@@ -59,7 +58,7 @@ public class MatcherGeneratorScalingInfos extends MatcherModificationInfos<Gener
         return true;
     }
 
-    private boolean matchesFilter(FilterInfo filter1, FilterInfo filter2) {
+    private boolean matchesFilter(FilterInfos filter1, FilterInfos filter2) {
         return Objects.equals(filter1.getName(), filter2.getName());
     }
 

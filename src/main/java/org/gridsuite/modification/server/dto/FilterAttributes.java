@@ -16,6 +16,5 @@ public class FilterAttributes {
     private String id;
     private Date modificationDate;
     private String equipmentType;
-    private Double distributionKey;
     private List<FilterEquipmentAttributes> filterEquipmentsAttributes;
 }
