@@ -42,7 +42,7 @@ public class LoadScalingModificationTest extends AbstractNetworkModificationTest
 
     private static final String FILTER_ID_1 = "bdefd63f-6cd8-4686-b57b-6bc7aaffa202";
     private static final String FILTER_ID_2 = "bdfad63f-6fe6-4686-b57b-6bc7aa11a202";
-    private static final String FILTER_ID_3 = "bd063f-611f-4686-b57b-6bc7aa00a202";
+    private static final String FILTER_ID_3 = "00bd063f-611f-4686-b57b-6bc7aa00a202";
     private static final String FILTER_ID_4 = "6f11d63f-6f06-4686-b57b-6bc7aa66a202";
     private static final String FILTER_ID_5 = "7100163f-60f1-4686-b57b-6bc7aa77a202";
 

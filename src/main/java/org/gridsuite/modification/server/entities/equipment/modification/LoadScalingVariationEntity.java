@@ -67,7 +67,7 @@ public class LoadScalingVariationEntity {
                 .activeVariationMode(getActiveVariationMode())
                 .reactiveVariationMode(getReactiveVariationMode())
                 .filters(this.getFilters().stream()
-                        .map(filter -> new FilterInfos(filter.getId().toString(), filter.getName()))
+                        .map(filter -> new FilterInfos(filter.getFilterId().toString(), filter.getName()))
                         .collect(Collectors.toList()))
                 .build();
     }
