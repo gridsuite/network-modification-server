@@ -16,6 +16,7 @@ import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationGroupEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.*;
 import org.gridsuite.modification.server.entities.equipment.modification.BranchStatusModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.LineAttachToVoltageLevelEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.LineSplitWithVoltageLevelEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.LinesAttachToSplitLinesEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.BooleanModificationEmbedded;
@@ -417,16 +418,16 @@ public class ModificationRepositoryTest {
         phaseTapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.PHASE, 1, 1, 0, 0, 0, 0, 0.));
         phaseTapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.PHASE, 2, 1, 0, 0, 0, 0, 0.));
         phaseTapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.PHASE, 3, 1, 0, 0, 0, 0, 0.));
-        var createTwoWindingsTransformerEntity1 = networkModificationRepository.createTwoWindingsTransformerEntity("id2wt1", "name2wt1", 1.0, 1.1, 10.0, 11.0, 100.0, 100.1, -1, "vlId11", "busId11", "vlId12", "busId12", null, null, "cn11", ConnectablePosition.Direction.TOP, "cn22", ConnectablePosition.Direction.TOP, 1, 2, false, null, null, null, null, PhaseTapChanger.RegulationMode.CURRENT_LIMITER, null, null, null, null, null, null, null, null, null, null, phaseTapChangerStepCreationEmbeddables);
+        var createTwoWindingsTransformerEntity1 = networkModificationRepository.createTwoWindingsTransformerEntity("id2wt1", "name2wt1", 1.0, 1.1, 10.0, 11.0, 100.0, 100.1, -1, "vlId11", "busId11", "vlId12", "busId12", null, null, "cn11", ConnectablePosition.Direction.TOP, "cn22", ConnectablePosition.Direction.TOP, 1, 2, false, null, null, null, null, PhaseTapChanger.RegulationMode.CURRENT_LIMITER, null, null, null, null, null, null, null, null, null, null, phaseTapChangerStepCreationEmbeddables, 0, 1);
 
         List<TapChangerStepCreationEmbeddable> ratioTapChangerStepCreationEmbeddables = new ArrayList<>();
         ratioTapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.RATIO, 5, 1, 0, 0, 0, 0, null));
         ratioTapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.RATIO, 6, 1, 0, 0, 0, 0, null));
         ratioTapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.RATIO, 7, 1, 0, 0, 0, 0, null));
         ratioTapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.RATIO, 8, 1, 0, 0, 0, 0, null));
-        var createTwoWindingsTransformerEntity2 = networkModificationRepository.createTwoWindingsTransformerEntity("id2wt2", "name2wt2", 2.0, 1.2, 11.0, 12.0, 101.0, 100.2, -1, "vlId11", "busId11", "vlId12", "busId12", 480.0, 480.0, "cn33", ConnectablePosition.Direction.TOP, "cn44", ConnectablePosition.Direction.BOTTOM, null, null, null, null, null, null, null, null, null,  5, 6, true, 1., "v2load", "v2", "LOAD", true, 50., ratioTapChangerStepCreationEmbeddables);
-        var createTwoWindingsTransformerEntity3 = networkModificationRepository.createTwoWindingsTransformerEntity("id2wt3", "name2wt3", 1.0, 1.1, 10.0, 11.0, 100.0, 100.1, -1, "vlId11", "busId11", "vlId12", "busId12", 485.0, 480.0, "cn55", ConnectablePosition.Direction.TOP, "cn66", ConnectablePosition.Direction.TOP, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
-        var createTwoWindingsTransformerEntity4 = networkModificationRepository.createTwoWindingsTransformerEntity("id2wt4", "name2wt4", 2.0, 1.2, 11.0, 12.0, 101.0, 100.2, -1, "vlId11", "busId11", "vlId12", "busId12", null, 490.0, "cn77", ConnectablePosition.Direction.TOP, "cn88", ConnectablePosition.Direction.BOTTOM, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+        var createTwoWindingsTransformerEntity2 = networkModificationRepository.createTwoWindingsTransformerEntity("id2wt2", "name2wt2", 2.0, 1.2, 11.0, 12.0, 101.0, 100.2, -1, "vlId11", "busId11", "vlId12", "busId12", 480.0, 480.0, "cn33", ConnectablePosition.Direction.TOP, "cn44", ConnectablePosition.Direction.BOTTOM, null, null, null, null, null, null, null, null, null,  5, 6, true, 1., "v2load", "v2", "LOAD", true, 50., ratioTapChangerStepCreationEmbeddables, 2, 3);
+        var createTwoWindingsTransformerEntity3 = networkModificationRepository.createTwoWindingsTransformerEntity("id2wt3", "name2wt3", 1.0, 1.1, 10.0, 11.0, 100.0, 100.1, -1, "vlId11", "busId11", "vlId12", "busId12", 485.0, 480.0, "cn55", ConnectablePosition.Direction.TOP, "cn66", ConnectablePosition.Direction.TOP, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 4, 5);
+        var createTwoWindingsTransformerEntity4 = networkModificationRepository.createTwoWindingsTransformerEntity("id2wt4", "name2wt4", 2.0, 1.2, 11.0, 12.0, 101.0, 100.2, -1, "vlId11", "busId11", "vlId12", "busId12", null, 490.0, "cn77", ConnectablePosition.Direction.TOP, "cn88", ConnectablePosition.Direction.BOTTOM, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 6, 7);
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(createTwoWindingsTransformerEntity1, createTwoWindingsTransformerEntity2, createTwoWindingsTransformerEntity3, createTwoWindingsTransformerEntity4));
         assertRequestsCount(1, 21, 4, 0);
 
@@ -873,13 +874,97 @@ public class ModificationRepositoryTest {
     }
 
     @Test
+    public void testLineAttachToVoltageLevel() {
+        LineCreationInfos attachmentLine = LineCreationInfos.builder()
+                .type(ModificationType.LINE_CREATION)
+                .equipmentId("attachmentLineId")
+                .seriesResistance(50.6)
+                .seriesReactance(25.3)
+                .build();
+        LineAttachToVoltageLevelEntity lineAttachToEntity1 = LineAttachToVoltageLevelInfos.builder()
+                .type(ModificationType.LINE_ATTACH_TO_VOLTAGE_LEVEL)
+                .lineToAttachToId("lineId0")
+                .percent(40.0)
+                .attachmentPointId("AttachmentPointId")
+                .attachmentPointName(null)
+                .mayNewVoltageLevelInfos(null)
+                .existingVoltageLevelId("vl1")
+                .bbsOrBusId("bbsId")
+                .attachmentLine(attachmentLine)
+                .newLine1Id("line1Id")
+                .newLine1Name("line1Name")
+                .newLine2Id("line2Id")
+                .newLine2Name("line2Name")
+                .build().toEntity();
+        VoltageLevelCreationInfos voltageLevelCreationInfos = makeAVoltageLevelInfos(1, 0);
+        LineAttachToVoltageLevelEntity lineAttachToEntity2 = LineAttachToVoltageLevelInfos.builder()
+                .type(ModificationType.LINE_ATTACH_TO_VOLTAGE_LEVEL)
+                .lineToAttachToId("lineId1")
+                .percent(40.0)
+                .attachmentPointId("AttachmentPointId")
+                .attachmentPointName(null)
+                .mayNewVoltageLevelInfos(voltageLevelCreationInfos)
+                .existingVoltageLevelId(null)
+                .bbsOrBusId("bbsId")
+                .attachmentLine(attachmentLine)
+                .newLine1Id("line1Id")
+                .newLine1Name("line1Name")
+                .newLine2Id("line2Id")
+                .newLine2Name("line2Name")
+                .build().toEntity();
+        networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(lineAttachToEntity1, lineAttachToEntity2));
+
+        List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
+        assertEquals(2, modificationInfos.size());
+
+        assertThat(getLineAttachToVoltageLevelModification(modificationInfos.get(0).getUuid()),
+                MatcherLineAttachToVoltageLevelInfos.createMatcherLineAttachToVoltageLevelInfos(
+                        lineAttachToEntity1.toModificationInfos()));
+
+        assertThat(getLineAttachToVoltageLevelModification(modificationInfos.get(1).getUuid()),
+                MatcherLineAttachToVoltageLevelInfos.createMatcherLineAttachToVoltageLevelInfos(
+                        lineAttachToEntity2.toModificationInfos()));
+
+        SQLStatementCountValidator.reset();
+        networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(lineAttachToEntity1.getId(),
+                lineAttachToEntity2.getId()));
+        assertRequestsCount(2, 0, 0, 12);
+
+        SQLStatementCountValidator.reset();
+        networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
+        assertRequestsCount(2, 0, 0, 1);
+
+        assertThrows(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage(),
+                NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true)
+        );
+    }
+
+    @Test
     public void testLinesAttachToSplitLines() {
-        LinesAttachToSplitLinesEntity linesAttachToEntity1 = LinesAttachToSplitLinesEntity.toEntity(
-                "lineId0", "lineId1", "lineId3", "vl1", "bbsId", "line1Id", "line1Name", "line2Id", "line2Name"
-        );
-        LinesAttachToSplitLinesEntity linesAttachToEntity2 = LinesAttachToSplitLinesEntity.toEntity(
-                "lineId4", "lineId5", "lineId6", "vl2", "bbsId2", "line3Id", "line3Name", "line4Id", "line4Name"
-        );
+        LinesAttachToSplitLinesEntity linesAttachToEntity1 = LinesAttachToSplitLinesInfos.builder()
+                .type(ModificationType.LINES_ATTACH_TO_SPLIT_LINES)
+                .lineToAttachTo1Id("lineId0")
+                .lineToAttachTo2Id("lineId1")
+                .attachedLineId("lineId3")
+                .voltageLevelId("vl1")
+                .bbsBusId("bbsId")
+                .replacingLine1Id("line1Id")
+                .replacingLine1Name("line1Name")
+                .replacingLine2Id("line2Id")
+                .replacingLine2Name("line2Name")
+                .build().toEntity();
+        LinesAttachToSplitLinesEntity linesAttachToEntity2 = LinesAttachToSplitLinesInfos.builder()
+                .type(ModificationType.LINES_ATTACH_TO_SPLIT_LINES)
+                .lineToAttachTo1Id("lineId4")
+                .lineToAttachTo2Id("lineId5")
+                .attachedLineId("lineId6")
+                .voltageLevelId("vl2")
+                .bbsBusId("bbsId2")
+                .replacingLine1Id("line3Id")
+                .replacingLine1Name("line3Name")
+                .replacingLine2Id("line4Id")
+                .replacingLine2Name("line4Name")
+                .build().toEntity();
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(linesAttachToEntity1, linesAttachToEntity2));
 
         List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);

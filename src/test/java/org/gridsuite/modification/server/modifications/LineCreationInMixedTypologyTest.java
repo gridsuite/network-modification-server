@@ -51,6 +51,8 @@ public class LineCreationInMixedTypologyTest extends AbstractNetworkModification
             .connectionDirection1(ConnectablePosition.Direction.TOP)
             .connectionName2("cn2Line1")
             .connectionDirection2(ConnectablePosition.Direction.TOP)
+            .connectionPosition1(0)
+            .connectionPosition2(0)
             .build();
     }
 
@@ -74,6 +76,8 @@ public class LineCreationInMixedTypologyTest extends AbstractNetworkModification
             .connectionDirection1(ConnectablePosition.Direction.BOTTOM)
             .connectionName2("cn4Line1")
             .connectionDirection2(ConnectablePosition.Direction.BOTTOM)
+            .connectionPosition1(0)
+            .connectionPosition2(0)
             .build();
     }
 
