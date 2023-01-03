@@ -29,6 +29,9 @@ public class GeneratorScalingVariationEntity {
     private UUID id;
 
     @ManyToMany(cascade = CascadeType.ALL)
+    @JoinTable(
+            joinColumns = @JoinColumn(name = "id"),
+            inverseJoinColumns = @JoinColumn(name = "filterId"))
     private List<VariationFilterEntity> filters;
 
     @Column(name = "variationValue")

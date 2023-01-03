@@ -12,6 +12,7 @@ import org.gridsuite.modification.server.dto.FilterEquipmentAttributes;
 import org.gridsuite.modification.server.dto.FilterInfos;
 import org.gridsuite.modification.server.dto.GeneratorScalingInfos;
 import org.gridsuite.modification.server.dto.GeneratorScalingVariation;
+import org.gridsuite.modification.server.dto.IdentifiableAttributes;
 import org.gridsuite.modification.server.service.FilterService;
 import org.gridsuite.modification.server.service.SpringContext;
 
@@ -21,6 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -28,16 +30,10 @@ import static org.gridsuite.modification.server.utils.ScalingUtils.createReport;
 
 public class GeneratorScaling extends AbstractModification {
 
-    FilterService filterService;
-
     private final GeneratorScalingInfos generatorScalableInfos;
 
     public GeneratorScaling(GeneratorScalingInfos generatorScalableInfos) {
         this.generatorScalableInfos = generatorScalableInfos;
-    }
-
-    public void setFilterService(FilterService filterService) {
-        this.filterService = filterService;
     }
 
     @Override
@@ -48,6 +44,8 @@ public class GeneratorScaling extends AbstractModification {
             filterIds.addAll(variation.getFilters().stream().map(FilterInfos::getId).collect(Collectors.toList()));
         });
 
+        Map<UUID, List<IdentifiableAttributes>> exportFilters = SpringContext.getBean(FilterService.class)
+                .exportFilters(filterIds.stream().distinct().collect(Collectors.toList()), network.getId(), null);
         List<FilterAttributes> filters = SpringContext.getBean(FilterService.class)
                 .getFilters(filterIds.stream().distinct().collect(Collectors.toList()));
 
@@ -91,7 +89,7 @@ public class GeneratorScaling extends AbstractModification {
             default:
                 throw new NetworkModificationException(NetworkModificationException.Type.GENERATOR_SCALING_ERROR, "This variation mode is not supported : " + generatorScalingVariation.getVariationMode().name());
         }
-        createReport(subReporter,"generatorScalingCreated","new load scaling created", TypedValue.INFO_SEVERITY);
+        createReport(subReporter,"generatorScalingCreated","new generator scaling created", TypedValue.INFO_SEVERITY);
     }
 
     private void scaleWithStackingUpMode(Network network, FilterAttributes filter, GeneratorScalingVariation generatorScalingVariation) {
@@ -173,7 +171,8 @@ public class GeneratorScaling extends AbstractModification {
                                                   Reporter subReporter,
                                                   FilterAttributes filter,
                                                   GeneratorScalingVariation generatorScalingVariation) {
-        AtomicReference<Double> sum = new AtomicReference<>(0D);
+        AtomicReference<Double> maxPSum = new AtomicReference<>(0D);
+        AtomicReference<Double> targetPSum = new AtomicReference<>(0D);
         Map<String, Double> targetPMap = new HashMap<>();
         List<Float> percentages = new ArrayList<>();
         List<Scalable> scalables = new ArrayList<>();
@@ -184,20 +183,21 @@ public class GeneratorScaling extends AbstractModification {
                 Generator generator = network.getGenerator(equipment.getEquipmentID());
                 if (generator != null) {
                     targetPMap.put(generator.getId(), generator.getMaxP());
-                    sum.set(sum.get() + generator.getMaxP());
+                    maxPSum.set(maxPSum.get() + generator.getMaxP());
+                    targetPSum.set(targetPSum.get() + generator.getTargetP());
                 } else {
                     notFoundEquipments.add(equipment.getEquipmentID());
                 }
             });
         checkVariationFilter(filter, subReporter, targetPMap, notFoundEquipments);
         targetPMap.forEach((id, p) -> {
-            percentages.add((float) ((p / sum.get()) * 100));
+            percentages.add((float) ((p / maxPSum.get()) * 100));
             scalables.add(getScalable(id));
         });
 
         Scalable proportionalToPmaxScalable = Scalable.proportional(percentages, scalables, isIterative);
         proportionalToPmaxScalable.scale(network,
-                getAsked(generatorScalingVariation, sum),
+                getAsked(generatorScalingVariation, targetPSum),
                 Scalable.ScalingConvention.GENERATOR);
     }
 

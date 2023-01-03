@@ -1,6 +1,7 @@
 package org.gridsuite.modification.server.service;
 
 import org.gridsuite.modification.server.dto.FilterAttributes;
+import org.gridsuite.modification.server.dto.IdentifiableAttributes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -10,6 +11,8 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 @Service
 public class FilterService {
@@ -39,5 +42,20 @@ public class FilterService {
                 .toUriString();
         return restTemplate.exchange(filterServerBaseUri + path, HttpMethod.GET, null, new ParameterizedTypeReference<List<FilterAttributes>>() {
         }).getBody();
+    }
+
+    public Map<UUID, List<IdentifiableAttributes>> exportFilters(List<String> filtersUuids, String networkUuid, String variantId) {
+        var ids = filtersUuids != null && filtersUuids.size() > 0 ?
+                "?ids=" + String.join(",", filtersUuids) : "";
+        var variant = variantId != null ? "&variantId=" + variantId : "";
+        String path = UriComponentsBuilder.fromPath(DELIMITER + FILTER_SERVER_API_VERSION + "/filters/export?networkUuid=" + networkUuid + variant + ids)
+                .buildAndExpand()
+                .toUriString();
+        return restTemplate.exchange(
+                    filterServerBaseUri + path,
+                    HttpMethod.GET,
+                    null,
+                    new ParameterizedTypeReference<Map<UUID, List<IdentifiableAttributes>>>() {})
+                .getBody();
     }
 }

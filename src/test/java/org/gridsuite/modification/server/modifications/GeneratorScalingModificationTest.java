@@ -117,16 +117,10 @@ public class GeneratorScalingModificationTest extends AbstractNetworkModificatio
 
         String modificationToCreateJson = mapper.writeValueAsString(generatorScalingInfo);
 
-        var result = mockMvc.perform(post(getNetworkModificationUri())
+        mockMvc.perform(post(getNetworkModificationUri())
                         .content(modificationToCreateJson)
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().is4xxClientError())
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
-
-        var a = result;
-        //assertEquals(new NetworkModificationException(NetworkModificationException.Type.GENERATOR_SCALING_ERROR, "This mode is available only for equipment with distribution key").getMessage(), result);
+                .andExpect(status().is4xxClientError());
     }
 
     @Override
@@ -262,7 +256,7 @@ public class GeneratorScalingModificationTest extends AbstractNetworkModificatio
     }
 
     @After
-    public void shutDown() throws IOException {
+    public void shutDown() {
         wireMock.shutdown();
     }
 }

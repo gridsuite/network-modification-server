@@ -25,8 +25,13 @@ import java.util.List;
 @Schema(description = "Generator scaling creation")
 public class GeneratorScalingInfos extends ModificationInfos {
 
+    @Schema(description = "generator scaling variations")
     private List<GeneratorScalingVariation> generatorScalingVariations;
+
+    @Schema(description = "is iterative")
     private boolean isIterative;
+
+    @Schema(description = "variation type")
     private VariationType variationType;
 
     @Override
