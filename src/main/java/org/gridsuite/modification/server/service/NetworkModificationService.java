@@ -92,6 +92,8 @@ public class NetworkModificationService {
 
     private static final String NETWORK_MODIFICATION_TYPE_REPORT = "NetworkModification";
     private static final String LINE_ID_PARAMETER = "lineId";
+    private static final String MIN_REACTIVE_POWER_FIELDNAME = "Minimum reactive power";
+    private static final String MAX_REACTIVE_POWER_FIELDNAME = "Maximum reactive power";
 
     public NetworkModificationService(@Value("${backing-services.report-server.base-uri:http://report-server}") String reportServerURI,
                                       NetworkStoreService networkStoreService, NetworkModificationRepository networkModificationRepository,
@@ -741,6 +743,7 @@ public class NetworkModificationService {
 
         // (if the min and max reactive limits are null and there is no previous min max limits set we set them to Double max and
         // Double min values)
+        // The user can change the value of MinimumReactivePower, MaximumReactivePower or both
         if (modificationInfos.getMinimumReactivePower() != null
                 && modificationInfos.getMaximumReactivePower() != null) {
             generator.newMinMaxReactiveLimits().setMinQ(modificationInfos.getMinimumReactivePower().getValue())
@@ -748,20 +751,34 @@ public class NetworkModificationService {
                     .add();
             addModificationReport(minMaxReactiveLimits != null ? minMaxReactiveLimits.getMinQ() : Double.NaN,
                     modificationInfos.getMinimumReactivePower().getValue(), subReporter,
-                    "Minimum reactive power");
+                    MIN_REACTIVE_POWER_FIELDNAME);
             addModificationReport(minMaxReactiveLimits != null ? minMaxReactiveLimits.getMaxQ() : Double.NaN,
                     modificationInfos.getMaximumReactivePower().getValue(), subReporter,
-                    "Maximum reactive power");
+                    MAX_REACTIVE_POWER_FIELDNAME);
+        } else if (modificationInfos.getMinimumReactivePower() != null) {
+            generator.newMinMaxReactiveLimits().setMinQ(modificationInfos.getMinimumReactivePower().getValue())
+                    .setMaxQ(minMaxReactiveLimits != null ? minMaxReactiveLimits.getMaxQ() : Double.MAX_VALUE)
+                    .add();
+            addModificationReport(minMaxReactiveLimits != null ? minMaxReactiveLimits.getMinQ() : Double.NaN,
+                    modificationInfos.getMinimumReactivePower().getValue(), subReporter,
+                    MIN_REACTIVE_POWER_FIELDNAME);
+        } else if (modificationInfos.getMaximumReactivePower() != null) {
+            generator.newMinMaxReactiveLimits().setMinQ(minMaxReactiveLimits != null ? minMaxReactiveLimits.getMaxQ() : -Double.MAX_VALUE)
+                    .setMaxQ(modificationInfos.getMaximumReactivePower().getValue())
+                    .add();
+            addModificationReport(minMaxReactiveLimits != null ? minMaxReactiveLimits.getMaxQ() : Double.NaN,
+                    modificationInfos.getMaximumReactivePower().getValue(), subReporter,
+                    MAX_REACTIVE_POWER_FIELDNAME);
         } else if (minMaxReactiveLimits == null) {
             generator.newMinMaxReactiveLimits().setMinQ(-Double.MAX_VALUE)
                     .setMaxQ(Double.MAX_VALUE)
                     .add();
             addModificationReport(Double.NaN,
                     -Double.MAX_VALUE, subReporter,
-                    "Minimum reactive power");
+                    MIN_REACTIVE_POWER_FIELDNAME);
             addModificationReport(Double.NaN,
                     Double.MAX_VALUE, subReporter,
-                    "Maximum reactive power");
+                    MAX_REACTIVE_POWER_FIELDNAME);
         }
     }
 
