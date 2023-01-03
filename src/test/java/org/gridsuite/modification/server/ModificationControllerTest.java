@@ -1062,7 +1062,9 @@ public class ModificationControllerTest {
                 null,
                 null,
                 null,
-                null
+                null,
+                0,
+                1
                 )
                 .toModificationInfos();
         twoWindingsTransformerCreationInfos.setUuid(bsmlrTwoWindings.get(0).getUuid());
@@ -1106,7 +1108,9 @@ public class ModificationControllerTest {
                 null,
                 null,
                 null,
-                null
+                null,
+                2,
+                3
         ).toModificationInfos();
         String twoWindingsTransformerCreationUpdateJson = objectWriter.writeValueAsString(twoWindingsTransformerCreationUpdate);
         mockMvc.perform(put(URI_NETWORK_MODIF_GET_PUT + bsmlrTwoWindings.get(0).getUuid()).content(twoWindingsTransformerCreationUpdateJson).contentType(MediaType.APPLICATION_JSON))
@@ -1786,7 +1790,11 @@ public class ModificationControllerTest {
         duplicateModificationUuidList.addAll(badModificationUuidList);
 
         MvcResult mvcResult = mockMvc.perform(
-            put("/v1/groups/" + TEST_GROUP_ID + "?action=COPY")
+            put("/v1/groups/" + TEST_GROUP_ID + "?action=COPY"
+                    + "&networkUuid=" + TEST_NETWORK_ID
+                    + "&reportUuid=" + TEST_REPORT_ID
+                    + "&reporterId=" + UUID.randomUUID()
+                    + "&variantId=" + NetworkCreation.VARIANT_ID)
                 .content(objectWriter.writeValueAsString(duplicateModificationUuidList))
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
@@ -1826,7 +1834,11 @@ public class ModificationControllerTest {
         // Duplicate the same modifications, and append them at the end of this new group modification list.
         duplicateModificationUuidList = new ArrayList<>(modificationUuidList.subList(0, 2));
         mvcResult = mockMvc.perform(
-                put("/v1/groups/" + otherGroupId + "?action=COPY")
+                put("/v1/groups/" + otherGroupId + "?action=COPY"
+                        + "&networkUuid=" + TEST_NETWORK_ID
+                        + "&reportUuid=" + TEST_REPORT_ID
+                        + "&reporterId=" + UUID.randomUUID()
+                        + "&variantId=" + NetworkCreation.VARIANT_ID)
                     .content(objectWriter.writeValueAsString(duplicateModificationUuidList))
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
@@ -1848,24 +1860,95 @@ public class ModificationControllerTest {
     }
 
     @Test
-    public void testMoveModification() throws Exception {
+    public void testDuplicateModificationWithUnexistingId() throws Exception {
+        // create 1 modifications
+        List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 1);
+        List<UUID> modificationUuidList = modificationList.stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
+
+        // Try to copy an unexisting Modification
+        List<UUID> duplicateModificationUuidList = List.of(UUID.randomUUID());
+        MvcResult mvcResult = mockMvc.perform(
+                        put("/v1/groups/" + TEST_GROUP_ID + "?action=COPY"
+                                + "&networkUuid=" + TEST_NETWORK_ID
+                                + "&reportUuid=" + TEST_REPORT_ID
+                                + "&reporterId=" + UUID.randomUUID()
+                                + "&variantId=" + NetworkCreation.VARIANT_ID)
+                                .content(objectWriter.writeValueAsString(duplicateModificationUuidList))
+                                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        List<UUID> resultModificationUuidList = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertEquals(duplicateModificationUuidList, resultModificationUuidList); // bad uuids are returned
+
+        var newModificationList = modificationRepository.getModifications(TEST_GROUP_ID, true, true);
+        List<UUID> newModificationUuidList = newModificationList.stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
+        // we still have the same and only modification
+        assertEquals(newModificationUuidList, modificationUuidList);
+    }
+
+    private void testMoveModification(UUID originGroupUuid, Boolean canBuild) throws Exception {
         // create 2 modifications
         List<UUID> modificationUuidList = createSomeSwitchModifications(TEST_GROUP_ID, 2).
                 stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
 
         // swap modifications: move [1] before [0]
         List<UUID> movingModificationUuidList = Collections.singletonList(modificationUuidList.get(1));
-        mockMvc.perform(
-            put("/v1/groups/" + TEST_GROUP_ID + "?action=MOVE&originGroupUuid=" + TEST_GROUP_ID + "&before=" + modificationUuidList.get(0))
-                    .content(objectWriter.writeValueAsString(movingModificationUuidList))
-                    .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk());
+        String url = "/v1/groups/" + TEST_GROUP_ID + "?action=MOVE"
+                + "&networkUuid=" + TEST_NETWORK_ID
+                + "&reportUuid=" + TEST_REPORT_ID
+                + "&reporterId=" + UUID.randomUUID()
+                + "&variantId=" + NetworkCreation.VARIANT_ID
+                + "&before=" + modificationUuidList.get(0);
+        if (originGroupUuid != null) {
+            url = url + "&originGroupUuid=" + TEST_GROUP_ID;
+        }
+        if (canBuild != null) {
+            url = url + "&buid=" + canBuild;
+        }
+        mockMvc.perform(put(url).content(objectWriter.writeValueAsString(movingModificationUuidList))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
 
         var newModificationUuidList = modificationRepository.getModifications(TEST_GROUP_ID, true, true).
                 stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
         assertNotNull(newModificationUuidList);
         Collections.reverse(newModificationUuidList);
 
+        assertEquals(modificationUuidList, newModificationUuidList);
+    }
+
+    @Test
+    public void testMoveModificationWithOrigin() throws Exception {
+        testMoveModification(TEST_GROUP_ID, Boolean.TRUE);
+    }
+
+    @Test
+    public void testMoveModificationWithoutOrigin() throws Exception {
+        testMoveModification(null, null);
+    }
+
+    @Test
+    public void testMoveModificationWithUnexistingId() throws Exception {
+        // create 2 modifications
+        List<UUID> modificationUuidList = createSomeSwitchModifications(TEST_GROUP_ID, 2).
+                stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
+
+        // try to move an unexisting modification before [0]: no error, no change
+        List<UUID> movingModificationUuidList = List.of(UUID.randomUUID());
+        String url = "/v1/groups/" + TEST_GROUP_ID + "?action=MOVE"
+                + "&networkUuid=" + TEST_NETWORK_ID
+                + "&reportUuid=" + TEST_REPORT_ID
+                + "&reporterId=" + UUID.randomUUID()
+                + "&variantId=" + NetworkCreation.VARIANT_ID
+                + "&before=" + modificationUuidList.get(0)
+                + "&originGroupUuid=" + TEST_GROUP_ID;
+        mockMvc.perform(put(url).content(objectWriter.writeValueAsString(movingModificationUuidList))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        var newModificationUuidList = modificationRepository.getModifications(TEST_GROUP_ID, true, true).
+                stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
+        assertNotNull(newModificationUuidList);
+        // nothing has changed in modification group
         assertEquals(modificationUuidList, newModificationUuidList);
     }
 

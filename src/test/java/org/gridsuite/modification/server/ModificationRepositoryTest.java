@@ -46,8 +46,7 @@ import static com.vladmihalcea.sql.SQLStatementCountValidator.*;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_GROUP_NOT_FOUND;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_NOT_FOUND;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.*;
 
 
 /**
@@ -419,16 +418,16 @@ public class ModificationRepositoryTest {
         phaseTapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.PHASE, 1, 1, 0, 0, 0, 0, 0.));
         phaseTapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.PHASE, 2, 1, 0, 0, 0, 0, 0.));
         phaseTapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.PHASE, 3, 1, 0, 0, 0, 0, 0.));
-        var createTwoWindingsTransformerEntity1 = networkModificationRepository.createTwoWindingsTransformerEntity("id2wt1", "name2wt1", 1.0, 1.1, 10.0, 11.0, 100.0, 100.1, -1, "vlId11", "busId11", "vlId12", "busId12", null, null, "cn11", ConnectablePosition.Direction.TOP, "cn22", ConnectablePosition.Direction.TOP, 1, 2, false, null, null, null, null, PhaseTapChanger.RegulationMode.CURRENT_LIMITER, null, null, null, null, null, null, null, null, null, null, phaseTapChangerStepCreationEmbeddables);
+        var createTwoWindingsTransformerEntity1 = networkModificationRepository.createTwoWindingsTransformerEntity("id2wt1", "name2wt1", 1.0, 1.1, 10.0, 11.0, 100.0, 100.1, -1, "vlId11", "busId11", "vlId12", "busId12", null, null, "cn11", ConnectablePosition.Direction.TOP, "cn22", ConnectablePosition.Direction.TOP, 1, 2, false, null, null, null, null, PhaseTapChanger.RegulationMode.CURRENT_LIMITER, null, null, null, null, null, null, null, null, null, null, phaseTapChangerStepCreationEmbeddables, 0, 1);
 
         List<TapChangerStepCreationEmbeddable> ratioTapChangerStepCreationEmbeddables = new ArrayList<>();
         ratioTapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.RATIO, 5, 1, 0, 0, 0, 0, null));
         ratioTapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.RATIO, 6, 1, 0, 0, 0, 0, null));
         ratioTapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.RATIO, 7, 1, 0, 0, 0, 0, null));
         ratioTapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.RATIO, 8, 1, 0, 0, 0, 0, null));
-        var createTwoWindingsTransformerEntity2 = networkModificationRepository.createTwoWindingsTransformerEntity("id2wt2", "name2wt2", 2.0, 1.2, 11.0, 12.0, 101.0, 100.2, -1, "vlId11", "busId11", "vlId12", "busId12", 480.0, 480.0, "cn33", ConnectablePosition.Direction.TOP, "cn44", ConnectablePosition.Direction.BOTTOM, null, null, null, null, null, null, null, null, null,  5, 6, true, 1., "v2load", "v2", "LOAD", true, 50., ratioTapChangerStepCreationEmbeddables);
-        var createTwoWindingsTransformerEntity3 = networkModificationRepository.createTwoWindingsTransformerEntity("id2wt3", "name2wt3", 1.0, 1.1, 10.0, 11.0, 100.0, 100.1, -1, "vlId11", "busId11", "vlId12", "busId12", 485.0, 480.0, "cn55", ConnectablePosition.Direction.TOP, "cn66", ConnectablePosition.Direction.TOP, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
-        var createTwoWindingsTransformerEntity4 = networkModificationRepository.createTwoWindingsTransformerEntity("id2wt4", "name2wt4", 2.0, 1.2, 11.0, 12.0, 101.0, 100.2, -1, "vlId11", "busId11", "vlId12", "busId12", null, 490.0, "cn77", ConnectablePosition.Direction.TOP, "cn88", ConnectablePosition.Direction.BOTTOM, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+        var createTwoWindingsTransformerEntity2 = networkModificationRepository.createTwoWindingsTransformerEntity("id2wt2", "name2wt2", 2.0, 1.2, 11.0, 12.0, 101.0, 100.2, -1, "vlId11", "busId11", "vlId12", "busId12", 480.0, 480.0, "cn33", ConnectablePosition.Direction.TOP, "cn44", ConnectablePosition.Direction.BOTTOM, null, null, null, null, null, null, null, null, null,  5, 6, true, 1., "v2load", "v2", "LOAD", true, 50., ratioTapChangerStepCreationEmbeddables, 2, 3);
+        var createTwoWindingsTransformerEntity3 = networkModificationRepository.createTwoWindingsTransformerEntity("id2wt3", "name2wt3", 1.0, 1.1, 10.0, 11.0, 100.0, 100.1, -1, "vlId11", "busId11", "vlId12", "busId12", 485.0, 480.0, "cn55", ConnectablePosition.Direction.TOP, "cn66", ConnectablePosition.Direction.TOP, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 4, 5);
+        var createTwoWindingsTransformerEntity4 = networkModificationRepository.createTwoWindingsTransformerEntity("id2wt4", "name2wt4", 2.0, 1.2, 11.0, 12.0, 101.0, 100.2, -1, "vlId11", "busId11", "vlId12", "busId12", null, 490.0, "cn77", ConnectablePosition.Direction.TOP, "cn88", ConnectablePosition.Direction.BOTTOM, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 6, 7);
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(createTwoWindingsTransformerEntity1, createTwoWindingsTransformerEntity2, createTwoWindingsTransformerEntity3, createTwoWindingsTransformerEntity4));
         assertRequestsCount(1, 21, 4, 0);
 
@@ -610,15 +609,17 @@ public class ModificationRepositoryTest {
         // moving modifications from a wrong group should work but return their UUID in response
         SQLStatementCountValidator.reset();
         List<UUID> modificationsToMoveUuid = List.of(groovyScriptModificationEntity1.getId(), groovyScriptModificationEntity3.getId());
-        assertEquals(List.of(groovyScriptModificationEntity3.getId()), networkModificationRepository.moveModifications(TEST_GROUP_ID_3, TEST_GROUP_ID, modificationsToMoveUuid, null));
+        assertEquals(List.of(groovyScriptModificationEntity3.getId()), networkModificationRepository.moveModifications(TEST_GROUP_ID_3, TEST_GROUP_ID, modificationsToMoveUuid, null).getModificationsInError());
         assertRequestsCount(4, 0, 5, 0);
 
-        // moving modification with reference node not in destination group shoud throw exception
+        // moving modification with reference node not in destination: no exception, and bad id is returned as error
         SQLStatementCountValidator.reset();
         List <UUID> modificationsToMoveUuid2 = List.of(groovyScriptModificationEntity1.getId());
         UUID referenceNodeUuid = groovyScriptModificationEntity2.getId();
-        assertThrows(NetworkModificationException.class, () -> networkModificationRepository.moveModifications(TEST_GROUP_ID_2, TEST_GROUP_ID, modificationsToMoveUuid2, referenceNodeUuid));
-        assertRequestsCount(4, 0, 0, 0);
+        NetworkModificationRepository.MoveModificationResult result =  networkModificationRepository.moveModifications(TEST_GROUP_ID_2, TEST_GROUP_ID, modificationsToMoveUuid2, referenceNodeUuid);
+        assertTrue(result.getModificationsMoved().isEmpty()); // nothing moved
+        assertEquals(modificationsToMoveUuid2, result.getModificationsInError());
+        assertRequestsCount(2, 0, 0, 0);
 
         var modification1 = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
         var modification2 = networkModificationRepository.getModifications(TEST_GROUP_ID_2, true, true);

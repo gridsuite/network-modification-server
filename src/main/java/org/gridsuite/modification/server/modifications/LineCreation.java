@@ -39,8 +39,8 @@ public class LineCreation extends AbstractModification {
         if (voltageLevel1.getTopologyKind() == TopologyKind.NODE_BREAKER &&
                 voltageLevel2.getTopologyKind() == TopologyKind.NODE_BREAKER) {
             LineAdder lineAdder = ModificationUtils.getInstance().createLineAdder(network, voltageLevel1, voltageLevel2, modificationInfos, false, false);
-            var position1 = ModificationUtils.getInstance().getPosition(modificationInfos.getBusOrBusbarSectionId1(), network, voltageLevel1);
-            var position2 = ModificationUtils.getInstance().getPosition(modificationInfos.getBusOrBusbarSectionId2(), network, voltageLevel2);
+            var position1 = modificationInfos.getConnectionPosition1() != null ? modificationInfos.getConnectionPosition1() : ModificationUtils.getInstance().getPosition(modificationInfos.getBusOrBusbarSectionId1(), network, voltageLevel1);
+            var position2 = modificationInfos.getConnectionPosition2() != null ? modificationInfos.getConnectionPosition2() : ModificationUtils.getInstance().getPosition(modificationInfos.getBusOrBusbarSectionId2(), network, voltageLevel2);
 
             CreateBranchFeederBays algo = new CreateBranchFeederBaysBuilder()
                     .withBbsId1(modificationInfos.getBusOrBusbarSectionId1())
