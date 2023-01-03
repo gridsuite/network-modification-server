@@ -16,6 +16,7 @@ import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationGroupEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.*;
 import org.gridsuite.modification.server.entities.equipment.modification.BranchStatusModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.LineAttachToVoltageLevelEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.LineSplitWithVoltageLevelEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.LinesAttachToSplitLinesEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.BooleanModificationEmbedded;
@@ -873,13 +874,97 @@ public class ModificationRepositoryTest {
     }
 
     @Test
+    public void testLineAttachToVoltageLevel() {
+        LineCreationInfos attachmentLine = LineCreationInfos.builder()
+                .type(ModificationType.LINE_CREATION)
+                .equipmentId("attachmentLineId")
+                .seriesResistance(50.6)
+                .seriesReactance(25.3)
+                .build();
+        LineAttachToVoltageLevelEntity lineAttachToEntity1 = LineAttachToVoltageLevelInfos.builder()
+                .type(ModificationType.LINE_ATTACH_TO_VOLTAGE_LEVEL)
+                .lineToAttachToId("lineId0")
+                .percent(40.0)
+                .attachmentPointId("AttachmentPointId")
+                .attachmentPointName(null)
+                .mayNewVoltageLevelInfos(null)
+                .existingVoltageLevelId("vl1")
+                .bbsOrBusId("bbsId")
+                .attachmentLine(attachmentLine)
+                .newLine1Id("line1Id")
+                .newLine1Name("line1Name")
+                .newLine2Id("line2Id")
+                .newLine2Name("line2Name")
+                .build().toEntity();
+        VoltageLevelCreationInfos voltageLevelCreationInfos = makeAVoltageLevelInfos(1, 0);
+        LineAttachToVoltageLevelEntity lineAttachToEntity2 = LineAttachToVoltageLevelInfos.builder()
+                .type(ModificationType.LINE_ATTACH_TO_VOLTAGE_LEVEL)
+                .lineToAttachToId("lineId1")
+                .percent(40.0)
+                .attachmentPointId("AttachmentPointId")
+                .attachmentPointName(null)
+                .mayNewVoltageLevelInfos(voltageLevelCreationInfos)
+                .existingVoltageLevelId(null)
+                .bbsOrBusId("bbsId")
+                .attachmentLine(attachmentLine)
+                .newLine1Id("line1Id")
+                .newLine1Name("line1Name")
+                .newLine2Id("line2Id")
+                .newLine2Name("line2Name")
+                .build().toEntity();
+        networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(lineAttachToEntity1, lineAttachToEntity2));
+
+        List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
+        assertEquals(2, modificationInfos.size());
+
+        assertThat(getLineAttachToVoltageLevelModification(modificationInfos.get(0).getUuid()),
+                MatcherLineAttachToVoltageLevelInfos.createMatcherLineAttachToVoltageLevelInfos(
+                        lineAttachToEntity1.toModificationInfos()));
+
+        assertThat(getLineAttachToVoltageLevelModification(modificationInfos.get(1).getUuid()),
+                MatcherLineAttachToVoltageLevelInfos.createMatcherLineAttachToVoltageLevelInfos(
+                        lineAttachToEntity2.toModificationInfos()));
+
+        SQLStatementCountValidator.reset();
+        networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(lineAttachToEntity1.getId(),
+                lineAttachToEntity2.getId()));
+        assertRequestsCount(2, 0, 0, 12);
+
+        SQLStatementCountValidator.reset();
+        networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
+        assertRequestsCount(2, 0, 0, 1);
+
+        assertThrows(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage(),
+                NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true)
+        );
+    }
+
+    @Test
     public void testLinesAttachToSplitLines() {
-        LinesAttachToSplitLinesEntity linesAttachToEntity1 = LinesAttachToSplitLinesEntity.toEntity(
-                "lineId0", "lineId1", "lineId3", "vl1", "bbsId", "line1Id", "line1Name", "line2Id", "line2Name"
-        );
-        LinesAttachToSplitLinesEntity linesAttachToEntity2 = LinesAttachToSplitLinesEntity.toEntity(
-                "lineId4", "lineId5", "lineId6", "vl2", "bbsId2", "line3Id", "line3Name", "line4Id", "line4Name"
-        );
+        LinesAttachToSplitLinesEntity linesAttachToEntity1 = LinesAttachToSplitLinesInfos.builder()
+                .type(ModificationType.LINES_ATTACH_TO_SPLIT_LINES)
+                .lineToAttachTo1Id("lineId0")
+                .lineToAttachTo2Id("lineId1")
+                .attachedLineId("lineId3")
+                .voltageLevelId("vl1")
+                .bbsBusId("bbsId")
+                .replacingLine1Id("line1Id")
+                .replacingLine1Name("line1Name")
+                .replacingLine2Id("line2Id")
+                .replacingLine2Name("line2Name")
+                .build().toEntity();
+        LinesAttachToSplitLinesEntity linesAttachToEntity2 = LinesAttachToSplitLinesInfos.builder()
+                .type(ModificationType.LINES_ATTACH_TO_SPLIT_LINES)
+                .lineToAttachTo1Id("lineId4")
+                .lineToAttachTo2Id("lineId5")
+                .attachedLineId("lineId6")
+                .voltageLevelId("vl2")
+                .bbsBusId("bbsId2")
+                .replacingLine1Id("line3Id")
+                .replacingLine1Name("line3Name")
+                .replacingLine2Id("line4Id")
+                .replacingLine2Name("line4Name")
+                .build().toEntity();
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(linesAttachToEntity1, linesAttachToEntity2));
 
         List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);

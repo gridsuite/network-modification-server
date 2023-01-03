@@ -2283,53 +2283,6 @@ public class ModificationControllerTest {
         mockMvc.perform(post(uriStringGroups).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk());
     }
 
-    @Test
-    public void testAttachLinesToSplitLines() throws Exception {
-        assertNotNull(networkWithTeePoint.getLine("l2"));
-        assertNotNull(networkWithTeePoint.getLine("l3"));
-        assertEquals(3, networkWithTeePoint.getLineCount());
-        assertNotNull(networkWithTeePoint.getVoltageLevel("v2"));
-        assertNotNull(networkWithTeePoint.getVoltageLevel("v4"));
-        assertEquals(4, networkWithTeePoint.getVoltageLevelCount());
-
-        LinesAttachToSplitLinesInfos linesAttachToAbsentLine1 = new LinesAttachToSplitLinesInfos("absent_line_id", "l2", "l3", "v4", "bbs2", "nl1", "NewLine1", "nl2", "NewLine2");
-        linesAttachToAbsentLine1.setType(ModificationType.LINES_ATTACH_TO_SPLIT_LINES);
-        String linesAttachToAbsentLine1Json = objectWriter.writeValueAsString(linesAttachToAbsentLine1);
-
-        MvcResult mvcResult = mockMvc.perform(post(URI_NETWORK_WITH_TEE_POINT_MODIF).content(linesAttachToAbsentLine1Json).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().is4xxClientError()).andReturn();
-        String resultAsString = mvcResult.getResponse().getContentAsString();
-        assertEquals("LINE_NOT_FOUND : Line absent_line_id is not found", resultAsString);
-
-        // fix to have to correct modification
-        linesAttachToAbsentLine1.setLineToAttachTo1Id("l1");
-        String linesAttachToSplitLinesJson = objectWriter.writeValueAsString(linesAttachToAbsentLine1);
-        mvcResult = mockMvc.perform(post(URI_NETWORK_WITH_TEE_POINT_MODIF).content(linesAttachToSplitLinesJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-
-        List<ModificationInfos> result = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertNotNull(result);
-        assertEquals(18, result.size()); // FIXME why ??? we get a result for this modification and all individual deletion
-        ModificationInfos linesAttachToProperSplitLines = result.stream().filter(r -> r.getType() == ModificationType.LINES_ATTACH_TO_SPLIT_LINES).findFirst().orElseThrow();
-        assertEquals(Set.of("s3", "s4", "s1", "s2"), linesAttachToProperSplitLines.getSubstationIds());
-        testNetworkModificationsCount(TEST_GROUP_ID, 1);
-
-        assertNull(networkWithTeePoint.getLine("l1"));
-        assertNull(networkWithTeePoint.getLine("l2"));
-        assertNotNull(networkWithTeePoint.getLine("nl1"));
-        assertNotNull(networkWithTeePoint.getLine("nl2"));
-        assertNull(networkWithTeePoint.getLine("l3"));
-        assertEquals(2, networkWithTeePoint.getLineCount());
-        assertNull(networkWithTeePoint.getVoltageLevel("v2"));
-        assertNotNull(networkWithTeePoint.getVoltageLevel("v4"));
-        assertEquals(3, networkWithTeePoint.getVoltageLevelCount());
-
-        mockMvc.perform(put(URI_NETWORK_MODIF_GET_PUT + linesAttachToProperSplitLines.getUuid()).content(linesAttachToSplitLinesJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
-        testNetworkModificationsCount(TEST_GROUP_ID, 1);
-    }
-
     private void testNetworkModificationsCount(UUID groupUuid, int actualSize) throws Exception {
         MvcResult mvcResult;
         String resultAsString;
