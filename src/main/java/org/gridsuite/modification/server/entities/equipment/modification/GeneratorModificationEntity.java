@@ -107,7 +107,7 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
         assignAttributes((GeneratorModificationInfos) modificationInfos);
     }
 
-    void assignAttributes(GeneratorModificationInfos generatorModificationInfos) {
+    private void assignAttributes(GeneratorModificationInfos generatorModificationInfos) {
         this.energySource = new EnumModificationEmbedded<>(generatorModificationInfos.getEnergySource());
         this.minActivePower = new DoubleModificationEmbedded(generatorModificationInfos.getMinActivePower());
         this.maxActivePower = new DoubleModificationEmbedded(generatorModificationInfos.getMaxActivePower());

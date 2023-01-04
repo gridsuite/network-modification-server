@@ -32,28 +32,12 @@ public class GeneratorModification extends AbstractModification {
         if (modificationInfos == null) {
             throw new NetworkModificationException(MODIFY_GENERATOR_ERROR, "Missing required attributes to modify the equipment");
         }
-        try {
-            Generator generator = ModificationUtils.getInstance().getGenerator(network, modificationInfos.getEquipmentId());
-            // modify the generator in the network
-            modifyGenerator(generator, modificationInfos, subReporter);
-        } catch (NetworkModificationException exc) {
-            subReporter.report(Report.builder()
-                .withKey("generatorModification")
-                .withDefaultMessage(exc.getMessage())
-                .withValue("id", modificationInfos.getEquipmentId())
-                .withSeverity(TypedValue.ERROR_SEVERITY)
-                .build());
-        }
+        Generator generator = ModificationUtils.getInstance().getGenerator(network, modificationInfos.getEquipmentId());
+        // modify the generator in the network
+        modifyGenerator(generator, modificationInfos, subReporter);
     }
 
     private void modifyGenerator(Generator generator, GeneratorModificationInfos modificationInfos, Reporter subReporter) {
-        subReporter.report(Report.builder()
-            .withKey("generatorModification")
-            .withDefaultMessage("Generator with id=${id} modified :")
-            .withValue("id", modificationInfos.getEquipmentId())
-            .withSeverity(TypedValue.INFO_SEVERITY)
-            .build());
-
         ModificationUtils.getInstance().applyElementaryModifications(generator::setName, generator::getNameOrId, modificationInfos.getEquipmentName(), subReporter, "Name");
         ModificationUtils.getInstance().applyElementaryModifications(generator::setEnergySource, generator::getEnergySource, modificationInfos.getEnergySource(), subReporter, "Energy source");
         ModificationUtils.getInstance().applyElementaryModifications(generator::setMinP, generator::getMinP, modificationInfos.getMinActivePower(), subReporter, "Min active power");
@@ -63,5 +47,13 @@ public class GeneratorModification extends AbstractModification {
         ModificationUtils.getInstance().applyElementaryModifications(generator::setTargetQ, generator::getTargetQ, modificationInfos.getReactivePowerSetpoint(), subReporter, "Reactive power set point");
         ModificationUtils.getInstance().applyElementaryModifications(generator::setTargetV, generator::getTargetV, modificationInfos.getVoltageSetpoint(), subReporter, "Voltage set point");
         ModificationUtils.getInstance().applyElementaryModifications(generator::setVoltageRegulatorOn, generator::isVoltageRegulatorOn, modificationInfos.getVoltageRegulationOn(), subReporter, "Voltage regulation on");
+
+        subReporter.report(Report.builder()
+                .withKey("generatorModification")
+                .withDefaultMessage("Generator with id=${id} modified :")
+                .withValue("id", modificationInfos.getEquipmentId())
+                .withSeverity(TypedValue.INFO_SEVERITY)
+                .build());
+
     }
 }

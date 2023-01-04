@@ -40,7 +40,7 @@ public class InjectionModificationEntity extends BasicEquipmentModificationEntit
     @Enumerated(EnumType.STRING)
     private OperationType busOrBusbarSectionIdOp;
 
-    //TODO : remove before merge
+    //TODO : Remove when LoadModification refactoring is done
     protected InjectionModificationEntity(ModificationType modificationType, String equipmentId,
                                           AttributeModification<String> equipmentName,
                                           AttributeModification<String> voltageLevelId,
@@ -63,7 +63,7 @@ public class InjectionModificationEntity extends BasicEquipmentModificationEntit
         assignAttributes((InjectionModificationInfos) modificationInfos);
     }
 
-    protected void assignAttributes(InjectionModificationInfos modificationInfos) {
+    private void assignAttributes(InjectionModificationInfos modificationInfos) {
         this.voltageLevelIdValue = modificationInfos.getVoltageLevelId() != null ? modificationInfos.getVoltageLevelId().getValue() : null;
         this.voltageLevelIdOp = modificationInfos.getVoltageLevelId() != null ? modificationInfos.getVoltageLevelId().getOp() : null;
         this.busOrBusbarSectionIdValue = modificationInfos.getBusOrBusbarSectionId() != null ? modificationInfos.getBusOrBusbarSectionId().getValue() : null;

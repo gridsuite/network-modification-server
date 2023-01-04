@@ -49,29 +49,7 @@ public class GeneratorCreation extends AbstractModification {
         // create the generator in the network
         VoltageLevel voltageLevel = ModificationUtils.getInstance().getVoltageLevel(network, modificationInfos.getVoltageLevelId());
         if (voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER) {
-            GeneratorAdder generatorAdder = createGeneratorAdderInNodeBreaker(voltageLevel, modificationInfos);
-            var position = modificationInfos.getConnectionPosition() != null
-                    ? modificationInfos.getConnectionPosition()
-                    : ModificationUtils.getInstance().getPosition(modificationInfos.getBusOrBusbarSectionId(),
-                            network, voltageLevel);
-
-            CreateFeederBay algo = new CreateFeederBayBuilder()
-                    .withBbsId(modificationInfos.getBusOrBusbarSectionId())
-                    .withInjectionDirection(modificationInfos.getConnectionDirection())
-                    .withInjectionFeederName(modificationInfos.getConnectionName() != null
-                            ? modificationInfos.getConnectionName()
-                            : modificationInfos.getEquipmentId())
-                    .withInjectionPositionOrder(position)
-                    .withInjectionAdder(generatorAdder)
-                    .build();
-
-            algo.apply(network, true, subReporter);
-
-            // CreateFeederBayBuilder already create the generator using
-            // (withInjectionAdder(generatorAdder)) so then we can add extensions
-            var generator = ModificationUtils.getInstance().getGenerator(network,
-                    modificationInfos.getEquipmentId());
-            addExtensionsToGenerator(modificationInfos, generator, voltageLevel);
+            createGeneratorInNodeBreaker(voltageLevel, modificationInfos, network, subReporter);
         } else {
             createGeneratorInBusBreaker(voltageLevel, modificationInfos);
             subReporter.report(Report.builder()
@@ -81,6 +59,31 @@ public class GeneratorCreation extends AbstractModification {
                     .withSeverity(TypedValue.INFO_SEVERITY)
                     .build());
         }
+    }
+
+    private void createGeneratorInNodeBreaker(VoltageLevel voltageLevel, GeneratorCreationInfos generatorCreationInfos, Network network, Reporter subReporter) {
+        GeneratorAdder generatorAdder = createGeneratorAdderInNodeBreaker(voltageLevel, generatorCreationInfos);
+        var position = generatorCreationInfos.getConnectionPosition() != null
+                ? generatorCreationInfos.getConnectionPosition()
+                : ModificationUtils.getInstance().getPosition(generatorCreationInfos.getBusOrBusbarSectionId(),
+                        network, voltageLevel);
+
+        CreateFeederBay algo = new CreateFeederBayBuilder()
+                .withBbsId(generatorCreationInfos.getBusOrBusbarSectionId())
+                .withInjectionDirection(generatorCreationInfos.getConnectionDirection())
+                .withInjectionFeederName(generatorCreationInfos.getConnectionName() != null
+                        ? generatorCreationInfos.getConnectionName()
+                        : generatorCreationInfos.getEquipmentId())
+                .withInjectionPositionOrder(position)
+                .withInjectionAdder(generatorAdder)
+                .build();
+
+        algo.apply(network, true, subReporter);
+
+        // CreateFeederBayBuilder already create the generator using
+        // (withInjectionAdder(generatorAdder)) so then we can add extensions
+        var generator = ModificationUtils.getInstance().getGenerator(network, generatorCreationInfos.getEquipmentId());
+        addExtensionsToGenerator(generatorCreationInfos, generator, voltageLevel);
     }
 
     private GeneratorAdder createGeneratorAdderInNodeBreaker(VoltageLevel voltageLevel, GeneratorCreationInfos generatorCreationInfos) {

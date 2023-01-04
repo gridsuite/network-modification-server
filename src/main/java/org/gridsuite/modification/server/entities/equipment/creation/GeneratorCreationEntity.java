@@ -115,7 +115,7 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
         assignAttributes((GeneratorCreationInfos) modificationInfos);
     }
 
-    void assignAttributes(GeneratorCreationInfos generatorCreationInfos) {
+    private void assignAttributes(GeneratorCreationInfos generatorCreationInfos) {
         this.energySource = generatorCreationInfos.getEnergySource();
         this.minActivePower = generatorCreationInfos.getMinActivePower();
         this.maxActivePower = generatorCreationInfos.getMaxActivePower();
