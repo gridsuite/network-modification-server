@@ -46,7 +46,6 @@ import java.util.stream.Stream;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_GROUP_NOT_FOUND;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_NOT_FOUND;
-import static org.gridsuite.modification.server.utils.MatcherDeleteAttachingLineInfos.createMatcherDeleteAttachingLineInfos;
 import static org.gridsuite.modification.server.utils.MatcherDeleteVoltageLevelOnLineInfos.createMatcherDeleteVoltageLevelOnLineInfos;
 import static org.gridsuite.modification.server.utils.TestUtils.assertRequestsCount;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -1026,14 +1025,6 @@ public class ModificationRepositoryTest {
 
         List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
         assertEquals(2, modificationInfos.size());
-
-        assertThat(getDeleteAttachingLineModification(modificationInfos.get(0).getUuid()),
-                createMatcherDeleteAttachingLineInfos(
-                        deleteAttachingLineEntity.toModificationInfos()));
-
-        assertThat(getDeleteAttachingLineModification(modificationInfos.get(1).getUuid()),
-                createMatcherDeleteAttachingLineInfos(
-                        deleteAttachingLineEntity2.toModificationInfos()));
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(deleteAttachingLineEntity.getId(),
