@@ -826,6 +826,7 @@ public class NetworkModificationService {
     private void modifyGeneratorActivePowerControlAttributes(GeneratorModificationInfos modificationInfos,
             Generator generator, Reporter subReporter) {
         ActivePowerControl<Generator> activePowerControl = generator.getExtension(ActivePowerControl.class);
+        Float oldDroop = activePowerControl != null ? activePowerControl.getDroop() : Float.NaN;
         Boolean participate = null;
         // if participate is null and droop was modified, we consider that participate
         // is true
@@ -844,7 +845,7 @@ public class NetworkModificationService {
                 generator.newExtension(ActivePowerControlAdder.class)
                         .withParticipate(participate).withDroop(modificationInfos.getDroop().getValue())
                         .add();
-                addModificationReport(activePowerControl != null ? activePowerControl.getDroop() : Float.NaN,
+                addModificationReport(oldDroop,
                         modificationInfos.getDroop().getValue(), subReporter,
                         "Droop");
             } else {
@@ -858,11 +859,12 @@ public class NetworkModificationService {
     private void modifyGeneratorStartUpAttributes(GeneratorModificationInfos modificationInfos, Generator generator,
             Reporter subReporter) {
         GeneratorStartup generatorStartup = generator.getExtension(GeneratorStartup.class);
+        Double oldMarginalCost = generatorStartup != null ? generatorStartup.getMarginalCost() : Double.NaN;
         if (modificationInfos.getMarginalCost() != null) {
             generator.newExtension(GeneratorStartupAdder.class)
                     .withMarginalCost(modificationInfos.getMarginalCost().getValue()).add();
 
-            addModificationReport(generatorStartup != null ? generatorStartup.getMarginalCost() : Double.NaN,
+            addModificationReport(oldMarginalCost,
                     modificationInfos.getMarginalCost().getValue(), subReporter,
                     "Cost of start");
 
@@ -964,8 +966,8 @@ public class NetworkModificationService {
 
         applyElementaryModifications(generator::setName, generator::getNameOrId, modificationInfos.getEquipmentName(), subReporter, "Name");
         applyElementaryModifications(generator::setEnergySource, generator::getEnergySource, modificationInfos.getEnergySource(), subReporter, "Energy source");
-        applyElementaryModifications(generator::setMinP, generator::getMinP, modificationInfos.getMinActivePower(), subReporter, "Min active power");
         applyElementaryModifications(generator::setMaxP, generator::getMaxP, modificationInfos.getMaxActivePower(), subReporter, "Max active power");
+        applyElementaryModifications(generator::setMinP, generator::getMinP, modificationInfos.getMinActivePower(), subReporter, "Min active power");
         applyElementaryModifications(generator::setRatedS, generator::getRatedS, modificationInfos.getRatedNominalPower(), subReporter, "Rated nominal power");
         applyElementaryModifications(generator::setTargetP, generator::getTargetP, modificationInfos.getActivePowerSetpoint(), subReporter, "Active power set point");
         applyElementaryModifications(generator::setTargetV, generator::getTargetV, modificationInfos.getVoltageSetpoint(), subReporter, "Voltage set point");
