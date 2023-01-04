@@ -16,6 +16,7 @@ import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.GeneratorScaling;
 
 import java.util.List;
+import java.util.UUID;
 
 @SuperBuilder
 @NoArgsConstructor
@@ -33,6 +34,9 @@ public class GeneratorScalingInfos extends ModificationInfos {
 
     @Schema(description = "variation type")
     private VariationType variationType;
+
+    @Schema(description = "network uuid")
+    private UUID networkUuid;
 
     @Override
     public GeneratorScalingEntity toEntity() {

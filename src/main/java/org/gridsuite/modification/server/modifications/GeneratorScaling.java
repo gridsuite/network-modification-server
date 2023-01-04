@@ -5,10 +5,12 @@ import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.iidm.modification.scalable.Scalable;
 import com.powsybl.iidm.network.Generator;
 import com.powsybl.iidm.network.Network;
+import com.powsybl.network.store.iidm.impl.NetworkImpl;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.VariationType;
 import org.gridsuite.modification.server.dto.FilterAttributes;
 import org.gridsuite.modification.server.dto.FilterEquipmentAttributes;
+import org.gridsuite.modification.server.dto.FilterEquipments;
 import org.gridsuite.modification.server.dto.FilterInfos;
 import org.gridsuite.modification.server.dto.GeneratorScalingInfos;
 import org.gridsuite.modification.server.dto.GeneratorScalingVariation;
@@ -44,24 +46,35 @@ public class GeneratorScaling extends AbstractModification {
             filterIds.addAll(variation.getFilters().stream().map(FilterInfos::getId).collect(Collectors.toList()));
         });
 
-        Map<String, List<IdentifiableAttributes>> exportFilters = SpringContext.getBean(FilterService.class)
-                .exportFilters(filterIds.stream().distinct().collect(Collectors.toList()), network.getId(), null);
-        List<FilterAttributes> filters = SpringContext.getBean(FilterService.class)
-                .getFilters(filterIds.stream().distinct().collect(Collectors.toList()));
+        List<FilterEquipments> exportFilters = SpringContext.getBean(FilterService.class)
+                .exportFilters(filterIds.stream().distinct().collect(Collectors.toList()), ((NetworkImpl) network).getUuid(), null);
 
-        for (GeneratorScalingVariation generatorScalingVariation : generatorScalingVariations) {
-            generatorScalingVariation.getFilters().forEach(filter -> {
-                List<IdentifiableAttributes> identifiableAttributes = exportFilters.get(filter.getId());
+        generatorScalingVariations.forEach(variation -> {
+            variation.getFilters().forEach(filter -> {
+                FilterEquipments filterEquipments = exportFilters.stream()
+                        .filter(f -> Objects.equals(f.getFilterId().toString(), filter.getId()))
+                        .findAny()
+                        .orElse(null);
+
+                if (filterEquipments != null) {
+                    if (filterEquipments.getNotFoundEquipments().isEmpty()) {
+                        List<IdentifiableAttributes> identifiableAttributes = filterEquipments.getIdentifiableAttributes();
+                        if (!identifiableAttributes.isEmpty()) {
+                            applyVariation(network, filter.getName(), identifiableAttributes, variation, subReporter);
+                        }
+                    }
+                }
+                /*List<IdentifiableAttributes> identifiableAttributes = exportFilters.get(filter.getId());
                 if (identifiableAttributes.isEmpty()) {
                     createReport(subReporter,
                             NetworkModificationException.Type.GENERATOR_SCALING_ERROR.name(),
                             "Cannot find generators for filter : " + filter.getName(),
                             TypedValue.WARN_SEVERITY);
                 } else {
-                    applyVariation(network, filter.getName(), identifiableAttributes, generatorScalingVariation, subReporter);
-                }
+                    applyVariation(network, filter.getName(), identifiableAttributes, variation, subReporter);
+                }*/
             });
-        }
+        });
 
         /*if (!filters.isEmpty()) {
             for (GeneratorScalingVariation generatorScalingVariation : generatorScalingVariations) {
@@ -89,7 +102,7 @@ public class GeneratorScaling extends AbstractModification {
             case PROPORTIONAL:
                 List<Generator> proportionalGenerators = identifiableAttributes
                         .stream().map(attribute -> network.getGenerator(attribute.getId())).collect(Collectors.toList());
-                if (proportionalGenerators.size() != identifiableAttributes.size())
+                /*if (proportionalGenerators.size() != identifiableAttributes.size())
                 {
                     var generatorIds = proportionalGenerators.stream().map(Generator::getId).collect(Collectors.toList());
                     var notFound = identifiableAttributes.stream()
@@ -106,7 +119,7 @@ public class GeneratorScaling extends AbstractModification {
                                 TypedValue.WARN_SEVERITY);
                         break;
                     }
-                }
+                }*/
                 applyProportionalVariation(network, subReporter, proportionalGenerators, generatorScalingVariation);
                 break;
             case PROPORTIONAL_TO_PMAX:
@@ -168,14 +181,14 @@ public class GeneratorScaling extends AbstractModification {
         AtomicReference<Double> sum = new AtomicReference<>(0D);
         Map<String, Double> targetPMap = new HashMap<>();
         boolean isIterative =generatorScalableInfos.isIterative();
-        List<String> notFoundEquipments = new ArrayList<>();
+        //List<String> notFoundEquipments = new ArrayList<>();
         List<Scalable> scalables = generators.stream()
                 .map(generator -> {
                     sum.set(sum.get() + generator.getTargetP());
                     return getScalable(generator.getId());
                 }).collect(Collectors.toList());
 
-        if (scalables.isEmpty()) {
+        /*if (scalables.isEmpty()) {
             throw new NetworkModificationException(NetworkModificationException.Type.GENERATOR_SCALING_ERROR,
                     "Error while creating generator scaling : All generators of filter  not found : " + String.join(", ", notFoundEquipments));
         }
@@ -185,7 +198,7 @@ public class GeneratorScaling extends AbstractModification {
                     NetworkModificationException.Type.GENERATOR_SCALING_ERROR.name(),
                     "Cannot find the following generators : " + String.join(", ", notFoundEquipments),
                     TypedValue.WARN_SEVERITY);
-        }
+        }*/
 
         List<Float> percentages = new ArrayList<>(Collections.nCopies(scalables.size(), (float) (100 / scalables.size())));
 
@@ -204,7 +217,7 @@ public class GeneratorScaling extends AbstractModification {
         List<Float> percentages = new ArrayList<>();
         List<Scalable> scalables = new ArrayList<>();
         boolean isIterative = generatorScalableInfos.isIterative();
-        List<String> notFoundEquipments = new ArrayList<>();
+        //List<String> notFoundEquipments = new ArrayList<>();
         generators.forEach(generator -> {
             targetPMap.put(generator.getId(), generator.getMaxP());
             maxPSum.set(maxPSum.get() + generator.getMaxP());
