@@ -43,7 +43,7 @@ public class FilterService {
     public List<FilterAttributes> getFilters(List<String> filtersUuids) {
         var ids = filtersUuids != null && !filtersUuids.isEmpty() ?
                 "?ids=" + String.join(",", filtersUuids) : "";
-        String path = UriComponentsBuilder.fromPath(DELIMITER + FILTER_SERVER_API_VERSION + "/filters/data" + ids)
+        String path = UriComponentsBuilder.fromPath(DELIMITER + FILTER_SERVER_API_VERSION + "/filters/metadata" + ids)
                 .buildAndExpand()
                 .toUriString();
         return restTemplate.exchange(filterServerBaseUri + path, HttpMethod.GET, null, new ParameterizedTypeReference<List<FilterAttributes>>() {

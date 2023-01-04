@@ -77,7 +77,7 @@ public class LoadScalingModificationTest extends AbstractNetworkModificationTest
         getNetwork().getLoad("v5load").setP0(100);
         wireMock = new WireMockServer(wireMockConfig().dynamicPort());
         wireMock.start();
-        wireMock.stubFor(WireMock.get(WireMock.urlMatching("/v1/filters/data.*"))
+        wireMock.stubFor(WireMock.get(WireMock.urlMatching("/v1/filters/metadata.*"))
                 .willReturn(WireMock.ok()
                         .withBody(resourceToString("/filter_equipments.json"))
                         .withHeader("Content-Type", "application/json")));

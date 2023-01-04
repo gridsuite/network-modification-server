@@ -165,12 +165,12 @@ public class LoadScaling extends AbstractModification {
     private void scale(Network network, LoadScalingVariation loadScalingVariation, AtomicReference<Double> sum, Scalable proportionalScalable) {
         switch (loadScalingVariation.getReactiveVariationMode()) {
             case CONSTANT_Q:
-                proportionalScalable.scaleWithConstantPowerFactor(network,
+                proportionalScalable.scale(network,
                         getAsked(loadScalingVariation, sum),
                         Scalable.ScalingConvention.LOAD);
                 break;
             case TAN_FIXED:
-                proportionalScalable.scale(network,
+                proportionalScalable.scaleWithConstantPowerFactor(network,
                         getAsked(loadScalingVariation, sum),
                         Scalable.ScalingConvention.LOAD);
                 break;
