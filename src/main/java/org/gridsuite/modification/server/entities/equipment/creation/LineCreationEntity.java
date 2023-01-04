@@ -81,7 +81,9 @@ public class LineCreationEntity extends BranchCreationEntity {
             .connectionName1(getConnectionName1())
             .connectionDirection1(getConnectionDirection1())
             .connectionName2(getConnectionName2())
-            .connectionDirection2(getConnectionDirection2());
+            .connectionDirection2(getConnectionDirection2())
+            .connectionPosition1(getConnectionPosition1())
+            .connectionPosition2(getConnectionPosition2());
 
         if (getCurrentLimits1() != null) {
             builder.currentLimits1(getCurrentLimits1().toCurrentLimitsInfos());
