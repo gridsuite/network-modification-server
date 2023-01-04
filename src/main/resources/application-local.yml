@@ -1,12 +1,15 @@
 server:
   port: 5007
 
-backing-services:
-  report-server:
-    base-uri: http://localhost:5028
-  network-store-server:
+powsybl:
+  services:
+    network-store-server:
     base-uri: http://localhost:8080
 
+gridsuite:
+  services:
+    report-server:
+      base-uri: http://localhost:5028
 
 spring:
   rabbitmq:
