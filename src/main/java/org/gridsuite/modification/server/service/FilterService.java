@@ -44,7 +44,7 @@ public class FilterService {
         }).getBody();
     }
 
-    public Map<UUID, List<IdentifiableAttributes>> exportFilters(List<String> filtersUuids, String networkUuid, String variantId) {
+    public Map<String, List<IdentifiableAttributes>> exportFilters(List<String> filtersUuids, String networkUuid, String variantId) {
         var ids = filtersUuids != null && filtersUuids.size() > 0 ?
                 "?ids=" + String.join(",", filtersUuids) : "";
         var variant = variantId != null ? "&variantId=" + variantId : "";
@@ -55,7 +55,7 @@ public class FilterService {
                     filterServerBaseUri + path,
                     HttpMethod.GET,
                     null,
-                    new ParameterizedTypeReference<Map<UUID, List<IdentifiableAttributes>>>() {})
+                    new ParameterizedTypeReference<Map<String, List<IdentifiableAttributes>>>() {})
                 .getBody();
     }
 }

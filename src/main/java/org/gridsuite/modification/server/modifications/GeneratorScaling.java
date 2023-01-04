@@ -44,12 +44,26 @@ public class GeneratorScaling extends AbstractModification {
             filterIds.addAll(variation.getFilters().stream().map(FilterInfos::getId).collect(Collectors.toList()));
         });
 
-        Map<UUID, List<IdentifiableAttributes>> exportFilters = SpringContext.getBean(FilterService.class)
+        Map<String, List<IdentifiableAttributes>> exportFilters = SpringContext.getBean(FilterService.class)
                 .exportFilters(filterIds.stream().distinct().collect(Collectors.toList()), network.getId(), null);
         List<FilterAttributes> filters = SpringContext.getBean(FilterService.class)
                 .getFilters(filterIds.stream().distinct().collect(Collectors.toList()));
 
-        if (!filters.isEmpty()) {
+        for (GeneratorScalingVariation generatorScalingVariation : generatorScalingVariations) {
+            generatorScalingVariation.getFilters().forEach(filter -> {
+                List<IdentifiableAttributes> identifiableAttributes = exportFilters.get(filter.getId());
+                if (identifiableAttributes.isEmpty()) {
+                    createReport(subReporter,
+                            NetworkModificationException.Type.GENERATOR_SCALING_ERROR.name(),
+                            "Cannot find generators for filter : " + filter.getName(),
+                            TypedValue.WARN_SEVERITY);
+                } else {
+                    applyVariation(network, filter.getName(), identifiableAttributes, generatorScalingVariation, subReporter);
+                }
+            });
+        }
+
+        /*if (!filters.isEmpty()) {
             for (GeneratorScalingVariation generatorScalingVariation : generatorScalingVariations) {
                 var filterIdsList = generatorScalingVariation.getFilters().stream().map(FilterInfos::getId).collect(Collectors.toList());
                 var filterList = filters.stream()
@@ -63,28 +77,53 @@ public class GeneratorScaling extends AbstractModification {
             }
         } else {
             throw new NetworkModificationException(NetworkModificationException.Type.GENERATOR_SCALING_ERROR, "Filters list is Empty");
-        }
+        }*/
     }
 
     private void applyVariation(Network network,
-                                FilterAttributes filter,
+                                String filterName,
+                                List<IdentifiableAttributes> identifiableAttributes,
                                 GeneratorScalingVariation generatorScalingVariation,
                                 Reporter subReporter) {
         switch (generatorScalingVariation.getVariationMode()) {
             case PROPORTIONAL:
-                applyProportionalVariation(network, subReporter, filter, generatorScalingVariation);
+                List<Generator> proportionalGenerators = identifiableAttributes
+                        .stream().map(attribute -> network.getGenerator(attribute.getId())).collect(Collectors.toList());
+                if (proportionalGenerators.size() != identifiableAttributes.size())
+                {
+                    var generatorIds = proportionalGenerators.stream().map(Generator::getId).collect(Collectors.toList());
+                    var notFound = identifiableAttributes.stream()
+                            .map(IdentifiableAttributes::getId)
+                            .filter(id -> !generatorIds.contains(id))
+                            .collect(Collectors.joining(","));
+                    if (generatorIds.isEmpty()) {
+                        throw new NetworkModificationException(NetworkModificationException.Type.GENERATOR_SCALING_ERROR,
+                                "Cannot find the following generators : " + notFound);
+                    } else {
+                        createReport(subReporter,
+                                NetworkModificationException.Type.GENERATOR_SCALING_ERROR.name(),
+                                "Cannot find the following generators : " + notFound + " of filter : " + filterName,
+                                TypedValue.WARN_SEVERITY);
+                        break;
+                    }
+                }
+                applyProportionalVariation(network, subReporter, proportionalGenerators, generatorScalingVariation);
                 break;
             case PROPORTIONAL_TO_PMAX:
-                applyProportionalToPmaxVariation(network, subReporter, filter, generatorScalingVariation);
+                List<Generator> proportionalToPmaxGenerators = identifiableAttributes
+                        .stream().map(attribute -> network.getGenerator(attribute.getId())).collect(Collectors.toList());
+                applyProportionalToPmaxVariation(network, subReporter, proportionalToPmaxGenerators, generatorScalingVariation);
                 break;
             case REGULAR_DISTRIBUTION:
-                applyRegularDistributionVariation(network, subReporter, filter, generatorScalingVariation);
+                List<Generator> regularDistributionGenerators = identifiableAttributes
+                        .stream().map(attribute -> network.getGenerator(attribute.getId())).collect(Collectors.toList());
+                applyRegularDistributionVariation(network, subReporter, regularDistributionGenerators, generatorScalingVariation);
                 break;
             case VENTILATION:
-                scaleWithVentilationMode(network, filter, generatorScalingVariation);
+                scaleWithVentilationMode(network, identifiableAttributes, generatorScalingVariation);
                 break;
             case STACKING_UP:
-                scaleWithStackingUpMode(network, filter, generatorScalingVariation);
+                scaleWithStackingUpMode(network, identifiableAttributes, generatorScalingVariation);
                 break;
             default:
                 throw new NetworkModificationException(NetworkModificationException.Type.GENERATOR_SCALING_ERROR, "This variation mode is not supported : " + generatorScalingVariation.getVariationMode().name());
@@ -92,32 +131,30 @@ public class GeneratorScaling extends AbstractModification {
         createReport(subReporter,"generatorScalingCreated","new generator scaling created", TypedValue.INFO_SEVERITY);
     }
 
-    private void scaleWithStackingUpMode(Network network, FilterAttributes filter, GeneratorScalingVariation generatorScalingVariation) {
+    private void scaleWithStackingUpMode(Network network, List<IdentifiableAttributes> identifiableAttributes, GeneratorScalingVariation generatorScalingVariation) {
         AtomicReference<Double> sum = new AtomicReference<>(0D);
-        Scalable stackingUpScalable = Scalable.stack(filter.getFilterEquipmentsAttributes()
-                .stream()
-                .map(equipment -> getScalable(equipment.getEquipmentID())).toArray(Scalable[]::new));
+        Scalable stackingUpScalable = Scalable.stack(identifiableAttributes.stream()
+                .map(equipment -> getScalable(equipment.getId())).toArray(Scalable[]::new));
         stackingUpScalable.scale(network, getAsked(generatorScalingVariation, sum));
     }
 
     private void scaleWithVentilationMode(Network network,
-                                          FilterAttributes filter,
+                                          List<IdentifiableAttributes> identifiableAttributes,
                                           GeneratorScalingVariation generatorScalingVariation) {
         AtomicReference<Double> sum = new AtomicReference<>(0D);
         List<Float> percentages = new ArrayList<>();
         List<Scalable> scalables = new ArrayList<>();
         boolean isIterative = generatorScalableInfos.isIterative();
-        var distributionKeys = filter.getFilterEquipmentsAttributes()
-                .stream()
+        var distributionKeys = identifiableAttributes.stream()
                 .filter(equipment -> equipment.getDistributionKey() != null)
-                .mapToDouble(FilterEquipmentAttributes::getDistributionKey)
+                .mapToDouble(IdentifiableAttributes::getDistributionKey)
                 .sum();
         if (distributionKeys == 0) {
             throw new NetworkModificationException(NetworkModificationException.Type.GENERATOR_SCALING_ERROR, "This mode is available only for equipment with distribution key");
         }
 
-        filter.getFilterEquipmentsAttributes().forEach(equipment -> {
-            scalables.add(getScalable(equipment.getEquipmentID()));
+        identifiableAttributes.forEach(equipment -> {
+            scalables.add(getScalable(equipment.getId()));
             percentages.add((float) ((equipment.getDistributionKey() / distributionKeys) * 100));
         });
         Scalable ventilationScalable = Scalable.proportional(percentages, scalables, isIterative);
@@ -126,31 +163,21 @@ public class GeneratorScaling extends AbstractModification {
 
     private void applyRegularDistributionVariation(Network network,
                                                    Reporter subReporter,
-                                                   FilterAttributes filter,
+                                                   List<Generator> generators,
                                                    GeneratorScalingVariation generatorScalingVariation) {
         AtomicReference<Double> sum = new AtomicReference<>(0D);
         Map<String, Double> targetPMap = new HashMap<>();
-        List<Scalable> scalables = new ArrayList<>();
         boolean isIterative =generatorScalableInfos.isIterative();
         List<String> notFoundEquipments = new ArrayList<>();
-        scalables.addAll(filter.getFilterEquipmentsAttributes()
-                .stream()
-                .map(equipment -> {
-                    Generator generator = network.getGenerator(equipment.getEquipmentID());
-                    if (generator != null) {
-                        sum.set(sum.get() + generator.getTargetP());
-                        return getScalable(equipment.getEquipmentID());
-                    } else {
-                        notFoundEquipments.add(equipment.getEquipmentID());
-                    }
-                    return null;
-                })
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList()));
+        List<Scalable> scalables = generators.stream()
+                .map(generator -> {
+                    sum.set(sum.get() + generator.getTargetP());
+                    return getScalable(generator.getId());
+                }).collect(Collectors.toList());
 
         if (scalables.isEmpty()) {
             throw new NetworkModificationException(NetworkModificationException.Type.GENERATOR_SCALING_ERROR,
-                    "Error while creating generator scaling : All generators of filter " + filter.getId() +  " not found : " + String.join(", ", notFoundEquipments));
+                    "Error while creating generator scaling : All generators of filter  not found : " + String.join(", ", notFoundEquipments));
         }
 
         if (!notFoundEquipments.isEmpty()) {
@@ -169,7 +196,7 @@ public class GeneratorScaling extends AbstractModification {
 
     private void applyProportionalToPmaxVariation(Network network,
                                                   Reporter subReporter,
-                                                  FilterAttributes filter,
+                                                  List<Generator> generators,
                                                   GeneratorScalingVariation generatorScalingVariation) {
         AtomicReference<Double> maxPSum = new AtomicReference<>(0D);
         AtomicReference<Double> targetPSum = new AtomicReference<>(0D);
@@ -178,18 +205,12 @@ public class GeneratorScaling extends AbstractModification {
         List<Scalable> scalables = new ArrayList<>();
         boolean isIterative = generatorScalableInfos.isIterative();
         List<String> notFoundEquipments = new ArrayList<>();
-        filter.getFilterEquipmentsAttributes()
-            .forEach(equipment -> {
-                Generator generator = network.getGenerator(equipment.getEquipmentID());
-                if (generator != null) {
-                    targetPMap.put(generator.getId(), generator.getMaxP());
-                    maxPSum.set(maxPSum.get() + generator.getMaxP());
-                    targetPSum.set(targetPSum.get() + generator.getTargetP());
-                } else {
-                    notFoundEquipments.add(equipment.getEquipmentID());
-                }
+        generators.forEach(generator -> {
+            targetPMap.put(generator.getId(), generator.getMaxP());
+            maxPSum.set(maxPSum.get() + generator.getMaxP());
+            targetPSum.set(targetPSum.get() + generator.getTargetP());
             });
-        checkVariationFilter(filter, subReporter, targetPMap, notFoundEquipments);
+        //checkVariationFilter(filter, subReporter, targetPMap, notFoundEquipments);
         targetPMap.forEach((id, p) -> {
             percentages.add((float) ((p / maxPSum.get()) * 100));
             scalables.add(getScalable(id));
@@ -203,7 +224,7 @@ public class GeneratorScaling extends AbstractModification {
 
     private void applyProportionalVariation(Network network,
                                             Reporter subReporter,
-                                            FilterAttributes filter,
+                                            List<Generator> generators,
                                             GeneratorScalingVariation generatorScalingVariation) {
         AtomicReference<Double> sum = new AtomicReference<>(0D);
         Map<String, Double> targetPMap = new HashMap<>();
@@ -211,17 +232,11 @@ public class GeneratorScaling extends AbstractModification {
         List<Scalable> scalables = new ArrayList<>();
         boolean isIterative = generatorScalableInfos.isIterative();
         List<String> notFoundEquipments = new ArrayList<>();
-        filter.getFilterEquipmentsAttributes()
-            .forEach(equipment -> {
-                Generator generator = network.getGenerator(equipment.getEquipmentID());
-                if (generator != null) {
-                    targetPMap.put(generator.getId(), generator.getTargetP());
-                    sum.set(sum.get() + generator.getTargetP());
-                } else {
-                    notFoundEquipments.add(equipment.getEquipmentID());
-                }
-            });
-        checkVariationFilter(filter, subReporter, targetPMap, notFoundEquipments);
+        generators.forEach(generator -> {
+            targetPMap.put(generator.getId(), generator.getTargetP());
+            sum.set(sum.get() + generator.getTargetP());
+        });
+        //checkVariationFilter(identifiableAttributes, subReporter, targetPMap, notFoundEquipments);
         targetPMap.forEach((id, p) -> {
             percentages.add((float) ((p / sum.get()) * 100));
             scalables.add(getScalable(id));
