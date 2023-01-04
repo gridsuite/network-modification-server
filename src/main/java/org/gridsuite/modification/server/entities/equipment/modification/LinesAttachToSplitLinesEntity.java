@@ -8,8 +8,10 @@ package org.gridsuite.modification.server.entities.equipment.modification;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.LinesAttachToSplitLinesInfos;
+import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 
 import javax.persistence.Column;
@@ -52,17 +54,27 @@ public class LinesAttachToSplitLinesEntity extends ModificationEntity {
     @Column
     private String replacingLine2Name;
 
-    public LinesAttachToSplitLinesEntity(String lineToAttachTo1Id, String lineToAttachTo2Id, String attachedLineId, String voltageLevelId, String bbsBusId, String replacingLine1Id, String replacingLine1Name, String replacingLine2Id, String replacingLine2Name) {
+    public LinesAttachToSplitLinesEntity(@NonNull LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos) {
         super(ModificationType.LINES_ATTACH_TO_SPLIT_LINES);
-        this.lineToAttachTo1Id = lineToAttachTo1Id;
-        this.lineToAttachTo2Id = lineToAttachTo2Id;
-        this.attachedLineId = attachedLineId;
-        this.voltageLevelId = voltageLevelId;
-        this.bbsBusId = bbsBusId;
-        this.replacingLine1Id = replacingLine1Id;
-        this.replacingLine1Name = replacingLine1Name;
-        this.replacingLine2Id = replacingLine2Id;
-        this.replacingLine2Name = replacingLine2Name;
+        assignAttributes(linesAttachToSplitLinesInfos);
+    }
+
+    @Override
+    public void update(@NonNull ModificationInfos modificationInfos) {
+        super.update(modificationInfos);
+        assignAttributes((LinesAttachToSplitLinesInfos) modificationInfos);
+    }
+
+    private void assignAttributes(LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos) {
+        lineToAttachTo1Id = linesAttachToSplitLinesInfos.getLineToAttachTo1Id();
+        lineToAttachTo2Id = linesAttachToSplitLinesInfos.getLineToAttachTo2Id();
+        attachedLineId = linesAttachToSplitLinesInfos.getAttachedLineId();
+        voltageLevelId = linesAttachToSplitLinesInfos.getVoltageLevelId();
+        bbsBusId = linesAttachToSplitLinesInfos.getBbsBusId();
+        replacingLine1Id = linesAttachToSplitLinesInfos.getReplacingLine1Id();
+        replacingLine1Name = linesAttachToSplitLinesInfos.getReplacingLine1Name();
+        replacingLine2Id = linesAttachToSplitLinesInfos.getReplacingLine2Id();
+        replacingLine2Name = linesAttachToSplitLinesInfos.getReplacingLine2Name();
     }
 
     @Override
@@ -85,16 +97,5 @@ public class LinesAttachToSplitLinesEntity extends ModificationEntity {
                 .replacingLine1Name(getReplacingLine1Name())
                 .replacingLine2Id(getReplacingLine2Id())
                 .replacingLine2Name(getReplacingLine2Name());
-    }
-
-    public static LinesAttachToSplitLinesEntity toEntity(String lineToAttachTo1Id,
-                                                          String lineToAttachTo2Id, String attachedLineId,
-                                                          String voltageLevelId, String bbsBusId,
-                                                          String replacingLine1Id, String replacingLine1Name, String replacingLine2Id, String replacingLine2Name) {
-
-        return new LinesAttachToSplitLinesEntity(
-            lineToAttachTo1Id, lineToAttachTo2Id, attachedLineId, voltageLevelId,
-            bbsBusId, replacingLine1Id, replacingLine1Name, replacingLine2Id, replacingLine2Name
-        );
     }
 }

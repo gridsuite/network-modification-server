@@ -35,7 +35,6 @@ import org.gridsuite.modification.server.entities.equipment.creation.*;
 import org.gridsuite.modification.server.entities.equipment.deletion.EquipmentDeletionEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.LinesAttachToSplitLinesEntity;
 import org.gridsuite.modification.server.modifications.ModificationApplicator;
 import org.gridsuite.modification.server.modifications.ModificationUtils;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
@@ -527,8 +526,6 @@ public class NetworkModificationService {
                 return createTwoWindingsTransformerCreation(networkUuid, variantId, groupUuid, reportUuid, reporterId, (TwoWindingsTransformerCreationInfos) modificationInfos);
             case EQUIPMENT_DELETION:
                 return createEquipmentDeletion(networkUuid, variantId, groupUuid, reportUuid, reporterId, (EquipmentDeletionInfos) modificationInfos);
-            case LINES_ATTACH_TO_SPLIT_LINES:
-                return createLinesAttachToSplitLinesCreation(networkUuid, variantId, groupUuid, reportUuid, reporterId, (LinesAttachToSplitLinesInfos) modificationInfos);
             case BRANCH_STATUS:
                 return createLineStatusModification(networkUuid, variantId, groupUuid, reportUuid, reporterId, (BranchStatusModificationInfos) modificationInfos);
             default:
@@ -556,9 +553,6 @@ public class NetworkModificationService {
                 break;
             case EQUIPMENT_DELETION:
                 updateEquipmentDeletion(modificationUuid, (EquipmentDeletionInfos) modificationInfos);
-                break;
-            case LINES_ATTACH_TO_SPLIT_LINES:
-                updateLinesAttachToSplitLinesCreation(modificationUuid, (LinesAttachToSplitLinesInfos) modificationInfos);
                 break;
             default:
                 throw new NetworkModificationException(TYPE_MISMATCH);
@@ -1384,6 +1378,7 @@ public class NetworkModificationService {
                 case LINE_CREATION:
                 case LINE_ATTACH_TO_VOLTAGE_LEVEL:
                 case VOLTAGE_LEVEL_CREATION:
+                case LINES_ATTACH_TO_SPLIT_LINES:
                     // Generic form
                     return handleModification(infos, listener, groupUuid, reportUuid, reporterId);
 
@@ -1418,10 +1413,6 @@ public class NetworkModificationService {
                 case BRANCH_STATUS:
                     BranchStatusModificationInfos branchStatusModificationInfos = (BranchStatusModificationInfos) infos;
                     return execCreateBranchStatusModification(listener, branchStatusModificationInfos, reportUuid, reporterId);
-
-                case LINES_ATTACH_TO_SPLIT_LINES:
-                    LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos = (LinesAttachToSplitLinesInfos) infos;
-                    return execCreateLinesAttachToSplitLinesCreation(listener, linesAttachToSplitLinesInfos, reportUuid, reporterId);
 
                 default:
             }
@@ -1506,80 +1497,6 @@ public class NetworkModificationService {
         GeneratorModificationEntity updatedEntity = this.networkModificationRepository.createGeneratorModificationEntity(generatorModificationInfos);
         updatedEntity.setId(modificationUuid);
         updatedEntity.setGroup(generatorModificationEntity.get().getGroup());
-        this.networkModificationRepository.updateModification(updatedEntity);
-    }
-
-    private void assertLinesAttachToSplitLinesInfosNotEmpty(LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos) {
-        if (linesAttachToSplitLinesInfos == null) {
-            throw new NetworkModificationException(LINE_ATTACH_ERROR,
-                    "Missing required attributes to attach lines to a split lines");
-        }
-    }
-
-    private List<ModificationInfos> execCreateLinesAttachToSplitLinesCreation(NetworkStoreListener listener,
-                                                                              LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos,
-                                                                              UUID reportUuid, String reporterId) {
-        Network network = listener.getNetwork();
-
-        String rootReporterId = reporterId + "@" + NETWORK_MODIFICATION_TYPE_REPORT;
-        ReporterModel reporter = new ReporterModel(rootReporterId, rootReporterId);
-        Reporter subReporter = reporter.createSubReporter(ModificationType.LINES_ATTACH_TO_SPLIT_LINES.name(), "Lines attach to split lines");
-
-        List<ModificationInfos> inspectable = doAction(listener, () -> {
-            if (listener.isApplyModifications()) {
-                ReplaceTeePointByVoltageLevelOnLine algo = new ReplaceTeePointByVoltageLevelOnLineBuilder()
-                        .withTeePointLine1(linesAttachToSplitLinesInfos.getLineToAttachTo1Id())
-                        .withTeePointLine2(linesAttachToSplitLinesInfos.getLineToAttachTo2Id())
-                        .withTeePointLineToRemove(linesAttachToSplitLinesInfos.getAttachedLineId())
-                        .withBbsOrBusId(linesAttachToSplitLinesInfos.getBbsBusId())
-                        .withNewLine1Id(linesAttachToSplitLinesInfos.getReplacingLine1Id())
-                        .withNewLine1Name(linesAttachToSplitLinesInfos.getReplacingLine1Name())
-                        .withNewLine2Id(linesAttachToSplitLinesInfos.getReplacingLine2Id())
-                        .withNewLine2Name(linesAttachToSplitLinesInfos.getReplacingLine2Name())
-                        .build();
-                algo.apply(network, true, subReporter);
-            }
-
-            listener.storeLinesAttachToSplitLinesInfos(linesAttachToSplitLinesInfos);
-        }, LINE_NOT_FOUND, reportUuid, reporter, subReporter).stream().map(ModificationInfos.class::cast)
-                .collect(Collectors.toList());
-
-        if (!inspectable.isEmpty()) {
-            inspectable.addAll(listener.getDeletions());
-        }
-        return inspectable;
-    }
-
-    public List<ModificationInfos> createLinesAttachToSplitLinesCreation(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId,
-                                                                         LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos) {
-        assertLinesAttachToSplitLinesInfosNotEmpty(linesAttachToSplitLinesInfos);
-        ModificationNetworkInfos networkInfos = getNetworkModificationInfos(networkUuid, variantId);
-        NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
-        return execCreateLinesAttachToSplitLinesCreation(listener, linesAttachToSplitLinesInfos, reportUuid, reporterId);
-    }
-
-    public void updateLinesAttachToSplitLinesCreation(UUID modificationUuid, LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos) {
-        assertLinesAttachToSplitLinesInfosNotEmpty(linesAttachToSplitLinesInfos);
-
-        Optional<ModificationEntity> linesAttachToSplitLinesEntity = this.modificationRepository.findById(modificationUuid);
-
-        if (linesAttachToSplitLinesEntity.isEmpty()) {
-            throw new NetworkModificationException(LINE_ATTACH_NOT_FOUND, "Line attach to split line not found");
-        }
-
-        LinesAttachToSplitLinesEntity updatedEntity = LinesAttachToSplitLinesEntity.toEntity(
-                linesAttachToSplitLinesInfos.getLineToAttachTo1Id(),
-                linesAttachToSplitLinesInfos.getLineToAttachTo2Id(),
-                linesAttachToSplitLinesInfos.getAttachedLineId(),
-                linesAttachToSplitLinesInfos.getVoltageLevelId(),
-                linesAttachToSplitLinesInfos.getBbsBusId(),
-                linesAttachToSplitLinesInfos.getReplacingLine1Id(),
-                linesAttachToSplitLinesInfos.getReplacingLine1Name(),
-                linesAttachToSplitLinesInfos.getReplacingLine2Id(),
-                linesAttachToSplitLinesInfos.getReplacingLine2Name()
-        );
-        updatedEntity.setId(modificationUuid);
-        updatedEntity.setGroup(linesAttachToSplitLinesEntity.get().getGroup());
         this.networkModificationRepository.updateModification(updatedEntity);
     }
 
