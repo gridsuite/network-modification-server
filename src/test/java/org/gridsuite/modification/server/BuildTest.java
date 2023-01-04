@@ -248,10 +248,16 @@ public class BuildTest {
         modificationRepository.saveModifications(TEST_GROUP_ID, entities1);
 
         List<ModificationEntity> entities2 = new ArrayList<>();
-        entities2.add(modificationRepository.createVoltageLevelEntity("vl9", "vl9", 225, "s1",
-            List.of(new BusbarSectionCreationInfos("1.1", "1.1", 1, 1),
-                new BusbarSectionCreationInfos("1.2", "1.2", 1, 2)),
-            List.of(new BusbarConnectionCreationInfos("1.1", "1.2", SwitchKind.BREAKER))));
+        entities2.add(VoltageLevelCreationInfos.builder()
+                .type(ModificationType.VOLTAGE_LEVEL_CREATION)
+                .equipmentId("vl9")
+                .equipmentName("vl9")
+                .nominalVoltage(225)
+                .substationId("s1")
+                .busbarSections(List.of(new BusbarSectionCreationInfos("1.1", "1.1", 1, 1),
+                 new BusbarSectionCreationInfos("1.2", "1.2", 1, 2)))
+                .busbarConnections(List.of(new BusbarConnectionCreationInfos("1.1", "1.2", SwitchKind.BREAKER)))
+                .build().toEntity());
         modificationRepository.saveModifications(TEST_GROUP_ID_2, entities2);
 
         String uriString = "/v1/networks/{networkUuid}/build?receiver=me";
@@ -366,10 +372,16 @@ public class BuildTest {
         entities2.add(modificationRepository.createEquipmentDeletionEntity("v2shunt", "SHUNT_COMPENSATOR"));
         entities2.add(modificationRepository.createGroovyScriptModificationEntity("network.getGenerator('idGenerator').targetP=55\n"));
         entities2.add(modificationRepository.createBranchStatusModificationEntity("line2", BranchStatusModificationInfos.ActionType.TRIP));
-        entities2.add(modificationRepository.createVoltageLevelEntity("vl9", "vl9", 225, "s1",
-            List.of(new BusbarSectionCreationInfos("1.1", "1.1", 1, 1),
-                new BusbarSectionCreationInfos("1.2", "1.2", 1, 2)),
-            List.of(new BusbarConnectionCreationInfos("1.1", "1.2", SwitchKind.BREAKER))));
+        entities2.add(VoltageLevelCreationInfos.builder()
+                .type(ModificationType.VOLTAGE_LEVEL_CREATION)
+                .equipmentId("vl9")
+                .equipmentName("vl9")
+                .nominalVoltage(225)
+                .substationId("s1")
+                .busbarSections(List.of(new BusbarSectionCreationInfos("1.1", "1.1", 1, 1),
+                 new BusbarSectionCreationInfos("1.2", "1.2", 1, 2)))
+                .busbarConnections(List.of(new BusbarConnectionCreationInfos("1.1", "1.2", SwitchKind.BREAKER)))
+                .build().toEntity());
         entities2.add(ShuntCompensatorCreationInfos.builder()
             .type(ModificationType.SHUNT_COMPENSATOR_CREATION)
             .equipmentId("shunt9")

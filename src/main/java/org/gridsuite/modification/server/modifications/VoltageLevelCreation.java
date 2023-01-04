@@ -23,6 +23,6 @@ public class VoltageLevelCreation extends AbstractModification {
 
     @Override
     public void apply(Network network, Reporter subReporter) {
-        ModificationUtils.getInstance().createVoltageLevelAction(modificationInfos, subReporter, network);
+        ModificationUtils.getInstance().createVoltageLevel(modificationInfos, subReporter, network);
     }
 }
