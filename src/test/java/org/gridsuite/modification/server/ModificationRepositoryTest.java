@@ -119,6 +119,10 @@ public class ModificationRepositoryTest {
         return (LineSplitWithVoltageLevelInfos) networkModificationRepository.getModificationInfo(modificationUuid);
     }
 
+    private LineAttachToVoltageLevelInfos getLineAttachToVoltageLevelModification(UUID modificationUuid) {
+        return (LineAttachToVoltageLevelInfos) networkModificationRepository.getModificationInfo(modificationUuid);
+    }
+
     private LinesAttachToSplitLinesInfos getLinesAttachToSplitLinesModification(UUID modificationUuid) {
         return (LinesAttachToSplitLinesInfos) networkModificationRepository.getModificationInfo(modificationUuid);
     }
