@@ -67,11 +67,20 @@ public class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
     @Override
     protected void assertNetworkAfterCreation() {
         assertNotNull(getNetwork().getVoltageLevel("vlId"));
+        assertNotNull(getNetwork().getBusbarSection("bbs.nw"));
+        assertNotNull(getNetwork().getBusbarSection("bbs.ne"));
+        assertNotNull(getNetwork().getBusbarSection("bbs.sw"));
+        assertTrue(getNetwork().getSubstation("s2").getVoltageLevelStream().anyMatch(vl -> vl.getId().equals("vlId")));
     }
 
     @Override
     protected void assertNetworkAfterDeletion() {
         assertNull(getNetwork().getVoltageLevel("vlId"));
+        assertNull(getNetwork().getBusbarSection("bbs.nw"));
+        assertNull(getNetwork().getBusbarSection("bbs.ne"));
+        assertNull(getNetwork().getBusbarSection("bbs.sw"));
+        assertFalse(getNetwork().getSubstation("s2").getVoltageLevelStream().anyMatch(vl -> vl.getId().equals("vlId")));
+
     }
 
     @SneakyThrows
