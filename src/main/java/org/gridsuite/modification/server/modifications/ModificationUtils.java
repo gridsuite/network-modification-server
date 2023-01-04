@@ -212,7 +212,7 @@ public final class ModificationUtils {
         return Pair.of(nodeRank, cnxRank);
     }
 
-    public void createVoltageLevel(VoltageLevelCreationInfos voltageLevelCreationInfos,
+    void createVoltageLevel(VoltageLevelCreationInfos voltageLevelCreationInfos,
                                    Reporter subReporter, Network network) {
         String substationId = voltageLevelCreationInfos.getSubstationId();
         Substation substation = network.getSubstation(substationId);
