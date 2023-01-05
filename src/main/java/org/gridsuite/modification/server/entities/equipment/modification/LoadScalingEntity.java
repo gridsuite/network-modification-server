@@ -10,25 +10,17 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.Setter;
-import org.apache.commons.collections4.CollectionUtils;
 import org.gridsuite.modification.server.ModificationType;
-import org.gridsuite.modification.server.VariationType;
 import org.gridsuite.modification.server.dto.LoadScalingInfos;
-import org.gridsuite.modification.server.dto.LoadScalingVariation;
 import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.entities.ModificationEntity;
-import org.hibernate.Hibernate;
+import org.gridsuite.modification.server.dto.ScalingVariationInfos;
 
 import javax.persistence.CascadeType;
-import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -39,14 +31,10 @@ import java.util.stream.Collectors;
 @Setter
 @Entity
 @Table(name = "LoadScaling")
-public class LoadScalingEntity extends ModificationEntity {
-
-    @Column(name = "variationType")
-    @Enumerated(EnumType.STRING)
-    private VariationType variationType;
+public class LoadScalingEntity extends ScalingEntity {
 
     @OneToMany(cascade = CascadeType.ALL)
-    private List<LoadScalingVariationEntity> variations;
+    private List<ScalingVariationEntity> variations;
 
     public LoadScalingEntity(@NonNull LoadScalingInfos loadScalingInfos) {
         super(ModificationType.LOAD_SCALING);
@@ -60,44 +48,25 @@ public class LoadScalingEntity extends ModificationEntity {
     }
 
     private void assignAttributes(LoadScalingInfos loadScalingInfos) {
-        variationType = loadScalingInfos.getVariationType();
-        if (CollectionUtils.isNotEmpty(loadScalingInfos.getLoadScalingVariations())) {
-            variations = loadScalingInfos.getLoadScalingVariations().stream()
-                    .map(LoadScalingVariation::toEntity)
-                    .collect(Collectors.toList());
-        }
+        setVariationType(loadScalingInfos.getVariationType());
+        setVariations(loadScalingInfos.getVariations()
+                .stream()
+                .map(ScalingVariationInfos::toEntity)
+                .collect(Collectors.toList()));
     }
 
     @Override
     public LoadScalingInfos toModificationInfos() {
-        return toLoadScalingInfosBuilder().build();
-    }
-
-    private LoadScalingInfos.LoadScalingInfosBuilder<?, ?> toLoadScalingInfosBuilder() {
         return LoadScalingInfos
                 .builder()
                 .uuid(getId())
                 .date(getDate())
                 .type(ModificationType.valueOf(getType()))
                 .variationType(getVariationType())
-                .loadScalingVariations(getVariations().stream().map(LoadScalingVariationEntity::toLoadScalingVariation).collect(Collectors.toList()));
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) {
-            return false;
-        }
-        LoadScalingEntity that = (LoadScalingEntity) o;
-        return getId() != null && Objects.equals(getId(), that.getId());
-    }
-
-    @Override
-    public int hashCode() {
-        return getClass().hashCode();
+                .variations(getVariations().stream()
+                        .map(ScalingVariationEntity::toScalingVariation)
+                        .collect(Collectors.toList()))
+                .build();
     }
 
     @Override

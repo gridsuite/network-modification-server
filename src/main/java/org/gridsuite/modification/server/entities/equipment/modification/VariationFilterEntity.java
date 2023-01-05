@@ -11,6 +11,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.gridsuite.modification.server.dto.FilterInfos;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -44,4 +45,9 @@ public class VariationFilterEntity {
 
     @Column(name = "name")
     private String name;
+
+    public VariationFilterEntity(FilterInfos filterInfos) {
+        setFilterId(UUID.fromString(filterInfos.getId()));
+        setName(filterInfos.getName());
+    }
 }

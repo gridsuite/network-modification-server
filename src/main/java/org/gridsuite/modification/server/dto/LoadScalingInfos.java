@@ -16,12 +16,9 @@ import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.VariationType;
 import org.gridsuite.modification.server.entities.equipment.modification.LoadScalingEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.LoadScaling;
-
-import java.util.List;
 
 /**
  * @author bendaamerahm <ahmed.bendaamer at rte-france.com>
@@ -32,13 +29,7 @@ import java.util.List;
 @Setter
 @ToString(callSuper = true)
 @Schema(description = "Load scaling creation")
-public class LoadScalingInfos extends ModificationInfos {
-
-    @Schema(description = "Load Scaling Variations")
-    private List<LoadScalingVariation> loadScalingVariations;
-
-    @Schema(description = "Variation Type")
-    private VariationType variationType;
+public class LoadScalingInfos extends ScalingInfos {
 
     @Override
     public LoadScalingEntity toEntity() {

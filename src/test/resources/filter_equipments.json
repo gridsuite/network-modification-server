@@ -1,80 +1,80 @@
 [
   {
-    "id": "bdefd63f-6cd8-4686-b57b-6bc7aaffa202",
-    "modificationDate": "2022-12-12T15:00:26.911+00:00",
-    "equipmentType": "LOAD",
-    "filterEquipmentsAttributes": [
+    "filterId": "bdefd63f-6cd8-4686-b57b-6bc7aaffa202",
+    "identifiableAttributes": [
       {
-        "equipmentID": "v1load",
+        "id": "v1load",
+        "type": "LOAD",
         "distributionKey": 1
       },
       {
-        "equipmentID": "load5",
+        "id": "load5",
+        "type": "LOAD",
         "distributionKey": 2
       }
     ],
-    "type": "IDENTIFIER_LIST"
+    "notFoundEquipments": []
   },
   {
-    "id": "bdfad63f-6fe6-4686-b57b-6bc7aa11a202",
-    "modificationDate": "2022-12-12T15:00:27.911+00:00",
-    "equipmentType": "LOAD",
-    "filterEquipmentsAttributes": [
+    "filterId": "bdfad63f-6fe6-4686-b57b-6bc7aa11a202",
+    "identifiableAttributes": [
       {
-        "equipmentID": "load4"
+        "id": "load4",
+        "type": "LOAD"
       },
       {
-        "equipmentID": "load7"
+        "id": "load7",
+        "type": "LOAD"
       }
     ],
-    "type": "IDENTIFIER_LIST"
+    "notFoundEquipments": []
   },
   {
-    "id": "00bd063f-611f-4686-b57b-6bc7aa00a202",
-    "modificationDate": "2022-12-12T15:00:28.911+00:00",
-    "equipmentType": "LOAD",
-    "filterEquipmentsAttributes": [
+    "filterId": "00bd063f-611f-4686-b57b-6bc7aa00a202",
+    "identifiableAttributes": [
       {
-        "equipmentID": "load6",
+        "id": "load6",
+        "type": "LOAD",
         "distributionKey": 1
       },
       {
-        "equipmentID": "v6load",
+        "id": "v6load",
+        "type": "LOAD",
         "distributionKey": 0
       }
     ],
-    "type": "IDENTIFIER_LIST"
+    "notFoundEquipments": []
   },
   {
-    "id": "6f11d63f-6f06-4686-b57b-6bc7aa66a202",
-    "modificationDate": "2022-12-12T15:00:26.911+00:00",
-    "equipmentType": "LOAD",
-    "filterEquipmentsAttributes": [
+    "filterId": "6f11d63f-6f06-4686-b57b-6bc7aa66a202",
+    "identifiableAttributes": [
       {
-        "equipmentID": "load8",
+        "id": "load8",
+        "type": "LOAD",
         "distributionKey": 1
       },
       {
-        "equipmentID": "v5load",
+        "id": "v5load",
+        "type": "LOAD",
         "distributionKey": 2
       }
     ],
-    "type": "IDENTIFIER_LIST"
+    "notFoundEquipments": []
   },
   {
-    "id": "7100163f-60f1-4686-b57b-6bc7aa77a202",
-    "modificationDate": "2022-12-12T15:00:26.911+00:00",
-    "equipmentType": "LOAD",
-    "filterEquipmentsAttributes": [
+    "filterId": "7100163f-60f1-4686-b57b-6bc7aa77a202",
+    "identifiableAttributes": [
       {
-        "equipmentID": "load9",
+        "id": "load9",
+        "type": "LOAD",
         "distributionKey": 1
       },
       {
-        "equipmentID": "load10",
+        "id": "load10",
+        "type": "LOAD",
         "distributionKey": 2
       }
     ],
-    "type": "IDENTIFIER_LIST"
+    "notFoundEquipments": []
   }
 ]
