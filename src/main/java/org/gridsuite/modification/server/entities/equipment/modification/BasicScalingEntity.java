@@ -22,6 +22,7 @@ import javax.validation.constraints.NotNull;
 @Builder
 @MappedSuperclass
 public class BasicScalingEntity extends ModificationEntity {
+
     @Column(name = "VariationType")
     @Enumerated(EnumType.STRING)
     private VariationType variationType;

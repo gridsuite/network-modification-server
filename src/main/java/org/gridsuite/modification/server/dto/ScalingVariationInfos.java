@@ -1,7 +1,6 @@
 package org.gridsuite.modification.server.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -19,7 +18,7 @@ import java.util.UUID;
 @Setter
 @ToString(callSuper = true)
 @Schema(description = "Scaling creation")
-public class AbstractScalingVariationInfos {
+public class ScalingVariationInfos {
     @Schema(description = "id")
     UUID id;
 

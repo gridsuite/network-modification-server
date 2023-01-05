@@ -17,7 +17,7 @@ import java.util.List;
 @ToString(callSuper = true)
 public class ScalingInfos extends ModificationInfos {
     @Schema(description = "scaling variations")
-    private List<AbstractScalingVariationInfos> variations;
+    private List<ScalingVariationInfos> variations;
 
     @Schema(description = "variation type")
     private VariationType variationType;

@@ -4,9 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.experimental.SuperBuilder;
 import org.gridsuite.modification.server.VariationMode;
-import org.gridsuite.modification.server.dto.AbstractScalingVariationInfos;
+import org.gridsuite.modification.server.dto.ScalingVariationInfos;
 
 import javax.persistence.*;
 import java.util.List;
@@ -16,7 +15,6 @@ import java.util.UUID;
 @AllArgsConstructor
 @Getter
 @Setter
-@SuperBuilder
 @MappedSuperclass
 public class BasicScalingVariationEntity {
     @Id
@@ -37,7 +35,7 @@ public class BasicScalingVariationEntity {
     @Enumerated(EnumType.STRING)
     private VariationMode variationMode;
 
-    public AbstractScalingVariationInfos toScalingVariation() {
+    public ScalingVariationInfos toScalingVariation() {
         return null;
     }
 }

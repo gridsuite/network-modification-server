@@ -7,7 +7,7 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.iidm.impl.NetworkImpl;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.AbstractScalingVariationInfos;
+import org.gridsuite.modification.server.dto.ScalingVariationInfos;
 import org.gridsuite.modification.server.dto.FilterEquipments;
 import org.gridsuite.modification.server.dto.FilterInfos;
 import org.gridsuite.modification.server.dto.IdentifiableAttributes;
@@ -86,7 +86,7 @@ public abstract class AbstractScaling extends AbstractModification {
 
     private void applyVariation(Network network,
                                 List<IdentifiableAttributes> identifiableAttributes,
-                                AbstractScalingVariationInfos variation) {
+                                ScalingVariationInfos variation) {
         switch (variation.getVariationMode()) {
             case PROPORTIONAL:
                 applyProportionalVariation(network, identifiableAttributes, variation);
@@ -108,35 +108,35 @@ public abstract class AbstractScaling extends AbstractModification {
         }
     }
 
-    public void applyStackingUpVariation(Network network, List<IdentifiableAttributes> identifiableAttributes, AbstractScalingVariationInfos variationInfos) {
+    public void applyStackingUpVariation(Network network, List<IdentifiableAttributes> identifiableAttributes, ScalingVariationInfos variationInfos) {
         throw new NetworkModificationException(getExceptionType());
     }
 
     public void applyVentilationVariation(Network network,
                                            List<IdentifiableAttributes> identifiableAttributes,
-                                           AbstractScalingVariationInfos generatorScalingVariation) {
+                                           ScalingVariationInfos generatorScalingVariation) {
         throw new NetworkModificationException(getExceptionType());
     }
 
     public void applyRegularDistributionVariation(Network network,
                                                    List<IdentifiableAttributes> identifiableAttributes,
-                                                   AbstractScalingVariationInfos generatorScalingVariation) {
+                                                   ScalingVariationInfos generatorScalingVariation) {
         throw new NetworkModificationException(getExceptionType());
     }
 
     public void applyProportionalToPmaxVariation(Network network,
                                                   List<IdentifiableAttributes> identifiableAttributes,
-                                                  AbstractScalingVariationInfos generatorScalingVariation) {
+                                                  ScalingVariationInfos generatorScalingVariation) {
         throw new NetworkModificationException(getExceptionType());
     }
 
     public void applyProportionalVariation(Network network,
                                             List<IdentifiableAttributes> identifiableAttributes,
-                                            AbstractScalingVariationInfos variationInfos) {
+                                            ScalingVariationInfos variationInfos) {
         throw new NetworkModificationException(getExceptionType());
     }
 
-    public abstract double getAsked(AbstractScalingVariationInfos variationInfos, AtomicReference<Double> sum);
+    public abstract double getAsked(ScalingVariationInfos variationInfos, AtomicReference<Double> sum);
 
     public abstract Scalable getScalable(String id);
 

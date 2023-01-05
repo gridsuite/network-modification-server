@@ -6,6 +6,7 @@ import lombok.NonNull;
 import lombok.Setter;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.GeneratorScalingInfos;
+import org.gridsuite.modification.server.dto.GeneratorScalingVariationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 
 import javax.persistence.CascadeType;
@@ -47,7 +48,12 @@ public class GeneratorScalingEntity extends BasicScalingEntity {
         setVariationType(generatorScalingInfos.getVariationType());
         setVariations(generatorScalingInfos.getVariations()
                 .stream()
-                .map(variation -> (GeneratorScalingVariationEntity) variation.toEntity())
+                .map(variation -> GeneratorScalingVariationInfos.builder()
+                        .variationMode(variation.getVariationMode())
+                        .variationValue(variation.getVariationValue())
+                        .filters(variation.getFilters())
+                        .build()
+                        .toEntity())
                 .collect(Collectors.toList()));
     }
 

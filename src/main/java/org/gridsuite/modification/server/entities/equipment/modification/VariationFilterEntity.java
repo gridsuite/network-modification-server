@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.gridsuite.modification.server.dto.FilterInfos;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -39,6 +40,8 @@ public class VariationFilterEntity {
     @Column(name = "name")
     private String name;
 
-    @ManyToMany(mappedBy = "filters", cascade = CascadeType.ALL)
-    private List<GeneratorScalingVariationEntity> variations;
+    public VariationFilterEntity(FilterInfos filterInfos) {
+        setFilterId(UUID.fromString(filterInfos.getId()));
+        setName(filterInfos.getName());
+    }
 }

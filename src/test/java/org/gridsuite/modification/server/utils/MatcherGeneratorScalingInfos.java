@@ -1,6 +1,6 @@
 package org.gridsuite.modification.server.utils;
 
-import org.gridsuite.modification.server.dto.AbstractScalingVariationInfos;
+import org.gridsuite.modification.server.dto.ScalingVariationInfos;
 import org.gridsuite.modification.server.dto.FilterInfos;
 import org.gridsuite.modification.server.dto.GeneratorScalingInfos;
 
@@ -23,7 +23,7 @@ public class MatcherGeneratorScalingInfos extends MatcherModificationInfos<Gener
                 && matchesVariations(m.getVariations());
     }
 
-    private boolean matchesVariations(List<AbstractScalingVariationInfos> generatorScalingVariations) {
+    private boolean matchesVariations(List<ScalingVariationInfos> generatorScalingVariations) {
         if (!matchesList(reference.getVariations(), generatorScalingVariations)) {
             return false;
         }
@@ -38,7 +38,7 @@ public class MatcherGeneratorScalingInfos extends MatcherModificationInfos<Gener
         return true;
     }
 
-    private boolean matchesVariation(AbstractScalingVariationInfos variation1, AbstractScalingVariationInfos variation2) {
+    private boolean matchesVariation(ScalingVariationInfos variation1, ScalingVariationInfos variation2) {
         return Objects.equals(variation1.getVariationValue(), variation2.getVariationValue())
                 && Objects.equals(variation1.getVariationMode(), variation2.getVariationMode())
                 && matchesFilters(variation1.getFilters(), variation2.getFilters());

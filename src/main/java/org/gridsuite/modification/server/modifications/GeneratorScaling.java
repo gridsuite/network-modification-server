@@ -6,7 +6,7 @@ import com.powsybl.iidm.network.Network;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.VariationType;
-import org.gridsuite.modification.server.dto.AbstractScalingVariationInfos;
+import org.gridsuite.modification.server.dto.ScalingVariationInfos;
 import org.gridsuite.modification.server.dto.GeneratorScalingInfos;
 import org.gridsuite.modification.server.dto.IdentifiableAttributes;
 
@@ -29,7 +29,7 @@ public class GeneratorScaling extends AbstractScaling {
 
     public void applyStackingUpVariation(Network network,
                                          List<IdentifiableAttributes> identifiableAttributes,
-                                         AbstractScalingVariationInfos generatorScalingVariation) {
+                                         ScalingVariationInfos generatorScalingVariation) {
         AtomicReference<Double> sum = new AtomicReference<>(0D);
         Scalable stackingUpScalable = Scalable.stack(identifiableAttributes.stream()
                 .map(equipment -> getScalable(equipment.getId())).toArray(Scalable[]::new));
@@ -38,7 +38,7 @@ public class GeneratorScaling extends AbstractScaling {
 
     public void applyVentilationVariation(Network network,
                                           List<IdentifiableAttributes> identifiableAttributes,
-                                          AbstractScalingVariationInfos generatorScalingVariation) {
+                                          ScalingVariationInfos generatorScalingVariation) {
         AtomicReference<Double> sum = new AtomicReference<>(0D);
         List<Float> percentages = new ArrayList<>();
         List<Scalable> scalables = new ArrayList<>();
@@ -60,7 +60,7 @@ public class GeneratorScaling extends AbstractScaling {
 
     public void applyRegularDistributionVariation(Network network,
                                                    List<IdentifiableAttributes> identifiableAttributes,
-                                                   AbstractScalingVariationInfos generatorScalingVariation) {
+                                                   ScalingVariationInfos generatorScalingVariation) {
         List<Generator> generators = identifiableAttributes
                 .stream()
                 .map(attribute -> network.getGenerator(attribute.getId()))
@@ -83,7 +83,7 @@ public class GeneratorScaling extends AbstractScaling {
 
     public void applyProportionalToPmaxVariation(Network network,
                                                   List<IdentifiableAttributes> identifiableAttributes,
-                                                  AbstractScalingVariationInfos generatorScalingVariation) {
+                                                  ScalingVariationInfos generatorScalingVariation) {
         List<Generator> generators = identifiableAttributes
                 .stream().map(attribute -> network.getGenerator(attribute.getId())).collect(Collectors.toList());
         AtomicReference<Double> maxPSum = new AtomicReference<>(0D);
@@ -110,7 +110,7 @@ public class GeneratorScaling extends AbstractScaling {
     @Override
     public void applyProportionalVariation(Network network,
                                             List<IdentifiableAttributes> identifiableAttributes,
-                                            AbstractScalingVariationInfos generatorScalingVariation) {
+                                            ScalingVariationInfos generatorScalingVariation) {
         List<Generator> generators = identifiableAttributes
                 .stream().map(attribute -> network.getGenerator(attribute.getId())).collect(Collectors.toList());
         AtomicReference<Double> sum = new AtomicReference<>(0D);
@@ -132,7 +132,7 @@ public class GeneratorScaling extends AbstractScaling {
     }
 
     @Override
-    public double getAsked(AbstractScalingVariationInfos generatorScalingVariation, AtomicReference<Double> sum) {
+    public double getAsked(ScalingVariationInfos generatorScalingVariation, AtomicReference<Double> sum) {
         return scalingInfos.getVariationType() == VariationType.DELTA_P
                 ? generatorScalingVariation.getVariationValue()
                 : generatorScalingVariation.getVariationValue() - sum.get();

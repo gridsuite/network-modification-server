@@ -19,7 +19,7 @@ import org.gridsuite.modification.server.VariationMode;
 import org.gridsuite.modification.server.VariationType;
 import org.gridsuite.modification.server.dto.FilterInfos;
 import org.gridsuite.modification.server.dto.GeneratorScalingInfos;
-import org.gridsuite.modification.server.dto.GeneratorScalingVariation;
+import org.gridsuite.modification.server.dto.GeneratorScalingVariationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.service.FilterService;
 import org.gridsuite.modification.server.utils.MatcherGeneratorScalingInfos;
@@ -45,7 +45,10 @@ import java.util.UUID;
 
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.gridsuite.modification.server.utils.NetworkUtil.createGenerator;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -61,7 +64,8 @@ public class GeneratorScalingModificationTest extends AbstractNetworkModificatio
     private static final String FILTER_ID_3 = "00bd063f-611f-4686-b57b-6bc7aa00a202";
     private static final String FILTER_ID_4 = "6f11d63f-6f06-4686-b57b-6bc7aa66a202";
     private static final String FILTER_ID_5 = "7100163f-60f1-4686-b57b-6bc7aa77a202";
-    private static final String FILTER_WRONG_ID = UUID.randomUUID().toString();
+    private static final String FILTER_WRONG_ID_1 = UUID.randomUUID().toString();
+    private static final String FILTER_WRONG_ID_2 = UUID.randomUUID().toString();
     private static final String GENERATOR_ID_1 = "idGenerator";
     private static final String GENERATOR_ID_2 = "v5generator";
     private static final String GENERATOR_ID_3 = "v6generator";
@@ -92,7 +96,8 @@ public class GeneratorScalingModificationTest extends AbstractNetworkModificatio
         wireMock = new WireMockServer(wireMockConfig().dynamicPort());
         wireMock.start();
 
-        var filterWithWrongIds = "[{\"filterId\":\"" + FILTER_WRONG_ID + "\",\"identifiableAttributes\":[{\"id\":\"idGenerator\",\"type\":\"GENERATOR\",\"distributionKey\":1},{\"id\":\"gen5\",\"type\":\"GENERATOR\",\"distributionKey\":2}],\"notFoundEquipments\":[\"wrongID\"]}]";
+        var filterWithWrongIds = "[{\"filterId\":\"" + FILTER_WRONG_ID_1 + "\",\"identifiableAttributes\":[{\"id\":\"wrongId1\",\"type\":\"GENERATOR\",\"distributionKey\":1},{\"id\":\"wrongId2\",\"type\":\"GENERATOR\",\"distributionKey\":2}],\"notFoundEquipments\":[\"wrongId1\",\"wrongId2\"]}]";
+        var filterWithWrongIds2 = "[{\"filterId\":\"" + FILTER_WRONG_ID_2 + "\",\"identifiableAttributes\":[{\"id\":\"idGenerator\",\"type\":\"GENERATOR\",\"distributionKey\":1},{\"id\":\"gen5\",\"type\":\"GENERATOR\",\"distributionKey\":2}],\"notFoundEquipments\":[]},{\"filterId\":\"bdfad63f-6fe6-4686-b57b-6bc7aa11a202\",\"identifiableAttributes\":[{\"id\":\"gen4\",\"type\":\"wrongId\"},{\"id\":\"gen7\",\"type\":\"GENERATOR\"}],\"notFoundEquipments\":[\"\"wrongId\"]}]";
         String networkParams = "?networkUuid=" + ((NetworkImpl) getNetwork()).getUuid() + "&variantId=variant_1";
         String params = "&ids=" + String.join(",", List.of(FILTER_ID_1, FILTER_ID_2, FILTER_ID_3, FILTER_ID_4, FILTER_ID_5));
         String path = "/v1/filters/export";
@@ -101,9 +106,14 @@ public class GeneratorScalingModificationTest extends AbstractNetworkModificatio
                         .withBody(resourceToString())
                         .withHeader("Content-Type", "application/json")));
 
-        wireMock.stubFor(WireMock.get(path + networkParams + "&ids=" + FILTER_WRONG_ID)
+        wireMock.stubFor(WireMock.get(path + networkParams + "&ids=" + FILTER_WRONG_ID_1)
                 .willReturn(WireMock.ok()
                         .withBody(filterWithWrongIds)
+                        .withHeader("Content-Type", "application/json")));
+
+        wireMock.stubFor(WireMock.get(path + networkParams + "&ids=" + FILTER_WRONG_ID_2)
+                .willReturn(WireMock.ok()
+                        .withBody(filterWithWrongIds2)
                         .withHeader("Content-Type", "application/json")));
 
         filterService.setFilterServerBaseUri(wireMock.baseUrl());
@@ -113,14 +123,15 @@ public class GeneratorScalingModificationTest extends AbstractNetworkModificatio
     public void testFilterWithWrongIds() throws Exception {
         var filter = FilterInfos.builder()
                 .name("filter")
-                .id(FILTER_WRONG_ID)
+                .id(FILTER_WRONG_ID_1)
                 .build();
-        var variation = GeneratorScalingVariation.builder()
+        var variation = GeneratorScalingVariationInfos.builder()
                 .variationMode(VariationMode.PROPORTIONAL)
                 .variationValue(100D)
                 .filters(List.of(filter))
                 .build();
         var generatorScalingInfo = GeneratorScalingInfos.builder()
+                .type(ModificationType.GENERATOR_SCALING)
                 .isIterative(false)
                 .variationType(VariationType.TARGET_P)
                 .variations(List.of(variation))
@@ -128,10 +139,42 @@ public class GeneratorScalingModificationTest extends AbstractNetworkModificatio
 
         String modificationToCreateJson = mapper.writeValueAsString(generatorScalingInfo);
 
-        mockMvc.perform(post(getNetworkModificationUri())
+        var response = mockMvc.perform(post(getNetworkModificationUri())
                         .content(modificationToCreateJson)
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().is5xxServerError());
+                .andExpect(status().is5xxServerError())
+                .andReturn();
+
+        assertEquals(response.getResponse().getContentAsString(), "GENERATOR_SCALING_ERROR : All filters contains equipments with wrong ids");
+    }
+
+    @Test
+    public void testScalingCreationWithWarning() throws Exception {
+        var filter = FilterInfos.builder()
+                .name("filter")
+                .id(FILTER_WRONG_ID_2)
+                .build();
+        var variation = GeneratorScalingVariationInfos.builder()
+                .variationMode(VariationMode.PROPORTIONAL)
+                .variationValue(100D)
+                .filters(List.of(filter))
+                .build();
+        var generatorScalingInfo = GeneratorScalingInfos.builder()
+                .type(ModificationType.GENERATOR_SCALING)
+                .isIterative(false)
+                .variationType(VariationType.TARGET_P)
+                .variations(List.of(variation))
+                .build();
+
+        String modificationToCreateJson = mapper.writeValueAsString(generatorScalingInfo);
+
+        var response = mockMvc.perform(post(getNetworkModificationUri())
+                        .content(modificationToCreateJson)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        assertNotNull(response.getResponse().getContentAsString());
     }
 
     @Override
@@ -166,38 +209,37 @@ public class GeneratorScalingModificationTest extends AbstractNetworkModificatio
                 .name("filter 3")
                 .build();
 
-        var variation1 = GeneratorScalingVariation.builder()
+        var variation1 = GeneratorScalingVariationInfos.builder()
                 .variationMode(VariationMode.PROPORTIONAL_TO_PMAX)
                 .variationValue(50D)
                 .filters(List.of(filter1))
                 .build();
 
-        var variation2 = GeneratorScalingVariation.builder()
+        var variation2 = GeneratorScalingVariationInfos.builder()
                 .variationMode(VariationMode.REGULAR_DISTRIBUTION)
                 .variationValue(50D)
                 .filters(List.of(filter2))
                 .build();
 
-        var variation3 = GeneratorScalingVariation.builder()
+        var variation3 = GeneratorScalingVariationInfos.builder()
                 .variationMode(VariationMode.STACKING_UP)
                 .variationValue(50D)
                 .filters(List.of(filter3))
                 .build();
 
-        var variation4 = GeneratorScalingVariation.builder()
+        var variation4 = GeneratorScalingVariationInfos.builder()
                 .variationMode(VariationMode.VENTILATION)
                 .variationValue(50D)
                 .filters(List.of(filter4))
                 .build();
 
-        var variation5 = GeneratorScalingVariation.builder()
+        var variation5 = GeneratorScalingVariationInfos.builder()
                 .variationMode(VariationMode.PROPORTIONAL)
                 .variationValue(50D)
                 .filters(List.of(filter1, filter5))
                 .build();
 
         return GeneratorScalingInfos.builder()
-                .uuid(GENERATOR_SCALING_ID)
                 .date(ZonedDateTime.now())
                 .type(ModificationType.GENERATOR_SCALING)
                 .isIterative(true)
@@ -213,7 +255,7 @@ public class GeneratorScalingModificationTest extends AbstractNetworkModificatio
                 .name("filter 3")
                 .build();
 
-        var variation5 = GeneratorScalingVariation.builder()
+        var variation5 = GeneratorScalingVariationInfos.builder()
                 .variationMode(VariationMode.PROPORTIONAL)
                 .variationValue(50D)
                 .filters(List.of(filter5))
