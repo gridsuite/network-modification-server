@@ -17,10 +17,7 @@ import lombok.experimental.SuperBuilder;
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
  */
 
-@SuperBuilder
-@NoArgsConstructor
 @Getter
-@Setter
 public class FilterEquipmentAttributes {
     @Schema(description = "Equipment ID")
     private String equipmentID;

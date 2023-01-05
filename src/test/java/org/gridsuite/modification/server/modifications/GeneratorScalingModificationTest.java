@@ -67,6 +67,8 @@ public class GeneratorScalingModificationTest extends AbstractNetworkModificatio
     private static final String FILTER_ID_3 = "00bd063f-611f-4686-b57b-6bc7aa00a202";
     private static final String FILTER_ID_4 = "6f11d63f-6f06-4686-b57b-6bc7aa66a202";
     private static final String FILTER_ID_5 = "7100163f-60f1-4686-b57b-6bc7aa77a202";
+    private static final String FILTER_NOT_FOUND_ID = UUID.randomUUID().toString();
+    private static final String FILTER_NO_DK = UUID.randomUUID().toString();
     private static final String FILTER_WRONG_ID_1 = UUID.randomUUID().toString();
     private static final String FILTER_WRONG_ID_2 = UUID.randomUUID().toString();
     private static final String GENERATOR_ID_1 = "idGenerator";
@@ -100,10 +102,13 @@ public class GeneratorScalingModificationTest extends AbstractNetworkModificatio
         wireMock.start();
 
         var filterWithWrongIds = "[{\"filterId\":\"" + FILTER_WRONG_ID_1 + "\",\"identifiableAttributes\":[{\"id\":\"wrongId1\",\"type\":\"GENERATOR\",\"distributionKey\":1},{\"id\":\"wrongId2\",\"type\":\"GENERATOR\",\"distributionKey\":2}],\"notFoundEquipments\":[\"wrongId1\",\"wrongId2\"]}]";
-        var filterWithWrongIds2 = "[{\"filterId\":\"bdefd63f-6cd8-4686-b57b-6bc7aaffa202\",\"identifiableAttributes\":[{\"id\":\"idGenerator\",\"type\":\"GENERATOR\",\"distributionKey\":1},{\"id\":\"gen5\",\"type\":\"GENERATOR\",\"distributionKey\":2}],\"notFoundEquipments\":[]},{\"filterId\":\"bdfad63f-6fe6-4686-b57b-6bc7aa11a202\",\"identifiableAttributes\":[{\"id\":\"Wrongid1\",\"type\":\"GENERATOR\"},{\"id\":\"gen7\",\"type\":\"GENERATOR\"}],\"notFoundEquipments\":[\"Wrongid1\"]}]";
+        var filterWithWrongIds2 = "[{\"filterId\":\"" + FILTER_WRONG_ID_2 + "\",\"identifiableAttributes\":[{\"id\":\"idGenerator\",\"type\":\"GENERATOR\",\"distributionKey\":1},{\"id\":\"gen5\",\"type\":\"GENERATOR\",\"distributionKey\":2}],\"notFoundEquipments\":[]},{\"filterId\":\"bdfad63f-6fe6-4686-b57b-6bc7aa11a202\",\"identifiableAttributes\":[{\"id\":\"Wrongid1\",\"type\":\"GENERATOR\"},{\"id\":\"gen7\",\"type\":\"GENERATOR\"}],\"notFoundEquipments\":[\"Wrongid1\"]}]";
+        var filterWithNoDK = "[{\"filterId\":\"" + FILTER_NO_DK + "\",\"identifiableAttributes\":[{\"id\":\"idGenerator\",\"type\":\"GENERATOR\"},{\"id\":\"gen5\",\"type\":\"GENERATOR\"}],\"notFoundEquipments\":[]}]";
+
         String networkParams = "?networkUuid=" + ((NetworkImpl) getNetwork()).getUuid() + "&variantId=variant_1";
         String params = "&ids=" + String.join(",", List.of(FILTER_ID_1, FILTER_ID_2, FILTER_ID_3, FILTER_ID_4, FILTER_ID_5));
         String path = "/v1/filters/export";
+
         wireMock.stubFor(WireMock.get(path + networkParams + params)
                 .willReturn(WireMock.ok()
                         .withBody(resourceToString())
@@ -119,7 +124,72 @@ public class GeneratorScalingModificationTest extends AbstractNetworkModificatio
                         .withBody(filterWithWrongIds2)
                         .withHeader("Content-Type", "application/json")));
 
+        wireMock.stubFor(WireMock.get(path + networkParams + "&ids=" + FILTER_NO_DK)
+                .willReturn(WireMock.ok()
+                        .withBody(filterWithNoDK)
+                        .withHeader("Content-Type", "application/json")));
+
+        wireMock.stubFor(WireMock.get(path + networkParams + "&ids=" + FILTER_NOT_FOUND_ID)
+                .willReturn(WireMock.notFound()
+                        .withHeader("Content-Type", "application/json")));
+
         filterService.setFilterServerBaseUri(wireMock.baseUrl());
+    }
+
+    @Test
+    public void testWithWrongFilter() throws Exception {
+        var filter = FilterInfos.builder()
+                .id(FILTER_NOT_FOUND_ID)
+                .name("filter 1")
+                .build();
+
+        var variation = ScalingVariationInfos.builder()
+                .variationMode(VariationMode.PROPORTIONAL)
+                .variationValue(100D)
+                .filters(List.of(filter))
+                .build();
+
+        ModificationInfos modificationToCreate = GeneratorScalingInfos.builder()
+                .uuid(GENERATOR_SCALING_ID)
+                .date(ZonedDateTime.now())
+                .type(ModificationType.GENERATOR_SCALING)
+                .variationType(VariationType.DELTA_P)
+                .variations(List.of(variation))
+                .build();
+
+        String modificationToCreateJson = mapper.writeValueAsString(modificationToCreate);
+
+        var result = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().is5xxServerError()).andReturn().getResponse().getContentAsString();
+        assertEquals(new NetworkModificationException(NetworkModificationException.Type.GENERATOR_SCALING_ERROR, "404 Not Found: [no body]").getMessage(), result);
+    }
+
+    @Test
+    public void testVentilationModeWithoutDistributionKey() throws Exception {
+        var filter = FilterInfos.builder()
+                .id(FILTER_NO_DK)
+                .name("filter")
+                .build();
+
+        var variation1 = ScalingVariationInfos.builder()
+                .variationValue(100D)
+                .variationMode(VariationMode.VENTILATION)
+                .filters(List.of(filter))
+                .build();
+
+        ModificationInfos modificationToCreate = GeneratorScalingInfos.builder()
+                .uuid(GENERATOR_SCALING_ID)
+                .date(ZonedDateTime.now())
+                .type(ModificationType.GENERATOR_SCALING)
+                .variationType(VariationType.DELTA_P)
+                .variations(List.of(variation1))
+                .build();
+
+        String modificationToCreateJson = mapper.writeValueAsString(modificationToCreate);
+
+        var result = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().is5xxServerError()).andReturn().getResponse().getContentAsString();
+        assertEquals(new NetworkModificationException(NetworkModificationException.Type.GENERATOR_SCALING_ERROR, "This mode is available only for equipment with distribution key").getMessage(), result);
     }
 
     @Test
@@ -296,16 +366,16 @@ public class GeneratorScalingModificationTest extends AbstractNetworkModificatio
 
     @Override
     protected void assertNetworkAfterDeletion() {
-        assertEquals(getNetwork().getGenerator(GENERATOR_ID_1).getTargetP(), 42.1, 0);
-        assertEquals(getNetwork().getGenerator(GENERATOR_ID_2).getTargetP(), 42.1, 0);
-        assertEquals(getNetwork().getGenerator(GENERATOR_ID_3).getTargetP(), 42.1, 0);
-        assertEquals(getNetwork().getGenerator(GENERATOR_ID_4).getTargetP(), 100, 0);
-        assertEquals(getNetwork().getGenerator(GENERATOR_ID_5).getTargetP(), 200, 0);
-        assertEquals(getNetwork().getGenerator(GENERATOR_ID_6).getTargetP(), 100, 0);
-        assertEquals(getNetwork().getGenerator(GENERATOR_ID_7).getTargetP(), 200, 0);
-        assertEquals(getNetwork().getGenerator(GENERATOR_ID_8).getTargetP(), 100, 0);
-        assertEquals(getNetwork().getGenerator(GENERATOR_ID_9).getTargetP(), 200, 0);
-        assertEquals(getNetwork().getGenerator(GENERATOR_ID_10).getTargetP(), 100, 0);
+        assertEquals(42.1, getNetwork().getGenerator(GENERATOR_ID_1).getTargetP(), 0);
+        assertEquals(42.1, getNetwork().getGenerator(GENERATOR_ID_2).getTargetP(), 0);
+        assertEquals(42.1, getNetwork().getGenerator(GENERATOR_ID_3).getTargetP(), 0);
+        assertEquals(100, getNetwork().getGenerator(GENERATOR_ID_4).getTargetP(), 0);
+        assertEquals(200, getNetwork().getGenerator(GENERATOR_ID_5).getTargetP(), 0);
+        assertEquals(100, getNetwork().getGenerator(GENERATOR_ID_6).getTargetP(), 0);
+        assertEquals(200, getNetwork().getGenerator(GENERATOR_ID_7).getTargetP(), 0);
+        assertEquals(100, getNetwork().getGenerator(GENERATOR_ID_8).getTargetP(), 0);
+        assertEquals(200, getNetwork().getGenerator(GENERATOR_ID_9).getTargetP(), 0);
+        assertEquals(100, getNetwork().getGenerator(GENERATOR_ID_10).getTargetP(), 0);
     }
 
     private String resourceToString() throws IOException {

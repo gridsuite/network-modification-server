@@ -17,8 +17,6 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
-@Builder
 @Schema(description = "Identifiable attributes")
 public class IdentifiableAttributes {
 

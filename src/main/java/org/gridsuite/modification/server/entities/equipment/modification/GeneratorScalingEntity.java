@@ -7,6 +7,7 @@
 
 package org.gridsuite.modification.server.entities.equipment.modification;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
@@ -30,6 +31,7 @@ import java.util.stream.Collectors;
 @Getter
 @Setter
 @Entity
+@EqualsAndHashCode
 @Table(name = "GeneratorScaling")
 public class GeneratorScalingEntity extends ScalingEntity {
 

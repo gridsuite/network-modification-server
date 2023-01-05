@@ -24,11 +24,8 @@ import javax.persistence.MappedSuperclass;
 import javax.validation.constraints.NotNull;
 
 @NoArgsConstructor
-@AllArgsConstructor
 @Getter
 @Setter
-@Builder
-@EqualsAndHashCode
 @MappedSuperclass
 public class ScalingEntity extends ModificationEntity {
 
