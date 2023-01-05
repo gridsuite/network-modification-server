@@ -37,7 +37,7 @@ public class LineSplitWithVoltageLevel extends AbstractModification {
 
         VoltageLevelCreationInfos mayNewVL = modificationInfos.getMayNewVoltageLevelInfos();
         if (mayNewVL != null) {
-            ModificationUtils.getInstance().createVoltageLevelAction(mayNewVL, subReporter, network);
+            ModificationUtils.getInstance().createVoltageLevel(mayNewVL, subReporter, network);
         }
 
         ConnectVoltageLevelOnLine algo = new ConnectVoltageLevelOnLineBuilder()

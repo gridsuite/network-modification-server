@@ -26,6 +26,12 @@ public class EquipmentCreationEntity extends EquipmentModificationEntity {
     @Column(name = "equipmentName")
     private String equipmentName;
 
+    protected EquipmentCreationEntity(EquipmentCreationInfos equipmentCreationInfos) {
+        super(equipmentCreationInfos);
+        this.equipmentName = equipmentCreationInfos.getEquipmentName();
+    }
+
+    //TODO : remove
     protected EquipmentCreationEntity(ModificationType modificationType, String equipmentId, String equipmentName) {
         super(equipmentId, modificationType);
         this.equipmentName = equipmentName;
