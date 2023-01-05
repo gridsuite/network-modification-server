@@ -123,7 +123,7 @@ public class GeneratorScalingModificationTest extends AbstractNetworkModificatio
         var generatorScalingInfo = GeneratorScalingInfos.builder()
                 .isIterative(false)
                 .variationType(VariationType.TARGET_P)
-                .generatorScalingVariations(List.of(variation))
+                .variations(List.of(variation))
                 .build();
 
         String modificationToCreateJson = mapper.writeValueAsString(generatorScalingInfo);
@@ -202,7 +202,7 @@ public class GeneratorScalingModificationTest extends AbstractNetworkModificatio
                 .type(ModificationType.GENERATOR_SCALING)
                 .isIterative(true)
                 .variationType(VariationType.DELTA_P)
-                .generatorScalingVariations(List.of(variation1, variation2, variation3, variation4, variation5))
+                .variations(List.of(variation1, variation2, variation3, variation4, variation5))
                 .build();
     }
 
@@ -225,7 +225,7 @@ public class GeneratorScalingModificationTest extends AbstractNetworkModificatio
                 .type(ModificationType.GENERATOR_SCALING)
                 .isIterative(false)
                 .variationType(VariationType.TARGET_P)
-                .generatorScalingVariations(List.of(variation5))
+                .variations(List.of(variation5))
                 .build();
     }
 
@@ -236,8 +236,8 @@ public class GeneratorScalingModificationTest extends AbstractNetworkModificatio
 
     @Override
     protected void assertNetworkAfterCreation() {
-        //assertEquals(getNetwork().getGenerator(GENERATOR_ID_1).getTargetP(), 68.82, 0.01D);
-        //assertEquals(getNetwork().getGenerator(GENERATOR_ID_2).getTargetP(), 75.43, 0.01D);
+        assertEquals(getNetwork().getGenerator(GENERATOR_ID_1).getTargetP(), 68.82, 0.01D);
+        assertEquals(getNetwork().getGenerator(GENERATOR_ID_2).getTargetP(), 75.43, 0.01D);
         assertEquals(getNetwork().getGenerator(GENERATOR_ID_3).getTargetP(), 42.1, 0.01D);
         assertEquals(getNetwork().getGenerator(GENERATOR_ID_4).getTargetP(), 125.0, 0.01D);
         assertEquals(getNetwork().getGenerator(GENERATOR_ID_5).getTargetP(), 273.27, 0.01D);

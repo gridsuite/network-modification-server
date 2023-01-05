@@ -1,8 +1,8 @@
 package org.gridsuite.modification.server.utils;
 
+import org.gridsuite.modification.server.dto.AbstractScalingVariationInfos;
 import org.gridsuite.modification.server.dto.FilterInfos;
 import org.gridsuite.modification.server.dto.GeneratorScalingInfos;
-import org.gridsuite.modification.server.dto.GeneratorScalingVariation;
 
 import java.util.List;
 import java.util.Objects;
@@ -20,16 +20,16 @@ public class MatcherGeneratorScalingInfos extends MatcherModificationInfos<Gener
         return super.matchesSafely(m)
                 && Objects.equals(reference.getVariationType(), m.getVariationType())
                 && Objects.equals(reference.isIterative(), m.isIterative())
-                && matchesVariations(m.getGeneratorScalingVariations());
+                && matchesVariations(m.getVariations());
     }
 
-    private boolean matchesVariations(List<GeneratorScalingVariation> generatorScalingVariations) {
-        if (!matchesList(reference.getGeneratorScalingVariations(), generatorScalingVariations)) {
+    private boolean matchesVariations(List<AbstractScalingVariationInfos> generatorScalingVariations) {
+        if (!matchesList(reference.getVariations(), generatorScalingVariations)) {
             return false;
         }
 
         for (int index = 0; index < generatorScalingVariations.size(); index++) {
-            if (!matchesVariation(reference.getGeneratorScalingVariations().get(index),
+            if (!matchesVariation(reference.getVariations().get(index),
                     generatorScalingVariations.get(index))) {
                 return false;
             }
@@ -38,7 +38,7 @@ public class MatcherGeneratorScalingInfos extends MatcherModificationInfos<Gener
         return true;
     }
 
-    private boolean matchesVariation(GeneratorScalingVariation variation1, GeneratorScalingVariation variation2) {
+    private boolean matchesVariation(AbstractScalingVariationInfos variation1, AbstractScalingVariationInfos variation2) {
         return Objects.equals(variation1.getVariationValue(), variation2.getVariationValue())
                 && Objects.equals(variation1.getVariationMode(), variation2.getVariationMode())
                 && matchesFilters(variation1.getFilters(), variation2.getFilters());
