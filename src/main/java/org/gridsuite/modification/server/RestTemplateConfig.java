@@ -16,6 +16,10 @@ import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.client.RestTemplate;
 
+/**
+ * @author Seddik Yengui <Seddik.yengui at rte-france.com>
+ */
+
 @Configuration
 public class RestTemplateConfig {
 

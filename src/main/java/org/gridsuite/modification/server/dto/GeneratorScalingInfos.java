@@ -1,3 +1,10 @@
+/**
+ * Copyright (c) 2022, RTE (http://www.rte-france.com)
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
 package org.gridsuite.modification.server.dto;
 
 import com.powsybl.commons.reporter.Reporter;
@@ -14,6 +21,10 @@ import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.entities.equipment.modification.GeneratorScalingEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.GeneratorScaling;
+
+/**
+ * @author Seddik Yengui <Seddik.yengui at rte-france.com>
+ */
 
 @SuperBuilder
 @AllArgsConstructor

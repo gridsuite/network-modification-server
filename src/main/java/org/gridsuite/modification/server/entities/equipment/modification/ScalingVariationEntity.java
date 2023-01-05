@@ -1,3 +1,10 @@
+/**
+ * Copyright (c) 2022, RTE (http://www.rte-france.com)
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
 package org.gridsuite.modification.server.entities.equipment.modification;
 
 import lombok.AllArgsConstructor;
@@ -38,15 +45,11 @@ public class ScalingVariationEntity {
     @Enumerated(EnumType.STRING)
     private VariationMode variationMode;
 
-    @Column(name = "reactiveVariationMode")
-    private String reactiveVariationMode;
-
     public ScalingVariationEntity(ScalingVariationInfos variationInfos) {
         this.id = null;
         this.filters = getFiltersEntity(variationInfos);
         this.variationMode = variationInfos.getVariationMode();
         this.variationValue = variationInfos.getVariationValue();
-        this.reactiveVariationMode = variationInfos.getReactiveVariationMode();
     }
 
     private List<VariationFilterEntity> getFiltersEntity(ScalingVariationInfos variationInfos) {
@@ -62,7 +65,6 @@ public class ScalingVariationEntity {
                 .id(getId())
                 .variationMode(getVariationMode())
                 .variationValue(getVariationValue())
-                .reactiveVariationMode(getReactiveVariationMode())
                 .filters(this.getFilters().stream()
                         .map(filter -> new FilterInfos(filter.getFilterId().toString(), filter.getName()))
                         .collect(Collectors.toList()))

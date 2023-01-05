@@ -50,6 +50,10 @@ import static org.junit.Assert.assertNotNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+/**
+ * @author Seddik Yengui <Seddik.yengui at rte-france.com>
+ */
+
 @RunWith(SpringRunner.class)
 @AutoConfigureMockMvc
 @SpringBootTest
