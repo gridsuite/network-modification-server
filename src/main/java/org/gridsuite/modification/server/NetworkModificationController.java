@@ -123,9 +123,13 @@ public class NetworkModificationController {
             case LOAD_CREATION:
             case LINE_SPLIT_WITH_VOLTAGE_LEVEL:
             case EQUIPMENT_ATTRIBUTE_MODIFICATION:
+            case DELETE_VOLTAGE_LEVEL_ON_LINE:
+            case DELETE_ATTACHING_LINE:
             case SHUNT_COMPENSATOR_CREATION:
             case LINE_CREATION:
             case LINE_ATTACH_TO_VOLTAGE_LEVEL:
+            case VOLTAGE_LEVEL_CREATION:
+            case LINES_ATTACH_TO_SPLIT_LINES:
                 return ResponseEntity.ok().body(networkModificationService.createModification(networkUuid, variantId, groupUuid, reportUuid, reporterId, modificationInfos));
             default:
                 return ResponseEntity.ok().body(networkModificationService.createNetworkModification(networkUuid, variantId, groupUuid, reportUuid, reporterId, modificationInfos));
@@ -143,10 +147,14 @@ public class NetworkModificationController {
         switch (modificationInfos.getType()) {
             case LOAD_CREATION:
             case LINE_SPLIT_WITH_VOLTAGE_LEVEL:
+            case DELETE_VOLTAGE_LEVEL_ON_LINE:
+            case DELETE_ATTACHING_LINE:
             case EQUIPMENT_ATTRIBUTE_MODIFICATION:
             case SHUNT_COMPENSATOR_CREATION:
             case LINE_CREATION:
             case LINE_ATTACH_TO_VOLTAGE_LEVEL:
+            case VOLTAGE_LEVEL_CREATION:
+            case LINES_ATTACH_TO_SPLIT_LINES:
                 networkModificationService.updateModification(networkModificationUuid, modificationInfos);
                 break;
             default:

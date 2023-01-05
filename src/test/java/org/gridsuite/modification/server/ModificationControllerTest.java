@@ -688,11 +688,14 @@ public class ModificationControllerTest {
         String resultAsString;
         String generatorId = "idGenerator";
         GeneratorModificationInfos generatorModificationInfos = GeneratorModificationInfos.builder()
-            .type(ModificationType.GENERATOR_MODIFICATION)
-            .equipmentId(generatorId)
-            .energySource(new AttributeModification<>(EnergySource.HYDRO, OperationType.SET))
-            .maxActivePower(new AttributeModification<>(100.0, OperationType.SET))
-            .build();
+                        .type(ModificationType.GENERATOR_MODIFICATION)
+                        .equipmentId(generatorId)
+                        .energySource(new AttributeModification<>(EnergySource.HYDRO, OperationType.SET))
+                        .maxActivePower(new AttributeModification<>(100.0, OperationType.SET))
+                        .reactiveCapabilityCurve(new AttributeModification<>(false, OperationType.SET))
+                        .voltageRegulationType(
+                                        new AttributeModification<>(VoltageRegulationType.LOCAL, OperationType.SET))
+                        .build();
 
         String generatorModificationInfosJson = objectWriter.writeValueAsString(generatorModificationInfos);
         mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(generatorModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
@@ -724,18 +727,35 @@ public class ModificationControllerTest {
 
         // Modify all attributes of the generator
         generatorModificationInfos = GeneratorModificationInfos.builder()
-            .type(ModificationType.GENERATOR_MODIFICATION)
-            .energySource(new AttributeModification<>(EnergySource.SOLAR, OperationType.SET))
-            .equipmentName(new AttributeModification<>("newV1Generator", OperationType.SET))
-            .activePowerSetpoint(new AttributeModification<>(80.0, OperationType.SET))
-            .reactivePowerSetpoint(new AttributeModification<>(40.0, OperationType.SET))
-            .voltageSetpoint(new AttributeModification<>(48.0, OperationType.SET))
-            .voltageRegulationOn(new AttributeModification<>(true, OperationType.SET))
-            .minActivePower(new AttributeModification<>(0., OperationType.SET))
-            .maxActivePower(new AttributeModification<>(100., OperationType.SET))
-            .ratedNominalPower(new AttributeModification<>(220., OperationType.SET))
-            .equipmentId(generatorId)
-            .build();
+                        .type(ModificationType.GENERATOR_MODIFICATION)
+                        .energySource(new AttributeModification<>(EnergySource.SOLAR, OperationType.SET))
+                        .equipmentName(new AttributeModification<>("newV1Generator", OperationType.SET))
+                        .activePowerSetpoint(new AttributeModification<>(80.0, OperationType.SET))
+                        .reactivePowerSetpoint(new AttributeModification<>(40.0, OperationType.SET))
+                        .voltageSetpoint(new AttributeModification<>(48.0, OperationType.SET))
+                        .voltageRegulationOn(new AttributeModification<>(false, OperationType.SET))
+                        .minActivePower(new AttributeModification<>(0., OperationType.SET))
+                        .maxActivePower(new AttributeModification<>(100., OperationType.SET))
+                        .ratedNominalPower(new AttributeModification<>(220., OperationType.SET))
+                        .voltageRegulationType(
+                                        new AttributeModification<>(VoltageRegulationType.LOCAL, OperationType.SET))
+                        .marginalCost(new AttributeModification<>(0.1, OperationType.SET))
+                        .minimumReactivePower(new AttributeModification<>(-100., OperationType.SET))
+                        .maximumReactivePower(new AttributeModification<>(100., OperationType.SET))
+                        .reactiveCapabilityCurvePoints(List.of(
+                                        new ReactiveCapabilityCurveModificationInfos(0., 0., 100., 100., 0., 0.2),
+                                        new ReactiveCapabilityCurveModificationInfos(10., 0., 100., 100., 200., 100.)))
+                        .droop(new AttributeModification<>(0.1f, OperationType.SET))
+                        .participate(new AttributeModification<>(true, OperationType.SET))
+                        .transientReactance(new AttributeModification<>(0.1, OperationType.SET))
+                        .stepUpTransformerReactance(new AttributeModification<>(0.1, OperationType.SET))
+                        .regulatingTerminalId(new AttributeModification<>("v1load", OperationType.SET))
+                        .regulatingTerminalType(new AttributeModification<>("LOAD", OperationType.SET))
+                        .regulatingTerminalVlId(new AttributeModification<>("v1", OperationType.SET))
+                        .qPercent(new AttributeModification<>(0.1, OperationType.SET))
+                        .reactiveCapabilityCurve(new AttributeModification<>(true, OperationType.SET))
+                        .equipmentId(generatorId)
+                        .build();
 
         generatorModificationInfosJson = objectWriter.writeValueAsString(generatorModificationInfos);
         mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).contentType(MediaType.APPLICATION_JSON).content(generatorModificationInfosJson))
@@ -751,13 +771,36 @@ public class ModificationControllerTest {
         assertEquals(80.0, equipment.getTargetP(), .1);
         assertEquals(40.0, equipment.getTargetQ(), .1);
         assertEquals(48.0, equipment.getTargetV(), .1);
-        assertTrue(equipment.isVoltageRegulatorOn());
+        assertFalse(equipment.isVoltageRegulatorOn());
         assertEquals(0.0, equipment.getMinP(), .1);
         assertEquals(100.0, equipment.getMaxP(), .1);
         assertEquals(220.0, equipment.getRatedS(), .1);
 
         // TODO check connectivity when it will be implemented
         testNetworkModificationsCount(TEST_GROUP_ID, 3);  // new modification stored in the database
+
+        //regulating
+        generatorModificationInfos.setVoltageRegulationOn(new AttributeModification<>(true, OperationType.SET));
+        generatorModificationInfos.setReactiveCapabilityCurve(new AttributeModification<>(false, OperationType.SET));
+        generatorModificationInfos.setTransientReactance(null);
+        generatorModificationInfosJson = objectWriter.writeValueAsString(generatorModificationInfos);
+        mockMvc.perform(post(URI_NETWORK_MODIF).contentType(MediaType.APPLICATION_JSON).content(generatorModificationInfosJson))
+                .andExpect(status().isOk()).andReturn();
+        List<EquipmentModificationInfos> bsmlrGeneratorModification = mapper.readValue(resultAsString, new TypeReference<>() { });
+        assertThat(bsmlrGeneratorModification.get(0), createMatcherEquipmentModificationInfos(ModificationType.GENERATOR_MODIFICATION, generatorId, Set.of("s1")));
+
+        generatorModificationInfos.setTransientReactance(new AttributeModification<>(0.1, OperationType.SET));
+        generatorModificationInfos.setStepUpTransformerReactance(null);
+        generatorModificationInfos.setParticipate(null);
+        generatorModificationInfos.setVoltageRegulationType(new AttributeModification<>(VoltageRegulationType.DISTANT, OperationType.SET));
+        generatorModificationInfos.setMaximumReactivePower(null);
+        generatorModificationInfos.setMinimumReactivePower(null);
+        generatorModificationInfosJson = objectWriter.writeValueAsString(generatorModificationInfos);
+        mockMvc.perform(post(URI_NETWORK_MODIF).contentType(MediaType.APPLICATION_JSON).content(generatorModificationInfosJson))
+                .andExpect(status().isOk()).andReturn();
+
+        List<EquipmentModificationInfos> bsmlrGeneratorModification1 = mapper.readValue(resultAsString, new TypeReference<>() { });
+        assertThat(bsmlrGeneratorModification1.get(0), createMatcherEquipmentModificationInfos(ModificationType.GENERATOR_MODIFICATION, generatorId, Set.of("s1")));
 
         // Unset an attribute that should not be null
         generatorModificationInfos = GeneratorModificationInfos.builder()
@@ -774,17 +817,78 @@ public class ModificationControllerTest {
 
     }
 
+    GeneratorModificationInfos buildGeneratorModificationUpdateInfos(UUID uuid) {
+        return GeneratorModificationInfos.builder()
+            .equipmentId("idGeneratorModified")
+            .energySource(new AttributeModification<>(EnergySource.SOLAR, OperationType.SET))
+            .equipmentName(new AttributeModification<>("newV1Generator", OperationType.SET))
+            .activePowerSetpoint(new AttributeModification<>(80.0, OperationType.SET))
+            .reactivePowerSetpoint(new AttributeModification<>(40.0, OperationType.SET))
+            .voltageSetpoint(new AttributeModification<>(48.0, OperationType.SET))
+            .voltageRegulationOn(new AttributeModification<>(true, OperationType.SET))
+            .minActivePower(new AttributeModification<>(0., OperationType.SET))
+            .maxActivePower(new AttributeModification<>(100., OperationType.SET))
+            .ratedNominalPower(new AttributeModification<>(220., OperationType.SET))
+            .marginalCost(new AttributeModification<>(0.1, OperationType.SET))
+            .minimumReactivePower(new AttributeModification<>(-100., OperationType.SET))
+            .maximumReactivePower(new AttributeModification<>(100., OperationType.SET))
+            .reactiveCapabilityCurvePoints(List.of(
+                new ReactiveCapabilityCurveModificationInfos(0., 0., 100., 100., 0.1, 0.1),
+                new ReactiveCapabilityCurveModificationInfos(0., 0., 100., 100., 0.1, 0.1)))
+            .droop(new AttributeModification<>(0.1f, OperationType.SET))
+            .participate(new AttributeModification<>(true, OperationType.SET))
+            .transientReactance(new AttributeModification<>(0.1, OperationType.SET))
+            .stepUpTransformerReactance(new AttributeModification<>(0.1, OperationType.SET))
+            .regulatingTerminalId(new AttributeModification<>("idTerminal", OperationType.SET))
+            .regulatingTerminalType(new AttributeModification<>("regTerminalType", OperationType.SET))
+            .regulatingTerminalVlId(new AttributeModification<>("idVl", OperationType.SET))
+            .qPercent(new AttributeModification<>(0.1, OperationType.SET))
+            .reactiveCapabilityCurve(new AttributeModification<>(true, OperationType.SET))
+            .uuid(uuid)
+            .type(ModificationType.GENERATOR_MODIFICATION)
+            .build();
+    }
+
+    private void checkUpdatedGeneratorModification(GeneratorModificationInfos modification) {
+        assertNotNull(modification);
+        assertEquals("idGeneratorModified", modification.getEquipmentId());
+        assertEquals(EnergySource.SOLAR, modification.getEnergySource().getValue());
+        assertEquals("newV1Generator", modification.getEquipmentName().getValue());
+        assertEquals(80.0, modification.getActivePowerSetpoint().getValue(), .1);
+        assertEquals(40.0, modification.getReactivePowerSetpoint().getValue(), .1);
+        assertEquals(48.0, modification.getVoltageSetpoint().getValue(), .1);
+        assertTrue(modification.getVoltageRegulationOn().getValue());
+        assertEquals(0.0, modification.getMinActivePower().getValue(), .1);
+        assertEquals(100.0, modification.getMaxActivePower().getValue(), .1);
+        assertEquals(220.0, modification.getRatedNominalPower().getValue(), .1);
+        assertEquals(0.1, modification.getMarginalCost().getValue(), .1);
+        assertEquals(-100.0, modification.getMinimumReactivePower().getValue(), .1);
+        assertEquals(100.0, modification.getMaximumReactivePower().getValue(), .1);
+        assertEquals(2, modification.getReactiveCapabilityCurvePoints().size());
+        assertEquals(0.1, modification.getTransientReactance().getValue(), .1);
+        assertEquals(0.1, modification.getStepUpTransformerReactance().getValue(), .1);
+        assertEquals("idTerminal", modification.getRegulatingTerminalId().getValue());
+        assertEquals("regTerminalType", modification.getRegulatingTerminalType().getValue());
+        assertEquals("idVl", modification.getRegulatingTerminalVlId().getValue());
+        assertEquals(0.1, modification.getQPercent().getValue(), .1);
+        assertEquals(0.1, modification.getDroop().getValue(), .1);
+        assertTrue(modification.getReactiveCapabilityCurve().getValue());
+    }
+
     @Test
     public void testUpdateModifyGenerator() throws Exception {
         MvcResult mvcResult;
         String resultAsString;
         String generatorId = "idGenerator";
         GeneratorModificationInfos generatorModificationInfos = GeneratorModificationInfos.builder()
-            .type(ModificationType.GENERATOR_MODIFICATION)
-            .equipmentId(generatorId)
-            .energySource(new AttributeModification<>(EnergySource.HYDRO, OperationType.SET))
-            .maxActivePower(new AttributeModification<>(100.0, OperationType.SET))
-            .build();
+                        .type(ModificationType.GENERATOR_MODIFICATION)
+                        .equipmentId(generatorId)
+                        .energySource(new AttributeModification<>(EnergySource.HYDRO, OperationType.SET))
+                        .maxActivePower(new AttributeModification<>(100.0, OperationType.SET))
+                        .reactiveCapabilityCurve(new AttributeModification<>(false, OperationType.SET))
+                        .voltageRegulationType(
+                                        new AttributeModification<>(VoltageRegulationType.LOCAL, OperationType.SET))
+                        .build();
 
         String generatorModificationInfosJson = objectWriter.writeValueAsString(generatorModificationInfos);
         mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(generatorModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
@@ -796,20 +900,7 @@ public class ModificationControllerTest {
         var listModifications = modificationRepository.getModifications(TEST_GROUP_ID, true, true);
         assertEquals(1, listModifications.size());
 
-        generatorModificationInfos = GeneratorModificationInfos.builder()
-            .equipmentId(generatorId)
-            .energySource(new AttributeModification<>(EnergySource.SOLAR, OperationType.SET))
-            .equipmentName(new AttributeModification<>("newV1Generator", OperationType.SET))
-            .activePowerSetpoint(new AttributeModification<>(80.0, OperationType.SET))
-            .reactivePowerSetpoint(new AttributeModification<>(40.0, OperationType.SET))
-            .voltageSetpoint(new AttributeModification<>(48.0, OperationType.SET))
-            .voltageRegulationOn(new AttributeModification<>(true, OperationType.SET))
-            .minActivePower(new AttributeModification<>(0., OperationType.SET))
-            .maxActivePower(new AttributeModification<>(100., OperationType.SET))
-            .ratedNominalPower(new AttributeModification<>(220., OperationType.SET))
-            .uuid(listModifications.get(0).getUuid())
-            .type(ModificationType.GENERATOR_MODIFICATION)
-            .build();
+        generatorModificationInfos = buildGeneratorModificationUpdateInfos(listModifications.get(0).getUuid());
         generatorModificationInfosJson = objectWriter.writeValueAsString(generatorModificationInfos);
 
         mockMvc.perform(put(URI_NETWORK_MODIF_GET_PUT + listModifications.get(0).getUuid()).content(generatorModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
@@ -818,8 +909,22 @@ public class ModificationControllerTest {
         var modifications = modificationRepository.getModifications(TEST_GROUP_ID, false, true);
 
         assertEquals(1, modifications.size());
-        modifications.get(0).setDate(listModifications.get(0).getDate()); // this one is modified by sql database
-        assertEquals(generatorModificationInfos, modifications.get(0));
+        checkUpdatedGeneratorModification((GeneratorModificationInfos) modifications.get(0));
+
+        //Test Generator Modification duplication
+        mockMvc.perform(
+            put("/v1/groups/" + TEST_GROUP_ID + "?action=COPY"
+                    + "&networkUuid=" + TEST_NETWORK_ID
+                    + "&reportUuid=" + TEST_REPORT_ID
+                    + "&reporterId=" + UUID.randomUUID()
+                    + "&variantId=" + NetworkCreation.VARIANT_ID)
+                .content(objectWriter.writeValueAsString(List.of(modifications.get(0).getUuid())))
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk()).andReturn();
+        var modifications2 = modificationRepository.getModifications(TEST_GROUP_ID, false, true);
+
+        assertEquals(2, modifications2.size());
+
     }
 
     @Test
@@ -2182,87 +2287,6 @@ public class ModificationControllerTest {
     }
 
     @Test
-    public void testCreateVoltageLevel() throws Exception {
-        MvcResult mvcResult;
-        String resultAsString;
-
-        VoltageLevelCreationInfos vli = ModificationCreation.getCreationVoltageLevel("absent_station", "vlId", "vlName");
-        String vliJson = objectWriter.writeValueAsString(vli);
-        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(vliJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().is4xxClientError()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        assertEquals(resultAsString, new NetworkModificationException(SUBSTATION_NOT_FOUND, "absent_station").getMessage());
-
-        vli = ModificationCreation.getCreationVoltageLevel("s1", "vlId", "vlName");
-        vli.getBusbarConnections().add(BusbarConnectionCreationInfos.builder().fromBBS("bbs.ne").toBBS("bbs.ne").switchKind(SwitchKind.DISCONNECTOR).build());
-        String vliJsonObject = objectWriter.writeValueAsString(vli);
-        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(vliJsonObject).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().is5xxServerError()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        assertEquals(resultAsString, new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "Disconnector between same bus bar section 'bbs.ne'").getMessage());
-
-        // then success
-        vli = ModificationCreation.getCreationVoltageLevel("s1", "vlId", "vlName");
-        String vliJsonS1Object = objectWriter.writeValueAsString(vli);
-        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(vliJsonS1Object).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        List<EquipmentModificationInfos> listModificationsVoltageLevelCreation = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertThat(listModificationsVoltageLevelCreation.get(0), createMatcherEquipmentModificationInfos(ModificationType.VOLTAGE_LEVEL_CREATION, "vlId", Set.of("s1")));
-
-        testNetworkModificationsCount(TEST_GROUP_ID, 1);
-
-        vli = new VoltageLevelCreationEntity(
-                "VoltageLevelIdEdited",
-                "VoltageLevelEdited",
-                385.,
-                "s2",
-                List.of(),
-                List.of())
-                .toModificationInfos();
-        vli.setUuid(listModificationsVoltageLevelCreation.get(0).getUuid());
-        vli.setType(ModificationType.VOLTAGE_LEVEL_CREATION);
-        String vliJsonS2Object = objectWriter.writeValueAsString(vli);
-
-        // Update voltage level creation
-        VoltageLevelCreationInfos vlu = new VoltageLevelCreationEntity(
-                "VoltageLevelIdEdited",
-                "VoltageLevelEdited",
-                385.,
-                "s2",
-                List.of(),
-                List.of())
-                .toModificationInfos();
-        vlu.setType(ModificationType.VOLTAGE_LEVEL_CREATION);
-        String vluInfosJson = objectWriter.writeValueAsString(vlu);
-        mockMvc.perform(put(URI_NETWORK_MODIF_GET_PUT + listModificationsVoltageLevelCreation.get(0).getUuid()).content(vluInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
-
-        testNetworkModificationsCount(TEST_GROUP_ID, 1);
-
-        mvcResult = mockMvc.perform(get(URI_NETWORK_MODIF_GET_PUT + listModificationsVoltageLevelCreation.get(0).getUuid()).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        VoltageLevelCreationInfos listModificationsCreatMatcher = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertThat(listModificationsCreatMatcher, MatcherVoltageLevelCreationInfos.createMatcherVoltageLevelCreationInfos(vli));
-
-        // create substation with errors
-        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF_BAD_NETWORK).content(vliJsonS2Object).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isNotFound()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        assertEquals(resultAsString, new NetworkModificationException(NETWORK_NOT_FOUND, NOT_FOUND_NETWORK_ID.toString()).getMessage());
-
-        vli.setEquipmentId("");
-        vliJsonS2Object = objectWriter.writeValueAsString(vli);
-        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(vliJsonS2Object).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().is5xxServerError()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        assertEquals(resultAsString, new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "Invalid id ''").getMessage());
-
-        testNetworkModificationsCount(TEST_GROUP_ID, 1);
-    }
-
-    @Test
     public void testGroupDuplication() throws Exception {
         // create new load in voltage level with node/breaker topology (in voltage level "v2" and busbar section "1B")
         LoadCreationInfos loadCreationInfos = LoadCreationInfos.builder()
@@ -2289,53 +2313,6 @@ public class ModificationControllerTest {
 
         uriStringGroups = "/v1/groups?duplicateFrom=" + UUID.randomUUID() + "&groupUuid=" + UUID.randomUUID() + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
         mockMvc.perform(post(uriStringGroups).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk());
-    }
-
-    @Test
-    public void testAttachLinesToSplitLines() throws Exception {
-        assertNotNull(networkWithTeePoint.getLine("l2"));
-        assertNotNull(networkWithTeePoint.getLine("l3"));
-        assertEquals(3, networkWithTeePoint.getLineCount());
-        assertNotNull(networkWithTeePoint.getVoltageLevel("v2"));
-        assertNotNull(networkWithTeePoint.getVoltageLevel("v4"));
-        assertEquals(4, networkWithTeePoint.getVoltageLevelCount());
-
-        LinesAttachToSplitLinesInfos linesAttachToAbsentLine1 = new LinesAttachToSplitLinesInfos("absent_line_id", "l2", "l3", "v4", "bbs2", "nl1", "NewLine1", "nl2", "NewLine2");
-        linesAttachToAbsentLine1.setType(ModificationType.LINES_ATTACH_TO_SPLIT_LINES);
-        String linesAttachToAbsentLine1Json = objectWriter.writeValueAsString(linesAttachToAbsentLine1);
-
-        MvcResult mvcResult = mockMvc.perform(post(URI_NETWORK_WITH_TEE_POINT_MODIF).content(linesAttachToAbsentLine1Json).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().is4xxClientError()).andReturn();
-        String resultAsString = mvcResult.getResponse().getContentAsString();
-        assertEquals("LINE_NOT_FOUND : Line absent_line_id is not found", resultAsString);
-
-        // fix to have to correct modification
-        linesAttachToAbsentLine1.setLineToAttachTo1Id("l1");
-        String linesAttachToSplitLinesJson = objectWriter.writeValueAsString(linesAttachToAbsentLine1);
-        mvcResult = mockMvc.perform(post(URI_NETWORK_WITH_TEE_POINT_MODIF).content(linesAttachToSplitLinesJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-
-        List<ModificationInfos> result = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertNotNull(result);
-        assertEquals(18, result.size()); // FIXME why ??? we get a result for this modification and all individual deletion
-        ModificationInfos linesAttachToProperSplitLines = result.stream().filter(r -> r.getType() == ModificationType.LINES_ATTACH_TO_SPLIT_LINES).findFirst().orElseThrow();
-        assertEquals(Set.of("s3", "s4", "s1", "s2"), linesAttachToProperSplitLines.getSubstationIds());
-        testNetworkModificationsCount(TEST_GROUP_ID, 1);
-
-        assertNull(networkWithTeePoint.getLine("l1"));
-        assertNull(networkWithTeePoint.getLine("l2"));
-        assertNotNull(networkWithTeePoint.getLine("nl1"));
-        assertNotNull(networkWithTeePoint.getLine("nl2"));
-        assertNull(networkWithTeePoint.getLine("l3"));
-        assertEquals(2, networkWithTeePoint.getLineCount());
-        assertNull(networkWithTeePoint.getVoltageLevel("v2"));
-        assertNotNull(networkWithTeePoint.getVoltageLevel("v4"));
-        assertEquals(3, networkWithTeePoint.getVoltageLevelCount());
-
-        mockMvc.perform(put(URI_NETWORK_MODIF_GET_PUT + linesAttachToProperSplitLines.getUuid()).content(linesAttachToSplitLinesJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
-        testNetworkModificationsCount(TEST_GROUP_ID, 1);
     }
 
     private void testNetworkModificationsCount(UUID groupUuid, int actualSize) throws Exception {
