@@ -7,7 +7,7 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 import org.gridsuite.modification.server.VariationMode;
-import org.gridsuite.modification.server.entities.equipment.modification.BasicScalingVariationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.ScalingVariationEntity;
 
 import java.util.List;
 import java.util.UUID;
@@ -31,7 +31,10 @@ public class ScalingVariationInfos {
     @Schema(description = "variation value")
     Double variationValue;
 
-    public BasicScalingVariationEntity toEntity(){
-        return null;
-    };
+    @Schema(description = "reactiveVariationMode")
+    private String reactiveVariationMode;
+
+    public ScalingVariationEntity toEntity() {
+        return new ScalingVariationEntity(this);
+    }
 }

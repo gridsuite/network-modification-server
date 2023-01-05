@@ -19,4 +19,5 @@ public class FilterInfos {
 
     @Schema(description = "name")
     private String name;
+
 }

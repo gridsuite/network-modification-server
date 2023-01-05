@@ -21,13 +21,13 @@ import javax.validation.constraints.NotNull;
 @Setter
 @Builder
 @MappedSuperclass
-public class BasicScalingEntity extends ModificationEntity {
+public class ScalingEntity extends ModificationEntity {
 
     @Column(name = "VariationType")
     @Enumerated(EnumType.STRING)
     private VariationType variationType;
 
-    public BasicScalingEntity(@NotNull ModificationType modificationType) {
+    public ScalingEntity(@NotNull ModificationType modificationType) {
         super(modificationType);
     }
 }

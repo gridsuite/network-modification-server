@@ -4,7 +4,6 @@ import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -45,7 +44,6 @@ public class GeneratorScalingInfos extends ScalingInfos {
 
     @Override
     public Reporter createSubReporter(ReporterModel reporter) {
-        System.out.println();
         return reporter.createSubReporter(ModificationType.GENERATOR_SCALING.name(), "Generator scaling");
     }
 }

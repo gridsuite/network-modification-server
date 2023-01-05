@@ -6,8 +6,8 @@ import lombok.NonNull;
 import lombok.Setter;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.GeneratorScalingInfos;
-import org.gridsuite.modification.server.dto.GeneratorScalingVariationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.ScalingVariationInfos;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -24,13 +24,13 @@ import java.util.stream.Collectors;
 @Setter
 @Entity
 @Table(name = "GeneratorScaling")
-public class GeneratorScalingEntity extends BasicScalingEntity {
+public class GeneratorScalingEntity extends ScalingEntity {
 
     @Column(name = "isIterative")
     private boolean isIterative;
 
     @OneToMany(cascade = CascadeType.ALL)
-    private List<GeneratorScalingVariationEntity> variations;
+    private List<ScalingVariationEntity> variations;
 
     public GeneratorScalingEntity(@NotNull GeneratorScalingInfos generatorScalingInfos) {
         super(ModificationType.GENERATOR_SCALING);
@@ -48,12 +48,7 @@ public class GeneratorScalingEntity extends BasicScalingEntity {
         setVariationType(generatorScalingInfos.getVariationType());
         setVariations(generatorScalingInfos.getVariations()
                 .stream()
-                .map(variation -> GeneratorScalingVariationInfos.builder()
-                        .variationMode(variation.getVariationMode())
-                        .variationValue(variation.getVariationValue())
-                        .filters(variation.getFilters())
-                        .build()
-                        .toEntity())
+                .map(ScalingVariationInfos::toEntity)
                 .collect(Collectors.toList()));
     }
 
@@ -66,7 +61,7 @@ public class GeneratorScalingEntity extends BasicScalingEntity {
                 .isIterative(isIterative())
                 .variationType(getVariationType())
                 .variations(getVariations().stream()
-                        .map(GeneratorScalingVariationEntity::toScalingVariation)
+                        .map(ScalingVariationEntity::toScalingVariation)
                         .collect(Collectors.toList()))
                 .build();
     }
