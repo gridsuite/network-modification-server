@@ -27,11 +27,9 @@ import org.gridsuite.modification.server.modifications.GeneratorScaling;
  */
 
 @SuperBuilder
-@AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @Setter
-@ToString(callSuper = true)
 @Schema(description = "Generator scaling creation")
 public class GeneratorScalingInfos extends ScalingInfos {
 
