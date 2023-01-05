@@ -48,7 +48,9 @@ public abstract class AbstractScaling extends AbstractModification {
                 .collect(Collectors.toList());
 
         if (filterWithWrongIds.size() == exportFilters.size()) {
-            throw new NetworkModificationException(getExceptionType(), "All filters contains equipments with wrong ids");
+            String errorMsg = "All filters contains equipments with wrong ids";
+            createReport(subReporter, getExceptionType().name(), errorMsg, TypedValue.ERROR_SEVERITY);
+            throw new NetworkModificationException(getExceptionType(), errorMsg);
         }
 
         if (!filterWithWrongIds.isEmpty()) {
