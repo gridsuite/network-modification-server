@@ -88,7 +88,7 @@ public class GeneratorScaling extends AbstractScaling {
                     return getScalable(generator.getId());
                 }).collect(Collectors.toList());
 
-        if (scalables.size() > 0) {
+        if (!scalables.isEmpty()) {
             List<Float> percentages = new ArrayList<>(Collections.nCopies(scalables.size(), (float) (100.0 / scalables.size())));
 
             Scalable regularDistributionScalable = Scalable.proportional(percentages, scalables, isIterative);
