@@ -30,7 +30,7 @@ public class FilterService {
     private RestTemplate restTemplate;
 
     @Autowired
-    public FilterService(@Value("http://localhost:5027") String filterServerBaseUri) {
+    public FilterService(@Value("${gridsuite.services.filter-server.base-uri:http://filter-server/}") String filterServerBaseUri) {
         this.filterServerBaseUri = filterServerBaseUri;
         restTemplate = new RestTemplate();
     }

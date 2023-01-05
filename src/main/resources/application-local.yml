@@ -10,6 +10,8 @@ gridsuite:
   services:
     report-server:
       base-uri: http://localhost:5028
+    filter-server:
+      base-uri: http://localhost:5027
 
 spring:
   rabbitmq:
