@@ -97,7 +97,7 @@ public class GeneratorScalingModificationTest extends AbstractNetworkModificatio
         wireMock.start();
 
         var filterWithWrongIds = "[{\"filterId\":\"" + FILTER_WRONG_ID_1 + "\",\"identifiableAttributes\":[{\"id\":\"wrongId1\",\"type\":\"GENERATOR\",\"distributionKey\":1},{\"id\":\"wrongId2\",\"type\":\"GENERATOR\",\"distributionKey\":2}],\"notFoundEquipments\":[\"wrongId1\",\"wrongId2\"]}]";
-        var filterWithWrongIds2 = "[{\"filterId\":\"" + FILTER_WRONG_ID_2 + "\",\"identifiableAttributes\":[{\"id\":\"idGenerator\",\"type\":\"GENERATOR\",\"distributionKey\":1},{\"id\":\"gen5\",\"type\":\"GENERATOR\",\"distributionKey\":2}],\"notFoundEquipments\":[]},{\"filterId\":\"bdfad63f-6fe6-4686-b57b-6bc7aa11a202\",\"identifiableAttributes\":[{\"id\":\"gen4\",\"type\":\"wrongId\"},{\"id\":\"gen7\",\"type\":\"GENERATOR\"}],\"notFoundEquipments\":[\"\"wrongId\"]}]";
+        var filterWithWrongIds2 = "[{\"filterId\":\"" + FILTER_WRONG_ID_2 + "\",\"identifiableAttributes\":[{\"id\":\"idGenerator\",\"type\":\"GENERATOR\",\"distributionKey\":1},{\"id\":\"gen5\",\"type\":\"GENERATOR\",\"distributionKey\":2}],\"notFoundEquipments\":[]},{\"filterId\":\"" + FILTER_WRONG_ID_1 + "\",\"identifiableAttributes\":[{\"id\":\"gen4\",\"type\":\"GENERATOR\"},{\"id\":\"wrongId\",\"type\":\"GENERATOR\"}],\"notFoundEquipments\":[\"\"wrongId\"]}]";
         String networkParams = "?networkUuid=" + ((NetworkImpl) getNetwork()).getUuid() + "&variantId=variant_1";
         String params = "&ids=" + String.join(",", List.of(FILTER_ID_1, FILTER_ID_2, FILTER_ID_3, FILTER_ID_4, FILTER_ID_5));
         String path = "/v1/filters/export";

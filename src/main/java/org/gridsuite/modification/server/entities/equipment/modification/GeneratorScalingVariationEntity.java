@@ -5,12 +5,7 @@ import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.dto.FilterInfos;
 import org.gridsuite.modification.server.dto.GeneratorScalingVariationInfos;
 
-import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @NoArgsConstructor
