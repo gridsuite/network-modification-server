@@ -168,7 +168,7 @@ public class ModificationControllerTest {
     public void testModificationException() {
         assertEquals(new NetworkModificationException(MODIFICATION_ERROR).getMessage(), MODIFICATION_ERROR.name());
         assertEquals(new NetworkModificationException(MODIFICATION_ERROR, "Error message").getMessage(), MODIFICATION_ERROR.name() + " : Error message");
-        assertEquals(new NetworkModificationException(MODIFICATION_ERROR, new IllegalArgumentException("Error message")).getMessage(), MODIFICATION_ERROR.name() +  " : Error message");
+        assertEquals(new NetworkModificationException(MODIFICATION_ERROR, new IllegalArgumentException("Error message")).getMessage(), MODIFICATION_ERROR.name() + " : Error message");
     }
 
     @Test
@@ -1775,7 +1775,7 @@ public class ModificationControllerTest {
     }
 
     @Test
-    public void replaceTeePointByVoltageLevelOnLineDuplicateModificationGroupTest() throws Exception  {
+    public void replaceTeePointByVoltageLevelOnLineDuplicateModificationGroupTest() throws Exception {
         LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos = new LinesAttachToSplitLinesInfos("l1", "l2", "l3", "v4", "bbs2", "nl1", "NewLine1", "nl2", "NewLine2");
         linesAttachToSplitLinesInfos.setType(ModificationType.LINES_ATTACH_TO_SPLIT_LINES);
 
@@ -1862,87 +1862,6 @@ public class ModificationControllerTest {
     }
 
     @Test
-    public void testCreateVoltageLevel() throws Exception {
-        MvcResult mvcResult;
-        String resultAsString;
-
-        VoltageLevelCreationInfos vli = ModificationCreation.getCreationVoltageLevel("absent_station", "vlId", "vlName");
-        String vliJson = objectWriter.writeValueAsString(vli);
-        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(vliJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().is4xxClientError()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        assertEquals(resultAsString, new NetworkModificationException(SUBSTATION_NOT_FOUND, "absent_station").getMessage());
-
-        vli = ModificationCreation.getCreationVoltageLevel("s1", "vlId", "vlName");
-        vli.getBusbarConnections().add(BusbarConnectionCreationInfos.builder().fromBBS("bbs.ne").toBBS("bbs.ne").switchKind(SwitchKind.DISCONNECTOR).build());
-        String vliJsonObject = objectWriter.writeValueAsString(vli);
-        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(vliJsonObject).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().is5xxServerError()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        assertEquals(resultAsString, new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "Disconnector between same bus bar section 'bbs.ne'").getMessage());
-
-        // then success
-        vli = ModificationCreation.getCreationVoltageLevel("s1", "vlId", "vlName");
-        String vliJsonS1Object = objectWriter.writeValueAsString(vli);
-        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(vliJsonS1Object).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        List<EquipmentModificationInfos> listModificationsVoltageLevelCreation = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertThat(listModificationsVoltageLevelCreation.get(0), createMatcherEquipmentModificationInfos(ModificationType.VOLTAGE_LEVEL_CREATION, "vlId", Set.of("s1")));
-
-        testNetworkModificationsCount(TEST_GROUP_ID, 1);
-
-        vli = new VoltageLevelCreationEntity(
-                "VoltageLevelIdEdited",
-                "VoltageLevelEdited",
-                385.,
-                "s2",
-                List.of(),
-                List.of())
-                .toModificationInfos();
-        vli.setUuid(listModificationsVoltageLevelCreation.get(0).getUuid());
-        vli.setType(ModificationType.VOLTAGE_LEVEL_CREATION);
-        String vliJsonS2Object = objectWriter.writeValueAsString(vli);
-
-        // Update voltage level creation
-        VoltageLevelCreationInfos vlu = new VoltageLevelCreationEntity(
-                "VoltageLevelIdEdited",
-                "VoltageLevelEdited",
-                385.,
-                "s2",
-                List.of(),
-                List.of())
-                .toModificationInfos();
-        vlu.setType(ModificationType.VOLTAGE_LEVEL_CREATION);
-        String vluInfosJson = objectWriter.writeValueAsString(vlu);
-        mockMvc.perform(put(URI_NETWORK_MODIF_GET_PUT + listModificationsVoltageLevelCreation.get(0).getUuid()).content(vluInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
-
-        testNetworkModificationsCount(TEST_GROUP_ID, 1);
-
-        mvcResult = mockMvc.perform(get(URI_NETWORK_MODIF_GET_PUT + listModificationsVoltageLevelCreation.get(0).getUuid()).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        VoltageLevelCreationInfos listModificationsCreatMatcher = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertThat(listModificationsCreatMatcher, MatcherVoltageLevelCreationInfos.createMatcherVoltageLevelCreationInfos(vli));
-
-        // create substation with errors
-        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF_BAD_NETWORK).content(vliJsonS2Object).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isNotFound()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        assertEquals(resultAsString, new NetworkModificationException(NETWORK_NOT_FOUND, NOT_FOUND_NETWORK_ID.toString()).getMessage());
-
-        vli.setEquipmentId("");
-        vliJsonS2Object = objectWriter.writeValueAsString(vli);
-        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(vliJsonS2Object).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().is5xxServerError()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        assertEquals(resultAsString, new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "Invalid id ''").getMessage());
-
-        testNetworkModificationsCount(TEST_GROUP_ID, 1);
-    }
-
-    @Test
     public void testGroupDuplication() throws Exception {
         // create new load in voltage level with node/breaker topology (in voltage level "v2" and busbar section "1B")
         LoadCreationInfos loadCreationInfos = LoadCreationInfos.builder()
@@ -1969,53 +1888,6 @@ public class ModificationControllerTest {
 
         uriStringGroups = "/v1/groups?duplicateFrom=" + UUID.randomUUID() + "&groupUuid=" + UUID.randomUUID() + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
         mockMvc.perform(post(uriStringGroups).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk());
-    }
-
-    @Test
-    public void testAttachLinesToSplitLines() throws Exception {
-        assertNotNull(networkWithTeePoint.getLine("l2"));
-        assertNotNull(networkWithTeePoint.getLine("l3"));
-        assertEquals(3, networkWithTeePoint.getLineCount());
-        assertNotNull(networkWithTeePoint.getVoltageLevel("v2"));
-        assertNotNull(networkWithTeePoint.getVoltageLevel("v4"));
-        assertEquals(4, networkWithTeePoint.getVoltageLevelCount());
-
-        LinesAttachToSplitLinesInfos linesAttachToAbsentLine1 = new LinesAttachToSplitLinesInfos("absent_line_id", "l2", "l3", "v4", "bbs2", "nl1", "NewLine1", "nl2", "NewLine2");
-        linesAttachToAbsentLine1.setType(ModificationType.LINES_ATTACH_TO_SPLIT_LINES);
-        String linesAttachToAbsentLine1Json = objectWriter.writeValueAsString(linesAttachToAbsentLine1);
-
-        MvcResult mvcResult = mockMvc.perform(post(URI_NETWORK_WITH_TEE_POINT_MODIF).content(linesAttachToAbsentLine1Json).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().is4xxClientError()).andReturn();
-        String resultAsString = mvcResult.getResponse().getContentAsString();
-        assertEquals("LINE_NOT_FOUND : Line absent_line_id is not found", resultAsString);
-
-        // fix to have to correct modification
-        linesAttachToAbsentLine1.setLineToAttachTo1Id("l1");
-        String linesAttachToSplitLinesJson = objectWriter.writeValueAsString(linesAttachToAbsentLine1);
-        mvcResult = mockMvc.perform(post(URI_NETWORK_WITH_TEE_POINT_MODIF).content(linesAttachToSplitLinesJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-
-        List<ModificationInfos> result = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertNotNull(result);
-        assertEquals(18, result.size()); // FIXME why ??? we get a result for this modification and all individual deletion
-        ModificationInfos linesAttachToProperSplitLines = result.stream().filter(r -> r.getType() == ModificationType.LINES_ATTACH_TO_SPLIT_LINES).findFirst().orElseThrow();
-        assertEquals(Set.of("s3", "s4", "s1", "s2"), linesAttachToProperSplitLines.getSubstationIds());
-        testNetworkModificationsCount(TEST_GROUP_ID, 1);
-
-        assertNull(networkWithTeePoint.getLine("l1"));
-        assertNull(networkWithTeePoint.getLine("l2"));
-        assertNotNull(networkWithTeePoint.getLine("nl1"));
-        assertNotNull(networkWithTeePoint.getLine("nl2"));
-        assertNull(networkWithTeePoint.getLine("l3"));
-        assertEquals(2, networkWithTeePoint.getLineCount());
-        assertNull(networkWithTeePoint.getVoltageLevel("v2"));
-        assertNotNull(networkWithTeePoint.getVoltageLevel("v4"));
-        assertEquals(3, networkWithTeePoint.getVoltageLevelCount());
-
-        mockMvc.perform(put(URI_NETWORK_MODIF_GET_PUT + linesAttachToProperSplitLines.getUuid()).content(linesAttachToSplitLinesJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
-        testNetworkModificationsCount(TEST_GROUP_ID, 1);
     }
 
     private void testNetworkModificationsCount(UUID groupUuid, int actualSize) throws Exception {

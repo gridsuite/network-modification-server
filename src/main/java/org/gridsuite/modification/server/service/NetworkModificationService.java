@@ -6,33 +6,64 @@
  */
 package org.gridsuite.modification.server.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.InjectableValues;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.Streams;
-import com.powsybl.commons.PowsyblException;
-import com.powsybl.commons.reporter.*;
-import com.powsybl.iidm.modification.topology.*;
-import com.powsybl.iidm.modification.tripping.BranchTripping;
-import com.powsybl.iidm.network.*;
-import com.powsybl.iidm.network.Branch.Side;
-import com.powsybl.iidm.network.extensions.*;
-import com.powsybl.network.store.client.NetworkStoreService;
-import groovy.lang.Binding;
-import groovy.lang.GroovyShell;
-import lombok.NonNull;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.BRANCH_ACTION_ERROR;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.BRANCH_ACTION_TYPE_EMPTY;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.BUSBAR_SECTION_NOT_FOUND;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.CREATE_SUBSTATION_ERROR;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.CREATE_TWO_WINDINGS_TRANSFORMER_ERROR;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.DELETE_EQUIPMENT_ERROR;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.EQUIPMENT_NOT_FOUND;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.GROOVY_SCRIPT_EMPTY;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.GROOVY_SCRIPT_ERROR;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_NOT_FOUND;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.LOAD_NOT_FOUND;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_ERROR;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_GROUP_NOT_FOUND;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_NOT_FOUND;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_LOAD_ERROR;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.NETWORK_NOT_FOUND;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.TYPE_MISMATCH;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.VARIANT_NOT_FOUND;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.server.dto.BasicEquipmentModificationInfos;
+import org.gridsuite.modification.server.dto.BranchCreationInfos;
+import org.gridsuite.modification.server.dto.BranchStatusModificationInfos;
 import org.gridsuite.modification.server.dto.BranchStatusModificationInfos.ActionType;
+import org.gridsuite.modification.server.dto.BuildInfos;
+import org.gridsuite.modification.server.dto.EquipmentDeletionInfos;
+import org.gridsuite.modification.server.dto.EquipmentModificationInfos;
+import org.gridsuite.modification.server.dto.GroovyScriptModificationInfos;
+import org.gridsuite.modification.server.dto.LoadModificationInfos;
+import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.ModificationNetworkInfos;
+import org.gridsuite.modification.server.dto.PhaseTapChangerCreationInfos;
+import org.gridsuite.modification.server.dto.RatioTapChangerCreationInfos;
+import org.gridsuite.modification.server.dto.SubstationCreationInfos;
+import org.gridsuite.modification.server.dto.TapChangerStepCreationInfos;
+import org.gridsuite.modification.server.dto.TwoWindingsTransformerCreationInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.creation.*;
+import org.gridsuite.modification.server.entities.equipment.creation.EquipmentCreationEntity;
+import org.gridsuite.modification.server.entities.equipment.creation.TwoWindingsTransformerCreationEntity;
 import org.gridsuite.modification.server.entities.equipment.deletion.EquipmentDeletionEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.LinesAttachToSplitLinesEntity;
 import org.gridsuite.modification.server.modifications.ModificationApplicator;
 import org.gridsuite.modification.server.modifications.ModificationUtils;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
@@ -47,12 +78,48 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.InjectableValues;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.Streams;
+import com.powsybl.commons.PowsyblException;
+import com.powsybl.commons.reporter.Report;
+import com.powsybl.commons.reporter.Reporter;
+import com.powsybl.commons.reporter.ReporterModel;
+import com.powsybl.commons.reporter.ReporterModelDeserializer;
+import com.powsybl.commons.reporter.ReporterModelJsonModule;
+import com.powsybl.commons.reporter.TypedValue;
+import com.powsybl.iidm.modification.topology.CreateBranchFeederBays;
+import com.powsybl.iidm.modification.topology.CreateBranchFeederBaysBuilder;
+import com.powsybl.iidm.modification.topology.RemoveFeederBay;
+import com.powsybl.iidm.modification.tripping.BranchTripping;
+import com.powsybl.iidm.network.Branch;
+import com.powsybl.iidm.network.Branch.Side;
+import com.powsybl.iidm.network.BranchAdder;
+import com.powsybl.iidm.network.Bus;
+import com.powsybl.iidm.network.BusbarSection;
+import com.powsybl.iidm.network.Connectable;
+import com.powsybl.iidm.network.HvdcLine;
+import com.powsybl.iidm.network.Identifiable;
+import com.powsybl.iidm.network.Load;
+import com.powsybl.iidm.network.Network;
+import com.powsybl.iidm.network.PhaseTapChangerAdder;
+import com.powsybl.iidm.network.RatioTapChangerAdder;
+import com.powsybl.iidm.network.Substation;
+import com.powsybl.iidm.network.Switch;
+import com.powsybl.iidm.network.Terminal;
+import com.powsybl.iidm.network.TopologyKind;
+import com.powsybl.iidm.network.TwoWindingsTransformer;
+import com.powsybl.iidm.network.TwoWindingsTransformerAdder;
+import com.powsybl.iidm.network.VariantManagerConstants;
+import com.powsybl.iidm.network.VoltageLevel;
+import com.powsybl.iidm.network.extensions.BranchStatus;
+import com.powsybl.iidm.network.extensions.BranchStatusAdder;
+import com.powsybl.network.store.client.NetworkStoreService;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
+import groovy.lang.Binding;
+import groovy.lang.GroovyShell;
+import lombok.NonNull;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -453,14 +520,10 @@ public class NetworkModificationService {
                 return createLoadModification(networkUuid, variantId, groupUuid, reportUuid, reporterId, (LoadModificationInfos) modificationInfos);
             case SUBSTATION_CREATION:
                 return createSubstationCreation(networkUuid, variantId, groupUuid, reportUuid, reporterId, (SubstationCreationInfos) modificationInfos);
-            case VOLTAGE_LEVEL_CREATION:
-                return createVoltageLevelCreation(networkUuid, variantId, groupUuid, reportUuid, reporterId, (VoltageLevelCreationInfos) modificationInfos);
             case TWO_WINDINGS_TRANSFORMER_CREATION:
                 return createTwoWindingsTransformerCreation(networkUuid, variantId, groupUuid, reportUuid, reporterId, (TwoWindingsTransformerCreationInfos) modificationInfos);
             case EQUIPMENT_DELETION:
                 return createEquipmentDeletion(networkUuid, variantId, groupUuid, reportUuid, reporterId, (EquipmentDeletionInfos) modificationInfos);
-            case LINES_ATTACH_TO_SPLIT_LINES:
-                return createLinesAttachToSplitLinesCreation(networkUuid, variantId, groupUuid, reportUuid, reporterId, (LinesAttachToSplitLinesInfos) modificationInfos);
             case BRANCH_STATUS:
                 return createLineStatusModification(networkUuid, variantId, groupUuid, reportUuid, reporterId, (BranchStatusModificationInfos) modificationInfos);
             default:
@@ -477,17 +540,11 @@ public class NetworkModificationService {
             case SUBSTATION_CREATION:
                 updateSubstationCreation(modificationUuid, (SubstationCreationInfos) modificationInfos);
                 break;
-            case VOLTAGE_LEVEL_CREATION:
-                updateVoltageLevelCreation(modificationUuid, (VoltageLevelCreationInfos) modificationInfos);
-                break;
             case TWO_WINDINGS_TRANSFORMER_CREATION:
                 updateTwoWindingsTransformerCreation(modificationUuid, (TwoWindingsTransformerCreationInfos) modificationInfos);
                 break;
             case EQUIPMENT_DELETION:
                 updateEquipmentDeletion(modificationUuid, (EquipmentDeletionInfos) modificationInfos);
-                break;
-            case LINES_ATTACH_TO_SPLIT_LINES:
-                updateLinesAttachToSplitLinesCreation(modificationUuid, (LinesAttachToSplitLinesInfos) modificationInfos);
                 break;
             default:
                 throw new NetworkModificationException(TYPE_MISMATCH);
@@ -957,66 +1014,6 @@ public class NetworkModificationService {
         }
     }
 
-    private List<ModificationInfos> execCreateVoltageLevelCreation(NetworkStoreListener listener, VoltageLevelCreationInfos voltageLevelCreationInfos,
-                                                           UUID reportUuid, String reporterId) {
-
-        Network network = listener.getNetwork();
-        String rootReporterId = reporterId + "@" + NETWORK_MODIFICATION_TYPE_REPORT;
-        ReporterModel reporter = new ReporterModel(rootReporterId, rootReporterId);
-        Reporter subReporter = reporter.createSubReporter(ModificationType.VOLTAGE_LEVEL_CREATION.name(), "VoltageLevel creation ${voltageLevelId}", "voltageLevelId", voltageLevelCreationInfos.getEquipmentId());
-
-        return doAction(listener, () -> {
-            if (listener.isApplyModifications()) {
-                ModificationUtils.getInstance().createVoltageLevelAction(voltageLevelCreationInfos, subReporter, network);
-            }
-            listener.storeVoltageLevelCreation(voltageLevelCreationInfos);
-        }, CREATE_VOLTAGE_LEVEL_ERROR, reportUuid, reporter, subReporter);
-    }
-
-    public List<EquipmentModificationInfos> createVoltageLevelCreation(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId,
-                                                                       VoltageLevelCreationInfos voltageLevelCreationInfos) {
-        assertVoltageLevelCreationInfosNotEmpty(voltageLevelCreationInfos);
-        ModificationNetworkInfos networkInfos = getNetworkModificationInfos(networkUuid, variantId);
-        NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid,
-                networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
-        return execCreateVoltageLevelCreation(listener, voltageLevelCreationInfos, reportUuid, reporterId)
-            .stream().map(EquipmentModificationInfos.class::cast).collect(Collectors.toList());
-    }
-
-    public void updateVoltageLevelCreation(UUID modificationUuid, VoltageLevelCreationInfos voltageLevelCreationInfos) {
-        assertVoltageLevelCreationInfosNotEmpty(voltageLevelCreationInfos);
-
-        Optional<ModificationEntity> voltageLevelModificationEntity = this.modificationRepository.findById(modificationUuid);
-
-        if (!voltageLevelModificationEntity.isPresent()) {
-            throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "Voltage level creation not found");
-        }
-
-        List<BusbarSectionCreationEmbeddable> busbarSections = voltageLevelCreationInfos.getBusbarSections().stream().map(bbsi ->
-                new BusbarSectionCreationEmbeddable(bbsi.getId(), bbsi.getName(), bbsi.getVertPos(), bbsi.getHorizPos())
-        ).collect(Collectors.toList());
-        List<BusbarConnectionCreationEmbeddable> busbarConnections = voltageLevelCreationInfos.getBusbarConnections().stream().map(cnxi ->
-                new BusbarConnectionCreationEmbeddable(cnxi.getFromBBS(), cnxi.getToBBS(), cnxi.getSwitchKind())
-        ).collect(Collectors.toList());
-
-        EquipmentCreationEntity updatedEntity = this.networkModificationRepository.createVoltageLevelEntity(
-                voltageLevelCreationInfos.getEquipmentId(),
-                voltageLevelCreationInfos.getEquipmentName(),
-                voltageLevelCreationInfos.getNominalVoltage(),
-                voltageLevelCreationInfos.getSubstationId(),
-                busbarSections,
-                busbarConnections);
-        updatedEntity.setId(modificationUuid);
-        updatedEntity.setGroup(voltageLevelModificationEntity.get().getGroup());
-        this.networkModificationRepository.updateModification(updatedEntity);
-    }
-
-    private void assertVoltageLevelCreationInfosNotEmpty(VoltageLevelCreationInfos voltageLevelCreationInfos) {
-        if (voltageLevelCreationInfos == null) {
-            throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "Missing required attributes to create the voltage level");
-        }
-    }
-
     public Network cloneNetworkVariant(UUID networkUuid, String originVariantId, String destinationVariantId) {
         Network network;
         try {
@@ -1091,9 +1088,13 @@ public class NetworkModificationService {
                 case EQUIPMENT_ATTRIBUTE_MODIFICATION:
                 case LOAD_CREATION:
                 case LINE_SPLIT_WITH_VOLTAGE_LEVEL:
+                case DELETE_VOLTAGE_LEVEL_ON_LINE:
+                case DELETE_ATTACHING_LINE:
                 case SHUNT_COMPENSATOR_CREATION:
                 case LINE_CREATION:
                 case LINE_ATTACH_TO_VOLTAGE_LEVEL:
+                case VOLTAGE_LEVEL_CREATION:
+                case LINES_ATTACH_TO_SPLIT_LINES:
                 case GENERATOR_CREATION:
                 case GENERATOR_MODIFICATION:
                     // Generic form
@@ -1119,17 +1120,9 @@ public class NetworkModificationService {
                     SubstationCreationInfos substationCreationInfos = (SubstationCreationInfos) infos;
                     return execCreateSubstationCreation(listener, substationCreationInfos, reportUuid, reporterId);
 
-                case VOLTAGE_LEVEL_CREATION:
-                    VoltageLevelCreationInfos voltageLevelCreationInfos = (VoltageLevelCreationInfos) infos;
-                    return execCreateVoltageLevelCreation(listener, voltageLevelCreationInfos, reportUuid, reporterId);
-
                 case BRANCH_STATUS:
                     BranchStatusModificationInfos branchStatusModificationInfos = (BranchStatusModificationInfos) infos;
                     return execCreateBranchStatusModification(listener, branchStatusModificationInfos, reportUuid, reporterId);
-
-                case LINES_ATTACH_TO_SPLIT_LINES:
-                    LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos = (LinesAttachToSplitLinesInfos) infos;
-                    return execCreateLinesAttachToSplitLinesCreation(listener, linesAttachToSplitLinesInfos, reportUuid, reporterId);
 
                 default:
             }
@@ -1201,79 +1194,5 @@ public class NetworkModificationService {
             applyModifications(duplicatedModificationList, targetGroupUuid, networkUuid, reportUuid, reporterId, variantId);
         }
         return missingModificationList;
-    }
-
-    private void assertLinesAttachToSplitLinesInfosNotEmpty(LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos) {
-        if (linesAttachToSplitLinesInfos == null) {
-            throw new NetworkModificationException(LINE_ATTACH_ERROR,
-                    "Missing required attributes to attach lines to a split lines");
-        }
-    }
-
-    private List<ModificationInfos> execCreateLinesAttachToSplitLinesCreation(NetworkStoreListener listener,
-                                                                              LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos,
-                                                                              UUID reportUuid, String reporterId) {
-        Network network = listener.getNetwork();
-
-        String rootReporterId = reporterId + "@" + NETWORK_MODIFICATION_TYPE_REPORT;
-        ReporterModel reporter = new ReporterModel(rootReporterId, rootReporterId);
-        Reporter subReporter = reporter.createSubReporter(ModificationType.LINES_ATTACH_TO_SPLIT_LINES.name(), "Lines attach to split lines");
-
-        List<ModificationInfos> inspectable = doAction(listener, () -> {
-            if (listener.isApplyModifications()) {
-                ReplaceTeePointByVoltageLevelOnLine algo = new ReplaceTeePointByVoltageLevelOnLineBuilder()
-                        .withTeePointLine1(linesAttachToSplitLinesInfos.getLineToAttachTo1Id())
-                        .withTeePointLine2(linesAttachToSplitLinesInfos.getLineToAttachTo2Id())
-                        .withTeePointLineToRemove(linesAttachToSplitLinesInfos.getAttachedLineId())
-                        .withBbsOrBusId(linesAttachToSplitLinesInfos.getBbsBusId())
-                        .withNewLine1Id(linesAttachToSplitLinesInfos.getReplacingLine1Id())
-                        .withNewLine1Name(linesAttachToSplitLinesInfos.getReplacingLine1Name())
-                        .withNewLine2Id(linesAttachToSplitLinesInfos.getReplacingLine2Id())
-                        .withNewLine2Name(linesAttachToSplitLinesInfos.getReplacingLine2Name())
-                        .build();
-                algo.apply(network, true, subReporter);
-            }
-
-            listener.storeLinesAttachToSplitLinesInfos(linesAttachToSplitLinesInfos);
-        }, LINE_NOT_FOUND, reportUuid, reporter, subReporter).stream().map(ModificationInfos.class::cast)
-                .collect(Collectors.toList());
-
-        if (!inspectable.isEmpty()) {
-            inspectable.addAll(listener.getDeletions());
-        }
-        return inspectable;
-    }
-
-    public List<ModificationInfos> createLinesAttachToSplitLinesCreation(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId,
-                                                                         LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos) {
-        assertLinesAttachToSplitLinesInfosNotEmpty(linesAttachToSplitLinesInfos);
-        ModificationNetworkInfos networkInfos = getNetworkModificationInfos(networkUuid, variantId);
-        NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
-        return execCreateLinesAttachToSplitLinesCreation(listener, linesAttachToSplitLinesInfos, reportUuid, reporterId);
-    }
-
-    public void updateLinesAttachToSplitLinesCreation(UUID modificationUuid, LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos) {
-        assertLinesAttachToSplitLinesInfosNotEmpty(linesAttachToSplitLinesInfos);
-
-        Optional<ModificationEntity> linesAttachToSplitLinesEntity = this.modificationRepository.findById(modificationUuid);
-
-        if (linesAttachToSplitLinesEntity.isEmpty()) {
-            throw new NetworkModificationException(LINE_ATTACH_NOT_FOUND, "Line attach to split line not found");
-        }
-
-        LinesAttachToSplitLinesEntity updatedEntity = LinesAttachToSplitLinesEntity.toEntity(
-                linesAttachToSplitLinesInfos.getLineToAttachTo1Id(),
-                linesAttachToSplitLinesInfos.getLineToAttachTo2Id(),
-                linesAttachToSplitLinesInfos.getAttachedLineId(),
-                linesAttachToSplitLinesInfos.getVoltageLevelId(),
-                linesAttachToSplitLinesInfos.getBbsBusId(),
-                linesAttachToSplitLinesInfos.getReplacingLine1Id(),
-                linesAttachToSplitLinesInfos.getReplacingLine1Name(),
-                linesAttachToSplitLinesInfos.getReplacingLine2Id(),
-                linesAttachToSplitLinesInfos.getReplacingLine2Name()
-        );
-        updatedEntity.setId(modificationUuid);
-        updatedEntity.setGroup(linesAttachToSplitLinesEntity.get().getGroup());
-        this.networkModificationRepository.updateModification(updatedEntity);
     }
 }

@@ -19,6 +19,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static com.vladmihalcea.sql.SQLStatementCountValidator.assertDeleteCount;
+import static com.vladmihalcea.sql.SQLStatementCountValidator.assertInsertCount;
+import static com.vladmihalcea.sql.SQLStatementCountValidator.assertSelectCount;
+import static com.vladmihalcea.sql.SQLStatementCountValidator.assertUpdateCount;
 import static org.junit.Assert.assertNull;
 
 /**
@@ -73,5 +77,12 @@ public final class TestUtils {
         }
 
         assertNull("Should not be any http requests : ", httpRequest);
+    }
+
+    public static void assertRequestsCount(long select, long insert, long update, long delete) {
+        assertSelectCount(select);
+        assertInsertCount(insert);
+        assertUpdateCount(update);
+        assertDeleteCount(delete);
     }
 }

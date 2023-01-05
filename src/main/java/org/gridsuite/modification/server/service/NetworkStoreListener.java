@@ -12,8 +12,6 @@ import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.TwoWindingsTransformerCreationEntity;
-import org.gridsuite.modification.server.entities.equipment.creation.VoltageLevelCreationEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.LinesAttachToSplitLinesEntity;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 
 import java.time.ZoneOffset;
@@ -180,11 +178,6 @@ public class NetworkStoreListener implements NetworkListener {
         ));
     }
 
-    public void storeVoltageLevelCreation(VoltageLevelCreationInfos voltageLevelCreationInfos) {
-        VoltageLevelCreationEntity voltageLevelEntity = VoltageLevelCreationEntity.toEntity(voltageLevelCreationInfos);
-        modifications.add(voltageLevelEntity);
-    }
-
     @Override
     public void onUpdate(Identifiable identifiable, String attribute, Object oldValue, Object newValue) {
         substationsIds.addAll(getSubstationIds(identifiable));
@@ -242,20 +235,5 @@ public class NetworkStoreListener implements NetworkListener {
 
     private void addSubstationsIds(Identifiable<?> identifiable) {
         substationsIds.addAll(getSubstationIds(identifiable));
-    }
-
-    public void storeLinesAttachToSplitLinesInfos(LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos) {
-
-        modifications.add(LinesAttachToSplitLinesEntity.toEntity(
-                linesAttachToSplitLinesInfos.getLineToAttachTo1Id(),
-                linesAttachToSplitLinesInfos.getLineToAttachTo2Id(),
-                linesAttachToSplitLinesInfos.getAttachedLineId(),
-                linesAttachToSplitLinesInfos.getVoltageLevelId(),
-                linesAttachToSplitLinesInfos.getBbsBusId(),
-                linesAttachToSplitLinesInfos.getReplacingLine1Id(),
-                linesAttachToSplitLinesInfos.getReplacingLine1Name(),
-                linesAttachToSplitLinesInfos.getReplacingLine2Id(),
-                linesAttachToSplitLinesInfos.getReplacingLine2Name())
-        );
     }
 }

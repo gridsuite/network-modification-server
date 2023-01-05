@@ -18,6 +18,8 @@ import org.gridsuite.modification.server.dto.AttributeModification;
 import org.gridsuite.modification.server.dto.GeneratorModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.OperationType;
+import org.gridsuite.modification.server.dto.ReactiveCapabilityCurveModificationInfos;
+import org.gridsuite.modification.server.dto.VoltageRegulationType;
 import org.gridsuite.modification.server.utils.MatcherGeneratorModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
@@ -26,8 +28,10 @@ import org.springframework.test.web.servlet.MvcResult;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_GENERATOR_ERROR;
+import java.util.List;
 import java.util.UUID;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class GeneratorModificationTest extends AbstractNetworkModificationTest {
@@ -46,10 +50,27 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
                 .activePowerSetpoint(new AttributeModification<>(80.0, OperationType.SET))
                 .reactivePowerSetpoint(new AttributeModification<>(40.0, OperationType.SET))
                 .voltageSetpoint(new AttributeModification<>(48.0, OperationType.SET))
-                .voltageRegulationOn(new AttributeModification<>(true, OperationType.SET))
+                .voltageRegulationOn(new AttributeModification<>(false, OperationType.SET))
                 .minActivePower(new AttributeModification<>(0., OperationType.SET))
                 .maxActivePower(new AttributeModification<>(100., OperationType.SET))
                 .ratedNominalPower(new AttributeModification<>(220., OperationType.SET))
+                .voltageRegulationType(
+                        new AttributeModification<>(VoltageRegulationType.DISTANT, OperationType.SET))
+                .marginalCost(new AttributeModification<>(0.1, OperationType.SET))
+                .minimumReactivePower(new AttributeModification<>(-100., OperationType.SET))
+                .maximumReactivePower(new AttributeModification<>(100., OperationType.SET))
+                .reactiveCapabilityCurvePoints(List.of(
+                        new ReactiveCapabilityCurveModificationInfos(0., 0., 100., 100., 0., 0.1),
+                        new ReactiveCapabilityCurveModificationInfos(0., 0., 100., 100., 200., 150.)))
+                .droop(new AttributeModification<>(0.1f, OperationType.SET))
+                .participate(new AttributeModification<>(true, OperationType.SET))
+                .transientReactance(new AttributeModification<>(0.1, OperationType.SET))
+                .stepUpTransformerReactance(new AttributeModification<>(0.1, OperationType.SET))
+                .regulatingTerminalId(new AttributeModification<>("v2load", OperationType.SET))
+                .regulatingTerminalType(new AttributeModification<>("LOAD", OperationType.SET))
+                .regulatingTerminalVlId(new AttributeModification<>("v1", OperationType.SET))
+                .qPercent(new AttributeModification<>(0.1, OperationType.SET))
+                .reactiveCapabilityCurve(new AttributeModification<>(true, OperationType.SET))
                 .build();
     }
 
@@ -67,6 +88,10 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
                 .minActivePower(new AttributeModification<>(1., OperationType.SET))
                 .maxActivePower(new AttributeModification<>(102., OperationType.SET))
                 .ratedNominalPower(new AttributeModification<>(221., OperationType.SET))
+                .reactiveCapabilityCurve(new AttributeModification<>(false, OperationType.SET))
+                .reactiveCapabilityCurvePoints(List.of())
+                .voltageRegulationType(
+                                new AttributeModification<>(VoltageRegulationType.LOCAL, OperationType.SET))
                 .build();
     }
 
@@ -83,7 +108,7 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
         assertEquals(80.0, modifiedGenerator.getTargetP());
         assertEquals(40.0, modifiedGenerator.getTargetQ());
         assertEquals(48.0, modifiedGenerator.getTargetV());
-        assertEquals(true, modifiedGenerator.isVoltageRegulatorOn());
+        assertEquals(false, modifiedGenerator.isVoltageRegulatorOn());
         assertEquals(0., modifiedGenerator.getMinP());
         assertEquals(100., modifiedGenerator.getMaxP());
         assertEquals(220., modifiedGenerator.getRatedS());
@@ -101,6 +126,140 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
         assertEquals(-1.1, generator.getMinP());
         assertEquals(1000.0, generator.getMaxP());
         assertEquals(Double.NaN, generator.getRatedS());
+    }
+
+    @SneakyThrows
+    @Test
+    public void testMinMaxReactiveLimitsAttributesModification() {
+        GeneratorModificationInfos generatorModificationInfos = (GeneratorModificationInfos) buildModification();
+
+        generatorModificationInfos.setReactiveCapabilityCurve(new AttributeModification<>(false, OperationType.SET));
+        generatorModificationInfos.setMaximumReactivePower(null);
+        generatorModificationInfos.setMinimumReactivePower(null);
+        Generator generator = getNetwork().getGenerator("idGenerator");
+        generator.newReactiveCapabilityCurve()
+                .beginPoint()
+                .setP(0.)
+                .setMaxQ(100.)
+                .setMinQ(0.)
+                .endPoint()
+                .beginPoint()
+                .setP(200.)
+                .setMaxQ(150.)
+                .setMinQ(0.)
+                .endPoint()
+                .add();
+        String modificationToCreateJson = mapper.writeValueAsString(generatorModificationInfos);
+
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+
+        GeneratorModificationInfos createdModification = (GeneratorModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
+
+        assertThat(createdModification, createMatcher(generatorModificationInfos));
+        testNetworkModificationsCount(getGroupId(), 1);
+
+        generatorModificationInfos.setMinimumReactivePower(new AttributeModification<>(-200., OperationType.SET));
+        modificationToCreateJson = mapper.writeValueAsString(generatorModificationInfos);
+
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+
+        createdModification = (GeneratorModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(1);
+
+        assertThat(createdModification, createMatcher(generatorModificationInfos));
+        testNetworkModificationsCount(getGroupId(), 2);
+
+        generatorModificationInfos.setMinimumReactivePower(null);
+        generatorModificationInfos.setMaximumReactivePower(new AttributeModification<>(200., OperationType.SET));
+        modificationToCreateJson = mapper.writeValueAsString(generatorModificationInfos);
+
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+
+        createdModification = (GeneratorModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(2);
+
+        assertThat(createdModification, createMatcher(generatorModificationInfos));
+        testNetworkModificationsCount(getGroupId(), 3);
+
+        generatorModificationInfos.setMinimumReactivePower(new AttributeModification<>(-1.1, OperationType.SET));
+        modificationToCreateJson = mapper.writeValueAsString(generatorModificationInfos);
+
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+
+        createdModification = (GeneratorModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(3);
+
+        assertThat(createdModification, createMatcher(generatorModificationInfos));
+        testNetworkModificationsCount(getGroupId(), 4);
+    }
+
+    @SneakyThrows
+    @Test
+    public void testGeneratorShortCircuitAttributesModification() {
+        GeneratorModificationInfos generatorModificationInfos = (GeneratorModificationInfos) buildModification();
+
+        generatorModificationInfos.setTransientReactance(null);
+        String modificationToCreateJson = mapper.writeValueAsString(generatorModificationInfos);
+
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+
+        GeneratorModificationInfos createdModification = (GeneratorModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
+
+        assertThat(createdModification, createMatcher(generatorModificationInfos));
+        testNetworkModificationsCount(getGroupId(), 1);
+
+        generatorModificationInfos.setTransientReactance(new AttributeModification<>(1.1, OperationType.SET));
+        generatorModificationInfos.setStepUpTransformerReactance(null);
+        modificationToCreateJson = mapper.writeValueAsString(generatorModificationInfos);
+
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+
+        createdModification = (GeneratorModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(1);
+
+        assertThat(createdModification, createMatcher(generatorModificationInfos));
+        testNetworkModificationsCount(getGroupId(), 2);
+    }
+
+    @SneakyThrows
+    @Test
+    public void testGeneratorVoltageRegulatorAttributesModification() {
+        GeneratorModificationInfos generatorModificationInfos = (GeneratorModificationInfos) buildModification();
+
+        generatorModificationInfos.setVoltageRegulationOn(new AttributeModification<>(true, OperationType.SET));
+        String modificationToCreateJson = mapper.writeValueAsString(generatorModificationInfos);
+
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+
+        GeneratorModificationInfos createdModification = (GeneratorModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
+
+        assertThat(createdModification, createMatcher(generatorModificationInfos));
+        testNetworkModificationsCount(getGroupId(), 1);
+
+        generatorModificationInfos.setVoltageRegulationOn(null);
+        modificationToCreateJson = mapper.writeValueAsString(generatorModificationInfos);
+
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+
+        createdModification = (GeneratorModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(1);
+
+        assertThat(createdModification, createMatcher(generatorModificationInfos));
+        testNetworkModificationsCount(getGroupId(), 2);
+
+        generatorModificationInfos.setVoltageRegulationType(new AttributeModification<>(VoltageRegulationType.LOCAL, OperationType.SET));
+        modificationToCreateJson = mapper.writeValueAsString(generatorModificationInfos);
+
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+
+        createdModification = (GeneratorModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(2);
+
+        assertThat(createdModification, createMatcher(generatorModificationInfos));
+        testNetworkModificationsCount(getGroupId(), 3);
     }
 
     @SneakyThrows

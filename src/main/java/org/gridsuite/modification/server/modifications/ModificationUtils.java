@@ -222,8 +222,8 @@ public final class ModificationUtils {
         return Pair.of(nodeRank, cnxRank);
     }
 
-    public void createVoltageLevelAction(VoltageLevelCreationInfos voltageLevelCreationInfos,
-                                         Reporter subReporter, Network network) {
+    void createVoltageLevel(VoltageLevelCreationInfos voltageLevelCreationInfos,
+                                   Reporter subReporter, Network network) {
         String substationId = voltageLevelCreationInfos.getSubstationId();
         Substation substation = network.getSubstation(substationId);
         if (substation == null) {
@@ -334,22 +334,29 @@ public final class ModificationUtils {
     }
 
     public <T> void applyElementaryModifications(Consumer<T> setter, Supplier<T> getter,
-            AttributeModification<T> modification,
-            Reporter subReporter, String fieldName) {
+                                                         AttributeModification<T> modification,
+                                                         Reporter subReporter, String fieldName) {
         if (modification != null) {
             T oldValue = getter.get();
             T newValue = modification.applyModification(oldValue);
             setter.accept(newValue);
 
-            subReporter.report(Report.builder()
-                    .withKey("Modification" + fieldName)
-                    .withDefaultMessage("    ${fieldName} : ${oldValue} -> ${newValue}")
-                    .withValue("fieldName", fieldName)
-                    .withValue("oldValue", oldValue.toString())
-                    .withValue("newValue", newValue.toString())
-                    .withSeverity(TypedValue.INFO_SEVERITY)
-                    .build());
+            addModificationReport(oldValue, newValue, subReporter, fieldName);
         }
+    }
+
+    public <T> void addModificationReport(T oldValue, T newValue,
+            Reporter subReporter, String fieldName) {
+        String oldValueString = oldValue == null ? "NaN" : oldValue.toString();
+        String newValueString = newValue == null ? "NaN" : newValue.toString();
+        subReporter.report(Report.builder()
+                .withKey("Modification" + fieldName)
+                .withDefaultMessage("    ${fieldName} : ${oldValue} -> ${newValue}")
+                .withValue("fieldName", fieldName)
+                .withValue("oldValue", oldValueString)
+                .withValue("newValue", newValueString)
+                .withSeverity(TypedValue.INFO_SEVERITY)
+                .build());
     }
 
     public Terminal getTerminalFromIdentifiable(Network network,

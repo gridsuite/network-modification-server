@@ -7,8 +7,10 @@
 package org.gridsuite.modification.server.utils;
 
 import org.gridsuite.modification.server.dto.GeneratorModificationInfos;
+import org.gridsuite.modification.server.dto.ReactiveCapabilityCurveModificationInfos;
 import org.hamcrest.Description;
 
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -27,17 +29,58 @@ public class MatcherGeneratorModificationInfos extends MatcherModificationInfos<
     @Override
     public boolean matchesSafely(GeneratorModificationInfos m) {
         return super.matchesSafely(m)
-            && m.getEquipmentId().equals(reference.getEquipmentId())
-            && m.getSubstationIds().equals(reference.getSubstationIds())
-            && m.getEquipmentName().equals(reference.getEquipmentName())
-            && Objects.equals(m.getEnergySource(), reference.getEnergySource())
-            && Objects.equals(m.getMinActivePower(), reference.getMinActivePower())
-            && Objects.equals(m.getMaxActivePower(), reference.getMaxActivePower())
-            && Objects.equals(m.getRatedNominalPower(), reference.getRatedNominalPower())
-            && Objects.equals(m.getActivePowerSetpoint(), reference.getActivePowerSetpoint())
-            && Objects.equals(m.getReactivePowerSetpoint(), reference.getReactivePowerSetpoint())
-            && Objects.equals(m.getVoltageRegulationOn(), reference.getVoltageRegulationOn())
-            && Objects.equals(m.getVoltageSetpoint(), reference.getVoltageSetpoint());
+                && m.getEquipmentId().equals(reference.getEquipmentId())
+                && m.getSubstationIds().equals(reference.getSubstationIds())
+                && m.getEquipmentName().equals(reference.getEquipmentName())
+                && Objects.equals(m.getEnergySource(), reference.getEnergySource())
+                && Objects.equals(m.getMinActivePower(), reference.getMinActivePower())
+                && Objects.equals(m.getMaxActivePower(), reference.getMaxActivePower())
+                && Objects.equals(m.getRatedNominalPower(), reference.getRatedNominalPower())
+                && Objects.equals(m.getActivePowerSetpoint(), reference.getActivePowerSetpoint())
+                && Objects.equals(m.getReactivePowerSetpoint(), reference.getReactivePowerSetpoint())
+                && Objects.equals(m.getVoltageRegulationOn(), reference.getVoltageRegulationOn())
+                && Objects.equals(m.getVoltageSetpoint(), reference.getVoltageSetpoint())
+                && Objects.equals(m.getDroop(), reference.getDroop())
+                && Objects.equals(m.getParticipate(), reference.getParticipate())
+                && Objects.equals(m.getRegulatingTerminalId(), reference.getRegulatingTerminalId())
+                && Objects.equals(m.getRegulatingTerminalType(), reference.getRegulatingTerminalType())
+                && Objects.equals(m.getRegulatingTerminalVlId(), reference.getRegulatingTerminalVlId())
+                && Objects.equals(m.getMaximumReactivePower(), reference.getMaximumReactivePower())
+                && Objects.equals(m.getMinimumReactivePower(), reference.getMinimumReactivePower())
+                && Objects.equals(m.getMarginalCost(), reference.getMarginalCost())
+                && Objects.equals(m.getStepUpTransformerReactance(), reference.getStepUpTransformerReactance())
+                && Objects.equals(m.getTransientReactance(), reference.getTransientReactance())
+                && Objects.equals(m.getReactiveCapabilityCurve(), reference.getReactiveCapabilityCurve())
+                && matchesReactiveCapabilityCurvePoints(m.getReactiveCapabilityCurvePoints(), reference.getReactiveCapabilityCurvePoints());
+    }
+
+    private static boolean matchesReactiveCapabilityCurvePoints(List<ReactiveCapabilityCurveModificationInfos> points1, List<ReactiveCapabilityCurveModificationInfos> points2) {
+        if (points1 == null && points2 == null) {
+            return true;
+        }
+
+        if (points1 != null && points2 != null && points1.size() == points2.size()) {
+            for (int idx = 0; idx < points1.size(); idx++) {
+                if (!matchesReactiveCapabilityCurve(points1.get(idx), points2.get(idx))) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    private static boolean matchesReactiveCapabilityCurve(ReactiveCapabilityCurveModificationInfos point1, ReactiveCapabilityCurveModificationInfos point2) {
+        return (point1 == null && point2 == null) ||
+                (point1 != null && point2 != null &&
+                        Objects.equals(point1.getP(), point2.getP()) &&
+                        Objects.equals(point1.getQmaxP(), point2.getQmaxP()) &&
+                        Objects.equals(point1.getQminP(), point2.getQminP())) &&
+                        Objects.equals(point1.getOldP(), point2.getOldP()) &&
+                        Objects.equals(point1.getOldQmaxP(), point2.getOldQmaxP()) &&
+                        Objects.equals(point1.getOldQminP(), point2.getOldQminP());
     }
 
     @Override
