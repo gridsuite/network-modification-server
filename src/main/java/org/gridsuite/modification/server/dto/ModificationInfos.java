@@ -48,7 +48,9 @@ import org.gridsuite.modification.server.modifications.AbstractModification;
     @JsonSubTypes.Type(value = LinesAttachToSplitLinesInfos.class, name = "LINES_ATTACH_TO_SPLIT_LINES"),
     @JsonSubTypes.Type(value = BranchStatusModificationInfos.class, name = "BRANCH_STATUS"),
     @JsonSubTypes.Type(value = EquipmentAttributeModificationInfos.class, name = "EQUIPMENT_ATTRIBUTE_MODIFICATION"),
-    @JsonSubTypes.Type(value = LoadScalingInfos.class, name = "LOAD_SCALING")
+    @JsonSubTypes.Type(value = LoadScalingInfos.class, name = "LOAD_SCALING"),
+    @JsonSubTypes.Type(value = DeleteVoltageLevelOnLineInfos.class, name = "DELETE_VOLTAGE_LEVEL_ON_LINE"),
+    @JsonSubTypes.Type(value = DeleteAttachingLineInfos.class, name = "DELETE_ATTACHING_LINE"),
 })
 @SuperBuilder
 @NoArgsConstructor
