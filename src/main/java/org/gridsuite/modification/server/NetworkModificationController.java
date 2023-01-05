@@ -128,6 +128,7 @@ public class NetworkModificationController {
             case SHUNT_COMPENSATOR_CREATION:
             case LINE_CREATION:
             case LINE_ATTACH_TO_VOLTAGE_LEVEL:
+            case VOLTAGE_LEVEL_CREATION:
             case LINES_ATTACH_TO_SPLIT_LINES:
                 return ResponseEntity.ok().body(networkModificationService.createModification(networkUuid, variantId, groupUuid, reportUuid, reporterId, modificationInfos));
             default:
@@ -152,6 +153,7 @@ public class NetworkModificationController {
             case SHUNT_COMPENSATOR_CREATION:
             case LINE_CREATION:
             case LINE_ATTACH_TO_VOLTAGE_LEVEL:
+            case VOLTAGE_LEVEL_CREATION:
             case LINES_ATTACH_TO_SPLIT_LINES:
                 networkModificationService.updateModification(networkModificationUuid, modificationInfos);
                 break;

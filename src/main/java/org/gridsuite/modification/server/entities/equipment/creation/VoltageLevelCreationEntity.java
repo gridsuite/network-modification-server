@@ -12,9 +12,11 @@ import java.util.stream.Collectors;
 
 import javax.persistence.*;
 
+import lombok.NonNull;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.BusbarConnectionCreationInfos;
 import org.gridsuite.modification.server.dto.BusbarSectionCreationInfos;
+import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.VoltageLevelCreationInfos;
 
 import lombok.Getter;
@@ -44,16 +46,9 @@ public class VoltageLevelCreationEntity extends EquipmentCreationEntity {
     @CollectionTable
     private List<BusbarConnectionCreationEmbeddable> busbarConnections;
 
-    public VoltageLevelCreationEntity(String equipmentId, String equipmentName, double nominalVoltage, String substationId,
-        List<BusbarSectionCreationEmbeddable> busbarSections,
-        List<BusbarConnectionCreationEmbeddable> busbarConnections) {
-        super(ModificationType.VOLTAGE_LEVEL_CREATION,
-                equipmentId,
-                equipmentName);
-        this.nominalVoltage = nominalVoltage;
-        this.substationId = substationId;
-        this.busbarSections = busbarSections;
-        this.busbarConnections = busbarConnections;
+    public VoltageLevelCreationEntity(VoltageLevelCreationInfos voltageLevelCreationInfos) {
+        super(voltageLevelCreationInfos);
+        assignAttributes(voltageLevelCreationInfos);
     }
 
     public static List<BusbarConnectionCreationEmbeddable> toEmbeddableConnections(
@@ -68,16 +63,6 @@ public class VoltageLevelCreationEntity extends EquipmentCreationEntity {
             .map(bbsi ->
                 new BusbarSectionCreationEmbeddable(bbsi.getId(), bbsi.getName(), bbsi.getVertPos(), bbsi.getHorizPos())
             ).collect(Collectors.toList());
-    }
-
-    public static VoltageLevelCreationEntity toEntity(VoltageLevelCreationInfos mayVoltageLevelCreationInfos) {
-        VoltageLevelCreationEntity voltageLevelCreationEntity;
-        List<BusbarSectionCreationEmbeddable> bbsEmbeddables = toEmbeddableSections(mayVoltageLevelCreationInfos.getBusbarSections());
-        List<BusbarConnectionCreationEmbeddable> cnxEmbeddables = toEmbeddableConnections(mayVoltageLevelCreationInfos.getBusbarConnections());
-        voltageLevelCreationEntity = new VoltageLevelCreationEntity(mayVoltageLevelCreationInfos.getEquipmentId(),
-            mayVoltageLevelCreationInfos.getEquipmentName(), mayVoltageLevelCreationInfos.getNominalVoltage(),
-            mayVoltageLevelCreationInfos.getSubstationId(), bbsEmbeddables, cnxEmbeddables);
-        return voltageLevelCreationEntity;
     }
 
     @Override
@@ -112,6 +97,21 @@ public class VoltageLevelCreationEntity extends EquipmentCreationEntity {
         super.cloneWithIdsToNull();
         this.busbarSections = new ArrayList<>(busbarSections);
         this.busbarConnections = new ArrayList<>(busbarConnections);
+    }
+
+    @Override
+    public void update(@NonNull ModificationInfos modificationInfos) {
+        super.update(modificationInfos);
+        assignAttributes((VoltageLevelCreationInfos) modificationInfos);
+    }
+
+    private void assignAttributes(VoltageLevelCreationInfos voltageLevelCreationInfos) {
+        this.nominalVoltage = voltageLevelCreationInfos.getNominalVoltage();
+        this.substationId = voltageLevelCreationInfos.getSubstationId();
+        List<BusbarSectionCreationEmbeddable> busBarSections = toEmbeddableSections(voltageLevelCreationInfos.getBusbarSections());
+        List<BusbarConnectionCreationEmbeddable> busBarConnections = toEmbeddableConnections(voltageLevelCreationInfos.getBusbarConnections());
+        this.busbarSections = busBarSections;
+        this.busbarConnections = busBarConnections;
     }
 }
 

@@ -728,18 +728,23 @@ public class ModificationRepositoryTest {
 
     @Test
     public void testVoltageLevelCreation() {
-        List<BusbarSectionCreationEmbeddable> bbses;
-        bbses = new ArrayList<>();
-        Stream.iterate(1, n -> n + 1).limit(3 + 1).forEach(i -> bbses.add(new BusbarSectionCreationEmbeddable("bbs" + i, "NW", 1 + i, 1)));
+        List<BusbarSectionCreationInfos> bbses = new ArrayList<>();
+        Stream.iterate(1, n -> n + 1).limit(3 + 1).forEach(i -> bbses.add(new BusbarSectionCreationInfos("bbs" + i, "NW", 1 + i, 1)));
 
-        List<BusbarConnectionCreationEmbeddable> cnxes;
-        cnxes = new ArrayList<>();
+        List<BusbarConnectionCreationInfos> cnxes = new ArrayList<>();
         Stream.iterate(0, n -> n + 1).limit(3).forEach(i -> {
-            cnxes.add(new BusbarConnectionCreationEmbeddable("bbs.nw", "bbs.ne", SwitchKind.BREAKER));
-            cnxes.add(new BusbarConnectionCreationEmbeddable("bbs.nw", "bbs.ne", SwitchKind.DISCONNECTOR));
+            cnxes.add(new BusbarConnectionCreationInfos("bbs.nw", "bbs.ne", SwitchKind.BREAKER));
+            cnxes.add(new BusbarConnectionCreationInfos("bbs.nw", "bbs.ne", SwitchKind.DISCONNECTOR));
         });
 
-        VoltageLevelCreationEntity createVoltLvlEntity1 = networkModificationRepository.createVoltageLevelEntity("idVL1", "VLName", 379.0, "s1", bbses, cnxes);
+        VoltageLevelCreationEntity createVoltLvlEntity1 = VoltageLevelCreationInfos.builder().type(ModificationType.VOLTAGE_LEVEL_CREATION)
+                .equipmentId("idVL1")
+                .equipmentName("VLName")
+                .nominalVoltage(379.0)
+                .substationId("s1")
+                .busbarSections(bbses)
+                .busbarConnections(cnxes)
+                .build().toEntity();
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(createVoltLvlEntity1));
         List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
@@ -781,7 +786,7 @@ public class ModificationRepositoryTest {
             });
         }
 
-        VoltageLevelCreationInfos createVoltLvlEntity1 = VoltageLevelCreationInfos.builder()
+        VoltageLevelCreationInfos createVoltLvlEntity1 = VoltageLevelCreationInfos.builder().type(ModificationType.VOLTAGE_LEVEL_CREATION)
             .substationId("s1").nominalVoltage(379.0).equipmentId("idVL1").equipmentName("VLName")
             .busbarSections(bbses).busbarConnections(cnxes)
             .build();
@@ -852,7 +857,7 @@ public class ModificationRepositoryTest {
             .newLine2Id("line2Id")
             .newLine2Name("line2Name")
             .build().toEntity();
-        VoltageLevelCreationEntity voltageLevelCreationEntity = VoltageLevelCreationEntity.toEntity(voltageLevelCreationInfos);
+        VoltageLevelCreationEntity voltageLevelCreationEntity = new VoltageLevelCreationEntity(voltageLevelCreationInfos);
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(lineSplitEntity1, voltageLevelCreationEntity, lineSplitEntity2));
 
         List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
