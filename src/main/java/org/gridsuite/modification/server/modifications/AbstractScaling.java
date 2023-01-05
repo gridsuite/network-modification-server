@@ -38,6 +38,7 @@ import static org.gridsuite.modification.server.utils.ScalingUtils.createReport;
 
 public abstract class AbstractScaling extends AbstractModification {
     protected final ScalingInfos scalingInfos;
+    private static final String ERROR_MESSAGE = "this variation mode is not supported";
 
     protected AbstractScaling(ScalingInfos scalingInfos) {
         this.scalingInfos = scalingInfos;
@@ -119,31 +120,31 @@ public abstract class AbstractScaling extends AbstractModification {
     }
 
     public void applyStackingUpVariation(Network network, List<IdentifiableAttributes> identifiableAttributes, ScalingVariationInfos variationInfos) {
-        throw new NetworkModificationException(getExceptionType());
+        throw new NetworkModificationException(getExceptionType(), ERROR_MESSAGE);
     }
 
     public void applyVentilationVariation(Network network,
                                            List<IdentifiableAttributes> identifiableAttributes,
                                            ScalingVariationInfos generatorScalingVariation) {
-        throw new NetworkModificationException(getExceptionType());
+        throw new NetworkModificationException(getExceptionType(), ERROR_MESSAGE);
     }
 
     public void applyRegularDistributionVariation(Network network,
                                                    List<IdentifiableAttributes> identifiableAttributes,
                                                    ScalingVariationInfos generatorScalingVariation) {
-        throw new NetworkModificationException(getExceptionType());
+        throw new NetworkModificationException(getExceptionType(), ERROR_MESSAGE);
     }
 
     public void applyProportionalToPmaxVariation(Network network,
                                                   List<IdentifiableAttributes> identifiableAttributes,
                                                   ScalingVariationInfos generatorScalingVariation) {
-        throw new NetworkModificationException(getExceptionType());
+        throw new NetworkModificationException(getExceptionType(), ERROR_MESSAGE);
     }
 
     public void applyProportionalVariation(Network network,
                                             List<IdentifiableAttributes> identifiableAttributes,
                                             ScalingVariationInfos variationInfos) {
-        throw new NetworkModificationException(getExceptionType());
+        throw new NetworkModificationException(getExceptionType(), ERROR_MESSAGE);
     }
 
     public abstract double getAsked(ScalingVariationInfos variationInfos, AtomicReference<Double> sum);

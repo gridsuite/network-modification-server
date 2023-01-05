@@ -22,7 +22,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @NoArgsConstructor
-@AllArgsConstructor
 @Getter
 @Setter
 @Entity
