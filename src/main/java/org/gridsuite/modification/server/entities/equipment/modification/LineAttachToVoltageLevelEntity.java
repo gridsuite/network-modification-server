@@ -80,7 +80,7 @@ public class LineAttachToVoltageLevelEntity extends ModificationEntity {
         attachmentPointName = lineAttachToVoltageLevelInfos.getAttachmentPointName();
         mayVoltageLevelCreation = null; // Needed for the update
         if (lineAttachToVoltageLevelInfos.getMayNewVoltageLevelInfos() != null) {
-            mayVoltageLevelCreation = VoltageLevelCreationEntity.toEntity(lineAttachToVoltageLevelInfos.getMayNewVoltageLevelInfos());
+            mayVoltageLevelCreation = lineAttachToVoltageLevelInfos.getMayNewVoltageLevelInfos().toEntity();
         }
         existingVoltageLevelId = lineAttachToVoltageLevelInfos.getExistingVoltageLevelId();
         bbsOrBusId = lineAttachToVoltageLevelInfos.getBbsOrBusId();
