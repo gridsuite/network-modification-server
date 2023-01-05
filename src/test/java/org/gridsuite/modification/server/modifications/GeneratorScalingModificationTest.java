@@ -15,6 +15,7 @@ import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import com.powsybl.network.store.iidm.impl.NetworkImpl;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationApplication;
+import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.VariationMode;
 import org.gridsuite.modification.server.VariationType;
 import org.gridsuite.modification.server.dto.FilterInfos;
@@ -147,7 +148,8 @@ public class GeneratorScalingModificationTest extends AbstractNetworkModificatio
                 .andExpect(status().is5xxServerError())
                 .andReturn();
 
-        assertEquals(response.getResponse().getContentAsString(), "GENERATOR_SCALING_ERROR : All filters contains equipments with wrong ids");
+        assertEquals(new NetworkModificationException(NetworkModificationException.Type.GENERATOR_SCALING_ERROR, "All filters contains equipments with wrong ids").getMessage(),
+                response.getResponse().getContentAsString());
     }
 
     @Test
@@ -280,16 +282,16 @@ public class GeneratorScalingModificationTest extends AbstractNetworkModificatio
 
     @Override
     protected void assertNetworkAfterCreation() {
-        assertEquals(getNetwork().getGenerator(GENERATOR_ID_1).getTargetP(), 68.82, 0.01D);
-        assertEquals(getNetwork().getGenerator(GENERATOR_ID_2).getTargetP(), 75.43, 0.01D);
-        assertEquals(getNetwork().getGenerator(GENERATOR_ID_3).getTargetP(), 42.1, 0.01D);
-        assertEquals(getNetwork().getGenerator(GENERATOR_ID_4).getTargetP(), 125.0, 0.01D);
-        assertEquals(getNetwork().getGenerator(GENERATOR_ID_5).getTargetP(), 273.27, 0.01D);
-        assertEquals(getNetwork().getGenerator(GENERATOR_ID_6).getTargetP(), 150, 0.01D);
-        assertEquals(getNetwork().getGenerator(GENERATOR_ID_7).getTargetP(), 225, 0.01D);
-        assertEquals(getNetwork().getGenerator(GENERATOR_ID_8).getTargetP(), 116.66, 0.01D);
-        assertEquals(getNetwork().getGenerator(GENERATOR_ID_9).getTargetP(), 233.33, 0.01D);
-        assertEquals(getNetwork().getGenerator(GENERATOR_ID_10).getTargetP(), 116.66, 0.01D);
+        assertEquals(68.82, getNetwork().getGenerator(GENERATOR_ID_1).getTargetP(), 0.01D);
+        assertEquals(75.43, getNetwork().getGenerator(GENERATOR_ID_2).getTargetP(), 0.01D);
+        assertEquals(42.1, getNetwork().getGenerator(GENERATOR_ID_3).getTargetP(), 0.01D);
+        assertEquals(125.0, getNetwork().getGenerator(GENERATOR_ID_4).getTargetP(), 0.01D);
+        assertEquals(273.27, getNetwork().getGenerator(GENERATOR_ID_5).getTargetP(), 0.01D);
+        assertEquals(150, getNetwork().getGenerator(GENERATOR_ID_6).getTargetP(), 0.01D);
+        assertEquals(225, getNetwork().getGenerator(GENERATOR_ID_7).getTargetP(), 0.01D);
+        assertEquals(116.66, getNetwork().getGenerator(GENERATOR_ID_8).getTargetP(), 0.01D);
+        assertEquals(233.33, getNetwork().getGenerator(GENERATOR_ID_9).getTargetP(), 0.01D);
+        assertEquals(116.66, getNetwork().getGenerator(GENERATOR_ID_10).getTargetP(), 0.01D);
     }
 
     @Override

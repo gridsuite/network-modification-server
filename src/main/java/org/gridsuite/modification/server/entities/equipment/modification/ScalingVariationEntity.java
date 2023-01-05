@@ -8,6 +8,7 @@
 package org.gridsuite.modification.server.entities.equipment.modification;
 
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -25,6 +26,7 @@ import java.util.stream.Collectors;
 @Getter
 @Setter
 @Entity
+@EqualsAndHashCode
 @Table(name = "ScalingVariation")
 public class ScalingVariationEntity {
     @Id

@@ -39,7 +39,7 @@ import static org.gridsuite.modification.server.utils.ScalingUtils.createReport;
 public abstract class AbstractScaling extends AbstractModification {
     protected final ScalingInfos scalingInfos;
 
-    public AbstractScaling(ScalingInfos scalingInfos) {
+    protected AbstractScaling(ScalingInfos scalingInfos) {
         this.scalingInfos = scalingInfos;
     }
 
@@ -47,9 +47,7 @@ public abstract class AbstractScaling extends AbstractModification {
     public void apply(Network network, Reporter subReporter) {
         var variationsInfos = scalingInfos.getVariations();
         List<String> filterIds = new ArrayList<>();
-        variationsInfos.forEach(variation -> {
-            filterIds.addAll(variation.getFilters().stream().map(FilterInfos::getId).collect(Collectors.toList()));
-        });
+        variationsInfos.forEach(variation -> filterIds.addAll(variation.getFilters().stream().map(FilterInfos::getId).collect(Collectors.toList())));
 
         String workingVariantId = network.getVariantManager().getWorkingVariantId();
         UUID uuid = ((NetworkImpl) network).getUuid();
@@ -76,12 +74,12 @@ public abstract class AbstractScaling extends AbstractModification {
 
         var wrongFiltersId = filterWithWrongIds.stream().map(f -> f.getFilterId().toString()).collect(Collectors.toList());
 
-        variationsInfos.forEach(variation -> {
+        variationsInfos.forEach(variation ->
             variation.getFilters().forEach(filter -> {
                 FilterEquipments filterEquipments = exportFilters.stream()
-                        .filter(f -> Objects.equals(f.getFilterId().toString(), filter.getId()))
-                        .findAny()
-                        .orElse(null);
+                    .filter(f -> Objects.equals(f.getFilterId().toString(), filter.getId()))
+                    .findAny()
+                    .orElse(null);
 
                 if (wrongFiltersId.contains(filter.getId()) || filterEquipments == null) {
                     return;
@@ -89,8 +87,7 @@ public abstract class AbstractScaling extends AbstractModification {
 
                 List<IdentifiableAttributes> identifiableAttributes = filterEquipments.getIdentifiableAttributes();
                 applyVariation(network, identifiableAttributes, variation);
-            });
-        });
+            }));
 
         createReport(subReporter, getModificationType().name(), "new scaling created", TypedValue.INFO_SEVERITY);
     }

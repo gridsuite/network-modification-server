@@ -12,6 +12,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.powsybl.iidm.network.EnergySource;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
@@ -20,6 +21,7 @@ import lombok.experimental.SuperBuilder;
  * @author Jacques Borsenberger <jacques.borsenberger at rte-france.com>
  */
 
+@EqualsAndHashCode(callSuper = true)
 @SuperBuilder
 @NoArgsConstructor
 @Data

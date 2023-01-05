@@ -9,6 +9,7 @@ package org.gridsuite.modification.server.entities.equipment.modification;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -27,6 +28,7 @@ import javax.validation.constraints.NotNull;
 @Getter
 @Setter
 @Builder
+@EqualsAndHashCode
 @MappedSuperclass
 public class ScalingEntity extends ModificationEntity {
 

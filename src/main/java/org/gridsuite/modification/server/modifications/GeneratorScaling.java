@@ -38,6 +38,7 @@ public class GeneratorScaling extends AbstractScaling {
         this.isIterative = generatorScalableInfos.isIterative();
     }
 
+    @Override
     public void applyStackingUpVariation(Network network,
                                          List<IdentifiableAttributes> identifiableAttributes,
                                          ScalingVariationInfos generatorScalingVariation) {
@@ -47,6 +48,7 @@ public class GeneratorScaling extends AbstractScaling {
         stackingUpScalable.scale(network, getAsked(generatorScalingVariation, sum));
     }
 
+    @Override
     public void applyVentilationVariation(Network network,
                                           List<IdentifiableAttributes> identifiableAttributes,
                                           ScalingVariationInfos generatorScalingVariation) {
@@ -69,9 +71,10 @@ public class GeneratorScaling extends AbstractScaling {
         ventilationScalable.scale(network, getAsked(generatorScalingVariation, sum));
     }
 
+    @Override
     public void applyRegularDistributionVariation(Network network,
-                                                   List<IdentifiableAttributes> identifiableAttributes,
-                                                   ScalingVariationInfos generatorScalingVariation) {
+                                                  List<IdentifiableAttributes> identifiableAttributes,
+                                                  ScalingVariationInfos generatorScalingVariation) {
         List<Generator> generators = identifiableAttributes
                 .stream()
                 .map(attribute -> network.getGenerator(attribute.getId()))
@@ -85,13 +88,18 @@ public class GeneratorScaling extends AbstractScaling {
                     return getScalable(generator.getId());
                 }).collect(Collectors.toList());
 
-        List<Float> percentages = new ArrayList<>(Collections.nCopies(scalables.size(), (float) (100 / scalables.size())));
+        if (scalables.size() > 0) {
+            List<Float> percentages = new ArrayList<>(Collections.nCopies(scalables.size(), (float) (100 / scalables.size())));
 
-        Scalable regularDistributionScalable = Scalable.proportional(percentages, scalables, isIterative);
-        regularDistributionScalable.scale(network,
-                getAsked(generatorScalingVariation, sum));
+            Scalable regularDistributionScalable = Scalable.proportional(percentages, scalables, isIterative);
+            regularDistributionScalable.scale(network,
+                    getAsked(generatorScalingVariation, sum));
+        } else {
+            throw new NetworkModificationException(NetworkModificationException.Type.GENERATOR_SCALING_ERROR, "equipments cannot be found");
+        }
     }
 
+    @Override
     public void applyProportionalToPmaxVariation(Network network,
                                                   List<IdentifiableAttributes> identifiableAttributes,
                                                   ScalingVariationInfos generatorScalingVariation) {
