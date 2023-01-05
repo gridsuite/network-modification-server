@@ -15,9 +15,7 @@ import com.powsybl.iidm.network.extensions.BusbarSectionPosition;
 import com.powsybl.iidm.network.extensions.BusbarSectionPositionAdder;
 import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.BusbarConnectionCreationInfos;
-import org.gridsuite.modification.server.dto.BusbarSectionCreationInfos;
-import org.gridsuite.modification.server.dto.VoltageLevelCreationInfos;
+import org.gridsuite.modification.server.dto.*;
 
 import java.util.List;
 import java.util.Map;
@@ -32,11 +30,18 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
 // TODO remove public qualifier for all methods
 public final class ModificationUtils {
 
+    public static final String DISCONNECTOR = "disconnector_";
+    public static final String BREAKER = "breaker_";
+
     private ModificationUtils() {
     }
 
     public static ModificationUtils getInstance() {
         return new ModificationUtils();
+    }
+
+    public Double zeroIfNull(Double d) {
+        return d != null ? d : 0.0;
     }
 
     VoltageLevel getVoltageLevel(Network network, String voltageLevelId) {
@@ -47,32 +52,40 @@ public final class ModificationUtils {
         return voltageLevel;
     }
 
+    Line getLine(Network network, String lineId) {
+        Line line = network.getLine(lineId);
+        if (line == null) {
+            throw new NetworkModificationException(LINE_NOT_FOUND, lineId);
+        }
+        return line;
+    }
+
     public int getPosition(String busOrBusbarSectionId, Network network, VoltageLevel voltageLevel) {
         var position = 0;
         var bbs = network.getBusbarSection(busOrBusbarSectionId);
+        if (bbs == null) {
+            throw new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, busOrBusbarSectionId);
+        }
 
-        if (bbs != null) {
-            var extensionExist = bbs.getExtension(BusbarSectionPosition.class) != null;
-            if (!extensionExist) {
-                return position;
-            }
+        var extensionExist = bbs.getExtension(BusbarSectionPosition.class) != null;
+        if (!extensionExist) {
+            return position;
+        }
 
-            if (voltageLevel.getConnectableStream().anyMatch(c -> !(c instanceof BusbarSection))) {
-                var rightRange = TopologyModificationUtils.getUnusedOrderPositionsAfter(bbs);
-                if (rightRange.isPresent()) {
-                    position = rightRange.get().getMinimum();
+        if (voltageLevel.getConnectableStream().anyMatch(c -> !(c instanceof BusbarSection))) {
+            var rightRange = TopologyModificationUtils.getUnusedOrderPositionsAfter(bbs);
+            if (rightRange.isPresent()) {
+                position = rightRange.get().getMinimum();
+            } else {
+                var leftRange = TopologyModificationUtils.getUnusedOrderPositionsBefore(bbs);
+                if (leftRange.isPresent()) {
+                    position = leftRange.get().getMaximum();
                 } else {
-                    var leftRange = TopologyModificationUtils.getUnusedOrderPositionsBefore(bbs);
-                    if (leftRange.isPresent()) {
-                        position = leftRange.get().getMaximum();
-                    } else {
-                        throw new NetworkModificationException(POSITION_ORDER_ERROR, "no available position");
-                    }
+                    throw new NetworkModificationException(POSITION_ORDER_ERROR, "no available position");
                 }
             }
-        } else {
-            throw new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "Bus bar section " + busOrBusbarSectionId + " not found");
         }
+
         return position;
     }
 
@@ -95,8 +108,8 @@ public final class ModificationUtils {
 
         // creating the disconnector
         int newNode = nodeBreakerView.getMaximumNodeIndex();
-        String disconnectorId = "disconnector_" + equipmentId + sideSuffix;
-        String disconnectorName = equipmentName != null ? "disconnector_" + equipmentName + sideSuffix : null;
+        String disconnectorId = DISCONNECTOR + equipmentId + sideSuffix;
+        String disconnectorName = equipmentName != null ? DISCONNECTOR + equipmentName + sideSuffix : null;
         nodeBreakerView.newSwitch()
             .setId(disconnectorId)
             .setName(disconnectorName)
@@ -109,8 +122,8 @@ public final class ModificationUtils {
             .add();
 
         // creating the breaker
-        String breakerId = "breaker_" + equipmentId + sideSuffix;
-        String breakerName = equipmentName != null ? "breaker_" + equipmentName + sideSuffix : null;
+        String breakerId = BREAKER + equipmentId + sideSuffix;
+        String breakerName = equipmentName != null ? BREAKER + equipmentName + sideSuffix : null;
         nodeBreakerView.newSwitch()
             .setId(breakerId)
             .setName(breakerName)
@@ -153,7 +166,7 @@ public final class ModificationUtils {
         if (switchKind == SwitchKind.DISCONNECTOR) {
             voltageLevel.getNodeBreakerView().newDisconnector()
                 .setKind(switchKind)
-                .setId("disconnector_" + infix + cnxRank++)
+                .setId(DISCONNECTOR + infix + cnxRank++)
                 .setNode1(rank1)
                 .setNode2(rank2)
                 .setFictitious(false)
@@ -165,7 +178,7 @@ public final class ModificationUtils {
             int postBreakerRank = nodeRank++;
             voltageLevel.getNodeBreakerView().newDisconnector()
                 .setKind(SwitchKind.DISCONNECTOR)
-                .setId("disconnector_" + infix + cnxRank++)
+                .setId(DISCONNECTOR + infix + cnxRank++)
                 .setNode1(rank1)
                 .setNode2(preBreakerRank)
                 .setFictitious(false)
@@ -175,7 +188,7 @@ public final class ModificationUtils {
 
             voltageLevel.getNodeBreakerView().newBreaker()
                 .setKind(switchKind)
-                .setId("breaker_" + infix + cnxRank++)
+                .setId(BREAKER + infix + cnxRank++)
                 .setNode1(preBreakerRank)
                 .setNode2(postBreakerRank)
                 .setFictitious(false)
@@ -185,7 +198,7 @@ public final class ModificationUtils {
 
             voltageLevel.getNodeBreakerView().newDisconnector()
                 .setKind(SwitchKind.DISCONNECTOR)
-                .setId("disconnector_" + infix + cnxRank++)
+                .setId(DISCONNECTOR + infix + cnxRank++)
                 .setNode1(postBreakerRank)
                 .setNode2(rank2)
                 .setFictitious(false)
@@ -199,8 +212,8 @@ public final class ModificationUtils {
         return Pair.of(nodeRank, cnxRank);
     }
 
-    public void createVoltageLevelAction(VoltageLevelCreationInfos voltageLevelCreationInfos,
-                                         Reporter subReporter, Network network) {
+    void createVoltageLevel(VoltageLevelCreationInfos voltageLevelCreationInfos,
+                                   Reporter subReporter, Network network) {
         String substationId = voltageLevelCreationInfos.getSubstationId();
         Substation substation = network.getSubstation(substationId);
         if (substation == null) {
@@ -247,5 +260,68 @@ public final class ModificationUtils {
             .withSeverity(TypedValue.INFO_SEVERITY)
             .build());
     }
+
+    public LineAdder createLineAdder(Network network, VoltageLevel voltageLevel1, VoltageLevel voltageLevel2, LineCreationInfos lineCreationInfos, boolean withSwitch1, boolean withSwitch2) {
+
+        // common settings
+        LineAdder lineAdder = network.newLine()
+                .setId(lineCreationInfos.getEquipmentId())
+                .setName(lineCreationInfos.getEquipmentName())
+                .setVoltageLevel1(lineCreationInfos.getVoltageLevelId1())
+                .setVoltageLevel2(lineCreationInfos.getVoltageLevelId2())
+                .setR(lineCreationInfos.getSeriesResistance())
+                .setX(lineCreationInfos.getSeriesReactance())
+                .setG1(lineCreationInfos.getShuntConductance1() != null ? lineCreationInfos.getShuntConductance1() : 0.0)
+                .setB1(lineCreationInfos.getShuntSusceptance1() != null ? lineCreationInfos.getShuntSusceptance1() : 0.0)
+                .setG2(lineCreationInfos.getShuntConductance2() != null ? lineCreationInfos.getShuntConductance2() : 0.0)
+                .setB2(lineCreationInfos.getShuntSusceptance2() != null ? lineCreationInfos.getShuntSusceptance2() : 0.0);
+
+        // lineAdder completion by topology
+        setBranchAdderNodeOrBus(lineAdder, voltageLevel1, lineCreationInfos, Branch.Side.ONE, withSwitch1);
+        setBranchAdderNodeOrBus(lineAdder, voltageLevel2, lineCreationInfos, Branch.Side.TWO, withSwitch2);
+
+        return lineAdder;
+    }
+
+    private void setBranchAdderNodeOrBus(BranchAdder<?> branchAdder, VoltageLevel voltageLevel, BranchCreationInfos branchCreationInfos,
+                                         Branch.Side side, boolean withSwitch) {
+        String busOrBusbarSectionId = (side == Branch.Side.ONE) ? branchCreationInfos.getBusOrBusbarSectionId1() : branchCreationInfos.getBusOrBusbarSectionId2();
+        if (voltageLevel.getTopologyKind() == TopologyKind.BUS_BREAKER) {
+            setBranchAdderBusBreaker(branchAdder, voltageLevel, side, busOrBusbarSectionId);
+        } else if (withSwitch) { // NODE_BREAKER
+            setBranchAdderNodeBreaker(branchAdder, voltageLevel, branchCreationInfos, side, busOrBusbarSectionId);
+        }
+    }
+
+    private void setBranchAdderBusBreaker(BranchAdder<?> branchAdder, VoltageLevel voltageLevel, Branch.Side side, String busId) {
+        Bus bus = ModificationUtils.getInstance().getBusBreakerBus(voltageLevel, busId);
+
+        // complete the lineAdder
+        if (side == Branch.Side.ONE) {
+            branchAdder.setBus1(bus.getId()).setConnectableBus1(bus.getId());
+        } else {
+            branchAdder.setBus2(bus.getId()).setConnectableBus2(bus.getId());
+        }
+    }
+
+    private void setBranchAdderNodeBreaker(BranchAdder<?> branchAdder, VoltageLevel voltageLevel,
+                                           BranchCreationInfos branchCreationInfos, Branch.Side side,
+                                           String currentBusBarSectionId) {
+        // create cell switches
+        String sideSuffix = side != null ? "_" + side.name() : "";
+        int nodeNum = ModificationUtils.getInstance().createNodeBreakerCellSwitches(voltageLevel,
+            currentBusBarSectionId,
+            branchCreationInfos.getEquipmentId(),
+            branchCreationInfos.getEquipmentName(),
+            sideSuffix);
+
+        // complete the lineAdder
+        if (side == Branch.Side.ONE) {
+            branchAdder.setNode1(nodeNum);
+        } else {
+            branchAdder.setNode2(nodeNum);
+        }
+    }
+
 }
 

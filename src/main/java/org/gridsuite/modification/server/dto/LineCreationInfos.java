@@ -6,12 +6,19 @@
  */
 package org.gridsuite.modification.server.dto;
 
+import com.powsybl.commons.reporter.Reporter;
+import com.powsybl.commons.reporter.ReporterModel;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
+import org.gridsuite.modification.server.ModificationType;
+import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.entities.equipment.creation.LineCreationEntity;
+import org.gridsuite.modification.server.modifications.AbstractModification;
+import org.gridsuite.modification.server.modifications.LineCreation;
 
 /**
  * @author Sylvain Bouzols <sylvain.bouzols at rte-france.com>
@@ -36,4 +43,24 @@ public class LineCreationInfos extends BranchCreationInfos {
 
     @Schema(description = "Shunt susceptance Side 2")
     private Double shuntSusceptance2;
+
+    @Override
+    public LineCreationEntity toEntity() {
+        return new LineCreationEntity(this);
+    }
+
+    @Override
+    public AbstractModification toModification() {
+        return new LineCreation(this);
+    }
+
+    @Override
+    public NetworkModificationException.Type getErrorType() {
+        return NetworkModificationException.Type.CREATE_LINE_ERROR;
+    }
+
+    @Override
+    public Reporter createSubReporter(ReporterModel reporter) {
+        return reporter.createSubReporter(ModificationType.LINE_CREATION.name(), "Creation of line " + getEquipmentId());
+    }
 }

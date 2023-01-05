@@ -25,10 +25,7 @@ import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationGroupEntity;
-import org.gridsuite.modification.server.entities.equipment.creation.BusbarConnectionCreationEmbeddable;
-import org.gridsuite.modification.server.entities.equipment.creation.BusbarSectionCreationEmbeddable;
 import org.gridsuite.modification.server.entities.equipment.creation.TapChangerStepCreationEmbeddable;
-import org.gridsuite.modification.server.entities.equipment.modification.LineSplitWithVoltageLevelEntity;
 import org.gridsuite.modification.server.repositories.ModificationGroupRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.NetworkModificationService;
@@ -82,7 +79,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @RunWith(SpringRunner.class)
 @AutoConfigureMockMvc
-@SpringBootTest(properties = {"spring.data.elasticsearch.enabled=true"})
+@SpringBootTest(properties = {"test.elasticsearch.enabled=true"})
 @ContextHierarchy({@ContextConfiguration(classes = {NetworkModificationApplication.class, TestChannelBinderConfiguration.class})})
 public class BuildTest {
 
@@ -215,16 +212,52 @@ public class BuildTest {
 
     @Test
     public void runBuildForLineSplits() throws  Exception {
-        List<ModificationEntity> entities1 = new ArrayList<>();
-        entities1.add(modificationRepository.createLineEntity("newLine", "newLine", 1., 2., 3., 4., 5., 6., "v1", "1.1", "v2", "1B", null, null, "cn11", ConnectablePosition.Direction.TOP, "cn22", ConnectablePosition.Direction.TOP));
-        entities1.add(LineSplitWithVoltageLevelEntity.toEntity("line3", 0.32, null, "vl1", "sjb1", "un", "One", "deux", "Two"));
+        List<ModificationEntity> entities1 = List.of(
+                LineCreationInfos.builder()
+                        .type(ModificationType.LINE_CREATION)
+                        .equipmentId("newLine")
+                        .equipmentName("newLine")
+                        .seriesResistance(1.0)
+                        .seriesReactance(2.0)
+                        .shuntConductance1(3.0)
+                        .shuntSusceptance1(4.0)
+                        .shuntConductance2(5.0)
+                        .shuntSusceptance2(6.0)
+                        .voltageLevelId1("v1")
+                        .busOrBusbarSectionId1("1.1")
+                        .voltageLevelId2("v2")
+                        .busOrBusbarSectionId2("1B")
+                        .connectionName1("cn11")
+                        .connectionDirection1(ConnectablePosition.Direction.TOP)
+                        .connectionName2("cn22")
+                        .connectionDirection2(ConnectablePosition.Direction.TOP)
+                        .build().toEntity(),
+                LineSplitWithVoltageLevelInfos.builder()
+                        .type(ModificationType.LINE_SPLIT_WITH_VOLTAGE_LEVEL)
+                        .lineToSplitId("line3")
+                        .percent(0.32)
+                        .mayNewVoltageLevelInfos(null)
+                        .existingVoltageLevelId("vl1")
+                        .bbsOrBusId("sjb1")
+                        .newLine1Id("un")
+                        .newLine1Name("One")
+                        .newLine2Id("deux")
+                        .newLine2Name("Two")
+                        .build().toEntity()
+        );
         modificationRepository.saveModifications(TEST_GROUP_ID, entities1);
 
         List<ModificationEntity> entities2 = new ArrayList<>();
-        entities2.add(modificationRepository.createVoltageLevelEntity("vl9", "vl9", 225, "s1",
-            List.of(new BusbarSectionCreationEmbeddable("1.1", "1.1", 1, 1),
-                new BusbarSectionCreationEmbeddable("1.2", "1.2", 1, 2)),
-            List.of(new BusbarConnectionCreationEmbeddable("1.1", "1.2", SwitchKind.BREAKER))));
+        entities2.add(VoltageLevelCreationInfos.builder()
+                .type(ModificationType.VOLTAGE_LEVEL_CREATION)
+                .equipmentId("vl9")
+                .equipmentName("vl9")
+                .nominalVoltage(225)
+                .substationId("s1")
+                .busbarSections(List.of(new BusbarSectionCreationInfos("1.1", "1.1", 1, 1),
+                 new BusbarSectionCreationInfos("1.2", "1.2", 1, 2)))
+                .busbarConnections(List.of(new BusbarConnectionCreationInfos("1.1", "1.2", SwitchKind.BREAKER)))
+                .build().toEntity());
         modificationRepository.saveModifications(TEST_GROUP_ID_2, entities2);
 
         String uriString = "/v1/networks/{networkUuid}/build?receiver=me";
@@ -324,7 +357,7 @@ public class BuildTest {
 
         List<ModificationEntity> entities2 = new ArrayList<>();
         entities2.add(modificationRepository.createGeneratorEntity(NEW_GENERATOR_ID, NEW_GENERATOR_ID, EnergySource.HYDRO, "v2", "1A", 0., 500., 1., 100., 50., true, 225., 8., 20., 50., true, 9F, 35., 25., "v2load", "LOAD", "v2", 25., false, List.of(), "Top", ConnectablePosition.Direction.TOP, 0));
-        entities2.add(modificationRepository.createLineEntity("newLine", "newLine", 1., 2., 3., 4., 5., 6., "v1", "1.1", "v2", "1B", null, null, "cn101", ConnectablePosition.Direction.TOP, "cn102", ConnectablePosition.Direction.TOP));
+        entities2.add(LineCreationInfos.builder().type(ModificationType.LINE_CREATION).equipmentId("newLine").equipmentName("newLine").seriesResistance(1.0).seriesReactance(2.0).shuntConductance1(3.0).shuntSusceptance1(4.0).shuntConductance2(5.0).shuntSusceptance2(6.0).voltageLevelId1("v1").busOrBusbarSectionId1("1.1").voltageLevelId2("v2").busOrBusbarSectionId2("1B").currentLimits1(null).currentLimits2(null).connectionName1("cn101").connectionDirection1(ConnectablePosition.Direction.TOP).connectionName2("cn102").connectionDirection2(ConnectablePosition.Direction.TOP).build().toEntity());
 
         List<TapChangerStepCreationEmbeddable> tapChangerStepCreationEmbeddables = new ArrayList<>();
         tapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.PHASE, 1, 1, 0, 0, 0, 0, 0.));
@@ -335,15 +368,22 @@ public class BuildTest {
         tapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.RATIO, 7, 1, 0, 0, 0, 0, null));
         tapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.RATIO, 8, 1, 0, 0, 0, 0, null));
 
-        entities2.add(modificationRepository.createTwoWindingsTransformerEntity("new2wt", "new2wt", 1., 2., 3., 4., 5., 6., 1., "v1", "1.1", "v2", "1A", 3., 2., "cn201", ConnectablePosition.Direction.TOP, "cn202", ConnectablePosition.Direction.TOP, 1, 2, false, null, null, null, null, PhaseTapChanger.RegulationMode.CURRENT_LIMITER, null, 5, 6, true, 1., "v2load", "v2", "LOAD", true, 50., tapChangerStepCreationEmbeddables));
+        entities2.add(modificationRepository.createTwoWindingsTransformerEntity("new2wt", "new2wt", 1., 2., 3., 4., 5., 6., 1., "v1", "1.1", "v2", "1A", 3., 2., "cn201", ConnectablePosition.Direction.TOP, "cn202", ConnectablePosition.Direction.TOP, 1, 2, false, null, null, null, null, PhaseTapChanger.RegulationMode.CURRENT_LIMITER, null, 5, 6, true, 1., "v2load", "v2", "LOAD", true, 50., tapChangerStepCreationEmbeddables, 0, 1));
         entities2.add(modificationRepository.createEquipmentDeletionEntity("v2shunt", "SHUNT_COMPENSATOR"));
         entities2.add(modificationRepository.createGroovyScriptModificationEntity("network.getGenerator('idGenerator').targetP=55\n"));
         entities2.add(modificationRepository.createBranchStatusModificationEntity("line2", BranchStatusModificationInfos.ActionType.TRIP));
-        entities2.add(modificationRepository.createVoltageLevelEntity("vl9", "vl9", 225, "s1",
-            List.of(new BusbarSectionCreationEmbeddable("1.1", "1.1", 1, 1),
-                new BusbarSectionCreationEmbeddable("1.2", "1.2", 1, 2)),
-            List.of(new BusbarConnectionCreationEmbeddable("1.1", "1.2", SwitchKind.BREAKER))));
-        entities2.add(modificationRepository.createShuntCompensatorEntity(ShuntCompensatorCreationInfos.builder()
+        entities2.add(VoltageLevelCreationInfos.builder()
+                .type(ModificationType.VOLTAGE_LEVEL_CREATION)
+                .equipmentId("vl9")
+                .equipmentName("vl9")
+                .nominalVoltage(225)
+                .substationId("s1")
+                .busbarSections(List.of(new BusbarSectionCreationInfos("1.1", "1.1", 1, 1),
+                 new BusbarSectionCreationInfos("1.2", "1.2", 1, 2)))
+                .busbarConnections(List.of(new BusbarConnectionCreationInfos("1.1", "1.2", SwitchKind.BREAKER)))
+                .build().toEntity());
+        entities2.add(ShuntCompensatorCreationInfos.builder()
+            .type(ModificationType.SHUNT_COMPENSATOR_CREATION)
             .equipmentId("shunt9")
             .equipmentName("shunt9")
             .voltageLevelId("v2")
@@ -354,11 +394,14 @@ public class BuildTest {
             .isIdenticalSection(true)
             .connectionDirection(ConnectablePosition.Direction.UNDEFINED)
             .connectionName("shunt9")
-            .build()));
+            .build().toEntity());
         entities2.add(modificationRepository.createLoadModificationEntity("newLoad",
             new AttributeModification<>("newLoadName", OperationType.SET), null, null, null, null, null));
-        entities2.add(modificationRepository.createGeneratorModificationEntity(GeneratorModificationInfos.builder().equipmentId("newGenerator")
-            .equipmentName(new AttributeModification<>("newGeneratorName", OperationType.SET)).build()));
+        entities2.add(modificationRepository.createGeneratorModificationEntity(GeneratorModificationInfos.builder()
+                .equipmentId("newGenerator")
+                .equipmentName(new AttributeModification<>("newGeneratorName", OperationType.SET))
+                .voltageRegulationType(new AttributeModification<>(VoltageRegulationType.LOCAL, OperationType.SET))
+                .reactiveCapabilityCurve(new AttributeModification<>(false, OperationType.SET)).build()));
 
         modificationRepository.saveModifications(TEST_GROUP_ID, entities1);
         modificationRepository.saveModifications(TEST_GROUP_ID_2, entities2);

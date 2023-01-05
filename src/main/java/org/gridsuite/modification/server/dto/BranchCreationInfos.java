@@ -60,4 +60,10 @@ public class BranchCreationInfos extends EquipmentCreationInfos {
 
     @Schema(description = "Connection Direction 2")
     private ConnectablePosition.Direction connectionDirection2;
+
+    @Schema(description = "Connection position 1")
+    private Integer connectionPosition1;
+
+    @Schema(description = "Connection position 2")
+    private Integer connectionPosition2;
 }

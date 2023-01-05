@@ -6,20 +6,19 @@
  */
 package org.gridsuite.modification.server.entities;
 
-import javax.persistence.*;
-
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
-import java.util.Collections;
-import java.util.Set;
-import java.util.UUID;
-
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.ModificationInfos;
+
+import javax.persistence.*;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.util.Collections;
+import java.util.Set;
+import java.util.UUID;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -49,6 +48,15 @@ public class ModificationEntity {
     @Setter
     private ModificationGroupEntity group;
 
+    protected ModificationEntity(ModificationInfos modificationInfos) {
+        if (modificationInfos == null) {
+            throw new NullPointerException("Impossible to create entity from null DTO");
+        }
+        this.date = ZonedDateTime.now(ZoneOffset.UTC);
+        this.type = modificationInfos.getType().name();
+    }
+
+    //TODO : remove
     protected ModificationEntity(ModificationType type) {
         this.id = null;
         this.date = ZonedDateTime.now(ZoneOffset.UTC);
@@ -70,6 +78,9 @@ public class ModificationEntity {
 
     public void update(ModificationInfos modificationInfos) {
         // Basic attributes are immutable in the database
+        if (modificationInfos == null) {
+            throw new NullPointerException("Impossible to update entity from null DTO");
+        }
     }
 
     //From https://vladmihalcea.com/the-best-way-to-map-a-onetomany-association-with-jpa-and-hibernate/
