@@ -7,24 +7,24 @@
 
 package org.gridsuite.modification.server.entities.equipment.modification;
 
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.VariationType;
 import org.gridsuite.modification.server.entities.ModificationEntity;
+import org.hibernate.Hibernate;
 
 import javax.persistence.Column;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.MappedSuperclass;
 import javax.validation.constraints.NotNull;
+import java.util.Objects;
 
 @NoArgsConstructor
 @Getter
 @Setter
-@EqualsAndHashCode
 @MappedSuperclass
 public class ScalingEntity extends ModificationEntity {
 
@@ -34,5 +34,18 @@ public class ScalingEntity extends ModificationEntity {
 
     public ScalingEntity(@NotNull ModificationType modificationType) {
         super(modificationType);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
+        ScalingEntity that = (ScalingEntity) o;
+        return getId() != null && Objects.equals(getId(), that.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
     }
 }

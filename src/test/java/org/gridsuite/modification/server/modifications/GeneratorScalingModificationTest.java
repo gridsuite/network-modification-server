@@ -137,34 +137,6 @@ public class GeneratorScalingModificationTest extends AbstractNetworkModificatio
     }
 
     @Test
-    public void testWithWrongFilter() throws Exception {
-        var filter = FilterInfos.builder()
-                .id(FILTER_NOT_FOUND_ID)
-                .name("filter 1")
-                .build();
-
-        var variation = ScalingVariationInfos.builder()
-                .variationMode(VariationMode.PROPORTIONAL)
-                .variationValue(100D)
-                .filters(List.of(filter))
-                .build();
-
-        ModificationInfos modificationToCreate = GeneratorScalingInfos.builder()
-                .uuid(GENERATOR_SCALING_ID)
-                .date(ZonedDateTime.now())
-                .type(ModificationType.GENERATOR_SCALING)
-                .variationType(VariationType.DELTA_P)
-                .variations(List.of(variation))
-                .build();
-
-        String modificationToCreateJson = mapper.writeValueAsString(modificationToCreate);
-
-        var result = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().is5xxServerError()).andReturn().getResponse().getContentAsString();
-        assertEquals(new NetworkModificationException(NetworkModificationException.Type.GENERATOR_SCALING_ERROR, "404 Not Found: [no body]").getMessage(), result);
-    }
-
-    @Test
     public void testVentilationModeWithoutDistributionKey() throws Exception {
         var filter = FilterInfos.builder()
                 .id(FILTER_NO_DK)

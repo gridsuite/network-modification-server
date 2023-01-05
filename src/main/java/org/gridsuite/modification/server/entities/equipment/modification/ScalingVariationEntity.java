@@ -7,16 +7,17 @@
 
 package org.gridsuite.modification.server.entities.equipment.modification;
 
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.gridsuite.modification.server.VariationMode;
 import org.gridsuite.modification.server.dto.FilterInfos;
 import org.gridsuite.modification.server.dto.ScalingVariationInfos;
+import org.hibernate.Hibernate;
 
 import javax.persistence.*;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -24,7 +25,6 @@ import java.util.stream.Collectors;
 @Getter
 @Setter
 @Entity
-@EqualsAndHashCode
 @Table(name = "ScalingVariation")
 public class ScalingVariationEntity {
     @Id
@@ -69,5 +69,18 @@ public class ScalingVariationEntity {
                         .map(filter -> new FilterInfos(filter.getFilterId().toString(), filter.getName()))
                         .collect(Collectors.toList()))
                 .build();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
+        ScalingVariationEntity that = (ScalingVariationEntity) o;
+        return id != null && Objects.equals(id, that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
     }
 }
