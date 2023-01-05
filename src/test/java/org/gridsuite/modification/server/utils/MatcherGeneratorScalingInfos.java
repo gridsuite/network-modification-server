@@ -7,7 +7,7 @@ import org.gridsuite.modification.server.dto.GeneratorScalingVariation;
 import java.util.List;
 import java.util.Objects;
 
-public class MatcherGeneratorScalingInfos extends MatcherModificationInfos<GeneratorScalingInfos>{
+public class MatcherGeneratorScalingInfos extends MatcherModificationInfos<GeneratorScalingInfos> {
     protected MatcherGeneratorScalingInfos(GeneratorScalingInfos ref) {
         super(ref);
     }

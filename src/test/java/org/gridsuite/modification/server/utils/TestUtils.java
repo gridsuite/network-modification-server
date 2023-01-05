@@ -7,13 +7,11 @@
 
 package org.gridsuite.modification.server.utils;
 
-import com.google.common.io.ByteStreams;
 import com.powsybl.commons.exceptions.UncheckedInterruptedException;
 import okhttp3.mockwebserver.MockWebServer;
 import org.springframework.cloud.stream.binder.test.OutputDestination;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;

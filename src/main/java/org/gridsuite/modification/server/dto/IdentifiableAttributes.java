@@ -9,14 +9,16 @@ package org.gridsuite.modification.server.dto;
 import com.powsybl.iidm.network.IdentifiableType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
-
-/**
- * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
- */
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
+@Setter
+@NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @Schema(description = "Identifiable attributes")
 public class IdentifiableAttributes {
 

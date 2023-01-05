@@ -8,10 +8,8 @@ import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.VariationType;
 import org.gridsuite.modification.server.dto.GeneratorScalingInfos;
 import org.gridsuite.modification.server.dto.GeneratorScalingVariation;
-import org.gridsuite.modification.server.dto.LineSplitWithVoltageLevelInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.creation.VoltageLevelCreationEntity;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
