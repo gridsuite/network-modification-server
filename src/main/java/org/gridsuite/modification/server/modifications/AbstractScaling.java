@@ -89,13 +89,14 @@ public abstract class AbstractScaling extends AbstractModification {
                 }
 
                 List<IdentifiableAttributes> identifiableAttributes = filterEquipments.getIdentifiableAttributes();
-                applyVariation(network, identifiableAttributes, variation);
+                applyVariation(network, subReporter, identifiableAttributes, variation);
             }));
 
         createReport(subReporter, getModificationType().name(), "new scaling created", TypedValue.INFO_SEVERITY);
     }
 
     private void applyVariation(Network network,
+                                Reporter subReporter,
                                 List<IdentifiableAttributes> identifiableAttributes,
                                 ScalingVariationInfos variation) {
         switch (variation.getVariationMode()) {
@@ -109,7 +110,7 @@ public abstract class AbstractScaling extends AbstractModification {
                 applyRegularDistributionVariation(network, identifiableAttributes, variation);
                 break;
             case VENTILATION:
-                applyVentilationVariation(network, identifiableAttributes, variation);
+                applyVentilationVariation(network, subReporter, identifiableAttributes, variation);
                 break;
             case STACKING_UP:
                 applyStackingUpVariation(network, identifiableAttributes, variation);
@@ -124,6 +125,7 @@ public abstract class AbstractScaling extends AbstractModification {
     }
 
     public void applyVentilationVariation(Network network,
+                                           Reporter subReporter,
                                            List<IdentifiableAttributes> identifiableAttributes,
                                            ScalingVariationInfos generatorScalingVariation) {
         throw new NetworkModificationException(getExceptionType(), ERROR_MESSAGE);

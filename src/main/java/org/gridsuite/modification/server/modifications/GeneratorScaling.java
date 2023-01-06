@@ -7,15 +7,18 @@
 
 package org.gridsuite.modification.server.modifications;
 
+import com.powsybl.commons.reporter.Reporter;
+import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.iidm.modification.scalable.Scalable;
 import com.powsybl.iidm.network.Generator;
 import com.powsybl.iidm.network.Network;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.VariationType;
-import org.gridsuite.modification.server.dto.ScalingVariationInfos;
 import org.gridsuite.modification.server.dto.GeneratorScalingInfos;
 import org.gridsuite.modification.server.dto.IdentifiableAttributes;
+import org.gridsuite.modification.server.dto.ScalingVariationInfos;
+import org.gridsuite.modification.server.utils.ScalingUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -25,6 +28,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
+
+import static org.gridsuite.modification.server.NetworkModificationException.Type.GENERATOR_SCALING_ERROR;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
@@ -50,6 +55,7 @@ public class GeneratorScaling extends AbstractScaling {
 
     @Override
     public void applyVentilationVariation(Network network,
+                                          Reporter subReporter,
                                           List<IdentifiableAttributes> identifiableAttributes,
                                           ScalingVariationInfos generatorScalingVariation) {
         AtomicReference<Double> sum = new AtomicReference<>(0D);
@@ -60,7 +66,9 @@ public class GeneratorScaling extends AbstractScaling {
                 .mapToDouble(IdentifiableAttributes::getDistributionKey)
                 .sum();
         if (distributionKeys == 0) {
-            throw new NetworkModificationException(NetworkModificationException.Type.GENERATOR_SCALING_ERROR, "This mode is available only for equipment with distribution key");
+            String message = "This mode is available only for equipment with distribution key";
+            ScalingUtils.createReport(subReporter, GENERATOR_SCALING_ERROR.name(), message, TypedValue.ERROR_SEVERITY);
+            throw new NetworkModificationException(GENERATOR_SCALING_ERROR, message);
         }
 
         identifiableAttributes.forEach(equipment -> {
@@ -95,7 +103,7 @@ public class GeneratorScaling extends AbstractScaling {
             regularDistributionScalable.scale(network,
                     getAsked(generatorScalingVariation, sum));
         } else {
-            throw new NetworkModificationException(NetworkModificationException.Type.GENERATOR_SCALING_ERROR, "equipments cannot be found");
+            throw new NetworkModificationException(GENERATOR_SCALING_ERROR, "equipments cannot be found");
         }
     }
 
@@ -164,7 +172,7 @@ public class GeneratorScaling extends AbstractScaling {
 
     @Override
     public NetworkModificationException.Type getExceptionType() {
-        return NetworkModificationException.Type.GENERATOR_SCALING_ERROR;
+        return GENERATOR_SCALING_ERROR;
     }
 
     @Override
