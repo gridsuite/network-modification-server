@@ -86,7 +86,7 @@ public abstract class AbstractScaling extends AbstractModification {
             }
 
             List<IdentifiableAttributes> identifiableAttributes = filterEquipments.getIdentifiableAttributes();
-            applyVariation(network, identifiableAttributes, variation);
+            applyVariation(network, identifiableAttributes, variation, subReporter);
         }));
 
         createReport(subReporter, getModificationType().name(), "new scaling created", TypedValue.INFO_SEVERITY);
@@ -94,7 +94,7 @@ public abstract class AbstractScaling extends AbstractModification {
 
     private void applyVariation(Network network,
                                 List<IdentifiableAttributes> identifiableAttributes,
-                                ScalingVariationInfos variation) {
+                                ScalingVariationInfos variation, Reporter subReporter) {
         switch (variation.getVariationMode()) {
             case PROPORTIONAL:
                 applyProportionalVariation(network, identifiableAttributes, variation);
@@ -106,7 +106,7 @@ public abstract class AbstractScaling extends AbstractModification {
                 applyRegularDistributionVariation(network, identifiableAttributes, variation);
                 break;
             case VENTILATION:
-                applyVentilationVariation(network, identifiableAttributes, variation);
+                applyVentilationVariation(network, identifiableAttributes, variation, subReporter);
                 break;
             case STACKING_UP:
                 applyStackingUpVariation(network, identifiableAttributes, variation);
@@ -122,7 +122,7 @@ public abstract class AbstractScaling extends AbstractModification {
 
     public void applyVentilationVariation(Network network,
                                           List<IdentifiableAttributes> identifiableAttributes,
-                                          ScalingVariationInfos scalingVariationInfos) {
+                                          ScalingVariationInfos scalingVariationInfos, Reporter subReporter) {
         throw new NetworkModificationException(getExceptionType(), ERROR_MESSAGE);
     }
 

@@ -6,6 +6,8 @@
  */
 package org.gridsuite.modification.server.modifications;
 
+import com.powsybl.commons.reporter.Reporter;
+import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.iidm.modification.scalable.Scalable;
 import com.powsybl.iidm.network.Load;
 import com.powsybl.iidm.network.Network;
@@ -26,6 +28,8 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
+import static org.gridsuite.modification.server.NetworkModificationException.Type.LOAD_SCALING_ERROR;
+
 /**
  * @author bendaamerahm <ahmed.bendaamer at rte-france.com>
  */
@@ -39,7 +43,7 @@ public class LoadScaling extends AbstractScaling {
     @Override
     public void applyVentilationVariation(Network network,
                                           List<IdentifiableAttributes> identifiableAttributes,
-                                          ScalingVariationInfos scalingVariationInfos) {
+                                          ScalingVariationInfos scalingVariationInfos, Reporter subReporter) {
         AtomicReference<Double> sum = new AtomicReference<>(0D);
         List<Float> percentages = new ArrayList<>();
         List<Scalable> scalables = new ArrayList<>();
@@ -48,7 +52,9 @@ public class LoadScaling extends AbstractScaling {
                 .mapToDouble(IdentifiableAttributes::getDistributionKey)
                 .sum();
         if (distributionKeys == 0) {
-            throw new NetworkModificationException(NetworkModificationException.Type.LOAD_SCALING_ERROR, "This mode is available only for equipment with distribution key");
+            String message = "This mode is available only for equipment with distribution key";
+            ScalingUtils.createReport(subReporter, LOAD_SCALING_ERROR.name(), message, TypedValue.ERROR_SEVERITY);
+            throw new NetworkModificationException(LOAD_SCALING_ERROR, message);
         }
 
         identifiableAttributes.forEach(equipment -> {
@@ -118,7 +124,7 @@ public class LoadScaling extends AbstractScaling {
                         Scalable.ScalingConvention.LOAD);
                 break;
             default:
-                throw new NetworkModificationException(NetworkModificationException.Type.LOAD_SCALING_ERROR, "Reactive Variation mode not recognised");
+                throw new NetworkModificationException(LOAD_SCALING_ERROR, "Reactive Variation mode not recognised");
         }
     }
 
@@ -135,7 +141,7 @@ public class LoadScaling extends AbstractScaling {
 
     @Override
     public NetworkModificationException.Type getExceptionType() {
-        return NetworkModificationException.Type.LOAD_SCALING_ERROR;
+        return LOAD_SCALING_ERROR;
     }
 
     @Override

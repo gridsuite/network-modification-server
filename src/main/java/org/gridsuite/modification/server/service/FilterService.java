@@ -32,7 +32,7 @@ public class FilterService {
     private final RestTemplate restTemplate;
 
     @Autowired
-    public FilterService(@Value("${backing-services.network-modification.base-uri:http://filter-server/}") String filterServerBaseUri) {
+    public FilterService(@Value("${gridsuite.services.filter-server.base-uri:http://filter-server/}") String filterServerBaseUri) {
         setFilterServerBaseUri(filterServerBaseUri);
         restTemplate = new RestTemplate();
     }
