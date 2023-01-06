@@ -33,7 +33,7 @@ public class BasicEquipmentModificationEntity extends EquipmentModificationEntit
     @Enumerated(EnumType.STRING)
     private OperationType equipmentNameOp;
 
-    //TODO : remove before merge
+    //TODO : Remove when LoadModification refactoring is done
     protected BasicEquipmentModificationEntity(ModificationType modificationType, String equipmentId, AttributeModification<String> equipmentName) {
         super(equipmentId, modificationType);
         this.equipmentNameValue = equipmentName != null ? equipmentName.getValue() : null;

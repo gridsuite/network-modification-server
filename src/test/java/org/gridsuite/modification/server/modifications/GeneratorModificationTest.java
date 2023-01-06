@@ -10,6 +10,11 @@ package org.gridsuite.modification.server.modifications;
 import com.powsybl.iidm.network.EnergySource;
 import com.powsybl.iidm.network.Generator;
 import com.powsybl.iidm.network.Network;
+import com.powsybl.iidm.network.ReactiveLimitsKind;
+import com.powsybl.iidm.network.extensions.ActivePowerControl;
+import com.powsybl.iidm.network.extensions.GeneratorShortCircuit;
+import com.powsybl.iidm.network.extensions.GeneratorStartup;
+
 import lombok.SneakyThrows;
 
 import org.gridsuite.modification.server.ModificationType;
@@ -112,6 +117,12 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
         assertEquals(0., modifiedGenerator.getMinP());
         assertEquals(100., modifiedGenerator.getMaxP());
         assertEquals(220., modifiedGenerator.getRatedS());
+        assertEquals(0.1, modifiedGenerator.getExtension(GeneratorStartup.class).getMarginalCost());
+        assertEquals(0.1f, modifiedGenerator.getExtension(ActivePowerControl.class).getDroop());
+        assertEquals(true, modifiedGenerator.getExtension(ActivePowerControl.class).isParticipate());
+        assertEquals(0.1, modifiedGenerator.getExtension(GeneratorShortCircuit.class).getDirectTransX());
+        assertEquals(0.1, modifiedGenerator.getExtension(GeneratorShortCircuit.class).getStepUpTransformerX());
+        assertEquals(ReactiveLimitsKind.CURVE, modifiedGenerator.getReactiveLimits().getKind());
     }
 
     @Override
@@ -126,6 +137,7 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
         assertEquals(-1.1, generator.getMinP());
         assertEquals(1000.0, generator.getMaxP());
         assertEquals(Double.NaN, generator.getRatedS());
+        assertEquals(ReactiveLimitsKind.MIN_MAX, generator.getReactiveLimits().getKind());
     }
 
     @SneakyThrows
@@ -133,9 +145,11 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
     public void testMinMaxReactiveLimitsAttributesModification() {
         GeneratorModificationInfos generatorModificationInfos = (GeneratorModificationInfos) buildModification();
 
+        //setting ReactiveCapabilityCurve to false with null min and max reactive limits
         generatorModificationInfos.setReactiveCapabilityCurve(new AttributeModification<>(false, OperationType.SET));
         generatorModificationInfos.setMaximumReactivePower(null);
         generatorModificationInfos.setMinimumReactivePower(null);
+        //setting ReactiveCapabilityCurvePoints for the generator we are modifying
         Generator generator = getNetwork().getGenerator("idGenerator");
         generator.newReactiveCapabilityCurve()
                 .beginPoint()
@@ -159,6 +173,7 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
         assertThat(createdModification, createMatcher(generatorModificationInfos));
         testNetworkModificationsCount(getGroupId(), 1);
 
+        // Modifying only min reactive limit
         generatorModificationInfos.setMinimumReactivePower(new AttributeModification<>(-200., OperationType.SET));
         modificationToCreateJson = mapper.writeValueAsString(generatorModificationInfos);
 
@@ -170,6 +185,7 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
         assertThat(createdModification, createMatcher(generatorModificationInfos));
         testNetworkModificationsCount(getGroupId(), 2);
 
+        // Modifying only max reactive limit
         generatorModificationInfos.setMinimumReactivePower(null);
         generatorModificationInfos.setMaximumReactivePower(new AttributeModification<>(200., OperationType.SET));
         modificationToCreateJson = mapper.writeValueAsString(generatorModificationInfos);
@@ -182,6 +198,7 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
         assertThat(createdModification, createMatcher(generatorModificationInfos));
         testNetworkModificationsCount(getGroupId(), 3);
 
+        // Modifying both min and max reactive limits
         generatorModificationInfos.setMinimumReactivePower(new AttributeModification<>(-1.1, OperationType.SET));
         modificationToCreateJson = mapper.writeValueAsString(generatorModificationInfos);
 
@@ -199,6 +216,7 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
     public void testGeneratorShortCircuitAttributesModification() {
         GeneratorModificationInfos generatorModificationInfos = (GeneratorModificationInfos) buildModification();
 
+        // setting transient reactance to null, modifying only step up transformer reactance
         generatorModificationInfos.setTransientReactance(null);
         String modificationToCreateJson = mapper.writeValueAsString(generatorModificationInfos);
 
@@ -210,6 +228,7 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
         assertThat(createdModification, createMatcher(generatorModificationInfos));
         testNetworkModificationsCount(getGroupId(), 1);
 
+        // setting step up transformer reactance to null, modifying only transient reactance
         generatorModificationInfos.setTransientReactance(new AttributeModification<>(1.1, OperationType.SET));
         generatorModificationInfos.setStepUpTransformerReactance(null);
         modificationToCreateJson = mapper.writeValueAsString(generatorModificationInfos);
@@ -228,6 +247,7 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
     public void testGeneratorVoltageRegulatorAttributesModification() {
         GeneratorModificationInfos generatorModificationInfos = (GeneratorModificationInfos) buildModification();
 
+        // setting voltageRegulatorOn to true, applying qPercent and regulatingTerminal
         generatorModificationInfos.setVoltageRegulationOn(new AttributeModification<>(true, OperationType.SET));
         String modificationToCreateJson = mapper.writeValueAsString(generatorModificationInfos);
 
@@ -239,6 +259,7 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
         assertThat(createdModification, createMatcher(generatorModificationInfos));
         testNetworkModificationsCount(getGroupId(), 1);
 
+        // setting voltageRegulatorOn to null, no modification on voltageRegulationOn
         generatorModificationInfos.setVoltageRegulationOn(null);
         modificationToCreateJson = mapper.writeValueAsString(generatorModificationInfos);
 
@@ -250,6 +271,7 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
         assertThat(createdModification, createMatcher(generatorModificationInfos));
         testNetworkModificationsCount(getGroupId(), 2);
 
+        // setting voltageRegulationType to local, setting reginingTerminal to null
         generatorModificationInfos.setVoltageRegulationType(new AttributeModification<>(VoltageRegulationType.LOCAL, OperationType.SET));
         modificationToCreateJson = mapper.writeValueAsString(generatorModificationInfos);
 
