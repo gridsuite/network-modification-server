@@ -11,13 +11,30 @@ import com.fasterxml.jackson.databind.InjectableValues;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Streams;
 import com.powsybl.commons.PowsyblException;
-import com.powsybl.commons.reporter.*;
-import com.powsybl.iidm.modification.topology.*;
+import com.powsybl.commons.reporter.Report;
+import com.powsybl.commons.reporter.Reporter;
+import com.powsybl.commons.reporter.ReporterModel;
+import com.powsybl.commons.reporter.ReporterModelDeserializer;
+import com.powsybl.commons.reporter.ReporterModelJsonModule;
+import com.powsybl.commons.reporter.TypedValue;
+import com.powsybl.iidm.modification.topology.CreateBranchFeederBays;
+import com.powsybl.iidm.modification.topology.CreateBranchFeederBaysBuilder;
+import com.powsybl.iidm.modification.topology.CreateFeederBay;
+import com.powsybl.iidm.modification.topology.CreateFeederBayBuilder;
 import com.powsybl.iidm.modification.tripping.BranchTripping;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.Branch.Side;
-import com.powsybl.iidm.network.extensions.*;
+import com.powsybl.iidm.network.extensions.ActivePowerControl;
+import com.powsybl.iidm.network.extensions.ActivePowerControlAdder;
+import com.powsybl.iidm.network.extensions.BranchStatus;
+import com.powsybl.iidm.network.extensions.BranchStatusAdder;
+import com.powsybl.iidm.network.extensions.CoordinatedReactiveControl;
+import com.powsybl.iidm.network.extensions.GeneratorShortCircuit;
+import com.powsybl.iidm.network.extensions.GeneratorShortCircuitAdder;
+import com.powsybl.iidm.network.extensions.GeneratorStartup;
+import com.powsybl.iidm.network.extensions.GeneratorStartupAdder;
 import com.powsybl.network.store.client.NetworkStoreService;
+import com.powsybl.network.store.iidm.impl.MinMaxReactiveLimitsImpl;
 import com.powsybl.network.store.iidm.impl.extensions.CoordinatedReactiveControlAdderImpl;
 import com.powsybl.network.store.iidm.impl.extensions.GeneratorStartupAdderImpl;
 import lombok.NonNull;
@@ -28,9 +45,9 @@ import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.BranchStatusModificationInfos.ActionType;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.creation.*;
+import org.gridsuite.modification.server.entities.equipment.creation.EquipmentCreationEntity;
+import org.gridsuite.modification.server.entities.equipment.creation.TwoWindingsTransformerCreationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.LinesAttachToSplitLinesEntity;
 import org.gridsuite.modification.server.modifications.ModificationApplicator;
 import org.gridsuite.modification.server.modifications.ModificationUtils;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
@@ -45,9 +62,18 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
@@ -83,8 +109,10 @@ public class NetworkModificationService {
 
     private static final String NETWORK_MODIFICATION_TYPE_REPORT = "NetworkModification";
     private static final String LINE_ID_PARAMETER = "lineId";
+    private static final String MIN_REACTIVE_POWER_FIELDNAME = "Minimum reactive power";
+    private static final String MAX_REACTIVE_POWER_FIELDNAME = "Maximum reactive power";
 
-    public NetworkModificationService(@Value("${backing-services.report-server.base-uri:http://report-server}") String reportServerURI,
+    public NetworkModificationService(@Value("${gridsuite.services.report-server.base-uri:http://report-server}") String reportServerURI,
                                       NetworkStoreService networkStoreService, NetworkModificationRepository networkModificationRepository,
                                       EquipmentInfosService equipmentInfosService,
                                       ModificationRepository modificationRepository, NotificationService notificationService,
@@ -451,7 +479,11 @@ public class NetworkModificationService {
                 networkModifications = modificationApplicator.apply(modificationInfos, reporter, listener);
             }
             if (!listener.isBuild()) {
-                saveModifications(listener, groupUuid, modificationInfos.toEntity());
+                try {
+                    saveModifications(listener, groupUuid, modificationInfos.toEntity());
+                } catch (Exception e) {
+                    throw new PowsyblException(e);
+                }
             }
             return networkModifications;
         } finally {
@@ -471,12 +503,8 @@ public class NetworkModificationService {
                 return createGeneratorModification(networkUuid, variantId, groupUuid, reportUuid, reporterId, (GeneratorModificationInfos) modificationInfos);
             case SUBSTATION_CREATION:
                 return createSubstationCreation(networkUuid, variantId, groupUuid, reportUuid, reporterId, (SubstationCreationInfos) modificationInfos);
-            case VOLTAGE_LEVEL_CREATION:
-                return createVoltageLevelCreation(networkUuid, variantId, groupUuid, reportUuid, reporterId, (VoltageLevelCreationInfos) modificationInfos);
             case TWO_WINDINGS_TRANSFORMER_CREATION:
                 return createTwoWindingsTransformerCreation(networkUuid, variantId, groupUuid, reportUuid, reporterId, (TwoWindingsTransformerCreationInfos) modificationInfos);
-            case LINES_ATTACH_TO_SPLIT_LINES:
-                return createLinesAttachToSplitLinesCreation(networkUuid, variantId, groupUuid, reportUuid, reporterId, (LinesAttachToSplitLinesInfos) modificationInfos);
             case BRANCH_STATUS:
                 return createLineStatusModification(networkUuid, variantId, groupUuid, reportUuid, reporterId, (BranchStatusModificationInfos) modificationInfos);
             default:
@@ -496,14 +524,8 @@ public class NetworkModificationService {
             case SUBSTATION_CREATION:
                 updateSubstationCreation(modificationUuid, (SubstationCreationInfos) modificationInfos);
                 break;
-            case VOLTAGE_LEVEL_CREATION:
-                updateVoltageLevelCreation(modificationUuid, (VoltageLevelCreationInfos) modificationInfos);
-                break;
             case TWO_WINDINGS_TRANSFORMER_CREATION:
                 updateTwoWindingsTransformerCreation(modificationUuid, (TwoWindingsTransformerCreationInfos) modificationInfos);
-                break;
-            case LINES_ATTACH_TO_SPLIT_LINES:
-                updateLinesAttachToSplitLinesCreation(modificationUuid, (LinesAttachToSplitLinesInfos) modificationInfos);
                 break;
             default:
                 throw new NetworkModificationException(TYPE_MISMATCH);
@@ -534,6 +556,274 @@ public class NetworkModificationService {
         return handleModification(modificationInfos, listener, groupUuid, reportUuid, reporterId);
     }
 
+    private void modifyGeneratorShortCircuitAttributes(GeneratorModificationInfos modificationInfos,
+            Generator generator, Reporter subReporter) {
+        GeneratorShortCircuit generatorShortCircuit = generator.getExtension(GeneratorShortCircuit.class);
+        // Either transient reactance or step-up transformer reactance are modified or
+        // both
+        if (modificationInfos.getTransientReactance() != null
+                && modificationInfos.getStepUpTransformerReactance() != null) {
+            generator.newExtension(GeneratorShortCircuitAdder.class)
+                    .withDirectTransX(modificationInfos.getTransientReactance().getValue())
+                    .withStepUpTransformerX(modificationInfos.getStepUpTransformerReactance().getValue())
+                    .add();
+            ModificationUtils.getInstance().addModificationReport(generatorShortCircuit != null ? generatorShortCircuit.getDirectTransX() : Double.NaN,
+                    modificationInfos.getTransientReactance().getValue(), subReporter,
+                    "Transient reactance");
+            ModificationUtils.getInstance().addModificationReport(generatorShortCircuit != null ? generatorShortCircuit.getStepUpTransformerX() : Double.NaN,
+                    modificationInfos.getStepUpTransformerReactance().getValue(), subReporter,
+                    "Transformer reactance");
+
+        } else if (modificationInfos.getTransientReactance() != null) {
+            generator.newExtension(GeneratorShortCircuitAdder.class)
+                    .withDirectTransX(modificationInfos.getTransientReactance().getValue())
+                    .add();
+            ModificationUtils.getInstance().addModificationReport(generatorShortCircuit != null ? generatorShortCircuit.getDirectTransX() : Double.NaN,
+                    modificationInfos.getTransientReactance().getValue(), subReporter,
+                    "Transient reactance");
+        } else if (modificationInfos.getStepUpTransformerReactance() != null) {
+            generator.newExtension(GeneratorShortCircuitAdder.class)
+                    .withStepUpTransformerX(modificationInfos.getStepUpTransformerReactance().getValue())
+                    .add();
+            ModificationUtils.getInstance().addModificationReport(generatorShortCircuit != null ? generatorShortCircuit.getStepUpTransformerX() : Double.NaN,
+                    modificationInfos.getStepUpTransformerReactance().getValue(), subReporter,
+                    "Transformer reactance");
+        }
+    }
+
+    private void modifyGeneratorMinMaxReactiveLimits(GeneratorModificationInfos modificationInfos, Generator generator,
+            Reporter subReporter) {
+        //we get previous min max values if they exist
+        MinMaxReactiveLimits minMaxReactiveLimits = null;
+        ReactiveLimits reactiveLimits = generator.getReactiveLimits();
+        if (reactiveLimits != null) {
+            ReactiveLimitsKind limitsKind = reactiveLimits.getKind();
+            if (limitsKind == ReactiveLimitsKind.MIN_MAX) {
+                minMaxReactiveLimits = generator.getReactiveLimits(MinMaxReactiveLimitsImpl.class);
+            }
+        }
+
+        // (if the min and max reactive limits are null and there is no previous min max limits set we set them to Double max and
+        // Double min values)
+        // The user can change the value of MinimumReactivePower, MaximumReactivePower or both
+        if (modificationInfos.getMinimumReactivePower() != null
+                && modificationInfos.getMaximumReactivePower() != null) {
+            generator.newMinMaxReactiveLimits().setMinQ(modificationInfos.getMinimumReactivePower().getValue())
+                    .setMaxQ(modificationInfos.getMaximumReactivePower().getValue())
+                    .add();
+            ModificationUtils.getInstance().addModificationReport(minMaxReactiveLimits != null ? minMaxReactiveLimits.getMinQ() : Double.NaN,
+                    modificationInfos.getMinimumReactivePower().getValue(), subReporter,
+                    MIN_REACTIVE_POWER_FIELDNAME);
+            ModificationUtils.getInstance().addModificationReport(minMaxReactiveLimits != null ? minMaxReactiveLimits.getMaxQ() : Double.NaN,
+                    modificationInfos.getMaximumReactivePower().getValue(), subReporter,
+                    MAX_REACTIVE_POWER_FIELDNAME);
+        } else if (modificationInfos.getMinimumReactivePower() != null) {
+            generator.newMinMaxReactiveLimits().setMinQ(modificationInfos.getMinimumReactivePower().getValue())
+                    .setMaxQ(minMaxReactiveLimits != null ? minMaxReactiveLimits.getMaxQ() : Double.MAX_VALUE)
+                    .add();
+            ModificationUtils.getInstance().addModificationReport(minMaxReactiveLimits != null ? minMaxReactiveLimits.getMinQ() : Double.NaN,
+                    modificationInfos.getMinimumReactivePower().getValue(), subReporter,
+                    MIN_REACTIVE_POWER_FIELDNAME);
+        } else if (modificationInfos.getMaximumReactivePower() != null) {
+            generator.newMinMaxReactiveLimits().setMinQ(minMaxReactiveLimits != null ? minMaxReactiveLimits.getMaxQ() : -Double.MAX_VALUE)
+                    .setMaxQ(modificationInfos.getMaximumReactivePower().getValue())
+                    .add();
+            ModificationUtils.getInstance().addModificationReport(minMaxReactiveLimits != null ? minMaxReactiveLimits.getMaxQ() : Double.NaN,
+                    modificationInfos.getMaximumReactivePower().getValue(), subReporter,
+                    MAX_REACTIVE_POWER_FIELDNAME);
+        } else if (minMaxReactiveLimits == null) {
+            generator.newMinMaxReactiveLimits().setMinQ(-Double.MAX_VALUE)
+                    .setMaxQ(Double.MAX_VALUE)
+                    .add();
+            ModificationUtils.getInstance().addModificationReport(Double.NaN,
+                    -Double.MAX_VALUE, subReporter,
+                    MIN_REACTIVE_POWER_FIELDNAME);
+            ModificationUtils.getInstance().addModificationReport(Double.NaN,
+                    Double.MAX_VALUE, subReporter,
+                    MAX_REACTIVE_POWER_FIELDNAME);
+        }
+    }
+
+    private void modifyGeneratorReactiveCapabilityCurvePoints(GeneratorModificationInfos modificationInfos,
+            Generator generator, Reporter subReporter) {
+        ReactiveCapabilityCurveAdder adder = generator.newReactiveCapabilityCurve();
+        List<ReactiveCapabilityCurveModificationInfos> points = modificationInfos.getReactiveCapabilityCurvePoints();
+        IntStream.range(0, points.size())
+                .forEach(i -> {
+                    ReactiveCapabilityCurveModificationInfos point = points.get(i);
+                    adder.beginPoint()
+                            .setMaxQ(point.getQmaxP() != null ? point.getQmaxP() : point.getOldQmaxP())
+                            .setMinQ(point.getQminP() != null ? point.getQminP() : point.getOldQminP())
+                            .setP(point.getP() != null ? point.getP() : point.getOldP())
+                            .endPoint();
+                    if (point.getP() != null) {
+                        ModificationUtils.getInstance().addModificationReport(point.getOldP(),
+                                point.getP(), subReporter,
+                                "P" + i);
+                    }
+                    if (point.getQminP() != null) {
+                        ModificationUtils.getInstance().addModificationReport(point.getOldQminP(),
+                                point.getQminP(), subReporter,
+                                "QminP" + i);
+                    }
+                    if (point.getQmaxP() != null) {
+                        ModificationUtils.getInstance().addModificationReport(point.getOldQmaxP(),
+                                point.getQmaxP(), subReporter,
+                                "QmaxP" + i);
+                    }
+                });
+        adder.add();
+    }
+
+    private void modifyGeneratorReactiveLimitsAttributes(GeneratorModificationInfos modificationInfos,
+            Generator generator, Reporter subReporter) {
+        // if reactive capability curve is true and there was modifications on the
+        // reactive capability curve points,
+        // then we have to apply the reactive capability curve modifications
+        // else if reactive capability curve is false we have to apply the min and max
+        // reactive limits modifications
+        if (Boolean.TRUE.equals(modificationInfos.getReactiveCapabilityCurve().getValue()
+                && modificationInfos.getReactiveCapabilityCurvePoints() != null
+                && !modificationInfos.getReactiveCapabilityCurvePoints().isEmpty())) {
+            modifyGeneratorReactiveCapabilityCurvePoints(modificationInfos, generator, subReporter);
+        } else if (Boolean.FALSE.equals(modificationInfos.getReactiveCapabilityCurve().getValue())) {
+            modifyGeneratorMinMaxReactiveLimits(modificationInfos, generator, subReporter);
+        }
+    }
+
+    private void modifyGeneratorActivePowerControlAttributes(GeneratorModificationInfos modificationInfos,
+            Generator generator, Reporter subReporter) {
+        ActivePowerControl<Generator> activePowerControl = generator.getExtension(ActivePowerControl.class);
+        Float oldDroop = activePowerControl != null ? activePowerControl.getDroop() : Float.NaN;
+        Boolean participate = null;
+        // if participate is null and droop was modified, we consider that participate
+        // is true
+        if (modificationInfos.getParticipate() != null) {
+            participate = modificationInfos.getParticipate().getValue();
+            ModificationUtils.getInstance().addModificationReport(activePowerControl != null ? activePowerControl.isParticipate() : null,
+                    participate, subReporter,
+                    "Active power regulation");
+        } else if (modificationInfos.getDroop() != null) {
+            participate = true;
+        }
+        // if no modification were done to ActivePowerControl, we don't apply
+        // modifications
+        if (participate != null) {
+            if (Boolean.TRUE.equals(participate)) {
+                generator.newExtension(ActivePowerControlAdder.class)
+                        .withParticipate(participate).withDroop(modificationInfos.getDroop().getValue())
+                        .add();
+                ModificationUtils.getInstance().addModificationReport(oldDroop,
+                        modificationInfos.getDroop().getValue(), subReporter,
+                        "Droop");
+            } else {
+                generator.newExtension(ActivePowerControlAdder.class)
+                        .withParticipate(participate).add();
+            }
+        }
+
+    }
+
+    private void modifyGeneratorStartUpAttributes(GeneratorModificationInfos modificationInfos, Generator generator,
+            Reporter subReporter) {
+        GeneratorStartup generatorStartup = generator.getExtension(GeneratorStartup.class);
+        Double oldMarginalCost = generatorStartup != null ? generatorStartup.getMarginalCost() : Double.NaN;
+        if (modificationInfos.getMarginalCost() != null) {
+            generator.newExtension(GeneratorStartupAdder.class)
+                    .withMarginalCost(modificationInfos.getMarginalCost().getValue()).add();
+
+            ModificationUtils.getInstance().addModificationReport(oldMarginalCost,
+                    modificationInfos.getMarginalCost().getValue(), subReporter,
+                    "Cost of start");
+
+        }
+    }
+
+    private void modifyGeneratorRegulatingTerminal(GeneratorModificationInfos modificationInfos, Generator generator,
+            Reporter subReporter) {
+        Terminal regulatingTerminal = generator.getRegulatingTerminal();
+
+        String oldVoltageLevel = null;
+        String oldEquipment = null;
+        // If there is no regulating terminal in file, regulating terminal voltage level
+        // is equal to generator voltage level
+        if (regulatingTerminal != null
+                && !regulatingTerminal.getVoltageLevel().equals(generator.getTerminal().getVoltageLevel())) {
+            oldVoltageLevel = regulatingTerminal.getVoltageLevel().getId();
+            oldEquipment = regulatingTerminal.getConnectable().getType().name() + ":"
+                    + regulatingTerminal.getConnectable().getId();
+        }
+
+        if (modificationInfos.getRegulatingTerminalId() != null
+                && modificationInfos.getRegulatingTerminalType() != null
+                && modificationInfos.getRegulatingTerminalVlId() != null) {
+            Terminal terminal = getTerminalFromIdentifiable(generator.getNetwork(),
+                    modificationInfos.getRegulatingTerminalId().getValue(),
+                    modificationInfos.getRegulatingTerminalType().getValue(),
+                    modificationInfos.getRegulatingTerminalVlId().getValue());
+            generator.setRegulatingTerminal(terminal);
+
+            ModificationUtils.getInstance().addModificationReport(oldVoltageLevel,
+                    modificationInfos.getRegulatingTerminalVlId().getValue(), subReporter,
+                    "Voltage level");
+            ModificationUtils.getInstance().addModificationReport(oldEquipment,
+                    modificationInfos.getRegulatingTerminalType().getValue() + ":"
+                            + modificationInfos.getRegulatingTerminalId().getValue(),
+                    subReporter,
+                    "Equipment");
+        }
+
+        // if the voltageRegulationType is set to LOCAL, we set the regulatingTerminal
+        // to null
+        if (modificationInfos.getVoltageRegulationType() != null
+                && modificationInfos.getVoltageRegulationType().getValue() == VoltageRegulationType.LOCAL) {
+            generator.setRegulatingTerminal(null);
+            ModificationUtils.getInstance().addModificationReport(oldVoltageLevel,
+                    null, subReporter,
+                    "Voltage level");
+            ModificationUtils.getInstance().addModificationReport(oldEquipment,
+                    null,
+                    subReporter,
+                    "Equipment");
+        }
+    }
+
+    private void modifyGeneratorVoltageRegulatorAttributes(GeneratorModificationInfos modificationInfos,
+            Generator generator, Reporter subReporter) {
+        // if no modification were done to VoltageRegulatorOn, we get the old value
+        Boolean isVoltageRegulationOn = null;
+        if (modificationInfos.getVoltageRegulationOn() != null) {
+            isVoltageRegulationOn = modificationInfos.getVoltageRegulationOn().getValue();
+            ModificationUtils.getInstance().applyElementaryModifications(generator::setVoltageRegulatorOn, generator::isVoltageRegulatorOn,
+                    modificationInfos.getVoltageRegulationOn(), subReporter, "Voltage regulation on");
+        } else {
+            isVoltageRegulationOn = generator.isVoltageRegulatorOn();
+        }
+
+        // if voltageRegulationOn is true, we apply modifications to regulatingTerminal
+        // and QPercent
+        // otherwise we apply modifications to the reactivepower setpoint
+        if (Boolean.TRUE.equals(isVoltageRegulationOn)) {
+            modifyGeneratorRegulatingTerminal(modificationInfos, generator, subReporter);
+            if (modificationInfos.getQPercent() != null) {
+                CoordinatedReactiveControl coordinatedReactiveControl = generator
+                        .getExtension(CoordinatedReactiveControl.class);
+                generator.newExtension(CoordinatedReactiveControlAdderImpl.class)
+                        .withQPercent(modificationInfos.getQPercent().getValue())
+                        .add();
+                ModificationUtils.getInstance().addModificationReport(
+                        coordinatedReactiveControl != null ? coordinatedReactiveControl.getQPercent() : Double.NaN,
+                        modificationInfos.getQPercent().getValue(),
+                        subReporter, "Reactive percentage");
+            }
+        } else {
+            if (modificationInfos.getReactivePowerSetpoint() != null) {
+                ModificationUtils.getInstance().applyElementaryModifications(generator::setTargetQ, generator::getTargetQ,
+                        modificationInfos.getReactivePowerSetpoint(), subReporter, "Reactive power set point");
+            }
+        }
+    }
+
     private void modifyGenerator(Generator generator, GeneratorModificationInfos modificationInfos, Reporter subReporter) {
         subReporter.report(Report.builder()
             .withKey("generatorModification")
@@ -544,15 +834,16 @@ public class NetworkModificationService {
 
         ModificationUtils.getInstance().applyElementaryModifications(generator::setName, generator::getNameOrId, modificationInfos.getEquipmentName(), subReporter, "Name");
         ModificationUtils.getInstance().applyElementaryModifications(generator::setEnergySource, generator::getEnergySource, modificationInfos.getEnergySource(), subReporter, "Energy source");
-        ModificationUtils.getInstance().applyElementaryModifications(generator::setMinP, generator::getMinP, modificationInfos.getMinActivePower(), subReporter, "Min active power");
         ModificationUtils.getInstance().applyElementaryModifications(generator::setMaxP, generator::getMaxP, modificationInfos.getMaxActivePower(), subReporter, "Max active power");
+        ModificationUtils.getInstance().applyElementaryModifications(generator::setMinP, generator::getMinP, modificationInfos.getMinActivePower(), subReporter, "Min active power");
         ModificationUtils.getInstance().applyElementaryModifications(generator::setRatedS, generator::getRatedS, modificationInfos.getRatedNominalPower(), subReporter, "Rated nominal power");
         ModificationUtils.getInstance().applyElementaryModifications(generator::setTargetP, generator::getTargetP, modificationInfos.getActivePowerSetpoint(), subReporter, "Active power set point");
-        ModificationUtils.getInstance().applyElementaryModifications(generator::setTargetQ, generator::getTargetQ, modificationInfos.getReactivePowerSetpoint(), subReporter, "Reactive power set point");
         ModificationUtils.getInstance().applyElementaryModifications(generator::setTargetV, generator::getTargetV, modificationInfos.getVoltageSetpoint(), subReporter, "Voltage set point");
-        ModificationUtils.getInstance().applyElementaryModifications(generator::setVoltageRegulatorOn, generator::isVoltageRegulatorOn, modificationInfos.getVoltageRegulationOn(), subReporter, "Voltage regulation on");
-
-        // TODO connectivity modification
+        modifyGeneratorVoltageRegulatorAttributes(modificationInfos, generator, subReporter);
+        modifyGeneratorShortCircuitAttributes(modificationInfos, generator, subReporter);
+        modifyGeneratorActivePowerControlAttributes(modificationInfos, generator, subReporter);
+        modifyGeneratorReactiveLimitsAttributes(modificationInfos, generator, subReporter);
+        modifyGeneratorStartUpAttributes(modificationInfos, generator, subReporter);
     }
 
     private List<ModificationInfos> execCreateGeneratorModification(NetworkStoreListener listener,
@@ -1092,66 +1383,6 @@ public class NetworkModificationService {
         }
     }
 
-    private List<ModificationInfos> execCreateVoltageLevelCreation(NetworkStoreListener listener, VoltageLevelCreationInfos voltageLevelCreationInfos,
-                                                           UUID reportUuid, String reporterId) {
-
-        Network network = listener.getNetwork();
-        String rootReporterId = reporterId + "@" + NETWORK_MODIFICATION_TYPE_REPORT;
-        ReporterModel reporter = new ReporterModel(rootReporterId, rootReporterId);
-        Reporter subReporter = reporter.createSubReporter(ModificationType.VOLTAGE_LEVEL_CREATION.name(), "VoltageLevel creation ${voltageLevelId}", "voltageLevelId", voltageLevelCreationInfos.getEquipmentId());
-
-        return doAction(listener, () -> {
-            if (listener.isApplyModifications()) {
-                ModificationUtils.getInstance().createVoltageLevelAction(voltageLevelCreationInfos, subReporter, network);
-            }
-            listener.storeVoltageLevelCreation(voltageLevelCreationInfos);
-        }, CREATE_VOLTAGE_LEVEL_ERROR, reportUuid, reporter, subReporter);
-    }
-
-    public List<EquipmentModificationInfos> createVoltageLevelCreation(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId,
-                                                                       VoltageLevelCreationInfos voltageLevelCreationInfos) {
-        assertVoltageLevelCreationInfosNotEmpty(voltageLevelCreationInfos);
-        ModificationNetworkInfos networkInfos = getNetworkModificationInfos(networkUuid, variantId);
-        NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid,
-                networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
-        return execCreateVoltageLevelCreation(listener, voltageLevelCreationInfos, reportUuid, reporterId)
-            .stream().map(EquipmentModificationInfos.class::cast).collect(Collectors.toList());
-    }
-
-    public void updateVoltageLevelCreation(UUID modificationUuid, VoltageLevelCreationInfos voltageLevelCreationInfos) {
-        assertVoltageLevelCreationInfosNotEmpty(voltageLevelCreationInfos);
-
-        Optional<ModificationEntity> voltageLevelModificationEntity = this.modificationRepository.findById(modificationUuid);
-
-        if (!voltageLevelModificationEntity.isPresent()) {
-            throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "Voltage level creation not found");
-        }
-
-        List<BusbarSectionCreationEmbeddable> busbarSections = voltageLevelCreationInfos.getBusbarSections().stream().map(bbsi ->
-                new BusbarSectionCreationEmbeddable(bbsi.getId(), bbsi.getName(), bbsi.getVertPos(), bbsi.getHorizPos())
-        ).collect(Collectors.toList());
-        List<BusbarConnectionCreationEmbeddable> busbarConnections = voltageLevelCreationInfos.getBusbarConnections().stream().map(cnxi ->
-                new BusbarConnectionCreationEmbeddable(cnxi.getFromBBS(), cnxi.getToBBS(), cnxi.getSwitchKind())
-        ).collect(Collectors.toList());
-
-        EquipmentCreationEntity updatedEntity = this.networkModificationRepository.createVoltageLevelEntity(
-                voltageLevelCreationInfos.getEquipmentId(),
-                voltageLevelCreationInfos.getEquipmentName(),
-                voltageLevelCreationInfos.getNominalVoltage(),
-                voltageLevelCreationInfos.getSubstationId(),
-                busbarSections,
-                busbarConnections);
-        updatedEntity.setId(modificationUuid);
-        updatedEntity.setGroup(voltageLevelModificationEntity.get().getGroup());
-        this.networkModificationRepository.updateModification(updatedEntity);
-    }
-
-    private void assertVoltageLevelCreationInfosNotEmpty(VoltageLevelCreationInfos voltageLevelCreationInfos) {
-        if (voltageLevelCreationInfos == null) {
-            throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "Missing required attributes to create the voltage level");
-        }
-    }
-
     public Network cloneNetworkVariant(UUID networkUuid, String originVariantId, String destinationVariantId) {
         Network network;
         try {
@@ -1226,9 +1457,13 @@ public class NetworkModificationService {
                 case EQUIPMENT_ATTRIBUTE_MODIFICATION:
                 case LOAD_CREATION:
                 case LINE_SPLIT_WITH_VOLTAGE_LEVEL:
+                case DELETE_VOLTAGE_LEVEL_ON_LINE:
+                case DELETE_ATTACHING_LINE:
                 case SHUNT_COMPENSATOR_CREATION:
                 case LINE_CREATION:
                 case LINE_ATTACH_TO_VOLTAGE_LEVEL:
+                case VOLTAGE_LEVEL_CREATION:
+                case LINES_ATTACH_TO_SPLIT_LINES:
                 case LOAD_MODIFICATION:
                 case EQUIPMENT_DELETION:
                 case GROOVY_SCRIPT:
@@ -1251,17 +1486,9 @@ public class NetworkModificationService {
                     SubstationCreationInfos substationCreationInfos = (SubstationCreationInfos) infos;
                     return execCreateSubstationCreation(listener, substationCreationInfos, reportUuid, reporterId);
 
-                case VOLTAGE_LEVEL_CREATION:
-                    VoltageLevelCreationInfos voltageLevelCreationInfos = (VoltageLevelCreationInfos) infos;
-                    return execCreateVoltageLevelCreation(listener, voltageLevelCreationInfos, reportUuid, reporterId);
-
                 case BRANCH_STATUS:
                     BranchStatusModificationInfos branchStatusModificationInfos = (BranchStatusModificationInfos) infos;
                     return execCreateBranchStatusModification(listener, branchStatusModificationInfos, reportUuid, reporterId);
-
-                case LINES_ATTACH_TO_SPLIT_LINES:
-                    LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos = (LinesAttachToSplitLinesInfos) infos;
-                    return execCreateLinesAttachToSplitLinesCreation(listener, linesAttachToSplitLinesInfos, reportUuid, reporterId);
 
                 default:
             }
@@ -1349,78 +1576,43 @@ public class NetworkModificationService {
         this.networkModificationRepository.updateModification(updatedEntity);
     }
 
-    private void assertLinesAttachToSplitLinesInfosNotEmpty(LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos) {
-        if (linesAttachToSplitLinesInfos == null) {
-            throw new NetworkModificationException(LINE_ATTACH_ERROR,
-                    "Missing required attributes to attach lines to a split lines");
-        }
-    }
-
-    private List<ModificationInfos> execCreateLinesAttachToSplitLinesCreation(NetworkStoreListener listener,
-                                                                              LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos,
-                                                                              UUID reportUuid, String reporterId) {
-        Network network = listener.getNetwork();
-
-        String rootReporterId = reporterId + "@" + NETWORK_MODIFICATION_TYPE_REPORT;
-        ReporterModel reporter = new ReporterModel(rootReporterId, rootReporterId);
-        Reporter subReporter = reporter.createSubReporter(ModificationType.LINES_ATTACH_TO_SPLIT_LINES.name(), "Lines attach to split lines");
-
-        List<ModificationInfos> inspectable = doAction(listener, () -> {
-            if (listener.isApplyModifications()) {
-                ReplaceTeePointByVoltageLevelOnLine algo = new ReplaceTeePointByVoltageLevelOnLineBuilder()
-                        .withTeePointLine1(linesAttachToSplitLinesInfos.getLineToAttachTo1Id())
-                        .withTeePointLine2(linesAttachToSplitLinesInfos.getLineToAttachTo2Id())
-                        .withTeePointLineToRemove(linesAttachToSplitLinesInfos.getAttachedLineId())
-                        .withBbsOrBusId(linesAttachToSplitLinesInfos.getBbsBusId())
-                        .withNewLine1Id(linesAttachToSplitLinesInfos.getReplacingLine1Id())
-                        .withNewLine1Name(linesAttachToSplitLinesInfos.getReplacingLine1Name())
-                        .withNewLine2Id(linesAttachToSplitLinesInfos.getReplacingLine2Id())
-                        .withNewLine2Name(linesAttachToSplitLinesInfos.getReplacingLine2Name())
-                        .build();
-                algo.apply(network, true, subReporter);
-            }
-
-            listener.storeLinesAttachToSplitLinesInfos(linesAttachToSplitLinesInfos);
-        }, LINE_NOT_FOUND, reportUuid, reporter, subReporter).stream().map(ModificationInfos.class::cast)
-                .collect(Collectors.toList());
-
-        if (!inspectable.isEmpty()) {
-            inspectable.addAll(listener.getDeletions());
-        }
-        return inspectable;
-    }
-
-    public List<ModificationInfos> createLinesAttachToSplitLinesCreation(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId,
-                                                                         LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos) {
-        assertLinesAttachToSplitLinesInfosNotEmpty(linesAttachToSplitLinesInfos);
-        ModificationNetworkInfos networkInfos = getNetworkModificationInfos(networkUuid, variantId);
-        NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
-        return execCreateLinesAttachToSplitLinesCreation(listener, linesAttachToSplitLinesInfos, reportUuid, reporterId);
-    }
-
-    public void updateLinesAttachToSplitLinesCreation(UUID modificationUuid, LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos) {
-        assertLinesAttachToSplitLinesInfosNotEmpty(linesAttachToSplitLinesInfos);
-
-        Optional<ModificationEntity> linesAttachToSplitLinesEntity = this.modificationRepository.findById(modificationUuid);
-
-        if (linesAttachToSplitLinesEntity.isEmpty()) {
-            throw new NetworkModificationException(LINE_ATTACH_NOT_FOUND, "Line attach to split line not found");
+    private Identifiable<?> getEquipmentByIdentifiableType(Network network, String type, String equipmentId) {
+        if (type == null || equipmentId == null) {
+            return null;
         }
 
-        LinesAttachToSplitLinesEntity updatedEntity = LinesAttachToSplitLinesEntity.toEntity(
-                linesAttachToSplitLinesInfos.getLineToAttachTo1Id(),
-                linesAttachToSplitLinesInfos.getLineToAttachTo2Id(),
-                linesAttachToSplitLinesInfos.getAttachedLineId(),
-                linesAttachToSplitLinesInfos.getVoltageLevelId(),
-                linesAttachToSplitLinesInfos.getBbsBusId(),
-                linesAttachToSplitLinesInfos.getReplacingLine1Id(),
-                linesAttachToSplitLinesInfos.getReplacingLine1Name(),
-                linesAttachToSplitLinesInfos.getReplacingLine2Id(),
-                linesAttachToSplitLinesInfos.getReplacingLine2Name()
-        );
-        updatedEntity.setId(modificationUuid);
-        updatedEntity.setGroup(linesAttachToSplitLinesEntity.get().getGroup());
-        this.networkModificationRepository.updateModification(updatedEntity);
+        switch (IdentifiableType.valueOf(type)) {
+            case HVDC_LINE:
+                return network.getHvdcLine(equipmentId);
+            case LINE:
+                return network.getLine(equipmentId);
+            case TWO_WINDINGS_TRANSFORMER:
+                return network.getTwoWindingsTransformer(equipmentId);
+            case THREE_WINDINGS_TRANSFORMER:
+                return network.getThreeWindingsTransformer(equipmentId);
+            case GENERATOR:
+                return network.getGenerator(equipmentId);
+            case LOAD:
+                return network.getLoad(equipmentId);
+            case BATTERY:
+                return network.getBattery(equipmentId);
+            case SHUNT_COMPENSATOR:
+                return network.getShuntCompensator(equipmentId);
+            case STATIC_VAR_COMPENSATOR:
+                return network.getStaticVarCompensator(equipmentId);
+            case DANGLING_LINE:
+                return network.getDanglingLine(equipmentId);
+            case HVDC_CONVERTER_STATION:
+                return network.getHvdcConverterStation(equipmentId);
+            case SUBSTATION:
+                return network.getSubstation(equipmentId);
+            case VOLTAGE_LEVEL:
+                return network.getVoltageLevel(equipmentId);
+            case BUSBAR_SECTION:
+                return network.getBusbarSection(equipmentId);
+            default:
+                return null;
+        }
     }
 
     private Terminal getTerminalFromIdentifiable(Network network,

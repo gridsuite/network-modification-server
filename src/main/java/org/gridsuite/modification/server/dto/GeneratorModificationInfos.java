@@ -6,6 +6,9 @@
  */
 package org.gridsuite.modification.server.dto;
 
+import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.powsybl.iidm.network.EnergySource;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
@@ -46,4 +49,49 @@ public class GeneratorModificationInfos extends InjectionModificationInfos {
 
     @Schema(description = "Voltage set point")
     private AttributeModification<Double> voltageSetpoint;
+
+    @Schema(description = "Marginal cost")
+    private AttributeModification<Double> marginalCost;
+
+    @Schema(description = "Minimum reactive power")
+    private AttributeModification<Double> minimumReactivePower;
+
+    @Schema(description = "Maximum reactive power")
+    private AttributeModification<Double> maximumReactivePower;
+
+    @Schema(description = "Reactive capability curve points")
+    private List<ReactiveCapabilityCurveModificationInfos> reactiveCapabilityCurvePoints;
+
+    @Schema(description = "Participate")
+    private AttributeModification<Boolean> participate;
+
+    @Schema(description = "Droop")
+    private AttributeModification<Float> droop;
+
+    @Schema(description = "Transient reactance")
+    private AttributeModification<Double> transientReactance;
+
+    @Schema(description = "Step up transformer reactance")
+    private AttributeModification<Double> stepUpTransformerReactance;
+
+    @Schema(description = "Voltage Regulation type")
+    private AttributeModification<VoltageRegulationType> voltageRegulationType;
+
+    @Schema(description = "Regulating terminal equipment id")
+    private AttributeModification<String> regulatingTerminalId;
+
+    @Schema(description = "Regulating terminal equipment type")
+    private AttributeModification<String> regulatingTerminalType;
+
+    @Schema(description = "Regulating terminal voltage level id")
+    private AttributeModification<String> regulatingTerminalVlId;
+
+    // As this attribute has only one lower case letter at its start (xXXXX), the getters is parsed as getQPercent and the field for Jackson is parsed as qpercent
+    // while we expect qPercent. JsonProperty let fix the json field to qPercent
+    @JsonProperty("qPercent")
+    @Schema(description = "Q percent")
+    private AttributeModification<Double> qPercent;
+
+    @Schema(description = "Reactive capability curve")
+    private AttributeModification<Boolean> reactiveCapabilityCurve;
 }

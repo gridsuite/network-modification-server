@@ -13,9 +13,9 @@ import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.entities.equipment.modification.LinesAttachToSplitLinesEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.DeleteVoltageLevelOnLineEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
-import org.gridsuite.modification.server.modifications.LinesAttachToSplitLines;
+import org.gridsuite.modification.server.modifications.DeleteVoltageLevelOnLine;
 
 
 /**
@@ -27,8 +27,8 @@ import org.gridsuite.modification.server.modifications.LinesAttachToSplitLines;
 @Getter
 @Setter
 @ToString(callSuper = true)
-@Schema(description = "Line attach to split line")
-public class LinesAttachToSplitLinesInfos extends ModificationInfos {
+@Schema(description = "Delete voltage level on line infos")
+public class DeleteVoltageLevelOnLineInfos extends ModificationInfos {
 
     @Schema(description = "line 1 id")
     private String lineToAttachTo1Id;
@@ -36,44 +36,29 @@ public class LinesAttachToSplitLinesInfos extends ModificationInfos {
     @Schema(description = "line 2 id")
     private String lineToAttachTo2Id;
 
-    @Schema(description = "attachment line id")
-    private String attachedLineId;
-
-    @Schema(description = "ID for the existing voltage level")
-    private String voltageLevelId;
-
-    @Schema(description = "bus bar section or bus id")
-    private String bbsBusId;
-
     @Schema(description = "replacing line 1 ID")
     private String replacingLine1Id;
 
     @Schema(description = "replacing line 1 name")
     private String replacingLine1Name;
 
-    @Schema(description = "replacing line 1 ID")
-    private String replacingLine2Id;
-
-    @Schema(description = "replacing line 2 name")
-    private String replacingLine2Name;
-
     @Override
-    public LinesAttachToSplitLinesEntity toEntity() {
-        return new LinesAttachToSplitLinesEntity(this);
+    public DeleteVoltageLevelOnLineEntity toEntity() {
+        return new DeleteVoltageLevelOnLineEntity(this);
     }
 
     @Override
     public AbstractModification toModification() {
-        return new LinesAttachToSplitLines(this);
+        return new DeleteVoltageLevelOnLine(this);
     }
 
     @Override
     public NetworkModificationException.Type getErrorType() {
-        return NetworkModificationException.Type.LINE_ATTACH_ERROR;
+        return NetworkModificationException.Type.DELETE_VOLTAGE_LEVEL_ON_LINE_ERROR;
     }
 
     @Override
     public Reporter createSubReporter(ReporterModel reporter) {
-        return reporter.createSubReporter(ModificationType.LINES_ATTACH_TO_SPLIT_LINES.name(), "Lines attach to split lines");
+        return reporter.createSubReporter(ModificationType.DELETE_VOLTAGE_LEVEL_ON_LINE.name(), "Delete voltage level on line");
     }
 }
