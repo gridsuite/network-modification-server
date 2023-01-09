@@ -209,15 +209,6 @@ public class NetworkStoreListener implements NetworkListener {
         modifications.add(this.modificationRepository.createBranchStatusModificationEntity(lineId, action));
     }
 
-    public void storeSubstationCreation(SubstationCreationInfos substationCreationInfos) {
-        modifications.add(this.modificationRepository.createSubstationEntity(
-                substationCreationInfos.getEquipmentId(),
-                substationCreationInfos.getEquipmentName(),
-                substationCreationInfos.getSubstationCountry(),
-                substationCreationInfos.getProperties()
-        ));
-    }
-
     @Override
     public void onUpdate(Identifiable identifiable, String attribute, Object oldValue, Object newValue) {
         substationsIds.addAll(getSubstationIds(identifiable));
