@@ -11,33 +11,12 @@ import com.fasterxml.jackson.databind.InjectableValues;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Streams;
 import com.powsybl.commons.PowsyblException;
-import com.powsybl.commons.reporter.Report;
-import com.powsybl.commons.reporter.Reporter;
-import com.powsybl.commons.reporter.ReporterModel;
-import com.powsybl.commons.reporter.ReporterModelDeserializer;
-import com.powsybl.commons.reporter.ReporterModelJsonModule;
-import com.powsybl.commons.reporter.TypedValue;
-import com.powsybl.iidm.modification.topology.CreateBranchFeederBays;
-import com.powsybl.iidm.modification.topology.CreateBranchFeederBaysBuilder;
-import com.powsybl.iidm.modification.topology.CreateFeederBay;
-import com.powsybl.iidm.modification.topology.CreateFeederBayBuilder;
-import com.powsybl.iidm.modification.topology.RemoveFeederBay;
+import com.powsybl.commons.reporter.*;
+import com.powsybl.iidm.modification.topology.*;
 import com.powsybl.iidm.modification.tripping.BranchTripping;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.Branch.Side;
-import com.powsybl.iidm.network.extensions.ActivePowerControlAdder;
-import com.powsybl.iidm.network.extensions.BranchStatus;
-import com.powsybl.iidm.network.extensions.BranchStatusAdder;
-import com.powsybl.iidm.network.extensions.GeneratorShortCircuitAdder;
-import com.powsybl.iidm.network.extensions.ActivePowerControl;
-import com.powsybl.iidm.network.extensions.ActivePowerControlAdder;
-import com.powsybl.iidm.network.extensions.BranchStatus;
-import com.powsybl.iidm.network.extensions.BranchStatusAdder;
-import com.powsybl.iidm.network.extensions.CoordinatedReactiveControl;
-import com.powsybl.iidm.network.extensions.GeneratorShortCircuit;
-import com.powsybl.iidm.network.extensions.GeneratorShortCircuitAdder;
-import com.powsybl.iidm.network.extensions.GeneratorStartup;
-import com.powsybl.iidm.network.extensions.GeneratorStartupAdder;
+import com.powsybl.iidm.network.extensions.*;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.iidm.impl.MinMaxReactiveLimitsImpl;
 import com.powsybl.network.store.iidm.impl.extensions.CoordinatedReactiveControlAdderImpl;
@@ -53,10 +32,6 @@ import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.BranchStatusModificationInfos.ActionType;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.creation.BusbarConnectionCreationEmbeddable;
-import org.gridsuite.modification.server.entities.equipment.creation.BusbarSectionCreationEmbeddable;
-import org.gridsuite.modification.server.entities.equipment.creation.EquipmentCreationEntity;
-import org.gridsuite.modification.server.entities.equipment.creation.TwoWindingsTransformerCreationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.EquipmentCreationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.TwoWindingsTransformerCreationEntity;
 import org.gridsuite.modification.server.entities.equipment.deletion.EquipmentDeletionEntity;
@@ -76,15 +51,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -1180,18 +1147,17 @@ public class NetworkModificationService {
 
         Boolean participate = generatorCreationInfos.getParticipate();
 
-        //TODO waiting for answer on #1474
         if (generatorCreationInfos.getPlannedActivePowerSetPoint() != null
-                && generatorCreationInfos.getStartupCost() != null
-                && generatorCreationInfos.getMarginalCost() != null
-                && generatorCreationInfos.getPlannedOutageRate() != null
-                && generatorCreationInfos.getForcedOutageRate() != null) {
+                || generatorCreationInfos.getStartupCost() != null
+                || generatorCreationInfos.getMarginalCost() != null
+                || generatorCreationInfos.getPlannedOutageRate() != null
+                || generatorCreationInfos.getForcedOutageRate() != null) {
             generator.newExtension(GeneratorStartupAdderImpl.class)
-                    .withPlannedActivePowerSetpoint(generatorCreationInfos.getPlannedActivePowerSetPoint())
-                    .withStartupCost(generatorCreationInfos.getStartupCost())
-                    .withMarginalCost(generatorCreationInfos.getMarginalCost())
-                    .withPlannedOutageRate(generatorCreationInfos.getPlannedOutageRate())
-                    .withForcedOutageRate(generatorCreationInfos.getForcedOutageRate())
+                    .withPlannedActivePowerSetpoint(generatorCreationInfos.getPlannedActivePowerSetPoint() != null ? generatorCreationInfos.getPlannedActivePowerSetPoint() : Double.NaN)
+                    .withStartupCost(generatorCreationInfos.getStartupCost() != null ? generatorCreationInfos.getStartupCost() : Double.NaN)
+                    .withMarginalCost(generatorCreationInfos.getMarginalCost() != null ? generatorCreationInfos.getMarginalCost() : Double.NaN)
+                    .withPlannedOutageRate(generatorCreationInfos.getPlannedOutageRate() != null ? generatorCreationInfos.getPlannedOutageRate() : Double.NaN)
+                    .withForcedOutageRate(generatorCreationInfos.getForcedOutageRate() != null ? generatorCreationInfos.getForcedOutageRate() : Double.NaN)
                     .add();
         }
 
@@ -1265,18 +1231,17 @@ public class NetworkModificationService {
                     .add();
         }
 
-        //TODO waiting for answer on #1474
         if (generatorCreationInfos.getPlannedActivePowerSetPoint() != null
-                && generatorCreationInfos.getStartupCost() != null
-                && generatorCreationInfos.getMarginalCost() != null
-                && generatorCreationInfos.getPlannedOutageRate() != null
-                && generatorCreationInfos.getForcedOutageRate() != null) {
+                || generatorCreationInfos.getStartupCost() != null
+                || generatorCreationInfos.getMarginalCost() != null
+                || generatorCreationInfos.getPlannedOutageRate() != null
+                || generatorCreationInfos.getForcedOutageRate() != null) {
             generator.newExtension(GeneratorStartupAdderImpl.class)
-                    .withPlannedActivePowerSetpoint(generatorCreationInfos.getPlannedActivePowerSetPoint())
-                    .withStartupCost(generatorCreationInfos.getStartupCost())
-                    .withMarginalCost(generatorCreationInfos.getMarginalCost())
-                    .withPlannedOutageRate(generatorCreationInfos.getPlannedOutageRate())
-                    .withForcedOutageRate(generatorCreationInfos.getForcedOutageRate())
+                    .withPlannedActivePowerSetpoint(generatorCreationInfos.getPlannedActivePowerSetPoint() != null ? generatorCreationInfos.getPlannedActivePowerSetPoint() : Double.NaN)
+                    .withStartupCost(generatorCreationInfos.getStartupCost() != null ? generatorCreationInfos.getStartupCost() : Double.NaN)
+                    .withMarginalCost(generatorCreationInfos.getMarginalCost() != null ? generatorCreationInfos.getMarginalCost() : Double.NaN)
+                    .withPlannedOutageRate(generatorCreationInfos.getPlannedOutageRate() != null ? generatorCreationInfos.getPlannedOutageRate() : Double.NaN)
+                    .withForcedOutageRate(generatorCreationInfos.getForcedOutageRate() != null ? generatorCreationInfos.getForcedOutageRate() : Double.NaN)
                     .add();
         }
 
