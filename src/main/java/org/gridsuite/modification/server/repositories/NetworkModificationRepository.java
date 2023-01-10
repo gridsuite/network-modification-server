@@ -6,7 +6,6 @@
  */
 package org.gridsuite.modification.server.repositories;
 
-import com.powsybl.iidm.network.Country;
 import com.powsybl.iidm.network.EnergySource;
 import com.powsybl.iidm.network.PhaseTapChanger;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
@@ -283,10 +282,6 @@ public class NetworkModificationRepository {
                 tapChangerSteps,
                 connectionPosition1,
                 connectionPosition2);
-    }
-
-    public EquipmentCreationEntity createSubstationEntity(String id, String name, Country country, Map<String, String> properties) {
-        return new SubstationCreationEntity(id, name, country, properties);
     }
 
     public BranchStatusModificationEntity createBranchStatusModificationEntity(String lineId, BranchStatusModificationInfos.ActionType action) {
