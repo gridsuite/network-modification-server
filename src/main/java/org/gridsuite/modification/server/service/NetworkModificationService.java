@@ -983,6 +983,9 @@ public class NetworkModificationService {
     private void modifyGeneratorVoltageRegulatorAttributes(GeneratorModificationInfos modificationInfos,
             Generator generator, Reporter subReporter) {
         List<Report> voltageRegulationReports = new ArrayList<>();
+
+        voltageRegulationReports.add(applyElementaryModificationsAndReturnReport(generator::setTargetV, generator::getTargetV,
+                modificationInfos.getVoltageSetpoint(), "Voltage set point"));
         // if no modification were done to VoltageRegulatorOn, we get the old value
         Boolean isVoltageRegulationOn = null;
         if (modificationInfos.getVoltageRegulationOn() != null) {
@@ -1017,8 +1020,6 @@ public class NetworkModificationService {
                         "Reactive power set point"));
             }
         }
-        voltageRegulationReports.add(applyElementaryModificationsAndReturnReport(generator::setTargetV, generator::getTargetV,
-                modificationInfos.getVoltageSetpoint(), "Voltage set point"));
         reportModifications(subReporter, voltageRegulationReports, "voltageRegulation", "Voltage regulation modified :");
     }
 
