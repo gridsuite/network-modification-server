@@ -6,16 +6,17 @@
  */
 package org.gridsuite.modification.server.entities.equipment.creation;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import com.powsybl.iidm.network.Country;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.ModificationType;
+import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.SubstationCreationInfos;
 
 import javax.persistence.*;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
@@ -34,14 +35,21 @@ public class SubstationCreationEntity extends EquipmentCreationEntity {
     @CollectionTable
     private Map<String, String> properties;
 
-    public SubstationCreationEntity(String equipmentId, String equipmentName, Country country,
-        Map<String, String> properties) {
+    private void assignAttributes(SubstationCreationInfos substationCreationInfos) {
+        country = substationCreationInfos.getSubstationCountry();
+        properties = substationCreationInfos.getProperties() == null ? null : new HashMap<>(substationCreationInfos.getProperties());
+    }
 
-        super(ModificationType.SUBSTATION_CREATION,
-            equipmentId,
-            equipmentName);
-        this.country = country;
-        this.properties = properties == null ? null : new HashMap<>(properties);
+    public SubstationCreationEntity(SubstationCreationInfos substationCreationInfos) {
+        super(substationCreationInfos);
+        assignAttributes(substationCreationInfos);
+    }
+
+    @Override
+    public void update(ModificationInfos modificationInfos) {
+        super.update(modificationInfos);
+        SubstationCreationInfos substationCreationInfos = (SubstationCreationInfos) modificationInfos;
+        assignAttributes(substationCreationInfos);
     }
 
     @Override
@@ -61,7 +69,15 @@ public class SubstationCreationEntity extends EquipmentCreationEntity {
                 .type(ModificationType.valueOf(getType()))
                 .equipmentId(getEquipmentId())
                 .equipmentName(getEquipmentName())
-                .substationCountry(getCountry()).properties(getProperties());
+                .substationCountry(getCountry())
+                .properties(getProperties() == null || getProperties().size() == 0 ? null : getProperties());
     }
+
+    @Override
+    public void cloneWithIdsToNull() {
+        super.cloneWithIdsToNull();
+        this.properties = properties == null ? null : new HashMap<>(properties);
+    }
+
 }
 

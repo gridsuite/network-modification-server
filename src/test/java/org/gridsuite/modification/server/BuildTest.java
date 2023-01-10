@@ -353,7 +353,13 @@ public class BuildTest {
         entities1.add(LoadCreationInfos.builder().equipmentId("newLoad2").equipmentName("newLoad2").loadType(LoadType.AUXILIARY).voltageLevelId("v1").busOrBusbarSectionId("1.1").activePower(10.).reactivePower(20.).connectionName(null).connectionDirection(ConnectablePosition.Direction.UNDEFINED).build().toEntity());
 
         Map<String, String> properties = Map.of("DEMO", "Demo1");
-        entities1.add(modificationRepository.createSubstationEntity("newSubstation", "newSubstation", Country.FR, properties));
+        entities1.add(SubstationCreationInfos.builder()
+                .type(ModificationType.SUBSTATION_CREATION)
+                .equipmentId("newSubstation")
+                .equipmentName("newSubstation")
+                .substationCountry(Country.FR)
+                .properties(properties)
+                .build().toEntity());
 
         List<ModificationEntity> entities2 = new ArrayList<>();
         entities2.add(GeneratorCreationInfos.builder().type(ModificationType.GENERATOR_CREATION)

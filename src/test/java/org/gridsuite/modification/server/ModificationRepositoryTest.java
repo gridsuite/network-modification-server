@@ -725,9 +725,28 @@ public class ModificationRepositoryTest {
 
     @Test
     public void testSubstationCreation() {
-        var createSubstationEntity1 = networkModificationRepository.createSubstationEntity("idSubstation1", "nameSubstation1", Country.AR, null);
-        var createSubstationEntity2 = networkModificationRepository.createSubstationEntity("idSubstation2", "nameSubstation2", Country.TD, null);
-        var createSubstationEntity3 = networkModificationRepository.createSubstationEntity("idSubstation3", "nameSubstation3", Country.KG, null);
+
+        var createSubstationEntity1 = SubstationCreationInfos.builder()
+                .type(ModificationType.SUBSTATION_CREATION)
+                .equipmentId("idSubstation1")
+                .equipmentName("nameSubstation1")
+                .substationCountry(Country.FR)
+                .properties(null)
+                .build().toEntity();
+        var createSubstationEntity2 = SubstationCreationInfos.builder()
+                .type(ModificationType.SUBSTATION_CREATION)
+                .equipmentId("idSubstation2")
+                .equipmentName("nameSubstation2")
+                .substationCountry(Country.TD)
+                .properties(null)
+                .build().toEntity();
+        var createSubstationEntity3 = SubstationCreationInfos.builder()
+                .type(ModificationType.SUBSTATION_CREATION)
+                .equipmentId("idSubstation3")
+                .equipmentName("nameSubstation3")
+                .substationCountry(Country.KG)
+                .properties(null)
+                .build().toEntity();
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(createSubstationEntity1, createSubstationEntity2, createSubstationEntity3));
         assertRequestsCount(1, 7, 3, 0);
