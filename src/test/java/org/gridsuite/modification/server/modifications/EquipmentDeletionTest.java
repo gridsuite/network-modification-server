@@ -378,7 +378,7 @@ public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
         List<EquipmentDeletionInfos> deletionsV5 = modificationRepository.getModifications(getGroupId(), false, true)
                 .stream().map(EquipmentDeletionInfos.class::cast).collect(Collectors.toList());
         EquipmentDeletionInfos lastCreatedEquipmentDeletion = deletionsV5.get(deletionsV5.size() - 1);
-//        assertThat(deletionsV5.get(0), createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "v5", "VOLTAGE_LEVEL", Set.of("s3")));
+        assertThat(deletionsV5.get(13), MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "v5", "VOLTAGE_LEVEL", Set.of()));
         assertEquals(ModificationType.EQUIPMENT_DELETION, lastCreatedEquipmentDeletion.getType());
         assertEquals("VOLTAGE_LEVEL", lastCreatedEquipmentDeletion.getEquipmentType());
         assertEquals("v5", lastCreatedEquipmentDeletion.getEquipmentId());
@@ -405,9 +405,6 @@ public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
         equipmentDeletionInfosJson = mapper.writeValueAsString(equipmentDeletionInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
-        // resultAsString = mvcResult.getResponse().getContentAsString();
-        // List<EquipmentDeletionInfos> deletionsS3 = mapper.readValue(resultAsString, new TypeReference<>() { });
-        // assertThat(deletionsS3.get(0), createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "s3", "SUBSTATION", Set.of("s3")));
         List<EquipmentDeletionInfos> deletionsS3 = modificationRepository.getModifications(getGroupId(), false, true)
                 .stream().map(EquipmentDeletionInfos.class::cast).collect(Collectors.toList());
         lastCreatedEquipmentDeletion = deletionsS3.get(deletionsS3.size() - 1);
