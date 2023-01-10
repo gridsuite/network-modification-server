@@ -12,6 +12,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
+import org.gridsuite.modification.server.entities.equipment.modification.VariationFilterEntity;
 
 import java.util.UUID;
 
@@ -31,4 +32,8 @@ public class FilterInfos {
 
     @Schema(description = "name of filter")
     private String name;
+
+    public VariationFilterEntity toEntity() {
+        return new VariationFilterEntity(this);
+    }
 }

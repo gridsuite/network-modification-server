@@ -6,11 +6,10 @@
  */
 package org.gridsuite.modification.server.entities.equipment.modification;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.gridsuite.modification.server.dto.FilterInfos;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -25,11 +24,9 @@ import java.util.UUID;
  * @author bendaamerahm <ahmed.bendaamer at rte-france.com>
  */
 @NoArgsConstructor
-@AllArgsConstructor
 @Getter
 @Setter
 @Entity
-@Builder
 @Table(name = "VariationFilter")
 public class VariationFilterEntity {
 
@@ -45,4 +42,9 @@ public class VariationFilterEntity {
     @Column(name = "name")
     private String name;
 
+    public VariationFilterEntity(@NotNull FilterInfos filterInfos) {
+        this.filterId = filterInfos.getId();
+        this.id = null;
+        this.name = filterInfos.getName();
+    }
 }

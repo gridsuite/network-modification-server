@@ -21,7 +21,7 @@ import org.gridsuite.modification.server.service.FilterService;
 import org.springframework.context.ApplicationContext;
 import org.springframework.util.CollectionUtils;
 
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -31,6 +31,7 @@ import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.LOAD_SCALING_ERROR;
 import static org.gridsuite.modification.server.modifications.ModificationUtils.createReport;
+import static org.gridsuite.modification.server.modifications.ModificationUtils.distinctByKey;
 
 /**
  * @author bendaamerahm <ahmed.bendaamer at rte-france.com>
@@ -45,19 +46,17 @@ public abstract class AbstractScaling extends AbstractModification {
     @Override
     public void apply(Network network, Reporter subReporter, ApplicationContext context) {
         // collect all filters from all variations
+
         var filters = scalingInfos.getVariations().stream()
                 .flatMap(v -> v.getFilters().stream())
-                .collect(Collectors.groupingBy(FilterInfos::getId))
-                .values()
-                .stream()
-                .flatMap(Collection::stream)
+                .filter(distinctByKey(FilterInfos::getId))
                 .collect(Collectors.toMap(FilterInfos::getId, FilterInfos::getName));
 
         // export filters from filter server
         String workingVariantId = network.getVariantManager().getWorkingVariantId();
         UUID uuid = ((NetworkImpl) network).getUuid();
         Map<UUID, FilterEquipments> exportFilters = context.getBean(FilterService.class)
-                .exportFilters(filters.keySet(), uuid, workingVariantId)
+                .exportFilters(new ArrayList<>(filters.keySet()), uuid, workingVariantId)
                 .stream()
                 .peek(t -> t.setFilterName(filters.get(t.getFilterId())))
                 .collect(Collectors.toMap(FilterEquipments::getFilterId, Function.identity()));

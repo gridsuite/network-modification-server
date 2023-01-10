@@ -58,10 +58,7 @@ public class ScalingVariationEntity {
     }
 
     private List<VariationFilterEntity> getFiltersEntity(ScalingVariationInfos variationInfos) {
-        return variationInfos.getFilters().stream().map(filterInfos -> VariationFilterEntity.builder()
-                        .filterId(filterInfos.getId())
-                        .name(filterInfos.getName())
-                        .build())
+        return variationInfos.getFilters().stream().map(FilterInfos::toEntity)
                 .collect(Collectors.toList());
     }
 

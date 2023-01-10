@@ -20,7 +20,6 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -48,7 +47,7 @@ public class FilterService {
         FilterService.filterServerBaseUri = filterServerBaseUri;
     }
 
-    public List<FilterEquipments> exportFilters(Set<UUID> filtersUuids, UUID networkUuid, String variantId) {
+    public List<FilterEquipments> exportFilters(List<UUID> filtersUuids, UUID networkUuid, String variantId) {
         var ids = !filtersUuids.isEmpty() ?
                 "&ids=" + filtersUuids.stream().map(UUID::toString).collect(Collectors.joining(",")) : "";
         var variant = variantId != null ? "&variantId=" + variantId : "";

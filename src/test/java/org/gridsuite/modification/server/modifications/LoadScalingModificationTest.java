@@ -127,7 +127,7 @@ public class LoadScalingModificationTest extends AbstractNetworkModificationTest
         var filterWithNoDKJson = mapper.writeValueAsString(List.of(filterWithNoDK));
 
         String networkParams = "?networkUuid=" + ((NetworkImpl) getNetwork()).getUuid() + "&variantId=variant_1";
-        String params = "&ids=" + String.join(",", List.of(FILTER_ID_1.toString(), FILTER_ID_2.toString(), FILTER_ID_3.toString(), FILTER_ID_4.toString(), FILTER_ID_5.toString()));
+        String params = "&ids=" + String.join(",", List.of(FILTER_ID_5.toString(), FILTER_ID_3.toString(), FILTER_ID_4.toString(), FILTER_ID_2.toString(), FILTER_ID_1.toString()));
         String path = "/v1/filters/export";
         wireMock.stubFor(WireMock.get(path + networkParams + params)
                 .willReturn(WireMock.ok()
@@ -235,7 +235,7 @@ public class LoadScalingModificationTest extends AbstractNetworkModificationTest
         var variation5 = ScalingVariationInfos.builder()
                 .variationMode(VariationMode.PROPORTIONAL)
                 .reactiveVariationMode(ReactiveVariationMode.CONSTANT_Q)
-                .variationValue(50D)
+                .variationValue(500D)
                 .filters(List.of(filter5))
                 .build();
 
@@ -256,6 +256,7 @@ public class LoadScalingModificationTest extends AbstractNetworkModificationTest
                 .build();
         var variation = ScalingVariationInfos.builder()
                 .variationMode(VariationMode.PROPORTIONAL)
+                .reactiveVariationMode(ReactiveVariationMode.TAN_PHI_FIXED)
                 .variationValue(100D)
                 .filters(List.of(filter))
                 .build();
@@ -287,6 +288,7 @@ public class LoadScalingModificationTest extends AbstractNetworkModificationTest
 
         var variation = ScalingVariationInfos.builder()
                 .variationMode(VariationMode.PROPORTIONAL)
+                .reactiveVariationMode(ReactiveVariationMode.TAN_PHI_FIXED)
                 .variationValue(100D)
                 .filters(List.of(filter))
                 .build();
@@ -316,6 +318,7 @@ public class LoadScalingModificationTest extends AbstractNetworkModificationTest
         var variation1 = ScalingVariationInfos.builder()
                 .variationValue(100D)
                 .variationMode(VariationMode.VENTILATION)
+                .reactiveVariationMode(ReactiveVariationMode.TAN_PHI_FIXED)
                 .filters(List.of(filter))
                 .build();
 
@@ -342,6 +345,7 @@ public class LoadScalingModificationTest extends AbstractNetworkModificationTest
                 .build();
         var variation = ScalingVariationInfos.builder()
                 .variationMode(VariationMode.PROPORTIONAL)
+                .reactiveVariationMode(ReactiveVariationMode.TAN_PHI_FIXED)
                 .variationValue(100D)
                 .filters(List.of(filter))
                 .build();
@@ -369,16 +373,16 @@ public class LoadScalingModificationTest extends AbstractNetworkModificationTest
 
     @Override
     protected void assertNetworkAfterCreation() {
-        assertEquals(139.12280807495117, getNetwork().getLoad(LOAD_ID_1).getP0(), 0.01D);
-        assertEquals(333.3333206176758, getNetwork().getLoad(LOAD_ID_2).getP0(), 0.01D);
-        assertEquals(190.0, getNetwork().getLoad(LOAD_ID_3).getP0(), 0.01D);
-        assertEquals(90.00000038146973, getNetwork().getLoad(LOAD_ID_4).getP0(), 0.01D);
-        assertEquals(140.87719383239747, getNetwork().getLoad(LOAD_ID_5).getP0(), 0.01D);
-        assertEquals(110.0, getNetwork().getLoad(LOAD_ID_6).getP0(), 0.01D);
-        assertEquals(180.00000076293946, getNetwork().getLoad(LOAD_ID_7).getP0(), 0.01D);
-        assertEquals(296.6666603088379, getNetwork().getLoad(LOAD_ID_8).getP0(), 0.01D);
-        assertEquals(366.6666603088379, getNetwork().getLoad(LOAD_ID_9).getP0(), 0.01D);
-        assertEquals(433.3333206176758, getNetwork().getLoad(LOAD_ID_10).getP0(), 0.01D);
+        assertEquals(150.39, getNetwork().getLoad(LOAD_ID_1).getP0(), 0.01D);
+        assertEquals(166.66, getNetwork().getLoad(LOAD_ID_2).getP0(), 0.01D);
+        assertEquals(195.0, getNetwork().getLoad(LOAD_ID_3).getP0(), 0.01D);
+        assertEquals(95.58, getNetwork().getLoad(LOAD_ID_4).getP0(), 0.01D);
+        assertEquals(152.84, getNetwork().getLoad(LOAD_ID_5).getP0(), 0.01D);
+        assertEquals(115.0, getNetwork().getLoad(LOAD_ID_6).getP0(), 0.01D);
+        assertEquals(191.17, getNetwork().getLoad(LOAD_ID_7).getP0(), 0.01D);
+        assertEquals(213.33, getNetwork().getLoad(LOAD_ID_8).getP0(), 0.01D);
+        assertEquals(283.33, getNetwork().getLoad(LOAD_ID_9).getP0(), 0.01D);
+        assertEquals(266.66, getNetwork().getLoad(LOAD_ID_10).getP0(), 0.01D);
     }
 
     @Override
