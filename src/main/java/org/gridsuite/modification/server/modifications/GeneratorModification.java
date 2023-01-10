@@ -61,6 +61,12 @@ public class GeneratorModification extends AbstractModification {
     }
 
     private void modifyGenerator(Generator generator, GeneratorModificationInfos modificationInfos, Reporter subReporter) {
+        subReporter.report(Report.builder()
+                .withKey("generatorModification")
+                .withDefaultMessage("Generator with id=${id} modified :")
+                .withValue("id", modificationInfos.getEquipmentId())
+                .withSeverity(TypedValue.INFO_SEVERITY)
+                .build());
         ModificationUtils.getInstance().applyElementaryModifications(generator::setName, generator::getNameOrId, modificationInfos.getEquipmentName(), subReporter, "Name");
         ModificationUtils.getInstance().applyElementaryModifications(generator::setEnergySource, generator::getEnergySource, modificationInfos.getEnergySource(), subReporter, "Energy source");
         ModificationUtils.getInstance().applyElementaryModifications(generator::setMaxP, generator::getMaxP, modificationInfos.getMaxActivePower(), subReporter, "Max active power");
@@ -73,12 +79,6 @@ public class GeneratorModification extends AbstractModification {
         modifyGeneratorActivePowerControlAttributes(modificationInfos, generator, subReporter);
         modifyGeneratorReactiveLimitsAttributes(modificationInfos, generator, subReporter);
         modifyGeneratorStartUpAttributes(modificationInfos, generator, subReporter);
-        subReporter.report(Report.builder()
-                .withKey("generatorModification")
-                .withDefaultMessage("Generator with id=${id} modified :")
-                .withValue("id", modificationInfos.getEquipmentId())
-                .withSeverity(TypedValue.INFO_SEVERITY)
-                .build());
 
     }
 

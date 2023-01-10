@@ -32,6 +32,8 @@ public class MatcherGeneratorModificationInfos extends MatcherModificationInfos<
                 && m.getEquipmentId().equals(reference.getEquipmentId())
                 && m.getSubstationIds().equals(reference.getSubstationIds())
                 && m.getEquipmentName().equals(reference.getEquipmentName())
+                && m.getVoltageLevelId().equals(reference.getVoltageLevelId())
+                && m.getBusOrBusbarSectionId().equals(reference.getBusOrBusbarSectionId())
                 && Objects.equals(m.getEnergySource(), reference.getEnergySource())
                 && Objects.equals(m.getMinActivePower(), reference.getMinActivePower())
                 && Objects.equals(m.getMaxActivePower(), reference.getMaxActivePower())
@@ -51,6 +53,8 @@ public class MatcherGeneratorModificationInfos extends MatcherModificationInfos<
                 && Objects.equals(m.getStepUpTransformerReactance(), reference.getStepUpTransformerReactance())
                 && Objects.equals(m.getTransientReactance(), reference.getTransientReactance())
                 && Objects.equals(m.getReactiveCapabilityCurve(), reference.getReactiveCapabilityCurve())
+                && Objects.equals(m.getQPercent(), reference.getQPercent())
+                && Objects.equals(m.getVoltageRegulationType(), m.getVoltageRegulationType())
                 && matchesReactiveCapabilityCurvePoints(m.getReactiveCapabilityCurvePoints(), reference.getReactiveCapabilityCurvePoints());
     }
 
