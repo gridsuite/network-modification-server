@@ -782,10 +782,8 @@ public class NetworkModificationService {
         }
 
         // (if the min and max reactive limits are null and there is no previous min max
-        // limits set we set them to Double max and
-        // Double min values)
-        // The user can change the value of MinimumReactivePower, MaximumReactivePower
-        // or both
+        // limits set we set them to Double max and Double min values)
+        // The user can change the value of MinimumReactivePower, MaximumReactivePower or both
         if (modificationInfos.getMinimumReactivePower() != null
                 && modificationInfos.getMaximumReactivePower() != null) {
             generator.newMinMaxReactiveLimits().setMinQ(modificationInfos.getMinimumReactivePower().getValue())
