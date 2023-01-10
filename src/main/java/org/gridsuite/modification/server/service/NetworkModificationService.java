@@ -695,21 +695,22 @@ public class NetworkModificationService {
         return null;
     }
 
-    private void reportModifications(Reporter subReporter, List<Report> reports, String subReporterKey, String subReporterDefaultMessage) {
-        if(!reports.isEmpty()) {
+    private void reportModifications(Reporter subReporter, List<Report> reports, String subReporterKey,
+            String subReporterDefaultMessage) {
+        if (!reports.isEmpty()) {
             Reporter modificationSubreporter = subReporter.createSubReporter(subReporterKey, subReporterDefaultMessage);
             modificationSubreporter.report(Report.builder()
-            .withKey(subReporterKey)
-            .withDefaultMessage(subReporterDefaultMessage)
-            .withSeverity(TypedValue.INFO_SEVERITY)
-            .build());
+                    .withKey(subReporterKey)
+                    .withDefaultMessage(subReporterDefaultMessage)
+                    .withSeverity(TypedValue.INFO_SEVERITY)
+                    .build());
             reports.stream().filter(Objects::nonNull).forEach(modificationSubreporter::report);
         }
     }
 
     private static <T> void applyElementaryModifications(Consumer<T> setter, Supplier<T> getter,
-                                                         AttributeModification<T> modification,
-                                                         Reporter subReporter, String fieldName) {
+            AttributeModification<T> modification,
+            Reporter subReporter, String fieldName) {
         if (modification != null) {
             T oldValue = getter.get();
             T newValue = modification.applyModification(oldValue);
