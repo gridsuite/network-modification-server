@@ -855,7 +855,6 @@ public class ModificationControllerTest {
         createdModification = (GeneratorModificationInfos) modificationRepository
                         .getModifications(TEST_GROUP_ID, false, true).get(1);
 
-
         // Modifying only max reactive limit
         generatorModificationInfos.setMinimumReactivePower(null);
         generatorModificationInfos.setMaximumReactivePower(new AttributeModification<>(200., OperationType.SET));
