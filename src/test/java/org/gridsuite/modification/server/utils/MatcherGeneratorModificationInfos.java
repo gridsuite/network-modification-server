@@ -54,7 +54,7 @@ public class MatcherGeneratorModificationInfos extends MatcherModificationInfos<
                 && Objects.equals(m.getTransientReactance(), reference.getTransientReactance())
                 && Objects.equals(m.getReactiveCapabilityCurve(), reference.getReactiveCapabilityCurve())
                 && Objects.equals(m.getQPercent(), reference.getQPercent())
-                && Objects.equals(m.getVoltageRegulationType(), m.getVoltageRegulationType())
+                && Objects.equals(m.getVoltageRegulationType(), reference.getVoltageRegulationType())
                 && matchesReactiveCapabilityCurvePoints(m.getReactiveCapabilityCurvePoints(), reference.getReactiveCapabilityCurvePoints());
     }
 
