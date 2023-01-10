@@ -72,7 +72,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -550,8 +549,6 @@ public class NetworkModificationService {
                 return createGeneratorCreation(networkUuid, variantId, groupUuid, reportUuid, reporterId, (GeneratorCreationInfos) modificationInfos);
             case GENERATOR_MODIFICATION:
                 return createGeneratorModification(networkUuid, variantId, groupUuid, reportUuid, reporterId, (GeneratorModificationInfos) modificationInfos);
-            case SUBSTATION_CREATION:
-                return createSubstationCreation(networkUuid, variantId, groupUuid, reportUuid, reporterId, (SubstationCreationInfos) modificationInfos);
             case TWO_WINDINGS_TRANSFORMER_CREATION:
                 return createTwoWindingsTransformerCreation(networkUuid, variantId, groupUuid, reportUuid, reporterId, (TwoWindingsTransformerCreationInfos) modificationInfos);
             case EQUIPMENT_DELETION:
@@ -574,9 +571,6 @@ public class NetworkModificationService {
                 break;
             case GENERATOR_MODIFICATION:
                 updateGeneratorModification(modificationUuid, (GeneratorModificationInfos) modificationInfos);
-                break;
-            case SUBSTATION_CREATION:
-                updateSubstationCreation(modificationUuid, (SubstationCreationInfos) modificationInfos);
                 break;
             case TWO_WINDINGS_TRANSFORMER_CREATION:
                 updateTwoWindingsTransformerCreation(modificationUuid, (TwoWindingsTransformerCreationInfos) modificationInfos);
@@ -1591,68 +1585,6 @@ public class NetworkModificationService {
         }
     }
 
-    private List<ModificationInfos> execCreateSubstationCreation(NetworkStoreListener listener,
-                                                                          SubstationCreationInfos substationCreationInfos,
-                                                                          UUID reportUuid, String reporterId) {
-        Network network = listener.getNetwork();
-        String rootReporterId = reporterId + "@" + NETWORK_MODIFICATION_TYPE_REPORT;
-        ReporterModel reporter = new ReporterModel(rootReporterId, rootReporterId);
-        Reporter subReporter = reporter.createSubReporter(ModificationType.SUBSTATION_CREATION.name(), "Substation creation ${substationId}", "substationId", substationCreationInfos.getEquipmentId());
-
-        return doAction(listener, () -> {
-            if (listener.isApplyModifications()) {
-                Substation substation = network.newSubstation()
-                    .setId(substationCreationInfos.getEquipmentId())
-                    .setName(substationCreationInfos.getEquipmentName())
-                    .setCountry(substationCreationInfos.getSubstationCountry())
-                    .add();
-                //substation.setProperty()
-                Map<String, String> properties = substationCreationInfos.getProperties();
-                if (properties != null) {
-                    properties.forEach(substation::setProperty);
-                }
-
-                subReporter.report(Report.builder()
-                    .withKey("substationCreated")
-                    .withDefaultMessage("New substation with id=${id} created")
-                    .withValue("id", substationCreationInfos.getEquipmentId())
-                    .withSeverity(TypedValue.INFO_SEVERITY)
-                    .build());
-            }
-
-            // add the substation creation entity to the listener
-            listener.storeSubstationCreation(substationCreationInfos);
-        }, CREATE_SUBSTATION_ERROR, reportUuid, reporter, subReporter);
-    }
-
-    public List<EquipmentModificationInfos> createSubstationCreation(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId, SubstationCreationInfos substationCreationInfos) {
-        assertSubstationCreationInfosNotEmpty(substationCreationInfos);
-        ModificationNetworkInfos networkInfos = getNetworkModificationInfos(networkUuid, variantId);
-        NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
-        return execCreateSubstationCreation(listener, substationCreationInfos, reportUuid, reporterId)
-            .stream().map(EquipmentModificationInfos.class::cast).collect(Collectors.toList());
-    }
-
-    public void updateSubstationCreation(UUID modificationUuid, SubstationCreationInfos substationCreationInfos) {
-        Optional<ModificationEntity> substationModificationEntity = this.modificationRepository.findById(modificationUuid);
-
-        if (!substationModificationEntity.isPresent()) {
-            throw new NetworkModificationException(CREATE_SUBSTATION_ERROR, "Substation creation not found");
-        }
-
-        EquipmentCreationEntity updatedEntity = this.networkModificationRepository.createSubstationEntity(substationCreationInfos.getEquipmentId(),
-            substationCreationInfos.getEquipmentName(), substationCreationInfos.getSubstationCountry(), substationCreationInfos.getProperties());
-        updatedEntity.setId(modificationUuid);
-        updatedEntity.setGroup(substationModificationEntity.get().getGroup());
-        this.networkModificationRepository.updateModification(updatedEntity);
-    }
-
-    private void assertSubstationCreationInfosNotEmpty(SubstationCreationInfos substationCreationInfos) {
-        if (substationCreationInfos == null) {
-            throw new NetworkModificationException(CREATE_SUBSTATION_ERROR, "Missing required attributes to create the substation");
-        }
-    }
-
     public Network cloneNetworkVariant(UUID networkUuid, String originVariantId, String destinationVariantId) {
         Network network;
         try {
@@ -1734,6 +1666,7 @@ public class NetworkModificationService {
                 case LINE_ATTACH_TO_VOLTAGE_LEVEL:
                 case VOLTAGE_LEVEL_CREATION:
                 case LINES_ATTACH_TO_SPLIT_LINES:
+                case SUBSTATION_CREATION:
                     // Generic form
                     return handleModification(infos, listener, groupUuid, reportUuid, reporterId);
 
@@ -1760,10 +1693,6 @@ public class NetworkModificationService {
                 case GROOVY_SCRIPT:
                     GroovyScriptModificationInfos groovyModificationInfos = (GroovyScriptModificationInfos) infos;
                     return execCreateGroovyScript(listener, groovyModificationInfos.getScript(), reportUuid, reporterId);
-
-                case SUBSTATION_CREATION:
-                    SubstationCreationInfos substationCreationInfos = (SubstationCreationInfos) infos;
-                    return execCreateSubstationCreation(listener, substationCreationInfos, reportUuid, reporterId);
 
                 case BRANCH_STATUS:
                     BranchStatusModificationInfos branchStatusModificationInfos = (BranchStatusModificationInfos) infos;
