@@ -812,7 +812,7 @@ public class NetworkModificationService {
                     MIN_REACTIVE_POWER_FIELDNAME));
         } else if (modificationInfos.getMaximumReactivePower() != null) {
             generator.newMinMaxReactiveLimits()
-                    .setMinQ(minMaxReactiveLimits != null ? minMaxReactiveLimits.getMaxQ() : -Double.MAX_VALUE)
+                    .setMinQ(minMaxReactiveLimits != null ? minMaxReactiveLimits.getMinQ() : -Double.MAX_VALUE)
                     .setMaxQ(modificationInfos.getMaximumReactivePower().getValue())
                     .add();
             reports.add(buildModificationReport(minMaxReactiveLimits != null ? minMaxReactiveLimits.getMaxQ() : Double.NaN,
