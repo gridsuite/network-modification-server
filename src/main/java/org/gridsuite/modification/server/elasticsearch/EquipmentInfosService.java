@@ -10,6 +10,7 @@ import com.google.common.collect.Lists;
 import org.gridsuite.modification.server.dto.EquipmentInfos;
 import org.gridsuite.modification.server.dto.TombstonedEquipmentInfos;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
@@ -33,7 +34,7 @@ public class EquipmentInfosService {
     @Value("${spring.data.elasticsearch.partition-size:10000}")
     private int partitionSize;
 
-    public EquipmentInfosService(EquipmentInfosRepository equipmentInfosRepository, TombstonedEquipmentInfosRepository tombstonedEquipmentInfosRepository) {
+    public EquipmentInfosService(@Lazy EquipmentInfosRepository equipmentInfosRepository, @Lazy TombstonedEquipmentInfosRepository tombstonedEquipmentInfosRepository) {
         this.equipmentInfosRepository = equipmentInfosRepository;
         this.tombstonedEquipmentInfosRepository = tombstonedEquipmentInfosRepository;
     }

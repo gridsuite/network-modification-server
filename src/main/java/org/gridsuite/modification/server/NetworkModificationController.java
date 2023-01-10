@@ -131,6 +131,7 @@ public class NetworkModificationController {
             case LOAD_SCALING:
             case VOLTAGE_LEVEL_CREATION:
             case LINES_ATTACH_TO_SPLIT_LINES:
+            case SUBSTATION_CREATION:
                 return ResponseEntity.ok().body(networkModificationService.createModification(networkUuid, variantId, groupUuid, reportUuid, reporterId, modificationInfos));
             default:
                 return ResponseEntity.ok().body(networkModificationService.createNetworkModification(networkUuid, variantId, groupUuid, reportUuid, reporterId, modificationInfos));
@@ -157,6 +158,7 @@ public class NetworkModificationController {
             case LOAD_SCALING:
             case VOLTAGE_LEVEL_CREATION:
             case LINES_ATTACH_TO_SPLIT_LINES:
+            case SUBSTATION_CREATION:
                 networkModificationService.updateModification(networkModificationUuid, modificationInfos);
                 break;
             default:

@@ -814,6 +814,71 @@ public class ModificationControllerTest {
            .andExpect(status().is5xxServerError()).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
         assertEquals(resultAsString, new NetworkModificationException(MODIFY_GENERATOR_ERROR, "Generator '" + generatorId + "': energy source is not set").getMessage());
+        // setting ReactiveCapabilityCurve to false with null min and max reactive
+        // limits
+        generatorModificationInfos.setReactiveCapabilityCurve(new AttributeModification<>(false, OperationType.SET));
+        generatorModificationInfos.setEnergySource(new AttributeModification<>(EnergySource.SOLAR, OperationType.SET));
+        generatorModificationInfos.setMaximumReactivePower(null);
+        generatorModificationInfos.setMinimumReactivePower(null);
+        // setting ReactiveCapabilityCurvePoints for the generator we are modifying
+        Generator generator = network.getGenerator("idGenerator");
+        generator.newReactiveCapabilityCurve()
+                        .beginPoint()
+                        .setP(0.)
+                        .setMaxQ(100.)
+                        .setMinQ(0.)
+                        .endPoint()
+                        .beginPoint()
+                        .setP(200.)
+                        .setMaxQ(150.)
+                        .setMinQ(0.)
+                        .endPoint()
+                        .add();
+        String modificationToCreateJson = mapper.writeValueAsString(generatorModificationInfos);
+
+        mockMvc.perform(post(URI_NETWORK_MODIF).content(modificationToCreateJson)
+                        .contentType(MediaType.APPLICATION_JSON))
+                        .andExpect(status().isOk()).andReturn();
+
+        GeneratorModificationInfos createdModification = (GeneratorModificationInfos) modificationRepository
+                        .getModifications(TEST_GROUP_ID, false, true).get(0);
+        testNetworkModificationsCount(TEST_GROUP_ID, 6);
+
+        // Modifying only min reactive limit
+        generatorModificationInfos.setMinimumReactivePower(new AttributeModification<>(-200., OperationType.SET));
+        modificationToCreateJson = mapper.writeValueAsString(generatorModificationInfos);
+
+        mockMvc.perform(post(URI_NETWORK_MODIF).content(modificationToCreateJson)
+                        .contentType(MediaType.APPLICATION_JSON))
+                        .andExpect(status().isOk()).andReturn();
+
+        createdModification = (GeneratorModificationInfos) modificationRepository
+                        .getModifications(TEST_GROUP_ID, false, true).get(1);
+
+        // Modifying only max reactive limit
+        generatorModificationInfos.setMinimumReactivePower(null);
+        generatorModificationInfos.setMaximumReactivePower(new AttributeModification<>(200., OperationType.SET));
+        modificationToCreateJson = mapper.writeValueAsString(generatorModificationInfos);
+
+        mockMvc.perform(post(URI_NETWORK_MODIF).content(modificationToCreateJson)
+                        .contentType(MediaType.APPLICATION_JSON))
+                        .andExpect(status().isOk()).andReturn();
+
+        createdModification = (GeneratorModificationInfos) modificationRepository
+                        .getModifications(TEST_GROUP_ID, false, true).get(2);
+        testNetworkModificationsCount(TEST_GROUP_ID, 8);
+
+        // Modifying both min and max reactive limits
+        generatorModificationInfos.setMinimumReactivePower(new AttributeModification<>(-1.1, OperationType.SET));
+        modificationToCreateJson = mapper.writeValueAsString(generatorModificationInfos);
+
+        mockMvc.perform(post(URI_NETWORK_MODIF).content(modificationToCreateJson)
+                        .contentType(MediaType.APPLICATION_JSON))
+                        .andExpect(status().isOk()).andReturn();
+
+        createdModification = (GeneratorModificationInfos) modificationRepository
+                        .getModifications(TEST_GROUP_ID, false, true).get(3);
+        testNetworkModificationsCount(TEST_GROUP_ID, 9);
 
     }
 
@@ -2210,72 +2275,6 @@ public class ModificationControllerTest {
                 .andExpect(status().isOk());
 
         testNetworkModificationsCount(newGroupUuid, 1);
-    }
-
-    @Test
-    public void testCreateSubstation() throws Exception {
-        MvcResult mvcResult;
-        String resultAsString;
-
-        // create new substation
-        SubstationCreationInfos substationCreationInfos = SubstationCreationInfos.builder()
-                .type(ModificationType.SUBSTATION_CREATION)
-                .equipmentId("SubstationId")
-                .equipmentName("SubstationName")
-                .substationCountry(Country.AF)
-                .build();
-        String substationCreationInfosJson = objectWriter.writeValueAsString(substationCreationInfos);
-        assertEquals("SubstationCreationInfos(super=EquipmentCreationInfos(super=EquipmentModificationInfos(super=ModificationInfos(uuid=null, date=null, type=SUBSTATION_CREATION, substationIds=[]), equipmentId=SubstationId), equipmentName=SubstationName), substationCountry=AF, properties=null)", substationCreationInfos.toString());
-        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(substationCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        List<EquipmentModificationInfos> modificationsSubstationCreation = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertThat(modificationsSubstationCreation.get(0), createMatcherEquipmentModificationInfos(ModificationType.SUBSTATION_CREATION, "SubstationId", Set.of("SubstationId")));
-
-        testNetworkModificationsCount(TEST_GROUP_ID, 1);
-
-        substationCreationInfos = new SubstationCreationEntity(
-                "SubstationIdEdited",
-                "SubstationNameEdited",
-                Country.CI,
-                Map.of("DEMO", "Demo1"))
-                .toModificationInfos();
-        substationCreationInfos.setUuid(modificationsSubstationCreation.get(0).getUuid());
-        substationCreationInfosJson = objectWriter.writeValueAsString(substationCreationInfos);
-
-        // Update substation creation
-        SubstationCreationInfos substationCreationUpdate = new SubstationCreationEntity(
-                "SubstationIdEdited",
-                "SubstationNameEdited",
-                Country.CI,
-               Map.of("DEMO", "Demo1")
-            ).toModificationInfos();
-        String substationCreationUpdateJson = objectWriter.writeValueAsString(substationCreationUpdate);
-        mockMvc.perform(put(URI_NETWORK_MODIF_GET_PUT + modificationsSubstationCreation.get(0).getUuid()).content(substationCreationUpdateJson).contentType(MediaType.APPLICATION_JSON))
-                .andReturn();
-
-        testNetworkModificationsCount(TEST_GROUP_ID, 1);
-
-        mvcResult = mockMvc.perform(get(URI_NETWORK_MODIF_GET_PUT + modificationsSubstationCreation.get(0).getUuid()))
-                .andExpect(status().isOk()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        SubstationCreationInfos listModificationsSubstationCreation = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertThat(listModificationsSubstationCreation, MatcherSubstationCreationInfos.createMatcherSubstationCreationInfos(substationCreationInfos));
-
-        // create substation with errors
-        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF_BAD_NETWORK).content(substationCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        assertEquals(resultAsString, new NetworkModificationException(NETWORK_NOT_FOUND, NOT_FOUND_NETWORK_ID.toString()).getMessage());
-
-        substationCreationInfos.setEquipmentId("");
-        substationCreationInfosJson = objectWriter.writeValueAsString(substationCreationInfos);
-        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(substationCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().is5xxServerError()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        assertEquals(resultAsString, new NetworkModificationException(CREATE_SUBSTATION_ERROR, "Invalid id ''").getMessage());
-
-        testNetworkModificationsCount(TEST_GROUP_ID, 1);
     }
 
     @Test
