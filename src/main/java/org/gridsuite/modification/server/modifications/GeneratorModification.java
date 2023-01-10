@@ -85,6 +85,8 @@ public class GeneratorModification extends AbstractModification {
     private void modifyGeneratorShortCircuitAttributes(GeneratorModificationInfos modificationInfos,
             Generator generator, Reporter subReporter) {
         GeneratorShortCircuit generatorShortCircuit = generator.getExtension(GeneratorShortCircuit.class);
+        Double oldTransientReactance = generatorShortCircuit != null ? generatorShortCircuit.getDirectTransX() : Double.NaN;
+        Double oldStepUpTransformerReactance = generatorShortCircuit != null ? generatorShortCircuit.getStepUpTransformerX() : Double.NaN;
         // Either transient reactance or step-up transformer reactance are modified or
         // both
         if (modificationInfos.getTransientReactance() != null
@@ -93,10 +95,10 @@ public class GeneratorModification extends AbstractModification {
                     .withDirectTransX(modificationInfos.getTransientReactance().getValue())
                     .withStepUpTransformerX(modificationInfos.getStepUpTransformerReactance().getValue())
                     .add();
-            ModificationUtils.getInstance().addModificationReport(generatorShortCircuit != null ? generatorShortCircuit.getDirectTransX() : Double.NaN,
+            ModificationUtils.getInstance().addModificationReport(oldTransientReactance,
                     modificationInfos.getTransientReactance().getValue(), subReporter,
                     "Transient reactance");
-            ModificationUtils.getInstance().addModificationReport(generatorShortCircuit != null ? generatorShortCircuit.getStepUpTransformerX() : Double.NaN,
+            ModificationUtils.getInstance().addModificationReport(oldStepUpTransformerReactance,
                     modificationInfos.getStepUpTransformerReactance().getValue(), subReporter,
                     "Transformer reactance");
 
@@ -104,14 +106,14 @@ public class GeneratorModification extends AbstractModification {
             generator.newExtension(GeneratorShortCircuitAdder.class)
                     .withDirectTransX(modificationInfos.getTransientReactance().getValue())
                     .add();
-            ModificationUtils.getInstance().addModificationReport(generatorShortCircuit != null ? generatorShortCircuit.getDirectTransX() : Double.NaN,
+            ModificationUtils.getInstance().addModificationReport(oldTransientReactance,
                     modificationInfos.getTransientReactance().getValue(), subReporter,
                     "Transient reactance");
         } else if (modificationInfos.getStepUpTransformerReactance() != null) {
             generator.newExtension(GeneratorShortCircuitAdder.class)
                     .withStepUpTransformerX(modificationInfos.getStepUpTransformerReactance().getValue())
                     .add();
-            ModificationUtils.getInstance().addModificationReport(generatorShortCircuit != null ? generatorShortCircuit.getStepUpTransformerX() : Double.NaN,
+            ModificationUtils.getInstance().addModificationReport(oldStepUpTransformerReactance,
                     modificationInfos.getStepUpTransformerReactance().getValue(), subReporter,
                     "Transformer reactance");
         }
@@ -334,11 +336,12 @@ public class GeneratorModification extends AbstractModification {
             if (modificationInfos.getQPercent() != null) {
                 CoordinatedReactiveControl coordinatedReactiveControl = generator
                         .getExtension(CoordinatedReactiveControl.class);
+                Double oldQPercent = coordinatedReactiveControl != null ? coordinatedReactiveControl.getQPercent() : Double.NaN;
                 generator.newExtension(CoordinatedReactiveControlAdderImpl.class)
                         .withQPercent(modificationInfos.getQPercent().getValue())
                         .add();
                 ModificationUtils.getInstance().addModificationReport(
-                        coordinatedReactiveControl != null ? coordinatedReactiveControl.getQPercent() : Double.NaN,
+                        oldQPercent,
                         modificationInfos.getQPercent().getValue(),
                         subReporter, "Reactive percentage");
             }
