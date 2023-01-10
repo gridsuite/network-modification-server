@@ -6,7 +6,6 @@
  */
 package org.gridsuite.modification.server.entities.equipment.modification;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -24,7 +23,6 @@ import java.util.stream.Collectors;
  * @author bendaamerahm <ahmed.bendaamer at rte-france.com>
  */
 @NoArgsConstructor
-@AllArgsConstructor
 @Getter
 @Setter
 @Entity
@@ -61,20 +59,19 @@ public class ScalingVariationEntity {
 
     private List<VariationFilterEntity> getFiltersEntity(ScalingVariationInfos variationInfos) {
         return variationInfos.getFilters().stream().map(filterInfos -> VariationFilterEntity.builder()
-                        .filterId(UUID.fromString(filterInfos.getId()))
+                        .filterId(filterInfos.getId())
                         .name(filterInfos.getName())
                         .build())
                 .collect(Collectors.toList());
     }
 
-    public ScalingVariationInfos toScalingVariation() {
+    public ScalingVariationInfos toScalingVariationInfos() {
         return ScalingVariationInfos.builder()
-                .id(getId())
                 .variationMode(getVariationMode())
                 .variationValue(getVariationValue())
                 .reactiveVariationMode(getReactiveVariationMode())
                 .filters(this.getFilters().stream()
-                        .map(filter -> new FilterInfos(filter.getFilterId().toString(), filter.getName()))
+                        .map(filter -> new FilterInfos(filter.getFilterId(), filter.getName()))
                         .collect(Collectors.toList()))
                 .build();
     }

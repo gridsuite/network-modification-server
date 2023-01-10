@@ -13,6 +13,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
+import java.util.UUID;
+
 /**
  * @author bendaamerahm <ahmed.bendaamer at rte-france.com>
  */
@@ -25,7 +27,7 @@ import lombok.experimental.SuperBuilder;
 public class FilterInfos {
 
     @Schema(description = "id of filter")
-    private String id;
+    private UUID id;
 
     @Schema(description = "name of filter")
     private String name;

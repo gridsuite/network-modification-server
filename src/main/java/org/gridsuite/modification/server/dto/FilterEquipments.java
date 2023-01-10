@@ -28,6 +28,9 @@ public class FilterEquipments {
     @Schema(description = "filter id")
     private UUID filterId;
 
+    @Schema(description = "filter name")
+    private String filterName;
+
     @Schema(description = "equipments of filter")
     private List<IdentifiableAttributes> identifiableAttributes;
 

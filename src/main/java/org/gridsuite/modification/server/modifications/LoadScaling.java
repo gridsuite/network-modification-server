@@ -7,17 +7,14 @@
 package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.commons.reporter.Reporter;
-import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.iidm.modification.scalable.Scalable;
 import com.powsybl.iidm.network.Load;
 import com.powsybl.iidm.network.Network;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.VariationType;
 import org.gridsuite.modification.server.dto.IdentifiableAttributes;
 import org.gridsuite.modification.server.dto.LoadScalingInfos;
 import org.gridsuite.modification.server.dto.ScalingVariationInfos;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -35,27 +32,17 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
  */
 public class LoadScaling extends AbstractScaling {
 
-    @Autowired
     public LoadScaling(LoadScalingInfos loadScalableInfos) {
         super(loadScalableInfos);
     }
 
     @Override
-    public void applyVentilationVariation(Network network,
+    protected void applyVentilationVariation(Network network,
                                           List<IdentifiableAttributes> identifiableAttributes,
-                                          ScalingVariationInfos scalingVariationInfos, Reporter subReporter) {
+                                          ScalingVariationInfos scalingVariationInfos, Reporter subReporter, double distributionKeys) {
         AtomicReference<Double> sum = new AtomicReference<>(0D);
         List<Float> percentages = new ArrayList<>();
         List<Scalable> scalables = new ArrayList<>();
-        var distributionKeys = identifiableAttributes.stream()
-                .filter(equipment -> equipment.getDistributionKey() != null)
-                .mapToDouble(IdentifiableAttributes::getDistributionKey)
-                .sum();
-        if (distributionKeys == 0) {
-            String message = "This mode is available only for equipment with distribution key";
-            ScalingUtils.createReport(subReporter, LOAD_SCALING_ERROR.name(), message, TypedValue.ERROR_SEVERITY);
-            throw new NetworkModificationException(LOAD_SCALING_ERROR, message);
-        }
 
         identifiableAttributes.forEach(equipment -> {
             scalables.add(getScalable(equipment.getId()));
@@ -66,20 +53,20 @@ public class LoadScaling extends AbstractScaling {
     }
 
     @Override
-    public void applyRegularDistributionVariation(Network network,
+    protected void applyRegularDistributionVariation(Network network,
                                                   List<IdentifiableAttributes> identifiableAttributes,
                                                   ScalingVariationInfos scalingVariationInfos) {
-        List<Load> generators = identifiableAttributes
+        List<Load> loads = identifiableAttributes
                 .stream()
                 .map(attribute -> network.getLoad(attribute.getId()))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
         AtomicReference<Double> sum = new AtomicReference<>(0D);
-        List<Scalable> scalables = generators.stream()
-                .map(generator -> {
-                    sum.set(sum.get() + generator.getP0());
-                    return getScalable(generator.getId());
+        List<Scalable> scalables = loads.stream()
+                .map(load -> {
+                    sum.set(sum.get() + load.getP0());
+                    return getScalable(load.getId());
                 }).collect(Collectors.toList());
 
         List<Float> percentages = new ArrayList<>(Collections.nCopies(scalables.size(), 100 / (float) scalables.size()));
@@ -89,18 +76,18 @@ public class LoadScaling extends AbstractScaling {
     }
 
     @Override
-    public void applyProportionalVariation(Network network,
+    protected void applyProportionalVariation(Network network,
                                            List<IdentifiableAttributes> identifiableAttributes,
                                            ScalingVariationInfos scalingVariationInfos) {
-        List<Load> generators = identifiableAttributes
+        List<Load> loads = identifiableAttributes
                 .stream().map(attribute -> network.getLoad(attribute.getId())).collect(Collectors.toList());
         AtomicReference<Double> sum = new AtomicReference<>(0D);
         Map<String, Double> targetPMap = new HashMap<>();
         List<Float> percentages = new ArrayList<>();
         List<Scalable> scalables = new ArrayList<>();
-        generators.forEach(generator -> {
-            targetPMap.put(generator.getId(), generator.getP0());
-            sum.set(sum.get() + generator.getP0());
+        loads.forEach(load -> {
+            targetPMap.put(load.getId(), load.getP0());
+            sum.set(sum.get() + load.getP0());
         });
         targetPMap.forEach((id, p) -> {
             percentages.add((float) ((p / sum.get()) * 100));
@@ -118,7 +105,7 @@ public class LoadScaling extends AbstractScaling {
                         getAsked(scalingVariationInfos, sum),
                         Scalable.ScalingConvention.LOAD);
                 break;
-            case TAN_FIXED:
+            case TAN_PHI_FIXED:
                 proportionalScalable.scaleWithConstantPowerFactor(network,
                         getAsked(scalingVariationInfos, sum),
                         Scalable.ScalingConvention.LOAD);
@@ -129,23 +116,15 @@ public class LoadScaling extends AbstractScaling {
     }
 
     @Override
-    public double getAsked(ScalingVariationInfos generatorScalingVariation, AtomicReference<Double> sum) {
+    protected double getAsked(ScalingVariationInfos scalingVariationInfos, AtomicReference<Double> sum) {
         return scalingInfos.getVariationType() == VariationType.DELTA_P
-                ? generatorScalingVariation.getVariationValue()
-                : generatorScalingVariation.getVariationValue() - sum.get();
+                ? scalingVariationInfos.getVariationValue()
+                : scalingVariationInfos.getVariationValue() - sum.get();
     }
 
-    public Scalable getScalable(String id) {
+    @Override
+    protected Scalable getScalable(String id) {
         return Scalable.onLoad(id);
     }
 
-    @Override
-    public NetworkModificationException.Type getExceptionType() {
-        return LOAD_SCALING_ERROR;
-    }
-
-    @Override
-    public ModificationType getModificationType() {
-        return ModificationType.LOAD_SCALING;
-    }
 }

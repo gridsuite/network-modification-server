@@ -69,7 +69,8 @@ public class MatcherLoadScalingInfos extends MatcherModificationInfos<LoadScalin
     }
 
     private boolean matchesFilter(FilterInfos filter1, FilterInfos filter2) {
-        return Objects.equals(filter1.getName(), filter2.getName());
+        return Objects.equals(filter1.getName(), filter2.getName()) &&
+                Objects.equals(filter1.getId(), filter2.getId());
     }
 
     private boolean matchesList(List<?> list1, List<?> list2) {

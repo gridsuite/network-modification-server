@@ -59,6 +59,7 @@ import org.gridsuite.modification.server.modifications.ModificationUtils;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -111,6 +112,7 @@ public class NetworkModificationService {
     private String reportServerBaseUri;
 
     private final ObjectMapper objectMapper;
+    private final ApplicationContext context;
 
     private static final String REPORT_API_VERSION = "v1";
     private static final String DELIMITER = "/";
@@ -124,7 +126,8 @@ public class NetworkModificationService {
                                       NetworkStoreService networkStoreService, NetworkModificationRepository networkModificationRepository,
                                       EquipmentInfosService equipmentInfosService,
                                       ModificationRepository modificationRepository, NotificationService notificationService,
-                                      ModificationApplicator modificationApplicator, ObjectMapper objectMapper) {
+                                      ModificationApplicator modificationApplicator, ObjectMapper objectMapper,
+                                      ApplicationContext context) {
         this.networkStoreService = networkStoreService;
         this.networkModificationRepository = networkModificationRepository;
         this.equipmentInfosService = equipmentInfosService;
@@ -136,6 +139,7 @@ public class NetworkModificationService {
         this.objectMapper = objectMapper;
         this.objectMapper.registerModule(new ReporterModelJsonModule());
         this.objectMapper.setInjectableValues(new InjectableValues.Std().addValue(ReporterModelDeserializer.DICTIONARY_VALUE_ID, null));
+        this.context = context;
     }
 
     public void setReportServerBaseUri(String reportServerBaseUri) {
@@ -525,7 +529,7 @@ public class NetworkModificationService {
         List<ModificationInfos> networkModifications = List.of();
         try {
             if (listener.isApplyModifications()) {
-                networkModifications = modificationApplicator.apply(modificationInfos, reporter, listener);
+                networkModifications = modificationApplicator.apply(modificationInfos, reporter, listener, context);
             }
             if (!listener.isBuild()) {
                 saveModifications(listener, groupUuid, modificationInfos.toEntity());

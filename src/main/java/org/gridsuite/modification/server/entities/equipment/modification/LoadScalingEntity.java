@@ -64,7 +64,7 @@ public class LoadScalingEntity extends ScalingEntity {
                 .type(ModificationType.valueOf(getType()))
                 .variationType(getVariationType())
                 .variations(getVariations().stream()
-                        .map(ScalingVariationEntity::toScalingVariation)
+                        .map(ScalingVariationEntity::toScalingVariationInfos)
                         .collect(Collectors.toList()))
                 .build();
     }

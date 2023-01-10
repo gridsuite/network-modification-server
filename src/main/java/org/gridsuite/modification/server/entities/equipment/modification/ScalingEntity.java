@@ -6,13 +6,12 @@
  */
 package org.gridsuite.modification.server.entities.equipment.modification;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.VariationType;
+import org.gridsuite.modification.server.dto.ScalingInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 
 import javax.persistence.Column;
@@ -25,10 +24,8 @@ import javax.validation.constraints.NotNull;
  * @author bendaamerahm <ahmed.bendaamer at rte-france.com>
  */
 @NoArgsConstructor
-@AllArgsConstructor
 @Getter
 @Setter
-@Builder
 @MappedSuperclass
 public class ScalingEntity extends ModificationEntity {
     @Column(name = "VariationType")
@@ -37,5 +34,9 @@ public class ScalingEntity extends ModificationEntity {
 
     public ScalingEntity(@NotNull ModificationType modificationType) {
         super(modificationType);
+    }
+
+    public ScalingEntity(@NotNull ScalingInfos scalingInfos) {
+        super(scalingInfos);
     }
 }

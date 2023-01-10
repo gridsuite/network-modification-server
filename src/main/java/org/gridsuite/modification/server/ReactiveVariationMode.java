@@ -11,5 +11,5 @@ package org.gridsuite.modification.server;
  */
 public enum ReactiveVariationMode {
     CONSTANT_Q,
-    TAN_FIXED
+    TAN_PHI_FIXED
 }

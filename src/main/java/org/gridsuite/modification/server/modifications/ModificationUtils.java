@@ -323,5 +323,13 @@ public final class ModificationUtils {
         }
     }
 
+    public static void createReport(Reporter reporter, String reporterKey, String message, TypedValue errorSeverity) {
+        reporter.report(Report.builder()
+                .withKey(reporterKey)
+                .withDefaultMessage(message)
+                .withSeverity(errorSeverity)
+                .build());
+    }
+
 }
 
