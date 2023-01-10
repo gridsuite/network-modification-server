@@ -814,6 +814,71 @@ public class ModificationControllerTest {
            .andExpect(status().is5xxServerError()).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
         assertEquals(resultAsString, new NetworkModificationException(MODIFY_GENERATOR_ERROR, "Generator '" + generatorId + "': energy source is not set").getMessage());
+        // setting ReactiveCapabilityCurve to false with null min and max reactive
+        // limits
+        generatorModificationInfos.setReactiveCapabilityCurve(new AttributeModification<>(false, OperationType.SET));
+        generatorModificationInfos.setEnergySource(new AttributeModification<>(EnergySource.SOLAR, OperationType.SET));
+        generatorModificationInfos.setMaximumReactivePower(null);
+        generatorModificationInfos.setMinimumReactivePower(null);
+        // setting ReactiveCapabilityCurvePoints for the generator we are modifying
+        Generator generator = network.getGenerator("idGenerator");
+        generator.newReactiveCapabilityCurve()
+                        .beginPoint()
+                        .setP(0.)
+                        .setMaxQ(100.)
+                        .setMinQ(0.)
+                        .endPoint()
+                        .beginPoint()
+                        .setP(200.)
+                        .setMaxQ(150.)
+                        .setMinQ(0.)
+                        .endPoint()
+                        .add();
+        String modificationToCreateJson = mapper.writeValueAsString(generatorModificationInfos);
+
+        mockMvc.perform(post(URI_NETWORK_MODIF).content(modificationToCreateJson)
+                        .contentType(MediaType.APPLICATION_JSON))
+                        .andExpect(status().isOk()).andReturn();
+
+        GeneratorModificationInfos createdModification = (GeneratorModificationInfos) modificationRepository
+                        .getModifications(TEST_GROUP_ID, false, true).get(0);
+        testNetworkModificationsCount(TEST_GROUP_ID, 6);
+
+        // Modifying only min reactive limit
+        generatorModificationInfos.setMinimumReactivePower(new AttributeModification<>(-200., OperationType.SET));
+        modificationToCreateJson = mapper.writeValueAsString(generatorModificationInfos);
+
+        mockMvc.perform(post(URI_NETWORK_MODIF).content(modificationToCreateJson)
+                        .contentType(MediaType.APPLICATION_JSON))
+                        .andExpect(status().isOk()).andReturn();
+
+        createdModification = (GeneratorModificationInfos) modificationRepository
+                        .getModifications(TEST_GROUP_ID, false, true).get(1);
+
+        // Modifying only max reactive limit
+        generatorModificationInfos.setMinimumReactivePower(null);
+        generatorModificationInfos.setMaximumReactivePower(new AttributeModification<>(200., OperationType.SET));
+        modificationToCreateJson = mapper.writeValueAsString(generatorModificationInfos);
+
+        mockMvc.perform(post(URI_NETWORK_MODIF).content(modificationToCreateJson)
+                        .contentType(MediaType.APPLICATION_JSON))
+                        .andExpect(status().isOk()).andReturn();
+
+        createdModification = (GeneratorModificationInfos) modificationRepository
+                        .getModifications(TEST_GROUP_ID, false, true).get(2);
+        testNetworkModificationsCount(TEST_GROUP_ID, 8);
+
+        // Modifying both min and max reactive limits
+        generatorModificationInfos.setMinimumReactivePower(new AttributeModification<>(-1.1, OperationType.SET));
+        modificationToCreateJson = mapper.writeValueAsString(generatorModificationInfos);
+
+        mockMvc.perform(post(URI_NETWORK_MODIF).content(modificationToCreateJson)
+                        .contentType(MediaType.APPLICATION_JSON))
+                        .andExpect(status().isOk()).andReturn();
+
+        createdModification = (GeneratorModificationInfos) modificationRepository
+                        .getModifications(TEST_GROUP_ID, false, true).get(3);
+        testNetworkModificationsCount(TEST_GROUP_ID, 9);
 
     }
 
