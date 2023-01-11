@@ -51,13 +51,7 @@ public class GeneratorCreation extends AbstractModification {
         if (voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER) {
             createGeneratorInNodeBreaker(voltageLevel, modificationInfos, network, subReporter);
         } else {
-            createGeneratorInBusBreaker(voltageLevel, modificationInfos);
-            subReporter.report(Report.builder()
-                    .withKey("generatorCreated")
-                    .withDefaultMessage("New generator with id=${id} created")
-                    .withValue("id", modificationInfos.getEquipmentId())
-                    .withSeverity(TypedValue.INFO_SEVERITY)
-                    .build());
+            createGeneratorInBusBreaker(voltageLevel, modificationInfos, subReporter);
         }
     }
 
@@ -165,7 +159,7 @@ public class GeneratorCreation extends AbstractModification {
         }
     }
 
-    private Generator createGeneratorInBusBreaker(VoltageLevel voltageLevel, GeneratorCreationInfos generatorCreationInfos) {
+    private void createGeneratorInBusBreaker(VoltageLevel voltageLevel, GeneratorCreationInfos generatorCreationInfos, Reporter subReporter) {
         Bus bus = ModificationUtils.getInstance().getBusBreakerBus(voltageLevel, generatorCreationInfos.getBusOrBusbarSectionId());
 
         Terminal terminal = ModificationUtils.getInstance().getTerminalFromIdentifiable(voltageLevel.getNetwork(),
@@ -226,7 +220,12 @@ public class GeneratorCreation extends AbstractModification {
             adder.add();
         }
 
-        return generator;
+        subReporter.report(Report.builder()
+                .withKey("generatorCreated")
+                .withDefaultMessage("New generator with id=${id} created")
+                .withValue("id", modificationInfos.getEquipmentId())
+                .withSeverity(TypedValue.INFO_SEVERITY)
+                .build());
     }
 
 }

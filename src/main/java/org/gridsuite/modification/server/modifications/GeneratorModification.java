@@ -124,7 +124,7 @@ public class GeneratorModification extends AbstractModification {
                     modificationInfos.getStepUpTransformerReactance().getValue(),
                     "Transformer reactance"));
         }
-        ModificationUtils.getInstance().reportModifications(subReporter, reports, GeneratorShortCircuit.class.getSimpleName(), "Short-circuit modified :");
+        ModificationUtils.getInstance().reportModifications(subReporter, reports, "shortCircuitAttributesModified", "Short-circuit modified :");
     }
 
     private void modifyGeneratorMinMaxReactiveLimits(GeneratorModificationInfos modificationInfos, Generator generator,
@@ -181,7 +181,7 @@ public class GeneratorModification extends AbstractModification {
                     MAX_REACTIVE_POWER_FIELDNAME));
         }
 
-        ModificationUtils.getInstance().reportModifications(subReporter, reports, ReactiveLimitsKind.MIN_MAX.name(), "Reactive limits By range modified :");
+        ModificationUtils.getInstance().reportModifications(subReporter, reports, "minMaxReactiveLimitsModified", "Reactive limits By range modified :");
     }
 
     private void modifyGeneratorReactiveCapabilityCurvePoints(GeneratorModificationInfos modificationInfos,
@@ -214,7 +214,7 @@ public class GeneratorModification extends AbstractModification {
                     }
                 });
         adder.add();
-        ModificationUtils.getInstance().reportModifications(subReporter, reports, ReactiveLimitsKind.CURVE.name(), "Reactive limits By diagram modified :");
+        ModificationUtils.getInstance().reportModifications(subReporter, reports, "curveReactiveLimitsModified", "Reactive limits By diagram modified :");
     }
 
     private void modifyGeneratorReactiveLimitsAttributes(GeneratorModificationInfos modificationInfos,
@@ -264,7 +264,7 @@ public class GeneratorModification extends AbstractModification {
                         .withParticipate(participate).add();
             }
         }
-        ModificationUtils.getInstance().reportModifications(subReporter, reports, ActivePowerControl.class.getSimpleName(), "Active power regulation modified :");
+        ModificationUtils.getInstance().reportModifications(subReporter, reports, "activePowerRegulationModified", "Active power regulation modified :");
     }
 
     private void modifyGeneratorStartUpAttributes(GeneratorModificationInfos modificationInfos, Generator generator,
@@ -280,7 +280,7 @@ public class GeneratorModification extends AbstractModification {
                     "Cost of start"));
         }
 
-        ModificationUtils.getInstance().reportModifications(subReporter, reports, GeneratorStartup.class.getSimpleName(), "Start up modified :");
+        ModificationUtils.getInstance().reportModifications(subReporter, reports, "startUpAttributesModified", "Start up modified :");
     }
 
     private void modifyGeneratorRegulatingTerminal(GeneratorModificationInfos modificationInfos, Generator generator, List<Report> modificationReports) {
@@ -370,6 +370,6 @@ public class GeneratorModification extends AbstractModification {
                         "Reactive power set point"));
             }
         }
-        ModificationUtils.getInstance().reportModifications(subReporter, voltageRegulationReports, "voltageRegulation", "Voltage regulation modified :");
+        ModificationUtils.getInstance().reportModifications(subReporter, voltageRegulationReports, "voltageRegulationModified", "Voltage regulation modified :");
     }
 }
