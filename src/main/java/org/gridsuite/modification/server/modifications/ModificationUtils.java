@@ -19,9 +19,11 @@ import org.gridsuite.modification.server.dto.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TreeMap;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 
@@ -333,30 +335,55 @@ public final class ModificationUtils {
         }
     }
 
-    public <T> void applyElementaryModifications(Consumer<T> setter, Supplier<T> getter,
-                                                         AttributeModification<T> modification,
-                                                         Reporter subReporter, String fieldName) {
+    public <T> Report applyElementaryModificationsAndReturnReport(Consumer<T> setter, Supplier<T> getter,
+            AttributeModification<T> modification, String fieldName) {
         if (modification != null) {
             T oldValue = getter.get();
             T newValue = modification.applyModification(oldValue);
             setter.accept(newValue);
 
-            addModificationReport(oldValue, newValue, subReporter, fieldName);
+            return buildModificationReport(oldValue, newValue, fieldName);
+        }
+        return null;
+    }
+
+    public void reportModifications(Reporter subReporter, List<Report> reports, String subReporterKey,
+            String subReporterDefaultMessage) {
+        List<Report> validReports = reports.stream().filter(Objects::nonNull).collect(Collectors.toList());
+        if (!validReports.isEmpty()) {
+            Reporter modificationSubreporter = subReporter.createSubReporter(subReporterKey, subReporterDefaultMessage);
+            modificationSubreporter.report(Report.builder()
+                    .withKey(subReporterKey)
+                    .withDefaultMessage(subReporterDefaultMessage)
+                    .withSeverity(TypedValue.INFO_SEVERITY)
+                    .build());
+            validReports.stream().forEach(modificationSubreporter::report);
         }
     }
 
-    public <T> void addModificationReport(T oldValue, T newValue,
+    public <T> void applyElementaryModifications(Consumer<T> setter, Supplier<T> getter,
+            AttributeModification<T> modification,
             Reporter subReporter, String fieldName) {
+        if (modification != null) {
+            T oldValue = getter.get();
+            T newValue = modification.applyModification(oldValue);
+            setter.accept(newValue);
+
+            subReporter.report(buildModificationReport(oldValue, newValue, fieldName));
+        }
+    }
+
+    public <T> Report buildModificationReport(T oldValue, T newValue, String fieldName) {
         String oldValueString = oldValue == null ? "NaN" : oldValue.toString();
         String newValueString = newValue == null ? "NaN" : newValue.toString();
-        subReporter.report(Report.builder()
+        return Report.builder()
                 .withKey("Modification" + fieldName)
                 .withDefaultMessage("    ${fieldName} : ${oldValue} -> ${newValue}")
                 .withValue("fieldName", fieldName)
                 .withValue("oldValue", oldValueString)
                 .withValue("newValue", newValueString)
                 .withSeverity(TypedValue.INFO_SEVERITY)
-                .build());
+                .build();
     }
 
     public Terminal getTerminalFromIdentifiable(Network network,
