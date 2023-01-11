@@ -12,16 +12,12 @@ import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.TwoWindingsTransformerCreationEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
-
-import static org.gridsuite.modification.server.entities.equipment.creation.GeneratorCreationEntity.toEmbeddablePoints;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -155,42 +151,6 @@ public class NetworkStoreListener implements NetworkListener {
                 loadModificationInfos.getBusOrBusbarSectionId(),
                 loadModificationInfos.getActivePower(),
                 loadModificationInfos.getReactivePower()));
-    }
-
-    @Transactional
-    public void storeGeneratorModification(GeneratorModificationInfos generatorModificationInfos) {
-        modifications.add(new GeneratorModificationEntity(generatorModificationInfos));
-    }
-
-    public void storeGeneratorCreation(GeneratorCreationInfos generatorCreationInfos) {
-        modifications.add(this.modificationRepository.createGeneratorEntity(generatorCreationInfos.getEquipmentId(),
-            generatorCreationInfos.getEquipmentName(),
-            generatorCreationInfos.getEnergySource(),
-            generatorCreationInfos.getVoltageLevelId(),
-            generatorCreationInfos.getBusOrBusbarSectionId(),
-            generatorCreationInfos.getMinActivePower(),
-            generatorCreationInfos.getMaxActivePower(),
-            generatorCreationInfos.getRatedNominalPower(),
-            generatorCreationInfos.getActivePowerSetpoint(),
-            generatorCreationInfos.getReactivePowerSetpoint(),
-            generatorCreationInfos.isVoltageRegulationOn(),
-            generatorCreationInfos.getVoltageSetpoint(),
-            generatorCreationInfos.getMarginalCost(),
-            generatorCreationInfos.getMinimumReactivePower(),
-            generatorCreationInfos.getMaximumReactivePower(),
-            generatorCreationInfos.getParticipate() != null && generatorCreationInfos.getParticipate(),
-            generatorCreationInfos.getDroop(),
-            generatorCreationInfos.getTransientReactance(),
-            generatorCreationInfos.getStepUpTransformerReactance(),
-            generatorCreationInfos.getRegulatingTerminalId(),
-            generatorCreationInfos.getRegulatingTerminalType(),
-            generatorCreationInfos.getRegulatingTerminalVlId(),
-            generatorCreationInfos.getQPercent(),
-            generatorCreationInfos.getReactiveCapabilityCurve() == null || generatorCreationInfos.getReactiveCapabilityCurve(),
-            toEmbeddablePoints(generatorCreationInfos.getReactiveCapabilityCurvePoints()),
-            generatorCreationInfos.getConnectionName(),
-            generatorCreationInfos.getConnectionDirection(),
-            generatorCreationInfos.getConnectionPosition()));
     }
 
     public void storeEquipmentDeletion(String equipmentId, String equipmentType) {

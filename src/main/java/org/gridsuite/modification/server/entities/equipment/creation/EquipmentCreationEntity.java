@@ -28,10 +28,10 @@ public class EquipmentCreationEntity extends EquipmentModificationEntity {
 
     protected EquipmentCreationEntity(EquipmentCreationInfos equipmentCreationInfos) {
         super(equipmentCreationInfos);
-        this.equipmentName = equipmentCreationInfos.getEquipmentName();
+        assignAttributes(equipmentCreationInfos);
     }
 
-    //TODO : remove
+    // TODO : remove
     protected EquipmentCreationEntity(ModificationType modificationType, String equipmentId, String equipmentName) {
         super(equipmentId, modificationType);
         this.equipmentName = equipmentName;
@@ -40,7 +40,10 @@ public class EquipmentCreationEntity extends EquipmentModificationEntity {
     @Override
     public void update(ModificationInfos modificationInfos) {
         super.update(modificationInfos);
-        EquipmentCreationInfos equipmentCreationInfos = (EquipmentCreationInfos) modificationInfos;
-        equipmentName = equipmentCreationInfos.getEquipmentName();
+        assignAttributes((EquipmentCreationInfos) modificationInfos);
+    }
+
+    private void assignAttributes(EquipmentCreationInfos equipmentCreationInfos) {
+        this.equipmentName = equipmentCreationInfos.getEquipmentName();
     }
 }

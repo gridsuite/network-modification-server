@@ -9,9 +9,12 @@ package org.gridsuite.modification.server.entities.equipment.modification;
 import com.powsybl.iidm.network.EnergySource;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
+
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.AttributeModification;
 import org.gridsuite.modification.server.dto.GeneratorModificationInfos;
+import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.ReactiveCapabilityCurveModificationInfos;
 import org.gridsuite.modification.server.dto.VoltageRegulationType;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.BooleanModificationEmbedded;
@@ -198,45 +201,40 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
     @CollectionTable
     private List<ReactiveCapabilityCurveModificationEmbeddable> reactiveCapabilityCurvePoints;
 
-    public GeneratorModificationEntity(String equipmentId, AttributeModification<String> equipmentName,
-            AttributeModification<String> voltageLevelId, AttributeModification<String> busOrBusbarSectionId,
-            AttributeModification<EnergySource> energySource,
-            AttributeModification<Double> minActivePower, AttributeModification<Double> maxActivePower,
-            AttributeModification<Double> ratedNominalPower,
-            AttributeModification<Double> activePowerSetpoint, AttributeModification<Double> reactivePowerSetpoint,
-            AttributeModification<Boolean> voltageRegulationOn, AttributeModification<Double> voltageSetpoint,
-            AttributeModification<Double> marginalCost, AttributeModification<Double> minimumReactivePower,
-            AttributeModification<Double> maximumReactivePower, AttributeModification<Boolean> participate,
-            AttributeModification<Float> droop, AttributeModification<Double> transientReactance,
-            AttributeModification<Double> stepUpTransformerReactance, AttributeModification<VoltageRegulationType> voltageRegulationType,
-            AttributeModification<String> regulatingTerminalId, AttributeModification<String> regulatingTerminalType,
-            AttributeModification<String> regulatingTerminalVlId,
-            AttributeModification<Double> qPercent,
-            AttributeModification<Boolean> reactiveCapabilityCurve,
-            List<ReactiveCapabilityCurveModificationEmbeddable> reactiveCapabilityCurvePoints) {
-        super(ModificationType.GENERATOR_MODIFICATION, equipmentId, equipmentName, voltageLevelId, busOrBusbarSectionId);
-        this.energySource = new EnumModificationEmbedded<>(energySource);
-        this.minActivePower = new DoubleModificationEmbedded(minActivePower);
-        this.maxActivePower = new DoubleModificationEmbedded(maxActivePower);
-        this.ratedNominalPower = new DoubleModificationEmbedded(ratedNominalPower);
-        this.activePowerSetpoint = new DoubleModificationEmbedded(activePowerSetpoint);
-        this.reactivePowerSetpoint = new DoubleModificationEmbedded(reactivePowerSetpoint);
-        this.voltageRegulationOn = new BooleanModificationEmbedded(voltageRegulationOn);
-        this.voltageSetpoint = new DoubleModificationEmbedded(voltageSetpoint);
-        this.marginalCost = new DoubleModificationEmbedded(marginalCost);
-        this.minimumReactivePower = new DoubleModificationEmbedded(minimumReactivePower);
-        this.maximumReactivePower = new DoubleModificationEmbedded(maximumReactivePower);
-        this.participate = new BooleanModificationEmbedded(participate);
-        this.droop = new FloatModificationEmbedded(droop);
-        this.transientReactance = new DoubleModificationEmbedded(transientReactance);
-        this.stepUpTransformerReactance = new DoubleModificationEmbedded(stepUpTransformerReactance);
-        this.voltageRegulationType = new EnumModificationEmbedded<>(voltageRegulationType);
-        this.regulatingTerminalId = new StringModificationEmbedded(regulatingTerminalId);
-        this.regulatingTerminalType = new StringModificationEmbedded(regulatingTerminalType);
-        this.regulatingTerminalVlId = new StringModificationEmbedded(regulatingTerminalVlId);
-        this.qPercent = new DoubleModificationEmbedded(qPercent);
-        this.reactiveCapabilityCurve = new BooleanModificationEmbedded(reactiveCapabilityCurve);
-        this.reactiveCapabilityCurvePoints = reactiveCapabilityCurvePoints;
+    public GeneratorModificationEntity(@NonNull GeneratorModificationInfos generatorModificationInfos) {
+        super(generatorModificationInfos);
+        assignAttributes(generatorModificationInfos);
+    }
+
+    @Override
+    public void update(@NonNull ModificationInfos modificationInfos) {
+        super.update(modificationInfos);
+        assignAttributes((GeneratorModificationInfos) modificationInfos);
+    }
+
+    private void assignAttributes(GeneratorModificationInfos generatorModificationInfos) {
+        this.energySource = new EnumModificationEmbedded<>(generatorModificationInfos.getEnergySource());
+        this.minActivePower = new DoubleModificationEmbedded(generatorModificationInfos.getMinActivePower());
+        this.maxActivePower = new DoubleModificationEmbedded(generatorModificationInfos.getMaxActivePower());
+        this.ratedNominalPower = new DoubleModificationEmbedded(generatorModificationInfos.getRatedNominalPower());
+        this.activePowerSetpoint = new DoubleModificationEmbedded(generatorModificationInfos.getActivePowerSetpoint());
+        this.reactivePowerSetpoint = new DoubleModificationEmbedded(generatorModificationInfos.getReactivePowerSetpoint());
+        this.voltageRegulationOn = new BooleanModificationEmbedded(generatorModificationInfos.getVoltageRegulationOn());
+        this.voltageSetpoint = new DoubleModificationEmbedded(generatorModificationInfos.getVoltageSetpoint());
+        this.marginalCost = new DoubleModificationEmbedded(generatorModificationInfos.getMarginalCost());
+        this.minimumReactivePower = new DoubleModificationEmbedded(generatorModificationInfos.getMinimumReactivePower());
+        this.maximumReactivePower = new DoubleModificationEmbedded(generatorModificationInfos.getMaximumReactivePower());
+        this.participate = new BooleanModificationEmbedded(generatorModificationInfos.getParticipate());
+        this.droop = new FloatModificationEmbedded(generatorModificationInfos.getDroop());
+        this.transientReactance = new DoubleModificationEmbedded(generatorModificationInfos.getTransientReactance());
+        this.stepUpTransformerReactance = new DoubleModificationEmbedded(generatorModificationInfos.getStepUpTransformerReactance());
+        this.voltageRegulationType = new EnumModificationEmbedded<>(generatorModificationInfos.getVoltageRegulationType());
+        this.regulatingTerminalId = new StringModificationEmbedded(generatorModificationInfos.getRegulatingTerminalId());
+        this.regulatingTerminalType = new StringModificationEmbedded(generatorModificationInfos.getRegulatingTerminalType());
+        this.regulatingTerminalVlId = new StringModificationEmbedded(generatorModificationInfos.getRegulatingTerminalVlId());
+        this.qPercent = new DoubleModificationEmbedded(generatorModificationInfos.getQPercent());
+        this.reactiveCapabilityCurve = new BooleanModificationEmbedded(generatorModificationInfos.getReactiveCapabilityCurve());
+        this.reactiveCapabilityCurvePoints = toEmbeddablePoints(generatorModificationInfos.getReactiveCapabilityCurvePoints());
     }
 
     public static List<ReactiveCapabilityCurveModificationEmbeddable> toEmbeddablePoints(
@@ -247,17 +245,6 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
                                 point.getQmaxP(), point.getOldQmaxP(), point.getP(),
                                 point.getOldP()))
                         .collect(Collectors.toList());
-    }
-
-    public GeneratorModificationEntity(GeneratorModificationInfos infos) {
-        this(infos.getEquipmentId(), infos.getEquipmentName(), infos.getVoltageLevelId(),
-                infos.getBusOrBusbarSectionId(),
-                infos.getEnergySource(),
-                infos.getMinActivePower(), infos.getMaxActivePower(), infos.getRatedNominalPower(),
-                infos.getActivePowerSetpoint(), infos.getReactivePowerSetpoint(), infos.getVoltageRegulationOn(),
-                infos.getVoltageSetpoint(), infos.getMarginalCost(), infos.getMinimumReactivePower(), infos.getMaximumReactivePower(), infos.getParticipate(),
-                infos.getDroop(), infos.getTransientReactance(), infos.getStepUpTransformerReactance(), infos.getVoltageRegulationType(), infos.getRegulatingTerminalId(), infos.getRegulatingTerminalType(),
-                infos.getRegulatingTerminalVlId(), infos.getQPercent(), infos.getReactiveCapabilityCurve(), toEmbeddablePoints(infos.getReactiveCapabilityCurvePoints()));
     }
 
     @Override
@@ -279,9 +266,9 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
                 .date(getDate())
                 .type(ModificationType.valueOf(getType()))
                 .equipmentId(getEquipmentId())
-                .equipmentName(new AttributeModification<>(getEquipmentNameValue(), getEquipmentNameOp()))
-                .voltageLevelId(new AttributeModification<>(getVoltageLevelIdValue(), getVoltageLevelIdOp()))
-                .busOrBusbarSectionId(new AttributeModification<>(getBusOrBusbarSectionIdValue(), getBusOrBusbarSectionIdOp()))
+                .equipmentName(AttributeModification.toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))
+                .voltageLevelId(AttributeModification.toAttributeModification(getVoltageLevelIdValue(), getVoltageLevelIdOp()))
+                .busOrBusbarSectionId(AttributeModification.toAttributeModification(getBusOrBusbarSectionIdValue(), getBusOrBusbarSectionIdOp()))
             .energySource(toAttributeModification(getEnergySource()))
             .activePowerSetpoint(toAttributeModification(getActivePowerSetpoint()))
             .maxActivePower(toAttributeModification(getMaxActivePower()))

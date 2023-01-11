@@ -19,10 +19,14 @@ import org.gridsuite.modification.server.dto.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 
@@ -47,7 +51,7 @@ public final class ModificationUtils {
         return d != null ? d : 0.0;
     }
 
-    VoltageLevel getVoltageLevel(Network network, String voltageLevelId) {
+    public VoltageLevel getVoltageLevel(Network network, String voltageLevelId) {
         VoltageLevel voltageLevel = network.getVoltageLevel(voltageLevelId);
         if (voltageLevel == null) {
             throw new NetworkModificationException(VOLTAGE_LEVEL_NOT_FOUND, voltageLevelId);
@@ -61,6 +65,14 @@ public final class ModificationUtils {
             throw new NetworkModificationException(LINE_NOT_FOUND, lineId);
         }
         return line;
+    }
+
+    Generator getGenerator(Network network, String generatorId) {
+        Generator generator = network.getGenerator(generatorId);
+        if (generator == null) {
+            throw new NetworkModificationException(GENERATOR_NOT_FOUND, "Generator " + generatorId + " does not exist in network");
+        }
+        return generator;
     }
 
     public int getPosition(String busOrBusbarSectionId, Network network, VoltageLevel voltageLevel) {
@@ -341,5 +353,115 @@ public final class ModificationUtils {
         return t -> seen.putIfAbsent(keyExtractor.apply(t), Boolean.TRUE) == null;
     }
 
+    public <T> Report applyElementaryModificationsAndReturnReport(Consumer<T> setter, Supplier<T> getter,
+            AttributeModification<T> modification, String fieldName) {
+        if (modification != null) {
+            T oldValue = getter.get();
+            T newValue = modification.applyModification(oldValue);
+            setter.accept(newValue);
+
+            return buildModificationReport(oldValue, newValue, fieldName);
+        }
+        return null;
+    }
+
+    public void reportModifications(Reporter subReporter, List<Report> reports, String subReporterKey,
+            String subReporterDefaultMessage) {
+        List<Report> validReports = reports.stream().filter(Objects::nonNull).collect(Collectors.toList());
+        if (!validReports.isEmpty()) {
+            Reporter modificationSubreporter = subReporter.createSubReporter(subReporterKey, subReporterDefaultMessage);
+            modificationSubreporter.report(Report.builder()
+                    .withKey(subReporterKey)
+                    .withDefaultMessage(subReporterDefaultMessage)
+                    .withSeverity(TypedValue.INFO_SEVERITY)
+                    .build());
+            validReports.stream().forEach(modificationSubreporter::report);
+        }
+    }
+
+    public <T> void applyElementaryModifications(Consumer<T> setter, Supplier<T> getter,
+            AttributeModification<T> modification,
+            Reporter subReporter, String fieldName) {
+        if (modification != null) {
+            T oldValue = getter.get();
+            T newValue = modification.applyModification(oldValue);
+            setter.accept(newValue);
+
+            subReporter.report(buildModificationReport(oldValue, newValue, fieldName));
+        }
+    }
+
+    public <T> Report buildModificationReport(T oldValue, T newValue, String fieldName) {
+        String oldValueString = oldValue == null ? "NaN" : oldValue.toString();
+        String newValueString = newValue == null ? "NaN" : newValue.toString();
+        return Report.builder()
+                .withKey("Modification" + fieldName)
+                .withDefaultMessage("    ${fieldName} : ${oldValue} -> ${newValue}")
+                .withValue("fieldName", fieldName)
+                .withValue("oldValue", oldValueString)
+                .withValue("newValue", newValueString)
+                .withSeverity(TypedValue.INFO_SEVERITY)
+                .build();
+    }
+
+    public Terminal getTerminalFromIdentifiable(Network network,
+            String equipmentId,
+            String type,
+            String voltageLevelId) {
+        if (network != null && equipmentId != null && type != null && voltageLevelId != null) {
+            Identifiable<?> identifiable = getEquipmentByIdentifiableType(network, type, equipmentId);
+
+            if (identifiable == null) {
+                throw new NetworkModificationException(EQUIPMENT_NOT_FOUND);
+            }
+
+            if (identifiable instanceof Injection<?>) {
+                return ((Injection<?>) identifiable).getTerminal();
+            } else if (identifiable instanceof Branch<?>) {
+                return ((Branch<?>) identifiable).getTerminal(voltageLevelId);
+            }
+        }
+
+        return null;
+    }
+
+    public Identifiable<?> getEquipmentByIdentifiableType(Network network, String type, String equipmentId) {
+        if (type == null || equipmentId == null) {
+            return null;
+        }
+
+        switch (IdentifiableType.valueOf(type)) {
+            case HVDC_LINE:
+                return network.getHvdcLine(equipmentId);
+            case LINE:
+                return network.getLine(equipmentId);
+            case TWO_WINDINGS_TRANSFORMER:
+                return network.getTwoWindingsTransformer(equipmentId);
+            case THREE_WINDINGS_TRANSFORMER:
+                return network.getThreeWindingsTransformer(equipmentId);
+            case GENERATOR:
+                return network.getGenerator(equipmentId);
+            case LOAD:
+                return network.getLoad(equipmentId);
+            case BATTERY:
+                return network.getBattery(equipmentId);
+            case SHUNT_COMPENSATOR:
+                return network.getShuntCompensator(equipmentId);
+            case STATIC_VAR_COMPENSATOR:
+                return network.getStaticVarCompensator(equipmentId);
+            case DANGLING_LINE:
+                return network.getDanglingLine(equipmentId);
+            case HVDC_CONVERTER_STATION:
+                return network.getHvdcConverterStation(equipmentId);
+            case SUBSTATION:
+                return network.getSubstation(equipmentId);
+            case VOLTAGE_LEVEL:
+                return network.getVoltageLevel(equipmentId);
+            case BUSBAR_SECTION:
+                return network.getBusbarSection(equipmentId);
+            default:
+                return null;
+        }
+    }
 }
 

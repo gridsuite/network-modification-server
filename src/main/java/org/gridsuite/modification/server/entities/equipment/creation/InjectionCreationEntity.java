@@ -30,8 +30,7 @@ public class InjectionCreationEntity extends EquipmentCreationEntity {
 
     protected InjectionCreationEntity(InjectionCreationInfos injectionCreationInfos) {
         super(injectionCreationInfos);
-        this.voltageLevelId = injectionCreationInfos.getVoltageLevelId();
-        this.busOrBusbarSectionId = injectionCreationInfos.getBusOrBusbarSectionId();
+        assignAttributes(injectionCreationInfos);
     }
 
     protected InjectionCreationEntity(ModificationType modificationType, String equipmentId, String equipmentName, String voltageLevelId, String busOrBusbarSectionId) {
@@ -43,8 +42,11 @@ public class InjectionCreationEntity extends EquipmentCreationEntity {
     @Override
     public void update(ModificationInfos modificationInfos) {
         super.update(modificationInfos);
-        InjectionCreationInfos injectionCreationInfos = (InjectionCreationInfos) modificationInfos;
-        voltageLevelId = injectionCreationInfos.getVoltageLevelId();
-        busOrBusbarSectionId = injectionCreationInfos.getBusOrBusbarSectionId();
+        assignAttributes((InjectionCreationInfos) modificationInfos);
+    }
+
+    private void assignAttributes(InjectionCreationInfos injectionCreationInfos) {
+        this.voltageLevelId = injectionCreationInfos.getVoltageLevelId();
+        this.busOrBusbarSectionId = injectionCreationInfos.getBusOrBusbarSectionId();
     }
 }
