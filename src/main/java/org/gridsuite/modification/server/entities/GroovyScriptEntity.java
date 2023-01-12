@@ -40,7 +40,7 @@ public class GroovyScriptEntity extends ModificationEntity {
         assignAttributes((GroovyScriptInfos) modificationInfos);
     }
 
-    void assignAttributes(GroovyScriptInfos modificationInfos) {
+    private void assignAttributes(GroovyScriptInfos modificationInfos) {
         this.script = modificationInfos.getScript();
     }
 
