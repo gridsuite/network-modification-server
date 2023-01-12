@@ -60,7 +60,7 @@ public class LoadModificationEntity extends InjectionModificationEntity {
         assignAttributes((LoadModificationInfos) modificationInfos);
     }
 
-    void assignAttributes(LoadModificationInfos loadModificationInfos) {
+    private void assignAttributes(LoadModificationInfos loadModificationInfos) {
         this.loadTypeValue = loadModificationInfos.getLoadType() != null ? loadModificationInfos.getLoadType().getValue() : null;
         this.loadTypeOp = loadModificationInfos.getLoadType() != null ? loadModificationInfos.getLoadType().getOp() : null;
         this.activePowerValue = loadModificationInfos.getActivePower() != null ? loadModificationInfos.getActivePower().getValue() : null;

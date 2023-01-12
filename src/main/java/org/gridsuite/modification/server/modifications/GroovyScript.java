@@ -17,17 +17,17 @@ import groovy.lang.GroovyShell;
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.GroovyScriptModificationInfos;
+import org.gridsuite.modification.server.dto.GroovyScriptInfos;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.GROOVY_SCRIPT_EMPTY;
 
 /**
  * @author Ayoub Labidi <ayoub.labidi at rte-france.com>
  */
-public class GroovyScriptModification extends AbstractModification {
+public class GroovyScript extends AbstractModification {
 
-    private final GroovyScriptModificationInfos modificationInfos;
+    private final GroovyScriptInfos modificationInfos;
 
-    public GroovyScriptModification(GroovyScriptModificationInfos modificationInfos) {
+    public GroovyScript(GroovyScriptInfos modificationInfos) {
         this.modificationInfos = modificationInfos;
     }
 

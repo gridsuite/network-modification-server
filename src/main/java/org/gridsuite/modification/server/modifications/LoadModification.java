@@ -11,7 +11,6 @@ import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.iidm.network.*;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.LOAD_NOT_FOUND;
-import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_LOAD_ERROR;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.LoadModificationInfos;
 
@@ -28,25 +27,13 @@ public class LoadModification extends AbstractModification {
 
     @Override
     public void apply(Network network, Reporter subReporter) {
-        if (modificationInfos == null) {
-            throw new NetworkModificationException(MODIFY_LOAD_ERROR, "Missing required attributes to modify the equipment");
+        Load load = network.getLoad(modificationInfos.getEquipmentId());
+        if (load == null) {
+            throw new NetworkModificationException(LOAD_NOT_FOUND,
+                    "Load " + modificationInfos.getEquipmentId() + " does not exist in network");
         }
-        try {
-            Load load = network.getLoad(modificationInfos.getEquipmentId());
-            if (load == null) {
-                throw new NetworkModificationException(LOAD_NOT_FOUND,
-                        "Load " + modificationInfos.getEquipmentId() + " does not exist in network");
-            }
-            // modify the load in the network
-            modifyLoad(load, modificationInfos, subReporter);
-        } catch (NetworkModificationException exc) {
-            subReporter.report(Report.builder()
-                    .withKey("loadModification")
-                    .withDefaultMessage(exc.getMessage())
-                    .withValue("id", modificationInfos.getEquipmentId())
-                    .withSeverity(TypedValue.ERROR_SEVERITY)
-                    .build());
-        }
+        // modify the load in the network
+        modifyLoad(load, modificationInfos, subReporter);
     }
 
     private void modifyLoad(Load load, LoadModificationInfos loadModificationInfos, Reporter subReporter) {

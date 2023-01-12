@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
 import org.gridsuite.modification.server.ModificationType;
-import org.gridsuite.modification.server.dto.GroovyScriptModificationInfos;
+import org.gridsuite.modification.server.dto.GroovyScriptInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 
 import javax.persistence.*;
@@ -25,37 +25,37 @@ import java.util.Set;
 @Entity
 @Table(name = "groovyScriptModification")
 @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "groovyScriptModification_id_fk_constraint"))
-public class GroovyScriptModificationEntity extends ModificationEntity {
+public class GroovyScriptEntity extends ModificationEntity {
     @Column(name = "script", columnDefinition = "CLOB")
     private String script;
 
-    public GroovyScriptModificationEntity(GroovyScriptModificationInfos groovyScriptModificationInfos) {
+    public GroovyScriptEntity(GroovyScriptInfos groovyScriptInfos) {
         super(ModificationType.GROOVY_SCRIPT);
-        assignAttributes(groovyScriptModificationInfos);
+        assignAttributes(groovyScriptInfos);
     }
 
     @Override
     public void update(@NonNull ModificationInfos modificationInfos) {
         super.update(modificationInfos);
-        assignAttributes((GroovyScriptModificationInfos) modificationInfos);
+        assignAttributes((GroovyScriptInfos) modificationInfos);
     }
 
-    void assignAttributes(GroovyScriptModificationInfos modificationInfos) {
+    void assignAttributes(GroovyScriptInfos modificationInfos) {
         this.script = modificationInfos.getScript();
     }
 
     @Override
-    public GroovyScriptModificationInfos toModificationInfos() {
-        return toGroovyScriptModificationInfosBuilder().build();
+    public GroovyScriptInfos toModificationInfos() {
+        return toGroovyScriptInfosBuilder().build();
     }
 
     @Override
-    public GroovyScriptModificationInfos toModificationInfos(Set<String> uuids) {
-        return toGroovyScriptModificationInfosBuilder().substationIds(uuids).build();
+    public GroovyScriptInfos toModificationInfos(Set<String> uuids) {
+        return toGroovyScriptInfosBuilder().substationIds(uuids).build();
     }
 
-    private GroovyScriptModificationInfos.GroovyScriptModificationInfosBuilder<?, ?> toGroovyScriptModificationInfosBuilder() {
-        return GroovyScriptModificationInfos
+    private GroovyScriptInfos.GroovyScriptInfosBuilder<?, ?> toGroovyScriptInfosBuilder() {
+        return GroovyScriptInfos
                 .builder()
                 .uuid(getId())
                 .date(getDate())

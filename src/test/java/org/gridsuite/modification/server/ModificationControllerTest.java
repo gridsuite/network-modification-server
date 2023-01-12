@@ -433,14 +433,14 @@ public class ModificationControllerTest {
     public void testUndoModificationsOnNetworkFlushError() throws Exception {
         String uriString = URI_NETWORK_MODIF_BASE + "?networkUuid=" + TEST_NETWORK_WITH_FLUSH_ERROR_ID + URI_NETWORK_MODIF_PARAMS;
 
-        GroovyScriptModificationInfos groovyScriptModificationInfos = GroovyScriptModificationInfos.builder()
+        GroovyScriptInfos groovyScriptInfos = GroovyScriptInfos.builder()
                 .type(ModificationType.GROOVY_SCRIPT)
                 .script("network.getGenerator('idGenerator').targetP=10\nnetwork.getGenerator('idGenerator').targetP=20\n")
                 .build();
-        String groovyScriptModificationInfosJson = objectWriter.writeValueAsString(groovyScriptModificationInfos);
+        String groovyScriptInfosJson = objectWriter.writeValueAsString(groovyScriptInfos);
 
         assertThrows(PowsyblException.class.getName(),
-                        NestedServletException.class, () -> mockMvc.perform(post(uriString).content(groovyScriptModificationInfosJson)
+                        NestedServletException.class, () -> mockMvc.perform(post(uriString).content(groovyScriptInfosJson)
                                         .contentType(MediaType.APPLICATION_JSON)));
         // apply groovy script with 2 modifications with network flush error
         assertEquals(0, modificationRepository.getModifications(TEST_GROUP_ID, true, false).size());
@@ -448,21 +448,21 @@ public class ModificationControllerTest {
 
     @Test
     public void testMultipleModificationsWithError() throws Exception {
-        GroovyScriptModificationInfos groovyScriptModificationInfos = GroovyScriptModificationInfos.builder()
+        GroovyScriptInfos groovyScriptInfos = GroovyScriptInfos.builder()
                 .type(ModificationType.GROOVY_SCRIPT)
                 .script("network.getGenerator('idGenerator').targetP=10\nnetwork.getGenerator('idGenerator').targetP=20\n")
                 .build();
-        String groovyScriptModificationInfosJson = objectWriter.writeValueAsString(groovyScriptModificationInfos);
+        String groovyScriptInfosJson = objectWriter.writeValueAsString(groovyScriptInfos);
 
         // apply groovy script without error
-        mockMvc.perform(post(URI_NETWORK_MODIF).content(groovyScriptModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(post(URI_NETWORK_MODIF).content(groovyScriptInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
 
         // apply groovy script with error ont the second
-        groovyScriptModificationInfos.setScript("network.getGenerator('idGenerator').targetP=30\nnetwork.getGenerator('there is no generator').targetP=40\n");
-        groovyScriptModificationInfosJson = objectWriter.writeValueAsString(groovyScriptModificationInfos);
-        MvcResult mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(groovyScriptModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
+        groovyScriptInfos.setScript("network.getGenerator('idGenerator').targetP=30\nnetwork.getGenerator('there is no generator').targetP=40\n");
+        groovyScriptInfosJson = objectWriter.writeValueAsString(groovyScriptInfos);
+        MvcResult mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(groovyScriptInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isBadRequest()).andReturn();
         String resultAsString = mvcResult.getResponse().getContentAsString();
         assertEquals(resultAsString, new NetworkModificationException(GROOVY_SCRIPT_ERROR, "Cannot set property 'targetP' on null object").getMessage());

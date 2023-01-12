@@ -63,7 +63,7 @@ public class InjectionModificationEntity extends BasicEquipmentModificationEntit
         assignAttributes((InjectionModificationInfos) modificationInfos);
     }
 
-    protected void assignAttributes(InjectionModificationInfos modificationInfos) {
+    private void assignAttributes(InjectionModificationInfos modificationInfos) {
         this.voltageLevelIdValue = modificationInfos.getVoltageLevelId() != null ? modificationInfos.getVoltageLevelId().getValue() : null;
         this.voltageLevelIdOp = modificationInfos.getVoltageLevelId() != null ? modificationInfos.getVoltageLevelId().getOp() : null;
         this.busOrBusbarSectionIdValue = modificationInfos.getBusOrBusbarSectionId() != null ? modificationInfos.getBusOrBusbarSectionId().getValue() : null;

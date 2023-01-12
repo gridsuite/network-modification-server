@@ -8,9 +8,9 @@ package org.gridsuite.modification.server.dto;
 
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.entities.GroovyScriptModificationEntity;
+import org.gridsuite.modification.server.entities.GroovyScriptEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
-import org.gridsuite.modification.server.modifications.GroovyScriptModification;
+import org.gridsuite.modification.server.modifications.GroovyScript;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -29,18 +29,18 @@ import lombok.experimental.SuperBuilder;
 @Setter
 @ToString(callSuper = true)
 @Schema(description = "Groovy script modification")
-public class GroovyScriptModificationInfos extends ModificationInfos {
+public class GroovyScriptInfos extends ModificationInfos {
     @Schema(description = "Groovy script")
     private String script;
 
     @Override
-    public GroovyScriptModificationEntity toEntity() {
-        return new GroovyScriptModificationEntity(this);
+    public GroovyScriptEntity toEntity() {
+        return new GroovyScriptEntity(this);
     }
 
     @Override
     public AbstractModification toModification() {
-        return new GroovyScriptModification(this);
+        return new GroovyScript(this);
     }
 
     @Override
