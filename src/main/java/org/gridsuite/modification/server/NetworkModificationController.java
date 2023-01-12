@@ -133,6 +133,8 @@ public class NetworkModificationController {
             case GROOVY_SCRIPT:
             case VOLTAGE_LEVEL_CREATION:
             case LINES_ATTACH_TO_SPLIT_LINES:
+            case GENERATOR_CREATION:
+            case GENERATOR_MODIFICATION:
             case SUBSTATION_CREATION:
                 return ResponseEntity.ok().body(networkModificationService.createModification(networkUuid, variantId, groupUuid, reportUuid, reporterId, modificationInfos));
             default:
@@ -162,6 +164,8 @@ public class NetworkModificationController {
             case GROOVY_SCRIPT:
             case VOLTAGE_LEVEL_CREATION:
             case LINES_ATTACH_TO_SPLIT_LINES:
+            case GENERATOR_CREATION:
+            case GENERATOR_MODIFICATION:
             case SUBSTATION_CREATION:
                 networkModificationService.updateModification(networkModificationUuid, modificationInfos);
                 break;

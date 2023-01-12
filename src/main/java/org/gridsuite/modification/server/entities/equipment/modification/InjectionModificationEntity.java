@@ -8,8 +8,6 @@ package org.gridsuite.modification.server.entities.equipment.modification;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.server.ModificationType;
-import org.gridsuite.modification.server.dto.AttributeModification;
 import org.gridsuite.modification.server.dto.InjectionModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.OperationType;
@@ -39,18 +37,6 @@ public class InjectionModificationEntity extends BasicEquipmentModificationEntit
     @Column(name = "busOrBusbarSectionIdOp")
     @Enumerated(EnumType.STRING)
     private OperationType busOrBusbarSectionIdOp;
-
-    //TODO : Remove when generator refactoring is done
-    protected InjectionModificationEntity(ModificationType modificationType, String equipmentId,
-            AttributeModification<String> equipmentName,
-            AttributeModification<String> voltageLevelId,
-            AttributeModification<String> busOrBusbarSectionId) {
-        super(modificationType, equipmentId, equipmentName);
-        this.voltageLevelIdValue = voltageLevelId != null ? voltageLevelId.getValue() : null;
-        this.voltageLevelIdOp = voltageLevelId != null ? voltageLevelId.getOp() : null;
-        this.busOrBusbarSectionIdValue = busOrBusbarSectionId != null ? busOrBusbarSectionId.getValue() : null;
-        this.busOrBusbarSectionIdOp = busOrBusbarSectionId != null ? busOrBusbarSectionId.getOp() : null;
-    }
 
     protected InjectionModificationEntity(InjectionModificationInfos modificationInfos) {
         super(modificationInfos);

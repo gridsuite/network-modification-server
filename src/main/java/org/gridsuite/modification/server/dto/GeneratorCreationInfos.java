@@ -7,6 +7,8 @@
 package org.gridsuite.modification.server.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.powsybl.commons.reporter.Reporter;
+import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.iidm.network.EnergySource;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -17,6 +19,12 @@ import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
 import java.util.List;
+
+import org.gridsuite.modification.server.ModificationType;
+import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.entities.equipment.creation.GeneratorCreationEntity;
+import org.gridsuite.modification.server.modifications.AbstractModification;
+import org.gridsuite.modification.server.modifications.GeneratorCreation;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -103,4 +111,24 @@ public class GeneratorCreationInfos extends InjectionCreationInfos {
 
     @Schema(description = "Connection Position")
     private Integer connectionPosition;
+
+    @Override
+    public GeneratorCreationEntity toEntity() {
+        return new GeneratorCreationEntity(this);
+    }
+
+    @Override
+    public AbstractModification toModification() {
+        return new GeneratorCreation(this);
+    }
+
+    @Override
+    public NetworkModificationException.Type getErrorType() {
+        return NetworkModificationException.Type.CREATE_GENERATOR_ERROR;
+    }
+
+    @Override
+    public Reporter createSubReporter(ReporterModel reporter) {
+        return reporter.createSubReporter(ModificationType.GENERATOR_CREATION.name(), "Generator creation ${generatorId}", "generatorId", this.getEquipmentId());
+    }
 }

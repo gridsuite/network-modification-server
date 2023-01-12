@@ -8,8 +8,6 @@ package org.gridsuite.modification.server.entities.equipment.modification;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.server.ModificationType;
-import org.gridsuite.modification.server.dto.AttributeModification;
 import org.gridsuite.modification.server.dto.BasicEquipmentModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.OperationType;
@@ -33,13 +31,6 @@ public class BasicEquipmentModificationEntity extends EquipmentModificationEntit
     @Enumerated(EnumType.STRING)
     private OperationType equipmentNameOp;
 
-    //TODO : Remove when generator refactoring is done
-    protected BasicEquipmentModificationEntity(ModificationType modificationType, String equipmentId, AttributeModification<String> equipmentName) {
-        super(equipmentId, modificationType);
-        this.equipmentNameValue = equipmentName != null ? equipmentName.getValue() : null;
-        this.equipmentNameOp = equipmentName != null ? equipmentName.getOp() : null;
-    }
-
     protected BasicEquipmentModificationEntity(BasicEquipmentModificationInfos modificationInfos) {
         super(modificationInfos);
         assignAttributes(modificationInfos);
@@ -51,7 +42,7 @@ public class BasicEquipmentModificationEntity extends EquipmentModificationEntit
         assignAttributes((BasicEquipmentModificationInfos) modificationInfos);
     }
 
-    protected void assignAttributes(BasicEquipmentModificationInfos modificationInfos) {
+    private void assignAttributes(BasicEquipmentModificationInfos modificationInfos) {
         this.equipmentNameValue = modificationInfos.getEquipmentName() != null ? modificationInfos.getEquipmentName().getValue() : null;
         this.equipmentNameOp = modificationInfos.getEquipmentName() != null ? modificationInfos.getEquipmentName().getOp() : null;
     }

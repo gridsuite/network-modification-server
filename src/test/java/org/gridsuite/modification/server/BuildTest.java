@@ -362,7 +362,20 @@ public class BuildTest {
                 .build().toEntity());
 
         List<ModificationEntity> entities2 = new ArrayList<>();
-        entities2.add(modificationRepository.createGeneratorEntity(NEW_GENERATOR_ID, NEW_GENERATOR_ID, EnergySource.HYDRO, "v2", "1A", 0., 500., 1., 100., 50., true, 225., 8., 20., 50., true, 9F, 35., 25., "v2load", "LOAD", "v2", 25., false, List.of(), "Top", ConnectablePosition.Direction.TOP, 0));
+        entities2.add(GeneratorCreationInfos.builder().type(ModificationType.GENERATOR_CREATION)
+                .equipmentId(NEW_GENERATOR_ID).equipmentName(NEW_GENERATOR_ID)
+                .energySource(EnergySource.HYDRO).voltageLevelId("v2")
+                .busOrBusbarSectionId("1A").minActivePower(0)
+                .maxActivePower(500).ratedNominalPower(1.)
+                .activePowerSetpoint(100).reactivePowerSetpoint(50.)
+                .voltageRegulationOn(true).voltageSetpoint(225.).marginalCost(8.)
+                .minimumReactivePower(20.).maximumReactivePower(50.)
+                .participate(true).droop(9F).transientReactance(35.)
+                .stepUpTransformerReactance(25.).regulatingTerminalId("v2load")
+                .regulatingTerminalType("LOAD").regulatingTerminalVlId("v2")
+                .qPercent(25.).reactiveCapabilityCurve(false).reactiveCapabilityCurvePoints(List.of())
+                .connectionName("Top").connectionDirection(ConnectablePosition.Direction.TOP)
+                .connectionPosition(0).build().toEntity());
         entities2.add(LineCreationInfos.builder().type(ModificationType.LINE_CREATION).equipmentId("newLine").equipmentName("newLine").seriesResistance(1.0).seriesReactance(2.0).shuntConductance1(3.0).shuntSusceptance1(4.0).shuntConductance2(5.0).shuntSusceptance2(6.0).voltageLevelId1("v1").busOrBusbarSectionId1("1.1").voltageLevelId2("v2").busOrBusbarSectionId2("1B").currentLimits1(null).currentLimits2(null).connectionName1("cn101").connectionDirection1(ConnectablePosition.Direction.TOP).connectionName2("cn102").connectionDirection2(ConnectablePosition.Direction.TOP).build().toEntity());
 
         List<TapChangerStepCreationEmbeddable> tapChangerStepCreationEmbeddables = new ArrayList<>();
@@ -403,11 +416,11 @@ public class BuildTest {
             .build().toEntity());
         entities2.add(LoadModificationInfos.builder().type(ModificationType.LOAD_MODIFICATION).equipmentId("newLoad")
             .equipmentName(new AttributeModification<>("newLoadName", OperationType.SET)).activePower(null).build().toEntity());
-        entities2.add(modificationRepository.createGeneratorModificationEntity(GeneratorModificationInfos.builder()
+        entities2.add(GeneratorModificationInfos.builder().type(ModificationType.GENERATOR_MODIFICATION)
                 .equipmentId("newGenerator")
                 .equipmentName(new AttributeModification<>("newGeneratorName", OperationType.SET))
                 .voltageRegulationType(new AttributeModification<>(VoltageRegulationType.LOCAL, OperationType.SET))
-                .reactiveCapabilityCurve(new AttributeModification<>(false, OperationType.SET)).build()));
+                .reactiveCapabilityCurve(new AttributeModification<>(false, OperationType.SET)).build().toEntity());
 
         modificationRepository.saveModifications(TEST_GROUP_ID, entities1);
         modificationRepository.saveModifications(TEST_GROUP_ID_2, entities2);
