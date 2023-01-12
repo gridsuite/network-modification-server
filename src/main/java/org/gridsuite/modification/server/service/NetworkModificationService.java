@@ -857,18 +857,43 @@ public class NetworkModificationService {
     }
 
     private void modifyGeneratorStartUpAttributes(GeneratorModificationInfos modificationInfos, Generator generator,
-            Reporter subReporter) {
+                                                  Reporter subReporter) {
         GeneratorStartup generatorStartup = generator.getExtension(GeneratorStartup.class);
+        Double oldPlannedActivePowerSetPoint = generatorStartup != null ? generatorStartup.getPlannedActivePowerSetpoint() : Double.NaN;
+        Double oldStartupCost = generatorStartup != null ? generatorStartup.getStartupCost() : Double.NaN;
         Double oldMarginalCost = generatorStartup != null ? generatorStartup.getMarginalCost() : Double.NaN;
-        if (modificationInfos.getMarginalCost() != null) {
-            generator.newExtension(GeneratorStartupAdder.class)
-                    .withMarginalCost(modificationInfos.getMarginalCost().getValue()).add();
+        Double oldPlannedOutageRate = generatorStartup != null ? generatorStartup.getPlannedOutageRate() : Double.NaN;
+        Double oldForcedOutageRate = generatorStartup != null ? generatorStartup.getForcedOutageRate() : Double.NaN;
 
-            addModificationReport(oldMarginalCost,
-                    modificationInfos.getMarginalCost().getValue(), subReporter,
-                    "Cost of start");
+        Double plannedActivePowerSetPoint = Optional.ofNullable(modificationInfos.getPlannedActivePowerSetPoint()).map(AttributeModification::getValue).orElse(Double.NaN);
+        Double startupCost = Optional.ofNullable(modificationInfos.getStartupCost()).map(AttributeModification::getValue).orElse(Double.NaN);
+        Double marginalCost = Optional.ofNullable(modificationInfos.getMarginalCost()).map(AttributeModification::getValue).orElse(Double.NaN);
+        Double plannedOutageRate = Optional.ofNullable(modificationInfos.getPlannedOutageRate()).map(AttributeModification::getValue).orElse(Double.NaN);
+        Double forcedOutageRate = Optional.ofNullable(modificationInfos.getForcedOutageRate()).map(AttributeModification::getValue).orElse(Double.NaN);
 
-        }
+        generator.newExtension(GeneratorStartupAdder.class)
+                .withPlannedActivePowerSetpoint(plannedActivePowerSetPoint)
+                .withStartupCost(startupCost)
+                .withMarginalCost(marginalCost)
+                .withPlannedOutageRate(plannedOutageRate)
+                .withForcedOutageRate(forcedOutageRate)
+                .add();
+
+        addModificationReport(oldPlannedActivePowerSetPoint,
+                plannedActivePowerSetPoint, subReporter,
+                "Planning active power set point");
+        addModificationReport(oldStartupCost,
+                startupCost, subReporter,
+                "Startup cost");
+        addModificationReport(oldMarginalCost,
+                marginalCost, subReporter,
+                "Marginal cost");
+        addModificationReport(oldPlannedOutageRate,
+                plannedOutageRate, subReporter,
+                "Planning outage rate");
+        addModificationReport(oldForcedOutageRate,
+                forcedOutageRate, subReporter,
+                "Forced outage rate");
     }
 
     private void modifyGeneratorRegulatingTerminal(GeneratorModificationInfos modificationInfos, Generator generator,

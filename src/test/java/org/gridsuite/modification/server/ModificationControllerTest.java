@@ -744,7 +744,11 @@ public class ModificationControllerTest {
                         .ratedNominalPower(new AttributeModification<>(220., OperationType.SET))
                         .voltageRegulationType(
                                         new AttributeModification<>(VoltageRegulationType.LOCAL, OperationType.SET))
+                        .plannedActivePowerSetPoint(new AttributeModification<>(1., OperationType.SET))
+                        .startupCost(new AttributeModification<>(2., OperationType.SET))
                         .marginalCost(new AttributeModification<>(0.1, OperationType.SET))
+                        .plannedOutageRate(new AttributeModification<>(0.3, OperationType.SET))
+                        .plannedOutageRate(new AttributeModification<>(0.5, OperationType.SET))
                         .minimumReactivePower(new AttributeModification<>(-100., OperationType.SET))
                         .maximumReactivePower(new AttributeModification<>(100., OperationType.SET))
                         .reactiveCapabilityCurvePoints(List.of(
@@ -834,7 +838,11 @@ public class ModificationControllerTest {
             .minActivePower(new AttributeModification<>(0., OperationType.SET))
             .maxActivePower(new AttributeModification<>(100., OperationType.SET))
             .ratedNominalPower(new AttributeModification<>(220., OperationType.SET))
+            .plannedActivePowerSetPoint(new AttributeModification<>(1., OperationType.SET))
+            .startupCost(new AttributeModification<>(2., OperationType.SET))
             .marginalCost(new AttributeModification<>(0.1, OperationType.SET))
+            .plannedOutageRate(new AttributeModification<>(0.3, OperationType.SET))
+            .forcedOutageRate(new AttributeModification<>(0.5, OperationType.SET))
             .minimumReactivePower(new AttributeModification<>(-100., OperationType.SET))
             .maximumReactivePower(new AttributeModification<>(100., OperationType.SET))
             .reactiveCapabilityCurvePoints(List.of(
@@ -866,7 +874,11 @@ public class ModificationControllerTest {
         assertEquals(0.0, modification.getMinActivePower().getValue(), .1);
         assertEquals(100.0, modification.getMaxActivePower().getValue(), .1);
         assertEquals(220.0, modification.getRatedNominalPower().getValue(), .1);
-        assertEquals(0.1, modification.getMarginalCost().getValue(), .1);
+        assertEquals(1., modification.getPlannedActivePowerSetPoint().getValue(), .0);
+        assertEquals(2., modification.getStartupCost().getValue(), 0);
+        assertEquals(0.1, modification.getMarginalCost().getValue(), 0);
+        assertEquals(0.3, modification.getPlannedOutageRate().getValue(), 0);
+        assertEquals(0.5, modification.getForcedOutageRate().getValue(), 0);
         assertEquals(-100.0, modification.getMinimumReactivePower().getValue(), .1);
         assertEquals(100.0, modification.getMaximumReactivePower().getValue(), .1);
         assertEquals(2, modification.getReactiveCapabilityCurvePoints().size());

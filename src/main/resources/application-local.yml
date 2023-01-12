@@ -24,3 +24,7 @@ spring:
 powsybl-ws:
   database:
     host: localhost
+
+logging:
+  level:
+    org: debug
