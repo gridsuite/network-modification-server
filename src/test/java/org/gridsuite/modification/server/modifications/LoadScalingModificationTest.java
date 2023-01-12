@@ -39,6 +39,9 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.gridsuite.modification.server.utils.NetworkUtil.createLoad;
@@ -127,7 +130,7 @@ public class LoadScalingModificationTest extends AbstractNetworkModificationTest
         var filterWithNoDKJson = mapper.writeValueAsString(List.of(filterWithNoDK));
 
         String networkParams = "?networkUuid=" + ((NetworkImpl) getNetwork()).getUuid() + "&variantId=variant_1";
-        String params = "&ids=" + String.join(",", List.of(FILTER_ID_5.toString(), FILTER_ID_3.toString(), FILTER_ID_4.toString(), FILTER_ID_2.toString(), FILTER_ID_1.toString()));
+        String params = "&ids=" + String.join(",", FILTER_ID_5.toString(), FILTER_ID_3.toString(), FILTER_ID_4.toString(), FILTER_ID_2.toString(), FILTER_ID_1.toString());
         String path = "/v1/filters/export";
         wireMock.stubFor(WireMock.get(path + networkParams + params)
                 .willReturn(WireMock.ok()
