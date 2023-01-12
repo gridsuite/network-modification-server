@@ -90,22 +90,26 @@ public abstract class AbstractScaling extends AbstractModification {
                             .stream())
                     .collect(Collectors.toList());
 
-            if (!CollectionUtils.isEmpty(identifiableAttributes)) {
-                applyVariation(network, identifiableAttributes, variation, subReporter);
-                createReport(subReporter, "scalingVariationCreated", "new scaling created", TypedValue.INFO_SEVERITY);
+            if (CollectionUtils.isEmpty(identifiableAttributes)) {
+                var filterNames = variation.getFilters().stream().map(FilterInfos::getName).collect(Collectors.joining(","));
+                createReport(subReporter, "allFiltersWrong", String.format("All of the following variation's filters have equipments with wrong id: %s", filterNames), TypedValue.WARN_SEVERITY);
+            } else {
+                applyVariation(network, subReporter, identifiableAttributes, variation);
             }
         });
+        createReport(subReporter, "scalingVariationCreated", "new scaling created", TypedValue.INFO_SEVERITY);
     }
 
     private void applyVariation(Network network,
+                                Reporter subReporter,
                                 List<IdentifiableAttributes> identifiableAttributes,
-                                ScalingVariationInfos variation, Reporter subReporter) {
+                                ScalingVariationInfos variation) {
         switch (variation.getVariationMode()) {
             case PROPORTIONAL:
-                applyProportionalVariation(network, identifiableAttributes, variation);
+                applyProportionalVariation(network, identifiableAttributes, variation, subReporter);
                 break;
             case REGULAR_DISTRIBUTION:
-                applyRegularDistributionVariation(network, identifiableAttributes, variation);
+                applyRegularDistributionVariation(network, identifiableAttributes, variation, subReporter);
                 break;
             case VENTILATION:
                 applyVentilationVariation(network, identifiableAttributes, variation, subReporter, getDistributionKeys(identifiableAttributes, subReporter));
@@ -134,12 +138,12 @@ public abstract class AbstractScaling extends AbstractModification {
                                                       double distributionKeys);
 
     protected abstract void applyRegularDistributionVariation(Network network,
-                                                  List<IdentifiableAttributes> identifiableAttributes,
-                                                  ScalingVariationInfos scalingVariationInfos);
+                                                              List<IdentifiableAttributes> identifiableAttributes,
+                                                              ScalingVariationInfos scalingVariationInfos, Reporter subReporter);
 
     protected abstract void applyProportionalVariation(Network network,
-                                           List<IdentifiableAttributes> identifiableAttributes,
-                                           ScalingVariationInfos scalingVariationInfos);
+                                                       List<IdentifiableAttributes> identifiableAttributes,
+                                                       ScalingVariationInfos scalingVariationInfos, Reporter subReporter);
 
     protected abstract double getAsked(ScalingVariationInfos variationInfos, AtomicReference<Double> sum);
 

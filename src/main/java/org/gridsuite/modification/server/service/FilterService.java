@@ -11,6 +11,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.FilterEquipments;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
@@ -23,7 +25,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import static io.swagger.v3.oas.integration.StringOpenApiConfigurationLoader.LOGGER;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.FILTERS_NOT_FOUND;
 
 /**
@@ -31,6 +32,8 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
  */
 @Service
 public class FilterService {
+    private static final Logger LOGGER = LoggerFactory.getLogger(FilterService.class);
+
     private static final String FILTER_SERVER_API_VERSION = "v1";
 
     private static final String DELIMITER = "/";
