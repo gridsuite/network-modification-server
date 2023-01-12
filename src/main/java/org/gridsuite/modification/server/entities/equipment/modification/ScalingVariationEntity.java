@@ -16,6 +16,7 @@ import org.gridsuite.modification.server.dto.ScalingVariationInfos;
 
 import javax.persistence.*;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -33,7 +34,7 @@ public class ScalingVariationEntity {
     @Column(name = "id")
     private UUID id;
 
-    @ManyToMany(cascade = CascadeType.ALL)
+    @OneToMany(cascade = CascadeType.ALL)
     @JoinTable(
             joinColumns = @JoinColumn(name = "id"),
             inverseJoinColumns = @JoinColumn(name = "filterId"))
@@ -51,19 +52,19 @@ public class ScalingVariationEntity {
 
     public ScalingVariationEntity(ScalingVariationInfos variationInfos) {
         this.id = null;
+        assignAttributes(variationInfos);
+    }
+
+    private void assignAttributes(ScalingVariationInfos variationInfos) {
         this.filters = getFiltersEntity(variationInfos);
         this.variationMode = variationInfos.getVariationMode();
         this.variationValue = variationInfos.getVariationValue();
         this.reactiveVariationMode = variationInfos.getReactiveVariationMode();
     }
 
-    private List<VariationFilterEntity> getFiltersEntity(ScalingVariationInfos variationInfos) {
-        return variationInfos.getFilters().stream().map(FilterInfos::toEntity)
-                .collect(Collectors.toList());
-    }
-
     public ScalingVariationInfos toScalingVariationInfos() {
         return ScalingVariationInfos.builder()
+                .id(getId())
                 .variationMode(getVariationMode())
                 .variationValue(getVariationValue())
                 .reactiveVariationMode(getReactiveVariationMode())
@@ -71,5 +72,30 @@ public class ScalingVariationEntity {
                         .map(filter -> new FilterInfos(filter.getFilterId(), filter.getName()))
                         .collect(Collectors.toList()))
                 .build();
+    }
+
+    public ScalingVariationEntity update(ScalingVariationInfos variation) {
+        this.reactiveVariationMode = variation.getReactiveVariationMode();
+        this.variationMode = variation.getVariationMode();
+        this.variationValue = variation.getVariationValue();
+        this.filters = getFiltersEntity(variation);
+        return this;
+    }
+
+    private List<VariationFilterEntity> getFiltersEntity(ScalingVariationInfos variationInfos) {
+        return variationInfos.getFilters()
+                .stream()
+                .map(filterInfos -> {
+                    if (getFilters() == null) {
+                        return new VariationFilterEntity(filterInfos);
+                    } else {
+                        return getFilters()
+                                .stream()
+                                .filter(filter -> Objects.equals(filter.getFilterId(), filterInfos.getId()))
+                                .findFirst()
+                                .orElse(new VariationFilterEntity(filterInfos));
+                    }
+                })
+                .collect(Collectors.toList());
     }
 }

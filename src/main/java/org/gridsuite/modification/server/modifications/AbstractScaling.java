@@ -29,7 +29,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.LOAD_SCALING_ERROR;
 import static org.gridsuite.modification.server.modifications.ModificationUtils.createReport;
 import static org.gridsuite.modification.server.modifications.ModificationUtils.distinctByKey;
 
@@ -83,16 +82,19 @@ public abstract class AbstractScaling extends AbstractModification {
         });
 
         // apply variations
-        scalingInfos.getVariations().forEach(variation -> applyVariation(network, variation.getFilters().stream()
+        scalingInfos.getVariations().forEach(variation -> {
+            List<IdentifiableAttributes> identifiableAttributes = variation.getFilters().stream()
                     .filter(f -> !filterWithWrongEquipmentsIds.containsKey(f.getId()))
                     .flatMap(f -> exportFilters.get(f.getId())
                             .getIdentifiableAttributes()
                             .stream())
-                    .collect(Collectors.toList()),
-                variation,
-                subReporter));
+                    .collect(Collectors.toList());
 
-        createReport(subReporter, "scalingCreated", "new scaling created", TypedValue.INFO_SEVERITY);
+            if (!CollectionUtils.isEmpty(identifiableAttributes)) {
+                applyVariation(network, identifiableAttributes, variation, subReporter);
+                createReport(subReporter, "scalingVariationCreated", "new scaling created", TypedValue.INFO_SEVERITY);
+            }
+        });
     }
 
     private void applyVariation(Network network,
@@ -121,7 +123,7 @@ public abstract class AbstractScaling extends AbstractModification {
         if (distributionKeys == 0) {
             String message = "This mode is available only for equipment with distribution key";
             createReport(subReporter, "distributionKeysNotFound", message, TypedValue.ERROR_SEVERITY);
-            throw new NetworkModificationException(LOAD_SCALING_ERROR, message);
+            throw new NetworkModificationException(scalingInfos.getErrorType(), message);
         }
         return distributionKeys;
     }

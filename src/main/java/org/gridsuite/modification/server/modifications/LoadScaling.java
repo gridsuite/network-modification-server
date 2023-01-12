@@ -43,8 +43,8 @@ public class LoadScaling extends AbstractScaling {
         AtomicReference<Double> sum = new AtomicReference<>(0D);
         List<Float> percentages = new ArrayList<>();
         List<Scalable> scalables = new ArrayList<>();
-
         identifiableAttributes.forEach(equipment -> {
+            sum.set(network.getLoad(equipment.getId()).getP0() + sum.get());
             scalables.add(getScalable(equipment.getId()));
             percentages.add((float) ((equipment.getDistributionKey() / distributionKeys) * 100));
         });
@@ -70,7 +70,6 @@ public class LoadScaling extends AbstractScaling {
                 }).collect(Collectors.toList());
 
         List<Float> percentages = new ArrayList<>(Collections.nCopies(scalables.size(), 100 / (float) scalables.size()));
-
         Scalable regularDistributionScalable = Scalable.proportional(percentages, scalables);
         scale(network, scalingVariationInfos, sum, regularDistributionScalable);
     }

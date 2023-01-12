@@ -1032,6 +1032,7 @@ public class NetworkModificationService {
                 case GENERATOR_CREATION:
                 case GENERATOR_MODIFICATION:
                 case SUBSTATION_CREATION:
+                case LOAD_SCALING:
                     // Generic form
                     return handleModification(infos, listener, groupUuid, reportUuid, reporterId);
 

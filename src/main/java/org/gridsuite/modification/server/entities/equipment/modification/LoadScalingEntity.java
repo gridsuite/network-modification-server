@@ -13,7 +13,6 @@ import lombok.Setter;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.LoadScalingInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.dto.ScalingVariationInfos;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
@@ -21,6 +20,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -49,10 +49,24 @@ public class LoadScalingEntity extends ScalingEntity {
 
     private void assignAttributes(LoadScalingInfos loadScalingInfos) {
         setVariationType(loadScalingInfos.getVariationType());
-        setVariations(loadScalingInfos.getVariations()
+        setVariations(getScalingVariationEntities(loadScalingInfos));
+    }
+
+    private List<ScalingVariationEntity> getScalingVariationEntities(LoadScalingInfos loadScalingInfos) {
+        return loadScalingInfos.getVariations()
                 .stream()
-                .map(ScalingVariationInfos::toEntity)
-                .collect(Collectors.toList()));
+                .map(info -> {
+                    if (variations == null) {
+                        return info.toEntity();
+                    } else {
+                        return variations.stream()
+                                .filter(entity -> Objects.equals(info.getId(), entity.getId()))
+                                .findFirst()
+                                .map(entity -> entity.update(info))
+                                .orElse(info.toEntity());
+                    }
+                })
+                .collect(Collectors.toList());
     }
 
     @Override

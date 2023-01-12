@@ -17,6 +17,7 @@ import org.gridsuite.modification.server.VariationMode;
 import org.gridsuite.modification.server.entities.equipment.modification.ScalingVariationEntity;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * @author bendaamerahm <ahmed.bendaamer at rte-france.com>
@@ -28,6 +29,9 @@ import java.util.List;
 @ToString(callSuper = true)
 @Schema(description = "Scaling creation")
 public class ScalingVariationInfos {
+
+    @Schema(description = "id")
+    UUID id;
 
     @Schema(description = "filters")
     List<FilterInfos> filters;
