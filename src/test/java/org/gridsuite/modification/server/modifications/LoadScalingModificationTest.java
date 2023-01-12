@@ -71,8 +71,8 @@ public class LoadScalingModificationTest extends AbstractNetworkModificationTest
     private static final UUID LOAD_SCALING_ID = UUID.randomUUID();
     private static final UUID FILTER_NOT_FOUND_ID = UUID.randomUUID();
     private static final UUID FILTER_NO_DK = UUID.randomUUID();
-    private static final UUID FILTER_WRONG_ID_1 = UUID.randomUUID();
-    private static final UUID FILTER_WRONG_ID_2 = UUID.randomUUID();
+    private static final UUID FILTER_WRONG_ID_1 = UUID.fromString("7700ff56-60f1-4686-b57b-6bc7aa77ff22");
+    private static final UUID FILTER_WRONG_ID_2 = UUID.fromString("71001656-60f1-4686-b57b-6bc7aa77a222");
 
     private WireMockServer wireMock;
 
@@ -94,17 +94,17 @@ public class LoadScalingModificationTest extends AbstractNetworkModificationTest
         wireMock = new WireMockServer(wireMockConfig().dynamicPort());
         wireMock.start();
 
-        var identifiableAttributes1 = IdentifiableAttributes.builder().id("idLoad")
+        var identifiableAttributes1 = IdentifiableAttributes.builder().id(LOAD_ID_4)
                 .type(IdentifiableType.LOAD).distributionKey(1.0).build();
-        var identifiableAttributes2 = IdentifiableAttributes.builder().id("load5")
+        var identifiableAttributes2 = IdentifiableAttributes.builder().id(LOAD_ID_5)
                 .type(IdentifiableType.LOAD).distributionKey(2.0).build();
         var identifiableAttributes3 = IdentifiableAttributes.builder().id("Wrongid1")
                 .type(IdentifiableType.LOAD).build();
-        var identifiableAttributes4 = IdentifiableAttributes.builder().id("load7")
+        var identifiableAttributes4 = IdentifiableAttributes.builder().id(LOAD_ID_7)
                 .type(IdentifiableType.LOAD).build();
-        var identifiableAttributes5 = IdentifiableAttributes.builder().id("idLoad")
+        var identifiableAttributes5 = IdentifiableAttributes.builder().id(LOAD_ID_4)
                 .type(IdentifiableType.LOAD).build();
-        var identifiableAttributes6 = IdentifiableAttributes.builder().id("load5")
+        var identifiableAttributes6 = IdentifiableAttributes.builder().id(LOAD_ID_5)
                 .type(IdentifiableType.LOAD).build();
         var filterWithWrongIds = FilterEquipments.builder().filterId(FILTER_WRONG_ID_1)
                 .identifiableAttributes(List.of(identifiableAttributes1, identifiableAttributes2))
@@ -139,7 +139,7 @@ public class LoadScalingModificationTest extends AbstractNetworkModificationTest
                         .withBody(filterWithWrongIdsJson)
                         .withHeader("Content-Type", "application/json")));
 
-        wireMock.stubFor(WireMock.get(path + networkParams + "&ids=" + FILTER_WRONG_ID_2)
+        wireMock.stubFor(WireMock.get(path + networkParams + "&ids=" + String.join(",", FILTER_WRONG_ID_1.toString(), FILTER_WRONG_ID_2.toString()))
                 .willReturn(WireMock.ok()
                         .withBody(filterWithWrongIds2Json)
                         .withHeader("Content-Type", "application/json")));
@@ -340,14 +340,18 @@ public class LoadScalingModificationTest extends AbstractNetworkModificationTest
     @Test
     public void testScalingCreationWithWarning() throws Exception {
         var filter = FilterInfos.builder()
-                .name("filter")
+                .name("filter1")
+                .id(FILTER_WRONG_ID_1)
+                .build();
+        var filter2 = FilterInfos.builder()
+                .name("filter2")
                 .id(FILTER_WRONG_ID_2)
                 .build();
         var variation = ScalingVariationInfos.builder()
                 .variationMode(VariationMode.PROPORTIONAL)
                 .reactiveVariationMode(ReactiveVariationMode.TAN_PHI_FIXED)
                 .variationValue(100D)
-                .filters(List.of(filter))
+                .filters(List.of(filter, filter2))
                 .build();
         var loadScalingInfo = LoadScalingInfos.builder()
                 .type(ModificationType.LOAD_SCALING)
