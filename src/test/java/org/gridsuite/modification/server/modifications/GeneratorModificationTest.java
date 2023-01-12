@@ -61,7 +61,11 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
                 .ratedNominalPower(new AttributeModification<>(220., OperationType.SET))
                 .voltageRegulationType(
                         new AttributeModification<>(VoltageRegulationType.DISTANT, OperationType.SET))
+                .plannedActivePowerSetPoint(new AttributeModification<>(10., OperationType.SET))
+                .startupCost(new AttributeModification<>(20., OperationType.SET))
                 .marginalCost(new AttributeModification<>(0.1, OperationType.SET))
+                .plannedOutageRate(new AttributeModification<>(.30, OperationType.SET))
+                .forcedOutageRate(new AttributeModification<>(.40, OperationType.SET))
                 .minimumReactivePower(new AttributeModification<>(-100., OperationType.SET))
                 .maximumReactivePower(new AttributeModification<>(100., OperationType.SET))
                 .reactiveCapabilityCurvePoints(List.of(
@@ -97,6 +101,11 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
                 .reactiveCapabilityCurvePoints(List.of())
                 .voltageRegulationType(
                                 new AttributeModification<>(VoltageRegulationType.LOCAL, OperationType.SET))
+                .plannedActivePowerSetPoint(new AttributeModification<>(111., OperationType.SET))
+                .startupCost(new AttributeModification<>(201., OperationType.SET))
+                .marginalCost(new AttributeModification<>(0.40, OperationType.SET))
+                .plannedOutageRate(new AttributeModification<>(.45, OperationType.SET))
+                .forcedOutageRate(new AttributeModification<>(.66, OperationType.SET))
                 .build();
     }
 

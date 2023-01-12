@@ -6,8 +6,10 @@
  */
 package org.gridsuite.modification.server.modifications;
 
+import com.powsybl.network.store.iidm.impl.extensions.GeneratorStartupAdderImpl;
 import org.gridsuite.modification.server.NetworkModificationException;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_GENERATOR_ERROR;
+import static org.gridsuite.modification.server.modifications.ModificationUtils.nanIfNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -280,13 +282,50 @@ public class GeneratorModification extends AbstractModification {
             Reporter subReporter) {
         List<Report> reports = new ArrayList<>();
         GeneratorStartup generatorStartup = generator.getExtension(GeneratorStartup.class);
+        Double oldPlannedActivePowerSetPoint = generatorStartup != null ? generatorStartup.getPlannedActivePowerSetpoint() : Double.NaN;
+        Double oldStartupCost = generatorStartup != null ? generatorStartup.getStartupCost() : Double.NaN;
         Double oldMarginalCost = generatorStartup != null ? generatorStartup.getMarginalCost() : Double.NaN;
+        Double oldPlannedOutageRate = generatorStartup != null ? generatorStartup.getPlannedOutageRate() : Double.NaN;
+        Double oldForcedOutageRate = generatorStartup != null ? generatorStartup.getForcedOutageRate() : Double.NaN;
+
         if (modificationInfos.getMarginalCost() != null) {
             generator.newExtension(GeneratorStartupAdder.class)
                     .withMarginalCost(modificationInfos.getMarginalCost().getValue()).add();
             reports.add(ModificationUtils.getInstance().buildModificationReport(oldMarginalCost,
                     modificationInfos.getMarginalCost().getValue(),
                     "Cost of start"));
+        }
+
+        if (modificationInfos.getPlannedActivePowerSetPoint() != null) {
+            generator.newExtension(GeneratorStartupAdder.class)
+                    .withPlannedActivePowerSetpoint(modificationInfos.getPlannedActivePowerSetPoint().getValue()).add();
+            reports.add(ModificationUtils.getInstance().buildModificationReport(oldPlannedActivePowerSetPoint,
+                    modificationInfos.getPlannedActivePowerSetPoint().getValue(),
+                    "Planning active power set point"));
+        }
+
+        if (modificationInfos.getStartupCost()!= null) {
+            generator.newExtension(GeneratorStartupAdder.class)
+                    .withStartupCost(modificationInfos.getStartupCost().getValue()).add();
+            reports.add(ModificationUtils.getInstance().buildModificationReport(oldStartupCost,
+                    modificationInfos.getStartupCost().getValue(),
+                    "Startup cost"));
+        }
+
+        if (modificationInfos.getPlannedOutageRate()!= null) {
+            generator.newExtension(GeneratorStartupAdder.class)
+                    .withStartupCost(modificationInfos.getPlannedOutageRate().getValue()).add();
+            reports.add(ModificationUtils.getInstance().buildModificationReport(oldPlannedOutageRate,
+                    modificationInfos.getPlannedOutageRate().getValue(),
+                    "Planning outage rate"));
+        }
+
+        if (modificationInfos.getForcedOutageRate()!= null) {
+            generator.newExtension(GeneratorStartupAdder.class)
+                    .withStartupCost(modificationInfos.getForcedOutageRate().getValue()).add();
+            reports.add(ModificationUtils.getInstance().buildModificationReport(oldForcedOutageRate,
+                    modificationInfos.getForcedOutageRate().getValue(),
+                    "Forced outage rate"));
         }
 
         ModificationUtils.getInstance().reportModifications(subReporter, reports, "startUpAttributesModified", "Start up modified :");
