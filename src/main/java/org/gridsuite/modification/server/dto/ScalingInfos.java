@@ -25,7 +25,8 @@ import java.util.List;
 @NoArgsConstructor
 @Getter
 @Setter
-@ToString(callSuper = true)
+@ToString
+@Schema(description = "Scaling infos")
 public class ScalingInfos extends ModificationInfos {
     @Schema(description = "scaling variations")
     private List<ScalingVariationInfos> variations;

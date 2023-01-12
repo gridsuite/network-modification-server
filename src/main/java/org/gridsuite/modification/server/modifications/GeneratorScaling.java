@@ -7,6 +7,8 @@
 
 package org.gridsuite.modification.server.modifications;
 
+import com.powsybl.commons.reporter.Reporter;
+import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.iidm.modification.scalable.Scalable;
 import com.powsybl.iidm.network.Generator;
 import com.powsybl.iidm.network.Network;
@@ -27,6 +29,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.GENERATOR_SCALING_ERROR;
+import static org.gridsuite.modification.server.modifications.ModificationUtils.createReport;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
@@ -37,11 +40,12 @@ public class GeneratorScaling extends AbstractScaling {
 
     public GeneratorScaling(GeneratorScalingInfos generatorScalableInfos) {
         super(generatorScalableInfos);
-        this.isIterative = generatorScalableInfos.isIterative();
+        this.isIterative = generatorScalableInfos.getIsIterative();
     }
 
     @Override
     public void applyStackingUpVariation(Network network,
+                                         Reporter subReporter,
                                          List<IdentifiableAttributes> identifiableAttributes,
                                          ScalingVariationInfos generatorScalingVariation) {
         AtomicReference<Double> sum = new AtomicReference<>(0D);
@@ -50,11 +54,12 @@ public class GeneratorScaling extends AbstractScaling {
                     sum.set(network.getGenerator(equipment.getId()).getTargetP() + sum.get());
                     return getScalable(equipment.getId());
                 }).toArray(Scalable[]::new));
-        stackingUpScalable.scale(network, getAsked(generatorScalingVariation, sum));
+        scale(network, subReporter, generatorScalingVariation, sum, stackingUpScalable);
     }
 
     @Override
     public void applyVentilationVariation(Network network,
+                                          Reporter subReporter,
                                           List<IdentifiableAttributes> identifiableAttributes,
                                           ScalingVariationInfos generatorScalingVariation,
                                           Double distributionKeys) {
@@ -69,12 +74,13 @@ public class GeneratorScaling extends AbstractScaling {
                 percentages.add((float) ((equipment.getDistributionKey() / distributionKeys) * 100));
             });
             Scalable ventilationScalable = Scalable.proportional(percentages, scalables, isIterative);
-            ventilationScalable.scale(network, getAsked(generatorScalingVariation, sum));
+            scale(network, subReporter, generatorScalingVariation, sum, ventilationScalable);
         }
     }
 
     @Override
     public void applyRegularDistributionVariation(Network network,
+                                                  Reporter subReporter,
                                                   List<IdentifiableAttributes> identifiableAttributes,
                                                   ScalingVariationInfos generatorScalingVariation) {
         List<Generator> generators = identifiableAttributes
@@ -91,21 +97,16 @@ public class GeneratorScaling extends AbstractScaling {
                     return getScalable(generator.getId());
                 }).collect(Collectors.toList());
 
-        if (!scalables.isEmpty()) {
-            List<Float> percentages = new ArrayList<>(Collections.nCopies(scalables.size(), (float) (100.0 / scalables.size())));
-
-            Scalable regularDistributionScalable = Scalable.proportional(percentages, scalables, isIterative);
-            regularDistributionScalable.scale(network,
-                    getAsked(generatorScalingVariation, sum));
-        } else {
-            throw new NetworkModificationException(GENERATOR_SCALING_ERROR, "equipments cannot be found");
-        }
+        List<Float> percentages = new ArrayList<>(Collections.nCopies(scalables.size(), (float) (100.0 / scalables.size())));
+        Scalable regularDistributionScalable = Scalable.proportional(percentages, scalables, isIterative);
+        scale(network, subReporter, generatorScalingVariation, sum, regularDistributionScalable);
     }
 
     @Override
     public void applyProportionalToPmaxVariation(Network network,
-                                                  List<IdentifiableAttributes> identifiableAttributes,
-                                                  ScalingVariationInfos generatorScalingVariation) {
+                                                 Reporter subReporter,
+                                                 List<IdentifiableAttributes> identifiableAttributes,
+                                                 ScalingVariationInfos generatorScalingVariation) {
         List<Generator> generators = identifiableAttributes
                 .stream().map(attribute -> network.getGenerator(attribute.getId())).collect(Collectors.toList());
         AtomicReference<Double> maxPSum = new AtomicReference<>(0D);
@@ -128,15 +129,14 @@ public class GeneratorScaling extends AbstractScaling {
         });
 
         Scalable proportionalToPmaxScalable = Scalable.proportional(percentages, scalables, isIterative);
-        proportionalToPmaxScalable.scale(network,
-                getAsked(generatorScalingVariation, targetPSum),
-                Scalable.ScalingConvention.GENERATOR);
+        scale(network, subReporter, generatorScalingVariation, targetPSum, proportionalToPmaxScalable);
     }
 
     @Override
     public void applyProportionalVariation(Network network,
-                                            List<IdentifiableAttributes> identifiableAttributes,
-                                            ScalingVariationInfos generatorScalingVariation) {
+                                           Reporter subReporter,
+                                           List<IdentifiableAttributes> identifiableAttributes,
+                                           ScalingVariationInfos generatorScalingVariation) {
         List<Generator> generators = identifiableAttributes
                 .stream().map(attribute -> network.getGenerator(attribute.getId())).collect(Collectors.toList());
         AtomicReference<Double> sum = new AtomicReference<>(0D);
@@ -157,8 +157,16 @@ public class GeneratorScaling extends AbstractScaling {
         });
 
         Scalable proportionalScalable = Scalable.proportional(percentages, scalables, isIterative);
-        proportionalScalable.scale(network,
-                getAsked(generatorScalingVariation, sum));
+        scale(network, subReporter, generatorScalingVariation, sum, proportionalScalable);
+    }
+
+    private void scale(Network network, Reporter subReporter, ScalingVariationInfos scalingVariationInfos, AtomicReference<Double> sum, Scalable scalable) {
+        double asked = getAsked(scalingVariationInfos, sum);
+        double done = scalable.scale(network, asked);
+        createReport(subReporter,
+                "scalingApplied",
+                String.format("successfully scaled for mode %s with variation value asked is %s. variation done is  %s", scalingVariationInfos.getVariationMode(), asked, done),
+                TypedValue.INFO_SEVERITY);
     }
 
     @Override
@@ -171,15 +179,5 @@ public class GeneratorScaling extends AbstractScaling {
     @Override
     public Scalable getScalable(String id) {
         return Scalable.onGenerator(id);
-    }
-
-    @Override
-    public NetworkModificationException.Type getExceptionType() {
-        return GENERATOR_SCALING_ERROR;
-    }
-
-    @Override
-    public ModificationType getModificationType() {
-        return ModificationType.GENERATOR_SCALING;
     }
 }

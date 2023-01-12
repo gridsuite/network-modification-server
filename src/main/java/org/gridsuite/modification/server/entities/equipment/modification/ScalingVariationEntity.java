@@ -32,7 +32,7 @@ public class ScalingVariationEntity {
     @Column(name = "id")
     private UUID id;
 
-    @OneToMany(cascade = CascadeType.ALL)
+    @ManyToMany(cascade = CascadeType.ALL)
     @JoinTable(
             joinColumns = @JoinColumn(name = "id"),
             inverseJoinColumns = @JoinColumn(name = "filterId"))

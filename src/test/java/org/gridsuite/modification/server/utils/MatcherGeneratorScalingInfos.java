@@ -30,7 +30,7 @@ public class MatcherGeneratorScalingInfos extends MatcherModificationInfos<Gener
     public boolean matchesSafely(GeneratorScalingInfos m) {
         return super.matchesSafely(m)
                 && Objects.equals(reference.getVariationType(), m.getVariationType())
-                && Objects.equals(reference.isIterative(), m.isIterative())
+                && Objects.equals(reference.getIsIterative(), m.getIsIterative())
                 && matchesVariations(m.getVariations());
     }
 
@@ -70,7 +70,8 @@ public class MatcherGeneratorScalingInfos extends MatcherModificationInfos<Gener
     }
 
     private boolean matchesFilter(FilterInfos filter1, FilterInfos filter2) {
-        return Objects.equals(filter1.getName(), filter2.getName());
+        return Objects.equals(filter1.getName(), filter2.getName()) &&
+               Objects.equals(filter1.getId(), filter2.getId());
     }
 
     private boolean matchesList(List<?> list1, List<?> list2) {

@@ -53,7 +53,7 @@ public class GeneratorScalingEntity extends ScalingEntity {
     }
 
     private void assignAttributes(GeneratorScalingInfos generatorScalingInfos) {
-        isIterative = generatorScalingInfos.isIterative();
+        isIterative = generatorScalingInfos.getIsIterative();
         setVariationType(generatorScalingInfos.getVariationType());
         setVariations(getScalingVariationEntities(generatorScalingInfos));
     }
@@ -78,7 +78,7 @@ public class GeneratorScalingEntity extends ScalingEntity {
     @Override
     public GeneratorScalingInfos toModificationInfos() {
         return GeneratorScalingInfos.builder()
-                .type(ModificationType.GENERATOR_SCALING)
+                .type(ModificationType.valueOf(getType()))
                 .date(getDate())
                 .uuid(getId())
                 .isIterative(isIterative())

@@ -78,6 +78,7 @@ public abstract class AbstractScaling extends AbstractModification {
         // create report for each wrong filter
         filterWithWrongEquipmentsIds.values().forEach(f -> {
             var equipmentIds = String.join(", ", f.getNotFoundEquipments());
+
             createReport(subReporter,
                     "filterEquipmentsNotFound",
                     String.format("Cannot find the following equipments %s in filter %s", equipmentIds, filters.get(f.getFilterId())),
@@ -85,16 +86,24 @@ public abstract class AbstractScaling extends AbstractModification {
         });
 
         // apply variations
-        scalingInfos.getVariations().forEach(variation -> applyVariation(
-                network,
-                subReporter,
-                variation.getFilters().stream()
+        scalingInfos.getVariations().forEach(variation -> {
+            List<IdentifiableAttributes> identifiableAttributes = variation.getFilters()
+                    .stream()
                     .filter(f -> !filterWithWrongEquipmentsIds.containsKey(f.getId()))
                     .flatMap(f -> exportFilters.get(f.getId())
-                        .getIdentifiableAttributes()
-                        .stream())
-                    .collect(Collectors.toList()),
-                variation));
+                            .getIdentifiableAttributes()
+                            .stream())
+                    .collect(Collectors.toList());
+            if (CollectionUtils.isEmpty(identifiableAttributes)) {
+                String filterNames = variation.getFilters().stream().map(FilterInfos::getName).collect(Collectors.joining(", "));
+                createReport(subReporter,
+                        "allFiltersWrong",
+                        String.format("All of the following variation's filters have equipments with wrong id : %s", filterNames),
+                        TypedValue.WARN_SEVERITY);
+            } else {
+                applyVariation(network, subReporter, identifiableAttributes, variation);
+            }
+        });
 
         createReport(subReporter, "scalingCreated", "new scaling created", TypedValue.INFO_SEVERITY);
     }
@@ -105,19 +114,19 @@ public abstract class AbstractScaling extends AbstractModification {
                                 ScalingVariationInfos variation) {
         switch (variation.getVariationMode()) {
             case PROPORTIONAL:
-                applyProportionalVariation(network, identifiableAttributes, variation);
+                applyProportionalVariation(network, subReporter, identifiableAttributes, variation);
                 break;
             case PROPORTIONAL_TO_PMAX:
-                applyProportionalToPmaxVariation(network, identifiableAttributes, variation);
+                applyProportionalToPmaxVariation(network, subReporter, identifiableAttributes, variation);
                 break;
             case REGULAR_DISTRIBUTION:
-                applyRegularDistributionVariation(network, identifiableAttributes, variation);
+                applyRegularDistributionVariation(network, subReporter, identifiableAttributes, variation);
                 break;
             case VENTILATION:
-                applyVentilationVariation(network, identifiableAttributes, variation, getDistributionKeys(identifiableAttributes, subReporter));
+                applyVentilationVariation(network, subReporter, identifiableAttributes, variation, getDistributionKeys(identifiableAttributes, subReporter));
                 break;
             case STACKING_UP:
-                applyStackingUpVariation(network, identifiableAttributes, variation);
+                applyStackingUpVariation(network, subReporter, identifiableAttributes, variation);
                 break;
             default:
                 throw new NetworkModificationException(scalingInfos.getErrorType(), "This variation mode is not supported : " + variation.getVariationMode().name());
@@ -137,21 +146,17 @@ public abstract class AbstractScaling extends AbstractModification {
         return distributionKeys;
     }
 
-    public abstract void applyStackingUpVariation(Network network, List<IdentifiableAttributes> identifiableAttributes, ScalingVariationInfos variationInfos);
+    public abstract void applyStackingUpVariation(Network network, Reporter subReporter, List<IdentifiableAttributes> identifiableAttributes, ScalingVariationInfos variationInfos);
 
-    public abstract void applyVentilationVariation(Network network, List<IdentifiableAttributes> identifiableAttributes, ScalingVariationInfos generatorScalingVariation, Double distributionKeys);
+    public abstract void applyVentilationVariation(Network network, Reporter subReporter, List<IdentifiableAttributes> identifiableAttributes, ScalingVariationInfos generatorScalingVariation, Double distributionKeys);
 
-    public abstract void applyRegularDistributionVariation(Network network, List<IdentifiableAttributes> identifiableAttributes, ScalingVariationInfos generatorScalingVariation);
+    public abstract void applyRegularDistributionVariation(Network network, Reporter subReporter, List<IdentifiableAttributes> identifiableAttributes, ScalingVariationInfos generatorScalingVariation);
 
-    public abstract void applyProportionalToPmaxVariation(Network network, List<IdentifiableAttributes> identifiableAttributes, ScalingVariationInfos generatorScalingVariation);
+    public abstract void applyProportionalToPmaxVariation(Network network, Reporter subReporter, List<IdentifiableAttributes> identifiableAttributes, ScalingVariationInfos generatorScalingVariation);
 
-    public abstract void applyProportionalVariation(Network network, List<IdentifiableAttributes> identifiableAttributes, ScalingVariationInfos variationInfos);
+    public abstract void applyProportionalVariation(Network network, Reporter subReporter, List<IdentifiableAttributes> identifiableAttributes, ScalingVariationInfos variationInfos);
 
     public abstract double getAsked(ScalingVariationInfos variationInfos, AtomicReference<Double> sum);
 
     public abstract Scalable getScalable(String id);
-
-    public abstract NetworkModificationException.Type getExceptionType();
-
-    public abstract ModificationType getModificationType();
 }
