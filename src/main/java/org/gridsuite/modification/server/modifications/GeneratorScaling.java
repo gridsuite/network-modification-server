@@ -7,8 +7,6 @@
 
 package org.gridsuite.modification.server.modifications;
 
-import com.powsybl.commons.reporter.Reporter;
-import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.iidm.modification.scalable.Scalable;
 import com.powsybl.iidm.network.Generator;
 import com.powsybl.iidm.network.Network;
@@ -18,7 +16,6 @@ import org.gridsuite.modification.server.VariationType;
 import org.gridsuite.modification.server.dto.GeneratorScalingInfos;
 import org.gridsuite.modification.server.dto.IdentifiableAttributes;
 import org.gridsuite.modification.server.dto.ScalingVariationInfos;
-import org.gridsuite.modification.server.utils.ScalingUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -49,34 +46,31 @@ public class GeneratorScaling extends AbstractScaling {
                                          ScalingVariationInfos generatorScalingVariation) {
         AtomicReference<Double> sum = new AtomicReference<>(0D);
         Scalable stackingUpScalable = Scalable.stack(identifiableAttributes.stream()
-                .map(equipment -> getScalable(equipment.getId())).toArray(Scalable[]::new));
+                .map(equipment -> {
+                    sum.set(network.getGenerator(equipment.getId()).getTargetP() + sum.get());
+                    return getScalable(equipment.getId());
+                }).toArray(Scalable[]::new));
         stackingUpScalable.scale(network, getAsked(generatorScalingVariation, sum));
     }
 
     @Override
     public void applyVentilationVariation(Network network,
-                                          Reporter subReporter,
                                           List<IdentifiableAttributes> identifiableAttributes,
-                                          ScalingVariationInfos generatorScalingVariation) {
-        AtomicReference<Double> sum = new AtomicReference<>(0D);
-        List<Float> percentages = new ArrayList<>();
-        List<Scalable> scalables = new ArrayList<>();
-        var distributionKeys = identifiableAttributes.stream()
-                .filter(equipment -> equipment.getDistributionKey() != null)
-                .mapToDouble(IdentifiableAttributes::getDistributionKey)
-                .sum();
-        if (distributionKeys == 0) {
-            String message = "This mode is available only for equipment with distribution key";
-            ScalingUtils.createReport(subReporter, GENERATOR_SCALING_ERROR.name(), message, TypedValue.ERROR_SEVERITY);
-            throw new NetworkModificationException(GENERATOR_SCALING_ERROR, message);
-        }
+                                          ScalingVariationInfos generatorScalingVariation,
+                                          Double distributionKeys) {
+        if (distributionKeys != null) {
+            AtomicReference<Double> sum = new AtomicReference<>(0D);
+            List<Float> percentages = new ArrayList<>();
+            List<Scalable> scalables = new ArrayList<>();
 
-        identifiableAttributes.forEach(equipment -> {
-            scalables.add(getScalable(equipment.getId()));
-            percentages.add((float) ((equipment.getDistributionKey() / distributionKeys) * 100));
-        });
-        Scalable ventilationScalable = Scalable.proportional(percentages, scalables, isIterative);
-        ventilationScalable.scale(network, getAsked(generatorScalingVariation, sum));
+            identifiableAttributes.forEach(equipment -> {
+                sum.set(network.getGenerator(equipment.getId()).getTargetP() + sum.get());
+                scalables.add(getScalable(equipment.getId()));
+                percentages.add((float) ((equipment.getDistributionKey() / distributionKeys) * 100));
+            });
+            Scalable ventilationScalable = Scalable.proportional(percentages, scalables, isIterative);
+            ventilationScalable.scale(network, getAsked(generatorScalingVariation, sum));
+        }
     }
 
     @Override
@@ -90,6 +84,7 @@ public class GeneratorScaling extends AbstractScaling {
                 .collect(Collectors.toList());
 
         AtomicReference<Double> sum = new AtomicReference<>(0D);
+
         List<Scalable> scalables = generators.stream()
                 .map(generator -> {
                     sum.set(sum.get() + generator.getTargetP());
@@ -118,11 +113,15 @@ public class GeneratorScaling extends AbstractScaling {
         Map<String, Double> targetPMap = new HashMap<>();
         List<Float> percentages = new ArrayList<>();
         List<Scalable> scalables = new ArrayList<>();
+
+        // we retrieve max P and the sum of max P of each generator to calculate the percentage.
+        // we calculate the sum of target P to calculate variation value if variation type is Target_P
         generators.forEach(generator -> {
             targetPMap.put(generator.getId(), generator.getMaxP());
             maxPSum.set(maxPSum.get() + generator.getMaxP());
             targetPSum.set(targetPSum.get() + generator.getTargetP());
         });
+
         targetPMap.forEach((id, p) -> {
             percentages.add((float) ((p / maxPSum.get()) * 100));
             scalables.add(getScalable(id));
@@ -144,10 +143,14 @@ public class GeneratorScaling extends AbstractScaling {
         Map<String, Double> targetPMap = new HashMap<>();
         List<Float> percentages = new ArrayList<>();
         List<Scalable> scalables = new ArrayList<>();
+
+        // we retrieve the target P for every generator and calculate their sum
         generators.forEach(generator -> {
             targetPMap.put(generator.getId(), generator.getTargetP());
             sum.set(sum.get() + generator.getTargetP());
         });
+
+        // we calculate percentage of each target P value relative to the sum of target P
         targetPMap.forEach((id, p) -> {
             percentages.add((float) ((p / sum.get()) * 100));
             scalables.add(getScalable(id));

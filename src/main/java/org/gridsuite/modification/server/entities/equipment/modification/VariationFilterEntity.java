@@ -7,11 +7,10 @@
 
 package org.gridsuite.modification.server.entities.equipment.modification;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.gridsuite.modification.server.dto.FilterInfos;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -23,11 +22,9 @@ import javax.validation.constraints.NotNull;
 import java.util.UUID;
 
 @NoArgsConstructor
-@AllArgsConstructor
 @Getter
 @Setter
 @Entity
-@Builder
 @Table(name = "VariationFilter")
 public class VariationFilterEntity {
 
@@ -42,4 +39,10 @@ public class VariationFilterEntity {
 
     @Column(name = "name")
     private String name;
+
+    public VariationFilterEntity(FilterInfos filterInfos) {
+        this.id = null;
+        this.filterId = filterInfos.getId();
+        this.name = filterInfos.getName();
+    }
 }

@@ -32,7 +32,7 @@ public class ScalingVariationEntity {
     @Column(name = "id")
     private UUID id;
 
-    @ManyToMany(cascade = CascadeType.ALL)
+    @OneToMany(cascade = CascadeType.ALL)
     @JoinTable(
             joinColumns = @JoinColumn(name = "id"),
             inverseJoinColumns = @JoinColumn(name = "filterId"))
@@ -47,26 +47,45 @@ public class ScalingVariationEntity {
 
     public ScalingVariationEntity(ScalingVariationInfos variationInfos) {
         this.id = null;
+        assignAttributes(variationInfos);
+    }
+
+    public ScalingVariationEntity update(ScalingVariationInfos variationInfos) {
+        assignAttributes(variationInfos);
+        return this;
+    }
+
+    private void assignAttributes(ScalingVariationInfos variationInfos) {
         this.filters = getFiltersEntity(variationInfos);
         this.variationMode = variationInfos.getVariationMode();
         this.variationValue = variationInfos.getVariationValue();
     }
 
     private List<VariationFilterEntity> getFiltersEntity(ScalingVariationInfos variationInfos) {
-        return variationInfos.getFilters().stream().map(filterInfos -> VariationFilterEntity.builder()
-                        .filterId(UUID.fromString(filterInfos.getId()))
-                        .name(filterInfos.getName())
-                        .build())
+        var filters = getFilters();
+        return variationInfos.getFilters()
+                .stream()
+                .map(filterInfos -> {
+                    if (filters == null) {
+                        return new VariationFilterEntity(filterInfos);
+                    } else {
+                        return getFilters()
+                                .stream()
+                                .filter(filter -> Objects.equals(filter.getFilterId(), filterInfos.getId()))
+                                .findFirst()
+                                .orElse(filterInfos.toEntity());
+                    }
+                })
                 .collect(Collectors.toList());
     }
 
-    public ScalingVariationInfos toScalingVariation() {
+    public ScalingVariationInfos toScalingVariationInfo() {
         return ScalingVariationInfos.builder()
                 .id(getId())
                 .variationMode(getVariationMode())
                 .variationValue(getVariationValue())
                 .filters(this.getFilters().stream()
-                        .map(filter -> new FilterInfos(filter.getFilterId().toString(), filter.getName()))
+                        .map(filter -> new FilterInfos(filter.getFilterId(), filter.getName()))
                         .collect(Collectors.toList()))
                 .build();
     }

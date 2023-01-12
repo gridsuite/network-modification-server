@@ -1,0 +1,33 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-4.1.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
+    <changeSet author="yenguised (generated)" id="1673481796069-9">
+        <addUniqueConstraint columnNames="filter_id" constraintName="UK_j7lwgf59hux07bl6bpdii0ky9" tableName="scaling_variation_filters"/>
+    </changeSet>
+    <changeSet author="yenguised (generated)" id="1673481796069-10">
+        <dropColumn columnName="REACTIVE_VARIATION_MODE" tableName="SCALING_VARIATION"/>
+    </changeSet>
+    <changeSet author="yenguised (generated)" id="1673481796069-1">
+        <dropForeignKeyConstraint baseTableName="two_windings_transformer_creation" constraintName="current_limits_id1_fk"/>
+    </changeSet>
+    <changeSet author="yenguised (generated)" id="1673481796069-2">
+        <addForeignKeyConstraint baseColumnNames="current_limits_id1" baseTableName="two_windings_transformer_creation" constraintName="current_limits_id1_fk" referencedColumnNames="id" referencedTableName="current_limits"/>
+    </changeSet>
+    <changeSet author="yenguised (generated)" id="1673481796069-3">
+        <dropForeignKeyConstraint baseTableName="two_windings_transformer_creation" constraintName="current_limits_id2_fk"/>
+    </changeSet>
+    <changeSet author="yenguised (generated)" id="1673481796069-4">
+        <addForeignKeyConstraint baseColumnNames="current_limits_id2" baseTableName="two_windings_transformer_creation" constraintName="current_limits_id2_fk" referencedColumnNames="id" referencedTableName="current_limits"/>
+    </changeSet>
+    <changeSet author="yenguised (generated)" id="1673481796069-5">
+        <dropNotNullConstraint columnDataType="int" columnName="horiz_pos" tableName="voltage_level_creation_entity_busbar_sections"/>
+    </changeSet>
+    <changeSet author="yenguised (generated)" id="1673481796069-6">
+        <dropNotNullConstraint columnDataType="int" columnName="vert_pos" tableName="voltage_level_creation_entity_busbar_sections"/>
+    </changeSet>
+    <changeSet author="yenguised (generated)" id="1673481796069-7">
+        <dropUniqueConstraint constraintName="UK_j7lwgf59hux07bl6bpdii0ky9" tableName="scaling_variation_filters"/>
+    </changeSet>
+    <changeSet author="yenguised (generated)" id="1673481796069-8">
+        <addUniqueConstraint columnNames="filter_id" constraintName="UK_j7lwgf59hux07bl6bpdii0ky9" tableName="scaling_variation_filters"/>
+    </changeSet>
+</databaseChangeLog>

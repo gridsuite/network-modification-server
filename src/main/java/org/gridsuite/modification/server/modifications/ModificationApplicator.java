@@ -12,6 +12,8 @@ import com.powsybl.commons.reporter.ReporterModel;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.service.NetworkStoreListener;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 
 import java.time.ZoneOffset;
@@ -26,6 +28,9 @@ import java.util.stream.Stream;
  */
 @Service
 public class ModificationApplicator {
+    @Autowired
+    private ApplicationContext context;
+
     private static List<ModificationInfos> getNetworkDamage(ModificationInfos modificationInfos, NetworkStoreListener listener) {
         modificationInfos.setSubstationIds(listener.getSubstationsIds());
         modificationInfos.setDate(ZonedDateTime.now(ZoneOffset.UTC));
@@ -38,7 +43,7 @@ public class ModificationApplicator {
     public List<ModificationInfos> apply(ModificationInfos modificationInfos, ReporterModel reporter, NetworkStoreListener listener) {
         Reporter subReporter = modificationInfos.createSubReporter(reporter);
         try {
-            modificationInfos.toModification().apply(listener.getNetwork(), subReporter);
+            modificationInfos.toModification().apply(listener.getNetwork(), subReporter, context);
             return getNetworkDamage(modificationInfos, listener);
         } catch (PowsyblException e) {
             NetworkModificationException exc = e instanceof NetworkModificationException ? (NetworkModificationException) e : new NetworkModificationException(modificationInfos.getErrorType(), e);

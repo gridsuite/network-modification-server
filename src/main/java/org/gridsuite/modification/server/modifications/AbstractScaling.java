@@ -14,23 +14,25 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.iidm.impl.NetworkImpl;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.ScalingVariationInfos;
 import org.gridsuite.modification.server.dto.FilterEquipments;
 import org.gridsuite.modification.server.dto.FilterInfos;
 import org.gridsuite.modification.server.dto.IdentifiableAttributes;
 import org.gridsuite.modification.server.dto.ScalingInfos;
+import org.gridsuite.modification.server.dto.ScalingVariationInfos;
 import org.gridsuite.modification.server.service.FilterService;
-import org.gridsuite.modification.server.service.SpringContext;
+import org.springframework.context.ApplicationContext;
 import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static org.gridsuite.modification.server.utils.ScalingUtils.createReport;
+import static org.gridsuite.modification.server.modifications.ModificationUtils.createReport;
+import static org.gridsuite.modification.server.modifications.ModificationUtils.distinctByKey;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
@@ -45,54 +47,56 @@ public abstract class AbstractScaling extends AbstractModification {
     }
 
     @Override
-    public void apply(Network network, Reporter subReporter) {
-        var variationsInfos = scalingInfos.getVariations();
-        List<String> filterIds = new ArrayList<>();
-        variationsInfos.forEach(variation -> filterIds.addAll(variation.getFilters().stream().map(FilterInfos::getId).collect(Collectors.toList())));
+    public void apply(Network network, Reporter subReporter, ApplicationContext context) {
+        // collect all filters from all variations
+        Map<UUID, String> filters = scalingInfos.getVariations().stream()
+                .flatMap(v -> v.getFilters().stream())
+                .filter(distinctByKey(FilterInfos::getId))
+                .collect(Collectors.toMap(FilterInfos::getId, FilterInfos::getName));
 
+        // export filters from filter server
         String workingVariantId = network.getVariantManager().getWorkingVariantId();
         UUID uuid = ((NetworkImpl) network).getUuid();
-        List<FilterEquipments> exportFilters = SpringContext.getBean(FilterService.class)
-                .exportFilters(filterIds.stream().distinct().collect(Collectors.toList()), uuid, workingVariantId);
+        Map<UUID, FilterEquipments> exportFilters = context.getBean(FilterService.class)
+                .exportFilters(new ArrayList<>(filters.keySet()), uuid, workingVariantId)
+                .stream()
+                .peek(t -> t.setFilterName(filters.get(t.getFilterId())))
+                .collect(Collectors.toMap(FilterEquipments::getFilterId, Function.identity()));
 
-        var filterWithWrongIds = exportFilters.stream()
-                .filter(f -> !CollectionUtils.isEmpty(f.getNotFoundEquipments()))
-                .collect(Collectors.toList());
+        // collect all filters with wrong equipments ids
+        Map<UUID, FilterEquipments> filterWithWrongEquipmentsIds = exportFilters.entrySet().stream()
+                .filter(e -> !CollectionUtils.isEmpty(e.getValue().getNotFoundEquipments()))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
-        if (filterWithWrongIds.size() == exportFilters.size()) {
+        // check if all exported filters contain equipments with wrong ids
+        if (filterWithWrongEquipmentsIds.size() == exportFilters.size()) {
             String errorMsg = "All filters contains equipments with wrong ids";
-            createReport(subReporter, getExceptionType().name(), errorMsg, TypedValue.ERROR_SEVERITY);
-            throw new NetworkModificationException(getExceptionType(), errorMsg);
+            createReport(subReporter, "invalidFilters", errorMsg, TypedValue.ERROR_SEVERITY);
+            throw new NetworkModificationException(scalingInfos.getErrorType(), errorMsg);
         }
 
-        if (!filterWithWrongIds.isEmpty()) {
-            filterWithWrongIds.forEach(f -> {
-                var equipmentIds = String.join(", ", f.getNotFoundEquipments());
-                createReport(subReporter,
-                        getExceptionType().name() + f.getFilterId(),
-                        "Cannot find the following equipments " + equipmentIds + " in filter " + f.getFilterId(),
-                        TypedValue.WARN_SEVERITY);
-            });
-        }
+        // create report for each wrong filter
+        filterWithWrongEquipmentsIds.values().forEach(f -> {
+            var equipmentIds = String.join(", ", f.getNotFoundEquipments());
+            createReport(subReporter,
+                    "filterEquipmentsNotFound",
+                    String.format("Cannot find the following equipments %s in filter %s", equipmentIds, filters.get(f.getFilterId())),
+                    TypedValue.WARN_SEVERITY);
+        });
 
-        var wrongFiltersId = filterWithWrongIds.stream().map(f -> f.getFilterId().toString()).collect(Collectors.toList());
+        // apply variations
+        scalingInfos.getVariations().forEach(variation -> applyVariation(
+                network,
+                subReporter,
+                variation.getFilters().stream()
+                    .filter(f -> !filterWithWrongEquipmentsIds.containsKey(f.getId()))
+                    .flatMap(f -> exportFilters.get(f.getId())
+                        .getIdentifiableAttributes()
+                        .stream())
+                    .collect(Collectors.toList()),
+                variation));
 
-        variationsInfos.forEach(variation ->
-            variation.getFilters().forEach(filter -> {
-                FilterEquipments filterEquipments = exportFilters.stream()
-                    .filter(f -> Objects.equals(f.getFilterId().toString(), filter.getId()))
-                    .findAny()
-                    .orElse(null);
-
-                if (wrongFiltersId.contains(filter.getId()) || filterEquipments == null) {
-                    return;
-                }
-
-                List<IdentifiableAttributes> identifiableAttributes = filterEquipments.getIdentifiableAttributes();
-                applyVariation(network, subReporter, identifiableAttributes, variation);
-            }));
-
-        createReport(subReporter, getModificationType().name(), "new scaling created", TypedValue.INFO_SEVERITY);
+        createReport(subReporter, "scalingCreated", "new scaling created", TypedValue.INFO_SEVERITY);
     }
 
     private void applyVariation(Network network,
@@ -110,44 +114,38 @@ public abstract class AbstractScaling extends AbstractModification {
                 applyRegularDistributionVariation(network, identifiableAttributes, variation);
                 break;
             case VENTILATION:
-                applyVentilationVariation(network, subReporter, identifiableAttributes, variation);
+                applyVentilationVariation(network, identifiableAttributes, variation, getDistributionKeys(identifiableAttributes, subReporter));
                 break;
             case STACKING_UP:
                 applyStackingUpVariation(network, identifiableAttributes, variation);
                 break;
             default:
-                throw new NetworkModificationException(getExceptionType(), "This variation mode is not supported : " + variation.getVariationMode().name());
+                throw new NetworkModificationException(scalingInfos.getErrorType(), "This variation mode is not supported : " + variation.getVariationMode().name());
         }
     }
 
-    public void applyStackingUpVariation(Network network, List<IdentifiableAttributes> identifiableAttributes, ScalingVariationInfos variationInfos) {
-        throw new NetworkModificationException(getExceptionType(), ERROR_MESSAGE);
+    private Double getDistributionKeys(List<IdentifiableAttributes> identifiableAttributes, Reporter subReporter) {
+        var distributionKeys = identifiableAttributes.stream()
+                .filter(equipment -> equipment.getDistributionKey() != null)
+                .mapToDouble(IdentifiableAttributes::getDistributionKey)
+                .sum();
+        if (distributionKeys == 0) {
+            String message = "This mode is available only for equipment with distribution key";
+            createReport(subReporter, "distributionKeysNotFound", message, TypedValue.ERROR_SEVERITY);
+            return null;
+        }
+        return distributionKeys;
     }
 
-    public void applyVentilationVariation(Network network,
-                                           Reporter subReporter,
-                                           List<IdentifiableAttributes> identifiableAttributes,
-                                           ScalingVariationInfos generatorScalingVariation) {
-        throw new NetworkModificationException(getExceptionType(), ERROR_MESSAGE);
-    }
+    public abstract void applyStackingUpVariation(Network network, List<IdentifiableAttributes> identifiableAttributes, ScalingVariationInfos variationInfos);
 
-    public void applyRegularDistributionVariation(Network network,
-                                                   List<IdentifiableAttributes> identifiableAttributes,
-                                                   ScalingVariationInfos generatorScalingVariation) {
-        throw new NetworkModificationException(getExceptionType(), ERROR_MESSAGE);
-    }
+    public abstract void applyVentilationVariation(Network network, List<IdentifiableAttributes> identifiableAttributes, ScalingVariationInfos generatorScalingVariation, Double distributionKeys);
 
-    public void applyProportionalToPmaxVariation(Network network,
-                                                  List<IdentifiableAttributes> identifiableAttributes,
-                                                  ScalingVariationInfos generatorScalingVariation) {
-        throw new NetworkModificationException(getExceptionType(), ERROR_MESSAGE);
-    }
+    public abstract void applyRegularDistributionVariation(Network network, List<IdentifiableAttributes> identifiableAttributes, ScalingVariationInfos generatorScalingVariation);
 
-    public void applyProportionalVariation(Network network,
-                                            List<IdentifiableAttributes> identifiableAttributes,
-                                            ScalingVariationInfos variationInfos) {
-        throw new NetworkModificationException(getExceptionType(), ERROR_MESSAGE);
-    }
+    public abstract void applyProportionalToPmaxVariation(Network network, List<IdentifiableAttributes> identifiableAttributes, ScalingVariationInfos generatorScalingVariation);
+
+    public abstract void applyProportionalVariation(Network network, List<IdentifiableAttributes> identifiableAttributes, ScalingVariationInfos variationInfos);
 
     public abstract double getAsked(ScalingVariationInfos variationInfos, AtomicReference<Double> sum);
 

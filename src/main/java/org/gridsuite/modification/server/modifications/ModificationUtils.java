@@ -20,6 +20,9 @@ import org.gridsuite.modification.server.dto.*;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 
@@ -323,5 +326,19 @@ public final class ModificationUtils {
         }
     }
 
+    public static void createReport(Reporter reporter, String reporterKey, String message, TypedValue errorSeverity) {
+        reporter.report(Report.builder()
+                .withKey(reporterKey)
+                .withDefaultMessage(message)
+                .withSeverity(errorSeverity)
+                .build());
+    }
+
+    public static <T> Predicate<T> distinctByKey(
+            Function<? super T, ?> keyExtractor) {
+
+        Map<Object, Boolean> seen = new ConcurrentHashMap<>();
+        return t -> seen.putIfAbsent(keyExtractor.apply(t), Boolean.TRUE) == null;
+    }
 }
 

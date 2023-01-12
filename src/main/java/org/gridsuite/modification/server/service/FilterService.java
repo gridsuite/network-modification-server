@@ -8,7 +8,6 @@
 package org.gridsuite.modification.server.service;
 
 import org.gridsuite.modification.server.dto.FilterEquipments;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
@@ -18,6 +17,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class FilterService {
@@ -25,13 +25,12 @@ public class FilterService {
 
     private static final String DELIMITER = "/";
 
+    @Value("${gridsuite.services.filter-server.base-uri:http://filter-server/}")
     private String filterServerBaseUri;
 
-    private RestTemplate restTemplate;
+    private final RestTemplate restTemplate;
 
-    @Autowired
-    public FilterService(@Value("${gridsuite.services.filter-server.base-uri:http://filter-server/}") String filterServerBaseUri) {
-        this.filterServerBaseUri = filterServerBaseUri;
+    public FilterService() {
         restTemplate = new RestTemplate();
     }
 
@@ -39,9 +38,9 @@ public class FilterService {
         this.filterServerBaseUri = filterServerBaseUri;
     }
 
-    public List<FilterEquipments> exportFilters(List<String> filtersUuids, UUID networkUuid, String variantId) {
+    public List<FilterEquipments> exportFilters(List<UUID> filtersUuids, UUID networkUuid, String variantId) {
         var ids = !filtersUuids.isEmpty() ?
-                "&ids="  + String.join(",", filtersUuids) : "";
+                "&ids="  + filtersUuids.stream().map(UUID::toString).collect(Collectors.joining(",")) : "";
         var variant = variantId != null ? "&variantId=" + variantId : "";
         String path = UriComponentsBuilder.fromPath(DELIMITER + FILTER_SERVER_API_VERSION + "/filters/export?networkUuid=" + networkUuid + variant + ids)
                 .buildAndExpand()

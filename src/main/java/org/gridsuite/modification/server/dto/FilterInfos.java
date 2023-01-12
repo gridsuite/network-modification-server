@@ -13,6 +13,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
+import org.gridsuite.modification.server.entities.equipment.modification.VariationFilterEntity;
+
+import java.util.UUID;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
@@ -26,9 +29,12 @@ import lombok.experimental.SuperBuilder;
 public class FilterInfos {
 
     @Schema(description = "id")
-    private String id;
+    private UUID id;
 
     @Schema(description = "name")
     private String name;
 
+    public VariationFilterEntity toEntity() {
+        return new VariationFilterEntity(this);
+    }
 }
