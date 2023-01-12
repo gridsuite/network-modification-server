@@ -266,7 +266,7 @@ public class NetworkModificationService {
         String rootReporterId = reporterId + "@" + NETWORK_MODIFICATION_TYPE_REPORT;
         ReporterModel reporter = new ReporterModel(rootReporterId, rootReporterId);
         Reporter subReporter = reporter.createSubReporter(
-                ModificationType.BRANCH_STATUS.name() + "_" + ActionType.LOCKOUT.name(),
+                ModificationType.BRANCH_STATUS_MODIFICATION.name() + "_" + ActionType.LOCKOUT.name(),
                 "Lockout line ${lineId}", LINE_ID_PARAMETER, lineId);
 
         return doAction(listener, () -> {
@@ -300,7 +300,7 @@ public class NetworkModificationService {
         ReporterModel reporter = new ReporterModel(rootReporterId, rootReporterId);
         Reporter subReporter = reporter
                 .createSubReporter(
-                        ModificationType.BRANCH_STATUS.name() + "_" + ActionType.TRIP.name(),
+                        ModificationType.BRANCH_STATUS_MODIFICATION.name() + "_" + ActionType.TRIP.name(),
                         "Trip line ${lineId}", LINE_ID_PARAMETER, lineId);
 
         return doAction(listener, () -> {
@@ -344,7 +344,7 @@ public class NetworkModificationService {
         String branchSideKey = side == Branch.Side.ONE ? ActionType.ENERGISE_END_TWO.name() : ActionType.ENERGISE_END_ONE.name();
         Reporter subReporter = reporter
                 .createSubReporter(
-                        ModificationType.BRANCH_STATUS.name() + "_" + branchSideKey,
+                        ModificationType.BRANCH_STATUS_MODIFICATION.name() + "_" + branchSideKey,
                         "Energise line ${lineId}", LINE_ID_PARAMETER, lineId);
 
         return doAction(listener, () -> {
@@ -382,7 +382,7 @@ public class NetworkModificationService {
         String rootReporterId = reporterId + "@" + NETWORK_MODIFICATION_TYPE_REPORT;
         ReporterModel reporter = new ReporterModel(rootReporterId, rootReporterId);
         Reporter subReporter = reporter.createSubReporter(
-                ModificationType.BRANCH_STATUS.name() + "_" + ActionType.SWITCH_ON.name(),
+                ModificationType.BRANCH_STATUS_MODIFICATION.name() + "_" + ActionType.SWITCH_ON.name(),
                 "Switch on line ${lineId}", LINE_ID_PARAMETER, lineId);
 
         return doAction(listener, () -> {
@@ -519,7 +519,7 @@ public class NetworkModificationService {
                 return createTwoWindingsTransformerCreation(networkUuid, variantId, groupUuid, reportUuid, reporterId, (TwoWindingsTransformerCreationInfos) modificationInfos);
             case EQUIPMENT_DELETION:
                 return createEquipmentDeletion(networkUuid, variantId, groupUuid, reportUuid, reporterId, (EquipmentDeletionInfos) modificationInfos);
-            case BRANCH_STATUS:
+            case BRANCH_STATUS_MODIFICATION:
                 return createLineStatusModification(networkUuid, variantId, groupUuid, reportUuid, reporterId, (BranchStatusModificationInfos) modificationInfos);
             default:
                 throw new NetworkModificationException(TYPE_MISMATCH);
@@ -1047,7 +1047,7 @@ public class NetworkModificationService {
                     GroovyScriptModificationInfos groovyModificationInfos = (GroovyScriptModificationInfos) infos;
                     return execCreateGroovyScript(listener, groovyModificationInfos.getScript(), reportUuid, reporterId);
 
-                case BRANCH_STATUS:
+                case BRANCH_STATUS_MODIFICATION:
                     BranchStatusModificationInfos branchStatusModificationInfos = (BranchStatusModificationInfos) infos;
                     return execCreateBranchStatusModification(listener, branchStatusModificationInfos, reportUuid, reporterId);
 

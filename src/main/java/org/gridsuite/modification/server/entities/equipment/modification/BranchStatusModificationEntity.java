@@ -29,7 +29,7 @@ public class BranchStatusModificationEntity extends EquipmentModificationEntity 
     private BranchStatusModificationInfos.ActionType action;
 
     public BranchStatusModificationEntity(String lineId, BranchStatusModificationInfos.ActionType status) {
-        super(lineId, ModificationType.BRANCH_STATUS);
+        super(lineId, ModificationType.BRANCH_STATUS_MODIFICATION);
         this.action = status;
     }
 

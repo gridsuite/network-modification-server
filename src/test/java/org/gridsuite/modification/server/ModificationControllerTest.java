@@ -313,7 +313,7 @@ public class ModificationControllerTest {
         String resultAsString;
 
         BranchStatusModificationInfos branchStatusModificationInfos = BranchStatusModificationInfos.builder()
-                .type(ModificationType.BRANCH_STATUS)
+                .type(ModificationType.BRANCH_STATUS_MODIFICATION)
                 .equipmentId("line2")
                 .action(BranchStatusModificationInfos.ActionType.LOCKOUT)
                 .build();
@@ -380,7 +380,7 @@ public class ModificationControllerTest {
     public void testLineStatusModificationWithErrors() throws Exception {
 
         BranchStatusModificationInfos branchStatusModificationInfos = BranchStatusModificationInfos.builder()
-                .type(ModificationType.BRANCH_STATUS)
+                .type(ModificationType.BRANCH_STATUS_MODIFICATION)
                 .equipmentId("line2")
                 .action(BranchStatusModificationInfos.ActionType.LOCKOUT)
                 .build();
