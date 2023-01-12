@@ -6,6 +6,8 @@
  */
 package org.gridsuite.modification.server.utils;
 
+import java.util.Objects;
+
 import org.gridsuite.modification.server.dto.SubstationCreationInfos;
 import org.hamcrest.Description;
 
@@ -27,7 +29,8 @@ public class MatcherSubstationCreationInfos extends MatcherModificationInfos<Sub
         return super.matchesSafely(m)
                 && m.getEquipmentId().equals(reference.getEquipmentId())
                 && m.getEquipmentName().equals(reference.getEquipmentName())
-                && m.getSubstationCountry().equals(reference.getSubstationCountry());
+                && m.getSubstationCountry().equals(reference.getSubstationCountry())
+                && Objects.equals(m.getProperties(), reference.getProperties());
     }
 
     @Override

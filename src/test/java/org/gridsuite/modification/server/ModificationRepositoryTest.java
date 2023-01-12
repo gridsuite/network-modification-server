@@ -292,10 +292,46 @@ public class ModificationRepositoryTest {
 
     @Test
     public void testGeneratorCreation() {
-        var createGeneratorEntity1 = networkModificationRepository.createGeneratorEntity("idGenerator1", "nameGenerator1", EnergySource.HYDRO, "vlId1", "busId1", 100.0, 800.0, 10., 500., 50., true, 225., 20., 30., 50., true, 8f, 37., 46., "testTerminalId1", "LINE", "idVlTest1", 25., false, List.of(), "Top", ConnectablePosition.Direction.TOP, 1);
-        var createGeneratorEntity2 = networkModificationRepository.createGeneratorEntity("idGenerator2", "nameGenerator2", EnergySource.SOLAR, "vlId2", "busId2", 0., 300., 5., 150., 30., false, 380.0, 30., 10., 20., false, null, 37., 46., null, null, "idVlTest2", 25., false, List.of(), "Bot", ConnectablePosition.Direction.BOTTOM, 2);
-        var createGeneratorEntity3 = networkModificationRepository.createGeneratorEntity("idGenerator3", "nameGenerator3", EnergySource.OTHER, "vlId3", "busId3", 10., 900., 5., 250., 20., true, 150.0, null, null, null, false, null, 37., null, "testTerminalId2", "BATTERY", "idVlTest3", 25., true,
-                List.of(new ReactiveCapabilityCurveCreationEmbeddable(33., 44., 55.)), "Top", ConnectablePosition.Direction.TOP, 3);
+        var createGeneratorEntity1 = GeneratorCreationInfos.builder().type(ModificationType.GENERATOR_CREATION)
+                .equipmentId("idGenerator1").equipmentName("nameGenerator1")
+                .energySource(EnergySource.HYDRO).voltageLevelId("vlId1")
+                .busOrBusbarSectionId("busId1").minActivePower(100.0)
+                .maxActivePower(800.0).ratedNominalPower(10.)
+                .activePowerSetpoint(500).reactivePowerSetpoint(50.)
+                .voltageRegulationOn(true).voltageSetpoint(225.).marginalCost(20.)
+                .minimumReactivePower(30.).maximumReactivePower(50.)
+                .participate(true).droop(8f).transientReactance(37.)
+                .stepUpTransformerReactance(46.).regulatingTerminalId("testTerminalId1")
+                .regulatingTerminalType("LINE").regulatingTerminalVlId("idVlTest1")
+                .qPercent(25.).reactiveCapabilityCurve(false).reactiveCapabilityCurvePoints(List.of())
+                .connectionName("Top").connectionDirection(ConnectablePosition.Direction.TOP)
+                .connectionPosition(1).build().toEntity();
+        var createGeneratorEntity2 = GeneratorCreationInfos.builder().type(ModificationType.GENERATOR_CREATION)
+                .equipmentId("idGenerator2").equipmentName("nameGenerator2")
+                .energySource(EnergySource.SOLAR).voltageLevelId("vlId2")
+                .busOrBusbarSectionId("busId2").minActivePower(0.0)
+                .maxActivePower(300.0).ratedNominalPower(5.)
+                .activePowerSetpoint(150).reactivePowerSetpoint(30.)
+                .voltageRegulationOn(false).voltageSetpoint(380.).marginalCost(30.)
+                .participate(false).droop(null).transientReactance(37.)
+                .stepUpTransformerReactance(46.).regulatingTerminalId(null)
+                .regulatingTerminalType(null).regulatingTerminalVlId("idVlTest2")
+                .qPercent(25.).reactiveCapabilityCurve(false).reactiveCapabilityCurvePoints(List.of())
+                .connectionName("Bot").connectionDirection(ConnectablePosition.Direction.BOTTOM)
+                .connectionPosition(2).build().toEntity();
+
+        var createGeneratorEntity3 = GeneratorCreationInfos.builder().type(ModificationType.GENERATOR_CREATION)
+                .equipmentId("idGenerator3").equipmentName("nameGenerator3")
+                .energySource(EnergySource.OTHER).voltageLevelId("vlId3")
+                .busOrBusbarSectionId("busId3").minActivePower(10.0)
+                .maxActivePower(900.0).ratedNominalPower(20.)
+                .voltageRegulationOn(true).voltageSetpoint(150.).marginalCost(null)
+                .participate(false).droop(null).transientReactance(null)
+                .stepUpTransformerReactance(null).regulatingTerminalId("testTerminalId2")
+                .regulatingTerminalType("BATTERY").regulatingTerminalVlId("idVlTest2")
+                .qPercent(25.).reactiveCapabilityCurve(true).reactiveCapabilityCurvePoints(List.of(new ReactiveCapabilityCurveCreationInfos(33., 44., 55.)))
+                .connectionName("Top").connectionDirection(ConnectablePosition.Direction.TOP)
+                .connectionPosition(3).build().toEntity();
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(createGeneratorEntity1, createGeneratorEntity2, createGeneratorEntity3));
         assertRequestsCount(1, 8, 3, 0);
@@ -689,9 +725,28 @@ public class ModificationRepositoryTest {
 
     @Test
     public void testSubstationCreation() {
-        var createSubstationEntity1 = networkModificationRepository.createSubstationEntity("idSubstation1", "nameSubstation1", Country.AR, null);
-        var createSubstationEntity2 = networkModificationRepository.createSubstationEntity("idSubstation2", "nameSubstation2", Country.TD, null);
-        var createSubstationEntity3 = networkModificationRepository.createSubstationEntity("idSubstation3", "nameSubstation3", Country.KG, null);
+
+        var createSubstationEntity1 = SubstationCreationInfos.builder()
+                .type(ModificationType.SUBSTATION_CREATION)
+                .equipmentId("idSubstation1")
+                .equipmentName("nameSubstation1")
+                .substationCountry(Country.FR)
+                .properties(null)
+                .build().toEntity();
+        var createSubstationEntity2 = SubstationCreationInfos.builder()
+                .type(ModificationType.SUBSTATION_CREATION)
+                .equipmentId("idSubstation2")
+                .equipmentName("nameSubstation2")
+                .substationCountry(Country.TD)
+                .properties(null)
+                .build().toEntity();
+        var createSubstationEntity3 = SubstationCreationInfos.builder()
+                .type(ModificationType.SUBSTATION_CREATION)
+                .equipmentId("idSubstation3")
+                .equipmentName("nameSubstation3")
+                .substationCountry(Country.KG)
+                .properties(null)
+                .build().toEntity();
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(createSubstationEntity1, createSubstationEntity2, createSubstationEntity3));
         assertRequestsCount(1, 7, 3, 0);

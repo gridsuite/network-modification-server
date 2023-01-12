@@ -6,8 +6,6 @@
  */
 package org.gridsuite.modification.server.repositories;
 
-import com.powsybl.iidm.network.Country;
-import com.powsybl.iidm.network.EnergySource;
 import com.powsybl.iidm.network.LoadType;
 import com.powsybl.iidm.network.PhaseTapChanger;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
@@ -23,7 +21,6 @@ import org.gridsuite.modification.server.entities.equipment.creation.*;
 import org.gridsuite.modification.server.entities.equipment.deletion.EquipmentDeletionEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.BranchStatusModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.LoadModificationEntity;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -119,7 +116,7 @@ public class NetworkModificationRepository {
 
         List<ModificationEntity> newDestinationModificationList = new ArrayList<>(destinationModifications.values());
         /* when referenceModification == null we move at the end of list */
-        int index =  referenceModificationUuid == null ? newDestinationModificationList.size() : newDestinationModificationList.indexOf(destinationModifications.get(referenceModificationUuid));
+        int index = referenceModificationUuid == null ? newDestinationModificationList.size() : newDestinationModificationList.indexOf(destinationModifications.get(referenceModificationUuid));
         newDestinationModificationList.addAll(index, movedModifications);
 
         return newDestinationModificationList;
@@ -220,24 +217,6 @@ public class NetworkModificationRepository {
         return new LoadModificationEntity(loadId, loadName, loadType, voltageLevelId, busOrBusbarSectionId, activePower, reactivePower);
     }
 
-    public EquipmentCreationEntity createGeneratorEntity(String generatorId, String generatorName, EnergySource energySource,
-                                                         String voltageLevelId, String busOrBusbarSectionId,
-                                                         double minActivePower, double maxActivePower,
-                                                         Double ratedNominalPower, double activePowerSetpoint,
-                                                         Double reactivePowerSetpoint, boolean voltageRegulationOn, Double voltageSetpoint,
-                                                         Double marginalCost, Double minQ, Double maxQ, boolean participate, Float droop,
-                                                         Double transientReactance, Double stepUpTransformerReactance,
-                                                         String regulatingTerminalId, String regulatingTerminalType, String regulatingTerminalVlId,
-                                                         Double qPercent, boolean reactiveCapabilityCurve,
-                                                         List<ReactiveCapabilityCurveCreationEmbeddable> reactiveCapabilityCurvePoints, String connectionName,
-                                                         ConnectablePosition.Direction connectionDirection,
-                                                         Integer connectionPosition) {
-        return new GeneratorCreationEntity(generatorId, generatorName, energySource, voltageLevelId, busOrBusbarSectionId, minActivePower,
-            maxActivePower, ratedNominalPower, activePowerSetpoint, reactivePowerSetpoint, voltageRegulationOn, voltageSetpoint, marginalCost, minQ, maxQ,
-            participate, droop,  transientReactance, stepUpTransformerReactance, reactiveCapabilityCurvePoints, regulatingTerminalId, regulatingTerminalType,
-            regulatingTerminalVlId, qPercent, reactiveCapabilityCurve, connectionName, connectionDirection, connectionPosition);
-    }
-
     public EquipmentCreationEntity createTwoWindingsTransformerEntity(String id, String name, double seriesResistance, double seriesReactance,
                                                                       double magnetizingConductance, double magnetizingSusceptance, double ratedVoltage1, double ratedVoltage2, double ratedS,
                                                                       String voltageLevelId1, String busOrBusbarSectionId1, String voltageLevelId2, String busOrBusbarSectionId2,
@@ -296,10 +275,6 @@ public class NetworkModificationRepository {
                 connectionPosition2);
     }
 
-    public EquipmentCreationEntity createSubstationEntity(String id, String name, Country country, Map<String, String> properties) {
-        return new SubstationCreationEntity(id, name, country, properties);
-    }
-
     public EquipmentDeletionEntity createEquipmentDeletionEntity(String equipmentId, String equipmentType) {
         return new EquipmentDeletionEntity(equipmentId, equipmentType);
     }
@@ -329,9 +304,5 @@ public class NetworkModificationRepository {
             entity.cloneWithIdsToNull();
             return entity;
         }).collect(Collectors.toList());
-    }
-
-    public GeneratorModificationEntity createGeneratorModificationEntity(GeneratorModificationInfos generatorModificationInfos) {
-        return new GeneratorModificationEntity(generatorModificationInfos);
     }
 }
