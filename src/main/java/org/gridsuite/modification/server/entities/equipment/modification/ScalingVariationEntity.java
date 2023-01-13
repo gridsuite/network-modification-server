@@ -13,7 +13,6 @@ import lombok.Setter;
 import org.gridsuite.modification.server.VariationMode;
 import org.gridsuite.modification.server.dto.FilterInfos;
 import org.gridsuite.modification.server.dto.ScalingVariationInfos;
-import org.hibernate.Hibernate;
 
 import javax.persistence.*;
 import java.util.List;
@@ -62,14 +61,13 @@ public class ScalingVariationEntity {
     }
 
     private List<VariationFilterEntity> getFiltersEntity(ScalingVariationInfos variationInfos) {
-        var filters = getFilters();
         return variationInfos.getFilters()
                 .stream()
                 .map(filterInfos -> {
                     if (filters == null) {
                         return new VariationFilterEntity(filterInfos);
                     } else {
-                        return getFilters()
+                        return filters
                                 .stream()
                                 .filter(filter -> Objects.equals(filter.getFilterId(), filterInfos.getId()))
                                 .findFirst()
@@ -88,22 +86,5 @@ public class ScalingVariationEntity {
                         .map(filter -> new FilterInfos(filter.getFilterId(), filter.getName()))
                         .collect(Collectors.toList()))
                 .build();
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) {
-            return false;
-        }
-        ScalingVariationEntity that = (ScalingVariationEntity) o;
-        return id != null && Objects.equals(id, that.id);
-    }
-
-    @Override
-    public int hashCode() {
-        return getClass().hashCode();
     }
 }

@@ -39,7 +39,6 @@ import static org.gridsuite.modification.server.modifications.ModificationUtils.
 
 public abstract class AbstractScaling extends AbstractModification {
     protected final ScalingInfos scalingInfos;
-    private static final String ERROR_MESSAGE = "this variation mode is not supported";
 
     protected AbstractScaling(ScalingInfos scalingInfos) {
         this.scalingInfos = scalingInfos;
@@ -59,7 +58,10 @@ public abstract class AbstractScaling extends AbstractModification {
         Map<UUID, FilterEquipments> exportFilters = context.getBean(FilterService.class)
                 .exportFilters(new ArrayList<>(filters.keySet()), uuid, workingVariantId)
                 .stream()
-                .peek(t -> t.setFilterName(filters.get(t.getFilterId())))
+                .map(filter -> {
+                    filter.setFilterName(filters.get(filter.getFilterId()));
+                    return filter;
+                })
                 .collect(Collectors.toMap(FilterEquipments::getFilterId, Function.identity()));
 
         // collect all filters with wrong equipments ids
