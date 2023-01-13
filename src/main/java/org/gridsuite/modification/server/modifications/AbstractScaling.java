@@ -45,24 +45,25 @@ public abstract class AbstractScaling extends AbstractModification {
     @Override
     public void apply(Network network, Reporter subReporter, ApplicationContext context) {
         // collect all filters from all variations
-
-        var filters = scalingInfos.getVariations().stream()
-                .flatMap(v -> v.getFilters().stream())
+        List<FilterInfos> filterInfos = scalingInfos.getVariations().parallelStream()
+                .flatMap(v -> v.getFilters().parallelStream())
                 .filter(distinctByKey(FilterInfos::getId))
-                .collect(Collectors.toMap(FilterInfos::getId, FilterInfos::getName));
+                .collect(Collectors.toList());
+
+        Map<UUID, String> filters = filterInfos.parallelStream().collect(Collectors.toMap(FilterInfos::getId, FilterInfos::getName));
 
         // export filters from filter server
         String workingVariantId = network.getVariantManager().getWorkingVariantId();
         UUID uuid = ((NetworkImpl) network).getUuid();
         Map<UUID, FilterEquipments> exportFilters = context.getBean(FilterService.class)
                 .exportFilters(new ArrayList<>(filters.keySet()), uuid, workingVariantId)
-                .stream()
+                .parallelStream()
                 .peek(t -> t.setFilterName(filters.get(t.getFilterId())))
                 .collect(Collectors.toMap(FilterEquipments::getFilterId, Function.identity()));
 
         // collect all filters with wrong equipments ids
-        Map<UUID, FilterEquipments> filterWithWrongEquipmentsIds = exportFilters.entrySet().stream()
-                .filter(e -> !CollectionUtils.isEmpty(e.getValue().getNotFoundEquipments()))
+        Map<UUID, FilterEquipments> filterWithWrongEquipmentsIds = exportFilters.entrySet().parallelStream()
+                .filter(e -> !e.getValue().getNotFoundEquipments().isEmpty())
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
         // check if all exported filters contain equipments with wrong ids
@@ -74,7 +75,8 @@ public abstract class AbstractScaling extends AbstractModification {
 
         // create report for each wrong filter
         filterWithWrongEquipmentsIds.values().forEach(f -> {
-            var equipmentIds = String.join(", ", f.getNotFoundEquipments());
+            StringBuilder equipmentIds = new StringBuilder();
+            f.getNotFoundEquipments().forEach(equipmentIds::append);
             createReport(subReporter,
                     "filterEquipmentsNotFound",
                     String.format("Cannot find the following equipments %s in filter %s", equipmentIds, filters.get(f.getFilterId())),
