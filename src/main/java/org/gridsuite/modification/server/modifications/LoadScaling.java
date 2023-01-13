@@ -22,9 +22,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.LOAD_SCALING_ERROR;
 import static org.gridsuite.modification.server.modifications.ModificationUtils.createReport;
@@ -38,66 +35,92 @@ public class LoadScaling extends AbstractScaling {
         super(loadScalableInfos);
     }
 
+    /*
+        Here I removed the use of the AtomicReference, and the use of the forEach loop, which creates a new object for each iteration,
+        instead i used the for loop which is more efficient in terms of memory and performance.
+        Also, i initialized the lists with their respective sizes, which will save memory and increase the performance
+     */
     @Override
     protected void applyVentilationVariation(Network network,
-                                          List<IdentifiableAttributes> identifiableAttributes,
-                                          ScalingVariationInfos scalingVariationInfos, Reporter subReporter, double distributionKeys) {
-        AtomicReference<Double> sum = new AtomicReference<>(0D);
-        List<Float> percentages = new ArrayList<>();
-        List<Scalable> scalables = new ArrayList<>();
-        identifiableAttributes.forEach(equipment -> {
-            sum.set(network.getLoad(equipment.getId()).getP0() + sum.get());
+                                             List<IdentifiableAttributes> identifiableAttributes,
+                                             ScalingVariationInfos scalingVariationInfos, Reporter subReporter, double distributionKeys) {
+        double sum = 0;
+        List<Float> percentages = new ArrayList<>(identifiableAttributes.size());
+        List<Scalable> scalables = new ArrayList<>(identifiableAttributes.size());
+        for (IdentifiableAttributes equipment : identifiableAttributes) {
+            sum += network.getLoad(equipment.getId()).getP0();
             scalables.add(getScalable(equipment.getId()));
             percentages.add((float) ((equipment.getDistributionKey() / distributionKeys) * 100));
-        });
+        }
         Scalable ventilationScalable = Scalable.proportional(percentages, scalables);
         var asked = getAsked(scalingVariationInfos, sum);
         var done = scale(network, scalingVariationInfos, asked, ventilationScalable);
         createReport(subReporter, "ScaleVentilationVariation", String.format("Successfully scaling variation in ventilation mode with variation value asked is %s and variation done is %s", asked, done), TypedValue.INFO_SEVERITY);
     }
 
+    /*
+        Here, I replaced the use of a stream and an AtomicReference with a simple for loop to iterate over the list of IdentifiableAttributes,
+        and also replaced the use of filter with a simple if statement to check if the load is non-null.
+        This will decrease the number of objects created and will increase the performance.
+        Also, i initialized the lists with their respective sizes, which will save memory and increase the performance.
+     */
     @Override
     protected void applyRegularDistributionVariation(Network network,
                                                      List<IdentifiableAttributes> identifiableAttributes,
                                                      ScalingVariationInfos scalingVariationInfos, Reporter subReporter) {
-        List<Load> loads = identifiableAttributes
-                .stream()
-                .map(attribute -> network.getLoad(attribute.getId()))
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+        double sum = 0;
+        List<Scalable> scalables = new ArrayList<>(identifiableAttributes.size());
 
-        AtomicReference<Double> sum = new AtomicReference<>(0D);
-        List<Scalable> scalables = loads.stream()
-                .map(load -> {
-                    sum.set(sum.get() + load.getP0());
-                    return getScalable(load.getId());
-                }).collect(Collectors.toList());
+        for (IdentifiableAttributes attribute : identifiableAttributes) {
+            Load load = network.getLoad(attribute.getId());
+            if (load == null) {
+                continue;
+            }
+            sum += load.getP0();
+            scalables.add(getScalable(load.getId()));
+        }
 
-        List<Float> percentages = new ArrayList<>(Collections.nCopies(scalables.size(), 100 / (float) scalables.size()));
+        int n = scalables.size();
+        List<Float> percentages = new ArrayList<>(Collections.nCopies(n, 100f / n));
         Scalable regularDistributionScalable = Scalable.proportional(percentages, scalables);
         var asked = getAsked(scalingVariationInfos, sum);
         var done = scale(network, scalingVariationInfos, asked, regularDistributionScalable);
         createReport(subReporter, "ScaleRegularDistributionVariation", String.format("Successfully scaling variation in regular Distribution mode with variation value asked is %s and variation done is %s", asked, done), TypedValue.INFO_SEVERITY);
     }
 
+    /*
+        Here, I replaced the use of a stream and an AtomicReference with a simple for loop to iterate over the list of IdentifiableAttributes,
+        and also replaced the use of filter with a simple if statement to check if the load is non-null.
+        Also i initialized the lists with their respective sizes, which will save memory and increase the performance.
+        Also, I removed the unnecessary step of putting all the loads into a list and then iterating over that list to add the loads to the targetPMap,
+        since we already have the information we need in the IdentifiableAttributes list.
+     */
     @Override
     protected void applyProportionalVariation(Network network,
                                               List<IdentifiableAttributes> identifiableAttributes,
                                               ScalingVariationInfos scalingVariationInfos, Reporter subReporter) {
-        List<Load> loads = identifiableAttributes
-                .stream().map(attribute -> network.getLoad(attribute.getId())).collect(Collectors.toList());
-        AtomicReference<Double> sum = new AtomicReference<>(0D);
-        Map<String, Double> targetPMap = new HashMap<>();
-        List<Float> percentages = new ArrayList<>();
-        List<Scalable> scalables = new ArrayList<>();
-        loads.forEach(load -> {
+        double sum = 0;
+        Map<String, Double> targetPMap = new HashMap<>(identifiableAttributes.size());
+        List<Float> percentages = new ArrayList<>(identifiableAttributes.size());
+        List<Scalable> scalables = new ArrayList<>(identifiableAttributes.size());
+
+        for (IdentifiableAttributes attribute : identifiableAttributes) {
+            Load load = network.getLoad(attribute.getId());
+            if (load == null) {
+                continue;
+            }
+            sum += load.getP0();
             targetPMap.put(load.getId(), load.getP0());
-            sum.set(sum.get() + load.getP0());
-        });
-        targetPMap.forEach((id, p) -> {
-            percentages.add((float) ((p / sum.get()) * 100));
-            scalables.add(getScalable(id));
-        });
+        }
+
+        if (sum == 0) {
+            throw new IllegalArgumentException("Sum of P0 can't be zero before doing the division");
+        }
+
+        for (Map.Entry<String, Double> entry : targetPMap.entrySet()) {
+            percentages.add((float) (entry.getValue() / sum * 100));
+            scalables.add(getScalable(entry.getKey()));
+        }
 
         Scalable proportionalScalable = Scalable.proportional(percentages, scalables);
         var asked = getAsked(scalingVariationInfos, sum);
@@ -117,15 +140,15 @@ public class LoadScaling extends AbstractScaling {
     }
 
     @Override
-    protected double getAsked(ScalingVariationInfos scalingVariationInfos, AtomicReference<Double> sum) {
+    protected double getAsked(ScalingVariationInfos scalingVariationInfos, double sum) {
         return scalingInfos.getVariationType() == VariationType.DELTA_P
                 ? scalingVariationInfos.getVariationValue()
-                : scalingVariationInfos.getVariationValue() - sum.get();
+                : scalingVariationInfos.getVariationValue() - sum;
     }
 
     @Override
     protected Scalable getScalable(String id) {
-        return Scalable.onLoad(id);
+        return Scalable.onLoad(id, -Double.MAX_VALUE, Double.MAX_VALUE);
     }
 
 }
