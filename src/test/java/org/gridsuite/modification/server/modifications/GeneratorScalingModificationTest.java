@@ -182,6 +182,7 @@ public class GeneratorScalingModificationTest extends AbstractNetworkModificatio
         ModificationInfos modificationToCreate = GeneratorScalingInfos.builder()
                 .uuid(GENERATOR_SCALING_ID)
                 .date(ZonedDateTime.now())
+                .isIterative(true)
                 .type(ModificationType.GENERATOR_SCALING)
                 .variationType(VariationType.DELTA_P)
                 .variations(List.of(variation1))
