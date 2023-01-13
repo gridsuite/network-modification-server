@@ -19,7 +19,6 @@ import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationGroupEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.*;
 import org.gridsuite.modification.server.entities.equipment.deletion.EquipmentDeletionEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.BranchStatusModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.LoadModificationEntity;
 import org.springframework.stereotype.Repository;
@@ -281,10 +280,6 @@ public class NetworkModificationRepository {
 
     public GroovyScriptModificationEntity createGroovyScriptModificationEntity(String script) {
         return new GroovyScriptModificationEntity(script);
-    }
-
-    public BranchStatusModificationEntity createBranchStatusModificationEntity(String lineId, BranchStatusModificationInfos.ActionType action) {
-        return new BranchStatusModificationEntity(lineId, action);
     }
 
     private List<ModificationEntity> getModificationsEntities(List<UUID> groupUuids) {

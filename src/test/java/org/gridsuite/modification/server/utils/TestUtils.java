@@ -8,6 +8,9 @@
 package org.gridsuite.modification.server.utils;
 
 import com.powsybl.commons.exceptions.UncheckedInterruptedException;
+import com.powsybl.iidm.network.Line;
+import com.powsybl.iidm.network.Network;
+import com.powsybl.iidm.network.extensions.BranchStatus;
 import okhttp3.mockwebserver.MockWebServer;
 import org.springframework.cloud.stream.binder.test.OutputDestination;
 
@@ -23,6 +26,7 @@ import static com.vladmihalcea.sql.SQLStatementCountValidator.assertDeleteCount;
 import static com.vladmihalcea.sql.SQLStatementCountValidator.assertInsertCount;
 import static com.vladmihalcea.sql.SQLStatementCountValidator.assertSelectCount;
 import static com.vladmihalcea.sql.SQLStatementCountValidator.assertUpdateCount;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 /**
@@ -84,5 +88,14 @@ public final class TestUtils {
         assertInsertCount(insert);
         assertUpdateCount(update);
         assertDeleteCount(delete);
+    }
+
+    public static boolean checkBranchStatus(Network network, String lineName, BranchStatus.Status status) {
+        assertNotNull(network);
+        Line line = network.getLine(lineName);
+        assertNotNull(line);
+        BranchStatus branchStatus = line.getExtensionByName("branchStatus");
+        assertNotNull(branchStatus);
+        return status == branchStatus.getStatus();
     }
 }

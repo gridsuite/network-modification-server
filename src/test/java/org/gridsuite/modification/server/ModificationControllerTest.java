@@ -50,7 +50,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
-import static org.gridsuite.modification.server.utils.MatcherBranchStatusModificationInfos.createMatcherBranchStatusModificationInfos;
 import static org.gridsuite.modification.server.utils.MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos;
 import static org.gridsuite.modification.server.utils.MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos;
 import static org.gridsuite.modification.server.utils.MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos;
@@ -305,131 +304,6 @@ public class ModificationControllerTest {
         mockMvc.perform(delete("/v1/groups/" + TEST_GROUP_ID)).andExpect(status().isOk());
         mockMvc.perform(delete("/v1/groups/" + TEST_GROUP_ID)).andExpect(status().isNotFound());
         mockMvc.perform(delete("/v1/groups/" + TEST_GROUP_ID).queryParam("errorOnGroupNotFound", "false")).andExpect(status().isOk());
-    }
-
-    @Test
-    public void testLineStatusModification() throws Exception {
-        MvcResult mvcResult;
-        String resultAsString;
-
-        BranchStatusModificationInfos branchStatusModificationInfos = BranchStatusModificationInfos.builder()
-                .type(ModificationType.BRANCH_STATUS_MODIFICATION)
-                .equipmentId("line2")
-                .action(BranchStatusModificationInfos.ActionType.LOCKOUT)
-                .build();
-        String branchStatusModificationInfosJson = objectWriter.writeValueAsString(branchStatusModificationInfos);
-
-        // line lockout
-        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(branchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        List<BranchStatusModificationInfos> bsmListResultBranchStatus = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertThat(bsmListResultBranchStatus.get(0), createMatcherBranchStatusModificationInfos("line2", BranchStatusModificationInfos.ActionType.LOCKOUT, Set.of("s1", "s2")));
-
-        // line switch on (already switched on)
-        branchStatusModificationInfos.setAction(BranchStatusModificationInfos.ActionType.SWITCH_ON);
-        branchStatusModificationInfosJson = objectWriter.writeValueAsString(branchStatusModificationInfos);
-        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(branchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        List<BranchStatusModificationInfos> bsmListResultBranchStatusInfos = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertThat(bsmListResultBranchStatusInfos.get(0), createMatcherBranchStatusModificationInfos("line2", BranchStatusModificationInfos.ActionType.SWITCH_ON, Set.of()));
-
-        // line trip
-        branchStatusModificationInfos.setAction(BranchStatusModificationInfos.ActionType.TRIP);
-        branchStatusModificationInfosJson = objectWriter.writeValueAsString(branchStatusModificationInfos);
-        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(branchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        List<BranchStatusModificationInfos> bsmlrBranchStatusInfos = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertThat(bsmlrBranchStatusInfos.get(0), createMatcherBranchStatusModificationInfos("line2", BranchStatusModificationInfos.ActionType.TRIP, Set.of("s1", "s2")));
-
-        branchStatusModificationInfos.setEquipmentId("line3");
-        branchStatusModificationInfosJson = objectWriter.writeValueAsString(branchStatusModificationInfos);
-        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(branchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        List<BranchStatusModificationInfos> bsmlResultBranchStatusInfos = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertEquals(1, bsmlResultBranchStatusInfos.size());
-        var matcher = createMatcherBranchStatusModificationInfos("line3", BranchStatusModificationInfos.ActionType.TRIP, Set.of("s1", "s2"));
-        assertTrue(bsmlResultBranchStatusInfos.stream().anyMatch(matcher::matchesSafely));
-
-        // line energise on one end
-        branchStatusModificationInfos.setAction(BranchStatusModificationInfos.ActionType.ENERGISE_END_ONE);
-        branchStatusModificationInfos.setEquipmentId("line2");
-        branchStatusModificationInfosJson = objectWriter.writeValueAsString(branchStatusModificationInfos);
-        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(branchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        List<BranchStatusModificationInfos> bsmlrbsInfos = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertThat(bsmlrbsInfos.get(0), createMatcherBranchStatusModificationInfos("line2", BranchStatusModificationInfos.ActionType.ENERGISE_END_ONE, Set.of("s2")));
-
-        // line energise on other end
-        branchStatusModificationInfos.setAction(BranchStatusModificationInfos.ActionType.ENERGISE_END_TWO);
-        branchStatusModificationInfosJson = objectWriter.writeValueAsString(branchStatusModificationInfos);
-        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(branchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        List<BranchStatusModificationInfos> bsmlrbStatusInfos = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertThat(bsmlrbStatusInfos.get(0), createMatcherBranchStatusModificationInfos("line2", BranchStatusModificationInfos.ActionType.ENERGISE_END_TWO, Set.of("s1")));
-
-        testNetworkModificationsCount(TEST_GROUP_ID, 6);
-    }
-
-    @Test
-    public void testLineStatusModificationWithErrors() throws Exception {
-
-        BranchStatusModificationInfos branchStatusModificationInfos = BranchStatusModificationInfos.builder()
-                .type(ModificationType.BRANCH_STATUS_MODIFICATION)
-                .equipmentId("line2")
-                .action(BranchStatusModificationInfos.ActionType.LOCKOUT)
-                .build();
-        String branchStatusModificationInfosJson = objectWriter.writeValueAsString(branchStatusModificationInfos);
-
-        // network not existing
-        mockMvc.perform(post(URI_NETWORK_MODIF_BAD_NETWORK).content(branchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpectAll(
-                status().isNotFound(),
-                content().string(new NetworkModificationException(NETWORK_NOT_FOUND, NOT_FOUND_NETWORK_ID.toString()).getMessage()));
-
-        // line not existing
-        branchStatusModificationInfos.setEquipmentId("notFound");
-        branchStatusModificationInfosJson = objectWriter.writeValueAsString(branchStatusModificationInfos);
-        mockMvc.perform(post(URI_NETWORK_MODIF).content(branchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpectAll(
-                status().isNotFound(),
-                content().string(new NetworkModificationException(LINE_NOT_FOUND, "notFound").getMessage()));
-
-        // modification action empty
-        branchStatusModificationInfos.setEquipmentId("line2");
-        branchStatusModificationInfos.setAction(null);
-        branchStatusModificationInfosJson = objectWriter.writeValueAsString(branchStatusModificationInfos);
-        mockMvc.perform(post(URI_NETWORK_MODIF).content(branchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpectAll(
-                status().isBadRequest(),
-                content().string(new NetworkModificationException(BRANCH_ACTION_TYPE_EMPTY).getMessage()));
-
-        // modification action not existing
-        branchStatusModificationInfos.setAction(BranchStatusModificationInfos.ActionType.LOCKOUT);
-        branchStatusModificationInfosJson = objectWriter.writeValueAsString(branchStatusModificationInfos);
-        branchStatusModificationInfosJson = branchStatusModificationInfosJson.replace("LOCKOUT", "INVALID_ACTION");
-        mockMvc.perform(post(URI_NETWORK_MODIF).content(branchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().is4xxClientError());
-
-        branchStatusModificationInfos.setEquipmentId("line3");
-        branchStatusModificationInfosJson = objectWriter.writeValueAsString(branchStatusModificationInfos);
-        mockMvc.perform(post(URI_NETWORK_MODIF).content(branchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpectAll(
-                status().isBadRequest(),
-                content().string(new NetworkModificationException(BRANCH_ACTION_ERROR, "Unable to disconnect both line ends").getMessage()));
-
-        branchStatusModificationInfos.setAction(BranchStatusModificationInfos.ActionType.ENERGISE_END_ONE);
-        branchStatusModificationInfosJson = objectWriter.writeValueAsString(branchStatusModificationInfos);
-        mockMvc.perform(post(URI_NETWORK_MODIF).content(branchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpectAll(
-                status().isBadRequest(),
-                content().string(new NetworkModificationException(BRANCH_ACTION_ERROR, "Unable to energise line end").getMessage()));
-
-        branchStatusModificationInfos.setAction(BranchStatusModificationInfos.ActionType.ENERGISE_END_TWO);
-        branchStatusModificationInfosJson = objectWriter.writeValueAsString(branchStatusModificationInfos);
-        mockMvc.perform(post(URI_NETWORK_MODIF).content(branchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpectAll(
-                status().isBadRequest(),
-                content().string(new NetworkModificationException(BRANCH_ACTION_ERROR, "Unable to energise line end").getMessage()));
     }
 
     @Test

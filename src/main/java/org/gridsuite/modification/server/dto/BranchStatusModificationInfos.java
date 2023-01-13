@@ -6,14 +6,19 @@
  */
 package org.gridsuite.modification.server.dto;
 
+import com.powsybl.commons.reporter.Reporter;
+import com.powsybl.commons.reporter.ReporterModel;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
+import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
-
+import org.gridsuite.modification.server.entities.equipment.modification.BranchStatusModificationEntity;
+import org.gridsuite.modification.server.modifications.AbstractModification;
+import org.gridsuite.modification.server.modifications.BranchStatusModification;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.BRANCH_ACTION_TYPE_EMPTY;
 
 /**
@@ -36,6 +41,44 @@ public class BranchStatusModificationInfos extends EquipmentModificationInfos {
         SWITCH_ON,
         ENERGISE_END_ONE,
         ENERGISE_END_TWO
+    }
+
+    @Override
+    public BranchStatusModificationEntity toEntity() {
+        return new BranchStatusModificationEntity(this);
+    }
+
+    @Override
+    public AbstractModification toModification() {
+        return new BranchStatusModification(this);
+    }
+
+    @Override
+    public NetworkModificationException.Type getErrorType() {
+        return NetworkModificationException.Type.BRANCH_ACTION_ERROR;
+    }
+
+    @Override
+    public Reporter createSubReporter(ReporterModel reporter) {
+        String defaultName;
+        switch (action) {
+            case LOCKOUT:
+                defaultName = "Lockout line ${lineId}";
+                break;
+            case TRIP:
+                defaultName = "Trip line ${lineId}";
+                break;
+            case ENERGISE_END_ONE:
+            case ENERGISE_END_TWO:
+                defaultName = "Energise line ${lineId}";
+                break;
+            case SWITCH_ON:
+                defaultName = "Switch on ${lineId}";
+                break;
+            default:
+                defaultName = "";
+        }
+        return reporter.createSubReporter(ModificationType.BRANCH_STATUS_MODIFICATION.name() + "_" + action, defaultName, "lineId", this.getEquipmentId());
     }
 
     @Override
