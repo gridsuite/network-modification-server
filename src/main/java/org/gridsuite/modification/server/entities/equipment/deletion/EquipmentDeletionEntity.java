@@ -8,8 +8,10 @@ package org.gridsuite.modification.server.entities.equipment.deletion;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.EquipmentDeletionInfos;
+import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
 
 import javax.persistence.Column;
@@ -17,8 +19,6 @@ import javax.persistence.Entity;
 import javax.persistence.ForeignKey;
 import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
-
-import static org.gridsuite.modification.server.ModificationType.EQUIPMENT_DELETION;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -32,10 +32,19 @@ public class EquipmentDeletionEntity extends EquipmentModificationEntity {
     @Column(name = "equipmentType")
     private String equipmentType;
 
-    //TODO : remove
-    public EquipmentDeletionEntity(String equipmentId, String equipmentType) {
-        super(equipmentId, EQUIPMENT_DELETION);
-        this.equipmentType = equipmentType;
+    public EquipmentDeletionEntity(EquipmentDeletionInfos equipmentDeletionInfos) {
+        super(equipmentDeletionInfos);
+        assignAttributes(equipmentDeletionInfos);
+    }
+
+    @Override
+    public void update(@NonNull ModificationInfos modificationInfos) {
+        super.update(modificationInfos);
+        assignAttributes((EquipmentDeletionInfos) modificationInfos);
+    }
+
+    private void assignAttributes(EquipmentDeletionInfos equipmentDeletionInfos) {
+        this.equipmentType = equipmentDeletionInfos.getEquipmentType();
     }
 
     @Override

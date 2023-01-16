@@ -129,6 +129,9 @@ public class NetworkModificationController {
             case LINE_CREATION:
             case LINE_ATTACH_TO_VOLTAGE_LEVEL:
             case LOAD_SCALING:
+            case LOAD_MODIFICATION:
+            case EQUIPMENT_DELETION:
+            case GROOVY_SCRIPT:
             case VOLTAGE_LEVEL_CREATION:
             case LINES_ATTACH_TO_SPLIT_LINES:
             case GENERATOR_CREATION:
@@ -158,6 +161,9 @@ public class NetworkModificationController {
             case LINE_CREATION:
             case LINE_ATTACH_TO_VOLTAGE_LEVEL:
             case LOAD_SCALING:
+            case LOAD_MODIFICATION:
+            case EQUIPMENT_DELETION:
+            case GROOVY_SCRIPT:
             case VOLTAGE_LEVEL_CREATION:
             case LINES_ATTACH_TO_SPLIT_LINES:
             case GENERATOR_CREATION:
