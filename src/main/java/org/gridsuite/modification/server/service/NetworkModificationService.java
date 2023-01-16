@@ -419,7 +419,6 @@ public class NetworkModificationService {
         }
     }
 
-    // Generic form
     @Transactional
     public void updateNetworkModification(@NonNull UUID modificationUuid, @NonNull ModificationInfos modificationInfos) {
         ModificationEntity modificationEntity = this.modificationRepository.findById(modificationUuid)

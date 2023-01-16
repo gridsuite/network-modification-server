@@ -7,7 +7,6 @@
 
 package org.gridsuite.modification.server.modifications;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.PhaseTapChanger;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
@@ -22,14 +21,10 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.BUSBAR_SECTION_NOT_FOUND;
-import static org.gridsuite.modification.server.utils.MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -273,7 +268,9 @@ public class TwoWindingsTransformerCreationMixedBreakerTest extends AbstractNetw
 
     @Override
     protected void assertNetworkAfterDeletion() {
-
+        assertNull(getNetwork().getTwoWindingsTransformer("id2wt1"));
+        assertEquals(0, getNetwork().getVoltageLevel("v1").getTwoWindingsTransformerStream().filter(transformer -> transformer.getId().equals("id2wt1")).count());
+        assertEquals(0, getNetwork().getVoltageLevel("v3").getTwoWindingsTransformerStream().filter(transformer -> transformer.getId().equals("id2wt1")).count());
     }
 
     @SneakyThrows
@@ -291,42 +288,6 @@ public class TwoWindingsTransformerCreationMixedBreakerTest extends AbstractNetw
         twoWindingsTransformerCreationInfosJson = mapper.writeValueAsString(twoWindingsTransformerCreationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(twoWindingsTransformerCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpectAll(status().isNotFound(), content().string(new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "notFoundBus").getMessage()));
-    }
-
-    @Test
-    public void testCreateTwoWindingsTransformerInMixedTopology() throws Exception {
-        MvcResult mvcResult;
-        String resultAsString;
-
-        // create new 2wt in voltage level with mixed topology
-        TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos = TwoWindingsTransformerCreationInfos.builder()
-                .type(ModificationType.TWO_WINDINGS_TRANSFORMER_CREATION)
-                .equipmentId("id2wt1")
-                .equipmentName("2wtName")
-                .voltageLevelId1("v1")
-                .busOrBusbarSectionId1("1.1")
-                .voltageLevelId2("v3")
-                .busOrBusbarSectionId2("bus3")
-                .magnetizingConductance(100.0)
-                .magnetizingSusceptance(200.0)
-                .ratedVoltage1(1000)
-                .ratedVoltage2(1010)
-                .seriesReactance(300)
-                .seriesResistance(400)
-                .connectionName1("cnid2wt1")
-                .connectionDirection1(ConnectablePosition.Direction.TOP)
-                .connectionName2("cnid2wt2")
-                .connectionDirection2(ConnectablePosition.Direction.TOP)
-                .build();
-
-        String twoWindingsTransformerCreationInfosJson = mapper.writeValueAsString(twoWindingsTransformerCreationInfos);
-        mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(twoWindingsTransformerCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        List<EquipmentModificationInfos> bsmlrTwoWindingsTransformerCreation = mapper.readValue(resultAsString, new TypeReference<>() {
-        });
-        assertThat(bsmlrTwoWindingsTransformerCreation.get(0), createMatcherEquipmentModificationInfos(ModificationType.TWO_WINDINGS_TRANSFORMER_CREATION, "id2wt1", Set.of("s1")));
-
     }
 }
 

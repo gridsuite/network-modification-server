@@ -460,43 +460,6 @@ public class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetwo
         twoWindingsTransformerCreationInfosJson = mapper.writeValueAsString(twoWindingsTransformerCreationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(twoWindingsTransformerCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpectAll(status().isNotFound(), content().string(new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "notFoundBus").getMessage()));
-    }
-
-    @Test
-    public void testCreateTwoWindingsTransformerInNodeBreaker() throws Exception {
-        MvcResult mvcResult;
-        String resultAsString;
-
-        // create new 2wt in voltage level with Node/breaker topology
-        TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos = TwoWindingsTransformerCreationInfos.builder()
-                .type(ModificationType.TWO_WINDINGS_TRANSFORMER_CREATION)
-                .equipmentId("id2wt1")
-                .equipmentName("2wtName")
-                .voltageLevelId1("v1")
-                .busOrBusbarSectionId1("1.1")
-                .voltageLevelId2("v2")
-                .busOrBusbarSectionId2("1A")
-                .magnetizingConductance(100.0)
-                .magnetizingSusceptance(200.0)
-                .ratedVoltage1(1000)
-                .ratedVoltage2(1010)
-                .seriesReactance(300)
-                .seriesResistance(400)
-                .connectionName1("cnid2wt1")
-                .connectionDirection1(ConnectablePosition.Direction.TOP)
-                .connectionName2("cnid2wt2")
-                .connectionDirection2(ConnectablePosition.Direction.TOP)
-                .build();
-        String twoWindingsTransformerCreationInfosJson = mapper.writeValueAsString(twoWindingsTransformerCreationInfos);
-        mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(twoWindingsTransformerCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        List<EquipmentModificationInfos> bsmlrTwoWindingsTransformer = mapper.readValue(resultAsString, new TypeReference<>() {
-        });
-        assertThat(bsmlrTwoWindingsTransformer.get(0), createMatcherEquipmentModificationInfos(ModificationType.TWO_WINDINGS_TRANSFORMER_CREATION, "id2wt1", Set.of("s1")));
-
-        assertNotNull(getNetwork().getTwoWindingsTransformer("id2wt1"));  // transformer was created
-        testNetworkModificationsCount(getGroupId(), 1);
 
         // Test create transformer on not yet existing variant VARIANT_NOT_EXISTING_ID :
         // Only the modification should be added in the database but the transformer cannot be created
@@ -511,7 +474,7 @@ public class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetwo
 
         assertTrue(modifications.isEmpty());  // no modifications returned
         assertNull(getNetwork().getTwoWindingsTransformer("id2wt3"));  // transformer was not created
-        testNetworkModificationsCount(getGroupId(), 2);  // new modification stored in the database
+        testNetworkModificationsCount(getGroupId(), 1);  // new modification stored in the database
     }
 
     private void testCreateTwoWindingsTransformerInNodeBreaker(TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos, int actualSize) throws Exception {
