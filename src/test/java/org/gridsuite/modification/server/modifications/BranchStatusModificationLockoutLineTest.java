@@ -6,10 +6,8 @@
  */
 package org.gridsuite.modification.server.modifications;
 
-import com.powsybl.iidm.network.Line;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.BranchStatus;
-import com.powsybl.iidm.network.extensions.BranchStatusAdder;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
@@ -22,9 +20,10 @@ import org.springframework.http.MediaType;
 
 import java.util.UUID;
 
+import static com.powsybl.iidm.network.extensions.BranchStatus.Status.FORCED_OUTAGE;
+import static com.powsybl.iidm.network.extensions.BranchStatus.Status.PLANNED_OUTAGE;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.utils.MatcherBranchStatusModificationInfos.createMatcherBranchStatusModificationInfos;
-import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -32,14 +31,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class BranchStatusModificationLockoutLineTest extends AbstractNetworkModificationTest {
 
     private static final String targetLineId = "line2";
+    private static final String updateBranchId = "line1";
+    private static final BranchStatus.Status targetBranchStatus = PLANNED_OUTAGE;
+    private static final BranchStatus.Status otherBranchStatus = FORCED_OUTAGE;
 
     @Override
     protected Network createNetwork(UUID networkUuid) {
         Network network = NetworkCreation.create(networkUuid, true);
-        // force a branch status different from PLANNED_OUTAGE (expected after testCreate)
-        Line line = network.getLine(targetLineId);
-        assertNotNull(line);
-        line.newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.FORCED_OUTAGE).add();
+        // force a branch status different from the expected one, after testCreate
+        TestUtils.setBranchStatus(network, targetLineId, otherBranchStatus);
         return network;
     }
 
@@ -55,7 +55,7 @@ public class BranchStatusModificationLockoutLineTest extends AbstractNetworkModi
     protected ModificationInfos buildModificationUpdate() {
         return BranchStatusModificationInfos.builder()
                 .type(ModificationType.BRANCH_STATUS_MODIFICATION)
-                .equipmentId("line1")
+                .equipmentId(updateBranchId)
                 .action(BranchStatusModificationInfos.ActionType.SWITCH_ON).build();
     }
 
@@ -66,14 +66,13 @@ public class BranchStatusModificationLockoutLineTest extends AbstractNetworkModi
 
     @Override
     protected void assertNetworkAfterCreation() {
-        // excepted result of LOCKOUT => extension line.branchStatus == 'PLANNED_OUTAGE'
-        assertTrue(TestUtils.checkBranchStatus(getNetwork(), targetLineId, BranchStatus.Status.PLANNED_OUTAGE));
+        TestUtils.assertBranchStatus(getNetwork(), targetLineId, targetBranchStatus);
     }
 
     @Override
     protected void assertNetworkAfterDeletion() {
         // go back to init status
-        assertTrue(TestUtils.checkBranchStatus(getNetwork(), targetLineId, BranchStatus.Status.FORCED_OUTAGE));
+        TestUtils.assertBranchStatus(getNetwork(), targetLineId, otherBranchStatus);
     }
 
     @SneakyThrows
@@ -86,7 +85,7 @@ public class BranchStatusModificationLockoutLineTest extends AbstractNetworkModi
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpectAll(
                         status().isNotFound(),
-                        content().string(new NetworkModificationException(LINE_NOT_FOUND, "notFound").getMessage())
+                        content().string(new NetworkModificationException(BRANCH_NOT_FOUND, "notFound").getMessage())
                 );
 
         // modification action empty
@@ -112,7 +111,7 @@ public class BranchStatusModificationLockoutLineTest extends AbstractNetworkModi
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpectAll(
                         status().is5xxServerError(),
-                        content().string(new NetworkModificationException(BRANCH_ACTION_ERROR, "Unable to disconnect both line ends").getMessage())
+                        content().string(new NetworkModificationException(BRANCH_ACTION_ERROR, "Unable to disconnect all branch ends").getMessage())
                 );
     }
 }

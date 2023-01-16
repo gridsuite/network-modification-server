@@ -10,10 +10,7 @@ import com.powsybl.commons.reporter.Report;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.iidm.modification.tripping.BranchTripping;
-import com.powsybl.iidm.network.Branch;
-import com.powsybl.iidm.network.Network;
-import com.powsybl.iidm.network.Switch;
-import com.powsybl.iidm.network.Terminal;
+import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.BranchStatus;
 import com.powsybl.iidm.network.extensions.BranchStatusAdder;
 import org.gridsuite.modification.server.NetworkModificationException;
@@ -22,8 +19,8 @@ import org.gridsuite.modification.server.dto.BranchStatusModificationInfos;
 import java.util.HashSet;
 import java.util.Objects;
 
+import static org.gridsuite.modification.server.NetworkModificationException.Type.BRANCH_NOT_FOUND;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.BRANCH_ACTION_ERROR;
-import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_NOT_FOUND;
 
 /**
  * @author David Braquart <david.braquart at rte-france.com>
@@ -38,47 +35,50 @@ public class BranchStatusModification extends AbstractModification {
 
     @Override
     public void apply(Network network, Reporter subReporter) {
-        String lineId = modificationInfos.getEquipmentId();
-        if (network.getLine(lineId) == null) {
-            throw new NetworkModificationException(LINE_NOT_FOUND, lineId);
+        String branchId = modificationInfos.getEquipmentId();
+        Branch<?> branch = network.getBranch(branchId);
+        if (branch == null) {
+            throw new NetworkModificationException(BRANCH_NOT_FOUND, branchId);
         }
+
+        String branchType = branch.getType() == IdentifiableType.LINE ? "Line" : "2WTransformer";
         switch (modificationInfos.getAction()) {
             case LOCKOUT:
-                applyLockoutLine(network, subReporter, lineId);
+                applyLockoutBranch(subReporter, branch, branchType);
                 break;
             case TRIP:
-                applyTripLine(network, subReporter, lineId);
+                applyTripBranch(subReporter, branch, branchType, network);
                 break;
             case SWITCH_ON:
-                applySwitchOnLine(network, subReporter, lineId);
+                applySwitchOnBranch(subReporter, branch, branchType);
                 break;
             case ENERGISE_END_ONE:
-                applyEnergiseLineEnd(network, subReporter, lineId, Branch.Side.ONE);
+                applyEnergiseBranchEnd(subReporter, branch, branchType, Branch.Side.ONE);
                 break;
             case ENERGISE_END_TWO:
-                applyEnergiseLineEnd(network, subReporter, lineId, Branch.Side.TWO);
+                applyEnergiseBranchEnd(subReporter, branch,branchType, Branch.Side.TWO);
                 break;
             default:
                 throw NetworkModificationException.createBranchActionTypeUnsupported(modificationInfos.getAction());
         }
     }
 
-    private void applyLockoutLine(Network network, Reporter subReporter, String lineId) {
-        if (disconnectLineBothSides(network, lineId)) {
-            network.getLine(lineId).newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.PLANNED_OUTAGE).add();
+    private void applyLockoutBranch(Reporter subReporter, Branch<?> branch, String branchType) {
+        if (disconnectAllTerminals(branch)) {
+            branch.newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.PLANNED_OUTAGE).add();
         } else {
-            throw new NetworkModificationException(BRANCH_ACTION_ERROR, "Unable to disconnect both line ends");
+            throw new NetworkModificationException(BRANCH_ACTION_ERROR, "Unable to disconnect all branch ends");
         }
         subReporter.report(Report.builder()
-            .withKey("lockoutLineApplied")
-            .withDefaultMessage("Line ${id} (id) : lockout applied")
-            .withValue("id", lineId)
+            .withKey("lockout" + branchType + "Applied")
+            .withDefaultMessage(branchType + " ${id} (id) : lockout applied")
+            .withValue("id", branch.getId())
             .withSeverity(TypedValue.INFO_SEVERITY)
             .build());
     }
 
-    private void applyTripLine(Network network, Reporter subReporter, String lineId) {
-        var trip = new BranchTripping(lineId);
+    private void applyTripBranch(Reporter subReporter, Branch<?> branch, String branchType, Network network) {
+        var trip = new BranchTripping(branch.getId());
         var switchToDisconnect = new HashSet<Switch>();
         var terminalsToDisconnect = new HashSet<Terminal>();
         var traversedTerminals = new HashSet<Terminal>();
@@ -88,64 +88,61 @@ public class BranchStatusModification extends AbstractModification {
         terminalsToDisconnect.forEach(Terminal::disconnect);
 
         subReporter.report(Report.builder()
-                .withKey("tripLineApplied")
-                .withDefaultMessage("Line ${id} (id) : trip applied")
-                .withValue("id", lineId)
+                .withKey("trip" + branchType + "Applied")
+                .withDefaultMessage(branchType + " ${id} (id) : trip applied")
+                .withValue("id", branch.getId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .build());
 
-        traversedTerminals.stream().map(t -> network.getLine(t.getConnectable().getId())).filter(Objects::nonNull)
-                .forEach(b -> b.newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.FORCED_OUTAGE).add());
+        traversedTerminals.stream().map(t -> network.getBranch(t.getConnectable().getId())).filter(Objects::nonNull)
+                .forEach(b -> ((Branch<?>) b).newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.FORCED_OUTAGE).add());
     }
 
-    private void applySwitchOnLine(Network network, Reporter subReporter, String lineId) {
-        Terminal terminal1 = network.getLine(lineId).getTerminal1();
-        boolean terminal1Connected = terminal1.isConnected() || terminal1.connect();
-        Terminal terminal2 = network.getLine(lineId).getTerminal2();
-        boolean terminal2Connected = terminal2.isConnected() || terminal2.connect();
-        if (terminal1Connected && terminal2Connected) {
-            network.getLine(lineId).newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.IN_OPERATION).add();
+    private void applySwitchOnBranch(Reporter subReporter, Branch<?> branch, String branchType) {
+        if (connectAllTerminals(branch)) {
+            branch.newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.IN_OPERATION).add();
         } else {
-            throw new NetworkModificationException(BRANCH_ACTION_ERROR, "Unable to connect both line ends");
+            throw new NetworkModificationException(BRANCH_ACTION_ERROR, "Unable to connect all branch ends");
         }
 
         subReporter.report(Report.builder()
-                .withKey("switchOnLineApplied")
-                .withDefaultMessage("Line ${id} (id) : switch on applied")
-                .withValue("id", lineId)
+                .withKey("switchOn" + branchType + "Applied")
+                .withDefaultMessage(branchType + " ${id} (id) : switch on applied")
+                .withValue("id", branch.getId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .build());
     }
 
-    private void applyEnergiseLineEnd(Network network, Reporter subReporter, String lineId, Branch.Side side) {
-        Terminal terminalToConnect = network.getLine(lineId).getTerminal(side);
-        boolean isTerminalToConnectConnected = terminalToConnect.isConnected() || terminalToConnect.connect();
-
+    private void applyEnergiseBranchEnd(Reporter subReporter, Branch<?> branch, String branchType, Branch.Side side) {
         Branch.Side oppositeSide = side == Branch.Side.ONE ? Branch.Side.TWO : Branch.Side.ONE;
-        Terminal terminalToDisconnect = network.getLine(lineId).getTerminal(oppositeSide);
-        boolean isTerminalToDisconnectDisconnected = !terminalToDisconnect.isConnected() || terminalToDisconnect.disconnect();
-
-        if (isTerminalToConnectConnected && isTerminalToDisconnectDisconnected) {
-            network.getLine(lineId).newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.IN_OPERATION).add();
+        if (connectOneTerminal(branch.getTerminal(side)) && disconnectOneTerminal(branch.getTerminal(oppositeSide))) {
+            branch.newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.IN_OPERATION).add();
         } else {
-            throw new NetworkModificationException(BRANCH_ACTION_ERROR, "Unable to energise line end");
+            throw new NetworkModificationException(BRANCH_ACTION_ERROR, "Unable to energise branch end");
         }
 
         subReporter.report(Report.builder()
-                .withKey("energiseLineEndApplied")
-                .withDefaultMessage("Line ${id} (id) : energise the side ${side} applied")
-                .withValue("id", lineId)
+                .withKey("energise" + branchType + "EndApplied")
+                .withDefaultMessage(branchType + " ${id} (id) : energise the side ${side} applied")
+                .withValue("id", branch.getId())
                 .withValue("side", side.name())
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .build());
     }
 
-    private boolean disconnectLineBothSides(Network network, String lineId) {
-        Terminal terminal1 = network.getLine(lineId).getTerminal1();
-        boolean terminal1Disconnected = !terminal1.isConnected() || terminal1.disconnect();
-        Terminal terminal2 = network.getLine(lineId).getTerminal2();
-        boolean terminal2Disconnected = !terminal2.isConnected() || terminal2.disconnect();
+    private boolean disconnectAllTerminals(Branch<?> branch) {
+        return branch.getTerminals().stream().allMatch(this::disconnectOneTerminal);
+    }
 
-        return terminal1Disconnected && terminal2Disconnected;
+    private boolean disconnectOneTerminal(Terminal terminal) {
+        return !terminal.isConnected() || terminal.disconnect();
+    }
+
+    private boolean connectAllTerminals(Branch<?> branch) {
+        return branch.getTerminals().stream().allMatch(this::connectOneTerminal);
+    }
+
+    private boolean connectOneTerminal(Terminal terminal) {
+        return terminal.isConnected() || terminal.connect();
     }
 }

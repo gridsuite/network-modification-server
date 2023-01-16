@@ -63,22 +63,22 @@ public class BranchStatusModificationInfos extends EquipmentModificationInfos {
         String defaultName;
         switch (action) {
             case LOCKOUT:
-                defaultName = "Lockout line ${lineId}";
+                defaultName = "Lockout branch ${branchId}";
                 break;
             case TRIP:
-                defaultName = "Trip line ${lineId}";
+                defaultName = "Trip branch ${branchId}";
                 break;
             case ENERGISE_END_ONE:
             case ENERGISE_END_TWO:
-                defaultName = "Energise line ${lineId}";
+                defaultName = "Energise branch ${branchId}";
                 break;
             case SWITCH_ON:
-                defaultName = "Switch on ${lineId}";
+                defaultName = "Switch on branch ${branchId}";
                 break;
             default:
                 defaultName = "";
         }
-        return reporter.createSubReporter(ModificationType.BRANCH_STATUS_MODIFICATION.name() + "_" + action, defaultName, "lineId", this.getEquipmentId());
+        return reporter.createSubReporter(ModificationType.BRANCH_STATUS_MODIFICATION.name() + "_" + action, defaultName, "branchId", this.getEquipmentId());
     }
 
     @Override

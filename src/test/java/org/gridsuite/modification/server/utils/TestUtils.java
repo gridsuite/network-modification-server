@@ -8,9 +8,10 @@
 package org.gridsuite.modification.server.utils;
 
 import com.powsybl.commons.exceptions.UncheckedInterruptedException;
-import com.powsybl.iidm.network.Line;
+import com.powsybl.iidm.network.Branch;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.BranchStatus;
+import com.powsybl.iidm.network.extensions.BranchStatusAdder;
 import okhttp3.mockwebserver.MockWebServer;
 import org.springframework.cloud.stream.binder.test.OutputDestination;
 
@@ -26,8 +27,7 @@ import static com.vladmihalcea.sql.SQLStatementCountValidator.assertDeleteCount;
 import static com.vladmihalcea.sql.SQLStatementCountValidator.assertInsertCount;
 import static com.vladmihalcea.sql.SQLStatementCountValidator.assertSelectCount;
 import static com.vladmihalcea.sql.SQLStatementCountValidator.assertUpdateCount;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -90,12 +90,18 @@ public final class TestUtils {
         assertDeleteCount(delete);
     }
 
-    public static boolean checkBranchStatus(Network network, String lineName, BranchStatus.Status status) {
+    public static void assertBranchStatus(Network network, String branchName, BranchStatus.Status status) {
         assertNotNull(network);
-        Line line = network.getLine(lineName);
-        assertNotNull(line);
-        BranchStatus branchStatus = line.getExtensionByName("branchStatus");
+        Branch<?> branch = network.getBranch(branchName);
+        assertNotNull(branch);
+        BranchStatus branchStatus = branch.getExtensionByName("branchStatus");
         assertNotNull(branchStatus);
-        return status == branchStatus.getStatus();
+        assertEquals(status, branchStatus.getStatus());
+    }
+
+    public static void setBranchStatus(Network network, String branchName, BranchStatus.Status status) {
+        Branch<?> branch = network.getBranch(branchName);
+        assertNotNull(branch);
+        branch.newExtension(BranchStatusAdder .class).withStatus(status).add();
     }
 }

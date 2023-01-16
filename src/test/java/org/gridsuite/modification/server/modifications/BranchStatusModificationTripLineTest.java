@@ -6,10 +6,8 @@
  */
 package org.gridsuite.modification.server.modifications;
 
-import com.powsybl.iidm.network.Line;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.BranchStatus;
-import com.powsybl.iidm.network.extensions.BranchStatusAdder;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.BranchStatusModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
@@ -19,21 +17,22 @@ import org.gridsuite.modification.server.utils.TestUtils;
 
 import java.util.UUID;
 
+import static com.powsybl.iidm.network.extensions.BranchStatus.Status.FORCED_OUTAGE;
+import static com.powsybl.iidm.network.extensions.BranchStatus.Status.PLANNED_OUTAGE;
 import static org.gridsuite.modification.server.utils.MatcherBranchStatusModificationInfos.createMatcherBranchStatusModificationInfos;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 public class BranchStatusModificationTripLineTest extends AbstractNetworkModificationTest {
 
     private static final String targetLineId = "line2";
+    private static final String updateBranchId = "line1";
+    private static final BranchStatus.Status targetBranchStatus = FORCED_OUTAGE;
+    private static final BranchStatus.Status otherBranchStatus = PLANNED_OUTAGE;
 
     @Override
     protected Network createNetwork(UUID networkUuid) {
         Network network = NetworkCreation.create(networkUuid, true);
-        // force a branch status different from FORCED_OUTAGE (expected after testCreate)
-        Line line = network.getLine(targetLineId);
-        assertNotNull(line);
-        line.newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.PLANNED_OUTAGE).add();
+        // force a branch status different from the expected one, after testCreate
+        TestUtils.setBranchStatus(network, targetLineId, otherBranchStatus);
         return network;
     }
 
@@ -49,7 +48,7 @@ public class BranchStatusModificationTripLineTest extends AbstractNetworkModific
     protected ModificationInfos buildModificationUpdate() {
         return BranchStatusModificationInfos.builder()
                 .type(ModificationType.BRANCH_STATUS_MODIFICATION)
-                .equipmentId("line1")
+                .equipmentId(updateBranchId)
                 .action(BranchStatusModificationInfos.ActionType.SWITCH_ON).build();
     }
 
@@ -60,12 +59,12 @@ public class BranchStatusModificationTripLineTest extends AbstractNetworkModific
 
     @Override
     protected void assertNetworkAfterCreation() {
-        // excepted result of LOCKOUT => extension line.branchStatus == 'PLANNED_OUTAGE'
-        assertTrue(TestUtils.checkBranchStatus(getNetwork(), targetLineId, BranchStatus.Status.FORCED_OUTAGE));
+        TestUtils.assertBranchStatus(getNetwork(), targetLineId, targetBranchStatus);
     }
 
     @Override
     protected void assertNetworkAfterDeletion() {
-        assertTrue(TestUtils.checkBranchStatus(getNetwork(), targetLineId, BranchStatus.Status.PLANNED_OUTAGE));
+        // back to init status
+        TestUtils.assertBranchStatus(getNetwork(), targetLineId, otherBranchStatus);
     }
 }
