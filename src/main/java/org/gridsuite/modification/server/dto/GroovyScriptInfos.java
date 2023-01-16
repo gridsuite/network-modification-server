@@ -8,9 +8,9 @@ package org.gridsuite.modification.server.dto;
 
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.entities.equipment.deletion.EquipmentDeletionEntity;
+import org.gridsuite.modification.server.entities.GroovyScriptEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
-import org.gridsuite.modification.server.modifications.EquipmentDeletion;
+import org.gridsuite.modification.server.modifications.GroovyScript;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -28,28 +28,28 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @Setter
 @ToString(callSuper = true)
-@Schema(description = "Equipment deletion")
-public class EquipmentDeletionInfos extends EquipmentModificationInfos {
-    @Schema(description = "Equipment type")
-    private String equipmentType;
+@Schema(description = "Groovy script modification")
+public class GroovyScriptInfos extends ModificationInfos {
+    @Schema(description = "Groovy script")
+    private String script;
 
     @Override
-    public EquipmentDeletionEntity toEntity() {
-        return new EquipmentDeletionEntity(this);
+    public GroovyScriptEntity toEntity() {
+        return new GroovyScriptEntity(this);
     }
 
     @Override
     public AbstractModification toModification() {
-        return new EquipmentDeletion(this);
+        return new GroovyScript(this);
     }
 
     @Override
     public NetworkModificationException.Type getErrorType() {
-        return NetworkModificationException.Type.DELETE_EQUIPMENT_ERROR;
+        return NetworkModificationException.Type.GROOVY_SCRIPT_ERROR;
     }
 
     @Override
     public Reporter createSubReporter(ReporterModel reporter) {
-        return reporter.createSubReporter(ModificationType.EQUIPMENT_DELETION.name(), "Equipment deletion ${equipmentId}", "equipmentId", this.getEquipmentId());
+        return reporter.createSubReporter(ModificationType.GROOVY_SCRIPT.name(), "Apply groovy script");
     }
 }

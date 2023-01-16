@@ -143,26 +143,8 @@ public class NetworkStoreListener implements NetworkListener {
         return deletions;
     }
 
-    public void storeLoadModification(LoadModificationInfos loadModificationInfos) {
-        modifications.add(this.modificationRepository.createLoadModificationEntity(loadModificationInfos.getEquipmentId(),
-                loadModificationInfos.getEquipmentName(),
-                loadModificationInfos.getLoadType(),
-                loadModificationInfos.getVoltageLevelId(),
-                loadModificationInfos.getBusOrBusbarSectionId(),
-                loadModificationInfos.getActivePower(),
-                loadModificationInfos.getReactivePower()));
-    }
-
-    public void storeEquipmentDeletion(String equipmentId, String equipmentType) {
-        modifications.add(this.modificationRepository.createEquipmentDeletionEntity(equipmentId, equipmentType));
-    }
-
     public void storeTwoWindingsTransformerCreation(TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
         modifications.add(TwoWindingsTransformerCreationEntity.toEntity(twoWindingsTransformerCreationInfos));
-    }
-
-    public void storeGroovyScriptModification(String script) {
-        modifications.add(this.modificationRepository.createGroovyScriptModificationEntity(script));
     }
 
     public void storeBranchStatusModification(String lineId, BranchStatusModificationInfos.ActionType action) {
