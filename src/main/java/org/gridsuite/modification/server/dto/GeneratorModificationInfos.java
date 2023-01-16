@@ -6,6 +6,17 @@
  */
 package org.gridsuite.modification.server.dto;
 
+import java.util.List;
+
+import org.gridsuite.modification.server.ModificationType;
+import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
+import org.gridsuite.modification.server.modifications.AbstractModification;
+import org.gridsuite.modification.server.modifications.GeneratorModification;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.powsybl.commons.reporter.Reporter;
+import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.iidm.network.EnergySource;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
@@ -46,4 +57,69 @@ public class GeneratorModificationInfos extends InjectionModificationInfos {
 
     @Schema(description = "Voltage set point")
     private AttributeModification<Double> voltageSetpoint;
+
+    @Schema(description = "Marginal cost")
+    private AttributeModification<Double> marginalCost;
+
+    @Schema(description = "Minimum reactive power")
+    private AttributeModification<Double> minimumReactivePower;
+
+    @Schema(description = "Maximum reactive power")
+    private AttributeModification<Double> maximumReactivePower;
+
+    @Schema(description = "Reactive capability curve points")
+    private List<ReactiveCapabilityCurveModificationInfos> reactiveCapabilityCurvePoints;
+
+    @Schema(description = "Participate")
+    private AttributeModification<Boolean> participate;
+
+    @Schema(description = "Droop")
+    private AttributeModification<Float> droop;
+
+    @Schema(description = "Transient reactance")
+    private AttributeModification<Double> transientReactance;
+
+    @Schema(description = "Step up transformer reactance")
+    private AttributeModification<Double> stepUpTransformerReactance;
+
+    @Schema(description = "Voltage Regulation type")
+    private AttributeModification<VoltageRegulationType> voltageRegulationType;
+
+    @Schema(description = "Regulating terminal equipment id")
+    private AttributeModification<String> regulatingTerminalId;
+
+    @Schema(description = "Regulating terminal equipment type")
+    private AttributeModification<String> regulatingTerminalType;
+
+    @Schema(description = "Regulating terminal voltage level id")
+    private AttributeModification<String> regulatingTerminalVlId;
+
+    // As this attribute has only one lower case letter at its start (xXXXX), the getters is parsed as getQPercent and the field for Jackson is parsed as qpercent
+    // while we expect qPercent. JsonProperty let fix the json field to qPercent
+    @JsonProperty("qPercent")
+    @Schema(description = "Q percent")
+    private AttributeModification<Double> qPercent;
+
+    @Schema(description = "Reactive capability curve")
+    private AttributeModification<Boolean> reactiveCapabilityCurve;
+
+    @Override
+    public GeneratorModificationEntity toEntity() {
+        return new GeneratorModificationEntity(this);
+    }
+
+    @Override
+    public AbstractModification toModification() {
+        return new GeneratorModification(this);
+    }
+
+    @Override
+    public NetworkModificationException.Type getErrorType() {
+        return NetworkModificationException.Type.MODIFY_GENERATOR_ERROR;
+    }
+
+    @Override
+    public Reporter createSubReporter(ReporterModel reporter) {
+        return reporter.createSubReporter(ModificationType.GENERATOR_MODIFICATION.name(), "Generator modification ${generatorId}", "generatorId", this.getEquipmentId());
+    }
 }

@@ -12,18 +12,12 @@ import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.TwoWindingsTransformerCreationEntity;
-import org.gridsuite.modification.server.entities.equipment.creation.VoltageLevelCreationEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.LinesAttachToSplitLinesEntity;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
-
-import static org.gridsuite.modification.server.entities.equipment.creation.GeneratorCreationEntity.toEmbeddablePoints;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -149,80 +143,12 @@ public class NetworkStoreListener implements NetworkListener {
         return deletions;
     }
 
-    public void storeLoadModification(LoadModificationInfos loadModificationInfos) {
-        modifications.add(this.modificationRepository.createLoadModificationEntity(loadModificationInfos.getEquipmentId(),
-                loadModificationInfos.getEquipmentName(),
-                loadModificationInfos.getLoadType(),
-                loadModificationInfos.getVoltageLevelId(),
-                loadModificationInfos.getBusOrBusbarSectionId(),
-                loadModificationInfos.getActivePower(),
-                loadModificationInfos.getReactivePower()));
-    }
-
-    @Transactional
-    public void storeGeneratorModification(GeneratorModificationInfos generatorModificationInfos) {
-        modifications.add(new GeneratorModificationEntity(generatorModificationInfos));
-    }
-
-    public void storeGeneratorCreation(GeneratorCreationInfos generatorCreationInfos) {
-        modifications.add(this.modificationRepository.createGeneratorEntity(generatorCreationInfos.getEquipmentId(),
-            generatorCreationInfos.getEquipmentName(),
-            generatorCreationInfos.getEnergySource(),
-            generatorCreationInfos.getVoltageLevelId(),
-            generatorCreationInfos.getBusOrBusbarSectionId(),
-            generatorCreationInfos.getMinActivePower(),
-            generatorCreationInfos.getMaxActivePower(),
-            generatorCreationInfos.getRatedNominalPower(),
-            generatorCreationInfos.getActivePowerSetpoint(),
-            generatorCreationInfos.getReactivePowerSetpoint(),
-            generatorCreationInfos.isVoltageRegulationOn(),
-            generatorCreationInfos.getVoltageSetpoint(),
-            generatorCreationInfos.getMarginalCost(),
-            generatorCreationInfos.getMinimumReactivePower(),
-            generatorCreationInfos.getMaximumReactivePower(),
-            generatorCreationInfos.getParticipate() != null && generatorCreationInfos.getParticipate(),
-            generatorCreationInfos.getDroop(),
-            generatorCreationInfos.getTransientReactance(),
-            generatorCreationInfos.getStepUpTransformerReactance(),
-            generatorCreationInfos.getRegulatingTerminalId(),
-            generatorCreationInfos.getRegulatingTerminalType(),
-            generatorCreationInfos.getRegulatingTerminalVlId(),
-            generatorCreationInfos.getQPercent(),
-            generatorCreationInfos.getReactiveCapabilityCurve() == null || generatorCreationInfos.getReactiveCapabilityCurve(),
-            toEmbeddablePoints(generatorCreationInfos.getReactiveCapabilityCurvePoints()),
-            generatorCreationInfos.getConnectionName(),
-            generatorCreationInfos.getConnectionDirection(),
-            generatorCreationInfos.getConnectionPosition()));
-    }
-
-    public void storeEquipmentDeletion(String equipmentId, String equipmentType) {
-        modifications.add(this.modificationRepository.createEquipmentDeletionEntity(equipmentId, equipmentType));
-    }
-
     public void storeTwoWindingsTransformerCreation(TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
         modifications.add(TwoWindingsTransformerCreationEntity.toEntity(twoWindingsTransformerCreationInfos));
     }
 
-    public void storeGroovyScriptModification(String script) {
-        modifications.add(this.modificationRepository.createGroovyScriptModificationEntity(script));
-    }
-
     public void storeBranchStatusModification(String lineId, BranchStatusModificationInfos.ActionType action) {
         modifications.add(this.modificationRepository.createBranchStatusModificationEntity(lineId, action));
-    }
-
-    public void storeSubstationCreation(SubstationCreationInfos substationCreationInfos) {
-        modifications.add(this.modificationRepository.createSubstationEntity(
-                substationCreationInfos.getEquipmentId(),
-                substationCreationInfos.getEquipmentName(),
-                substationCreationInfos.getSubstationCountry(),
-                substationCreationInfos.getProperties()
-        ));
-    }
-
-    public void storeVoltageLevelCreation(VoltageLevelCreationInfos voltageLevelCreationInfos) {
-        VoltageLevelCreationEntity voltageLevelEntity = VoltageLevelCreationEntity.toEntity(voltageLevelCreationInfos);
-        modifications.add(voltageLevelEntity);
     }
 
     @Override
@@ -282,20 +208,5 @@ public class NetworkStoreListener implements NetworkListener {
 
     private void addSubstationsIds(Identifiable<?> identifiable) {
         substationsIds.addAll(getSubstationIds(identifiable));
-    }
-
-    public void storeLinesAttachToSplitLinesInfos(LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos) {
-
-        modifications.add(LinesAttachToSplitLinesEntity.toEntity(
-                linesAttachToSplitLinesInfos.getLineToAttachTo1Id(),
-                linesAttachToSplitLinesInfos.getLineToAttachTo2Id(),
-                linesAttachToSplitLinesInfos.getAttachedLineId(),
-                linesAttachToSplitLinesInfos.getVoltageLevelId(),
-                linesAttachToSplitLinesInfos.getBbsBusId(),
-                linesAttachToSplitLinesInfos.getReplacingLine1Id(),
-                linesAttachToSplitLinesInfos.getReplacingLine1Name(),
-                linesAttachToSplitLinesInfos.getReplacingLine2Id(),
-                linesAttachToSplitLinesInfos.getReplacingLine2Name())
-        );
     }
 }

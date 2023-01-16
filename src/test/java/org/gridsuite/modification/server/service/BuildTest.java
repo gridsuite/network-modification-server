@@ -21,14 +21,11 @@ import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationApplication;
-import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.TapChangerType;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationGroupEntity;
-import org.gridsuite.modification.server.entities.equipment.creation.BusbarConnectionCreationEmbeddable;
-import org.gridsuite.modification.server.entities.equipment.creation.BusbarSectionCreationEmbeddable;
 import org.gridsuite.modification.server.entities.equipment.creation.TapChangerStepCreationEmbeddable;
 import org.gridsuite.modification.server.repositories.ModificationGroupRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
@@ -212,7 +209,7 @@ public class BuildTest {
     }
 
     @Test
-    public void runBuildForLineSplits() throws  Exception {
+    public void runBuildForLineSplits() throws Exception {
         List<ModificationEntity> entities1 = List.of(
                 LineCreationInfos.builder()
                         .type(ModificationType.LINE_CREATION)
@@ -249,10 +246,15 @@ public class BuildTest {
         modificationRepository.saveModifications(TEST_GROUP_ID, entities1);
 
         List<ModificationEntity> entities2 = new ArrayList<>();
-        entities2.add(modificationRepository.createVoltageLevelEntity("vl9", "vl9", 225, "s1",
-            List.of(new BusbarSectionCreationEmbeddable("1.1", "1.1", 1, 1),
-                new BusbarSectionCreationEmbeddable("1.2", "1.2", 1, 2)),
-            List.of(new BusbarConnectionCreationEmbeddable("1.1", "1.2", SwitchKind.BREAKER))));
+        entities2.add(VoltageLevelCreationInfos.builder()
+                .type(ModificationType.VOLTAGE_LEVEL_CREATION)
+                .equipmentId("vl9")
+                .equipmentName("vl9")
+                .nominalVoltage(225)
+                .substationId("s1")
+                .busbarSections(List.of(new BusbarSectionCreationInfos("1.1", "1.1", 1, 1), new BusbarSectionCreationInfos("1.2", "1.2", 1, 2)))
+                .busbarConnections(List.of(new BusbarConnectionCreationInfos("1.1", "1.2", SwitchKind.BREAKER)))
+                .build().toEntity());
         modificationRepository.saveModifications(TEST_GROUP_ID_2, entities2);
 
         String uriString = "/v1/networks/{networkUuid}/build?receiver=me";
@@ -340,10 +342,29 @@ public class BuildTest {
         entities1.add(LoadCreationInfos.builder().equipmentId("newLoad2").equipmentName("newLoad2").loadType(LoadType.AUXILIARY).voltageLevelId("v1").busOrBusbarSectionId("1.1").activePower(10.).reactivePower(20.).connectionName(null).connectionDirection(ConnectablePosition.Direction.UNDEFINED).build().toEntity());
 
         Map<String, String> properties = Map.of("DEMO", "Demo1");
-        entities1.add(modificationRepository.createSubstationEntity("newSubstation", "newSubstation", Country.FR, properties));
+        entities1.add(SubstationCreationInfos.builder()
+                .type(ModificationType.SUBSTATION_CREATION)
+                .equipmentId("newSubstation")
+                .equipmentName("newSubstation")
+                .substationCountry(Country.FR)
+                .properties(properties)
+                .build().toEntity());
 
         List<ModificationEntity> entities2 = new ArrayList<>();
-        entities2.add(modificationRepository.createGeneratorEntity(NEW_GENERATOR_ID, NEW_GENERATOR_ID, EnergySource.HYDRO, "v2", "1A", 0., 500., 1., 100., 50., true, 225., 8., 20., 50., true, 9F, 35., 25., "v2load", "LOAD", "v2", 25., false, List.of(), "Top", ConnectablePosition.Direction.TOP, 0));
+        entities2.add(GeneratorCreationInfos.builder().type(ModificationType.GENERATOR_CREATION)
+                .equipmentId(NEW_GENERATOR_ID).equipmentName(NEW_GENERATOR_ID)
+                .energySource(EnergySource.HYDRO).voltageLevelId("v2")
+                .busOrBusbarSectionId("1A").minActivePower(0)
+                .maxActivePower(500).ratedNominalPower(1.)
+                .activePowerSetpoint(100).reactivePowerSetpoint(50.)
+                .voltageRegulationOn(true).voltageSetpoint(225.).marginalCost(8.)
+                .minimumReactivePower(20.).maximumReactivePower(50.)
+                .participate(true).droop(9F).transientReactance(35.)
+                .stepUpTransformerReactance(25.).regulatingTerminalId("v2load")
+                .regulatingTerminalType("LOAD").regulatingTerminalVlId("v2")
+                .qPercent(25.).reactiveCapabilityCurve(false).reactiveCapabilityCurvePoints(List.of())
+                .connectionName("Top").connectionDirection(ConnectablePosition.Direction.TOP)
+                .connectionPosition(0).build().toEntity());
         entities2.add(LineCreationInfos.builder().type(ModificationType.LINE_CREATION).equipmentId("newLine").equipmentName("newLine").seriesResistance(1.0).seriesReactance(2.0).shuntConductance1(3.0).shuntSusceptance1(4.0).shuntConductance2(5.0).shuntSusceptance2(6.0).voltageLevelId1("v1").busOrBusbarSectionId1("1.1").voltageLevelId2("v2").busOrBusbarSectionId2("1B").currentLimits1(null).currentLimits2(null).connectionName1("cn101").connectionDirection1(ConnectablePosition.Direction.TOP).connectionName2("cn102").connectionDirection2(ConnectablePosition.Direction.TOP).build().toEntity());
 
         List<TapChangerStepCreationEmbeddable> tapChangerStepCreationEmbeddables = new ArrayList<>();
@@ -356,13 +377,18 @@ public class BuildTest {
         tapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.RATIO, 8, 1, 0, 0, 0, 0, null));
 
         entities2.add(modificationRepository.createTwoWindingsTransformerEntity("new2wt", "new2wt", 1., 2., 3., 4., 5., 6., 1., "v1", "1.1", "v2", "1A", 3., 2., "cn201", ConnectablePosition.Direction.TOP, "cn202", ConnectablePosition.Direction.TOP, 1, 2, false, null, null, null, null, PhaseTapChanger.RegulationMode.CURRENT_LIMITER, null, 5, 6, true, 1., "v2load", "v2", "LOAD", true, 50., tapChangerStepCreationEmbeddables, 0, 1));
-        entities2.add(modificationRepository.createEquipmentDeletionEntity("v2shunt", "SHUNT_COMPENSATOR"));
-        entities2.add(modificationRepository.createGroovyScriptModificationEntity("network.getGenerator('idGenerator').targetP=55\n"));
+        entities2.add(EquipmentDeletionInfos.builder().type(ModificationType.EQUIPMENT_DELETION).equipmentId("v2shunt").equipmentType("SHUNT_COMPENSATOR").build().toEntity());
+        entities2.add(GroovyScriptInfos.builder().script("network.getGenerator('idGenerator').targetP=55\n").build().toEntity());
         entities2.add(modificationRepository.createBranchStatusModificationEntity("line2", BranchStatusModificationInfos.ActionType.TRIP));
-        entities2.add(modificationRepository.createVoltageLevelEntity("vl9", "vl9", 225, "s1",
-            List.of(new BusbarSectionCreationEmbeddable("1.1", "1.1", 1, 1),
-                new BusbarSectionCreationEmbeddable("1.2", "1.2", 1, 2)),
-            List.of(new BusbarConnectionCreationEmbeddable("1.1", "1.2", SwitchKind.BREAKER))));
+        entities2.add(VoltageLevelCreationInfos.builder()
+                .type(ModificationType.VOLTAGE_LEVEL_CREATION)
+                .equipmentId("vl9")
+                .equipmentName("vl9")
+                .nominalVoltage(225)
+                .substationId("s1")
+                .busbarSections(List.of(new BusbarSectionCreationInfos("1.1", "1.1", 1, 1), new BusbarSectionCreationInfos("1.2", "1.2", 1, 2)))
+                .busbarConnections(List.of(new BusbarConnectionCreationInfos("1.1", "1.2", SwitchKind.BREAKER)))
+                .build().toEntity());
         entities2.add(ShuntCompensatorCreationInfos.builder()
             .type(ModificationType.SHUNT_COMPENSATOR_CREATION)
             .equipmentId("shunt9")
@@ -376,10 +402,13 @@ public class BuildTest {
             .connectionDirection(ConnectablePosition.Direction.UNDEFINED)
             .connectionName("shunt9")
             .build().toEntity());
-        entities2.add(modificationRepository.createLoadModificationEntity("newLoad",
-            new AttributeModification<>("newLoadName", OperationType.SET), null, null, null, null, null));
-        entities2.add(modificationRepository.createGeneratorModificationEntity(GeneratorModificationInfos.builder().equipmentId("newGenerator")
-            .equipmentName(new AttributeModification<>("newGeneratorName", OperationType.SET)).build()));
+        entities2.add(LoadModificationInfos.builder().type(ModificationType.LOAD_MODIFICATION).equipmentId("newLoad")
+            .equipmentName(new AttributeModification<>("newLoadName", OperationType.SET)).activePower(null).build().toEntity());
+        entities2.add(GeneratorModificationInfos.builder().type(ModificationType.GENERATOR_MODIFICATION)
+                .equipmentId("newGenerator")
+                .equipmentName(new AttributeModification<>("newGeneratorName", OperationType.SET))
+                .voltageRegulationType(new AttributeModification<>(VoltageRegulationType.LOCAL, OperationType.SET))
+                .reactiveCapabilityCurve(new AttributeModification<>(false, OperationType.SET)).build().toEntity());
 
         modificationRepository.saveModifications(TEST_GROUP_ID, entities1);
         modificationRepository.saveModifications(TEST_GROUP_ID_2, entities2);
@@ -641,48 +670,6 @@ public class BuildTest {
         Message<byte[]> message = output.receive(TIMEOUT * 3, buildFailedDestination);
         assertEquals("me", message.getHeaders().get("receiver"));
         assertThat((String) message.getHeaders().get("message"), startsWith(FAIL_MESSAGE));
-    }
-
-    @Test
-    public void testApplyModificationWithErrors() {
-        Network network = NetworkCreation.create(TEST_NETWORK_ID, true);
-        ReporterModel reporter = new ReporterModel("reportKey", "reportName");
-        LoadCreationInfos loadCreationInfos = LoadCreationInfos.builder().voltageLevelId("unknownVoltageLevelId").equipmentId("loadId").build();
-        GeneratorCreationInfos generatorCreationInfos = GeneratorCreationInfos.builder().voltageLevelId("unknownVoltageLevelId").equipmentId("generatorId").build();
-        UUID groupUuid = UUID.randomUUID();
-        UUID reportUuid = UUID.randomUUID();
-        String reporterId = UUID.randomUUID().toString();
-
-        // Building mode : No error send with exception in the action part
-        NetworkStoreListener listener1 = NetworkStoreListener.create(network, TEST_NETWORK_ID, groupUuid, modificationRepository, equipmentInfosService, true, true);
-        assertEquals(List.of(), networkModificationService.handleModification(loadCreationInfos, listener1, groupUuid, reportUuid, reporterId));
-        assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches(String.format("/v1/reports/%s", reportUuid))));
-        assertEquals(List.of(), networkModificationService.execCreateGeneratorCreation(listener1, generatorCreationInfos, reportUuid, reporterId));
-        assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches(String.format("/v1/reports/%s", reportUuid))));
-
-        // Incremental mode : Error send with exception in the action part
-        NetworkStoreListener listener2 = NetworkStoreListener.create(network, TEST_NETWORK_ID, groupUuid, modificationRepository, equipmentInfosService, false, true);
-        assertEquals("VOLTAGE_LEVEL_NOT_FOUND : unknownVoltageLevelId",
-            assertThrows(NetworkModificationException.class,
-                () -> networkModificationService.handleModification(loadCreationInfos, listener2, groupUuid, reportUuid, reporterId)
-            ).getMessage()
-        );
-        assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches(String.format("/v1/reports/%s", reportUuid))));
-        testNetworkModificationsCount(groupUuid, 1);
-        assertEquals("VOLTAGE_LEVEL_NOT_FOUND : unknownVoltageLevelId",
-            assertThrows(NetworkModificationException.class,
-                () -> networkModificationService.execCreateGeneratorCreation(listener2, generatorCreationInfos, reportUuid, reporterId)
-            ).getMessage()
-        );
-        assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches(String.format("/v1/reports/%s", reportUuid))));
-        testNetworkModificationsCount(groupUuid, 2);
-
-        // Save mode only : No log and no error send with exception in the action part
-        NetworkStoreListener listener3 = NetworkStoreListener.create(network, TEST_NETWORK_ID, groupUuid, modificationRepository, equipmentInfosService, false, false);
-        assertEquals(List.of(), networkModificationService.execCreateGeneratorCreation(listener3, generatorCreationInfos, reportUuid, reporterId));
-        testNetworkModificationsCount(groupUuid, 3);
-        assertEquals(List.of(), networkModificationService.handleModification(loadCreationInfos, listener3, groupUuid, reportUuid, reporterId));
-        testNetworkModificationsCount(groupUuid, 4);
     }
 
     private void testNetworkModificationsCount(UUID groupUuid, int actualSize) {

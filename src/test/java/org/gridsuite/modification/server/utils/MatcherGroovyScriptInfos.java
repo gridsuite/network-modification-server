@@ -7,7 +7,7 @@
 package org.gridsuite.modification.server.utils;
 
 import org.gridsuite.modification.server.ModificationType;
-import org.gridsuite.modification.server.dto.GroovyScriptModificationInfos;
+import org.gridsuite.modification.server.dto.GroovyScriptInfos;
 import org.hamcrest.Description;
 
 import java.time.ZoneOffset;
@@ -17,11 +17,11 @@ import java.util.Set;
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
-public class MatcherGroovyScriptModificationInfos extends MatcherModificationInfos<GroovyScriptModificationInfos> {
+public class MatcherGroovyScriptInfos extends MatcherModificationInfos<GroovyScriptInfos> {
 
-    public static MatcherGroovyScriptModificationInfos createMatcherGroovyScriptModificationInfos(String script,
+    public static MatcherGroovyScriptInfos createMatcherGroovyScriptInfos(String script,
                                                                                                   Set<String> substationIds) {
-        return new MatcherGroovyScriptModificationInfos(GroovyScriptModificationInfos.builder()
+        return new MatcherGroovyScriptInfos(GroovyScriptInfos.builder()
                 .date(ZonedDateTime.now(ZoneOffset.UTC))
                 .type(ModificationType.GROOVY_SCRIPT)
                 .script(script)
@@ -29,16 +29,16 @@ public class MatcherGroovyScriptModificationInfos extends MatcherModificationInf
                 .build());
     }
 
-    public static MatcherGroovyScriptModificationInfos createMatcherGroovyScriptModificationInfos(GroovyScriptModificationInfos groovyScriptModificationInfos) {
-        return new MatcherGroovyScriptModificationInfos(groovyScriptModificationInfos);
+    public static MatcherGroovyScriptInfos createMatcherGroovyScriptInfos(GroovyScriptInfos groovyScriptInfos) {
+        return new MatcherGroovyScriptInfos(groovyScriptInfos);
     }
 
-    protected MatcherGroovyScriptModificationInfos(GroovyScriptModificationInfos ref) {
+    protected MatcherGroovyScriptInfos(GroovyScriptInfos ref) {
         super(ref);
     }
 
     @Override
-    public boolean matchesSafely(GroovyScriptModificationInfos m) {
+    public boolean matchesSafely(GroovyScriptInfos m) {
         return super.matchesSafely(m)
             && m.getScript().equals(reference.getScript())
             && m.getSubstationIds().equals(reference.getSubstationIds());

@@ -60,16 +60,16 @@ public class BranchCreationEntity extends EquipmentCreationEntity {
     private Integer connectionPosition2;
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @JoinColumn(name  =  "current_limits_id1",
-        referencedColumnName  =  "id",
+    @JoinColumn(name = "current_limits_id1",
+        referencedColumnName = "id",
         foreignKey = @ForeignKey(
             name = "current_limits_id1_fk"
         ), nullable = true)
     private CurrentLimitsEntity currentLimits1;
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @JoinColumn(name  =  "current_limits_id2",
-        referencedColumnName  =  "id",
+    @JoinColumn(name = "current_limits_id2",
+        referencedColumnName = "id",
         foreignKey = @ForeignKey(
             name = "current_limits_id2_fk"
         ), nullable = true)
