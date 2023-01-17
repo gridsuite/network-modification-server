@@ -137,6 +137,7 @@ public class NetworkModificationController {
             case GENERATOR_CREATION:
             case GENERATOR_MODIFICATION:
             case SUBSTATION_CREATION:
+            case TWO_WINDINGS_TRANSFORMER_CREATION:
                 return ResponseEntity.ok().body(networkModificationService.createModification(networkUuid, variantId, groupUuid, reportUuid, reporterId, modificationInfos));
             default:
                 return ResponseEntity.ok().body(networkModificationService.createNetworkModification(networkUuid, variantId, groupUuid, reportUuid, reporterId, modificationInfos));
@@ -149,31 +150,7 @@ public class NetworkModificationController {
     public ResponseEntity<Void> updateNetworkModification(
             @Parameter(description = "Network modification UUID") @PathVariable("uuid") UUID networkModificationUuid,
             @RequestBody ModificationInfos modificationInfos) {
-        // temporary switch, should be removed when all kind of modification will use the generic updateModification
-        // PS : the switch can't be in the service because of @Transactional that need to be called from outside the class
-        switch (modificationInfos.getType()) {
-            case LOAD_CREATION:
-            case LINE_SPLIT_WITH_VOLTAGE_LEVEL:
-            case DELETE_VOLTAGE_LEVEL_ON_LINE:
-            case DELETE_ATTACHING_LINE:
-            case EQUIPMENT_ATTRIBUTE_MODIFICATION:
-            case SHUNT_COMPENSATOR_CREATION:
-            case LINE_CREATION:
-            case LINE_ATTACH_TO_VOLTAGE_LEVEL:
-            case LOAD_SCALING:
-            case LOAD_MODIFICATION:
-            case EQUIPMENT_DELETION:
-            case GROOVY_SCRIPT:
-            case VOLTAGE_LEVEL_CREATION:
-            case LINES_ATTACH_TO_SPLIT_LINES:
-            case GENERATOR_CREATION:
-            case GENERATOR_MODIFICATION:
-            case SUBSTATION_CREATION:
-                networkModificationService.updateModification(networkModificationUuid, modificationInfos);
-                break;
-            default:
-                networkModificationService.updateNetworkModification(networkModificationUuid, modificationInfos);
-        }
+        networkModificationService.updateNetworkModification(networkModificationUuid, modificationInfos);
         return ResponseEntity.ok().build();
     }
 
