@@ -21,6 +21,7 @@ import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationApplication;
+import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.TapChangerType;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
@@ -294,9 +295,8 @@ public class BuildTest {
         TestUtils.purgeRequests(server);
     }
 
-    @SneakyThrows
     @Test
-    public void runBuildWithEmptyGroupTest() {
+    public void runBuildWithEmptyGroupTest() throws Exception {
         Network network = NetworkCreation.create(TEST_NETWORK_ID, false);
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
             NetworkCreation.VARIANT_ID,
@@ -325,9 +325,8 @@ public class BuildTest {
         assertEquals(expectedBody, request.getBody().readUtf8());
     }
 
-    @SneakyThrows
     @Test
-    public void runBuildTest() {
+    public void runBuildTest() throws Exception {
         // create modification entities in the database
         List<ModificationEntity> entities1 = new ArrayList<>();
         entities1.add(EquipmentAttributeModificationInfos.builder().equipmentId("v1d1").equipmentAttributeName("open").equipmentAttributeValue(true).equipmentType(IdentifiableType.SWITCH).build().toEntity());
@@ -747,9 +746,8 @@ public class BuildTest {
         assertEquals(CANCEL_MESSAGE, message.getHeaders().get("message"));
     }
 
-    @SneakyThrows
     @Test
-    public void runBuildWithReportErrorTest() {
+    public void runBuildWithReportErrorTest() throws Exception {
         modificationRepository.saveModifications(TEST_GROUP_ID, List.of(EquipmentAttributeModificationInfos.builder().equipmentId("v1d1").equipmentAttributeName("open").equipmentAttributeValue(true).equipmentType(IdentifiableType.SWITCH).build().toEntity()));
 
         // build VARIANT_ID by cloning network initial variant and applying all modifications in all groups
@@ -772,6 +770,35 @@ public class BuildTest {
         Message<byte[]> message = output.receive(TIMEOUT * 3, buildFailedDestination);
         assertEquals("me", message.getHeaders().get("receiver"));
         assertThat((String) message.getHeaders().get("message"), startsWith(FAIL_MESSAGE));
+    }
+
+    @Test
+    public void testApplyModificationWithErrors() {
+        Network network = NetworkCreation.create(TEST_NETWORK_ID, true);
+        LoadCreationInfos loadCreationInfos = LoadCreationInfos.builder().voltageLevelId("unknownVoltageLevelId").equipmentId("loadId").build();
+        UUID groupUuid = UUID.randomUUID();
+        UUID reportUuid = UUID.randomUUID();
+        String reporterId = UUID.randomUUID().toString();
+
+        // Building mode : No error send with exception in the action part
+        NetworkStoreListener listener1 = NetworkStoreListener.create(network, TEST_NETWORK_ID, groupUuid, modificationRepository, equipmentInfosService, true, true);
+        assertEquals(List.of(), networkModificationService.handleModification(loadCreationInfos, listener1, groupUuid, reportUuid, reporterId));
+        assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches(String.format("/v1/reports/%s", reportUuid))));
+
+        // Incremental mode : Error send with exception in the action part
+        NetworkStoreListener listener2 = NetworkStoreListener.create(network, TEST_NETWORK_ID, groupUuid, modificationRepository, equipmentInfosService, false, true);
+        assertEquals("VOLTAGE_LEVEL_NOT_FOUND : unknownVoltageLevelId",
+            assertThrows(NetworkModificationException.class,
+                () -> networkModificationService.handleModification(loadCreationInfos, listener2, groupUuid, reportUuid, reporterId)
+            ).getMessage()
+        );
+        assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches(String.format("/v1/reports/%s", reportUuid))));
+        testNetworkModificationsCount(groupUuid, 1);
+
+        // Save mode only : No log and no error send with exception in the action part
+        NetworkStoreListener listener3 = NetworkStoreListener.create(network, TEST_NETWORK_ID, groupUuid, modificationRepository, equipmentInfosService, false, false);
+        assertEquals(List.of(), networkModificationService.handleModification(loadCreationInfos, listener3, groupUuid, reportUuid, reporterId));
+        testNetworkModificationsCount(groupUuid, 2);
     }
 
     private void testNetworkModificationsCount(UUID groupUuid, int actualSize) {
