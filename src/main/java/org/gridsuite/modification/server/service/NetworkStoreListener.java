@@ -11,7 +11,6 @@ import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.creation.TwoWindingsTransformerCreationEntity;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 
 import java.time.ZoneOffset;
@@ -141,10 +140,6 @@ public class NetworkStoreListener implements NetworkListener {
 
     public List<EquipmentDeletionInfos> getDeletions() {
         return deletions;
-    }
-
-    public void storeTwoWindingsTransformerCreation(TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
-        modifications.add(TwoWindingsTransformerCreationEntity.toEntity(twoWindingsTransformerCreationInfos));
     }
 
     public void storeBranchStatusModification(String lineId, BranchStatusModificationInfos.ActionType action) {

@@ -6,12 +6,19 @@
  */
 package org.gridsuite.modification.server.dto;
 
+import com.powsybl.commons.reporter.Reporter;
+import com.powsybl.commons.reporter.ReporterModel;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
+import org.gridsuite.modification.server.ModificationType;
+import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.entities.equipment.creation.TwoWindingsTransformerCreationEntity;
+import org.gridsuite.modification.server.modifications.AbstractModification;
+import org.gridsuite.modification.server.modifications.TwoWindingsTransformerCreation;
 
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
@@ -45,5 +52,25 @@ public class TwoWindingsTransformerCreationInfos extends BranchCreationInfos {
 
     @Schema(description = "Phase tap changer")
     private PhaseTapChangerCreationInfos phaseTapChanger;
+
+    @Override
+    public TwoWindingsTransformerCreationEntity toEntity() {
+        return new TwoWindingsTransformerCreationEntity(this);
+    }
+
+    @Override
+    public AbstractModification toModification() {
+        return new TwoWindingsTransformerCreation(this);
+    }
+
+    @Override
+    public NetworkModificationException.Type getErrorType() {
+        return NetworkModificationException.Type.CREATE_TWO_WINDINGS_TRANSFORMER_ERROR;
+    }
+
+    @Override
+    public Reporter createSubReporter(ReporterModel reporter) {
+        return reporter.createSubReporter(ModificationType.TWO_WINDINGS_TRANSFORMER_CREATION.name(), "Two windings transformer creation ${twoWindingsTransformerId}", "twoWindingsTransformerId", getEquipmentId());
+    }
 
 }

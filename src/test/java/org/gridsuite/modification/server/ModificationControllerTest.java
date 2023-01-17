@@ -21,7 +21,6 @@ import lombok.SneakyThrows;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.LoadCreationInfos.LoadCreationInfosBuilder;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
-import org.gridsuite.modification.server.entities.equipment.creation.*;
 import org.gridsuite.modification.server.modifications.ModificationUtils;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.NetworkModificationService;
@@ -194,9 +193,9 @@ public class ModificationControllerTest {
     public void assertThrowsUpdateModificationNotFound() {
         UUID modificationUuid = UUID.randomUUID();
         ModificationInfos modificationInfos = LoadCreationInfos.builder().type(ModificationType.LOAD_CREATION).equipmentId("id").build();
-        String errorMessage = assertThrows(NetworkModificationException.class, () -> networkModificationService.updateModification(modificationUuid, modificationInfos)).getMessage();
+        String errorMessage = assertThrows(NetworkModificationException.class, () -> networkModificationService.updateNetworkModification(modificationUuid, modificationInfos)).getMessage();
         assertEquals(new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format("Modification (%s) not found", modificationUuid)).getMessage(), errorMessage);
-        assertThrows(NullPointerException.class, () -> networkModificationService.updateModification(modificationUuid, null));
+        assertThrows(NullPointerException.class, () -> networkModificationService.updateNetworkModification(modificationUuid, null));
     }
 
     @Test
@@ -470,351 +469,6 @@ public class ModificationControllerTest {
         assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
     }
 
-    @Test
-    public void testCreateTwoWindingsTransformerInBusBreaker() throws Exception {
-        MvcResult mvcResult;
-        String resultAsString;
-
-        // create new 2wt in voltage level with bus/breaker topology
-        TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos = TwoWindingsTransformerCreationInfos.builder()
-                .type(ModificationType.TWO_WINDINGS_TRANSFORMER_CREATION)
-                .equipmentId("id2wt1")
-                .equipmentName("2wtName")
-                .voltageLevelId1("v1")
-                .busOrBusbarSectionId1("bus1")
-                .voltageLevelId2("v12")
-                .busOrBusbarSectionId2("bus12")
-                .magnetizingConductance(100.0)
-                .magnetizingSusceptance(200.0)
-                .ratedVoltage1(1000)
-                .ratedVoltage2(1010)
-                .seriesReactance(300)
-                .seriesResistance(400)
-                .ratedS(200.)
-                .build();
-        String twoWindingsTransformerCreationInfosJson = objectWriter.writeValueAsString(twoWindingsTransformerCreationInfos);
-        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF_BUS_BREAKER).content(twoWindingsTransformerCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        List<EquipmentModificationInfos> bsmlrTwoWindings = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertThat(bsmlrTwoWindings.get(0), createMatcherEquipmentModificationInfos(ModificationType.TWO_WINDINGS_TRANSFORMER_CREATION, "id2wt1", Set.of("s1")));
-
-        testNetworkModificationsCount(TEST_GROUP_ID, 1);
-
-        twoWindingsTransformerCreationInfos = new TwoWindingsTransformerCreationEntity(
-                "id2wt1Edited",
-                "2wtNameEdited",
-                150.,
-                250.,
-                1005.,
-                1015.,
-                350.,
-                450.,
-                200.,
-                "v12",
-                "bus12",
-                "v1",
-                "bus1",
-                50.,
-                55.,
-                "cn1",
-                ConnectablePosition.Direction.TOP,
-                "cn2",
-                ConnectablePosition.Direction.BOTTOM,
-                null,
-                null,
-                false,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                0,
-                1
-                )
-                .toModificationInfos();
-        twoWindingsTransformerCreationInfos.setUuid(bsmlrTwoWindings.get(0).getUuid());
-
-        // Update 2wt creation
-        TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationUpdate = new TwoWindingsTransformerCreationEntity(
-                "id2wt1Edited",
-                "2wtNameEdited",
-                150.,
-                250.,
-                1005.,
-                1015.,
-                350.,
-                450.,
-                200.,
-                "v12",
-                "bus12",
-                "v1",
-                "bus1",
-                50.,
-                55.,
-                "cn12",
-                ConnectablePosition.Direction.TOP,
-                "cn22",
-                ConnectablePosition.Direction.BOTTOM,
-                null,
-                null,
-                false,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                2,
-                3
-        ).toModificationInfos();
-        String twoWindingsTransformerCreationUpdateJson = objectWriter.writeValueAsString(twoWindingsTransformerCreationUpdate);
-        mockMvc.perform(put(URI_NETWORK_MODIF_GET_PUT + bsmlrTwoWindings.get(0).getUuid()).content(twoWindingsTransformerCreationUpdateJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
-
-        testNetworkModificationsCount(TEST_GROUP_ID, 1);
-        mvcResult = mockMvc.perform(get(URI_NETWORK_MODIF_GET_PUT + bsmlrTwoWindings.get(0).getUuid()))
-                .andExpect(status().isOk()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        TwoWindingsTransformerCreationInfos bsmlrWindingsTransformer = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertThat(bsmlrWindingsTransformer, MatcherTwoWindingsTransformerCreationInfos.createMatcherTwoWindingsTransformerCreationInfos(twoWindingsTransformerCreationInfos));
-
-        // create 2wt with errors
-        twoWindingsTransformerCreationInfos.setBusOrBusbarSectionId1("notFoundBus");
-        twoWindingsTransformerCreationInfosJson = objectWriter.writeValueAsString(twoWindingsTransformerCreationInfos);
-        mockMvc.perform(post(URI_NETWORK_MODIF_BUS_BREAKER).content(twoWindingsTransformerCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpectAll(status().is4xxClientError(), content().string(new NetworkModificationException(BUS_NOT_FOUND, "notFoundBus").getMessage())).andReturn();
-
-        testNetworkModificationsCount(TEST_GROUP_ID, 1);
-    }
-
-    @Test
-    public void testCreateTwoWindingsTransformerInNodeBreaker() throws Exception {
-        MvcResult mvcResult;
-        String resultAsString;
-
-        // create new 2wt in voltage level with Node/breaker topology
-        TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos = TwoWindingsTransformerCreationInfos.builder()
-                .type(ModificationType.TWO_WINDINGS_TRANSFORMER_CREATION)
-                .equipmentId("id2wt1")
-                .equipmentName("2wtName")
-                .voltageLevelId1("v1")
-                .busOrBusbarSectionId1("1.1")
-                .voltageLevelId2("v2")
-                .busOrBusbarSectionId2("1A")
-                .magnetizingConductance(100.0)
-                .magnetizingSusceptance(200.0)
-                .ratedVoltage1(1000)
-                .ratedVoltage2(1010)
-                .seriesReactance(300)
-                .seriesResistance(400)
-                .connectionName1("cnid2wt1")
-                .connectionDirection1(ConnectablePosition.Direction.TOP)
-                .connectionName2("cnid2wt2")
-                .connectionDirection2(ConnectablePosition.Direction.TOP)
-                .build();
-        String twoWindingsTransformerCreationInfosJson = objectWriter.writeValueAsString(twoWindingsTransformerCreationInfos);
-        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(twoWindingsTransformerCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        List<EquipmentModificationInfos> bsmlrTwoWindingsTransformer = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertThat(bsmlrTwoWindingsTransformer.get(0), createMatcherEquipmentModificationInfos(ModificationType.TWO_WINDINGS_TRANSFORMER_CREATION, "id2wt1", Set.of("s1")));
-
-        assertNotNull(network.getTwoWindingsTransformer("id2wt1"));  // transformer was created
-        testNetworkModificationsCount(TEST_GROUP_ID, 1);
-
-        // Test create transformer on not yet existing variant VARIANT_NOT_EXISTING_ID :
-        // Only the modification should be added in the database but the transformer cannot be created
-        twoWindingsTransformerCreationInfos.setEquipmentId("id2wt3");
-        twoWindingsTransformerCreationInfos.setEquipmentName("name2wt3");
-        twoWindingsTransformerCreationInfosJson = objectWriter.writeValueAsString(twoWindingsTransformerCreationInfos);
-        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF_BAD_VARIANT).content(twoWindingsTransformerCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        List<EquipmentModificationInfos> modifications = mapper.readValue(resultAsString, new TypeReference<>() { });
-
-        assertTrue(modifications.isEmpty());  // no modifications returned
-        assertNull(network.getTwoWindingsTransformer("id2wt3"));  // transformer was not created
-        testNetworkModificationsCount(TEST_GROUP_ID, 2);  // new modification stored in the database
-    }
-
-    private List<TapChangerStepCreationInfos> getTapChangerSteps() {
-        return List.of(
-                TapChangerStepCreationInfos.builder()
-                        .r(39.78473)
-                        .x(39.784725)
-                        .g(0.)
-                        .b(0.)
-                        .rho(1.)
-                        .build(),
-                TapChangerStepCreationInfos.builder()
-                        .r(39.78474)
-                        .x(39.784726)
-                        .g(0.)
-                        .b(0.)
-                        .rho(1.)
-                        .build(),
-                TapChangerStepCreationInfos.builder()
-                        .r(39.78475)
-                        .x(39.784727)
-                        .g(0.)
-                        .b(0.)
-                        .rho(1.)
-                        .build()
-        );
-    }
-
-    private void testCreateTwoWindingsTransformerInNodeBreaker(TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) throws Exception {
-        MvcResult mvcResult;
-        String resultAsString;
-        final String transformerId = twoWindingsTransformerCreationInfos.getEquipmentId();
-
-        String twoWindingsTransformerCreationInfosJson = objectWriter.writeValueAsString(twoWindingsTransformerCreationInfos);
-        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(twoWindingsTransformerCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        List<EquipmentModificationInfos> bsmlrTwoWindingsTransformer = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertThat(bsmlrTwoWindingsTransformer.get(0), createMatcherEquipmentModificationInfos(ModificationType.TWO_WINDINGS_TRANSFORMER_CREATION, transformerId, Set.of("s1")));
-
-        assertNotNull(network.getTwoWindingsTransformer(transformerId));  // transformer was created
-        testNetworkModificationsCount(TEST_GROUP_ID, 1);
-    }
-
-    @Test
-    public void testCreateTwoWindingsTransformerWithRatioTapChangerInNodeBreaker() throws Exception {
-        final String transformerId = "id2wt1WithRatioTapChanger";
-        // create new 2wt in voltage level with Node/breaker topology, having a RatioTapChanger
-        RatioTapChangerCreationInfos ratioTapChangerCreationInfos = RatioTapChangerCreationInfos.builder()
-                .lowTapPosition(0)
-                .tapPosition(1)
-                .regulating(true)
-                .targetDeadband(null)
-                .regulatingTerminalVlId("v1")
-                .regulatingTerminalId("v1load")
-                .regulatingTerminalType("LOAD")
-                .loadTapChangingCapabilities(true)
-                .targetV(220.)
-                .steps(getTapChangerSteps())
-                .build();
-        TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos = TwoWindingsTransformerCreationInfos.builder()
-                .type(ModificationType.TWO_WINDINGS_TRANSFORMER_CREATION)
-                .equipmentId(transformerId)
-                .equipmentName("2wtName")
-                .voltageLevelId1("v1")
-                .busOrBusbarSectionId1("1.1")
-                .voltageLevelId2("v2")
-                .busOrBusbarSectionId2("1A")
-                .magnetizingConductance(100.0)
-                .magnetizingSusceptance(200.0)
-                .ratedVoltage1(1000)
-                .ratedVoltage2(1010)
-                .seriesReactance(300)
-                .seriesResistance(400)
-                .connectionName1("cnid2wt1")
-                .connectionDirection1(ConnectablePosition.Direction.TOP)
-                .connectionName2("cnid2wt2")
-                .connectionDirection2(ConnectablePosition.Direction.TOP)
-                .ratioTapChanger(ratioTapChangerCreationInfos)
-                .build();
-        testCreateTwoWindingsTransformerInNodeBreaker(twoWindingsTransformerCreationInfos);
-    }
-
-    @Test
-    public void testCreateTwoWindingsTransformerWithPhaseTapChangerInNodeBreaker() throws Exception {
-        final String transformerId = "id2wt1WithPhaseTapChanger";
-        // create new 2wt in voltage level with Node/breaker topology, having a PhaseTapChanger
-        PhaseTapChangerCreationInfos phaseTapChangerCreationInfos = PhaseTapChangerCreationInfos.builder()
-                .lowTapPosition(0)
-                .tapPosition(1)
-                .regulating(true)
-                .targetDeadband(null)
-                .regulationMode(PhaseTapChanger.RegulationMode.ACTIVE_POWER_CONTROL)
-                .regulationValue(10.0)
-                .regulatingTerminalVlId("v1")
-                .regulatingTerminalId("v1load")
-                .regulatingTerminalType("LOAD")
-                .steps(getTapChangerSteps())
-                .build();
-        TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos = TwoWindingsTransformerCreationInfos.builder()
-                .type(ModificationType.TWO_WINDINGS_TRANSFORMER_CREATION)
-                .equipmentId(transformerId)
-                .equipmentName("2wtName")
-                .voltageLevelId1("v1")
-                .busOrBusbarSectionId1("1.1")
-                .voltageLevelId2("v2")
-                .busOrBusbarSectionId2("1A")
-                .magnetizingConductance(100.0)
-                .magnetizingSusceptance(200.0)
-                .ratedVoltage1(1000)
-                .ratedVoltage2(1010)
-                .seriesReactance(300)
-                .seriesResistance(400)
-                .connectionName1("cnid2wt1")
-                .connectionDirection1(ConnectablePosition.Direction.TOP)
-                .connectionName2("cnid2wt2")
-                .connectionDirection2(ConnectablePosition.Direction.TOP)
-                .phaseTapChanger(phaseTapChangerCreationInfos)
-                .build();
-        testCreateTwoWindingsTransformerInNodeBreaker(twoWindingsTransformerCreationInfos);
-    }
-
-    @Test
-    public void testCreateTwoWindingsTransformerInMixedTopology() throws Exception {
-        MvcResult mvcResult;
-        String resultAsString;
-
-        // create new 2wt in voltage level with mixed topology
-        TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos = TwoWindingsTransformerCreationInfos.builder()
-                .type(ModificationType.TWO_WINDINGS_TRANSFORMER_CREATION)
-                .equipmentId("id2wt1")
-                .equipmentName("2wtName")
-                .voltageLevelId1("v1")
-                .busOrBusbarSectionId1("1.1")
-                .voltageLevelId2("v3")
-                .busOrBusbarSectionId2("bus3")
-                .magnetizingConductance(100.0)
-                .magnetizingSusceptance(200.0)
-                .ratedVoltage1(1000)
-                .ratedVoltage2(1010)
-                .seriesReactance(300)
-                .seriesResistance(400)
-                .connectionName1("cnid2wt1")
-                .connectionDirection1(ConnectablePosition.Direction.TOP)
-                .connectionName2("cnid2wt2")
-                .connectionDirection2(ConnectablePosition.Direction.TOP)
-                .build();
-
-        String twoWindingsTransformerCreationInfosJson = objectWriter.writeValueAsString(twoWindingsTransformerCreationInfos);
-        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF_FULL_MIXED_TOPO).content(twoWindingsTransformerCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        List<EquipmentModificationInfos> bsmlrTwoWindingsTransformerCreation = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertThat(bsmlrTwoWindingsTransformerCreation.get(0), createMatcherEquipmentModificationInfos(ModificationType.TWO_WINDINGS_TRANSFORMER_CREATION, "id2wt1", Set.of("s1")));
-
-        testNetworkModificationsCount(TEST_NETWORK_MIXED_TOPOLOGY_ID, 1);
-    }
-
     private List<ModificationInfos> createSomeSwitchModifications(UUID groupId, int number) throws Exception {
         List<Boolean> openStates = List.of(true, false);
         EquipmentAttributeModificationInfos switchStatusModificationInfos = EquipmentAttributeModificationInfos.builder()
@@ -1067,33 +721,6 @@ public class ModificationControllerTest {
 
         testNetworkModificationsCount(TEST_GROUP_ID, 3);
 
-        // create new 2wt in voltage level with bus/breaker topology
-        TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos = TwoWindingsTransformerCreationInfos.builder()
-                .type(ModificationType.TWO_WINDINGS_TRANSFORMER_CREATION)
-                .equipmentId("id2wt1")
-                .equipmentName("2wtName")
-                .voltageLevelId1("v1")
-                .busOrBusbarSectionId1("bus1")
-                .voltageLevelId2("v12")
-                .busOrBusbarSectionId2("bus12")
-                .magnetizingConductance(100.0)
-                .magnetizingSusceptance(200.0)
-                .ratedVoltage1(1000)
-                .ratedVoltage2(1010)
-                .seriesReactance(300)
-                .seriesResistance(400)
-                .currentLimits1(c1)
-                .currentLimits2(c2)
-                .build();
-
-        mockMvc.perform(
-                post(URI_NETWORK_MODIF_BUS_BREAKER)
-                    .content(objectWriter.writeValueAsString(twoWindingsTransformerCreationInfos))
-                    .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk());
-
-        testNetworkModificationsCount(TEST_GROUP_ID, 4);
-
         //create a lineAttached
         LineCreationInfos attachmentLine = LineCreationInfos.builder()
                 .type(ModificationType.LINE_CREATION)
@@ -1113,7 +740,7 @@ public class ModificationControllerTest {
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 5);
+        testNetworkModificationsCount(TEST_GROUP_ID, 4);
 
         //create a lineSplit
         LineSplitWithVoltageLevelInfos lineSplitWoVL = new LineSplitWithVoltageLevelInfos("line3", 10.0, null, "v4", "1.A",
@@ -1135,14 +762,14 @@ public class ModificationControllerTest {
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 7);
+        testNetworkModificationsCount(TEST_GROUP_ID, 6);
 
         //test copy group
         UUID newGroupUuid = UUID.randomUUID();
         String uriStringGroups = "/v1/groups?groupUuid=" + newGroupUuid + "&duplicateFrom=" + TEST_GROUP_ID + "&reportUuid=" + UUID.randomUUID();
         mockMvc.perform(post(uriStringGroups)).andExpect(status().isOk());
 
-        testNetworkModificationsCount(newGroupUuid, 7);
+        testNetworkModificationsCount(newGroupUuid, 6);
     }
 
     @Test
