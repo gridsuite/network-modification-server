@@ -23,16 +23,16 @@ import static org.gridsuite.modification.server.utils.MatcherBranchStatusModific
 
 public class BranchStatusModificationTripLineTest extends AbstractNetworkModificationTest {
 
-    private static final String targetLineId = "line2";
-    private static final String updateBranchId = "line1";
-    private static final BranchStatus.Status targetBranchStatus = FORCED_OUTAGE;
-    private static final BranchStatus.Status otherBranchStatus = PLANNED_OUTAGE;
+    private static final String TARGET_LINE_ID = "line2";
+    private static final String UPDATE_BRANCH_ID = "line1";
+    private static final BranchStatus.Status TARGET_BRANCH_STATUS = FORCED_OUTAGE;
+    private static final BranchStatus.Status OTHER_BRANCH_STATUS = PLANNED_OUTAGE;
 
     @Override
     protected Network createNetwork(UUID networkUuid) {
         Network network = NetworkCreation.create(networkUuid, true);
         // force a branch status different from the expected one, after testCreate
-        TestUtils.setBranchStatus(network, targetLineId, otherBranchStatus);
+        TestUtils.setBranchStatus(network, TARGET_LINE_ID, OTHER_BRANCH_STATUS);
         return network;
     }
 
@@ -40,7 +40,7 @@ public class BranchStatusModificationTripLineTest extends AbstractNetworkModific
     protected ModificationInfos buildModification() {
         return BranchStatusModificationInfos.builder()
                 .type(ModificationType.BRANCH_STATUS_MODIFICATION)
-                .equipmentId(targetLineId)
+                .equipmentId(TARGET_LINE_ID)
                 .action(BranchStatusModificationInfos.ActionType.TRIP).build();
     }
 
@@ -48,7 +48,7 @@ public class BranchStatusModificationTripLineTest extends AbstractNetworkModific
     protected ModificationInfos buildModificationUpdate() {
         return BranchStatusModificationInfos.builder()
                 .type(ModificationType.BRANCH_STATUS_MODIFICATION)
-                .equipmentId(updateBranchId)
+                .equipmentId(UPDATE_BRANCH_ID)
                 .action(BranchStatusModificationInfos.ActionType.SWITCH_ON).build();
     }
 
@@ -59,12 +59,12 @@ public class BranchStatusModificationTripLineTest extends AbstractNetworkModific
 
     @Override
     protected void assertNetworkAfterCreation() {
-        TestUtils.assertBranchStatus(getNetwork(), targetLineId, targetBranchStatus);
+        TestUtils.assertBranchStatus(getNetwork(), TARGET_LINE_ID, TARGET_BRANCH_STATUS);
     }
 
     @Override
     protected void assertNetworkAfterDeletion() {
         // back to init status
-        TestUtils.assertBranchStatus(getNetwork(), targetLineId, otherBranchStatus);
+        TestUtils.assertBranchStatus(getNetwork(), TARGET_LINE_ID, OTHER_BRANCH_STATUS);
     }
 }

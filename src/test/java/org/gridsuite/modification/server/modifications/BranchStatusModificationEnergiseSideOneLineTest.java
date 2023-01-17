@@ -29,13 +29,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 public class BranchStatusModificationEnergiseSideOneLineTest extends AbstractNetworkModificationTest {
 
-    private static final String targetLineId = "line2";
+    private static final String TARGET_LINE_ID = "line2";
 
     @Override
     protected Network createNetwork(UUID networkUuid) {
         Network network = NetworkCreation.create(networkUuid, true);
         // force a disconnection for terminal1, a connection for terminal2 (must be reconnected/disconnected after testCreate)
-        Line line = network.getLine(targetLineId);
+        Line line = network.getLine(TARGET_LINE_ID);
         assertNotNull(line);
         line.getTerminal1().disconnect();
         line.getTerminal2().connect();
@@ -46,7 +46,7 @@ public class BranchStatusModificationEnergiseSideOneLineTest extends AbstractNet
     protected ModificationInfos buildModification() {
         return BranchStatusModificationInfos.builder()
                 .type(ModificationType.BRANCH_STATUS_MODIFICATION)
-                .equipmentId(targetLineId)
+                .equipmentId(TARGET_LINE_ID)
                 .action(BranchStatusModificationInfos.ActionType.ENERGISE_END_ONE).build();
     }
 
@@ -66,7 +66,7 @@ public class BranchStatusModificationEnergiseSideOneLineTest extends AbstractNet
     @Override
     protected void assertNetworkAfterCreation() {
         // terminal1 is now connected, terminal2 is now disconnected
-        Line line = getNetwork().getLine(targetLineId);
+        Line line = getNetwork().getLine(TARGET_LINE_ID);
         assertNotNull(line);
         assertTrue(line.getTerminal1().isConnected());
         assertFalse(line.getTerminal2().isConnected());
@@ -75,7 +75,7 @@ public class BranchStatusModificationEnergiseSideOneLineTest extends AbstractNet
     @Override
     protected void assertNetworkAfterDeletion() {
         // back to init state
-        Line line = getNetwork().getLine(targetLineId);
+        Line line = getNetwork().getLine(TARGET_LINE_ID);
         assertNotNull(line);
         assertFalse(line.getTerminal1().isConnected());
         assertTrue(line.getTerminal2().isConnected());
@@ -90,9 +90,9 @@ public class BranchStatusModificationEnergiseSideOneLineTest extends AbstractNet
         modificationInfos.setEquipmentId("line3");
         String modificationJson = mapper.writeValueAsString(modificationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpectAll(
-                        status().is5xxServerError(),
-                        content().string(new NetworkModificationException(BRANCH_ACTION_ERROR, "Unable to energise branch end").getMessage())
-                );
+            .andExpectAll(
+                    status().is5xxServerError(),
+                    content().string(new NetworkModificationException(BRANCH_ACTION_ERROR, "Unable to energise branch end").getMessage())
+            );
     }
 }

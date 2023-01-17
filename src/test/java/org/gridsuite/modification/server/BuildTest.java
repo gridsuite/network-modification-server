@@ -255,7 +255,7 @@ public class BuildTest {
                 .nominalVoltage(225)
                 .substationId("s1")
                 .busbarSections(List.of(new BusbarSectionCreationInfos("1.1", "1.1", 1, 1),
-                 new BusbarSectionCreationInfos("1.2", "1.2", 1, 2)))
+                    new BusbarSectionCreationInfos("1.2", "1.2", 1, 2)))
                 .busbarConnections(List.of(new BusbarConnectionCreationInfos("1.1", "1.2", SwitchKind.BREAKER)))
                 .build().toEntity());
         modificationRepository.saveModifications(TEST_GROUP_ID_2, entities2);
@@ -398,7 +398,7 @@ public class BuildTest {
                 .nominalVoltage(225)
                 .substationId("s1")
                 .busbarSections(List.of(new BusbarSectionCreationInfos("1.1", "1.1", 1, 1),
-                 new BusbarSectionCreationInfos("1.2", "1.2", 1, 2)))
+                    new BusbarSectionCreationInfos("1.2", "1.2", 1, 2)))
                 .busbarConnections(List.of(new BusbarConnectionCreationInfos("1.1", "1.2", SwitchKind.BREAKER)))
                 .build().toEntity());
         entities2.add(ShuntCompensatorCreationInfos.builder()

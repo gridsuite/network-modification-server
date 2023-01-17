@@ -63,17 +63,17 @@ public class BranchStatusModificationInfos extends EquipmentModificationInfos {
         String defaultName;
         switch (action) {
             case LOCKOUT:
-                defaultName = "Lockout branch ${branchId}";
+                defaultName = "Lockout ${branchId}";
                 break;
             case TRIP:
-                defaultName = "Trip branch ${branchId}";
+                defaultName = "Trip ${branchId}";
                 break;
             case ENERGISE_END_ONE:
             case ENERGISE_END_TWO:
-                defaultName = "Energise branch ${branchId}";
+                defaultName = "Energise ${branchId}";
                 break;
             case SWITCH_ON:
-                defaultName = "Switch on branch ${branchId}";
+                defaultName = "Switch on ${branchId}";
                 break;
             default:
                 defaultName = "";

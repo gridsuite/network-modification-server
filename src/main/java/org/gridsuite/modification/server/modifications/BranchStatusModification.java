@@ -56,7 +56,7 @@ public class BranchStatusModification extends AbstractModification {
                 applyEnergiseBranchEnd(subReporter, branch, branchType, Branch.Side.ONE);
                 break;
             case ENERGISE_END_TWO:
-                applyEnergiseBranchEnd(subReporter, branch,branchType, Branch.Side.TWO);
+                applyEnergiseBranchEnd(subReporter, branch, branchType, Branch.Side.TWO);
                 break;
             default:
                 throw NetworkModificationException.createBranchActionTypeUnsupported(modificationInfos.getAction());
@@ -79,12 +79,12 @@ public class BranchStatusModification extends AbstractModification {
 
     private void applyTripBranch(Reporter subReporter, Branch<?> branch, String branchType, Network network) {
         var trip = new BranchTripping(branch.getId());
-        var switchToDisconnect = new HashSet<Switch>();
+        var switchesToDisconnect = new HashSet<Switch>();
         var terminalsToDisconnect = new HashSet<Terminal>();
         var traversedTerminals = new HashSet<Terminal>();
-        trip.traverse(network, switchToDisconnect, terminalsToDisconnect, traversedTerminals);
+        trip.traverse(network, switchesToDisconnect, terminalsToDisconnect, traversedTerminals);
 
-        switchToDisconnect.forEach(sw -> sw.setOpen(true));
+        switchesToDisconnect.forEach(sw -> sw.setOpen(true));
         terminalsToDisconnect.forEach(Terminal::disconnect);
 
         subReporter.report(Report.builder()

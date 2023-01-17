@@ -23,13 +23,13 @@ import static org.junit.Assert.assertTrue;
 
 public class BranchStatusModificationSwitchOnLineTest extends AbstractNetworkModificationTest {
 
-    private static final String targetLineId = "line2";
+    private static final String TARGET_LINE_ID = "line2";
 
     @Override
     protected Network createNetwork(UUID networkUuid) {
         Network network = NetworkCreation.create(networkUuid, true);
         // force a disconnection for all terminals (must be reconnected after testCreate)
-        Line line = network.getLine(targetLineId);
+        Line line = network.getLine(TARGET_LINE_ID);
         assertNotNull(line);
         line.getTerminals().stream().forEach(Terminal::disconnect);
         return network;
@@ -39,7 +39,7 @@ public class BranchStatusModificationSwitchOnLineTest extends AbstractNetworkMod
     protected ModificationInfos buildModification() {
         return BranchStatusModificationInfos.builder()
                 .type(ModificationType.BRANCH_STATUS_MODIFICATION)
-                .equipmentId(targetLineId)
+                .equipmentId(TARGET_LINE_ID)
                 .action(BranchStatusModificationInfos.ActionType.SWITCH_ON).build();
     }
 
@@ -59,7 +59,7 @@ public class BranchStatusModificationSwitchOnLineTest extends AbstractNetworkMod
     @Override
     protected void assertNetworkAfterCreation() {
         // terminals are now all connected
-        Line line = getNetwork().getLine(targetLineId);
+        Line line = getNetwork().getLine(TARGET_LINE_ID);
         assertNotNull(line);
         assertTrue(line.getTerminals().stream().allMatch(Terminal::isConnected));
     }
@@ -67,7 +67,7 @@ public class BranchStatusModificationSwitchOnLineTest extends AbstractNetworkMod
     @Override
     protected void assertNetworkAfterDeletion() {
         // back to init state : no more connected terminals
-        Line line = getNetwork().getLine(targetLineId);
+        Line line = getNetwork().getLine(TARGET_LINE_ID);
         assertNotNull(line);
         assertTrue(line.getTerminals().stream().noneMatch(Terminal::isConnected));
     }

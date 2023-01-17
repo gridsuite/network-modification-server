@@ -30,16 +30,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 public class BranchStatusModificationLockoutLineTest extends AbstractNetworkModificationTest {
 
-    private static final String targetLineId = "line2";
-    private static final String updateBranchId = "line1";
-    private static final BranchStatus.Status targetBranchStatus = PLANNED_OUTAGE;
-    private static final BranchStatus.Status otherBranchStatus = FORCED_OUTAGE;
+    private static final String TARGET_LINE_ID = "line2";
+    private static final String UPDATE_BRANCH_ID = "line1";
+    private static final BranchStatus.Status TARGET_BRANCH_STATUS = PLANNED_OUTAGE;
+    private static final BranchStatus.Status OTHER_BRANCH_STATUS = FORCED_OUTAGE;
 
     @Override
     protected Network createNetwork(UUID networkUuid) {
         Network network = NetworkCreation.create(networkUuid, true);
         // force a branch status different from the expected one, after testCreate
-        TestUtils.setBranchStatus(network, targetLineId, otherBranchStatus);
+        TestUtils.setBranchStatus(network, TARGET_LINE_ID, OTHER_BRANCH_STATUS);
         return network;
     }
 
@@ -47,7 +47,7 @@ public class BranchStatusModificationLockoutLineTest extends AbstractNetworkModi
     protected ModificationInfos buildModification() {
         return BranchStatusModificationInfos.builder()
                 .type(ModificationType.BRANCH_STATUS_MODIFICATION)
-                .equipmentId(targetLineId)
+                .equipmentId(TARGET_LINE_ID)
                 .action(BranchStatusModificationInfos.ActionType.LOCKOUT).build();
     }
 
@@ -55,7 +55,7 @@ public class BranchStatusModificationLockoutLineTest extends AbstractNetworkModi
     protected ModificationInfos buildModificationUpdate() {
         return BranchStatusModificationInfos.builder()
                 .type(ModificationType.BRANCH_STATUS_MODIFICATION)
-                .equipmentId(updateBranchId)
+                .equipmentId(UPDATE_BRANCH_ID)
                 .action(BranchStatusModificationInfos.ActionType.SWITCH_ON).build();
     }
 
@@ -66,13 +66,13 @@ public class BranchStatusModificationLockoutLineTest extends AbstractNetworkModi
 
     @Override
     protected void assertNetworkAfterCreation() {
-        TestUtils.assertBranchStatus(getNetwork(), targetLineId, targetBranchStatus);
+        TestUtils.assertBranchStatus(getNetwork(), TARGET_LINE_ID, TARGET_BRANCH_STATUS);
     }
 
     @Override
     protected void assertNetworkAfterDeletion() {
         // go back to init status
-        TestUtils.assertBranchStatus(getNetwork(), targetLineId, otherBranchStatus);
+        TestUtils.assertBranchStatus(getNetwork(), TARGET_LINE_ID, OTHER_BRANCH_STATUS);
     }
 
     @SneakyThrows
@@ -83,20 +83,20 @@ public class BranchStatusModificationLockoutLineTest extends AbstractNetworkModi
         modificationInfos.setEquipmentId("notFound");
         String modificationJson = mapper.writeValueAsString(modificationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpectAll(
-                        status().isNotFound(),
-                        content().string(new NetworkModificationException(BRANCH_NOT_FOUND, "notFound").getMessage())
-                );
+            .andExpectAll(
+                    status().isNotFound(),
+                    content().string(new NetworkModificationException(BRANCH_NOT_FOUND, "notFound").getMessage())
+            );
 
         // modification action empty
         modificationInfos.setEquipmentId("line2");
         modificationInfos.setAction(null);
         modificationJson = mapper.writeValueAsString(modificationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpectAll(
-                        status().isBadRequest(),
-                        content().string(new NetworkModificationException(BRANCH_ACTION_TYPE_EMPTY).getMessage())
-                );
+            .andExpectAll(
+                    status().isBadRequest(),
+                    content().string(new NetworkModificationException(BRANCH_ACTION_TYPE_EMPTY).getMessage())
+            );
 
         // modification action not existing
         modificationJson = modificationJson.replace("LOCKOUT", "INVALID_ACTION"); // note: should never happen in real
@@ -109,9 +109,9 @@ public class BranchStatusModificationLockoutLineTest extends AbstractNetworkModi
         modificationInfos.setAction(BranchStatusModificationInfos.ActionType.LOCKOUT);
         modificationJson = mapper.writeValueAsString(modificationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpectAll(
-                        status().is5xxServerError(),
-                        content().string(new NetworkModificationException(BRANCH_ACTION_ERROR, "Unable to disconnect all branch ends").getMessage())
-                );
+            .andExpectAll(
+                    status().is5xxServerError(),
+                    content().string(new NetworkModificationException(BRANCH_ACTION_ERROR, "Unable to disconnect all branch ends").getMessage())
+            );
     }
 }
