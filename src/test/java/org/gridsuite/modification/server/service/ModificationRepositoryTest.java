@@ -12,17 +12,11 @@ import com.vladmihalcea.sql.SQLStatementCountValidator;
 import nl.jqno.equalsverifier.EqualsVerifier;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.TapChangerType;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationGroupEntity;
-import org.gridsuite.modification.server.entities.equipment.creation.*;
-import org.gridsuite.modification.server.entities.equipment.modification.BranchStatusModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.DeleteAttachingLineEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.DeleteVoltageLevelOnLineEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.LineAttachToVoltageLevelEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.LineSplitWithVoltageLevelEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.LinesAttachToSplitLinesEntity;
+import org.gridsuite.modification.server.entities.equipment.creation.VoltageLevelCreationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.*;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.BooleanModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.EnumModificationEmbedded;
@@ -447,56 +441,6 @@ public class ModificationRepositoryTest {
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
         assertRequestsCount(4, 0, 0, 7);
-
-        assertThrows(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage(),
-            NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, true, true)
-        );
-    }
-
-    @Test
-    public void testTwoWindingsTransformerCreation() {
-        List<TapChangerStepCreationEmbeddable> phaseTapChangerStepCreationEmbeddables = new ArrayList<>();
-        phaseTapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.PHASE, 1, 1, 0, 0, 0, 0, 0.));
-        phaseTapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.PHASE, 2, 1, 0, 0, 0, 0, 0.));
-        phaseTapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.PHASE, 3, 1, 0, 0, 0, 0, 0.));
-        var createTwoWindingsTransformerEntity1 = networkModificationRepository.createTwoWindingsTransformerEntity("id2wt1", "name2wt1", 1.0, 1.1, 10.0, 11.0, 100.0, 100.1, -1, "vlId11", "busId11", "vlId12", "busId12", null, null, "cn11", ConnectablePosition.Direction.TOP, "cn22", ConnectablePosition.Direction.TOP, 1, 2, false, null, null, null, null, PhaseTapChanger.RegulationMode.CURRENT_LIMITER, null, null, null, null, null, null, null, null, null, null, phaseTapChangerStepCreationEmbeddables, 0, 1);
-
-        List<TapChangerStepCreationEmbeddable> ratioTapChangerStepCreationEmbeddables = new ArrayList<>();
-        ratioTapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.RATIO, 5, 1, 0, 0, 0, 0, null));
-        ratioTapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.RATIO, 6, 1, 0, 0, 0, 0, null));
-        ratioTapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.RATIO, 7, 1, 0, 0, 0, 0, null));
-        ratioTapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.RATIO, 8, 1, 0, 0, 0, 0, null));
-        var createTwoWindingsTransformerEntity2 = networkModificationRepository.createTwoWindingsTransformerEntity("id2wt2", "name2wt2", 2.0, 1.2, 11.0, 12.0, 101.0, 100.2, -1, "vlId11", "busId11", "vlId12", "busId12", 480.0, 480.0, "cn33", ConnectablePosition.Direction.TOP, "cn44", ConnectablePosition.Direction.BOTTOM, null, null, null, null, null, null, null, null, null, 5, 6, true, 1., "v2load", "v2", "LOAD", true, 50., ratioTapChangerStepCreationEmbeddables, 2, 3);
-        var createTwoWindingsTransformerEntity3 = networkModificationRepository.createTwoWindingsTransformerEntity("id2wt3", "name2wt3", 1.0, 1.1, 10.0, 11.0, 100.0, 100.1, -1, "vlId11", "busId11", "vlId12", "busId12", 485.0, 480.0, "cn55", ConnectablePosition.Direction.TOP, "cn66", ConnectablePosition.Direction.TOP, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 4, 5);
-        var createTwoWindingsTransformerEntity4 = networkModificationRepository.createTwoWindingsTransformerEntity("id2wt4", "name2wt4", 2.0, 1.2, 11.0, 12.0, 101.0, 100.2, -1, "vlId11", "busId11", "vlId12", "busId12", null, 490.0, "cn77", ConnectablePosition.Direction.TOP, "cn88", ConnectablePosition.Direction.BOTTOM, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 6, 7);
-        networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(createTwoWindingsTransformerEntity1, createTwoWindingsTransformerEntity2, createTwoWindingsTransformerEntity3, createTwoWindingsTransformerEntity4));
-        assertRequestsCount(1, 21, 4, 0);
-
-        List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
-        assertEquals(4, modificationInfos.size());
-
-        assertThat(getTwoWindingsTransformerCreationModification(modificationInfos.get(0).getUuid()),
-            MatcherTwoWindingsTransformerCreationInfos.createMatcherTwoWindingsTransformerCreationInfos(((TwoWindingsTransformerCreationEntity) createTwoWindingsTransformerEntity1).toModificationInfos()));
-        assertThat(getTwoWindingsTransformerCreationModification(modificationInfos.get(1).getUuid()),
-            MatcherTwoWindingsTransformerCreationInfos.createMatcherTwoWindingsTransformerCreationInfos(((TwoWindingsTransformerCreationEntity) createTwoWindingsTransformerEntity2).toModificationInfos()));
-        assertThat(getTwoWindingsTransformerCreationModification(modificationInfos.get(2).getUuid()),
-            MatcherTwoWindingsTransformerCreationInfos.createMatcherTwoWindingsTransformerCreationInfos(((TwoWindingsTransformerCreationEntity) createTwoWindingsTransformerEntity3).toModificationInfos()));
-        assertThat(getTwoWindingsTransformerCreationModification(modificationInfos.get(3).getUuid()),
-            MatcherTwoWindingsTransformerCreationInfos.createMatcherTwoWindingsTransformerCreationInfos(((TwoWindingsTransformerCreationEntity) createTwoWindingsTransformerEntity4).toModificationInfos()));
-        assertEquals(4, networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
-        assertEquals(List.of(TEST_GROUP_ID), this.networkModificationRepository.getModificationGroupsUuids());
-
-        SQLStatementCountValidator.reset();
-        networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(createTwoWindingsTransformerEntity1.getId(), createTwoWindingsTransformerEntity2.getId()));
-        assertRequestsCount(4, 0, 2, 8);
-
-        SQLStatementCountValidator.reset();
-        assertEquals(2, networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
-        assertRequestsCount(2, 0, 0, 0);
-
-        SQLStatementCountValidator.reset();
-        networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
-        assertRequestsCount(5, 0, 0, 10);
 
         assertThrows(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage(),
             NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, true, true)

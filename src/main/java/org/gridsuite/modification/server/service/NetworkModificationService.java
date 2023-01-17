@@ -12,8 +12,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Streams;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.reporter.*;
-import com.powsybl.iidm.modification.topology.CreateBranchFeederBays;
-import com.powsybl.iidm.modification.topology.CreateBranchFeederBaysBuilder;
 import com.powsybl.iidm.modification.tripping.BranchTripping;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.Branch.Side;
@@ -24,14 +22,14 @@ import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.server.dto.BranchStatusModificationInfos;
 import org.gridsuite.modification.server.dto.BranchStatusModificationInfos.ActionType;
+import org.gridsuite.modification.server.dto.BuildInfos;
+import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.ModificationNetworkInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.creation.EquipmentCreationEntity;
-import org.gridsuite.modification.server.entities.equipment.creation.TwoWindingsTransformerCreationEntity;
 import org.gridsuite.modification.server.modifications.ModificationApplicator;
-import org.gridsuite.modification.server.modifications.ModificationUtils;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.slf4j.Logger;
@@ -433,8 +431,6 @@ public class NetworkModificationService {
     public List<? extends ModificationInfos> createNetworkModification(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId, ModificationInfos modificationInfos) {
 
         switch (modificationInfos.getType()) {
-            case TWO_WINDINGS_TRANSFORMER_CREATION:
-                return createTwoWindingsTransformerCreation(networkUuid, variantId, groupUuid, reportUuid, reporterId, (TwoWindingsTransformerCreationInfos) modificationInfos);
             case BRANCH_STATUS:
                 return createLineStatusModification(networkUuid, variantId, groupUuid, reportUuid, reporterId, (BranchStatusModificationInfos) modificationInfos);
             default:
@@ -442,20 +438,9 @@ public class NetworkModificationService {
         }
     }
 
-    public void updateNetworkModification(UUID modificationUuid, ModificationInfos modificationInfos) {
-
-        switch (modificationInfos.getType()) {
-            case TWO_WINDINGS_TRANSFORMER_CREATION:
-                updateTwoWindingsTransformerCreation(modificationUuid, (TwoWindingsTransformerCreationInfos) modificationInfos);
-                break;
-            default:
-                throw new NetworkModificationException(TYPE_MISMATCH);
-        }
-    }
-
     // Generic form
     @Transactional
-    public void updateModification(@NonNull UUID modificationUuid, @NonNull ModificationInfos modificationInfos) {
+    public void updateNetworkModification(@NonNull UUID modificationUuid, @NonNull ModificationInfos modificationInfos) {
         ModificationEntity modificationEntity = this.modificationRepository.findById(modificationUuid)
             .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format("Modification (%s) not found", modificationUuid)));
 
@@ -486,221 +471,6 @@ public class NetworkModificationService {
 
     public void setReportServerRest(RestTemplate reportServerRest) {
         this.reportServerRest = Objects.requireNonNull(reportServerRest, "reportServerRest can't be null");
-    }
-
-    private void setBranchAdderNodeOrBus(BranchAdder<?> branchAdder, VoltageLevel voltageLevel, BranchCreationInfos branchCreationInfos, Side side, boolean withSwitch) {
-        String currentBusBarSectionId = (side == Side.ONE) ? branchCreationInfos.getBusOrBusbarSectionId1() : branchCreationInfos.getBusOrBusbarSectionId2();
-
-        if (voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER) {
-            VoltageLevel.NodeBreakerView nodeBreakerView = voltageLevel.getNodeBreakerView();
-            // busId is a busbar section id
-            BusbarSection busbarSection = nodeBreakerView.getBusbarSection(currentBusBarSectionId);
-            if (busbarSection == null) {
-                throw new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, currentBusBarSectionId);
-            }
-            if (withSwitch) {
-                // create cell switches
-                String sideSuffix = side != null ? "_" + side.name() : "";
-                int nodeNum = ModificationUtils.getInstance().createNodeBreakerCellSwitches(voltageLevel,
-                        currentBusBarSectionId,
-                        branchCreationInfos.getEquipmentId(),
-                        branchCreationInfos.getEquipmentName(),
-                        sideSuffix);
-
-                // complete the lineAdder
-                if (side == Side.ONE) {
-                    branchAdder.setNode1(nodeNum);
-                } else {
-                    branchAdder.setNode2(nodeNum);
-                }
-            }
-        } else { // BUS BREAKER
-            // busId is a bus id
-            Bus bus = ModificationUtils.getInstance().getBusBreakerBus(voltageLevel, currentBusBarSectionId);
-
-            // complete the lineAdder
-            if (side == Side.ONE) {
-                branchAdder.setBus1(bus.getId()).setConnectableBus1(bus.getId());
-            } else {
-                branchAdder.setBus2(bus.getId()).setConnectableBus2(bus.getId());
-            }
-        }
-
-    }
-
-    private List<ModificationInfos> execCreateTwoWindingsTransformerCreation(NetworkStoreListener listener, TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos,
-                                                                             UUID reportUuid, String reporterId) {
-        String rootReporterId = reporterId + "@" + NETWORK_MODIFICATION_TYPE_REPORT;
-        ReporterModel reporter = new ReporterModel(rootReporterId, rootReporterId);
-        Reporter subReporter = reporter.createSubReporter(ModificationType.TWO_WINDINGS_TRANSFORMER_CREATION.name(), "Two windings transformer creation ${twoWindingsTransformerId}", "twoWindingsTransformerId", twoWindingsTransformerCreationInfos.getEquipmentId());
-
-        return doAction(listener,
-            () -> {
-                Network network = listener.getNetwork();
-
-                // create the 2wt in the network
-                VoltageLevel voltageLevel1 = ModificationUtils.getInstance().getVoltageLevel(network, twoWindingsTransformerCreationInfos.getVoltageLevelId1());
-                VoltageLevel voltageLevel2 = ModificationUtils.getInstance().getVoltageLevel(network, twoWindingsTransformerCreationInfos.getVoltageLevelId2());
-                if (voltageLevel1.getTopologyKind() == TopologyKind.NODE_BREAKER && voltageLevel2.getTopologyKind() == TopologyKind.NODE_BREAKER) {
-                    var twoWindingsTransformerAdder = createTwoWindingsTransformerAdder(network, voltageLevel1, voltageLevel2, twoWindingsTransformerCreationInfos, false, false);
-
-                    var position1 = twoWindingsTransformerCreationInfos.getConnectionPosition1() != null ? twoWindingsTransformerCreationInfos.getConnectionPosition1() : ModificationUtils.getInstance().getPosition(twoWindingsTransformerCreationInfos.getBusOrBusbarSectionId1(), network, voltageLevel1);
-                    var position2 = twoWindingsTransformerCreationInfos.getConnectionPosition2() != null ? twoWindingsTransformerCreationInfos.getConnectionPosition2() : ModificationUtils.getInstance().getPosition(twoWindingsTransformerCreationInfos.getBusOrBusbarSectionId2(), network, voltageLevel2);
-
-                    CreateBranchFeederBays algo = new CreateBranchFeederBaysBuilder()
-                        .withBbsId1(twoWindingsTransformerCreationInfos.getBusOrBusbarSectionId1())
-                        .withBbsId2(twoWindingsTransformerCreationInfos.getBusOrBusbarSectionId2())
-                        .withFeederName1(twoWindingsTransformerCreationInfos.getConnectionName1() != null ? twoWindingsTransformerCreationInfos.getConnectionName1() : twoWindingsTransformerCreationInfos.getEquipmentId())
-                        .withFeederName2(twoWindingsTransformerCreationInfos.getConnectionName2() != null ? twoWindingsTransformerCreationInfos.getConnectionName2() : twoWindingsTransformerCreationInfos.getEquipmentId())
-                        .withDirection1(twoWindingsTransformerCreationInfos.getConnectionDirection1())
-                        .withDirection2(twoWindingsTransformerCreationInfos.getConnectionDirection2())
-                        .withPositionOrder1(position1)
-                        .withPositionOrder2(position2)
-                        .withBranchAdder(twoWindingsTransformerAdder).build();
-                    algo.apply(network, true, subReporter);
-
-                    var twt = network.getTwoWindingsTransformer(twoWindingsTransformerCreationInfos.getEquipmentId());
-                    addTapChangersToTwoWindingsTransformer(network, twoWindingsTransformerCreationInfos, twt);
-                } else {
-                    addTwoWindingsTransformer(network, voltageLevel1, voltageLevel2, twoWindingsTransformerCreationInfos, true, true, subReporter);
-                }
-            },
-            () -> listener.storeTwoWindingsTransformerCreation(twoWindingsTransformerCreationInfos),
-            CREATE_TWO_WINDINGS_TRANSFORMER_ERROR, reportUuid, reporter, subReporter
-        );
-    }
-
-    private void addTapChangersToTwoWindingsTransformer(Network network, TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos, TwoWindingsTransformer twt) {
-        if (twoWindingsTransformerCreationInfos.getRatioTapChanger() != null) {
-            RatioTapChangerCreationInfos ratioTapChangerInfos = twoWindingsTransformerCreationInfos.getRatioTapChanger();
-            RatioTapChangerAdder ratioTapChangerAdder = twt.newRatioTapChanger();
-            Terminal terminal = ModificationUtils.getInstance().getTerminalFromIdentifiable(network,
-                    ratioTapChangerInfos.getRegulatingTerminalId(),
-                    ratioTapChangerInfos.getRegulatingTerminalType(),
-                    ratioTapChangerInfos.getRegulatingTerminalVlId());
-
-            if (ratioTapChangerInfos.isRegulating()) {
-                ratioTapChangerAdder.setTargetV(ratioTapChangerInfos.getTargetV())
-                        .setTargetDeadband(ratioTapChangerInfos.getTargetDeadband() != null ? ratioTapChangerInfos.getTargetDeadband() : 0.)
-                        .setRegulationTerminal(terminal);
-            }
-
-            ratioTapChangerAdder.setRegulating(ratioTapChangerInfos.isRegulating())
-                    .setLoadTapChangingCapabilities(ratioTapChangerInfos.isLoadTapChangingCapabilities())
-                    .setLowTapPosition(ratioTapChangerInfos.getLowTapPosition())
-                    .setTapPosition(ratioTapChangerInfos.getTapPosition());
-
-            if (ratioTapChangerInfos.getSteps() != null) {
-                for (TapChangerStepCreationInfos step : ratioTapChangerInfos.getSteps()) {
-                    ratioTapChangerAdder.beginStep().setR(step.getR()).setX(step.getX()).setG(step.getG()).setB(step.getB()).setRho(step.getRho()).endStep();
-                }
-
-                ratioTapChangerAdder.add();
-            }
-        }
-
-        if (twoWindingsTransformerCreationInfos.getPhaseTapChanger() != null) {
-            PhaseTapChangerCreationInfos phaseTapChangerInfos = twoWindingsTransformerCreationInfos.getPhaseTapChanger();
-            PhaseTapChangerAdder phaseTapChangerAdder = twt.newPhaseTapChanger();
-            Terminal terminal = ModificationUtils.getInstance().getTerminalFromIdentifiable(network,
-                    phaseTapChangerInfos.getRegulatingTerminalId(),
-                    phaseTapChangerInfos.getRegulatingTerminalType(),
-                    phaseTapChangerInfos.getRegulatingTerminalVlId());
-
-            if (phaseTapChangerInfos.isRegulating()) {
-                phaseTapChangerAdder.setRegulationValue(phaseTapChangerInfos.getRegulationValue())
-                        .setTargetDeadband(phaseTapChangerInfos.getTargetDeadband() != null ? phaseTapChangerInfos.getTargetDeadband() : 0.)
-                        .setRegulationTerminal(terminal);
-            }
-
-            phaseTapChangerAdder.setRegulating(phaseTapChangerInfos.isRegulating())
-                    .setRegulationMode(phaseTapChangerInfos.getRegulationMode())
-                    .setLowTapPosition(phaseTapChangerInfos.getLowTapPosition())
-                    .setTapPosition(phaseTapChangerInfos.getTapPosition());
-
-            if (phaseTapChangerInfos.getSteps() != null) {
-                for (TapChangerStepCreationInfos step : phaseTapChangerInfos.getSteps()) {
-                    phaseTapChangerAdder.beginStep().setR(step.getR()).setX(step.getX()).setG(step.getG()).setB(step.getB()).setRho(step.getRho()).setAlpha(step.getAlpha()).endStep();
-                }
-
-                phaseTapChangerAdder.add();
-            }
-        }
-    }
-
-    private void addTwoWindingsTransformer(Network network, VoltageLevel voltageLevel1, VoltageLevel voltageLevel2, TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos, boolean withSwitch1, boolean withSwitch2, Reporter subReporter) {
-        var twt = createTwoWindingsTransformerAdder(network, voltageLevel1, voltageLevel2, twoWindingsTransformerCreationInfos, withSwitch1, withSwitch2).add();
-        addTapChangersToTwoWindingsTransformer(network, twoWindingsTransformerCreationInfos, twt);
-        subReporter.report(Report.builder()
-                .withKey("twoWindingsTransformerCreated")
-                .withDefaultMessage("New two windings transformer with id=${id} created")
-                .withValue("id", twoWindingsTransformerCreationInfos.getEquipmentId())
-                .withSeverity(TypedValue.INFO_SEVERITY)
-                .build());
-    }
-
-    public List<EquipmentModificationInfos> createTwoWindingsTransformerCreation(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId, TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
-        assertTwoWindingsTransformerCreationInfosNotEmpty(twoWindingsTransformerCreationInfos);
-        ModificationNetworkInfos networkInfos = getNetworkModificationInfos(networkUuid, variantId);
-        NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
-        return execCreateTwoWindingsTransformerCreation(listener, twoWindingsTransformerCreationInfos, reportUuid, reporterId)
-            .stream().map(EquipmentModificationInfos.class::cast).collect(Collectors.toList());
-    }
-
-    private TwoWindingsTransformerAdder createTwoWindingsTransformerAdder(Network network, VoltageLevel voltageLevel1, VoltageLevel voltageLevel2, TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos, boolean withSwitch1, boolean withSwitch2) {
-        Optional<Substation> optS1 = voltageLevel1.getSubstation();
-        Optional<Substation> optS2 = voltageLevel2.getSubstation();
-        Substation s1 = optS1.orElse(null);
-        Substation s2 = optS2.orElse(null);
-        BranchAdder<TwoWindingsTransformerAdder> branchAdder;
-
-        if (s1 != null) {
-            branchAdder = s1.newTwoWindingsTransformer();
-        } else if (s2 != null) {
-            branchAdder = s2.newTwoWindingsTransformer();
-        } else {
-            branchAdder = network.newTwoWindingsTransformer();
-        }
-        // common settings
-        TwoWindingsTransformerAdder twoWindingsTransformerAdder = branchAdder.setId(twoWindingsTransformerCreationInfos.getEquipmentId())
-                .setName(twoWindingsTransformerCreationInfos.getEquipmentName())
-                .setVoltageLevel1(twoWindingsTransformerCreationInfos.getVoltageLevelId1())
-                .setVoltageLevel2(twoWindingsTransformerCreationInfos.getVoltageLevelId2())
-                .setG(twoWindingsTransformerCreationInfos.getMagnetizingConductance())
-                .setB(twoWindingsTransformerCreationInfos.getMagnetizingSusceptance())
-                .setR(twoWindingsTransformerCreationInfos.getSeriesResistance())
-                .setX(twoWindingsTransformerCreationInfos.getSeriesReactance())
-                .setRatedU1(twoWindingsTransformerCreationInfos.getRatedVoltage1())
-                .setRatedU2(twoWindingsTransformerCreationInfos.getRatedVoltage2());
-
-        if (twoWindingsTransformerCreationInfos.getRatedS() != null) {
-            twoWindingsTransformerAdder.setRatedS(twoWindingsTransformerCreationInfos.getRatedS());
-        }
-
-        // BranchAdder completion by topology
-        setBranchAdderNodeOrBus(branchAdder, voltageLevel1, twoWindingsTransformerCreationInfos, Side.ONE, withSwitch1);
-        setBranchAdderNodeOrBus(branchAdder, voltageLevel2, twoWindingsTransformerCreationInfos, Side.TWO, withSwitch2);
-
-        return twoWindingsTransformerAdder;
-    }
-
-    public void updateTwoWindingsTransformerCreation(UUID modificationUuid, TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
-        assertTwoWindingsTransformerCreationInfosNotEmpty(twoWindingsTransformerCreationInfos);
-        Optional<ModificationEntity> twoWindingsTransformerModificationEntity = this.modificationRepository.findById(modificationUuid);
-
-        if (twoWindingsTransformerModificationEntity.isEmpty()) {
-            throw new NetworkModificationException(CREATE_TWO_WINDINGS_TRANSFORMER_ERROR, "Two windings transformer creation not found");
-        }
-        EquipmentCreationEntity updatedEntity = TwoWindingsTransformerCreationEntity.toEntity(twoWindingsTransformerCreationInfos);
-        updatedEntity.setId(modificationUuid);
-        updatedEntity.setGroup(twoWindingsTransformerModificationEntity.get().getGroup());
-        this.networkModificationRepository.updateModification(updatedEntity);
-    }
-
-    private void assertTwoWindingsTransformerCreationInfosNotEmpty(TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
-        if (twoWindingsTransformerCreationInfos == null) {
-            throw new NetworkModificationException(CREATE_TWO_WINDINGS_TRANSFORMER_ERROR, "Missing required attributes to create the two windings transformer");
-        }
     }
 
     public Network cloneNetworkVariant(UUID networkUuid, String originVariantId, String destinationVariantId) {
@@ -789,12 +559,8 @@ public class NetworkModificationService {
             case GENERATOR_CREATION:
             case GENERATOR_MODIFICATION:
             case SUBSTATION_CREATION:
-                // Generic form
+            case TWO_WINDINGS_TRANSFORMER_CREATION:// Generic form
                 return handleModification(infos, listener, groupUuid, reportUuid, reporterId);
-
-            case TWO_WINDINGS_TRANSFORMER_CREATION:
-                TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos = (TwoWindingsTransformerCreationInfos) infos;
-                return execCreateTwoWindingsTransformerCreation(listener, twoWindingsTransformerCreationInfos, reportUuid, reporterId);
 
             case BRANCH_STATUS:
                 BranchStatusModificationInfos branchStatusModificationInfos = (BranchStatusModificationInfos) infos;
