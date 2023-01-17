@@ -43,19 +43,21 @@ public class LoadScaling extends AbstractScaling {
     @Override
     protected void applyVentilationVariation(Network network,
                                              List<IdentifiableAttributes> identifiableAttributes,
-                                             ScalingVariationInfos scalingVariationInfos, Reporter subReporter, double distributionKeys) {
-        double sum = 0;
-        List<Float> percentages = new ArrayList<>(identifiableAttributes.size());
-        List<Scalable> scalables = new ArrayList<>(identifiableAttributes.size());
-        for (IdentifiableAttributes equipment : identifiableAttributes) {
-            sum += network.getLoad(equipment.getId()).getP0();
-            scalables.add(getScalable(equipment.getId()));
-            percentages.add((float) ((equipment.getDistributionKey() / distributionKeys) * 100));
+                                             ScalingVariationInfos scalingVariationInfos, Reporter subReporter, Double distributionKeys) {
+        if (distributionKeys != null) {
+            double sum = 0;
+            List<Float> percentages = new ArrayList<>(identifiableAttributes.size());
+            List<Scalable> scalables = new ArrayList<>(identifiableAttributes.size());
+            for (IdentifiableAttributes equipment : identifiableAttributes) {
+                sum += network.getLoad(equipment.getId()).getP0();
+                scalables.add(getScalable(equipment.getId()));
+                percentages.add((float) ((equipment.getDistributionKey() / distributionKeys) * 100));
+            }
+            Scalable ventilationScalable = Scalable.proportional(percentages, scalables);
+            var asked = getAsked(scalingVariationInfos, sum);
+            var done = scale(network, scalingVariationInfos, asked, ventilationScalable);
+            createReport(subReporter, "ScaleVentilationVariation", String.format("Successfully scaling variation in ventilation mode with variation value asked is %s and variation done is %s", asked, done), TypedValue.INFO_SEVERITY);
         }
-        Scalable ventilationScalable = Scalable.proportional(percentages, scalables);
-        var asked = getAsked(scalingVariationInfos, sum);
-        var done = scale(network, scalingVariationInfos, asked, ventilationScalable);
-        createReport(subReporter, "ScaleVentilationVariation", String.format("Successfully scaling variation in ventilation mode with variation value asked is %s and variation done is %s", asked, done), TypedValue.INFO_SEVERITY);
     }
 
     /*

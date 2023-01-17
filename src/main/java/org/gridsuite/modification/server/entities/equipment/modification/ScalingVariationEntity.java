@@ -62,6 +62,7 @@ public class ScalingVariationEntity {
             filters.addAll(variationInfos.getFilters().stream().map(FilterInfos::toEntity).collect(Collectors.toList()));
         }
         this.variationMode = variationInfos.getVariationMode();
+        this.reactiveVariationMode = variationInfos.getReactiveVariationMode();
         this.variationValue = variationInfos.getVariationValue();
     }
 

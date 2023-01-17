@@ -81,8 +81,16 @@ public abstract class AbstractScaling extends AbstractModification {
 
         // apply variations
         scalingInfos.getVariations().forEach(variation -> {
-            List<IdentifiableAttributes> identifiableAttributes = variation.getFilters().stream()
-                    .filter(f -> !filterWithWrongEquipmentsIds.containsKey(f.getId()))
+            variation.getFilters().stream()
+                    .filter(f -> !exportFilters.containsKey(f.getId()))
+                    .forEach(f -> createReport(subReporter,
+                            "filterNotFound",
+                            String.format("Cannot find the following filter: %s", f.getName()),
+                            TypedValue.WARN_SEVERITY));
+
+            List<IdentifiableAttributes> identifiableAttributes = variation.getFilters()
+                    .stream()
+                    .filter(f -> !filterWithWrongEquipmentsIds.containsKey(f.getId()) && exportFilters.containsKey(f.getId()))
                     .flatMap(f -> exportFilters.get(f.getId())
                             .getIdentifiableAttributes()
                             .stream())
@@ -117,15 +125,15 @@ public abstract class AbstractScaling extends AbstractModification {
         }
     }
 
-    private double getDistributionKeys(List<IdentifiableAttributes> identifiableAttributes, Reporter subReporter) {
+    private Double getDistributionKeys(List<IdentifiableAttributes> identifiableAttributes, Reporter subReporter) {
         var distributionKeys = identifiableAttributes.stream()
                 .filter(equipment -> equipment.getDistributionKey() != null)
                 .mapToDouble(IdentifiableAttributes::getDistributionKey)
                 .sum();
         if (distributionKeys == 0) {
             String message = "This mode is available only for equipment with distribution key";
-            createReport(subReporter, "distributionKeysNotFound", message, TypedValue.ERROR_SEVERITY);
-            throw new NetworkModificationException(scalingInfos.getErrorType(), message);
+            createReport(subReporter, "distributionKeysNotFound", message, TypedValue.WARN_SEVERITY);
+            return null;
         }
         return distributionKeys;
     }
@@ -133,7 +141,7 @@ public abstract class AbstractScaling extends AbstractModification {
     protected abstract void applyVentilationVariation(Network network,
                                           List<IdentifiableAttributes> identifiableAttributes,
                                           ScalingVariationInfos scalingVariationInfos, Reporter subReporter,
-                                                      double distributionKeys);
+                                                      Double distributionKeys);
 
     protected abstract void applyRegularDistributionVariation(Network network,
                                                               List<IdentifiableAttributes> identifiableAttributes,
