@@ -16,7 +16,6 @@ import org.gridsuite.modification.server.dto.ScalingVariationInfos;
 
 import javax.persistence.*;
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -34,7 +33,7 @@ public class ScalingVariationEntity {
     @Column(name = "id")
     private UUID id;
 
-    @OneToMany(cascade = CascadeType.ALL)
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JoinTable(
             joinColumns = @JoinColumn(name = "id"),
             inverseJoinColumns = @JoinColumn(name = "filterId"))
@@ -56,10 +55,14 @@ public class ScalingVariationEntity {
     }
 
     private void assignAttributes(ScalingVariationInfos variationInfos) {
-        this.filters = getFiltersEntity(variationInfos);
+        if (filters == null) {
+            this.filters = variationInfos.getFilters().stream().map(FilterInfos::toEntity).collect(Collectors.toList());
+        } else {
+            filters.clear();
+            filters.addAll(variationInfos.getFilters().stream().map(FilterInfos::toEntity).collect(Collectors.toList()));
+        }
         this.variationMode = variationInfos.getVariationMode();
         this.variationValue = variationInfos.getVariationValue();
-        this.reactiveVariationMode = variationInfos.getReactiveVariationMode();
     }
 
     public ScalingVariationInfos toScalingVariationInfos() {
@@ -74,28 +77,4 @@ public class ScalingVariationEntity {
                 .build();
     }
 
-    public ScalingVariationEntity update(ScalingVariationInfos variation) {
-        this.reactiveVariationMode = variation.getReactiveVariationMode();
-        this.variationMode = variation.getVariationMode();
-        this.variationValue = variation.getVariationValue();
-        this.filters = getFiltersEntity(variation);
-        return this;
-    }
-
-    private List<VariationFilterEntity> getFiltersEntity(ScalingVariationInfos variationInfos) {
-        return variationInfos.getFilters()
-                .stream()
-                .map(filterInfos -> {
-                    if (getFilters() == null) {
-                        return new VariationFilterEntity(filterInfos);
-                    } else {
-                        return getFilters()
-                                .stream()
-                                .filter(filter -> Objects.equals(filter.getFilterId(), filterInfos.getId()))
-                                .findFirst()
-                                .orElse(new VariationFilterEntity(filterInfos));
-                    }
-                })
-                .collect(Collectors.toList());
-    }
 }

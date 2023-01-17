@@ -122,7 +122,7 @@ public class LoadScaling extends AbstractScaling {
             scalables.add(getScalable(entry.getKey()));
         }
 
-        Scalable proportionalScalable = Scalable.proportional(percentages, scalables, true);
+        Scalable proportionalScalable = Scalable.proportional(percentages, scalables);
         var asked = getAsked(scalingVariationInfos, sum);
         var done = scale(network, scalingVariationInfos, asked, proportionalScalable);
         createReport(subReporter, "ScaleProportionalVariation", String.format("Successfully scaling variation in proportional mode with variation value asked is %s and variation done is %s", asked, done), TypedValue.INFO_SEVERITY);
