@@ -109,39 +109,14 @@ public class NetworkModificationController {
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "The network modification was created"),
         @ApiResponse(responseCode = "404", description = "The network or equipment was not found")})
-    public ResponseEntity<List<? extends ModificationInfos>> createNetworkModification(
+    public ResponseEntity<List<ModificationInfos>> createNetworkModification(
             @Parameter(description = "Network UUID") @RequestParam("networkUuid") UUID networkUuid,
             @Parameter(description = "Variant ID") @RequestParam(name = "variantId", required = false) String variantId,
             @Parameter(description = "Group UUID") @RequestParam(name = "groupUuid", required = false) UUID groupUuid,
             @Parameter(description = "Report UUID") @RequestParam("reportUuid") UUID reportUuid,
             @Parameter(description = "Reporter ID") @RequestParam("reporterId") String reporterId,
             @RequestBody ModificationInfos modificationInfos) {
-        // temporary switch, should be removed when all kind of modification will use the generic updateModification
-        // PS : same for the wildcard return type (code smell)
-        // PS 2 : the switch can't be in the service because of @Transactional that need to be called from outside the class
-        switch (modificationInfos.getType()) {
-            case LOAD_CREATION:
-            case LINE_SPLIT_WITH_VOLTAGE_LEVEL:
-            case EQUIPMENT_ATTRIBUTE_MODIFICATION:
-            case DELETE_VOLTAGE_LEVEL_ON_LINE:
-            case DELETE_ATTACHING_LINE:
-            case SHUNT_COMPENSATOR_CREATION:
-            case LINE_CREATION:
-            case LINE_ATTACH_TO_VOLTAGE_LEVEL:
-            case LOAD_MODIFICATION:
-            case EQUIPMENT_DELETION:
-            case GROOVY_SCRIPT:
-            case VOLTAGE_LEVEL_CREATION:
-            case LINES_ATTACH_TO_SPLIT_LINES:
-            case GENERATOR_CREATION:
-            case GENERATOR_MODIFICATION:
-            case SUBSTATION_CREATION:
-            case TWO_WINDINGS_TRANSFORMER_CREATION:
-            case BRANCH_STATUS_MODIFICATION:
-                return ResponseEntity.ok().body(networkModificationService.createModification(networkUuid, variantId, groupUuid, reportUuid, reporterId, modificationInfos));
-            default:
-                return ResponseEntity.ok().body(networkModificationService.createNetworkModification(networkUuid, variantId, groupUuid, reportUuid, reporterId, modificationInfos));
-        }
+        return ResponseEntity.ok().body(networkModificationService.createModification(networkUuid, variantId, groupUuid, reportUuid, reporterId, modificationInfos));
     }
 
     @PutMapping(value = "/network-modifications/{uuid}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)

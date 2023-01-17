@@ -10,7 +10,6 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NonNull;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.BranchStatusModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationGroupEntity;
@@ -189,10 +188,6 @@ public class NetworkModificationRepository {
         int count = modifications.size();
         this.modificationRepository.deleteAll(modifications);
         return count;
-    }
-
-    public void updateModification(ModificationEntity modificationEntity) {
-        this.modificationRepository.save(modificationEntity);
     }
 
     private ModificationGroupEntity getModificationGroup(UUID groupUuid) {

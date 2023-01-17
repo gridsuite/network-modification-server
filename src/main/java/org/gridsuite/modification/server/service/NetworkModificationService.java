@@ -204,15 +204,6 @@ public class NetworkModificationService {
         }
     }
 
-    // temporary wildcard code smell (method to be deleted)
-    public List<? extends ModificationInfos> createNetworkModification(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId, ModificationInfos modificationInfos) {
-
-        switch (modificationInfos.getType()) {
-            default:
-                throw new NetworkModificationException(TYPE_MISMATCH);
-        }
-    }
-
     private void saveModifications(NetworkStoreListener listener, UUID groupUuid, ModificationEntity modificationEntity) {
         networkModificationRepository.saveModifications(groupUuid, List.of(modificationEntity));
         if (listener.isApplyModifications()) {
