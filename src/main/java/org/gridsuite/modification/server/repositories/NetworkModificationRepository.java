@@ -6,7 +6,6 @@
  */
 package org.gridsuite.modification.server.repositories;
 
-import com.powsybl.iidm.network.LoadType;
 import com.powsybl.iidm.network.PhaseTapChanger;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.AllArgsConstructor;
@@ -14,14 +13,10 @@ import lombok.Getter;
 import lombok.NonNull;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
-import org.gridsuite.modification.server.entities.GroovyScriptModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationGroupEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.*;
-import org.gridsuite.modification.server.entities.equipment.deletion.EquipmentDeletionEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.BranchStatusModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.LoadModificationEntity;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -211,12 +206,6 @@ public class NetworkModificationRepository {
         return this.modificationGroupRepository.findById(groupUuid).orElseGet(() -> modificationGroupRepository.save(new ModificationGroupEntity(groupUuid)));
     }
 
-    public EquipmentModificationEntity createLoadModificationEntity(String loadId, AttributeModification<String> loadName, AttributeModification<LoadType> loadType,
-                                                                    AttributeModification<String> voltageLevelId, AttributeModification<String> busOrBusbarSectionId,
-                                                                    AttributeModification<Double> activePower, AttributeModification<Double> reactivePower) {
-        return new LoadModificationEntity(loadId, loadName, loadType, voltageLevelId, busOrBusbarSectionId, activePower, reactivePower);
-    }
-
     public EquipmentCreationEntity createTwoWindingsTransformerEntity(String id, String name, double seriesResistance, double seriesReactance,
                                                                       double magnetizingConductance, double magnetizingSusceptance, double ratedVoltage1, double ratedVoltage2, double ratedS,
                                                                       String voltageLevelId1, String busOrBusbarSectionId1, String voltageLevelId2, String busOrBusbarSectionId2,
@@ -273,14 +262,6 @@ public class NetworkModificationRepository {
                 tapChangerSteps,
                 connectionPosition1,
                 connectionPosition2);
-    }
-
-    public EquipmentDeletionEntity createEquipmentDeletionEntity(String equipmentId, String equipmentType) {
-        return new EquipmentDeletionEntity(equipmentId, equipmentType);
-    }
-
-    public GroovyScriptModificationEntity createGroovyScriptModificationEntity(String script) {
-        return new GroovyScriptModificationEntity(script);
     }
 
     public BranchStatusModificationEntity createBranchStatusModificationEntity(String lineId, BranchStatusModificationInfos.ActionType action) {

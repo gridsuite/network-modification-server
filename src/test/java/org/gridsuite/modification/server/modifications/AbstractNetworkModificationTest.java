@@ -15,6 +15,7 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.client.NetworkStoreService;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.NetworkModificationService;
 import org.gridsuite.modification.server.utils.MatcherModificationInfos;
@@ -87,6 +88,9 @@ public abstract class AbstractNetworkModificationTest {
     protected NetworkModificationRepository modificationRepository;
 
     @Autowired
+    protected EquipmentInfosService equipmentInfosService;
+
+    @Autowired
     protected ObjectMapper mapper;
 
     private Network network;
@@ -106,6 +110,7 @@ public abstract class AbstractNetworkModificationTest {
         networkModificationService.setReportServerRest(reportServerRest);
 
         modificationRepository.deleteAll();
+        equipmentInfosService.deleteAll();
     }
 
     @After
@@ -231,6 +236,10 @@ public abstract class AbstractNetworkModificationTest {
 
     protected Network getNetwork() {
         return network;
+    }
+
+    protected UUID getNetworkId() {
+        return TEST_NETWORK_ID;
     }
 
     protected UUID getGroupId() {

@@ -110,8 +110,8 @@ public class ModificationRepositoryTest {
         return (VoltageLevelCreationInfos) networkModificationRepository.getModificationInfo(modificationUuid);
     }
 
-    public GroovyScriptModificationInfos getGroovyScriptModification(UUID modificationUuid) {
-        return (GroovyScriptModificationInfos) networkModificationRepository.getModificationInfo(modificationUuid);
+    public GroovyScriptInfos getGroovyScript(UUID modificationUuid) {
+        return (GroovyScriptInfos) networkModificationRepository.getModificationInfo(modificationUuid);
     }
 
     public ShuntCompensatorCreationInfos getShuntCompensatorCreationModification(UUID modificationUuid) {
@@ -472,7 +472,7 @@ public class ModificationRepositoryTest {
         ratioTapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.RATIO, 6, 1, 0, 0, 0, 0, null));
         ratioTapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.RATIO, 7, 1, 0, 0, 0, 0, null));
         ratioTapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.RATIO, 8, 1, 0, 0, 0, 0, null));
-        var createTwoWindingsTransformerEntity2 = networkModificationRepository.createTwoWindingsTransformerEntity("id2wt2", "name2wt2", 2.0, 1.2, 11.0, 12.0, 101.0, 100.2, -1, "vlId11", "busId11", "vlId12", "busId12", 480.0, 480.0, "cn33", ConnectablePosition.Direction.TOP, "cn44", ConnectablePosition.Direction.BOTTOM, null, null, null, null, null, null, null, null, null,  5, 6, true, 1., "v2load", "v2", "LOAD", true, 50., ratioTapChangerStepCreationEmbeddables, 2, 3);
+        var createTwoWindingsTransformerEntity2 = networkModificationRepository.createTwoWindingsTransformerEntity("id2wt2", "name2wt2", 2.0, 1.2, 11.0, 12.0, 101.0, 100.2, -1, "vlId11", "busId11", "vlId12", "busId12", 480.0, 480.0, "cn33", ConnectablePosition.Direction.TOP, "cn44", ConnectablePosition.Direction.BOTTOM, null, null, null, null, null, null, null, null, null, 5, 6, true, 1., "v2load", "v2", "LOAD", true, 50., ratioTapChangerStepCreationEmbeddables, 2, 3);
         var createTwoWindingsTransformerEntity3 = networkModificationRepository.createTwoWindingsTransformerEntity("id2wt3", "name2wt3", 1.0, 1.1, 10.0, 11.0, 100.0, 100.1, -1, "vlId11", "busId11", "vlId12", "busId12", 485.0, 480.0, "cn55", ConnectablePosition.Direction.TOP, "cn66", ConnectablePosition.Direction.TOP, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 4, 5);
         var createTwoWindingsTransformerEntity4 = networkModificationRepository.createTwoWindingsTransformerEntity("id2wt4", "name2wt4", 2.0, 1.2, 11.0, 12.0, 101.0, 100.2, -1, "vlId11", "busId11", "vlId12", "busId12", null, 490.0, "cn77", ConnectablePosition.Direction.TOP, "cn88", ConnectablePosition.Direction.BOTTOM, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 6, 7);
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(createTwoWindingsTransformerEntity1, createTwoWindingsTransformerEntity2, createTwoWindingsTransformerEntity3, createTwoWindingsTransformerEntity4));
@@ -511,21 +511,21 @@ public class ModificationRepositoryTest {
 
     @Test
     public void insertModificationTest() {
-        var groovyScriptModificationEntity1 = networkModificationRepository.createGroovyScriptModificationEntity("script1");
-        var groovyScriptModificationEntity2 = networkModificationRepository.createGroovyScriptModificationEntity("script2");
-        var groovyScriptModificationEntity3 = networkModificationRepository.createGroovyScriptModificationEntity("script3");
-        var groovyScriptModificationEntity4 = networkModificationRepository.createGroovyScriptModificationEntity("script4");
-        var groovyScriptModificationEntity5 = networkModificationRepository.createGroovyScriptModificationEntity("script5");
-        var groovyScriptModificationEntity6 = networkModificationRepository.createGroovyScriptModificationEntity("scriptSaucisse");
+        var groovyScriptEntity1 = GroovyScriptInfos.builder().script("script1").build().toEntity();
+        var groovyScriptEntity2 = GroovyScriptInfos.builder().script("script2").build().toEntity();
+        var groovyScriptEntity3 = GroovyScriptInfos.builder().script("script3").build().toEntity();
+        var groovyScriptEntity4 = GroovyScriptInfos.builder().script("script4").build().toEntity();
+        var groovyScriptEntity5 = GroovyScriptInfos.builder().script("script5").build().toEntity();
+        var groovyScriptEntity6 = GroovyScriptInfos.builder().script("scriptSaucisse").build().toEntity();
 
-        networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(groovyScriptModificationEntity1, groovyScriptModificationEntity2,
-            groovyScriptModificationEntity3, groovyScriptModificationEntity4, groovyScriptModificationEntity5, groovyScriptModificationEntity6));
+        networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(groovyScriptEntity1, groovyScriptEntity2,
+            groovyScriptEntity3, groovyScriptEntity4, groovyScriptEntity5, groovyScriptEntity6));
         assertRequestsCount(1, 13, 6, 0);
 
         var modificationOriginal = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.moveModifications(TEST_GROUP_ID, TEST_GROUP_ID, List.of(groovyScriptModificationEntity6.getId()), groovyScriptModificationEntity2.getId());
+        networkModificationRepository.moveModifications(TEST_GROUP_ID, TEST_GROUP_ID, List.of(groovyScriptEntity6.getId()), groovyScriptEntity2.getId());
         assertRequestsCount(2, 0, 6, 0);
 
         var modification = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
@@ -536,7 +536,7 @@ public class ModificationRepositoryTest {
         assertEquals(getIds(expected), getIds(modification));
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.moveModifications(TEST_GROUP_ID, TEST_GROUP_ID, List.of(groovyScriptModificationEntity3.getId(), groovyScriptModificationEntity6.getId()), null);
+        networkModificationRepository.moveModifications(TEST_GROUP_ID, TEST_GROUP_ID, List.of(groovyScriptEntity3.getId(), groovyScriptEntity6.getId()), null);
         assertRequestsCount(2, 0, 6, 0);
 
         // [0:1, 1:2, 2:4, 3:5, 4:6, 5:3 ]
@@ -549,26 +549,26 @@ public class ModificationRepositoryTest {
 
     @Test
     public void testMoveModificationsBetweenTwoGroups() {
-        var groovyScriptModificationEntity1 = networkModificationRepository.createGroovyScriptModificationEntity("script1");
-        var groovyScriptModificationEntity2 = networkModificationRepository.createGroovyScriptModificationEntity("script2");
-        var groovyScriptModificationEntity3 = networkModificationRepository.createGroovyScriptModificationEntity("script3");
-        var groovyScriptModificationEntity4 = networkModificationRepository.createGroovyScriptModificationEntity("script4");
-        var groovyScriptModificationEntity5 = networkModificationRepository.createGroovyScriptModificationEntity("script5");
-        var groovyScriptModificationEntity6 = networkModificationRepository.createGroovyScriptModificationEntity("script6");
+        var groovyScriptEntity1 = GroovyScriptInfos.builder().script("script1").build().toEntity();
+        var groovyScriptEntity2 = GroovyScriptInfos.builder().script("script2").build().toEntity();
+        var groovyScriptEntity3 = GroovyScriptInfos.builder().script("script3").build().toEntity();
+        var groovyScriptEntity4 = GroovyScriptInfos.builder().script("script4").build().toEntity();
+        var groovyScriptEntity5 = GroovyScriptInfos.builder().script("script5").build().toEntity();
+        var groovyScriptEntity6 = GroovyScriptInfos.builder().script("script6").build().toEntity();
 
-        networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(groovyScriptModificationEntity1, groovyScriptModificationEntity2,
-                groovyScriptModificationEntity3, groovyScriptModificationEntity4));
+        networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(groovyScriptEntity1, groovyScriptEntity2,
+                groovyScriptEntity3, groovyScriptEntity4));
         assertRequestsCount(1, 9, 4, 0);
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.saveModifications(TEST_GROUP_ID_2, List.of(groovyScriptModificationEntity5, groovyScriptModificationEntity6));
+        networkModificationRepository.saveModifications(TEST_GROUP_ID_2, List.of(groovyScriptEntity5, groovyScriptEntity6));
         assertRequestsCount(1, 5, 2, 0);
 
         var modificationOriginal1 = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
         var modificationOriginal2 = networkModificationRepository.getModifications(TEST_GROUP_ID_2, true, true);
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.moveModifications(TEST_GROUP_ID_2, TEST_GROUP_ID, List.of(groovyScriptModificationEntity2.getId(), groovyScriptModificationEntity3.getId()), null);
+        networkModificationRepository.moveModifications(TEST_GROUP_ID_2, TEST_GROUP_ID, List.of(groovyScriptEntity2.getId(), groovyScriptEntity3.getId()), null);
         assertRequestsCount(4, 0, 8, 0);
 
         var modification1 = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
@@ -597,26 +597,26 @@ public class ModificationRepositoryTest {
 
     @Test
     public void testMoveModificationsBetweenTwoGroupsWithReferenceNode() {
-        var groovyScriptModificationEntity1 = networkModificationRepository.createGroovyScriptModificationEntity("script1");
-        var groovyScriptModificationEntity2 = networkModificationRepository.createGroovyScriptModificationEntity("script2");
-        var groovyScriptModificationEntity3 = networkModificationRepository.createGroovyScriptModificationEntity("script3");
-        var groovyScriptModificationEntity4 = networkModificationRepository.createGroovyScriptModificationEntity("script4");
-        var groovyScriptModificationEntity5 = networkModificationRepository.createGroovyScriptModificationEntity("script5");
-        var groovyScriptModificationEntity6 = networkModificationRepository.createGroovyScriptModificationEntity("script6");
+        var groovyScriptEntity1 = GroovyScriptInfos.builder().script("script1").build().toEntity();
+        var groovyScriptEntity2 = GroovyScriptInfos.builder().script("script2").build().toEntity();
+        var groovyScriptEntity3 = GroovyScriptInfos.builder().script("script3").build().toEntity();
+        var groovyScriptEntity4 = GroovyScriptInfos.builder().script("script4").build().toEntity();
+        var groovyScriptEntity5 = GroovyScriptInfos.builder().script("script5").build().toEntity();
+        var groovyScriptEntity6 = GroovyScriptInfos.builder().script("script6").build().toEntity();
 
-        networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(groovyScriptModificationEntity1, groovyScriptModificationEntity2,
-                groovyScriptModificationEntity3, groovyScriptModificationEntity4));
+        networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(groovyScriptEntity1, groovyScriptEntity2,
+                groovyScriptEntity3, groovyScriptEntity4));
         assertRequestsCount(1, 9, 4, 0);
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.saveModifications(TEST_GROUP_ID_2, List.of(groovyScriptModificationEntity5, groovyScriptModificationEntity6));
+        networkModificationRepository.saveModifications(TEST_GROUP_ID_2, List.of(groovyScriptEntity5, groovyScriptEntity6));
         assertRequestsCount(1, 5, 2, 0);
 
         var modificationOriginal1 = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
         var modificationOriginal2 = networkModificationRepository.getModifications(TEST_GROUP_ID_2, true, true);
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.moveModifications(TEST_GROUP_ID_2, TEST_GROUP_ID, List.of(groovyScriptModificationEntity2.getId(), groovyScriptModificationEntity3.getId()), groovyScriptModificationEntity6.getId());
+        networkModificationRepository.moveModifications(TEST_GROUP_ID_2, TEST_GROUP_ID, List.of(groovyScriptEntity2.getId(), groovyScriptEntity3.getId()), groovyScriptEntity6.getId());
         assertRequestsCount(4, 0, 8, 0);
 
         var modification1 = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
@@ -631,22 +631,22 @@ public class ModificationRepositoryTest {
 
     @Test
     public void testMoveModificationsBetweenMoreThanTwoGroups() {
-        var groovyScriptModificationEntity1 = networkModificationRepository.createGroovyScriptModificationEntity("script1");
-        var groovyScriptModificationEntity2 = networkModificationRepository.createGroovyScriptModificationEntity("script2");
-        var groovyScriptModificationEntity3 = networkModificationRepository.createGroovyScriptModificationEntity("script3");
-        var groovyScriptModificationEntity4 = networkModificationRepository.createGroovyScriptModificationEntity("script4");
-        var groovyScriptModificationEntity5 = networkModificationRepository.createGroovyScriptModificationEntity("script5");
-        var groovyScriptModificationEntity6 = networkModificationRepository.createGroovyScriptModificationEntity("script6");
+        var groovyScriptEntity1 = GroovyScriptInfos.builder().script("script1").build().toEntity();
+        var groovyScriptEntity2 = GroovyScriptInfos.builder().script("script2").build().toEntity();
+        var groovyScriptEntity3 = GroovyScriptInfos.builder().script("script3").build().toEntity();
+        var groovyScriptEntity4 = GroovyScriptInfos.builder().script("script4").build().toEntity();
+        var groovyScriptEntity5 = GroovyScriptInfos.builder().script("script5").build().toEntity();
+        var groovyScriptEntity6 = GroovyScriptInfos.builder().script("script6").build().toEntity();
 
-        networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(groovyScriptModificationEntity1, groovyScriptModificationEntity2));
+        networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(groovyScriptEntity1, groovyScriptEntity2));
         assertRequestsCount(1, 5, 2, 0);
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.saveModifications(TEST_GROUP_ID_2, List.of(groovyScriptModificationEntity3, groovyScriptModificationEntity4));
+        networkModificationRepository.saveModifications(TEST_GROUP_ID_2, List.of(groovyScriptEntity3, groovyScriptEntity4));
         assertRequestsCount(1, 5, 2, 0);
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.saveModifications(TEST_GROUP_ID_3, List.of(groovyScriptModificationEntity5, groovyScriptModificationEntity6));
+        networkModificationRepository.saveModifications(TEST_GROUP_ID_3, List.of(groovyScriptEntity5, groovyScriptEntity6));
         assertRequestsCount(1, 5, 2, 0);
 
         var modificationOriginal1 = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
@@ -655,15 +655,15 @@ public class ModificationRepositoryTest {
 
         // moving modifications from a wrong group should work but return their UUID in response
         SQLStatementCountValidator.reset();
-        List<UUID> modificationsToMoveUuid = List.of(groovyScriptModificationEntity1.getId(), groovyScriptModificationEntity3.getId());
-        assertEquals(List.of(groovyScriptModificationEntity3.getId()), networkModificationRepository.moveModifications(TEST_GROUP_ID_3, TEST_GROUP_ID, modificationsToMoveUuid, null).getModificationsInError());
+        List<UUID> modificationsToMoveUuid = List.of(groovyScriptEntity1.getId(), groovyScriptEntity3.getId());
+        assertEquals(List.of(groovyScriptEntity3.getId()), networkModificationRepository.moveModifications(TEST_GROUP_ID_3, TEST_GROUP_ID, modificationsToMoveUuid, null).getModificationsInError());
         assertRequestsCount(4, 0, 5, 0);
 
         // moving modification with reference node not in destination: no exception, and bad id is returned as error
         SQLStatementCountValidator.reset();
-        List <UUID> modificationsToMoveUuid2 = List.of(groovyScriptModificationEntity1.getId());
-        UUID referenceNodeUuid = groovyScriptModificationEntity2.getId();
-        NetworkModificationRepository.MoveModificationResult result =  networkModificationRepository.moveModifications(TEST_GROUP_ID_2, TEST_GROUP_ID, modificationsToMoveUuid2, referenceNodeUuid);
+        List <UUID> modificationsToMoveUuid2 = List.of(groovyScriptEntity1.getId());
+        UUID referenceNodeUuid = groovyScriptEntity2.getId();
+        NetworkModificationRepository.MoveModificationResult result = networkModificationRepository.moveModifications(TEST_GROUP_ID_2, TEST_GROUP_ID, modificationsToMoveUuid2, referenceNodeUuid);
         assertTrue(result.getModificationsMoved().isEmpty()); // nothing moved
         assertEquals(modificationsToMoveUuid2, result.getModificationsInError());
         assertRequestsCount(2, 0, 0, 0);
@@ -686,28 +686,28 @@ public class ModificationRepositoryTest {
 
     @Test
     public void testGroovyScript() {
-        var groovyScriptModificationEntity1 = networkModificationRepository.createGroovyScriptModificationEntity("script1");
-        var groovyScriptModificationEntity2 = networkModificationRepository.createGroovyScriptModificationEntity("script2");
-        var groovyScriptModificationEntity3 = networkModificationRepository.createGroovyScriptModificationEntity("script3");
+        var groovyScriptEntity1 = GroovyScriptInfos.builder().script("script1").build().toEntity();
+        var groovyScriptEntity2 = GroovyScriptInfos.builder().script("script2").build().toEntity();
+        var groovyScriptEntity3 = GroovyScriptInfos.builder().script("script3").build().toEntity();
 
-        networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(groovyScriptModificationEntity1, groovyScriptModificationEntity2, groovyScriptModificationEntity3));
+        networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(groovyScriptEntity1, groovyScriptEntity2, groovyScriptEntity3));
         assertRequestsCount(1, 7, 3, 0);
 
         List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
         assertEquals(3, modificationInfos.size());
 
-        assertThat(getGroovyScriptModification(modificationInfos.get(0).getUuid()),
-            MatcherGroovyScriptModificationInfos.createMatcherGroovyScriptModificationInfos(groovyScriptModificationEntity1.toModificationInfos()));
-        assertThat(getGroovyScriptModification(modificationInfos.get(1).getUuid()),
-            MatcherGroovyScriptModificationInfos.createMatcherGroovyScriptModificationInfos(groovyScriptModificationEntity2.toModificationInfos()));
-        assertThat(getGroovyScriptModification(modificationInfos.get(2).getUuid()),
-            MatcherGroovyScriptModificationInfos.createMatcherGroovyScriptModificationInfos(groovyScriptModificationEntity3.toModificationInfos()));
+        assertThat(getGroovyScript(modificationInfos.get(0).getUuid()),
+            MatcherGroovyScriptInfos.createMatcherGroovyScriptInfos(groovyScriptEntity1.toModificationInfos()));
+        assertThat(getGroovyScript(modificationInfos.get(1).getUuid()),
+            MatcherGroovyScriptInfos.createMatcherGroovyScriptInfos(groovyScriptEntity2.toModificationInfos()));
+        assertThat(getGroovyScript(modificationInfos.get(2).getUuid()),
+            MatcherGroovyScriptInfos.createMatcherGroovyScriptInfos(groovyScriptEntity3.toModificationInfos()));
 
         assertEquals(3, networkModificationRepository.getModifications(TEST_GROUP_ID, false, true).size());
         assertEquals(List.of(TEST_GROUP_ID), this.networkModificationRepository.getModificationGroupsUuids());
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(groovyScriptModificationEntity2.getId(), groovyScriptModificationEntity3.getId()));
+        networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(groovyScriptEntity2.getId(), groovyScriptEntity3.getId()));
         assertRequestsCount(2, 0, 1, 4);
 
         SQLStatementCountValidator.reset();
