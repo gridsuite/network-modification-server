@@ -31,7 +31,7 @@ public class ScalingVariationEntity {
     @Column(name = "id")
     private UUID id;
 
-    @ManyToMany(cascade = CascadeType.ALL)
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JoinTable(
             joinColumns = @JoinColumn(name = "id"),
             inverseJoinColumns = @JoinColumn(name = "filterId"))
@@ -49,32 +49,15 @@ public class ScalingVariationEntity {
         assignAttributes(variationInfos);
     }
 
-    public ScalingVariationEntity update(ScalingVariationInfos variationInfos) {
-        assignAttributes(variationInfos);
-        return this;
-    }
-
     private void assignAttributes(ScalingVariationInfos variationInfos) {
-        this.filters = getFiltersEntity(variationInfos);
+        if (filters == null) {
+            this.filters = variationInfos.getFilters().stream().map(FilterInfos::toEntity).collect(Collectors.toList());
+        } else {
+            filters.clear();
+            filters.addAll(variationInfos.getFilters().stream().map(FilterInfos::toEntity).collect(Collectors.toList()));
+        }
         this.variationMode = variationInfos.getVariationMode();
         this.variationValue = variationInfos.getVariationValue();
-    }
-
-    private List<VariationFilterEntity> getFiltersEntity(ScalingVariationInfos variationInfos) {
-        return variationInfos.getFilters()
-                .stream()
-                .map(filterInfos -> {
-                    if (filters == null) {
-                        return new VariationFilterEntity(filterInfos);
-                    } else {
-                        return filters
-                                .stream()
-                                .filter(filter -> Objects.equals(filter.getFilterId(), filterInfos.getId()))
-                                .findFirst()
-                                .orElse(filterInfos.toEntity());
-                    }
-                })
-                .collect(Collectors.toList());
     }
 
     public ScalingVariationInfos toScalingVariationInfo() {

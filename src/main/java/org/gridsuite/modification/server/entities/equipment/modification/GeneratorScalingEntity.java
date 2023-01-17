@@ -15,10 +15,12 @@ import lombok.Setter;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.GeneratorScalingInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.ScalingVariationInfos;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
@@ -38,7 +40,7 @@ public class GeneratorScalingEntity extends ScalingEntity {
     @Column(name = "isIterative")
     private boolean isIterative;
 
-    @OneToMany(cascade = CascadeType.ALL)
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<ScalingVariationEntity> variations;
 
     public GeneratorScalingEntity(@NotNull GeneratorScalingInfos generatorScalingInfos) {
@@ -55,24 +57,12 @@ public class GeneratorScalingEntity extends ScalingEntity {
     private void assignAttributes(GeneratorScalingInfos generatorScalingInfos) {
         isIterative = generatorScalingInfos.getIsIterative();
         setVariationType(generatorScalingInfos.getVariationType());
-        setVariations(getScalingVariationEntities(generatorScalingInfos));
-    }
-
-    private List<ScalingVariationEntity> getScalingVariationEntities(GeneratorScalingInfos generatorScalingInfos) {
-        return generatorScalingInfos.getVariations()
-                .stream()
-                .map(info -> {
-                    if (variations == null) {
-                        return info.toEntity();
-                    } else {
-                        return variations.stream()
-                                .filter(entity -> Objects.equals(info.getId(), entity.getId()))
-                                .findFirst()
-                                .map(entity -> entity.update(info))
-                                .orElse(info.toEntity());
-                    }
-                })
-                .collect(Collectors.toList());
+        if (variations == null) {
+            variations = generatorScalingInfos.getVariations().stream().map(ScalingVariationInfos::toEntity).collect(Collectors.toList());
+        } else {
+            variations.clear();
+            variations.addAll(generatorScalingInfos.getVariations().stream().map(ScalingVariationInfos::toEntity).collect(Collectors.toList()));
+        }
     }
 
     @Override
