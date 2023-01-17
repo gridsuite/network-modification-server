@@ -88,13 +88,21 @@ public abstract class AbstractScaling extends AbstractModification {
 
         // apply variations
         scalingInfos.getVariations().forEach(variation -> {
+            variation.getFilters().stream()
+                    .filter(f -> !exportFilters.containsKey(f.getId()))
+                    .forEach(f -> createReport(subReporter,
+                            "filterNotFound",
+                            String.format("Cannot find the following filter: %s", f.getName()),
+                            TypedValue.WARN_SEVERITY));
+
             List<IdentifiableAttributes> identifiableAttributes = variation.getFilters()
                     .stream()
-                    .filter(f -> !filterWithWrongEquipmentsIds.containsKey(f.getId()))
+                    .filter(f -> !filterWithWrongEquipmentsIds.containsKey(f.getId()) && exportFilters.containsKey(f.getId()))
                     .flatMap(f -> exportFilters.get(f.getId())
                             .getIdentifiableAttributes()
                             .stream())
                     .collect(Collectors.toList());
+
             if (CollectionUtils.isEmpty(identifiableAttributes)) {
                 String filterNames = variation.getFilters().stream().map(FilterInfos::getName).collect(Collectors.joining(", "));
                 createReport(subReporter,
