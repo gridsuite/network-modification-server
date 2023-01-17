@@ -14,7 +14,6 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import com.powsybl.network.store.iidm.impl.NetworkImpl;
 import org.gridsuite.modification.server.ModificationType;
-import org.gridsuite.modification.server.NetworkModificationApplication;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.VariationMode;
 import org.gridsuite.modification.server.VariationType;
@@ -30,14 +29,8 @@ import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.stream.binder.test.TestChannelBinderConfiguration;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.IOException;
 import java.time.ZonedDateTime;
@@ -57,10 +50,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
  */
 
-@RunWith(SpringRunner.class)
-@AutoConfigureMockMvc
-@SpringBootTest
-@ContextConfiguration(classes = {NetworkModificationApplication.class, TestChannelBinderConfiguration.class})
 public class GeneratorScalingModificationTest extends AbstractNetworkModificationTest {
 
     private static final UUID GENERATOR_SCALING_ID = UUID.randomUUID();
