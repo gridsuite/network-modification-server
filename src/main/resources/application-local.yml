@@ -26,6 +26,3 @@ spring:
 powsybl-ws:
   database:
     host: localhost
-
-network-store-server:
-  base-uri: http://localhost:8080
