@@ -8,8 +8,6 @@ package org.gridsuite.modification.server.entities.equipment.modification;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.server.ModificationType;
-import org.gridsuite.modification.server.dto.AttributeModification;
 import org.gridsuite.modification.server.dto.BasicEquipmentModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.OperationType;
@@ -32,13 +30,6 @@ public class BasicEquipmentModificationEntity extends EquipmentModificationEntit
     @Column(name = "equipmentNameOp")
     @Enumerated(EnumType.STRING)
     private OperationType equipmentNameOp;
-
-    //TODO : Remove when LoadModification refactoring is done
-    protected BasicEquipmentModificationEntity(ModificationType modificationType, String equipmentId, AttributeModification<String> equipmentName) {
-        super(equipmentId, modificationType);
-        this.equipmentNameValue = equipmentName != null ? equipmentName.getValue() : null;
-        this.equipmentNameOp = equipmentName != null ? equipmentName.getOp() : null;
-    }
 
     protected BasicEquipmentModificationEntity(BasicEquipmentModificationInfos modificationInfos) {
         super(modificationInfos);
