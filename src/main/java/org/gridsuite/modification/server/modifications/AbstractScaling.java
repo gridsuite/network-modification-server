@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -151,7 +152,7 @@ public abstract class AbstractScaling extends AbstractModification {
                                                        List<IdentifiableAttributes> identifiableAttributes,
                                                        ScalingVariationInfos scalingVariationInfos, Reporter subReporter);
 
-    protected abstract double getAsked(ScalingVariationInfos variationInfos, double sum);
+    protected abstract double getAsked(ScalingVariationInfos variationInfos, AtomicReference<Double> sum);
 
     protected abstract Scalable getScalable(String id);
 }
