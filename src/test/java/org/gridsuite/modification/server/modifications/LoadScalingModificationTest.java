@@ -357,7 +357,7 @@ public class LoadScalingModificationTest extends AbstractNetworkModificationTest
         return MatcherLoadScalingInfos.createMatcherLoadScalingInfos((LoadScalingInfos) modificationInfos);
     }
 
-    //TODO update values after powsybl release
+    //TODO update values after PowSyBl release
     @Override
     protected void assertNetworkAfterCreation() {
         assertEquals(108.33, getNetwork().getLoad(LOAD_ID_1).getP0(), 0.01D);

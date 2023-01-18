@@ -114,7 +114,7 @@ public class LoadScaling extends AbstractScaling {
             case CONSTANT_Q:
                 return proportionalScalable.scale(network, asked, Scalable.ScalingConvention.LOAD);
             case TAN_PHI_FIXED:
-                return proportionalScalable.scaleWithConstantPowerFactor(network, asked, Scalable.ScalingConvention.LOAD); //TODO waiting for to be fixed by Powsybl
+                return proportionalScalable.scaleWithConstantPowerFactor(network, asked, Scalable.ScalingConvention.LOAD); //TODO waiting for to be fixed by PowSyBl
             default:
                 throw new NetworkModificationException(LOAD_SCALING_ERROR, "Reactive Variation mode not recognised");
         }
