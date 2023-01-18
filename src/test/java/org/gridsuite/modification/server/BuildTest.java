@@ -10,7 +10,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.powsybl.commons.exceptions.UncheckedInterruptedException;
-import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.*;
@@ -29,7 +28,6 @@ import org.gridsuite.modification.server.entities.equipment.creation.TapChangerS
 import org.gridsuite.modification.server.repositories.ModificationGroupRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.NetworkModificationService;
-import org.gridsuite.modification.server.service.NetworkStoreListener;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.gridsuite.modification.server.utils.TestUtils;
 import org.jetbrains.annotations.NotNull;
@@ -64,7 +62,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import static com.powsybl.iidm.network.ReactiveLimitsKind.MIN_MAX;
-import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_ERROR;
 import static org.gridsuite.modification.server.service.BuildWorkerService.CANCEL_MESSAGE;
 import static org.gridsuite.modification.server.service.BuildWorkerService.FAIL_MESSAGE;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -255,7 +252,7 @@ public class BuildTest {
                 .nominalVoltage(225)
                 .substationId("s1")
                 .busbarSections(List.of(new BusbarSectionCreationInfos("1.1", "1.1", 1, 1),
-                 new BusbarSectionCreationInfos("1.2", "1.2", 1, 2)))
+                    new BusbarSectionCreationInfos("1.2", "1.2", 1, 2)))
                 .busbarConnections(List.of(new BusbarConnectionCreationInfos("1.1", "1.2", SwitchKind.BREAKER)))
                 .build().toEntity());
         modificationRepository.saveModifications(TEST_GROUP_ID_2, entities2);
@@ -389,7 +386,7 @@ public class BuildTest {
 
         entities2.add(EquipmentDeletionInfos.builder().type(ModificationType.EQUIPMENT_DELETION).equipmentId("v2shunt").equipmentType("SHUNT_COMPENSATOR").build().toEntity());
         entities2.add(GroovyScriptInfos.builder().script("network.getGenerator('idGenerator').targetP=55\n").build().toEntity());
-        entities2.add(modificationRepository.createBranchStatusModificationEntity("line2", BranchStatusModificationInfos.ActionType.TRIP));
+        entities2.add(BranchStatusModificationInfos.builder().type(ModificationType.BRANCH_STATUS_MODIFICATION).equipmentId("line2").action(BranchStatusModificationInfos.ActionType.TRIP).build().toEntity());
         entities2.add(VoltageLevelCreationInfos.builder()
                 .type(ModificationType.VOLTAGE_LEVEL_CREATION)
                 .equipmentId("vl9")
@@ -397,7 +394,7 @@ public class BuildTest {
                 .nominalVoltage(225)
                 .substationId("s1")
                 .busbarSections(List.of(new BusbarSectionCreationInfos("1.1", "1.1", 1, 1),
-                 new BusbarSectionCreationInfos("1.2", "1.2", 1, 2)))
+                    new BusbarSectionCreationInfos("1.2", "1.2", 1, 2)))
                 .busbarConnections(List.of(new BusbarConnectionCreationInfos("1.1", "1.2", SwitchKind.BREAKER)))
                 .build().toEntity());
         entities2.add(ShuntCompensatorCreationInfos.builder()
@@ -783,21 +780,6 @@ public class BuildTest {
         Message<byte[]> message = output.receive(TIMEOUT * 3, buildFailedDestination);
         assertEquals("me", message.getHeaders().get("receiver"));
         assertThat((String) message.getHeaders().get("message"), startsWith(FAIL_MESSAGE));
-    }
-
-    @Test
-    public void doActionWithUncheckedExceptionTest() {
-        Network networkTest = NetworkCreation.create(TEST_NETWORK_ID, true);
-        NetworkStoreListener listener = NetworkStoreListener.create(networkTest, TEST_NETWORK_ID, null, modificationRepository, equipmentInfosService, true, true);
-        ReporterModel reporter = new ReporterModel("reportKey", "reportName");
-        Reporter subReporter = reporter.createSubReporter("AttributeModification", "Attribute modification");
-        assertThrows("unexpected error", RuntimeException.class, () ->
-            networkModificationService.doAction(listener, () -> {
-                throw new RuntimeException("unexpected error");
-            }, MODIFICATION_ERROR, TEST_NETWORK_ID, reporter, subReporter)
-        );
-
-        assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches("/v1/reports/.*")));
     }
 
     private void testNetworkModificationsCount(UUID groupUuid, int actualSize) throws Exception {

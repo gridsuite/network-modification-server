@@ -8,8 +8,10 @@ package org.gridsuite.modification.server.entities.equipment.modification;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.BranchStatusModificationInfos;
+import org.gridsuite.modification.server.dto.ModificationInfos;
 
 import javax.persistence.*;
 import java.util.Set;
@@ -28,9 +30,19 @@ public class BranchStatusModificationEntity extends EquipmentModificationEntity 
     @Enumerated(EnumType.STRING)
     private BranchStatusModificationInfos.ActionType action;
 
-    public BranchStatusModificationEntity(String lineId, BranchStatusModificationInfos.ActionType status) {
-        super(lineId, ModificationType.BRANCH_STATUS);
-        this.action = status;
+    public BranchStatusModificationEntity(@NonNull BranchStatusModificationInfos branchStatusModificationInfos) {
+        super(branchStatusModificationInfos);
+        assignAttributes(branchStatusModificationInfos);
+    }
+
+    @Override
+    public void update(@NonNull ModificationInfos modificationInfos) {
+        super.update(modificationInfos);
+        assignAttributes((BranchStatusModificationInfos) modificationInfos);
+    }
+
+    private void assignAttributes(BranchStatusModificationInfos branchStatusModificationInfos) {
+        action = branchStatusModificationInfos.getAction();
     }
 
     @Override
