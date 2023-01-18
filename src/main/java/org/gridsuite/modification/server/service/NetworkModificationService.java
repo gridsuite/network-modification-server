@@ -117,51 +117,6 @@ public class NetworkModificationService {
         networkModificationRepository.deleteModificationGroup(groupUuid, errorOnGroupNotFound);
     }
 
-    public List<ModificationInfos> doAction(NetworkStoreListener listener, Runnable action,
-                                            NetworkModificationException.Type typeIfError,
-                                            UUID reportUuid, ReporterModel reporter,
-                                            Reporter subReporter) {
-        try {
-            action.run();
-            if (!listener.isBuild()) {
-                saveModifications(listener);
-            }
-            return listener.isApplyModifications() ? listener.getModifications() : Collections.emptyList();
-        } catch (PowsyblException e) {
-            NetworkModificationException exc = e instanceof NetworkModificationException ? (NetworkModificationException) e : new NetworkModificationException(typeIfError, e);
-            subReporter.report(Report.builder()
-                .withKey(typeIfError.name())
-                .withDefaultMessage(exc.getMessage())
-                .withSeverity(TypedValue.ERROR_SEVERITY)
-                .build());
-            if (!listener.isBuild()) {
-                throw exc;
-            } else {
-                return Collections.emptyList();
-            }
-        } catch (Exception e) {
-            if (!listener.isBuild()) {
-                throw new NetworkModificationException(typeIfError, e);
-            } else {
-                throw e;
-            }
-        } finally {
-            if (listener.isApplyModifications()) {
-                sendReport(reportUuid, reporter);
-            }
-        }
-    }
-
-    private void saveModifications(NetworkStoreListener listener) {
-        listener.saveModifications();
-        try {
-            networkStoreService.flush(listener.getNetwork());
-        } catch (Exception e) {
-            listener.deleteModifications();
-            throw e;
-        }
-    }
-
     private ModificationNetworkInfos getNetworkModificationInfos(UUID networkUuid, String variantId) {
         Network network;
         try {
@@ -220,7 +175,7 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public List<ModificationInfos> createModification(@NonNull UUID networkUuid, String variantId, @NonNull UUID groupUuid, @NonNull UUID reportUuid, @NonNull String reporterId, @NonNull ModificationInfos modificationInfos) {
+    public List<ModificationInfos> createNetworkModification(@NonNull UUID networkUuid, String variantId, @NonNull UUID groupUuid, @NonNull UUID reportUuid, @NonNull String reporterId, @NonNull ModificationInfos modificationInfos) {
         modificationInfos.check();
         ModificationNetworkInfos networkInfos = getNetworkModificationInfos(networkUuid, variantId);
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
@@ -313,29 +268,7 @@ public class NetworkModificationService {
             if (modificationsToExclude.contains(infos.getUuid())) {
                 return List.of();
             }
-
-            switch (infos.getType()) {
-                case EQUIPMENT_ATTRIBUTE_MODIFICATION:
-                case LOAD_CREATION:
-                case LINE_SPLIT_WITH_VOLTAGE_LEVEL:
-                case DELETE_VOLTAGE_LEVEL_ON_LINE:
-                case DELETE_ATTACHING_LINE:
-                case SHUNT_COMPENSATOR_CREATION:
-                case LINE_CREATION:
-                case LINE_ATTACH_TO_VOLTAGE_LEVEL:
-                case VOLTAGE_LEVEL_CREATION:
-                case LINES_ATTACH_TO_SPLIT_LINES:
-                case LOAD_MODIFICATION:
-                case EQUIPMENT_DELETION:
-                case GROOVY_SCRIPT:
-                case GENERATOR_CREATION:
-                case GENERATOR_MODIFICATION:
-                case SUBSTATION_CREATION:
-                case TWO_WINDINGS_TRANSFORMER_CREATION:
-                case BRANCH_STATUS_MODIFICATION:
-                    return handleModification(infos, listener, groupUuid, reportUuid, reporterId);
-                default:
-            }
+            return handleModification(infos, listener, groupUuid, reportUuid, reporterId);
         } catch (PowsyblException e) {
             NetworkModificationException exc = e instanceof NetworkModificationException ? (NetworkModificationException) e : new NetworkModificationException(MODIFICATION_ERROR, e);
             ReporterModel reporter = new ReporterModel(reporterId, "Building node");
