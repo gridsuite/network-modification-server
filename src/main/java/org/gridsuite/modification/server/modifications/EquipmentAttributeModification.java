@@ -15,7 +15,8 @@ import com.powsybl.iidm.network.extensions.BranchStatusAdder;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.EquipmentAttributeModificationInfos;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.EQUIPMENT_NOT_FOUND;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.WRONG_EQUIPMENT_TYPE;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
