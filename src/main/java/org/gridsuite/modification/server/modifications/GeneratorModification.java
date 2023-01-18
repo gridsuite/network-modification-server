@@ -264,7 +264,7 @@ public class GeneratorModification extends AbstractModification {
                 }
             } else {
                 generator.newExtension(ActivePowerControlAdder.class)
-                        .withParticipate(false).add();
+                        .withParticipate(participate).add();
             }
         }
         ModificationUtils.getInstance().reportModifications(subReporter, reports, "activePowerRegulationModified", "Active power regulation modified :");

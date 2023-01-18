@@ -6,17 +6,13 @@
  */
 package org.gridsuite.modification.server.repositories;
 
-import com.powsybl.iidm.network.PhaseTapChanger;
-import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NonNull;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationGroupEntity;
-import org.gridsuite.modification.server.entities.equipment.creation.*;
-import org.gridsuite.modification.server.entities.equipment.modification.BranchStatusModificationEntity;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -194,78 +190,12 @@ public class NetworkModificationRepository {
         return count;
     }
 
-    public void updateModification(ModificationEntity modificationEntity) {
-        this.modificationRepository.save(modificationEntity);
-    }
-
     private ModificationGroupEntity getModificationGroup(UUID groupUuid) {
         return this.modificationGroupRepository.findById(groupUuid).orElseThrow(() -> new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, groupUuid.toString()));
     }
 
     private ModificationGroupEntity getOrCreateModificationGroup(UUID groupUuid) {
         return this.modificationGroupRepository.findById(groupUuid).orElseGet(() -> modificationGroupRepository.save(new ModificationGroupEntity(groupUuid)));
-    }
-
-    public EquipmentCreationEntity createTwoWindingsTransformerEntity(String id, String name, double seriesResistance, double seriesReactance,
-                                                                      double magnetizingConductance, double magnetizingSusceptance, double ratedVoltage1, double ratedVoltage2, double ratedS,
-                                                                      String voltageLevelId1, String busOrBusbarSectionId1, String voltageLevelId2, String busOrBusbarSectionId2,
-                                                                      Double permanentCurrentLimit1, Double permanentCurrentLimit2,
-                                                                      String connectionName1,
-                                                                      ConnectablePosition.Direction connectionDirection1,
-                                                                      String connectionName2,
-                                                                      ConnectablePosition.Direction connectionDirection2,
-                                                                      Integer phaseTapChangerLowTapPosition,
-                                                                      Integer phaseTapChangerTapPosition,
-                                                                      Boolean phaseTapChangerRegulating,
-                                                                      Double phaseTapChangerTargetDeadband,
-                                                                      String phaseTapChangerTerminalRefConnectableId,
-                                                                      String phaseTapChangerTerminalRefVoltageLevelId,
-                                                                      String phaseTapChangerTerminalRefType,
-                                                                      PhaseTapChanger.RegulationMode phaseTapChangerRegulationMode,
-                                                                      Double phaseTapChangerRegulationValue,
-                                                                      Integer ratioTapChangerLowTapPosition,
-                                                                      Integer ratioTapChangerTapPosition,
-                                                                      Boolean ratioTapChangerRegulating,
-                                                                      Double ratioTapChangerTargetDeadband,
-                                                                      String ratioTapChangerTerminalRefConnectableId,
-                                                                      String ratioTapChangerTerminalRefVoltageLevelId,
-                                                                      String ratioTapChangerTerminalRefType,
-                                                                      Boolean ratioTapChangerLoadTapChangingCapabilities,
-                                                                      Double ratioTapChangerTargetV,
-                                                                      List<TapChangerStepCreationEmbeddable> tapChangerSteps,
-                                                                      Integer connectionPosition1,
-                                                                      Integer connectionPosition2) {
-        return new TwoWindingsTransformerCreationEntity(id, name, seriesResistance, seriesReactance,
-                magnetizingConductance, magnetizingSusceptance, ratedVoltage1, ratedVoltage2, ratedS,
-                voltageLevelId1, busOrBusbarSectionId1, voltageLevelId2, busOrBusbarSectionId2,
-                permanentCurrentLimit1, permanentCurrentLimit2,
-                connectionName1, connectionDirection1,
-                connectionName2, connectionDirection2,
-                phaseTapChangerLowTapPosition,
-                phaseTapChangerTapPosition,
-                phaseTapChangerRegulating,
-                phaseTapChangerTargetDeadband,
-                phaseTapChangerTerminalRefConnectableId,
-                phaseTapChangerTerminalRefVoltageLevelId,
-                phaseTapChangerTerminalRefType,
-                phaseTapChangerRegulationMode,
-                phaseTapChangerRegulationValue,
-                ratioTapChangerLowTapPosition,
-                ratioTapChangerTapPosition,
-                ratioTapChangerRegulating,
-                ratioTapChangerTargetDeadband,
-                ratioTapChangerTerminalRefConnectableId,
-                ratioTapChangerTerminalRefVoltageLevelId,
-                ratioTapChangerTerminalRefType,
-                ratioTapChangerLoadTapChangingCapabilities,
-                ratioTapChangerTargetV,
-                tapChangerSteps,
-                connectionPosition1,
-                connectionPosition2);
-    }
-
-    public BranchStatusModificationEntity createBranchStatusModificationEntity(String lineId, BranchStatusModificationInfos.ActionType action) {
-        return new BranchStatusModificationEntity(lineId, action);
     }
 
     private List<ModificationEntity> getModificationsEntities(List<UUID> groupUuids) {
