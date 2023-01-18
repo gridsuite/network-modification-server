@@ -10,11 +10,9 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NonNull;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.BranchStatusModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationGroupEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.BranchStatusModificationEntity;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -192,20 +190,12 @@ public class NetworkModificationRepository {
         return count;
     }
 
-    public void updateModification(ModificationEntity modificationEntity) {
-        this.modificationRepository.save(modificationEntity);
-    }
-
     private ModificationGroupEntity getModificationGroup(UUID groupUuid) {
         return this.modificationGroupRepository.findById(groupUuid).orElseThrow(() -> new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, groupUuid.toString()));
     }
 
     private ModificationGroupEntity getOrCreateModificationGroup(UUID groupUuid) {
         return this.modificationGroupRepository.findById(groupUuid).orElseGet(() -> modificationGroupRepository.save(new ModificationGroupEntity(groupUuid)));
-    }
-
-    public BranchStatusModificationEntity createBranchStatusModificationEntity(String lineId, BranchStatusModificationInfos.ActionType action) {
-        return new BranchStatusModificationEntity(lineId, action);
     }
 
     private List<ModificationEntity> getModificationsEntities(List<UUID> groupUuids) {

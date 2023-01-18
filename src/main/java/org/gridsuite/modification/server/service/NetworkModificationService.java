@@ -12,18 +12,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Streams;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.reporter.*;
-import com.powsybl.iidm.modification.tripping.BranchTripping;
 import com.powsybl.iidm.network.*;
-import com.powsybl.iidm.network.Branch.Side;
-import com.powsybl.iidm.network.extensions.BranchStatus;
-import com.powsybl.iidm.network.extensions.BranchStatusAdder;
 import com.powsybl.network.store.client.NetworkStoreService;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.BranchStatusModificationInfos;
-import org.gridsuite.modification.server.dto.BranchStatusModificationInfos.ActionType;
 import org.gridsuite.modification.server.dto.BuildInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationNetworkInfos;
@@ -82,7 +75,6 @@ public class NetworkModificationService {
     private static final String DELIMITER = "/";
 
     private static final String NETWORK_MODIFICATION_TYPE_REPORT = "NetworkModification";
-    private static final String LINE_ID_PARAMETER = "lineId";
 
     public NetworkModificationService(@Value("${gridsuite.services.report-server.base-uri:http://report-server}") String reportServerURI,
                                       NetworkStoreService networkStoreService, NetworkModificationRepository networkModificationRepository,
@@ -125,188 +117,6 @@ public class NetworkModificationService {
         return networkModificationRepository.getModificationInfo(networkModificationUuid);
     }
 
-    private boolean disconnectLineBothSides(Network network, String lineId) {
-        Terminal terminal1 = network.getLine(lineId).getTerminal1();
-        boolean terminal1Disconnected = !terminal1.isConnected() || terminal1.disconnect();
-        Terminal terminal2 = network.getLine(lineId).getTerminal2();
-        boolean terminal2Disconnected = !terminal2.isConnected() || terminal2.disconnect();
-        return terminal1Disconnected && terminal2Disconnected;
-    }
-
-    public List<ModificationInfos> createLineStatusModification(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId, BranchStatusModificationInfos branchStatusModificationInfos) {
-        ModificationNetworkInfos networkInfos = getNetworkModificationInfos(networkUuid, variantId);
-        NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
-        return execCreateBranchStatusModification(listener, branchStatusModificationInfos, reportUuid, reporterId);
-    }
-
-    private List<ModificationInfos> execCreateBranchStatusModification(NetworkStoreListener listener, BranchStatusModificationInfos branchStatusModificationInfos, UUID reportUuid, String reporterId) {
-        String lineId = branchStatusModificationInfos.getEquipmentId();
-        BranchStatusModificationInfos.ActionType action = branchStatusModificationInfos.getAction();
-        if (action == null) {
-            throw new NetworkModificationException(BRANCH_ACTION_TYPE_EMPTY);
-        }
-        switch (action) {
-            case LOCKOUT:
-                return execCreateLockoutLine(listener, lineId, reportUuid, reporterId);
-            case TRIP:
-                return execCreateTripLine(listener, lineId, reportUuid, reporterId);
-            case SWITCH_ON:
-                return execCreateSwitchOnLine(listener, lineId, reportUuid, reporterId);
-            case ENERGISE_END_ONE:
-                return execCreateEnergiseLineEnd(listener, lineId, Branch.Side.ONE, reportUuid, reporterId);
-            case ENERGISE_END_TWO:
-                return execCreateEnergiseLineEnd(listener, lineId, Side.TWO, reportUuid, reporterId);
-            default:
-                throw NetworkModificationException.createBranchActionTypeUnsupported(action);
-        }
-    }
-
-    private List<ModificationInfos> execCreateLockoutLine(NetworkStoreListener listener, String lineId,
-                                                          UUID reportUuid, String reporterId) {
-        String rootReporterId = reporterId + "@" + NETWORK_MODIFICATION_TYPE_REPORT;
-        ReporterModel reporter = new ReporterModel(rootReporterId, rootReporterId);
-        Reporter subReporter = reporter.createSubReporter(
-            ModificationType.BRANCH_STATUS.name() + "_" + ActionType.LOCKOUT.name(),
-            "Lockout line ${lineId}", LINE_ID_PARAMETER, lineId);
-
-        return doAction(listener,
-            () -> {
-                Network network = listener.getNetwork();
-                if (network.getLine(lineId) == null) {
-                    throw new NetworkModificationException(LINE_NOT_FOUND, lineId);
-                }
-                if (disconnectLineBothSides(network, lineId)) {
-                    network.getLine(lineId).newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.PLANNED_OUTAGE).add();
-                } else {
-                    throw new NetworkModificationException(BRANCH_ACTION_ERROR, "Unable to disconnect both line ends");
-                }
-
-                subReporter.report(Report.builder()
-                    .withKey("lockoutLineApplied")
-                    .withDefaultMessage("Line ${id} (id) : lockout applied")
-                    .withValue("id", lineId)
-                    .withSeverity(TypedValue.INFO_SEVERITY)
-                    .build());
-            },
-            () -> listener.storeBranchStatusModification(lineId, BranchStatusModificationInfos.ActionType.LOCKOUT),
-            MODIFICATION_ERROR, reportUuid, reporter, subReporter
-        );
-    }
-
-    private List<ModificationInfos> execCreateTripLine(NetworkStoreListener listener, String lineId,
-                                                       UUID reportUuid, String reporterId) {
-        String rootReporterId = reporterId + "@" + NETWORK_MODIFICATION_TYPE_REPORT;
-        ReporterModel reporter = new ReporterModel(rootReporterId, rootReporterId);
-        Reporter subReporter = reporter
-                .createSubReporter(
-                        ModificationType.BRANCH_STATUS.name() + "_" + ActionType.TRIP.name(),
-                        "Trip line ${lineId}", LINE_ID_PARAMETER, lineId);
-
-        return doAction(listener,
-            () -> {
-                Network network = listener.getNetwork();
-                if (network.getLine(lineId) == null) {
-                    throw new NetworkModificationException(LINE_NOT_FOUND, lineId);
-                }
-                var trip = new BranchTripping(lineId);
-                var switchToDisconnect = new HashSet<Switch>();
-                var terminalsToDisconnect = new HashSet<Terminal>();
-                var traversedTerminals = new HashSet<Terminal>();
-                trip.traverse(network, switchToDisconnect, terminalsToDisconnect, traversedTerminals);
-
-                switchToDisconnect.forEach(sw -> sw.setOpen(true));
-                terminalsToDisconnect.forEach(Terminal::disconnect);
-
-                subReporter.report(Report.builder()
-                    .withKey("tripLineApplied")
-                    .withDefaultMessage("Line ${id} (id) : trip applied")
-                    .withValue("id", lineId)
-                    .withSeverity(TypedValue.INFO_SEVERITY)
-                    .build());
-
-                traversedTerminals.stream().map(t -> network.getLine(t.getConnectable().getId())).filter(Objects::nonNull)
-                    .forEach(b -> b.newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.FORCED_OUTAGE).add());
-            },
-            () -> listener.storeBranchStatusModification(lineId, BranchStatusModificationInfos.ActionType.TRIP),
-            MODIFICATION_ERROR, reportUuid, reporter, subReporter
-        );
-    }
-
-    private List<ModificationInfos> execCreateEnergiseLineEnd(NetworkStoreListener listener, String lineId, Side side,
-                                                              UUID reportUuid, String reporterId) {
-        String rootReporterId = reporterId + "@" + NETWORK_MODIFICATION_TYPE_REPORT;
-        ReporterModel reporter = new ReporterModel(rootReporterId, rootReporterId);
-        String branchSideKey = side == Branch.Side.ONE ? ActionType.ENERGISE_END_TWO.name() : ActionType.ENERGISE_END_ONE.name();
-        Reporter subReporter = reporter
-            .createSubReporter(
-                ModificationType.BRANCH_STATUS.name() + "_" + branchSideKey,
-                "Energise line ${lineId}", LINE_ID_PARAMETER, lineId);
-
-        return doAction(listener,
-            () -> {
-                Network network = listener.getNetwork();
-                if (network.getLine(lineId) == null) {
-                    throw new NetworkModificationException(LINE_NOT_FOUND, lineId);
-                }
-                Terminal terminalToConnect = network.getLine(lineId).getTerminal(side);
-                boolean isTerminalToConnectConnected = terminalToConnect.isConnected() || terminalToConnect.connect();
-                Terminal terminalToDisconnect = network.getLine(lineId).getTerminal(side == Branch.Side.ONE ? Branch.Side.TWO : Branch.Side.ONE);
-                boolean isTerminalToDisconnectDisconnected = !terminalToDisconnect.isConnected() || terminalToDisconnect.disconnect();
-                if (isTerminalToConnectConnected && isTerminalToDisconnectDisconnected) {
-                    network.getLine(lineId).newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.IN_OPERATION).add();
-                } else {
-                    throw new NetworkModificationException(BRANCH_ACTION_ERROR, "Unable to energise line end");
-                }
-
-                subReporter.report(Report.builder()
-                    .withKey("energiseLineEndApplied")
-                    .withDefaultMessage("Line ${id} (id) : energise the side ${side} applied")
-                    .withValue("id", lineId)
-                    .withValue("side", side.name())
-                    .withSeverity(TypedValue.INFO_SEVERITY)
-                    .build());
-            },
-            () -> listener.storeBranchStatusModification(lineId, side == Branch.Side.ONE ? BranchStatusModificationInfos.ActionType.ENERGISE_END_ONE : BranchStatusModificationInfos.ActionType.ENERGISE_END_TWO),
-            MODIFICATION_ERROR, reportUuid, reporter, subReporter
-        );
-    }
-
-    private List<ModificationInfos> execCreateSwitchOnLine(NetworkStoreListener listener, String lineId,
-                                                           UUID reportUuid, String reporterId) {
-        String rootReporterId = reporterId + "@" + NETWORK_MODIFICATION_TYPE_REPORT;
-        ReporterModel reporter = new ReporterModel(rootReporterId, rootReporterId);
-        Reporter subReporter = reporter.createSubReporter(
-                ModificationType.BRANCH_STATUS.name() + "_" + ActionType.SWITCH_ON.name(),
-                "Switch on line ${lineId}", LINE_ID_PARAMETER, lineId);
-
-        return doAction(listener,
-            () -> {
-                Network network = listener.getNetwork();
-                if (network.getLine(lineId) == null) {
-                    throw new NetworkModificationException(LINE_NOT_FOUND, lineId);
-                }
-                Terminal terminal1 = network.getLine(lineId).getTerminal1();
-                boolean terminal1Connected = terminal1.isConnected() || terminal1.connect();
-                Terminal terminal2 = network.getLine(lineId).getTerminal2();
-                boolean terminal2Connected = terminal2.isConnected() || terminal2.connect();
-                if (terminal1Connected && terminal2Connected) {
-                    network.getLine(lineId).newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.IN_OPERATION).add();
-                } else {
-                    throw new NetworkModificationException(BRANCH_ACTION_ERROR, "Unable to connect both line ends");
-                }
-
-                subReporter.report(Report.builder()
-                    .withKey("switchOnLineApplied")
-                    .withDefaultMessage("Line ${id} (id) : switch on applied")
-                    .withValue("id", lineId)
-                    .withSeverity(TypedValue.INFO_SEVERITY)
-                    .build());
-            },
-            () -> listener.storeBranchStatusModification(lineId, BranchStatusModificationInfos.ActionType.SWITCH_ON),
-            MODIFICATION_ERROR, reportUuid, reporter, subReporter
-        );
-    }
-
     public void deleteModificationGroup(UUID groupUuid, boolean errorOnGroupNotFound) {
         networkModificationRepository.deleteModificationGroup(groupUuid, errorOnGroupNotFound);
     }
@@ -327,54 +137,6 @@ public class NetworkModificationService {
         return networkModificationException;
     }
 
-    private List<ModificationInfos> doAction(NetworkStoreListener listener, Runnable action, Runnable postAction,
-                                             NetworkModificationException.Type typeIfError,
-                                             UUID reportUuid, ReporterModel reporter, Reporter subReporter) {
-        NetworkModificationException networkModificationException = null;
-        try {
-            if (listener.isApplyModifications() && action != null) {
-                action.run();
-            }
-        } catch (Exception e) {
-            networkModificationException = handleException(typeIfError, subReporter, e);
-        }
-
-        try {
-            if (postAction != null) {
-                postAction.run();
-            }
-            if (!listener.isBuild()) {
-                saveModifications(listener);
-            }
-        } catch (Exception e) {
-            networkModificationException = handleException(typeIfError, subReporter, e);
-        } finally {
-            if (listener.isApplyModifications()) {
-                sendReport(reportUuid, reporter);
-            }
-        }
-
-        if (networkModificationException != null) {
-            if (listener.isBuild()) {
-                return List.of();
-            } else {
-                throw networkModificationException;
-            }
-        }
-
-        return listener.isApplyModifications() ? listener.getModifications() : List.of();
-    }
-
-    private void saveModifications(NetworkStoreListener listener) {
-        listener.saveModifications();
-        try {
-            networkStoreService.flush(listener.getNetwork());
-        } catch (Exception e) {
-            listener.deleteModifications();
-            throw e;
-        }
-    }
-
     private ModificationNetworkInfos getNetworkModificationInfos(UUID networkUuid, String variantId) {
         Network network;
         try {
@@ -393,7 +155,6 @@ public class NetworkModificationService {
         return new ModificationNetworkInfos(network, applyModifications);
     }
 
-    // Generic form
     List<ModificationInfos> handleModification(ModificationInfos modificationInfos, NetworkStoreListener listener, UUID groupUuid,
                                                UUID reportUuid, String reporterId) {
         String rootReporterId = reporterId + "@" + NETWORK_MODIFICATION_TYPE_REPORT;
@@ -402,16 +163,16 @@ public class NetworkModificationService {
 
         List<ModificationInfos> networkModifications = List.of();
         try {
-            if (!listener.isBuild()) { // Save network modification in DB
+            if (!listener.isBuild()) { // Save modification action in DB
                 networkModificationRepository.saveModifications(groupUuid, List.of(modificationInfos.toEntity()));
             }
 
             if (listener.isApplyModifications()) { // Apply modification on the network
                 networkModifications = modificationApplicator.apply(modificationInfos, subReporter, listener);
-            }
 
-            if (!listener.isBuild()) { // Save network in DB
-                networkStoreService.flush(listener.getNetwork());
+                if (!listener.isBuild()) { // Save network in DB in incremental mode only. TODO
+                    networkStoreService.flush(listener.getNetwork());
+                }
             }
         } catch (Exception e) {
             NetworkModificationException networkModificationException = handleException(modificationInfos.getErrorType(), subReporter, e);
@@ -427,18 +188,6 @@ public class NetworkModificationService {
         return networkModifications;
     }
 
-    // temporary wildcard code smell (method to be deleted)
-    public List<? extends ModificationInfos> createNetworkModification(UUID networkUuid, String variantId, UUID groupUuid, UUID reportUuid, String reporterId, ModificationInfos modificationInfos) {
-
-        switch (modificationInfos.getType()) {
-            case BRANCH_STATUS:
-                return createLineStatusModification(networkUuid, variantId, groupUuid, reportUuid, reporterId, (BranchStatusModificationInfos) modificationInfos);
-            default:
-                throw new NetworkModificationException(TYPE_MISMATCH);
-        }
-    }
-
-    // Generic form
     @Transactional
     public void updateNetworkModification(@NonNull UUID modificationUuid, @NonNull ModificationInfos modificationInfos) {
         ModificationEntity modificationEntity = this.modificationRepository.findById(modificationUuid)
@@ -449,7 +198,7 @@ public class NetworkModificationService {
 
     // No transactional because we need to save modification in DB also in case of error
     // Transaction made in 'saveModifications' method
-    public List<ModificationInfos> createModification(@NonNull UUID networkUuid, String variantId, @NonNull UUID groupUuid, @NonNull UUID reportUuid, @NonNull String reporterId, @NonNull ModificationInfos modificationInfos) {
+    public List<ModificationInfos> createNetworkModification(@NonNull UUID networkUuid, String variantId, @NonNull UUID groupUuid, @NonNull UUID reportUuid, @NonNull String reporterId, @NonNull ModificationInfos modificationInfos) {
         modificationInfos.check();
         ModificationNetworkInfos networkInfos = getNetworkModificationInfos(networkUuid, variantId);
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, false, networkInfos.isApplyModifications());
@@ -538,37 +287,23 @@ public class NetworkModificationService {
 
     private List<ModificationInfos> applyModification(NetworkStoreListener listener, Set<UUID> modificationsToExclude, UUID groupUuid,
                                                       UUID reportUuid, String reporterId, ModificationInfos infos) {
-        if (modificationsToExclude.contains(infos.getUuid())) {
-            return List.of();
+        try {
+            if (modificationsToExclude.contains(infos.getUuid())) {
+                return List.of();
+            }
+            return handleModification(infos, listener, groupUuid, reportUuid, reporterId);
+        } catch (PowsyblException e) {
+            NetworkModificationException exc = e instanceof NetworkModificationException ? (NetworkModificationException) e : new NetworkModificationException(MODIFICATION_ERROR, e);
+            ReporterModel reporter = new ReporterModel(reporterId, "Building node");
+            reporter.report(Report.builder()
+                .withKey(MODIFICATION_ERROR.name())
+                .withDefaultMessage(exc.getMessage())
+                .withSeverity(TypedValue.ERROR_SEVERITY)
+                .build());
+            sendReport(reportUuid, reporter);
         }
 
-        switch (infos.getType()) {
-            case EQUIPMENT_ATTRIBUTE_MODIFICATION:
-            case LOAD_CREATION:
-            case LINE_SPLIT_WITH_VOLTAGE_LEVEL:
-            case DELETE_VOLTAGE_LEVEL_ON_LINE:
-            case DELETE_ATTACHING_LINE:
-            case SHUNT_COMPENSATOR_CREATION:
-            case LINE_CREATION:
-            case LINE_ATTACH_TO_VOLTAGE_LEVEL:
-            case VOLTAGE_LEVEL_CREATION:
-            case LINES_ATTACH_TO_SPLIT_LINES:
-            case LOAD_MODIFICATION:
-            case EQUIPMENT_DELETION:
-            case GROOVY_SCRIPT:
-            case GENERATOR_CREATION:
-            case GENERATOR_MODIFICATION:
-            case SUBSTATION_CREATION:
-            case TWO_WINDINGS_TRANSFORMER_CREATION:// Generic form
-                return handleModification(infos, listener, groupUuid, reportUuid, reporterId);
-
-            case BRANCH_STATUS:
-                BranchStatusModificationInfos branchStatusModificationInfos = (BranchStatusModificationInfos) infos;
-                return execCreateBranchStatusModification(listener, branchStatusModificationInfos, reportUuid, reporterId);
-
-            default:
-                throw new NetworkModificationException(UNKNOWN_MODIFICATION_TYPE, String.format("The modification type '%s' is unknown", infos.getType()));
-        }
+        return List.of();
     }
 
     /*

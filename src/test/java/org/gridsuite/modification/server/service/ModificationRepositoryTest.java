@@ -790,11 +790,11 @@ public class ModificationRepositoryTest {
     @Test
     public void testStatusLineModification() {
         List<BranchStatusModificationEntity> entities = List.of(
-            networkModificationRepository.createBranchStatusModificationEntity("idLine1", BranchStatusModificationInfos.ActionType.LOCKOUT),
-            networkModificationRepository.createBranchStatusModificationEntity("idLine2", BranchStatusModificationInfos.ActionType.TRIP),
-            networkModificationRepository.createBranchStatusModificationEntity("idLine3", BranchStatusModificationInfos.ActionType.SWITCH_ON),
-            networkModificationRepository.createBranchStatusModificationEntity("idLine4", BranchStatusModificationInfos.ActionType.ENERGISE_END_ONE),
-            networkModificationRepository.createBranchStatusModificationEntity("idLine5", BranchStatusModificationInfos.ActionType.ENERGISE_END_TWO)
+            BranchStatusModificationInfos.builder().type(ModificationType.BRANCH_STATUS_MODIFICATION).equipmentId("idLine1").action(BranchStatusModificationInfos.ActionType.LOCKOUT).build().toEntity(),
+            BranchStatusModificationInfos.builder().type(ModificationType.BRANCH_STATUS_MODIFICATION).equipmentId("idLine2").action(BranchStatusModificationInfos.ActionType.TRIP).build().toEntity(),
+            BranchStatusModificationInfos.builder().type(ModificationType.BRANCH_STATUS_MODIFICATION).equipmentId("idLine3").action(BranchStatusModificationInfos.ActionType.SWITCH_ON).build().toEntity(),
+            BranchStatusModificationInfos.builder().type(ModificationType.BRANCH_STATUS_MODIFICATION).equipmentId("idLine4").action(BranchStatusModificationInfos.ActionType.ENERGISE_END_ONE).build().toEntity(),
+            BranchStatusModificationInfos.builder().type(ModificationType.BRANCH_STATUS_MODIFICATION).equipmentId("idLine5").action(BranchStatusModificationInfos.ActionType.ENERGISE_END_TWO).build().toEntity()
         );
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, entities);
