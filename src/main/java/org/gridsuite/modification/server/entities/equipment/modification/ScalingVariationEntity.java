@@ -4,12 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-
 package org.gridsuite.modification.server.entities.equipment.modification;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import org.gridsuite.modification.server.ReactiveVariationMode;
 import org.gridsuite.modification.server.VariationMode;
 import org.gridsuite.modification.server.dto.FilterInfos;
 import org.gridsuite.modification.server.dto.ScalingVariationInfos;
@@ -19,6 +20,9 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+/**
+ * @author bendaamerahm <ahmed.bendaamer at rte-france.com>
+ */
 @NoArgsConstructor
 @Getter
 @Setter
@@ -43,6 +47,9 @@ public class ScalingVariationEntity {
     @Enumerated(EnumType.STRING)
     private VariationMode variationMode;
 
+    @Column(name = "reactiveVariationMode")
+    private ReactiveVariationMode reactiveVariationMode;
+
     public ScalingVariationEntity(ScalingVariationInfos variationInfos) {
         this.id = null;
         assignAttributes(variationInfos);
@@ -56,17 +63,20 @@ public class ScalingVariationEntity {
             filters.addAll(variationInfos.getFilters().stream().map(FilterInfos::toEntity).collect(Collectors.toList()));
         }
         this.variationMode = variationInfos.getVariationMode();
+        this.reactiveVariationMode = variationInfos.getReactiveVariationMode();
         this.variationValue = variationInfos.getVariationValue();
     }
 
-    public ScalingVariationInfos toScalingVariationInfo() {
+    public ScalingVariationInfos toScalingVariationInfos() {
         return ScalingVariationInfos.builder()
                 .id(getId())
                 .variationMode(getVariationMode())
                 .variationValue(getVariationValue())
+                .reactiveVariationMode(getReactiveVariationMode())
                 .filters(this.getFilters().stream()
                         .map(filter -> new FilterInfos(filter.getFilterId(), filter.getName()))
                         .collect(Collectors.toList()))
                 .build();
     }
+
 }

@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-
 package org.gridsuite.modification.server.entities.equipment.modification;
 
 import lombok.Getter;
@@ -21,6 +20,9 @@ import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import java.util.UUID;
 
+/**
+ * @author bendaamerahm <ahmed.bendaamer at rte-france.com>
+ */
 @NoArgsConstructor
 @Getter
 @Setter
@@ -40,9 +42,10 @@ public class VariationFilterEntity {
     @Column(name = "name")
     private String name;
 
-    public VariationFilterEntity(FilterInfos filterInfos) {
-        this.id = null;
+
+    public VariationFilterEntity(@NotNull FilterInfos filterInfos) {
         this.filterId = filterInfos.getId();
+        this.id = null;
         this.name = filterInfos.getName();
     }
 }

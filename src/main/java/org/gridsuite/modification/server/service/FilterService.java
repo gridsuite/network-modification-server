@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-
 package org.gridsuite.modification.server.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -28,16 +27,18 @@ import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.FILTERS_NOT_FOUND;
 
+/**
+ * @author bendaamerahm <ahmed.bendaamer at rte-france.com>
+ */
 @Service
 public class FilterService {
-
     private static final Logger LOGGER = LoggerFactory.getLogger(FilterService.class);
 
     private static final String FILTER_SERVER_API_VERSION = "v1";
 
     private static final String DELIMITER = "/";
 
-    private String filterServerBaseUri;
+    private static String filterServerBaseUri;
 
     private final RestTemplate restTemplate = new RestTemplate();
 
@@ -45,8 +46,8 @@ public class FilterService {
         setFilterServerBaseUri(filterServerBaseUri);
     }
 
-    public void setFilterServerBaseUri(String filterServerBaseUri) {
-        this.filterServerBaseUri = filterServerBaseUri;
+    public static void setFilterServerBaseUri(String filterServerBaseUri) {
+        FilterService.filterServerBaseUri = filterServerBaseUri;
     }
 
     public List<FilterEquipments> exportFilters(List<UUID> filtersUuids, UUID networkUuid, String variantId) {

@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-
 package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.commons.reporter.Reporter;
@@ -34,9 +33,8 @@ import static org.gridsuite.modification.server.modifications.ModificationUtils.
 import static org.gridsuite.modification.server.modifications.ModificationUtils.distinctByKey;
 
 /**
- * @author Seddik Yengui <Seddik.yengui at rte-france.com>
+ * @author bendaamerahm <ahmed.bendaamer at rte-france.com>
  */
-
 public abstract class AbstractScaling extends AbstractModification {
     protected final ScalingInfos scalingInfos;
 
@@ -47,7 +45,7 @@ public abstract class AbstractScaling extends AbstractModification {
     @Override
     public void apply(Network network, Reporter subReporter, ApplicationContext context) {
         // collect all filters from all variations
-        Map<UUID, String> filters = scalingInfos.getVariations().stream()
+        var filters = scalingInfos.getVariations().stream()
                 .flatMap(v -> v.getFilters().stream())
                 .filter(distinctByKey(FilterInfos::getId))
                 .collect(Collectors.toMap(FilterInfos::getId, FilterInfos::getName));
@@ -58,10 +56,7 @@ public abstract class AbstractScaling extends AbstractModification {
         Map<UUID, FilterEquipments> exportFilters = context.getBean(FilterService.class)
                 .exportFilters(new ArrayList<>(filters.keySet()), uuid, workingVariantId)
                 .stream()
-                .map(filter -> {
-                    filter.setFilterName(filters.get(filter.getFilterId()));
-                    return filter;
-                })
+                .peek(t -> t.setFilterName(filters.get(t.getFilterId())))
                 .collect(Collectors.toMap(FilterEquipments::getFilterId, Function.identity()));
 
         // collect all filters with wrong equipments ids
@@ -113,7 +108,6 @@ public abstract class AbstractScaling extends AbstractModification {
                 applyVariation(network, subReporter, identifiableAttributes, variation);
             }
         });
-
         createReport(subReporter, "scalingCreated", "new scaling created", TypedValue.INFO_SEVERITY);
     }
 
@@ -149,23 +143,24 @@ public abstract class AbstractScaling extends AbstractModification {
                 .sum();
         if (distributionKeys == 0) {
             String message = "This mode is available only for equipment with distribution key";
-            createReport(subReporter, "distributionKeysNotFound", message, TypedValue.ERROR_SEVERITY);
+            createReport(subReporter, "distributionKeysNotFound", message, TypedValue.WARN_SEVERITY);
             return null;
         }
         return distributionKeys;
     }
 
-    public abstract void applyStackingUpVariation(Network network, Reporter subReporter, List<IdentifiableAttributes> identifiableAttributes, ScalingVariationInfos variationInfos);
+    protected abstract void applyStackingUpVariation(Network network, Reporter subReporter, List<IdentifiableAttributes> identifiableAttributes, ScalingVariationInfos variationInfos);
 
-    public abstract void applyVentilationVariation(Network network, Reporter subReporter, List<IdentifiableAttributes> identifiableAttributes, ScalingVariationInfos generatorScalingVariation, Double distributionKeys);
+    protected abstract void applyVentilationVariation(Network network, Reporter subReporter, List<IdentifiableAttributes> identifiableAttributes, ScalingVariationInfos generatorScalingVariation, Double distributionKeys);
 
-    public abstract void applyRegularDistributionVariation(Network network, Reporter subReporter, List<IdentifiableAttributes> identifiableAttributes, ScalingVariationInfos generatorScalingVariation);
+    protected abstract void applyRegularDistributionVariation(Network network, Reporter subReporter, List<IdentifiableAttributes> identifiableAttributes, ScalingVariationInfos generatorScalingVariation);
 
-    public abstract void applyProportionalToPmaxVariation(Network network, Reporter subReporter, List<IdentifiableAttributes> identifiableAttributes, ScalingVariationInfos generatorScalingVariation);
+    protected abstract void applyProportionalToPmaxVariation(Network network, Reporter subReporter, List<IdentifiableAttributes> identifiableAttributes, ScalingVariationInfos generatorScalingVariation);
 
-    public abstract void applyProportionalVariation(Network network, Reporter subReporter, List<IdentifiableAttributes> identifiableAttributes, ScalingVariationInfos variationInfos);
+    protected abstract void applyProportionalVariation(Network network, Reporter subReporter, List<IdentifiableAttributes> identifiableAttributes, ScalingVariationInfos variationInfos);
 
-    public abstract double getAsked(ScalingVariationInfos variationInfos, AtomicReference<Double> sum);
+    protected abstract double getAsked(ScalingVariationInfos variationInfos, AtomicReference<Double> sum);
 
-    public abstract Scalable getScalable(String id);
+    protected abstract Scalable getScalable(String id);
+
 }

@@ -9,10 +9,7 @@ package org.gridsuite.modification.server;
 /**
  * @author bendaamerahm <ahmed.bendaamer at rte-france.com>
  */
-public enum VariationMode {
-    PROPORTIONAL,
-    PROPORTIONAL_TO_PMAX,
-    REGULAR_DISTRIBUTION,
-    STACKING_UP,
-    VENTILATION
+public enum ReactiveVariationMode {
+    CONSTANT_Q,
+    TAN_PHI_FIXED
 }

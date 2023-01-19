@@ -40,7 +40,7 @@ public class ModificationApplicator {
             .collect(Collectors.toList());
     }
 
-    public List<ModificationInfos> apply(ModificationInfos modificationInfos, ReporterModel reporter, NetworkStoreListener listener) {
+    public List<ModificationInfos> apply(ModificationInfos modificationInfos, ReporterModel reporter, NetworkStoreListener listener, ApplicationContext context) {
         Reporter subReporter = modificationInfos.createSubReporter(reporter);
         try {
             modificationInfos.toModification().apply(listener.getNetwork(), subReporter, context);

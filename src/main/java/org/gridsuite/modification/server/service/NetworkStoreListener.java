@@ -142,10 +142,6 @@ public class NetworkStoreListener implements NetworkListener {
         return deletions;
     }
 
-    public void storeBranchStatusModification(String lineId, BranchStatusModificationInfos.ActionType action) {
-        modifications.add(this.modificationRepository.createBranchStatusModificationEntity(lineId, action));
-    }
-
     @Override
     public void onUpdate(Identifiable identifiable, String attribute, Object oldValue, Object newValue) {
         substationsIds.addAll(getSubstationIds(identifiable));
