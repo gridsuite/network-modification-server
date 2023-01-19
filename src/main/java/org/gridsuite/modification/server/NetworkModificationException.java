@@ -71,8 +71,10 @@ public class NetworkModificationException extends PowsyblException {
         EQUIPMENT_ATTRIBUTE_NAME_ERROR(HttpStatus.BAD_REQUEST),
         EQUIPMENT_ATTRIBUTE_VALUE_ERROR(HttpStatus.BAD_REQUEST),
         MOVE_MODIFICATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
+        LOAD_SCALING_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         DELETE_ATTACHING_LINE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
-        DELETE_ATTACHING_LINE_NOT_FOUND(HttpStatus.NOT_FOUND);
+        DELETE_ATTACHING_LINE_NOT_FOUND(HttpStatus.NOT_FOUND),
+        FILTERS_NOT_FOUND(HttpStatus.NOT_FOUND);
 
         public final HttpStatus status;
         private final String message;
