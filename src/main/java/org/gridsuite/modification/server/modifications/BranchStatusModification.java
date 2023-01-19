@@ -15,9 +15,12 @@ import com.powsybl.iidm.network.extensions.BranchStatus;
 import com.powsybl.iidm.network.extensions.BranchStatusAdder;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.BranchStatusModificationInfos;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.BRANCH_NOT_FOUND;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.BRANCH_ACTION_ERROR;
@@ -28,6 +31,7 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
 public class BranchStatusModification extends AbstractModification {
 
     private final BranchStatusModificationInfos modificationInfos;
+    private static final Logger LOGGER = LoggerFactory.getLogger(BranchStatusModification.class);
 
     public BranchStatusModification(BranchStatusModificationInfos modificationInfos) {
         this.modificationInfos = modificationInfos;
@@ -84,6 +88,15 @@ public class BranchStatusModification extends AbstractModification {
         var traversedTerminals = new HashSet<Terminal>();
         trip.traverse(network, switchesToDisconnect, terminalsToDisconnect, traversedTerminals);
 
+        LOGGER.info("Apply Trip Branch switchesToDisconnect: {}", switchesToDisconnect.stream()
+                .map(Identifiable::getId)
+                .collect(Collectors.toList()));
+        LOGGER.info("Apply Trip Branch terminalsToDisconnect: {}", terminalsToDisconnect.stream()
+                .map(Terminal::getConnectable).map(Identifiable::getId)
+                .collect(Collectors.toList()));
+        LOGGER.info("Apply Trip Branch traversedTerminals: {}", traversedTerminals.stream()
+                .map(Terminal::getConnectable).map(Identifiable::getId)
+                .collect(Collectors.toList()));
         switchesToDisconnect.forEach(sw -> sw.setOpen(true));
         terminalsToDisconnect.forEach(Terminal::disconnect);
 
