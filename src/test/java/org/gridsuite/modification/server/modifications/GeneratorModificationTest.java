@@ -300,4 +300,31 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
         assertEquals(resultAsString, new NetworkModificationException(MODIFY_GENERATOR_ERROR, "Generator '" + "idGenerator" + "': energy source is not set").getMessage());
 
     }
+
+    @SneakyThrows
+    @Test
+    public void testDroopUnchanged() {
+        GeneratorModificationInfos generatorModificationInfos = (GeneratorModificationInfos) buildModification();
+
+        generatorModificationInfos.getDroop().setValue(18f);
+        String modificationToCreateJson = mapper.writeValueAsString(generatorModificationInfos);
+
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+
+        GeneratorModificationInfos createdModification = (GeneratorModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
+
+        assertThat(createdModification, createMatcher(generatorModificationInfos));
+
+        // setting droop to null, modifying only participate
+        generatorModificationInfos.setDroop(null);
+        modificationToCreateJson = mapper.writeValueAsString(generatorModificationInfos);
+
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+
+        createdModification = (GeneratorModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
+
+        assertEquals(18f, createdModification.getDroop().getValue());
+    }
 }
