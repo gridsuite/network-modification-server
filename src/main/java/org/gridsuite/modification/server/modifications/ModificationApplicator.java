@@ -12,6 +12,7 @@ import com.powsybl.commons.reporter.ReporterModel;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.service.NetworkStoreListener;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 
 import java.time.ZoneOffset;
@@ -35,10 +36,10 @@ public class ModificationApplicator {
             .collect(Collectors.toList());
     }
 
-    public List<ModificationInfos> apply(ModificationInfos modificationInfos, ReporterModel reporter, NetworkStoreListener listener) {
+    public List<ModificationInfos> apply(ModificationInfos modificationInfos, ReporterModel reporter, NetworkStoreListener listener, ApplicationContext context) {
         Reporter subReporter = modificationInfos.createSubReporter(reporter);
         try {
-            modificationInfos.toModification().apply(listener.getNetwork(), subReporter);
+            modificationInfos.toModification().apply(listener.getNetwork(), subReporter, context);
             return getNetworkDamage(modificationInfos, listener);
         } catch (PowsyblException e) {
             NetworkModificationException exc = e instanceof NetworkModificationException ? (NetworkModificationException) e : new NetworkModificationException(modificationInfos.getErrorType(), e);
