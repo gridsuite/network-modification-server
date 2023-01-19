@@ -54,11 +54,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class LoadScalingTest extends AbstractNetworkModificationTest {
 
     private static final UUID LOAD_SCALING_ID = UUID.randomUUID();
-    private static final UUID FILTER_ID_1 = UUID.randomUUID();
-    private static final UUID FILTER_ID_2 = UUID.randomUUID();
-    private static final UUID FILTER_ID_3 = UUID.randomUUID();
-    private static final UUID FILTER_ID_4 = UUID.randomUUID();
-    private static final UUID FILTER_ID_5 = UUID.randomUUID();
+    private static final UUID FILTER_ID_1 = UUID.fromString("bdefd63f-6cd8-4686-b57b-6bc7aaffa202");
+    private static final UUID FILTER_ID_2 = UUID.fromString("bdfad63f-6fe6-4686-b57b-6bc7aa11a202");
+    private static final UUID FILTER_ID_3 = UUID.fromString("00bd063f-611f-4686-b57b-6bc7aa00a202");
+    private static final UUID FILTER_ID_4 = UUID.fromString("6f11d63f-6f06-4686-b57b-6bc7aa66a202");
+    private static final UUID FILTER_ID_5 = UUID.fromString("7100163f-60f1-4686-b57b-6bc7aa77a202");
     private static final UUID FILTER_NOT_FOUND_ID = UUID.randomUUID();
     private static final UUID FILTER_NO_DK = UUID.randomUUID();
     private static final UUID FILTER_WRONG_ID_1 = UUID.randomUUID();
