@@ -224,12 +224,14 @@ public class GeneratorModification extends AbstractModification {
         // then we have to apply the reactive capability curve modifications
         // else if reactive capability curve is false we have to apply the min and max
         // reactive limits modifications
-        if (Boolean.TRUE.equals(modificationInfos.getReactiveCapabilityCurve().getValue()
+        if (modificationInfos.getReactiveCapabilityCurve() != null) {
+            if (Boolean.TRUE.equals(modificationInfos.getReactiveCapabilityCurve().getValue()
                 && modificationInfos.getReactiveCapabilityCurvePoints() != null
                 && !modificationInfos.getReactiveCapabilityCurvePoints().isEmpty())) {
-            modifyGeneratorReactiveCapabilityCurvePoints(modificationInfos, generator, subReporter);
-        } else if (Boolean.FALSE.equals(modificationInfos.getReactiveCapabilityCurve().getValue())) {
-            modifyGeneratorMinMaxReactiveLimits(modificationInfos, generator, subReporter);
+                modifyGeneratorReactiveCapabilityCurvePoints(modificationInfos, generator, subReporter);
+            } else if (Boolean.FALSE.equals(modificationInfos.getReactiveCapabilityCurve().getValue())) {
+                modifyGeneratorMinMaxReactiveLimits(modificationInfos, generator, subReporter);
+            }
         }
     }
 
