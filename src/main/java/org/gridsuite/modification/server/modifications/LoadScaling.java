@@ -39,9 +39,7 @@ public class LoadScaling extends AbstractScaling {
     }
 
     @Override
-    protected void applyVentilationVariation(Network network,
-                                             List<IdentifiableAttributes> identifiableAttributes,
-                                             ScalingVariationInfos scalingVariationInfos, Reporter subReporter, Double distributionKeys) {
+    protected void applyVentilationVariation(Network network, Reporter subReporter, List<IdentifiableAttributes> identifiableAttributes, ScalingVariationInfos scalingVariationInfos, Double distributionKeys) {
         if (distributionKeys != null) {
             AtomicReference<Double> sum = new AtomicReference<>(0D);
             List<Float> percentages = new ArrayList<>();
@@ -60,9 +58,7 @@ public class LoadScaling extends AbstractScaling {
     }
 
     @Override
-    protected void applyRegularDistributionVariation(Network network,
-                                                     List<IdentifiableAttributes> identifiableAttributes,
-                                                     ScalingVariationInfos scalingVariationInfos, Reporter subReporter) {
+    protected void applyRegularDistributionVariation(Network network, Reporter subReporter, List<IdentifiableAttributes> identifiableAttributes, ScalingVariationInfos scalingVariationInfos) {
         List<Load> loads = identifiableAttributes
                 .stream()
                 .map(attribute -> network.getLoad(attribute.getId()))
@@ -85,9 +81,7 @@ public class LoadScaling extends AbstractScaling {
     }
 
     @Override
-    protected void applyProportionalVariation(Network network,
-                                              List<IdentifiableAttributes> identifiableAttributes,
-                                              ScalingVariationInfos scalingVariationInfos, Reporter subReporter) {
+    protected void applyProportionalVariation(Network network, Reporter subReporter, List<IdentifiableAttributes> identifiableAttributes, ScalingVariationInfos scalingVariationInfos) {
         List<Load> loads = identifiableAttributes
                 .stream().map(attribute -> network.getLoad(attribute.getId())).collect(Collectors.toList());
         AtomicReference<Double> sum = new AtomicReference<>(0D);
@@ -107,6 +101,16 @@ public class LoadScaling extends AbstractScaling {
         var asked = getAsked(scalingVariationInfos, sum);
         var done = scale(network, scalingVariationInfos, asked, proportionalScalable);
         createReport(subReporter, "scalingApplied", String.format("Successfully scaling variation in proportional mode with variation value asked is %s and variation done is %s", asked, done), TypedValue.INFO_SEVERITY);
+    }
+
+    @Override
+    protected void applyProportionalToPmaxVariation(Network network, Reporter subReporter, List<IdentifiableAttributes> identifiableAttributes, ScalingVariationInfos generatorScalingVariation) {
+        // no implementation for load scaling
+    }
+
+    @Override
+    protected void applyStackingUpVariation(Network network, Reporter subReporter, List<IdentifiableAttributes> identifiableAttributes, ScalingVariationInfos variationInfos) {
+        // no implementation for load scaling
     }
 
     private double scale(Network network, ScalingVariationInfos scalingVariationInfos, double asked, Scalable proportionalScalable) {

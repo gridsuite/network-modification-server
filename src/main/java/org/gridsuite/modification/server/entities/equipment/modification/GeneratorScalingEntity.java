@@ -73,7 +73,7 @@ public class GeneratorScalingEntity extends ScalingEntity {
                 .isIterative(isIterative())
                 .variationType(getVariationType())
                 .variations(getVariations().stream()
-                        .map(ScalingVariationEntity::toScalingVariationInfo)
+                        .map(ScalingVariationEntity::toScalingVariationInfos)
                         .collect(Collectors.toList()))
                 .build();
     }

@@ -50,7 +50,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
  */
 
-public class GeneratorScalingModificationTest extends AbstractNetworkModificationTest {
+public class GeneratorScalingTest extends AbstractNetworkModificationTest {
 
     private static final UUID GENERATOR_SCALING_ID = UUID.randomUUID();
     private static final UUID FILTER_ID_1 = UUID.fromString("bdefd63f-6cd8-4686-b57b-6bc7aaffa202");
@@ -61,7 +61,7 @@ public class GeneratorScalingModificationTest extends AbstractNetworkModificatio
     private static final UUID FILTER_NOT_FOUND_ID = UUID.randomUUID();
     private static final UUID FILTER_NO_DK = UUID.randomUUID();
     private static final UUID FILTER_WRONG_ID_1 = UUID.randomUUID();
-    private static final UUID FILTER_WRONG_ID_2 = UUID.fromString("7928181c-7977-4592-ba19-88027e4254e4");
+    private static final UUID FILTER_WRONG_ID_2 = UUID.randomUUID();
     private static final String GENERATOR_ID_1 = "idGenerator";
     private static final String GENERATOR_ID_2 = "v5generator";
     private static final String GENERATOR_ID_3 = "v6generator";

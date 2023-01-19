@@ -42,7 +42,6 @@ public class VariationFilterEntity {
     @Column(name = "name")
     private String name;
 
-
     public VariationFilterEntity(@NotNull FilterInfos filterInfos) {
         this.filterId = filterInfos.getId();
         this.id = null;
