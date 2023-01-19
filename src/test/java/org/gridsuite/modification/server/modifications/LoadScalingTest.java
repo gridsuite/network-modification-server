@@ -37,8 +37,6 @@ import java.io.IOException;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.gridsuite.modification.server.service.FilterService.setFilterServerBaseUri;
@@ -54,11 +52,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class LoadScalingTest extends AbstractNetworkModificationTest {
 
     private static final UUID LOAD_SCALING_ID = UUID.randomUUID();
-    private static final UUID FILTER_ID_1 = UUID.fromString("bdefd63f-6cd8-4686-b57b-6bc7aaffa202");
-    private static final UUID FILTER_ID_2 = UUID.fromString("bdfad63f-6fe6-4686-b57b-6bc7aa11a202");
-    private static final UUID FILTER_ID_3 = UUID.fromString("00bd063f-611f-4686-b57b-6bc7aa00a202");
-    private static final UUID FILTER_ID_4 = UUID.fromString("6f11d63f-6f06-4686-b57b-6bc7aa66a202");
-    private static final UUID FILTER_ID_5 = UUID.fromString("7100163f-60f1-4686-b57b-6bc7aa77a202");
+    private static final UUID FILTER_ID_1 = UUID.randomUUID();
+    private static final UUID FILTER_ID_2 = UUID.randomUUID();
+    private static final UUID FILTER_ID_3 = UUID.randomUUID();
+    private static final UUID FILTER_ID_4 = UUID.randomUUID();
+    private static final UUID FILTER_ID_5 = UUID.randomUUID();
     private static final UUID FILTER_NOT_FOUND_ID = UUID.randomUUID();
     private static final UUID FILTER_NO_DK = UUID.randomUUID();
     private static final UUID FILTER_WRONG_ID_1 = UUID.randomUUID();
@@ -125,31 +123,30 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
         FilterEquipments wrongIdFilter2 = getFilterEquipments(FILTER_WRONG_ID_2, "wrongIdFilter2", List.of(loadWrongId1, load10), List.of(LOAD_WRONG_ID_1));
         FilterEquipments noDistributionKeyFilter = getFilterEquipments(FILTER_NO_DK, "noDistributionKeyFilter", List.of(loadNoDK1, loadNoDK2), List.of());
 
-        String networkParams = "?networkUuid=" + ((NetworkImpl) getNetwork()).getUuid() + "&variantId=variant_1";
-        String params = "&ids=" + Stream.of(FILTER_ID_5, FILTER_ID_3, FILTER_ID_4, FILTER_ID_2, FILTER_ID_1).map(UUID::toString).collect(Collectors.joining(","));
-        String path = "/v1/filters/export";
+        String path = "/v1/filters/export?networkUuid=" + ((NetworkImpl) getNetwork()).getUuid() + "&variantId=variant_1&ids=";
+        String pathRegex = "/v1/filters/export\\?networkUuid=" + ((NetworkImpl) getNetwork()).getUuid() + "\\&variantId=variant_1\\&ids=";
 
-        wireMock.stubFor(WireMock.get(path + networkParams + params)
+        wireMock.stubFor(WireMock.get(WireMock.urlMatching(pathRegex + "(.+){5}.*"))
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(List.of(filter1, filter2, filter3, filter4, filter5)))
                         .withHeader("Content-Type", "application/json")));
 
-        wireMock.stubFor(WireMock.get(path + networkParams + "&ids=" + FILTER_WRONG_ID_1)
-                .willReturn(WireMock.ok()
-                        .withBody(mapper.writeValueAsString(List.of(wrongIdFilter1)))
-                        .withHeader("Content-Type", "application/json")));
-
-        wireMock.stubFor(WireMock.get(path + networkParams + "&ids=" + FILTER_ID_5 + "," + FILTER_WRONG_ID_2)
+        wireMock.stubFor(WireMock.get(WireMock.urlMatching(pathRegex + "(" + FILTER_ID_5 + "," + FILTER_WRONG_ID_2 + "|" + FILTER_WRONG_ID_2 + "," + FILTER_ID_5 + ")"))
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(List.of(wrongIdFilter2, filter5)))
                         .withHeader("Content-Type", "application/json")));
 
-        wireMock.stubFor(WireMock.get(path + networkParams + "&ids=" + FILTER_NO_DK)
+        wireMock.stubFor(WireMock.get(path + FILTER_WRONG_ID_1)
+                .willReturn(WireMock.ok()
+                        .withBody(mapper.writeValueAsString(List.of(wrongIdFilter1)))
+                        .withHeader("Content-Type", "application/json")));
+
+        wireMock.stubFor(WireMock.get(path + FILTER_NO_DK)
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(List.of(noDistributionKeyFilter)))
                         .withHeader("Content-Type", "application/json")));
 
-        wireMock.stubFor(WireMock.get(path + networkParams + "&ids=" + FILTER_NOT_FOUND_ID)
+        wireMock.stubFor(WireMock.get(path + FILTER_NOT_FOUND_ID)
                 .willReturn(WireMock.notFound()
                         .withHeader("Content-Type", "application/json")));
 
