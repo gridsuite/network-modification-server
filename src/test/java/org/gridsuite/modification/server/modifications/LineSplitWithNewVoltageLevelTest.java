@@ -43,6 +43,7 @@ public class LineSplitWithNewVoltageLevelTest extends AbstractNetworkModificatio
                 status().is4xxClientError(),
                 content().string(new NetworkModificationException(LINE_NOT_FOUND, "absent_line_id").getMessage())
             );
+        testNetworkModificationsCount(getGroupId(), 1);
     }
 
     @Override
