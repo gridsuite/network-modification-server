@@ -304,7 +304,7 @@ public class ModificationControllerTest {
     }
 
     @Test
-    public void testUndoModificationsOnNetworkFlushError() throws Exception {
+    public void testNetworkModificationsWithErrorOnNetworkFlush() throws Exception {
         String uriString = URI_NETWORK_MODIF_BASE + "?networkUuid=" + TEST_NETWORK_WITH_FLUSH_ERROR_ID + URI_NETWORK_MODIF_PARAMS;
 
         GroovyScriptInfos groovyScriptInfos = GroovyScriptInfos.builder()
@@ -313,11 +313,9 @@ public class ModificationControllerTest {
                 .build();
         String groovyScriptInfosJson = objectWriter.writeValueAsString(groovyScriptInfos);
 
-        assertThrows(PowsyblException.class.getName(),
-                        NestedServletException.class, () -> mockMvc.perform(post(uriString).content(groovyScriptInfosJson)
-                                        .contentType(MediaType.APPLICATION_JSON)));
-        // apply groovy script with 2 modifications with network flush error
-        assertEquals(0, modificationRepository.getModifications(TEST_GROUP_ID, true, false).size());
+        mockMvc.perform(post(uriString).content(groovyScriptInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isBadRequest());
+
+        assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID, true, false).size());
     }
 
     @Test
@@ -341,8 +339,7 @@ public class ModificationControllerTest {
         String resultAsString = mvcResult.getResponse().getContentAsString();
         assertEquals(resultAsString, new NetworkModificationException(GROOVY_SCRIPT_ERROR, "Cannot set property 'targetP' on null object").getMessage());
 
-        // no modifications have been saved
-        assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
+        assertEquals(2, modificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
     }
 
     private List<ModificationInfos> createSomeSwitchModifications(UUID groupId, int number) throws Exception {
@@ -1032,7 +1029,7 @@ public class ModificationControllerTest {
         assertEquals("SUBSTATION", lastCreatedEquipmentDeletion.getEquipmentType());
         assertEquals("s3", lastCreatedEquipmentDeletion.getEquipmentId());
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 15);
+        testNetworkModificationsCount(TEST_GROUP_ID, 16);
 
         // substation and equipments have been removed from network and added as TombstonedEquipmentInfos in ElasticSearch
         assertNull(network.getSubstation("s3"));
