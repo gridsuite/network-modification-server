@@ -52,6 +52,7 @@
         <equalsverifier-version>3.7.1</equalsverifier-version>
         <testcontainers.version>1.16.2</testcontainers.version>
         <liquibase-hibernate-package>org.gridsuite.modification.server</liquibase-hibernate-package>
+        <wiremock.version>2.35.0</wiremock.version>
     </properties>
 
     <build>
@@ -117,6 +118,12 @@
                 <groupId>org.testcontainers</groupId>
                 <artifactId>elasticsearch</artifactId>
                 <version>${testcontainers.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.github.tomakehurst</groupId>
+                <artifactId>wiremock-jre8</artifactId>
+                <version>${wiremock.version}</version>
                 <scope>test</scope>
             </dependency>
         </dependencies>
@@ -275,6 +282,11 @@
             <type>test-jar</type>
             <scope>test</scope>
             <classifier>test-binder</classifier>
+        </dependency>
+        <dependency>
+            <groupId>com.github.tomakehurst</groupId>
+            <artifactId>wiremock-jre8</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>

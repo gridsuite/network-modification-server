@@ -21,6 +21,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -335,6 +338,21 @@ public final class ModificationUtils {
         } else {
             branchAdder.setNode2(nodeNum);
         }
+    }
+
+    public static void createReport(Reporter reporter, String reporterKey, String message, TypedValue errorSeverity) {
+        reporter.report(Report.builder()
+                .withKey(reporterKey)
+                .withDefaultMessage(message)
+                .withSeverity(errorSeverity)
+                .build());
+    }
+
+    public static <T> Predicate<T> distinctByKey(
+            Function<? super T, ?> keyExtractor) {
+
+        Map<Object, Boolean> seen = new ConcurrentHashMap<>();
+        return t -> seen.putIfAbsent(keyExtractor.apply(t), Boolean.TRUE) == null;
     }
 
     public <T> Report applyElementaryModificationsAndReturnReport(Consumer<T> setter, Supplier<T> getter,
