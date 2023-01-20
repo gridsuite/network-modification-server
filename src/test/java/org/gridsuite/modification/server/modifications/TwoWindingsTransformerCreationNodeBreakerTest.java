@@ -455,11 +455,13 @@ public class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetwo
                 .andExpect(status().is5xxServerError()).andReturn();
         String resultAsString = mvcResult.getResponse().getContentAsString();
         assertEquals(resultAsString, new NetworkModificationException(NetworkModificationException.Type.CREATE_TWO_WINDINGS_TRANSFORMER_ERROR, "Invalid id ''").getMessage());
+        testNetworkModificationsCount(getGroupId(), 1);
 
         twoWindingsTransformerCreationInfos.setBusOrBusbarSectionId1("notFoundBus");
         twoWindingsTransformerCreationInfosJson = mapper.writeValueAsString(twoWindingsTransformerCreationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(twoWindingsTransformerCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpectAll(status().isNotFound(), content().string(new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "notFoundBus").getMessage()));
+        testNetworkModificationsCount(getGroupId(), 2);
 
         // Test create transformer on not yet existing variant VARIANT_NOT_EXISTING_ID :
         // Only the modification should be added in the database but the transformer cannot be created
@@ -474,7 +476,7 @@ public class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetwo
 
         assertTrue(modifications.isEmpty());  // no modifications returned
         assertNull(getNetwork().getTwoWindingsTransformer("id2wt3"));  // transformer was not created
-        testNetworkModificationsCount(getGroupId(), 1);  // new modification stored in the database
+        testNetworkModificationsCount(getGroupId(), 3);
     }
 
     private void testCreateTwoWindingsTransformerInNodeBreaker(TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos, int actualSize) throws Exception {

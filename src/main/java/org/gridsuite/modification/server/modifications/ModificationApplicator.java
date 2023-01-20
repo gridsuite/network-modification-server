@@ -6,10 +6,7 @@
  */
 package org.gridsuite.modification.server.modifications;
 
-import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.reporter.Reporter;
-import com.powsybl.commons.reporter.ReporterModel;
-import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.service.NetworkStoreListener;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,24 +37,8 @@ public class ModificationApplicator {
             .collect(Collectors.toList());
     }
 
-    public List<ModificationInfos> apply(ModificationInfos modificationInfos, ReporterModel reporter, NetworkStoreListener listener, ApplicationContext context) {
-        Reporter subReporter = modificationInfos.createSubReporter(reporter);
-        try {
-            modificationInfos.toModification().apply(listener.getNetwork(), subReporter, context);
-            return getNetworkDamage(modificationInfos, listener);
-        } catch (PowsyblException e) {
-            NetworkModificationException exc = e instanceof NetworkModificationException ? (NetworkModificationException) e : new NetworkModificationException(modificationInfos.getErrorType(), e);
-
-            if (!listener.isBuild()) {
-                throw exc;
-            }
-        } catch (Exception e) {
-            if (!listener.isBuild()) {
-                throw new NetworkModificationException(modificationInfos.getErrorType(), e);
-            } else {
-                throw e;
-            }
-        }
-        return List.of();
+    public List<ModificationInfos> apply(ModificationInfos modificationInfos, Reporter subReporter, NetworkStoreListener listener, ApplicationContext context) {
+        modificationInfos.toModification().apply(listener.getNetwork(), subReporter, context);
+        return getNetworkDamage(modificationInfos, listener);
     }
 }

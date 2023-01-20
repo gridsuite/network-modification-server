@@ -251,16 +251,23 @@ public class GeneratorModification extends AbstractModification {
         } else if (modificationInfos.getDroop() != null) {
             participate = true;
         }
-        // if no modification were done to ActivePowerControl, we don't apply
-        // modifications
+        // if no modification were done to ActivePowerControl or if neither the old nor the new droop values are valid,
+        // we don't apply modifications
         if (participate != null) {
             if (Boolean.TRUE.equals(participate)) {
-                generator.newExtension(ActivePowerControlAdder.class)
-                        .withParticipate(participate).withDroop(modificationInfos.getDroop().getValue())
-                        .add();
-                reports.add(ModificationUtils.getInstance().buildModificationReport(oldDroop,
-                        modificationInfos.getDroop().getValue(),
-                        "Droop"));
+                if (modificationInfos.getDroop() != null) {
+                    generator.newExtension(ActivePowerControlAdder.class)
+                            .withParticipate(true)
+                            .withDroop(modificationInfos.getDroop().getValue())
+                            .add();
+                    reports.add(ModificationUtils.getInstance().buildModificationReport(oldDroop,
+                            modificationInfos.getDroop().getValue(),
+                            "Droop"));
+                } else {
+                    generator.newExtension(ActivePowerControlAdder.class)
+                            .withParticipate(true).withDroop(oldDroop)
+                            .add();
+                }
             } else {
                 generator.newExtension(ActivePowerControlAdder.class)
                         .withParticipate(participate).add();
