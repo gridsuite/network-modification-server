@@ -4,13 +4,11 @@
   License, v. 2.0. If a copy of the MPL was not distributed with this
   file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package org.gridsuite.modification.server;
+package org.gridsuite.modification.server.service;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.powsybl.commons.exceptions.UncheckedInterruptedException;
-import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.*;
@@ -21,6 +19,10 @@ import okhttp3.mockwebserver.Dispatcher;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
+import org.gridsuite.modification.server.ModificationType;
+import org.gridsuite.modification.server.NetworkModificationApplication;
+import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.TapChangerType;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
@@ -28,8 +30,6 @@ import org.gridsuite.modification.server.entities.ModificationGroupEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.TapChangerStepCreationEmbeddable;
 import org.gridsuite.modification.server.repositories.ModificationGroupRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
-import org.gridsuite.modification.server.service.NetworkModificationService;
-import org.gridsuite.modification.server.service.NetworkStoreListener;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.gridsuite.modification.server.utils.TestUtils;
 import org.jetbrains.annotations.NotNull;
@@ -55,7 +55,6 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.ContextHierarchy;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 
 import java.io.IOException;
 import java.util.*;
@@ -64,14 +63,14 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import static com.powsybl.iidm.network.ReactiveLimitsKind.MIN_MAX;
-import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_ERROR;
 import static org.gridsuite.modification.server.service.BuildWorkerService.CANCEL_MESSAGE;
 import static org.gridsuite.modification.server.service.BuildWorkerService.FAIL_MESSAGE;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -211,7 +210,7 @@ public class BuildTest {
     }
 
     @Test
-    public void runBuildForLineSplits() throws  Exception {
+    public void runBuildForLineSplits() throws Exception {
         List<ModificationEntity> entities1 = List.of(
                 LineCreationInfos.builder()
                         .type(ModificationType.LINE_CREATION)
@@ -254,8 +253,7 @@ public class BuildTest {
                 .equipmentName("vl9")
                 .nominalVoltage(225)
                 .substationId("s1")
-                .busbarSections(List.of(new BusbarSectionCreationInfos("1.1", "1.1", 1, 1),
-                 new BusbarSectionCreationInfos("1.2", "1.2", 1, 2)))
+                .busbarSections(List.of(new BusbarSectionCreationInfos("1.1", "1.1", 1, 1), new BusbarSectionCreationInfos("1.2", "1.2", 1, 2)))
                 .busbarConnections(List.of(new BusbarConnectionCreationInfos("1.1", "1.2", SwitchKind.BREAKER)))
                 .build().toEntity());
         modificationRepository.saveModifications(TEST_GROUP_ID_2, entities2);
@@ -297,9 +295,8 @@ public class BuildTest {
         TestUtils.purgeRequests(server);
     }
 
-    @SneakyThrows
     @Test
-    public void runBuildWithEmptyGroupTest() {
+    public void runBuildWithEmptyGroupTest() throws Exception {
         Network network = NetworkCreation.create(TEST_NETWORK_ID, false);
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
             NetworkCreation.VARIANT_ID,
@@ -328,15 +325,6 @@ public class BuildTest {
         assertEquals(expectedBody, request.getBody().readUtf8());
     }
 
-    public ModificationEntity createEquipmentAttributeModificationEntity(String equipmentId, String attributeName, Object attributeValue, IdentifiableType equipmentType) {
-        return EquipmentAttributeModificationInfos.builder()
-            .equipmentId(equipmentId)
-            .equipmentAttributeName(attributeName)
-            .equipmentAttributeValue(attributeValue)
-            .equipmentType(equipmentType)
-            .build().toEntity();
-    }
-
     @Test
     public void runBuildTest() throws Exception {
         // create modification entities in the database
@@ -353,9 +341,30 @@ public class BuildTest {
         entities1.add(LoadCreationInfos.builder().equipmentId("newLoad2").equipmentName("newLoad2").loadType(LoadType.AUXILIARY).voltageLevelId("v1").busOrBusbarSectionId("1.1").activePower(10.).reactivePower(20.).connectionName(null).connectionDirection(ConnectablePosition.Direction.UNDEFINED).build().toEntity());
 
         Map<String, String> properties = Map.of("DEMO", "Demo1");
-        entities1.add(modificationRepository.createSubstationEntity("newSubstation", "newSubstation", Country.FR, properties));
+        entities1.add(SubstationCreationInfos.builder()
+                .type(ModificationType.SUBSTATION_CREATION)
+                .equipmentId("newSubstation")
+                .equipmentName("newSubstation")
+                .substationCountry(Country.FR)
+                .properties(properties)
+                .build().toEntity());
 
         List<ModificationEntity> entities2 = new ArrayList<>();
+        entities2.add(GeneratorCreationInfos.builder().type(ModificationType.GENERATOR_CREATION)
+                .equipmentId(NEW_GENERATOR_ID).equipmentName(NEW_GENERATOR_ID)
+                .energySource(EnergySource.HYDRO).voltageLevelId("v2")
+                .busOrBusbarSectionId("1A").minActivePower(0)
+                .maxActivePower(500).ratedNominalPower(1.)
+                .activePowerSetpoint(100).reactivePowerSetpoint(50.)
+                .voltageRegulationOn(true).voltageSetpoint(225.).marginalCost(8.)
+                .minimumReactivePower(20.).maximumReactivePower(50.)
+                .participate(true).droop(9F).transientReactance(35.)
+                .stepUpTransformerReactance(25.).regulatingTerminalId("v2load")
+                .regulatingTerminalType("LOAD").regulatingTerminalVlId("v2")
+                .qPercent(25.).reactiveCapabilityCurve(false).reactiveCapabilityCurvePoints(List.of())
+                .connectionName("Top").connectionDirection(ConnectablePosition.Direction.TOP)
+                .connectionPosition(0).build().toEntity());
+        //TODO change this shit
         entities2.add(modificationRepository.createGeneratorEntity(NEW_GENERATOR_ID, NEW_GENERATOR_ID, EnergySource.HYDRO, "v2", "1A", 0., 500., 1., 100., 50., true, 225., 80., 8., 8., 100., 100., 20., 50., true, 9F, 35., 25., "v2load", "LOAD", "v2", 25., false, List.of(), "Top", ConnectablePosition.Direction.TOP, 0));
         entities2.add(LineCreationInfos.builder().type(ModificationType.LINE_CREATION).equipmentId("newLine").equipmentName("newLine").seriesResistance(1.0).seriesReactance(2.0).shuntConductance1(3.0).shuntSusceptance1(4.0).shuntConductance2(5.0).shuntSusceptance2(6.0).voltageLevelId1("v1").busOrBusbarSectionId1("1.1").voltageLevelId2("v2").busOrBusbarSectionId2("1B").currentLimits1(null).currentLimits2(null).connectionName1("cn101").connectionDirection1(ConnectablePosition.Direction.TOP).connectionName2("cn102").connectionDirection2(ConnectablePosition.Direction.TOP).build().toEntity());
 
@@ -368,18 +377,16 @@ public class BuildTest {
         tapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.RATIO, 7, 1, 0, 0, 0, 0, null));
         tapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.RATIO, 8, 1, 0, 0, 0, 0, null));
 
-        entities2.add(modificationRepository.createTwoWindingsTransformerEntity("new2wt", "new2wt", 1., 2., 3., 4., 5., 6., 1., "v1", "1.1", "v2", "1A", 3., 2., "cn201", ConnectablePosition.Direction.TOP, "cn202", ConnectablePosition.Direction.TOP, 1, 2, false, null, null, null, null, PhaseTapChanger.RegulationMode.CURRENT_LIMITER, null, 5, 6, true, 1., "v2load", "v2", "LOAD", true, 50., tapChangerStepCreationEmbeddables, 0, 1));
-        entities2.add(modificationRepository.createEquipmentDeletionEntity("v2shunt", "SHUNT_COMPENSATOR"));
-        entities2.add(modificationRepository.createGroovyScriptModificationEntity("network.getGenerator('idGenerator').targetP=55\n"));
-        entities2.add(modificationRepository.createBranchStatusModificationEntity("line2", BranchStatusModificationInfos.ActionType.TRIP));
+        entities2.add(EquipmentDeletionInfos.builder().type(ModificationType.EQUIPMENT_DELETION).equipmentId("v2shunt").equipmentType("SHUNT_COMPENSATOR").build().toEntity());
+        entities2.add(GroovyScriptInfos.builder().script("network.getGenerator('idGenerator').targetP=55\n").build().toEntity());
+        entities2.add(BranchStatusModificationInfos.builder().type(ModificationType.BRANCH_STATUS_MODIFICATION).equipmentId("line2").action(BranchStatusModificationInfos.ActionType.TRIP).build().toEntity());
         entities2.add(VoltageLevelCreationInfos.builder()
                 .type(ModificationType.VOLTAGE_LEVEL_CREATION)
                 .equipmentId("vl9")
                 .equipmentName("vl9")
                 .nominalVoltage(225)
                 .substationId("s1")
-                .busbarSections(List.of(new BusbarSectionCreationInfos("1.1", "1.1", 1, 1),
-                 new BusbarSectionCreationInfos("1.2", "1.2", 1, 2)))
+                .busbarSections(List.of(new BusbarSectionCreationInfos("1.1", "1.1", 1, 1), new BusbarSectionCreationInfos("1.2", "1.2", 1, 2)))
                 .busbarConnections(List.of(new BusbarConnectionCreationInfos("1.1", "1.2", SwitchKind.BREAKER)))
                 .build().toEntity());
         entities2.add(ShuntCompensatorCreationInfos.builder()
@@ -395,13 +402,116 @@ public class BuildTest {
             .connectionDirection(ConnectablePosition.Direction.UNDEFINED)
             .connectionName("shunt9")
             .build().toEntity());
-        entities2.add(modificationRepository.createLoadModificationEntity("newLoad",
-            new AttributeModification<>("newLoadName", OperationType.SET), null, null, null, null, null));
-        entities2.add(modificationRepository.createGeneratorModificationEntity(GeneratorModificationInfos.builder()
+        entities2.add(TwoWindingsTransformerCreationInfos.builder()
+                .type(ModificationType.TWO_WINDINGS_TRANSFORMER_CREATION)
+                .equipmentId("new2wt")
+                .equipmentName("new2wt")
+                .seriesResistance(1.)
+                .seriesReactance(2.)
+                .magnetizingConductance(3.)
+                .magnetizingSusceptance(4.)
+                .ratedVoltage1(5.)
+                .ratedVoltage2(6.)
+                .ratedS(1.)
+                .voltageLevelId1("v1")
+                .busOrBusbarSectionId1("1.1")
+                .voltageLevelId2("v2")
+                .busOrBusbarSectionId2("1A")
+                .currentLimits1(CurrentLimitsInfos.builder().permanentLimit(3.).build())
+                .currentLimits2(CurrentLimitsInfos.builder().permanentLimit(2.).build())
+                .connectionName1("cn201")
+                .connectionDirection1(ConnectablePosition.Direction.TOP)
+                .connectionName2("cn202")
+                .connectionDirection2(ConnectablePosition.Direction.TOP)
+                .phaseTapChanger(PhaseTapChangerCreationInfos.builder()
+                        .lowTapPosition(1)
+                        .tapPosition(2)
+                        .regulatingTerminalId("v1load")
+                        .regulatingTerminalVlId("v1")
+                        .regulating(false)
+                        .regulatingTerminalType("LOAD")
+                        .regulationMode(PhaseTapChanger.RegulationMode.CURRENT_LIMITER)
+                        .steps(List.of(TapChangerStepCreationInfos.builder()
+                                        .index(1)
+                                        .rho(1)
+                                        .r(0)
+                                        .x(0)
+                                        .g(0)
+                                        .b(0)
+                                        .alpha(0)
+                                        .build(),
+                                TapChangerStepCreationInfos.builder()
+                                        .index(2)
+                                        .rho(1)
+                                        .r(0)
+                                        .x(0)
+                                        .g(0)
+                                        .b(0)
+                                        .alpha(0.)
+                                        .build(),
+                                TapChangerStepCreationInfos.builder()
+                                        .index(3)
+                                        .rho(1)
+                                        .r(0)
+                                        .x(0)
+                                        .g(0)
+                                        .b(0)
+                                        .alpha(0.)
+                                        .build()
+                        )).build())
+                .ratioTapChanger(RatioTapChangerCreationInfos.builder()
+                        .lowTapPosition(5)
+                        .tapPosition(6)
+                        .regulating(true)
+                        .targetDeadband(1.)
+                        .regulatingTerminalId("v2load")
+                        .regulatingTerminalVlId("v2")
+                        .regulatingTerminalType("LOAD")
+                        .loadTapChangingCapabilities(true)
+                        .targetV(5.)
+                        .steps(List.of(TapChangerStepCreationInfos.builder()
+                                        .index(5)
+                                        .rho(1)
+                                        .r(0)
+                                        .x(0)
+                                        .g(0)
+                                        .b(0)
+                                        .build(),
+                                TapChangerStepCreationInfos.builder()
+                                        .index(6)
+                                        .rho(1)
+                                        .r(0)
+                                        .x(0)
+                                        .g(0)
+                                        .b(0)
+                                        .build(),
+                                TapChangerStepCreationInfos.builder()
+                                        .index(7)
+                                        .rho(1)
+                                        .r(0)
+                                        .x(0)
+                                        .g(0)
+                                        .b(0)
+                                        .build(),
+                                TapChangerStepCreationInfos.builder()
+                                        .index(8)
+                                        .rho(1)
+                                        .r(0)
+                                        .x(0)
+                                        .g(0)
+                                        .b(0)
+                                        .build()
+                        ))
+                        .build())
+                .build().toEntity()
+        );
+        entities2.add(LoadModificationInfos.builder().type(ModificationType.LOAD_MODIFICATION).equipmentId("newLoad")
+            .equipmentName(new AttributeModification<>("newLoadName", OperationType.SET)).activePower(null).build().toEntity());
+        entities2.add(GeneratorModificationInfos.builder().type(ModificationType.GENERATOR_MODIFICATION)
                 .equipmentId("newGenerator")
                 .equipmentName(new AttributeModification<>("newGeneratorName", OperationType.SET))
                 .voltageRegulationType(new AttributeModification<>(VoltageRegulationType.LOCAL, OperationType.SET))
-                .reactiveCapabilityCurve(new AttributeModification<>(false, OperationType.SET)).build()));
+                .reactiveCapabilityCurve(new AttributeModification<>(false, OperationType.SET)).build().toEntity());
 
         modificationRepository.saveModifications(TEST_GROUP_ID, entities1);
         modificationRepository.saveModifications(TEST_GROUP_ID_2, entities2);
@@ -669,26 +779,36 @@ public class BuildTest {
     }
 
     @Test
-    public void doActionWithUncheckedExceptionTest() {
-        Network networkTest = NetworkCreation.create(TEST_NETWORK_ID, true);
-        NetworkStoreListener listener = NetworkStoreListener.create(networkTest, TEST_NETWORK_ID, null, modificationRepository, equipmentInfosService, true, true);
-        ReporterModel reporter = new ReporterModel("reportKey", "reportName");
-        Reporter subReporter = reporter.createSubReporter("AttributeModification", "Attribute modification");
-        assertThrows("unexpected error", RuntimeException.class, () ->
-            networkModificationService.doAction(listener, () -> {
-                throw new RuntimeException("unexpected error");
-            }, MODIFICATION_ERROR, TEST_NETWORK_ID, reporter, subReporter)
-        );
+    public void testApplyModificationWithErrors() {
+        Network network = NetworkCreation.create(TEST_NETWORK_ID, true);
+        LoadCreationInfos loadCreationInfos = LoadCreationInfos.builder().voltageLevelId("unknownVoltageLevelId").equipmentId("loadId").build();
+        UUID groupUuid = UUID.randomUUID();
+        UUID reportUuid = UUID.randomUUID();
+        String reporterId = UUID.randomUUID().toString();
 
-        assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches("/v1/reports/.*")));
+        // Building mode : No error send with exception in the action part
+        NetworkStoreListener listener1 = NetworkStoreListener.create(network, TEST_NETWORK_ID, groupUuid, modificationRepository, equipmentInfosService, true, true);
+        assertEquals(List.of(), networkModificationService.handleModification(loadCreationInfos, listener1, groupUuid, reportUuid, reporterId));
+        assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches(String.format("/v1/reports/%s", reportUuid))));
+
+        // Incremental mode : Error send with exception in the action part
+        NetworkStoreListener listener2 = NetworkStoreListener.create(network, TEST_NETWORK_ID, groupUuid, modificationRepository, equipmentInfosService, false, true);
+        assertEquals("VOLTAGE_LEVEL_NOT_FOUND : unknownVoltageLevelId",
+            assertThrows(NetworkModificationException.class,
+                () -> networkModificationService.handleModification(loadCreationInfos, listener2, groupUuid, reportUuid, reporterId)
+            ).getMessage()
+        );
+        assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches(String.format("/v1/reports/%s", reportUuid))));
+        testNetworkModificationsCount(groupUuid, 1);
+
+        // Save mode only : No log and no error send with exception in the action part
+        NetworkStoreListener listener3 = NetworkStoreListener.create(network, TEST_NETWORK_ID, groupUuid, modificationRepository, equipmentInfosService, false, false);
+        assertEquals(List.of(), networkModificationService.handleModification(loadCreationInfos, listener3, groupUuid, reportUuid, reporterId));
+        testNetworkModificationsCount(groupUuid, 2);
     }
 
-    private void testNetworkModificationsCount(UUID groupUuid, int actualSize) throws Exception {
-        // get all modifications for the given group of a network
-        MvcResult mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/modifications", groupUuid)).andExpect(status().isOk()).andReturn();
-        String resultAsString = mvcResult.getResponse().getContentAsString();
-        List<ModificationInfos> modificationInfos = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertEquals(actualSize, modificationInfos.size());
+    private void testNetworkModificationsCount(UUID groupUuid, int actualSize) {
+        assertEquals(actualSize, modificationRepository.getModifications(groupUuid, true, true).size());
     }
 
     @After

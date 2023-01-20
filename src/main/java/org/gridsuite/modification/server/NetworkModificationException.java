@@ -30,8 +30,10 @@ public class NetworkModificationException extends PowsyblException {
         MODIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND),
         SWITCH_NOT_FOUND(HttpStatus.NOT_FOUND),
         LINE_NOT_FOUND(HttpStatus.NOT_FOUND),
+        BRANCH_NOT_FOUND(HttpStatus.NOT_FOUND),
         LOAD_NOT_FOUND(HttpStatus.NOT_FOUND),
         GENERATOR_NOT_FOUND(HttpStatus.NOT_FOUND),
+        UNKNOWN_MODIFICATION_TYPE(HttpStatus.INTERNAL_SERVER_ERROR),
         UNKNOWN_EQUIPMENT_TYPE(HttpStatus.INTERNAL_SERVER_ERROR),
         WRONG_EQUIPMENT_TYPE(HttpStatus.INTERNAL_SERVER_ERROR),
         MODIFICATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
@@ -50,16 +52,18 @@ public class NetworkModificationException extends PowsyblException {
         CREATE_SUBSTATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         CREATE_VOLTAGE_LEVEL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         SUBSTATION_NOT_FOUND(HttpStatus.NOT_FOUND),
-        BRANCH_ACTION_ERROR(HttpStatus.BAD_REQUEST),
+        BRANCH_ACTION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         BRANCH_ACTION_TYPE_EMPTY(HttpStatus.BAD_REQUEST, "Empty branch action type"),
         BRANCH_ACTION_TYPE_UNKNOWN(HttpStatus.BAD_REQUEST),
         BRANCH_ACTION_TYPE_UNSUPPORTED(HttpStatus.INTERNAL_SERVER_ERROR),
         LINE_SPLIT_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         LINE_SPLIT_NOT_FOUND(HttpStatus.NOT_FOUND),
         LINE_ATTACH_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
+        LINE_ATTACH_DESCRIPTION_ERROR(HttpStatus.BAD_REQUEST),
         LINE_ATTACH_NOT_FOUND(HttpStatus.NOT_FOUND),
         MODIFY_GENERATOR_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         TYPE_MISMATCH(HttpStatus.BAD_REQUEST),
+        MISSING_MODIFICATION_DESCRIPTION(HttpStatus.BAD_REQUEST),
         MODIFICATION_OUT_OF_RANGE(HttpStatus.BAD_REQUEST),
         POSITION_ORDER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         DELETE_VOLTAGE_LEVEL_ON_LINE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
@@ -67,8 +71,10 @@ public class NetworkModificationException extends PowsyblException {
         EQUIPMENT_ATTRIBUTE_NAME_ERROR(HttpStatus.BAD_REQUEST),
         EQUIPMENT_ATTRIBUTE_VALUE_ERROR(HttpStatus.BAD_REQUEST),
         MOVE_MODIFICATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
+        LOAD_SCALING_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         DELETE_ATTACHING_LINE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
-        DELETE_ATTACHING_LINE_NOT_FOUND(HttpStatus.NOT_FOUND);
+        DELETE_ATTACHING_LINE_NOT_FOUND(HttpStatus.NOT_FOUND),
+        FILTERS_NOT_FOUND(HttpStatus.NOT_FOUND);
 
         public final HttpStatus status;
         private final String message;
@@ -114,10 +120,6 @@ public class NetworkModificationException extends PowsyblException {
 
     public static NetworkModificationException createBranchActionTypeUnsupported(@NonNull BranchStatusModificationInfos.ActionType type) {
         return new NetworkModificationException(Type.BRANCH_ACTION_TYPE_UNSUPPORTED, "The branch action type : " + type + " is unsupported");
-    }
-
-    public static NetworkModificationException createBranchActionTypeUnknown(@NonNull String type) {
-        return new NetworkModificationException(Type.BRANCH_ACTION_TYPE_UNKNOWN, "The branch action type : " + type + " is unknown");
     }
 
     public static NetworkModificationException createEquipementAttributeNotEditable(@NonNull IdentifiableType equipmentType, @NonNull String attributeName) {

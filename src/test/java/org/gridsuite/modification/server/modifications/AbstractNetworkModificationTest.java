@@ -13,6 +13,7 @@ import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.client.NetworkStoreService;
+import com.powsybl.network.store.iidm.impl.NetworkImpl;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
@@ -231,6 +232,14 @@ public abstract class AbstractNetworkModificationTest {
 
     protected Network getNetwork() {
         return network;
+    }
+
+    protected UUID getNetworkId() {
+        return TEST_NETWORK_ID;
+    }
+
+    protected UUID getNetworkUuid() {
+        return ((NetworkImpl) network).getUuid();
     }
 
     protected UUID getGroupId() {

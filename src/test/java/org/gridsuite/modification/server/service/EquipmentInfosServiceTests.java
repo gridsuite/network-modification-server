@@ -4,7 +4,7 @@
   License, v. 2.0. If a copy of the MPL was not distributed with this
   file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package org.gridsuite.modification.server;
+package org.gridsuite.modification.server.service;
 
 import com.powsybl.iidm.network.Identifiable;
 import com.powsybl.iidm.network.IdentifiableType;
@@ -12,6 +12,7 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
 import com.powsybl.network.store.iidm.impl.NetworkImpl;
 import nl.jqno.equalsverifier.EqualsVerifier;
+import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.EquipmentInfos;
 import org.gridsuite.modification.server.dto.TombstonedEquipmentInfos;
 import org.gridsuite.modification.server.dto.VoltageLevelInfos;

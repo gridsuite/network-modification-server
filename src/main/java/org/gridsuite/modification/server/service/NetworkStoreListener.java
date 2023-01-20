@@ -8,20 +8,15 @@ package org.gridsuite.modification.server.service;
 
 import com.powsybl.iidm.network.*;
 import org.gridsuite.modification.server.ModificationType;
-import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.server.dto.EquipmentDeletionInfos;
+import org.gridsuite.modification.server.dto.EquipmentInfos;
+import org.gridsuite.modification.server.dto.TombstonedEquipmentInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
-import org.gridsuite.modification.server.entities.ModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.creation.TwoWindingsTransformerCreationEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
-
-import static org.gridsuite.modification.server.entities.equipment.creation.GeneratorCreationEntity.toEmbeddablePoints;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -29,17 +24,11 @@ import static org.gridsuite.modification.server.entities.equipment.creation.Gene
  */
 public class NetworkStoreListener implements NetworkListener {
 
-    private final UUID groupUuid;
-
     private final UUID networkUuid;
 
     private final Network network;
 
-    private final NetworkModificationRepository modificationRepository;
-
     private final EquipmentInfosService equipmentInfosService;
-
-    private final List<ModificationEntity> modifications = new LinkedList<>();
 
     private final Set<String> substationsIds = new HashSet<>();
 
@@ -58,8 +47,6 @@ public class NetworkStoreListener implements NetworkListener {
                                    boolean isBuild, boolean isApplyModifications) {
         this.network = network;
         this.networkUuid = networkUuid;
-        this.groupUuid = groupUuid;
-        this.modificationRepository = modificationRepository;
         this.equipmentInfosService = equipmentInfosService;
         this.isBuild = isBuild;
         this.isApplyModifications = isApplyModifications;
@@ -112,114 +99,8 @@ public class NetworkStoreListener implements NetworkListener {
         return isApplyModifications;
     }
 
-    public List<ModificationInfos> getModifications() {
-        List<ModificationInfos> modificationInfos = modifications.stream()
-            .map(m -> {
-                ModificationInfos infos = m.toModificationInfos();
-                infos.setSubstationIds(substationsIds);
-                return infos;
-            }).collect(Collectors.toList());
-        modifications.clear();
-        return modificationInfos;
-    }
-
-    public void saveModifications() {
-        if (groupUuid != null) {
-            modificationRepository.saveModifications(groupUuid,
-                modifications
-                    .stream()
-                    .map(ModificationEntity.class::cast)
-                    .collect(Collectors.toList()));
-        }
-    }
-
-    public void deleteModifications() {
-        if (groupUuid != null) {
-            modificationRepository.deleteModifications(groupUuid,
-                modifications
-                    .stream()
-                    .map(ModificationEntity::getId)
-                    .collect(Collectors.toList()));
-        }
-    }
-
     public List<EquipmentDeletionInfos> getDeletions() {
         return deletions;
-    }
-
-    public void storeLoadModification(LoadModificationInfos loadModificationInfos) {
-        modifications.add(this.modificationRepository.createLoadModificationEntity(loadModificationInfos.getEquipmentId(),
-                loadModificationInfos.getEquipmentName(),
-                loadModificationInfos.getLoadType(),
-                loadModificationInfos.getVoltageLevelId(),
-                loadModificationInfos.getBusOrBusbarSectionId(),
-                loadModificationInfos.getActivePower(),
-                loadModificationInfos.getReactivePower()));
-    }
-
-    @Transactional
-    public void storeGeneratorModification(GeneratorModificationInfos generatorModificationInfos) {
-        modifications.add(new GeneratorModificationEntity(generatorModificationInfos));
-    }
-
-    public void storeGeneratorCreation(GeneratorCreationInfos generatorCreationInfos) {
-        modifications.add(this.modificationRepository.createGeneratorEntity(generatorCreationInfos.getEquipmentId(),
-            generatorCreationInfos.getEquipmentName(),
-            generatorCreationInfos.getEnergySource(),
-            generatorCreationInfos.getVoltageLevelId(),
-            generatorCreationInfos.getBusOrBusbarSectionId(),
-            generatorCreationInfos.getMinActivePower(),
-            generatorCreationInfos.getMaxActivePower(),
-            generatorCreationInfos.getRatedNominalPower(),
-            generatorCreationInfos.getActivePowerSetpoint(),
-            generatorCreationInfos.getReactivePowerSetpoint(),
-            generatorCreationInfos.isVoltageRegulationOn(),
-            generatorCreationInfos.getVoltageSetpoint(),
-            generatorCreationInfos.getPlannedActivePowerSetPoint(),
-            generatorCreationInfos.getStartupCost(),
-            generatorCreationInfos.getMarginalCost(),
-            generatorCreationInfos.getPlannedOutageRate(),
-            generatorCreationInfos.getForcedOutageRate(),
-            generatorCreationInfos.getMinimumReactivePower(),
-            generatorCreationInfos.getMaximumReactivePower(),
-            generatorCreationInfos.getParticipate() != null && generatorCreationInfos.getParticipate(),
-            generatorCreationInfos.getDroop(),
-            generatorCreationInfos.getTransientReactance(),
-            generatorCreationInfos.getStepUpTransformerReactance(),
-            generatorCreationInfos.getRegulatingTerminalId(),
-            generatorCreationInfos.getRegulatingTerminalType(),
-            generatorCreationInfos.getRegulatingTerminalVlId(),
-            generatorCreationInfos.getQPercent(),
-            generatorCreationInfos.getReactiveCapabilityCurve() == null || generatorCreationInfos.getReactiveCapabilityCurve(),
-            toEmbeddablePoints(generatorCreationInfos.getReactiveCapabilityCurvePoints()),
-            generatorCreationInfos.getConnectionName(),
-            generatorCreationInfos.getConnectionDirection(),
-            generatorCreationInfos.getConnectionPosition()));
-    }
-
-    public void storeEquipmentDeletion(String equipmentId, String equipmentType) {
-        modifications.add(this.modificationRepository.createEquipmentDeletionEntity(equipmentId, equipmentType));
-    }
-
-    public void storeTwoWindingsTransformerCreation(TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
-        modifications.add(TwoWindingsTransformerCreationEntity.toEntity(twoWindingsTransformerCreationInfos));
-    }
-
-    public void storeGroovyScriptModification(String script) {
-        modifications.add(this.modificationRepository.createGroovyScriptModificationEntity(script));
-    }
-
-    public void storeBranchStatusModification(String lineId, BranchStatusModificationInfos.ActionType action) {
-        modifications.add(this.modificationRepository.createBranchStatusModificationEntity(lineId, action));
-    }
-
-    public void storeSubstationCreation(SubstationCreationInfos substationCreationInfos) {
-        modifications.add(this.modificationRepository.createSubstationEntity(
-                substationCreationInfos.getEquipmentId(),
-                substationCreationInfos.getEquipmentName(),
-                substationCreationInfos.getSubstationCountry(),
-                substationCreationInfos.getProperties()
-        ));
     }
 
     @Override

@@ -7,7 +7,6 @@
 package org.gridsuite.modification.server.entities.equipment.creation;
 
 import com.powsybl.iidm.network.PhaseTapChanger;
-import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.ModificationType;
@@ -18,6 +17,7 @@ import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -107,151 +107,62 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
     )
     private List<TapChangerStepCreationEmbeddable> tapChangerSteps;
 
-    public TwoWindingsTransformerCreationEntity(String equipmentId,
-                                                String equipmentName,
-                                                double seriesResistance,
-                                                double seriesReactance,
-                                                double magnetizingConductance,
-                                                double magnetizingSusceptance,
-                                                double ratedVoltage1,
-                                                double ratedVoltage2,
-                                                Double ratedS,
-                                                String voltageLevelId1,
-                                                String busOrBusbarSectionId1,
-                                                String voltageLevelId2,
-                                                String busOrBusbarSectionId2,
-                                                Double permanentCurrentLimit1,
-                                                Double permanentCurrentLimit2,
-                                                String connectionName1,
-                                                ConnectablePosition.Direction connectionDirection1,
-                                                String connectionName2,
-                                                ConnectablePosition.Direction connectionDirection2,
-                                                Integer phaseTapChangerLowTapPosition,
-                                                Integer phaseTapChangerTapPosition,
-                                                Boolean phaseTapChangerRegulating,
-                                                Double phaseTapChangerTargetDeadband,
-                                                String phaseTapChangerTerminalRefConnectableId,
-                                                String phaseTapChangerTerminalRefVoltageLevelId,
-                                                String phaseTapChangerTerminalRefType,
-                                                PhaseTapChanger.RegulationMode phaseTapChangerRegulationMode,
-                                                Double phaseTapChangerRegulationValue,
-                                                Integer ratioTapChangerLowTapPosition,
-                                                Integer ratioTapChangerTapPosition,
-                                                Boolean ratioTapChangerRegulating,
-                                                Double ratioTapChangerTargetDeadband,
-                                                String ratioTapChangerTerminalRefConnectableId,
-                                                String ratioTapChangerTerminalRefVoltageLevelId,
-                                                String ratioTapChangerTerminalRefType,
-                                                Boolean ratioTapChangerLoadTapChangingCapabilities,
-                                                Double ratioTapChangerTargetV,
-                                                List<TapChangerStepCreationEmbeddable> tapChangerSteps,
-                                                Integer connectionPosition1,
-                                                Integer connectionPosition2
-    ) {
-        super(ModificationType.TWO_WINDINGS_TRANSFORMER_CREATION,
-                equipmentId,
-                equipmentName,
-                seriesResistance,
-                seriesReactance,
-                voltageLevelId1,
-                voltageLevelId2,
-                busOrBusbarSectionId1,
-                busOrBusbarSectionId2,
-                permanentCurrentLimit1 != null ? new CurrentLimitsEntity(null, permanentCurrentLimit1) : null,
-                permanentCurrentLimit2 != null ? new CurrentLimitsEntity(null, permanentCurrentLimit2) : null,
-                connectionName1,
-                connectionDirection1,
-                connectionName2,
-                connectionDirection2,
-                connectionPosition1,
-                connectionPosition2);
-        this.magnetizingConductance = magnetizingConductance;
-        this.magnetizingSusceptance = magnetizingSusceptance;
-        this.ratedVoltage1 = ratedVoltage1;
-        this.ratedVoltage2 = ratedVoltage2;
-        this.ratedS = ratedS;
+    @Override
+    public void update(ModificationInfos modificationInfos) {
+        super.update(modificationInfos);
+        TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos = (TwoWindingsTransformerCreationInfos) modificationInfos;
+        assignAttributes(twoWindingsTransformerCreationInfos);
+    }
 
-        this.phaseTapChangerLowTapPosition = phaseTapChangerLowTapPosition;
-        this.phaseTapChangerTapPosition = phaseTapChangerTapPosition;
-        this.phaseTapChangerRegulating = phaseTapChangerRegulating;
-        this.phaseTapChangerTargetDeadband = phaseTapChangerTargetDeadband;
-        this.phaseTapChangerTerminalRefConnectableId = phaseTapChangerTerminalRefConnectableId;
-        this.phaseTapChangerTerminalRefVoltageLevelId = phaseTapChangerTerminalRefVoltageLevelId;
-        this.phaseTapChangerTerminalRefType = phaseTapChangerTerminalRefType;
-        this.phaseTapChangerRegulationMode = phaseTapChangerRegulationMode;
-        this.phaseTapChangerRegulationValue = phaseTapChangerRegulationValue;
-        this.ratioTapChangerLowTapPosition = ratioTapChangerLowTapPosition;
-        this.ratioTapChangerTapPosition = ratioTapChangerTapPosition;
-        this.ratioTapChangerRegulating = ratioTapChangerRegulating;
-        this.ratioTapChangerTargetDeadband = ratioTapChangerTargetDeadband;
-        this.ratioTapChangerTerminalRefConnectableId = ratioTapChangerTerminalRefConnectableId;
-        this.ratioTapChangerTerminalRefVoltageLevelId = ratioTapChangerTerminalRefVoltageLevelId;
-        this.ratioTapChangerTerminalRefType = ratioTapChangerTerminalRefType;
-        this.ratioTapChangerLoadTapChangingCapabilities = ratioTapChangerLoadTapChangingCapabilities;
-        this.ratioTapChangerTargetV = ratioTapChangerTargetV;
-        this.tapChangerSteps = tapChangerSteps;
+    public TwoWindingsTransformerCreationEntity(TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
+        super(twoWindingsTransformerCreationInfos);
+        assignAttributes(twoWindingsTransformerCreationInfos);
+    }
+
+    private void assignAttributes(TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
+        this.magnetizingConductance = twoWindingsTransformerCreationInfos.getMagnetizingConductance();
+        this.magnetizingSusceptance = twoWindingsTransformerCreationInfos.getMagnetizingSusceptance();
+        this.ratedVoltage1 = twoWindingsTransformerCreationInfos.getRatedVoltage1();
+        this.ratedVoltage2 = twoWindingsTransformerCreationInfos.getRatedVoltage2();
+        this.ratedS = twoWindingsTransformerCreationInfos.getRatedS();
+        this.tapChangerSteps = new ArrayList<>();
+        assignTapChanger(twoWindingsTransformerCreationInfos);
+    }
+
+    private void assignTapChanger(TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
+        Optional.ofNullable(twoWindingsTransformerCreationInfos.getPhaseTapChanger()).ifPresent(this::assignPhaseTapChanger);
+        Optional.ofNullable(twoWindingsTransformerCreationInfos.getRatioTapChanger()).ifPresent(this::assignRatioTapChanger);
+    }
+
+    private void assignRatioTapChanger(RatioTapChangerCreationInfos ratioTapChanger) {
+        this.ratioTapChangerLowTapPosition = ratioTapChanger.getLowTapPosition();
+        this.ratioTapChangerTapPosition =  ratioTapChanger.getTapPosition();
+        this.ratioTapChangerRegulating = ratioTapChanger.isRegulating();
+        this.ratioTapChangerTargetDeadband = ratioTapChanger.getTargetDeadband();
+        this.ratioTapChangerTerminalRefConnectableId = ratioTapChanger.getRegulatingTerminalId();
+        this.ratioTapChangerTerminalRefVoltageLevelId = ratioTapChanger.getRegulatingTerminalVlId();
+        this.ratioTapChangerTerminalRefType =  ratioTapChanger.getRegulatingTerminalType();
+        this.ratioTapChangerLoadTapChangingCapabilities = ratioTapChanger.isLoadTapChangingCapabilities();
+        this.ratioTapChangerTargetV =  ratioTapChanger.getTargetV();
+        this.tapChangerSteps.addAll(TapChangerStepCreationEmbeddable.toEmbeddableRatioTapChangerSteps(ratioTapChanger.getSteps()));
+    }
+
+    private void assignPhaseTapChanger(PhaseTapChangerCreationInfos phaseTapChangerCreationInfos) {
+        this.phaseTapChangerLowTapPosition = phaseTapChangerCreationInfos.getLowTapPosition();
+        this.phaseTapChangerTapPosition = phaseTapChangerCreationInfos.getTapPosition();
+        this.phaseTapChangerRegulating = phaseTapChangerCreationInfos.isRegulating();
+        this.phaseTapChangerTargetDeadband = phaseTapChangerCreationInfos.getTargetDeadband();
+        this.phaseTapChangerTerminalRefConnectableId = phaseTapChangerCreationInfos.getRegulatingTerminalId();
+        this.phaseTapChangerTerminalRefVoltageLevelId = phaseTapChangerCreationInfos.getRegulatingTerminalVlId();
+        this.phaseTapChangerTerminalRefType = phaseTapChangerCreationInfos.getRegulatingTerminalType();
+        this.phaseTapChangerRegulationMode = phaseTapChangerCreationInfos.getRegulationMode();
+        this.phaseTapChangerRegulationValue = phaseTapChangerCreationInfos.getRegulationValue();
+        this.tapChangerSteps.addAll(TapChangerStepCreationEmbeddable.toEmbeddablePhaseTapChangerSteps(phaseTapChangerCreationInfos.getSteps()));
     }
 
     @Override
     public TwoWindingsTransformerCreationInfos toModificationInfos() {
         return toTwoWindingsTransformerCreationInfosBuilder().build();
-    }
-
-    public static TwoWindingsTransformerCreationEntity toEntity(TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
-        TwoWindingsTransformerCreationEntity twoWindingsTransformerCreationEntity;
-        List<TapChangerStepCreationEmbeddable> tapChangerSteps = new ArrayList<>();
-
-        if (twoWindingsTransformerCreationInfos.getRatioTapChanger() != null) {
-            tapChangerSteps.addAll(TapChangerStepCreationEmbeddable.toEmbeddableRatioTapChangerSteps(twoWindingsTransformerCreationInfos.getRatioTapChanger().getSteps()));
-        }
-        if (twoWindingsTransformerCreationInfos.getPhaseTapChanger() != null) {
-            tapChangerSteps.addAll(TapChangerStepCreationEmbeddable.toEmbeddablePhaseTapChangerSteps(twoWindingsTransformerCreationInfos.getPhaseTapChanger().getSteps()));
-        }
-        PhaseTapChangerCreationInfos phaseTapChangerInfos = twoWindingsTransformerCreationInfos.getPhaseTapChanger();
-        RatioTapChangerCreationInfos ratioTapChangerInfos = twoWindingsTransformerCreationInfos.getRatioTapChanger();
-
-        twoWindingsTransformerCreationEntity = new TwoWindingsTransformerCreationEntity(twoWindingsTransformerCreationInfos.getEquipmentId(),
-                twoWindingsTransformerCreationInfos.getEquipmentName(),
-                twoWindingsTransformerCreationInfos.getSeriesResistance(),
-                twoWindingsTransformerCreationInfos.getSeriesReactance(),
-                twoWindingsTransformerCreationInfos.getMagnetizingConductance(),
-                twoWindingsTransformerCreationInfos.getMagnetizingSusceptance(),
-                twoWindingsTransformerCreationInfos.getRatedVoltage1(),
-                twoWindingsTransformerCreationInfos.getRatedVoltage2(),
-                twoWindingsTransformerCreationInfos.getRatedS(),
-                twoWindingsTransformerCreationInfos.getVoltageLevelId1(),
-                twoWindingsTransformerCreationInfos.getBusOrBusbarSectionId1(),
-                twoWindingsTransformerCreationInfos.getVoltageLevelId2(),
-                twoWindingsTransformerCreationInfos.getBusOrBusbarSectionId2(),
-                twoWindingsTransformerCreationInfos.getCurrentLimits1() != null ? twoWindingsTransformerCreationInfos.getCurrentLimits1().getPermanentLimit() : null,
-                twoWindingsTransformerCreationInfos.getCurrentLimits2() != null ? twoWindingsTransformerCreationInfos.getCurrentLimits2().getPermanentLimit() : null,
-                twoWindingsTransformerCreationInfos.getConnectionName1(),
-                twoWindingsTransformerCreationInfos.getConnectionDirection1(),
-                twoWindingsTransformerCreationInfos.getConnectionName2(),
-                twoWindingsTransformerCreationInfos.getConnectionDirection2(),
-                phaseTapChangerInfos != null ? phaseTapChangerInfos.getLowTapPosition() : null,
-                phaseTapChangerInfos != null ? phaseTapChangerInfos.getTapPosition() : null,
-                phaseTapChangerInfos != null ? phaseTapChangerInfos.isRegulating() : null,
-                phaseTapChangerInfos != null ? phaseTapChangerInfos.getTargetDeadband() : null,
-                phaseTapChangerInfos != null ? phaseTapChangerInfos.getRegulatingTerminalId() : null,
-                phaseTapChangerInfos != null ? phaseTapChangerInfos.getRegulatingTerminalVlId() : null,
-                phaseTapChangerInfos != null ? phaseTapChangerInfos.getRegulatingTerminalType() : null,
-                phaseTapChangerInfos != null ? phaseTapChangerInfos.getRegulationMode() : null,
-                phaseTapChangerInfos != null ? phaseTapChangerInfos.getRegulationValue() : null,
-                ratioTapChangerInfos != null ? ratioTapChangerInfos.getLowTapPosition() : null,
-                ratioTapChangerInfos != null ? ratioTapChangerInfos.getTapPosition() : null,
-                ratioTapChangerInfos != null ? ratioTapChangerInfos.isRegulating() : null,
-                ratioTapChangerInfos != null ? ratioTapChangerInfos.getTargetDeadband() : null,
-                ratioTapChangerInfos != null ? ratioTapChangerInfos.getRegulatingTerminalId() : null,
-                ratioTapChangerInfos != null ? ratioTapChangerInfos.getRegulatingTerminalVlId() : null,
-                ratioTapChangerInfos != null ? ratioTapChangerInfos.getRegulatingTerminalType() : null,
-                ratioTapChangerInfos != null ? ratioTapChangerInfos.isLoadTapChangingCapabilities() : null,
-                ratioTapChangerInfos != null ? ratioTapChangerInfos.getTargetV() : null,
-                tapChangerSteps,
-                twoWindingsTransformerCreationInfos.getConnectionPosition1(),
-                twoWindingsTransformerCreationInfos.getConnectionPosition2());
-
-        return twoWindingsTransformerCreationEntity;
     }
 
     private TwoWindingsTransformerCreationInfos.TwoWindingsTransformerCreationInfosBuilder<?, ?> toTwoWindingsTransformerCreationInfosBuilder() {
@@ -327,6 +238,12 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
         }
 
         return builder;
+    }
+
+    @Override
+    public void cloneWithIdsToNull() {
+        super.cloneWithIdsToNull();
+        this.tapChangerSteps = new ArrayList<>(tapChangerSteps);
     }
 
 }

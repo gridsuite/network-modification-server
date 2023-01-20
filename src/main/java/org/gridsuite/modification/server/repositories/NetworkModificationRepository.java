@@ -6,25 +6,13 @@
  */
 package org.gridsuite.modification.server.repositories;
 
-import com.powsybl.iidm.network.Country;
-import com.powsybl.iidm.network.EnergySource;
-import com.powsybl.iidm.network.LoadType;
-import com.powsybl.iidm.network.PhaseTapChanger;
-import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NonNull;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.*;
-import org.gridsuite.modification.server.entities.GroovyScriptModificationEntity;
+import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationGroupEntity;
-import org.gridsuite.modification.server.entities.equipment.creation.*;
-import org.gridsuite.modification.server.entities.equipment.deletion.EquipmentDeletionEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.BranchStatusModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.LoadModificationEntity;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -119,7 +107,7 @@ public class NetworkModificationRepository {
 
         List<ModificationEntity> newDestinationModificationList = new ArrayList<>(destinationModifications.values());
         /* when referenceModification == null we move at the end of list */
-        int index =  referenceModificationUuid == null ? newDestinationModificationList.size() : newDestinationModificationList.indexOf(destinationModifications.get(referenceModificationUuid));
+        int index = referenceModificationUuid == null ? newDestinationModificationList.size() : newDestinationModificationList.indexOf(destinationModifications.get(referenceModificationUuid));
         newDestinationModificationList.addAll(index, movedModifications);
 
         return newDestinationModificationList;
@@ -202,117 +190,12 @@ public class NetworkModificationRepository {
         return count;
     }
 
-    public void updateModification(ModificationEntity modificationEntity) {
-        this.modificationRepository.save(modificationEntity);
-    }
-
     private ModificationGroupEntity getModificationGroup(UUID groupUuid) {
         return this.modificationGroupRepository.findById(groupUuid).orElseThrow(() -> new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, groupUuid.toString()));
     }
 
     private ModificationGroupEntity getOrCreateModificationGroup(UUID groupUuid) {
         return this.modificationGroupRepository.findById(groupUuid).orElseGet(() -> modificationGroupRepository.save(new ModificationGroupEntity(groupUuid)));
-    }
-
-    public EquipmentModificationEntity createLoadModificationEntity(String loadId, AttributeModification<String> loadName, AttributeModification<LoadType> loadType,
-                                                                    AttributeModification<String> voltageLevelId, AttributeModification<String> busOrBusbarSectionId,
-                                                                    AttributeModification<Double> activePower, AttributeModification<Double> reactivePower) {
-        return new LoadModificationEntity(loadId, loadName, loadType, voltageLevelId, busOrBusbarSectionId, activePower, reactivePower);
-    }
-
-    public EquipmentCreationEntity createGeneratorEntity(String generatorId, String generatorName, EnergySource energySource,
-                                                         String voltageLevelId, String busOrBusbarSectionId,
-                                                         double minActivePower, double maxActivePower,
-                                                         Double ratedNominalPower, double activePowerSetpoint,
-                                                         Double reactivePowerSetpoint, boolean voltageRegulationOn, Double voltageSetpoint,
-                                                         Double plannedActivePowerSetPoint, Double startupCost,
-                                                         Double marginalCost, Double plannedOutageRate, Double forcedOutageRate,
-                                                         Double minQ, Double maxQ, boolean participate, Float droop,
-                                                         Double transientReactance, Double stepUpTransformerReactance,
-                                                         String regulatingTerminalId, String regulatingTerminalType, String regulatingTerminalVlId,
-                                                         Double qPercent, boolean reactiveCapabilityCurve,
-                                                         List<ReactiveCapabilityCurveCreationEmbeddable> reactiveCapabilityCurvePoints, String connectionName,
-                                                         ConnectablePosition.Direction connectionDirection,
-                                                         Integer connectionPosition) {
-        return new GeneratorCreationEntity(generatorId, generatorName, energySource, voltageLevelId, busOrBusbarSectionId, minActivePower,
-            maxActivePower, ratedNominalPower, activePowerSetpoint, reactivePowerSetpoint, voltageRegulationOn, voltageSetpoint, plannedActivePowerSetPoint, startupCost,
-            marginalCost, plannedOutageRate, forcedOutageRate, minQ, maxQ,
-            participate, droop,  transientReactance, stepUpTransformerReactance, reactiveCapabilityCurvePoints, regulatingTerminalId, regulatingTerminalType,
-            regulatingTerminalVlId, qPercent, reactiveCapabilityCurve, connectionName, connectionDirection, connectionPosition);
-    }
-
-    public EquipmentCreationEntity createTwoWindingsTransformerEntity(String id, String name, double seriesResistance, double seriesReactance,
-                                                                      double magnetizingConductance, double magnetizingSusceptance, double ratedVoltage1, double ratedVoltage2, double ratedS,
-                                                                      String voltageLevelId1, String busOrBusbarSectionId1, String voltageLevelId2, String busOrBusbarSectionId2,
-                                                                      Double permanentCurrentLimit1, Double permanentCurrentLimit2,
-                                                                      String connectionName1,
-                                                                      ConnectablePosition.Direction connectionDirection1,
-                                                                      String connectionName2,
-                                                                      ConnectablePosition.Direction connectionDirection2,
-                                                                      Integer phaseTapChangerLowTapPosition,
-                                                                      Integer phaseTapChangerTapPosition,
-                                                                      Boolean phaseTapChangerRegulating,
-                                                                      Double phaseTapChangerTargetDeadband,
-                                                                      String phaseTapChangerTerminalRefConnectableId,
-                                                                      String phaseTapChangerTerminalRefVoltageLevelId,
-                                                                      String phaseTapChangerTerminalRefType,
-                                                                      PhaseTapChanger.RegulationMode phaseTapChangerRegulationMode,
-                                                                      Double phaseTapChangerRegulationValue,
-                                                                      Integer ratioTapChangerLowTapPosition,
-                                                                      Integer ratioTapChangerTapPosition,
-                                                                      Boolean ratioTapChangerRegulating,
-                                                                      Double ratioTapChangerTargetDeadband,
-                                                                      String ratioTapChangerTerminalRefConnectableId,
-                                                                      String ratioTapChangerTerminalRefVoltageLevelId,
-                                                                      String ratioTapChangerTerminalRefType,
-                                                                      Boolean ratioTapChangerLoadTapChangingCapabilities,
-                                                                      Double ratioTapChangerTargetV,
-                                                                      List<TapChangerStepCreationEmbeddable> tapChangerSteps,
-                                                                      Integer connectionPosition1,
-                                                                      Integer connectionPosition2) {
-        return new TwoWindingsTransformerCreationEntity(id, name, seriesResistance, seriesReactance,
-                magnetizingConductance, magnetizingSusceptance, ratedVoltage1, ratedVoltage2, ratedS,
-                voltageLevelId1, busOrBusbarSectionId1, voltageLevelId2, busOrBusbarSectionId2,
-                permanentCurrentLimit1, permanentCurrentLimit2,
-                connectionName1, connectionDirection1,
-                connectionName2, connectionDirection2,
-                phaseTapChangerLowTapPosition,
-                phaseTapChangerTapPosition,
-                phaseTapChangerRegulating,
-                phaseTapChangerTargetDeadband,
-                phaseTapChangerTerminalRefConnectableId,
-                phaseTapChangerTerminalRefVoltageLevelId,
-                phaseTapChangerTerminalRefType,
-                phaseTapChangerRegulationMode,
-                phaseTapChangerRegulationValue,
-                ratioTapChangerLowTapPosition,
-                ratioTapChangerTapPosition,
-                ratioTapChangerRegulating,
-                ratioTapChangerTargetDeadband,
-                ratioTapChangerTerminalRefConnectableId,
-                ratioTapChangerTerminalRefVoltageLevelId,
-                ratioTapChangerTerminalRefType,
-                ratioTapChangerLoadTapChangingCapabilities,
-                ratioTapChangerTargetV,
-                tapChangerSteps,
-                connectionPosition1,
-                connectionPosition2);
-    }
-
-    public EquipmentCreationEntity createSubstationEntity(String id, String name, Country country, Map<String, String> properties) {
-        return new SubstationCreationEntity(id, name, country, properties);
-    }
-
-    public EquipmentDeletionEntity createEquipmentDeletionEntity(String equipmentId, String equipmentType) {
-        return new EquipmentDeletionEntity(equipmentId, equipmentType);
-    }
-
-    public GroovyScriptModificationEntity createGroovyScriptModificationEntity(String script) {
-        return new GroovyScriptModificationEntity(script);
-    }
-
-    public BranchStatusModificationEntity createBranchStatusModificationEntity(String lineId, BranchStatusModificationInfos.ActionType action) {
-        return new BranchStatusModificationEntity(lineId, action);
     }
 
     private List<ModificationEntity> getModificationsEntities(List<UUID> groupUuids) {
@@ -332,9 +215,5 @@ public class NetworkModificationRepository {
             entity.cloneWithIdsToNull();
             return entity;
         }).collect(Collectors.toList());
-    }
-
-    public GeneratorModificationEntity createGeneratorModificationEntity(GeneratorModificationInfos generatorModificationInfos) {
-        return new GeneratorModificationEntity(generatorModificationInfos);
     }
 }

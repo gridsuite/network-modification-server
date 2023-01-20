@@ -6,6 +6,13 @@
  */
 package org.gridsuite.modification.server.dto;
 
+import org.gridsuite.modification.server.ModificationType;
+import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.entities.equipment.deletion.EquipmentDeletionEntity;
+import org.gridsuite.modification.server.modifications.AbstractModification;
+import org.gridsuite.modification.server.modifications.EquipmentDeletion;
+import com.powsybl.commons.reporter.Reporter;
+import com.powsybl.commons.reporter.ReporterModel;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -25,4 +32,24 @@ import lombok.experimental.SuperBuilder;
 public class EquipmentDeletionInfos extends EquipmentModificationInfos {
     @Schema(description = "Equipment type")
     private String equipmentType;
+
+    @Override
+    public EquipmentDeletionEntity toEntity() {
+        return new EquipmentDeletionEntity(this);
+    }
+
+    @Override
+    public AbstractModification toModification() {
+        return new EquipmentDeletion(this);
+    }
+
+    @Override
+    public NetworkModificationException.Type getErrorType() {
+        return NetworkModificationException.Type.DELETE_EQUIPMENT_ERROR;
+    }
+
+    @Override
+    public Reporter createSubReporter(ReporterModel reporter) {
+        return reporter.createSubReporter(ModificationType.EQUIPMENT_DELETION.name(), "Equipment deletion ${equipmentId}", "equipmentId", this.getEquipmentId());
+    }
 }

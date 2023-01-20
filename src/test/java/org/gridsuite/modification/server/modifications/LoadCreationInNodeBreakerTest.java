@@ -44,6 +44,7 @@ public class LoadCreationInNodeBreakerTest extends AbstractNetworkModificationTe
         String loadCreationInfosJson1 = mapper.writeValueAsString(loadCreationInfos1);
         mockMvc.perform(post(getNetworkModificationUri()).content(loadCreationInfosJson1).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(status().is5xxServerError(), content().string(new NetworkModificationException(CREATE_LOAD_ERROR, "java.lang.NullPointerException").getMessage())).andReturn();
+        testNetworkModificationsCount(getGroupId(), 1);
 
         // Equipment Id invalid
         LoadCreationInfos loadCreationInfos = (LoadCreationInfos) buildModification();
@@ -51,12 +52,14 @@ public class LoadCreationInNodeBreakerTest extends AbstractNetworkModificationTe
         String loadCreationInfosJson = mapper.writeValueAsString(loadCreationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(loadCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(status().is5xxServerError(), content().string(new NetworkModificationException(CREATE_LOAD_ERROR, "Invalid id ''").getMessage())).andReturn();
+        testNetworkModificationsCount(getGroupId(), 2);
 
         // VoltageLevel not found
         loadCreationInfos.setVoltageLevelId("notFoundVoltageLevelId");
         loadCreationInfosJson = mapper.writeValueAsString(loadCreationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(loadCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(status().is4xxClientError(), content().string(new NetworkModificationException(VOLTAGE_LEVEL_NOT_FOUND, "notFoundVoltageLevelId").getMessage())).andReturn();
+        testNetworkModificationsCount(getGroupId(), 3);
 
         loadCreationInfos.setEquipmentId("idLoad1");
         loadCreationInfos.setVoltageLevelId("v2");
@@ -64,22 +67,22 @@ public class LoadCreationInNodeBreakerTest extends AbstractNetworkModificationTe
         loadCreationInfosJson = mapper.writeValueAsString(loadCreationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(loadCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(status().is4xxClientError(), content().string(new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "notFoundBusbarSection").getMessage())).andReturn();
+        testNetworkModificationsCount(getGroupId(), 4);
 
         loadCreationInfos.setBusOrBusbarSectionId("1B");
         loadCreationInfos.setActivePower(Double.NaN);
         loadCreationInfosJson = mapper.writeValueAsString(loadCreationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(loadCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(status().is5xxServerError(), content().string(new NetworkModificationException(CREATE_LOAD_ERROR, "Load 'idLoad1': p0 is invalid").getMessage())).andReturn();
+        testNetworkModificationsCount(getGroupId(), 5);
 
         loadCreationInfosJson = mapper.writeValueAsString(loadCreationInfos);
         MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUriWithBadVariant()).content(loadCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(status().isOk()).andReturn();
-        String resultAsString = mvcResult.getResponse().getContentAsString();
-        List<EquipmentModificationInfos> bsmlrModification = mapper.readValue(resultAsString, new TypeReference<>() { });
-
+        List<EquipmentModificationInfos> bsmlrModification = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertTrue(bsmlrModification.isEmpty());  // no modifications returned
         assertNull(getNetwork().getLoad("idLoad1"));  // load was not created
-        testNetworkModificationsCount(getGroupId(), 1);  // new modification stored in the database
+        testNetworkModificationsCount(getGroupId(), 6);
     }
 
     @Override
