@@ -23,7 +23,7 @@ import static org.gridsuite.modification.server.utils.MatcherBranchStatusModific
 
 public class BranchStatusModificationTrip2WTransformerTest extends AbstractNetworkModificationTest {
 
-    private static final String TARGET_LINE_ID = "trf1";
+    private static final String TARGET_BRANCH_ID = "trf1";
     private static final String UPDATE_BRANCH_ID = "line1"; // it is not a 2WT, but is does not matter
     private static final BranchStatus.Status TARGET_BRANCH_STATUS = FORCED_OUTAGE;
     private static final BranchStatus.Status OTHER_BRANCH_STATUS = PLANNED_OUTAGE;
@@ -32,7 +32,7 @@ public class BranchStatusModificationTrip2WTransformerTest extends AbstractNetwo
     protected Network createNetwork(UUID networkUuid) {
         Network network = NetworkCreation.create(networkUuid, true);
         // force a branch status different from the expected one, after testCreate
-        TestUtils.setBranchStatus(network, TARGET_LINE_ID, OTHER_BRANCH_STATUS);
+        TestUtils.setBranchStatus(network, TARGET_BRANCH_ID, OTHER_BRANCH_STATUS);
         return network;
     }
 
@@ -40,7 +40,7 @@ public class BranchStatusModificationTrip2WTransformerTest extends AbstractNetwo
     protected ModificationInfos buildModification() {
         return BranchStatusModificationInfos.builder()
                 .type(ModificationType.BRANCH_STATUS_MODIFICATION)
-                .equipmentId(TARGET_LINE_ID)
+                .equipmentId(TARGET_BRANCH_ID)
                 .action(BranchStatusModificationInfos.ActionType.TRIP).build();
     }
 
@@ -59,12 +59,12 @@ public class BranchStatusModificationTrip2WTransformerTest extends AbstractNetwo
 
     @Override
     protected void assertNetworkAfterCreation() {
-        TestUtils.assertBranchStatus(getNetwork(), TARGET_LINE_ID, TARGET_BRANCH_STATUS);
+        TestUtils.assertBranchStatus(getNetwork(), TARGET_BRANCH_ID, TARGET_BRANCH_STATUS);
     }
 
     @Override
     protected void assertNetworkAfterDeletion() {
         // back to init status
-        TestUtils.assertBranchStatus(getNetwork(), TARGET_LINE_ID, OTHER_BRANCH_STATUS);
+        TestUtils.assertBranchStatus(getNetwork(), TARGET_BRANCH_ID, OTHER_BRANCH_STATUS);
     }
 }
