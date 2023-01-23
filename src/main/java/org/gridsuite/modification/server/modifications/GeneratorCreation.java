@@ -8,6 +8,7 @@ package org.gridsuite.modification.server.modifications;
 
 import org.gridsuite.modification.server.NetworkModificationException;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.CREATE_GENERATOR_ERROR;
+import static org.gridsuite.modification.server.modifications.ModificationUtils.nanIfNull;
 
 import org.gridsuite.modification.server.dto.GeneratorCreationInfos;
 
@@ -26,7 +27,6 @@ import com.powsybl.iidm.network.TopologyKind;
 import com.powsybl.iidm.network.VoltageLevel;
 import com.powsybl.iidm.network.extensions.ActivePowerControlAdder;
 import com.powsybl.iidm.network.extensions.GeneratorShortCircuitAdder;
-import com.powsybl.iidm.network.extensions.GeneratorStartupAdder;
 import com.powsybl.network.store.iidm.impl.extensions.CoordinatedReactiveControlAdderImpl;
 import com.powsybl.network.store.iidm.impl.extensions.GeneratorStartupAdderImpl;
 
@@ -94,11 +94,11 @@ public class GeneratorCreation extends AbstractModification {
             .setEnergySource(generatorCreationInfos.getEnergySource())
             .setMinP(generatorCreationInfos.getMinActivePower())
             .setMaxP(generatorCreationInfos.getMaxActivePower())
-            .setRatedS(generatorCreationInfos.getRatedNominalPower() != null ? generatorCreationInfos.getRatedNominalPower() : Double.NaN)
+            .setRatedS(nanIfNull(generatorCreationInfos.getRatedNominalPower()))
             .setTargetP(generatorCreationInfos.getActivePowerSetpoint())
-            .setTargetQ(generatorCreationInfos.getReactivePowerSetpoint() != null ? generatorCreationInfos.getReactivePowerSetpoint() : Double.NaN)
+            .setTargetQ(nanIfNull(generatorCreationInfos.getReactivePowerSetpoint()))
             .setVoltageRegulatorOn(generatorCreationInfos.isVoltageRegulationOn())
-            .setTargetV(generatorCreationInfos.getVoltageSetpoint() != null ? generatorCreationInfos.getVoltageSetpoint() : Double.NaN);
+            .setTargetV(nanIfNull(generatorCreationInfos.getVoltageSetpoint()));
 
         if (terminal != null) {
             generatorAdder.setRegulatingTerminal(terminal);
@@ -117,14 +117,23 @@ public class GeneratorCreation extends AbstractModification {
             generator.setRegulatingTerminal(terminal);
         }
 
-        Boolean participate = generatorCreationInfos.getParticipate();
-
-        if (generatorCreationInfos.getMarginalCost() != null) {
-            generator.newExtension(GeneratorStartupAdderImpl.class).withMarginalCost(generatorCreationInfos.getMarginalCost()).add();
+        if (generatorCreationInfos.getPlannedActivePowerSetPoint() != null
+                || generatorCreationInfos.getStartupCost() != null
+                || generatorCreationInfos.getMarginalCost() != null
+                || generatorCreationInfos.getPlannedOutageRate() != null
+                || generatorCreationInfos.getForcedOutageRate() != null) {
+            generator.newExtension(GeneratorStartupAdderImpl.class)
+                    .withPlannedActivePowerSetpoint(nanIfNull(generatorCreationInfos.getPlannedActivePowerSetPoint()))
+                    .withStartupCost(nanIfNull(generatorCreationInfos.getStartupCost()))
+                    .withMarginalCost(nanIfNull(generatorCreationInfos.getMarginalCost()))
+                    .withPlannedOutageRate(nanIfNull(generatorCreationInfos.getPlannedOutageRate()))
+                    .withForcedOutageRate(nanIfNull(generatorCreationInfos.getForcedOutageRate()))
+                    .add();
         }
 
         if (generatorCreationInfos.getParticipate() != null && generatorCreationInfos.getDroop() != null) {
-            generator.newExtension(ActivePowerControlAdder.class).withParticipate(participate)
+            generator.newExtension(ActivePowerControlAdder.class)
+                    .withParticipate(generatorCreationInfos.getParticipate())
                     .withDroop(generatorCreationInfos.getDroop())
                     .add();
         }
@@ -162,11 +171,6 @@ public class GeneratorCreation extends AbstractModification {
     private void createGeneratorInBusBreaker(VoltageLevel voltageLevel, GeneratorCreationInfos generatorCreationInfos, Reporter subReporter) {
         Bus bus = ModificationUtils.getInstance().getBusBreakerBus(voltageLevel, generatorCreationInfos.getBusOrBusbarSectionId());
 
-        Terminal terminal = ModificationUtils.getInstance().getTerminalFromIdentifiable(voltageLevel.getNetwork(),
-                generatorCreationInfos.getRegulatingTerminalId(),
-                generatorCreationInfos.getRegulatingTerminalType(),
-                generatorCreationInfos.getRegulatingTerminalVlId());
-
         // creating the generator
         Generator generator = voltageLevel.newGenerator()
             .setId(generatorCreationInfos.getEquipmentId())
@@ -176,49 +180,14 @@ public class GeneratorCreation extends AbstractModification {
             .setConnectableBus(bus.getId())
             .setMinP(generatorCreationInfos.getMinActivePower())
             .setMaxP(generatorCreationInfos.getMaxActivePower())
-            .setRatedS(generatorCreationInfos.getRatedNominalPower() != null ? generatorCreationInfos.getRatedNominalPower() : Double.NaN)
+            .setRatedS(nanIfNull(generatorCreationInfos.getRatedNominalPower()))
             .setTargetP(generatorCreationInfos.getActivePowerSetpoint())
-            .setTargetQ(generatorCreationInfos.getReactivePowerSetpoint() != null ? generatorCreationInfos.getReactivePowerSetpoint() : Double.NaN)
+            .setTargetQ(nanIfNull(generatorCreationInfos.getReactivePowerSetpoint()))
             .setVoltageRegulatorOn(generatorCreationInfos.isVoltageRegulationOn())
-            .setTargetV(generatorCreationInfos.getVoltageSetpoint() != null ? generatorCreationInfos.getVoltageSetpoint() : Double.NaN)
+            .setTargetV(nanIfNull(generatorCreationInfos.getVoltageSetpoint()))
             .add();
 
-        if (terminal != null) {
-            generator.setRegulatingTerminal(terminal);
-        }
-
-        if (generatorCreationInfos.getTransientReactance() != null && generatorCreationInfos.getStepUpTransformerReactance() != null) {
-            generator.newExtension(GeneratorShortCircuitAdder.class).withDirectTransX(generatorCreationInfos.getTransientReactance())
-                    .withStepUpTransformerX(generatorCreationInfos.getStepUpTransformerReactance())
-                    .add();
-        }
-
-        if (generatorCreationInfos.getMarginalCost() != null) {
-            generator.newExtension(GeneratorStartupAdder.class).withMarginalCost(generatorCreationInfos.getMarginalCost()).add();
-        }
-
-        if (generatorCreationInfos.getParticipate() != null && generatorCreationInfos.getDroop() != null) {
-            generator.newExtension(ActivePowerControlAdder.class).withParticipate(generatorCreationInfos.getParticipate())
-                    .withDroop(generatorCreationInfos.getDroop())
-                    .add();
-        }
-
-        if (generatorCreationInfos.getMaximumReactivePower() != null && generatorCreationInfos.getMinimumReactivePower() != null) {
-            generator.newMinMaxReactiveLimits().setMinQ(generatorCreationInfos.getMinimumReactivePower())
-                    .setMaxQ(generatorCreationInfos.getMaximumReactivePower())
-                    .add();
-        }
-
-        if (Boolean.TRUE.equals(generatorCreationInfos.getReactiveCapabilityCurve())) {
-            ReactiveCapabilityCurveAdder adder = generator.newReactiveCapabilityCurve();
-            generatorCreationInfos.getReactiveCapabilityCurvePoints()
-                    .forEach(point -> adder.beginPoint()
-                            .setMaxQ(point.getQmaxP())
-                            .setMinQ(point.getQminP())
-                            .setP(point.getP())
-                            .endPoint());
-            adder.add();
-        }
+        addExtensionsToGenerator(generatorCreationInfos, generator, voltageLevel);
 
         subReporter.report(Report.builder()
                 .withKey("generatorCreated")

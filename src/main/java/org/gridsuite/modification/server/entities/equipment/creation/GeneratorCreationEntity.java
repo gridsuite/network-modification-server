@@ -55,8 +55,20 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
     @Column(name = "voltageSetpoint")
     private Double voltageSetpoint;
 
+    @Column(name = "plannedActivePowerSetPoint")
+    private Double plannedActivePowerSetPoint;
+
+    @Column(name = "startupCost")
+    private Double startupCost;
+
     @Column(name = "marginalCost")
     private Double marginalCost;
+
+    @Column(name = "plannedOutageRate")
+    private Double plannedOutageRate;
+
+    @Column(name = "forcedOutageRate")
+    private Double forcedOutageRate;
 
     @Column(name = "minimumReactivePower")
     private Double minimumReactivePower;
@@ -124,7 +136,11 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
         this.reactivePowerSetpoint = generatorCreationInfos.getReactivePowerSetpoint();
         this.voltageRegulationOn = generatorCreationInfos.isVoltageRegulationOn();
         this.voltageSetpoint = generatorCreationInfos.getVoltageSetpoint();
+        this.plannedActivePowerSetPoint = generatorCreationInfos.getPlannedActivePowerSetPoint();
+        this.startupCost = generatorCreationInfos.getStartupCost();
         this.marginalCost = generatorCreationInfos.getMarginalCost();
+        this.plannedOutageRate = generatorCreationInfos.getPlannedOutageRate();
+        this.forcedOutageRate = generatorCreationInfos.getForcedOutageRate();
         this.minimumReactivePower = generatorCreationInfos.getMinimumReactivePower();
         this.maximumReactivePower = generatorCreationInfos.getMaximumReactivePower();
         this.participate = generatorCreationInfos.getParticipate();
@@ -182,7 +198,11 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
             .reactivePowerSetpoint(getReactivePowerSetpoint())
             .voltageRegulationOn(isVoltageRegulationOn())
             .voltageSetpoint(getVoltageSetpoint())
+            .plannedActivePowerSetPoint(getPlannedActivePowerSetPoint())
+            .startupCost(getStartupCost())
             .marginalCost(getMarginalCost())
+            .plannedOutageRate(getPlannedOutageRate())
+            .forcedOutageRate(getForcedOutageRate())
             .minimumReactivePower(this.getMinimumReactivePower())
             .participate(getParticipate())
             .droop(getDroop())
