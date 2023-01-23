@@ -51,6 +51,10 @@ public final class ModificationUtils {
         return d != null ? d : 0.0;
     }
 
+    public static Double nanIfNull(Double d) {
+        return d == null ? Double.NaN : d;
+    }
+
     public VoltageLevel getVoltageLevel(Network network, String voltageLevelId) {
         VoltageLevel voltageLevel = network.getVoltageLevel(voltageLevelId);
         if (voltageLevel == null) {
