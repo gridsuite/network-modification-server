@@ -26,7 +26,6 @@ import com.powsybl.iidm.network.TopologyKind;
 import com.powsybl.iidm.network.VoltageLevel;
 import com.powsybl.iidm.network.extensions.ActivePowerControlAdder;
 import com.powsybl.iidm.network.extensions.GeneratorShortCircuitAdder;
-import com.powsybl.iidm.network.extensions.GeneratorStartupAdder;
 import com.powsybl.network.store.iidm.impl.extensions.CoordinatedReactiveControlAdderImpl;
 import com.powsybl.network.store.iidm.impl.extensions.GeneratorStartupAdderImpl;
 
@@ -107,6 +106,7 @@ public class GeneratorCreation extends AbstractModification {
         return generatorAdder;
     }
 
+    //TODO why not factorized with createGeneratorInBusBreaker ?
     private void addExtensionsToGenerator(GeneratorCreationInfos generatorCreationInfos, Generator generator, VoltageLevel voltageLevel) {
         Terminal terminal = ModificationUtils.getInstance().getTerminalFromIdentifiable(voltageLevel.getNetwork(),
                 generatorCreationInfos.getRegulatingTerminalId(),
@@ -119,8 +119,18 @@ public class GeneratorCreation extends AbstractModification {
 
         Boolean participate = generatorCreationInfos.getParticipate();
 
-        if (generatorCreationInfos.getMarginalCost() != null) {
-            generator.newExtension(GeneratorStartupAdderImpl.class).withMarginalCost(generatorCreationInfos.getMarginalCost()).add();
+        if (generatorCreationInfos.getPlannedActivePowerSetPoint() != null
+                || generatorCreationInfos.getStartupCost() != null
+                || generatorCreationInfos.getMarginalCost() != null
+                || generatorCreationInfos.getPlannedOutageRate() != null
+                || generatorCreationInfos.getForcedOutageRate() != null) {
+            generator.newExtension(GeneratorStartupAdderImpl.class)
+                    .withPlannedActivePowerSetpoint(generatorCreationInfos.getPlannedActivePowerSetPoint() != null ? generatorCreationInfos.getPlannedActivePowerSetPoint() : Double.NaN)
+                    .withStartupCost(generatorCreationInfos.getStartupCost() != null ? generatorCreationInfos.getStartupCost() : Double.NaN)
+                    .withMarginalCost(generatorCreationInfos.getMarginalCost() != null ? generatorCreationInfos.getMarginalCost() : Double.NaN)
+                    .withPlannedOutageRate(generatorCreationInfos.getPlannedOutageRate() != null ? generatorCreationInfos.getPlannedOutageRate() : Double.NaN)
+                    .withForcedOutageRate(generatorCreationInfos.getForcedOutageRate() != null ? generatorCreationInfos.getForcedOutageRate() : Double.NaN)
+                    .add();
         }
 
         if (generatorCreationInfos.getParticipate() != null && generatorCreationInfos.getDroop() != null) {
@@ -193,8 +203,18 @@ public class GeneratorCreation extends AbstractModification {
                     .add();
         }
 
-        if (generatorCreationInfos.getMarginalCost() != null) {
-            generator.newExtension(GeneratorStartupAdder.class).withMarginalCost(generatorCreationInfos.getMarginalCost()).add();
+        if (generatorCreationInfos.getPlannedActivePowerSetPoint() != null
+                || generatorCreationInfos.getStartupCost() != null
+                || generatorCreationInfos.getMarginalCost() != null
+                || generatorCreationInfos.getPlannedOutageRate() != null
+                || generatorCreationInfos.getForcedOutageRate() != null) {
+            generator.newExtension(GeneratorStartupAdderImpl.class)
+                    .withPlannedActivePowerSetpoint(generatorCreationInfos.getPlannedActivePowerSetPoint() != null ? generatorCreationInfos.getPlannedActivePowerSetPoint() : Double.NaN)
+                    .withStartupCost(generatorCreationInfos.getStartupCost() != null ? generatorCreationInfos.getStartupCost() : Double.NaN)
+                    .withMarginalCost(generatorCreationInfos.getMarginalCost() != null ? generatorCreationInfos.getMarginalCost() : Double.NaN)
+                    .withPlannedOutageRate(generatorCreationInfos.getPlannedOutageRate() != null ? generatorCreationInfos.getPlannedOutageRate() : Double.NaN)
+                    .withForcedOutageRate(generatorCreationInfos.getForcedOutageRate() != null ? generatorCreationInfos.getForcedOutageRate() : Double.NaN)
+                    .add();
         }
 
         if (generatorCreationInfos.getParticipate() != null && generatorCreationInfos.getDroop() != null) {

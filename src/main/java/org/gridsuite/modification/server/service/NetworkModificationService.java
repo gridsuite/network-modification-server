@@ -12,12 +12,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Streams;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.reporter.*;
-import com.powsybl.iidm.modification.topology.*;
-import com.powsybl.iidm.modification.tripping.BranchTripping;
-import com.powsybl.commons.reporter.*;
-import com.powsybl.iidm.network.*;
-import com.powsybl.iidm.network.Branch.Side;
-import com.powsybl.iidm.network.extensions.*;
+import com.powsybl.iidm.network.Network;
+import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.NetworkStoreService;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
@@ -44,15 +40,12 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.*;
-import java.util.*;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 
-// TODO change this shit (optimize import)
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  * @author Slimane Amar <slimane.amar at rte-france.com>

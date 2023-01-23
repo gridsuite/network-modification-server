@@ -280,14 +280,16 @@ public class ModificationRepositoryTest {
 
     @Test
     public void testGeneratorCreation() {
-        //TODO CHANGE this shit
         var createGeneratorEntity1 = GeneratorCreationInfos.builder().type(ModificationType.GENERATOR_CREATION)
                 .equipmentId("idGenerator1").equipmentName("nameGenerator1")
                 .energySource(EnergySource.HYDRO).voltageLevelId("vlId1")
                 .busOrBusbarSectionId("busId1").minActivePower(100.0)
                 .maxActivePower(800.0).ratedNominalPower(10.)
                 .activePowerSetpoint(500).reactivePowerSetpoint(50.)
-                .voltageRegulationOn(true).voltageSetpoint(225.).marginalCost(20.)
+                .voltageRegulationOn(true).voltageSetpoint(225.)
+                .plannedActivePowerSetPoint(20.)
+                .startupCost(20.).marginalCost(20.)
+                .plannedOutageRate(20.).forcedOutageRate(20.)
                 .minimumReactivePower(30.).maximumReactivePower(50.)
                 .participate(true).droop(8f).transientReactance(37.)
                 .stepUpTransformerReactance(46.).regulatingTerminalId("testTerminalId1")
@@ -301,7 +303,10 @@ public class ModificationRepositoryTest {
                 .busOrBusbarSectionId("busId2").minActivePower(0.0)
                 .maxActivePower(300.0).ratedNominalPower(5.)
                 .activePowerSetpoint(150).reactivePowerSetpoint(30.)
-                .voltageRegulationOn(false).voltageSetpoint(380.).marginalCost(30.)
+                .voltageRegulationOn(false).voltageSetpoint(380.)
+                .plannedActivePowerSetPoint(30.)
+                .startupCost(30.).marginalCost(30.)
+                .plannedOutageRate(30.).forcedOutageRate(30.)
                 .participate(false).droop(null).transientReactance(37.)
                 .stepUpTransformerReactance(46.).regulatingTerminalId(null)
                 .regulatingTerminalType(null).regulatingTerminalVlId("idVlTest2")

@@ -610,14 +610,6 @@ public class ModificationControllerTest {
             .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString();
 
-        VoltageLevelCreationInfos vl2 = ModificationCreation.getCreationVoltageLevel("s1", "vl2Id", "vl2Name");
-        mockMvc.perform(
-                post(URI_NETWORK_MODIF_BUS_BREAKER)
-                    .content(objectWriter.writeValueAsString(vl2))
-                    .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk())
-            .andReturn().getResponse().getContentAsString();
-
         // create new line in voltage levels with node/breaker topology
         // between voltage level "v1" and busbar section "bus1" and
         //         voltage level "v2" and busbar section "bus2"
@@ -653,7 +645,7 @@ public class ModificationControllerTest {
         List<EquipmentModificationInfos> modifications = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertThat(modifications.get(0), createMatcherEquipmentModificationInfos(ModificationType.LINE_CREATION, "idLine1", Set.of("s1", "s2")));
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 3);
+        testNetworkModificationsCount(TEST_GROUP_ID, 2);
 
         //create a lineAttached
         LineCreationInfos attachmentLine = LineCreationInfos.builder()
@@ -674,7 +666,7 @@ public class ModificationControllerTest {
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 4);
+        testNetworkModificationsCount(TEST_GROUP_ID, 3);
 
         //create a lineSplit
         LineSplitWithVoltageLevelInfos lineSplitWoVL = new LineSplitWithVoltageLevelInfos("line3", 10.0, null, "v4", "1.A",
@@ -696,14 +688,14 @@ public class ModificationControllerTest {
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
 
-        testNetworkModificationsCount(TEST_GROUP_ID, 6);
+        testNetworkModificationsCount(TEST_GROUP_ID, 5);
 
         //test copy group
         UUID newGroupUuid = UUID.randomUUID();
         String uriStringGroups = "/v1/groups?groupUuid=" + newGroupUuid + "&duplicateFrom=" + TEST_GROUP_ID + "&reportUuid=" + UUID.randomUUID();
         mockMvc.perform(post(uriStringGroups)).andExpect(status().isOk());
 
-        testNetworkModificationsCount(newGroupUuid, 6);
+        testNetworkModificationsCount(newGroupUuid, 5);
     }
 
     @Test

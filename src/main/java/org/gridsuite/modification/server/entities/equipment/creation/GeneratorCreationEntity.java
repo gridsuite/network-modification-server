@@ -136,17 +136,11 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
         this.reactivePowerSetpoint = generatorCreationInfos.getReactivePowerSetpoint();
         this.voltageRegulationOn = generatorCreationInfos.isVoltageRegulationOn();
         this.voltageSetpoint = generatorCreationInfos.getVoltageSetpoint();
-        //TODO CHANGE THIS SHIT
-        this.plannedActivePowerSetPoint = generatorCreationInfos.getMarginalCost();
-        this.startupCost = generatorCreationInfos.getMarginalCost();
+        this.plannedActivePowerSetPoint = generatorCreationInfos.getPlannedActivePowerSetPoint();
+        this.startupCost = generatorCreationInfos.getStartupCost();
         this.marginalCost = generatorCreationInfos.getMarginalCost();
-        this.plannedOutageRate = generatorCreationInfos.getMarginalCost();
-        this.forcedOutageRate = generatorCreationInfos.getMarginalCost();
-        this.plannedActivePowerSetPoint = plannedActivePowerSetPoint;
-        this.startupCost = startupCost;
-        this.marginalCost = marginalCost;
-        this.plannedOutageRate = plannedOutageRate;
-        this.forcedOutageRate = forcedOutageRate;
+        this.plannedOutageRate = generatorCreationInfos.getPlannedOutageRate();
+        this.forcedOutageRate = generatorCreationInfos.getForcedOutageRate();
         this.minimumReactivePower = generatorCreationInfos.getMinimumReactivePower();
         this.maximumReactivePower = generatorCreationInfos.getMaximumReactivePower();
         this.participate = generatorCreationInfos.getParticipate();
