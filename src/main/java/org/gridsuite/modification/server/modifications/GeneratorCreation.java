@@ -107,7 +107,6 @@ public class GeneratorCreation extends AbstractModification {
         return generatorAdder;
     }
 
-    //TODO why not factorized with createGeneratorInBusBreaker ?
     private void addExtensionsToGenerator(GeneratorCreationInfos generatorCreationInfos, Generator generator, VoltageLevel voltageLevel) {
         Terminal terminal = ModificationUtils.getInstance().getTerminalFromIdentifiable(voltageLevel.getNetwork(),
                 generatorCreationInfos.getRegulatingTerminalId(),
