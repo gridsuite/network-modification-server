@@ -41,7 +41,7 @@ public class GeneratorScaling extends AbstractScaling {
     }
 
     @Override
-    public void applyStackingUpVariation(Network network,
+    protected void applyStackingUpVariation(Network network,
                                          Reporter subReporter,
                                          List<IdentifiableAttributes> identifiableAttributes,
                                          ScalingVariationInfos generatorScalingVariation) {
@@ -55,7 +55,7 @@ public class GeneratorScaling extends AbstractScaling {
     }
 
     @Override
-    public void applyVentilationVariation(Network network,
+    protected void applyVentilationVariation(Network network,
                                           Reporter subReporter,
                                           List<IdentifiableAttributes> identifiableAttributes,
                                           ScalingVariationInfos generatorScalingVariation,
@@ -76,7 +76,7 @@ public class GeneratorScaling extends AbstractScaling {
     }
 
     @Override
-    public void applyRegularDistributionVariation(Network network,
+    protected void applyRegularDistributionVariation(Network network,
                                                   Reporter subReporter,
                                                   List<IdentifiableAttributes> identifiableAttributes,
                                                   ScalingVariationInfos generatorScalingVariation) {
@@ -100,7 +100,7 @@ public class GeneratorScaling extends AbstractScaling {
     }
 
     @Override
-    public void applyProportionalToPmaxVariation(Network network,
+    protected void applyProportionalToPmaxVariation(Network network,
                                                  Reporter subReporter,
                                                  List<IdentifiableAttributes> identifiableAttributes,
                                                  ScalingVariationInfos generatorScalingVariation) {
@@ -130,7 +130,7 @@ public class GeneratorScaling extends AbstractScaling {
     }
 
     @Override
-    public void applyProportionalVariation(Network network,
+    protected void applyProportionalVariation(Network network,
                                            Reporter subReporter,
                                            List<IdentifiableAttributes> identifiableAttributes,
                                            ScalingVariationInfos generatorScalingVariation) {
@@ -167,14 +167,14 @@ public class GeneratorScaling extends AbstractScaling {
     }
 
     @Override
-    public double getAsked(ScalingVariationInfos generatorScalingVariation, AtomicReference<Double> sum) {
+    protected double getAsked(ScalingVariationInfos generatorScalingVariation, AtomicReference<Double> sum) {
         return scalingInfos.getVariationType() == VariationType.DELTA_P
                 ? generatorScalingVariation.getVariationValue()
                 : generatorScalingVariation.getVariationValue() - sum.get();
     }
 
     @Override
-    public Scalable getScalable(String id) {
+    protected Scalable getScalable(String id) {
         return Scalable.onGenerator(id);
     }
 }

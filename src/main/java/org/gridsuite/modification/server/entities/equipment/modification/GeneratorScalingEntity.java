@@ -15,17 +15,11 @@ import lombok.Setter;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.GeneratorScalingInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.dto.ScalingVariationInfos;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.stream.Collectors;
 
 @NoArgsConstructor
@@ -39,9 +33,6 @@ public class GeneratorScalingEntity extends ScalingEntity {
     @Column(name = "isIterative")
     private boolean isIterative;
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<ScalingVariationEntity> variations;
-
     public GeneratorScalingEntity(@NotNull GeneratorScalingInfos generatorScalingInfos) {
         super(ModificationType.GENERATOR_SCALING);
         assignAttributes(generatorScalingInfos);
@@ -54,14 +45,8 @@ public class GeneratorScalingEntity extends ScalingEntity {
     }
 
     private void assignAttributes(GeneratorScalingInfos generatorScalingInfos) {
+        super.assignAttribute(generatorScalingInfos);
         isIterative = generatorScalingInfos.getIsIterative();
-        setVariationType(generatorScalingInfos.getVariationType());
-        if (variations == null) {
-            variations = generatorScalingInfos.getVariations().stream().map(ScalingVariationInfos::toEntity).collect(Collectors.toList());
-        } else {
-            variations.clear();
-            variations.addAll(generatorScalingInfos.getVariations().stream().map(ScalingVariationInfos::toEntity).collect(Collectors.toList()));
-        }
     }
 
     @Override
@@ -76,19 +61,5 @@ public class GeneratorScalingEntity extends ScalingEntity {
                         .map(ScalingVariationEntity::toScalingVariationInfos)
                         .collect(Collectors.toList()))
                 .build();
-    }
-
-    @Override
-    public void cloneWithIdsToNull() {
-        setId(null);
-        this.variations = getVariations()
-                .stream()
-                .peek(variation -> {
-                    variation.setId(null);
-                    variation.setFilters(new ArrayList<>(variation.getFilters()
-                            .stream()
-                            .peek(filter -> filter.setId(null))
-                            .collect(Collectors.toList())));
-                }).collect(Collectors.toList());
     }
 }
