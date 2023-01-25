@@ -254,6 +254,7 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
         this.marginalCost = new DoubleModificationEmbedded(generatorModificationInfos.getMarginalCost());
         this.plannedOutageRate = new DoubleModificationEmbedded(generatorModificationInfos.getPlannedOutageRate());
         this.forcedOutageRate = new DoubleModificationEmbedded(generatorModificationInfos.getForcedOutageRate());
+        this.minimumReactivePower = new DoubleModificationEmbedded(generatorModificationInfos.getMinimumReactivePower());
         this.maximumReactivePower = new DoubleModificationEmbedded(generatorModificationInfos.getMaximumReactivePower());
         this.participate = new BooleanModificationEmbedded(generatorModificationInfos.getParticipate());
         this.droop = new FloatModificationEmbedded(generatorModificationInfos.getDroop());

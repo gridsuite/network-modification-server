@@ -127,6 +127,10 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
         assertEquals(100., modifiedGenerator.getMaxP());
         assertEquals(220., modifiedGenerator.getRatedS());
         assertEquals(0.1, modifiedGenerator.getExtension(GeneratorStartup.class).getMarginalCost());
+        assertEquals(10., modifiedGenerator.getExtension(GeneratorStartup.class).getPlannedActivePowerSetpoint());
+        assertEquals(20., modifiedGenerator.getExtension(GeneratorStartup.class).getStartupCost());
+        assertEquals(0.30, modifiedGenerator.getExtension(GeneratorStartup.class).getPlannedOutageRate());
+        assertEquals(0.40, modifiedGenerator.getExtension(GeneratorStartup.class).getForcedOutageRate());
         assertEquals(0.1f, modifiedGenerator.getExtension(ActivePowerControl.class).getDroop());
         assertEquals(true, modifiedGenerator.getExtension(ActivePowerControl.class).isParticipate());
         assertEquals(0.1, modifiedGenerator.getExtension(GeneratorShortCircuit.class).getDirectTransX());

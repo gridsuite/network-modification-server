@@ -6,38 +6,23 @@
  */
 package org.gridsuite.modification.server.modifications;
 
-import com.powsybl.network.store.iidm.impl.extensions.GeneratorStartupAdderImpl;
+import com.powsybl.commons.reporter.Report;
+import com.powsybl.commons.reporter.Reporter;
+import com.powsybl.commons.reporter.TypedValue;
+import com.powsybl.iidm.network.*;
+import com.powsybl.iidm.network.extensions.*;
+import com.powsybl.network.store.iidm.impl.MinMaxReactiveLimitsImpl;
+import com.powsybl.network.store.iidm.impl.extensions.CoordinatedReactiveControlAdderImpl;
 import org.gridsuite.modification.server.NetworkModificationException;
-import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_GENERATOR_ERROR;
-import static org.gridsuite.modification.server.modifications.ModificationUtils.nanIfNull;
+import org.gridsuite.modification.server.dto.GeneratorModificationInfos;
+import org.gridsuite.modification.server.dto.ReactiveCapabilityCurveModificationInfos;
+import org.gridsuite.modification.server.dto.VoltageRegulationType;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.IntStream;
 
-import org.gridsuite.modification.server.dto.GeneratorModificationInfos;
-import org.gridsuite.modification.server.dto.ReactiveCapabilityCurveModificationInfos;
-import org.gridsuite.modification.server.dto.VoltageRegulationType;
-
-import com.powsybl.commons.reporter.Report;
-import com.powsybl.commons.reporter.Reporter;
-import com.powsybl.commons.reporter.TypedValue;
-import com.powsybl.iidm.network.Generator;
-import com.powsybl.iidm.network.MinMaxReactiveLimits;
-import com.powsybl.iidm.network.Network;
-import com.powsybl.iidm.network.ReactiveCapabilityCurveAdder;
-import com.powsybl.iidm.network.ReactiveLimits;
-import com.powsybl.iidm.network.ReactiveLimitsKind;
-import com.powsybl.iidm.network.Terminal;
-import com.powsybl.iidm.network.extensions.ActivePowerControl;
-import com.powsybl.iidm.network.extensions.ActivePowerControlAdder;
-import com.powsybl.iidm.network.extensions.CoordinatedReactiveControl;
-import com.powsybl.iidm.network.extensions.GeneratorShortCircuit;
-import com.powsybl.iidm.network.extensions.GeneratorShortCircuitAdder;
-import com.powsybl.iidm.network.extensions.GeneratorStartup;
-import com.powsybl.iidm.network.extensions.GeneratorStartupAdder;
-import com.powsybl.network.store.iidm.impl.MinMaxReactiveLimitsImpl;
-import com.powsybl.network.store.iidm.impl.extensions.CoordinatedReactiveControlAdderImpl;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_GENERATOR_ERROR;
 
 /**
  * @author Ayoub Labidi <ayoub.labidi at rte-france.com>
@@ -65,11 +50,11 @@ public class GeneratorModification extends AbstractModification {
 
     private void modifyGenerator(Generator generator, GeneratorModificationInfos modificationInfos, Reporter subReporter) {
         subReporter.report(Report.builder()
-            .withKey("generatorModification")
-            .withDefaultMessage("Generator with id=${id} modified :")
-            .withValue("id", modificationInfos.getEquipmentId())
-            .withSeverity(TypedValue.INFO_SEVERITY)
-            .build());
+                .withKey("generatorModification")
+                .withDefaultMessage("Generator with id=${id} modified :")
+                .withValue("id", modificationInfos.getEquipmentId())
+                .withSeverity(TypedValue.INFO_SEVERITY)
+                .build());
 
         if (modificationInfos.getEquipmentName() != null && modificationInfos.getEquipmentName().getValue() != null) {
             ModificationUtils.getInstance().applyElementaryModifications(generator::setName, generator::getNameOrId, modificationInfos.getEquipmentName(), subReporter, "Name");
@@ -87,7 +72,7 @@ public class GeneratorModification extends AbstractModification {
     }
 
     private void modifyGeneratorShortCircuitAttributes(GeneratorModificationInfos modificationInfos,
-            Generator generator, Reporter subReporter) {
+                                                       Generator generator, Reporter subReporter) {
         List<Report> reports = new ArrayList<>();
         GeneratorShortCircuit generatorShortCircuit = generator.getExtension(GeneratorShortCircuit.class);
         Double oldTransientReactance = generatorShortCircuit != null ? generatorShortCircuit.getDirectTransX() : Double.NaN;
@@ -130,7 +115,7 @@ public class GeneratorModification extends AbstractModification {
     }
 
     private void modifyGeneratorMinMaxReactiveLimits(GeneratorModificationInfos modificationInfos, Generator generator,
-            Reporter subReporter) {
+                                                     Reporter subReporter) {
         List<Report> reports = new ArrayList<>();
         // we get previous min max values if they exist
         MinMaxReactiveLimits minMaxReactiveLimits = null;
@@ -187,7 +172,7 @@ public class GeneratorModification extends AbstractModification {
     }
 
     private void modifyGeneratorReactiveCapabilityCurvePoints(GeneratorModificationInfos modificationInfos,
-            Generator generator, Reporter subReporter) {
+                                                              Generator generator, Reporter subReporter) {
         List<Report> reports = new ArrayList<>();
         ReactiveCapabilityCurveAdder adder = generator.newReactiveCapabilityCurve();
         List<ReactiveCapabilityCurveModificationInfos> points = modificationInfos.getReactiveCapabilityCurvePoints();
@@ -220,7 +205,7 @@ public class GeneratorModification extends AbstractModification {
     }
 
     private void modifyGeneratorReactiveLimitsAttributes(GeneratorModificationInfos modificationInfos,
-            Generator generator, Reporter subReporter) {
+                                                         Generator generator, Reporter subReporter) {
         // if reactive capability curve is true and there was modifications on the
         // reactive capability curve points,
         // then we have to apply the reactive capability curve modifications
@@ -228,8 +213,8 @@ public class GeneratorModification extends AbstractModification {
         // reactive limits modifications
         if (modificationInfos.getReactiveCapabilityCurve() != null) {
             if (Boolean.TRUE.equals(modificationInfos.getReactiveCapabilityCurve().getValue()
-                && modificationInfos.getReactiveCapabilityCurvePoints() != null
-                && !modificationInfos.getReactiveCapabilityCurvePoints().isEmpty())) {
+                    && modificationInfos.getReactiveCapabilityCurvePoints() != null
+                    && !modificationInfos.getReactiveCapabilityCurvePoints().isEmpty())) {
                 modifyGeneratorReactiveCapabilityCurvePoints(modificationInfos, generator, subReporter);
             } else if (Boolean.FALSE.equals(modificationInfos.getReactiveCapabilityCurve().getValue())) {
                 modifyGeneratorMinMaxReactiveLimits(modificationInfos, generator, subReporter);
@@ -238,7 +223,7 @@ public class GeneratorModification extends AbstractModification {
     }
 
     private void modifyGeneratorActivePowerControlAttributes(GeneratorModificationInfos modificationInfos,
-            Generator generator, Reporter subReporter) {
+                                                             Generator generator, Reporter subReporter) {
         List<Report> reports = new ArrayList<>();
         ActivePowerControl<Generator> activePowerControl = generator.getExtension(ActivePowerControl.class);
         Float oldDroop = activePowerControl != null ? activePowerControl.getDroop() : Float.NaN;
@@ -279,55 +264,64 @@ public class GeneratorModification extends AbstractModification {
     }
 
     private void modifyGeneratorStartUpAttributes(GeneratorModificationInfos modificationInfos, Generator generator,
-            Reporter subReporter) {
+                                                  Reporter subReporter) {
         List<Report> reports = new ArrayList<>();
+        boolean isUpdated = false;
         GeneratorStartup generatorStartup = generator.getExtension(GeneratorStartup.class);
         Double oldPlannedActivePowerSetPoint = generatorStartup != null ? generatorStartup.getPlannedActivePowerSetpoint() : Double.NaN;
         Double oldStartupCost = generatorStartup != null ? generatorStartup.getStartupCost() : Double.NaN;
         Double oldMarginalCost = generatorStartup != null ? generatorStartup.getMarginalCost() : Double.NaN;
         Double oldPlannedOutageRate = generatorStartup != null ? generatorStartup.getPlannedOutageRate() : Double.NaN;
         Double oldForcedOutageRate = generatorStartup != null ? generatorStartup.getForcedOutageRate() : Double.NaN;
+        GeneratorStartupAdder generatorStartupAdder = generator.newExtension(GeneratorStartupAdder.class);
 
         if (modificationInfos.getMarginalCost() != null) {
-            generator.newExtension(GeneratorStartupAdder.class)
-                    .withMarginalCost(modificationInfos.getMarginalCost().getValue()).add();
+            generatorStartupAdder
+                    .withMarginalCost(modificationInfos.getMarginalCost().getValue());
             reports.add(ModificationUtils.getInstance().buildModificationReport(oldMarginalCost,
                     modificationInfos.getMarginalCost().getValue(),
                     "Cost of start"));
+            isUpdated = true;
         }
 
         if (modificationInfos.getPlannedActivePowerSetPoint() != null) {
-            generator.newExtension(GeneratorStartupAdder.class)
-                    .withPlannedActivePowerSetpoint(modificationInfos.getPlannedActivePowerSetPoint().getValue()).add();
+            generatorStartupAdder
+                    .withPlannedActivePowerSetpoint(modificationInfos.getPlannedActivePowerSetPoint().getValue());
             reports.add(ModificationUtils.getInstance().buildModificationReport(oldPlannedActivePowerSetPoint,
                     modificationInfos.getPlannedActivePowerSetPoint().getValue(),
                     "Planning active power set point"));
+            isUpdated = true;
         }
 
-        if (modificationInfos.getStartupCost()!= null) {
-            generator.newExtension(GeneratorStartupAdder.class)
-                    .withStartupCost(modificationInfos.getStartupCost().getValue()).add();
+        if (modificationInfos.getStartupCost() != null) {
+            generatorStartupAdder
+                    .withStartupCost(modificationInfos.getStartupCost().getValue());
             reports.add(ModificationUtils.getInstance().buildModificationReport(oldStartupCost,
                     modificationInfos.getStartupCost().getValue(),
                     "Startup cost"));
+            isUpdated = true;
         }
 
-        if (modificationInfos.getPlannedOutageRate()!= null) {
-            generator.newExtension(GeneratorStartupAdder.class)
-                    .withStartupCost(modificationInfos.getPlannedOutageRate().getValue()).add();
+        if (modificationInfos.getPlannedOutageRate() != null) {
+            generatorStartupAdder
+                    .withPlannedOutageRate(modificationInfos.getPlannedOutageRate().getValue());
             reports.add(ModificationUtils.getInstance().buildModificationReport(oldPlannedOutageRate,
                     modificationInfos.getPlannedOutageRate().getValue(),
                     "Planning outage rate"));
+            isUpdated = true;
         }
 
-        if (modificationInfos.getForcedOutageRate()!= null) {
-            generator.newExtension(GeneratorStartupAdder.class)
-                    .withStartupCost(modificationInfos.getForcedOutageRate().getValue()).add();
+        if (modificationInfos.getForcedOutageRate() != null) {
+            generatorStartupAdder
+                    .withForcedOutageRate(modificationInfos.getForcedOutageRate().getValue());
             reports.add(ModificationUtils.getInstance().buildModificationReport(oldForcedOutageRate,
                     modificationInfos.getForcedOutageRate().getValue(),
                     "Forced outage rate"));
+            isUpdated = true;
         }
-
+        if (isUpdated) {
+            generatorStartupAdder.add();
+        }
         ModificationUtils.getInstance().reportModifications(subReporter, reports, "startUpAttributesModified", "Start up modified :");
     }
 
@@ -379,7 +373,7 @@ public class GeneratorModification extends AbstractModification {
     }
 
     private void modifyGeneratorVoltageRegulatorAttributes(GeneratorModificationInfos modificationInfos,
-            Generator generator, Reporter subReporter) {
+                                                           Generator generator, Reporter subReporter) {
         List<Report> voltageRegulationReports = new ArrayList<>();
 
         voltageRegulationReports.add(ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setTargetV, generator::getTargetV,
