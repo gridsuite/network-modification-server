@@ -275,22 +275,15 @@ public class GeneratorModification extends AbstractModification {
         Double oldForcedOutageRate = generatorStartup != null ? generatorStartup.getForcedOutageRate() : Double.NaN;
         GeneratorStartupAdder generatorStartupAdder = generator.newExtension(GeneratorStartupAdder.class);
 
-        if (modificationInfos.getMarginalCost() != null) {
-            generatorStartupAdder
-                    .withMarginalCost(modificationInfos.getMarginalCost().getValue());
-            reports.add(ModificationUtils.getInstance().buildModificationReport(oldMarginalCost,
-                    modificationInfos.getMarginalCost().getValue(),
-                    "Cost of start"));
-            isUpdated = true;
-        }
-
         if (modificationInfos.getPlannedActivePowerSetPoint() != null) {
             generatorStartupAdder
                     .withPlannedActivePowerSetpoint(modificationInfos.getPlannedActivePowerSetPoint().getValue());
             reports.add(ModificationUtils.getInstance().buildModificationReport(oldPlannedActivePowerSetPoint,
                     modificationInfos.getPlannedActivePowerSetPoint().getValue(),
                     "Planning active power set point"));
-            isUpdated = true;
+        } else {
+            generatorStartupAdder
+                    .withPlannedActivePowerSetpoint(oldPlannedActivePowerSetPoint);
         }
 
         if (modificationInfos.getStartupCost() != null) {
@@ -299,7 +292,20 @@ public class GeneratorModification extends AbstractModification {
             reports.add(ModificationUtils.getInstance().buildModificationReport(oldStartupCost,
                     modificationInfos.getStartupCost().getValue(),
                     "Startup cost"));
-            isUpdated = true;
+        } else {
+            generatorStartupAdder
+                    .withStartupCost(oldStartupCost);
+        }
+
+        if (modificationInfos.getMarginalCost() != null) {
+            generatorStartupAdder
+                    .withMarginalCost(modificationInfos.getMarginalCost().getValue());
+            reports.add(ModificationUtils.getInstance().buildModificationReport(oldMarginalCost,
+                    modificationInfos.getMarginalCost().getValue(),
+                    "Cost of start"));
+        } else {
+            generatorStartupAdder
+                    .withMarginalCost(oldMarginalCost);
         }
 
         if (modificationInfos.getPlannedOutageRate() != null) {
@@ -308,7 +314,9 @@ public class GeneratorModification extends AbstractModification {
             reports.add(ModificationUtils.getInstance().buildModificationReport(oldPlannedOutageRate,
                     modificationInfos.getPlannedOutageRate().getValue(),
                     "Planning outage rate"));
-            isUpdated = true;
+        } else {
+            generatorStartupAdder
+                    .withPlannedOutageRate(oldPlannedOutageRate);
         }
 
         if (modificationInfos.getForcedOutageRate() != null) {
@@ -317,11 +325,12 @@ public class GeneratorModification extends AbstractModification {
             reports.add(ModificationUtils.getInstance().buildModificationReport(oldForcedOutageRate,
                     modificationInfos.getForcedOutageRate().getValue(),
                     "Forced outage rate"));
-            isUpdated = true;
+        } else {
+            generatorStartupAdder
+                    .withForcedOutageRate(oldForcedOutageRate);
         }
-        if (isUpdated) {
-            generatorStartupAdder.add();
-        }
+
+        generatorStartupAdder.add();
         ModificationUtils.getInstance().reportModifications(subReporter, reports, "startUpAttributesModified", "Start up modified :");
     }
 
