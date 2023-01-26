@@ -266,59 +266,21 @@ public class GeneratorModification extends AbstractModification {
     private void modifyGeneratorStartUpAttributes(GeneratorModificationInfos modificationInfos, Generator generator,
                                                   Reporter subReporter) {
         List<Report> reports = new ArrayList<>();
-        boolean isUpdated = false;
         GeneratorStartup generatorStartup = generator.getExtension(GeneratorStartup.class);
-        Double oldPlannedActivePowerSetPoint = generatorStartup != null ? generatorStartup.getPlannedActivePowerSetpoint() : Double.NaN;
-        Double oldStartupCost = generatorStartup != null ? generatorStartup.getStartupCost() : Double.NaN;
-        Double oldMarginalCost = generatorStartup != null ? generatorStartup.getMarginalCost() : Double.NaN;
-        Double oldPlannedOutageRate = generatorStartup != null ? generatorStartup.getPlannedOutageRate() : Double.NaN;
-        Double oldForcedOutageRate = generatorStartup != null ? generatorStartup.getForcedOutageRate() : Double.NaN;
         GeneratorStartupAdder generatorStartupAdder = generator.newExtension(GeneratorStartupAdder.class);
 
-        if (modificationInfos.getPlannedActivePowerSetPoint() != null) {
-            generatorStartupAdder
-                    .withPlannedActivePowerSetpoint(modificationInfos.getPlannedActivePowerSetPoint().getValue());
-            reports.add(ModificationUtils.getInstance().buildModificationReport(oldPlannedActivePowerSetPoint,
-                    modificationInfos.getPlannedActivePowerSetPoint().getValue(),
-                    "Planning active power set point"));
-        } else {
-            generatorStartupAdder
-                    .withPlannedActivePowerSetpoint(oldPlannedActivePowerSetPoint);
-        }
+        addPlannedActivePowerSetPoint(generatorStartupAdder, generatorStartup, reports);
+        addStartupCost(generatorStartupAdder, generatorStartup, reports);
+        addMarginalCost(generatorStartupAdder, generatorStartup, reports);
+        addPlannedOutageRate(generatorStartupAdder, generatorStartup, reports);
+        addForcedOutageRate(generatorStartupAdder, generatorStartup, reports);
 
-        if (modificationInfos.getStartupCost() != null) {
-            generatorStartupAdder
-                    .withStartupCost(modificationInfos.getStartupCost().getValue());
-            reports.add(ModificationUtils.getInstance().buildModificationReport(oldStartupCost,
-                    modificationInfos.getStartupCost().getValue(),
-                    "Startup cost"));
-        } else {
-            generatorStartupAdder
-                    .withStartupCost(oldStartupCost);
-        }
+        generatorStartupAdder.add();
+        ModificationUtils.getInstance().reportModifications(subReporter, reports, "startUpAttributesModified", "Start up modified :");
+    }
 
-        if (modificationInfos.getMarginalCost() != null) {
-            generatorStartupAdder
-                    .withMarginalCost(modificationInfos.getMarginalCost().getValue());
-            reports.add(ModificationUtils.getInstance().buildModificationReport(oldMarginalCost,
-                    modificationInfos.getMarginalCost().getValue(),
-                    "Cost of start"));
-        } else {
-            generatorStartupAdder
-                    .withMarginalCost(oldMarginalCost);
-        }
-
-        if (modificationInfos.getPlannedOutageRate() != null) {
-            generatorStartupAdder
-                    .withPlannedOutageRate(modificationInfos.getPlannedOutageRate().getValue());
-            reports.add(ModificationUtils.getInstance().buildModificationReport(oldPlannedOutageRate,
-                    modificationInfos.getPlannedOutageRate().getValue(),
-                    "Planning outage rate"));
-        } else {
-            generatorStartupAdder
-                    .withPlannedOutageRate(oldPlannedOutageRate);
-        }
-
+    private void addForcedOutageRate(GeneratorStartupAdder generatorStartupAdder, GeneratorStartup generatorStartup, List<Report> reports) {
+        Double oldForcedOutageRate = generatorStartup != null ? generatorStartup.getForcedOutageRate() : Double.NaN;
         if (modificationInfos.getForcedOutageRate() != null) {
             generatorStartupAdder
                     .withForcedOutageRate(modificationInfos.getForcedOutageRate().getValue());
@@ -329,9 +291,62 @@ public class GeneratorModification extends AbstractModification {
             generatorStartupAdder
                     .withForcedOutageRate(oldForcedOutageRate);
         }
+    }
 
-        generatorStartupAdder.add();
-        ModificationUtils.getInstance().reportModifications(subReporter, reports, "startUpAttributesModified", "Start up modified :");
+    private void addPlannedOutageRate(GeneratorStartupAdder generatorStartupAdder, GeneratorStartup generatorStartup, List<Report> reports) {
+        Double oldPlannedOutageRate = generatorStartup != null ? generatorStartup.getPlannedOutageRate() : Double.NaN;
+        if (modificationInfos.getPlannedOutageRate() != null) {
+            generatorStartupAdder
+                    .withPlannedOutageRate(modificationInfos.getPlannedOutageRate().getValue());
+            reports.add(ModificationUtils.getInstance().buildModificationReport(oldPlannedOutageRate,
+                    modificationInfos.getPlannedOutageRate().getValue(),
+                    "Planning outage rate"));
+        } else {
+            generatorStartupAdder
+                    .withPlannedOutageRate(oldPlannedOutageRate);
+        }
+    }
+
+    private void addMarginalCost(GeneratorStartupAdder generatorStartupAdder, GeneratorStartup generatorStartup, List<Report> reports) {
+        Double oldMarginalCost = generatorStartup != null ? generatorStartup.getMarginalCost() : Double.NaN;
+        if (modificationInfos.getMarginalCost() != null) {
+            generatorStartupAdder
+                    .withMarginalCost(modificationInfos.getMarginalCost().getValue());
+            reports.add(ModificationUtils.getInstance().buildModificationReport(oldMarginalCost,
+                    modificationInfos.getMarginalCost().getValue(),
+                    "Cost of start"));
+        } else {
+            generatorStartupAdder
+                    .withMarginalCost(oldMarginalCost);
+        }
+    }
+
+    private void addStartupCost(GeneratorStartupAdder generatorStartupAdder, GeneratorStartup generatorStartup, List<Report> reports) {
+        Double oldStartupCost = generatorStartup != null ? generatorStartup.getStartupCost() : Double.NaN;
+        if (modificationInfos.getStartupCost() != null) {
+            generatorStartupAdder
+                    .withStartupCost(modificationInfos.getStartupCost().getValue());
+            reports.add(ModificationUtils.getInstance().buildModificationReport(oldStartupCost,
+                    modificationInfos.getStartupCost().getValue(),
+                    "Startup cost"));
+        } else {
+            generatorStartupAdder
+                    .withStartupCost(oldStartupCost);
+        }
+    }
+
+    private void addPlannedActivePowerSetPoint(GeneratorStartupAdder generatorStartupAdder, GeneratorStartup generatorStartup, List<Report> reports) {
+        Double oldPlannedActivePowerSetPoint = generatorStartup != null ? generatorStartup.getPlannedActivePowerSetpoint() : Double.NaN;
+        if (modificationInfos.getPlannedActivePowerSetPoint() != null) {
+            generatorStartupAdder
+                    .withPlannedActivePowerSetpoint(modificationInfos.getPlannedActivePowerSetPoint().getValue());
+            reports.add(ModificationUtils.getInstance().buildModificationReport(oldPlannedActivePowerSetPoint,
+                    modificationInfos.getPlannedActivePowerSetPoint().getValue(),
+                    "Planning active power set point"));
+        } else {
+            generatorStartupAdder
+                    .withPlannedActivePowerSetpoint(oldPlannedActivePowerSetPoint);
+        }
     }
 
     private void modifyGeneratorRegulatingTerminal(GeneratorModificationInfos modificationInfos, Generator generator, List<Report> modificationReports) {
