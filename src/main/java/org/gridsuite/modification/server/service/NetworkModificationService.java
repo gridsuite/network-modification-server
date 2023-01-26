@@ -296,7 +296,6 @@ public class NetworkModificationService {
             if (modificationsToExclude.contains(infos.getUuid())) {
                 return List.of();
             }
-
             return handleModification(infos, listener, groupUuid, reportUuid, reporterId);
         } catch (PowsyblException e) {
             NetworkModificationException exc = e instanceof NetworkModificationException ? (NetworkModificationException) e : new NetworkModificationException(MODIFICATION_ERROR, e);
