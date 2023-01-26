@@ -31,7 +31,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.http.MediaType;
 
-import java.io.IOException;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.UUID;
