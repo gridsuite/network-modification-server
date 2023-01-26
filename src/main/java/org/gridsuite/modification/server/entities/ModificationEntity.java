@@ -11,6 +11,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.gridsuite.modification.server.ModificationType;
+import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 
 import javax.persistence.*;
@@ -19,6 +20,8 @@ import java.time.ZonedDateTime;
 import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;
+
+import static org.gridsuite.modification.server.NetworkModificationException.Type.MISSING_MODIFICATION_DESCRIPTION;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -50,7 +53,7 @@ public class ModificationEntity {
 
     protected ModificationEntity(ModificationInfos modificationInfos) {
         if (modificationInfos == null) {
-            throw new NullPointerException("Impossible to create entity from null DTO");
+            throw new NetworkModificationException(MISSING_MODIFICATION_DESCRIPTION, "Missing network modification description");
         }
         this.date = ZonedDateTime.now(ZoneOffset.UTC);
         this.type = modificationInfos.getType().name();

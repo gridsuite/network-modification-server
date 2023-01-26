@@ -8,15 +8,15 @@ package org.gridsuite.modification.server.service;
 
 import com.powsybl.iidm.network.*;
 import org.gridsuite.modification.server.ModificationType;
-import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.server.dto.EquipmentDeletionInfos;
+import org.gridsuite.modification.server.dto.EquipmentInfos;
+import org.gridsuite.modification.server.dto.TombstonedEquipmentInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
-import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -24,17 +24,11 @@ import java.util.stream.Collectors;
  */
 public class NetworkStoreListener implements NetworkListener {
 
-    private final UUID groupUuid;
-
     private final UUID networkUuid;
 
     private final Network network;
 
-    private final NetworkModificationRepository modificationRepository;
-
     private final EquipmentInfosService equipmentInfosService;
-
-    private final List<ModificationEntity> modifications = new LinkedList<>();
 
     private final Set<String> substationsIds = new HashSet<>();
 
@@ -53,8 +47,6 @@ public class NetworkStoreListener implements NetworkListener {
                                    boolean isBuild, boolean isApplyModifications) {
         this.network = network;
         this.networkUuid = networkUuid;
-        this.groupUuid = groupUuid;
-        this.modificationRepository = modificationRepository;
         this.equipmentInfosService = equipmentInfosService;
         this.isBuild = isBuild;
         this.isApplyModifications = isApplyModifications;
@@ -105,37 +97,6 @@ public class NetworkStoreListener implements NetworkListener {
 
     public boolean isApplyModifications() {
         return isApplyModifications;
-    }
-
-    public List<ModificationInfos> getModifications() {
-        List<ModificationInfos> modificationInfos = modifications.stream()
-            .map(m -> {
-                ModificationInfos infos = m.toModificationInfos();
-                infos.setSubstationIds(substationsIds);
-                return infos;
-            }).collect(Collectors.toList());
-        modifications.clear();
-        return modificationInfos;
-    }
-
-    public void saveModifications() {
-        if (groupUuid != null) {
-            modificationRepository.saveModifications(groupUuid,
-                modifications
-                    .stream()
-                    .map(ModificationEntity.class::cast)
-                    .collect(Collectors.toList()));
-        }
-    }
-
-    public void deleteModifications() {
-        if (groupUuid != null) {
-            modificationRepository.deleteModifications(groupUuid,
-                modifications
-                    .stream()
-                    .map(ModificationEntity::getId)
-                    .collect(Collectors.toList()));
-        }
     }
 
     public List<EquipmentDeletionInfos> getDeletions() {

@@ -187,6 +187,6 @@ public class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificat
 
         assertTrue(modifications.isEmpty());  // no modifications returned
         assertNull(getNetwork().getGenerator("idGenerator3"));  // generator was not created
-        testNetworkModificationsCount(getGroupId(), 1);  // new modification stored in the database
+        testNetworkModificationsCount(getGroupId(), 5);  // new modification stored in the database
     }
 }

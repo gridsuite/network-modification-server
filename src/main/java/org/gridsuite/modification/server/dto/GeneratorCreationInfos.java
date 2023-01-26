@@ -61,8 +61,20 @@ public class GeneratorCreationInfos extends InjectionCreationInfos {
     @Schema(description = "Voltage set point")
     private Double voltageSetpoint;
 
+    @Schema(description = "Planning active power set point")
+    private Double plannedActivePowerSetPoint;
+
+    @Schema(description = "Startup cost")
+    private Double startupCost;
+
     @Schema(description = "Marginal cost")
     private Double marginalCost;
+
+    @Schema(description = "Planning outage rate")
+    private Double plannedOutageRate;
+
+    @Schema(description = "Forced outage rate")
+    private Double forcedOutageRate;
 
     @Schema(description = "Minimum reactive power")
     private Double minimumReactivePower;

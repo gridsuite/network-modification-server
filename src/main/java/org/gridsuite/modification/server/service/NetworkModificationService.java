@@ -12,7 +12,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Streams;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.reporter.*;
-import com.powsybl.iidm.network.*;
+import com.powsybl.iidm.network.Network;
+import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.NetworkStoreService;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
@@ -25,6 +26,8 @@ import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.modifications.ModificationApplicator;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpEntity;
@@ -49,6 +52,8 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
  */
 @Service
 public class NetworkModificationService {
+    private static final Logger LOGGER = LoggerFactory.getLogger(NetworkModificationService.class);
+
     private final NetworkStoreService networkStoreService;
 
     private final NetworkModificationRepository networkModificationRepository;
@@ -121,6 +126,22 @@ public class NetworkModificationService {
         networkModificationRepository.deleteModificationGroup(groupUuid, errorOnGroupNotFound);
     }
 
+    private NetworkModificationException handleException(NetworkModificationException.Type typeIfError, Reporter subReporter, Exception e) {
+        NetworkModificationException networkModificationException;
+        networkModificationException = e instanceof NetworkModificationException ? (NetworkModificationException) e : new NetworkModificationException(typeIfError, e);
+        boolean isApplicationException = PowsyblException.class.isAssignableFrom(e.getClass());
+        if (!isApplicationException && LOGGER.isErrorEnabled()) {
+            LOGGER.error(e.toString(), e);
+        }
+        String errorMessage = isApplicationException ? e.getMessage() : "Technical error: " + e;
+        subReporter.report(Report.builder()
+            .withKey(typeIfError.name())
+            .withDefaultMessage(errorMessage)
+            .withSeverity(TypedValue.ERROR_SEVERITY)
+            .build());
+        return networkModificationException;
+    }
+
     private ModificationNetworkInfos getNetworkModificationInfos(UUID networkUuid, String variantId) {
         Network network;
         try {
@@ -139,35 +160,37 @@ public class NetworkModificationService {
         return new ModificationNetworkInfos(network, applyModifications);
     }
 
-    // Generic form
-    private List<ModificationInfos> handleModification(ModificationInfos modificationInfos, NetworkStoreListener listener, UUID groupUuid, UUID reportUuid, String reporterId) {
+    List<ModificationInfos> handleModification(ModificationInfos modificationInfos, NetworkStoreListener listener, UUID groupUuid,
+                                               UUID reportUuid, String reporterId) {
         String rootReporterId = reporterId + "@" + NETWORK_MODIFICATION_TYPE_REPORT;
         ReporterModel reporter = new ReporterModel(rootReporterId, rootReporterId);
+        Reporter subReporter = modificationInfos.createSubReporter(reporter);
+
         List<ModificationInfos> networkModifications = List.of();
         try {
-            if (listener.isApplyModifications()) {
-                networkModifications = modificationApplicator.apply(modificationInfos, reporter, listener, context);
+            if (!listener.isBuild()) { // Save modification action in DB
+                networkModificationRepository.saveModifications(groupUuid, List.of(modificationInfos.toEntity()));
             }
-            if (!listener.isBuild()) {
-                try {
-                    saveModifications(listener, groupUuid, modificationInfos.toEntity());
-                } catch (Exception e) {
-                    throw new PowsyblException(e);
+
+            if (listener.isApplyModifications()) { // Apply modification on the network
+                networkModifications = modificationApplicator.apply(modificationInfos, subReporter, listener, context);
+
+                if (!listener.isBuild()) { // Save network in DB in incremental mode only
+                    networkStoreService.flush(listener.getNetwork());
                 }
             }
-            return networkModifications;
+        } catch (Exception e) {
+            NetworkModificationException networkModificationException = handleException(modificationInfos.getErrorType(), subReporter, e);
+            if (!listener.isBuild()) {
+                throw networkModificationException;
+            }
         } finally {
             if (listener.isApplyModifications()) {
                 sendReport(reportUuid, reporter);
             }
         }
-    }
 
-    private void saveModifications(NetworkStoreListener listener, UUID groupUuid, ModificationEntity modificationEntity) {
-        networkModificationRepository.saveModifications(groupUuid, List.of(modificationEntity));
-        if (listener.isApplyModifications()) {
-            networkStoreService.flush(listener.getNetwork());
-        }
+        return networkModifications;
     }
 
     @Transactional
@@ -178,7 +201,8 @@ public class NetworkModificationService {
         modificationEntity.update(modificationInfos);
     }
 
-    @Transactional
+    // No transactional because we need to save modification in DB also in case of error
+    // Transaction made in 'saveModifications' method
     public List<ModificationInfos> createNetworkModification(@NonNull UUID networkUuid, String variantId, @NonNull UUID groupUuid, @NonNull UUID reportUuid, @NonNull String reporterId, @NonNull ModificationInfos modificationInfos) {
         modificationInfos.check();
         ModificationNetworkInfos networkInfos = getNetworkModificationInfos(networkUuid, variantId);
@@ -254,7 +278,7 @@ public class NetworkModificationService {
         return allModificationsInfos;
     }
 
-    public void applyModifications(List<UUID> modificationsUuidList, UUID groupUuid, UUID networkUuid, UUID reportUuid, UUID reporterId, String variantId) {
+    private void applyModifications(List<UUID> modificationsUuidList, UUID groupUuid, UUID networkUuid, UUID reportUuid, UUID reporterId, String variantId) {
         ModificationNetworkInfos networkInfos = getNetworkModificationInfos(networkUuid, variantId);
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkUuid, groupUuid, networkModificationRepository, equipmentInfosService, true, networkInfos.isApplyModifications());
 

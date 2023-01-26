@@ -19,8 +19,7 @@ import org.springframework.http.MediaType;
 import java.util.List;
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_ATTACH_ERROR;
-import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_NOT_FOUND;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.utils.MatcherLineAttachToVoltageLevelInfos.createMatcherLineAttachToVoltageLevelInfos;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -133,14 +132,16 @@ public class LineAttachToVoltageLevelTest extends AbstractNetworkModificationTes
                     status().is4xxClientError(),
                     content().string(new NetworkModificationException(LINE_NOT_FOUND, "absent_line_id").getMessage())
             );
+        testNetworkModificationsCount(getGroupId(), 1);
 
         LineAttachToVoltageLevelInfos lineMissingLine = (LineAttachToVoltageLevelInfos) buildModification();
         lineMissingLine.setAttachmentLine(null); // we omit a mandatory input data
         String lineMissingLineJson = mapper.writeValueAsString(lineMissingLine);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineMissingLineJson).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(
-                    status().is5xxServerError(),
-                    content().string(new NetworkModificationException(LINE_ATTACH_ERROR, "Missing required attachment line description").getMessage())
+                    status().is4xxClientError(),
+                    content().string(new NetworkModificationException(LINE_ATTACH_DESCRIPTION_ERROR, "Missing required attachment line description").getMessage())
             );
+        testNetworkModificationsCount(getGroupId(), 1);
     }
 }
