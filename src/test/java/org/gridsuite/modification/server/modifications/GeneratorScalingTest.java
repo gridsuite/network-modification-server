@@ -74,8 +74,9 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
 
     private WireMockServer wireMock;
 
+    @SneakyThrows
     @Before
-    public void specificSetUp() throws IOException {
+    public void specificSetUp() {
         getNetwork().getVariantManager().setWorkingVariant("variant_1");
         getNetwork().getGenerator(GENERATOR_ID_1).setTargetP(100).setMaxP(500);
         getNetwork().getGenerator(GENERATOR_ID_2).setTargetP(200).setMaxP(2000);
@@ -181,8 +182,9 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
         assertEquals(200, getNetwork().getGenerator(GENERATOR_ID_3).getTargetP(), 0.01D);
     }
 
+    @SneakyThrows
     @Test
-    public void testFilterWithWrongIds() throws Exception {
+    public void testFilterWithWrongIds() {
         var filter = FilterInfos.builder()
                 .name("filter")
                 .id(FILTER_WRONG_ID_1)
@@ -211,8 +213,9 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
                 response.getResponse().getContentAsString());
     }
 
+    @SneakyThrows
     @Test
-    public void testScalingCreationWithWarning() throws Exception {
+    public void testScalingCreationWithWarning() {
         var filter = FilterInfos.builder()
                 .name("filter")
                 .id(FILTER_WRONG_ID_2)
