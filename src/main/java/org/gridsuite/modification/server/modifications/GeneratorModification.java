@@ -268,14 +268,17 @@ public class GeneratorModification extends AbstractModification {
         List<Report> reports = new ArrayList<>();
         GeneratorStartup generatorStartup = generator.getExtension(GeneratorStartup.class);
         GeneratorStartupAdder generatorStartupAdder = generator.newExtension(GeneratorStartupAdder.class);
-
         boolean plannedActivePowerSetPointUpdated = addPlannedActivePowerSetPoint(modificationInfos, generatorStartupAdder, generatorStartup, reports);
         boolean startupCostUpdated = addStartupCost(modificationInfos, generatorStartupAdder, generatorStartup, reports);
         boolean marginalCostUpdated = addMarginalCost(modificationInfos, generatorStartupAdder, generatorStartup, reports);
         boolean plannedOutageRateUpdated = addPlannedOutageRate(modificationInfos, generatorStartupAdder, generatorStartup, reports);
         boolean forcedOutageRateUpdated = addForcedOutageRate(modificationInfos, generatorStartupAdder, generatorStartup, reports);
 
-        if (plannedActivePowerSetPointUpdated || startupCostUpdated || marginalCostUpdated || plannedOutageRateUpdated || forcedOutageRateUpdated) {
+        if (plannedActivePowerSetPointUpdated ||
+                startupCostUpdated ||
+                marginalCostUpdated ||
+                plannedOutageRateUpdated ||
+                forcedOutageRateUpdated) {
             generatorStartupAdder.add();
             ModificationUtils.getInstance().reportModifications(subReporter, reports, "startUpAttributesModified", "Start up modified :");
         }
