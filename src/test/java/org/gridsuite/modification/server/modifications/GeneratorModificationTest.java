@@ -61,7 +61,11 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
                 .ratedNominalPower(new AttributeModification<>(220., OperationType.SET))
                 .voltageRegulationType(
                         new AttributeModification<>(VoltageRegulationType.DISTANT, OperationType.SET))
+                .plannedActivePowerSetPoint(new AttributeModification<>(10., OperationType.SET))
+                .startupCost(new AttributeModification<>(20., OperationType.SET))
                 .marginalCost(new AttributeModification<>(0.1, OperationType.SET))
+                .plannedOutageRate(new AttributeModification<>(.30, OperationType.SET))
+                .forcedOutageRate(new AttributeModification<>(.40, OperationType.SET))
                 .minimumReactivePower(new AttributeModification<>(-100., OperationType.SET))
                 .maximumReactivePower(new AttributeModification<>(100., OperationType.SET))
                 .reactiveCapabilityCurvePoints(List.of(
@@ -97,6 +101,11 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
                 .reactiveCapabilityCurvePoints(List.of())
                 .voltageRegulationType(
                                 new AttributeModification<>(VoltageRegulationType.LOCAL, OperationType.SET))
+                .plannedActivePowerSetPoint(new AttributeModification<>(111., OperationType.SET))
+                .startupCost(new AttributeModification<>(201., OperationType.SET))
+                .marginalCost(new AttributeModification<>(0.40, OperationType.SET))
+                .plannedOutageRate(new AttributeModification<>(.45, OperationType.SET))
+                .forcedOutageRate(new AttributeModification<>(.66, OperationType.SET))
                 .build();
     }
 
@@ -118,6 +127,10 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
         assertEquals(100., modifiedGenerator.getMaxP());
         assertEquals(220., modifiedGenerator.getRatedS());
         assertEquals(0.1, modifiedGenerator.getExtension(GeneratorStartup.class).getMarginalCost());
+        assertEquals(10., modifiedGenerator.getExtension(GeneratorStartup.class).getPlannedActivePowerSetpoint());
+        assertEquals(20., modifiedGenerator.getExtension(GeneratorStartup.class).getStartupCost());
+        assertEquals(0.30, modifiedGenerator.getExtension(GeneratorStartup.class).getPlannedOutageRate());
+        assertEquals(0.40, modifiedGenerator.getExtension(GeneratorStartup.class).getForcedOutageRate());
         assertEquals(0.1f, modifiedGenerator.getExtension(ActivePowerControl.class).getDroop());
         assertEquals(true, modifiedGenerator.getExtension(ActivePowerControl.class).isParticipate());
         assertEquals(0.1, modifiedGenerator.getExtension(GeneratorShortCircuit.class).getDirectTransX());
