@@ -28,8 +28,7 @@ import java.util.stream.Collectors;
 public class LoadScalingEntity extends ScalingEntity {
 
     public LoadScalingEntity(@NonNull LoadScalingInfos loadScalingInfos) {
-        super(ModificationType.LOAD_SCALING);
-        super.assignAttribute(loadScalingInfos);
+        super(ModificationType.LOAD_SCALING, loadScalingInfos);
     }
 
     @Override

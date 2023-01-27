@@ -34,7 +34,7 @@ public class GeneratorScalingEntity extends ScalingEntity {
     private boolean isIterative;
 
     public GeneratorScalingEntity(@NotNull GeneratorScalingInfos generatorScalingInfos) {
-        super(ModificationType.GENERATOR_SCALING);
+        super(ModificationType.GENERATOR_SCALING, generatorScalingInfos);
         assignAttributes(generatorScalingInfos);
     }
 
@@ -45,7 +45,6 @@ public class GeneratorScalingEntity extends ScalingEntity {
     }
 
     private void assignAttributes(GeneratorScalingInfos generatorScalingInfos) {
-        super.assignAttribute(generatorScalingInfos);
         isIterative = generatorScalingInfos.getIsIterative();
     }
 

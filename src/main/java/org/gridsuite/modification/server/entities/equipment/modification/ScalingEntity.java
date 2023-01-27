@@ -46,8 +46,9 @@ public class ScalingEntity extends ModificationEntity {
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<ScalingVariationEntity> variations;
 
-    public ScalingEntity(@NotNull ModificationType modificationType) {
+    public ScalingEntity(@NotNull ModificationType modificationType, ScalingInfos scalingInfos) {
         super(modificationType);
+        assignAttribute(scalingInfos);
     }
 
     @Override
@@ -56,7 +57,7 @@ public class ScalingEntity extends ModificationEntity {
         assignAttribute((ScalingInfos) modificationInfos);
     }
 
-    protected void assignAttribute(ScalingInfos scalingInfos) {
+    private void assignAttribute(ScalingInfos scalingInfos) {
         variationType = scalingInfos.getVariationType();
         if (variations == null) {
             variations = scalingInfos.getVariations().stream().map(ScalingVariationInfos::toEntity).collect(Collectors.toList());
