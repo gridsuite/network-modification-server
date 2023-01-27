@@ -108,27 +108,19 @@ public class GeneratorScaling extends AbstractScaling {
         AtomicReference<Double> targetPSum = new AtomicReference<>(0D);
         List<Generator> generators = identifiableAttributes
                 .stream().map(attribute -> network.getGenerator(attribute.getId())).collect(Collectors.toList());
-        Map<String, Double> targetPMap = new HashMap<>();
+        Map<String, Double> maxPMap = new HashMap<>();
         List<Float> percentages = new ArrayList<>();
         List<Scalable> scalables = new ArrayList<>();
 
         // we retrieve max P and the sum of max P of each generator to calculate the percentage.
         // we calculate the sum of target P to calculate variation value if variation type is Target_P
         generators.forEach(generator -> {
-            targetPMap.put(generator.getId(), generator.getMaxP());
+            maxPMap.put(generator.getId(), generator.getMaxP());
             maxPSum.set(maxPSum.get() + generator.getMaxP());
             targetPSum.set(targetPSum.get() + generator.getTargetP());
         });
 
-        setScalablePercentage(network, subReporter, generatorScalingVariation, maxPSum, targetPSum, targetPMap, percentages, scalables);
-    }
-
-    private void setScalablePercentage(Network network, Reporter subReporter, ScalingVariationInfos generatorScalingVariation, AtomicReference<Double> sum, AtomicReference<Double> targetPSum, Map<String, Double> targetPMap, List<Float> percentages, List<Scalable> scalables) {
-        targetPMap.forEach((id, p) -> {
-            percentages.add((float) ((p / sum.get()) * 100));
-            scalables.add(getScalable(id));
-        });
-
+        setScalablePercentage(maxPSum, maxPMap, percentages, scalables);
         Scalable proportionalToPmaxScalable = Scalable.proportional(percentages, scalables, isIterative);
         scale(network, subReporter, generatorScalingVariation, targetPSum, proportionalToPmaxScalable);
     }
@@ -152,7 +144,19 @@ public class GeneratorScaling extends AbstractScaling {
         });
 
         // we calculate percentage of each target P value relative to the sum of target P
-        setScalablePercentage(network, subReporter, generatorScalingVariation, sum, sum, targetPMap, percentages, scalables);
+        setScalablePercentage(sum, targetPMap, percentages, scalables);
+        Scalable proportionalScalable = Scalable.proportional(percentages, scalables, isIterative);
+        scale(network, subReporter, generatorScalingVariation, sum, proportionalScalable);
+    }
+
+    private void setScalablePercentage(AtomicReference<Double> sum,
+                                       Map<String, Double> targetPMap,
+                                       List<Float> percentages,
+                                       List<Scalable> scalables) {
+        targetPMap.forEach((id, p) -> {
+            percentages.add((float) ((p / sum.get()) * 100));
+            scalables.add(getScalable(id));
+        });
     }
 
     private void scale(Network network, Reporter subReporter, ScalingVariationInfos scalingVariationInfos, AtomicReference<Double> sum, Scalable scalable) {
