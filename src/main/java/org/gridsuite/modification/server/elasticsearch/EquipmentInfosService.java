@@ -39,14 +39,6 @@ public class EquipmentInfosService {
         this.tombstonedEquipmentInfosRepository = tombstonedEquipmentInfosRepository;
     }
 
-    public EquipmentInfos addEquipmentInfos(@NonNull EquipmentInfos equipmentInfos) {
-        return equipmentInfosRepository.save(equipmentInfos);
-    }
-
-    public TombstonedEquipmentInfos addTombstonedEquipmentInfos(TombstonedEquipmentInfos tombstonedEquipmentInfos) {
-        return tombstonedEquipmentInfosRepository.save(tombstonedEquipmentInfos);
-    }
-
     public void addAllEquipmentInfos(@NonNull final List<EquipmentInfos> equipmentsInfos) {
         Lists.partition(equipmentsInfos, partitionSize)
                 .parallelStream()
@@ -59,8 +51,8 @@ public class EquipmentInfosService {
                 .forEach(tombstonedEquipmentInfosRepository::saveAll);
     }
 
-    public void deleteEquipmentInfos(@NonNull String equipmentId, @NonNull UUID networkUuid, @NonNull String variantId) {
-        equipmentInfosRepository.deleteByIdAndNetworkUuidAndVariantId(equipmentId, networkUuid, variantId);
+    public void deleteEquipmentInfosList(@NonNull List<String> equipmentIds, @NonNull UUID networkUuid, @NonNull String variantId) {
+        equipmentInfosRepository.deleteByIdInAndNetworkUuidAndVariantId(equipmentIds, networkUuid, variantId);
     }
 
     public void deleteVariants(@NonNull UUID networkUuid, List<String> variantIds) {
@@ -91,20 +83,8 @@ public class EquipmentInfosService {
         );
     }
 
-    public boolean existEquipmentInfos(String equipmentId, UUID networkUuid, String variantId) {
-        return !equipmentInfosRepository.findByIdAndNetworkUuidAndVariantId(equipmentId, networkUuid, variantId).isEmpty();
-    }
-
-    public List<EquipmentInfos> findAllEquipmentInfos(@NonNull UUID networkUuid) {
-        return equipmentInfosRepository.findAllByNetworkUuid(networkUuid);
-    }
-
-    public List<TombstonedEquipmentInfos> findAllTombstonedEquipmentInfos(UUID networkUuid) {
-        return tombstonedEquipmentInfosRepository.findAllByNetworkUuid(networkUuid);
-    }
-
-    public boolean existTombstonedEquipmentInfos(String equipmentId, UUID networkUuid, String variantId) {
-        return !tombstonedEquipmentInfosRepository.findByIdAndNetworkUuidAndVariantId(equipmentId, networkUuid, variantId).isEmpty();
+    public List<EquipmentInfos> findEquipmentInfosList(List<String> equipmentIds, UUID networkUuid, String variantId) {
+        return equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(equipmentIds, networkUuid, variantId);
     }
 
     public void deleteAll() {

@@ -11,6 +11,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+import java.util.UUID;
+
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
@@ -19,6 +21,8 @@ import lombok.Getter;
 @Schema(description = "Modification network infos")
 public class ModificationNetworkInfos {
     private Network network;
+
+    private UUID networkUuuid;
 
     private boolean applyModifications;
 }

@@ -74,14 +74,14 @@ public class NetworkModificationController {
                                                               @RequestBody List<UUID> modificationsUuidList) {
         switch (action) {
             case COPY:
-                return ResponseEntity.ok().body(networkModificationService.duplicateModifications(targetGroupUuid, networkUuid, reportUuid, reporterId, variantId, modificationsUuidList));
+                return ResponseEntity.ok().body(networkModificationService.duplicateModifications(targetGroupUuid, networkUuid, reportUuid, reporterId.toString(), variantId, modificationsUuidList));
             case MOVE:
                 UUID sourceGroupUuid = originGroupUuid == null ? targetGroupUuid : originGroupUuid;
                 boolean canBuildNode = build;
                 if (sourceGroupUuid.equals(targetGroupUuid)) {
                     canBuildNode = false;
                 }
-                networkModificationService.moveModifications(targetGroupUuid, sourceGroupUuid, before, networkUuid, reportUuid, reporterId, variantId, modificationsUuidList, canBuildNode);
+                networkModificationService.moveModifications(targetGroupUuid, sourceGroupUuid, before, networkUuid, reportUuid, reporterId.toString(), variantId, modificationsUuidList, canBuildNode);
                 return ResponseEntity.ok().body(List.of());
             default:
                 throw new NetworkModificationException(TYPE_MISMATCH);

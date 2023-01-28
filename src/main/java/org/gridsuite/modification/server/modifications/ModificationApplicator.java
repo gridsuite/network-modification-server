@@ -12,29 +12,18 @@ import org.gridsuite.modification.server.service.NetworkStoreListener;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
-import java.util.Collection;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
 @Service
 public class ModificationApplicator {
-    private static List<ModificationInfos> getNetworkDamage(ModificationInfos modificationInfos, NetworkStoreListener listener) {
-        modificationInfos.setSubstationIds(listener.getSubstationsIds());
-        modificationInfos.setDate(ZonedDateTime.now(ZoneOffset.UTC));
-        return Stream
-            .of(List.of(modificationInfos), listener.getDeletions())
-            .flatMap(Collection::stream)
-            .collect(Collectors.toList());
+    private enum ApplicationMode {
+        UNITARY,
+        MULTIPLE
     }
 
-    public List<ModificationInfos> apply(ModificationInfos modificationInfos, Reporter subReporter, NetworkStoreListener listener, ApplicationContext context) {
+    public void apply(ModificationInfos modificationInfos, Reporter subReporter, NetworkStoreListener listener, ApplicationContext context) {
         modificationInfos.toModification().apply(listener.getNetwork(), subReporter, context);
-        return getNetworkDamage(modificationInfos, listener);
+        listener.addNetworkDamage(modificationInfos);
     }
 }
