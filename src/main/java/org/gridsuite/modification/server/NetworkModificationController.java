@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.gridsuite.modification.server.dto.BuildInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.ReportInfos;
 import org.gridsuite.modification.server.service.NetworkModificationService;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -74,14 +75,14 @@ public class NetworkModificationController {
                                                               @RequestBody List<UUID> modificationsUuidList) {
         switch (action) {
             case COPY:
-                return ResponseEntity.ok().body(networkModificationService.duplicateModifications(targetGroupUuid, networkUuid, reportUuid, reporterId.toString(), variantId, modificationsUuidList));
+                return ResponseEntity.ok().body(networkModificationService.duplicateModifications(targetGroupUuid, networkModificationService.getNetworkInfos(networkUuid, variantId), new ReportInfos(reportUuid, reporterId.toString()), modificationsUuidList));
             case MOVE:
                 UUID sourceGroupUuid = originGroupUuid == null ? targetGroupUuid : originGroupUuid;
                 boolean canBuildNode = build;
                 if (sourceGroupUuid.equals(targetGroupUuid)) {
                     canBuildNode = false;
                 }
-                networkModificationService.moveModifications(targetGroupUuid, sourceGroupUuid, before, networkUuid, reportUuid, reporterId.toString(), variantId, modificationsUuidList, canBuildNode);
+                networkModificationService.moveModifications(targetGroupUuid, sourceGroupUuid, before, networkModificationService.getNetworkInfos(networkUuid, variantId), new ReportInfos(reportUuid, reporterId.toString()), modificationsUuidList, canBuildNode);
                 return ResponseEntity.ok().body(List.of());
             default:
                 throw new NetworkModificationException(TYPE_MISMATCH);
@@ -116,7 +117,8 @@ public class NetworkModificationController {
             @Parameter(description = "Report UUID") @RequestParam("reportUuid") UUID reportUuid,
             @Parameter(description = "Reporter ID") @RequestParam("reporterId") String reporterId,
             @RequestBody ModificationInfos modificationInfos) {
-        return ResponseEntity.ok().body(networkModificationService.createNetworkModification(networkUuid, variantId, groupUuid, reportUuid, reporterId, modificationInfos));
+        modificationInfos.check();
+        return ResponseEntity.ok().body(networkModificationService.createNetworkModification(networkModificationService.getNetworkInfos(networkUuid, variantId), groupUuid, new ReportInfos(reportUuid, reporterId), modificationInfos));
     }
 
     @PutMapping(value = "/network-modifications/{uuid}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -153,7 +155,7 @@ public class NetworkModificationController {
     public ResponseEntity<Void> buildVariant(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
                                                      @Parameter(description = "Receiver") @RequestParam(name = "receiver", required = false) String receiver,
                                                      @RequestBody BuildInfos buildInfos) {
-        networkModificationService.buildVariant(networkUuid, buildInfos, receiver);
+        networkModificationService.buildVariantRequest(networkUuid, buildInfos, receiver);
         return ResponseEntity.ok().build();
     }
 
@@ -161,7 +163,7 @@ public class NetworkModificationController {
     @Operation(summary = "Stop a build")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The build has been stopped")})
     public ResponseEntity<Void> stopBuild(@Parameter(description = "Build receiver") @RequestParam(name = "receiver", required = false) String receiver) {
-        networkModificationService.stopBuild(receiver);
+        networkModificationService.stopBuildRequest(receiver);
         return ResponseEntity.ok().build();
     }
 }

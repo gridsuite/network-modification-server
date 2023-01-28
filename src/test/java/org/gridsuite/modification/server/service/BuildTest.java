@@ -30,6 +30,7 @@ import org.gridsuite.modification.server.elasticsearch.TombstonedEquipmentInfosR
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationGroupEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.TapChangerStepCreationEmbeddable;
+import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
 import org.gridsuite.modification.server.repositories.ModificationGroupRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -138,6 +139,12 @@ public class BuildTest {
     private NetworkModificationService networkModificationService;
 
     @Autowired
+    private NetworkModificationApplicator networkModificationApplicator;
+
+    @Autowired
+    private ReportService reportService;
+
+    @Autowired
     private EquipmentInfosService equipmentInfosService;
 
     @Autowired
@@ -192,7 +199,7 @@ public class BuildTest {
         // Ask the server for its URL. You'll need this to make HTTP requests.
         HttpUrl baseHttpUrl = server.url("");
         String baseUrl = baseHttpUrl.toString().substring(0, baseHttpUrl.toString().length() - 1);
-        networkModificationService.setReportServerBaseUri(baseUrl);
+        reportService.setReportServerBaseUri(baseUrl);
 
         final Dispatcher dispatcher = new Dispatcher() {
             @SneakyThrows
@@ -326,7 +333,7 @@ public class BuildTest {
 
         // Group is empty
         modificationGroupRepository.save(new ModificationGroupEntity(TEST_GROUP_ID));
-        networkModificationService.applyModifications(network, TEST_NETWORK_ID, buildInfos);
+        networkModificationService.buildVariant(new NetworkInfos(network, TEST_NETWORK_ID, true), buildInfos);
         request = server.takeRequest(TIMEOUT, TimeUnit.MILLISECONDS);
         assertNotNull(request);
         assertEquals(expectedBody, request.getBody().readUtf8());
@@ -796,22 +803,23 @@ public class BuildTest {
         String variantId = network.getVariantManager().getWorkingVariantId();
 
         // Building mode : No error send with exception
-        NetworkStoreListener listener1 = NetworkStoreListener.create(new ModificationNetworkInfos(network, TEST_NETWORK_ID, true), networkStoreService, equipmentInfosService, true);
-        networkModificationService.applyModification(loadCreationInfos, listener1, reportUuid, reporterId);
-        assertEquals(List.of(), listener1.flushNetworkModifications());
+        List<ModificationInfos> modificationInfos = networkModificationApplicator.applyModifications(List.of(loadCreationInfos), new NetworkInfos(network, TEST_NETWORK_ID, true), new ReportInfos(reportUuid, reporterId));
+        assertEquals(List.of(), modificationInfos);
         assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches(String.format("/v1/reports/%s", reportUuid))));
 
         // Incremental mode : Error send with exception
+        NetworkInfos networkInfos = networkModificationService.getNetworkInfos(TEST_NETWORK_ID, variantId);
+        ReportInfos reportInfos = new ReportInfos(reportUuid, reporterId);
         assertEquals("VOLTAGE_LEVEL_NOT_FOUND : unknownVoltageLevelId",
             assertThrows(NetworkModificationException.class,
-                () -> networkModificationService.createNetworkModification(TEST_NETWORK_ID, variantId, groupUuid, reportUuid, reporterId, loadCreationInfos)
+                () -> networkModificationService.createNetworkModification(networkInfos, groupUuid, reportInfos, loadCreationInfos)
             ).getMessage()
         );
         assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches(String.format("/v1/reports/%s", reportUuid))));
         testNetworkModificationsCount(groupUuid, 1);
 
         // Save mode only (variant does not exist) : No log and no error send with exception
-        assertEquals(List.of(), networkModificationService.createNetworkModification(TEST_NETWORK_ID, UUID.randomUUID().toString(), groupUuid, reportUuid, reporterId, loadCreationInfos));
+        assertEquals(List.of(), networkModificationService.createNetworkModification(networkModificationService.getNetworkInfos(TEST_NETWORK_ID, UUID.randomUUID().toString()), groupUuid, new ReportInfos(reportUuid, reporterId), loadCreationInfos));
         testNetworkModificationsCount(groupUuid, 2);
     }
 

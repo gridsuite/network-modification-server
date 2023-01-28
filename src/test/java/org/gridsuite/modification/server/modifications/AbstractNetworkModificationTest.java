@@ -18,6 +18,7 @@ import lombok.SneakyThrows;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.NetworkModificationService;
+import org.gridsuite.modification.server.service.ReportService;
 import org.gridsuite.modification.server.utils.MatcherModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.After;
@@ -85,6 +86,9 @@ public abstract class AbstractNetworkModificationTest {
     protected NetworkModificationService networkModificationService;
 
     @Autowired
+    protected ReportService reportService;
+
+    @Autowired
     protected NetworkModificationRepository modificationRepository;
 
     @Autowired
@@ -104,7 +108,7 @@ public abstract class AbstractNetworkModificationTest {
         given(reportServerRest.exchange(eq("/v1/reports/" + TEST_REPORT_ID), eq(HttpMethod.PUT), ArgumentMatchers.any(HttpEntity.class), eq(ReporterModel.class)))
                 .willReturn(new ResponseEntity<>(HttpStatus.OK));
 
-        networkModificationService.setReportServerRest(reportServerRest);
+        reportService.setReportServerRest(reportServerRest);
 
         modificationRepository.deleteAll();
     }

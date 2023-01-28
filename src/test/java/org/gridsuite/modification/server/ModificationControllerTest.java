@@ -27,6 +27,7 @@ import org.gridsuite.modification.server.elasticsearch.TombstonedEquipmentInfosR
 import org.gridsuite.modification.server.modifications.ModificationUtils;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.NetworkModificationService;
+import org.gridsuite.modification.server.service.ReportService;
 import org.gridsuite.modification.server.utils.ModificationCreation;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.gridsuite.modification.server.utils.NetworkWithTeePoint;
@@ -107,6 +108,9 @@ public class ModificationControllerTest {
     @Autowired
     private NetworkModificationRepository modificationRepository;
 
+    @Autowired
+    private ReportService reportService;
+
     @MockBean
     @Qualifier("reportServer")
     private RestTemplate reportServerRest;
@@ -157,7 +161,7 @@ public class ModificationControllerTest {
 
         doThrow(new PowsyblException()).when(networkStoreService).flush(argThat(n -> TEST_NETWORK_WITH_FLUSH_ERROR_ID.toString().equals(n.getId())));
 
-        networkModificationService.setReportServerRest(reportServerRest);
+        reportService.setReportServerRest(reportServerRest);
         given(reportServerRest.exchange(eq("/v1/reports/" + TEST_REPORT_ID), eq(HttpMethod.PUT), ArgumentMatchers.any(HttpEntity.class), eq(ReporterModel.class)))
             .willReturn(new ResponseEntity<>(HttpStatus.OK));
 

@@ -43,21 +43,18 @@ public class NetworkStoreListener implements NetworkListener {
 
     private final Set<String> substationsIds = new HashSet<>();
 
-    private final boolean isBuild;
-
-    protected NetworkStoreListener(ModificationNetworkInfos modificationNetworkInfos, NetworkStoreService networkStoreService,
-                                   EquipmentInfosService equipmentInfosService, boolean isBuild) {
-        this.network = modificationNetworkInfos.getNetwork();
-        this.networkUuid = modificationNetworkInfos.getNetworkUuuid();
+    protected NetworkStoreListener(Network network, UUID networkUuid,
+                                   NetworkStoreService networkStoreService, EquipmentInfosService equipmentInfosService) {
+        this.network = network;
+        this.networkUuid = networkUuid;
         this.networkStoreService = networkStoreService;
         this.equipmentInfosService = equipmentInfosService;
-        this.isBuild = isBuild;
     }
 
-    public static NetworkStoreListener create(ModificationNetworkInfos modificationNetworkInfos, NetworkStoreService networkStoreService,
-                                              EquipmentInfosService equipmentInfosService, boolean isBuild) {
-        var listener = new NetworkStoreListener(modificationNetworkInfos, networkStoreService, equipmentInfosService, isBuild);
-        modificationNetworkInfos.getNetwork().addListener(listener);
+    public static NetworkStoreListener create(Network network, UUID networkUuid, NetworkStoreService networkStoreService,
+                                              EquipmentInfosService equipmentInfosService) {
+        var listener = new NetworkStoreListener(network, networkUuid, networkStoreService, equipmentInfosService);
+        network.addListener(listener);
         return listener;
     }
 
@@ -88,10 +85,6 @@ public class NetworkStoreListener implements NetworkListener {
 
     public Network getNetwork() {
         return network;
-    }
-
-    public boolean isBuild() {
-        return isBuild;
     }
 
     @Override
@@ -158,7 +151,7 @@ public class NetworkStoreListener implements NetworkListener {
 
     private void flushEquipmentInfos() {
         String variantId = network.getVariantManager().getWorkingVariantId();
-        Set<String> presentEquipmentDeletionsIds = equipmentInfosService.findEquipmentInfosList(getIds(equipmentDeletions), networkUuid, variantId).stream().map(EquipmentInfos::getId).collect(Collectors.toSet());
+        Set<String> presentEquipmentDeletionsIds = equipmentInfosService.findEquipmentInfosList(getEquipmentIds(equipmentDeletions), networkUuid, variantId).stream().map(EquipmentInfos::getId).collect(Collectors.toSet());
         List<String> equipmentDeletionsIds = new ArrayList<>();
         List<TombstonedEquipmentInfos> tombstonedEquipmentInfos = new ArrayList<>();
         equipmentDeletions.forEach(d -> {
@@ -178,7 +171,7 @@ public class NetworkStoreListener implements NetworkListener {
         equipmentInfosService.addAllEquipmentInfos(equipmentCreations);
     }
 
-    private List<String> getIds(List<? extends EquipmentModificationInfos> equipmentInfosList) {
+    private List<String> getEquipmentIds(List<? extends EquipmentModificationInfos> equipmentInfosList) {
         return equipmentInfosList.stream().map(EquipmentModificationInfos::getEquipmentId).collect(Collectors.toList());
     }
 }
