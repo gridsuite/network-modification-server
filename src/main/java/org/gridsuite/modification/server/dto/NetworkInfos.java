@@ -24,5 +24,5 @@ public class NetworkInfos {
 
     private UUID networkUuuid;
 
-    private boolean isVariantExist;
+    private boolean isVariantPresent;
 }

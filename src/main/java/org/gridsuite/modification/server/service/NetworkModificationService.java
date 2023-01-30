@@ -117,7 +117,7 @@ public class NetworkModificationService {
                                                              @NonNull ModificationInfos modificationInfos) {
         networkModificationRepository.saveModifications(groupUuid, List.of(modificationInfos.toEntity()));
 
-        return networkInfos.isVariantExist() ? modificationApplicator.applyModification(modificationInfos, networkInfos, reportInfos) : List.of();
+        return networkInfos.isVariantPresent() ? modificationApplicator.applyModification(modificationInfos, networkInfos, reportInfos) : List.of();
     }
 
     public Network cloneNetworkVariant(UUID networkUuid, String originVariantId, String destinationVariantId) {
@@ -189,7 +189,7 @@ public class NetworkModificationService {
             .stream()
             .map(ModificationEntity::toModificationInfos)
             .collect(Collectors.toList());
-        if (canBuildNode && !movedModifications.isEmpty() && networkInfos.isVariantExist()) { // TODO remove canBuildNode and return NetworkDamages() ?
+        if (canBuildNode && !movedModifications.isEmpty() && networkInfos.isVariantPresent()) { // TODO remove canBuildNode and return NetworkDamages() ?
             // try to apply the moved modifications (incremental mode)
             modificationApplicator.applyModifications(movedModifications, networkInfos, reportInfos);
         }
@@ -216,7 +216,7 @@ public class NetworkModificationService {
         if (!duplicatedModificationsEntities.isEmpty()) {
             networkModificationRepository.saveModifications(targetGroupUuid, duplicatedModificationsEntities);
             // try to apply the duplicated modifications (incremental mode)
-            if (networkInfos.isVariantExist()) { // TODO return NetworkDamages() ?
+            if (networkInfos.isVariantPresent()) { // TODO return NetworkDamages() ?
                 modificationApplicator.applyModifications(
                     duplicatedModificationsEntities.stream().map(ModificationEntity::toModificationInfos).collect(Collectors.toList()),
                     networkInfos, reportInfos
