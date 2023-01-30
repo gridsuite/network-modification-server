@@ -9,7 +9,6 @@ package org.gridsuite.modification.server.modifications;
 import com.powsybl.commons.reporter.Reporter;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.service.NetworkStoreListener;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 
@@ -25,9 +24,6 @@ import java.util.stream.Stream;
  */
 @Service
 public class ModificationApplicator {
-    @Autowired
-    private ApplicationContext context;
-
     private static List<ModificationInfos> getNetworkDamage(ModificationInfos modificationInfos, NetworkStoreListener listener) {
         modificationInfos.setSubstationIds(listener.getSubstationsIds());
         modificationInfos.setDate(ZonedDateTime.now(ZoneOffset.UTC));
