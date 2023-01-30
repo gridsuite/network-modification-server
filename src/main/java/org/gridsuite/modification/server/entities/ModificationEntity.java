@@ -86,6 +86,10 @@ public class ModificationEntity {
         }
     }
 
+    public ModificationEntity copy() {
+        return toModificationInfos().toEntity();
+    }
+
     //From https://vladmihalcea.com/the-best-way-to-map-a-onetomany-association-with-jpa-and-hibernate/
     @Override
     public boolean equals(Object o) {
@@ -101,9 +105,5 @@ public class ModificationEntity {
     @Override
     public int hashCode() {
         return getClass().hashCode();
-    }
-
-    public void cloneWithIdsToNull() {
-        this.setId(null);
     }
 }

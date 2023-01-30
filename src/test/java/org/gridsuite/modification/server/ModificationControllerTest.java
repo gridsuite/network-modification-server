@@ -28,6 +28,7 @@ import org.gridsuite.modification.server.modifications.ModificationUtils;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.NetworkModificationService;
 import org.gridsuite.modification.server.service.ReportService;
+import org.gridsuite.modification.server.utils.MatcherModificationInfos;
 import org.gridsuite.modification.server.utils.ModificationCreation;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.gridsuite.modification.server.utils.NetworkWithTeePoint;
@@ -414,17 +415,10 @@ public class ModificationControllerTest {
         assertEquals(5, newModificationList.size());
         assertEquals(modificationUuidList, newModificationUuidList.subList(0, 3));
         // compare duplicates 0 and 3 (same data except uuid)
-        var modification0 = modificationList.get(0);
-        var newModification3 = newModificationList.get(3);
-        modification0.setUuid(null);
-        newModification3.setUuid(null);
-        assertEquals(modification0.toString(), newModification3.toString());
+        assertThat(newModificationList.get(3), MatcherModificationInfos.createMatcherModificationInfos(modificationList.get(0)));
+
         // compare duplicates 1 and 4 (same data except uuid)
-        var modification1 = modificationList.get(1);
-        var newModification4 = newModificationList.get(4);
-        modification1.setUuid(null);
-        newModification4.setUuid(null);
-        assertEquals(modification1.toString(), newModification4.toString());
+        assertThat(newModificationList.get(4), MatcherModificationInfos.createMatcherModificationInfos(modificationList.get(1)));
 
         // bad request error case: wrong action param
         mockMvc.perform(
@@ -458,12 +452,8 @@ public class ModificationControllerTest {
         assertEquals(3, newModificationListOtherGroup.size());
         assertEquals(modificationUuidListOtherGroup, newModificationUuidListOtherGroup.subList(0, 1));
         // compare duplicates
-        var newModification1 = newModificationListOtherGroup.get(1);
-        newModification1.setUuid(null);
-        assertEquals(modification0.toString(), newModification1.toString());
-        var newModification2 = newModificationListOtherGroup.get(2);
-        newModification2.setUuid(null);
-        assertEquals(modification1.toString(), newModification2.toString());
+        assertThat(newModificationListOtherGroup.get(1), MatcherModificationInfos.createMatcherModificationInfos(modificationList.get(0)));
+        assertThat(newModificationListOtherGroup.get(2), MatcherModificationInfos.createMatcherModificationInfos(modificationList.get(1)));
     }
 
     @Test

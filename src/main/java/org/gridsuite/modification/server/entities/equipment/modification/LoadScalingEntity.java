@@ -15,12 +15,7 @@ import org.gridsuite.modification.server.dto.LoadScalingInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.ScalingVariationInfos;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
-import java.util.ArrayList;
+import javax.persistence.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -70,19 +65,5 @@ public class LoadScalingEntity extends ScalingEntity {
                         .map(ScalingVariationEntity::toScalingVariationInfos)
                         .collect(Collectors.toList()))
                 .build();
-    }
-
-    @Override
-    public void cloneWithIdsToNull() {
-        setId(null);
-        this.variations = getVariations()
-                .stream()
-                .peek(variation -> {
-                    variation.setId(null);
-                    variation.setFilters(new ArrayList<>(variation.getFilters()
-                            .stream()
-                            .peek(filter -> filter.setId(null))
-                            .collect(Collectors.toList())));
-                }).collect(Collectors.toList());
     }
 }

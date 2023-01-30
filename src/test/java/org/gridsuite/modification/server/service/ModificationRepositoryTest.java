@@ -32,10 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -801,9 +798,7 @@ public class ModificationRepositoryTest {
         networkModificationRepository.saveModifications(TEST_GROUP_ID, entities);
         assertRequestsCount(1, 11, 5, 0);
 
-        List<BranchStatusModificationInfos> modificationInfos = networkModificationRepository.getModifications(
-                entities.stream().map(ModificationEntity::getId).collect(Collectors.toList())
-            )
+        List<BranchStatusModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true)
             .stream()
             .map(BranchStatusModificationInfos.class::cast)
             .sorted(Comparator.comparing(BranchStatusModificationInfos::getEquipmentId))

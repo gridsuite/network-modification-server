@@ -72,12 +72,5 @@ public class SubstationCreationEntity extends EquipmentCreationEntity {
                 .substationCountry(getCountry())
                 .properties(getProperties() == null || getProperties().size() == 0 ? null : getProperties());
     }
-
-    @Override
-    public void cloneWithIdsToNull() {
-        super.cloneWithIdsToNull();
-        this.properties = properties == null ? null : new HashMap<>(properties);
-    }
-
 }
 

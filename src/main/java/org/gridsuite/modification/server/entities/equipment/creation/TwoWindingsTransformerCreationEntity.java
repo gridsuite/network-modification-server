@@ -239,11 +239,4 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
 
         return builder;
     }
-
-    @Override
-    public void cloneWithIdsToNull() {
-        super.cloneWithIdsToNull();
-        this.tapChangerSteps = new ArrayList<>(tapChangerSteps);
-    }
-
 }

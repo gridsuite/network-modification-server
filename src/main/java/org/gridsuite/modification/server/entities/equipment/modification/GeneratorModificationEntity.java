@@ -10,35 +10,15 @@ import com.powsybl.iidm.network.EnergySource;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-
 import org.gridsuite.modification.server.ModificationType;
-import org.gridsuite.modification.server.dto.AttributeModification;
-import org.gridsuite.modification.server.dto.GeneratorModificationInfos;
-import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.dto.ReactiveCapabilityCurveModificationInfos;
-import org.gridsuite.modification.server.dto.VoltageRegulationType;
-import org.gridsuite.modification.server.entities.equipment.modification.attribute.BooleanModificationEmbedded;
-import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
-import org.gridsuite.modification.server.entities.equipment.modification.attribute.EnumModificationEmbedded;
-import org.gridsuite.modification.server.entities.equipment.modification.attribute.FloatModificationEmbedded;
-import org.gridsuite.modification.server.entities.equipment.modification.attribute.StringModificationEmbedded;
+import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.server.entities.equipment.modification.attribute.*;
 
-import javax.persistence.AttributeOverride;
-import javax.persistence.AttributeOverrides;
-import javax.persistence.CollectionTable;
-import javax.persistence.Column;
-import javax.persistence.ElementCollection;
-import javax.persistence.Embedded;
-import javax.persistence.Entity;
-import javax.persistence.ForeignKey;
-import javax.persistence.PrimaryKeyJoinColumn;
-import javax.persistence.Table;
-
-import static org.gridsuite.modification.server.entities.equipment.modification.attribute.IAttributeModificationEmbeddable.toAttributeModification;
-
-import java.util.ArrayList;
+import javax.persistence.*;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static org.gridsuite.modification.server.entities.equipment.modification.attribute.IAttributeModificationEmbeddable.toAttributeModification;
 
 
 /**
@@ -292,11 +272,5 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
             .qPercent(toAttributeModification(getQPercent()))
             .reactiveCapabilityCurve(toAttributeModification(getReactiveCapabilityCurve()))
             .reactiveCapabilityCurvePoints(points);
-    }
-
-    @Override
-    public void cloneWithIdsToNull() {
-        super.cloneWithIdsToNull();
-        this.reactiveCapabilityCurvePoints = new ArrayList<>(reactiveCapabilityCurvePoints);
     }
 }

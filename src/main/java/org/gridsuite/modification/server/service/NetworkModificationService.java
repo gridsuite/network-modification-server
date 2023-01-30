@@ -24,13 +24,13 @@ import org.gridsuite.modification.server.dto.ReportInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
-import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -48,9 +48,6 @@ public class NetworkModificationService {
 
     private final NetworkModificationApplicator modificationApplicator;
 
-    // TO DO : transfer the use of repositories in NetworkModificationRepository
-    private final ModificationRepository modificationRepository;
-
     private final EquipmentInfosService equipmentInfosService;
 
     private final NotificationService notificationService;
@@ -60,13 +57,11 @@ public class NetworkModificationService {
     private final ObjectMapper objectMapper;
 
     public NetworkModificationService(NetworkStoreService networkStoreService, NetworkModificationRepository networkModificationRepository,
-                                      EquipmentInfosService equipmentInfosService,
-                                      ModificationRepository modificationRepository, NotificationService notificationService, ReportService reportService,
+                                      EquipmentInfosService equipmentInfosService, NotificationService notificationService, ReportService reportService,
                                       NetworkModificationApplicator applicationService, ObjectMapper objectMapper) {
         this.networkStoreService = networkStoreService;
         this.networkModificationRepository = networkModificationRepository;
         this.equipmentInfosService = equipmentInfosService;
-        this.modificationRepository = modificationRepository;
         this.notificationService = notificationService;
         this.modificationApplicator = applicationService;
         this.reportService = reportService;
@@ -112,10 +107,7 @@ public class NetworkModificationService {
 
     @Transactional
     public void updateNetworkModification(@NonNull UUID modificationUuid, @NonNull ModificationInfos modificationInfos) {
-        ModificationEntity modificationEntity = this.modificationRepository.findById(modificationUuid)
-            .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format("Modification (%s) not found", modificationUuid)));
-
-        modificationEntity.update(modificationInfos);
+        networkModificationRepository.updateModification(modificationUuid, modificationInfos);
     }
 
     // No transactional because we need to save modification in DB also in case of error
@@ -214,23 +206,19 @@ public class NetworkModificationService {
         }
     }
 
-    // This function cannot be @Transactional because we clone all modifications resetting their id to null,
-    // which is not allowed by JPA if we still stay in the same Tx.
-    public List<UUID> duplicateModifications(UUID targetGroupUuid, NetworkInfos networkInfos, ReportInfos reportInfos, List<UUID> modificationsUuidList) {
-        List<ModificationEntity> duplicatedModificationEntityList = new ArrayList<>();
-        List<UUID> missingModificationList = new ArrayList<>();
-        for (UUID modifyId : modificationsUuidList) {
-            networkModificationRepository.cloneModificationEntity(modifyId).ifPresentOrElse(
-                duplicatedModificationEntityList::add,
-                () -> missingModificationList.add(modifyId)  // data no more available
-            );
-        }
-        if (!duplicatedModificationEntityList.isEmpty()) {
-            networkModificationRepository.saveModifications(targetGroupUuid, duplicatedModificationEntityList);
+    @Transactional
+    public List<UUID> duplicateModifications(UUID targetGroupUuid, NetworkInfos networkInfos, ReportInfos reportInfos, List<UUID> modificationsUuids) {
+        List<ModificationEntity> modificationsEntities = networkModificationRepository.getModificationsEntities(modificationsUuids);
+        Set<UUID> presentUuids = modificationsEntities.stream().map(ModificationEntity::getId).collect(Collectors.toSet());
+        List<ModificationEntity> duplicatedModificationsEntities = modificationsEntities.stream().map(ModificationEntity::copy).collect(Collectors.toList());
+        List<UUID> missingModificationList = new ArrayList<>(modificationsUuids);
+        missingModificationList.removeAll(presentUuids);
+        if (!duplicatedModificationsEntities.isEmpty()) {
+            networkModificationRepository.saveModifications(targetGroupUuid, duplicatedModificationsEntities);
             // try to apply the duplicated modifications (incremental mode)
             if (networkInfos.isVariantExist()) { // TODO return NetworkDamages() ?
                 modificationApplicator.applyModifications(
-                    duplicatedModificationEntityList.stream().map(ModificationEntity::toModificationInfos).collect(Collectors.toList()),
+                    duplicatedModificationsEntities.stream().map(ModificationEntity::toModificationInfos).collect(Collectors.toList()),
                     networkInfos, reportInfos
                 );
             }

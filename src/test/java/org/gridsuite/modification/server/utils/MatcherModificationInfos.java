@@ -29,6 +29,10 @@ public class MatcherModificationInfos<T extends ModificationInfos> extends TypeS
             .build());
     }
 
+    public static MatcherModificationInfos createMatcherModificationInfos(ModificationInfos ref) {
+        return new MatcherModificationInfos(ref);
+    }
+
     protected MatcherModificationInfos(T ref) {
         this.reference = ref;
     }

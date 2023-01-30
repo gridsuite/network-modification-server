@@ -6,12 +6,8 @@
  */
 package org.gridsuite.modification.server.entities.equipment.creation;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import javax.persistence.*;
-
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.BusbarConnectionCreationInfos;
@@ -19,8 +15,9 @@ import org.gridsuite.modification.server.dto.BusbarSectionCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.VoltageLevelCreationInfos;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import javax.persistence.*;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author Laurent GARNIER <laurent.garnier at rte-france.com>
@@ -90,13 +87,6 @@ public class VoltageLevelCreationEntity extends EquipmentCreationEntity {
                 .substationId(getSubstationId())
                 .busbarSections(bbsis)
                 .busbarConnections(cnxis);
-    }
-
-    @Override
-    public void cloneWithIdsToNull() {
-        super.cloneWithIdsToNull();
-        this.busbarSections = new ArrayList<>(busbarSections);
-        this.busbarConnections = new ArrayList<>(busbarConnections);
     }
 
     @Override

@@ -103,7 +103,7 @@ public class LineAttachToVoltageLevelEntity extends ModificationEntity {
         return toLineAttachToVoltageLevelInfosBuilder().build();
     }
 
-    private LineAttachToVoltageLevelInfos.LineAttachToVoltageLevelInfosBuilder toLineAttachToVoltageLevelInfosBuilder() {
+    private LineAttachToVoltageLevelInfos.LineAttachToVoltageLevelInfosBuilder<?, ?> toLineAttachToVoltageLevelInfosBuilder() {
         return LineAttachToVoltageLevelInfos
                 .builder()
                 .uuid(getId())
@@ -122,16 +122,4 @@ public class LineAttachToVoltageLevelEntity extends ModificationEntity {
                 .newLine2Id(getNewLine2Id())
                 .newLine2Name(getNewLine2Name());
     }
-
-    @Override
-    public void cloneWithIdsToNull() {
-        super.cloneWithIdsToNull();
-        if (this.getLineCreation() != null) {
-            this.getLineCreation().cloneWithIdsToNull();
-        }
-        if (this.getMayVoltageLevelCreation() != null) {
-            this.getMayVoltageLevelCreation().cloneWithIdsToNull();
-        }
-    }
-
 }

@@ -16,8 +16,8 @@ import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.iidm.impl.NetworkImpl;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
-import org.gridsuite.modification.server.service.NetworkModificationService;
 import org.gridsuite.modification.server.service.ReportService;
 import org.gridsuite.modification.server.utils.MatcherModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -44,8 +44,10 @@ import java.util.UUID;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -77,16 +79,16 @@ public abstract class AbstractNetworkModificationTest {
 
     @MockBean
     @Qualifier("reportServer")
-    protected RestTemplate reportServerRest;
+    private RestTemplate reportServerRest;
 
     @MockBean
-    protected NetworkStoreService networkStoreService;
+    private NetworkStoreService networkStoreService;
+
+    @MockBean
+    private EquipmentInfosService equipmentInfosService;
 
     @Autowired
-    protected NetworkModificationService networkModificationService;
-
-    @Autowired
-    protected ReportService reportService;
+    private ReportService reportService;
 
     @Autowired
     protected NetworkModificationRepository modificationRepository;
@@ -98,19 +100,25 @@ public abstract class AbstractNetworkModificationTest {
 
     @Before
     public void setUp() {
-
-        // creating the network
         network = createNetwork(TEST_NETWORK_ID);
 
-        // mocking
-        when(networkStoreService.getNetwork(NOT_FOUND_NETWORK_ID)).thenThrow(new PowsyblException());
-        when(networkStoreService.getNetwork(TEST_NETWORK_ID)).then((Answer<Network>) invocation -> network);
-        given(reportServerRest.exchange(eq("/v1/reports/" + TEST_REPORT_ID), eq(HttpMethod.PUT), ArgumentMatchers.any(HttpEntity.class), eq(ReporterModel.class)))
-                .willReturn(new ResponseEntity<>(HttpStatus.OK));
+        initMocks();
 
         reportService.setReportServerRest(reportServerRest);
 
         modificationRepository.deleteAll();
+    }
+
+    private void initMocks() {
+        when(networkStoreService.getNetwork(NOT_FOUND_NETWORK_ID)).thenThrow(new PowsyblException());
+        when(networkStoreService.getNetwork(TEST_NETWORK_ID)).then((Answer<Network>) invocation -> network);
+        doNothing().when(equipmentInfosService).addAllEquipmentInfos(any(List.class));
+
+        doNothing().when(equipmentInfosService).addAllTombstonedEquipmentInfos(any(List.class));
+        doNothing().when(equipmentInfosService).deleteEquipmentInfosList(any(List.class), any(UUID.class), any(String.class));
+
+        given(reportServerRest.exchange(eq("/v1/reports/" + TEST_REPORT_ID), eq(HttpMethod.PUT), ArgumentMatchers.any(HttpEntity.class), eq(ReporterModel.class)))
+            .willReturn(new ResponseEntity<>(HttpStatus.OK));
     }
 
     @After

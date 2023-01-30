@@ -152,6 +152,7 @@ public class NetworkStoreListener implements NetworkListener {
     private void flushEquipmentInfos() {
         String variantId = network.getVariantManager().getWorkingVariantId();
         Set<String> presentEquipmentDeletionsIds = equipmentInfosService.findEquipmentInfosList(getEquipmentIds(equipmentDeletions), networkUuid, variantId).stream().map(EquipmentInfos::getId).collect(Collectors.toSet());
+
         List<String> equipmentDeletionsIds = new ArrayList<>();
         List<TombstonedEquipmentInfos> tombstonedEquipmentInfos = new ArrayList<>();
         equipmentDeletions.forEach(d -> {
