@@ -58,8 +58,20 @@ public class GeneratorModificationInfos extends InjectionModificationInfos {
     @Schema(description = "Voltage set point")
     private AttributeModification<Double> voltageSetpoint;
 
+    @Schema(description = "Planning active power set point")
+    private AttributeModification<Double> plannedActivePowerSetPoint;
+
+    @Schema(description = "Startup cost")
+    private AttributeModification<Double> startupCost;
+
     @Schema(description = "Marginal cost")
     private AttributeModification<Double> marginalCost;
+
+    @Schema(description = "Planning outage rate")
+    private AttributeModification<Double> plannedOutageRate;
+
+    @Schema(description = "Forced outage rate")
+    private AttributeModification<Double> forcedOutageRate;
 
     @Schema(description = "Minimum reactive power")
     private AttributeModification<Double> minimumReactivePower;

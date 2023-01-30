@@ -88,10 +88,38 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
 
     @Embedded
     @AttributeOverrides(value = {
+            @AttributeOverride(name = "value", column = @Column(name = "plannedActivePowerSetPoint")),
+            @AttributeOverride(name = "opType", column = @Column(name = "plannedActivePowerSetPointOp"))
+    })
+    DoubleModificationEmbedded plannedActivePowerSetPoint;
+
+    @Embedded
+    @AttributeOverrides(value = {
+            @AttributeOverride(name = "value", column = @Column(name = "startupCost")),
+            @AttributeOverride(name = "opType", column = @Column(name = "startupCostOp"))
+    })
+    DoubleModificationEmbedded startupCost;
+
+    @Embedded
+    @AttributeOverrides(value = {
         @AttributeOverride(name = "value", column = @Column(name = "marginalCost")),
         @AttributeOverride(name = "opType", column = @Column(name = "marginalCostOp"))
     })
     DoubleModificationEmbedded marginalCost;
+
+    @Embedded
+    @AttributeOverrides(value = {
+            @AttributeOverride(name = "value", column = @Column(name = "plannedOutageRate")),
+            @AttributeOverride(name = "opType", column = @Column(name = "plannedOutageRateOp"))
+    })
+    DoubleModificationEmbedded plannedOutageRate;
+
+    @Embedded
+    @AttributeOverrides(value = {
+            @AttributeOverride(name = "value", column = @Column(name = "forcedOutageRate")),
+            @AttributeOverride(name = "opType", column = @Column(name = "forcedOutageRateOp"))
+    })
+    DoubleModificationEmbedded forcedOutageRate;
 
     @Embedded
     @AttributeOverrides(value = {
@@ -201,7 +229,11 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
         this.reactivePowerSetpoint = new DoubleModificationEmbedded(generatorModificationInfos.getReactivePowerSetpoint());
         this.voltageRegulationOn = new BooleanModificationEmbedded(generatorModificationInfos.getVoltageRegulationOn());
         this.voltageSetpoint = new DoubleModificationEmbedded(generatorModificationInfos.getVoltageSetpoint());
+        this.plannedActivePowerSetPoint = new DoubleModificationEmbedded(generatorModificationInfos.getPlannedActivePowerSetPoint());
+        this.startupCost = new DoubleModificationEmbedded(generatorModificationInfos.getStartupCost());
         this.marginalCost = new DoubleModificationEmbedded(generatorModificationInfos.getMarginalCost());
+        this.plannedOutageRate = new DoubleModificationEmbedded(generatorModificationInfos.getPlannedOutageRate());
+        this.forcedOutageRate = new DoubleModificationEmbedded(generatorModificationInfos.getForcedOutageRate());
         this.minimumReactivePower = new DoubleModificationEmbedded(generatorModificationInfos.getMinimumReactivePower());
         this.maximumReactivePower = new DoubleModificationEmbedded(generatorModificationInfos.getMaximumReactivePower());
         this.participate = new BooleanModificationEmbedded(generatorModificationInfos.getParticipate());
@@ -249,28 +281,32 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
                 .equipmentName(AttributeModification.toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))
                 .voltageLevelId(AttributeModification.toAttributeModification(getVoltageLevelIdValue(), getVoltageLevelIdOp()))
                 .busOrBusbarSectionId(AttributeModification.toAttributeModification(getBusOrBusbarSectionIdValue(), getBusOrBusbarSectionIdOp()))
-            .energySource(toAttributeModification(getEnergySource()))
-            .activePowerSetpoint(toAttributeModification(getActivePowerSetpoint()))
-            .maxActivePower(toAttributeModification(getMaxActivePower()))
-            .minActivePower(toAttributeModification(getMinActivePower()))
-            .ratedNominalPower(toAttributeModification(getRatedNominalPower()))
-            .reactivePowerSetpoint(toAttributeModification(getReactivePowerSetpoint()))
-            .voltageRegulationOn(toAttributeModification(getVoltageRegulationOn()))
-            .type(ModificationType.GENERATOR_MODIFICATION)
-            .voltageSetpoint(toAttributeModification(getVoltageSetpoint()))
-            .marginalCost(toAttributeModification(getMarginalCost()))
-            .minimumReactivePower(toAttributeModification(getMinimumReactivePower()))
-            .maximumReactivePower(toAttributeModification(getMaximumReactivePower()))
-            .participate(toAttributeModification(getParticipate()))
-            .droop(toAttributeModification(getDroop()))
-            .transientReactance(toAttributeModification(getTransientReactance()))
-            .stepUpTransformerReactance(toAttributeModification(getStepUpTransformerReactance()))
-            .voltageRegulationType(toAttributeModification(getVoltageRegulationType()))
-            .regulatingTerminalId(toAttributeModification(getRegulatingTerminalId()))
-            .regulatingTerminalType(toAttributeModification(getRegulatingTerminalType()))
-            .regulatingTerminalVlId(toAttributeModification(getRegulatingTerminalVlId()))
-            .qPercent(toAttributeModification(getQPercent()))
-            .reactiveCapabilityCurve(toAttributeModification(getReactiveCapabilityCurve()))
-            .reactiveCapabilityCurvePoints(points);
+                .energySource(toAttributeModification(getEnergySource()))
+                .activePowerSetpoint(toAttributeModification(getActivePowerSetpoint()))
+                .maxActivePower(toAttributeModification(getMaxActivePower()))
+                .minActivePower(toAttributeModification(getMinActivePower()))
+                .ratedNominalPower(toAttributeModification(getRatedNominalPower()))
+                .reactivePowerSetpoint(toAttributeModification(getReactivePowerSetpoint()))
+                .voltageRegulationOn(toAttributeModification(getVoltageRegulationOn()))
+                .type(ModificationType.GENERATOR_MODIFICATION)
+                .voltageSetpoint(toAttributeModification(getVoltageSetpoint()))
+                .plannedActivePowerSetPoint(toAttributeModification(getPlannedActivePowerSetPoint()))
+                .startupCost(toAttributeModification(getStartupCost()))
+                .marginalCost(toAttributeModification(getMarginalCost()))
+                .plannedOutageRate(toAttributeModification(getPlannedOutageRate()))
+                .forcedOutageRate(toAttributeModification(getForcedOutageRate()))
+                .minimumReactivePower(toAttributeModification(getMinimumReactivePower()))
+                .maximumReactivePower(toAttributeModification(getMaximumReactivePower()))
+                .participate(toAttributeModification(getParticipate()))
+                .droop(toAttributeModification(getDroop()))
+                .transientReactance(toAttributeModification(getTransientReactance()))
+                .stepUpTransformerReactance(toAttributeModification(getStepUpTransformerReactance()))
+                .voltageRegulationType(toAttributeModification(getVoltageRegulationType()))
+                .regulatingTerminalId(toAttributeModification(getRegulatingTerminalId()))
+                .regulatingTerminalType(toAttributeModification(getRegulatingTerminalType()))
+                .regulatingTerminalVlId(toAttributeModification(getRegulatingTerminalVlId()))
+                .qPercent(toAttributeModification(getQPercent()))
+                .reactiveCapabilityCurve(toAttributeModification(getReactiveCapabilityCurve()))
+                .reactiveCapabilityCurvePoints(points);
     }
 }

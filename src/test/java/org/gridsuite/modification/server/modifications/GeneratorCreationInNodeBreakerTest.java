@@ -16,10 +16,7 @@ import lombok.SneakyThrows;
 
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.EquipmentModificationInfos;
-import org.gridsuite.modification.server.dto.GeneratorCreationInfos;
-import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.dto.ReactiveCapabilityCurveCreationInfos;
+import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.utils.MatcherGeneratorCreationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
@@ -66,6 +63,11 @@ public class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificat
                 .transientReactance(61.0)
                 .minimumReactivePower(20.0)
                 .maximumReactivePower(25.0)
+                .plannedActivePowerSetPoint(111.)
+                .startupCost(201.)
+                .marginalCost(0.40)
+                .plannedOutageRate(.45)
+                .forcedOutageRate(.66)
                 .droop(5f)
                 .participate(true)
                 .regulatingTerminalId("v2load")
@@ -100,6 +102,11 @@ public class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificat
                 .transientReactance(62.0)
                 .minimumReactivePower(23.0)
                 .maximumReactivePower(26.0)
+                .plannedActivePowerSetPoint(222.)
+                .startupCost(301.)
+                .marginalCost(0.50)
+                .plannedOutageRate(.85)
+                .forcedOutageRate(.96)
                 .droop(6f)
                 .participate(true)
                 .regulatingTerminalId("idGenerator1")
