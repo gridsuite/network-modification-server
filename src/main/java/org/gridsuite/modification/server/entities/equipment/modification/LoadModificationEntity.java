@@ -10,8 +10,6 @@ import com.powsybl.iidm.network.LoadType;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.AttributeModification;
 import org.gridsuite.modification.server.dto.LoadModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
@@ -79,7 +77,6 @@ public class LoadModificationEntity extends InjectionModificationEntity {
                 .builder()
                 .uuid(getId())
                 .date(getDate())
-                .type(ModificationType.valueOf(getType()))
                 .equipmentId(getEquipmentId())
                 .equipmentName(AttributeModification.toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))
                 .voltageLevelId(AttributeModification.toAttributeModification(getVoltageLevelIdValue(), getVoltageLevelIdOp()))

@@ -9,16 +9,11 @@ package org.gridsuite.modification.server.entities.equipment.deletion;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.EquipmentDeletionInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.ForeignKey;
-import javax.persistence.PrimaryKeyJoinColumn;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -57,7 +52,6 @@ public class EquipmentDeletionEntity extends EquipmentModificationEntity {
             .builder()
             .uuid(getId())
             .date(getDate())
-            .type(ModificationType.valueOf(getType()))
             .equipmentId(getEquipmentId())
             .equipmentType(getEquipmentType());
     }

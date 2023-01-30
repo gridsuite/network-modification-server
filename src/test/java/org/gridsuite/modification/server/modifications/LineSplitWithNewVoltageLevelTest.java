@@ -8,7 +8,6 @@ package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.iidm.network.Network;
 import lombok.SneakyThrows;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.BusbarSectionCreationInfos;
 import org.gridsuite.modification.server.dto.LineSplitWithVoltageLevelInfos;
@@ -54,7 +53,6 @@ public class LineSplitWithNewVoltageLevelTest extends AbstractNetworkModificatio
     @Override
     protected ModificationInfos buildModification() {
         VoltageLevelCreationInfos vl1 = VoltageLevelCreationInfos.builder()
-            .type(ModificationType.VOLTAGE_LEVEL_CREATION)
             .equipmentId("vl1")
             .equipmentName("NewVoltageLevel")
             .nominalVoltage(379.3)
@@ -64,7 +62,6 @@ public class LineSplitWithNewVoltageLevelTest extends AbstractNetworkModificatio
             .build();
 
         return LineSplitWithVoltageLevelInfos.builder()
-            .type(ModificationType.LINE_SPLIT_WITH_VOLTAGE_LEVEL)
             .lineToSplitId("line2")
             .percent(10.0)
             .mayNewVoltageLevelInfos(vl1)
@@ -80,7 +77,6 @@ public class LineSplitWithNewVoltageLevelTest extends AbstractNetworkModificatio
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return LineSplitWithVoltageLevelInfos.builder()
-            .type(ModificationType.LINE_SPLIT_WITH_VOLTAGE_LEVEL)
             .lineToSplitId("line2Edited")
             .percent(20.0)
             .mayNewVoltageLevelInfos(null)

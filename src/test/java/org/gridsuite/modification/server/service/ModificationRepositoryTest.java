@@ -10,7 +10,6 @@ import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import com.vladmihalcea.sql.SQLStatementCountValidator;
 import nl.jqno.equalsverifier.EqualsVerifier;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.entities.ModificationEntity;
@@ -280,7 +279,7 @@ public class ModificationRepositoryTest {
 
     @Test
     public void testGeneratorCreation() {
-        var createGeneratorEntity1 = GeneratorCreationInfos.builder().type(ModificationType.GENERATOR_CREATION)
+        var createGeneratorEntity1 = GeneratorCreationInfos.builder()
                 .equipmentId("idGenerator1").equipmentName("nameGenerator1")
                 .energySource(EnergySource.HYDRO).voltageLevelId("vlId1")
                 .busOrBusbarSectionId("busId1").minActivePower(100.0)
@@ -297,7 +296,7 @@ public class ModificationRepositoryTest {
                 .qPercent(25.).reactiveCapabilityCurve(false).reactiveCapabilityCurvePoints(List.of())
                 .connectionName("Top").connectionDirection(ConnectablePosition.Direction.TOP)
                 .connectionPosition(1).build().toEntity();
-        var createGeneratorEntity2 = GeneratorCreationInfos.builder().type(ModificationType.GENERATOR_CREATION)
+        var createGeneratorEntity2 = GeneratorCreationInfos.builder()
                 .equipmentId("idGenerator2").equipmentName("nameGenerator2")
                 .energySource(EnergySource.SOLAR).voltageLevelId("vlId2")
                 .busOrBusbarSectionId("busId2").minActivePower(0.0)
@@ -314,7 +313,7 @@ public class ModificationRepositoryTest {
                 .connectionName("Bot").connectionDirection(ConnectablePosition.Direction.BOTTOM)
                 .connectionPosition(2).build().toEntity();
 
-        var createGeneratorEntity3 = GeneratorCreationInfos.builder().type(ModificationType.GENERATOR_CREATION)
+        var createGeneratorEntity3 = GeneratorCreationInfos.builder()
                 .equipmentId("idGenerator3").equipmentName("nameGenerator3")
                 .energySource(EnergySource.OTHER).voltageLevelId("vlId3")
                 .busOrBusbarSectionId("busId3").minActivePower(10.0)
@@ -363,14 +362,12 @@ public class ModificationRepositoryTest {
     @Test
     public void testShuntCompensatorCreation() {
         var shunt1 = ShuntCompensatorCreationInfos.builder()
-            .type(ModificationType.SHUNT_COMPENSATOR_CREATION)
             .equipmentId("shunt1").equipmentName("nameOne")
             .currentNumberOfSections(1).maximumNumberOfSections(2)
             .susceptancePerSection(1.).isIdenticalSection(true)
             .voltageLevelId("vlId1").busOrBusbarSectionId("busId1")
             .build();
         var shunt2 = ShuntCompensatorCreationInfos.builder()
-            .type(ModificationType.SHUNT_COMPENSATOR_CREATION)
             .equipmentId("shunt2").equipmentName("notNameOne")
             .currentNumberOfSections(1).maximumNumberOfSections(2)
             .susceptancePerSection(1.).isIdenticalSection(true)
@@ -413,10 +410,10 @@ public class ModificationRepositoryTest {
 
     @Test
     public void testLineCreation() {
-        var createLineEntity1 = LineCreationInfos.builder().type(ModificationType.LINE_CREATION).equipmentId("idLine1").equipmentName("nameLine1").seriesResistance(1.0).seriesReactance(1.1).shuntConductance1(10.0).shuntSusceptance1(11.0).shuntConductance2(100.0).shuntSusceptance2(100.1).voltageLevelId1("vlId11").busOrBusbarSectionId1("busId11").voltageLevelId2("vlId12").busOrBusbarSectionId2("busId12").connectionName1("cn11").connectionDirection1(ConnectablePosition.Direction.TOP).connectionName2("cn22").connectionDirection2(ConnectablePosition.Direction.TOP).build().toEntity();
-        var createLineEntity2 = LineCreationInfos.builder().type(ModificationType.LINE_CREATION).equipmentId("idLine2").equipmentName("nameLine2").seriesResistance(2.0).seriesReactance(2.2).shuntConductance1(20.0).shuntSusceptance1(22.0).shuntConductance2(200.0).shuntSusceptance2(200.2).voltageLevelId1("vlId21").busOrBusbarSectionId1("busId21").voltageLevelId2("vlId22").busOrBusbarSectionId2("busId22").connectionName1("cn33").connectionDirection1(ConnectablePosition.Direction.TOP).connectionName2("cn44").connectionDirection2(ConnectablePosition.Direction.BOTTOM).currentLimits2(CurrentLimitsInfos.builder().permanentLimit(5.0).build()).build().toEntity();
-        var createLineEntity3 = LineCreationInfos.builder().type(ModificationType.LINE_CREATION).equipmentId("idLine3").equipmentName("nameLine3").seriesResistance(3.0).seriesReactance(3.3).shuntConductance1(30.0).shuntSusceptance1(33.0).shuntConductance2(300.0).shuntSusceptance2(300.3).voltageLevelId1("vlId31").busOrBusbarSectionId1("busId31").voltageLevelId2("vlId32").busOrBusbarSectionId2("busId32").connectionName1("cn55").connectionDirection1(ConnectablePosition.Direction.TOP).connectionName2("cn66").connectionDirection2(ConnectablePosition.Direction.TOP).currentLimits1(CurrentLimitsInfos.builder().permanentLimit(5.0).build()).build().toEntity();
-        var createLineEntity4 = LineCreationInfos.builder().type(ModificationType.LINE_CREATION).equipmentId("idLine4").equipmentName("nameLine4").seriesResistance(3.0).seriesReactance(3.3).shuntConductance1(null).shuntSusceptance1(null).shuntConductance2(null).shuntSusceptance2(null).voltageLevelId1("vlId41").busOrBusbarSectionId1("busId41").voltageLevelId2("vlId42").busOrBusbarSectionId2("busId42").connectionName1("cn77").connectionDirection1(ConnectablePosition.Direction.TOP).connectionName2("cn88").connectionDirection2(ConnectablePosition.Direction.BOTTOM).currentLimits1(CurrentLimitsInfos.builder().permanentLimit(5.0).build()).currentLimits2(CurrentLimitsInfos.builder().permanentLimit(4.0).build()).build().toEntity();
+        var createLineEntity1 = LineCreationInfos.builder().equipmentId("idLine1").equipmentName("nameLine1").seriesResistance(1.0).seriesReactance(1.1).shuntConductance1(10.0).shuntSusceptance1(11.0).shuntConductance2(100.0).shuntSusceptance2(100.1).voltageLevelId1("vlId11").busOrBusbarSectionId1("busId11").voltageLevelId2("vlId12").busOrBusbarSectionId2("busId12").connectionName1("cn11").connectionDirection1(ConnectablePosition.Direction.TOP).connectionName2("cn22").connectionDirection2(ConnectablePosition.Direction.TOP).build().toEntity();
+        var createLineEntity2 = LineCreationInfos.builder().equipmentId("idLine2").equipmentName("nameLine2").seriesResistance(2.0).seriesReactance(2.2).shuntConductance1(20.0).shuntSusceptance1(22.0).shuntConductance2(200.0).shuntSusceptance2(200.2).voltageLevelId1("vlId21").busOrBusbarSectionId1("busId21").voltageLevelId2("vlId22").busOrBusbarSectionId2("busId22").connectionName1("cn33").connectionDirection1(ConnectablePosition.Direction.TOP).connectionName2("cn44").connectionDirection2(ConnectablePosition.Direction.BOTTOM).currentLimits2(CurrentLimitsInfos.builder().permanentLimit(5.0).build()).build().toEntity();
+        var createLineEntity3 = LineCreationInfos.builder().equipmentId("idLine3").equipmentName("nameLine3").seriesResistance(3.0).seriesReactance(3.3).shuntConductance1(30.0).shuntSusceptance1(33.0).shuntConductance2(300.0).shuntSusceptance2(300.3).voltageLevelId1("vlId31").busOrBusbarSectionId1("busId31").voltageLevelId2("vlId32").busOrBusbarSectionId2("busId32").connectionName1("cn55").connectionDirection1(ConnectablePosition.Direction.TOP).connectionName2("cn66").connectionDirection2(ConnectablePosition.Direction.TOP).currentLimits1(CurrentLimitsInfos.builder().permanentLimit(5.0).build()).build().toEntity();
+        var createLineEntity4 = LineCreationInfos.builder().equipmentId("idLine4").equipmentName("nameLine4").seriesResistance(3.0).seriesReactance(3.3).shuntConductance1(null).shuntSusceptance1(null).shuntConductance2(null).shuntSusceptance2(null).voltageLevelId1("vlId41").busOrBusbarSectionId1("busId41").voltageLevelId2("vlId42").busOrBusbarSectionId2("busId42").connectionName1("cn77").connectionDirection1(ConnectablePosition.Direction.TOP).connectionName2("cn88").connectionDirection2(ConnectablePosition.Direction.BOTTOM).currentLimits1(CurrentLimitsInfos.builder().permanentLimit(5.0).build()).currentLimits2(CurrentLimitsInfos.builder().permanentLimit(4.0).build()).build().toEntity();
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(createLineEntity1, createLineEntity2, createLineEntity3, createLineEntity4));
         assertRequestsCount(1, 13, 4, 0);
@@ -671,21 +668,18 @@ public class ModificationRepositoryTest {
     public void testSubstationCreation() {
 
         var createSubstationEntity1 = SubstationCreationInfos.builder()
-                .type(ModificationType.SUBSTATION_CREATION)
                 .equipmentId("idSubstation1")
                 .equipmentName("nameSubstation1")
                 .substationCountry(Country.FR)
                 .properties(null)
                 .build().toEntity();
         var createSubstationEntity2 = SubstationCreationInfos.builder()
-                .type(ModificationType.SUBSTATION_CREATION)
                 .equipmentId("idSubstation2")
                 .equipmentName("nameSubstation2")
                 .substationCountry(Country.TD)
                 .properties(null)
                 .build().toEntity();
         var createSubstationEntity3 = SubstationCreationInfos.builder()
-                .type(ModificationType.SUBSTATION_CREATION)
                 .equipmentId("idSubstation3")
                 .equipmentName("nameSubstation3")
                 .substationCountry(Country.KG)
@@ -736,7 +730,7 @@ public class ModificationRepositoryTest {
             cnxes.add(new BusbarConnectionCreationInfos("bbs.nw", "bbs.ne", SwitchKind.DISCONNECTOR));
         });
 
-        VoltageLevelCreationEntity createVoltLvlEntity1 = VoltageLevelCreationInfos.builder().type(ModificationType.VOLTAGE_LEVEL_CREATION)
+        VoltageLevelCreationEntity createVoltLvlEntity1 = VoltageLevelCreationInfos.builder()
                 .equipmentId("idVL1")
                 .equipmentName("VLName")
                 .nominalVoltage(379.0)
@@ -785,7 +779,7 @@ public class ModificationRepositoryTest {
             });
         }
 
-        VoltageLevelCreationInfos createVoltLvlEntity1 = VoltageLevelCreationInfos.builder().type(ModificationType.VOLTAGE_LEVEL_CREATION)
+        VoltageLevelCreationInfos createVoltLvlEntity1 = VoltageLevelCreationInfos.builder()
             .substationId("s1").nominalVoltage(379.0).equipmentId("idVL1").equipmentName("VLName")
             .busbarSections(bbses).busbarConnections(cnxes)
             .build();
@@ -796,11 +790,11 @@ public class ModificationRepositoryTest {
     @Test
     public void testStatusLineModification() {
         List<BranchStatusModificationEntity> entities = List.of(
-            BranchStatusModificationInfos.builder().type(ModificationType.BRANCH_STATUS_MODIFICATION).equipmentId("idLine1").action(BranchStatusModificationInfos.ActionType.LOCKOUT).build().toEntity(),
-            BranchStatusModificationInfos.builder().type(ModificationType.BRANCH_STATUS_MODIFICATION).equipmentId("idLine2").action(BranchStatusModificationInfos.ActionType.TRIP).build().toEntity(),
-            BranchStatusModificationInfos.builder().type(ModificationType.BRANCH_STATUS_MODIFICATION).equipmentId("idLine3").action(BranchStatusModificationInfos.ActionType.SWITCH_ON).build().toEntity(),
-            BranchStatusModificationInfos.builder().type(ModificationType.BRANCH_STATUS_MODIFICATION).equipmentId("idLine4").action(BranchStatusModificationInfos.ActionType.ENERGISE_END_ONE).build().toEntity(),
-            BranchStatusModificationInfos.builder().type(ModificationType.BRANCH_STATUS_MODIFICATION).equipmentId("idLine5").action(BranchStatusModificationInfos.ActionType.ENERGISE_END_TWO).build().toEntity()
+            BranchStatusModificationInfos.builder().equipmentId("idLine1").action(BranchStatusModificationInfos.ActionType.LOCKOUT).build().toEntity(),
+            BranchStatusModificationInfos.builder().equipmentId("idLine2").action(BranchStatusModificationInfos.ActionType.TRIP).build().toEntity(),
+            BranchStatusModificationInfos.builder().equipmentId("idLine3").action(BranchStatusModificationInfos.ActionType.SWITCH_ON).build().toEntity(),
+            BranchStatusModificationInfos.builder().equipmentId("idLine4").action(BranchStatusModificationInfos.ActionType.ENERGISE_END_ONE).build().toEntity(),
+            BranchStatusModificationInfos.builder().equipmentId("idLine5").action(BranchStatusModificationInfos.ActionType.ENERGISE_END_TWO).build().toEntity()
         );
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, entities);
@@ -833,7 +827,7 @@ public class ModificationRepositoryTest {
 
     @Test
     public void testLineSplitWithVoltageLevel() {
-        LineSplitWithVoltageLevelEntity lineSplitEntity1 = LineSplitWithVoltageLevelInfos.builder().type(ModificationType.LINE_SPLIT_WITH_VOLTAGE_LEVEL)
+        LineSplitWithVoltageLevelEntity lineSplitEntity1 = LineSplitWithVoltageLevelInfos.builder()
             .lineToSplitId("lineId0")
             .percent(30.0)
             .mayNewVoltageLevelInfos(null)
@@ -845,7 +839,7 @@ public class ModificationRepositoryTest {
             .newLine2Name("line2Name")
             .build().toEntity();
         VoltageLevelCreationInfos voltageLevelCreationInfos = makeAVoltageLevelInfos(1, 0);
-        LineSplitWithVoltageLevelEntity lineSplitEntity2 = LineSplitWithVoltageLevelInfos.builder().type(ModificationType.LINE_SPLIT_WITH_VOLTAGE_LEVEL)
+        LineSplitWithVoltageLevelEntity lineSplitEntity2 = LineSplitWithVoltageLevelInfos.builder()
             .lineToSplitId("lineId1")
             .percent(30.0)
             .mayNewVoltageLevelInfos(voltageLevelCreationInfos)
@@ -891,13 +885,11 @@ public class ModificationRepositoryTest {
     @Test
     public void testLineAttachToVoltageLevel() {
         LineCreationInfos attachmentLine = LineCreationInfos.builder()
-                .type(ModificationType.LINE_CREATION)
                 .equipmentId("attachmentLineId")
                 .seriesResistance(50.6)
                 .seriesReactance(25.3)
                 .build();
         LineAttachToVoltageLevelEntity lineAttachToEntity1 = LineAttachToVoltageLevelInfos.builder()
-                .type(ModificationType.LINE_ATTACH_TO_VOLTAGE_LEVEL)
                 .lineToAttachToId("lineId0")
                 .percent(40.0)
                 .attachmentPointId("AttachmentPointId")
@@ -913,7 +905,6 @@ public class ModificationRepositoryTest {
                 .build().toEntity();
         VoltageLevelCreationInfos voltageLevelCreationInfos = makeAVoltageLevelInfos(1, 0);
         LineAttachToVoltageLevelEntity lineAttachToEntity2 = LineAttachToVoltageLevelInfos.builder()
-                .type(ModificationType.LINE_ATTACH_TO_VOLTAGE_LEVEL)
                 .lineToAttachToId("lineId1")
                 .percent(40.0)
                 .attachmentPointId("AttachmentPointId")
@@ -957,7 +948,6 @@ public class ModificationRepositoryTest {
     @Test
     public void testLinesAttachToSplitLines() {
         LinesAttachToSplitLinesEntity linesAttachToEntity1 = LinesAttachToSplitLinesInfos.builder()
-                .type(ModificationType.LINES_ATTACH_TO_SPLIT_LINES)
                 .lineToAttachTo1Id("lineId0")
                 .lineToAttachTo2Id("lineId1")
                 .attachedLineId("lineId3")
@@ -969,7 +959,6 @@ public class ModificationRepositoryTest {
                 .replacingLine2Name("line2Name")
                 .build().toEntity();
         LinesAttachToSplitLinesEntity linesAttachToEntity2 = LinesAttachToSplitLinesInfos.builder()
-                .type(ModificationType.LINES_ATTACH_TO_SPLIT_LINES)
                 .lineToAttachTo1Id("lineId4")
                 .lineToAttachTo2Id("lineId5")
                 .attachedLineId("lineId6")
@@ -1009,7 +998,7 @@ public class ModificationRepositoryTest {
 
     @Test
     public void testDeleteAttachingLine() {
-        DeleteAttachingLineEntity deleteAttachingLineEntity = DeleteAttachingLineInfos.builder().type(ModificationType.DELETE_ATTACHING_LINE)
+        DeleteAttachingLineEntity deleteAttachingLineEntity = DeleteAttachingLineInfos.builder()
                 .lineToAttachTo1Id("lineId0")
                 .lineToAttachTo2Id("lineId1")
                 .attachedLineId("lineId3")
@@ -1017,7 +1006,7 @@ public class ModificationRepositoryTest {
                 .replacingLine1Name("line1Name")
                 .build().toEntity();
 
-        DeleteAttachingLineEntity deleteAttachingLineEntity2 = DeleteAttachingLineInfos.builder().type(ModificationType.DELETE_ATTACHING_LINE)
+        DeleteAttachingLineEntity deleteAttachingLineEntity2 = DeleteAttachingLineInfos.builder()
                 .lineToAttachTo1Id("lineId4")
                 .lineToAttachTo2Id("lineId5")
                 .attachedLineId("lineId6")
@@ -1046,14 +1035,14 @@ public class ModificationRepositoryTest {
 
     @Test
     public void testDeleteVoltageLevelOnLine() {
-        DeleteVoltageLevelOnLineEntity deleteVoltageLevelOnLineToEntity1 = DeleteVoltageLevelOnLineInfos.builder().type(ModificationType.DELETE_VOLTAGE_LEVEL_ON_LINE)
+        DeleteVoltageLevelOnLineEntity deleteVoltageLevelOnLineToEntity1 = DeleteVoltageLevelOnLineInfos.builder()
                 .lineToAttachTo1Id("lineId0")
                 .lineToAttachTo2Id("lineId1")
                 .replacingLine1Id("line1Id")
                 .replacingLine1Name("line1Name")
                 .build().toEntity();
 
-        DeleteVoltageLevelOnLineEntity deleteVoltageLevelOnLineToEntity2 = DeleteVoltageLevelOnLineInfos.builder().type(ModificationType.DELETE_VOLTAGE_LEVEL_ON_LINE)
+        DeleteVoltageLevelOnLineEntity deleteVoltageLevelOnLineToEntity2 = DeleteVoltageLevelOnLineInfos.builder()
                 .lineToAttachTo1Id("lineId4")
                 .lineToAttachTo2Id("lineId5")
                 .replacingLine1Id("line3Id")

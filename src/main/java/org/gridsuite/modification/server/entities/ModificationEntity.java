@@ -10,7 +10,6 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 
@@ -56,14 +55,6 @@ public class ModificationEntity {
             throw new NetworkModificationException(MISSING_MODIFICATION_DESCRIPTION, "Missing network modification description");
         }
         this.date = ZonedDateTime.now(ZoneOffset.UTC);
-        this.type = modificationInfos.getType().name();
-    }
-
-    //TODO : remove
-    protected ModificationEntity(ModificationType type) {
-        this.id = null;
-        this.date = ZonedDateTime.now(ZoneOffset.UTC);
-        this.type = type.name();
     }
 
     public ModificationInfos toModificationInfos() {
@@ -74,7 +65,6 @@ public class ModificationEntity {
         return ModificationInfos.builder()
                 .uuid(this.id)
                 .date(this.date)
-                .type(ModificationType.valueOf(this.type))
                 .substationIds(substationsIds)
                 .build();
     }

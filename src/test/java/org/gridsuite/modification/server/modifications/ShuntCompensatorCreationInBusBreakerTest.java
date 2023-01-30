@@ -10,7 +10,6 @@ package org.gridsuite.modification.server.modifications;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.SneakyThrows;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.ShuntCompensatorCreationInfos;
@@ -56,7 +55,6 @@ public class ShuntCompensatorCreationInBusBreakerTest extends AbstractNetworkMod
     @Override
     protected ModificationInfos buildModification() {
         return ShuntCompensatorCreationInfos.builder()
-            .type(ModificationType.SHUNT_COMPENSATOR_CREATION)
             .date(ZonedDateTime.now())
             .equipmentId("shuntOneId")
             .equipmentName("hopOne")
@@ -74,7 +72,6 @@ public class ShuntCompensatorCreationInBusBreakerTest extends AbstractNetworkMod
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return ShuntCompensatorCreationInfos.builder()
-                .type(ModificationType.SHUNT_COMPENSATOR_CREATION)
                 .date(ZonedDateTime.now())
                 .equipmentId("shuntOneIdEdited")
                 .equipmentName("hopEdited")

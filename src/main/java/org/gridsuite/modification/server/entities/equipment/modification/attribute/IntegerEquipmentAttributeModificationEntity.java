@@ -25,9 +25,6 @@ import javax.persistence.Table;
 @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "integer_equipment_attribute_modification_id_fk_constraint"))
 public class IntegerEquipmentAttributeModificationEntity extends EquipmentAttributeModificationEntity<Integer> {
     public IntegerEquipmentAttributeModificationEntity(EquipmentAttributeModificationInfos equipmentAttributeModificationInfos) {
-        super(equipmentAttributeModificationInfos.getEquipmentId(),
-            equipmentAttributeModificationInfos.getEquipmentAttributeName(),
-            (int) equipmentAttributeModificationInfos.getEquipmentAttributeValue(),
-            equipmentAttributeModificationInfos.getEquipmentType());
+        super(equipmentAttributeModificationInfos);
     }
 }

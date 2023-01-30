@@ -10,7 +10,6 @@ package org.gridsuite.modification.server.entities.equipment.creation;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.ShuntCompensatorCreationInfos;
 
@@ -82,7 +81,6 @@ public class ShuntCompensatorCreationEntity extends InjectionCreationEntity {
             .builder()
             .uuid(getId())
             .date(getDate())
-            .type(ModificationType.valueOf(getType()))
             .equipmentId(getEquipmentId())
             .equipmentName(getEquipmentName())
             .voltageLevelId(getVoltageLevelId())

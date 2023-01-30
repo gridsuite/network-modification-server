@@ -12,7 +12,6 @@ import com.powsybl.iidm.network.LoadType;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.SneakyThrows;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.EquipmentModificationInfos;
 import org.gridsuite.modification.server.dto.LoadCreationInfos;
@@ -93,7 +92,6 @@ public class LoadCreationInNodeBreakerTest extends AbstractNetworkModificationTe
     @Override
     protected ModificationInfos buildModification() {
         return LoadCreationInfos.builder()
-            .type(ModificationType.LOAD_CREATION)
             .equipmentId("idLoad1")
             .equipmentName("nameLoad1")
             .voltageLevelId("v2")
@@ -109,7 +107,6 @@ public class LoadCreationInNodeBreakerTest extends AbstractNetworkModificationTe
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return LoadCreationInfos.builder()
-            .type(ModificationType.LOAD_CREATION)
             .equipmentId("idLoad1Edited")
             .equipmentName("nameLoad1Edited")
             .voltageLevelId("v2Edited")

@@ -8,7 +8,6 @@ package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.iidm.network.Network;
 import lombok.SneakyThrows;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.DeleteAttachingLineInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
@@ -40,7 +39,6 @@ public class DeleteAttachingLineTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModification() {
         return DeleteAttachingLineInfos.builder()
-                .type(ModificationType.DELETE_ATTACHING_LINE)
                 .lineToAttachTo1Id("l1")
                 .lineToAttachTo2Id("l2")
                 .attachedLineId("l3")
@@ -52,7 +50,6 @@ public class DeleteAttachingLineTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return DeleteAttachingLineInfos.builder()
-                .type(ModificationType.DELETE_ATTACHING_LINE)
                 .lineToAttachTo1Id("l1")
                 .lineToAttachTo2Id("l2")
                 .attachedLineId("l3")
@@ -85,7 +82,6 @@ public class DeleteAttachingLineTest extends AbstractNetworkModificationTest {
     public void createWithInvalidLineIdTest() {
         // test create with incorrect line id
         DeleteAttachingLineInfos deleteAttachingLineInfos = DeleteAttachingLineInfos.builder()
-                .type(ModificationType.DELETE_ATTACHING_LINE)
                 .lineToAttachTo1Id("l1")
                 .lineToAttachTo2Id("ll")
                 .attachedLineId("l2")
@@ -104,7 +100,6 @@ public class DeleteAttachingLineTest extends AbstractNetworkModificationTest {
     @Test
     public void createWithNoAttachmentPointTest() {
         DeleteAttachingLineInfos deleteAttachingLineInfos = DeleteAttachingLineInfos.builder()
-                .type(ModificationType.DELETE_ATTACHING_LINE)
                 .lineToAttachTo1Id("l1")
                 .lineToAttachTo2Id("l3")
                 .attachedLineId("l1")

@@ -25,9 +25,6 @@ import javax.persistence.Table;
 @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "float_equipment_attribute_modification_id_fk_constraint"))
 public class FloatEquipmentAttributeModificationEntity extends EquipmentAttributeModificationEntity<Float> {
     public FloatEquipmentAttributeModificationEntity(EquipmentAttributeModificationInfos equipmentAttributeModificationInfos) {
-        super(equipmentAttributeModificationInfos.getEquipmentId(),
-            equipmentAttributeModificationInfos.getEquipmentAttributeName(),
-            (float) equipmentAttributeModificationInfos.getEquipmentAttributeValue(),
-            equipmentAttributeModificationInfos.getEquipmentType());
+        super(equipmentAttributeModificationInfos);
     }
 }

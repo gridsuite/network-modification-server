@@ -8,7 +8,6 @@ package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.iidm.network.Network;
 import lombok.SneakyThrows;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.DeleteVoltageLevelOnLineInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
@@ -40,7 +39,6 @@ public class DeleteVoltageLevelOnLineTest extends AbstractNetworkModificationTes
     @Override
     protected ModificationInfos buildModification() {
         return DeleteVoltageLevelOnLineInfos.builder()
-               .type(ModificationType.DELETE_VOLTAGE_LEVEL_ON_LINE)
                .lineToAttachTo1Id("l1")
                .lineToAttachTo2Id("l2")
                .replacingLine1Id("replacementLineId")
@@ -51,7 +49,6 @@ public class DeleteVoltageLevelOnLineTest extends AbstractNetworkModificationTes
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return DeleteVoltageLevelOnLineInfos.builder()
-                .type(ModificationType.DELETE_VOLTAGE_LEVEL_ON_LINE)
                 .lineToAttachTo1Id("line00")
                 .lineToAttachTo2Id("line11")
                 .replacingLine1Id("replacingLineId2")
@@ -87,7 +84,6 @@ public class DeleteVoltageLevelOnLineTest extends AbstractNetworkModificationTes
     public void createWithInvalidLineIdTest() {
         // test create with incorrect line id
         DeleteVoltageLevelOnLineInfos deleteVoltageLevelOnLineInfos = DeleteVoltageLevelOnLineInfos.builder()
-                .type(ModificationType.DELETE_VOLTAGE_LEVEL_ON_LINE)
                 .lineToAttachTo1Id("l1")
                 .lineToAttachTo2Id("ll")
                 .replacingLine1Id("replacementLineId")

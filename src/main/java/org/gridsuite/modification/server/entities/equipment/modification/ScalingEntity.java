@@ -8,16 +8,17 @@ package org.gridsuite.modification.server.entities.equipment.modification;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 import lombok.Setter;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.VariationType;
+import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.ScalingInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 
 import javax.persistence.Column;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.MappedSuperclass;
-import javax.validation.constraints.NotNull;
 
 /**
  * @author bendaamerahm <ahmed.bendaamer at rte-france.com>
@@ -31,7 +32,18 @@ public class ScalingEntity extends ModificationEntity {
     @Enumerated(EnumType.STRING)
     private VariationType variationType;
 
-    public ScalingEntity(@NotNull ModificationType modificationType) {
-        super(modificationType);
+    public ScalingEntity(ScalingInfos scalingInfos) {
+        super(scalingInfos);
+        assignAttributes(scalingInfos);
+    }
+
+    @Override
+    public void update(@NonNull ModificationInfos modificationInfos) {
+        super.update(modificationInfos);
+        assignAttributes((ScalingInfos) modificationInfos);
+    }
+
+    private void assignAttributes(ScalingInfos loadScalingInfos) {
+        variationType = loadScalingInfos.getVariationType();
     }
 }

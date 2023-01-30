@@ -6,7 +6,6 @@
  */
 package org.gridsuite.modification.server.utils;
 
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.GroovyScriptInfos;
 import org.hamcrest.Description;
 
@@ -23,7 +22,6 @@ public class MatcherGroovyScriptInfos extends MatcherModificationInfos<GroovyScr
                                                                                                   Set<String> substationIds) {
         return new MatcherGroovyScriptInfos(GroovyScriptInfos.builder()
                 .date(ZonedDateTime.now(ZoneOffset.UTC))
-                .type(ModificationType.GROOVY_SCRIPT)
                 .script(script)
                 .substationIds(substationIds)
                 .build());
@@ -40,8 +38,7 @@ public class MatcherGroovyScriptInfos extends MatcherModificationInfos<GroovyScr
     @Override
     public boolean matchesSafely(GroovyScriptInfos m) {
         return super.matchesSafely(m)
-            && m.getScript().equals(reference.getScript())
-            && m.getSubstationIds().equals(reference.getSubstationIds());
+            && m.getScript().equals(reference.getScript());
     }
 
     @Override

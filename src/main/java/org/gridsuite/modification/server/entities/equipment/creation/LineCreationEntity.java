@@ -8,7 +8,6 @@ package org.gridsuite.modification.server.entities.equipment.creation;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.LineCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 
@@ -65,7 +64,6 @@ public class LineCreationEntity extends BranchCreationEntity {
             .builder()
             .uuid(getId())
             .date(getDate())
-            .type(ModificationType.valueOf(getType()))
             .equipmentId(getEquipmentId())
             .equipmentName(getEquipmentName())
             .seriesResistance(getSeriesResistance())
