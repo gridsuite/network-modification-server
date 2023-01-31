@@ -13,19 +13,10 @@ import lombok.Setter;
 import org.gridsuite.modification.server.VariationType;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.ScalingInfos;
-import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.dto.ScalingInfos;
 import org.gridsuite.modification.server.dto.ScalingVariationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.FetchType;
-import javax.persistence.MappedSuperclass;
-import javax.persistence.OneToMany;
-import javax.validation.constraints.NotNull;
+import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -55,10 +46,10 @@ public class ScalingEntity extends ModificationEntity {
     @Override
     public void update(@NonNull ModificationInfos modificationInfos) {
         super.update(modificationInfos);
-        assignAttribute((ScalingInfos) modificationInfos);
+        assignAttributes((ScalingInfos) modificationInfos);
     }
 
-    private void assignAttribute(ScalingInfos scalingInfos) {
+    private void assignAttributes(ScalingInfos scalingInfos) {
         variationType = scalingInfos.getVariationType();
         if (variations == null) {
             variations = scalingInfos.getVariations().stream().map(ScalingVariationInfos::toEntity).collect(Collectors.toList());

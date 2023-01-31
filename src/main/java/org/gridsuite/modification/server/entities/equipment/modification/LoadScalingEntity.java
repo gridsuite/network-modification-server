@@ -14,9 +14,6 @@ import org.gridsuite.modification.server.dto.LoadScalingInfos;
 
 import javax.persistence.Entity;
 import javax.persistence.Table;
-import javax.persistence.*;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.stream.Collectors;
 
 /**
