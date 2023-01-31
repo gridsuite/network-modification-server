@@ -42,9 +42,6 @@ public class ModificationEntity {
     @Column(name = "date")
     private ZonedDateTime date;
 
-    @Column(name = "type")
-    private String type;
-
     @JoinColumn(name = "groupId", foreignKey = @ForeignKey(name = "group_id_fk_constraint"))
     @ManyToOne(fetch = FetchType.LAZY)
     @Setter
