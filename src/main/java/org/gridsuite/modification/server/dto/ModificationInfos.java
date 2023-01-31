@@ -90,5 +90,6 @@ public class ModificationInfos {
 
     @JsonIgnore
     public void check() {
+        // Nothing to check here
     }
 }
