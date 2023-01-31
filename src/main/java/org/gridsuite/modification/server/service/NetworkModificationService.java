@@ -94,15 +94,15 @@ public class NetworkModificationService {
         } catch (PowsyblException e) {
             throw new NetworkModificationException(NETWORK_NOT_FOUND, networkUuid.toString());
         }
-        boolean isVariantExist = true;
+        boolean isVariantPresent = true;
         if (variantId != null) {
             if (network.getVariantManager().getVariantIds().stream().anyMatch(id -> id.equals(variantId))) {
                 network.getVariantManager().setWorkingVariant(variantId);
             } else {
-                isVariantExist = false;
+                isVariantPresent = false;
             }
         }
-        return new NetworkInfos(network, networkUuid, isVariantExist);
+        return new NetworkInfos(network, networkUuid, isVariantPresent);
     }
 
     @Transactional
@@ -197,7 +197,7 @@ public class NetworkModificationService {
 
     public void createModificationGroup(UUID sourceGroupUuid, UUID groupUuid) {
         try {
-            networkModificationRepository.saveModifications(groupUuid, networkModificationRepository.cloneModificationsEntities(sourceGroupUuid));
+            networkModificationRepository.saveModifications(groupUuid, networkModificationRepository.copyModificationsEntities(sourceGroupUuid));
         } catch (NetworkModificationException e) {
             if (e.getType() == MODIFICATION_GROUP_NOT_FOUND) { // May not exist
                 return;

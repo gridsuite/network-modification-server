@@ -56,7 +56,7 @@ public class NetworkModificationRepository {
     public List<ModificationEntity> moveModifications(UUID destinationGroupUuid, UUID originGroupUuid, List<UUID> modificationsUuid, UUID referenceModificationUuid) {
         ModificationGroupEntity originModificationGroupEntity = getModificationGroup(originGroupUuid);
 
-        Map<UUID, ModificationEntity> originModifications = modificationRepository.findAllBaseByGroupId(originGroupUuid).stream()
+        Map<UUID, ModificationEntity> originModifications = getModificationsEntities(originGroupUuid).stream()
                 .collect(Collectors.toMap(ModificationEntity::getId, Function.identity(), (x, y) -> y, LinkedHashMap::new));
 
         List<UUID> modificationsToMoveUUID = modificationsUuid.stream().filter(originModifications::containsKey).collect(Collectors.toList());
@@ -183,13 +183,17 @@ public class NetworkModificationRepository {
         return getModificationGroup(groupUuid).getModifications().stream().filter(Objects::nonNull);
     }
 
+    private List<ModificationEntity> getModificationsEntities(UUID groupUuid) {
+        return getModificationEntityList(groupUuid).collect(Collectors.toList());
+    }
+
     @Transactional(readOnly = true)
     public List<ModificationEntity> getModificationsEntities(@NonNull List<UUID> uuids) {
         return modificationRepository.findAllById(uuids);
     }
 
     @Transactional(readOnly = true)
-    public List<ModificationEntity> cloneModificationsEntities(@NonNull UUID groupUuid) {
+    public List<ModificationEntity> copyModificationsEntities(@NonNull UUID groupUuid) {
         return getModificationEntityList(groupUuid).map(ModificationEntity::copy).collect(Collectors.toList());
     }
 
