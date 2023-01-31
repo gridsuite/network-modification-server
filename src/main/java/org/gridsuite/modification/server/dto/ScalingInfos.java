@@ -23,6 +23,7 @@ import java.util.List;
 @NoArgsConstructor
 @Getter
 @Setter
+@Schema(description = "Scaling infos")
 @ToString(callSuper = true)
 public class ScalingInfos extends ModificationInfos {
     @Schema(description = "scaling variations")
