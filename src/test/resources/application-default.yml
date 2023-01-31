@@ -15,6 +15,12 @@ logging:
     org.springframework.transaction: DEBUG
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+gridsuite:
+  services:
+    report-server:
+      base-uri: http://localhost:5028
+    filter-server:
+      base-uri: http://localhost:5027
 
 powsybl-ws:
   database:

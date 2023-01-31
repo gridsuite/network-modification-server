@@ -15,12 +15,16 @@ import com.powsybl.iidm.network.extensions.BranchStatus;
 import com.powsybl.iidm.network.extensions.BranchStatusAdder;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.BranchStatusModificationInfos;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.BRANCH_NOT_FOUND;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.BRANCH_ACTION_ERROR;
+import static org.gridsuite.modification.server.modifications.ModificationUtils.distinctByKey;
 
 /**
  * @author David Braquart <david.braquart at rte-france.com>
@@ -28,6 +32,7 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
 public class BranchStatusModification extends AbstractModification {
 
     private final BranchStatusModificationInfos modificationInfos;
+    private static final Logger LOGGER = LoggerFactory.getLogger(BranchStatusModification.class);
 
     public BranchStatusModification(BranchStatusModificationInfos modificationInfos) {
         this.modificationInfos = modificationInfos;
@@ -41,64 +46,72 @@ public class BranchStatusModification extends AbstractModification {
             throw new NetworkModificationException(BRANCH_NOT_FOUND, branchId);
         }
 
-        String branchType = branch.getType() == IdentifiableType.LINE ? "Line" : "2WTransformer";
+        String branchTypeName = branch.getType() == IdentifiableType.LINE ? "Line" : "2 windings transformer";
         switch (modificationInfos.getAction()) {
             case LOCKOUT:
-                applyLockoutBranch(subReporter, branch, branchType);
+                applyLockoutBranch(subReporter, branch, branchTypeName);
                 break;
             case TRIP:
-                applyTripBranch(subReporter, branch, branchType, network);
+                applyTripBranch(subReporter, branch, branchTypeName, network);
                 break;
             case SWITCH_ON:
-                applySwitchOnBranch(subReporter, branch, branchType);
+                applySwitchOnBranch(subReporter, branch, branchTypeName);
                 break;
             case ENERGISE_END_ONE:
-                applyEnergiseBranchEnd(subReporter, branch, branchType, Branch.Side.ONE);
+                applyEnergiseBranchEnd(subReporter, branch, branchTypeName, Branch.Side.ONE);
                 break;
             case ENERGISE_END_TWO:
-                applyEnergiseBranchEnd(subReporter, branch, branchType, Branch.Side.TWO);
+                applyEnergiseBranchEnd(subReporter, branch, branchTypeName, Branch.Side.TWO);
                 break;
             default:
                 throw NetworkModificationException.createBranchActionTypeUnsupported(modificationInfos.getAction());
         }
     }
 
-    private void applyLockoutBranch(Reporter subReporter, Branch<?> branch, String branchType) {
+    private void applyLockoutBranch(Reporter subReporter, Branch<?> branch, String branchTypeName) {
         if (disconnectAllTerminals(branch)) {
             branch.newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.PLANNED_OUTAGE).add();
         } else {
             throw new NetworkModificationException(BRANCH_ACTION_ERROR, "Unable to disconnect all branch ends");
         }
         subReporter.report(Report.builder()
-            .withKey("lockout" + branchType + "Applied")
-            .withDefaultMessage(branchType + " ${id} (id) : lockout applied")
+            .withKey("lockout" + branchTypeName + "Applied")
+            .withDefaultMessage(branchTypeName + " ${id} (id) : lockout applied")
             .withValue("id", branch.getId())
             .withSeverity(TypedValue.INFO_SEVERITY)
             .build());
     }
 
-    private void applyTripBranch(Reporter subReporter, Branch<?> branch, String branchType, Network network) {
+    private void applyTripBranch(Reporter subReporter, Branch<?> branch, String branchTypeName, Network network) {
         var trip = new BranchTripping(branch.getId());
         var switchesToDisconnect = new HashSet<Switch>();
         var terminalsToDisconnect = new HashSet<Terminal>();
         var traversedTerminals = new HashSet<Terminal>();
         trip.traverse(network, switchesToDisconnect, terminalsToDisconnect, traversedTerminals);
 
+        LOGGER.info("Apply Trip on {} {}, switchesToDisconnect: {} terminalsToDisconnect: {} traversedTerminals: {}",
+                branchTypeName, branch.getId(),
+                switchesToDisconnect.stream().map(Identifiable::getId).collect(Collectors.toList()),
+                terminalsToDisconnect.stream().map(Terminal::getConnectable).map(Identifiable::getId).collect(Collectors.toList()),
+                traversedTerminals.stream().map(Terminal::getConnectable).map(Identifiable::getId).collect(Collectors.toList()));
+
         switchesToDisconnect.forEach(sw -> sw.setOpen(true));
         terminalsToDisconnect.forEach(Terminal::disconnect);
 
         subReporter.report(Report.builder()
-                .withKey("trip" + branchType + "Applied")
-                .withDefaultMessage(branchType + " ${id} (id) : trip applied")
+                .withKey("trip" + branchTypeName + "Applied")
+                .withDefaultMessage(branchTypeName + " ${id} (id) : trip applied")
                 .withValue("id", branch.getId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .build());
 
-        traversedTerminals.stream().map(t -> network.getBranch(t.getConnectable().getId())).filter(Objects::nonNull)
+        traversedTerminals.stream().map(t -> network.getBranch(t.getConnectable().getId()))
+                .filter(Objects::nonNull)
+                .filter(distinctByKey(b -> b.getId()))  // dont process the same branch more than once
                 .forEach(b -> ((Branch<?>) b).newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.FORCED_OUTAGE).add());
     }
 
-    private void applySwitchOnBranch(Reporter subReporter, Branch<?> branch, String branchType) {
+    private void applySwitchOnBranch(Reporter subReporter, Branch<?> branch, String branchTypeName) {
         if (connectAllTerminals(branch)) {
             branch.newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.IN_OPERATION).add();
         } else {
@@ -106,14 +119,14 @@ public class BranchStatusModification extends AbstractModification {
         }
 
         subReporter.report(Report.builder()
-                .withKey("switchOn" + branchType + "Applied")
-                .withDefaultMessage(branchType + " ${id} (id) : switch on applied")
+                .withKey("switchOn" + branchTypeName + "Applied")
+                .withDefaultMessage(branchTypeName + " ${id} (id) : switch on applied")
                 .withValue("id", branch.getId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .build());
     }
 
-    private void applyEnergiseBranchEnd(Reporter subReporter, Branch<?> branch, String branchType, Branch.Side side) {
+    private void applyEnergiseBranchEnd(Reporter subReporter, Branch<?> branch, String branchTypeName, Branch.Side side) {
         Branch.Side oppositeSide = side == Branch.Side.ONE ? Branch.Side.TWO : Branch.Side.ONE;
         if (connectOneTerminal(branch.getTerminal(side)) && disconnectOneTerminal(branch.getTerminal(oppositeSide))) {
             branch.newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.IN_OPERATION).add();
@@ -122,8 +135,8 @@ public class BranchStatusModification extends AbstractModification {
         }
 
         subReporter.report(Report.builder()
-                .withKey("energise" + branchType + "EndApplied")
-                .withDefaultMessage(branchType + " ${id} (id) : energise the side ${side} applied")
+                .withKey("energise" + branchTypeName + "EndApplied")
+                .withDefaultMessage(branchTypeName + " ${id} (id) : energise the side ${side} applied")
                 .withValue("id", branch.getId())
                 .withValue("side", side.name())
                 .withSeverity(TypedValue.INFO_SEVERITY)
