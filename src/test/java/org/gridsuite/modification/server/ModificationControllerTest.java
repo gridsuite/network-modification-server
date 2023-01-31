@@ -1063,7 +1063,7 @@ public class ModificationControllerTest {
             .andExpectAll(
                 status().is5xxServerError(),
                 content().string(new NetworkModificationException(DELETE_EQUIPMENT_ERROR,
-                        "The voltage level 'v4' cannot be removed because of a remaining THREE_WINDINGS_TRANSFORMER").getMessage()));
+                    new PowsyblException(new AssertionError("The voltage level 'v4' cannot be removed because of a remaining THREE_WINDINGS_TRANSFORMER"))).getMessage()));
         assertNotNull(network.getVoltageLevel("v4"));
 
         // delete substation

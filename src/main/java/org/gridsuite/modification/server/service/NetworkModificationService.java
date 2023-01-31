@@ -160,13 +160,6 @@ public class NetworkModificationService {
         return new ModificationNetworkInfos(network, applyModifications);
     }
 
-    private void throwNetworkModificationException(ModificationInfos modificationInfos, NetworkStoreListener listener, Reporter subReporter, Exception exception) {
-        NetworkModificationException networkModificationException = handleException(modificationInfos.getErrorType(), subReporter, exception);
-        if (!listener.isBuild()) {
-            throw networkModificationException;
-        }
-    }
-
     List<ModificationInfos> handleModification(ModificationInfos modificationInfos, NetworkStoreListener listener, UUID groupUuid,
                                                UUID reportUuid, String reporterId) {
         String rootReporterId = reporterId + "@" + NETWORK_MODIFICATION_TYPE_REPORT;
@@ -181,20 +174,15 @@ public class NetworkModificationService {
 
             if (listener.isApplyModifications()) { // Apply modification on the network
                 networkModifications = modificationApplicator.apply(modificationInfos, subReporter, listener, context);
-
                 if (!listener.isBuild()) { // Save network in DB in incremental mode only
                     networkStoreService.flush(listener.getNetwork());
                 }
             }
         } catch (Exception e) {
-            throwNetworkModificationException(modificationInfos, listener, subReporter, e);
-        } catch (AssertionError assertionError) {
-            // Normally we should catch only Exception here, but powsybl may raise some AssertionError.
-            // Ex: java.lang.AssertionError: The voltage level '.BAUL 6' cannot be removed because of a remaining LINE
-            // TODO Remove this catch when powsybl wont raise AssertionError anymore.
-            throwNetworkModificationException(modificationInfos, listener, subReporter,
-                    // building with message+cause will suppress "java.lang.AssertionError: " from the final message
-                    new Exception(assertionError.getMessage(), assertionError.getCause()));
+            NetworkModificationException networkModificationException = handleException(modificationInfos.getErrorType(), subReporter, e);
+            if (!listener.isBuild()) {
+                throw networkModificationException;
+            }
         } finally {
             if (listener.isApplyModifications()) {
                 sendReport(reportUuid, reporter);

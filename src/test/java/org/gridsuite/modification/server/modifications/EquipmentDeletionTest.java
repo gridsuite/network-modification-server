@@ -7,6 +7,7 @@
 
 package org.gridsuite.modification.server.modifications;
 
+import com.powsybl.commons.PowsyblException;
 import com.powsybl.iidm.network.Network;
 
 import lombok.SneakyThrows;
@@ -109,7 +110,7 @@ public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
                 .andExpectAll(
                         status().is5xxServerError(),
                         content().string(new NetworkModificationException(DELETE_EQUIPMENT_ERROR,
-                                "The voltage level 'v4' cannot be removed because of a remaining THREE_WINDINGS_TRANSFORMER").getMessage()));
+                            new PowsyblException(new AssertionError("The voltage level 'v4' cannot be removed because of a remaining THREE_WINDINGS_TRANSFORMER"))).getMessage()));
         equipmentDeletionInfos.setEquipmentId("v4");
         assertNotNull(getNetwork().getVoltageLevel("v4"));
 

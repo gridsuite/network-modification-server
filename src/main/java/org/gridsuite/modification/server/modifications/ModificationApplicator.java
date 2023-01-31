@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.modifications;
 
+import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.reporter.Reporter;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.service.NetworkStoreListener;
@@ -33,8 +34,14 @@ public class ModificationApplicator {
             .collect(Collectors.toList());
     }
 
+    @SuppressWarnings("squid:S1181")
     public List<ModificationInfos> apply(ModificationInfos modificationInfos, Reporter subReporter, NetworkStoreListener listener, ApplicationContext context) {
-        modificationInfos.toModification().apply(listener.getNetwork(), subReporter, context);
-        return getNetworkDamage(modificationInfos, listener);
+        try {
+            modificationInfos.toModification().apply(listener.getNetwork(), subReporter, context);
+            return getNetworkDamage(modificationInfos, listener);
+        } catch (Error e) { // Powsybl can raise Error
+            // Ex: java.lang.AssertionError: The voltage level 'vlId' cannot be removed because of a remaining LINE
+            throw new PowsyblException(e);
+        }
     }
 }
