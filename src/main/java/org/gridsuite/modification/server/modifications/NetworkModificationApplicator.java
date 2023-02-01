@@ -11,6 +11,7 @@ import com.powsybl.commons.reporter.Report;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.commons.reporter.TypedValue;
+import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.client.NetworkStoreService;
 import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.modification.server.NetworkModificationException;
@@ -76,18 +77,12 @@ public class NetworkModificationApplicator {
         return listener.flushNetworkModifications();
     }
 
-    @SuppressWarnings("squid:S1181")
     private void apply(ModificationInfos modificationInfos, NetworkStoreListener listener, ReportInfos reportInfos, ApplicationMode mode) {
         String rootReporterId = reportInfos.getReporterId() + "@" + NETWORK_MODIFICATION_TYPE_REPORT;
         ReporterModel reporter = new ReporterModel(rootReporterId, rootReporterId);
         Reporter subReporter = modificationInfos.createSubReporter(reporter);
         try {
-            try {
-                modificationInfos.toModification().apply(listener.getNetwork(), subReporter, context);
-            } catch (Error e) { // Powsybl can raise Error
-                // Ex: java.lang.AssertionError: The voltage level 'vlId' cannot be removed because of a remaining LINE
-                throw new PowsyblException(e);
-            }
+            apply(modificationInfos.toModification(), listener.getNetwork(), subReporter);
             listener.addNetworkDamage(modificationInfos);
         } catch (Exception e) {
             NetworkModificationException networkModificationException = handleException(modificationInfos.getErrorType(), subReporter, e);
@@ -96,6 +91,16 @@ public class NetworkModificationApplicator {
             }
         } finally {
             reportService.sendReport(reportInfos.getReportUuid(), reporter); // TODO : Group report sends ?
+        }
+    }
+
+    @SuppressWarnings("squid:S1181")
+    private void apply(AbstractModification modification, Network network, Reporter subReporter) {
+        try {
+            modification.apply(network, subReporter, context);
+        } catch (Error e) { // Powsybl can raise Error
+            // Ex: java.lang.AssertionError: The voltage level 'vlId' cannot be removed because of a remaining LINE
+            throw new PowsyblException(e);
         }
     }
 
