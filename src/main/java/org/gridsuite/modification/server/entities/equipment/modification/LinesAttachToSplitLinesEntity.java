@@ -9,7 +9,6 @@ package org.gridsuite.modification.server.entities.equipment.modification;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.LinesAttachToSplitLinesInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
@@ -55,7 +54,7 @@ public class LinesAttachToSplitLinesEntity extends ModificationEntity {
     private String replacingLine2Name;
 
     public LinesAttachToSplitLinesEntity(@NonNull LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos) {
-        super(ModificationType.LINES_ATTACH_TO_SPLIT_LINES);
+        super(linesAttachToSplitLinesInfos);
         assignAttributes(linesAttachToSplitLinesInfos);
     }
 
@@ -87,7 +86,6 @@ public class LinesAttachToSplitLinesEntity extends ModificationEntity {
                 .builder()
                 .uuid(getId())
                 .date(getDate())
-                .type(ModificationType.valueOf(getType()))
                 .lineToAttachTo1Id(getLineToAttachTo1Id())
                 .lineToAttachTo2Id(getLineToAttachTo2Id())
                 .attachedLineId(getAttachedLineId())

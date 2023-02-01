@@ -9,9 +9,9 @@ package org.gridsuite.modification.server.modifications;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.BranchStatus;
 import lombok.SneakyThrows;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.server.dto.BranchStatusModificationInfos;
+import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.utils.MatcherModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.gridsuite.modification.server.utils.TestUtils;
@@ -46,7 +46,6 @@ public class BranchStatusModificationLockoutLineTest extends AbstractNetworkModi
     @Override
     protected ModificationInfos buildModification() {
         return BranchStatusModificationInfos.builder()
-                .type(ModificationType.BRANCH_STATUS_MODIFICATION)
                 .equipmentId(TARGET_LINE_ID)
                 .action(BranchStatusModificationInfos.ActionType.LOCKOUT).build();
     }
@@ -54,7 +53,6 @@ public class BranchStatusModificationLockoutLineTest extends AbstractNetworkModi
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return BranchStatusModificationInfos.builder()
-                .type(ModificationType.BRANCH_STATUS_MODIFICATION)
                 .equipmentId(UPDATE_BRANCH_ID)
                 .action(BranchStatusModificationInfos.ActionType.SWITCH_ON).build();
     }

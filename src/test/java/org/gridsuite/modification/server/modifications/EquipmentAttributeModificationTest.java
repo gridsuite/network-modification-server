@@ -10,12 +10,11 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
 import lombok.SneakyThrows;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.EquipmentAttributeModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.utils.MatcherEquipmentAttributeModificationInfos;
-import org.gridsuite.modification.server.utils.MatcherEquipmentModificationInfos;
+import org.gridsuite.modification.server.utils.MatcherModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
 import org.springframework.http.MediaType;
@@ -47,17 +46,15 @@ public class EquipmentAttributeModificationTest extends AbstractNetworkModificat
         EquipmentAttributeModificationInfos modificationInfos = EquipmentAttributeModificationInfos.builder()
             .uuid(modificationUuid)
             .date(ZonedDateTime.of(2021, 2, 19, 0, 0, 0, 0, ZoneOffset.UTC))
-            .type(ModificationType.EQUIPMENT_ATTRIBUTE_MODIFICATION)
             .equipmentId("equipmentId")
             .substationIds(Set.of("substationId"))
             .equipmentAttributeName("equipmentAttributeName")
             .equipmentAttributeValue("equipmentAttributeValue")
             .equipmentType(IdentifiableType.VOLTAGE_LEVEL)
             .build();
-        assertEquals(String.format("EquipmentAttributeModificationInfos(super=EquipmentModificationInfos(super=ModificationInfos(uuid=%s, date=2021-02-19T00:00Z, type=EQUIPMENT_ATTRIBUTE_MODIFICATION, substationIds=[substationId]), equipmentId=equipmentId), equipmentAttributeName=equipmentAttributeName, equipmentAttributeValue=equipmentAttributeValue, equipmentType=VOLTAGE_LEVEL)", modificationUuid), modificationInfos.toString());
+        assertEquals(String.format("EquipmentAttributeModificationInfos(super=EquipmentModificationInfos(super=ModificationInfos(uuid=%s, date=2021-02-19T00:00Z, substationIds=[substationId]), equipmentId=equipmentId), equipmentAttributeName=equipmentAttributeName, equipmentAttributeValue=equipmentAttributeValue, equipmentType=VOLTAGE_LEVEL)", modificationUuid), modificationInfos.toString());
 
         EquipmentAttributeModificationInfos switchStatusModificationInfos = EquipmentAttributeModificationInfos.builder()
-            .type(ModificationType.EQUIPMENT_ATTRIBUTE_MODIFICATION)
             .equipmentType(IdentifiableType.SWITCH)
             .equipmentAttributeName("open")
             .equipmentAttributeValue(true)
@@ -154,7 +151,6 @@ public class EquipmentAttributeModificationTest extends AbstractNetworkModificat
     public void testWithErrors() {
         // bad equipment attribute name
         EquipmentAttributeModificationInfos switchStatusModificationInfos = EquipmentAttributeModificationInfos.builder()
-            .type(ModificationType.EQUIPMENT_ATTRIBUTE_MODIFICATION)
             .equipmentType(IdentifiableType.SWITCH)
             .equipmentAttributeName("close") // bad
             .equipmentAttributeValue(true)
@@ -185,7 +181,6 @@ public class EquipmentAttributeModificationTest extends AbstractNetworkModificat
     @Override
     protected EquipmentAttributeModificationInfos buildModification() {
         return EquipmentAttributeModificationInfos.builder()
-            .type(ModificationType.EQUIPMENT_ATTRIBUTE_MODIFICATION)
             .equipmentType(IdentifiableType.SWITCH)
             .equipmentAttributeName("open")
             .equipmentAttributeValue(true)
@@ -196,7 +191,6 @@ public class EquipmentAttributeModificationTest extends AbstractNetworkModificat
     @Override
     protected EquipmentAttributeModificationInfos buildModificationUpdate() {
         return EquipmentAttributeModificationInfos.builder()
-            .type(ModificationType.EQUIPMENT_ATTRIBUTE_MODIFICATION)
             .equipmentType(IdentifiableType.SWITCH)
             .equipmentAttributeName("open")
             .equipmentAttributeValue(false)
@@ -205,8 +199,8 @@ public class EquipmentAttributeModificationTest extends AbstractNetworkModificat
     }
 
     @Override
-    protected MatcherEquipmentModificationInfos createMatcher(ModificationInfos modificationInfos) {
-        return MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos((EquipmentAttributeModificationInfos) modificationInfos);
+    protected MatcherModificationInfos createMatcher(ModificationInfos modificationInfos) {
+        return createMatcherEquipmentAttributeModificationInfos((EquipmentAttributeModificationInfos) modificationInfos);
     }
 
     @Override

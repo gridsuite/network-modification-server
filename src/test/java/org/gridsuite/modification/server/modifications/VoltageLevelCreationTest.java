@@ -9,7 +9,6 @@ package org.gridsuite.modification.server.modifications;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.SwitchKind;
 import lombok.SneakyThrows;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.BusbarConnectionCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
@@ -25,8 +24,8 @@ import org.springframework.test.web.servlet.MvcResult;
 import java.util.List;
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.CREATE_VOLTAGE_LEVEL_ERROR;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.SUBSTATION_NOT_FOUND;
 import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -55,7 +54,6 @@ public class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
                 .substationId("s2")
                 .busbarSections(List.of())
                 .busbarConnections(List.of())
-                .type(ModificationType.VOLTAGE_LEVEL_CREATION)
                 .build();
     }
 

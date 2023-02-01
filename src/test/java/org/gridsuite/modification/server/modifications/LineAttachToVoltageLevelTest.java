@@ -8,7 +8,6 @@ package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.iidm.network.Network;
 import lombok.SneakyThrows;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.utils.MatcherModificationInfos;
@@ -19,7 +18,8 @@ import org.springframework.http.MediaType;
 import java.util.List;
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_ATTACH_DESCRIPTION_ERROR;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_NOT_FOUND;
 import static org.gridsuite.modification.server.utils.MatcherLineAttachToVoltageLevelInfos.createMatcherLineAttachToVoltageLevelInfos;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -34,7 +34,6 @@ public class LineAttachToVoltageLevelTest extends AbstractNetworkModificationTes
 
     private LineCreationInfos getAttachmentLine(String lineName) {
         return LineCreationInfos.builder()
-                .type(ModificationType.LINE_CREATION)
                 .equipmentId(lineName)
                 .seriesResistance(50.6)
                 .seriesReactance(25.3)
@@ -43,7 +42,6 @@ public class LineAttachToVoltageLevelTest extends AbstractNetworkModificationTes
 
     private VoltageLevelCreationInfos getNewVoltageLevel() {
         return VoltageLevelCreationInfos.builder()
-                .type(ModificationType.VOLTAGE_LEVEL_CREATION)
                 .equipmentId("newVlName")
                 .equipmentName("NewVoltageLevel")
                 .nominalVoltage(379.3)
@@ -61,7 +59,6 @@ public class LineAttachToVoltageLevelTest extends AbstractNetworkModificationTes
     @Override
     protected ModificationInfos buildModification() {
         return LineAttachToVoltageLevelInfos.builder()
-                .type(ModificationType.LINE_ATTACH_TO_VOLTAGE_LEVEL)
                 .lineToAttachToId("line3")
                 .percent(10.0)
                 .attachmentPointId("AttPointId")   // created VL
@@ -80,7 +77,6 @@ public class LineAttachToVoltageLevelTest extends AbstractNetworkModificationTes
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return LineAttachToVoltageLevelInfos.builder()
-                .type(ModificationType.LINE_ATTACH_TO_VOLTAGE_LEVEL)
                 .lineToAttachToId("line2")
                 .percent(30.0)
                 .attachmentPointId("newAttPointId")

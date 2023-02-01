@@ -6,7 +6,6 @@
  */
 package org.gridsuite.modification.server.utils;
 
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.EquipmentModificationInfos;
 
 import java.time.ZoneOffset;
@@ -18,10 +17,9 @@ import java.util.Set;
  */
 public class MatcherEquipmentModificationInfos<T extends EquipmentModificationInfos> extends MatcherModificationInfos<T> {
 
-    public static MatcherEquipmentModificationInfos<EquipmentModificationInfos> createMatcherEquipmentModificationInfos(ModificationType modificationType, String equipmentId, Set<String> substationIds) {
+    public static MatcherEquipmentModificationInfos<EquipmentModificationInfos> createMatcherEquipmentModificationInfos(String equipmentId, Set<String> substationIds) {
         return new MatcherEquipmentModificationInfos<>(EquipmentModificationInfos.builder()
                 .date(ZonedDateTime.now(ZoneOffset.UTC))
-                .type(modificationType)
                 .equipmentId(equipmentId)
                 .substationIds(substationIds)
                 .build());

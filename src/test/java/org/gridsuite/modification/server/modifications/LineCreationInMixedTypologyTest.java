@@ -9,7 +9,6 @@ package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.LineCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.utils.MatcherLineCreationInfos;
@@ -34,7 +33,6 @@ public class LineCreationInMixedTypologyTest extends AbstractNetworkModification
         // between voltage level "v1" and busbar section "1.1" type NODE_BREAKER and
         //         voltage level "v2" and busbar section "bus2 type BUS_BREAKER"
         return LineCreationInfos.builder()
-            .type(ModificationType.LINE_CREATION)
             .equipmentId("idLine1")
             .equipmentName("nameLine1")
             .seriesResistance(100.0)
@@ -59,7 +57,6 @@ public class LineCreationInMixedTypologyTest extends AbstractNetworkModification
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return LineCreationInfos.builder()
-            .type(ModificationType.LINE_CREATION)
             .equipmentId("idLineEdited1")
             .equipmentName("nameLineEdited1")
             .seriesResistance(200.0)

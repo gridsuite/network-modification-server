@@ -8,14 +8,15 @@ package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.iidm.network.Network;
 import lombok.SneakyThrows;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.*;
-import org.gridsuite.modification.server.utils.*;
+import org.gridsuite.modification.server.dto.LinesAttachToSplitLinesInfos;
+import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.utils.MatcherModificationInfos;
+import org.gridsuite.modification.server.utils.NetworkWithTeePoint;
 import org.junit.Test;
 import org.springframework.http.MediaType;
 
-import java.util.*;
+import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_ATTACH_ERROR;
 import static org.gridsuite.modification.server.utils.MatcherLinesAttachToSplitLinesInfos.createMatcherLinesAttachToSplitLinesInfos;
@@ -37,7 +38,6 @@ public class LinesAttachToSplitLinesTest extends AbstractNetworkModificationTest
     @Override
     protected ModificationInfos buildModification() {
         return LinesAttachToSplitLinesInfos.builder()
-                .type(ModificationType.LINES_ATTACH_TO_SPLIT_LINES)
                 .lineToAttachTo1Id("l1")
                 .lineToAttachTo2Id("l2")
                 .attachedLineId("l3")
@@ -53,7 +53,6 @@ public class LinesAttachToSplitLinesTest extends AbstractNetworkModificationTest
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return LinesAttachToSplitLinesInfos.builder()
-                .type(ModificationType.LINES_ATTACH_TO_SPLIT_LINES)
                 .lineToAttachTo1Id("newline1")
                 .lineToAttachTo2Id("newline2")
                 .attachedLineId("newline3")

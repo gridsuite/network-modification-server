@@ -26,11 +26,15 @@ import javax.persistence.Table;
 public class StringEquipmentAttributeModificationEntity extends EquipmentAttributeModificationEntity<String> {
 
     public StringEquipmentAttributeModificationEntity(EquipmentAttributeModificationInfos equipmentAttributeModificationInfos) {
-        super(equipmentAttributeModificationInfos.getEquipmentId(),
-            equipmentAttributeModificationInfos.getEquipmentAttributeName(),
-            equipmentAttributeModificationInfos.getEquipmentAttributeValue() == null ?
-                (String) equipmentAttributeModificationInfos.getEquipmentAttributeValue() :
-                equipmentAttributeModificationInfos.getEquipmentAttributeValue().toString(),
-            equipmentAttributeModificationInfos.getEquipmentType());
+        super(equipmentAttributeModificationInfos);
+    }
+
+    @Override
+    protected String convertAttributeValue(Object attributeValue) {
+        if (attributeValue != null) {
+            return attributeValue.toString();
+        } else {
+            return null;
+        }
     }
 }

@@ -27,7 +27,6 @@ public class MatcherShuntCompensatorCreationInfos extends MatcherModificationInf
     public boolean matchesSafely(ShuntCompensatorCreationInfos m) {
         return super.matchesSafely(m)
             && m.getEquipmentId().equals(reference.getEquipmentId())
-            && m.getSubstationIds().equals(reference.getSubstationIds())
             && StringUtils.equals(m.getEquipmentName(), reference.getEquipmentName())
             && m.getVoltageLevelId().equals(reference.getVoltageLevelId())
             && m.getBusOrBusbarSectionId().equals(reference.getBusOrBusbarSectionId())

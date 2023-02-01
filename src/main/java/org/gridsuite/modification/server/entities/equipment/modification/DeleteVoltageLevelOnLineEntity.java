@@ -9,7 +9,6 @@ package org.gridsuite.modification.server.entities.equipment.modification;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.DeleteVoltageLevelOnLineInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
@@ -40,7 +39,7 @@ public class DeleteVoltageLevelOnLineEntity extends ModificationEntity {
     private String replacingLine1Name;
 
     public DeleteVoltageLevelOnLineEntity(@NonNull DeleteVoltageLevelOnLineInfos deleteVoltageLevelOnLineInfos) {
-        super(ModificationType.DELETE_VOLTAGE_LEVEL_ON_LINE);
+        super(deleteVoltageLevelOnLineInfos);
         assignAttributes(deleteVoltageLevelOnLineInfos);
     }
 
@@ -60,7 +59,6 @@ public class DeleteVoltageLevelOnLineEntity extends ModificationEntity {
                 .builder()
                 .uuid(getId())
                 .date(getDate())
-                .type(ModificationType.valueOf(getType()))
                 .lineToAttachTo1Id(getLineToAttachTo1Id())
                 .lineToAttachTo2Id(getLineToAttachTo2Id())
                 .replacingLine1Id(getReplacingLine1Id())
