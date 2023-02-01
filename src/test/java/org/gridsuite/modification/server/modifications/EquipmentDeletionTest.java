@@ -7,6 +7,7 @@
 
 package org.gridsuite.modification.server.modifications;
 
+import com.powsybl.commons.PowsyblException;
 import com.powsybl.iidm.network.Network;
 
 import lombok.SneakyThrows;
@@ -19,15 +20,14 @@ import org.gridsuite.modification.server.utils.MatcherEquipmentDeletionInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
 import org.springframework.http.MediaType;
-import org.springframework.web.util.NestedServletException;
 
+import static org.gridsuite.modification.server.NetworkModificationException.Type.DELETE_EQUIPMENT_ERROR;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.EQUIPMENT_NOT_FOUND;
 
 import java.util.UUID;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThrows;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -74,7 +74,7 @@ public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
 
     @SneakyThrows
     @Test
-    public void testOkWhenRemovingIsolatedEquipment() throws Exception {
+    public void testOkWhenRemovingIsolatedEquipment() {
 
         EquipmentDeletionInfos equipmentDeletionInfos = EquipmentDeletionInfos.builder()
                 .type(ModificationType.EQUIPMENT_DELETION)
@@ -105,21 +105,25 @@ public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
                         content().string(new NetworkModificationException(EQUIPMENT_NOT_FOUND,
                                 "Equipment with id=notFoundLoad not found or of bad type").getMessage()));
 
-        // delete voltage level (fail because the vl is connected)
+        // try to delete voltage level (Internal error because the vl is still connected)
         equipmentDeletionInfos.setEquipmentType("VOLTAGE_LEVEL");
         equipmentDeletionInfos.setEquipmentId("v4");
-        assertThrows("\"status\":500,\"error\":\"Internal Server Error\",\"message\":\"The voltage level 'v4' cannot be removed because of a remaining THREE_WINDINGS_TRANSFORMER",
-                NestedServletException.class, () -> mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(equipmentDeletionInfos))
-                                .contentType(MediaType.APPLICATION_JSON)));
+        mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(equipmentDeletionInfos)).contentType(MediaType.APPLICATION_JSON))
+                .andExpectAll(
+                        status().is5xxServerError(),
+                        content().string(new NetworkModificationException(DELETE_EQUIPMENT_ERROR,
+                            new PowsyblException(new AssertionError("The voltage level 'v4' cannot be removed because of a remaining THREE_WINDINGS_TRANSFORMER"))).getMessage()));
+        equipmentDeletionInfos.setEquipmentId("v4");
         assertNotNull(getNetwork().getVoltageLevel("v4"));
 
-        // delete substation (fail because the substations is connected)
-        equipmentDeletionInfos.setEquipmentType("VOLTAGE_LEVEL");
-        equipmentDeletionInfos.setEquipmentId("v4");
-        assertThrows("DELETE_EQUIPMENT_ERROR : The substation s2 is still connected to another substation",
-                NestedServletException.class, () -> mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(equipmentDeletionInfos))
-                                .contentType(MediaType.APPLICATION_JSON))
-                        .andReturn());
+        // try to delete substation (Internal error because the substation is still connected)
+        equipmentDeletionInfos.setEquipmentType("SUBSTATION");
+        equipmentDeletionInfos.setEquipmentId("s2");
+        mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(equipmentDeletionInfos)).contentType(MediaType.APPLICATION_JSON))
+                .andExpectAll(
+                        status().is5xxServerError(),
+                        content().string(new NetworkModificationException(DELETE_EQUIPMENT_ERROR,
+                                "The substation s2 is still connected to another substation").getMessage()));
         assertNotNull(getNetwork().getSubstation("s2"));
     }
 }

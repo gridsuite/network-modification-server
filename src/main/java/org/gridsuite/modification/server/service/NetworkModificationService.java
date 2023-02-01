@@ -173,7 +173,6 @@ public class NetworkModificationService {
 
             if (listener.isApplyModifications()) { // Apply modification on the network
                 networkModifications = modificationApplicator.apply(modificationInfos, subReporter, listener, context);
-
                 if (!listener.isBuild()) { // Save network in DB in incremental mode only
                     networkStoreService.flush(listener.getNetwork());
                 }
