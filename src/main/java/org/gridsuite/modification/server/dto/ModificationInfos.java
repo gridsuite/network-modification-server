@@ -6,30 +6,28 @@
  */
 package org.gridsuite.modification.server.dto;
 
-import java.time.ZonedDateTime;
-import java.util.Set;
-import java.util.UUID;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
+
+import java.time.ZonedDateTime;
+import java.util.Set;
+import java.util.UUID;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
 @JsonTypeInfo(
     use = JsonTypeInfo.Id.NAME,
-    property = "type",
-    include = JsonTypeInfo.As.EXISTING_PROPERTY,
-    visible = true
+    property = "type"
 )
 @JsonSubTypes({
     @JsonSubTypes.Type(value = GroovyScriptInfos.class, name = "GROOVY_SCRIPT"),
@@ -66,9 +64,6 @@ public class ModificationInfos {
     @Schema(description = "Modification date")
     ZonedDateTime date;
 
-    @Schema(description = "Modification type")
-    ModificationType type;
-
     @Schema(description = "Substations ID")
     @Builder.Default
     private Set<String> substationIds = Set.of();
@@ -95,6 +90,6 @@ public class ModificationInfos {
 
     @JsonIgnore
     public void check() {
-        // nothing to check here, maybe if type == null ?
+        // Nothing to check here
     }
 }

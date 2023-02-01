@@ -9,27 +9,23 @@ package org.gridsuite.modification.server.modifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
-
 import lombok.SneakyThrows;
-
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.GroovyScriptInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.utils.MatcherGroovyScriptInfos;
-import org.gridsuite.modification.server.utils.MatcherModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.GROOVY_SCRIPT_ERROR;
-import static org.gridsuite.modification.server.NetworkModificationException.Type.GROOVY_SCRIPT_EMPTY;
-
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import static org.gridsuite.modification.server.NetworkModificationException.Type.GROOVY_SCRIPT_EMPTY;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.GROOVY_SCRIPT_ERROR;
+import static org.gridsuite.modification.server.utils.MatcherGroovyScriptInfos.createMatcherGroovyScriptInfos;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -46,7 +42,6 @@ public class GroovyScriptTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModification() {
         return GroovyScriptInfos.builder()
-                .type(ModificationType.GROOVY_SCRIPT)
                 .script("network.getGenerator('idGenerator').targetP=12\n")
                 .build();
     }
@@ -54,14 +49,13 @@ public class GroovyScriptTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return GroovyScriptInfos.builder()
-                .type(ModificationType.GROOVY_SCRIPT)
                 .script("network.getGenerator('idGenerator').targetP=15\n")
                 .build();
     }
 
     @Override
     protected MatcherGroovyScriptInfos createMatcher(ModificationInfos modificationInfos) {
-        return MatcherGroovyScriptInfos.createMatcherGroovyScriptInfos((GroovyScriptInfos) modificationInfos);
+        return createMatcherGroovyScriptInfos((GroovyScriptInfos) modificationInfos);
     }
 
     @Override
@@ -81,8 +75,8 @@ public class GroovyScriptTest extends AbstractNetworkModificationTest {
         String resultAsString;
 
         GroovyScriptInfos groovyScriptInfos = GroovyScriptInfos.builder()
-                .type(ModificationType.GROOVY_SCRIPT)
                 .script("network.getGenerator('idGenerator').targetP=12\n")
+                .substationIds(Set.of("s1")) // for the matcher
                 .build();
         String groovyScriptInfosJson = mapper.writeValueAsString(groovyScriptInfos);
 
@@ -90,8 +84,8 @@ public class GroovyScriptTest extends AbstractNetworkModificationTest {
         mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(groovyScriptInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk())
                 .andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
-        List<ModificationInfos> bsmlrbStatusInfos = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertThat(bsmlrbStatusInfos.get(0), MatcherModificationInfos.createMatcherModificationInfos(ModificationType.GROOVY_SCRIPT, Set.of("s1")));
+        List<GroovyScriptInfos> bsmlrbStatusInfos = mapper.readValue(resultAsString, new TypeReference<>() { });
+        assertThat(bsmlrbStatusInfos.get(0), createMatcherGroovyScriptInfos(groovyScriptInfos));
 
         // apply groovy script with load type modification
         groovyScriptInfos.setScript("network.getLoad('v1load').loadType=com.powsybl.iidm.network.LoadType.FICTITIOUS\n");
@@ -99,8 +93,8 @@ public class GroovyScriptTest extends AbstractNetworkModificationTest {
         mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(groovyScriptInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk())
                 .andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
-        List<ModificationInfos> bsmlrBranchStatusInfos = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertThat(bsmlrBranchStatusInfos.get(0), MatcherModificationInfos.createMatcherModificationInfos(ModificationType.GROOVY_SCRIPT, Set.of("s1")));
+        List<GroovyScriptInfos> bsmlrBranchStatusInfos = mapper.readValue(resultAsString, new TypeReference<>() { });
+        assertThat(bsmlrBranchStatusInfos.get(0), createMatcherGroovyScriptInfos(groovyScriptInfos));
 
         // apply groovy script with lcc converter station power factor modification
         groovyScriptInfos.setScript("network.getLccConverterStation('v1lcc').powerFactor=1\n");
@@ -108,26 +102,28 @@ public class GroovyScriptTest extends AbstractNetworkModificationTest {
         mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(groovyScriptInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk())
                 .andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
-        List<ModificationInfos> bsmListResultBranchStatusInfos = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertThat(bsmListResultBranchStatusInfos.get(0), MatcherModificationInfos.createMatcherModificationInfos(ModificationType.GROOVY_SCRIPT, Set.of("s1")));
+        List<GroovyScriptInfos> bsmListResultBranchStatusInfos = mapper.readValue(resultAsString, new TypeReference<>() { });
+        assertThat(bsmListResultBranchStatusInfos.get(0), createMatcherGroovyScriptInfos(groovyScriptInfos));
 
         // apply groovy script with line R modification
         groovyScriptInfos.setScript("network.getLine('line1').r=2\n");
+        groovyScriptInfos.setSubstationIds(Set.of("s1", "s2")); // for the matcher
         groovyScriptInfosJson = mapper.writeValueAsString(groovyScriptInfos);
         mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(groovyScriptInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk())
                 .andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
-        List<ModificationInfos> bsmlrbInfos = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertThat(bsmlrbInfos.get(0), MatcherModificationInfos.createMatcherModificationInfos(ModificationType.GROOVY_SCRIPT, Set.of("s1", "s2")));
+        List<GroovyScriptInfos> bsmlrbInfos = mapper.readValue(resultAsString, new TypeReference<>() { });
+        assertThat(bsmlrbInfos.get(0), createMatcherGroovyScriptInfos(groovyScriptInfos));
 
         // apply groovy script with two windings transformer ratio tap modification
         groovyScriptInfos.setScript("network.getTwoWindingsTransformer('trf1').getRatioTapChanger().tapPosition=2\n");
+        groovyScriptInfos.setSubstationIds(Set.of("s1")); // for the matcher
         groovyScriptInfosJson = mapper.writeValueAsString(groovyScriptInfos);
         mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(groovyScriptInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk())
                 .andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
-        List<ModificationInfos> bsmlrbsInfos = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertThat(bsmlrbsInfos.get(0), MatcherModificationInfos.createMatcherModificationInfos(ModificationType.GROOVY_SCRIPT, Set.of("s1")));
+        List<GroovyScriptInfos> bsmlrbsInfos = mapper.readValue(resultAsString, new TypeReference<>() { });
+        assertThat(bsmlrbsInfos.get(0), createMatcherGroovyScriptInfos(groovyScriptInfos));
 
         // apply groovy script with three windings transformer phase tap modification
         groovyScriptInfos.setScript("network.getThreeWindingsTransformer('trf6').getLeg1().getPhaseTapChanger().tapPosition=0\n");
@@ -135,8 +131,8 @@ public class GroovyScriptTest extends AbstractNetworkModificationTest {
         mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(groovyScriptInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk())
                 .andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
-        List<ModificationInfos> bsmlrStatusInfos = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertThat(bsmlrStatusInfos.get(0), MatcherModificationInfos.createMatcherModificationInfos(ModificationType.GROOVY_SCRIPT, Set.of("s1")));
+        List<GroovyScriptInfos> bsmlrStatusInfos = mapper.readValue(resultAsString, new TypeReference<>() { });
+        assertThat(bsmlrStatusInfos.get(0), createMatcherGroovyScriptInfos(groovyScriptInfos));
 
         testNetworkModificationsCount(getGroupId(), 6);
     }

@@ -10,7 +10,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.Setter;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.LoadScalingInfos;
 
 import javax.persistence.Entity;
@@ -28,7 +27,7 @@ import java.util.stream.Collectors;
 public class LoadScalingEntity extends ScalingEntity {
 
     public LoadScalingEntity(@NonNull LoadScalingInfos loadScalingInfos) {
-        super(ModificationType.LOAD_SCALING, loadScalingInfos);
+        super(loadScalingInfos);
     }
 
     @Override
@@ -37,7 +36,6 @@ public class LoadScalingEntity extends ScalingEntity {
                 .builder()
                 .uuid(getId())
                 .date(getDate())
-                .type(ModificationType.valueOf(getType()))
                 .variationType(getVariationType())
                 .variations(getVariations().stream()
                         .map(ScalingVariationEntity::toScalingVariationInfos)

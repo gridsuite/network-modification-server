@@ -8,10 +8,7 @@
 package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.iidm.network.Network;
-
 import lombok.SneakyThrows;
-
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.EquipmentDeletionInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
@@ -21,13 +18,10 @@ import org.junit.Test;
 import org.springframework.http.MediaType;
 import org.springframework.web.util.NestedServletException;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.EQUIPMENT_NOT_FOUND;
-
 import java.util.UUID;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThrows;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.EQUIPMENT_NOT_FOUND;
+import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -42,7 +36,6 @@ public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModification() {
         return EquipmentDeletionInfos.builder()
-                .type(ModificationType.EQUIPMENT_DELETION)
                 .equipmentType("LOAD")
                 .equipmentId("v1load")
                 .build();
@@ -51,7 +44,6 @@ public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return EquipmentDeletionInfos.builder()
-                .type(ModificationType.EQUIPMENT_DELETION)
                 .equipmentType("GENERATOR")
                 .equipmentId("idGenerator")
                 .build();
@@ -77,7 +69,6 @@ public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
     public void testOkWhenRemovingIsolatedEquipment() throws Exception {
 
         EquipmentDeletionInfos equipmentDeletionInfos = EquipmentDeletionInfos.builder()
-                .type(ModificationType.EQUIPMENT_DELETION)
                 .equipmentType("LOAD")
                 .equipmentId("v5load")
                 .build();

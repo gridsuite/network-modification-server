@@ -13,7 +13,10 @@ import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.SneakyThrows;
-import org.gridsuite.modification.server.*;
+import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.ReactiveVariationMode;
+import org.gridsuite.modification.server.VariationMode;
+import org.gridsuite.modification.server.VariationType;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.utils.MatcherLoadScalingInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -186,7 +189,6 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
         ModificationInfos modificationToCreate = LoadScalingInfos.builder()
             .uuid(LOAD_SCALING_ID)
             .date(ZonedDateTime.now())
-            .type(ModificationType.LOAD_SCALING)
             .variationType(VariationType.DELTA_P)
             .variations(List.of(variation1))
             .build();
@@ -214,7 +216,6 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
             .build();
 
         LoadScalingInfos loadScalingInfo = LoadScalingInfos.builder()
-            .type(ModificationType.LOAD_SCALING)
             .variationType(VariationType.TARGET_P)
             .variations(List.of(variation))
             .build();
@@ -249,7 +250,6 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
             .build();
 
         LoadScalingInfos loadScalingInfo = LoadScalingInfos.builder()
-            .type(ModificationType.LOAD_SCALING)
             .variationType(VariationType.TARGET_P)
             .variations(List.of(variation))
             .build();
@@ -335,7 +335,6 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
 
         return LoadScalingInfos.builder()
             .date(ZonedDateTime.now())
-            .type(ModificationType.LOAD_SCALING)
             .variationType(VariationType.DELTA_P)
             .variations(List.of(variation1, variation2, variation3, variation4, variation5))
             .build();
@@ -358,7 +357,6 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
         return LoadScalingInfos.builder()
             .uuid(LOAD_SCALING_ID)
             .date(ZonedDateTime.now())
-            .type(ModificationType.LOAD_SCALING)
             .variationType(VariationType.TARGET_P)
             .variations(List.of(variation5))
             .build();

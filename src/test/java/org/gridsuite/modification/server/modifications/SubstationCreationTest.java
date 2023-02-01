@@ -11,7 +11,6 @@ import com.powsybl.iidm.network.Country;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.Substation;
 import lombok.SneakyThrows;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.SubstationCreationInfos;
@@ -39,7 +38,6 @@ public class SubstationCreationTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModification() {
         return SubstationCreationInfos.builder()
-                .type(ModificationType.SUBSTATION_CREATION)
                 .equipmentId("SubstationId")
                 .equipmentName("SubstationName")
                 .substationCountry(Country.AF)
@@ -50,7 +48,6 @@ public class SubstationCreationTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return SubstationCreationInfos.builder()
-                .type(ModificationType.SUBSTATION_CREATION)
                 .equipmentId("SubstationIdEdited")
                 .equipmentName("SubstationNameEdited")
                 .substationCountry(Country.CI)

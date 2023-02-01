@@ -9,7 +9,6 @@ package org.gridsuite.modification.server.modifications;
 import com.powsybl.iidm.network.Line;
 import com.powsybl.iidm.network.Network;
 import lombok.SneakyThrows;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.BranchStatusModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
@@ -45,7 +44,6 @@ public class BranchStatusModificationEnergiseSideTwoLineTest extends AbstractNet
     @Override
     protected ModificationInfos buildModification() {
         return BranchStatusModificationInfos.builder()
-                .type(ModificationType.BRANCH_STATUS_MODIFICATION)
                 .equipmentId(TARGET_LINE_ID)
                 .action(BranchStatusModificationInfos.ActionType.ENERGISE_END_TWO).build();
     }
@@ -53,7 +51,6 @@ public class BranchStatusModificationEnergiseSideTwoLineTest extends AbstractNet
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return BranchStatusModificationInfos.builder()
-                .type(ModificationType.BRANCH_STATUS_MODIFICATION)
                 .equipmentId("line1")
                 .action(BranchStatusModificationInfos.ActionType.TRIP).build();
     }

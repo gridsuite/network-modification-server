@@ -8,7 +8,6 @@ package org.gridsuite.modification.server.entities.equipment.modification;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.DeleteAttachingLineInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
@@ -42,7 +41,7 @@ public class DeleteAttachingLineEntity extends ModificationEntity {
     private String replacingLine1Name;
 
     public DeleteAttachingLineEntity(DeleteAttachingLineInfos deleteAttachingLineInfos) {
-        super(ModificationType.DELETE_ATTACHING_LINE);
+        super(deleteAttachingLineInfos);
         assignAttributes(deleteAttachingLineInfos);
     }
 
@@ -62,7 +61,6 @@ public class DeleteAttachingLineEntity extends ModificationEntity {
                 .builder()
                 .uuid(getId())
                 .date(getDate())
-                .type(ModificationType.valueOf(getType()))
                 .lineToAttachTo1Id(getLineToAttachTo1Id())
                 .lineToAttachTo2Id(getLineToAttachTo2Id())
                 .attachedLineId(getAttachedLineId())
