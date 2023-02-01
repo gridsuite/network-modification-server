@@ -44,7 +44,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.NestedServletException;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -85,11 +84,9 @@ public class ModificationControllerTest {
     private static final UUID TEST_REPORT_ID = UUID.randomUUID();
 
     private static final String URI_NETWORK_MODIF_BASE = "/v1/network-modifications";
-    private static final String URI_NETWORK_MODIF_GET_PUT = URI_NETWORK_MODIF_BASE + "/";
     private static final String URI_NETWORK_MODIF_PARAMS = "&groupUuid=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
     private static final String URI_NETWORK_MODIF = URI_NETWORK_MODIF_BASE + "?networkUuid=" + TEST_NETWORK_ID + URI_NETWORK_MODIF_PARAMS;
     private static final String URI_NETWORK_MODIF_BUS_BREAKER = URI_NETWORK_MODIF_BASE + "?networkUuid=" + TEST_NETWORK_BUS_BREAKER_ID + URI_NETWORK_MODIF_PARAMS;
-    private static final String URI_NETWORK_MODIF_FULL_MIXED_TOPO = URI_NETWORK_MODIF_BASE + "?networkUuid=" + TEST_NETWORK_MIXED_TOPOLOGY_ID + "&groupUuid=" + TEST_NETWORK_MIXED_TOPOLOGY_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
     private static final String URI_NETWORK_MODIF_BAD_NETWORK = URI_NETWORK_MODIF_BASE + "?networkUuid=" + NOT_FOUND_NETWORK_ID + URI_NETWORK_MODIF_PARAMS;
     private static final String URI_NETWORK_MODIF_BAD_VARIANT = URI_NETWORK_MODIF + "&variantId=" + VARIANT_NOT_EXISTING_ID;
     private static final String URI_NETWORK_MODIF_2 = URI_NETWORK_MODIF_BASE + "?networkUuid=" + TEST_NETWORK_ID_2 + URI_NETWORK_MODIF_PARAMS;
@@ -1055,11 +1052,14 @@ public class ModificationControllerTest {
         assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v5shunt", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
         assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v5Compensator", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
 
-        // delete voltage level (fail because the vl is connected)
+        // try to delete voltage level (Internal error because the vl is still connected)
         equipmentDeletionInfos.setEquipmentType("VOLTAGE_LEVEL");
         equipmentDeletionInfos.setEquipmentId("v4");
-        assertThrows("\"status\":500,\"error\":\"Internal Server Error\",\"message\":\"The voltage level 'v4' cannot be removed because of a remaining THREE_WINDINGS_TRANSFORMER",
-                NestedServletException.class, () -> mockMvc.perform(post(URI_NETWORK_MODIF).content(objectWriter.writeValueAsString(equipmentDeletionInfos)).contentType(MediaType.APPLICATION_JSON)));
+        mockMvc.perform(post(URI_NETWORK_MODIF).content(objectWriter.writeValueAsString(equipmentDeletionInfos)).contentType(MediaType.APPLICATION_JSON))
+            .andExpectAll(
+                status().is5xxServerError(),
+                content().string(new NetworkModificationException(DELETE_EQUIPMENT_ERROR,
+                    new PowsyblException(new AssertionError("The voltage level 'v4' cannot be removed because of a remaining THREE_WINDINGS_TRANSFORMER"))).getMessage()));
         assertNotNull(network.getVoltageLevel("v4"));
 
         // delete substation
@@ -1096,11 +1096,14 @@ public class ModificationControllerTest {
         assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v6shunt", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
         assertTrue(equipmentInfosService.existTombstonedEquipmentInfos("v6Compensator", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
 
-        // delete substation (fail because the substations is connected)
-        equipmentDeletionInfos.setEquipmentType("VOLTAGE_LEVEL");
-        equipmentDeletionInfos.setEquipmentId("v4");
-        assertThrows("DELETE_EQUIPMENT_ERROR : The substation s2 is still connected to another substation", NestedServletException.class, () ->
-                mockMvc.perform(post(URI_NETWORK_MODIF).content(objectWriter.writeValueAsString(equipmentDeletionInfos)).contentType(MediaType.APPLICATION_JSON)).andReturn());
+        // try to delete substation (Internal error because the substation is still connected)
+        equipmentDeletionInfos.setEquipmentType("SUBSTATION");
+        equipmentDeletionInfos.setEquipmentId("s2");
+        mockMvc.perform(post(URI_NETWORK_MODIF).content(objectWriter.writeValueAsString(equipmentDeletionInfos)).contentType(MediaType.APPLICATION_JSON))
+            .andExpectAll(
+                status().is5xxServerError(),
+                content().string(new NetworkModificationException(DELETE_EQUIPMENT_ERROR,
+                    "The substation s2 is still connected to another substation").getMessage()));
         assertNotNull(network.getSubstation("s2"));
 
         assertTrue(equipmentInfosService.findAllEquipmentInfos(TEST_NETWORK_ID).isEmpty());
@@ -1137,9 +1140,8 @@ public class ModificationControllerTest {
         assertEquals(0, result2);
 
         ModificationUtils modificationUtils = ModificationUtils.getInstance();
-        assertThrows(new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "Bus bar section invalidBbsId not found").getMessage(),
-                NetworkModificationException.class, () -> modificationUtils.getPosition("invalidBbsId", network, vl)
-        );
+        String errorMessage = assertThrows(NetworkModificationException.class, () -> modificationUtils.getPosition("invalidBbsId", network, vl)).getMessage();
+        assertEquals(new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "invalidBbsId").getMessage(), errorMessage);
     }
 
     @Test
