@@ -11,7 +11,6 @@ import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.LoadCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 
@@ -45,7 +44,7 @@ public class LoadCreationEntity extends InjectionCreationEntity {
     private Integer connectionPosition;
 
     public LoadCreationEntity(@NonNull LoadCreationInfos loadCreationInfos) {
-        super(ModificationType.LOAD_CREATION, loadCreationInfos.getEquipmentId(), loadCreationInfos.getEquipmentName(), loadCreationInfos.getVoltageLevelId(), loadCreationInfos.getBusOrBusbarSectionId());
+        super(loadCreationInfos);
         assignAttributes(loadCreationInfos);
     }
 
@@ -74,7 +73,6 @@ public class LoadCreationEntity extends InjectionCreationEntity {
             .builder()
             .uuid(getId())
             .date(getDate())
-            .type(ModificationType.valueOf(getType()))
             .equipmentId(getEquipmentId())
             .equipmentName(getEquipmentName())
             .voltageLevelId(getVoltageLevelId())

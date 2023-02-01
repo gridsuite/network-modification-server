@@ -8,7 +8,6 @@ package org.gridsuite.modification.server.entities.equipment.modification;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.EquipmentModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
@@ -25,12 +24,6 @@ import javax.persistence.MappedSuperclass;
 public class EquipmentModificationEntity extends ModificationEntity {
     @Column(name = "equipmentId")
     private String equipmentId;
-
-    //TODO : remove
-    protected EquipmentModificationEntity(String equipmentId, ModificationType modificationType) {
-        super(modificationType);
-        this.equipmentId = equipmentId;
-    }
 
     protected EquipmentModificationEntity(EquipmentModificationInfos equipmentModificationInfos) {
         super(equipmentModificationInfos);

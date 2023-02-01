@@ -9,7 +9,6 @@ package org.gridsuite.modification.server.entities.equipment.modification;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.LineAttachToVoltageLevelInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
@@ -67,7 +66,7 @@ public class LineAttachToVoltageLevelEntity extends ModificationEntity {
     private String newLine2Name;
 
     public LineAttachToVoltageLevelEntity(@NonNull LineAttachToVoltageLevelInfos lineAttachToVoltageLevelInfos) {
-        super(ModificationType.LINE_ATTACH_TO_VOLTAGE_LEVEL);
+        super(lineAttachToVoltageLevelInfos);
         assignAttributes(lineAttachToVoltageLevelInfos);
     }
 
@@ -108,7 +107,6 @@ public class LineAttachToVoltageLevelEntity extends ModificationEntity {
                 .builder()
                 .uuid(getId())
                 .date(getDate())
-                .type(ModificationType.valueOf(getType()))
                 .lineToAttachToId(getLineToAttachToId())
                 .percent(getPercent())
                 .attachmentPointId(getAttachmentPointId())

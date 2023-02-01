@@ -9,12 +9,10 @@ package org.gridsuite.modification.server.entities.equipment.creation;
 import com.powsybl.iidm.network.Country;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.SubstationCreationInfos;
 
 import javax.persistence.*;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -66,7 +64,6 @@ public class SubstationCreationEntity extends EquipmentCreationEntity {
                 .builder()
                 .uuid(getId())
                 .date(getDate())
-                .type(ModificationType.valueOf(getType()))
                 .equipmentId(getEquipmentId())
                 .equipmentName(getEquipmentName())
                 .substationCountry(getCountry())

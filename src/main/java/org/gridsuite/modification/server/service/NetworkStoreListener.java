@@ -8,7 +8,6 @@ package org.gridsuite.modification.server.service;
 
 import com.powsybl.iidm.network.*;
 import com.powsybl.network.store.client.NetworkStoreService;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
@@ -116,7 +115,6 @@ public class NetworkStoreListener implements NetworkListener {
             .builder()
             .uuid(null) // not in "this" db, transient
             .date(ZonedDateTime.now(ZoneOffset.UTC))
-            .type(ModificationType.EQUIPMENT_DELETION)
             .equipmentId(identifiable.getId())
             .equipmentType(identifiable.getType().name())
             .build()

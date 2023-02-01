@@ -9,7 +9,6 @@ package org.gridsuite.modification.server.entities.equipment.creation;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.BusbarConnectionCreationInfos;
 import org.gridsuite.modification.server.dto.BusbarSectionCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
@@ -80,7 +79,6 @@ public class VoltageLevelCreationEntity extends EquipmentCreationEntity {
                 .builder()
                 .uuid(getId())
                 .date(getDate())
-                .type(ModificationType.valueOf(getType()))
                 .equipmentId(getEquipmentId())
                 .equipmentName(getEquipmentName())
                 .nominalVoltage(getNominalVoltage())

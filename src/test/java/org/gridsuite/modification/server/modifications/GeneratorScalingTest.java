@@ -13,7 +13,6 @@ import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.SneakyThrows;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.VariationMode;
 import org.gridsuite.modification.server.VariationType;
@@ -167,7 +166,6 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
                 .uuid(GENERATOR_SCALING_ID)
                 .date(ZonedDateTime.now())
                 .isIterative(true)
-                .type(ModificationType.GENERATOR_SCALING)
                 .variationType(VariationType.DELTA_P)
                 .variations(List.of(variation1))
                 .build();
@@ -194,7 +192,6 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
                 .filters(List.of(filter))
                 .build();
         var generatorScalingInfo = GeneratorScalingInfos.builder()
-                .type(ModificationType.GENERATOR_SCALING)
                 .isIterative(false)
                 .variationType(VariationType.TARGET_P)
                 .variations(List.of(variation))
@@ -231,7 +228,6 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
                 .filters(List.of(filter, filter2))
                 .build();
         var generatorScalingInfo = GeneratorScalingInfos.builder()
-                .type(ModificationType.GENERATOR_SCALING)
                 .isIterative(false)
                 .variationType(VariationType.TARGET_P)
                 .variations(List.of(variation))
@@ -314,7 +310,6 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
 
         return GeneratorScalingInfos.builder()
                 .date(ZonedDateTime.now())
-                .type(ModificationType.GENERATOR_SCALING)
                 .isIterative(true)
                 .variationType(VariationType.DELTA_P)
                 .variations(List.of(variation1, variation2, variation3, variation4, variation5))
@@ -337,7 +332,6 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
         return GeneratorScalingInfos.builder()
                 .uuid(GENERATOR_SCALING_ID)
                 .date(ZonedDateTime.now())
-                .type(ModificationType.GENERATOR_SCALING)
                 .isIterative(false)
                 .variationType(VariationType.TARGET_P)
                 .variations(List.of(variation5))

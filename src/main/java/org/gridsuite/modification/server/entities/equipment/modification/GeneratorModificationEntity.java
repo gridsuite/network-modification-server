@@ -10,7 +10,6 @@ import com.powsybl.iidm.network.EnergySource;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.*;
 
@@ -276,7 +275,6 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
                 .builder()
                 .uuid(getId())
                 .date(getDate())
-                .type(ModificationType.valueOf(getType()))
                 .equipmentId(getEquipmentId())
                 .equipmentName(AttributeModification.toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))
                 .voltageLevelId(AttributeModification.toAttributeModification(getVoltageLevelIdValue(), getVoltageLevelIdOp()))
@@ -288,7 +286,6 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
                 .ratedNominalPower(toAttributeModification(getRatedNominalPower()))
                 .reactivePowerSetpoint(toAttributeModification(getReactivePowerSetpoint()))
                 .voltageRegulationOn(toAttributeModification(getVoltageRegulationOn()))
-                .type(ModificationType.GENERATOR_MODIFICATION)
                 .voltageSetpoint(toAttributeModification(getVoltageSetpoint()))
                 .plannedActivePowerSetPoint(toAttributeModification(getPlannedActivePowerSetPoint()))
                 .startupCost(toAttributeModification(getStartupCost()))

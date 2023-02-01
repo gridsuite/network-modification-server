@@ -19,7 +19,6 @@ import okhttp3.mockwebserver.Dispatcher;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationApplication;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.TapChangerType;
@@ -227,7 +226,6 @@ public class BuildTest {
     public void runBuildForLineSplits() throws Exception {
         List<ModificationEntity> entities1 = List.of(
                 LineCreationInfos.builder()
-                        .type(ModificationType.LINE_CREATION)
                         .equipmentId("newLine")
                         .equipmentName("newLine")
                         .seriesResistance(1.0)
@@ -246,7 +244,6 @@ public class BuildTest {
                         .connectionDirection2(ConnectablePosition.Direction.TOP)
                         .build().toEntity(),
                 LineSplitWithVoltageLevelInfos.builder()
-                        .type(ModificationType.LINE_SPLIT_WITH_VOLTAGE_LEVEL)
                         .lineToSplitId("line3")
                         .percent(0.32)
                         .mayNewVoltageLevelInfos(null)
@@ -262,7 +259,6 @@ public class BuildTest {
 
         List<ModificationEntity> entities2 = new ArrayList<>();
         entities2.add(VoltageLevelCreationInfos.builder()
-                .type(ModificationType.VOLTAGE_LEVEL_CREATION)
                 .equipmentId("vl9")
                 .equipmentName("vl9")
                 .nominalVoltage(225)
@@ -356,7 +352,6 @@ public class BuildTest {
 
         Map<String, String> properties = Map.of("DEMO", "Demo1");
         entities1.add(SubstationCreationInfos.builder()
-                .type(ModificationType.SUBSTATION_CREATION)
                 .equipmentId("newSubstation")
                 .equipmentName("newSubstation")
                 .substationCountry(Country.FR)
@@ -364,7 +359,7 @@ public class BuildTest {
                 .build().toEntity());
 
         List<ModificationEntity> entities2 = new ArrayList<>();
-        entities2.add(GeneratorCreationInfos.builder().type(ModificationType.GENERATOR_CREATION)
+        entities2.add(GeneratorCreationInfos.builder()
                 .equipmentId(NEW_GENERATOR_ID).equipmentName(NEW_GENERATOR_ID)
                 .energySource(EnergySource.HYDRO).voltageLevelId("v2")
                 .busOrBusbarSectionId("1A").minActivePower(0)
@@ -381,7 +376,7 @@ public class BuildTest {
                 .qPercent(25.).reactiveCapabilityCurve(false).reactiveCapabilityCurvePoints(List.of())
                 .connectionName("Top").connectionDirection(ConnectablePosition.Direction.TOP)
                 .connectionPosition(0).build().toEntity());
-        entities2.add(LineCreationInfos.builder().type(ModificationType.LINE_CREATION).equipmentId("newLine").equipmentName("newLine").seriesResistance(1.0).seriesReactance(2.0).shuntConductance1(3.0).shuntSusceptance1(4.0).shuntConductance2(5.0).shuntSusceptance2(6.0).voltageLevelId1("v1").busOrBusbarSectionId1("1.1").voltageLevelId2("v2").busOrBusbarSectionId2("1B").currentLimits1(null).currentLimits2(null).connectionName1("cn101").connectionDirection1(ConnectablePosition.Direction.TOP).connectionName2("cn102").connectionDirection2(ConnectablePosition.Direction.TOP).build().toEntity());
+        entities2.add(LineCreationInfos.builder().equipmentId("newLine").equipmentName("newLine").seriesResistance(1.0).seriesReactance(2.0).shuntConductance1(3.0).shuntSusceptance1(4.0).shuntConductance2(5.0).shuntSusceptance2(6.0).voltageLevelId1("v1").busOrBusbarSectionId1("1.1").voltageLevelId2("v2").busOrBusbarSectionId2("1B").currentLimits1(null).currentLimits2(null).connectionName1("cn101").connectionDirection1(ConnectablePosition.Direction.TOP).connectionName2("cn102").connectionDirection2(ConnectablePosition.Direction.TOP).build().toEntity());
 
         List<TapChangerStepCreationEmbeddable> tapChangerStepCreationEmbeddables = new ArrayList<>();
         tapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.PHASE, 1, 1, 0, 0, 0, 0, 0.));
@@ -392,11 +387,10 @@ public class BuildTest {
         tapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.RATIO, 7, 1, 0, 0, 0, 0, null));
         tapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.RATIO, 8, 1, 0, 0, 0, 0, null));
 
-        entities2.add(EquipmentDeletionInfos.builder().type(ModificationType.EQUIPMENT_DELETION).equipmentId("v2shunt").equipmentType("SHUNT_COMPENSATOR").build().toEntity());
+        entities2.add(EquipmentDeletionInfos.builder().equipmentId("v2shunt").equipmentType("SHUNT_COMPENSATOR").build().toEntity());
         entities2.add(GroovyScriptInfos.builder().script("network.getGenerator('idGenerator').targetP=55\n").build().toEntity());
-        entities2.add(BranchStatusModificationInfos.builder().type(ModificationType.BRANCH_STATUS_MODIFICATION).equipmentId("line2").action(BranchStatusModificationInfos.ActionType.TRIP).build().toEntity());
+        entities2.add(BranchStatusModificationInfos.builder().equipmentId("line2").action(BranchStatusModificationInfos.ActionType.TRIP).build().toEntity());
         entities2.add(VoltageLevelCreationInfos.builder()
-                .type(ModificationType.VOLTAGE_LEVEL_CREATION)
                 .equipmentId("vl9")
                 .equipmentName("vl9")
                 .nominalVoltage(225)
@@ -405,7 +399,6 @@ public class BuildTest {
                 .busbarConnections(List.of(new BusbarConnectionCreationInfos("1.1", "1.2", SwitchKind.BREAKER)))
                 .build().toEntity());
         entities2.add(ShuntCompensatorCreationInfos.builder()
-            .type(ModificationType.SHUNT_COMPENSATOR_CREATION)
             .equipmentId("shunt9")
             .equipmentName("shunt9")
             .voltageLevelId("v2")
@@ -418,7 +411,6 @@ public class BuildTest {
             .connectionName("shunt9")
             .build().toEntity());
         entities2.add(TwoWindingsTransformerCreationInfos.builder()
-                .type(ModificationType.TWO_WINDINGS_TRANSFORMER_CREATION)
                 .equipmentId("new2wt")
                 .equipmentName("new2wt")
                 .seriesResistance(1.)
@@ -520,9 +512,9 @@ public class BuildTest {
                         .build())
                 .build().toEntity()
         );
-        entities2.add(LoadModificationInfos.builder().type(ModificationType.LOAD_MODIFICATION).equipmentId("newLoad")
+        entities2.add(LoadModificationInfos.builder().equipmentId("newLoad")
             .equipmentName(new AttributeModification<>("newLoadName", OperationType.SET)).activePower(null).build().toEntity());
-        entities2.add(GeneratorModificationInfos.builder().type(ModificationType.GENERATOR_MODIFICATION)
+        entities2.add(GeneratorModificationInfos.builder()
                 .equipmentId("newGenerator")
                 .equipmentName(new AttributeModification<>("newGeneratorName", OperationType.SET))
                 .voltageRegulationType(new AttributeModification<>(VoltageRegulationType.LOCAL, OperationType.SET))
@@ -663,15 +655,15 @@ public class BuildTest {
         List<ModificationInfos> modificationsInfos = networkModificationService.getNetworkModifications(TEST_GROUP_ID, false, true);
         modificationsInfos.addAll(networkModificationService.getNetworkModifications(TEST_GROUP_ID_2, false, true));
         modificationsInfos.forEach(modificationInfos -> {
-            if (modificationInfos.getType().equals(ModificationType.EQUIPMENT_ATTRIBUTE_MODIFICATION)) {
+            if (modificationInfos.getClass().equals(EquipmentAttributeModificationInfos.class)) {
                 if (((EquipmentAttributeModificationInfos) modificationInfos).getEquipmentId().equals("line1")) {
                     lineModificationEntityUuid.set(modificationInfos.getUuid());
                 }
-            } else if (modificationInfos.getType().equals(ModificationType.LOAD_CREATION)) {
+            } else if (modificationInfos.getClass().equals(LoadCreationInfos.class)) {
                 if (((LoadCreationInfos) modificationInfos).getEquipmentId().equals("newLoad")) {
                     loadCreationEntityUuid.set(modificationInfos.getUuid());
                 }
-            } else if (modificationInfos.getType().equals(ModificationType.EQUIPMENT_DELETION)) {
+            } else if (modificationInfos.getClass().equals(EquipmentDeletionInfos.class)) {
                 if (((EquipmentDeletionInfos) modificationInfos).getEquipmentId().equals("v2shunt")) {
                     equipmentDeletionEntityUuid.set(modificationInfos.getUuid());
                 }

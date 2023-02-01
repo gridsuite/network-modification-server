@@ -7,7 +7,6 @@
 package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.iidm.network.Network;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.utils.MatcherModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -26,7 +25,6 @@ public class LineAttachToNewVoltageLevelTest extends AbstractNetworkModification
 
     private LineCreationInfos getAttachmentLine() {
         return LineCreationInfos.builder()
-                .type(ModificationType.LINE_CREATION)
                 .equipmentId("attachmentLine")
                 .seriesResistance(50.6)
                 .seriesReactance(25.3)
@@ -35,7 +33,6 @@ public class LineAttachToNewVoltageLevelTest extends AbstractNetworkModification
 
     private VoltageLevelCreationInfos getNewVoltageLevel() {
         return VoltageLevelCreationInfos.builder()
-                .type(ModificationType.VOLTAGE_LEVEL_CREATION)
                 .equipmentId("newVoltageLevel")
                 .equipmentName("NewVoltageLevel")
                 .nominalVoltage(379.3)
@@ -53,7 +50,6 @@ public class LineAttachToNewVoltageLevelTest extends AbstractNetworkModification
     @Override
     protected ModificationInfos buildModification() {
         return LineAttachToVoltageLevelInfos.builder()
-                .type(ModificationType.LINE_ATTACH_TO_VOLTAGE_LEVEL)
                 .lineToAttachToId("line3")
                 .percent(20.0)
                 .attachmentPointId("AttPointId")
@@ -72,7 +68,6 @@ public class LineAttachToNewVoltageLevelTest extends AbstractNetworkModification
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return LineAttachToVoltageLevelInfos.builder()
-                .type(ModificationType.LINE_ATTACH_TO_VOLTAGE_LEVEL)
                 .lineToAttachToId("line3")
                 .percent(10.0)
                 .attachmentPointId("AttPointId")   // created VL

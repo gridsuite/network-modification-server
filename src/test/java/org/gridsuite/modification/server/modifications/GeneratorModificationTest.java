@@ -14,30 +14,23 @@ import com.powsybl.iidm.network.ReactiveLimitsKind;
 import com.powsybl.iidm.network.extensions.ActivePowerControl;
 import com.powsybl.iidm.network.extensions.GeneratorShortCircuit;
 import com.powsybl.iidm.network.extensions.GeneratorStartup;
-
 import lombok.SneakyThrows;
-
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.AttributeModification;
-import org.gridsuite.modification.server.dto.GeneratorModificationInfos;
-import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.dto.OperationType;
-import org.gridsuite.modification.server.dto.ReactiveCapabilityCurveModificationInfos;
-import org.gridsuite.modification.server.dto.VoltageRegulationType;
+import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.utils.MatcherGeneratorModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_GENERATOR_ERROR;
+
 import java.util.List;
 import java.util.UUID;
 
+import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_GENERATOR_ERROR;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class GeneratorModificationTest extends AbstractNetworkModificationTest {
     @Override
@@ -48,7 +41,6 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModification() {
         return GeneratorModificationInfos.builder()
-                .type(ModificationType.GENERATOR_MODIFICATION)
                 .equipmentId("idGenerator")
                 .energySource(new AttributeModification<>(EnergySource.SOLAR, OperationType.SET))
                 .equipmentName(new AttributeModification<>("newV1Generator", OperationType.SET))
@@ -86,7 +78,6 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return GeneratorModificationInfos.builder()
-                .type(ModificationType.GENERATOR_MODIFICATION)
                 .equipmentId("idGenerator")
                 .energySource(new AttributeModification<>(EnergySource.HYDRO, OperationType.SET))
                 .equipmentName(new AttributeModification<>("newV1GeneratorEdited", OperationType.SET))

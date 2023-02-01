@@ -26,9 +26,6 @@ import javax.persistence.Table;
 public class BooleanEquipmentAttributeModificationEntity extends EquipmentAttributeModificationEntity<Boolean> {
 
     public BooleanEquipmentAttributeModificationEntity(EquipmentAttributeModificationInfos equipmentAttributeModificationInfos) {
-        super(equipmentAttributeModificationInfos.getEquipmentId(),
-            equipmentAttributeModificationInfos.getEquipmentAttributeName(),
-            (boolean) equipmentAttributeModificationInfos.getEquipmentAttributeValue(),
-            equipmentAttributeModificationInfos.getEquipmentType());
+        super(equipmentAttributeModificationInfos);
     }
 }

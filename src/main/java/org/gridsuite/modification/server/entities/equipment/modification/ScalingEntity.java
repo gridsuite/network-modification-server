@@ -10,7 +10,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.Setter;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.VariationType;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.ScalingInfos;
@@ -18,7 +17,6 @@ import org.gridsuite.modification.server.dto.ScalingVariationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 
 import javax.persistence.*;
-import javax.validation.constraints.NotNull;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -39,18 +37,18 @@ public class ScalingEntity extends ModificationEntity {
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<ScalingVariationEntity> variations;
 
-    public ScalingEntity(@NotNull ModificationType modificationType, ScalingInfos scalingInfos) {
-        super(modificationType);
-        assignAttribute(scalingInfos);
+    public ScalingEntity(ScalingInfos scalingInfos) {
+        super(scalingInfos);
+        assignAttributes(scalingInfos);
     }
 
     @Override
     public void update(@NonNull ModificationInfos modificationInfos) {
         super.update(modificationInfos);
-        assignAttribute((ScalingInfos) modificationInfos);
+        assignAttributes((ScalingInfos) modificationInfos);
     }
 
-    private void assignAttribute(ScalingInfos scalingInfos) {
+    private void assignAttributes(ScalingInfos scalingInfos) {
         variationType = scalingInfos.getVariationType();
         if (variations == null) {
             variations = scalingInfos.getVariations().stream().map(ScalingVariationInfos::toEntity).collect(Collectors.toList());

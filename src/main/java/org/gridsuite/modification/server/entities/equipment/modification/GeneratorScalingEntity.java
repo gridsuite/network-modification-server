@@ -12,7 +12,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.Setter;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.GeneratorScalingInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 
@@ -34,7 +33,7 @@ public class GeneratorScalingEntity extends ScalingEntity {
     private boolean isIterative;
 
     public GeneratorScalingEntity(@NotNull GeneratorScalingInfos generatorScalingInfos) {
-        super(ModificationType.GENERATOR_SCALING, generatorScalingInfos);
+        super(generatorScalingInfos);
         assignAttributes(generatorScalingInfos);
     }
 
@@ -51,7 +50,6 @@ public class GeneratorScalingEntity extends ScalingEntity {
     @Override
     public GeneratorScalingInfos toModificationInfos() {
         return GeneratorScalingInfos.builder()
-                .type(ModificationType.valueOf(getType()))
                 .date(getDate())
                 .uuid(getId())
                 .isIterative(isIterative())

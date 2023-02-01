@@ -8,7 +8,6 @@ package org.gridsuite.modification.server.entities.equipment.creation;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.InjectionCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 
@@ -31,12 +30,6 @@ public class InjectionCreationEntity extends EquipmentCreationEntity {
     protected InjectionCreationEntity(InjectionCreationInfos injectionCreationInfos) {
         super(injectionCreationInfos);
         assignAttributes(injectionCreationInfos);
-    }
-
-    protected InjectionCreationEntity(ModificationType modificationType, String equipmentId, String equipmentName, String voltageLevelId, String busOrBusbarSectionId) {
-        super(modificationType, equipmentId, equipmentName);
-        this.voltageLevelId = voltageLevelId;
-        this.busOrBusbarSectionId = busOrBusbarSectionId;
     }
 
     @Override

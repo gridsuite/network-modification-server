@@ -6,7 +6,6 @@
  */
 package org.gridsuite.modification.server.utils;
 
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.EquipmentDeletionInfos;
 import org.hamcrest.Description;
 
@@ -19,10 +18,9 @@ import java.util.Set;
  */
 public class MatcherEquipmentDeletionInfos extends MatcherModificationInfos<EquipmentDeletionInfos> {
 
-    public static MatcherEquipmentDeletionInfos createMatcherEquipmentDeletionInfos(ModificationType modificationType, String equipmentId, String equipmentType, Set<String> substationIds) {
+    public static MatcherEquipmentDeletionInfos createMatcherEquipmentDeletionInfos(String equipmentId, String equipmentType, Set<String> substationIds) {
         return new MatcherEquipmentDeletionInfos(EquipmentDeletionInfos.builder()
                 .date(ZonedDateTime.now(ZoneOffset.UTC))
-                .type(modificationType)
                 .equipmentType(equipmentType)
                 .equipmentId(equipmentId)
                 .substationIds(substationIds)
@@ -41,8 +39,7 @@ public class MatcherEquipmentDeletionInfos extends MatcherModificationInfos<Equi
     public boolean matchesSafely(EquipmentDeletionInfos m) {
         return super.matchesSafely(m)
                 && m.getEquipmentId().equals(reference.getEquipmentId())
-            && m.getEquipmentType().equals(reference.getEquipmentType())
-                && m.getSubstationIds().equals(reference.getSubstationIds());
+            && m.getEquipmentType().equals(reference.getEquipmentType());
     }
 
     @Override

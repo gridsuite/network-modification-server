@@ -76,13 +76,18 @@ public class NetworkModificationApplicator {
         return listener.flushNetworkModifications();
     }
 
+    @SuppressWarnings("squid:S1181")
     private void apply(ModificationInfos modificationInfos, NetworkStoreListener listener, ReportInfos reportInfos, ApplicationMode mode) {
         String rootReporterId = reportInfos.getReporterId() + "@" + NETWORK_MODIFICATION_TYPE_REPORT;
         ReporterModel reporter = new ReporterModel(rootReporterId, rootReporterId);
         Reporter subReporter = modificationInfos.createSubReporter(reporter);
-
         try {
-            modificationInfos.toModification().apply(listener.getNetwork(), subReporter, context);
+            try {
+                modificationInfos.toModification().apply(listener.getNetwork(), subReporter, context);
+            } catch (Error e) { // Powsybl can raise Error
+                // Ex: java.lang.AssertionError: The voltage level 'vlId' cannot be removed because of a remaining LINE
+                throw new PowsyblException(e);
+            }
             listener.addNetworkDamage(modificationInfos);
         } catch (Exception e) {
             NetworkModificationException networkModificationException = handleException(modificationInfos.getErrorType(), subReporter, e);
