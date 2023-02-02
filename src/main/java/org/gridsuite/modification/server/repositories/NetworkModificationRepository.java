@@ -131,7 +131,7 @@ public class NetworkModificationRepository {
     }
 
     public List<ModificationInfos> getModificationsInfos(List<UUID> groupUuids) {
-        return groupUuids.stream().flatMap(this::getModificationEntityList).map(ModificationEntity::toModificationInfos)
+        return groupUuids.stream().flatMap(this::getModificationEntityStream).map(ModificationEntity::toModificationInfos)
             .collect(Collectors.toList());
     }
 
@@ -162,7 +162,7 @@ public class NetworkModificationRepository {
     @Transactional // To have the find and delete in the same transaction (atomic)
     public int deleteModifications(UUID groupUuid, List<UUID> uuids) {
         ModificationGroupEntity groupEntity = getModificationGroup(groupUuid);
-        List<ModificationEntity> modifications = getModificationEntityList(groupUuid)
+        List<ModificationEntity> modifications = getModificationEntityStream(groupUuid)
                 .filter(m -> uuids.contains(m.getId()))
                 .collect(Collectors.toList());
         modifications.forEach(groupEntity::removeModification);
@@ -179,12 +179,12 @@ public class NetworkModificationRepository {
         return this.modificationGroupRepository.findById(groupUuid).orElseGet(() -> modificationGroupRepository.save(new ModificationGroupEntity(groupUuid)));
     }
 
-    private Stream<ModificationEntity> getModificationEntityList(UUID groupUuid) {
+    private Stream<ModificationEntity> getModificationEntityStream(UUID groupUuid) {
         return getModificationGroup(groupUuid).getModifications().stream().filter(Objects::nonNull);
     }
 
     private List<ModificationEntity> getModificationsEntities(UUID groupUuid) {
-        return getModificationEntityList(groupUuid).collect(Collectors.toList());
+        return getModificationEntityStream(groupUuid).collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
@@ -194,7 +194,7 @@ public class NetworkModificationRepository {
 
     @Transactional(readOnly = true)
     public List<ModificationEntity> copyModificationsEntities(@NonNull UUID groupUuid) {
-        return getModificationEntityList(groupUuid).map(ModificationEntity::copy).collect(Collectors.toList());
+        return getModificationEntityStream(groupUuid).map(ModificationEntity::copy).collect(Collectors.toList());
     }
 
     @Transactional
