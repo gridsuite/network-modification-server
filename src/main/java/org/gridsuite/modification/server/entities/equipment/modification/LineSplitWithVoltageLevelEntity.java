@@ -99,12 +99,4 @@ public class LineSplitWithVoltageLevelEntity  extends ModificationEntity {
             .newLine2Id(getNewLine2Id())
             .newLine2Name(getNewLine2Name());
     }
-
-    @Override
-    public void cloneWithIdsToNull() {
-        super.cloneWithIdsToNull();
-        if (this.getMayVoltageLevelCreation() != null) {
-            this.getMayVoltageLevelCreation().cloneWithIdsToNull();
-        }
-    }
 }

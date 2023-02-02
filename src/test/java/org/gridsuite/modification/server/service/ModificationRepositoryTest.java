@@ -31,10 +31,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -87,10 +84,6 @@ public class ModificationRepositoryTest {
 
     private LineCreationInfos getLineCreationModification(UUID modificationUuid) {
         return (LineCreationInfos) networkModificationRepository.getModificationInfo(modificationUuid);
-    }
-
-    private TwoWindingsTransformerCreationInfos getTwoWindingsTransformerCreationModification(UUID modificationUuid) {
-        return (TwoWindingsTransformerCreationInfos) networkModificationRepository.getModificationInfo(modificationUuid);
     }
 
     private SubstationCreationInfos getSubstationCreationModification(UUID modificationUuid) {
@@ -597,16 +590,15 @@ public class ModificationRepositoryTest {
         // moving modifications from a wrong group should work but return their UUID in response
         SQLStatementCountValidator.reset();
         List<UUID> modificationsToMoveUuid = List.of(groovyScriptEntity1.getId(), groovyScriptEntity3.getId());
-        assertEquals(List.of(groovyScriptEntity3.getId()), networkModificationRepository.moveModifications(TEST_GROUP_ID_3, TEST_GROUP_ID, modificationsToMoveUuid, null).getModificationsInError());
+        networkModificationRepository.moveModifications(TEST_GROUP_ID_3, TEST_GROUP_ID, modificationsToMoveUuid, null);
         assertRequestsCount(4, 0, 5, 0);
 
         // moving modification with reference node not in destination: no exception, and bad id is returned as error
         SQLStatementCountValidator.reset();
         List <UUID> modificationsToMoveUuid2 = List.of(groovyScriptEntity1.getId());
         UUID referenceNodeUuid = groovyScriptEntity2.getId();
-        NetworkModificationRepository.MoveModificationResult result = networkModificationRepository.moveModifications(TEST_GROUP_ID_2, TEST_GROUP_ID, modificationsToMoveUuid2, referenceNodeUuid);
-        assertTrue(result.getModificationsMoved().isEmpty()); // nothing moved
-        assertEquals(modificationsToMoveUuid2, result.getModificationsInError());
+        List<ModificationEntity> result = networkModificationRepository.moveModifications(TEST_GROUP_ID_2, TEST_GROUP_ID, modificationsToMoveUuid2, referenceNodeUuid);
+        assertTrue(result.isEmpty()); // nothing moved
         assertRequestsCount(2, 0, 0, 0);
 
         var modification1 = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
@@ -800,9 +792,7 @@ public class ModificationRepositoryTest {
         networkModificationRepository.saveModifications(TEST_GROUP_ID, entities);
         assertRequestsCount(1, 11, 5, 0);
 
-        List<BranchStatusModificationInfos> modificationInfos = networkModificationRepository.getModifications(
-                entities.stream().map(ModificationEntity::getId).collect(Collectors.toList())
-            )
+        List<BranchStatusModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true)
             .stream()
             .map(BranchStatusModificationInfos.class::cast)
             .sorted(Comparator.comparing(BranchStatusModificationInfos::getEquipmentId))

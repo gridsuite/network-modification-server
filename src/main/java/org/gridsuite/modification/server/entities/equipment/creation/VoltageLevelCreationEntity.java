@@ -15,7 +15,6 @@ import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.VoltageLevelCreationInfos;
 
 import javax.persistence.*;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -86,13 +85,6 @@ public class VoltageLevelCreationEntity extends EquipmentCreationEntity {
                 .substationId(getSubstationId())
                 .busbarSections(bbsis)
                 .busbarConnections(cnxis);
-    }
-
-    @Override
-    public void cloneWithIdsToNull() {
-        super.cloneWithIdsToNull();
-        this.busbarSections = new ArrayList<>(busbarSections);
-        this.busbarConnections = new ArrayList<>(busbarConnections);
     }
 
     @Override

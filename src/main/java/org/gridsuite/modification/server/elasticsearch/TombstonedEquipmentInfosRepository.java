@@ -19,11 +19,7 @@ import java.util.UUID;
  */
 @Lazy
 public interface TombstonedEquipmentInfosRepository extends ElasticsearchRepository<TombstonedEquipmentInfos, String> {
-    List<TombstonedEquipmentInfos> findAllByNetworkUuid(@NonNull UUID networkUuid);
-
     List<TombstonedEquipmentInfos> findAllByNetworkUuidAndVariantId(@NonNull UUID networkUuid, @NonNull String variantId);
 
     void deleteAllByNetworkUuidAndVariantId(UUID networkUuid, String variantId);
-
-    List<TombstonedEquipmentInfos> findByIdAndNetworkUuidAndVariantId(@NonNull String equipmentId, @NonNull UUID networkUuid, @NonNull String variantId);
 }

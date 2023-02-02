@@ -16,6 +16,10 @@ import org.hamcrest.TypeSafeMatcher;
 public class MatcherModificationInfos<T extends ModificationInfos> extends TypeSafeMatcher<T> {
     T reference;
 
+    public static MatcherModificationInfos createMatcherModificationInfos(ModificationInfos ref) {
+        return new MatcherModificationInfos(ref);
+    }
+
     protected MatcherModificationInfos(T ref) {
         this.reference = ref;
     }

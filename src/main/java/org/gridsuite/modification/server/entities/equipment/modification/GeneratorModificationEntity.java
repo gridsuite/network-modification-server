@@ -14,7 +14,6 @@ import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.*;
 
 import javax.persistence.*;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -306,11 +305,5 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
                 .qPercent(toAttributeModification(getQPercent()))
                 .reactiveCapabilityCurve(toAttributeModification(getReactiveCapabilityCurve()))
                 .reactiveCapabilityCurvePoints(points);
-    }
-
-    @Override
-    public void cloneWithIdsToNull() {
-        super.cloneWithIdsToNull();
-        this.reactiveCapabilityCurvePoints = new ArrayList<>(reactiveCapabilityCurvePoints);
     }
 }

@@ -6,8 +6,6 @@
  */
 package org.gridsuite.modification.server.repositories;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
 import lombok.NonNull;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ModificationInfos;
@@ -52,33 +50,26 @@ public class NetworkModificationRepository {
         modifications.forEach(modificationGroupEntity::addModification);
     }
 
-    @Getter
-    @AllArgsConstructor
-    public class MoveModificationResult {
-        private List<UUID> modificationsMoved;
-        private List<UUID> modificationsInError;
-    }
-
-    @Transactional // To have all move in the same transaction (atomic)
-    //when we move modifications, we move them right before referenceModification when it is defined, at the end of list otherwise
-    public MoveModificationResult moveModifications(UUID destinationGroupUuid, UUID originGroupUuid, List<UUID> modificationsUuid, UUID referenceModificationUuid) {
+    @Transactional
+    // To have all move in the same transaction (atomic)
+    // When we move modifications, we move them right before referenceModification when it is defined, at the end of list otherwise
+    public List<ModificationEntity> moveModifications(UUID destinationGroupUuid, UUID originGroupUuid, List<UUID> modificationsUuid, UUID referenceModificationUuid) {
         ModificationGroupEntity originModificationGroupEntity = getModificationGroup(originGroupUuid);
 
-        Map<UUID, ModificationEntity> originModifications = modificationRepository.findAllBaseByGroupId(originGroupUuid).stream()
+        Map<UUID, ModificationEntity> originModifications = getModificationsEntities(originGroupUuid).stream()
                 .collect(Collectors.toMap(ModificationEntity::getId, Function.identity(), (x, y) -> y, LinkedHashMap::new));
 
-        List<UUID> modificationsInErrorUUID = modificationsUuid.stream().filter(mUuid -> !originModifications.containsKey(mUuid)).collect(Collectors.toList());
         List<UUID> modificationsToMoveUUID = modificationsUuid.stream().filter(originModifications::containsKey).collect(Collectors.toList());
 
+        List<ModificationEntity> newDestinationModificationList = List.of();
         if (!modificationsToMoveUUID.isEmpty()) {
-
             // if moving within the same group
             if (originGroupUuid.equals(destinationGroupUuid)) {
                 if (referenceModificationUuid != null && !originModifications.containsKey(referenceModificationUuid)) {
                     throw new NetworkModificationException(MOVE_MODIFICATION_ERROR);
                 }
 
-                List<ModificationEntity> newDestinationModificationList = updateModificationList(modificationsToMoveUUID, originModifications, originModifications, referenceModificationUuid);
+                newDestinationModificationList = updateModificationList(modificationsToMoveUUID, originModifications, originModifications, referenceModificationUuid);
 
                 originModificationGroupEntity.setModifications(newDestinationModificationList);
             } else {
@@ -93,16 +84,16 @@ public class NetworkModificationRepository {
                     throw new NetworkModificationException(MOVE_MODIFICATION_ERROR);
                 }
 
-                List<ModificationEntity> newDestinationModificationList = updateModificationList(modificationsToMoveUUID, originModifications, destinationModifications, referenceModificationUuid);
+                newDestinationModificationList = updateModificationList(modificationsToMoveUUID, originModifications, destinationModifications, referenceModificationUuid);
 
                 originModificationGroupEntity.setModifications(new ArrayList<>(originModifications.values()));
                 destinationModificationGroupEntity.setModifications(newDestinationModificationList);
             }
         }
-        return new MoveModificationResult(modificationsToMoveUUID, modificationsInErrorUUID);
+        return newDestinationModificationList;
     }
 
-    public List<ModificationEntity> updateModificationList(List<UUID> modificationsToMoveUuid, Map<UUID, ModificationEntity> originModifications, Map<UUID, ModificationEntity> destinationModifications, UUID referenceModificationUuid) {
+    private List<ModificationEntity> updateModificationList(List<UUID> modificationsToMoveUuid, Map<UUID, ModificationEntity> originModifications, Map<UUID, ModificationEntity> destinationModifications, UUID referenceModificationUuid) {
         List<ModificationEntity> movedModifications = modificationsToMoveUuid.stream().map(originModifications::remove).collect(Collectors.toList());
 
         List<ModificationEntity> newDestinationModificationList = new ArrayList<>(destinationModifications.values());
@@ -117,12 +108,6 @@ public class NetworkModificationRepository {
         return this.modificationGroupRepository.findAll().stream()
                 .map(ModificationGroupEntity::getId)
                 .collect(Collectors.toList());
-    }
-
-    public List<ModificationInfos> getModifications(List<UUID> uuids) {
-        return this.modificationRepository.findAllById(uuids).stream()
-            .map(ModificationEntity::toModificationInfos)
-            .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
@@ -146,7 +131,7 @@ public class NetworkModificationRepository {
     }
 
     public List<ModificationInfos> getModificationsInfos(List<UUID> groupUuids) {
-        return this.getModificationsEntities(groupUuids).stream().map(ModificationEntity::toModificationInfos)
+        return groupUuids.stream().flatMap(this::getModificationEntityStream).map(ModificationEntity::toModificationInfos)
             .collect(Collectors.toList());
     }
 
@@ -156,10 +141,6 @@ public class NetworkModificationRepository {
             .findById(modificationUuid)
             .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString()))
             .toModificationInfos();
-    }
-
-    public Stream<ModificationEntity> getModificationEntityList(UUID groupUuid) {
-        return getModificationGroup(groupUuid).getModifications().stream().filter(Objects::nonNull);
     }
 
     @Transactional // To have the 2 delete in the same transaction (atomic)
@@ -181,7 +162,7 @@ public class NetworkModificationRepository {
     @Transactional // To have the find and delete in the same transaction (atomic)
     public int deleteModifications(UUID groupUuid, List<UUID> uuids) {
         ModificationGroupEntity groupEntity = getModificationGroup(groupUuid);
-        List<ModificationEntity> modifications = getModificationEntityList(groupUuid)
+        List<ModificationEntity> modifications = getModificationEntityStream(groupUuid)
                 .filter(m -> uuids.contains(m.getId()))
                 .collect(Collectors.toList());
         modifications.forEach(groupEntity::removeModification);
@@ -198,22 +179,29 @@ public class NetworkModificationRepository {
         return this.modificationGroupRepository.findById(groupUuid).orElseGet(() -> modificationGroupRepository.save(new ModificationGroupEntity(groupUuid)));
     }
 
-    private List<ModificationEntity> getModificationsEntities(List<UUID> groupUuids) {
-        return groupUuids.stream().flatMap(this::getModificationEntityList).collect(Collectors.toList());
+    private Stream<ModificationEntity> getModificationEntityStream(UUID groupUuid) {
+        return getModificationGroup(groupUuid).getModifications().stream().filter(Objects::nonNull);
+    }
+
+    private List<ModificationEntity> getModificationsEntities(UUID groupUuid) {
+        return getModificationEntityStream(groupUuid).collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
-    public Optional<ModificationEntity> cloneModificationEntity(UUID modificationUuid) {
-        Optional<ModificationEntity> entity = modificationRepository.findById(modificationUuid);
-        entity.ifPresent(ModificationEntity::cloneWithIdsToNull);
-        return entity;
+    public List<ModificationEntity> getModificationsEntities(@NonNull List<UUID> uuids) {
+        return modificationRepository.findAllById(uuids);
     }
 
     @Transactional(readOnly = true)
-    public List<ModificationEntity> cloneModificationsEntities(@NonNull UUID groupUuid) {
-        return getModificationEntityList(groupUuid).map(entity -> {
-            entity.cloneWithIdsToNull();
-            return entity;
-        }).collect(Collectors.toList());
+    public List<ModificationEntity> copyModificationsEntities(@NonNull UUID groupUuid) {
+        return getModificationEntityStream(groupUuid).map(ModificationEntity::copy).collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void updateModification(@NonNull UUID modificationUuid, @NonNull ModificationInfos modificationInfos) {
+        this.modificationRepository
+            .findById(modificationUuid)
+            .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format("Modification (%s) not found", modificationUuid)))
+            .update(modificationInfos);
     }
 }

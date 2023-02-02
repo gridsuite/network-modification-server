@@ -17,7 +17,6 @@ import org.gridsuite.modification.server.dto.ScalingVariationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 
 import javax.persistence.*;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -57,19 +56,5 @@ public class ScalingEntity extends ModificationEntity {
             variations.clear();
             variations.addAll(scalingInfos.getVariations().stream().map(ScalingVariationInfos::toEntity).collect(Collectors.toList()));
         }
-    }
-
-    @Override
-    public void cloneWithIdsToNull() {
-        setId(null);
-        this.variations = getVariations()
-                .stream()
-                .peek(variation -> {
-                    variation.setId(null);
-                    variation.setFilters(new ArrayList<>(variation.getFilters()
-                            .stream()
-                            .peek(filter -> filter.setId(null))
-                            .collect(Collectors.toList())));
-                }).collect(Collectors.toList());
     }
 }
