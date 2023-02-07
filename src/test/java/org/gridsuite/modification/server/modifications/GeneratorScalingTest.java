@@ -165,7 +165,6 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
         ModificationInfos modificationToCreate = GeneratorScalingInfos.builder()
                 .uuid(GENERATOR_SCALING_ID)
                 .date(ZonedDateTime.now())
-                .isIterative(true)
                 .variationType(VariationType.DELTA_P)
                 .variations(List.of(variation1))
                 .build();
@@ -192,7 +191,6 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
                 .filters(List.of(filter))
                 .build();
         var generatorScalingInfo = GeneratorScalingInfos.builder()
-                .isIterative(false)
                 .variationType(VariationType.TARGET_P)
                 .variations(List.of(variation))
                 .build();
@@ -228,7 +226,6 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
                 .filters(List.of(filter, filter2))
                 .build();
         var generatorScalingInfo = GeneratorScalingInfos.builder()
-                .isIterative(false)
                 .variationType(VariationType.TARGET_P)
                 .variations(List.of(variation))
                 .build();
@@ -310,7 +307,6 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
 
         return GeneratorScalingInfos.builder()
                 .date(ZonedDateTime.now())
-                .isIterative(true)
                 .variationType(VariationType.DELTA_P)
                 .variations(List.of(variation1, variation2, variation3, variation4, variation5))
                 .build();
@@ -332,7 +328,6 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
         return GeneratorScalingInfos.builder()
                 .uuid(GENERATOR_SCALING_ID)
                 .date(ZonedDateTime.now())
-                .isIterative(false)
                 .variationType(VariationType.TARGET_P)
                 .variations(List.of(variation5))
                 .build();
