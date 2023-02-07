@@ -8,7 +8,10 @@ package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.iidm.network.Network;
+import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.VoltageLevelCreationInfos;
+
+import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 
 /**
  * @author walid Sahnoun <walid.sahnoun at rte-france.com>
@@ -19,6 +22,14 @@ public class VoltageLevelCreation extends AbstractModification {
 
     public VoltageLevelCreation(VoltageLevelCreationInfos modificationInfos) {
         this.modificationInfos = modificationInfos;
+    }
+
+    @Override
+    public void control(Network network) throws NetworkModificationException {
+        if (network.getVoltageLevel(modificationInfos.getEquipmentId()) != null) {
+            throw new NetworkModificationException(VOLTAGE_LEVEL_ALREADY_EXISTS, modificationInfos.getEquipmentId());
+        }
+        ModificationUtils.getInstance().controlVoltageLevelCreation(modificationInfos, network);
     }
 
     @Override

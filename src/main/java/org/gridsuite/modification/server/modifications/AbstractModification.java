@@ -10,6 +10,7 @@ import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.computation.ComputationManager;
 import com.powsybl.iidm.modification.AbstractNetworkModification;
 import com.powsybl.iidm.network.Network;
+import org.gridsuite.modification.server.NetworkModificationException;
 import org.springframework.context.ApplicationContext;
 
 /**
@@ -23,5 +24,9 @@ public abstract class AbstractModification extends AbstractNetworkModification {
 
     public void apply(Network network, Reporter reporter, ApplicationContext context) {
         apply(network, reporter);
+    }
+
+    public void control(Network network) throws NetworkModificationException {
+        // To perform input data control before hypothesis apply. Nothing to check here
     }
 }

@@ -9,16 +9,14 @@ package org.gridsuite.modification.server.modifications;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.iidm.modification.topology.CreateLineOnLine;
 import com.powsybl.iidm.modification.topology.CreateLineOnLineBuilder;
-import com.powsybl.iidm.network.Line;
-import com.powsybl.iidm.network.LineAdder;
-import com.powsybl.iidm.network.Network;
+import com.powsybl.iidm.network.*;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.LineAttachToVoltageLevelInfos;
 import org.gridsuite.modification.server.dto.LineCreationInfos;
 import org.gridsuite.modification.server.dto.VoltageLevelCreationInfos;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_ATTACH_ERROR;
-import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_NOT_FOUND;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_ALREADY_EXISTS;
 
 /**
  * @author David Braquart <david.braquart at rte-france.com>
@@ -32,12 +30,32 @@ public class LineAttachToVoltageLevel extends AbstractModification {
     }
 
     @Override
-    public void apply(Network network, Reporter subReporter) {
+    public void control(Network network) throws NetworkModificationException {
         LineCreationInfos attachmentLineInfos = modificationInfos.getAttachmentLine();
         if (attachmentLineInfos == null) {
             throw new NetworkModificationException(LINE_ATTACH_ERROR, "Missing required attachment line description");
         }
+        ModificationUtils.getInstance().controlNewOrExistingVoltageLevel(modificationInfos.getMayNewVoltageLevelInfos(),
+                modificationInfos.getExistingVoltageLevelId(), modificationInfos.getBbsOrBusId(), network);
+        // new fictitious VL
+        if (network.getVoltageLevel(modificationInfos.getAttachmentPointId()) != null) {
+            throw new NetworkModificationException(VOLTAGE_LEVEL_ALREADY_EXISTS, modificationInfos.getAttachmentPointId());
+        }
+        // check future lines don't exist
+        if (network.getLine(attachmentLineInfos.getEquipmentId()) != null) {
+            throw new NetworkModificationException(LINE_ALREADY_EXISTS, attachmentLineInfos.getEquipmentId());
+        }
+        if (network.getLine(modificationInfos.getNewLine1Id()) != null) {
+            throw new NetworkModificationException(LINE_ALREADY_EXISTS, modificationInfos.getNewLine1Id());
+        }
+        if (network.getLine(modificationInfos.getNewLine2Id()) != null) {
+            throw new NetworkModificationException(LINE_ALREADY_EXISTS, modificationInfos.getNewLine2Id());
+        }
+    }
 
+    @Override
+    public void apply(Network network, Reporter subReporter) {
+        LineCreationInfos attachmentLineInfos = modificationInfos.getAttachmentLine();
         Line line = network.getLine(modificationInfos.getLineToAttachToId());
         if (line == null) {
             throw new NetworkModificationException(LINE_NOT_FOUND, modificationInfos.getLineToAttachToId());

@@ -97,6 +97,9 @@ public class NetworkModificationApplicator {
     @SuppressWarnings("squid:S1181")
     private void apply(AbstractModification modification, Network network, Reporter subReporter) {
         try {
+            // control input data but don't change the network
+            modification.control(network);
+            // apply all changes on the network
             modification.apply(network, subReporter, context);
         } catch (Error e) { // Powsybl can raise Error
             // Ex: java.lang.AssertionError: The voltage level 'vlId' cannot be removed because of a remaining LINE

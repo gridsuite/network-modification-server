@@ -87,15 +87,15 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
 
     @Embedded
     @AttributeOverrides(value = {
-            @AttributeOverride(name = "value", column = @Column(name = "plannedActivePowerSetPoint")),
-            @AttributeOverride(name = "opType", column = @Column(name = "plannedActivePowerSetPointOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "plannedActivePowerSetPoint")),
+        @AttributeOverride(name = "opType", column = @Column(name = "plannedActivePowerSetPointOp"))
     })
     DoubleModificationEmbedded plannedActivePowerSetPoint;
 
     @Embedded
     @AttributeOverrides(value = {
-            @AttributeOverride(name = "value", column = @Column(name = "startupCost")),
-            @AttributeOverride(name = "opType", column = @Column(name = "startupCostOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "startupCost")),
+        @AttributeOverride(name = "opType", column = @Column(name = "startupCostOp"))
     })
     DoubleModificationEmbedded startupCost;
 
@@ -108,15 +108,15 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
 
     @Embedded
     @AttributeOverrides(value = {
-            @AttributeOverride(name = "value", column = @Column(name = "plannedOutageRate")),
-            @AttributeOverride(name = "opType", column = @Column(name = "plannedOutageRateOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "plannedOutageRate")),
+        @AttributeOverride(name = "opType", column = @Column(name = "plannedOutageRateOp"))
     })
     DoubleModificationEmbedded plannedOutageRate;
 
     @Embedded
     @AttributeOverrides(value = {
-            @AttributeOverride(name = "value", column = @Column(name = "forcedOutageRate")),
-            @AttributeOverride(name = "opType", column = @Column(name = "forcedOutageRateOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "forcedOutageRate")),
+        @AttributeOverride(name = "opType", column = @Column(name = "forcedOutageRateOp"))
     })
     DoubleModificationEmbedded forcedOutageRate;
 

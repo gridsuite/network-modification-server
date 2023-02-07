@@ -7,7 +7,7 @@
 package org.gridsuite.modification.server.modifications;
 
 import org.gridsuite.modification.server.NetworkModificationException;
-import static org.gridsuite.modification.server.NetworkModificationException.Type.CREATE_GENERATOR_ERROR;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.modifications.ModificationUtils.nanIfNull;
 
 import org.gridsuite.modification.server.dto.GeneratorCreationInfos;
@@ -42,10 +42,19 @@ public class GeneratorCreation extends AbstractModification {
     }
 
     @Override
-    public void apply(Network network, Reporter subReporter) {
+    public void control(Network network) throws NetworkModificationException {
         if (modificationInfos == null) {
             throw new NetworkModificationException(CREATE_GENERATOR_ERROR, "Missing required attributes to create the generator");
         }
+        if (network.getGenerator(modificationInfos.getEquipmentId()) != null) {
+            throw new NetworkModificationException(GENERATOR_ALREADY_EXISTS, modificationInfos.getEquipmentId());
+        }
+        ModificationUtils.getInstance().controlInjectionCreation(network, modificationInfos.getVoltageLevelId(),
+                modificationInfos.getBusOrBusbarSectionId(), modificationInfos.getConnectionPosition());
+    }
+
+    @Override
+    public void apply(Network network, Reporter subReporter) {
         // create the generator in the network
         VoltageLevel voltageLevel = ModificationUtils.getInstance().getVoltageLevel(network, modificationInfos.getVoltageLevelId());
         if (voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER) {

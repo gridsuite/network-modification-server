@@ -12,7 +12,10 @@ import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.iidm.modification.topology.CreateFeederBay;
 import com.powsybl.iidm.modification.topology.CreateFeederBayBuilder;
 import com.powsybl.iidm.network.*;
+import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.LoadCreationInfos;
+
+import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -23,6 +26,15 @@ public class LoadCreation extends AbstractModification {
 
     public LoadCreation(LoadCreationInfos modificationInfos) {
         this.modificationInfos = modificationInfos;
+    }
+
+    @Override
+    public void control(Network network) throws NetworkModificationException {
+        if (network.getLoad(modificationInfos.getEquipmentId()) != null) {
+            throw new NetworkModificationException(LOAD_ALREADY_EXISTS, modificationInfos.getEquipmentId());
+        }
+        ModificationUtils.getInstance().controlInjectionCreation(network, modificationInfos.getVoltageLevelId(),
+                modificationInfos.getBusOrBusbarSectionId(), modificationInfos.getConnectionPosition());
     }
 
     @Override

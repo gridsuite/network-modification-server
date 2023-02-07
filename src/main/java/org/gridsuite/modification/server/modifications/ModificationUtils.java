@@ -17,10 +17,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -77,6 +74,56 @@ public final class ModificationUtils {
             throw new NetworkModificationException(GENERATOR_NOT_FOUND, "Generator " + generatorId + " does not exist in network");
         }
         return generator;
+    }
+
+    public void controlInjectionCreation(Network network, String voltageLevelId, String busOrBusbarSectionId, Integer connectionPosition) {
+        VoltageLevel voltageLevel = ModificationUtils.getInstance().getVoltageLevel(network, voltageLevelId);
+        if (voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER) {
+            // bus bar section must exist
+            if (network.getBusbarSection(busOrBusbarSectionId) == null) {
+                throw new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, busOrBusbarSectionId);
+            }
+            // check if position is free
+            Set<Integer> takenFeederPositions = TopologyModificationUtils.getFeederPositions(voltageLevel);
+            var position = ModificationUtils.getInstance().getPosition(connectionPosition, busOrBusbarSectionId, network, voltageLevel);
+            if (takenFeederPositions.contains(position)) {
+                throw new NetworkModificationException(CONNECTION_POSITION_ERROR, "PositionOrder '" + position + "' already taken");
+            }
+        } else {
+            // bus breaker must exist
+            ModificationUtils.getInstance().getBusBreakerBus(voltageLevel, busOrBusbarSectionId);
+        }
+    }
+
+    public void controlBus(Network network, VoltageLevel voltageLevel, String busOrBusbarSectionId) {
+        if (voltageLevel.getTopologyKind() == TopologyKind.BUS_BREAKER) {
+            ModificationUtils.getInstance().getBusBreakerBus(voltageLevel, busOrBusbarSectionId);
+        } else if (network.getBusbarSection(busOrBusbarSectionId) == null) {
+            throw new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, busOrBusbarSectionId);
+        }
+    }
+
+    public void controlBranchCreation(Network network, String voltageLevelId1, String busOrBusbarSectionId1, Integer connectionPosition1,
+                                      String voltageLevelId2, String busOrBusbarSectionId2, Integer connectionPosition2) {
+        VoltageLevel voltageLevel1 = ModificationUtils.getInstance().getVoltageLevel(network, voltageLevelId1);
+        VoltageLevel voltageLevel2 = ModificationUtils.getInstance().getVoltageLevel(network, voltageLevelId2);
+        if (voltageLevel1.getTopologyKind() == TopologyKind.NODE_BREAKER &&
+                voltageLevel2.getTopologyKind() == TopologyKind.NODE_BREAKER) {
+            ModificationUtils.getInstance().controlInjectionCreation(network, voltageLevelId1,
+                    busOrBusbarSectionId1, connectionPosition1);
+            ModificationUtils.getInstance().controlInjectionCreation(network, voltageLevelId2,
+                    busOrBusbarSectionId2, connectionPosition2);
+        } else {
+            // bus or mixed mode
+            controlBus(network, voltageLevel1, busOrBusbarSectionId1);
+            controlBus(network, voltageLevel2, busOrBusbarSectionId2);
+        }
+    }
+
+    public int getPosition(Integer defaultPosition, String busOrBusbarSectionId, Network network, VoltageLevel voltageLevel) {
+        return defaultPosition != null
+                ? defaultPosition
+                : ModificationUtils.getInstance().getPosition(busOrBusbarSectionId, network, voltageLevel);
     }
 
     public int getPosition(String busOrBusbarSectionId, Network network, VoltageLevel voltageLevel) {
@@ -225,10 +272,50 @@ public final class ModificationUtils {
                 .setOpen(false)
                 .add();
         } else {
-            throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "Swich kind '" + switchKind + "' unknown");
+            throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "Switch kind '" + switchKind + "' not supported");
         }
 
         return Pair.of(nodeRank, cnxRank);
+    }
+
+    public void controlNewOrExistingVoltageLevel(VoltageLevelCreationInfos mayNewVL,
+                String existingVoltageLevelId, String bbsOrBusId, Network network) {
+        if (mayNewVL != null) {
+            controlVoltageLevelCreation(mayNewVL, network);
+        } else {
+            // use existing VL
+            if (network.getVoltageLevel(existingVoltageLevelId) == null) {
+                throw new NetworkModificationException(VOLTAGE_LEVEL_NOT_FOUND, existingVoltageLevelId);
+            }
+            // check existing busbar/bus
+            Identifiable<?> identifiable = network.getIdentifiable(bbsOrBusId);
+            if (identifiable == null) {
+                throw new NetworkModificationException(BUS_OR_BUSBAR_NOT_FOUND, bbsOrBusId);
+            } else if (!(identifiable instanceof BusbarSection || identifiable instanceof Bus)) {
+                throw new NetworkModificationException(NOT_A_BUS_OR_BUSBAR, bbsOrBusId);
+            }
+        }
+    }
+
+    public void controlVoltageLevelCreation(VoltageLevelCreationInfos voltageLevelCreationInfos, Network network) {
+        if (network.getVoltageLevel(voltageLevelCreationInfos.getEquipmentId()) != null) {
+            throw new NetworkModificationException(VOLTAGE_LEVEL_ALREADY_EXISTS, voltageLevelCreationInfos.getEquipmentId());
+        }
+        for (BusbarSectionCreationInfos newBbs : voltageLevelCreationInfos.getBusbarSections()) {
+            if (network.getBusbarSection(newBbs.getId()) != null) {
+                throw new NetworkModificationException(BUSBAR_SECTION_ALREADY_EXISTS, newBbs.getId());
+            }
+        }
+        Set<String> allNewBbs = voltageLevelCreationInfos.getBusbarSections().stream().map(BusbarSectionCreationInfos::getId).collect(Collectors.toSet());
+        // From/to connections must use the new VL Busbar sections
+        for (BusbarConnectionCreationInfos bbc : voltageLevelCreationInfos.getBusbarConnections()) {
+            if (!allNewBbs.contains(bbc.getFromBBS())) {
+                throw new NetworkModificationException(BUSBAR_SECTION_NOT_DEFINED, bbc.getFromBBS());
+            }
+            if (!allNewBbs.contains(bbc.getToBBS())) {
+                throw new NetworkModificationException(BUSBAR_SECTION_NOT_DEFINED, bbc.getToBBS());
+            }
+        }
     }
 
     void createVoltageLevel(VoltageLevelCreationInfos voltageLevelCreationInfos,

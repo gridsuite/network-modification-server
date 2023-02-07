@@ -10,7 +10,10 @@ import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.iidm.modification.topology.ReplaceTeePointByVoltageLevelOnLine;
 import com.powsybl.iidm.modification.topology.ReplaceTeePointByVoltageLevelOnLineBuilder;
 import com.powsybl.iidm.network.Network;
+import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.LinesAttachToSplitLinesInfos;
+
+import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_ALREADY_EXISTS;
 
 /**
  * @author David Braquart <david.braquart at rte-france.com>
@@ -21,6 +24,17 @@ public class LinesAttachToSplitLines extends AbstractModification {
 
     public LinesAttachToSplitLines(LinesAttachToSplitLinesInfos modificationInfos) {
         this.modificationInfos = modificationInfos;
+    }
+
+    @Override
+    public void control(Network network) throws NetworkModificationException {
+        // check future lines don't exist
+        if (network.getLine(modificationInfos.getReplacingLine1Id()) != null) {
+            throw new NetworkModificationException(LINE_ALREADY_EXISTS, modificationInfos.getReplacingLine1Id());
+        }
+        if (network.getLine(modificationInfos.getReplacingLine2Id()) != null) {
+            throw new NetworkModificationException(LINE_ALREADY_EXISTS, modificationInfos.getReplacingLine2Id());
+        }
     }
 
     @Override
