@@ -33,11 +33,9 @@ import static org.gridsuite.modification.server.modifications.ModificationUtils.
  */
 
 public class GeneratorScaling extends AbstractScaling {
-    private final boolean isIterative;
 
     public GeneratorScaling(GeneratorScalingInfos generatorScalableInfos) {
         super(generatorScalableInfos);
-        this.isIterative = generatorScalableInfos.getIsIterative();
     }
 
     @Override
@@ -70,7 +68,7 @@ public class GeneratorScaling extends AbstractScaling {
                 scalables.add(getScalable(equipment.getId()));
                 percentages.add((float) ((equipment.getDistributionKey() / distributionKeys) * 100));
             });
-            Scalable ventilationScalable = Scalable.proportional(percentages, scalables, isIterative);
+            Scalable ventilationScalable = Scalable.proportional(percentages, scalables, true);
             scale(network, subReporter, generatorScalingVariation, sum, ventilationScalable);
         }
     }
@@ -95,7 +93,7 @@ public class GeneratorScaling extends AbstractScaling {
                 }).collect(Collectors.toList());
 
         List<Float> percentages = new ArrayList<>(Collections.nCopies(scalables.size(), (float) (100.0 / scalables.size())));
-        Scalable regularDistributionScalable = Scalable.proportional(percentages, scalables, isIterative);
+        Scalable regularDistributionScalable = Scalable.proportional(percentages, scalables, true);
         scale(network, subReporter, generatorScalingVariation, sum, regularDistributionScalable);
     }
 
@@ -121,7 +119,7 @@ public class GeneratorScaling extends AbstractScaling {
         });
 
         setScalablePercentage(maxPSum, maxPMap, percentages, scalables);
-        Scalable proportionalToPmaxScalable = Scalable.proportional(percentages, scalables, isIterative);
+        Scalable proportionalToPmaxScalable = Scalable.proportional(percentages, scalables, true);
         scale(network, subReporter, generatorScalingVariation, targetPSum, proportionalToPmaxScalable);
     }
 
@@ -145,7 +143,7 @@ public class GeneratorScaling extends AbstractScaling {
 
         // we calculate percentage of each target P value relative to the sum of target P
         setScalablePercentage(sum, targetPMap, percentages, scalables);
-        Scalable proportionalScalable = Scalable.proportional(percentages, scalables, isIterative);
+        Scalable proportionalScalable = Scalable.proportional(percentages, scalables, true);
         scale(network, subReporter, generatorScalingVariation, sum, proportionalScalable);
     }
 

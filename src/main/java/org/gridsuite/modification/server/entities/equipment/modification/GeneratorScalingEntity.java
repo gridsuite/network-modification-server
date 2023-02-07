@@ -10,12 +10,9 @@ package org.gridsuite.modification.server.entities.equipment.modification;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.NonNull;
 import lombok.Setter;
 import org.gridsuite.modification.server.dto.GeneratorScalingInfos;
-import org.gridsuite.modification.server.dto.ModificationInfos;
 
-import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
@@ -29,22 +26,8 @@ import java.util.stream.Collectors;
 @Table(name = "GeneratorScaling")
 public class GeneratorScalingEntity extends ScalingEntity {
 
-    @Column(name = "isIterative")
-    private boolean isIterative;
-
     public GeneratorScalingEntity(@NotNull GeneratorScalingInfos generatorScalingInfos) {
         super(generatorScalingInfos);
-        assignAttributes(generatorScalingInfos);
-    }
-
-    @Override
-    public void update(@NonNull ModificationInfos modificationInfos) {
-        super.update(modificationInfos);
-        assignAttributes((GeneratorScalingInfos) modificationInfos);
-    }
-
-    private void assignAttributes(GeneratorScalingInfos generatorScalingInfos) {
-        isIterative = generatorScalingInfos.getIsIterative();
     }
 
     @Override
@@ -52,7 +35,6 @@ public class GeneratorScalingEntity extends ScalingEntity {
         return GeneratorScalingInfos.builder()
                 .date(getDate())
                 .uuid(getId())
-                .isIterative(isIterative())
                 .variationType(getVariationType())
                 .variations(getVariations().stream()
                         .map(ScalingVariationEntity::toScalingVariationInfos)
