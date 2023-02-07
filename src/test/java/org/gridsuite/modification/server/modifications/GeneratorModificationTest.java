@@ -286,6 +286,21 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
 
         assertThat(createdModification, createMatcher(generatorModificationInfos));
         testNetworkModificationsCount(getGroupId(), 3);
+
+        // setting only active power regulation in setpoints
+        generatorModificationInfos = (GeneratorModificationInfos) buildModification();
+        generatorModificationInfos.setActivePowerSetpoint(null);
+        generatorModificationInfos.setReactivePowerSetpoint(null);
+        generatorModificationInfos.setVoltageRegulationOn(null);
+        generatorModificationInfos.setParticipate(null);
+
+        modificationToCreateJson = mapper.writeValueAsString(generatorModificationInfos);
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+
+        createdModification = (GeneratorModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(3);
+        assertThat(createdModification, createMatcher(generatorModificationInfos));
+        testNetworkModificationsCount(getGroupId(), 4);
     }
 
     @SneakyThrows
