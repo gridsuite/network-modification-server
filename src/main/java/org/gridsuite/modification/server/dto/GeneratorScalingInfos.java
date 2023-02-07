@@ -10,7 +10,6 @@ package org.gridsuite.modification.server.dto;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -27,14 +26,10 @@ import org.gridsuite.modification.server.modifications.GeneratorScaling;
 
 @SuperBuilder
 @NoArgsConstructor
-@AllArgsConstructor
 @Getter
 @Setter
 @Schema(description = "Generator scaling creation")
 public class GeneratorScalingInfos extends ScalingInfos {
-
-    @Schema(description = "isIterative")
-    private Boolean isIterative;
 
     @Override
     public GeneratorScalingEntity toEntity() {
