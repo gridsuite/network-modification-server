@@ -25,7 +25,7 @@ public class EmbeddedElasticsearch {
 
     private static ElasticsearchContainer elasticsearchContainer;
 
-    @Value("${test.elasticsearch.enabled:false}")
+    @Value("${spring.data.elasticsearch.repositories.enabled:true}")
     boolean elasticsearchEnabled;
 
     @PostConstruct
@@ -42,7 +42,7 @@ public class EmbeddedElasticsearch {
     }
 
     @PreDestroy
-    private void preDestroy() {
+    public void preDestroy() {
         if (elasticsearchContainer == null) {
             return;
         }
