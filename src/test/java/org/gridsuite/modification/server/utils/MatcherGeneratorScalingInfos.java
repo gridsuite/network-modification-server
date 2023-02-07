@@ -7,9 +7,9 @@
 
 package org.gridsuite.modification.server.utils;
 
-import org.gridsuite.modification.server.dto.ScalingVariationInfos;
 import org.gridsuite.modification.server.dto.FilterInfos;
 import org.gridsuite.modification.server.dto.GeneratorScalingInfos;
+import org.gridsuite.modification.server.dto.ScalingVariationInfos;
 
 import java.util.List;
 import java.util.Objects;
@@ -30,7 +30,6 @@ public class MatcherGeneratorScalingInfos extends MatcherModificationInfos<Gener
     public boolean matchesSafely(GeneratorScalingInfos m) {
         return super.matchesSafely(m)
                 && Objects.equals(reference.getVariationType(), m.getVariationType())
-                && Objects.equals(reference.getIsIterative(), m.getIsIterative())
                 && matchesVariations(m.getVariations());
     }
 

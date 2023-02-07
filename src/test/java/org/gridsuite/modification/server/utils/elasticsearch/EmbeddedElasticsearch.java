@@ -4,9 +4,8 @@
   License, v. 2.0. If a copy of the MPL was not distributed with this
   file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package org.gridsuite.modification.server;
+package org.gridsuite.modification.server.utils.elasticsearch;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
 
@@ -25,12 +24,9 @@ public class EmbeddedElasticsearch {
 
     private static ElasticsearchContainer elasticsearchContainer;
 
-    @Value("${spring.data.elasticsearch.repositories.enabled:true}")
-    boolean elasticsearchEnabled;
-
     @PostConstruct
     public void postConstruct() {
-        if (elasticsearchContainer != null || !elasticsearchEnabled) {
+        if (elasticsearchContainer != null) {
             return;
         }
 
