@@ -52,7 +52,7 @@ public class EquipmentDeletionEntity extends EquipmentModificationEntity {
             .builder()
             .uuid(getId())
             .date(getDate())
-            .equipmentId(getEquipmentId())
+            .id(getEquipmentId())
             .equipmentType(getEquipmentType());
     }
 }

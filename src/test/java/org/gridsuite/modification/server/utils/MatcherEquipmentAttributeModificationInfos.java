@@ -25,7 +25,7 @@ public class MatcherEquipmentAttributeModificationInfos extends MatcherModificat
                                                                                                               IdentifiableType equipmentType) {
         return new MatcherEquipmentAttributeModificationInfos(EquipmentAttributeModificationInfos.builder()
                 .date(ZonedDateTime.now(ZoneOffset.UTC))
-                .equipmentId(equipmentId)
+                .id(equipmentId)
                 .substationIds(substationIds)
                 .equipmentAttributeName(equipmentAttributeName)
                 .equipmentAttributeValue(equipmentAttributeValue)
@@ -44,7 +44,7 @@ public class MatcherEquipmentAttributeModificationInfos extends MatcherModificat
     @Override
     public boolean matchesSafely(EquipmentAttributeModificationInfos m) {
         return super.matchesSafely(m)
-                && m.getEquipmentId().equals(reference.getEquipmentId())
+                && m.getId().equals(reference.getId())
                 && m.getEquipmentType().equals(reference.getEquipmentType())
                 && m.getEquipmentAttributeName().equals(reference.getEquipmentAttributeName())
                 && Objects.equals(m.getEquipmentAttributeValue(), reference.getEquipmentAttributeValue());

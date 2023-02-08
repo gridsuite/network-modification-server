@@ -37,14 +37,14 @@ public class BranchStatusModificationSwitchOnLineTest extends AbstractNetworkMod
     @Override
     protected ModificationInfos buildModification() {
         return BranchStatusModificationInfos.builder()
-                .equipmentId(TARGET_LINE_ID)
+                .id(TARGET_LINE_ID)
                 .action(BranchStatusModificationInfos.ActionType.SWITCH_ON).build();
     }
 
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return BranchStatusModificationInfos.builder()
-                .equipmentId("line1")
+                .id("line1")
                 .action(BranchStatusModificationInfos.ActionType.TRIP).build();
     }
 

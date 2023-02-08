@@ -26,7 +26,7 @@ public class MatcherBranchStatusModificationInfos extends MatcherEquipmentModifi
         return new MatcherBranchStatusModificationInfos(BranchStatusModificationInfos.builder()
             .date(ZonedDateTime.now(ZoneOffset.UTC))
             .substationIds(substationIds)
-            .equipmentId(equipmentId)
+            .id(equipmentId)
             .action(action)
             .build());
     }

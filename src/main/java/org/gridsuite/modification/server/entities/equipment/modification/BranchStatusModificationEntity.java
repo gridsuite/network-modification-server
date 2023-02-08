@@ -51,7 +51,7 @@ public class BranchStatusModificationEntity extends EquipmentModificationEntity 
             .uuid(getId())
             .date(getDate())
             .substationIds(vlUuids)
-            .equipmentId(getEquipmentId())
+            .id(getEquipmentId())
             .action(getAction())
             .build();
     }

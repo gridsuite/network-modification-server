@@ -115,7 +115,7 @@ public class NetworkStoreListener implements NetworkListener {
             .builder()
             .uuid(null) // not in "this" db, transient
             .date(ZonedDateTime.now(ZoneOffset.UTC))
-            .equipmentId(identifiable.getId())
+            .id(identifiable.getId())
             .equipmentType(identifiable.getType().name())
             .build()
         );
@@ -154,14 +154,14 @@ public class NetworkStoreListener implements NetworkListener {
         List<String> equipmentDeletionsIds = new ArrayList<>();
         List<TombstonedEquipmentInfos> tombstonedEquipmentInfos = new ArrayList<>();
         equipmentDeletions.forEach(d -> {
-            if (presentEquipmentDeletionsIds.contains(d.getEquipmentId())) {
-                equipmentDeletionsIds.add(d.getEquipmentId());
+            if (presentEquipmentDeletionsIds.contains(d.getId())) {
+                equipmentDeletionsIds.add(d.getId());
             } else {
                 tombstonedEquipmentInfos.add(
                     TombstonedEquipmentInfos.builder()
                         .networkUuid(networkUuid)
                         .variantId(variantId)
-                        .id(d.getEquipmentId())
+                        .id(d.getId())
                         .build());
             }
         });
@@ -171,6 +171,6 @@ public class NetworkStoreListener implements NetworkListener {
     }
 
     private List<String> getEquipmentIds(List<? extends EquipmentModificationInfos> equipmentInfosList) {
-        return equipmentInfosList.stream().map(EquipmentModificationInfos::getEquipmentId).collect(Collectors.toList());
+        return equipmentInfosList.stream().map(EquipmentModificationInfos::getId).collect(Collectors.toList());
     }
 }

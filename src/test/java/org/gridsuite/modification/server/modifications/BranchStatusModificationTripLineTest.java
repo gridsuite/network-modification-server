@@ -38,14 +38,14 @@ public class BranchStatusModificationTripLineTest extends AbstractNetworkModific
     @Override
     protected ModificationInfos buildModification() {
         return BranchStatusModificationInfos.builder()
-                .equipmentId(TARGET_LINE_ID)
+                .id(TARGET_LINE_ID)
                 .action(BranchStatusModificationInfos.ActionType.TRIP).build();
     }
 
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return BranchStatusModificationInfos.builder()
-                .equipmentId(UPDATE_BRANCH_ID)
+                .id(UPDATE_BRANCH_ID)
                 .action(BranchStatusModificationInfos.ActionType.SWITCH_ON).build();
     }
 

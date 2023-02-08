@@ -44,14 +44,14 @@ public class BranchStatusModificationEnergiseSideOneLineTest extends AbstractNet
     @Override
     protected ModificationInfos buildModification() {
         return BranchStatusModificationInfos.builder()
-                .equipmentId(TARGET_LINE_ID)
+                .id(TARGET_LINE_ID)
                 .action(BranchStatusModificationInfos.ActionType.ENERGISE_END_ONE).build();
     }
 
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return BranchStatusModificationInfos.builder()
-                .equipmentId("line1")
+                .id("line1")
                 .action(BranchStatusModificationInfos.ActionType.TRIP).build();
     }
 
@@ -84,7 +84,7 @@ public class BranchStatusModificationEnergiseSideOneLineTest extends AbstractNet
         // line not existing
         BranchStatusModificationInfos modificationInfos = (BranchStatusModificationInfos) buildModification();
         // disconnection error
-        modificationInfos.setEquipmentId("line3");
+        modificationInfos.setId("line3");
         String modificationJson = mapper.writeValueAsString(modificationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(

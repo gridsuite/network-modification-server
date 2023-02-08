@@ -19,6 +19,7 @@ import lombok.experimental.SuperBuilder;
  * @author Slimane Amar <slimane.amar at rte-france.com>
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
+
 @SuperBuilder
 @NoArgsConstructor
 @Getter
@@ -29,5 +30,5 @@ import lombok.experimental.SuperBuilder;
 public class EquipmentModificationInfos extends ModificationInfos {
     @Schema(description = "Equipment ID")
     @NonNull
-    private String equipmentId;
+    private String id;
 }

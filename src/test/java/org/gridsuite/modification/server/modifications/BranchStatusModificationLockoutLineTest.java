@@ -46,14 +46,14 @@ public class BranchStatusModificationLockoutLineTest extends AbstractNetworkModi
     @Override
     protected ModificationInfos buildModification() {
         return BranchStatusModificationInfos.builder()
-                .equipmentId(TARGET_LINE_ID)
+                .id(TARGET_LINE_ID)
                 .action(BranchStatusModificationInfos.ActionType.LOCKOUT).build();
     }
 
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return BranchStatusModificationInfos.builder()
-                .equipmentId(UPDATE_BRANCH_ID)
+                .id(UPDATE_BRANCH_ID)
                 .action(BranchStatusModificationInfos.ActionType.SWITCH_ON).build();
     }
 
@@ -78,7 +78,7 @@ public class BranchStatusModificationLockoutLineTest extends AbstractNetworkModi
     public void testCreateWithErrors() {
         // line not existing
         BranchStatusModificationInfos modificationInfos = (BranchStatusModificationInfos) buildModification();
-        modificationInfos.setEquipmentId("notFound");
+        modificationInfos.setId("notFound");
         String modificationJson = mapper.writeValueAsString(modificationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(
@@ -87,7 +87,7 @@ public class BranchStatusModificationLockoutLineTest extends AbstractNetworkModi
             );
 
         // modification action empty
-        modificationInfos.setEquipmentId("line2");
+        modificationInfos.setId("line2");
         modificationInfos.setAction(null);
         modificationJson = mapper.writeValueAsString(modificationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
@@ -103,7 +103,7 @@ public class BranchStatusModificationLockoutLineTest extends AbstractNetworkModi
                         status().is4xxClientError());
 
         // disconnection error
-        modificationInfos.setEquipmentId("line3");
+        modificationInfos.setId("line3");
         modificationInfos.setAction(BranchStatusModificationInfos.ActionType.LOCKOUT);
         modificationJson = mapper.writeValueAsString(modificationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))

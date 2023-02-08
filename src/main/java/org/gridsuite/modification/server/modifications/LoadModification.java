@@ -27,10 +27,10 @@ public class LoadModification extends AbstractModification {
 
     @Override
     public void apply(Network network, Reporter subReporter) {
-        Load load = network.getLoad(modificationInfos.getEquipmentId());
+        Load load = network.getLoad(modificationInfos.getId());
         if (load == null) {
             throw new NetworkModificationException(LOAD_NOT_FOUND,
-                    "Load " + modificationInfos.getEquipmentId() + " does not exist in network");
+                    "Load " + modificationInfos.getId() + " does not exist in network");
         }
         // modify the load in the network
         modifyLoad(load, modificationInfos, subReporter);
@@ -40,7 +40,7 @@ public class LoadModification extends AbstractModification {
         subReporter.report(Report.builder()
             .withKey("loadModification")
             .withDefaultMessage("Load with id=${id} modified :")
-            .withValue("id", loadModificationInfos.getEquipmentId())
+            .withValue("id", loadModificationInfos.getId())
             .withSeverity(TypedValue.INFO_SEVERITY)
             .build());
 

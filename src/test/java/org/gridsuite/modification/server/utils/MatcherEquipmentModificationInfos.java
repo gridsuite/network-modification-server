@@ -20,7 +20,7 @@ public class MatcherEquipmentModificationInfos<T extends EquipmentModificationIn
     public static MatcherEquipmentModificationInfos<EquipmentModificationInfos> createMatcherEquipmentModificationInfos(String equipmentId, Set<String> substationIds) {
         return new MatcherEquipmentModificationInfos<>(EquipmentModificationInfos.builder()
                 .date(ZonedDateTime.now(ZoneOffset.UTC))
-                .equipmentId(equipmentId)
+                .id(equipmentId)
                 .substationIds(substationIds)
                 .build());
     }
@@ -36,6 +36,6 @@ public class MatcherEquipmentModificationInfos<T extends EquipmentModificationIn
     @Override
     public boolean matchesSafely(T m) {
         return super.matchesSafely(m)
-                && m.getEquipmentId().equals(reference.getEquipmentId());
+                && m.getId().equals(reference.getId());
     }
 }

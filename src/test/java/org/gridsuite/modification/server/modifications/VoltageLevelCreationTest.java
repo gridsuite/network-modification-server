@@ -48,7 +48,7 @@ public class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return VoltageLevelCreationInfos.builder()
-                .equipmentId("VoltageLevelIdEdited")
+                .id("VoltageLevelIdEdited")
                 .name("VoltageLevelEdited")
                 .nominalVoltage(385)
                 .substationId("s2")
@@ -109,7 +109,7 @@ public class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
 
         vli = (VoltageLevelCreationInfos) buildModificationUpdate();
 
-        vli.setEquipmentId("");
+        vli.setId("");
         String vliJsonS2Object = mapper.writeValueAsString(vli);
         mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(vliJsonS2Object).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().is5xxServerError()).andReturn();

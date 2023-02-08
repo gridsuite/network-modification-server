@@ -46,19 +46,19 @@ public class EquipmentAttributeModificationTest extends AbstractNetworkModificat
         EquipmentAttributeModificationInfos modificationInfos = EquipmentAttributeModificationInfos.builder()
             .uuid(modificationUuid)
             .date(ZonedDateTime.of(2021, 2, 19, 0, 0, 0, 0, ZoneOffset.UTC))
-            .equipmentId("equipmentId")
+            .id("equipmentId")
             .substationIds(Set.of("substationId"))
             .equipmentAttributeName("equipmentAttributeName")
             .equipmentAttributeValue("equipmentAttributeValue")
             .equipmentType(IdentifiableType.VOLTAGE_LEVEL)
             .build();
-        assertEquals(String.format("EquipmentAttributeModificationInfos(super=EquipmentModificationInfos(super=ModificationInfos(uuid=%s, date=2021-02-19T00:00Z, substationIds=[substationId]), equipmentId=equipmentId), equipmentAttributeName=equipmentAttributeName, equipmentAttributeValue=equipmentAttributeValue, equipmentType=VOLTAGE_LEVEL)", modificationUuid), modificationInfos.toString());
+        assertEquals(String.format("EquipmentAttributeModificationInfos(super=EquipmentModificationInfos(super=ModificationInfos(uuid=%s, date=2021-02-19T00:00Z, substationIds=[substationId]), id=equipmentId), equipmentAttributeName=equipmentAttributeName, equipmentAttributeValue=equipmentAttributeValue, equipmentType=VOLTAGE_LEVEL)", modificationUuid), modificationInfos.toString());
 
         EquipmentAttributeModificationInfos switchStatusModificationInfos = EquipmentAttributeModificationInfos.builder()
             .equipmentType(IdentifiableType.SWITCH)
             .equipmentAttributeName("open")
             .equipmentAttributeValue(true)
-            .equipmentId("v1b1")
+            .id("v1b1")
             .build();
         String switchStatusModificationInfosJson = mapper.writeValueAsString(switchStatusModificationInfos);
 
@@ -73,7 +73,7 @@ public class EquipmentAttributeModificationTest extends AbstractNetworkModificat
         org.hamcrest.MatcherAssert.assertThat(modificationSwitchInfos, MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos("v1b1", Set.of("s1"), "open", true, IdentifiableType.SWITCH));
 
         // switch in variant VARIANT_ID opening
-        switchStatusModificationInfos.setEquipmentId("break1Variant");
+        switchStatusModificationInfos.setId("break1Variant");
         switchStatusModificationInfosJson = mapper.writeValueAsString(switchStatusModificationInfos);
         mvcResult = mockMvc.perform(post(getNetworkModificationUri() + "&variantId=" + NetworkCreation.VARIANT_ID).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
@@ -103,14 +103,14 @@ public class EquipmentAttributeModificationTest extends AbstractNetworkModificat
         EquipmentAttributeModificationInfos switchStatusModificationInfos = buildModification();
 
         // switch not existing
-        switchStatusModificationInfos.setEquipmentId(switchNotFoundId);
+        switchStatusModificationInfos.setId(switchNotFoundId);
         String switchStatusModificationInfosJson = mapper.writeValueAsString(switchStatusModificationInfos);
         mockMvc.perform(post(getNetworkModificationUri() + extraParams).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpectAll(
             status().isNotFound(),
             content().string(new NetworkModificationException(EQUIPMENT_NOT_FOUND, switchNotFoundId).getMessage()));
 
         // switch closing when already closed
-        switchStatusModificationInfos.setEquipmentId(switchId1);
+        switchStatusModificationInfos.setId(switchId1);
         switchStatusModificationInfos.setEquipmentAttributeValue(false);
         switchStatusModificationInfosJson = mapper.writeValueAsString(switchStatusModificationInfos);
         mvcResult = mockMvc.perform(post(getNetworkModificationUri() + extraParams).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
@@ -126,7 +126,7 @@ public class EquipmentAttributeModificationTest extends AbstractNetworkModificat
         List<EquipmentAttributeModificationInfos> bsiListResultSwitchOpening = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertThat(bsiListResultSwitchOpening.get(0), createMatcherEquipmentAttributeModificationInfos(switchId1, substationsIds, "open", true, IdentifiableType.SWITCH));
         // switch closing
-        switchStatusModificationInfos.setEquipmentId(switchId2);
+        switchStatusModificationInfos.setId(switchId2);
         switchStatusModificationInfos.setEquipmentAttributeValue(false);
         switchStatusModificationInfosJson = mapper.writeValueAsString(switchStatusModificationInfos);
         mvcResult = mockMvc.perform(post(getNetworkModificationUri() + extraParams).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
@@ -135,7 +135,7 @@ public class EquipmentAttributeModificationTest extends AbstractNetworkModificat
         assertThat(bsiListResultami.get(0), createMatcherEquipmentAttributeModificationInfos(switchId2, substationsIds, "open", false, IdentifiableType.SWITCH));
 
         // switch opening on another substation
-        switchStatusModificationInfos.setEquipmentId(switchId3);
+        switchStatusModificationInfos.setId(switchId3);
         switchStatusModificationInfos.setEquipmentAttributeValue(true);
         switchStatusModificationInfosJson = mapper.writeValueAsString(switchStatusModificationInfos);
         mvcResult = mockMvc.perform(post(getNetworkModificationUri() + extraParams).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
@@ -154,7 +154,7 @@ public class EquipmentAttributeModificationTest extends AbstractNetworkModificat
             .equipmentType(IdentifiableType.SWITCH)
             .equipmentAttributeName("close") // bad
             .equipmentAttributeValue(true)
-            .equipmentId("v1b1")
+            .id("v1b1")
             .build();
 
         String switchStatusModificationInfosJson = mapper.writeValueAsString(switchStatusModificationInfos);
@@ -184,7 +184,7 @@ public class EquipmentAttributeModificationTest extends AbstractNetworkModificat
             .equipmentType(IdentifiableType.SWITCH)
             .equipmentAttributeName("open")
             .equipmentAttributeValue(true)
-            .equipmentId("v1b1")
+            .id("v1b1")
             .build();
     }
 
@@ -194,7 +194,7 @@ public class EquipmentAttributeModificationTest extends AbstractNetworkModificat
             .equipmentType(IdentifiableType.SWITCH)
             .equipmentAttributeName("open")
             .equipmentAttributeValue(false)
-            .equipmentId("v1b1Edited")
+            .id("v1b1Edited")
             .build();
     }
 

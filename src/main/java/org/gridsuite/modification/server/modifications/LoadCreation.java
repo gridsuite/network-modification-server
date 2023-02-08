@@ -37,7 +37,7 @@ public class LoadCreation extends AbstractModification {
             CreateFeederBay algo = new CreateFeederBayBuilder()
                 .withBbsId(modificationInfos.getBusOrBusbarSectionId())
                 .withInjectionDirection(modificationInfos.getPosition() != null ? modificationInfos.getPosition().getDirection() : null)
-                .withInjectionFeederName((modificationInfos.getPosition() != null && modificationInfos.getPosition().getLabel() != null) ? modificationInfos.getPosition().getLabel() : modificationInfos.getEquipmentId())
+                .withInjectionFeederName((modificationInfos.getPosition() != null && modificationInfos.getPosition().getLabel() != null) ? modificationInfos.getPosition().getLabel() : modificationInfos.getId())
                 .withInjectionPositionOrder(position)
                 .withInjectionAdder(loadAdder)
                 .build();
@@ -47,7 +47,7 @@ public class LoadCreation extends AbstractModification {
             subReporter.report(Report.builder()
                 .withKey("loadCreated")
                 .withDefaultMessage("New load with id=${id} created")
-                .withValue("id", modificationInfos.getEquipmentId())
+                .withValue("id", modificationInfos.getId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .build());
         }
@@ -56,7 +56,7 @@ public class LoadCreation extends AbstractModification {
     private LoadAdder createLoadAdderInNodeBreaker(VoltageLevel voltageLevel, LoadCreationInfos loadCreationInfos) {
         // creating the load adder
         return voltageLevel.newLoad()
-            .setId(loadCreationInfos.getEquipmentId())
+            .setId(loadCreationInfos.getId())
             .setName(loadCreationInfos.getName())
             .setLoadType(loadCreationInfos.getLoadType())
             .setP0(loadCreationInfos.getP0())
@@ -68,7 +68,7 @@ public class LoadCreation extends AbstractModification {
 
         // creating the load
         return voltageLevel.newLoad()
-            .setId(loadCreationInfos.getEquipmentId())
+            .setId(loadCreationInfos.getId())
             .setName(loadCreationInfos.getName())
             .setLoadType(loadCreationInfos.getLoadType())
             .setBus(bus.getId())

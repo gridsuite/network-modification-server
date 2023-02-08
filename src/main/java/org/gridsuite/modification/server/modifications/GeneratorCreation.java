@@ -67,7 +67,7 @@ public class GeneratorCreation extends AbstractModification {
                 .withInjectionDirection(generatorCreationInfos.getConnectionDirection())
                 .withInjectionFeederName(generatorCreationInfos.getConnectionName() != null
                         ? generatorCreationInfos.getConnectionName()
-                        : generatorCreationInfos.getEquipmentId())
+                        : generatorCreationInfos.getId())
                 .withInjectionPositionOrder(position)
                 .withInjectionAdder(generatorAdder)
                 .build();
@@ -76,7 +76,7 @@ public class GeneratorCreation extends AbstractModification {
 
         // CreateFeederBayBuilder already create the generator using
         // (withInjectionAdder(generatorAdder)) so then we can add extensions
-        var generator = ModificationUtils.getInstance().getGenerator(network, generatorCreationInfos.getEquipmentId());
+        var generator = ModificationUtils.getInstance().getGenerator(network, generatorCreationInfos.getId());
         addExtensionsToGenerator(generatorCreationInfos, generator, voltageLevel);
     }
 
@@ -89,7 +89,7 @@ public class GeneratorCreation extends AbstractModification {
 
         // creating the generator
         GeneratorAdder generatorAdder = voltageLevel.newGenerator()
-            .setId(generatorCreationInfos.getEquipmentId())
+            .setId(generatorCreationInfos.getId())
             .setName(generatorCreationInfos.getName())
             .setEnergySource(generatorCreationInfos.getEnergySource())
             .setMinP(generatorCreationInfos.getMinActivePower())
@@ -173,7 +173,7 @@ public class GeneratorCreation extends AbstractModification {
 
         // creating the generator
         Generator generator = voltageLevel.newGenerator()
-            .setId(generatorCreationInfos.getEquipmentId())
+            .setId(generatorCreationInfos.getId())
             .setName(generatorCreationInfos.getName())
             .setEnergySource(generatorCreationInfos.getEnergySource())
             .setBus(bus.getId())
@@ -192,7 +192,7 @@ public class GeneratorCreation extends AbstractModification {
         subReporter.report(Report.builder()
                 .withKey("generatorCreated")
                 .withDefaultMessage("New generator with id=${id} created")
-                .withValue("id", modificationInfos.getEquipmentId())
+                .withValue("id", modificationInfos.getId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .build());
     }

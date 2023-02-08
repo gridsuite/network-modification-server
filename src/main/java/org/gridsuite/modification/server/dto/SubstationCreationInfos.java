@@ -60,6 +60,6 @@ public class SubstationCreationInfos extends EquipmentCreationInfos {
 
     @Override
     public Reporter createSubReporter(ReporterModel reporter) {
-        return reporter.createSubReporter(ModificationType.SUBSTATION_CREATION.name(), "Substation creation ${substationId}", "substationId", getEquipmentId());
+        return reporter.createSubReporter(ModificationType.SUBSTATION_CREATION.name(), "Substation creation ${substationId}", "substationId", getId());
     }
 }

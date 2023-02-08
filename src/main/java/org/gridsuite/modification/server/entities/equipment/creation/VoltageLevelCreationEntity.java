@@ -79,7 +79,7 @@ public class VoltageLevelCreationEntity extends EquipmentCreationEntity {
                 .builder()
                 .uuid(getId())
                 .date(getDate())
-                .equipmentId(getEquipmentId())
+                .id(getEquipmentId())
                 .name(getEquipmentName())
                 .nominalVoltage(getNominalVoltage())
                 .substationId(getSubstationId())

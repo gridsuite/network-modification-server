@@ -40,7 +40,7 @@ public class LoadModificationTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModification() {
         return LoadModificationInfos.builder()
-            .equipmentId("v1load")
+            .id("v1load")
             .name(new AttributeModification<>("nameLoad1", OperationType.SET))
             .loadType(new AttributeModification<>(LoadType.FICTITIOUS, OperationType.SET))
             .p0(new AttributeModification<>(200.0, OperationType.SET))
@@ -51,7 +51,7 @@ public class LoadModificationTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return LoadModificationInfos.builder()
-            .equipmentId("v1load")
+            .id("v1load")
             .name(new AttributeModification<>("nameLoadEdited1", OperationType.SET))
             .loadType(new AttributeModification<>(LoadType.AUXILIARY, OperationType.SET))
             .p0(new AttributeModification<>(300.0, OperationType.SET))
@@ -89,7 +89,7 @@ public class LoadModificationTest extends AbstractNetworkModificationTest {
     public void testCreateWithErrors() {
         // Unset an attribute that should not be null
         LoadModificationInfos loadModificationInfos = LoadModificationInfos.builder()
-                .equipmentId("v1load")
+                .id("v1load")
                 .loadType(new AttributeModification<>(null, OperationType.UNSET))
                 .build();
         String loadModificationInfosJson = mapper.writeValueAsString(loadModificationInfos);

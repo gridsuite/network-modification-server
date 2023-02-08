@@ -48,7 +48,7 @@ public class LoadCreationInNodeBreakerTest extends AbstractNetworkModificationTe
 
         // Equipment Id invalid
         LoadCreationInfos loadCreationInfos = (LoadCreationInfos) buildModification();
-        loadCreationInfos.setEquipmentId("");
+        loadCreationInfos.setId("");
         String loadCreationInfosJson = mapper.writeValueAsString(loadCreationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(loadCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(status().is5xxServerError(), content().string(new NetworkModificationException(CREATE_LOAD_ERROR, "Invalid id ''").getMessage())).andReturn();
@@ -61,7 +61,7 @@ public class LoadCreationInNodeBreakerTest extends AbstractNetworkModificationTe
             .andExpectAll(status().is4xxClientError(), content().string(new NetworkModificationException(VOLTAGE_LEVEL_NOT_FOUND, "notFoundVoltageLevelId").getMessage())).andReturn();
         testNetworkModificationsCount(getGroupId(), 3);
 
-        loadCreationInfos.setEquipmentId("idLoad1");
+        loadCreationInfos.setId("idLoad1");
         loadCreationInfos.setVoltageLevelId("v2");
         loadCreationInfos.setBusOrBusbarSectionId("notFoundBusbarSection");
         loadCreationInfosJson = mapper.writeValueAsString(loadCreationInfos);
@@ -93,7 +93,7 @@ public class LoadCreationInNodeBreakerTest extends AbstractNetworkModificationTe
     @Override
     protected ModificationInfos buildModification() {
         return LoadCreationInfos.builder()
-            .equipmentId("idLoad1")
+            .id("idLoad1")
             .name("nameLoad1")
             .voltageLevelId("v2")
             .busOrBusbarSectionId("1B")
@@ -110,7 +110,7 @@ public class LoadCreationInNodeBreakerTest extends AbstractNetworkModificationTe
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return LoadCreationInfos.builder()
-            .equipmentId("idLoad1Edited")
+            .id("idLoad1Edited")
             .name("nameLoad1Edited")
             .voltageLevelId("v2Edited")
             .busOrBusbarSectionId("1BEdited")

@@ -40,7 +40,7 @@ public class BranchStatusModification extends AbstractModification {
 
     @Override
     public void apply(Network network, Reporter subReporter) {
-        String branchId = modificationInfos.getEquipmentId();
+        String branchId = modificationInfos.getId();
         Branch<?> branch = network.getBranch(branchId);
         if (branch == null) {
             throw new NetworkModificationException(BRANCH_NOT_FOUND, branchId);

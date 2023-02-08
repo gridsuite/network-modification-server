@@ -25,7 +25,7 @@ public class MatcherLoadCreationInfos extends MatcherModificationInfos<LoadCreat
     @Override
     public boolean matchesSafely(LoadCreationInfos m) {
         return super.matchesSafely(m)
-            && m.getEquipmentId().equals(reference.getEquipmentId())
+            && m.getId().equals(reference.getId())
             && m.getName().equals(reference.getName())
             && m.getVoltageLevelId().equals(reference.getVoltageLevelId())
             && m.getBusOrBusbarSectionId().equals(reference.getBusOrBusbarSectionId())

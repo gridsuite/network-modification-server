@@ -38,7 +38,7 @@ public class GeneratorCreationInBusBreakerTest extends AbstractNetworkModificati
     @Override
     protected ModificationInfos buildModification() {
         return GeneratorCreationInfos.builder()
-                .equipmentId("idGenerator2")
+                .id("idGenerator2")
                 .name("nameGenerator2")
                 .voltageLevelId("v1")
                 .busOrBusbarSectionId("bus1")
@@ -76,7 +76,7 @@ public class GeneratorCreationInBusBreakerTest extends AbstractNetworkModificati
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return GeneratorCreationInfos.builder()
-                .equipmentId("idGenerator2")
+                .id("idGenerator2")
                 .name("nameGeneratorModified")
                 .voltageLevelId("v1")
                 .busOrBusbarSectionId("bus1")

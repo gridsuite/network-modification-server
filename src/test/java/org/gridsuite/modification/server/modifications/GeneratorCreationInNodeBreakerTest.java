@@ -42,7 +42,7 @@ public class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificat
     protected ModificationInfos buildModification() {
         // create new generator in voltage level with node/breaker topology (in voltage level "v2" and busbar section "1B")
         return GeneratorCreationInfos.builder()
-                .equipmentId("idGenerator1")
+                .id("idGenerator1")
                 .name("idGenerator1")
                 .voltageLevelId("v2")
                 .busOrBusbarSectionId("1B")
@@ -80,7 +80,7 @@ public class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificat
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return GeneratorCreationInfos.builder()
-                .equipmentId("idGenerator2")
+                .id("idGenerator2")
                 .name("nameGeneratorModified")
                 .voltageLevelId("v1")
                 .busOrBusbarSectionId("bus1")
@@ -139,7 +139,7 @@ public class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificat
     public void testCreateWithErrors() {
         // invalid Generator id
         GeneratorCreationInfos generatorCreationInfos = (GeneratorCreationInfos) buildModification();
-        generatorCreationInfos.setEquipmentId("");
+        generatorCreationInfos.setId("");
         String generatorCreationInfosJson = mapper.writeValueAsString(generatorCreationInfos);
         MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().is5xxServerError()).andReturn();
@@ -147,7 +147,7 @@ public class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificat
         assertEquals(resultAsString, new NetworkModificationException(CREATE_GENERATOR_ERROR, "Invalid id ''").getMessage());
 
         // not found voltage level
-        generatorCreationInfos.setEquipmentId("idGenerator1");
+        generatorCreationInfos.setId("idGenerator1");
         generatorCreationInfos.setVoltageLevelId("notFoundVoltageLevelId");
         generatorCreationInfosJson = mapper.writeValueAsString(generatorCreationInfos);
         mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
@@ -176,7 +176,7 @@ public class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificat
 
         // Test create generator on not yet existing variant VARIANT_NOT_EXISTING_ID :
         // Only the modification should be added in the database but the generator cannot be created
-        generatorCreationInfos.setEquipmentId("idGenerator3");
+        generatorCreationInfos.setId("idGenerator3");
         generatorCreationInfos.setName("nameGenerator3");
         generatorCreationInfos.setVoltageLevelId("v2");
         generatorCreationInfos.setBusOrBusbarSectionId("1B");

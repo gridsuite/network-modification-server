@@ -37,6 +37,6 @@ public class EquipmentModificationEntity extends ModificationEntity {
     }
 
     private void assignAttributes(EquipmentModificationInfos equipmentModificationInfos) {
-        equipmentId = equipmentModificationInfos.getEquipmentId();
+        equipmentId = equipmentModificationInfos.getId();
     }
 }

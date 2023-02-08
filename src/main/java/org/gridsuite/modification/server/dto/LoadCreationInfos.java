@@ -62,6 +62,6 @@ public class LoadCreationInfos extends InjectionCreationInfos {
 
     @Override
     public Reporter createSubReporter(ReporterModel reporter) {
-        return reporter.createSubReporter(ModificationType.LOAD_CREATION.name(), "Load creation ${loadId}", "loadId", getEquipmentId());
+        return reporter.createSubReporter(ModificationType.LOAD_CREATION.name(), "Load creation ${loadId}", "loadId", getId());
     }
 }

@@ -43,7 +43,7 @@ public class GeneratorModification extends AbstractModification {
         if (modificationInfos == null) {
             throw new NetworkModificationException(MODIFY_GENERATOR_ERROR, "Missing required attributes to modify the equipment");
         }
-        Generator generator = ModificationUtils.getInstance().getGenerator(network, modificationInfos.getEquipmentId());
+        Generator generator = ModificationUtils.getInstance().getGenerator(network, modificationInfos.getId());
         // modify the generator in the network
         modifyGenerator(generator, modificationInfos, subReporter);
     }
@@ -52,7 +52,7 @@ public class GeneratorModification extends AbstractModification {
         subReporter.report(Report.builder()
                 .withKey("generatorModification")
                 .withDefaultMessage("Generator with id=${id} modified :")
-                .withValue("id", modificationInfos.getEquipmentId())
+                .withValue("id", modificationInfos.getId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .build());
 

@@ -38,14 +38,14 @@ public class BranchStatusModificationTrip2WTransformerTest extends AbstractNetwo
     @Override
     protected ModificationInfos buildModification() {
         return BranchStatusModificationInfos.builder()
-                .equipmentId(TARGET_BRANCH_ID)
+                .id(TARGET_BRANCH_ID)
                 .action(BranchStatusModificationInfos.ActionType.TRIP).build();
     }
 
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return BranchStatusModificationInfos.builder()
-                .equipmentId(UPDATE_BRANCH_ID)
+                .id(UPDATE_BRANCH_ID)
                 .action(BranchStatusModificationInfos.ActionType.SWITCH_ON).build();
     }
 

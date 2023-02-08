@@ -39,7 +39,7 @@ public class ShuntCompensatorCreationInBusBreakerTest extends AbstractNetworkMod
         shunt.setMaximumNumberOfSections(2);
         String shuntJson = mapper.writeValueAsString(shunt);
         mockMvc.perform(post(getNetworkModificationUri()).content(shuntJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpectAll(status().is5xxServerError(), content().string(new NetworkModificationException(CREATE_SHUNT_COMPENSATOR_ERROR, String.format("Shunt compensator '%s': the current number (%s) of section should be lesser than the maximum number of section (%s)", shunt.getEquipmentId(), 6, 2)).getMessage()));
+            .andExpectAll(status().is5xxServerError(), content().string(new NetworkModificationException(CREATE_SHUNT_COMPENSATOR_ERROR, String.format("Shunt compensator '%s': the current number (%s) of section should be lesser than the maximum number of section (%s)", shunt.getId(), 6, 2)).getMessage()));
 
         shunt.setBusOrBusbarSectionId("notFoundBus");
         shuntJson = mapper.writeValueAsString(shunt);
@@ -56,7 +56,7 @@ public class ShuntCompensatorCreationInBusBreakerTest extends AbstractNetworkMod
     protected ModificationInfos buildModification() {
         return ShuntCompensatorCreationInfos.builder()
             .date(ZonedDateTime.now())
-            .equipmentId("shuntOneId")
+            .id("shuntOneId")
             .name("hopOne")
             .currentNumberOfSections(4)
             .maximumNumberOfSections(9)
@@ -73,7 +73,7 @@ public class ShuntCompensatorCreationInBusBreakerTest extends AbstractNetworkMod
     protected ModificationInfos buildModificationUpdate() {
         return ShuntCompensatorCreationInfos.builder()
                 .date(ZonedDateTime.now())
-                .equipmentId("shuntOneIdEdited")
+                .id("shuntOneIdEdited")
                 .name("hopEdited")
                 .currentNumberOfSections(6)
                 .maximumNumberOfSections(12)

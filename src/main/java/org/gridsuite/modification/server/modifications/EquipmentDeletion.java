@@ -28,13 +28,13 @@ public class EquipmentDeletion extends AbstractModification {
 
     @Override
     public void apply(Network network, Reporter subReporter) {
-        Identifiable<?> identifiable = ModificationUtils.getInstance().getEquipmentByIdentifiableType(network, modificationInfos.getEquipmentType(), modificationInfos.getEquipmentId());
+        Identifiable<?> identifiable = ModificationUtils.getInstance().getEquipmentByIdentifiableType(network, modificationInfos.getEquipmentType(), modificationInfos.getId());
         if (identifiable == null) {
-            throw new NetworkModificationException(EQUIPMENT_NOT_FOUND, "Equipment with id=" + modificationInfos.getEquipmentId() + " not found or of bad type");
+            throw new NetworkModificationException(EQUIPMENT_NOT_FOUND, "Equipment with id=" + modificationInfos.getId() + " not found or of bad type");
         }
 
         if (identifiable instanceof Connectable) {
-            new RemoveFeederBay(modificationInfos.getEquipmentId()).apply(network, true, subReporter);
+            new RemoveFeederBay(modificationInfos.getId()).apply(network, true, subReporter);
         } else if (identifiable instanceof HvdcLine) {
             ((HvdcLine) identifiable).remove();
         } else if (identifiable instanceof VoltageLevel) {
@@ -47,7 +47,7 @@ public class EquipmentDeletion extends AbstractModification {
             .withKey("equipmentDeleted")
             .withDefaultMessage("equipment of type=${type} and id=${id} deleted")
             .withValue("type", modificationInfos.getEquipmentType())
-            .withValue("id", modificationInfos.getEquipmentId())
+            .withValue("id", modificationInfos.getId())
             .withSeverity(TypedValue.INFO_SEVERITY)
             .build());
     }

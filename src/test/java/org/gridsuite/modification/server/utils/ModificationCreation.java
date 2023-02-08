@@ -37,7 +37,7 @@ public final class ModificationCreation {
             BusbarConnectionCreationInfos.builder().fromBBS("bbs.nw").toBBS("bbs.sw").switchKind(SwitchKind.DISCONNECTOR).build());
 
         return VoltageLevelCreationInfos.builder()
-            .equipmentId(voltageLevelId)
+            .id(voltageLevelId)
             .name(voltageLevelName)
             .nominalVoltage(379.1)
             .substationId(substationId)
@@ -49,7 +49,7 @@ public final class ModificationCreation {
     public static GeneratorCreationInfos getCreationGenerator(String vlId, String generatorId, String generatorName, String busOrBusbarSectionId,
                                                               String regulatingTerminalId, String regulatingTerminalType, String regulatingTerminalVlId) {
         return GeneratorCreationInfos.builder()
-            .equipmentId(generatorId)
+            .id(generatorId)
             .name(generatorName)
             .voltageLevelId(vlId)
             .busOrBusbarSectionId(busOrBusbarSectionId)

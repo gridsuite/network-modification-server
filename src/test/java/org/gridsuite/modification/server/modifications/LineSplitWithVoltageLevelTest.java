@@ -46,7 +46,7 @@ public class LineSplitWithVoltageLevelTest extends AbstractNetworkModificationTe
     @Override
     protected ModificationInfos buildModificationUpdate() {
         VoltageLevelCreationInfos vl1 = VoltageLevelCreationInfos.builder()
-            .equipmentId("vl1")
+            .id("vl1")
             .name("NewVoltageLevel")
             .nominalVoltage(379.3)
             .substationId("s1")

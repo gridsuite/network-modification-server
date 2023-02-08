@@ -77,7 +77,7 @@ public class LoadModificationEntity extends InjectionModificationEntity {
                 .builder()
                 .uuid(getId())
                 .date(getDate())
-                .equipmentId(getEquipmentId())
+                .id(getEquipmentId())
                 .name(AttributeModification.toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))
                 .voltageLevelId(AttributeModification.toAttributeModification(getVoltageLevelIdValue(), getVoltageLevelIdOp()))
                 .busOrBusbarSectionId(AttributeModification.toAttributeModification(getBusOrBusbarSectionIdValue(), getBusOrBusbarSectionIdOp()))

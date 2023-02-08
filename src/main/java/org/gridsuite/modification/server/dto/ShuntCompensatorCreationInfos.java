@@ -70,6 +70,6 @@ public class ShuntCompensatorCreationInfos extends InjectionCreationInfos {
 
     @Override
     public Reporter createSubReporter(ReporterModel reporter) {
-        return reporter.createSubReporter(ModificationType.SHUNT_COMPENSATOR_CREATION.name(), "Creation of shunt compensator " + getEquipmentId());
+        return reporter.createSubReporter(ModificationType.SHUNT_COMPENSATOR_CREATION.name(), "Creation of shunt compensator " + getId());
     }
 }

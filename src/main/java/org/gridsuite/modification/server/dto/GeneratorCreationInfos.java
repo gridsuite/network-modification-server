@@ -141,6 +141,6 @@ public class GeneratorCreationInfos extends InjectionCreationInfos {
 
     @Override
     public Reporter createSubReporter(ReporterModel reporter) {
-        return reporter.createSubReporter(ModificationType.GENERATOR_CREATION.name(), "Generator creation ${generatorId}", "generatorId", this.getEquipmentId());
+        return reporter.createSubReporter(ModificationType.GENERATOR_CREATION.name(), "Generator creation ${generatorId}", "generatorId", this.getId());
     }
 }

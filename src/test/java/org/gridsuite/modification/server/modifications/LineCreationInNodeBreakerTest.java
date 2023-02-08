@@ -41,7 +41,7 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
         // Test create line on not yet existing variant VARIANT_NOT_EXISTING_ID :
         // Only the modification should be added in the database but the line cannot be created
         LineCreationInfos modificationToCreate = (LineCreationInfos) buildModification();
-        modificationToCreate.setEquipmentId("idLine2");
+        modificationToCreate.setId("idLine2");
         modificationToCreate.setName("nameLine2");
         String modificationToCreateJson = mapper.writeValueAsString(modificationToCreate);
         MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUriWithBadVariant()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
@@ -58,7 +58,7 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
     @SneakyThrows
     public void testCreateWithErrors() {
         LineCreationInfos lineCreationInfos = (LineCreationInfos) buildModification();
-        lineCreationInfos.setEquipmentId("");
+        lineCreationInfos.setId("");
         String lineCreationInfosJson = mapper.writeValueAsString(lineCreationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(
@@ -66,7 +66,7 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
                 content().string(new NetworkModificationException(CREATE_LINE_ERROR, "Invalid id ''").getMessage())
             );
 
-        lineCreationInfos.setEquipmentId("idLine4");
+        lineCreationInfos.setId("idLine4");
         lineCreationInfos.setVoltageLevelId1("notFoundVoltageLevelId1");
         lineCreationInfosJson = mapper.writeValueAsString(lineCreationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
@@ -112,7 +112,7 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
     @Override
     protected ModificationInfos buildModification() {
         return LineCreationInfos.builder()
-                .equipmentId("idLine")
+                .id("idLine")
                 .name("nameLine")
                 .seriesResistance(100.0)
                 .seriesReactance(100.0)
@@ -136,7 +136,7 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return LineCreationInfos.builder()
-                .equipmentId("idLineEdited")
+                .id("idLineEdited")
                 .name("nameLineEdited")
                 .seriesResistance(110.0)
                 .seriesReactance(110.0)

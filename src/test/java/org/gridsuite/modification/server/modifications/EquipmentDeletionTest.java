@@ -38,7 +38,7 @@ public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModification() {
         return EquipmentDeletionInfos.builder()
                 .equipmentType("LOAD")
-                .equipmentId("v1load")
+                .id("v1load")
                 .build();
     }
 
@@ -46,7 +46,7 @@ public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModificationUpdate() {
         return EquipmentDeletionInfos.builder()
                 .equipmentType("GENERATOR")
-                .equipmentId("idGenerator")
+                .id("idGenerator")
                 .build();
     }
 
@@ -71,7 +71,7 @@ public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
 
         EquipmentDeletionInfos equipmentDeletionInfos = EquipmentDeletionInfos.builder()
                 .equipmentType("LOAD")
-                .equipmentId("v5load")
+                .id("v5load")
                 .build();
         String equipmentDeletionInfosJson = mapper.writeValueAsString(equipmentDeletionInfos);
 
@@ -89,7 +89,7 @@ public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
     public void testCreateWithErrors() {
         // delete load (fail because the load is not found)
         EquipmentDeletionInfos equipmentDeletionInfos = (EquipmentDeletionInfos) buildModification();
-        equipmentDeletionInfos.setEquipmentId("notFoundLoad");
+        equipmentDeletionInfos.setId("notFoundLoad");
         mockMvc
                 .perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(equipmentDeletionInfos))
                         .contentType(MediaType.APPLICATION_JSON))
@@ -99,18 +99,18 @@ public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
 
         // try to delete voltage level (Internal error because the vl is still connected)
         equipmentDeletionInfos.setEquipmentType("VOLTAGE_LEVEL");
-        equipmentDeletionInfos.setEquipmentId("v4");
+        equipmentDeletionInfos.setId("v4");
         mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(equipmentDeletionInfos)).contentType(MediaType.APPLICATION_JSON))
                 .andExpectAll(
                         status().is5xxServerError(),
                         content().string(new NetworkModificationException(DELETE_EQUIPMENT_ERROR,
                             new PowsyblException(new AssertionError("The voltage level 'v4' cannot be removed because of a remaining THREE_WINDINGS_TRANSFORMER"))).getMessage()));
-        equipmentDeletionInfos.setEquipmentId("v4");
+        equipmentDeletionInfos.setId("v4");
         assertNotNull(getNetwork().getVoltageLevel("v4"));
 
         // try to delete substation (Internal error because the substation is still connected)
         equipmentDeletionInfos.setEquipmentType("SUBSTATION");
-        equipmentDeletionInfos.setEquipmentId("s2");
+        equipmentDeletionInfos.setId("s2");
         mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(equipmentDeletionInfos)).contentType(MediaType.APPLICATION_JSON))
                 .andExpectAll(
                         status().is5xxServerError(),

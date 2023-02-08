@@ -21,7 +21,7 @@ public class SubstationCreation extends AbstractModification {
     public void apply(Network network, Reporter subReporter) {
 
         Substation substation = network.newSubstation()
-                .setId(modificationInfos.getEquipmentId())
+                .setId(modificationInfos.getId())
                 .setName(modificationInfos.getName())
                 .setCountry(modificationInfos.getSubstationCountry())
                 .add();
@@ -33,7 +33,7 @@ public class SubstationCreation extends AbstractModification {
         subReporter.report(Report.builder()
                 .withKey("substationCreated")
                 .withDefaultMessage("New substation with id=${id} created")
-                .withValue("id", modificationInfos.getEquipmentId())
+                .withValue("id", modificationInfos.getId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .build());
     }

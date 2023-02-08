@@ -41,7 +41,7 @@ public class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetwor
     @Override
     protected ModificationInfos buildModification() {
         return TwoWindingsTransformerCreationInfos.builder()
-                .equipmentId("new2wt")
+                .id("new2wt")
                 .name("new2wt")
                 .seriesResistance(1.)
                 .seriesReactance(2.)
@@ -146,7 +146,7 @@ public class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetwor
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return TwoWindingsTransformerCreationInfos.builder()
-                .equipmentId("new2wtUpdate")
+                .id("new2wtUpdate")
                 .name("new2wtUpdate")
                 .seriesResistance(2.3)
                 .seriesReactance(3.2)
@@ -257,7 +257,7 @@ public class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetwor
     @Test
     public void testCreateWithErrors() {
         TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos = (TwoWindingsTransformerCreationInfos) buildModification();
-        twoWindingsTransformerCreationInfos.setEquipmentId("");
+        twoWindingsTransformerCreationInfos.setId("");
         String twoWindingsTransformerCreationInfosJson = mapper.writeValueAsString(twoWindingsTransformerCreationInfos);
         MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(twoWindingsTransformerCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().is5xxServerError()).andReturn();
@@ -310,7 +310,7 @@ public class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetwor
                 .build();
         // create new 2wt in voltage level with bus/breaker topology
         TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos = TwoWindingsTransformerCreationInfos.builder()
-                .equipmentId("id2wt1")
+                .id("id2wt1")
                 .name("2wtName")
                 .voltageLevelId1("v1")
                 .busOrBusbarSectionId1("bus1")
@@ -328,7 +328,7 @@ public class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetwor
                 .build();
         testCreateTwoWindingsTransformerInBusBreaker(twoWindingsTransformerCreationInfos, 1);
         TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos2 = TwoWindingsTransformerCreationInfos.builder()
-                .equipmentId("id2wt1WithRatioTapChanger2")
+                .id("id2wt1WithRatioTapChanger2")
                 .name("2wtName")
                 .voltageLevelId1("v1")
                 .busOrBusbarSectionId1("bus1")
@@ -364,7 +364,7 @@ public class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetwor
                 .steps(getTapChangerSteps())
                 .build();
         TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos = TwoWindingsTransformerCreationInfos.builder()
-                .equipmentId("id2wt1WithPhaseTapChanger")
+                .id("id2wt1WithPhaseTapChanger")
                 .name("2wtName")
                 .voltageLevelId1("v1")
                 .busOrBusbarSectionId1("bus1")
@@ -389,7 +389,7 @@ public class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetwor
     private void testCreateTwoWindingsTransformerInBusBreaker(TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos, int actualSize) throws Exception {
         MvcResult mvcResult;
         String resultAsString;
-        final String transformerId = twoWindingsTransformerCreationInfos.getEquipmentId();
+        final String transformerId = twoWindingsTransformerCreationInfos.getId();
 
         String twoWindingsTransformerCreationInfosJson = mapper.writeValueAsString(twoWindingsTransformerCreationInfos);
         mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(twoWindingsTransformerCreationInfosJson).contentType(MediaType.APPLICATION_JSON))

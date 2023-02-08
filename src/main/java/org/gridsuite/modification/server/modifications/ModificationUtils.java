@@ -181,7 +181,7 @@ public final class ModificationUtils {
 
         int nodeRank = ranks.getLeft();
         int cnxRank = ranks.getRight();
-        String infix = voltageLevelCreationInfos.getEquipmentId() + "_" + fromBBSId + "_" + toBBSId + "_";
+        String infix = voltageLevelCreationInfos.getId() + "_" + fromBBSId + "_" + toBBSId + "_";
         if (switchKind == SwitchKind.DISCONNECTOR) {
             voltageLevel.getNodeBreakerView().newDisconnector()
                 .setKind(switchKind)
@@ -240,7 +240,7 @@ public final class ModificationUtils {
         }
 
         VoltageLevel voltageLevel = substation.newVoltageLevel()
-            .setId(voltageLevelCreationInfos.getEquipmentId())
+            .setId(voltageLevelCreationInfos.getId())
             .setName(voltageLevelCreationInfos.getName())
             .setTopologyKind(TopologyKind.NODE_BREAKER)
             .setNominalV(voltageLevelCreationInfos.getNominalVoltage())
@@ -275,7 +275,7 @@ public final class ModificationUtils {
         subReporter.report(Report.builder()
             .withKey("voltageLevelCreated")
             .withDefaultMessage("New voltage level with id=${id} created")
-            .withValue("id", voltageLevelCreationInfos.getEquipmentId())
+            .withValue("id", voltageLevelCreationInfos.getId())
             .withSeverity(TypedValue.INFO_SEVERITY)
             .build());
     }
@@ -284,7 +284,7 @@ public final class ModificationUtils {
 
         // common settings
         LineAdder lineAdder = network.newLine()
-                .setId(lineCreationInfos.getEquipmentId())
+                .setId(lineCreationInfos.getId())
                 .setName(lineCreationInfos.getName())
                 .setVoltageLevel1(lineCreationInfos.getVoltageLevelId1())
                 .setVoltageLevel2(lineCreationInfos.getVoltageLevelId2())
@@ -332,7 +332,7 @@ public final class ModificationUtils {
         String sideSuffix = side != null ? "_" + side.name() : "";
         int nodeNum = ModificationUtils.getInstance().createNodeBreakerCellSwitches(voltageLevel,
             currentBusBarSectionId,
-            branchCreationInfos.getEquipmentId(),
+            branchCreationInfos.getId(),
             branchCreationInfos.getName(),
             sideSuffix);
 

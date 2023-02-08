@@ -47,8 +47,8 @@ public class TwoWindingsTransformerCreation extends AbstractModification {
         CreateBranchFeederBays algo = new CreateBranchFeederBaysBuilder()
                 .withBbsId1(modificationInfos.getBusOrBusbarSectionId1())
                 .withBbsId2(modificationInfos.getBusOrBusbarSectionId2())
-                .withFeederName1(modificationInfos.getConnectionName1() != null ? modificationInfos.getConnectionName1() : modificationInfos.getEquipmentId())
-                .withFeederName2(modificationInfos.getConnectionName2() != null ? modificationInfos.getConnectionName2() : modificationInfos.getEquipmentId())
+                .withFeederName1(modificationInfos.getConnectionName1() != null ? modificationInfos.getConnectionName1() : modificationInfos.getId())
+                .withFeederName2(modificationInfos.getConnectionName2() != null ? modificationInfos.getConnectionName2() : modificationInfos.getId())
                 .withDirection1(modificationInfos.getConnectionDirection1())
                 .withDirection2(modificationInfos.getConnectionDirection2())
                 .withPositionOrder1(position1)
@@ -56,7 +56,7 @@ public class TwoWindingsTransformerCreation extends AbstractModification {
                 .withBranchAdder(twoWindingsTransformerAdder).build();
         algo.apply(network, true, subReporter);
 
-        var twt = network.getTwoWindingsTransformer(modificationInfos.getEquipmentId());
+        var twt = network.getTwoWindingsTransformer(modificationInfos.getId());
         addTapChangersToTwoWindingsTransformer(network, modificationInfos, twt);
     }
 
@@ -75,7 +75,7 @@ public class TwoWindingsTransformerCreation extends AbstractModification {
             branchAdder = network.newTwoWindingsTransformer();
         }
         // common settings
-        TwoWindingsTransformerAdder twoWindingsTransformerAdder = branchAdder.setId(twoWindingsTransformerCreationInfos.getEquipmentId())
+        TwoWindingsTransformerAdder twoWindingsTransformerAdder = branchAdder.setId(twoWindingsTransformerCreationInfos.getId())
                 .setName(twoWindingsTransformerCreationInfos.getName())
                 .setVoltageLevel1(twoWindingsTransformerCreationInfos.getVoltageLevelId1())
                 .setVoltageLevel2(twoWindingsTransformerCreationInfos.getVoltageLevelId2())
@@ -169,7 +169,7 @@ public class TwoWindingsTransformerCreation extends AbstractModification {
         subReporter.report(Report.builder()
                 .withKey("twoWindingsTransformerCreated")
                 .withDefaultMessage("New two windings transformer with id=${id} created")
-                .withValue("id", twoWindingsTransformerCreationInfos.getEquipmentId())
+                .withValue("id", twoWindingsTransformerCreationInfos.getId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .build());
     }

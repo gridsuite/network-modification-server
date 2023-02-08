@@ -38,7 +38,7 @@ public class SubstationCreationTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModification() {
         return SubstationCreationInfos.builder()
-                .equipmentId("SubstationId")
+                .id("SubstationId")
                 .name("SubstationName")
                 .substationCountry(Country.AF)
                 .properties(Map.of("DEMO", "DemoC"))
@@ -48,7 +48,7 @@ public class SubstationCreationTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return SubstationCreationInfos.builder()
-                .equipmentId("SubstationIdEdited")
+                .id("SubstationIdEdited")
                 .name("SubstationNameEdited")
                 .substationCountry(Country.CI)
                 .properties(Map.of("DEMO", "DemoU"))
@@ -76,7 +76,7 @@ public class SubstationCreationTest extends AbstractNetworkModificationTest {
     @Test
     public void testCreateWithErrors() {
         SubstationCreationInfos substationCreationInfos = (SubstationCreationInfos) buildModification();
-        substationCreationInfos.setEquipmentId("");
+        substationCreationInfos.setId("");
         String substationCreationInfosJson = mapper.writeValueAsString(substationCreationInfos);
         MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(substationCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().is5xxServerError()).andReturn();

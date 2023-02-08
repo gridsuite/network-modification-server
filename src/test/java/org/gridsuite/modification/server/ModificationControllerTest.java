@@ -192,20 +192,20 @@ public class ModificationControllerTest {
 
     @Test
     public void testEquipmentIdNonNull() {
-        String errorMessage = "equipmentId is marked non-null but is null";
+        String errorMessage = "id is marked non-null but is null";
         LoadCreationInfosBuilder<?, ?> loadCreationBuilder = LoadCreationInfos.builder();
         assertEquals(errorMessage, assertThrows(NullPointerException.class, loadCreationBuilder::build).getMessage());
-        LoadCreationInfosBuilder<?, ?> loadCreationBuilder1 = loadCreationBuilder.equipmentId(null);
+        LoadCreationInfosBuilder<?, ?> loadCreationBuilder1 = loadCreationBuilder.id(null);
         assertEquals(errorMessage, assertThrows(NullPointerException.class, loadCreationBuilder1::build).getMessage());
-        LoadCreationInfos loadCreationInfos = LoadCreationInfos.builder().equipmentId("idLoad").build();
-        assertEquals(errorMessage, assertThrows(NullPointerException.class, () -> loadCreationInfos.setEquipmentId(null)).getMessage());
+        LoadCreationInfos loadCreationInfos = LoadCreationInfos.builder().id("idLoad").build();
+        assertEquals(errorMessage, assertThrows(NullPointerException.class, () -> loadCreationInfos.setId(null)).getMessage());
     }
 
     @SneakyThrows
     @Test
     public void testNetworkNotFound() {
         mockMvc.perform(post(URI_NETWORK_MODIF_BAD_NETWORK)
-            .content(objectWriter.writeValueAsString(LoadCreationInfos.builder().equipmentId("id").build()))
+            .content(objectWriter.writeValueAsString(LoadCreationInfos.builder().id("id").build()))
             .contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(
                 status().isNotFound(),
@@ -216,7 +216,7 @@ public class ModificationControllerTest {
     @Test
     public void assertThrowsUpdateModificationNotFound() {
         UUID modificationUuid = UUID.randomUUID();
-        ModificationInfos modificationInfos = LoadCreationInfos.builder().equipmentId("id").build();
+        ModificationInfos modificationInfos = LoadCreationInfos.builder().id("id").build();
         String errorMessage = assertThrows(NetworkModificationException.class, () -> networkModificationService.updateNetworkModification(modificationUuid, modificationInfos)).getMessage();
         assertEquals(new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format("Modification (%s) not found", modificationUuid)).getMessage(), errorMessage);
         assertThrows(NullPointerException.class, () -> networkModificationService.updateNetworkModification(modificationUuid, null));
@@ -231,7 +231,7 @@ public class ModificationControllerTest {
                 .equipmentType(IdentifiableType.SWITCH)
                 .equipmentAttributeName("open")
                 .equipmentAttributeValue(true)
-                .equipmentId("v1b1")
+                .id("v1b1")
                 .build();
         String switchStatusModificationInfosJson = objectWriter.writeValueAsString(switchStatusModificationInfos);
 
@@ -290,7 +290,7 @@ public class ModificationControllerTest {
                 .equipmentType(IdentifiableType.SWITCH)
                 .equipmentAttributeName("open")
                 .equipmentAttributeValue(true)
-                .equipmentId("v1b1")
+                .id("v1b1")
                 .build();
         String switchStatusModificationInfosJson = objectWriter.writeValueAsString(switchStatusModificationInfos);
 
@@ -366,7 +366,7 @@ public class ModificationControllerTest {
         EquipmentAttributeModificationInfos switchStatusModificationInfos = EquipmentAttributeModificationInfos.builder()
                 .equipmentType(IdentifiableType.SWITCH)
                 .equipmentAttributeName("open")
-                .equipmentId("v1b1")
+                .id("v1b1")
                 .build();
 
         for (int i = 0; i < number; i++) {
@@ -554,7 +554,7 @@ public class ModificationControllerTest {
         assertEquals(Double.NaN, generatorStartup.getForcedOutageRate(), 0);
 
         // same for bus breaker
-        generatorCreationInfosBusBreaker.setEquipmentId("idGenerator3");
+        generatorCreationInfosBusBreaker.setId("idGenerator3");
         generatorCreationInfosBusBreaker.setPlannedOutageRate(80.);
         generatorCreationInfosJson = objectWriter.writeValueAsString(generatorCreationInfosBusBreaker);
 
@@ -620,7 +620,7 @@ public class ModificationControllerTest {
         CurrentLimitsInfos c2 = new CurrentLimitsInfos();
         c2.setPermanentLimit(200.0);
         LineCreationInfos lineCreationInfos = LineCreationInfos.builder()
-                .equipmentId("idLine1")
+                .id("idLine1")
                 .name("nameLine1")
                 .seriesResistance(100.0)
                 .seriesReactance(100.0)
@@ -651,7 +651,7 @@ public class ModificationControllerTest {
 
         //create a lineAttached
         LineCreationInfos attachmentLine = LineCreationInfos.builder()
-                .equipmentId("attachmentLine")
+                .id("attachmentLine")
                 .seriesResistance(50.6)
                 .seriesReactance(25.3)
                 .build();
@@ -720,7 +720,7 @@ public class ModificationControllerTest {
     public void testGroupDuplication() throws Exception {
         // create new load in voltage level with node/breaker topology (in voltage level "v2" and busbar section "1B")
         LoadCreationInfos loadCreationInfos = LoadCreationInfos.builder()
-                .equipmentId("idLoad1")
+                .id("idLoad1")
                 .name("nameLoad1")
                 .voltageLevelId("v2")
                 .busOrBusbarSectionId("1B")
@@ -758,7 +758,7 @@ public class ModificationControllerTest {
 
         EquipmentDeletionInfos equipmentDeletionInfos = EquipmentDeletionInfos.builder()
                 .equipmentType("LOAD")
-                .equipmentId("v1load")
+                .id("v1load")
                 .substationIds(Set.of("s1")) // for the matcher
                 .build();
         String equipmentDeletionInfosJson = objectWriter.writeValueAsString(equipmentDeletionInfos);
@@ -783,7 +783,7 @@ public class ModificationControllerTest {
         // Test delete load on not yet existing variant VARIANT_NOT_EXISTING_ID :
         // Only the modification should be added in the database but the load cannot be deleted
         equipmentDeletionInfos.setEquipmentType("LOAD");
-        equipmentDeletionInfos.setEquipmentId("v3load");
+        equipmentDeletionInfos.setId("v3load");
         equipmentDeletionInfosJson = objectWriter.writeValueAsString(equipmentDeletionInfos);
         mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF_BAD_VARIANT).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
@@ -795,7 +795,7 @@ public class ModificationControllerTest {
 
         // delete shunt compensator
         equipmentDeletionInfos.setEquipmentType("SHUNT_COMPENSATOR");
-        equipmentDeletionInfos.setEquipmentId("v2shunt");
+        equipmentDeletionInfos.setId("v2shunt");
         equipmentDeletionInfosJson = objectWriter.writeValueAsString(equipmentDeletionInfos);
         mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
@@ -815,7 +815,7 @@ public class ModificationControllerTest {
 
         // delete generator
         equipmentDeletionInfos.setEquipmentType("GENERATOR");
-        equipmentDeletionInfos.setEquipmentId("idGenerator");
+        equipmentDeletionInfos.setId("idGenerator");
         equipmentDeletionInfosJson = objectWriter.writeValueAsString(equipmentDeletionInfos);
         mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
@@ -835,7 +835,7 @@ public class ModificationControllerTest {
 
         // delete line
         equipmentDeletionInfos.setEquipmentType("LINE");
-        equipmentDeletionInfos.setEquipmentId("line2");
+        equipmentDeletionInfos.setId("line2");
         equipmentDeletionInfos.setSubstationIds(Set.of("s1", "s2")); // for the matcher
         equipmentDeletionInfosJson = objectWriter.writeValueAsString(equipmentDeletionInfos);
         mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
@@ -860,7 +860,7 @@ public class ModificationControllerTest {
 
         // delete two windings transformer
         equipmentDeletionInfos.setEquipmentType("TWO_WINDINGS_TRANSFORMER");
-        equipmentDeletionInfos.setEquipmentId("trf1");
+        equipmentDeletionInfos.setId("trf1");
         equipmentDeletionInfos.setSubstationIds(Set.of("s1")); // for the matcher
         equipmentDeletionInfosJson = objectWriter.writeValueAsString(equipmentDeletionInfos);
         mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
@@ -886,7 +886,7 @@ public class ModificationControllerTest {
 
         // delete three windings transformer
         equipmentDeletionInfos.setEquipmentType("THREE_WINDINGS_TRANSFORMER");
-        equipmentDeletionInfos.setEquipmentId("trf6");
+        equipmentDeletionInfos.setId("trf6");
         equipmentDeletionInfosJson = objectWriter.writeValueAsString(equipmentDeletionInfos);
         mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
@@ -916,7 +916,7 @@ public class ModificationControllerTest {
 
         // delete static var compensator
         equipmentDeletionInfos.setEquipmentType("STATIC_VAR_COMPENSATOR");
-        equipmentDeletionInfos.setEquipmentId("v3Compensator");
+        equipmentDeletionInfos.setId("v3Compensator");
         equipmentDeletionInfos.setSubstationIds(Set.of("s2")); // for the matcher
         equipmentDeletionInfosJson = objectWriter.writeValueAsString(equipmentDeletionInfos);
         mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
@@ -937,7 +937,7 @@ public class ModificationControllerTest {
 
         // delete battery
         equipmentDeletionInfos.setEquipmentType("BATTERY");
-        equipmentDeletionInfos.setEquipmentId("v3Battery");
+        equipmentDeletionInfos.setId("v3Battery");
         equipmentDeletionInfosJson = objectWriter.writeValueAsString(equipmentDeletionInfos);
         mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
@@ -957,7 +957,7 @@ public class ModificationControllerTest {
 
         // delete dangling line
         equipmentDeletionInfos.setEquipmentType("DANGLING_LINE");
-        equipmentDeletionInfos.setEquipmentId("v2Dangling");
+        equipmentDeletionInfos.setId("v2Dangling");
         equipmentDeletionInfos.setSubstationIds(Set.of("s1")); // for the matcher
         equipmentDeletionInfosJson = objectWriter.writeValueAsString(equipmentDeletionInfos);
         mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
@@ -978,7 +978,7 @@ public class ModificationControllerTest {
 
         // delete hvdc line
         equipmentDeletionInfos.setEquipmentType("HVDC_LINE");
-        equipmentDeletionInfos.setEquipmentId("hvdcLine");
+        equipmentDeletionInfos.setId("hvdcLine");
         equipmentDeletionInfosJson = objectWriter.writeValueAsString(equipmentDeletionInfos);
         mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
@@ -993,7 +993,7 @@ public class ModificationControllerTest {
 
         // delete vsc converter station
         equipmentDeletionInfos.setEquipmentType("HVDC_CONVERTER_STATION");
-        equipmentDeletionInfos.setEquipmentId("v2vsc");
+        equipmentDeletionInfos.setId("v2vsc");
         equipmentDeletionInfosJson = objectWriter.writeValueAsString(equipmentDeletionInfos);
         mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF_2).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
@@ -1013,7 +1013,7 @@ public class ModificationControllerTest {
 
         // delete lcc converter station
         equipmentDeletionInfos.setEquipmentType("HVDC_CONVERTER_STATION");
-        equipmentDeletionInfos.setEquipmentId("v1lcc");
+        equipmentDeletionInfos.setId("v1lcc");
         equipmentDeletionInfos.setSubstationIds(Set.of("s1")); // for the matcher
         equipmentDeletionInfosJson = objectWriter.writeValueAsString(equipmentDeletionInfos);
         mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF_2).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
@@ -1034,7 +1034,7 @@ public class ModificationControllerTest {
 
         // delete voltage level
         equipmentDeletionInfos.setEquipmentType("VOLTAGE_LEVEL");
-        equipmentDeletionInfos.setEquipmentId("v5");
+        equipmentDeletionInfos.setId("v5");
         equipmentDeletionInfosJson = objectWriter.writeValueAsString(equipmentDeletionInfos);
         mockMvc.perform(post(URI_NETWORK_MODIF).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
@@ -1044,7 +1044,7 @@ public class ModificationControllerTest {
 //        assertThat(deletionsV5.get(0), createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "v5", "VOLTAGE_LEVEL", Set.of("s3")));
         assertEquals(EquipmentDeletionInfos.class, lastCreatedEquipmentDeletion.getClass());
         assertEquals("VOLTAGE_LEVEL", lastCreatedEquipmentDeletion.getEquipmentType());
-        assertEquals("v5", lastCreatedEquipmentDeletion.getEquipmentId());
+        assertEquals("v5", lastCreatedEquipmentDeletion.getId());
 
         testNetworkModificationsCount(TEST_GROUP_ID, 14);
 
@@ -1064,7 +1064,7 @@ public class ModificationControllerTest {
 
         // try to delete voltage level (Internal error because the vl is still connected)
         equipmentDeletionInfos.setEquipmentType("VOLTAGE_LEVEL");
-        equipmentDeletionInfos.setEquipmentId("v4");
+        equipmentDeletionInfos.setId("v4");
         mockMvc.perform(post(URI_NETWORK_MODIF).content(objectWriter.writeValueAsString(equipmentDeletionInfos)).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(
                 status().is5xxServerError(),
@@ -1074,7 +1074,7 @@ public class ModificationControllerTest {
 
         // delete substation
         equipmentDeletionInfos.setEquipmentType("SUBSTATION");
-        equipmentDeletionInfos.setEquipmentId("s3");
+        equipmentDeletionInfos.setId("s3");
         equipmentDeletionInfosJson = objectWriter.writeValueAsString(equipmentDeletionInfos);
         mockMvc.perform(post(URI_NETWORK_MODIF).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
@@ -1086,7 +1086,7 @@ public class ModificationControllerTest {
         lastCreatedEquipmentDeletion = deletionsS3.get(deletionsS3.size() - 1);
         assertEquals(EquipmentDeletionInfos.class, lastCreatedEquipmentDeletion.getClass());
         assertEquals("SUBSTATION", lastCreatedEquipmentDeletion.getEquipmentType());
-        assertEquals("s3", lastCreatedEquipmentDeletion.getEquipmentId());
+        assertEquals("s3", lastCreatedEquipmentDeletion.getId());
 
         testNetworkModificationsCount(TEST_GROUP_ID, 16);
 
@@ -1108,7 +1108,7 @@ public class ModificationControllerTest {
 
         // try to delete substation (Internal error because the substation is still connected)
         equipmentDeletionInfos.setEquipmentType("SUBSTATION");
-        equipmentDeletionInfos.setEquipmentId("s2");
+        equipmentDeletionInfos.setId("s2");
         mockMvc.perform(post(URI_NETWORK_MODIF).content(objectWriter.writeValueAsString(equipmentDeletionInfos)).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(
                 status().is5xxServerError(),

@@ -182,7 +182,7 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
             .builder()
             .uuid(getId())
             .date(getDate())
-            .equipmentId(getEquipmentId())
+            .id(getEquipmentId())
             .name(getEquipmentName())
             .voltageLevelId(getVoltageLevelId())
             .busOrBusbarSectionId(getBusOrBusbarSectionId())

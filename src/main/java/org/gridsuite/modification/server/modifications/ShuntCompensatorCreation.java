@@ -53,7 +53,7 @@ public class ShuntCompensatorCreation extends AbstractModification {
             subReporter.report(Report.builder()
                     .withKey("shuntCompensatorCreated")
                     .withDefaultMessage("New shunt compensator with id=${id} created")
-                    .withValue("id", modificationInfos.getEquipmentId())
+                    .withValue("id", modificationInfos.getId())
                     .withSeverity(TypedValue.INFO_SEVERITY)
                     .build());
         }
@@ -62,7 +62,7 @@ public class ShuntCompensatorCreation extends AbstractModification {
     private ShuntCompensatorAdder createShuntAdderInNodeBreaker(VoltageLevel voltageLevel, ShuntCompensatorCreationInfos shuntCompensatorInfos) {
         // creating the shunt compensator
         ShuntCompensatorAdder shuntAdder = voltageLevel.newShuntCompensator()
-                .setId(shuntCompensatorInfos.getEquipmentId())
+                .setId(shuntCompensatorInfos.getId())
                 .setName(shuntCompensatorInfos.getName())
                 .setSectionCount(shuntCompensatorInfos.getCurrentNumberOfSections());
 
@@ -78,7 +78,7 @@ public class ShuntCompensatorCreation extends AbstractModification {
         Bus bus = ModificationUtils.getInstance().getBusBreakerBus(voltageLevel, shuntCompensatorInfos.getBusOrBusbarSectionId());
         /* creating the shunt compensator */
         voltageLevel.newShuntCompensator()
-            .setId(shuntCompensatorInfos.getEquipmentId())
+            .setId(shuntCompensatorInfos.getId())
             .setName(shuntCompensatorInfos.getName())
             .setSectionCount(shuntCompensatorInfos.getCurrentNumberOfSections())
             .setBus(bus.getId())

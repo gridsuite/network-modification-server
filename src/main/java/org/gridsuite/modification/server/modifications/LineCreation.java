@@ -45,8 +45,8 @@ public class LineCreation extends AbstractModification {
             CreateBranchFeederBays algo = new CreateBranchFeederBaysBuilder()
                     .withBbsId1(modificationInfos.getBusOrBusbarSectionId1())
                     .withBbsId2(modificationInfos.getBusOrBusbarSectionId2())
-                    .withFeederName1(modificationInfos.getConnectionName1() != null ? modificationInfos.getConnectionName1() : modificationInfos.getEquipmentId())
-                    .withFeederName2(modificationInfos.getConnectionName2() != null ? modificationInfos.getConnectionName2() : modificationInfos.getEquipmentId())
+                    .withFeederName1(modificationInfos.getConnectionName1() != null ? modificationInfos.getConnectionName1() : modificationInfos.getId())
+                    .withFeederName2(modificationInfos.getConnectionName2() != null ? modificationInfos.getConnectionName2() : modificationInfos.getId())
                     .withDirection1(modificationInfos.getConnectionDirection1())
                     .withDirection2(modificationInfos.getConnectionDirection2())
                     .withPositionOrder1(position1)
@@ -60,7 +60,7 @@ public class LineCreation extends AbstractModification {
         // Set Permanent Current Limits if exist
         CurrentLimitsInfos currentLimitsInfos1 = modificationInfos.getCurrentLimits1();
         CurrentLimitsInfos currentLimitsInfos2 = modificationInfos.getCurrentLimits2();
-        var line = ModificationUtils.getInstance().getLine(network, modificationInfos.getEquipmentId());
+        var line = ModificationUtils.getInstance().getLine(network, modificationInfos.getId());
 
         if (currentLimitsInfos1 != null && currentLimitsInfos1.getPermanentLimit() != null) {
             line.newCurrentLimits1().setPermanentLimit(currentLimitsInfos1.getPermanentLimit()).add();
@@ -76,7 +76,7 @@ public class LineCreation extends AbstractModification {
         subReporter.report(Report.builder()
                 .withKey("lineCreated")
                 .withDefaultMessage("New line with id=${id} created")
-                .withValue("id", lineCreationInfos.getEquipmentId())
+                .withValue("id", lineCreationInfos.getId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .build());
     }

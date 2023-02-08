@@ -50,7 +50,7 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
     protected ModificationInfos buildModification() {
         return ShuntCompensatorCreationInfos.builder()
                 .date(ZonedDateTime.now())
-                .equipmentId("shuntOneId")
+                .id("shuntOneId")
                 .name("hop")
                 .currentNumberOfSections(4)
                 .maximumNumberOfSections(9)
@@ -67,7 +67,7 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
     protected ModificationInfos buildModificationUpdate() {
         return ShuntCompensatorCreationInfos.builder()
                 .date(ZonedDateTime.now())
-                .equipmentId("shuntOneIdEdited")
+                .id("shuntOneIdEdited")
                 .name("hopEdited")
                 .currentNumberOfSections(6)
                 .maximumNumberOfSections(12)

@@ -22,7 +22,7 @@ public class MatcherEquipmentDeletionInfos extends MatcherModificationInfos<Equi
         return new MatcherEquipmentDeletionInfos(EquipmentDeletionInfos.builder()
                 .date(ZonedDateTime.now(ZoneOffset.UTC))
                 .equipmentType(equipmentType)
-                .equipmentId(equipmentId)
+                .id(equipmentId)
                 .substationIds(substationIds)
                 .build());
     }
@@ -38,7 +38,7 @@ public class MatcherEquipmentDeletionInfos extends MatcherModificationInfos<Equi
     @Override
     public boolean matchesSafely(EquipmentDeletionInfos m) {
         return super.matchesSafely(m)
-                && m.getEquipmentId().equals(reference.getEquipmentId())
+                && m.getId().equals(reference.getId())
             && m.getEquipmentType().equals(reference.getEquipmentType());
     }
 

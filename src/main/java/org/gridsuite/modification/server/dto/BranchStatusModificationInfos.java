@@ -78,7 +78,7 @@ public class BranchStatusModificationInfos extends EquipmentModificationInfos {
             default:
                 defaultName = "";
         }
-        return reporter.createSubReporter(ModificationType.BRANCH_STATUS_MODIFICATION.name() + "_" + action, defaultName, "branchId", this.getEquipmentId());
+        return reporter.createSubReporter(ModificationType.BRANCH_STATUS_MODIFICATION.name() + "_" + action, defaultName, "branchId", this.getId());
     }
 
     @Override

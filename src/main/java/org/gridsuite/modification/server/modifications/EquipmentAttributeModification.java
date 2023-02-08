@@ -31,12 +31,12 @@ public class EquipmentAttributeModification extends AbstractModification {
 
     @Override
     public void apply(Network network, Reporter subReporter) {
-        Identifiable<?> identifiable = network.getIdentifiable(modificationInfos.getEquipmentId());
+        Identifiable<?> identifiable = network.getIdentifiable(modificationInfos.getId());
         if (identifiable == null) {
-            throw new NetworkModificationException(EQUIPMENT_NOT_FOUND, modificationInfos.getEquipmentId());
+            throw new NetworkModificationException(EQUIPMENT_NOT_FOUND, modificationInfos.getId());
         }
         if (identifiable.getType() != modificationInfos.getEquipmentType()) {
-            throw new NetworkModificationException(WRONG_EQUIPMENT_TYPE, String.format("Type of '%s' is not %s but %s", modificationInfos.getEquipmentId(), modificationInfos.getEquipmentType(), identifiable.getType()));
+            throw new NetworkModificationException(WRONG_EQUIPMENT_TYPE, String.format("Type of '%s' is not %s but %s", modificationInfos.getId(), modificationInfos.getEquipmentType(), identifiable.getType()));
         }
         if (identifiable instanceof Switch) {
             changeSwitchAttribute((Switch) identifiable, modificationInfos.getEquipmentAttributeName(), modificationInfos.getEquipmentAttributeValue(), subReporter);
