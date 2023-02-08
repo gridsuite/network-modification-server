@@ -43,7 +43,7 @@ public class BasicEquipmentModificationEntity extends EquipmentModificationEntit
     }
 
     private void assignAttributes(BasicEquipmentModificationInfos modificationInfos) {
-        this.equipmentNameValue = modificationInfos.getEquipmentName() != null ? modificationInfos.getEquipmentName().getValue() : null;
-        this.equipmentNameOp = modificationInfos.getEquipmentName() != null ? modificationInfos.getEquipmentName().getOp() : null;
+        this.equipmentNameValue = modificationInfos.getName() != null ? modificationInfos.getName().getValue() : null;
+        this.equipmentNameOp = modificationInfos.getName() != null ? modificationInfos.getName().getOp() : null;
     }
 }

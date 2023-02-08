@@ -241,7 +241,7 @@ public final class ModificationUtils {
 
         VoltageLevel voltageLevel = substation.newVoltageLevel()
             .setId(voltageLevelCreationInfos.getEquipmentId())
-            .setName(voltageLevelCreationInfos.getEquipmentName())
+            .setName(voltageLevelCreationInfos.getName())
             .setTopologyKind(TopologyKind.NODE_BREAKER)
             .setNominalV(voltageLevelCreationInfos.getNominalVoltage())
             .add();
@@ -285,7 +285,7 @@ public final class ModificationUtils {
         // common settings
         LineAdder lineAdder = network.newLine()
                 .setId(lineCreationInfos.getEquipmentId())
-                .setName(lineCreationInfos.getEquipmentName())
+                .setName(lineCreationInfos.getName())
                 .setVoltageLevel1(lineCreationInfos.getVoltageLevelId1())
                 .setVoltageLevel2(lineCreationInfos.getVoltageLevelId2())
                 .setR(lineCreationInfos.getSeriesResistance())
@@ -333,7 +333,7 @@ public final class ModificationUtils {
         int nodeNum = ModificationUtils.getInstance().createNodeBreakerCellSwitches(voltageLevel,
             currentBusBarSectionId,
             branchCreationInfos.getEquipmentId(),
-            branchCreationInfos.getEquipmentName(),
+            branchCreationInfos.getName(),
             sideSuffix);
 
         // complete the lineAdder

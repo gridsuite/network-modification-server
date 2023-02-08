@@ -41,10 +41,10 @@ public class LoadModificationTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModification() {
         return LoadModificationInfos.builder()
             .equipmentId("v1load")
-            .equipmentName(new AttributeModification<>("nameLoad1", OperationType.SET))
+            .name(new AttributeModification<>("nameLoad1", OperationType.SET))
             .loadType(new AttributeModification<>(LoadType.FICTITIOUS, OperationType.SET))
-            .activePower(new AttributeModification<>(200.0, OperationType.SET))
-            .reactivePower(new AttributeModification<>(30.0, OperationType.SET))
+            .p0(new AttributeModification<>(200.0, OperationType.SET))
+            .q0(new AttributeModification<>(30.0, OperationType.SET))
             .build();
     }
 
@@ -52,10 +52,10 @@ public class LoadModificationTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModificationUpdate() {
         return LoadModificationInfos.builder()
             .equipmentId("v1load")
-            .equipmentName(new AttributeModification<>("nameLoadEdited1", OperationType.SET))
+            .name(new AttributeModification<>("nameLoadEdited1", OperationType.SET))
             .loadType(new AttributeModification<>(LoadType.AUXILIARY, OperationType.SET))
-            .activePower(new AttributeModification<>(300.0, OperationType.SET))
-            .reactivePower(new AttributeModification<>(50.0, OperationType.SET))
+            .p0(new AttributeModification<>(300.0, OperationType.SET))
+            .q0(new AttributeModification<>(50.0, OperationType.SET))
             .build();
     }
 

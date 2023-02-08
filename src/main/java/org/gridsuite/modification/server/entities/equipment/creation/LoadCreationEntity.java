@@ -8,9 +8,12 @@ package org.gridsuite.modification.server.entities.equipment.creation;
 
 import com.powsybl.iidm.network.LoadType;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
+
+import org.gridsuite.modification.server.dto.ConnectablePositionInfos;
 import org.gridsuite.modification.server.dto.LoadCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 
@@ -56,11 +59,14 @@ public class LoadCreationEntity extends InjectionCreationEntity {
 
     private void assignAttributes(LoadCreationInfos loadCreationInfos) {
         loadType = loadCreationInfos.getLoadType();
-        activePower = loadCreationInfos.getActivePower();
-        reactivePower = loadCreationInfos.getReactivePower();
-        connectionName = loadCreationInfos.getConnectionName();
-        connectionDirection = loadCreationInfos.getConnectionDirection();
-        connectionPosition = loadCreationInfos.getConnectionPosition();
+        activePower = loadCreationInfos.getP0();
+        reactivePower = loadCreationInfos.getQ0();
+        connectionName =  loadCreationInfos.getPosition() != null ?
+                loadCreationInfos.getPosition().getLabel() : null;
+        connectionDirection = loadCreationInfos.getPosition() != null ?
+                loadCreationInfos.getPosition().getDirection() : null;
+        connectionPosition = loadCreationInfos.getPosition() != null ?
+                loadCreationInfos.getPosition().getOrder() : null;
     }
 
     @Override
@@ -74,14 +80,15 @@ public class LoadCreationEntity extends InjectionCreationEntity {
             .uuid(getId())
             .date(getDate())
             .equipmentId(getEquipmentId())
-            .equipmentName(getEquipmentName())
+            .name(getEquipmentName())
             .voltageLevelId(getVoltageLevelId())
             .busOrBusbarSectionId(getBusOrBusbarSectionId())
             .loadType(getLoadType())
-            .activePower(getActivePower())
-            .reactivePower(getReactivePower())
-            .connectionName(getConnectionName())
-            .connectionDirection(getConnectionDirection())
-            .connectionPosition(getConnectionPosition());
+            .q0(getReactivePower())
+            .p0(getActivePower())
+            .position(ConnectablePositionInfos.builder()
+                    .label(getConnectionName())
+                    .direction(getConnectionDirection())
+                    .order(getConnectionPosition()).build());
     }
 }

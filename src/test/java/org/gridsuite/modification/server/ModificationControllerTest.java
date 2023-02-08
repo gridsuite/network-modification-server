@@ -14,10 +14,12 @@ import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.BusbarSectionPositionAdder;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
+import com.powsybl.iidm.network.extensions.ConnectablePosition.Direction;
 import com.powsybl.iidm.network.extensions.ConnectablePositionAdder;
 import com.powsybl.iidm.network.extensions.GeneratorStartup;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
+
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.LoadCreationInfos.LoadCreationInfosBuilder;
@@ -619,7 +621,7 @@ public class ModificationControllerTest {
         c2.setPermanentLimit(200.0);
         LineCreationInfos lineCreationInfos = LineCreationInfos.builder()
                 .equipmentId("idLine1")
-                .equipmentName("nameLine1")
+                .name("nameLine1")
                 .seriesResistance(100.0)
                 .seriesReactance(100.0)
                 .shuntConductance1(10.0)
@@ -719,14 +721,16 @@ public class ModificationControllerTest {
         // create new load in voltage level with node/breaker topology (in voltage level "v2" and busbar section "1B")
         LoadCreationInfos loadCreationInfos = LoadCreationInfos.builder()
                 .equipmentId("idLoad1")
-                .equipmentName("nameLoad1")
+                .name("nameLoad1")
                 .voltageLevelId("v2")
                 .busOrBusbarSectionId("1B")
                 .loadType(LoadType.AUXILIARY)
-                .activePower(100.0)
-                .reactivePower(60.0)
-                .connectionDirection(ConnectablePosition.Direction.BOTTOM)
-                .connectionName("bottom")
+                .p0(100.0)
+                .q0(60.0)
+                .position(ConnectablePositionInfos.builder()
+                        .direction(Direction.BOTTOM)
+                        .label("bottom")
+                        .build())
                 .build();
         String loadCreationInfosJson = objectWriter.writeValueAsString(loadCreationInfos);
         mockMvc.perform(post(URI_NETWORK_MODIF).content(loadCreationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk());

@@ -12,7 +12,9 @@ import com.powsybl.commons.exceptions.UncheckedInterruptedException;
 import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.*;
+import com.powsybl.iidm.network.extensions.ConnectablePosition.Direction;
 import com.powsybl.network.store.client.NetworkStoreService;
+
 import lombok.SneakyThrows;
 import okhttp3.HttpUrl;
 import okhttp3.mockwebserver.Dispatcher;
@@ -79,8 +81,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @RunWith(SpringRunner.class)
 @AutoConfigureMockMvc
-@SpringBootTest(properties = {"test.elasticsearch.enabled=true"})
-@ContextHierarchy({@ContextConfiguration(classes = {NetworkModificationApplication.class, TestChannelBinderConfiguration.class})})
+@SpringBootTest(properties = { "test.elasticsearch.enabled=true" })
+@ContextHierarchy({ @ContextConfiguration(classes = { NetworkModificationApplication.class,
+        TestChannelBinderConfiguration.class }) })
 public class BuildTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BuildTest.class);
@@ -187,7 +190,8 @@ public class BuildTest {
 
     private void cleanDB() {
         modificationRepository.deleteAll();
-        equipmentInfosService.deleteVariants(TEST_NETWORK_ID, List.of(VariantManagerConstants.INITIAL_VARIANT_ID, NetworkCreation.VARIANT_ID, VARIANT_ID_2));
+        equipmentInfosService.deleteVariants(TEST_NETWORK_ID,
+                List.of(VariantManagerConstants.INITIAL_VARIANT_ID, NetworkCreation.VARIANT_ID, VARIANT_ID_2));
     }
 
     @SneakyThrows
@@ -214,7 +218,8 @@ public class BuildTest {
                     return new MockResponse().setResponseCode(HttpStatus.OK.value());
                 } else {
                     LOGGER.error("Unhandled method+path: " + request.getMethod() + " " + request.getPath());
-                    return new MockResponse().setResponseCode(HttpStatus.I_AM_A_TEAPOT.value()).setBody("Unhandled method+path: " + request.getMethod() + " " + request.getPath());
+                    return new MockResponse().setResponseCode(HttpStatus.I_AM_A_TEAPOT.value())
+                            .setBody("Unhandled method+path: " + request.getMethod() + " " + request.getPath());
                 }
             }
         };
@@ -225,76 +230,42 @@ public class BuildTest {
     @Test
     public void runBuildForLineSplits() throws Exception {
         List<ModificationEntity> entities1 = List.of(
-                LineCreationInfos.builder()
-                        .equipmentId("newLine")
-                        .equipmentName("newLine")
-                        .seriesResistance(1.0)
-                        .seriesReactance(2.0)
-                        .shuntConductance1(3.0)
-                        .shuntSusceptance1(4.0)
-                        .shuntConductance2(5.0)
-                        .shuntSusceptance2(6.0)
-                        .voltageLevelId1("v1")
-                        .busOrBusbarSectionId1("1.1")
-                        .voltageLevelId2("v2")
-                        .busOrBusbarSectionId2("1B")
-                        .connectionName1("cn11")
-                        .connectionDirection1(ConnectablePosition.Direction.TOP)
-                        .connectionName2("cn22")
-                        .connectionDirection2(ConnectablePosition.Direction.TOP)
-                        .build().toEntity(),
-                LineSplitWithVoltageLevelInfos.builder()
-                        .lineToSplitId("line3")
-                        .percent(0.32)
-                        .mayNewVoltageLevelInfos(null)
-                        .existingVoltageLevelId("vl1")
-                        .bbsOrBusId("sjb1")
-                        .newLine1Id("un")
-                        .newLine1Name("One")
-                        .newLine2Id("deux")
-                        .newLine2Name("Two")
-                        .build().toEntity()
-        );
+                LineCreationInfos.builder().equipmentId("newLine").name("newLine").seriesResistance(1.0)
+                        .seriesReactance(2.0).shuntConductance1(3.0).shuntSusceptance1(4.0).shuntConductance2(5.0)
+                        .shuntSusceptance2(6.0).voltageLevelId1("v1").busOrBusbarSectionId1("1.1").voltageLevelId2("v2")
+                        .busOrBusbarSectionId2("1B").connectionName1("cn11")
+                        .connectionDirection1(ConnectablePosition.Direction.TOP).connectionName2("cn22")
+                        .connectionDirection2(ConnectablePosition.Direction.TOP).build().toEntity(),
+                LineSplitWithVoltageLevelInfos.builder().lineToSplitId("line3").percent(0.32)
+                        .mayNewVoltageLevelInfos(null).existingVoltageLevelId("vl1").bbsOrBusId("sjb1").newLine1Id("un")
+                        .newLine1Name("One").newLine2Id("deux").newLine2Name("Two").build().toEntity());
         modificationRepository.saveModifications(TEST_GROUP_ID, entities1);
 
         List<ModificationEntity> entities2 = new ArrayList<>();
-        entities2.add(VoltageLevelCreationInfos.builder()
-                .equipmentId("vl9")
-                .equipmentName("vl9")
-                .nominalVoltage(225)
+        entities2.add(VoltageLevelCreationInfos.builder().equipmentId("vl9").name("vl9").nominalVoltage(225)
                 .substationId("s1")
-                .busbarSections(List.of(new BusbarSectionCreationInfos("1.1", "1.1", 1, 1), new BusbarSectionCreationInfos("1.2", "1.2", 1, 2)))
-                .busbarConnections(List.of(new BusbarConnectionCreationInfos("1.1", "1.2", SwitchKind.BREAKER)))
-                .build().toEntity());
+                .busbarSections(List.of(new BusbarSectionCreationInfos("1.1", "1.1", 1, 1),
+                        new BusbarSectionCreationInfos("1.2", "1.2", 1, 2)))
+                .busbarConnections(List.of(new BusbarConnectionCreationInfos("1.1", "1.2", SwitchKind.BREAKER))).build()
+                .toEntity());
         modificationRepository.saveModifications(TEST_GROUP_ID_2, entities2);
 
         String uriString = "/v1/networks/{networkUuid}/build?receiver=me";
-        BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
-            NetworkCreation.VARIANT_ID,
-            TEST_REPORT_ID,
-            List.of(TEST_GROUP_ID, TEST_GROUP_ID_2),
-            List.of(TEST_SUB_REPORTER_ID_1, TEST_SUB_REPORTER_ID_2),
-            new HashSet<>());
-        mockMvc.perform(post(uriString, TEST_NETWORK_ID)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(mapper.writeValueAsString(buildInfos)))
-                .andExpect(status().isOk());
+        BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID, NetworkCreation.VARIANT_ID,
+                TEST_REPORT_ID, List.of(TEST_GROUP_ID, TEST_GROUP_ID_2),
+                List.of(TEST_SUB_REPORTER_ID_1, TEST_SUB_REPORTER_ID_2), new HashSet<>());
+        mockMvc.perform(post(uriString, TEST_NETWORK_ID).contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(buildInfos))).andExpect(status().isOk());
 
         assertNotNull(output.receive(TIMEOUT, consumeBuildDestination));
         Message<byte[]> resultMessage = output.receive(TIMEOUT, buildResultDestination);
         assertNotNull(resultMessage);
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
 
-        BuildInfos newBuildInfos = new BuildInfos(NetworkCreation.VARIANT_ID,
-            VARIANT_ID_2,
-            TEST_REPORT_ID,
-            List.of(),
-            List.of(),
-            new HashSet<>());
-        mockMvc.perform(post(uriString, TEST_NETWORK_ID)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(mapper.writeValueAsString(newBuildInfos)))
-                .andExpect(status().isOk());
+        BuildInfos newBuildInfos = new BuildInfos(NetworkCreation.VARIANT_ID, VARIANT_ID_2, TEST_REPORT_ID, List.of(),
+                List.of(), new HashSet<>());
+        mockMvc.perform(post(uriString, TEST_NETWORK_ID).contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(newBuildInfos))).andExpect(status().isOk());
 
         assertNotNull(output.receive(TIMEOUT, consumeBuildDestination));
         resultMessage = output.receive(TIMEOUT, buildResultDestination);
@@ -308,18 +279,15 @@ public class BuildTest {
     @Test
     public void runBuildWithEmptyGroupTest() throws Exception {
         Network network = NetworkCreation.create(TEST_NETWORK_ID, false);
-        BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
-            NetworkCreation.VARIANT_ID,
-            TEST_REPORT_ID,
-            List.of(TEST_GROUP_ID),
-            List.of(TEST_SUB_REPORTER_ID_1),
-            new HashSet<>());
-        String expectedBody = mapper.writeValueAsString(new ReporterModel(TEST_SUB_REPORTER_ID_1, TEST_SUB_REPORTER_ID_1));
+        BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID, NetworkCreation.VARIANT_ID,
+                TEST_REPORT_ID, List.of(TEST_GROUP_ID), List.of(TEST_SUB_REPORTER_ID_1), new HashSet<>());
+        String expectedBody = mapper
+                .writeValueAsString(new ReporterModel(TEST_SUB_REPORTER_ID_1, TEST_SUB_REPORTER_ID_1));
 
         // Group does not exist
         String uriString = "/v1/networks/{networkUuid}/build?receiver=me";
-        mockMvc.perform(post(uriString, TEST_NETWORK_ID).contentType(MediaType.APPLICATION_JSON).content(mapper.writeValueAsString(buildInfos)))
-            .andExpect(status().isOk());
+        mockMvc.perform(post(uriString, TEST_NETWORK_ID).contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(buildInfos))).andExpect(status().isOk());
         RecordedRequest request = server.takeRequest(TIMEOUT, TimeUnit.MILLISECONDS);
         assertNotNull(request);
         assertEquals(expectedBody, request.getBody().readUtf8());
@@ -339,184 +307,134 @@ public class BuildTest {
     public void runBuildTest() throws Exception {
         // create modification entities in the database
         List<ModificationEntity> entities1 = new ArrayList<>();
-        entities1.add(EquipmentAttributeModificationInfos.builder().equipmentId("v1d1").equipmentAttributeName("open").equipmentAttributeValue(true).equipmentType(IdentifiableType.SWITCH).build().toEntity());
-        entities1.add(EquipmentAttributeModificationInfos.builder().equipmentId("line1").equipmentAttributeName("branchStatus").equipmentAttributeValue(BranchStatus.Status.PLANNED_OUTAGE).equipmentType(IdentifiableType.LINE).build().toEntity());
-        entities1.add(EquipmentAttributeModificationInfos.builder().equipmentId("idGenerator").equipmentAttributeName("targetP").equipmentAttributeValue(50.).equipmentType(IdentifiableType.GENERATOR).build().toEntity());
-        entities1.add(EquipmentAttributeModificationInfos.builder().equipmentId("trf1").equipmentAttributeName("ratioTapChanger.tapPosition").equipmentAttributeValue(2).equipmentType(IdentifiableType.TWO_WINDINGS_TRANSFORMER).build().toEntity());
-        entities1.add(EquipmentAttributeModificationInfos.builder().equipmentId("trf6").equipmentAttributeName("phaseTapChanger1.tapPosition").equipmentAttributeValue(0).equipmentType(IdentifiableType.THREE_WINDINGS_TRANSFORMER).build().toEntity());
+        entities1.add(EquipmentAttributeModificationInfos.builder().equipmentId("v1d1").equipmentAttributeName("open")
+                .equipmentAttributeValue(true).equipmentType(IdentifiableType.SWITCH).build().toEntity());
+        entities1.add(EquipmentAttributeModificationInfos.builder().equipmentId("line1")
+                .equipmentAttributeName("branchStatus").equipmentAttributeValue(BranchStatus.Status.PLANNED_OUTAGE)
+                .equipmentType(IdentifiableType.LINE).build().toEntity());
+        entities1.add(EquipmentAttributeModificationInfos.builder().equipmentId("idGenerator")
+                .equipmentAttributeName("targetP").equipmentAttributeValue(50.)
+                .equipmentType(IdentifiableType.GENERATOR).build().toEntity());
+        entities1.add(EquipmentAttributeModificationInfos.builder().equipmentId("trf1")
+                .equipmentAttributeName("ratioTapChanger.tapPosition").equipmentAttributeValue(2)
+                .equipmentType(IdentifiableType.TWO_WINDINGS_TRANSFORMER).build().toEntity());
+        entities1.add(EquipmentAttributeModificationInfos.builder().equipmentId("trf6")
+                .equipmentAttributeName("phaseTapChanger1.tapPosition").equipmentAttributeValue(0)
+                .equipmentType(IdentifiableType.THREE_WINDINGS_TRANSFORMER).build().toEntity());
 
-        entities1.add(LoadCreationInfos.builder().equipmentId("newLoad").equipmentName("newLoad").loadType(LoadType.AUXILIARY).voltageLevelId("v1").busOrBusbarSectionId("1.1").activePower(10.).reactivePower(20.).connectionName("vn").connectionDirection(ConnectablePosition.Direction.TOP).build().toEntity());
-        entities1.add(LoadCreationInfos.builder().equipmentId("newLoad1").equipmentName("newLoad1").loadType(LoadType.AUXILIARY).voltageLevelId("v1").busOrBusbarSectionId("1.1").activePower(10.).reactivePower(20.).connectionName("cn1").connectionDirection(ConnectablePosition.Direction.BOTTOM).build().toEntity());
-        entities1.add(LoadCreationInfos.builder().equipmentId("newLoad2").equipmentName("newLoad2").loadType(LoadType.AUXILIARY).voltageLevelId("v1").busOrBusbarSectionId("1.1").activePower(10.).reactivePower(20.).connectionName("cn2").connectionDirection(ConnectablePosition.Direction.UNDEFINED).build().toEntity());
-        entities1.add(LoadCreationInfos.builder().equipmentId("newLoad2").equipmentName("newLoad2").loadType(LoadType.AUXILIARY).voltageLevelId("v1").busOrBusbarSectionId("1.1").activePower(10.).reactivePower(20.).connectionName(null).connectionDirection(ConnectablePosition.Direction.UNDEFINED).build().toEntity());
+        entities1.add(LoadCreationInfos.builder().equipmentId("newLoad").name("newLoad").loadType(LoadType.AUXILIARY)
+                .voltageLevelId("v1").busOrBusbarSectionId("1.1").p0(10.).q0(20.).name("vn")
+                .position(ConnectablePositionInfos.builder().direction(Direction.TOP).build()).build().toEntity());
+        entities1.add(LoadCreationInfos.builder().equipmentId("newLoad1").name("newLoad1").loadType(LoadType.AUXILIARY)
+                .voltageLevelId("v1").busOrBusbarSectionId("1.1").p0(10.).q0(20.).name("cn1")
+                .position(ConnectablePositionInfos.builder().direction(Direction.BOTTOM).build()).build().toEntity());
+        entities1.add(LoadCreationInfos.builder().equipmentId("newLoad2").name("newLoad2").loadType(LoadType.AUXILIARY)
+                .voltageLevelId("v1").busOrBusbarSectionId("1.1").p0(10.).q0(20.).name("cn2")
+                .position(ConnectablePositionInfos.builder().direction(Direction.UNDEFINED).build()).build()
+                .toEntity());
+        entities1.add(LoadCreationInfos.builder().equipmentId("newLoad2").name("newLoad2").loadType(LoadType.AUXILIARY)
+                .voltageLevelId("v1").busOrBusbarSectionId("1.1").p0(10.).q0(20.).name(null)
+                .position(ConnectablePositionInfos.builder().direction(Direction.UNDEFINED).build()).build()
+                .toEntity());
 
         Map<String, String> properties = Map.of("DEMO", "Demo1");
-        entities1.add(SubstationCreationInfos.builder()
-                .equipmentId("newSubstation")
-                .equipmentName("newSubstation")
-                .substationCountry(Country.FR)
-                .properties(properties)
-                .build().toEntity());
+        entities1.add(SubstationCreationInfos.builder().equipmentId("newSubstation").name("newSubstation")
+                .substationCountry(Country.FR).properties(properties).build().toEntity());
 
         List<ModificationEntity> entities2 = new ArrayList<>();
-        entities2.add(GeneratorCreationInfos.builder()
-                .equipmentId(NEW_GENERATOR_ID).equipmentName(NEW_GENERATOR_ID)
-                .energySource(EnergySource.HYDRO).voltageLevelId("v2")
-                .busOrBusbarSectionId("1A").minActivePower(0)
-                .maxActivePower(500).ratedNominalPower(1.)
-                .activePowerSetpoint(100).reactivePowerSetpoint(50.)
-                .voltageRegulationOn(true).voltageSetpoint(225.)
-                .plannedActivePowerSetPoint(80.)
-                .startupCost(81.).marginalCost(82.)
-                .plannedOutageRate(83.).forcedOutageRate(84.)
-                .minimumReactivePower(20.).maximumReactivePower(50.)
-                .participate(true).droop(9F).transientReactance(35.)
-                .stepUpTransformerReactance(25.).regulatingTerminalId("v2load")
-                .regulatingTerminalType("LOAD").regulatingTerminalVlId("v2")
-                .qPercent(25.).reactiveCapabilityCurve(false).reactiveCapabilityCurvePoints(List.of())
-                .connectionName("Top").connectionDirection(ConnectablePosition.Direction.TOP)
-                .connectionPosition(0).build().toEntity());
-        entities2.add(LineCreationInfos.builder().equipmentId("newLine").equipmentName("newLine").seriesResistance(1.0).seriesReactance(2.0).shuntConductance1(3.0).shuntSusceptance1(4.0).shuntConductance2(5.0).shuntSusceptance2(6.0).voltageLevelId1("v1").busOrBusbarSectionId1("1.1").voltageLevelId2("v2").busOrBusbarSectionId2("1B").currentLimits1(null).currentLimits2(null).connectionName1("cn101").connectionDirection1(ConnectablePosition.Direction.TOP).connectionName2("cn102").connectionDirection2(ConnectablePosition.Direction.TOP).build().toEntity());
+        entities2.add(GeneratorCreationInfos.builder().equipmentId(NEW_GENERATOR_ID).name(NEW_GENERATOR_ID)
+                .energySource(EnergySource.HYDRO).voltageLevelId("v2").busOrBusbarSectionId("1A").minActivePower(0)
+                .maxActivePower(500).ratedNominalPower(1.).activePowerSetpoint(100).reactivePowerSetpoint(50.)
+                .voltageRegulationOn(true).voltageSetpoint(225.).plannedActivePowerSetPoint(80.).startupCost(81.)
+                .marginalCost(82.).plannedOutageRate(83.).forcedOutageRate(84.).minimumReactivePower(20.)
+                .maximumReactivePower(50.).participate(true).droop(9F).transientReactance(35.)
+                .stepUpTransformerReactance(25.).regulatingTerminalId("v2load").regulatingTerminalType("LOAD")
+                .regulatingTerminalVlId("v2").qPercent(25.).reactiveCapabilityCurve(false)
+                .reactiveCapabilityCurvePoints(List.of()).connectionName("Top")
+                .connectionDirection(ConnectablePosition.Direction.TOP).connectionPosition(0).build().toEntity());
+        entities2.add(LineCreationInfos.builder().equipmentId("newLine").name("newLine").seriesResistance(1.0)
+                .seriesReactance(2.0).shuntConductance1(3.0).shuntSusceptance1(4.0).shuntConductance2(5.0)
+                .shuntSusceptance2(6.0).voltageLevelId1("v1").busOrBusbarSectionId1("1.1").voltageLevelId2("v2")
+                .busOrBusbarSectionId2("1B").currentLimits1(null).currentLimits2(null).connectionName1("cn101")
+                .connectionDirection1(ConnectablePosition.Direction.TOP).connectionName2("cn102")
+                .connectionDirection2(ConnectablePosition.Direction.TOP).build().toEntity());
 
         List<TapChangerStepCreationEmbeddable> tapChangerStepCreationEmbeddables = new ArrayList<>();
-        tapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.PHASE, 1, 1, 0, 0, 0, 0, 0.));
-        tapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.PHASE, 2, 1, 0, 0, 0, 0, 0.));
-        tapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.PHASE, 3, 1, 0, 0, 0, 0, 0.));
-        tapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.RATIO, 5, 1, 0, 0, 0, 0, null));
-        tapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.RATIO, 6, 1, 0, 0, 0, 0, null));
-        tapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.RATIO, 7, 1, 0, 0, 0, 0, null));
-        tapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.RATIO, 8, 1, 0, 0, 0, 0, null));
+        tapChangerStepCreationEmbeddables
+                .add(new TapChangerStepCreationEmbeddable(TapChangerType.PHASE, 1, 1, 0, 0, 0, 0, 0.));
+        tapChangerStepCreationEmbeddables
+                .add(new TapChangerStepCreationEmbeddable(TapChangerType.PHASE, 2, 1, 0, 0, 0, 0, 0.));
+        tapChangerStepCreationEmbeddables
+                .add(new TapChangerStepCreationEmbeddable(TapChangerType.PHASE, 3, 1, 0, 0, 0, 0, 0.));
+        tapChangerStepCreationEmbeddables
+                .add(new TapChangerStepCreationEmbeddable(TapChangerType.RATIO, 5, 1, 0, 0, 0, 0, null));
+        tapChangerStepCreationEmbeddables
+                .add(new TapChangerStepCreationEmbeddable(TapChangerType.RATIO, 6, 1, 0, 0, 0, 0, null));
+        tapChangerStepCreationEmbeddables
+                .add(new TapChangerStepCreationEmbeddable(TapChangerType.RATIO, 7, 1, 0, 0, 0, 0, null));
+        tapChangerStepCreationEmbeddables
+                .add(new TapChangerStepCreationEmbeddable(TapChangerType.RATIO, 8, 1, 0, 0, 0, 0, null));
 
-        entities2.add(EquipmentDeletionInfos.builder().equipmentId("v2shunt").equipmentType("SHUNT_COMPENSATOR").build().toEntity());
-        entities2.add(GroovyScriptInfos.builder().script("network.getGenerator('idGenerator').targetP=55\n").build().toEntity());
-        entities2.add(BranchStatusModificationInfos.builder().equipmentId("line2").action(BranchStatusModificationInfos.ActionType.TRIP).build().toEntity());
-        entities2.add(VoltageLevelCreationInfos.builder()
-                .equipmentId("vl9")
-                .equipmentName("vl9")
-                .nominalVoltage(225)
+        entities2.add(EquipmentDeletionInfos.builder().equipmentId("v2shunt").equipmentType("SHUNT_COMPENSATOR").build()
+                .toEntity());
+        entities2.add(GroovyScriptInfos.builder().script("network.getGenerator('idGenerator').targetP=55\n").build()
+                .toEntity());
+        entities2.add(BranchStatusModificationInfos.builder().equipmentId("line2")
+                .action(BranchStatusModificationInfos.ActionType.TRIP).build().toEntity());
+        entities2.add(VoltageLevelCreationInfos.builder().equipmentId("vl9").name("vl9").nominalVoltage(225)
                 .substationId("s1")
-                .busbarSections(List.of(new BusbarSectionCreationInfos("1.1", "1.1", 1, 1), new BusbarSectionCreationInfos("1.2", "1.2", 1, 2)))
-                .busbarConnections(List.of(new BusbarConnectionCreationInfos("1.1", "1.2", SwitchKind.BREAKER)))
-                .build().toEntity());
-        entities2.add(ShuntCompensatorCreationInfos.builder()
-            .equipmentId("shunt9")
-            .equipmentName("shunt9")
-            .voltageLevelId("v2")
-            .busOrBusbarSectionId("1A")
-            .maximumNumberOfSections(2)
-            .currentNumberOfSections(2)
-            .susceptancePerSection(1.)
-            .isIdenticalSection(true)
-            .connectionDirection(ConnectablePosition.Direction.UNDEFINED)
-            .connectionName("shunt9")
-            .build().toEntity());
-        entities2.add(TwoWindingsTransformerCreationInfos.builder()
-                .equipmentId("new2wt")
-                .equipmentName("new2wt")
-                .seriesResistance(1.)
-                .seriesReactance(2.)
-                .magnetizingConductance(3.)
-                .magnetizingSusceptance(4.)
-                .ratedVoltage1(5.)
-                .ratedVoltage2(6.)
-                .ratedS(1.)
-                .voltageLevelId1("v1")
-                .busOrBusbarSectionId1("1.1")
-                .voltageLevelId2("v2")
-                .busOrBusbarSectionId2("1A")
-                .currentLimits1(CurrentLimitsInfos.builder().permanentLimit(3.).build())
-                .currentLimits2(CurrentLimitsInfos.builder().permanentLimit(2.).build())
-                .connectionName1("cn201")
-                .connectionDirection1(ConnectablePosition.Direction.TOP)
-                .connectionName2("cn202")
-                .connectionDirection2(ConnectablePosition.Direction.TOP)
-                .phaseTapChanger(PhaseTapChangerCreationInfos.builder()
-                        .lowTapPosition(1)
-                        .tapPosition(2)
-                        .regulatingTerminalId("v1load")
-                        .regulatingTerminalVlId("v1")
-                        .regulating(false)
-                        .regulatingTerminalType("LOAD")
-                        .regulationMode(PhaseTapChanger.RegulationMode.CURRENT_LIMITER)
-                        .steps(List.of(TapChangerStepCreationInfos.builder()
-                                        .index(1)
-                                        .rho(1)
-                                        .r(0)
-                                        .x(0)
-                                        .g(0)
-                                        .b(0)
-                                        .alpha(0)
-                                        .build(),
-                                TapChangerStepCreationInfos.builder()
-                                        .index(2)
-                                        .rho(1)
-                                        .r(0)
-                                        .x(0)
-                                        .g(0)
-                                        .b(0)
-                                        .alpha(0.)
-                                        .build(),
-                                TapChangerStepCreationInfos.builder()
-                                        .index(3)
-                                        .rho(1)
-                                        .r(0)
-                                        .x(0)
-                                        .g(0)
-                                        .b(0)
-                                        .alpha(0.)
-                                        .build()
-                        )).build())
-                .ratioTapChanger(RatioTapChangerCreationInfos.builder()
-                        .lowTapPosition(5)
-                        .tapPosition(6)
-                        .regulating(true)
-                        .targetDeadband(1.)
-                        .regulatingTerminalId("v2load")
-                        .regulatingTerminalVlId("v2")
-                        .regulatingTerminalType("LOAD")
-                        .loadTapChangingCapabilities(true)
-                        .targetV(5.)
-                        .steps(List.of(TapChangerStepCreationInfos.builder()
-                                        .index(5)
-                                        .rho(1)
-                                        .r(0)
-                                        .x(0)
-                                        .g(0)
-                                        .b(0)
-                                        .build(),
-                                TapChangerStepCreationInfos.builder()
-                                        .index(6)
-                                        .rho(1)
-                                        .r(0)
-                                        .x(0)
-                                        .g(0)
-                                        .b(0)
-                                        .build(),
-                                TapChangerStepCreationInfos.builder()
-                                        .index(7)
-                                        .rho(1)
-                                        .r(0)
-                                        .x(0)
-                                        .g(0)
-                                        .b(0)
-                                        .build(),
-                                TapChangerStepCreationInfos.builder()
-                                        .index(8)
-                                        .rho(1)
-                                        .r(0)
-                                        .x(0)
-                                        .g(0)
-                                        .b(0)
-                                        .build()
-                        ))
-                        .build())
-                .build().toEntity()
-        );
+                .busbarSections(List.of(new BusbarSectionCreationInfos("1.1", "1.1", 1, 1),
+                        new BusbarSectionCreationInfos("1.2", "1.2", 1, 2)))
+                .busbarConnections(List.of(new BusbarConnectionCreationInfos("1.1", "1.2", SwitchKind.BREAKER))).build()
+                .toEntity());
+        entities2.add(ShuntCompensatorCreationInfos.builder().equipmentId("shunt9").name("shunt9").voltageLevelId("v2")
+                .busOrBusbarSectionId("1A").maximumNumberOfSections(2).currentNumberOfSections(2)
+                .susceptancePerSection(1.).isIdenticalSection(true)
+                .connectionDirection(ConnectablePosition.Direction.UNDEFINED).connectionName("shunt9").build()
+                .toEntity());
+        entities2
+                .add(TwoWindingsTransformerCreationInfos.builder().equipmentId("new2wt").name("new2wt")
+                        .seriesResistance(1.).seriesReactance(2.).magnetizingConductance(3.).magnetizingSusceptance(4.)
+                        .ratedVoltage1(5.).ratedVoltage2(6.).ratedS(1.).voltageLevelId1("v1")
+                        .busOrBusbarSectionId1("1.1").voltageLevelId2("v2").busOrBusbarSectionId2("1A")
+                        .currentLimits1(CurrentLimitsInfos.builder().permanentLimit(3.).build())
+                        .currentLimits2(CurrentLimitsInfos.builder().permanentLimit(2.).build())
+                        .connectionName1("cn201").connectionDirection1(ConnectablePosition.Direction.TOP)
+                        .connectionName2("cn202").connectionDirection2(
+                                ConnectablePosition.Direction.TOP)
+                        .phaseTapChanger(
+                                PhaseTapChangerCreationInfos.builder().lowTapPosition(1).tapPosition(2)
+                                        .regulatingTerminalId("v1load").regulatingTerminalVlId("v1").regulating(false)
+                                        .regulatingTerminalType("LOAD")
+                                        .regulationMode(PhaseTapChanger.RegulationMode.CURRENT_LIMITER)
+                                        .steps(List
+                                                .of(TapChangerStepCreationInfos.builder().index(1).rho(1).r(0).x(0).g(0)
+                                                        .b(0).alpha(0).build(),
+                                                        TapChangerStepCreationInfos.builder().index(2).rho(1).r(0).x(0)
+                                                                .g(0).b(0).alpha(0.).build(),
+                                                        TapChangerStepCreationInfos.builder().index(3).rho(1).r(0).x(0)
+                                                                .g(0).b(0).alpha(0.).build()))
+                                        .build())
+                        .ratioTapChanger(
+                                RatioTapChangerCreationInfos.builder().lowTapPosition(5).tapPosition(6).regulating(true)
+                                        .targetDeadband(1.).regulatingTerminalId("v2load").regulatingTerminalVlId("v2")
+                                        .regulatingTerminalType("LOAD").loadTapChangingCapabilities(true).targetV(5.)
+                                        .steps(List.of(
+                                                TapChangerStepCreationInfos.builder().index(5).rho(1).r(0).x(0).g(0)
+                                                        .b(0).build(),
+                                                TapChangerStepCreationInfos.builder().index(6).rho(1).r(0).x(0).g(0)
+                                                        .b(0).build(),
+                                                TapChangerStepCreationInfos.builder().index(7).rho(1).r(0).x(0).g(0)
+                                                        .b(0).build(),
+                                                TapChangerStepCreationInfos.builder().index(8).rho(1).r(0).x(0).g(0)
+                                                        .b(0).build()))
+                                        .build())
+                        .build().toEntity());
         entities2.add(LoadModificationInfos.builder().equipmentId("newLoad")
-            .equipmentName(new AttributeModification<>("newLoadName", OperationType.SET)).activePower(null).build().toEntity());
-        entities2.add(GeneratorModificationInfos.builder()
-                .equipmentId("newGenerator")
-                .equipmentName(new AttributeModification<>("newGeneratorName", OperationType.SET))
+                .name(new AttributeModification<>("newLoadName", OperationType.SET)).p0(null).build()
+                .toEntity());
+        entities2.add(GeneratorModificationInfos.builder().equipmentId("newGenerator")
+                .name(new AttributeModification<>("newGeneratorName", OperationType.SET))
                 .voltageRegulationType(new AttributeModification<>(VoltageRegulationType.LOCAL, OperationType.SET))
                 .reactiveCapabilityCurve(new AttributeModification<>(false, OperationType.SET)).build().toEntity());
 
@@ -526,17 +444,16 @@ public class BuildTest {
         testNetworkModificationsCount(TEST_GROUP_ID, entities1.size());
         testNetworkModificationsCount(TEST_GROUP_ID_2, entities2.size());
 
-        // build VARIANT_ID by cloning network initial variant and applying all modifications in all groups
+        // build VARIANT_ID by cloning network initial variant and applying all
+        // modifications in all groups
         String uriString = "/v1/networks/{networkUuid}/build?receiver=me";
-        BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
-            NetworkCreation.VARIANT_ID,
-            TEST_REPORT_ID,
-            List.of(TEST_GROUP_ID, TEST_GROUP_ID_2),
-            List.of(TEST_SUB_REPORTER_ID_1, TEST_SUB_REPORTER_ID_2),
-            new HashSet<>());
+        BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID, NetworkCreation.VARIANT_ID,
+                TEST_REPORT_ID, List.of(TEST_GROUP_ID, TEST_GROUP_ID_2),
+                List.of(TEST_SUB_REPORTER_ID_1, TEST_SUB_REPORTER_ID_2), new HashSet<>());
         String buildInfosJson = objectWriter.writeValueAsString(buildInfos);
-        mockMvc.perform(post(uriString, TEST_NETWORK_ID).contentType(MediaType.APPLICATION_JSON).content(buildInfosJson))
-            .andExpect(status().isOk());
+        mockMvc.perform(
+                post(uriString, TEST_NETWORK_ID).contentType(MediaType.APPLICATION_JSON).content(buildInfosJson))
+                .andExpect(status().isOk());
 
         assertNotNull(output.receive(TIMEOUT, consumeBuildDestination));
         Message<byte[]> resultMessage = output.receive(TIMEOUT, buildResultDestination);
@@ -568,15 +485,22 @@ public class BuildTest {
         assertEquals("v2", network.getGenerator(NEW_GENERATOR_ID).getTerminal().getVoltageLevel().getId());
         assertEquals(500., network.getGenerator(NEW_GENERATOR_ID).getMaxP(), 0.1);
         assertEquals(100., network.getGenerator(NEW_GENERATOR_ID).getTargetP(), 0.1);
-        assertEquals(80., network.getGenerator(NEW_GENERATOR_ID).getExtension(GeneratorStartup.class).getPlannedActivePowerSetpoint(), 0);
-        assertEquals(81., network.getGenerator(NEW_GENERATOR_ID).getExtension(GeneratorStartup.class).getStartupCost(), 0);
-        assertEquals(82., network.getGenerator(NEW_GENERATOR_ID).getExtension(GeneratorStartup.class).getMarginalCost(), 0);
-        assertEquals(83., network.getGenerator(NEW_GENERATOR_ID).getExtension(GeneratorStartup.class).getPlannedOutageRate(), 0);
-        assertEquals(84., network.getGenerator(NEW_GENERATOR_ID).getExtension(GeneratorStartup.class).getForcedOutageRate(), 0);
+        assertEquals(80., network.getGenerator(NEW_GENERATOR_ID).getExtension(GeneratorStartup.class)
+                .getPlannedActivePowerSetpoint(), 0);
+        assertEquals(81., network.getGenerator(NEW_GENERATOR_ID).getExtension(GeneratorStartup.class).getStartupCost(),
+                0);
+        assertEquals(82., network.getGenerator(NEW_GENERATOR_ID).getExtension(GeneratorStartup.class).getMarginalCost(),
+                0);
+        assertEquals(83.,
+                network.getGenerator(NEW_GENERATOR_ID).getExtension(GeneratorStartup.class).getPlannedOutageRate(), 0);
+        assertEquals(84.,
+                network.getGenerator(NEW_GENERATOR_ID).getExtension(GeneratorStartup.class).getForcedOutageRate(), 0);
         assertTrue(network.getGenerator(NEW_GENERATOR_ID).getExtension(ActivePowerControl.class).isParticipate());
         assertEquals(9F, network.getGenerator(NEW_GENERATOR_ID).getExtension(ActivePowerControl.class).getDroop(), 0);
-        assertEquals(35., network.getGenerator(NEW_GENERATOR_ID).getExtension(GeneratorShortCircuit.class).getDirectTransX(), 0);
-        assertEquals(25., network.getGenerator(NEW_GENERATOR_ID).getExtension(GeneratorShortCircuit.class).getStepUpTransformerX(), 0);
+        assertEquals(35.,
+                network.getGenerator(NEW_GENERATOR_ID).getExtension(GeneratorShortCircuit.class).getDirectTransX(), 0);
+        assertEquals(25., network.getGenerator(NEW_GENERATOR_ID).getExtension(GeneratorShortCircuit.class)
+                .getStepUpTransformerX(), 0);
         assertEquals(MIN_MAX, network.getGenerator(NEW_GENERATOR_ID).getReactiveLimits().getKind());
         assertTrue(network.getGenerator(NEW_GENERATOR_ID).isVoltageRegulatorOn());
         assertEquals(225., network.getGenerator(NEW_GENERATOR_ID).getTargetV(), 0.1);
@@ -590,7 +514,8 @@ public class BuildTest {
         assertEquals(1, network.getTwoWindingsTransformer("new2wt").getRatedS(), 0.1);
         assertEquals(4, network.getTwoWindingsTransformer("new2wt").getRatioTapChanger().getStepCount());
         assertEquals(3, network.getTwoWindingsTransformer("new2wt").getPhaseTapChanger().getStepCount());
-        assertEquals(PhaseTapChanger.RegulationMode.CURRENT_LIMITER, network.getTwoWindingsTransformer("new2wt").getPhaseTapChanger().getRegulationMode());
+        assertEquals(PhaseTapChanger.RegulationMode.CURRENT_LIMITER,
+                network.getTwoWindingsTransformer("new2wt").getPhaseTapChanger().getRegulationMode());
         assertNull(network.getShuntCompensator("v2shunt"));
         Substation newSubstation = network.getSubstation("newSubstation");
         assertEquals(Country.FR, newSubstation.getCountry().orElse(Country.AF));
@@ -619,16 +544,15 @@ public class BuildTest {
         testNetworkModificationsCount(TEST_GROUP_ID, entities1.size());
         testNetworkModificationsCount(TEST_GROUP_ID_2, entities2.size());
 
-        // Execute another build starting from variant VARIANT_ID to variant VARIANT_ID_2
+        // Execute another build starting from variant VARIANT_ID to variant
+        // VARIANT_ID_2
         // to check
-        BuildInfos newBuildInfos = new BuildInfos(NetworkCreation.VARIANT_ID,
-            VARIANT_ID_2,
-            TEST_REPORT_ID,
-            Collections.emptyList(),
-            Collections.emptyList(),
-            new HashSet<>());
+        BuildInfos newBuildInfos = new BuildInfos(NetworkCreation.VARIANT_ID, VARIANT_ID_2, TEST_REPORT_ID,
+                Collections.emptyList(), Collections.emptyList(), new HashSet<>());
         buildInfosJson = objectWriter.writeValueAsString(newBuildInfos);
-        mockMvc.perform(post(uriString, TEST_NETWORK_ID).contentType(MediaType.APPLICATION_JSON).content(buildInfosJson)).andExpect(status().isOk());
+        mockMvc.perform(
+                post(uriString, TEST_NETWORK_ID).contentType(MediaType.APPLICATION_JSON).content(buildInfosJson))
+                .andExpect(status().isOk());
 
         assertNotNull(output.receive(TIMEOUT, consumeBuildDestination));
         resultMessage = output.receive(TIMEOUT, buildResultDestination);
@@ -636,23 +560,31 @@ public class BuildTest {
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
         assertEquals("", new String(resultMessage.getPayload()));
 
-        List<EquipmentInfos> eqVariant1 = equipmentInfosRepository.findAllByNetworkUuidAndVariantId(TEST_NETWORK_ID, NetworkCreation.VARIANT_ID);
-        List<EquipmentInfos> eqVariant2 = equipmentInfosRepository.findAllByNetworkUuidAndVariantId(TEST_NETWORK_ID, VARIANT_ID_2);
+        List<EquipmentInfos> eqVariant1 = equipmentInfosRepository.findAllByNetworkUuidAndVariantId(TEST_NETWORK_ID,
+                NetworkCreation.VARIANT_ID);
+        List<EquipmentInfos> eqVariant2 = equipmentInfosRepository.findAllByNetworkUuidAndVariantId(TEST_NETWORK_ID,
+                VARIANT_ID_2);
         assertTrue(eqVariant2.size() > 0);
         assertEquals(eqVariant1.size(), eqVariant2.size());
 
-        List<TombstonedEquipmentInfos> tbseqVariant1 = tombstonedEquipmentInfosRepository.findAllByNetworkUuidAndVariantId(TEST_NETWORK_ID, NetworkCreation.VARIANT_ID);
-        List<TombstonedEquipmentInfos> tbseqVariant2 = tombstonedEquipmentInfosRepository.findAllByNetworkUuidAndVariantId(TEST_NETWORK_ID, VARIANT_ID_2);
-        // v2shunt was deleted from initial variant => v2shunt and the cell switches (breaker and disconnector) have been added as TombstonedEquipmentInfos in ElasticSearch
+        List<TombstonedEquipmentInfos> tbseqVariant1 = tombstonedEquipmentInfosRepository
+                .findAllByNetworkUuidAndVariantId(TEST_NETWORK_ID, NetworkCreation.VARIANT_ID);
+        List<TombstonedEquipmentInfos> tbseqVariant2 = tombstonedEquipmentInfosRepository
+                .findAllByNetworkUuidAndVariantId(TEST_NETWORK_ID, VARIANT_ID_2);
+        // v2shunt was deleted from initial variant => v2shunt and the cell switches
+        // (breaker and disconnector) have been added as TombstonedEquipmentInfos in
+        // ElasticSearch
         assertEquals(3, tbseqVariant1.size());
         assertEquals(tbseqVariant1.size(), tbseqVariant2.size());
         // deactivate some modifications and rebuild VARIANT_ID
-        network.getVariantManager().cloneVariant(VariantManagerConstants.INITIAL_VARIANT_ID, NetworkCreation.VARIANT_ID, true);
+        network.getVariantManager().cloneVariant(VariantManagerConstants.INITIAL_VARIANT_ID, NetworkCreation.VARIANT_ID,
+                true);
 
         AtomicReference<UUID> lineModificationEntityUuid = new AtomicReference<>();
         AtomicReference<UUID> loadCreationEntityUuid = new AtomicReference<>();
         AtomicReference<UUID> equipmentDeletionEntityUuid = new AtomicReference<>();
-        List<ModificationInfos> modificationsInfos = networkModificationService.getNetworkModifications(TEST_GROUP_ID, false, true);
+        List<ModificationInfos> modificationsInfos = networkModificationService.getNetworkModifications(TEST_GROUP_ID,
+                false, true);
         modificationsInfos.addAll(networkModificationService.getNetworkModifications(TEST_GROUP_ID_2, false, true));
         modificationsInfos.forEach(modificationInfos -> {
             if (modificationInfos.getClass().equals(EquipmentAttributeModificationInfos.class)) {
@@ -675,8 +607,9 @@ public class BuildTest {
         buildInfos.addModificationToExclude(equipmentDeletionEntityUuid.get());
         buildInfosJson = objectWriter.writeValueAsString(buildInfos);
 
-        mockMvc.perform(post(uriString, TEST_NETWORK_ID).content(buildInfosJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk());
+        mockMvc.perform(
+                post(uriString, TEST_NETWORK_ID).content(buildInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
 
         assertNotNull(output.receive(TIMEOUT, consumeBuildDestination));
         resultMessage = output.receive(TIMEOUT, buildResultDestination);
@@ -708,7 +641,8 @@ public class BuildTest {
         assertEquals(1, network.getTwoWindingsTransformer("new2wt").getRatedS(), 0.1);
         assertEquals(4, network.getTwoWindingsTransformer("new2wt").getRatioTapChanger().getStepCount());
         assertEquals(3, network.getTwoWindingsTransformer("new2wt").getPhaseTapChanger().getStepCount());
-        assertEquals(PhaseTapChanger.RegulationMode.CURRENT_LIMITER, network.getTwoWindingsTransformer("new2wt").getPhaseTapChanger().getRegulationMode());
+        assertEquals(PhaseTapChanger.RegulationMode.CURRENT_LIMITER,
+                network.getTwoWindingsTransformer("new2wt").getPhaseTapChanger().getRegulationMode());
         assertNotNull(network.getShuntCompensator("v2shunt"));
         assertEquals(Country.FR, network.getSubstation("newSubstation").getCountry().orElse(Country.AF));
         assertNotNull(network.getVoltageLevel("vl9"));
@@ -720,28 +654,28 @@ public class BuildTest {
     @Test
     public void stopBuildTest() throws Exception {
         List<ModificationEntity> entities = List.of(
-            EquipmentAttributeModificationInfos.builder().equipmentId("v1d1").equipmentAttributeName("open").equipmentAttributeValue(true).equipmentType(IdentifiableType.SWITCH).build().toEntity(),
-            EquipmentAttributeModificationInfos.builder().equipmentId("line1").equipmentAttributeName("branchStatus").equipmentAttributeValue(BranchStatus.Status.PLANNED_OUTAGE).equipmentType(IdentifiableType.LINE).build().toEntity()
-        );
+                EquipmentAttributeModificationInfos.builder().equipmentId("v1d1").equipmentAttributeName("open")
+                        .equipmentAttributeValue(true).equipmentType(IdentifiableType.SWITCH).build().toEntity(),
+                EquipmentAttributeModificationInfos.builder().equipmentId("line1")
+                        .equipmentAttributeName("branchStatus")
+                        .equipmentAttributeValue(BranchStatus.Status.PLANNED_OUTAGE)
+                        .equipmentType(IdentifiableType.LINE).build().toEntity());
 
-        modificationRepository.saveModifications(TEST_GROUP_ID, entities);  // save all modification entities in group TEST_GROUP_ID
+        modificationRepository.saveModifications(TEST_GROUP_ID, entities); // save all modification entities in group
+                                                                           // TEST_GROUP_ID
         testNetworkModificationsCount(TEST_GROUP_ID, 2);
 
-        // Build VARIANT_ID by cloning network initial variant and applying all modifications in group uuid TEST_GROUP_ID
-        // Because TestChannelBinder implementation is synchronous the build is made in a different thread
-        BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
-            NetworkCreation.VARIANT_ID,
-            TEST_REPORT_ID,
-            List.of(TEST_GROUP_ID),
-            List.of(TEST_SUB_REPORTER_ID_1),
-            Set.of());
+        // Build VARIANT_ID by cloning network initial variant and applying all
+        // modifications in group uuid TEST_GROUP_ID
+        // Because TestChannelBinder implementation is synchronous the build is made in
+        // a different thread
+        BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID, NetworkCreation.VARIANT_ID,
+                TEST_REPORT_ID, List.of(TEST_GROUP_ID), List.of(TEST_SUB_REPORTER_ID_1), Set.of());
         String buildInfosJson = mapper.writeValueAsString(buildInfos);
         CompletableFuture.runAsync(() -> {
             try {
                 mockMvc.perform(post("/v1/networks/{networkUuid}/build?receiver=me", TEST_NETWORK_STOP_BUILD_ID)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(buildInfosJson))
-                    .andExpect(status().isOk());
+                        .contentType(MediaType.APPLICATION_JSON).content(buildInfosJson)).andExpect(status().isOk());
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -761,20 +695,17 @@ public class BuildTest {
 
     @Test
     public void runBuildWithReportErrorTest() throws Exception {
-        modificationRepository.saveModifications(TEST_GROUP_ID, List.of(EquipmentAttributeModificationInfos.builder().equipmentId("v1d1").equipmentAttributeName("open").equipmentAttributeValue(true).equipmentType(IdentifiableType.SWITCH).build().toEntity()));
+        modificationRepository.saveModifications(TEST_GROUP_ID,
+                List.of(EquipmentAttributeModificationInfos.builder().equipmentId("v1d1").equipmentAttributeName("open")
+                        .equipmentAttributeValue(true).equipmentType(IdentifiableType.SWITCH).build().toEntity()));
 
-        // build VARIANT_ID by cloning network initial variant and applying all modifications in all groups
+        // build VARIANT_ID by cloning network initial variant and applying all
+        // modifications in all groups
         String uriString = "/v1/networks/{networkUuid}/build?receiver=me";
-        BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
-            NetworkCreation.VARIANT_ID,
-            TEST_ERROR_REPORT_ID,
-            List.of(TEST_GROUP_ID),
-            List.of(TEST_SUB_REPORTER_ID_1),
-            Set.of());
-        mockMvc.perform(post(uriString, TEST_NETWORK_ID)
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(mapper.writeValueAsString(buildInfos)))
-            .andExpect(status().isOk());
+        BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID, NetworkCreation.VARIANT_ID,
+                TEST_ERROR_REPORT_ID, List.of(TEST_GROUP_ID), List.of(TEST_SUB_REPORTER_ID_1), Set.of());
+        mockMvc.perform(post(uriString, TEST_NETWORK_ID).contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(buildInfos))).andExpect(status().isOk());
 
         assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches("/v1/reports/.*")));
 
@@ -788,30 +719,38 @@ public class BuildTest {
     @Test
     public void testApplyModificationWithErrors() {
         Network network = NetworkCreation.create(TEST_NETWORK_ID, true);
-        LoadCreationInfos loadCreationInfos = LoadCreationInfos.builder().voltageLevelId("unknownVoltageLevelId").equipmentId("loadId").build();
+        LoadCreationInfos loadCreationInfos = LoadCreationInfos.builder().voltageLevelId("unknownVoltageLevelId")
+                .equipmentId("loadId").build();
         UUID groupUuid = UUID.randomUUID();
         UUID reportUuid = UUID.randomUUID();
         String reporterId = UUID.randomUUID().toString();
         String variantId = network.getVariantManager().getWorkingVariantId();
 
         // Building mode : No error send with exception
-        List<ModificationInfos> modificationInfos = networkModificationApplicator.applyModifications(List.of(loadCreationInfos), new NetworkInfos(network, TEST_NETWORK_ID, true), new ReportInfos(reportUuid, reporterId));
+        List<ModificationInfos> modificationInfos = networkModificationApplicator.applyModifications(
+                List.of(loadCreationInfos), new NetworkInfos(network, TEST_NETWORK_ID, true),
+                new ReportInfos(reportUuid, reporterId));
         assertEquals(List.of(), modificationInfos);
-        assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches(String.format("/v1/reports/%s", reportUuid))));
+        assertTrue(TestUtils.getRequestsDone(1, server).stream()
+                .anyMatch(r -> r.matches(String.format("/v1/reports/%s", reportUuid))));
 
         // Incremental mode : Error send with exception
         NetworkInfos networkInfos = networkModificationService.getNetworkInfos(TEST_NETWORK_ID, variantId);
         ReportInfos reportInfos = new ReportInfos(reportUuid, reporterId);
         assertEquals("VOLTAGE_LEVEL_NOT_FOUND : unknownVoltageLevelId",
-            assertThrows(NetworkModificationException.class,
-                () -> networkModificationService.createNetworkModification(networkInfos, groupUuid, reportInfos, loadCreationInfos)
-            ).getMessage()
-        );
-        assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches(String.format("/v1/reports/%s", reportUuid))));
+                assertThrows(NetworkModificationException.class, () -> networkModificationService
+                        .createNetworkModification(networkInfos, groupUuid, reportInfos, loadCreationInfos))
+                        .getMessage());
+        assertTrue(TestUtils.getRequestsDone(1, server).stream()
+                .anyMatch(r -> r.matches(String.format("/v1/reports/%s", reportUuid))));
         testNetworkModificationsCount(groupUuid, 1);
 
-        // Save mode only (variant does not exist) : No log and no error send with exception
-        assertEquals(List.of(), networkModificationService.createNetworkModification(networkModificationService.getNetworkInfos(TEST_NETWORK_ID, UUID.randomUUID().toString()), groupUuid, new ReportInfos(reportUuid, reporterId), loadCreationInfos));
+        // Save mode only (variant does not exist) : No log and no error send with
+        // exception
+        assertEquals(List.of(),
+                networkModificationService.createNetworkModification(
+                        networkModificationService.getNetworkInfos(TEST_NETWORK_ID, UUID.randomUUID().toString()),
+                        groupUuid, new ReportInfos(reportUuid, reporterId), loadCreationInfos));
         testNetworkModificationsCount(groupUuid, 2);
     }
 
@@ -821,7 +760,8 @@ public class BuildTest {
 
     @After
     public void tearDown() {
-        List<String> destinations = List.of(consumeBuildDestination, cancelBuildDestination, buildResultDestination, buildStoppedDestination, buildFailedDestination);
+        List<String> destinations = List.of(consumeBuildDestination, cancelBuildDestination, buildResultDestination,
+                buildStoppedDestination, buildFailedDestination);
         TestUtils.assertQueuesEmptyThenClear(destinations, output);
         try {
             TestUtils.assertServerRequestsEmptyThenShutdown(server);

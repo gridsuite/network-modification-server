@@ -63,7 +63,7 @@ public class ShuntCompensatorCreation extends AbstractModification {
         // creating the shunt compensator
         ShuntCompensatorAdder shuntAdder = voltageLevel.newShuntCompensator()
                 .setId(shuntCompensatorInfos.getEquipmentId())
-                .setName(shuntCompensatorInfos.getEquipmentName())
+                .setName(shuntCompensatorInfos.getName())
                 .setSectionCount(shuntCompensatorInfos.getCurrentNumberOfSections());
 
         /* when we create non linear shunt, this is where we branch ;) */
@@ -79,7 +79,7 @@ public class ShuntCompensatorCreation extends AbstractModification {
         /* creating the shunt compensator */
         voltageLevel.newShuntCompensator()
             .setId(shuntCompensatorInfos.getEquipmentId())
-            .setName(shuntCompensatorInfos.getEquipmentName())
+            .setName(shuntCompensatorInfos.getName())
             .setSectionCount(shuntCompensatorInfos.getCurrentNumberOfSections())
             .setBus(bus.getId())
             .setConnectableBus(bus.getId())

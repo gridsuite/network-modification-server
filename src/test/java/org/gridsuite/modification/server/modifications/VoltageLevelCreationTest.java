@@ -49,7 +49,7 @@ public class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModificationUpdate() {
         return VoltageLevelCreationInfos.builder()
                 .equipmentId("VoltageLevelIdEdited")
-                .equipmentName("VoltageLevelEdited")
+                .name("VoltageLevelEdited")
                 .nominalVoltage(385)
                 .substationId("s2")
                 .busbarSections(List.of())

@@ -42,7 +42,7 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
         // Only the modification should be added in the database but the line cannot be created
         LineCreationInfos modificationToCreate = (LineCreationInfos) buildModification();
         modificationToCreate.setEquipmentId("idLine2");
-        modificationToCreate.setEquipmentName("nameLine2");
+        modificationToCreate.setName("nameLine2");
         String modificationToCreateJson = mapper.writeValueAsString(modificationToCreate);
         MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUriWithBadVariant()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
@@ -113,7 +113,7 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
     protected ModificationInfos buildModification() {
         return LineCreationInfos.builder()
                 .equipmentId("idLine")
-                .equipmentName("nameLine")
+                .name("nameLine")
                 .seriesResistance(100.0)
                 .seriesReactance(100.0)
                 .shuntConductance1(10.0)
@@ -137,7 +137,7 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
     protected ModificationInfos buildModificationUpdate() {
         return LineCreationInfos.builder()
                 .equipmentId("idLineEdited")
-                .equipmentName("nameLineEdited")
+                .name("nameLineEdited")
                 .seriesResistance(110.0)
                 .seriesReactance(110.0)
                 .shuntConductance1(15.0)

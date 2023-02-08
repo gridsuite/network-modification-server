@@ -38,7 +38,7 @@ public final class ModificationCreation {
 
         return VoltageLevelCreationInfos.builder()
             .equipmentId(voltageLevelId)
-            .equipmentName(voltageLevelName)
+            .name(voltageLevelName)
             .nominalVoltage(379.1)
             .substationId(substationId)
             .busbarSections(busbarSectionInfos)
@@ -50,7 +50,7 @@ public final class ModificationCreation {
                                                               String regulatingTerminalId, String regulatingTerminalType, String regulatingTerminalVlId) {
         return GeneratorCreationInfos.builder()
             .equipmentId(generatorId)
-            .equipmentName(generatorName)
+            .name(generatorName)
             .voltageLevelId(vlId)
             .busOrBusbarSectionId(busOrBusbarSectionId)
             .energySource(EnergySource.HYDRO)

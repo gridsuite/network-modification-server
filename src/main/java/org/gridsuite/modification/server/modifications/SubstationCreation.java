@@ -22,7 +22,7 @@ public class SubstationCreation extends AbstractModification {
 
         Substation substation = network.newSubstation()
                 .setId(modificationInfos.getEquipmentId())
-                .setName(modificationInfos.getEquipmentName())
+                .setName(modificationInfos.getName())
                 .setCountry(modificationInfos.getSubstationCountry())
                 .add();
         Map<String, String> properties = modificationInfos.getProperties();

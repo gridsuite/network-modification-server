@@ -51,7 +51,7 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
         // create new line without shunt conductance or reactance
         LineCreationInfos lineCreationInfosNoShunt = LineCreationInfos.builder()
                 .equipmentId("idLine1")
-                .equipmentName("nameLine1")
+                .name("nameLine1")
                 .seriesResistance(100.0)
                 .seriesReactance(100.0)
                 .voltageLevelId1("v1")
@@ -75,7 +75,7 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
         // create new line without shunt conductance or reactance
         LineCreationInfos lineCreationInfosNoShunt = LineCreationInfos.builder()
                 .equipmentId("idLine1")
-                .equipmentName("nameLine1")
+                .name("nameLine1")
                 .seriesResistance(100.0)
                 .seriesReactance(100.0)
                 .voltageLevelId1("v1")
@@ -103,7 +103,7 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
     public void testCreateLineOptionalParameters3() {
         LineCreationInfos lineCreationInfosPermanentLimitOK = LineCreationInfos.builder()
                 .equipmentId("idLine2")
-                .equipmentName("nameLine2")
+                .name("nameLine2")
                 .seriesResistance(100.0)
                 .seriesReactance(100.0)
                 .voltageLevelId1("v1")
@@ -128,7 +128,7 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
     public void testCreateLineOptionalParameters4() {
         LineCreationInfos lineCreationInfosPermanentLimitOK = LineCreationInfos.builder()
                 .equipmentId("idLine2")
-                .equipmentName("nameLine2")
+                .name("nameLine2")
                 .seriesResistance(100.0)
                 .seriesReactance(100.0)
                 .voltageLevelId1("v1")
@@ -158,7 +158,7 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
 
         LineCreationInfos lineCreationInfosPermanentLimitNOK = LineCreationInfos.builder()
                 .equipmentId("idLine2")
-                .equipmentName("nameLine2")
+                .name("nameLine2")
                 .seriesResistance(100.0)
                 .seriesReactance(100.0)
                 .voltageLevelId1("v1")
@@ -179,7 +179,7 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
     public void testCreateLineOptionalParameters6() {
         LineCreationInfos lineCreationInfosOK = LineCreationInfos.builder()
                 .equipmentId("idLine3")
-                .equipmentName("nameLine3")
+                .name("nameLine3")
                 .seriesResistance(100.0)
                 .seriesReactance(100.0)
                 .voltageLevelId1("v1")
@@ -206,7 +206,7 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
         //         voltage level "v2" and busbar section "bus2"
         return LineCreationInfos.builder()
             .equipmentId("idLine1")
-            .equipmentName("nameLine1")
+            .name("nameLine1")
             .seriesResistance(100.0)
             .seriesReactance(100.0)
             .shuntConductance1(10.0)
@@ -226,7 +226,7 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
     protected ModificationInfos buildModificationUpdate() {
         return LineCreationInfos.builder()
             .equipmentId("idLineEdited1")
-            .equipmentName("nameLineEdited1")
+            .name("nameLineEdited1")
             .seriesResistance(200.0)
             .seriesReactance(200.0)
             .shuntConductance1(20.0)

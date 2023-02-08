@@ -39,7 +39,7 @@ public class SubstationCreationTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModification() {
         return SubstationCreationInfos.builder()
                 .equipmentId("SubstationId")
-                .equipmentName("SubstationName")
+                .name("SubstationName")
                 .substationCountry(Country.AF)
                 .properties(Map.of("DEMO", "DemoC"))
                 .build();
@@ -49,7 +49,7 @@ public class SubstationCreationTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModificationUpdate() {
         return SubstationCreationInfos.builder()
                 .equipmentId("SubstationIdEdited")
-                .equipmentName("SubstationNameEdited")
+                .name("SubstationNameEdited")
                 .substationCountry(Country.CI)
                 .properties(Map.of("DEMO", "DemoU"))
                 .build();

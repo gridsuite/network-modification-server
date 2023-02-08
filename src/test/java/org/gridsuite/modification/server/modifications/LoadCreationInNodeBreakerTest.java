@@ -10,9 +10,11 @@ package org.gridsuite.modification.server.modifications;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.LoadType;
 import com.powsybl.iidm.network.Network;
-import com.powsybl.iidm.network.extensions.ConnectablePosition;
+import com.powsybl.iidm.network.extensions.ConnectablePosition.Direction;
+
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.dto.ConnectablePositionInfos;
 import org.gridsuite.modification.server.dto.EquipmentModificationInfos;
 import org.gridsuite.modification.server.dto.LoadCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
@@ -38,8 +40,7 @@ public class LoadCreationInNodeBreakerTest extends AbstractNetworkModificationTe
     public void testCreateWithErrors() {
         // Create load without connection name and UNDEFINED direction
         LoadCreationInfos loadCreationInfos1 = (LoadCreationInfos) buildModification();
-        loadCreationInfos1.setConnectionDirection(null);
-        loadCreationInfos1.setConnectionName(null);
+        loadCreationInfos1.setPosition(ConnectablePositionInfos.builder().build());
         String loadCreationInfosJson1 = mapper.writeValueAsString(loadCreationInfos1);
         mockMvc.perform(post(getNetworkModificationUri()).content(loadCreationInfosJson1).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(status().is5xxServerError(), content().string(new NetworkModificationException(CREATE_LOAD_ERROR, "java.lang.NullPointerException").getMessage())).andReturn();
@@ -69,7 +70,7 @@ public class LoadCreationInNodeBreakerTest extends AbstractNetworkModificationTe
         testNetworkModificationsCount(getGroupId(), 4);
 
         loadCreationInfos.setBusOrBusbarSectionId("1B");
-        loadCreationInfos.setActivePower(Double.NaN);
+        loadCreationInfos.setP0(Double.NaN);
         loadCreationInfosJson = mapper.writeValueAsString(loadCreationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(loadCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(status().is5xxServerError(), content().string(new NetworkModificationException(CREATE_LOAD_ERROR, "Load 'idLoad1': p0 is invalid").getMessage())).andReturn();
@@ -93,14 +94,16 @@ public class LoadCreationInNodeBreakerTest extends AbstractNetworkModificationTe
     protected ModificationInfos buildModification() {
         return LoadCreationInfos.builder()
             .equipmentId("idLoad1")
-            .equipmentName("nameLoad1")
+            .name("nameLoad1")
             .voltageLevelId("v2")
             .busOrBusbarSectionId("1B")
             .loadType(LoadType.AUXILIARY)
-            .activePower(100.0)
-            .reactivePower(60.0)
-            .connectionDirection(ConnectablePosition.Direction.TOP)
-            .connectionName("top")
+            .p0(100.0)
+            .q0(60.0)
+            .position(ConnectablePositionInfos.builder()
+                .label("top")
+                .direction(Direction.TOP)
+                .build())
             .build();
     }
 
@@ -108,14 +111,16 @@ public class LoadCreationInNodeBreakerTest extends AbstractNetworkModificationTe
     protected ModificationInfos buildModificationUpdate() {
         return LoadCreationInfos.builder()
             .equipmentId("idLoad1Edited")
-            .equipmentName("nameLoad1Edited")
+            .name("nameLoad1Edited")
             .voltageLevelId("v2Edited")
             .busOrBusbarSectionId("1BEdited")
             .loadType(LoadType.AUXILIARY)
-            .activePower(200.0)
-            .reactivePower(90.0)
-            .connectionDirection(ConnectablePosition.Direction.BOTTOM)
-            .connectionName("topEdited")
+            .p0(200.0)
+            .q0(90.0)
+            .position(ConnectablePositionInfos.builder()
+                .label("topEdited")
+                .direction(Direction.BOTTOM)
+                .build())
             .build();
     }
 

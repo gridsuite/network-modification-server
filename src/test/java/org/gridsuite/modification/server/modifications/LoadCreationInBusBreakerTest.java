@@ -9,7 +9,9 @@ package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.iidm.network.LoadType;
 import com.powsybl.iidm.network.Network;
-import com.powsybl.iidm.network.extensions.ConnectablePosition;
+import com.powsybl.iidm.network.extensions.ConnectablePosition.Direction;
+
+import org.gridsuite.modification.server.dto.ConnectablePositionInfos;
 import org.gridsuite.modification.server.dto.LoadCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.utils.MatcherLoadCreationInfos;
@@ -30,14 +32,16 @@ public class LoadCreationInBusBreakerTest extends AbstractNetworkModificationTes
     protected ModificationInfos buildModification() {
         return LoadCreationInfos.builder()
             .equipmentId("idLoad1")
-            .equipmentName("nameLoad1")
+            .name("nameLoad1")
             .voltageLevelId("v1")
             .busOrBusbarSectionId("bus1")
             .loadType(LoadType.FICTITIOUS)
-            .activePower(200.0)
-            .reactivePower(30.0)
-            .connectionName("top")
-            .connectionDirection(ConnectablePosition.Direction.TOP)
+            .p0(200.0)
+            .q0(30.0)
+            .position(ConnectablePositionInfos.builder()
+                .label("top")
+                .direction(Direction.TOP)
+                .build())
             .build();
     }
 
@@ -45,14 +49,16 @@ public class LoadCreationInBusBreakerTest extends AbstractNetworkModificationTes
     protected ModificationInfos buildModificationUpdate() {
         return LoadCreationInfos.builder()
             .equipmentId("idLoadEdited1")
-            .equipmentName("nameLoadEdited1")
+            .name("nameLoadEdited1")
             .voltageLevelId("v1Edited")
             .busOrBusbarSectionId("bus1Edited")
             .loadType(LoadType.FICTITIOUS)
-            .activePower(300.0)
-            .reactivePower(50.0)
-            .connectionName("bottom")
-            .connectionDirection(ConnectablePosition.Direction.BOTTOM)
+            .p0(300.0)
+            .q0(50.0)
+            .position(ConnectablePositionInfos.builder()
+                .label("bottom")
+                .direction(Direction.BOTTOM)
+                .build())
             .build();
     }
 

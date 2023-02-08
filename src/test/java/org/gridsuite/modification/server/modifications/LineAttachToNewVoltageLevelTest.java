@@ -34,7 +34,7 @@ public class LineAttachToNewVoltageLevelTest extends AbstractNetworkModification
     private VoltageLevelCreationInfos getNewVoltageLevel() {
         return VoltageLevelCreationInfos.builder()
                 .equipmentId("newVoltageLevel")
-                .equipmentName("NewVoltageLevel")
+                .name("NewVoltageLevel")
                 .nominalVoltage(379.3)
                 .substationId("s1")
                 .busbarSections(List.of(new BusbarSectionCreationInfos("v1bbs", "BBS1", 1, 1)))

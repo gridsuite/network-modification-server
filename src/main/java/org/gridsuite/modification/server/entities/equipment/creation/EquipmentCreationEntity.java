@@ -37,6 +37,6 @@ public class EquipmentCreationEntity extends EquipmentModificationEntity {
     }
 
     private void assignAttributes(EquipmentCreationInfos equipmentCreationInfos) {
-        this.equipmentName = equipmentCreationInfos.getEquipmentName();
+        this.equipmentName = equipmentCreationInfos.getName();
     }
 }

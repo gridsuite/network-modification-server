@@ -34,7 +34,7 @@ public class LineCreationInMixedTypologyTest extends AbstractNetworkModification
         //         voltage level "v2" and busbar section "bus2 type BUS_BREAKER"
         return LineCreationInfos.builder()
             .equipmentId("idLine1")
-            .equipmentName("nameLine1")
+            .name("nameLine1")
             .seriesResistance(100.0)
             .seriesReactance(100.0)
             .shuntConductance1(10.0)
@@ -58,7 +58,7 @@ public class LineCreationInMixedTypologyTest extends AbstractNetworkModification
     protected ModificationInfos buildModificationUpdate() {
         return LineCreationInfos.builder()
             .equipmentId("idLineEdited1")
-            .equipmentName("nameLineEdited1")
+            .name("nameLineEdited1")
             .seriesResistance(200.0)
             .seriesReactance(200.0)
             .shuntConductance1(20.0)

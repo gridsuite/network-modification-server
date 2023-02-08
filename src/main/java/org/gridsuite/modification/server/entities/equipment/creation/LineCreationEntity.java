@@ -65,7 +65,7 @@ public class LineCreationEntity extends BranchCreationEntity {
             .uuid(getId())
             .date(getDate())
             .equipmentId(getEquipmentId())
-            .equipmentName(getEquipmentName())
+            .name(getEquipmentName())
             .seriesResistance(getSeriesResistance())
             .seriesReactance(getSeriesReactance())
             .shuntConductance1(getShuntConductance1())

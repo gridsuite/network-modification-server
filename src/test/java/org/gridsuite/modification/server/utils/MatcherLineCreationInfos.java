@@ -35,7 +35,7 @@ public class MatcherLineCreationInfos extends MatcherModificationInfos<LineCreat
     public boolean matchesSafely(LineCreationInfos m) {
         return super.matchesSafely(m)
             && m.getEquipmentId().equals(reference.getEquipmentId())
-            && Objects.equals(m.getEquipmentName(), reference.getEquipmentName())
+            && Objects.equals(m.getName(), reference.getName())
             && m.getSeriesResistance() == reference.getSeriesResistance()
             && m.getSeriesReactance() == reference.getSeriesReactance()
             && m.getShuntConductance1() != null && m.getShuntConductance1().equals(reference.getShuntConductance1())

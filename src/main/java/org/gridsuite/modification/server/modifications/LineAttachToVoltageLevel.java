@@ -50,7 +50,7 @@ public class LineAttachToVoltageLevel extends AbstractModification {
 
         LineAdder lineAdder = network.newLine()
                 .setId(attachmentLineInfos.getEquipmentId())
-                .setName(attachmentLineInfos.getEquipmentName())
+                .setName(attachmentLineInfos.getName())
                 .setR(attachmentLineInfos.getSeriesResistance())
                 .setX(attachmentLineInfos.getSeriesReactance())
                 .setG1(ModificationUtils.getInstance().zeroIfNull(attachmentLineInfos.getShuntConductance1()))

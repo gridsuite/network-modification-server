@@ -43,7 +43,7 @@ public class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificat
         // create new generator in voltage level with node/breaker topology (in voltage level "v2" and busbar section "1B")
         return GeneratorCreationInfos.builder()
                 .equipmentId("idGenerator1")
-                .equipmentName("idGenerator1")
+                .name("idGenerator1")
                 .voltageLevelId("v2")
                 .busOrBusbarSectionId("1B")
                 .energySource(EnergySource.HYDRO)
@@ -81,7 +81,7 @@ public class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificat
     protected ModificationInfos buildModificationUpdate() {
         return GeneratorCreationInfos.builder()
                 .equipmentId("idGenerator2")
-                .equipmentName("nameGeneratorModified")
+                .name("nameGeneratorModified")
                 .voltageLevelId("v1")
                 .busOrBusbarSectionId("bus1")
                 .energySource(EnergySource.SOLAR)
@@ -177,7 +177,7 @@ public class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificat
         // Test create generator on not yet existing variant VARIANT_NOT_EXISTING_ID :
         // Only the modification should be added in the database but the generator cannot be created
         generatorCreationInfos.setEquipmentId("idGenerator3");
-        generatorCreationInfos.setEquipmentName("nameGenerator3");
+        generatorCreationInfos.setName("nameGenerator3");
         generatorCreationInfos.setVoltageLevelId("v2");
         generatorCreationInfos.setBusOrBusbarSectionId("1B");
         generatorCreationInfosJson = mapper.writeValueAsString(generatorCreationInfos);

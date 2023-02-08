@@ -76,7 +76,7 @@ public class TwoWindingsTransformerCreation extends AbstractModification {
         }
         // common settings
         TwoWindingsTransformerAdder twoWindingsTransformerAdder = branchAdder.setId(twoWindingsTransformerCreationInfos.getEquipmentId())
-                .setName(twoWindingsTransformerCreationInfos.getEquipmentName())
+                .setName(twoWindingsTransformerCreationInfos.getName())
                 .setVoltageLevel1(twoWindingsTransformerCreationInfos.getVoltageLevelId1())
                 .setVoltageLevel2(twoWindingsTransformerCreationInfos.getVoltageLevelId2())
                 .setG(twoWindingsTransformerCreationInfos.getMagnetizingConductance())

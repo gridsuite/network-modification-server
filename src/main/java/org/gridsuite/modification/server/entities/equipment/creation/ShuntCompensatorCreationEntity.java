@@ -82,7 +82,7 @@ public class ShuntCompensatorCreationEntity extends InjectionCreationEntity {
             .uuid(getId())
             .date(getDate())
             .equipmentId(getEquipmentId())
-            .equipmentName(getEquipmentName())
+            .name(getEquipmentName())
             .voltageLevelId(getVoltageLevelId())
             .busOrBusbarSectionId(getBusOrBusbarSectionId())
             .isIdenticalSection(isIdenticalSections())

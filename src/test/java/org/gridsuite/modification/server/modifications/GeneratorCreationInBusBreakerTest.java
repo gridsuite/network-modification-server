@@ -39,7 +39,7 @@ public class GeneratorCreationInBusBreakerTest extends AbstractNetworkModificati
     protected ModificationInfos buildModification() {
         return GeneratorCreationInfos.builder()
                 .equipmentId("idGenerator2")
-                .equipmentName("nameGenerator2")
+                .name("nameGenerator2")
                 .voltageLevelId("v1")
                 .busOrBusbarSectionId("bus1")
                 .energySource(EnergySource.HYDRO)
@@ -77,7 +77,7 @@ public class GeneratorCreationInBusBreakerTest extends AbstractNetworkModificati
     protected ModificationInfos buildModificationUpdate() {
         return GeneratorCreationInfos.builder()
                 .equipmentId("idGenerator2")
-                .equipmentName("nameGeneratorModified")
+                .name("nameGeneratorModified")
                 .voltageLevelId("v1")
                 .busOrBusbarSectionId("bus1")
                 .energySource(EnergySource.SOLAR)

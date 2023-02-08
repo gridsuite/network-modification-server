@@ -276,7 +276,7 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
                 .uuid(getId())
                 .date(getDate())
                 .equipmentId(getEquipmentId())
-                .equipmentName(AttributeModification.toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))
+                .name(AttributeModification.toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))
                 .voltageLevelId(AttributeModification.toAttributeModification(getVoltageLevelIdValue(), getVoltageLevelIdOp()))
                 .busOrBusbarSectionId(AttributeModification.toAttributeModification(getBusOrBusbarSectionIdValue(), getBusOrBusbarSectionIdOp()))
                 .energySource(toAttributeModification(getEnergySource()))

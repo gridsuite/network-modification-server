@@ -31,12 +31,13 @@ public class LoadCreation extends AbstractModification {
         VoltageLevel voltageLevel = ModificationUtils.getInstance().getVoltageLevel(network, modificationInfos.getVoltageLevelId());
         if (voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER) {
             LoadAdder loadAdder = createLoadAdderInNodeBreaker(voltageLevel, modificationInfos);
-            var position = modificationInfos.getConnectionPosition() != null ? modificationInfos.getConnectionPosition() :
+            var position = (modificationInfos.getPosition() != null && modificationInfos.getPosition().getOrder() != null) ?
+                    modificationInfos.getPosition().getOrder() :
                     ModificationUtils.getInstance().getPosition(modificationInfos.getBusOrBusbarSectionId(), network, voltageLevel);
             CreateFeederBay algo = new CreateFeederBayBuilder()
                 .withBbsId(modificationInfos.getBusOrBusbarSectionId())
-                .withInjectionDirection(modificationInfos.getConnectionDirection())
-                .withInjectionFeederName(modificationInfos.getConnectionName() != null ? modificationInfos.getConnectionName() : modificationInfos.getEquipmentId())
+                .withInjectionDirection(modificationInfos.getPosition() != null ? modificationInfos.getPosition().getDirection() : null)
+                .withInjectionFeederName((modificationInfos.getPosition() != null && modificationInfos.getPosition().getLabel() != null) ? modificationInfos.getPosition().getLabel() : modificationInfos.getEquipmentId())
                 .withInjectionPositionOrder(position)
                 .withInjectionAdder(loadAdder)
                 .build();
@@ -56,10 +57,10 @@ public class LoadCreation extends AbstractModification {
         // creating the load adder
         return voltageLevel.newLoad()
             .setId(loadCreationInfos.getEquipmentId())
-            .setName(loadCreationInfos.getEquipmentName())
+            .setName(loadCreationInfos.getName())
             .setLoadType(loadCreationInfos.getLoadType())
-            .setP0(loadCreationInfos.getActivePower())
-            .setQ0(loadCreationInfos.getReactivePower());
+            .setP0(loadCreationInfos.getP0())
+            .setQ0(loadCreationInfos.getQ0());
     }
 
     private Load createLoadInBusBreaker(VoltageLevel voltageLevel, LoadCreationInfos loadCreationInfos) {
@@ -68,11 +69,11 @@ public class LoadCreation extends AbstractModification {
         // creating the load
         return voltageLevel.newLoad()
             .setId(loadCreationInfos.getEquipmentId())
-            .setName(loadCreationInfos.getEquipmentName())
+            .setName(loadCreationInfos.getName())
             .setLoadType(loadCreationInfos.getLoadType())
             .setBus(bus.getId())
             .setConnectableBus(bus.getId())
-            .setP0(loadCreationInfos.getActivePower())
-            .setQ0(loadCreationInfos.getReactivePower()).add();
+            .setP0(loadCreationInfos.getP0())
+            .setQ0(loadCreationInfos.getQ0()).add();
     }
 }

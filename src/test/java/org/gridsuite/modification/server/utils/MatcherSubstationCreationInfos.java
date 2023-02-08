@@ -28,7 +28,7 @@ public class MatcherSubstationCreationInfos extends MatcherModificationInfos<Sub
     public boolean matchesSafely(SubstationCreationInfos m) {
         return super.matchesSafely(m)
                 && m.getEquipmentId().equals(reference.getEquipmentId())
-                && m.getEquipmentName().equals(reference.getEquipmentName())
+                && m.getName().equals(reference.getName())
                 && m.getSubstationCountry().equals(reference.getSubstationCountry())
                 && Objects.equals(m.getProperties(), reference.getProperties());
     }

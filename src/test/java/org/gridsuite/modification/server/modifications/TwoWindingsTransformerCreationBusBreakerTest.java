@@ -42,7 +42,7 @@ public class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetwor
     protected ModificationInfos buildModification() {
         return TwoWindingsTransformerCreationInfos.builder()
                 .equipmentId("new2wt")
-                .equipmentName("new2wt")
+                .name("new2wt")
                 .seriesResistance(1.)
                 .seriesReactance(2.)
                 .magnetizingConductance(3.)
@@ -147,7 +147,7 @@ public class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetwor
     protected ModificationInfos buildModificationUpdate() {
         return TwoWindingsTransformerCreationInfos.builder()
                 .equipmentId("new2wtUpdate")
-                .equipmentName("new2wtUpdate")
+                .name("new2wtUpdate")
                 .seriesResistance(2.3)
                 .seriesReactance(3.2)
                 .magnetizingConductance(4.4)
@@ -311,7 +311,7 @@ public class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetwor
         // create new 2wt in voltage level with bus/breaker topology
         TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos = TwoWindingsTransformerCreationInfos.builder()
                 .equipmentId("id2wt1")
-                .equipmentName("2wtName")
+                .name("2wtName")
                 .voltageLevelId1("v1")
                 .busOrBusbarSectionId1("bus1")
                 .voltageLevelId2("v12")
@@ -329,7 +329,7 @@ public class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetwor
         testCreateTwoWindingsTransformerInBusBreaker(twoWindingsTransformerCreationInfos, 1);
         TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos2 = TwoWindingsTransformerCreationInfos.builder()
                 .equipmentId("id2wt1WithRatioTapChanger2")
-                .equipmentName("2wtName")
+                .name("2wtName")
                 .voltageLevelId1("v1")
                 .busOrBusbarSectionId1("bus1")
                 .voltageLevelId2("v12")
@@ -365,7 +365,7 @@ public class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetwor
                 .build();
         TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos = TwoWindingsTransformerCreationInfos.builder()
                 .equipmentId("id2wt1WithPhaseTapChanger")
-                .equipmentName("2wtName")
+                .name("2wtName")
                 .voltageLevelId1("v1")
                 .busOrBusbarSectionId1("bus1")
                 .voltageLevelId2("v12")

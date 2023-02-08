@@ -90,7 +90,7 @@ public class GeneratorCreation extends AbstractModification {
         // creating the generator
         GeneratorAdder generatorAdder = voltageLevel.newGenerator()
             .setId(generatorCreationInfos.getEquipmentId())
-            .setName(generatorCreationInfos.getEquipmentName())
+            .setName(generatorCreationInfos.getName())
             .setEnergySource(generatorCreationInfos.getEnergySource())
             .setMinP(generatorCreationInfos.getMinActivePower())
             .setMaxP(generatorCreationInfos.getMaxActivePower())
@@ -174,7 +174,7 @@ public class GeneratorCreation extends AbstractModification {
         // creating the generator
         Generator generator = voltageLevel.newGenerator()
             .setId(generatorCreationInfos.getEquipmentId())
-            .setName(generatorCreationInfos.getEquipmentName())
+            .setName(generatorCreationInfos.getName())
             .setEnergySource(generatorCreationInfos.getEnergySource())
             .setBus(bus.getId())
             .setConnectableBus(bus.getId())

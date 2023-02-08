@@ -39,7 +39,7 @@ public class TwoWindingsTransformerCreationMixedBreakerTest extends AbstractNetw
     protected ModificationInfos buildModification() {
         return TwoWindingsTransformerCreationInfos.builder()
                 .equipmentId("id2wt1")
-                .equipmentName("2wtName")
+                .name("2wtName")
                 .voltageLevelId1("v1")
                 .busOrBusbarSectionId1("1.1")
                 .voltageLevelId2("v3")
@@ -142,7 +142,7 @@ public class TwoWindingsTransformerCreationMixedBreakerTest extends AbstractNetw
     protected ModificationInfos buildModificationUpdate() {
         return TwoWindingsTransformerCreationInfos.builder()
                 .equipmentId("new2wtUpdate")
-                .equipmentName("new2wtUpdate")
+                .name("new2wtUpdate")
                 .seriesResistance(2.3)
                 .seriesReactance(3.2)
                 .magnetizingConductance(4.4)

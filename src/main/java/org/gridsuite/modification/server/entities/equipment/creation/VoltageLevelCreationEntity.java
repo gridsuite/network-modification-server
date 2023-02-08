@@ -80,7 +80,7 @@ public class VoltageLevelCreationEntity extends EquipmentCreationEntity {
                 .uuid(getId())
                 .date(getDate())
                 .equipmentId(getEquipmentId())
-                .equipmentName(getEquipmentName())
+                .name(getEquipmentName())
                 .nominalVoltage(getNominalVoltage())
                 .substationId(getSubstationId())
                 .busbarSections(bbsis)

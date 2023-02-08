@@ -24,5 +24,5 @@ import lombok.experimental.SuperBuilder;
 @Schema(description = "Basic equipment modification")
 public class BasicEquipmentModificationInfos extends EquipmentModificationInfos {
     @Schema(description = "Equipment name modification")
-    private AttributeModification<String> equipmentName;
+    private AttributeModification<String> name;
 }
