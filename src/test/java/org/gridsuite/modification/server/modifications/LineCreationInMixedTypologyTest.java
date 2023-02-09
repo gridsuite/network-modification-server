@@ -9,6 +9,7 @@ package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
+import org.gridsuite.modification.server.dto.ConnectablePositionInfos;
 import org.gridsuite.modification.server.dto.LineCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.utils.MatcherLineCreationInfos;
@@ -35,8 +36,8 @@ public class LineCreationInMixedTypologyTest extends AbstractNetworkModification
         return LineCreationInfos.builder()
             .id("idLine1")
             .name("nameLine1")
-            .seriesResistance(100.0)
-            .seriesReactance(100.0)
+            .r(100.0)
+            .x(100.0)
             .shuntConductance1(10.0)
             .shuntSusceptance1(10.0)
             .shuntConductance2(20.0)
@@ -45,12 +46,14 @@ public class LineCreationInMixedTypologyTest extends AbstractNetworkModification
             .busOrBusbarSectionId1("1.1")
             .voltageLevelId2("v2")
             .busOrBusbarSectionId2("bus2")
-            .connectionName1("cn1Line1")
-            .connectionDirection1(ConnectablePosition.Direction.TOP)
-            .connectionName2("cn2Line1")
-            .connectionDirection2(ConnectablePosition.Direction.TOP)
-            .connectionPosition1(0)
-            .connectionPosition2(0)
+            .position1(ConnectablePositionInfos.builder()
+                .label("cn1Line1")
+                .direction(ConnectablePosition.Direction.TOP)
+                .order(0).build())
+            .position2(ConnectablePositionInfos.builder()
+                .label("cn2Line1")
+                .direction(ConnectablePosition.Direction.TOP)
+                .order(0).build())
             .build();
     }
 
@@ -59,8 +62,8 @@ public class LineCreationInMixedTypologyTest extends AbstractNetworkModification
         return LineCreationInfos.builder()
             .id("idLineEdited1")
             .name("nameLineEdited1")
-            .seriesResistance(200.0)
-            .seriesReactance(200.0)
+            .r(200.0)
+            .x(200.0)
             .shuntConductance1(20.0)
             .shuntSusceptance1(20.0)
             .shuntConductance2(30.0)
@@ -69,12 +72,14 @@ public class LineCreationInMixedTypologyTest extends AbstractNetworkModification
             .busOrBusbarSectionId1("2.1")
             .voltageLevelId2("v3")
             .busOrBusbarSectionId2("bus3")
-            .connectionName1("cn3Line1")
-            .connectionDirection1(ConnectablePosition.Direction.BOTTOM)
-            .connectionName2("cn4Line1")
-            .connectionDirection2(ConnectablePosition.Direction.BOTTOM)
-            .connectionPosition1(0)
-            .connectionPosition2(0)
+            .position1(ConnectablePositionInfos.builder()
+                .label("cn3Line1")
+                .direction(ConnectablePosition.Direction.BOTTOM)
+                .order(0).build())
+            .position2(ConnectablePositionInfos.builder()
+                .label("cn4Line1")
+                .direction(ConnectablePosition.Direction.BOTTOM)
+                .order(0).build())
             .build();
     }
 

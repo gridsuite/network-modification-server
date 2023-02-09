@@ -230,15 +230,20 @@ public class BuildTest {
     @Test
     public void runBuildForLineSplits() throws Exception {
         List<ModificationEntity> entities1 = List.of(
-                LineCreationInfos.builder().id("newLine").name("newLine").seriesResistance(1.0)
-                        .seriesReactance(2.0).shuntConductance1(3.0).shuntSusceptance1(4.0).shuntConductance2(5.0)
-                        .shuntSusceptance2(6.0).voltageLevelId1("v1").busOrBusbarSectionId1("1.1").voltageLevelId2("v2")
-                        .busOrBusbarSectionId2("1B").connectionName1("cn11")
-                        .connectionDirection1(ConnectablePosition.Direction.TOP).connectionName2("cn22")
-                        .connectionDirection2(ConnectablePosition.Direction.TOP).build().toEntity(),
-                LineSplitWithVoltageLevelInfos.builder().lineToSplitId("line3").percent(0.32)
-                        .mayNewVoltageLevelInfos(null).existingVoltageLevelId("vl1").bbsOrBusId("sjb1").newLine1Id("un")
-                        .newLine1Name("One").newLine2Id("deux").newLine2Name("Two").build().toEntity());
+            LineCreationInfos.builder().id("newLine").name("newLine").r(1.0)
+                .x(2.0).shuntConductance1(3.0).shuntSusceptance1(4.0).shuntConductance2(5.0)
+                .shuntSusceptance2(6.0).voltageLevelId1("v1").busOrBusbarSectionId1("1.1").voltageLevelId2("v2")
+                .busOrBusbarSectionId2("1B")
+                .position1(ConnectablePositionInfos.builder()
+                    .label("cn11")
+                    .direction(Direction.TOP).build())
+                .position2(ConnectablePositionInfos.builder()
+                    .label("cn22")
+                    .direction(Direction.TOP).build())
+                .build().toEntity(),
+            LineSplitWithVoltageLevelInfos.builder().lineToSplitId("line3").percent(0.32)
+                .mayNewVoltageLevelInfos(null).existingVoltageLevelId("vl1").bbsOrBusId("sjb1").newLine1Id("un")
+                .newLine1Name("One").newLine2Id("deux").newLine2Name("Two").build().toEntity());
         modificationRepository.saveModifications(TEST_GROUP_ID, entities1);
 
         List<ModificationEntity> entities2 = new ArrayList<>();
@@ -352,12 +357,17 @@ public class BuildTest {
                 .regulatingTerminalVlId("v2").qPercent(25.).reactiveCapabilityCurve(false)
                 .reactiveCapabilityCurvePoints(List.of()).connectionName("Top")
                 .connectionDirection(ConnectablePosition.Direction.TOP).connectionPosition(0).build().toEntity());
-        entities2.add(LineCreationInfos.builder().id("newLine").name("newLine").seriesResistance(1.0)
-                .seriesReactance(2.0).shuntConductance1(3.0).shuntSusceptance1(4.0).shuntConductance2(5.0)
-                .shuntSusceptance2(6.0).voltageLevelId1("v1").busOrBusbarSectionId1("1.1").voltageLevelId2("v2")
-                .busOrBusbarSectionId2("1B").currentLimits1(null).currentLimits2(null).connectionName1("cn101")
-                .connectionDirection1(ConnectablePosition.Direction.TOP).connectionName2("cn102")
-                .connectionDirection2(ConnectablePosition.Direction.TOP).build().toEntity());
+        entities2.add(LineCreationInfos.builder().id("newLine").name("newLine").r(1.0)
+            .x(2.0).shuntConductance1(3.0).shuntSusceptance1(4.0).shuntConductance2(5.0)
+            .shuntSusceptance2(6.0).voltageLevelId1("v1").busOrBusbarSectionId1("1.1").voltageLevelId2("v2")
+            .busOrBusbarSectionId2("1B").currentLimits1(null).currentLimits2(null)
+            .position1(ConnectablePositionInfos.builder()
+                .label("cn101")
+                .direction(Direction.TOP).build())
+            .position2(ConnectablePositionInfos.builder()
+                .label("cn102")
+                .direction(Direction.TOP).build())
+            .build().toEntity());
 
         List<TapChangerStepCreationEmbeddable> tapChangerStepCreationEmbeddables = new ArrayList<>();
         tapChangerStepCreationEmbeddables
@@ -392,44 +402,53 @@ public class BuildTest {
                 .susceptancePerSection(1.).isIdenticalSection(true)
                 .connectionDirection(ConnectablePosition.Direction.UNDEFINED).connectionName("shunt9").build()
                 .toEntity());
-        entities2
-                .add(TwoWindingsTransformerCreationInfos.builder().id("new2wt").name("new2wt")
-                        .seriesResistance(1.).seriesReactance(2.).magnetizingConductance(3.).magnetizingSusceptance(4.)
-                        .ratedVoltage1(5.).ratedVoltage2(6.).ratedS(1.).voltageLevelId1("v1")
-                        .busOrBusbarSectionId1("1.1").voltageLevelId2("v2").busOrBusbarSectionId2("1A")
-                        .currentLimits1(CurrentLimitsInfos.builder().permanentLimit(3.).build())
-                        .currentLimits2(CurrentLimitsInfos.builder().permanentLimit(2.).build())
-                        .connectionName1("cn201").connectionDirection1(ConnectablePosition.Direction.TOP)
-                        .connectionName2("cn202").connectionDirection2(
-                                ConnectablePosition.Direction.TOP)
-                        .phaseTapChanger(
-                                PhaseTapChangerCreationInfos.builder().lowTapPosition(1).tapPosition(2)
-                                        .regulatingTerminalId("v1load").regulatingTerminalVlId("v1").regulating(false)
-                                        .regulatingTerminalType("LOAD")
-                                        .regulationMode(PhaseTapChanger.RegulationMode.CURRENT_LIMITER)
-                                        .steps(List
-                                                .of(TapChangerStepCreationInfos.builder().index(1).rho(1).r(0).x(0).g(0)
-                                                        .b(0).alpha(0).build(),
-                                                        TapChangerStepCreationInfos.builder().index(2).rho(1).r(0).x(0)
-                                                                .g(0).b(0).alpha(0.).build(),
-                                                        TapChangerStepCreationInfos.builder().index(3).rho(1).r(0).x(0)
-                                                                .g(0).b(0).alpha(0.).build()))
-                                        .build())
-                        .ratioTapChanger(
-                                RatioTapChangerCreationInfos.builder().lowTapPosition(5).tapPosition(6).regulating(true)
-                                        .targetDeadband(1.).regulatingTerminalId("v2load").regulatingTerminalVlId("v2")
-                                        .regulatingTerminalType("LOAD").loadTapChangingCapabilities(true).targetV(5.)
-                                        .steps(List.of(
-                                                TapChangerStepCreationInfos.builder().index(5).rho(1).r(0).x(0).g(0)
-                                                        .b(0).build(),
-                                                TapChangerStepCreationInfos.builder().index(6).rho(1).r(0).x(0).g(0)
-                                                        .b(0).build(),
-                                                TapChangerStepCreationInfos.builder().index(7).rho(1).r(0).x(0).g(0)
-                                                        .b(0).build(),
-                                                TapChangerStepCreationInfos.builder().index(8).rho(1).r(0).x(0).g(0)
-                                                        .b(0).build()))
-                                        .build())
-                        .build().toEntity());
+        entities2.add(TwoWindingsTransformerCreationInfos.builder().id("new2wt").name("new2wt")
+            .r(1.).x(2.).g(3.).b(4.)
+            .ratedU1(5.).ratedU2(6.).ratedS(1.).voltageLevelId1("v1")
+            .busOrBusbarSectionId1("1.1").voltageLevelId2("v2").busOrBusbarSectionId2("1A")
+            .currentLimits1(CurrentLimitsInfos.builder().permanentLimit(3.).build())
+            .currentLimits2(CurrentLimitsInfos.builder().permanentLimit(2.).build())
+            .position1(ConnectablePositionInfos.builder()
+                .label("cn201")
+                .direction(Direction.TOP).build())
+            .position2(ConnectablePositionInfos.builder()
+                .label("cn202")
+                .direction(Direction.TOP).build())
+            .phaseTapChanger(
+                PhaseTapChangerCreationInfos.builder().lowTapPosition(1).tapPosition(2)
+                    .regulating(false)
+                    .regulatingTerminal(RegulatingTerminalInfos.builder()
+                        .id("v1load")
+                        .vlId("v1")
+                        .type("LOAD").build())
+                    .regulationMode(PhaseTapChanger.RegulationMode.CURRENT_LIMITER)
+                    .steps(List
+                        .of(TapChangerStepCreationInfos.builder().index(1).rho(1).r(0).x(0).g(0)
+                                .b(0).alpha(0).build(),
+                            TapChangerStepCreationInfos.builder().index(2).rho(1).r(0).x(0)
+                                .g(0).b(0).alpha(0.).build(),
+                            TapChangerStepCreationInfos.builder().index(3).rho(1).r(0).x(0)
+                                .g(0).b(0).alpha(0.).build()))
+                    .build())
+            .ratioTapChanger(
+                RatioTapChangerCreationInfos.builder().lowTapPosition(5).tapPosition(6).regulating(true)
+                    .targetDeadband(1.)
+                    .regulatingTerminal(RegulatingTerminalInfos.builder()
+                        .id("v2load")
+                        .vlId("v2")
+                        .type("LOAD").build())
+                    .loadTapChangingCapabilities(true).targetV(5.)
+                    .steps(List.of(
+                        TapChangerStepCreationInfos.builder().index(5).rho(1).r(0).x(0).g(0)
+                            .b(0).build(),
+                        TapChangerStepCreationInfos.builder().index(6).rho(1).r(0).x(0).g(0)
+                            .b(0).build(),
+                        TapChangerStepCreationInfos.builder().index(7).rho(1).r(0).x(0).g(0)
+                            .b(0).build(),
+                        TapChangerStepCreationInfos.builder().index(8).rho(1).r(0).x(0).g(0)
+                            .b(0).build()))
+                    .build())
+            .build().toEntity());
         entities2.add(LoadModificationInfos.builder().id("newLoad")
                 .name(new AttributeModification<>("newLoadName", OperationType.SET)).p0(null).build()
                 .toEntity());

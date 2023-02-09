@@ -29,19 +29,19 @@ import java.util.stream.Collectors;
 @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "twoWindingsTransformerCreation_id_fk_constraint"))
 public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
 
-    @Column(name = "magnetizingConductance")
-    private double magnetizingConductance;
+    @Column(name = "g")
+    private double g;
 
-    @Column(name = "magnetizingSusceptance")
-    private double magnetizingSusceptance;
+    @Column(name = "b")
+    private double b;
 
-    @Column(name = "ratedVoltage1")
-    private double ratedVoltage1;
+    @Column(name = "ratedU1")
+    private double ratedU1;
 
-    @Column(name = "ratedVoltage2")
-    private double ratedVoltage2;
+    @Column(name = "ratedU2")
+    private double ratedU2;
 
-    @Column(name = "rateds")
+    @Column(name = "ratedS")
     private Double ratedS;
 
     @Column(name = "phasetapchangerlowtapposition")
@@ -119,10 +119,10 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
     }
 
     private void assignAttributes(TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
-        this.magnetizingConductance = twoWindingsTransformerCreationInfos.getMagnetizingConductance();
-        this.magnetizingSusceptance = twoWindingsTransformerCreationInfos.getMagnetizingSusceptance();
-        this.ratedVoltage1 = twoWindingsTransformerCreationInfos.getRatedVoltage1();
-        this.ratedVoltage2 = twoWindingsTransformerCreationInfos.getRatedVoltage2();
+        this.g = twoWindingsTransformerCreationInfos.getG();
+        this.b = twoWindingsTransformerCreationInfos.getB();
+        this.ratedU1 = twoWindingsTransformerCreationInfos.getRatedU1();
+        this.ratedU2 = twoWindingsTransformerCreationInfos.getRatedU2();
         this.ratedS = twoWindingsTransformerCreationInfos.getRatedS();
         this.tapChangerSteps = new ArrayList<>();
         assignTapChanger(twoWindingsTransformerCreationInfos);
@@ -135,14 +135,20 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
 
     private void assignRatioTapChanger(RatioTapChangerCreationInfos ratioTapChanger) {
         this.ratioTapChangerLowTapPosition = ratioTapChanger.getLowTapPosition();
-        this.ratioTapChangerTapPosition =  ratioTapChanger.getTapPosition();
+        this.ratioTapChangerTapPosition = ratioTapChanger.getTapPosition();
         this.ratioTapChangerRegulating = ratioTapChanger.isRegulating();
         this.ratioTapChangerTargetDeadband = ratioTapChanger.getTargetDeadband();
-        this.ratioTapChangerTerminalRefConnectableId = ratioTapChanger.getRegulatingTerminalId();
-        this.ratioTapChangerTerminalRefVoltageLevelId = ratioTapChanger.getRegulatingTerminalVlId();
-        this.ratioTapChangerTerminalRefType =  ratioTapChanger.getRegulatingTerminalType();
+        this.ratioTapChangerTerminalRefConnectableId = ratioTapChanger.getRegulatingTerminal() != null
+            ? ratioTapChanger.getRegulatingTerminal().getId()
+            : null;
+        this.ratioTapChangerTerminalRefVoltageLevelId = ratioTapChanger.getRegulatingTerminal() != null
+            ? ratioTapChanger.getRegulatingTerminal().getVlId()
+            : null;
+        this.ratioTapChangerTerminalRefType = ratioTapChanger.getRegulatingTerminal() != null
+            ? ratioTapChanger.getRegulatingTerminal().getType()
+            : null;
         this.ratioTapChangerLoadTapChangingCapabilities = ratioTapChanger.isLoadTapChangingCapabilities();
-        this.ratioTapChangerTargetV =  ratioTapChanger.getTargetV();
+        this.ratioTapChangerTargetV = ratioTapChanger.getTargetV();
         this.tapChangerSteps.addAll(TapChangerStepCreationEmbeddable.toEmbeddableRatioTapChangerSteps(ratioTapChanger.getSteps()));
     }
 
@@ -151,9 +157,15 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
         this.phaseTapChangerTapPosition = phaseTapChangerCreationInfos.getTapPosition();
         this.phaseTapChangerRegulating = phaseTapChangerCreationInfos.isRegulating();
         this.phaseTapChangerTargetDeadband = phaseTapChangerCreationInfos.getTargetDeadband();
-        this.phaseTapChangerTerminalRefConnectableId = phaseTapChangerCreationInfos.getRegulatingTerminalId();
-        this.phaseTapChangerTerminalRefVoltageLevelId = phaseTapChangerCreationInfos.getRegulatingTerminalVlId();
-        this.phaseTapChangerTerminalRefType = phaseTapChangerCreationInfos.getRegulatingTerminalType();
+        this.phaseTapChangerTerminalRefConnectableId = phaseTapChangerCreationInfos.getRegulatingTerminal() != null
+            ? phaseTapChangerCreationInfos.getRegulatingTerminal().getId()
+            : null;
+        this.phaseTapChangerTerminalRefVoltageLevelId = phaseTapChangerCreationInfos.getRegulatingTerminal() != null
+            ? phaseTapChangerCreationInfos.getRegulatingTerminal().getVlId()
+            : null;
+        this.phaseTapChangerTerminalRefType = phaseTapChangerCreationInfos.getRegulatingTerminal() != null
+            ? phaseTapChangerCreationInfos.getRegulatingTerminal().getType()
+            : null;
         this.phaseTapChangerRegulationMode = phaseTapChangerCreationInfos.getRegulationMode();
         this.phaseTapChangerRegulationValue = phaseTapChangerCreationInfos.getRegulationValue();
         this.tapChangerSteps.addAll(TapChangerStepCreationEmbeddable.toEmbeddablePhaseTapChangerSteps(phaseTapChangerCreationInfos.getSteps()));
@@ -173,28 +185,30 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
         }
 
         TwoWindingsTransformerCreationInfos.TwoWindingsTransformerCreationInfosBuilder<?, ?> builder = TwoWindingsTransformerCreationInfos
-                .builder()
-                .uuid(getId())
-                .date(getDate())
-                .id(getEquipmentId())
-                .name(getEquipmentName())
-                .seriesResistance(getSeriesResistance())
-                .seriesReactance(getSeriesReactance())
-                .magnetizingConductance(getMagnetizingConductance())
-                .magnetizingSusceptance(getMagnetizingSusceptance())
-                .ratedVoltage1(getRatedVoltage1())
-                .ratedVoltage2(getRatedVoltage2())
-                .ratedS(getRatedS())
-                .voltageLevelId1(getVoltageLevelId1())
-                .busOrBusbarSectionId1(getBusOrBusbarSectionId1())
-                .voltageLevelId2(getVoltageLevelId2())
-                .busOrBusbarSectionId2(getBusOrBusbarSectionId2())
-                .connectionName1(getConnectionName1())
-                .connectionDirection1(getConnectionDirection1())
-                .connectionName2(getConnectionName2())
-                .connectionDirection2(getConnectionDirection2())
-                .connectionPosition1(getConnectionPosition1())
-                .connectionPosition2(getConnectionPosition2());
+            .builder()
+            .uuid(getId())
+            .date(getDate())
+            .id(getEquipmentId())
+            .name(getEquipmentName())
+            .r(getR())
+            .x(getX())
+            .g(getG())
+            .b(getB())
+            .ratedU1(getRatedU1())
+            .ratedU2(getRatedU2())
+            .ratedS(getRatedS())
+            .voltageLevelId1(getVoltageLevelId1())
+            .busOrBusbarSectionId1(getBusOrBusbarSectionId1())
+            .voltageLevelId2(getVoltageLevelId2())
+            .busOrBusbarSectionId2(getBusOrBusbarSectionId2())
+            .position1(ConnectablePositionInfos.builder()
+                .label(getConnectionName1())
+                .direction(getConnectionDirection1())
+                .order(getConnectionPosition1()).build())
+            .position2(ConnectablePositionInfos.builder()
+                .label(getConnectionName2())
+                .direction(getConnectionDirection2())
+                .order(getConnectionPosition2()).build());
 
         if (getCurrentLimits1() != null) {
             builder.currentLimits1(getCurrentLimits1().toCurrentLimitsInfos());
@@ -212,9 +226,11 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
                     .regulating(getRatioTapChangerRegulating())
                     .loadTapChangingCapabilities(getRatioTapChangerLoadTapChangingCapabilities())
                     .targetV(getRatioTapChangerTargetV())
-                    .regulatingTerminalId(getRatioTapChangerTerminalRefConnectableId())
-                    .regulatingTerminalVlId(getRatioTapChangerTerminalRefVoltageLevelId())
-                    .regulatingTerminalType(getRatioTapChangerTerminalRefType())
+                    .regulatingTerminal(RegulatingTerminalInfos.builder()
+                        .id(getRatioTapChangerTerminalRefConnectableId())
+                        .vlId(getRatioTapChangerTerminalRefVoltageLevelId())
+                        .type(getRatioTapChangerTerminalRefType())
+                        .build())
                     .steps(ratioTapChangerStepCreationInfos)
                     .build());
         }
@@ -228,9 +244,11 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
                     .regulating(getPhaseTapChangerRegulating())
                     .regulationMode(getPhaseTapChangerRegulationMode())
                     .regulationValue(getPhaseTapChangerRegulationValue())
-                    .regulatingTerminalId(getPhaseTapChangerTerminalRefConnectableId())
-                    .regulatingTerminalVlId(getPhaseTapChangerTerminalRefVoltageLevelId())
-                    .regulatingTerminalType(getPhaseTapChangerTerminalRefType())
+                    .regulatingTerminal(RegulatingTerminalInfos.builder()
+                        .id(getPhaseTapChangerTerminalRefConnectableId())
+                        .vlId(getPhaseTapChangerTerminalRefVoltageLevelId())
+                        .type(getPhaseTapChangerTerminalRefType())
+                        .build())
                     .steps(phaseTapChangerStepCreationInfos)
                     .build());
         }

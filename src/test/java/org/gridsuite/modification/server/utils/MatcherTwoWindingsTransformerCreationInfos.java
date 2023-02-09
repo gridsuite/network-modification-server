@@ -9,6 +9,7 @@ package org.gridsuite.modification.server.utils;
 import org.gridsuite.modification.server.dto.CurrentLimitsInfos;
 import org.gridsuite.modification.server.dto.PhaseTapChangerCreationInfos;
 import org.gridsuite.modification.server.dto.RatioTapChangerCreationInfos;
+import org.gridsuite.modification.server.dto.RegulatingTerminalInfos;
 import org.gridsuite.modification.server.dto.TwoWindingsTransformerCreationInfos;
 import org.hamcrest.Description;
 
@@ -33,14 +34,38 @@ public class MatcherTwoWindingsTransformerCreationInfos extends MatcherModificat
                 || (cl1 != null && cl2 != null && cl1.getPermanentLimit() == null && cl2.getPermanentLimit() == null);
     }
 
+    private boolean matchesRegulatingTerminalInfos(RegulatingTerminalInfos rt1, RegulatingTerminalInfos rt2) {
+        return (rt1 == null && rt2 == null)
+            || (rt1 != null && rt2 != null
+            &&
+            Objects.equals(rt1.getVlId(), rt2.getVlId())
+            && Objects.equals(rt1.getType(), rt2.getType())
+            && Objects.equals(rt1.getId(), rt2.getId()));
+    }
+
     private boolean matchesRatioTapChangerInfos(RatioTapChangerCreationInfos rt1, RatioTapChangerCreationInfos rt2) {
         return (rt1 == null && rt2 == null)
-                || (rt1 != null && rt2 != null && rt1.isLoadTapChangingCapabilities() == rt2.isLoadTapChangingCapabilities() && rt1.isRegulating() == rt2.isRegulating() && Objects.equals(rt1.getTargetV(), rt2.getTargetV()) && Objects.equals(rt1.getTargetDeadband(), rt2.getTargetDeadband()) && Objects.equals(rt1.getRegulatingTerminalVlId(), rt2.getRegulatingTerminalVlId()) && Objects.equals(rt1.getRegulatingTerminalType(), rt2.getRegulatingTerminalType()) && Objects.equals(rt1.getRegulatingTerminalId(), rt2.getRegulatingTerminalId()) && rt1.getLowTapPosition() == rt2.getLowTapPosition() && rt1.getTapPosition() == rt2.getTapPosition());
+            || (rt1 != null && rt2 != null
+            && rt1.isLoadTapChangingCapabilities() == rt2.isLoadTapChangingCapabilities()
+            && rt1.isRegulating() == rt2.isRegulating()
+            && Objects.equals(rt1.getTargetV(), rt2.getTargetV())
+            && Objects.equals(rt1.getTargetDeadband(), rt2.getTargetDeadband())
+            && matchesRegulatingTerminalInfos(rt1.getRegulatingTerminal(), rt2.getRegulatingTerminal())
+            && rt1.getLowTapPosition() == rt2.getLowTapPosition()
+            && rt1.getTapPosition() == rt2.getTapPosition());
     }
 
     private boolean matchesPhaseTapChangerInfos(PhaseTapChangerCreationInfos pt1, PhaseTapChangerCreationInfos pt2) {
         return (pt1 == null && pt2 == null)
-                || (pt1 != null && pt2 != null && pt1.getRegulationMode().equals(pt2.getRegulationMode()) && pt1.isRegulating() == pt2.isRegulating() && pt1.getRegulationMode() == pt2.getRegulationMode() && Objects.equals(pt1.getRegulationValue(), pt2.getRegulationValue()) && Objects.equals(pt1.getTargetDeadband(), pt2.getTargetDeadband()) && Objects.equals(pt1.getRegulatingTerminalVlId(), pt2.getRegulatingTerminalVlId()) && Objects.equals(pt1.getRegulatingTerminalType(), pt2.getRegulatingTerminalType()) && Objects.equals(pt1.getRegulatingTerminalId(), pt2.getRegulatingTerminalId()) && pt1.getLowTapPosition() == pt2.getLowTapPosition() && pt1.getTapPosition() == pt2.getTapPosition());
+            || (pt1 != null && pt2 != null
+            && pt1.getRegulationMode().equals(pt2.getRegulationMode())
+            && pt1.isRegulating() == pt2.isRegulating()
+            && pt1.getRegulationMode() == pt2.getRegulationMode()
+            && Objects.equals(pt1.getRegulationValue(), pt2.getRegulationValue())
+            && Objects.equals(pt1.getTargetDeadband(), pt2.getTargetDeadband())
+            && matchesRegulatingTerminalInfos(pt1.getRegulatingTerminal(), pt2.getRegulatingTerminal())
+            && pt1.getLowTapPosition() == pt2.getLowTapPosition()
+            && pt1.getTapPosition() == pt2.getTapPosition());
     }
 
     @Override
@@ -52,12 +77,12 @@ public class MatcherTwoWindingsTransformerCreationInfos extends MatcherModificat
                 && m.getVoltageLevelId2().equals(reference.getVoltageLevelId2())
                 && m.getBusOrBusbarSectionId1().equals(reference.getBusOrBusbarSectionId1())
                 && m.getBusOrBusbarSectionId2().equals(reference.getBusOrBusbarSectionId2())
-                && m.getRatedVoltage1() == reference.getRatedVoltage1()
-                && m.getRatedVoltage2() == reference.getRatedVoltage2()
-                && m.getMagnetizingSusceptance() == reference.getMagnetizingSusceptance()
-                && m.getMagnetizingConductance() == reference.getMagnetizingConductance()
-                && m.getSeriesReactance() == reference.getSeriesReactance()
-                && m.getSeriesResistance() == reference.getSeriesResistance()
+                && m.getRatedU1() == reference.getRatedU1()
+                && m.getRatedU2() == reference.getRatedU2()
+                && m.getB() == reference.getB()
+                && m.getG() == reference.getG()
+                && m.getX() == reference.getX()
+                && m.getX() == reference.getX()
                 && Objects.equals(m.getRatedS(), reference.getRatedS())
                 && matchesCurrentLimitsInfos(m.getCurrentLimits1(), reference.getCurrentLimits1())
                 && matchesCurrentLimitsInfos(m.getCurrentLimits2(), reference.getCurrentLimits2())

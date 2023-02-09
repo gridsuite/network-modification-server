@@ -35,22 +35,21 @@ public class TwoWindingsTransformerCreation extends AbstractModification {
             // Create 2wt in bus/mixed breaker
             create2WTInOtherBreaker(network, voltageLevel1, voltageLevel2, modificationInfos, true, true, subReporter);
         }
-
     }
 
     private void create2WTInNodeBreaker(Network network, VoltageLevel voltageLevel1, VoltageLevel voltageLevel2, Reporter subReporter) {
         var twoWindingsTransformerAdder = createTwoWindingsTransformerAdder(network, voltageLevel1, voltageLevel2, modificationInfos, false, false);
 
-        var position1 = modificationInfos.getConnectionPosition1() != null ? modificationInfos.getConnectionPosition1() : ModificationUtils.getInstance().getPosition(modificationInfos.getBusOrBusbarSectionId1(), network, voltageLevel1);
-        var position2 = modificationInfos.getConnectionPosition2() != null ? modificationInfos.getConnectionPosition2() : ModificationUtils.getInstance().getPosition(modificationInfos.getBusOrBusbarSectionId2(), network, voltageLevel2);
+        var position1 = modificationInfos.getPosition1() != null && modificationInfos.getPosition1().getOrder() != null ? modificationInfos.getPosition1().getOrder() : ModificationUtils.getInstance().getPosition(modificationInfos.getBusOrBusbarSectionId1(), network, voltageLevel1);
+        var position2 = modificationInfos.getPosition2() != null && modificationInfos.getPosition2().getOrder() != null ? modificationInfos.getPosition2().getOrder() : ModificationUtils.getInstance().getPosition(modificationInfos.getBusOrBusbarSectionId2(), network, voltageLevel2);
 
         CreateBranchFeederBays algo = new CreateBranchFeederBaysBuilder()
                 .withBbsId1(modificationInfos.getBusOrBusbarSectionId1())
                 .withBbsId2(modificationInfos.getBusOrBusbarSectionId2())
-                .withFeederName1(modificationInfos.getConnectionName1() != null ? modificationInfos.getConnectionName1() : modificationInfos.getId())
-                .withFeederName2(modificationInfos.getConnectionName2() != null ? modificationInfos.getConnectionName2() : modificationInfos.getId())
-                .withDirection1(modificationInfos.getConnectionDirection1())
-                .withDirection2(modificationInfos.getConnectionDirection2())
+                .withFeederName1(modificationInfos.getPosition1() != null && modificationInfos.getPosition1().getLabel() != null ? modificationInfos.getPosition1().getLabel() : modificationInfos.getId())
+                .withFeederName2(modificationInfos.getPosition2() != null && modificationInfos.getPosition2().getLabel() != null ? modificationInfos.getPosition2().getLabel() : modificationInfos.getId())
+                .withDirection1(modificationInfos.getPosition1() != null ? modificationInfos.getPosition1().getDirection() : null)
+                .withDirection2(modificationInfos.getPosition2() != null ? modificationInfos.getPosition2().getDirection() : null)
                 .withPositionOrder1(position1)
                 .withPositionOrder2(position2)
                 .withBranchAdder(twoWindingsTransformerAdder).build();
@@ -79,12 +78,12 @@ public class TwoWindingsTransformerCreation extends AbstractModification {
                 .setName(twoWindingsTransformerCreationInfos.getName())
                 .setVoltageLevel1(twoWindingsTransformerCreationInfos.getVoltageLevelId1())
                 .setVoltageLevel2(twoWindingsTransformerCreationInfos.getVoltageLevelId2())
-                .setG(twoWindingsTransformerCreationInfos.getMagnetizingConductance())
-                .setB(twoWindingsTransformerCreationInfos.getMagnetizingSusceptance())
-                .setR(twoWindingsTransformerCreationInfos.getSeriesResistance())
-                .setX(twoWindingsTransformerCreationInfos.getSeriesReactance())
-                .setRatedU1(twoWindingsTransformerCreationInfos.getRatedVoltage1())
-                .setRatedU2(twoWindingsTransformerCreationInfos.getRatedVoltage2());
+                .setG(twoWindingsTransformerCreationInfos.getG())
+                .setB(twoWindingsTransformerCreationInfos.getB())
+                .setR(twoWindingsTransformerCreationInfos.getR())
+                .setX(twoWindingsTransformerCreationInfos.getX())
+                .setRatedU1(twoWindingsTransformerCreationInfos.getRatedU1())
+                .setRatedU2(twoWindingsTransformerCreationInfos.getRatedU2());
 
         if (twoWindingsTransformerCreationInfos.getRatedS() != null) {
             twoWindingsTransformerAdder.setRatedS(twoWindingsTransformerCreationInfos.getRatedS());
@@ -111,9 +110,9 @@ public class TwoWindingsTransformerCreation extends AbstractModification {
         PhaseTapChangerCreationInfos phaseTapChangerInfos = twoWindingsTransformerCreationInfos.getPhaseTapChanger();
         PhaseTapChangerAdder phaseTapChangerAdder = twt.newPhaseTapChanger();
         Terminal terminal = ModificationUtils.getInstance().getTerminalFromIdentifiable(network,
-                phaseTapChangerInfos.getRegulatingTerminalId(),
-                phaseTapChangerInfos.getRegulatingTerminalType(),
-                phaseTapChangerInfos.getRegulatingTerminalVlId());
+                phaseTapChangerInfos.getRegulatingTerminal() != null ? phaseTapChangerInfos.getRegulatingTerminal().getId() : null,
+                phaseTapChangerInfos.getRegulatingTerminal() != null ? phaseTapChangerInfos.getRegulatingTerminal().getType() : null,
+                phaseTapChangerInfos.getRegulatingTerminal() != null ? phaseTapChangerInfos.getRegulatingTerminal().getVlId() : null);
 
         if (phaseTapChangerInfos.isRegulating()) {
             phaseTapChangerAdder.setRegulationValue(phaseTapChangerInfos.getRegulationValue())
@@ -139,9 +138,9 @@ public class TwoWindingsTransformerCreation extends AbstractModification {
         RatioTapChangerCreationInfos ratioTapChangerInfos = twoWindingsTransformerCreationInfos.getRatioTapChanger();
         RatioTapChangerAdder ratioTapChangerAdder = twt.newRatioTapChanger();
         Terminal terminal = ModificationUtils.getInstance().getTerminalFromIdentifiable(network,
-                ratioTapChangerInfos.getRegulatingTerminalId(),
-                ratioTapChangerInfos.getRegulatingTerminalType(),
-                ratioTapChangerInfos.getRegulatingTerminalVlId());
+            ratioTapChangerInfos.getRegulatingTerminal() != null ? ratioTapChangerInfos.getRegulatingTerminal().getId() : null,
+            ratioTapChangerInfos.getRegulatingTerminal() != null ? ratioTapChangerInfos.getRegulatingTerminal().getType() : null,
+            ratioTapChangerInfos.getRegulatingTerminal() != null ? ratioTapChangerInfos.getRegulatingTerminal().getVlId() : null);
 
         if (ratioTapChangerInfos.isRegulating()) {
             ratioTapChangerAdder.setTargetV(ratioTapChangerInfos.getTargetV())

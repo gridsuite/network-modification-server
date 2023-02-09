@@ -8,6 +8,7 @@ package org.gridsuite.modification.server.entities.equipment.creation;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.gridsuite.modification.server.dto.ConnectablePositionInfos;
 import org.gridsuite.modification.server.dto.LineCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 
@@ -66,8 +67,8 @@ public class LineCreationEntity extends BranchCreationEntity {
             .date(getDate())
             .id(getEquipmentId())
             .name(getEquipmentName())
-            .seriesResistance(getSeriesResistance())
-            .seriesReactance(getSeriesReactance())
+            .r(getR())
+            .x(getX())
             .shuntConductance1(getShuntConductance1())
             .shuntSusceptance1(getShuntSusceptance1())
             .shuntConductance2(getShuntConductance2())
@@ -76,13 +77,14 @@ public class LineCreationEntity extends BranchCreationEntity {
             .busOrBusbarSectionId1(getBusOrBusbarSectionId1())
             .voltageLevelId2(getVoltageLevelId2())
             .busOrBusbarSectionId2(getBusOrBusbarSectionId2())
-            .connectionName1(getConnectionName1())
-            .connectionDirection1(getConnectionDirection1())
-            .connectionName2(getConnectionName2())
-            .connectionDirection2(getConnectionDirection2())
-            .connectionPosition1(getConnectionPosition1())
-            .connectionPosition2(getConnectionPosition2());
-
+            .position1(ConnectablePositionInfos.builder()
+                    .label(getConnectionName1())
+                    .direction(getConnectionDirection1())
+                    .order(getConnectionPosition1()).build())
+            .position2(ConnectablePositionInfos.builder()
+                    .label(getConnectionName2())
+                    .direction(getConnectionDirection2())
+                    .order(getConnectionPosition2()).build());
         if (getCurrentLimits1() != null) {
             builder.currentLimits1(getCurrentLimits1().toCurrentLimitsInfos());
         }

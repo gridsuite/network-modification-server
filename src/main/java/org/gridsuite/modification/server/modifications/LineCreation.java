@@ -39,16 +39,16 @@ public class LineCreation extends AbstractModification {
         if (voltageLevel1.getTopologyKind() == TopologyKind.NODE_BREAKER &&
                 voltageLevel2.getTopologyKind() == TopologyKind.NODE_BREAKER) {
             LineAdder lineAdder = ModificationUtils.getInstance().createLineAdder(network, voltageLevel1, voltageLevel2, modificationInfos, false, false);
-            var position1 = modificationInfos.getConnectionPosition1() != null ? modificationInfos.getConnectionPosition1() : ModificationUtils.getInstance().getPosition(modificationInfos.getBusOrBusbarSectionId1(), network, voltageLevel1);
-            var position2 = modificationInfos.getConnectionPosition2() != null ? modificationInfos.getConnectionPosition2() : ModificationUtils.getInstance().getPosition(modificationInfos.getBusOrBusbarSectionId2(), network, voltageLevel2);
+            var position1 = modificationInfos.getPosition1() != null && modificationInfos.getPosition1().getOrder() != null ? modificationInfos.getPosition1().getOrder() : ModificationUtils.getInstance().getPosition(modificationInfos.getBusOrBusbarSectionId1(), network, voltageLevel1);
+            var position2 = modificationInfos.getPosition2() != null && modificationInfos.getPosition2().getOrder() != null ? modificationInfos.getPosition2().getOrder() : ModificationUtils.getInstance().getPosition(modificationInfos.getBusOrBusbarSectionId2(), network, voltageLevel2);
 
             CreateBranchFeederBays algo = new CreateBranchFeederBaysBuilder()
                     .withBbsId1(modificationInfos.getBusOrBusbarSectionId1())
                     .withBbsId2(modificationInfos.getBusOrBusbarSectionId2())
-                    .withFeederName1(modificationInfos.getConnectionName1() != null ? modificationInfos.getConnectionName1() : modificationInfos.getId())
-                    .withFeederName2(modificationInfos.getConnectionName2() != null ? modificationInfos.getConnectionName2() : modificationInfos.getId())
-                    .withDirection1(modificationInfos.getConnectionDirection1())
-                    .withDirection2(modificationInfos.getConnectionDirection2())
+                    .withFeederName1(modificationInfos.getPosition1() != null && modificationInfos.getPosition1().getLabel() != null ? modificationInfos.getPosition1().getLabel() : modificationInfos.getId())
+                    .withFeederName2(modificationInfos.getPosition2() != null && modificationInfos.getPosition2().getLabel() != null ? modificationInfos.getPosition2().getLabel() : modificationInfos.getId())
+                    .withDirection1(modificationInfos.getPosition1() != null ? modificationInfos.getPosition1().getDirection() : null)
+                    .withDirection2(modificationInfos.getPosition2() != null ? modificationInfos.getPosition2().getDirection() : null)
                     .withPositionOrder1(position1)
                     .withPositionOrder2(position2)
                     .withBranchAdder(lineAdder).build();

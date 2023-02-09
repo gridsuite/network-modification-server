@@ -1,0 +1,43 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-4.1.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
+    <changeSet author="lecuyerfra (generated)" id="1675945863478-1">
+        <renameColumn tableName="TWO_WINDINGS_TRANSFORMER_CREATION"
+                oldColumnName="SERIES_RESISTANCE"
+                newColumnName="r"/>
+    </changeSet>
+    <changeSet author="lecuyerfra (generated)" id="1675945863478-2">
+        <renameColumn tableName="TWO_WINDINGS_TRANSFORMER_CREATION"
+                      oldColumnName="SERIES_REACTANCE"
+                      newColumnName="x"/>
+    </changeSet>
+    <changeSet author="lecuyerfra (generated)" id="1675945863478-3">
+        <renameColumn tableName="TWO_WINDINGS_TRANSFORMER_CREATION"
+                      oldColumnName="MAGNETIZING_SUSCEPTANCE"
+                      newColumnName="b"/>
+    </changeSet>
+    <changeSet author="lecuyerfra (generated)" id="1675945863478-4">
+        <renameColumn tableName="TWO_WINDINGS_TRANSFORMER_CREATION"
+                      oldColumnName="MAGNETIZING_CONDUCTANCE"
+                      newColumnName="g"/>
+    </changeSet>
+    <changeSet author="lecuyerfra (generated)" id="1675945863478-5">
+        <renameColumn tableName="TWO_WINDINGS_TRANSFORMER_CREATION"
+                      oldColumnName="RATED_VOLTAGE1"
+                      newColumnName="ratedU1"/>
+    </changeSet>
+    <changeSet author="lecuyerfra (generated)" id="1675945863478-6">
+        <renameColumn tableName="TWO_WINDINGS_TRANSFORMER_CREATION"
+                      oldColumnName="RATED_VOLTAGE2"
+                      newColumnName="ratedU2"/>
+    </changeSet>
+    <changeSet author="lecuyerfra (generated)" id="1675945863478-7">
+        <renameColumn tableName="LINE_CREATION"
+                      oldColumnName="SERIES_RESISTANCE"
+                      newColumnName="r"/>
+    </changeSet>
+    <changeSet author="lecuyerfra (generated)" id="1675945863478-8">
+        <renameColumn tableName="LINE_CREATION"
+                      oldColumnName="SERIES_REACTANCE"
+                      newColumnName="x"/>
+    </changeSet>
+</databaseChangeLog>

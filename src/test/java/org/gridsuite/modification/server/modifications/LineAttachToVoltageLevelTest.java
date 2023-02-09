@@ -35,8 +35,8 @@ public class LineAttachToVoltageLevelTest extends AbstractNetworkModificationTes
     private LineCreationInfos getAttachmentLine(String lineName) {
         return LineCreationInfos.builder()
                 .id(lineName)
-                .seriesResistance(50.6)
-                .seriesReactance(25.3)
+                .r(50.6)
+                .x(25.3)
                 .build();
     }
 
