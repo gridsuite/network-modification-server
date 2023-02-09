@@ -505,7 +505,7 @@ public final class ModificationUtils {
             Identifiable<?> identifiable = getEquipmentByIdentifiableType(network, type, equipmentId);
 
             if (identifiable == null) {
-                throw new NetworkModificationException(EQUIPMENT_NOT_FOUND);
+                throw new NetworkModificationException(EQUIPMENT_NOT_FOUND, "Equipment with id=" + equipmentId + " not found with type " + type);
             }
 
             if (identifiable instanceof Injection<?>) {

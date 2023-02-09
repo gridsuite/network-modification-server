@@ -336,8 +336,8 @@ public class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetwo
 
     @Test
     public void testCreateTwoWindingsTransformerWithPhaseTapChangerInNodeBreaker() throws Exception {
-        // create new 2wt in voltage level with Node/breaker topology, having a PhaseTapChanger
-        PhaseTapChangerCreationInfos phaseTapChangerCreationInfos = PhaseTapChangerCreationInfos.builder()
+        // create new 2wt in voltage level with Node/breaker topology, having a PhaseTapChanger with Load regulating
+        PhaseTapChangerCreationInfos phaseTapChangerLoadRegulatingCreationInfos = PhaseTapChangerCreationInfos.builder()
                 .lowTapPosition(0)
                 .tapPosition(1)
                 .regulating(true)
@@ -366,13 +366,13 @@ public class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetwo
                 .connectionDirection1(ConnectablePosition.Direction.TOP)
                 .connectionName2("cnid2wt2")
                 .connectionDirection2(ConnectablePosition.Direction.TOP)
-                .phaseTapChanger(phaseTapChangerCreationInfos)
+                .phaseTapChanger(phaseTapChangerLoadRegulatingCreationInfos)
                 .substationIds(Set.of("s1")) // for the matcher
                 .build();
         testCreateTwoWindingsTransformerInNodeBreaker(twoWindingsTransformerCreationInfos, 1);
 
-        // create new 2wt in voltage level with Node/breaker topology, having a PhaseTapChanger with BATTERY type
-        PhaseTapChangerCreationInfos phaseTapChangerCreationInfosLine = PhaseTapChangerCreationInfos.builder()
+        // create new 2wt in voltage level with Node/breaker topology, PhaseTapChanger with Battery regulating
+        PhaseTapChangerCreationInfos phaseTapChangerBatteryRegulatingCreationInfos = PhaseTapChangerCreationInfos.builder()
                 .lowTapPosition(0)
                 .tapPosition(1)
                 .regulating(true)
@@ -401,13 +401,13 @@ public class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetwo
                 .connectionDirection1(ConnectablePosition.Direction.TOP)
                 .connectionName2("cnid2wt2")
                 .connectionDirection2(ConnectablePosition.Direction.TOP)
-                .phaseTapChanger(phaseTapChangerCreationInfosLine)
+                .phaseTapChanger(phaseTapChangerBatteryRegulatingCreationInfos)
                 .substationIds(Set.of("s1")) // for the matcher
                 .build();
         testCreateTwoWindingsTransformerInNodeBreaker(twoWindingsTransformerCreationInfos2, 2);
 
-        // create new 2wt in voltage level with Node/breaker topology, having a PhaseTapChanger with Compensator type
-        PhaseTapChangerCreationInfos phaseTapChangerCreationInfosCompensator = PhaseTapChangerCreationInfos.builder()
+        // create new 2wt in voltage level with Node/breaker topology, having a PhaseTapChanger with Shunt compensator regulating
+        PhaseTapChangerCreationInfos phaseTapChangerShuntCompensatorRegulatingCreationInfos = PhaseTapChangerCreationInfos.builder()
                 .lowTapPosition(0)
                 .tapPosition(1)
                 .regulating(true)
@@ -415,8 +415,8 @@ public class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetwo
                 .regulationMode(PhaseTapChanger.RegulationMode.ACTIVE_POWER_CONTROL)
                 .regulationValue(10.0)
                 .regulatingTerminalVlId("v3")
-                .regulatingTerminalId("v3bCompensator")
-                .regulatingTerminalType("VOLTAGE_LEVEL")
+                .regulatingTerminalId("v2shunt")
+                .regulatingTerminalType("SHUNT_COMPENSATOR")
                 .steps(getTapChangerSteps())
                 .build();
         TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos3 = TwoWindingsTransformerCreationInfos.builder()
@@ -436,7 +436,7 @@ public class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetwo
                 .connectionDirection1(ConnectablePosition.Direction.TOP)
                 .connectionName2("cnid2wt2")
                 .connectionDirection2(ConnectablePosition.Direction.TOP)
-                .phaseTapChanger(phaseTapChangerCreationInfosLine)
+                .phaseTapChanger(phaseTapChangerShuntCompensatorRegulatingCreationInfos)
                 .substationIds(Set.of("s1")) // for the matcher
                 .build();
         testCreateTwoWindingsTransformerInNodeBreaker(twoWindingsTransformerCreationInfos3, 3);
