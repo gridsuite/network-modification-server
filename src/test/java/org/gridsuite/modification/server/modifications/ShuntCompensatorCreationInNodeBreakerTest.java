@@ -10,6 +10,7 @@ package org.gridsuite.modification.server.modifications;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.SneakyThrows;
+import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.ShuntCompensatorCreationInfos;
 import org.gridsuite.modification.server.utils.MatcherShuntCompensatorCreationInfos;
@@ -20,26 +21,15 @@ import org.springframework.http.MediaType;
 import java.time.ZonedDateTime;
 import java.util.UUID;
 
+import static org.gridsuite.modification.server.NetworkModificationException.Type.SHUNT_COMPENSATOR_ALREADY_EXISTS;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.CONNECTION_POSITION_ERROR;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
-
-    @SneakyThrows
-    @Test
-    public void testCreateWithError() {
-        ShuntCompensatorCreationInfos modificationToCreate = (ShuntCompensatorCreationInfos) buildModification();
-        // Current number of sections above maximum allowed
-        modificationToCreate.setIsIdenticalSection(false);
-        modificationToCreate.setCurrentNumberOfSections(6);
-        modificationToCreate.setMaximumNumberOfSections(2);
-        String modificationToCreateJson = mapper.writeValueAsString(modificationToCreate);
-
-        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().is5xxServerError());
-    }
 
     @Override
     protected Network createNetwork(UUID networkUuid) {
@@ -59,6 +49,7 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
                 .voltageLevelId("v2")
                 .busOrBusbarSectionId("1B")
                 .connectionName("cn")
+                .connectionPosition(99)
                 .connectionDirection(ConnectablePosition.Direction.UNDEFINED)
                 .build();
     }
@@ -95,4 +86,36 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
         assertNull(getNetwork().getShuntCompensator("shuntOneId"));
     }
 
+    @SneakyThrows
+    @Test
+    public void testCreateWithError() {
+        ShuntCompensatorCreationInfos modificationToCreate = (ShuntCompensatorCreationInfos) buildModification();
+        // Current number of sections above maximum allowed
+        modificationToCreate.setIsIdenticalSection(false);
+        modificationToCreate.setCurrentNumberOfSections(6);
+        modificationToCreate.setMaximumNumberOfSections(2);
+        String modificationToCreateJson = mapper.writeValueAsString(modificationToCreate);
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().is5xxServerError());
+
+        // try to create an existing equipment
+        modificationToCreate.setEquipmentId("v5shunt");
+        modificationToCreateJson = mapper.writeValueAsString(modificationToCreate);
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpectAll(
+                        status().is4xxClientError(),
+                        content().string(new NetworkModificationException(SHUNT_COMPENSATOR_ALREADY_EXISTS, "v5shunt").getMessage()));
+    }
+
+    @SneakyThrows
+    @Test
+    public void testCreateWithExistingConnectionPosition() {
+        ShuntCompensatorCreationInfos dto = (ShuntCompensatorCreationInfos) buildModification();
+        dto.setConnectionPosition(2);
+        String modificationToCreateJson = mapper.writeValueAsString(dto);
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+            .andExpectAll(
+                    status().is4xxClientError(),
+                    content().string(new NetworkModificationException(CONNECTION_POSITION_ERROR, "PositionOrder '2' already taken").getMessage()));
+    }
 }

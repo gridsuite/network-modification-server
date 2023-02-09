@@ -32,9 +32,6 @@ public class LineAttachToVoltageLevel extends AbstractModification {
     @Override
     public void control(Network network) throws NetworkModificationException {
         LineCreationInfos attachmentLineInfos = modificationInfos.getAttachmentLine();
-        if (attachmentLineInfos == null) {
-            throw new NetworkModificationException(LINE_ATTACH_ERROR, "Missing required attachment line description");
-        }
         ModificationUtils.getInstance().controlNewOrExistingVoltageLevel(modificationInfos.getMayNewVoltageLevelInfos(),
                 modificationInfos.getExistingVoltageLevelId(), modificationInfos.getBbsOrBusId(), network);
         // new fictitious VL

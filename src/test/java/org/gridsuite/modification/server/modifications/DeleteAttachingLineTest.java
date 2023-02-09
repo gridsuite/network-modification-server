@@ -20,9 +20,11 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.DELETE_ATTACHING_LINE_ERROR;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_ALREADY_EXISTS;
 import static org.gridsuite.modification.server.utils.MatcherDeleteAttachingLineInfos.createMatcherDeleteAttachingLineInfos;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -111,6 +113,20 @@ public class DeleteAttachingLineTest extends AbstractNetworkModificationTest {
             .andExpectAll(
                     status().is5xxServerError(),
                     content().string(new NetworkModificationException(DELETE_ATTACHING_LINE_ERROR, "Unable to find the attachment point and the tapped voltage level from lines l1, l3 and l1").getMessage())
+            );
+    }
+
+    @SneakyThrows
+    @Test
+    public void createNewLineWithExistingIdTest() {
+        // try to create an already existing line
+        DeleteAttachingLineInfos deleteAttachingLineInfos = (DeleteAttachingLineInfos) buildModification();
+        deleteAttachingLineInfos.setReplacingLine1Id("l2");
+        String lineAttachToAbsentLineJson = mapper.writeValueAsString(deleteAttachingLineInfos);
+        mockMvc.perform(post(getNetworkModificationUri()).content(lineAttachToAbsentLineJson).contentType(MediaType.APPLICATION_JSON))
+            .andExpectAll(
+                    status().is4xxClientError(),
+                    content().string(new NetworkModificationException(LINE_ALREADY_EXISTS, "l2").getMessage())
             );
     }
 }

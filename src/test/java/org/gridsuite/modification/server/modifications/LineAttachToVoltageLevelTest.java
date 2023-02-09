@@ -18,8 +18,7 @@ import org.springframework.http.MediaType;
 import java.util.List;
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_ATTACH_DESCRIPTION_ERROR;
-import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_NOT_FOUND;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.utils.MatcherLineAttachToVoltageLevelInfos.createMatcherLineAttachToVoltageLevelInfos;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -118,6 +117,16 @@ public class LineAttachToVoltageLevelTest extends AbstractNetworkModificationTes
     }
 
     @SneakyThrows
+    protected void tryToCreateLineWithExistingId(LineAttachToVoltageLevelInfos tryWithExistingLine, String existingLineId) {
+        String tryWithExistingLineJson = mapper.writeValueAsString(tryWithExistingLine);
+        mockMvc.perform(post(getNetworkModificationUri()).content(tryWithExistingLineJson).contentType(MediaType.APPLICATION_JSON))
+            .andExpectAll(
+                    status().is4xxClientError(),
+                    content().string(new NetworkModificationException(LINE_ALREADY_EXISTS, existingLineId).getMessage())
+            );
+    }
+
+    @SneakyThrows
     @Test
     public void testCreateWithErrors() {
         LineAttachToVoltageLevelInfos lineAttachToAbsentLine = (LineAttachToVoltageLevelInfos) buildModification();
@@ -139,5 +148,31 @@ public class LineAttachToVoltageLevelTest extends AbstractNetworkModificationTes
                     content().string(new NetworkModificationException(LINE_ATTACH_DESCRIPTION_ERROR, "Missing required attachment line description").getMessage())
             );
         testNetworkModificationsCount(getGroupId(), 1);
+    }
+
+    @SneakyThrows
+    @Test
+    public void testCreateWithExistingEquipments() {
+        // try to create an already existing line
+        LineAttachToVoltageLevelInfos tryWithNewLine1Id = (LineAttachToVoltageLevelInfos) buildModification();
+        tryWithNewLine1Id.setNewLine1Id("line1");
+        tryToCreateLineWithExistingId(tryWithNewLine1Id, "line1");
+        // same test with "newLine2Id"
+        LineAttachToVoltageLevelInfos tryWithNewLine2Id = (LineAttachToVoltageLevelInfos) buildModification();
+        tryWithNewLine2Id.setNewLine1Id("line3");
+        tryToCreateLineWithExistingId(tryWithNewLine2Id, "line3");
+        // same test with "attachmentLine"
+        LineAttachToVoltageLevelInfos tryWithEquipmentId = (LineAttachToVoltageLevelInfos) buildModification();
+        tryWithEquipmentId.setAttachmentLine(getAttachmentLine("line2"));
+        tryToCreateLineWithExistingId(tryWithEquipmentId, "line2");
+        // try to create an already existing VL
+        LineAttachToVoltageLevelInfos tryWithAttachmentPointId = (LineAttachToVoltageLevelInfos) buildModification();
+        tryWithAttachmentPointId.setAttachmentPointId("v5");
+        String tryWithExistingLineJson = mapper.writeValueAsString(tryWithAttachmentPointId);
+        mockMvc.perform(post(getNetworkModificationUri()).content(tryWithExistingLineJson).contentType(MediaType.APPLICATION_JSON))
+            .andExpectAll(
+                    status().is4xxClientError(),
+                    content().string(new NetworkModificationException(VOLTAGE_LEVEL_ALREADY_EXISTS, "v5").getMessage())
+            );
     }
 }

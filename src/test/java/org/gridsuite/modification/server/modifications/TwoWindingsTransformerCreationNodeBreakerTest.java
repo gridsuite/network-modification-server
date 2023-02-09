@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.BUSBAR_SECTION_NOT_FOUND;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.utils.MatcherTwoWindingsTransformerCreationInfos.createMatcherTwoWindingsTransformerCreationInfos;
 import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -214,8 +214,8 @@ public class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetwo
                         .steps(List.of(TapChangerStepCreationInfos.builder()
                                         .index(5)
                                         .rho(100)
-                                        .r(02)
-                                        .x(07)
+                                        .r(2)
+                                        .x(7)
                                         .g(880)
                                         .b(90)
                                         .build(),
@@ -223,7 +223,7 @@ public class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetwo
                                         .index(6)
                                         .rho(1)
                                         .r(0)
-                                        .x(065)
+                                        .x(65)
                                         .g(0)
                                         .b(88)
                                         .build(),
@@ -471,9 +471,18 @@ public class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetwo
         List<EquipmentModificationInfos> modifications = mapper.readValue(resultAsString, new TypeReference<>() {
         });
 
+        // try to create an existing equipment
+        twoWindingsTransformerCreationInfos = (TwoWindingsTransformerCreationInfos) buildModification();
+        twoWindingsTransformerCreationInfos.setEquipmentId("trf1");
+        twoWindingsTransformerCreationInfosJson = mapper.writeValueAsString(twoWindingsTransformerCreationInfos);
+        mockMvc.perform(post(getNetworkModificationUri()).content(twoWindingsTransformerCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpectAll(
+                        status().is4xxClientError(),
+                        content().string(new NetworkModificationException(TWO_WINDINGS_TRANSFORMER_ALREADY_EXISTS, "trf1").getMessage()));
+
         assertTrue(modifications.isEmpty());  // no modifications returned
         assertNull(getNetwork().getTwoWindingsTransformer("id2wt3"));  // transformer was not created
-        testNetworkModificationsCount(getGroupId(), 3);
+        testNetworkModificationsCount(getGroupId(), 4);
     }
 
     private void testCreateTwoWindingsTransformerInNodeBreaker(TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos, int actualSize) throws Exception {

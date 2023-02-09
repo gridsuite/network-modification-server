@@ -101,6 +101,14 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
                 status().is5xxServerError(),
                 content().string(new NetworkModificationException(CREATE_LINE_ERROR, "AC Line 'idLine4': x is invalid").getMessage())
             );
+
+        // try to create an existing line
+        lineCreationInfos.setEquipmentId("line2");
+        lineCreationInfosJson = mapper.writeValueAsString(lineCreationInfos);
+        mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpectAll(
+                        status().is4xxClientError(),
+                        content().string(new NetworkModificationException(LINE_ALREADY_EXISTS, "line2").getMessage()));
     }
 
     @Override

@@ -43,9 +43,6 @@ public class GeneratorCreation extends AbstractModification {
 
     @Override
     public void control(Network network) throws NetworkModificationException {
-        if (modificationInfos == null) {
-            throw new NetworkModificationException(CREATE_GENERATOR_ERROR, "Missing required attributes to create the generator");
-        }
         if (network.getGenerator(modificationInfos.getEquipmentId()) != null) {
             throw new NetworkModificationException(GENERATOR_ALREADY_EXISTS, modificationInfos.getEquipmentId());
         }
