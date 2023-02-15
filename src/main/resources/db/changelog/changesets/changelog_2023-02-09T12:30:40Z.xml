@@ -23,12 +23,12 @@
     <changeSet author="lecuyerfra (generated)" id="1675945863478-5">
         <renameColumn tableName="TWO_WINDINGS_TRANSFORMER_CREATION"
                       oldColumnName="RATED_VOLTAGE1"
-                      newColumnName="ratedU1"/>
+                      newColumnName="ratedu1"/>
     </changeSet>
     <changeSet author="lecuyerfra (generated)" id="1675945863478-6">
         <renameColumn tableName="TWO_WINDINGS_TRANSFORMER_CREATION"
                       oldColumnName="RATED_VOLTAGE2"
-                      newColumnName="ratedU2"/>
+                      newColumnName="ratedu2"/>
     </changeSet>
     <changeSet author="lecuyerfra (generated)" id="1675945863478-7">
         <renameColumn tableName="LINE_CREATION"
