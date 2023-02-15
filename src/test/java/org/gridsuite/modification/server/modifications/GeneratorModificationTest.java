@@ -213,6 +213,20 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
 
         assertThat(createdModification, createMatcher(generatorModificationInfos));
         testNetworkModificationsCount(getGroupId(), 4);
+
+        // nothing before reactive limits modification
+        generatorModificationInfos = (GeneratorModificationInfos) buildModification();
+        generatorModificationInfos.setEnergySource(null);
+        generatorModificationInfos.setEquipmentName(null);
+        generatorModificationInfos.setMinActivePower(null);
+        generatorModificationInfos.setMaxActivePower(null);
+        generatorModificationInfos.setRatedNominalPower(null);
+        modificationToCreateJson = mapper.writeValueAsString(generatorModificationInfos);
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        createdModification = (GeneratorModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(4);
+        assertThat(createdModification, createMatcher(generatorModificationInfos));
+        testNetworkModificationsCount(getGroupId(), 5);
     }
 
     @SneakyThrows
@@ -286,6 +300,21 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
 
         assertThat(createdModification, createMatcher(generatorModificationInfos));
         testNetworkModificationsCount(getGroupId(), 3);
+
+        // no modification in setpoints
+        generatorModificationInfos = (GeneratorModificationInfos) buildModification();
+        generatorModificationInfos.setActivePowerSetpoint(null);
+        generatorModificationInfos.setReactivePowerSetpoint(null);
+        generatorModificationInfos.setVoltageRegulationOn(null);
+        generatorModificationInfos.setParticipate(null);
+
+        modificationToCreateJson = mapper.writeValueAsString(generatorModificationInfos);
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+
+        createdModification = (GeneratorModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(3);
+        assertThat(createdModification, createMatcher(generatorModificationInfos));
+        testNetworkModificationsCount(getGroupId(), 4);
     }
 
     @SneakyThrows
