@@ -38,14 +38,8 @@ public class TapChangerCreationInfos {
     @Schema(description = "targetDeadband")
     private Double targetDeadband;
 
-    @Schema(description = "Regulating terminal equipment id")
-    private String regulatingTerminalId;
-
-    @Schema(description = "Regulating terminal equipment type")
-    private String regulatingTerminalType;
-
-    @Schema(description = "Regulating terminal voltage level id")
-    private String regulatingTerminalVlId;
+    @Schema(description = "Regulating terminal")
+    private RegulatingTerminalInfos regulatingTerminal;
 
     @Schema(description = "steps")
     private List<TapChangerStepCreationInfos> steps;

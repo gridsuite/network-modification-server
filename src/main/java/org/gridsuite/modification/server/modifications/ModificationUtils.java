@@ -281,15 +281,14 @@ public final class ModificationUtils {
     }
 
     public LineAdder createLineAdder(Network network, VoltageLevel voltageLevel1, VoltageLevel voltageLevel2, LineCreationInfos lineCreationInfos, boolean withSwitch1, boolean withSwitch2) {
-
         // common settings
         LineAdder lineAdder = network.newLine()
                 .setId(lineCreationInfos.getId())
                 .setName(lineCreationInfos.getName())
                 .setVoltageLevel1(lineCreationInfos.getVoltageLevelId1())
                 .setVoltageLevel2(lineCreationInfos.getVoltageLevelId2())
-                .setR(lineCreationInfos.getSeriesResistance())
-                .setX(lineCreationInfos.getSeriesReactance())
+                .setR(lineCreationInfos.getR())
+                .setX(lineCreationInfos.getX())
                 .setG1(lineCreationInfos.getShuntConductance1() != null ? lineCreationInfos.getShuntConductance1() : 0.0)
                 .setB1(lineCreationInfos.getShuntSusceptance1() != null ? lineCreationInfos.getShuntSusceptance1() : 0.0)
                 .setG2(lineCreationInfos.getShuntConductance2() != null ? lineCreationInfos.getShuntConductance2() : 0.0)

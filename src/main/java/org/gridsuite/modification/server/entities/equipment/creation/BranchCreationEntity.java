@@ -22,11 +22,11 @@ import javax.persistence.*;
 @MappedSuperclass
 public class BranchCreationEntity extends EquipmentCreationEntity {
 
-    @Column(name = "seriesResistance")
-    private double seriesResistance;
+    @Column(name = "r")
+    private double r;
 
-    @Column(name = "seriesReactance")
-    private double seriesReactance;
+    @Column(name = "x")
+    private double x;
 
     @Column(name = "voltageLevelId1")
     private String voltageLevelId1;
@@ -87,8 +87,8 @@ public class BranchCreationEntity extends EquipmentCreationEntity {
     }
 
     private void assignAttributes(BranchCreationInfos branchCreationInfos) {
-        seriesReactance = branchCreationInfos.getSeriesReactance();
-        seriesResistance = branchCreationInfos.getSeriesResistance();
+        x = branchCreationInfos.getX();
+        r = branchCreationInfos.getR();
         voltageLevelId1 = branchCreationInfos.getVoltageLevelId1();
         voltageLevelId2 = branchCreationInfos.getVoltageLevelId2();
         busOrBusbarSectionId1 = branchCreationInfos.getBusOrBusbarSectionId1();
@@ -103,11 +103,23 @@ public class BranchCreationEntity extends EquipmentCreationEntity {
         } else {
             currentLimits2 = branchCreationInfos.getCurrentLimits2().toEntity();
         }
-        connectionDirection1 = branchCreationInfos.getConnectionDirection1();
-        connectionName1 = branchCreationInfos.getConnectionName1();
-        connectionDirection2 = branchCreationInfos.getConnectionDirection2();
-        connectionName2 = branchCreationInfos.getConnectionName2();
-        connectionPosition1 = branchCreationInfos.getConnectionPosition1();
-        connectionPosition2 = branchCreationInfos.getConnectionPosition2();
+        connectionDirection1 = branchCreationInfos.getPosition1() != null
+            ? branchCreationInfos.getPosition1().getDirection()
+            : null;
+        connectionName1 = branchCreationInfos.getPosition1() != null
+            ? branchCreationInfos.getPosition1().getLabel()
+            : null;
+        connectionPosition1 = branchCreationInfos.getPosition1() != null
+            ? branchCreationInfos.getPosition1().getOrder()
+            : null;
+        connectionDirection2 = branchCreationInfos.getPosition2() != null
+            ? branchCreationInfos.getPosition2().getDirection()
+            : null;
+        connectionName2 = branchCreationInfos.getPosition2() != null
+            ? branchCreationInfos.getPosition2().getLabel()
+            : null;
+        connectionPosition2 = branchCreationInfos.getPosition2() != null
+            ? branchCreationInfos.getPosition2().getOrder()
+            : null;
     }
 }

@@ -36,8 +36,8 @@ public class MatcherLineCreationInfos extends MatcherModificationInfos<LineCreat
         return super.matchesSafely(m)
             && m.getId().equals(reference.getId())
             && Objects.equals(m.getName(), reference.getName())
-            && m.getSeriesResistance() == reference.getSeriesResistance()
-            && m.getSeriesReactance() == reference.getSeriesReactance()
+            && m.getR() == reference.getR()
+            && m.getX() == reference.getX()
             && m.getShuntConductance1() != null && m.getShuntConductance1().equals(reference.getShuntConductance1())
             || m.getShuntConductance1() == null && reference.getShuntConductance1() == null
             && m.getShuntSusceptance1() != null && m.getShuntSusceptance1().equals(reference.getShuntSusceptance1())

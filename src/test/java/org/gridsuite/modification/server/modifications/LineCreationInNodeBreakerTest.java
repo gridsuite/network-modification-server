@@ -12,6 +12,7 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.dto.ConnectablePositionInfos;
 import org.gridsuite.modification.server.dto.CurrentLimitsInfos;
 import org.gridsuite.modification.server.dto.EquipmentModificationInfos;
 import org.gridsuite.modification.server.dto.LineCreationInfos;
@@ -86,7 +87,7 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
 
         lineCreationInfos.setVoltageLevelId1("v1");
         lineCreationInfos.setBusOrBusbarSectionId1("1.1");
-        lineCreationInfos.setSeriesResistance(Double.NaN);
+        lineCreationInfos.setR(Double.NaN);
         lineCreationInfosJson = mapper.writeValueAsString(lineCreationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(
@@ -94,8 +95,8 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
                 content().string(new NetworkModificationException(CREATE_LINE_ERROR, "AC Line 'idLine4': r is invalid").getMessage())
             );
 
-        lineCreationInfos.setSeriesResistance(100.0);
-        lineCreationInfos.setSeriesReactance(Double.NaN);
+        lineCreationInfos.setR(100.0);
+        lineCreationInfos.setX(Double.NaN);
         lineCreationInfosJson = mapper.writeValueAsString(lineCreationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(
@@ -112,51 +113,56 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
     @Override
     protected ModificationInfos buildModification() {
         return LineCreationInfos.builder()
-                .id("idLine")
-                .name("nameLine")
-                .seriesResistance(100.0)
-                .seriesReactance(100.0)
-                .shuntConductance1(10.0)
-                .shuntSusceptance1(10.0)
-                .shuntConductance2(20.0)
-                .shuntSusceptance2(20.0)
-                .voltageLevelId1("v1")
-                .busOrBusbarSectionId1("1.1")
-                .voltageLevelId2("v2")
-                .busOrBusbarSectionId2("1A")
-                .connectionName1("cn1Line")
-                .connectionDirection1(ConnectablePosition.Direction.TOP)
-                .connectionName2("cn2Line")
-                .connectionDirection2(ConnectablePosition.Direction.BOTTOM)
-                .connectionPosition1(0)
-                .connectionPosition2(0)
-                .build();
+            .id("idLine")
+            .name("nameLine")
+            .r(100.0)
+            .x(100.0)
+            .shuntConductance1(10.0)
+            .shuntSusceptance1(10.0)
+            .shuntConductance2(20.0)
+            .shuntSusceptance2(20.0)
+            .voltageLevelId1("v1")
+            .busOrBusbarSectionId1("1.1")
+            .voltageLevelId2("v2")
+            .busOrBusbarSectionId2("1A")
+
+            .position1(ConnectablePositionInfos.builder()
+                .label("cn1Line")
+                .direction(ConnectablePosition.Direction.TOP)
+                .order(0).build())
+            .position2(ConnectablePositionInfos.builder()
+                .label("cn2Line")
+                .direction(ConnectablePosition.Direction.BOTTOM)
+                .order(0).build())
+            .build();
     }
 
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return LineCreationInfos.builder()
-                .id("idLineEdited")
-                .name("nameLineEdited")
-                .seriesResistance(110.0)
-                .seriesReactance(110.0)
-                .shuntConductance1(15.0)
-                .shuntSusceptance1(15.0)
-                .shuntConductance2(25.0)
-                .shuntSusceptance2(25.0)
-                .voltageLevelId1("v2")
-                .busOrBusbarSectionId1("1A")
-                .voltageLevelId2("v1")
-                .busOrBusbarSectionId2("1.1")
-                .currentLimits1(CurrentLimitsInfos.builder().permanentLimit(5.).build())
-                .currentLimits2(CurrentLimitsInfos.builder().permanentLimit(5.).build())
-                .connectionName1("cn1LineEdited")
-                .connectionDirection1(ConnectablePosition.Direction.BOTTOM)
-                .connectionName2("cn2LineEdited")
-                .connectionDirection2(ConnectablePosition.Direction.TOP)
-                .connectionPosition1(0)
-                .connectionPosition2(0)
-                .build();
+            .id("idLineEdited")
+            .name("nameLineEdited")
+            .r(110.0)
+            .x(110.0)
+            .shuntConductance1(15.0)
+            .shuntSusceptance1(15.0)
+            .shuntConductance2(25.0)
+            .shuntSusceptance2(25.0)
+            .voltageLevelId1("v2")
+            .busOrBusbarSectionId1("1A")
+            .voltageLevelId2("v1")
+            .busOrBusbarSectionId2("1.1")
+            .currentLimits1(CurrentLimitsInfos.builder().permanentLimit(5.).build())
+            .currentLimits2(CurrentLimitsInfos.builder().permanentLimit(5.).build())
+            .position1(ConnectablePositionInfos.builder()
+                .label("cn1LineEdited")
+                .direction(ConnectablePosition.Direction.BOTTOM)
+                .order(0).build())
+            .position2(ConnectablePositionInfos.builder()
+                .label("cn2LineEdited")
+                .direction(ConnectablePosition.Direction.TOP)
+                .order(0).build())
+            .build();
     }
 
     @Override
