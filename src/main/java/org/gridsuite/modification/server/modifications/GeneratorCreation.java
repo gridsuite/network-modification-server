@@ -46,7 +46,7 @@ public class GeneratorCreation extends AbstractModification {
         if (network.getGenerator(modificationInfos.getEquipmentId()) != null) {
             throw new NetworkModificationException(GENERATOR_ALREADY_EXISTS, modificationInfos.getEquipmentId());
         }
-        ModificationUtils.getInstance().controlInjectionCreation(network, modificationInfos.getVoltageLevelId(),
+        ModificationUtils.getInstance().controlConnectivity(network, modificationInfos.getVoltageLevelId(),
                 modificationInfos.getBusOrBusbarSectionId(), modificationInfos.getConnectionPosition());
     }
 

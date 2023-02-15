@@ -33,7 +33,7 @@ public class LoadCreation extends AbstractModification {
         if (network.getLoad(modificationInfos.getEquipmentId()) != null) {
             throw new NetworkModificationException(LOAD_ALREADY_EXISTS, modificationInfos.getEquipmentId());
         }
-        ModificationUtils.getInstance().controlInjectionCreation(network, modificationInfos.getVoltageLevelId(),
+        ModificationUtils.getInstance().controlConnectivity(network, modificationInfos.getVoltageLevelId(),
                 modificationInfos.getBusOrBusbarSectionId(), modificationInfos.getConnectionPosition());
     }
 

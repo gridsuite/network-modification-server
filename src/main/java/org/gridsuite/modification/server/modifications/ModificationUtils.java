@@ -76,13 +76,11 @@ public final class ModificationUtils {
         return generator;
     }
 
-    public void controlInjectionCreation(Network network, String voltageLevelId, String busOrBusbarSectionId, Integer connectionPosition) {
+    public void controlConnectivity(Network network, String voltageLevelId, String busOrBusbarSectionId, Integer connectionPosition) {
         VoltageLevel voltageLevel = getVoltageLevel(network, voltageLevelId);
         if (voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER) {
             // bus bar section must exist
-            if (network.getBusbarSection(busOrBusbarSectionId) == null) {
-                throw new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, busOrBusbarSectionId);
-            }
+            controlBus(network, voltageLevel, busOrBusbarSectionId);
             // check if position is free
             Set<Integer> takenFeederPositions = TopologyModificationUtils.getFeederPositions(voltageLevel);
             var position = getPosition(connectionPosition, busOrBusbarSectionId, network, voltageLevel);
@@ -91,7 +89,7 @@ public final class ModificationUtils {
             }
         } else {
             // bus breaker must exist
-            getBusBreakerBus(voltageLevel, busOrBusbarSectionId);
+            controlBus(network, voltageLevel, busOrBusbarSectionId);
         }
     }
 
@@ -109,9 +107,9 @@ public final class ModificationUtils {
         VoltageLevel voltageLevel2 = getVoltageLevel(network, voltageLevelId2);
         if (voltageLevel1.getTopologyKind() == TopologyKind.NODE_BREAKER &&
                 voltageLevel2.getTopologyKind() == TopologyKind.NODE_BREAKER) {
-            controlInjectionCreation(network, voltageLevelId1,
+            controlConnectivity(network, voltageLevelId1,
                     busOrBusbarSectionId1, connectionPosition1);
-            controlInjectionCreation(network, voltageLevelId2,
+            controlConnectivity(network, voltageLevelId2,
                     busOrBusbarSectionId2, connectionPosition2);
         } else {
             // bus or mixed mode
@@ -284,16 +282,12 @@ public final class ModificationUtils {
             controlVoltageLevelCreation(mayNewVL, network);
         } else {
             // use existing VL
-            if (network.getVoltageLevel(existingVoltageLevelId) == null) {
+            VoltageLevel vl = network.getVoltageLevel(existingVoltageLevelId);
+            if (vl == null) {
                 throw new NetworkModificationException(VOLTAGE_LEVEL_NOT_FOUND, existingVoltageLevelId);
             }
             // check existing busbar/bus
-            Identifiable<?> identifiable = network.getIdentifiable(bbsOrBusId);
-            if (identifiable == null) {
-                throw new NetworkModificationException(BUS_OR_BUSBAR_NOT_FOUND, bbsOrBusId);
-            } else if (!(identifiable instanceof BusbarSection || identifiable instanceof Bus)) {
-                throw new NetworkModificationException(NOT_A_BUS_OR_BUSBAR, bbsOrBusId);
-            }
+            controlBus(network, vl, bbsOrBusId);
         }
     }
 

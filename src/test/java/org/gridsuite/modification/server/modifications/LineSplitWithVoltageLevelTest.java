@@ -124,7 +124,7 @@ public class LineSplitWithVoltageLevelTest extends AbstractNetworkModificationTe
         mockMvc.perform(post(getNetworkModificationUri()).content(tryWithBadIdJson).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(
                     status().is4xxClientError(),
-                    content().string(new NetworkModificationException(BUS_OR_BUSBAR_NOT_FOUND, "999A").getMessage())
+                    content().string(new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "999A").getMessage())
             );
         // try with a switch, not a busbar
         LineSplitWithVoltageLevelInfos tryWithSwitchId = (LineSplitWithVoltageLevelInfos) buildModification();
@@ -133,7 +133,7 @@ public class LineSplitWithVoltageLevelTest extends AbstractNetworkModificationTe
         mockMvc.perform(post(getNetworkModificationUri()).content(tryWithSwitchIdJson).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(
                     status().is4xxClientError(),
-                    content().string(new NetworkModificationException(NOT_A_BUS_OR_BUSBAR, "v1d1").getMessage())
+                    content().string(new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "v1d1").getMessage())
             );
     }
 }

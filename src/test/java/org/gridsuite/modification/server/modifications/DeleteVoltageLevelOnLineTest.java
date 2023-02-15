@@ -19,7 +19,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.DELETE_VOLTAGE_LEVEL_ON_LINE_ERROR;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_NOT_FOUND;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_ALREADY_EXISTS;
 import static org.gridsuite.modification.server.utils.MatcherDeleteVoltageLevelOnLineInfos.createMatcherDeleteVoltageLevelOnLineInfos;
 import static org.junit.Assert.assertNotNull;
@@ -94,8 +94,8 @@ public class DeleteVoltageLevelOnLineTest extends AbstractNetworkModificationTes
         String json = objectWriter.writeValueAsString(deleteVoltageLevelOnLineInfos);
         mockMvc.perform(MockMvcRequestBuilders.post(getNetworkModificationUri()).content(json).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(
-                    status().is5xxServerError(),
-                    content().string(new NetworkModificationException(DELETE_VOLTAGE_LEVEL_ON_LINE_ERROR, "Line ll is not found").getMessage())
+                    status().is4xxClientError(),
+                    content().string(new NetworkModificationException(LINE_NOT_FOUND, "ll").getMessage())
             );
     }
 

@@ -21,6 +21,7 @@ import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.DELETE_ATTACHING_LINE_ERROR;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_ALREADY_EXISTS;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_NOT_FOUND;
 import static org.gridsuite.modification.server.utils.MatcherDeleteAttachingLineInfos.createMatcherDeleteAttachingLineInfos;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -93,8 +94,8 @@ public class DeleteAttachingLineTest extends AbstractNetworkModificationTest {
         String json = objectWriter.writeValueAsString(deleteAttachingLineInfos);
         mockMvc.perform(MockMvcRequestBuilders.post(getNetworkModificationUri()).content(json).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(
-                    status().is5xxServerError(),
-                    content().string(new NetworkModificationException(DELETE_ATTACHING_LINE_ERROR, "Line ll is not found").getMessage())
+                    status().is4xxClientError(),
+                    content().string(new NetworkModificationException(LINE_NOT_FOUND, "ll").getMessage())
             );
     }
 

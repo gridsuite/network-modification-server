@@ -33,7 +33,7 @@ public class ShuntCompensatorCreation extends AbstractModification {
         if (network.getShuntCompensator(modificationInfos.getEquipmentId()) != null) {
             throw new NetworkModificationException(SHUNT_COMPENSATOR_ALREADY_EXISTS, modificationInfos.getEquipmentId());
         }
-        ModificationUtils.getInstance().controlInjectionCreation(network, modificationInfos.getVoltageLevelId(),
+        ModificationUtils.getInstance().controlConnectivity(network, modificationInfos.getVoltageLevelId(),
                 modificationInfos.getBusOrBusbarSectionId(), modificationInfos.getConnectionPosition());
     }
 
