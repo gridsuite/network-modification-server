@@ -29,7 +29,7 @@ public class ShuntCompensatorCreation extends AbstractModification {
     }
 
     @Override
-    public void control(Network network) throws NetworkModificationException {
+    public void check(Network network) throws NetworkModificationException {
         if (network.getShuntCompensator(modificationInfos.getEquipmentId()) != null) {
             throw new NetworkModificationException(SHUNT_COMPENSATOR_ALREADY_EXISTS, modificationInfos.getEquipmentId());
         }

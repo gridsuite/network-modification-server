@@ -26,7 +26,7 @@ public abstract class AbstractModification extends AbstractNetworkModification {
         apply(network, reporter);
     }
 
-    public void control(Network network) throws NetworkModificationException {
-        // To perform input data control before hypothesis apply. Nothing to check here
+    public void check(Network network) throws NetworkModificationException {
+        // To perform input data check before hypothesis apply. Nothing to check here
     }
 }

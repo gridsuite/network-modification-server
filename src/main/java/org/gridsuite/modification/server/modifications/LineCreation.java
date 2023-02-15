@@ -30,7 +30,7 @@ public class LineCreation extends AbstractModification {
     }
 
     @Override
-    public void control(Network network) throws NetworkModificationException {
+    public void check(Network network) throws NetworkModificationException {
         if (network.getLine(modificationInfos.getEquipmentId()) != null) {
             throw new NetworkModificationException(LINE_ALREADY_EXISTS, modificationInfos.getEquipmentId());
         }

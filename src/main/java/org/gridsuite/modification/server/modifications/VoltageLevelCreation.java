@@ -25,7 +25,7 @@ public class VoltageLevelCreation extends AbstractModification {
     }
 
     @Override
-    public void control(Network network) throws NetworkModificationException {
+    public void check(Network network) throws NetworkModificationException {
         if (network.getVoltageLevel(modificationInfos.getEquipmentId()) != null) {
             throw new NetworkModificationException(VOLTAGE_LEVEL_ALREADY_EXISTS, modificationInfos.getEquipmentId());
         }

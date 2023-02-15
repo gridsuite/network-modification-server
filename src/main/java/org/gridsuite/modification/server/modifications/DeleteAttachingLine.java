@@ -27,7 +27,7 @@ public class DeleteAttachingLine extends AbstractModification {
     }
 
     @Override
-    public void control(Network network) throws NetworkModificationException {
+    public void check(Network network) throws NetworkModificationException {
         // check future line does not exist
         if (network.getLine(modificationInfos.getReplacingLine1Id()) != null) {
             throw new NetworkModificationException(LINE_ALREADY_EXISTS, modificationInfos.getReplacingLine1Id());

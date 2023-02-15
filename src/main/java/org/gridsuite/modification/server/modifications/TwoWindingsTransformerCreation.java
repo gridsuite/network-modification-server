@@ -28,7 +28,7 @@ public class TwoWindingsTransformerCreation extends AbstractModification {
     }
 
     @Override
-    public void control(Network network) throws NetworkModificationException {
+    public void check(Network network) throws NetworkModificationException {
         if (network.getTwoWindingsTransformer(modificationInfos.getEquipmentId()) != null) {
             throw new NetworkModificationException(TWO_WINDINGS_TRANSFORMER_ALREADY_EXISTS, modificationInfos.getEquipmentId());
         }

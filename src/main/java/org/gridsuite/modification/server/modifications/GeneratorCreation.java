@@ -42,7 +42,7 @@ public class GeneratorCreation extends AbstractModification {
     }
 
     @Override
-    public void control(Network network) throws NetworkModificationException {
+    public void check(Network network) throws NetworkModificationException {
         if (network.getGenerator(modificationInfos.getEquipmentId()) != null) {
             throw new NetworkModificationException(GENERATOR_ALREADY_EXISTS, modificationInfos.getEquipmentId());
         }

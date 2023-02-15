@@ -77,7 +77,7 @@ public final class ModificationUtils {
     }
 
     public void controlInjectionCreation(Network network, String voltageLevelId, String busOrBusbarSectionId, Integer connectionPosition) {
-        VoltageLevel voltageLevel = ModificationUtils.getInstance().getVoltageLevel(network, voltageLevelId);
+        VoltageLevel voltageLevel = getVoltageLevel(network, voltageLevelId);
         if (voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER) {
             // bus bar section must exist
             if (network.getBusbarSection(busOrBusbarSectionId) == null) {
@@ -85,19 +85,19 @@ public final class ModificationUtils {
             }
             // check if position is free
             Set<Integer> takenFeederPositions = TopologyModificationUtils.getFeederPositions(voltageLevel);
-            var position = ModificationUtils.getInstance().getPosition(connectionPosition, busOrBusbarSectionId, network, voltageLevel);
+            var position = getPosition(connectionPosition, busOrBusbarSectionId, network, voltageLevel);
             if (takenFeederPositions.contains(position)) {
                 throw new NetworkModificationException(CONNECTION_POSITION_ERROR, "PositionOrder '" + position + "' already taken");
             }
         } else {
             // bus breaker must exist
-            ModificationUtils.getInstance().getBusBreakerBus(voltageLevel, busOrBusbarSectionId);
+            getBusBreakerBus(voltageLevel, busOrBusbarSectionId);
         }
     }
 
     public void controlBus(Network network, VoltageLevel voltageLevel, String busOrBusbarSectionId) {
         if (voltageLevel.getTopologyKind() == TopologyKind.BUS_BREAKER) {
-            ModificationUtils.getInstance().getBusBreakerBus(voltageLevel, busOrBusbarSectionId);
+            getBusBreakerBus(voltageLevel, busOrBusbarSectionId);
         } else if (network.getBusbarSection(busOrBusbarSectionId) == null) {
             throw new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, busOrBusbarSectionId);
         }
@@ -105,13 +105,13 @@ public final class ModificationUtils {
 
     public void controlBranchCreation(Network network, String voltageLevelId1, String busOrBusbarSectionId1, Integer connectionPosition1,
                                       String voltageLevelId2, String busOrBusbarSectionId2, Integer connectionPosition2) {
-        VoltageLevel voltageLevel1 = ModificationUtils.getInstance().getVoltageLevel(network, voltageLevelId1);
-        VoltageLevel voltageLevel2 = ModificationUtils.getInstance().getVoltageLevel(network, voltageLevelId2);
+        VoltageLevel voltageLevel1 = getVoltageLevel(network, voltageLevelId1);
+        VoltageLevel voltageLevel2 = getVoltageLevel(network, voltageLevelId2);
         if (voltageLevel1.getTopologyKind() == TopologyKind.NODE_BREAKER &&
                 voltageLevel2.getTopologyKind() == TopologyKind.NODE_BREAKER) {
-            ModificationUtils.getInstance().controlInjectionCreation(network, voltageLevelId1,
+            controlInjectionCreation(network, voltageLevelId1,
                     busOrBusbarSectionId1, connectionPosition1);
-            ModificationUtils.getInstance().controlInjectionCreation(network, voltageLevelId2,
+            controlInjectionCreation(network, voltageLevelId2,
                     busOrBusbarSectionId2, connectionPosition2);
         } else {
             // bus or mixed mode
@@ -123,7 +123,7 @@ public final class ModificationUtils {
     public int getPosition(Integer defaultPosition, String busOrBusbarSectionId, Network network, VoltageLevel voltageLevel) {
         return defaultPosition != null
                 ? defaultPosition
-                : ModificationUtils.getInstance().getPosition(busOrBusbarSectionId, network, voltageLevel);
+                : getPosition(busOrBusbarSectionId, network, voltageLevel);
     }
 
     public int getPosition(String busOrBusbarSectionId, Network network, VoltageLevel voltageLevel) {
@@ -402,7 +402,7 @@ public final class ModificationUtils {
     }
 
     private void setBranchAdderBusBreaker(BranchAdder<?> branchAdder, VoltageLevel voltageLevel, Branch.Side side, String busId) {
-        Bus bus = ModificationUtils.getInstance().getBusBreakerBus(voltageLevel, busId);
+        Bus bus = getBusBreakerBus(voltageLevel, busId);
 
         // complete the lineAdder
         if (side == Branch.Side.ONE) {
@@ -417,7 +417,7 @@ public final class ModificationUtils {
                                            String currentBusBarSectionId) {
         // create cell switches
         String sideSuffix = side != null ? "_" + side.name() : "";
-        int nodeNum = ModificationUtils.getInstance().createNodeBreakerCellSwitches(voltageLevel,
+        int nodeNum = createNodeBreakerCellSwitches(voltageLevel,
             currentBusBarSectionId,
             branchCreationInfos.getEquipmentId(),
             branchCreationInfos.getEquipmentName(),

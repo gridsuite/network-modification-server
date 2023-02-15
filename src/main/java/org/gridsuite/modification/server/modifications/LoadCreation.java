@@ -29,7 +29,7 @@ public class LoadCreation extends AbstractModification {
     }
 
     @Override
-    public void control(Network network) throws NetworkModificationException {
+    public void check(Network network) throws NetworkModificationException {
         if (network.getLoad(modificationInfos.getEquipmentId()) != null) {
             throw new NetworkModificationException(LOAD_ALREADY_EXISTS, modificationInfos.getEquipmentId());
         }

@@ -28,7 +28,7 @@ public class LineSplitWithVoltageLevel extends AbstractModification {
     }
 
     @Override
-    public void control(Network network) throws NetworkModificationException {
+    public void check(Network network) throws NetworkModificationException {
         ModificationUtils.getInstance().controlNewOrExistingVoltageLevel(modificationInfos.getMayNewVoltageLevelInfos(),
                 modificationInfos.getExistingVoltageLevelId(), modificationInfos.getBbsOrBusId(), network);
         // check future lines don't exist

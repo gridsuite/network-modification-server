@@ -117,7 +117,7 @@ public class LineAttachToVoltageLevelTest extends AbstractNetworkModificationTes
     }
 
     @SneakyThrows
-    protected void tryToCreateLineWithExistingId(LineAttachToVoltageLevelInfos tryWithExistingLine, String existingLineId) {
+    private void tryToCreateLineWithExistingId(LineAttachToVoltageLevelInfos tryWithExistingLine, String existingLineId) {
         String tryWithExistingLineJson = mapper.writeValueAsString(tryWithExistingLine);
         mockMvc.perform(post(getNetworkModificationUri()).content(tryWithExistingLineJson).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(
