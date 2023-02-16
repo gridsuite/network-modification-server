@@ -45,8 +45,8 @@ public class TwoWindingsTransformerCreation extends AbstractModification {
         var position2 = modificationInfos.getConnectionPosition2() != null ? modificationInfos.getConnectionPosition2() : ModificationUtils.getInstance().getPosition(modificationInfos.getBusOrBusbarSectionId2(), network, voltageLevel2);
 
         CreateBranchFeederBays algo = new CreateBranchFeederBaysBuilder()
-                .withBbsId1(modificationInfos.getBusOrBusbarSectionId1())
-                .withBbsId2(modificationInfos.getBusOrBusbarSectionId2())
+                .withBusOrBusbarSectionId1(modificationInfos.getBusOrBusbarSectionId1())
+                .withBusOrBusbarSectionId2(modificationInfos.getBusOrBusbarSectionId2())
                 .withFeederName1(modificationInfos.getConnectionName1() != null ? modificationInfos.getConnectionName1() : modificationInfos.getEquipmentId())
                 .withFeederName2(modificationInfos.getConnectionName2() != null ? modificationInfos.getConnectionName2() : modificationInfos.getEquipmentId())
                 .withDirection1(modificationInfos.getConnectionDirection1())

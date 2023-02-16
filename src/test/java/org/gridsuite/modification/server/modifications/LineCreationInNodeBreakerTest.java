@@ -81,7 +81,7 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(
                 status().is5xxServerError(),
-                content().string(new NetworkModificationException(CREATE_LINE_ERROR, "Busbar section notFoundBusbarSection1 not found.").getMessage())
+                content().string(new NetworkModificationException(CREATE_LINE_ERROR, "Identifiable notFoundBusbarSection1 not found.").getMessage())
             );
 
         lineCreationInfos.setVoltageLevelId1("v1");
