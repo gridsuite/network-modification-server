@@ -41,8 +41,6 @@ public class LineCreation extends AbstractModification {
 
     @Override
     public void apply(Network network, Reporter subReporter) {
-
-        // create the line in the network
         VoltageLevel voltageLevel1 = ModificationUtils.getInstance().getVoltageLevel(network, modificationInfos.getVoltageLevelId1());
         VoltageLevel voltageLevel2 = ModificationUtils.getInstance().getVoltageLevel(network, modificationInfos.getVoltageLevelId2());
 

@@ -43,8 +43,8 @@ public class LoadCreation extends AbstractModification {
         VoltageLevel voltageLevel = ModificationUtils.getInstance().getVoltageLevel(network, modificationInfos.getVoltageLevelId());
         if (voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER) {
             LoadAdder loadAdder = createLoadAdderInNodeBreaker(voltageLevel, modificationInfos);
-            var position = modificationInfos.getConnectionPosition() != null ? modificationInfos.getConnectionPosition() :
-                    ModificationUtils.getInstance().getPosition(modificationInfos.getBusOrBusbarSectionId(), network, voltageLevel);
+            var position = ModificationUtils.getInstance().getPosition(modificationInfos.getConnectionPosition(),
+                modificationInfos.getBusOrBusbarSectionId(), network, voltageLevel);
             CreateFeederBay algo = new CreateFeederBayBuilder()
                 .withBbsId(modificationInfos.getBusOrBusbarSectionId())
                 .withInjectionDirection(modificationInfos.getConnectionDirection())

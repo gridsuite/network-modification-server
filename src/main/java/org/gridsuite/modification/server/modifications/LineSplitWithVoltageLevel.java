@@ -29,6 +29,9 @@ public class LineSplitWithVoltageLevel extends AbstractModification {
 
     @Override
     public void check(Network network) throws NetworkModificationException {
+        if (network.getLine(modificationInfos.getLineToSplitId()) == null) {
+            throw new NetworkModificationException(LINE_NOT_FOUND, modificationInfos.getLineToSplitId());
+        }
         ModificationUtils.getInstance().controlNewOrExistingVoltageLevel(modificationInfos.getMayNewVoltageLevelInfos(),
                 modificationInfos.getExistingVoltageLevelId(), modificationInfos.getBbsOrBusId(), network);
         // check future lines don't exist
@@ -42,11 +45,6 @@ public class LineSplitWithVoltageLevel extends AbstractModification {
 
     @Override
     public void apply(Network network, Reporter subReporter) {
-        Line line = network.getLine(modificationInfos.getLineToSplitId());
-        if (line == null) {
-            throw new NetworkModificationException(LINE_NOT_FOUND, modificationInfos.getLineToSplitId());
-        }
-
         VoltageLevelCreationInfos mayNewVL = modificationInfos.getMayNewVoltageLevelInfos();
         if (mayNewVL != null) {
             ModificationUtils.getInstance().createVoltageLevel(mayNewVL, subReporter, network);
@@ -59,7 +57,7 @@ public class LineSplitWithVoltageLevel extends AbstractModification {
                 .withLine1Name(modificationInfos.getNewLine1Name())
                 .withLine2Id(modificationInfos.getNewLine2Id())
                 .withLine2Name(modificationInfos.getNewLine2Name())
-                .withLine(line)
+                .withLine(network.getLine(modificationInfos.getLineToSplitId()))
                 .build();
 
         algo.apply(network, true, subReporter);

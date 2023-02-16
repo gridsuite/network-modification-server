@@ -31,6 +31,9 @@ public class LineAttachToVoltageLevel extends AbstractModification {
 
     @Override
     public void check(Network network) throws NetworkModificationException {
+        if (network.getLine(modificationInfos.getLineToAttachToId()) == null) {
+            throw new NetworkModificationException(LINE_NOT_FOUND, modificationInfos.getLineToAttachToId());
+        }
         LineCreationInfos attachmentLineInfos = modificationInfos.getAttachmentLine();
         ModificationUtils.getInstance().controlNewOrExistingVoltageLevel(modificationInfos.getMayNewVoltageLevelInfos(),
                 modificationInfos.getExistingVoltageLevelId(), modificationInfos.getBbsOrBusId(), network);
@@ -52,17 +55,12 @@ public class LineAttachToVoltageLevel extends AbstractModification {
 
     @Override
     public void apply(Network network, Reporter subReporter) {
-        LineCreationInfos attachmentLineInfos = modificationInfos.getAttachmentLine();
-        Line line = network.getLine(modificationInfos.getLineToAttachToId());
-        if (line == null) {
-            throw new NetworkModificationException(LINE_NOT_FOUND, modificationInfos.getLineToAttachToId());
-        }
-
         VoltageLevelCreationInfos mayNewVL = modificationInfos.getMayNewVoltageLevelInfos();
         if (mayNewVL != null) {
             ModificationUtils.getInstance().createVoltageLevel(mayNewVL, subReporter, network);
         }
 
+        LineCreationInfos attachmentLineInfos = modificationInfos.getAttachmentLine();
         LineAdder lineAdder = network.newLine()
                 .setId(attachmentLineInfos.getEquipmentId())
                 .setName(attachmentLineInfos.getEquipmentName())
@@ -84,7 +82,7 @@ public class LineAttachToVoltageLevel extends AbstractModification {
                 .withLine1Name(modificationInfos.getNewLine1Name())
                 .withLine2Id(modificationInfos.getNewLine2Id())
                 .withLine2Name(modificationInfos.getNewLine2Name())
-                .withLine(line)
+                .withLine(network.getLine(modificationInfos.getLineToAttachToId()))
                 .withLineAdder(lineAdder)
                 .build();
 

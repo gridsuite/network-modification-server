@@ -63,10 +63,8 @@ public class GeneratorCreation extends AbstractModification {
 
     private void createGeneratorInNodeBreaker(VoltageLevel voltageLevel, GeneratorCreationInfos generatorCreationInfos, Network network, Reporter subReporter) {
         GeneratorAdder generatorAdder = createGeneratorAdderInNodeBreaker(voltageLevel, generatorCreationInfos);
-        var position = generatorCreationInfos.getConnectionPosition() != null
-                ? generatorCreationInfos.getConnectionPosition()
-                : ModificationUtils.getInstance().getPosition(generatorCreationInfos.getBusOrBusbarSectionId(),
-                        network, voltageLevel);
+        var position = ModificationUtils.getInstance().getPosition(generatorCreationInfos.getConnectionPosition(),
+                generatorCreationInfos.getBusOrBusbarSectionId(), network, voltageLevel);
 
         CreateFeederBay algo = new CreateFeederBayBuilder()
                 .withBbsId(generatorCreationInfos.getBusOrBusbarSectionId())
