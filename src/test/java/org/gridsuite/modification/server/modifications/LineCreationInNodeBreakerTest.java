@@ -25,8 +25,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import java.util.List;
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.CREATE_LINE_ERROR;
-import static org.gridsuite.modification.server.NetworkModificationException.Type.VOLTAGE_LEVEL_NOT_FOUND;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.utils.MatcherLineCreationInfos.createMatcherLineCreationInfos;
 import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -80,8 +79,8 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
         lineCreationInfosJson = mapper.writeValueAsString(lineCreationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(
-                status().is5xxServerError(),
-                content().string(new NetworkModificationException(CREATE_LINE_ERROR, "Identifiable notFoundBusbarSection1 not found.").getMessage())
+                status().is4xxClientError(),
+                content().string(new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "notFoundBusbarSection1").getMessage())
             );
 
         lineCreationInfos.setVoltageLevelId1("v1");
@@ -102,6 +101,14 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
                 status().is5xxServerError(),
                 content().string(new NetworkModificationException(CREATE_LINE_ERROR, "AC Line 'idLine4': x is invalid").getMessage())
             );
+
+        // try to create an existing line
+        lineCreationInfos.setEquipmentId("line2");
+        lineCreationInfosJson = mapper.writeValueAsString(lineCreationInfos);
+        mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpectAll(
+                        status().is4xxClientError(),
+                        content().string(new NetworkModificationException(LINE_ALREADY_EXISTS, "line2").getMessage()));
     }
 
     @Override

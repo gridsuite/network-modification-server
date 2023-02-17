@@ -10,7 +10,12 @@ import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.iidm.modification.topology.ReplaceTeePointByVoltageLevelOnLine;
 import com.powsybl.iidm.modification.topology.ReplaceTeePointByVoltageLevelOnLineBuilder;
 import com.powsybl.iidm.network.Network;
+import com.powsybl.iidm.network.VoltageLevel;
+import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.LinesAttachToSplitLinesInfos;
+
+import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_ALREADY_EXISTS;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_NOT_FOUND;
 
 /**
  * @author David Braquart <david.braquart at rte-france.com>
@@ -21,6 +26,29 @@ public class LinesAttachToSplitLines extends AbstractModification {
 
     public LinesAttachToSplitLines(LinesAttachToSplitLinesInfos modificationInfos) {
         this.modificationInfos = modificationInfos;
+    }
+
+    @Override
+    public void check(Network network) throws NetworkModificationException {
+        // check existing lines, vl and busbar
+        if (network.getLine(modificationInfos.getLineToAttachTo1Id()) == null) {
+            throw new NetworkModificationException(LINE_NOT_FOUND, modificationInfos.getLineToAttachTo1Id());
+        }
+        if (network.getLine(modificationInfos.getLineToAttachTo2Id()) == null) {
+            throw new NetworkModificationException(LINE_NOT_FOUND, modificationInfos.getLineToAttachTo2Id());
+        }
+        if (network.getLine(modificationInfos.getAttachedLineId()) == null) {
+            throw new NetworkModificationException(LINE_NOT_FOUND, modificationInfos.getAttachedLineId());
+        }
+        VoltageLevel vl = ModificationUtils.getInstance().getVoltageLevel(network, modificationInfos.getVoltageLevelId());
+        ModificationUtils.getInstance().controlBus(network, vl, modificationInfos.getBbsBusId());
+        // check future lines don't exist
+        if (network.getLine(modificationInfos.getReplacingLine1Id()) != null) {
+            throw new NetworkModificationException(LINE_ALREADY_EXISTS, modificationInfos.getReplacingLine1Id());
+        }
+        if (network.getLine(modificationInfos.getReplacingLine2Id()) != null) {
+            throw new NetworkModificationException(LINE_ALREADY_EXISTS, modificationInfos.getReplacingLine2Id());
+        }
     }
 
     @Override
