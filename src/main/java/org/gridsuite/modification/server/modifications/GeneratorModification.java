@@ -307,7 +307,7 @@ public class GeneratorModification extends AbstractModification {
         List<Report> reports = new ArrayList<>();
 
         ActivePowerControl<Generator> activePowerControl = generator.getExtension(ActivePowerControl.class);
-        Float oldDroop = activePowerControl != null ? activePowerControl.getDroop() : Float.NaN;
+        double oldDroop = activePowerControl != null ? activePowerControl.getDroop() : Double.NaN;
         Boolean participate = null;
         // if participate is null and droop was modified, we consider that participate
         // is true
