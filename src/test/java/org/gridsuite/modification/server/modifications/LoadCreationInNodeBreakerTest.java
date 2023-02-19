@@ -13,16 +13,16 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.EquipmentModificationInfos;
 import org.gridsuite.modification.server.dto.LoadCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.utils.MatcherLoadCreationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
-import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
@@ -78,8 +78,9 @@ public class LoadCreationInNodeBreakerTest extends AbstractNetworkModificationTe
         loadCreationInfosJson = mapper.writeValueAsString(loadCreationInfos);
         MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUriWithBadVariant()).content(loadCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(status().isOk()).andReturn();
-        List<EquipmentModificationInfos> bsmlrModification = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        assertTrue(bsmlrModification.isEmpty());  // no modifications returned
+        Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertNotNull(networkModificationResult);
+        assertTrue(networkModificationResult.isEmpty());  // no modifications returned
         assertNull(getNetwork().getLoad("idLoad1"));  // load was not created
         testNetworkModificationsCount(getGroupId(), 6);
     }

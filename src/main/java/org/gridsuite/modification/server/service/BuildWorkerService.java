@@ -11,8 +11,8 @@ import com.google.common.collect.Sets;
 import com.powsybl.iidm.network.Network;
 import lombok.NonNull;
 import org.gridsuite.modification.server.dto.BuildInfos;
-import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.NetworkInfos;
+import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,8 +20,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
 
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -52,7 +50,7 @@ public class BuildWorkerService {
 
     private final BuildFailedPublisherService failedPublisherService;
 
-    private final Map<String, CompletableFuture<List<ModificationInfos>>> futures = new ConcurrentHashMap<>();
+    private final Map<String, CompletableFuture<NetworkModificationResult>> futures = new ConcurrentHashMap<>();
 
     private final Map<String, BuildCancelContext> cancelBuildRequests = new ConcurrentHashMap<>();
 
@@ -73,7 +71,7 @@ public class BuildWorkerService {
         this.failedPublisherService = failedPublisherService;
     }
 
-    private CompletableFuture<List<ModificationInfos>> execBuildVariant(BuildExecContext execContext, BuildInfos buildInfos) {
+    private CompletableFuture<NetworkModificationResult> execBuildVariant(BuildExecContext execContext, BuildInfos buildInfos) {
         lockRunAndCancel.lock();
         try {
             UUID networkUuid = execContext.getNetworkUuid();
@@ -85,10 +83,10 @@ public class BuildWorkerService {
 
             buildRequests.add(execContext.getReceiver()); // receiver is the node uuid to build
 
-            CompletableFuture<List<ModificationInfos>> future = CompletableFuture.supplyAsync(() -> {
+            CompletableFuture<NetworkModificationResult> future = CompletableFuture.supplyAsync(() -> {
                     Network network = networkModificationService.cloneNetworkVariant(networkUuid, buildInfos.getOriginVariantId(), buildInfos.getDestinationVariantId());
                     LOGGER.info("Starting build on variant : {}", buildInfos.getDestinationVariantId());
-                    return networkModificationService.buildVariant(new NetworkInfos(network, networkUuid, true), buildInfos);
+                    return networkModificationService.buildVariant(new NetworkInfos(network, networkUuid, true), buildInfos).get();
                 }
             );
 
@@ -116,12 +114,10 @@ public class BuildWorkerService {
     private void startBuild(BuildExecContext execContext) {
         try {
             BuildInfos buildInfos = execContext.getBuildInfos();
-            CompletableFuture<List<ModificationInfos>> future = execBuildVariant(execContext, buildInfos);
-            List<ModificationInfos> result;
+            CompletableFuture<NetworkModificationResult> future = execBuildVariant(execContext, buildInfos);
+            NetworkModificationResult result;
             if (future != null && (result = future.get()) != null) {  // result available
-                Set<String> allSubstationsIds = new HashSet<>();
-                result.forEach(r -> allSubstationsIds.addAll(r.getSubstationIds()));
-                notificationService.emitBuildResultMessage(String.join(",", allSubstationsIds), execContext.getReceiver());
+                notificationService.emitBuildResultMessage(result, execContext.getReceiver());
                 LOGGER.info("Build complete on node '{}'", execContext.getReceiver());
             } else {  // result not available : stop build request
                 if (cancelBuildRequests.get(execContext.getReceiver()) != null) {
@@ -163,7 +159,7 @@ public class BuildWorkerService {
             cancelBuildRequests.put(cancelContext.getReceiver(), cancelContext);
 
             // find the completableFuture associated with receiver
-            CompletableFuture<List<ModificationInfos>> future = futures.get(cancelContext.getReceiver());
+            CompletableFuture<NetworkModificationResult> future = futures.get(cancelContext.getReceiver());
             if (future != null) {
                 future.cancel(true);  // cancel build in progress
                 LOGGER.info(CANCEL_MESSAGE + " (receiver='{}')", cancelContext.getReceiver());

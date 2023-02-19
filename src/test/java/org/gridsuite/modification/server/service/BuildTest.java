@@ -23,6 +23,8 @@ import org.gridsuite.modification.server.NetworkModificationApplication;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.TapChangerType;
 import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.server.dto.elasticsearch.EquipmentInfos;
+import org.gridsuite.modification.server.dto.elasticsearch.TombstonedEquipmentInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosRepository;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.elasticsearch.TombstonedEquipmentInfosRepository;
@@ -36,6 +38,7 @@ import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.gridsuite.modification.server.utils.TestUtils;
 import org.jetbrains.annotations.NotNull;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -66,9 +69,12 @@ import java.util.concurrent.atomic.AtomicReference;
 import static com.powsybl.iidm.network.ReactiveLimitsKind.MIN_MAX;
 import static org.gridsuite.modification.server.service.BuildWorkerService.CANCEL_MESSAGE;
 import static org.gridsuite.modification.server.service.BuildWorkerService.FAIL_MESSAGE;
+import static org.gridsuite.modification.server.utils.ImpactUtils.testElementImpacts;
+import static org.gridsuite.modification.server.utils.ImpactUtils.testEmptyImpacts;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -300,7 +306,8 @@ public class BuildTest {
         resultMessage = output.receive(TIMEOUT, buildResultDestination);
         assertNotNull(resultMessage);
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
-        assertEquals("", new String(resultMessage.getPayload()));
+
+        testEmptyImpacts(mapper, new String(resultMessage.getPayload()));
 
         TestUtils.purgeRequests(server);
     }
@@ -542,7 +549,7 @@ public class BuildTest {
         Message<byte[]> resultMessage = output.receive(TIMEOUT, buildResultDestination);
         assertNotNull(resultMessage);
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
-        assertEquals("newSubstation,s1,s2", new String(resultMessage.getPayload()));
+        testElementImpacts(mapper, new String(resultMessage.getPayload()), 49, Set.of("newSubstation", "s1", "s2"));
 
         // test all modifications have been made on variant VARIANT_ID
         network.getVariantManager().setWorkingVariant(NetworkCreation.VARIANT_ID);
@@ -634,7 +641,7 @@ public class BuildTest {
         resultMessage = output.receive(TIMEOUT, buildResultDestination);
         assertNotNull(resultMessage);
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
-        assertEquals("", new String(resultMessage.getPayload()));
+        testEmptyImpacts(mapper, new String(resultMessage.getPayload()));
 
         List<EquipmentInfos> eqVariant1 = equipmentInfosRepository.findAllByNetworkUuidAndVariantId(TEST_NETWORK_ID, NetworkCreation.VARIANT_ID);
         List<EquipmentInfos> eqVariant2 = equipmentInfosRepository.findAllByNetworkUuidAndVariantId(TEST_NETWORK_ID, VARIANT_ID_2);
@@ -682,7 +689,7 @@ public class BuildTest {
         resultMessage = output.receive(TIMEOUT, buildResultDestination);
         assertNotNull(resultMessage);
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
-        assertEquals("newSubstation,s1,s2", new String(resultMessage.getPayload()));
+        testElementImpacts(mapper, new String(resultMessage.getPayload()), 41, Set.of("newSubstation", "s1", "s2"));
 
         // test that only active modifications have been made on variant VARIANT_ID
         network.getVariantManager().setWorkingVariant(NetworkCreation.VARIANT_ID);
@@ -795,8 +802,9 @@ public class BuildTest {
         String variantId = network.getVariantManager().getWorkingVariantId();
 
         // Building mode : No error send with exception
-        List<ModificationInfos> modificationInfos = networkModificationApplicator.applyModifications(List.of(loadCreationInfos), new NetworkInfos(network, TEST_NETWORK_ID, true), new ReportInfos(reportUuid, reporterId));
-        assertEquals(List.of(), modificationInfos);
+        Optional<NetworkModificationResult> networkModificationResult = networkModificationApplicator.applyModifications(List.of(loadCreationInfos), new NetworkInfos(network, TEST_NETWORK_ID, true), new ReportInfos(reportUuid, reporterId));
+        Assert.assertTrue(networkModificationResult.isPresent());
+        testEmptyImpacts(mapper, networkModificationResult.get());
         assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches(String.format("/v1/reports/%s", reportUuid))));
 
         // Incremental mode : Error send with exception
@@ -811,7 +819,7 @@ public class BuildTest {
         testNetworkModificationsCount(groupUuid, 1);
 
         // Save mode only (variant does not exist) : No log and no error send with exception
-        assertEquals(List.of(), networkModificationService.createNetworkModification(networkModificationService.getNetworkInfos(TEST_NETWORK_ID, UUID.randomUUID().toString()), groupUuid, new ReportInfos(reportUuid, reporterId), loadCreationInfos));
+        assertTrue(networkModificationService.createNetworkModification(networkModificationService.getNetworkInfos(TEST_NETWORK_ID, UUID.randomUUID().toString()), groupUuid, new ReportInfos(reportUuid, reporterId), loadCreationInfos).isEmpty());
         testNetworkModificationsCount(groupUuid, 2);
     }
 

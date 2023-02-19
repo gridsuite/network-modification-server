@@ -13,16 +13,16 @@ import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.CurrentLimitsInfos;
-import org.gridsuite.modification.server.dto.EquipmentModificationInfos;
 import org.gridsuite.modification.server.dto.LineCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.utils.MatcherLineCreationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
-import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
@@ -45,10 +45,9 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
         String modificationToCreateJson = mapper.writeValueAsString(modificationToCreate);
         MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUriWithBadVariant()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
-        String resultAsString = mvcResult.getResponse().getContentAsString();
-        List<EquipmentModificationInfos> modifications = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertNotNull(modifications);
-        assertTrue(modifications.isEmpty());  // no modifications returned
+        Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertNotNull(networkModificationResult);
+        assertTrue(networkModificationResult.isEmpty());  // no modifications returned
         assertNull(getNetwork().getLine("idLine2"));  // line was not created
         testNetworkModificationsCount(getGroupId(), 1);  // new modification stored in the database
     }

@@ -16,6 +16,7 @@ import com.powsybl.iidm.network.extensions.BusbarSectionPositionAdder;
 import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.server.dto.AttributeModification;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -441,7 +442,7 @@ public final class ModificationUtils {
     }
 
     public <T> Report applyElementaryModificationsAndReturnReport(Consumer<T> setter, Supplier<T> getter,
-            AttributeModification<T> modification, String fieldName) {
+                                                                  AttributeModification<T> modification, String fieldName) {
         if (modification != null) {
             T oldValue = getter.get();
             T newValue = modification.applyModification(oldValue);

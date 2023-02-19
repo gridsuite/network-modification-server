@@ -18,6 +18,7 @@ import org.gridsuite.modification.server.ReactiveVariationMode;
 import org.gridsuite.modification.server.VariationMode;
 import org.gridsuite.modification.server.VariationType;
 import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.utils.MatcherLoadScalingInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.hamcrest.core.IsNull;

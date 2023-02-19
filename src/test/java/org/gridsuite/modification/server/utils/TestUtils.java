@@ -23,10 +23,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static com.vladmihalcea.sql.SQLStatementCountValidator.assertDeleteCount;
-import static com.vladmihalcea.sql.SQLStatementCountValidator.assertInsertCount;
-import static com.vladmihalcea.sql.SQLStatementCountValidator.assertSelectCount;
-import static com.vladmihalcea.sql.SQLStatementCountValidator.assertUpdateCount;
+import static com.vladmihalcea.sql.SQLStatementCountValidator.*;
 import static org.junit.Assert.*;
 
 /**

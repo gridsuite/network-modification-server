@@ -9,14 +9,14 @@ package org.gridsuite.modification.server.service;
 import com.powsybl.iidm.network.*;
 import com.powsybl.network.store.client.NetworkStoreService;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.server.dto.NetworkModificationResult;
+import org.gridsuite.modification.server.dto.elasticsearch.EquipmentInfos;
+import org.gridsuite.modification.server.dto.elasticsearch.TombstonedEquipmentInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
+import org.gridsuite.modification.server.impacts.SimpleElementImpact;
 
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_ERROR;
 
@@ -34,13 +34,11 @@ public class NetworkStoreListener implements NetworkListener {
 
     private final EquipmentInfosService equipmentInfosService;
 
-    private final List<ModificationInfos> modificationsInfos = new ArrayList<>();
+    private final List<String> deletedEquipmentsIds = new ArrayList<>();
 
-    private final List<EquipmentInfos> equipmentCreations = new ArrayList<>();
+    private final List<EquipmentInfos> createdEquipments = new ArrayList<>();
 
-    private final List<EquipmentDeletionInfos> equipmentDeletions = new ArrayList<>();
-
-    private final Set<String> substationsIds = new HashSet<>();
+    private final Set<SimpleElementImpact> networkImpacts = new LinkedHashSet<>();
 
     protected NetworkStoreListener(Network network, UUID networkUuid,
                                    NetworkStoreService networkStoreService, EquipmentInfosService equipmentInfosService) {
@@ -58,7 +56,7 @@ public class NetworkStoreListener implements NetworkListener {
     }
 
     private static Set<String> getSubstationIds(Identifiable<?> identifiable) {
-        Set<String> ids = new HashSet<>();
+        Set<String> ids = new TreeSet<>();
         // TODO implement getVoltageLevels in powsybl
         if (identifiable instanceof Switch) {
             ids.add(((Switch) identifiable).getVoltageLevel().getSubstation().orElseThrow().getId());
@@ -88,17 +86,31 @@ public class NetworkStoreListener implements NetworkListener {
 
     @Override
     public void onUpdate(Identifiable identifiable, String attribute, Object oldValue, Object newValue) {
-        substationsIds.addAll(getSubstationIds(identifiable));
+        networkImpacts.add(
+            SimpleElementImpact.builder()
+                .impactType(SimpleElementImpact.SimpleImpactType.MODIFICATION)
+                .elementType(identifiable.getType())
+                .elementId(identifiable.getId())
+                .substationIds(getSubstationIds(identifiable))
+                .build()
+        );
     }
 
     @Override
     public void onUpdate(Identifiable identifiable, String attribute, String variantId, Object oldValue, Object newValue) {
-        substationsIds.addAll(getSubstationIds(identifiable));
+        networkImpacts.add(
+            SimpleElementImpact.builder()
+                .impactType(SimpleElementImpact.SimpleImpactType.MODIFICATION)
+                .elementType(identifiable.getType())
+                .elementId(identifiable.getId())
+                .substationIds(getSubstationIds(identifiable))
+                .build()
+        );
     }
 
     @Override
     public void onCreation(Identifiable identifiable) {
-        equipmentCreations.add(EquipmentInfos.builder()
+        createdEquipments.add(EquipmentInfos.builder()
             .networkUuid(networkUuid)
             .variantId(network.getVariantManager().getWorkingVariantId())
             .id(identifiable.getId())
@@ -106,20 +118,27 @@ public class NetworkStoreListener implements NetworkListener {
             .type(identifiable.getType().name())
             .voltageLevels(EquipmentInfos.getVoltageLevels(identifiable))
             .build());
-        substationsIds.addAll(getSubstationIds(identifiable));
+        networkImpacts.add(
+            SimpleElementImpact.builder()
+                .impactType(SimpleElementImpact.SimpleImpactType.CREATION)
+                .elementType(identifiable.getType())
+                .elementId(identifiable.getId())
+                .substationIds(getSubstationIds(identifiable))
+                .build()
+        );
     }
 
     @Override
     public void beforeRemoval(Identifiable identifiable) {
-        equipmentDeletions.add(EquipmentDeletionInfos
-            .builder()
-            .uuid(null) // not in "this" db, transient
-            .date(ZonedDateTime.now(ZoneOffset.UTC))
-            .equipmentId(identifiable.getId())
-            .equipmentType(identifiable.getType().name())
-            .build()
+        deletedEquipmentsIds.add(identifiable.getId());
+        networkImpacts.add(
+            SimpleElementImpact.builder()
+                .impactType(SimpleElementImpact.SimpleImpactType.DELETION)
+                .elementType(identifiable.getType())
+                .elementId(identifiable.getId())
+                .substationIds(getSubstationIds(identifiable))
+                .build()
         );
-        substationsIds.addAll(getSubstationIds(identifiable));
     }
 
     @Override
@@ -127,13 +146,7 @@ public class NetworkStoreListener implements NetworkListener {
         // Do nothing
     }
 
-    public void addNetworkDamage(ModificationInfos modificationInfos) {
-        modificationInfos.setSubstationIds(substationsIds);
-        modificationInfos.setDate(ZonedDateTime.now(ZoneOffset.UTC));
-        modificationsInfos.add(modificationInfos);
-    }
-
-    public List<ModificationInfos> flushNetworkModifications() {
+    public Optional<NetworkModificationResult> flushNetworkModifications() {
         try {
             networkStoreService.flush(network); // At first
             flushEquipmentInfos();
@@ -141,36 +154,34 @@ public class NetworkStoreListener implements NetworkListener {
             throw new NetworkModificationException(MODIFICATION_ERROR, e);
         }
 
-        return Stream
-            .of(modificationsInfos, equipmentDeletions)
-            .flatMap(Collection::stream)
-            .collect(Collectors.toList());
+        return Optional.of(
+            NetworkModificationResult.builder()
+                .applicationStatus(NetworkModificationResult.ApplicationStatus.ALL_OK)
+                .networkImpacts(new ArrayList<>(networkImpacts))
+                .build()
+        );
     }
 
     private void flushEquipmentInfos() {
         String variantId = network.getVariantManager().getWorkingVariantId();
-        Set<String> presentEquipmentDeletionsIds = equipmentInfosService.findEquipmentInfosList(getEquipmentIds(equipmentDeletions), networkUuid, variantId).stream().map(EquipmentInfos::getId).collect(Collectors.toSet());
+        Set<String> presentEquipmentDeletionsIds = equipmentInfosService.findEquipmentInfosList(deletedEquipmentsIds, networkUuid, variantId).stream().map(EquipmentInfos::getId).collect(Collectors.toSet());
 
         List<String> equipmentDeletionsIds = new ArrayList<>();
         List<TombstonedEquipmentInfos> tombstonedEquipmentInfos = new ArrayList<>();
-        equipmentDeletions.forEach(d -> {
-            if (presentEquipmentDeletionsIds.contains(d.getEquipmentId())) {
-                equipmentDeletionsIds.add(d.getEquipmentId());
+        deletedEquipmentsIds.forEach(id -> {
+            if (presentEquipmentDeletionsIds.contains(id)) {
+                equipmentDeletionsIds.add(id);
             } else {
                 tombstonedEquipmentInfos.add(
                     TombstonedEquipmentInfos.builder()
                         .networkUuid(networkUuid)
                         .variantId(variantId)
-                        .id(d.getEquipmentId())
+                        .id(id)
                         .build());
             }
         });
         equipmentInfosService.deleteEquipmentInfosList(equipmentDeletionsIds, networkUuid, variantId);
         equipmentInfosService.addAllTombstonedEquipmentInfos(tombstonedEquipmentInfos);
-        equipmentInfosService.addAllEquipmentInfos(equipmentCreations);
-    }
-
-    private List<String> getEquipmentIds(List<? extends EquipmentModificationInfos> equipmentInfosList) {
-        return equipmentInfosList.stream().map(EquipmentModificationInfos::getEquipmentId).collect(Collectors.toList());
+        equipmentInfosService.addAllEquipmentInfos(createdEquipments);
     }
 }

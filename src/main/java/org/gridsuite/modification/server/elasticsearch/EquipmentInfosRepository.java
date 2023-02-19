@@ -6,7 +6,7 @@
  */
 package org.gridsuite.modification.server.elasticsearch;
 
-import org.gridsuite.modification.server.dto.EquipmentInfos;
+import org.gridsuite.modification.server.dto.elasticsearch.EquipmentInfos;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.lang.NonNull;
