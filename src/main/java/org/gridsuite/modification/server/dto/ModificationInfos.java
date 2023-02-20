@@ -90,6 +90,6 @@ public class ModificationInfos {
 
     @JsonIgnore
     public void check() {
-        // Nothing to check here
+        // To check input DTO before hypothesis creation. Nothing to check here
     }
 }
