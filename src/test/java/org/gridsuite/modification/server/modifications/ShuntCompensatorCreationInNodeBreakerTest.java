@@ -136,10 +136,12 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
         assertThat(createdModification, createMatcher(dto));
         //REACTOR test
         dto.setShuntCompensatorType(ShuntCompensatorType.REACTOR);
+        dto.setEquipmentId("shuntTwoId");
+        dto.setConnectionPosition(10);
         modificationToCreateJson = mapper.writeValueAsString(dto);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
-        createdModification = (ShuntCompensatorCreationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
+        createdModification = (ShuntCompensatorCreationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(1);
         assertThat(createdModification, createMatcher(dto));
     }
 }
