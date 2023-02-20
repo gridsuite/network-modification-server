@@ -6,6 +6,8 @@
  */
 package org.gridsuite.modification.server.utils;
 
+import java.util.Objects;
+
 import org.apache.commons.lang3.StringUtils;
 import org.gridsuite.modification.server.dto.ShuntCompensatorCreationInfos;
 import org.hamcrest.Description;
@@ -31,9 +33,11 @@ public class MatcherShuntCompensatorCreationInfos extends MatcherModificationInf
             && m.getVoltageLevelId().equals(reference.getVoltageLevelId())
             && m.getBusOrBusbarSectionId().equals(reference.getBusOrBusbarSectionId())
             && m.getIsIdenticalSection().equals(reference.getIsIdenticalSection())
-            && m.getSusceptancePerSection().equals(reference.getSusceptancePerSection())
+            && Objects.equals(m.getSusceptancePerSection(), reference.getSusceptancePerSection())
             && m.getMaximumNumberOfSections().equals(reference.getMaximumNumberOfSections())
-            && m.getCurrentNumberOfSections().equals(reference.getCurrentNumberOfSections());
+            && m.getCurrentNumberOfSections().equals(reference.getCurrentNumberOfSections())
+            && Objects.equals(m.getShuntCompensatorType(), reference.getShuntCompensatorType())
+            && Objects.equals(m.getQAtNominalV(), reference.getQAtNominalV());
     }
 
     @Override

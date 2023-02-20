@@ -13,6 +13,7 @@ import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.ShuntCompensatorCreationInfos;
+import org.gridsuite.modification.server.dto.ShuntCompensatorType;
 import org.gridsuite.modification.server.utils.MatcherShuntCompensatorCreationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
@@ -25,6 +26,7 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
 import static org.gridsuite.modification.server.NetworkModificationException.Type.CONNECTION_POSITION_ERROR;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -117,5 +119,27 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
             .andExpectAll(
                     status().is4xxClientError(),
                     content().string(new NetworkModificationException(CONNECTION_POSITION_ERROR, "PositionOrder '2' already taken").getMessage()));
+    }
+
+    @SneakyThrows
+    @Test
+    public void testCreateWithQAtNominalV() {
+        ShuntCompensatorCreationInfos dto = (ShuntCompensatorCreationInfos) buildModification();
+        dto.setSusceptancePerSection(null);
+        dto.setQAtNominalV(80.0);
+        //CAPACITOR test
+        dto.setShuntCompensatorType(ShuntCompensatorType.CAPACITOR);
+        String modificationToCreateJson = mapper.writeValueAsString(dto);
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk()).andReturn();
+        ShuntCompensatorCreationInfos createdModification = (ShuntCompensatorCreationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
+        assertThat(createdModification, createMatcher(dto));
+        //REACTOR test
+        dto.setShuntCompensatorType(ShuntCompensatorType.REACTOR);
+        modificationToCreateJson = mapper.writeValueAsString(dto);
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk()).andReturn();
+        createdModification = (ShuntCompensatorCreationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
+        assertThat(createdModification, createMatcher(dto));
     }
 }
