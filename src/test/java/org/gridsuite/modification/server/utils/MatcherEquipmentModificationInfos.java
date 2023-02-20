@@ -8,26 +8,10 @@ package org.gridsuite.modification.server.utils;
 
 import org.gridsuite.modification.server.dto.EquipmentModificationInfos;
 
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
-import java.util.Set;
-
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 public class MatcherEquipmentModificationInfos<T extends EquipmentModificationInfos> extends MatcherModificationInfos<T> {
-
-    public static MatcherEquipmentModificationInfos<EquipmentModificationInfos> createMatcherEquipmentModificationInfos(String equipmentId, Set<String> substationIds) {
-        return new MatcherEquipmentModificationInfos<>(EquipmentModificationInfos.builder()
-                .date(ZonedDateTime.now(ZoneOffset.UTC))
-                .equipmentId(equipmentId)
-                .substationIds(substationIds)
-                .build());
-    }
-
-    public static MatcherEquipmentModificationInfos<EquipmentModificationInfos> createMatcherEquipmentModificationInfos(EquipmentModificationInfos modificationInfos) {
-        return new MatcherEquipmentModificationInfos<>(modificationInfos);
-    }
 
     protected MatcherEquipmentModificationInfos(T ref) {
         super(ref);

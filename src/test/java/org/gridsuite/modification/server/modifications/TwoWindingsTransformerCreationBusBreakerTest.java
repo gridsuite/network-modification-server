@@ -325,7 +325,6 @@ public class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetwor
                 .seriesResistance(400)
                 .ratedS(200.)
                 .ratioTapChanger(ratioTapChangerCreationInfos)
-                .substationIds(Set.of("s1")) // for the matcher
                 .build();
         testCreateTwoWindingsTransformerInBusBreaker(twoWindingsTransformerCreationInfos, 1);
         TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos2 = TwoWindingsTransformerCreationInfos.builder()
@@ -344,7 +343,6 @@ public class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetwor
                 .connectionDirection1(ConnectablePosition.Direction.TOP)
                 .connectionDirection2(ConnectablePosition.Direction.TOP)
                 .ratioTapChanger(ratioTapChangerCreationInfos)
-                .substationIds(Set.of("s1")) // for the matcher
                 .build();
         testCreateTwoWindingsTransformerInBusBreaker(twoWindingsTransformerCreationInfos2, 2);
     }
@@ -382,7 +380,6 @@ public class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetwor
                 .connectionName2("cnid2wt2")
                 .connectionDirection2(ConnectablePosition.Direction.TOP)
                 .phaseTapChanger(phaseTapChangerCreationInfos)
-                .substationIds(Set.of("s1")) // for the matcher
                 .build();
         testCreateTwoWindingsTransformerInBusBreaker(twoWindingsTransformerCreationInfos, 1);
     }

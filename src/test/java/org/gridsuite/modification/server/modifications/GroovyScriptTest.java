@@ -74,7 +74,6 @@ public class GroovyScriptTest extends AbstractNetworkModificationTest {
 
         GroovyScriptInfos groovyScriptInfos = GroovyScriptInfos.builder()
                 .script("network.getGenerator('idGenerator').targetP=12\n")
-                .substationIds(Set.of("s1")) // for the matcher
                 .build();
         String groovyScriptInfosJson = mapper.writeValueAsString(groovyScriptInfos);
 
@@ -106,7 +105,6 @@ public class GroovyScriptTest extends AbstractNetworkModificationTest {
 
         // apply groovy script with two windings transformer ratio tap modification
         groovyScriptInfos.setScript("network.getTwoWindingsTransformer('trf1').getRatioTapChanger().tapPosition=2\n");
-        groovyScriptInfos.setSubstationIds(Set.of("s1")); // for the matcher
         groovyScriptInfosJson = mapper.writeValueAsString(groovyScriptInfos);
         mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(groovyScriptInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk())
                 .andReturn();

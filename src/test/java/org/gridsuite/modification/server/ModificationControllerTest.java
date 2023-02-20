@@ -621,7 +621,6 @@ public class ModificationControllerTest {
                 .busOrBusbarSectionId2("bus2")
                 .currentLimits1(c1)
                 .currentLimits2(c2)
-                .substationIds(Set.of("s1", "s2")) // for the matcher
                 .build();
 
         String resultAsString = mockMvc.perform(
@@ -742,7 +741,6 @@ public class ModificationControllerTest {
         EquipmentDeletionInfos equipmentDeletionInfos = EquipmentDeletionInfos.builder()
                 .equipmentType("LOAD")
                 .equipmentId("v1load")
-                .substationIds(Set.of("s1")) // for the matcher
                 .build();
         String equipmentDeletionInfosJson = objectWriter.writeValueAsString(equipmentDeletionInfos);
 
@@ -785,7 +783,6 @@ public class ModificationControllerTest {
         // delete line
         equipmentDeletionInfos.setEquipmentType(IdentifiableType.LINE.name());
         equipmentDeletionInfos.setEquipmentId("line2");
-        equipmentDeletionInfos.setSubstationIds(Set.of("s1", "s2")); // for the matcher
         equipmentDeletionInfosJson = objectWriter.writeValueAsString(equipmentDeletionInfos);
         mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
              .andExpect(status().isOk()).andReturn();
@@ -795,7 +792,6 @@ public class ModificationControllerTest {
         // delete two windings transformer
         equipmentDeletionInfos.setEquipmentType(IdentifiableType.TWO_WINDINGS_TRANSFORMER.name());
         equipmentDeletionInfos.setEquipmentId("trf1");
-        equipmentDeletionInfos.setSubstationIds(Set.of("s1")); // for the matcher
         equipmentDeletionInfosJson = objectWriter.writeValueAsString(equipmentDeletionInfos);
         mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
@@ -814,7 +810,6 @@ public class ModificationControllerTest {
         // delete static var compensator
         equipmentDeletionInfos.setEquipmentType(IdentifiableType.STATIC_VAR_COMPENSATOR.name());
         equipmentDeletionInfos.setEquipmentId("v3Compensator");
-        equipmentDeletionInfos.setSubstationIds(Set.of("s2")); // for the matcher
         equipmentDeletionInfosJson = objectWriter.writeValueAsString(equipmentDeletionInfos);
         mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
@@ -833,7 +828,6 @@ public class ModificationControllerTest {
         // delete dangling line
         equipmentDeletionInfos.setEquipmentType(IdentifiableType.DANGLING_LINE.name());
         equipmentDeletionInfos.setEquipmentId("v2Dangling");
-        equipmentDeletionInfos.setSubstationIds(Set.of("s1")); // for the matcher
         equipmentDeletionInfosJson = objectWriter.writeValueAsString(equipmentDeletionInfos);
         mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
@@ -861,7 +855,6 @@ public class ModificationControllerTest {
         // delete lcc converter station
         equipmentDeletionInfos.setEquipmentType(IdentifiableType.HVDC_CONVERTER_STATION.name());
         equipmentDeletionInfos.setEquipmentId("v1lcc");
-        equipmentDeletionInfos.setSubstationIds(Set.of("s1")); // for the matcher
         equipmentDeletionInfosJson = objectWriter.writeValueAsString(equipmentDeletionInfos);
         mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();

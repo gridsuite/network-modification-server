@@ -38,18 +38,16 @@ public class EquipmentAttributeModificationTest extends AbstractNetworkModificat
     @Test
     public void testEquipmentAttributeModificationInfos() {
         MvcResult mvcResult;
-        String resultAsString;
         UUID modificationUuid = UUID.randomUUID();
         EquipmentAttributeModificationInfos modificationInfos = EquipmentAttributeModificationInfos.builder()
             .uuid(modificationUuid)
             .date(ZonedDateTime.of(2021, 2, 19, 0, 0, 0, 0, ZoneOffset.UTC))
             .equipmentId("equipmentId")
-            .substationIds(Set.of("substationId"))
             .equipmentAttributeName("equipmentAttributeName")
             .equipmentAttributeValue("equipmentAttributeValue")
             .equipmentType(IdentifiableType.VOLTAGE_LEVEL)
             .build();
-        assertEquals(String.format("EquipmentAttributeModificationInfos(super=EquipmentModificationInfos(super=ModificationInfos(uuid=%s, date=2021-02-19T00:00Z, substationIds=[substationId]), equipmentId=equipmentId), equipmentAttributeName=equipmentAttributeName, equipmentAttributeValue=equipmentAttributeValue, equipmentType=VOLTAGE_LEVEL)", modificationUuid), modificationInfos.toString());
+        assertEquals(String.format("EquipmentAttributeModificationInfos(super=EquipmentModificationInfos(super=ModificationInfos(uuid=%s, date=2021-02-19T00:00Z), equipmentId=equipmentId), equipmentAttributeName=equipmentAttributeName, equipmentAttributeValue=equipmentAttributeValue, equipmentType=VOLTAGE_LEVEL)", modificationUuid), modificationInfos.toString());
 
         EquipmentAttributeModificationInfos switchStatusModificationInfos = EquipmentAttributeModificationInfos.builder()
             .equipmentType(IdentifiableType.SWITCH)
@@ -86,7 +84,6 @@ public class EquipmentAttributeModificationTest extends AbstractNetworkModificat
                                      Set<String> substationsIds, Set<String> otherSubstationsIds,
                                      int modificationsCount) {
         MvcResult mvcResult;
-        String resultAsString;
 
         EquipmentAttributeModificationInfos switchStatusModificationInfos = buildModification();
 
