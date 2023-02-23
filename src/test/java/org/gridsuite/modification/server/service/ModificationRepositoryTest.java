@@ -517,7 +517,7 @@ public class ModificationRepositoryTest {
         // cutting and pasting to non existing group should work
         SQLStatementCountValidator.reset();
         networkModificationRepository.moveModifications(TEST_GROUP_ID_3, TEST_GROUP_ID_2, List.of(expected2.get(0).getUuid(), expected2.get(1).getUuid()), null);
-        assertRequestsCount(4, 1, 6, 0);
+        assertRequestsCount(3, 1, 6, 0);
 
         modification2 = networkModificationRepository.getModifications(TEST_GROUP_ID_2, true, true);
         var modification3 = networkModificationRepository.getModifications(TEST_GROUP_ID_3, true, true);
