@@ -262,8 +262,8 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
                 content().string(IsNull.notNullValue())
             );
 
-        assertEquals(-199.99, getNetwork().getLoad(LOAD_ID_9).getP0(), 0.01D);
-        assertEquals(-99.99, getNetwork().getLoad(LOAD_ID_10).getP0(), 0.01D);
+        assertEquals(600, getNetwork().getLoad(LOAD_ID_9).getP0(), 0.01D);
+        assertEquals(300, getNetwork().getLoad(LOAD_ID_10).getP0(), 0.01D);
     }
 
     @Override
@@ -374,8 +374,8 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
         assertEquals(216.66, getNetwork().getLoad(LOAD_ID_2).getP0(), 0.01D);
         assertEquals(225.0, getNetwork().getLoad(LOAD_ID_3).getP0(), 0.01D);
         assertEquals(125.0, getNetwork().getLoad(LOAD_ID_4).getP0(), 0.01D);
-        assertEquals(237.5, getNetwork().getLoad(LOAD_ID_5).getP0(), 0.01D);
-        assertEquals(132.5, getNetwork().getLoad(LOAD_ID_6).getP0(), 0.01D);
+        assertEquals(287.5, getNetwork().getLoad(LOAD_ID_5).getP0(), 0.01D);
+        assertEquals(182.5, getNetwork().getLoad(LOAD_ID_6).getP0(), 0.01D);
         assertEquals(213.63, getNetwork().getLoad(LOAD_ID_7).getP0(), 0.01D);
         assertEquals(166.36, getNetwork().getLoad(LOAD_ID_8).getP0(), 0.01D);
         assertEquals(216.66, getNetwork().getLoad(LOAD_ID_9).getP0(), 0.01D);

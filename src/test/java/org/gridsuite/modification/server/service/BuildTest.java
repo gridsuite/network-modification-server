@@ -395,8 +395,8 @@ public class BuildTest {
                 .equipmentName("vl9")
                 .nominalVoltage(225)
                 .substationId("s1")
-                .busbarSections(List.of(new BusbarSectionCreationInfos("1.1", "1.1", 1, 1), new BusbarSectionCreationInfos("1.2", "1.2", 1, 2)))
-                .busbarConnections(List.of(new BusbarConnectionCreationInfos("1.1", "1.2", SwitchKind.BREAKER)))
+                .busbarSections(List.of(new BusbarSectionCreationInfos("1.10", "name 1.10", 1, 1), new BusbarSectionCreationInfos("1.11", "name 1.11", 1, 2)))
+                .busbarConnections(List.of(new BusbarConnectionCreationInfos("1.10", "1.11", SwitchKind.BREAKER)))
                 .build().toEntity());
         entities2.add(ShuntCompensatorCreationInfos.builder()
             .equipmentId("shunt9")

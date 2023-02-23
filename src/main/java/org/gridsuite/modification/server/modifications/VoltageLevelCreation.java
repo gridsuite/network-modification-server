@@ -8,6 +8,7 @@ package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.iidm.network.Network;
+import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.VoltageLevelCreationInfos;
 
 /**
@@ -19,6 +20,11 @@ public class VoltageLevelCreation extends AbstractModification {
 
     public VoltageLevelCreation(VoltageLevelCreationInfos modificationInfos) {
         this.modificationInfos = modificationInfos;
+    }
+
+    @Override
+    public void check(Network network) throws NetworkModificationException {
+        ModificationUtils.getInstance().controlVoltageLevelCreation(modificationInfos, network);
     }
 
     @Override
