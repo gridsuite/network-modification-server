@@ -75,6 +75,7 @@ public class EquipmentAttributeModification extends AbstractModification {
         }
     }
 
+    // TODO remove only for switch
     private void changeGeneratorAttribute(Generator generator, String attributeName, Object attributeValue, Reporter reporter) {
         if (attributeName.equals("targetP")) {
             generator.setTargetP((Double) attributeValue);
@@ -89,6 +90,7 @@ public class EquipmentAttributeModification extends AbstractModification {
         }
     }
 
+    // TODO remove only for switch
     private void changeLineAttribute(Line line, String attributeName, Object attributeValue, Reporter reporter) {
         if (attributeName.equals("branchStatus")) {
             line.newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.valueOf((String) attributeValue)).add();
@@ -103,6 +105,7 @@ public class EquipmentAttributeModification extends AbstractModification {
         }
     }
 
+    // TODO remove only for switch
     private void changeTwoWindingsTransformerAttribute(TwoWindingsTransformer transformer, String attributeName, Object attributeValue, Reporter reporter) {
         String reportKey;
         String reportDefaultMessage;
@@ -129,6 +132,7 @@ public class EquipmentAttributeModification extends AbstractModification {
             .build());
     }
 
+    // TODO remove only for switch
     private void changeThreeWindingsTransformerAttribute(ThreeWindingsTransformer transformer, String attributeName, Object attributeValue, Reporter reporter) {
         String reportKey;
         String reportDefaultMessage;

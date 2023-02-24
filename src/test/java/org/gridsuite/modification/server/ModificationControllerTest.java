@@ -134,7 +134,6 @@ public class ModificationControllerTest {
     @Before
     public void setUp() {
         objectWriter = mapper.writer().withDefaultPrettyPrinter();
-        // /!\ create a new network for each invocation (answer)
         network = NetworkCreation.create(TEST_NETWORK_ID, true);
         when(networkStoreService.getNetwork(TEST_NETWORK_ID)).then((Answer<Network>) invocation -> network);
         network2 = NetworkCreation.create(TEST_NETWORK_ID_2, false);

@@ -40,6 +40,9 @@ public class NetworkStoreListener implements NetworkListener {
 
     private final Set<SimpleElementImpact> networkImpacts = new LinkedHashSet<>();
 
+    // TODO : Move to the NetworkModificationApplicator class
+    private NetworkModificationResult.ApplicationStatus applicationStatus = NetworkModificationResult.ApplicationStatus.ALL_OK;
+
     protected NetworkStoreListener(Network network, UUID networkUuid,
                                    NetworkStoreService networkStoreService, EquipmentInfosService equipmentInfosService) {
         this.network = network;
@@ -154,12 +157,17 @@ public class NetworkStoreListener implements NetworkListener {
             throw new NetworkModificationException(MODIFICATION_ERROR, e);
         }
 
+        // TODO : Move to the NetworkModificationApplicator class
         return Optional.of(
             NetworkModificationResult.builder()
-                .applicationStatus(NetworkModificationResult.ApplicationStatus.ALL_OK)
+                .applicationStatus(applicationStatus)
                 .networkImpacts(new ArrayList<>(networkImpacts))
                 .build()
         );
+    }
+
+    public void setApplicationStatus(NetworkModificationResult.ApplicationStatus applicationStatus) {
+        this.applicationStatus = applicationStatus;
     }
 
     private void flushEquipmentInfos() {
