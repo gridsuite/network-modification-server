@@ -43,7 +43,7 @@ public class ShuntCompensatorCreation extends AbstractModification {
         // create the shunt compensator in the network
         VoltageLevel voltageLevel = ModificationUtils.getInstance().getVoltageLevel(network, modificationInfos.getVoltageLevelId());
         if (modificationInfos.getSusceptancePerSection() == null) {
-            Double susceptancePerSection = modificationInfos.getQAtNominalV() / (voltageLevel.getNominalV() * voltageLevel.getNominalV());
+            Double susceptancePerSection = modificationInfos.getQAtNominalV() / Math.pow(voltageLevel.getNominalV(), 2);
             modificationInfos.setSusceptancePerSection(
                     modificationInfos.getShuntCompensatorType() == ShuntCompensatorType.CAPACITOR
                             ? susceptancePerSection
