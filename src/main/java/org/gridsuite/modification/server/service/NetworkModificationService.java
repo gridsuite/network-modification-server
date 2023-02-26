@@ -112,6 +112,7 @@ public class NetworkModificationService {
 
     // No transactional because we need to save modification in DB also in case of error
     // Transaction made in 'saveModifications' method
+    // TODO Add transaction when errors will no longer be sent to the front
     public List<ModificationInfos> createNetworkModification(@NonNull NetworkInfos networkInfos, @NonNull UUID groupUuid,
                                                              @NonNull ReportInfos reportInfos,
                                                              @NonNull ModificationInfos modificationInfos) {
@@ -184,6 +185,7 @@ public class NetworkModificationService {
         }
     }
 
+    @Transactional
     public void moveModifications(UUID groupUuid, UUID originGroupUuid, UUID before, NetworkInfos networkInfos, ReportInfos reportInfos, List<UUID> modificationsToMove, boolean canBuildNode) {
         List<ModificationInfos> movedModifications = networkModificationRepository.moveModifications(groupUuid, originGroupUuid, modificationsToMove, before)
             .stream()
