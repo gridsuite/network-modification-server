@@ -14,6 +14,7 @@ import com.powsybl.iidm.modification.topology.CreateFeederBayBuilder;
 import com.powsybl.iidm.network.*;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ShuntCompensatorCreationInfos;
+import org.gridsuite.modification.server.dto.ShuntCompensatorType;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 
@@ -41,6 +42,13 @@ public class ShuntCompensatorCreation extends AbstractModification {
     public void apply(Network network, Reporter subReporter) {
         // create the shunt compensator in the network
         VoltageLevel voltageLevel = ModificationUtils.getInstance().getVoltageLevel(network, modificationInfos.getVoltageLevelId());
+        if (modificationInfos.getSusceptancePerSection() == null) {
+            Double susceptancePerSection = modificationInfos.getQAtNominalV() / Math.pow(voltageLevel.getNominalV(), 2);
+            modificationInfos.setSusceptancePerSection(
+                    modificationInfos.getShuntCompensatorType() == ShuntCompensatorType.CAPACITOR
+                            ? susceptancePerSection
+                            : -susceptancePerSection);
+        }
         if (voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER) {
             ShuntCompensatorAdder shuntCompensatorAdder = createShuntAdderInNodeBreaker(voltageLevel, modificationInfos);
             var position = ModificationUtils.getInstance().getPosition(modificationInfos.getConnectionPosition(),

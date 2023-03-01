@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
@@ -40,6 +41,13 @@ public class ShuntCompensatorCreationInfos extends InjectionCreationInfos {
 
     @Schema(description = "Susceptance per section")
     private Double susceptancePerSection;
+
+    @JsonProperty("qAtNominalV")
+    @Schema(description = "Q at Nominal Voltage")
+    private Double qAtNominalV;
+
+    @Schema(description = "Shunt Compensator Type")
+    private ShuntCompensatorType shuntCompensatorType;
 
     @Schema(description = "Identical sections")
     private Boolean isIdenticalSection;
