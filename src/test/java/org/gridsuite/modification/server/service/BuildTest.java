@@ -38,7 +38,6 @@ import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.gridsuite.modification.server.utils.TestUtils;
 import org.jetbrains.annotations.NotNull;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -804,9 +803,9 @@ public class BuildTest {
         String variantId = network.getVariantManager().getWorkingVariantId();
 
         // Building mode : No error send with exception
-        Optional<NetworkModificationResult> networkModificationResult = networkModificationApplicator.applyModifications(List.of(loadCreationInfos), new NetworkInfos(network, TEST_NETWORK_ID, true), new ReportInfos(reportUuid, reporterId));
-        Assert.assertTrue(networkModificationResult.isPresent());
-        testEmptyImpactsWithErrors(mapper, networkModificationResult.get());
+        NetworkModificationResult networkModificationResult = networkModificationApplicator.applyModifications(List.of(loadCreationInfos), new NetworkInfos(network, TEST_NETWORK_ID, true), new ReportInfos(reportUuid, reporterId));
+        assertNotNull(networkModificationResult);
+        testEmptyImpactsWithErrors(mapper, networkModificationResult);
         assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches(String.format("/v1/reports/%s", reportUuid))));
 
         // Incremental mode : Error send with exception

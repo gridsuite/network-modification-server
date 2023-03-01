@@ -86,7 +86,7 @@ public class BuildWorkerService {
             CompletableFuture<NetworkModificationResult> future = CompletableFuture.supplyAsync(() -> {
                     Network network = networkModificationService.cloneNetworkVariant(networkUuid, buildInfos.getOriginVariantId(), buildInfos.getDestinationVariantId());
                     LOGGER.info("Starting build on variant : {}", buildInfos.getDestinationVariantId());
-                    return networkModificationService.buildVariant(new NetworkInfos(network, networkUuid, true), buildInfos).get();
+                    return networkModificationService.buildVariant(new NetworkInfos(network, networkUuid, true), buildInfos);
                 }
             );
 

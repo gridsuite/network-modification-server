@@ -113,7 +113,7 @@ public class NetworkModificationService {
         networkModificationRepository.saveModifications(groupUuid, List.of(modificationInfos.toEntity()));
 
         return networkInfos.isVariantPresent() ?
-            modificationApplicator.applyModification(modificationInfos, networkInfos, reportInfos) :
+            Optional.of(modificationApplicator.applyModification(modificationInfos, networkInfos, reportInfos)) :
             Optional.empty();
     }
 
@@ -136,7 +136,7 @@ public class NetworkModificationService {
     }
 
     @Transactional(readOnly = true)
-    public Optional<NetworkModificationResult> buildVariant(@NonNull NetworkInfos networkInfos, @NonNull BuildInfos buildInfos) {
+    public NetworkModificationResult buildVariant(@NonNull NetworkInfos networkInfos, @NonNull BuildInfos buildInfos) {
         // Apply all modifications belonging to the modification groups uuids in buildInfos
         List<Pair<String, List<ModificationInfos>>> modificationInfos = new ArrayList<>();
 

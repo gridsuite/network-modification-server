@@ -149,21 +149,21 @@ public class NetworkStoreListener implements NetworkListener {
         // Do nothing
     }
 
-    public Optional<NetworkModificationResult> flushNetworkModifications() {
+    public NetworkModificationResult flushNetworkModifications() {
         try {
             networkStoreService.flush(network); // At first
             flushEquipmentInfos();
+
         } catch (Exception e) {
             throw new NetworkModificationException(MODIFICATION_ERROR, e);
         }
 
         // TODO : Move to the NetworkModificationApplicator class
-        return Optional.of(
+        return
             NetworkModificationResult.builder()
                 .applicationStatus(applicationStatus)
                 .networkImpacts(new ArrayList<>(networkImpacts))
-                .build()
-        );
+                .build();
     }
 
     public void setApplicationStatus(NetworkModificationResult.ApplicationStatus applicationStatus) {

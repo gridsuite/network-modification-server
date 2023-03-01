@@ -21,7 +21,7 @@ import java.util.Set;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 @ToString
-public class SimpleElementImpact extends AbstractElementImpact {
+public class SimpleElementImpact {
     public enum SimpleImpactType {
         CREATION,
         MODIFICATION,

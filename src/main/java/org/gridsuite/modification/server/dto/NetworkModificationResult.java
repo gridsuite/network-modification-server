@@ -18,12 +18,8 @@ import java.util.stream.Collectors;
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
-@Setter
-@Getter
 @Builder
-@NoArgsConstructor
-@ToString
+@Data
 @Schema(description = "Network modification result")
 public class NetworkModificationResult {
     public enum ApplicationStatus {
