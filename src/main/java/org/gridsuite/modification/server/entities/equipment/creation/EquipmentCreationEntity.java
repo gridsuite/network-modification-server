@@ -8,7 +8,6 @@ package org.gridsuite.modification.server.entities.equipment.creation;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.EquipmentCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
@@ -29,12 +28,6 @@ public class EquipmentCreationEntity extends EquipmentModificationEntity {
     protected EquipmentCreationEntity(EquipmentCreationInfos equipmentCreationInfos) {
         super(equipmentCreationInfos);
         assignAttributes(equipmentCreationInfos);
-    }
-
-    // TODO : remove
-    protected EquipmentCreationEntity(ModificationType modificationType, String equipmentId, String equipmentName) {
-        super(equipmentId, modificationType);
-        this.equipmentName = equipmentName;
     }
 
     @Override

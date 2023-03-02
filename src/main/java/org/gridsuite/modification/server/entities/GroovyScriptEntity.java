@@ -9,8 +9,6 @@ package org.gridsuite.modification.server.entities;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.GroovyScriptInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 
@@ -30,7 +28,7 @@ public class GroovyScriptEntity extends ModificationEntity {
     private String script;
 
     public GroovyScriptEntity(GroovyScriptInfos groovyScriptInfos) {
-        super(ModificationType.GROOVY_SCRIPT);
+        super(groovyScriptInfos);
         assignAttributes(groovyScriptInfos);
     }
 
@@ -59,7 +57,6 @@ public class GroovyScriptEntity extends ModificationEntity {
                 .builder()
                 .uuid(getId())
                 .date(getDate())
-                .type(ModificationType.valueOf(getType()))
                 .script(getScript());
     }
 }

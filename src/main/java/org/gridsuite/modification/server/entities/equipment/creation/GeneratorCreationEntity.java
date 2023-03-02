@@ -11,14 +11,11 @@ import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.GeneratorCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.ReactiveCapabilityCurveCreationInfos;
 
 import javax.persistence.*;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -55,8 +52,20 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
     @Column(name = "voltageSetpoint")
     private Double voltageSetpoint;
 
+    @Column(name = "plannedActivePowerSetPoint")
+    private Double plannedActivePowerSetPoint;
+
+    @Column(name = "startupCost")
+    private Double startupCost;
+
     @Column(name = "marginalCost")
     private Double marginalCost;
+
+    @Column(name = "plannedOutageRate")
+    private Double plannedOutageRate;
+
+    @Column(name = "forcedOutageRate")
+    private Double forcedOutageRate;
 
     @Column(name = "minimumReactivePower")
     private Double minimumReactivePower;
@@ -124,7 +133,11 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
         this.reactivePowerSetpoint = generatorCreationInfos.getReactivePowerSetpoint();
         this.voltageRegulationOn = generatorCreationInfos.isVoltageRegulationOn();
         this.voltageSetpoint = generatorCreationInfos.getVoltageSetpoint();
+        this.plannedActivePowerSetPoint = generatorCreationInfos.getPlannedActivePowerSetPoint();
+        this.startupCost = generatorCreationInfos.getStartupCost();
         this.marginalCost = generatorCreationInfos.getMarginalCost();
+        this.plannedOutageRate = generatorCreationInfos.getPlannedOutageRate();
+        this.forcedOutageRate = generatorCreationInfos.getForcedOutageRate();
         this.minimumReactivePower = generatorCreationInfos.getMinimumReactivePower();
         this.maximumReactivePower = generatorCreationInfos.getMaximumReactivePower();
         this.participate = generatorCreationInfos.getParticipate();
@@ -169,7 +182,6 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
             .builder()
             .uuid(getId())
             .date(getDate())
-            .type(ModificationType.valueOf(getType()))
             .equipmentId(getEquipmentId())
             .equipmentName(getEquipmentName())
             .voltageLevelId(getVoltageLevelId())
@@ -182,7 +194,11 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
             .reactivePowerSetpoint(getReactivePowerSetpoint())
             .voltageRegulationOn(isVoltageRegulationOn())
             .voltageSetpoint(getVoltageSetpoint())
+            .plannedActivePowerSetPoint(getPlannedActivePowerSetPoint())
+            .startupCost(getStartupCost())
             .marginalCost(getMarginalCost())
+            .plannedOutageRate(getPlannedOutageRate())
+            .forcedOutageRate(getForcedOutageRate())
             .minimumReactivePower(this.getMinimumReactivePower())
             .participate(getParticipate())
             .droop(getDroop())
@@ -198,11 +214,5 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
             .connectionName(getConnectionName())
             .connectionDirection(getConnectionDirection())
             .connectionPosition(getConnectionPosition());
-    }
-
-    @Override
-    public void cloneWithIdsToNull() {
-        super.cloneWithIdsToNull();
-        this.reactiveCapabilityCurvePoints = new ArrayList<>(reactiveCapabilityCurvePoints);
     }
 }

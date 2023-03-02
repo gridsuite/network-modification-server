@@ -10,7 +10,6 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 
@@ -43,9 +42,6 @@ public class ModificationEntity {
     @Column(name = "date")
     private ZonedDateTime date;
 
-    @Column(name = "type")
-    private String type;
-
     @JoinColumn(name = "groupId", foreignKey = @ForeignKey(name = "group_id_fk_constraint"))
     @ManyToOne(fetch = FetchType.LAZY)
     @Setter
@@ -56,14 +52,6 @@ public class ModificationEntity {
             throw new NetworkModificationException(MISSING_MODIFICATION_DESCRIPTION, "Missing network modification description");
         }
         this.date = ZonedDateTime.now(ZoneOffset.UTC);
-        this.type = modificationInfos.getType().name();
-    }
-
-    //TODO : remove
-    protected ModificationEntity(ModificationType type) {
-        this.id = null;
-        this.date = ZonedDateTime.now(ZoneOffset.UTC);
-        this.type = type.name();
     }
 
     public ModificationInfos toModificationInfos() {
@@ -74,7 +62,6 @@ public class ModificationEntity {
         return ModificationInfos.builder()
                 .uuid(this.id)
                 .date(this.date)
-                .type(ModificationType.valueOf(this.type))
                 .substationIds(substationsIds)
                 .build();
     }
@@ -84,6 +71,10 @@ public class ModificationEntity {
         if (modificationInfos == null) {
             throw new NullPointerException("Impossible to update entity from null DTO");
         }
+    }
+
+    public ModificationEntity copy() {
+        return toModificationInfos().toEntity();
     }
 
     //From https://vladmihalcea.com/the-best-way-to-map-a-onetomany-association-with-jpa-and-hibernate/
@@ -101,9 +92,5 @@ public class ModificationEntity {
     @Override
     public int hashCode() {
         return getClass().hashCode();
-    }
-
-    public void cloneWithIdsToNull() {
-        this.setId(null);
     }
 }

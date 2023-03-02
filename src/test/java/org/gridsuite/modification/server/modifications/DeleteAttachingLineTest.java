@@ -8,7 +8,6 @@ package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.iidm.network.Network;
 import lombok.SneakyThrows;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.DeleteAttachingLineInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
@@ -21,9 +20,12 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.DELETE_ATTACHING_LINE_ERROR;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_ALREADY_EXISTS;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_NOT_FOUND;
 import static org.gridsuite.modification.server.utils.MatcherDeleteAttachingLineInfos.createMatcherDeleteAttachingLineInfos;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -40,7 +42,6 @@ public class DeleteAttachingLineTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModification() {
         return DeleteAttachingLineInfos.builder()
-                .type(ModificationType.DELETE_ATTACHING_LINE)
                 .lineToAttachTo1Id("l1")
                 .lineToAttachTo2Id("l2")
                 .attachedLineId("l3")
@@ -52,7 +53,6 @@ public class DeleteAttachingLineTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return DeleteAttachingLineInfos.builder()
-                .type(ModificationType.DELETE_ATTACHING_LINE)
                 .lineToAttachTo1Id("l1")
                 .lineToAttachTo2Id("l2")
                 .attachedLineId("l3")
@@ -85,7 +85,6 @@ public class DeleteAttachingLineTest extends AbstractNetworkModificationTest {
     public void createWithInvalidLineIdTest() {
         // test create with incorrect line id
         DeleteAttachingLineInfos deleteAttachingLineInfos = DeleteAttachingLineInfos.builder()
-                .type(ModificationType.DELETE_ATTACHING_LINE)
                 .lineToAttachTo1Id("l1")
                 .lineToAttachTo2Id("ll")
                 .attachedLineId("l2")
@@ -95,8 +94,8 @@ public class DeleteAttachingLineTest extends AbstractNetworkModificationTest {
         String json = objectWriter.writeValueAsString(deleteAttachingLineInfos);
         mockMvc.perform(MockMvcRequestBuilders.post(getNetworkModificationUri()).content(json).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(
-                    status().is5xxServerError(),
-                    content().string(new NetworkModificationException(DELETE_ATTACHING_LINE_ERROR, "Line ll is not found").getMessage())
+                    status().is4xxClientError(),
+                    content().string(new NetworkModificationException(LINE_NOT_FOUND, "ll").getMessage())
             );
     }
 
@@ -104,7 +103,6 @@ public class DeleteAttachingLineTest extends AbstractNetworkModificationTest {
     @Test
     public void createWithNoAttachmentPointTest() {
         DeleteAttachingLineInfos deleteAttachingLineInfos = DeleteAttachingLineInfos.builder()
-                .type(ModificationType.DELETE_ATTACHING_LINE)
                 .lineToAttachTo1Id("l1")
                 .lineToAttachTo2Id("l3")
                 .attachedLineId("l1")
@@ -116,6 +114,20 @@ public class DeleteAttachingLineTest extends AbstractNetworkModificationTest {
             .andExpectAll(
                     status().is5xxServerError(),
                     content().string(new NetworkModificationException(DELETE_ATTACHING_LINE_ERROR, "Unable to find the attachment point and the tapped voltage level from lines l1, l3 and l1").getMessage())
+            );
+    }
+
+    @SneakyThrows
+    @Test
+    public void createNewLineWithExistingIdTest() {
+        // try to create an already existing line
+        DeleteAttachingLineInfos deleteAttachingLineInfos = (DeleteAttachingLineInfos) buildModification();
+        deleteAttachingLineInfos.setReplacingLine1Id("l2");
+        String lineAttachToAbsentLineJson = mapper.writeValueAsString(deleteAttachingLineInfos);
+        mockMvc.perform(post(getNetworkModificationUri()).content(lineAttachToAbsentLineJson).contentType(MediaType.APPLICATION_JSON))
+            .andExpectAll(
+                    status().is4xxClientError(),
+                    content().string(new NetworkModificationException(LINE_ALREADY_EXISTS, "l2").getMessage())
             );
     }
 }

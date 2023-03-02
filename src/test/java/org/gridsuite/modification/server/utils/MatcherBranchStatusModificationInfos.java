@@ -6,7 +6,6 @@
  */
 package org.gridsuite.modification.server.utils;
 
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.BranchStatusModificationInfos;
 
 import java.time.ZoneOffset;
@@ -26,7 +25,6 @@ public class MatcherBranchStatusModificationInfos extends MatcherEquipmentModifi
                                                                                                   Set<String> substationIds) {
         return new MatcherBranchStatusModificationInfos(BranchStatusModificationInfos.builder()
             .date(ZonedDateTime.now(ZoneOffset.UTC))
-            .type(ModificationType.BRANCH_STATUS_MODIFICATION)
             .substationIds(substationIds)
             .equipmentId(equipmentId)
             .action(action)

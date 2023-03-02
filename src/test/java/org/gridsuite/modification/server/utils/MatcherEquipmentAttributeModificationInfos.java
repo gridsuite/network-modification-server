@@ -7,7 +7,6 @@
 package org.gridsuite.modification.server.utils;
 
 import com.powsybl.iidm.network.IdentifiableType;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.EquipmentAttributeModificationInfos;
 import org.hamcrest.Description;
 
@@ -26,7 +25,6 @@ public class MatcherEquipmentAttributeModificationInfos extends MatcherModificat
                                                                                                               IdentifiableType equipmentType) {
         return new MatcherEquipmentAttributeModificationInfos(EquipmentAttributeModificationInfos.builder()
                 .date(ZonedDateTime.now(ZoneOffset.UTC))
-                .type(ModificationType.EQUIPMENT_ATTRIBUTE_MODIFICATION)
                 .equipmentId(equipmentId)
                 .substationIds(substationIds)
                 .equipmentAttributeName(equipmentAttributeName)
@@ -48,7 +46,6 @@ public class MatcherEquipmentAttributeModificationInfos extends MatcherModificat
         return super.matchesSafely(m)
                 && m.getEquipmentId().equals(reference.getEquipmentId())
                 && m.getEquipmentType().equals(reference.getEquipmentType())
-                && m.getSubstationIds().equals(reference.getSubstationIds())
                 && m.getEquipmentAttributeName().equals(reference.getEquipmentAttributeName())
                 && Objects.equals(m.getEquipmentAttributeValue(), reference.getEquipmentAttributeValue());
     }

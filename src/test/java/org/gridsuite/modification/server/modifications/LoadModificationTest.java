@@ -10,10 +10,7 @@ package org.gridsuite.modification.server.modifications;
 import com.powsybl.iidm.network.Load;
 import com.powsybl.iidm.network.LoadType;
 import com.powsybl.iidm.network.Network;
-
 import lombok.SneakyThrows;
-
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.AttributeModification;
 import org.gridsuite.modification.server.dto.LoadModificationInfos;
@@ -24,9 +21,9 @@ import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
 import org.springframework.http.MediaType;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_LOAD_ERROR;
 import java.util.UUID;
 
+import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_LOAD_ERROR;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -43,7 +40,6 @@ public class LoadModificationTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModification() {
         return LoadModificationInfos.builder()
-            .type(ModificationType.LOAD_MODIFICATION)
             .equipmentId("v1load")
             .equipmentName(new AttributeModification<>("nameLoad1", OperationType.SET))
             .loadType(new AttributeModification<>(LoadType.FICTITIOUS, OperationType.SET))
@@ -55,7 +51,6 @@ public class LoadModificationTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return LoadModificationInfos.builder()
-            .type(ModificationType.LOAD_MODIFICATION)
             .equipmentId("v1load")
             .equipmentName(new AttributeModification<>("nameLoadEdited1", OperationType.SET))
             .loadType(new AttributeModification<>(LoadType.AUXILIARY, OperationType.SET))
@@ -94,7 +89,6 @@ public class LoadModificationTest extends AbstractNetworkModificationTest {
     public void testCreateWithErrors() {
         // Unset an attribute that should not be null
         LoadModificationInfos loadModificationInfos = LoadModificationInfos.builder()
-                .type(ModificationType.LOAD_MODIFICATION)
                 .equipmentId("v1load")
                 .loadType(new AttributeModification<>(null, OperationType.UNSET))
                 .build();

@@ -8,7 +8,6 @@ package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.iidm.network.Network;
 import lombok.SneakyThrows;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.DeleteVoltageLevelOnLineInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
@@ -20,10 +19,12 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.DELETE_VOLTAGE_LEVEL_ON_LINE_ERROR;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_NOT_FOUND;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_ALREADY_EXISTS;
 import static org.gridsuite.modification.server.utils.MatcherDeleteVoltageLevelOnLineInfos.createMatcherDeleteVoltageLevelOnLineInfos;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -40,7 +41,6 @@ public class DeleteVoltageLevelOnLineTest extends AbstractNetworkModificationTes
     @Override
     protected ModificationInfos buildModification() {
         return DeleteVoltageLevelOnLineInfos.builder()
-               .type(ModificationType.DELETE_VOLTAGE_LEVEL_ON_LINE)
                .lineToAttachTo1Id("l1")
                .lineToAttachTo2Id("l2")
                .replacingLine1Id("replacementLineId")
@@ -51,7 +51,6 @@ public class DeleteVoltageLevelOnLineTest extends AbstractNetworkModificationTes
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return DeleteVoltageLevelOnLineInfos.builder()
-                .type(ModificationType.DELETE_VOLTAGE_LEVEL_ON_LINE)
                 .lineToAttachTo1Id("line00")
                 .lineToAttachTo2Id("line11")
                 .replacingLine1Id("replacingLineId2")
@@ -87,7 +86,6 @@ public class DeleteVoltageLevelOnLineTest extends AbstractNetworkModificationTes
     public void createWithInvalidLineIdTest() {
         // test create with incorrect line id
         DeleteVoltageLevelOnLineInfos deleteVoltageLevelOnLineInfos = DeleteVoltageLevelOnLineInfos.builder()
-                .type(ModificationType.DELETE_VOLTAGE_LEVEL_ON_LINE)
                 .lineToAttachTo1Id("l1")
                 .lineToAttachTo2Id("ll")
                 .replacingLine1Id("replacementLineId")
@@ -96,8 +94,22 @@ public class DeleteVoltageLevelOnLineTest extends AbstractNetworkModificationTes
         String json = objectWriter.writeValueAsString(deleteVoltageLevelOnLineInfos);
         mockMvc.perform(MockMvcRequestBuilders.post(getNetworkModificationUri()).content(json).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(
-                    status().is5xxServerError(),
-                    content().string(new NetworkModificationException(DELETE_VOLTAGE_LEVEL_ON_LINE_ERROR, "Line ll is not found").getMessage())
+                    status().is4xxClientError(),
+                    content().string(new NetworkModificationException(LINE_NOT_FOUND, "ll").getMessage())
+            );
+    }
+
+    @SneakyThrows
+    @Test
+    public void createNewLineWithExistingIdTest() {
+        // try to create an already existing line
+        DeleteVoltageLevelOnLineInfos deleteVoltageLevelOnLineInfos = (DeleteVoltageLevelOnLineInfos) buildModification();
+        deleteVoltageLevelOnLineInfos.setReplacingLine1Id("l2");
+        String lineAttachToAbsentLineJson = mapper.writeValueAsString(deleteVoltageLevelOnLineInfos);
+        mockMvc.perform(post(getNetworkModificationUri()).content(lineAttachToAbsentLineJson).contentType(MediaType.APPLICATION_JSON))
+            .andExpectAll(
+                    status().is4xxClientError(),
+                    content().string(new NetworkModificationException(LINE_ALREADY_EXISTS, "l2").getMessage())
             );
     }
 }

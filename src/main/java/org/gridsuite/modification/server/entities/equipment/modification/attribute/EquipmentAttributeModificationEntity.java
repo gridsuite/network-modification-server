@@ -6,17 +6,17 @@
  */
 package org.gridsuite.modification.server.entities.equipment.modification.attribute;
 
+import com.powsybl.iidm.network.IdentifiableType;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import org.gridsuite.modification.server.dto.EquipmentAttributeModificationInfos;
+import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
+
 import javax.persistence.Column;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.MappedSuperclass;
-
-import com.powsybl.iidm.network.IdentifiableType;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import org.gridsuite.modification.server.ModificationType;
-import org.gridsuite.modification.server.dto.EquipmentAttributeModificationInfos;
-import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -36,11 +36,26 @@ public class EquipmentAttributeModificationEntity<T> extends EquipmentModificati
     @Enumerated(EnumType.STRING)
     private IdentifiableType equipmentType;
 
-    protected EquipmentAttributeModificationEntity(String equipmentId, String attributeName, T attributeValue, IdentifiableType equipmentType) {
-        super(equipmentId, ModificationType.EQUIPMENT_ATTRIBUTE_MODIFICATION);
-        this.attributeName = attributeName;
-        this.attributeValue = attributeValue;
-        this.equipmentType = equipmentType;
+    public EquipmentAttributeModificationEntity(EquipmentAttributeModificationInfos equipmentAttributeModificationInfos) {
+        super(equipmentAttributeModificationInfos);
+        assignAttributes(equipmentAttributeModificationInfos);
+    }
+
+    @Override
+    public void update(ModificationInfos modificationInfos) {
+        super.update(modificationInfos);
+        assignAttributes((EquipmentAttributeModificationInfos) modificationInfos);
+    }
+
+    private void assignAttributes(EquipmentAttributeModificationInfos equipmentAttributeModificationInfos) {
+        attributeName = equipmentAttributeModificationInfos.getEquipmentAttributeName();
+        attributeValue = convertAttributeValue(equipmentAttributeModificationInfos.getEquipmentAttributeValue());
+        equipmentType = equipmentAttributeModificationInfos.getEquipmentType();
+    }
+
+    // Override it if you need a special behaviour
+    protected T convertAttributeValue(Object attributeValue) {
+        return (T) attributeValue;
     }
 
     @Override
@@ -53,7 +68,6 @@ public class EquipmentAttributeModificationEntity<T> extends EquipmentModificati
             .builder()
             .uuid(getId())
             .date(getDate())
-            .type(ModificationType.valueOf(getType()))
             .equipmentId(getEquipmentId())
             .equipmentAttributeName(getAttributeName())
             .equipmentAttributeValue(getAttributeValue())

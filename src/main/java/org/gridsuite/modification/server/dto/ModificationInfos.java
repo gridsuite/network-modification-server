@@ -6,30 +6,28 @@
  */
 package org.gridsuite.modification.server.dto;
 
-import java.time.ZonedDateTime;
-import java.util.Set;
-import java.util.UUID;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
+
+import java.time.ZonedDateTime;
+import java.util.Set;
+import java.util.UUID;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
 @JsonTypeInfo(
     use = JsonTypeInfo.Id.NAME,
-    property = "type",
-    include = JsonTypeInfo.As.EXISTING_PROPERTY,
-    visible = true
+    property = "type"
 )
 @JsonSubTypes({
     @JsonSubTypes.Type(value = GroovyScriptInfos.class, name = "GROOVY_SCRIPT"),
@@ -48,9 +46,10 @@ import org.gridsuite.modification.server.modifications.AbstractModification;
     @JsonSubTypes.Type(value = LinesAttachToSplitLinesInfos.class, name = "LINES_ATTACH_TO_SPLIT_LINES"),
     @JsonSubTypes.Type(value = BranchStatusModificationInfos.class, name = "BRANCH_STATUS_MODIFICATION"),
     @JsonSubTypes.Type(value = EquipmentAttributeModificationInfos.class, name = "EQUIPMENT_ATTRIBUTE_MODIFICATION"),
+    @JsonSubTypes.Type(value = GeneratorScalingInfos.class, name = "GENERATOR_SCALING"),
     @JsonSubTypes.Type(value = LoadScalingInfos.class, name = "LOAD_SCALING"),
     @JsonSubTypes.Type(value = DeleteVoltageLevelOnLineInfos.class, name = "DELETE_VOLTAGE_LEVEL_ON_LINE"),
-    @JsonSubTypes.Type(value = DeleteAttachingLineInfos.class, name = "DELETE_ATTACHING_LINE"),
+    @JsonSubTypes.Type(value = DeleteAttachingLineInfos.class, name = "DELETE_ATTACHING_LINE")
 })
 @SuperBuilder
 @NoArgsConstructor
@@ -64,9 +63,6 @@ public class ModificationInfos {
 
     @Schema(description = "Modification date")
     ZonedDateTime date;
-
-    @Schema(description = "Modification type")
-    ModificationType type;
 
     @Schema(description = "Substations ID")
     @Builder.Default
@@ -94,6 +90,6 @@ public class ModificationInfos {
 
     @JsonIgnore
     public void check() {
-        // nothing to check here, maybe if type == null ?
+        // To check input DTO before hypothesis creation. Nothing to check here
     }
 }

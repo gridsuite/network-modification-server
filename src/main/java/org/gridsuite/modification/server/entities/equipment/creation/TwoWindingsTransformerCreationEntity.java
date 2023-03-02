@@ -9,7 +9,6 @@ package org.gridsuite.modification.server.entities.equipment.creation;
 import com.powsybl.iidm.network.PhaseTapChanger;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.TapChangerType;
 import org.gridsuite.modification.server.dto.*;
 
@@ -177,7 +176,6 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
                 .builder()
                 .uuid(getId())
                 .date(getDate())
-                .type(ModificationType.valueOf(getType()))
                 .equipmentId(getEquipmentId())
                 .equipmentName(getEquipmentName())
                 .seriesResistance(getSeriesResistance())
@@ -239,11 +237,4 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
 
         return builder;
     }
-
-    @Override
-    public void cloneWithIdsToNull() {
-        super.cloneWithIdsToNull();
-        this.tapChangerSteps = new ArrayList<>(tapChangerSteps);
-    }
-
 }

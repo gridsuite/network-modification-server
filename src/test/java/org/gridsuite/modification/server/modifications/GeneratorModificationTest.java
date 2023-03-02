@@ -14,30 +14,23 @@ import com.powsybl.iidm.network.ReactiveLimitsKind;
 import com.powsybl.iidm.network.extensions.ActivePowerControl;
 import com.powsybl.iidm.network.extensions.GeneratorShortCircuit;
 import com.powsybl.iidm.network.extensions.GeneratorStartup;
-
 import lombok.SneakyThrows;
-
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.AttributeModification;
-import org.gridsuite.modification.server.dto.GeneratorModificationInfos;
-import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.dto.OperationType;
-import org.gridsuite.modification.server.dto.ReactiveCapabilityCurveModificationInfos;
-import org.gridsuite.modification.server.dto.VoltageRegulationType;
+import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.utils.MatcherGeneratorModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_GENERATOR_ERROR;
+
 import java.util.List;
 import java.util.UUID;
 
+import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_GENERATOR_ERROR;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class GeneratorModificationTest extends AbstractNetworkModificationTest {
     @Override
@@ -48,7 +41,6 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModification() {
         return GeneratorModificationInfos.builder()
-                .type(ModificationType.GENERATOR_MODIFICATION)
                 .equipmentId("idGenerator")
                 .energySource(new AttributeModification<>(EnergySource.SOLAR, OperationType.SET))
                 .equipmentName(new AttributeModification<>("newV1Generator", OperationType.SET))
@@ -61,7 +53,11 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
                 .ratedNominalPower(new AttributeModification<>(220., OperationType.SET))
                 .voltageRegulationType(
                         new AttributeModification<>(VoltageRegulationType.DISTANT, OperationType.SET))
+                .plannedActivePowerSetPoint(new AttributeModification<>(10., OperationType.SET))
+                .startupCost(new AttributeModification<>(20., OperationType.SET))
                 .marginalCost(new AttributeModification<>(0.1, OperationType.SET))
+                .plannedOutageRate(new AttributeModification<>(.30, OperationType.SET))
+                .forcedOutageRate(new AttributeModification<>(.40, OperationType.SET))
                 .minimumReactivePower(new AttributeModification<>(-100., OperationType.SET))
                 .maximumReactivePower(new AttributeModification<>(100., OperationType.SET))
                 .reactiveCapabilityCurvePoints(List.of(
@@ -82,7 +78,6 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return GeneratorModificationInfos.builder()
-                .type(ModificationType.GENERATOR_MODIFICATION)
                 .equipmentId("idGenerator")
                 .energySource(new AttributeModification<>(EnergySource.HYDRO, OperationType.SET))
                 .equipmentName(new AttributeModification<>("newV1GeneratorEdited", OperationType.SET))
@@ -97,6 +92,11 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
                 .reactiveCapabilityCurvePoints(List.of())
                 .voltageRegulationType(
                                 new AttributeModification<>(VoltageRegulationType.LOCAL, OperationType.SET))
+                .plannedActivePowerSetPoint(new AttributeModification<>(111., OperationType.SET))
+                .startupCost(new AttributeModification<>(201., OperationType.SET))
+                .marginalCost(new AttributeModification<>(0.40, OperationType.SET))
+                .plannedOutageRate(new AttributeModification<>(.45, OperationType.SET))
+                .forcedOutageRate(new AttributeModification<>(.66, OperationType.SET))
                 .build();
     }
 
@@ -118,6 +118,10 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
         assertEquals(100., modifiedGenerator.getMaxP());
         assertEquals(220., modifiedGenerator.getRatedS());
         assertEquals(0.1, modifiedGenerator.getExtension(GeneratorStartup.class).getMarginalCost());
+        assertEquals(10., modifiedGenerator.getExtension(GeneratorStartup.class).getPlannedActivePowerSetpoint());
+        assertEquals(20., modifiedGenerator.getExtension(GeneratorStartup.class).getStartupCost());
+        assertEquals(0.30, modifiedGenerator.getExtension(GeneratorStartup.class).getPlannedOutageRate());
+        assertEquals(0.40, modifiedGenerator.getExtension(GeneratorStartup.class).getForcedOutageRate());
         assertEquals(0.1f, modifiedGenerator.getExtension(ActivePowerControl.class).getDroop());
         assertEquals(true, modifiedGenerator.getExtension(ActivePowerControl.class).isParticipate());
         assertEquals(0.1, modifiedGenerator.getExtension(GeneratorShortCircuit.class).getDirectTransX());
@@ -209,6 +213,20 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
 
         assertThat(createdModification, createMatcher(generatorModificationInfos));
         testNetworkModificationsCount(getGroupId(), 4);
+
+        // nothing before reactive limits modification
+        generatorModificationInfos = (GeneratorModificationInfos) buildModification();
+        generatorModificationInfos.setEnergySource(null);
+        generatorModificationInfos.setEquipmentName(null);
+        generatorModificationInfos.setMinActivePower(null);
+        generatorModificationInfos.setMaxActivePower(null);
+        generatorModificationInfos.setRatedNominalPower(null);
+        modificationToCreateJson = mapper.writeValueAsString(generatorModificationInfos);
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        createdModification = (GeneratorModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(4);
+        assertThat(createdModification, createMatcher(generatorModificationInfos));
+        testNetworkModificationsCount(getGroupId(), 5);
     }
 
     @SneakyThrows
@@ -282,6 +300,21 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
 
         assertThat(createdModification, createMatcher(generatorModificationInfos));
         testNetworkModificationsCount(getGroupId(), 3);
+
+        // no modification in setpoints
+        generatorModificationInfos = (GeneratorModificationInfos) buildModification();
+        generatorModificationInfos.setActivePowerSetpoint(null);
+        generatorModificationInfos.setReactivePowerSetpoint(null);
+        generatorModificationInfos.setVoltageRegulationOn(null);
+        generatorModificationInfos.setParticipate(null);
+
+        modificationToCreateJson = mapper.writeValueAsString(generatorModificationInfos);
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+
+        createdModification = (GeneratorModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(3);
+        assertThat(createdModification, createMatcher(generatorModificationInfos));
+        testNetworkModificationsCount(getGroupId(), 4);
     }
 
     @SneakyThrows

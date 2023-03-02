@@ -11,7 +11,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.SneakyThrows;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.CurrentLimitsInfos;
 import org.gridsuite.modification.server.dto.EquipmentModificationInfos;
@@ -80,8 +79,8 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
         lineCreationInfosJson = mapper.writeValueAsString(lineCreationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(
-                status().is5xxServerError(),
-                content().string(new NetworkModificationException(CREATE_LINE_ERROR, "Busbar section notFoundBusbarSection1 not found.").getMessage())
+                status().is4xxClientError(),
+                content().string(new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "notFoundBusbarSection1").getMessage())
             );
 
         lineCreationInfos.setVoltageLevelId1("v1");
@@ -102,6 +101,14 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
                 status().is5xxServerError(),
                 content().string(new NetworkModificationException(CREATE_LINE_ERROR, "AC Line 'idLine4': x is invalid").getMessage())
             );
+
+        // try to create an existing line
+        lineCreationInfos.setEquipmentId("line2");
+        lineCreationInfosJson = mapper.writeValueAsString(lineCreationInfos);
+        mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpectAll(
+                        status().is4xxClientError(),
+                        content().string(new NetworkModificationException(LINE_ALREADY_EXISTS, "line2").getMessage()));
     }
 
     @Override
@@ -112,7 +119,6 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
     @Override
     protected ModificationInfos buildModification() {
         return LineCreationInfos.builder()
-                .type(ModificationType.LINE_CREATION)
                 .equipmentId("idLine")
                 .equipmentName("nameLine")
                 .seriesResistance(100.0)
@@ -137,7 +143,6 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return LineCreationInfos.builder()
-                .type(ModificationType.LINE_CREATION)
                 .equipmentId("idLineEdited")
                 .equipmentName("nameLineEdited")
                 .seriesResistance(110.0)

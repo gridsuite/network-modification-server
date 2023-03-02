@@ -8,7 +8,6 @@ package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.iidm.network.Network;
 import lombok.SneakyThrows;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.utils.MatcherModificationInfos;
@@ -34,7 +33,6 @@ public class LineAttachToVoltageLevelTest extends AbstractNetworkModificationTes
 
     private LineCreationInfos getAttachmentLine(String lineName) {
         return LineCreationInfos.builder()
-                .type(ModificationType.LINE_CREATION)
                 .equipmentId(lineName)
                 .seriesResistance(50.6)
                 .seriesReactance(25.3)
@@ -43,7 +41,6 @@ public class LineAttachToVoltageLevelTest extends AbstractNetworkModificationTes
 
     private VoltageLevelCreationInfos getNewVoltageLevel() {
         return VoltageLevelCreationInfos.builder()
-                .type(ModificationType.VOLTAGE_LEVEL_CREATION)
                 .equipmentId("newVlName")
                 .equipmentName("NewVoltageLevel")
                 .nominalVoltage(379.3)
@@ -61,7 +58,6 @@ public class LineAttachToVoltageLevelTest extends AbstractNetworkModificationTes
     @Override
     protected ModificationInfos buildModification() {
         return LineAttachToVoltageLevelInfos.builder()
-                .type(ModificationType.LINE_ATTACH_TO_VOLTAGE_LEVEL)
                 .lineToAttachToId("line3")
                 .percent(10.0)
                 .attachmentPointId("AttPointId")   // created VL
@@ -80,7 +76,6 @@ public class LineAttachToVoltageLevelTest extends AbstractNetworkModificationTes
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return LineAttachToVoltageLevelInfos.builder()
-                .type(ModificationType.LINE_ATTACH_TO_VOLTAGE_LEVEL)
                 .lineToAttachToId("line2")
                 .percent(30.0)
                 .attachmentPointId("newAttPointId")
@@ -122,6 +117,16 @@ public class LineAttachToVoltageLevelTest extends AbstractNetworkModificationTes
     }
 
     @SneakyThrows
+    private void tryToCreateLineWithExistingId(LineAttachToVoltageLevelInfos tryWithExistingLine, String existingLineId) {
+        String tryWithExistingLineJson = mapper.writeValueAsString(tryWithExistingLine);
+        mockMvc.perform(post(getNetworkModificationUri()).content(tryWithExistingLineJson).contentType(MediaType.APPLICATION_JSON))
+            .andExpectAll(
+                    status().is4xxClientError(),
+                    content().string(new NetworkModificationException(LINE_ALREADY_EXISTS, existingLineId).getMessage())
+            );
+    }
+
+    @SneakyThrows
     @Test
     public void testCreateWithErrors() {
         LineAttachToVoltageLevelInfos lineAttachToAbsentLine = (LineAttachToVoltageLevelInfos) buildModification();
@@ -143,5 +148,31 @@ public class LineAttachToVoltageLevelTest extends AbstractNetworkModificationTes
                     content().string(new NetworkModificationException(LINE_ATTACH_DESCRIPTION_ERROR, "Missing required attachment line description").getMessage())
             );
         testNetworkModificationsCount(getGroupId(), 1);
+    }
+
+    @SneakyThrows
+    @Test
+    public void testCreateWithExistingEquipments() {
+        // try to create an already existing line
+        LineAttachToVoltageLevelInfos tryWithNewLine1Id = (LineAttachToVoltageLevelInfos) buildModification();
+        tryWithNewLine1Id.setNewLine1Id("line1");
+        tryToCreateLineWithExistingId(tryWithNewLine1Id, "line1");
+        // same test with "newLine2Id"
+        LineAttachToVoltageLevelInfos tryWithNewLine2Id = (LineAttachToVoltageLevelInfos) buildModification();
+        tryWithNewLine2Id.setNewLine1Id("line3");
+        tryToCreateLineWithExistingId(tryWithNewLine2Id, "line3");
+        // same test with "attachmentLine"
+        LineAttachToVoltageLevelInfos tryWithEquipmentId = (LineAttachToVoltageLevelInfos) buildModification();
+        tryWithEquipmentId.setAttachmentLine(getAttachmentLine("line2"));
+        tryToCreateLineWithExistingId(tryWithEquipmentId, "line2");
+        // try to create an already existing VL
+        LineAttachToVoltageLevelInfos tryWithAttachmentPointId = (LineAttachToVoltageLevelInfos) buildModification();
+        tryWithAttachmentPointId.setAttachmentPointId("v5");
+        String tryWithExistingLineJson = mapper.writeValueAsString(tryWithAttachmentPointId);
+        mockMvc.perform(post(getNetworkModificationUri()).content(tryWithExistingLineJson).contentType(MediaType.APPLICATION_JSON))
+            .andExpectAll(
+                    status().is4xxClientError(),
+                    content().string(new NetworkModificationException(VOLTAGE_LEVEL_ALREADY_EXISTS, "v5").getMessage())
+            );
     }
 }

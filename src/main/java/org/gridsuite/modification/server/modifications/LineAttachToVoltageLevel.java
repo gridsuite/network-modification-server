@@ -9,16 +9,14 @@ package org.gridsuite.modification.server.modifications;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.iidm.modification.topology.CreateLineOnLine;
 import com.powsybl.iidm.modification.topology.CreateLineOnLineBuilder;
-import com.powsybl.iidm.network.Line;
-import com.powsybl.iidm.network.LineAdder;
-import com.powsybl.iidm.network.Network;
+import com.powsybl.iidm.network.*;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.LineAttachToVoltageLevelInfos;
 import org.gridsuite.modification.server.dto.LineCreationInfos;
 import org.gridsuite.modification.server.dto.VoltageLevelCreationInfos;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_ATTACH_ERROR;
-import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_NOT_FOUND;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_ALREADY_EXISTS;
 
 /**
  * @author David Braquart <david.braquart at rte-france.com>
@@ -32,22 +30,37 @@ public class LineAttachToVoltageLevel extends AbstractModification {
     }
 
     @Override
-    public void apply(Network network, Reporter subReporter) {
-        LineCreationInfos attachmentLineInfos = modificationInfos.getAttachmentLine();
-        if (attachmentLineInfos == null) {
-            throw new NetworkModificationException(LINE_ATTACH_ERROR, "Missing required attachment line description");
-        }
-
-        Line line = network.getLine(modificationInfos.getLineToAttachToId());
-        if (line == null) {
+    public void check(Network network) throws NetworkModificationException {
+        if (network.getLine(modificationInfos.getLineToAttachToId()) == null) {
             throw new NetworkModificationException(LINE_NOT_FOUND, modificationInfos.getLineToAttachToId());
         }
+        LineCreationInfos attachmentLineInfos = modificationInfos.getAttachmentLine();
+        ModificationUtils.getInstance().controlNewOrExistingVoltageLevel(modificationInfos.getMayNewVoltageLevelInfos(),
+                modificationInfos.getExistingVoltageLevelId(), modificationInfos.getBbsOrBusId(), network);
+        // new fictitious VL
+        if (network.getVoltageLevel(modificationInfos.getAttachmentPointId()) != null) {
+            throw new NetworkModificationException(VOLTAGE_LEVEL_ALREADY_EXISTS, modificationInfos.getAttachmentPointId());
+        }
+        // check future lines don't exist
+        if (network.getLine(attachmentLineInfos.getEquipmentId()) != null) {
+            throw new NetworkModificationException(LINE_ALREADY_EXISTS, attachmentLineInfos.getEquipmentId());
+        }
+        if (network.getLine(modificationInfos.getNewLine1Id()) != null) {
+            throw new NetworkModificationException(LINE_ALREADY_EXISTS, modificationInfos.getNewLine1Id());
+        }
+        if (network.getLine(modificationInfos.getNewLine2Id()) != null) {
+            throw new NetworkModificationException(LINE_ALREADY_EXISTS, modificationInfos.getNewLine2Id());
+        }
+    }
 
+    @Override
+    public void apply(Network network, Reporter subReporter) {
         VoltageLevelCreationInfos mayNewVL = modificationInfos.getMayNewVoltageLevelInfos();
         if (mayNewVL != null) {
             ModificationUtils.getInstance().createVoltageLevel(mayNewVL, subReporter, network);
         }
 
+        LineCreationInfos attachmentLineInfos = modificationInfos.getAttachmentLine();
         LineAdder lineAdder = network.newLine()
                 .setId(attachmentLineInfos.getEquipmentId())
                 .setName(attachmentLineInfos.getEquipmentName())
@@ -69,7 +82,7 @@ public class LineAttachToVoltageLevel extends AbstractModification {
                 .withLine1Name(modificationInfos.getNewLine1Name())
                 .withLine2Id(modificationInfos.getNewLine2Id())
                 .withLine2Name(modificationInfos.getNewLine2Name())
-                .withLine(line)
+                .withLine(network.getLine(modificationInfos.getLineToAttachToId()))
                 .withLineAdder(lineAdder)
                 .build();
 

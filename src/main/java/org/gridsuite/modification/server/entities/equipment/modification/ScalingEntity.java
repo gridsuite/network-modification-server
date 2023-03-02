@@ -8,16 +8,18 @@ package org.gridsuite.modification.server.entities.equipment.modification;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 import lombok.Setter;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.VariationType;
+import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.ScalingInfos;
+import org.gridsuite.modification.server.dto.ScalingVariationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 
-import javax.persistence.Column;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.MappedSuperclass;
-import javax.validation.constraints.NotNull;
+import javax.persistence.*;
+import java.util.List;
+import java.util.stream.Collectors;
+
 
 /**
  * @author bendaamerahm <ahmed.bendaamer at rte-france.com>
@@ -27,11 +29,32 @@ import javax.validation.constraints.NotNull;
 @Setter
 @MappedSuperclass
 public class ScalingEntity extends ModificationEntity {
+
     @Column(name = "VariationType")
     @Enumerated(EnumType.STRING)
     private VariationType variationType;
 
-    public ScalingEntity(@NotNull ModificationType modificationType) {
-        super(modificationType);
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<ScalingVariationEntity> variations;
+
+    public ScalingEntity(ScalingInfos scalingInfos) {
+        super(scalingInfos);
+        assignAttributes(scalingInfos);
+    }
+
+    @Override
+    public void update(@NonNull ModificationInfos modificationInfos) {
+        super.update(modificationInfos);
+        assignAttributes((ScalingInfos) modificationInfos);
+    }
+
+    private void assignAttributes(ScalingInfos scalingInfos) {
+        variationType = scalingInfos.getVariationType();
+        if (variations == null) {
+            variations = scalingInfos.getVariations().stream().map(ScalingVariationInfos::toEntity).collect(Collectors.toList());
+        } else {
+            variations.clear();
+            variations.addAll(scalingInfos.getVariations().stream().map(ScalingVariationInfos::toEntity).collect(Collectors.toList()));
+        }
     }
 }

@@ -7,20 +7,24 @@
 package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.iidm.network.Network;
-import org.gridsuite.modification.server.ModificationType;
-import org.gridsuite.modification.server.dto.BusbarSectionCreationInfos;
-import org.gridsuite.modification.server.dto.LineSplitWithVoltageLevelInfos;
-import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.dto.VoltageLevelCreationInfos;
+import lombok.SneakyThrows;
+import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.utils.MatcherModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
+import org.junit.Test;
+import org.springframework.http.MediaType;
 
 import java.util.List;
 import java.util.UUID;
 
+import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.utils.MatcherLineSplitWithVoltageLevelInfos.createMatcherLineSplitWithVoltageLevelInfos;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class LineSplitWithVoltageLevelTest extends AbstractNetworkModificationTest {
 
@@ -32,7 +36,6 @@ public class LineSplitWithVoltageLevelTest extends AbstractNetworkModificationTe
     @Override
     protected ModificationInfos buildModification() {
         return LineSplitWithVoltageLevelInfos.builder()
-            .type(ModificationType.LINE_SPLIT_WITH_VOLTAGE_LEVEL)
             .lineToSplitId("line2")
             .percent(10.0)
             .mayNewVoltageLevelInfos(null)
@@ -48,7 +51,6 @@ public class LineSplitWithVoltageLevelTest extends AbstractNetworkModificationTe
     @Override
     protected ModificationInfos buildModificationUpdate() {
         VoltageLevelCreationInfos vl1 = VoltageLevelCreationInfos.builder()
-            .type(ModificationType.VOLTAGE_LEVEL_CREATION)
             .equipmentId("vl1")
             .equipmentName("NewVoltageLevel")
             .nominalVoltage(379.3)
@@ -58,7 +60,6 @@ public class LineSplitWithVoltageLevelTest extends AbstractNetworkModificationTe
             .build();
 
         return LineSplitWithVoltageLevelInfos.builder()
-            .type(ModificationType.LINE_SPLIT_WITH_VOLTAGE_LEVEL)
             .lineToSplitId("line2Edited")
             .percent(20.0)
             .mayNewVoltageLevelInfos(vl1)
@@ -88,5 +89,51 @@ public class LineSplitWithVoltageLevelTest extends AbstractNetworkModificationTe
         assertNotNull(getNetwork().getLine("line2"));
         assertNull(getNetwork().getLine("nl1v"));
         assertNull(getNetwork().getLine("nl2v"));
+    }
+
+    @SneakyThrows
+    @Test
+    public void testCreateWithExistingLines() {
+        // try to create an already existing line
+        LineSplitWithVoltageLevelInfos tryWithNewLine1Id = (LineSplitWithVoltageLevelInfos) buildModification();
+        tryWithNewLine1Id.setNewLine1Id("line1");
+        String tryWithNewLine1IdJson = mapper.writeValueAsString(tryWithNewLine1Id);
+        mockMvc.perform(post(getNetworkModificationUri()).content(tryWithNewLine1IdJson).contentType(MediaType.APPLICATION_JSON))
+            .andExpectAll(
+                    status().is4xxClientError(),
+                    content().string(new NetworkModificationException(LINE_ALREADY_EXISTS, "line1").getMessage())
+            );
+        // same test with "newLine2Id"
+        LineSplitWithVoltageLevelInfos tryWithNewLine2Id = (LineSplitWithVoltageLevelInfos) buildModification();
+        tryWithNewLine2Id.setNewLine2Id("line1");
+        String tryWithNewLine2IdJson = mapper.writeValueAsString(tryWithNewLine2Id);
+        mockMvc.perform(post(getNetworkModificationUri()).content(tryWithNewLine2IdJson).contentType(MediaType.APPLICATION_JSON))
+            .andExpectAll(
+                    status().is4xxClientError(),
+                    content().string(new NetworkModificationException(LINE_ALREADY_EXISTS, "line1").getMessage())
+            );
+    }
+
+    @SneakyThrows
+    @Test
+    public void testCreateWithWrongBusBar() {
+        // not existing busbar
+        LineSplitWithVoltageLevelInfos tryWithBadId = (LineSplitWithVoltageLevelInfos) buildModification();
+        tryWithBadId.setBbsOrBusId("999A");
+        String tryWithBadIdJson = mapper.writeValueAsString(tryWithBadId);
+        mockMvc.perform(post(getNetworkModificationUri()).content(tryWithBadIdJson).contentType(MediaType.APPLICATION_JSON))
+            .andExpectAll(
+                    status().is4xxClientError(),
+                    content().string(new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "999A").getMessage())
+            );
+        // try with a switch, not a busbar
+        LineSplitWithVoltageLevelInfos tryWithSwitchId = (LineSplitWithVoltageLevelInfos) buildModification();
+        tryWithSwitchId.setBbsOrBusId("v1d1");
+        String tryWithSwitchIdJson = mapper.writeValueAsString(tryWithSwitchId);
+        mockMvc.perform(post(getNetworkModificationUri()).content(tryWithSwitchIdJson).contentType(MediaType.APPLICATION_JSON))
+            .andExpectAll(
+                    status().is4xxClientError(),
+                    content().string(new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "v1d1").getMessage())
+            );
     }
 }

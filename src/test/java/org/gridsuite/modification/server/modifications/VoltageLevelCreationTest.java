@@ -9,7 +9,6 @@ package org.gridsuite.modification.server.modifications;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.SwitchKind;
 import lombok.SneakyThrows;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.BusbarConnectionCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
@@ -26,9 +25,9 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
-import static org.gridsuite.modification.server.NetworkModificationException.Type.CREATE_VOLTAGE_LEVEL_ERROR;
 import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -55,7 +54,6 @@ public class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
                 .substationId("s2")
                 .busbarSections(List.of())
                 .busbarConnections(List.of())
-                .type(ModificationType.VOLTAGE_LEVEL_CREATION)
                 .build();
     }
 
@@ -117,5 +115,39 @@ public class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
                 .andExpect(status().is5xxServerError()).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
         assertEquals(resultAsString, new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "Invalid id ''").getMessage());
+
+        // try to create an existing VL
+        vli = (VoltageLevelCreationInfos) buildModification();
+        vli.setEquipmentId("v1");
+        vliJsonObject = mapper.writeValueAsString(vli);
+        mockMvc.perform(post(getNetworkModificationUri()).content(vliJsonObject).contentType(MediaType.APPLICATION_JSON))
+            .andExpectAll(
+                    status().is4xxClientError(),
+                    content().string(new NetworkModificationException(VOLTAGE_LEVEL_ALREADY_EXISTS, "v1").getMessage())
+            );
+    }
+
+    @SneakyThrows
+    @Test
+    public void testCreateWithConnectionErrors() {
+        VoltageLevelCreationInfos vli = (VoltageLevelCreationInfos) buildModification();
+        // try to create with wrong busbar as 'fromBBS'
+        vli.setBusbarConnections(List.of(BusbarConnectionCreationInfos.builder().
+                fromBBS("bbs.bad").toBBS("bbs.ne").switchKind(SwitchKind.DISCONNECTOR).build()));
+        String vliJsonObject = mapper.writeValueAsString(vli);
+        mockMvc.perform(post(getNetworkModificationUri()).content(vliJsonObject).contentType(MediaType.APPLICATION_JSON))
+            .andExpectAll(
+                    status().is4xxClientError(),
+                    content().string(new NetworkModificationException(BUSBAR_SECTION_NOT_DEFINED, "bbs.bad").getMessage())
+            );
+        // same test with 'toBBS'
+        vli.setBusbarConnections(List.of(BusbarConnectionCreationInfos.builder().
+                fromBBS("bbs.ne").toBBS("bbs.wrong").switchKind(SwitchKind.DISCONNECTOR).build()));
+        vliJsonObject = mapper.writeValueAsString(vli);
+        mockMvc.perform(post(getNetworkModificationUri()).content(vliJsonObject).contentType(MediaType.APPLICATION_JSON))
+            .andExpectAll(
+                    status().is4xxClientError(),
+                    content().string(new NetworkModificationException(BUSBAR_SECTION_NOT_DEFINED, "bbs.wrong").getMessage())
+            );
     }
 }

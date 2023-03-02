@@ -9,7 +9,6 @@ package org.gridsuite.modification.server.entities.equipment.modification;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.LineAttachToVoltageLevelInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
@@ -67,7 +66,7 @@ public class LineAttachToVoltageLevelEntity extends ModificationEntity {
     private String newLine2Name;
 
     public LineAttachToVoltageLevelEntity(@NonNull LineAttachToVoltageLevelInfos lineAttachToVoltageLevelInfos) {
-        super(ModificationType.LINE_ATTACH_TO_VOLTAGE_LEVEL);
+        super(lineAttachToVoltageLevelInfos);
         assignAttributes(lineAttachToVoltageLevelInfos);
     }
 
@@ -103,12 +102,11 @@ public class LineAttachToVoltageLevelEntity extends ModificationEntity {
         return toLineAttachToVoltageLevelInfosBuilder().build();
     }
 
-    private LineAttachToVoltageLevelInfos.LineAttachToVoltageLevelInfosBuilder toLineAttachToVoltageLevelInfosBuilder() {
+    private LineAttachToVoltageLevelInfos.LineAttachToVoltageLevelInfosBuilder<?, ?> toLineAttachToVoltageLevelInfosBuilder() {
         return LineAttachToVoltageLevelInfos
                 .builder()
                 .uuid(getId())
                 .date(getDate())
-                .type(ModificationType.valueOf(getType()))
                 .lineToAttachToId(getLineToAttachToId())
                 .percent(getPercent())
                 .attachmentPointId(getAttachmentPointId())
@@ -122,16 +120,4 @@ public class LineAttachToVoltageLevelEntity extends ModificationEntity {
                 .newLine2Id(getNewLine2Id())
                 .newLine2Name(getNewLine2Name());
     }
-
-    @Override
-    public void cloneWithIdsToNull() {
-        super.cloneWithIdsToNull();
-        if (this.getLineCreation() != null) {
-            this.getLineCreation().cloneWithIdsToNull();
-        }
-        if (this.getMayVoltageLevelCreation() != null) {
-            this.getMayVoltageLevelCreation().cloneWithIdsToNull();
-        }
-    }
-
 }

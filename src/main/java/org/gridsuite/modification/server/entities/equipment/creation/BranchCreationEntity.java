@@ -110,15 +110,4 @@ public class BranchCreationEntity extends EquipmentCreationEntity {
         connectionPosition1 = branchCreationInfos.getConnectionPosition1();
         connectionPosition2 = branchCreationInfos.getConnectionPosition2();
     }
-
-    @Override
-    public void cloneWithIdsToNull() {
-        super.cloneWithIdsToNull();
-        if (this.getCurrentLimits1() != null) {
-            this.currentLimits1 = new CurrentLimitsEntity(null, this.getCurrentLimits1().getPermanentLimit());
-        }
-        if (this.getCurrentLimits2() != null) {
-            this.currentLimits2 = new CurrentLimitsEntity(null, this.getCurrentLimits2().getPermanentLimit());
-        }
-    }
 }

@@ -10,7 +10,6 @@ package org.gridsuite.modification.server.entities.equipment.modification;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.LineSplitWithVoltageLevelInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
@@ -55,7 +54,7 @@ public class LineSplitWithVoltageLevelEntity  extends ModificationEntity {
     private String newLine2Name;
 
     public LineSplitWithVoltageLevelEntity(@NonNull LineSplitWithVoltageLevelInfos splitWithVoltageLevelInfos) {
-        super(ModificationType.LINE_SPLIT_WITH_VOLTAGE_LEVEL);
+        super(splitWithVoltageLevelInfos);
         assignAttributes(splitWithVoltageLevelInfos);
     }
 
@@ -90,7 +89,6 @@ public class LineSplitWithVoltageLevelEntity  extends ModificationEntity {
             .builder()
             .uuid(getId())
             .date(getDate())
-            .type(ModificationType.valueOf(getType()))
             .lineToSplitId(getLineToSplitId())
             .percent(getPercent())
             .mayNewVoltageLevelInfos(mayVoltageLevelCreation == null ? null : mayVoltageLevelCreation.toVoltageLevelCreationInfos())
@@ -100,13 +98,5 @@ public class LineSplitWithVoltageLevelEntity  extends ModificationEntity {
             .newLine1Name(getNewLine1Name())
             .newLine2Id(getNewLine2Id())
             .newLine2Name(getNewLine2Name());
-    }
-
-    @Override
-    public void cloneWithIdsToNull() {
-        super.cloneWithIdsToNull();
-        if (this.getMayVoltageLevelCreation() != null) {
-            this.getMayVoltageLevelCreation().cloneWithIdsToNull();
-        }
     }
 }

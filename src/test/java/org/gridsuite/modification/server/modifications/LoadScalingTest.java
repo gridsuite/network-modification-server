@@ -13,7 +13,10 @@ import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.SneakyThrows;
-import org.gridsuite.modification.server.*;
+import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.ReactiveVariationMode;
+import org.gridsuite.modification.server.VariationMode;
+import org.gridsuite.modification.server.VariationType;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.utils.MatcherLoadScalingInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -186,7 +189,6 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
         ModificationInfos modificationToCreate = LoadScalingInfos.builder()
             .uuid(LOAD_SCALING_ID)
             .date(ZonedDateTime.now())
-            .type(ModificationType.LOAD_SCALING)
             .variationType(VariationType.DELTA_P)
             .variations(List.of(variation1))
             .build();
@@ -214,7 +216,6 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
             .build();
 
         LoadScalingInfos loadScalingInfo = LoadScalingInfos.builder()
-            .type(ModificationType.LOAD_SCALING)
             .variationType(VariationType.TARGET_P)
             .variations(List.of(variation))
             .build();
@@ -249,7 +250,6 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
             .build();
 
         LoadScalingInfos loadScalingInfo = LoadScalingInfos.builder()
-            .type(ModificationType.LOAD_SCALING)
             .variationType(VariationType.TARGET_P)
             .variations(List.of(variation))
             .build();
@@ -262,8 +262,8 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
                 content().string(IsNull.notNullValue())
             );
 
-        assertEquals(-199.99, getNetwork().getLoad(LOAD_ID_9).getP0(), 0.01D);
-        assertEquals(-99.99, getNetwork().getLoad(LOAD_ID_10).getP0(), 0.01D);
+        assertEquals(600, getNetwork().getLoad(LOAD_ID_9).getP0(), 0.01D);
+        assertEquals(300, getNetwork().getLoad(LOAD_ID_10).getP0(), 0.01D);
     }
 
     @Override
@@ -335,7 +335,6 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
 
         return LoadScalingInfos.builder()
             .date(ZonedDateTime.now())
-            .type(ModificationType.LOAD_SCALING)
             .variationType(VariationType.DELTA_P)
             .variations(List.of(variation1, variation2, variation3, variation4, variation5))
             .build();
@@ -358,7 +357,6 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
         return LoadScalingInfos.builder()
             .uuid(LOAD_SCALING_ID)
             .date(ZonedDateTime.now())
-            .type(ModificationType.LOAD_SCALING)
             .variationType(VariationType.TARGET_P)
             .variations(List.of(variation5))
             .build();
@@ -376,8 +374,8 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
         assertEquals(216.66, getNetwork().getLoad(LOAD_ID_2).getP0(), 0.01D);
         assertEquals(225.0, getNetwork().getLoad(LOAD_ID_3).getP0(), 0.01D);
         assertEquals(125.0, getNetwork().getLoad(LOAD_ID_4).getP0(), 0.01D);
-        assertEquals(237.5, getNetwork().getLoad(LOAD_ID_5).getP0(), 0.01D);
-        assertEquals(132.5, getNetwork().getLoad(LOAD_ID_6).getP0(), 0.01D);
+        assertEquals(287.5, getNetwork().getLoad(LOAD_ID_5).getP0(), 0.01D);
+        assertEquals(182.5, getNetwork().getLoad(LOAD_ID_6).getP0(), 0.01D);
         assertEquals(213.63, getNetwork().getLoad(LOAD_ID_7).getP0(), 0.01D);
         assertEquals(166.36, getNetwork().getLoad(LOAD_ID_8).getP0(), 0.01D);
         assertEquals(216.66, getNetwork().getLoad(LOAD_ID_9).getP0(), 0.01D);

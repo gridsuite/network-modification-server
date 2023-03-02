@@ -12,6 +12,7 @@ import com.powsybl.iidm.network.Network;
 import lombok.NonNull;
 import org.gridsuite.modification.server.dto.BuildInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.NetworkInfos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,21 +44,21 @@ public class BuildWorkerService {
     public static final String CANCEL_MESSAGE = "Build was canceled";
     public static final String FAIL_MESSAGE = "Build has failed";
 
-    private NetworkModificationService networkModificationService;
+    private final NetworkModificationService networkModificationService;
 
-    private ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper;
 
-    private BuildStoppedPublisherService stoppedPublisherService;
+    private final BuildStoppedPublisherService stoppedPublisherService;
 
-    private BuildFailedPublisherService failedPublisherService;
+    private final BuildFailedPublisherService failedPublisherService;
 
-    private Map<String, CompletableFuture<List<ModificationInfos>>> futures = new ConcurrentHashMap<>();
+    private final Map<String, CompletableFuture<List<ModificationInfos>>> futures = new ConcurrentHashMap<>();
 
-    private Map<String, BuildCancelContext> cancelBuildRequests = new ConcurrentHashMap<>();
+    private final Map<String, BuildCancelContext> cancelBuildRequests = new ConcurrentHashMap<>();
 
-    private Set<String> buildRequests = Sets.newConcurrentHashSet();
+    private final Set<String> buildRequests = Sets.newConcurrentHashSet();
 
-    private Lock lockRunAndCancel = new ReentrantLock();
+    private final Lock lockRunAndCancel = new ReentrantLock();
 
     @Autowired
     private NotificationService notificationService;
@@ -87,7 +88,7 @@ public class BuildWorkerService {
             CompletableFuture<List<ModificationInfos>> future = CompletableFuture.supplyAsync(() -> {
                     Network network = networkModificationService.cloneNetworkVariant(networkUuid, buildInfos.getOriginVariantId(), buildInfos.getDestinationVariantId());
                     LOGGER.info("Starting build on variant : {}", buildInfos.getDestinationVariantId());
-                    return networkModificationService.applyModifications(network, networkUuid, buildInfos);
+                    return networkModificationService.buildVariant(new NetworkInfos(network, networkUuid, true), buildInfos);
                 }
             );
 

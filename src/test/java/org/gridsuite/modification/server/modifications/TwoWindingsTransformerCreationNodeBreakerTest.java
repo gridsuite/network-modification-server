@@ -12,7 +12,6 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.PhaseTapChanger;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.SneakyThrows;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.utils.MatcherTwoWindingsTransformerCreationInfos;
@@ -20,13 +19,13 @@ import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
+
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.BUSBAR_SECTION_NOT_FOUND;
-import static org.gridsuite.modification.server.utils.MatcherEquipmentModificationInfos.createMatcherEquipmentModificationInfos;
-import static org.hamcrest.MatcherAssert.assertThat;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
+import static org.gridsuite.modification.server.utils.MatcherTwoWindingsTransformerCreationInfos.createMatcherTwoWindingsTransformerCreationInfos;
 import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -42,7 +41,6 @@ public class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetwo
     @Override
     protected ModificationInfos buildModification() {
         return TwoWindingsTransformerCreationInfos.builder()
-                .type(ModificationType.TWO_WINDINGS_TRANSFORMER_CREATION)
                 .equipmentId("new2wt")
                 .equipmentName("new2wt")
                 .seriesResistance(1.)
@@ -148,7 +146,6 @@ public class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetwo
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return TwoWindingsTransformerCreationInfos.builder()
-                .type(ModificationType.TWO_WINDINGS_TRANSFORMER_CREATION)
                 .equipmentId("new2wtUpdate")
                 .equipmentName("new2wtUpdate")
                 .seriesResistance(10.)
@@ -217,8 +214,8 @@ public class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetwo
                         .steps(List.of(TapChangerStepCreationInfos.builder()
                                         .index(5)
                                         .rho(100)
-                                        .r(02)
-                                        .x(07)
+                                        .r(2)
+                                        .x(7)
                                         .g(880)
                                         .b(90)
                                         .build(),
@@ -226,7 +223,7 @@ public class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetwo
                                         .index(6)
                                         .rho(1)
                                         .r(0)
-                                        .x(065)
+                                        .x(65)
                                         .g(0)
                                         .b(88)
                                         .build(),
@@ -296,7 +293,6 @@ public class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetwo
                 .steps(getTapChangerSteps())
                 .build();
         TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos = TwoWindingsTransformerCreationInfos.builder()
-                .type(ModificationType.TWO_WINDINGS_TRANSFORMER_CREATION)
                 .equipmentId("id2wt1WithRatioTapChanger")
                 .equipmentName("2wtName")
                 .voltageLevelId1("v1")
@@ -314,10 +310,10 @@ public class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetwo
                 .connectionName2("cnid2wt2")
                 .connectionDirection2(ConnectablePosition.Direction.TOP)
                 .ratioTapChanger(ratioTapChangerCreationInfos)
+                .substationIds(Set.of("s1")) // for the matcher
                 .build();
         testCreateTwoWindingsTransformerInNodeBreaker(twoWindingsTransformerCreationInfos, 1);
         TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos2 = TwoWindingsTransformerCreationInfos.builder()
-                .type(ModificationType.TWO_WINDINGS_TRANSFORMER_CREATION)
                 .equipmentId("id2wt1WithRatioTapChanger2")
                 .equipmentName("2wtName")
                 .voltageLevelId1("v1")
@@ -333,14 +329,15 @@ public class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetwo
                 .connectionDirection1(ConnectablePosition.Direction.TOP)
                 .connectionDirection2(ConnectablePosition.Direction.TOP)
                 .ratioTapChanger(ratioTapChangerCreationInfos)
+                .substationIds(Set.of("s1")) // for the matcher
                 .build();
         testCreateTwoWindingsTransformerInNodeBreaker(twoWindingsTransformerCreationInfos2, 2);
     }
 
     @Test
     public void testCreateTwoWindingsTransformerWithPhaseTapChangerInNodeBreaker() throws Exception {
-        // create new 2wt in voltage level with Node/breaker topology, having a PhaseTapChanger
-        PhaseTapChangerCreationInfos phaseTapChangerCreationInfos = PhaseTapChangerCreationInfos.builder()
+        // create new 2wt in voltage level with Node/breaker topology, having a PhaseTapChanger with Load regulating
+        PhaseTapChangerCreationInfos phaseTapChangerLoadRegulatingCreationInfos = PhaseTapChangerCreationInfos.builder()
                 .lowTapPosition(0)
                 .tapPosition(1)
                 .regulating(true)
@@ -353,7 +350,6 @@ public class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetwo
                 .steps(getTapChangerSteps())
                 .build();
         TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos = TwoWindingsTransformerCreationInfos.builder()
-                .type(ModificationType.TWO_WINDINGS_TRANSFORMER_CREATION)
                 .equipmentId("id2wt1WithPhaseTapChanger")
                 .equipmentName("2wtName")
                 .voltageLevelId1("v1")
@@ -370,12 +366,13 @@ public class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetwo
                 .connectionDirection1(ConnectablePosition.Direction.TOP)
                 .connectionName2("cnid2wt2")
                 .connectionDirection2(ConnectablePosition.Direction.TOP)
-                .phaseTapChanger(phaseTapChangerCreationInfos)
+                .phaseTapChanger(phaseTapChangerLoadRegulatingCreationInfos)
+                .substationIds(Set.of("s1")) // for the matcher
                 .build();
         testCreateTwoWindingsTransformerInNodeBreaker(twoWindingsTransformerCreationInfos, 1);
 
-        // create new 2wt in voltage level with Node/breaker topology, having a PhaseTapChanger with BATTERY type
-        PhaseTapChangerCreationInfos phaseTapChangerCreationInfosLine = PhaseTapChangerCreationInfos.builder()
+        // create new 2wt in voltage level with Node/breaker topology, PhaseTapChanger with Battery regulating
+        PhaseTapChangerCreationInfos phaseTapChangerBatteryRegulatingCreationInfos = PhaseTapChangerCreationInfos.builder()
                 .lowTapPosition(0)
                 .tapPosition(1)
                 .regulating(true)
@@ -388,7 +385,6 @@ public class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetwo
                 .steps(getTapChangerSteps())
                 .build();
         TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos2 = TwoWindingsTransformerCreationInfos.builder()
-                .type(ModificationType.TWO_WINDINGS_TRANSFORMER_CREATION)
                 .equipmentId("id2wt1WithPhaseTapChanger2")
                 .equipmentName("2wtName")
                 .voltageLevelId1("v1")
@@ -405,12 +401,13 @@ public class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetwo
                 .connectionDirection1(ConnectablePosition.Direction.TOP)
                 .connectionName2("cnid2wt2")
                 .connectionDirection2(ConnectablePosition.Direction.TOP)
-                .phaseTapChanger(phaseTapChangerCreationInfosLine)
+                .phaseTapChanger(phaseTapChangerBatteryRegulatingCreationInfos)
+                .substationIds(Set.of("s1")) // for the matcher
                 .build();
         testCreateTwoWindingsTransformerInNodeBreaker(twoWindingsTransformerCreationInfos2, 2);
 
-        // create new 2wt in voltage level with Node/breaker topology, having a PhaseTapChanger with Compensator type
-        PhaseTapChangerCreationInfos phaseTapChangerCreationInfosCompensator = PhaseTapChangerCreationInfos.builder()
+        // create new 2wt in voltage level with Node/breaker topology, having a PhaseTapChanger with Shunt compensator regulating
+        PhaseTapChangerCreationInfos phaseTapChangerShuntCompensatorRegulatingCreationInfos = PhaseTapChangerCreationInfos.builder()
                 .lowTapPosition(0)
                 .tapPosition(1)
                 .regulating(true)
@@ -418,12 +415,11 @@ public class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetwo
                 .regulationMode(PhaseTapChanger.RegulationMode.ACTIVE_POWER_CONTROL)
                 .regulationValue(10.0)
                 .regulatingTerminalVlId("v3")
-                .regulatingTerminalId("v3bCompensator")
-                .regulatingTerminalType("VOLTAGE_LEVEL")
+                .regulatingTerminalId("v2shunt")
+                .regulatingTerminalType("SHUNT_COMPENSATOR")
                 .steps(getTapChangerSteps())
                 .build();
         TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos3 = TwoWindingsTransformerCreationInfos.builder()
-                .type(ModificationType.TWO_WINDINGS_TRANSFORMER_CREATION)
                 .equipmentId("id2wt1WithPhaseTapChanger3")
                 .equipmentName("2wtName")
                 .voltageLevelId1("v1")
@@ -440,7 +436,8 @@ public class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetwo
                 .connectionDirection1(ConnectablePosition.Direction.TOP)
                 .connectionName2("cnid2wt2")
                 .connectionDirection2(ConnectablePosition.Direction.TOP)
-                .phaseTapChanger(phaseTapChangerCreationInfosLine)
+                .phaseTapChanger(phaseTapChangerShuntCompensatorRegulatingCreationInfos)
+                .substationIds(Set.of("s1")) // for the matcher
                 .build();
         testCreateTwoWindingsTransformerInNodeBreaker(twoWindingsTransformerCreationInfos3, 3);
     }
@@ -474,9 +471,18 @@ public class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetwo
         List<EquipmentModificationInfos> modifications = mapper.readValue(resultAsString, new TypeReference<>() {
         });
 
+        // try to create an existing equipment
+        twoWindingsTransformerCreationInfos = (TwoWindingsTransformerCreationInfos) buildModification();
+        twoWindingsTransformerCreationInfos.setEquipmentId("trf1");
+        twoWindingsTransformerCreationInfosJson = mapper.writeValueAsString(twoWindingsTransformerCreationInfos);
+        mockMvc.perform(post(getNetworkModificationUri()).content(twoWindingsTransformerCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpectAll(
+                        status().is4xxClientError(),
+                        content().string(new NetworkModificationException(TWO_WINDINGS_TRANSFORMER_ALREADY_EXISTS, "trf1").getMessage()));
+
         assertTrue(modifications.isEmpty());  // no modifications returned
         assertNull(getNetwork().getTwoWindingsTransformer("id2wt3"));  // transformer was not created
-        testNetworkModificationsCount(getGroupId(), 3);
+        testNetworkModificationsCount(getGroupId(), 4);
     }
 
     private void testCreateTwoWindingsTransformerInNodeBreaker(TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos, int actualSize) throws Exception {
@@ -488,9 +494,9 @@ public class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetwo
         mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(twoWindingsTransformerCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
-        List<EquipmentModificationInfos> bsmlrTwoWindingsTransformer = mapper.readValue(resultAsString, new TypeReference<>() {
+        List<TwoWindingsTransformerCreationInfos> bsmlrTwoWindingsTransformer = mapper.readValue(resultAsString, new TypeReference<>() {
         });
-        assertThat(bsmlrTwoWindingsTransformer.get(0), createMatcherEquipmentModificationInfos(ModificationType.TWO_WINDINGS_TRANSFORMER_CREATION, transformerId, Set.of("s1")));
+        assertThat(bsmlrTwoWindingsTransformer.get(0), createMatcherTwoWindingsTransformerCreationInfos(twoWindingsTransformerCreationInfos));
 
         assertNotNull(getNetwork().getTwoWindingsTransformer(transformerId));  // transformer was created
         testNetworkModificationsCount(getGroupId(), actualSize);

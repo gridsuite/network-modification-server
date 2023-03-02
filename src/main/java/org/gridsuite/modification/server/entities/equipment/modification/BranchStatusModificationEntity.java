@@ -9,7 +9,6 @@ package org.gridsuite.modification.server.entities.equipment.modification;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.BranchStatusModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 
@@ -51,7 +50,6 @@ public class BranchStatusModificationEntity extends EquipmentModificationEntity 
             .builder()
             .uuid(getId())
             .date(getDate())
-            .type(ModificationType.valueOf(getType()))
             .substationIds(vlUuids)
             .equipmentId(getEquipmentId())
             .action(getAction())

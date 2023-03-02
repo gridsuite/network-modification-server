@@ -12,7 +12,10 @@ import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.iidm.modification.topology.CreateFeederBay;
 import com.powsybl.iidm.modification.topology.CreateFeederBayBuilder;
 import com.powsybl.iidm.network.*;
+import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.LoadCreationInfos;
+
+import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -26,13 +29,22 @@ public class LoadCreation extends AbstractModification {
     }
 
     @Override
+    public void check(Network network) throws NetworkModificationException {
+        if (network.getLoad(modificationInfos.getEquipmentId()) != null) {
+            throw new NetworkModificationException(LOAD_ALREADY_EXISTS, modificationInfos.getEquipmentId());
+        }
+        ModificationUtils.getInstance().controlConnectivity(network, modificationInfos.getVoltageLevelId(),
+                modificationInfos.getBusOrBusbarSectionId(), modificationInfos.getConnectionPosition());
+    }
+
+    @Override
     public void apply(Network network, Reporter subReporter) {
         // create the load in the network
         VoltageLevel voltageLevel = ModificationUtils.getInstance().getVoltageLevel(network, modificationInfos.getVoltageLevelId());
         if (voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER) {
             LoadAdder loadAdder = createLoadAdderInNodeBreaker(voltageLevel, modificationInfos);
-            var position = modificationInfos.getConnectionPosition() != null ? modificationInfos.getConnectionPosition() :
-                    ModificationUtils.getInstance().getPosition(modificationInfos.getBusOrBusbarSectionId(), network, voltageLevel);
+            var position = ModificationUtils.getInstance().getPosition(modificationInfos.getConnectionPosition(),
+                modificationInfos.getBusOrBusbarSectionId(), network, voltageLevel);
             CreateFeederBay algo = new CreateFeederBayBuilder()
                 .withBbsId(modificationInfos.getBusOrBusbarSectionId())
                 .withInjectionDirection(modificationInfos.getConnectionDirection())

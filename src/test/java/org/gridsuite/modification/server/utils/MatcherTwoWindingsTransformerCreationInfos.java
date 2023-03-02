@@ -47,7 +47,6 @@ public class MatcherTwoWindingsTransformerCreationInfos extends MatcherModificat
     public boolean matchesSafely(TwoWindingsTransformerCreationInfos m) {
         return super.matchesSafely(m)
                 && m.getEquipmentId().equals(reference.getEquipmentId())
-                && m.getSubstationIds().equals(reference.getSubstationIds())
                 && m.getEquipmentName().equals(reference.getEquipmentName())
                 && m.getVoltageLevelId1().equals(reference.getVoltageLevelId1())
                 && m.getVoltageLevelId2().equals(reference.getVoltageLevelId2())
