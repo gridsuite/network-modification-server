@@ -12,11 +12,13 @@ import lombok.SneakyThrows;
 import nl.jqno.equalsverifier.EqualsVerifier;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationResult.ApplicationStatus;
-import org.gridsuite.modification.server.dto.elasticsearch.EquipmentInfos;
 import org.gridsuite.modification.server.impacts.SimpleElementImpact;
 import org.junit.Test;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.TreeSet;
 
 import static org.gridsuite.modification.server.utils.ImpactUtils.*;
 import static org.junit.Assert.assertEquals;
@@ -31,7 +33,8 @@ public class ElementImpactTest {
     @Test
     @SneakyThrows
     public void testElementImpact() {
-        EqualsVerifier.simple().forClass(EquipmentInfos.class).verify();
+        EqualsVerifier.simple().forClass(NetworkModificationResult.class).verify();
+        EqualsVerifier.simple().forClass(SimpleElementImpact.class).verify();
 
         SimpleElementImpact creationImpact = createCreationImpactType(IdentifiableType.LINE, "lineId", new TreeSet<>(List.of("s1", "s2")));
         SimpleElementImpact modificationImpact = createModificationImpactType(IdentifiableType.LOAD, "loadId", new TreeSet<>(List.of("s3")));
