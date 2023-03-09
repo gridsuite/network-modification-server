@@ -28,7 +28,7 @@ public class CurrentTemporaryLimitCreationEmbeddable {
     @Column(name = "name")
     private String name;
 
-    @Column(name = "value")
+    @Column(name = "value_")
     private Double value;
 
     @Column(name = "acceptableDuration")
