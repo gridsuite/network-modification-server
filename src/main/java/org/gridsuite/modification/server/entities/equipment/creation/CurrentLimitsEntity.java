@@ -47,7 +47,7 @@ public class CurrentLimitsEntity {
         return CurrentLimitsInfos
                 .builder()
                 .permanentLimit(getPermanentLimit())
-                .temporaryLimits(CurrentTemporaryLimitCreationEmbeddable.fromEmbeddableCurrentTemporaryLimits(temporaryLimits))
+                .temporaryLimits(CurrentTemporaryLimitCreationEmbeddable.fromEmbeddableCurrentTemporaryLimits(getTemporaryLimits()))
                 .build();
     }
 }

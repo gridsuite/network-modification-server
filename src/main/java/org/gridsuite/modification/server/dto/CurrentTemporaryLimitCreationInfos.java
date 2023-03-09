@@ -18,7 +18,6 @@ import lombok.*;
 @NoArgsConstructor
 @Getter
 @Setter
-@ToString(callSuper = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class CurrentTemporaryLimitCreationInfos {
 

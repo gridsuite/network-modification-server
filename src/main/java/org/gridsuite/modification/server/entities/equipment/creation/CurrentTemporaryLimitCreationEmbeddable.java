@@ -47,12 +47,4 @@ public class CurrentTemporaryLimitCreationEmbeddable {
                         .map(limit -> new CurrentTemporaryLimitCreationInfos(limit.getName(), limit.getValue(), limit.getAcceptableDuration()))
                         .collect(Collectors.toList());
     }
-
-    public CurrentTemporaryLimitCreationInfos toModificationInfos() {
-        return CurrentTemporaryLimitCreationInfos.builder()
-                .name(getName())
-                .value(getValue())
-                .acceptableDuration(getAcceptableDuration())
-                .build();
-    }
 }

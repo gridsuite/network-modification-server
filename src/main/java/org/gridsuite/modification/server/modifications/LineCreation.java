@@ -76,20 +76,20 @@ public class LineCreation extends AbstractModification {
         }
     }
 
-    private void setCurrentLimits(CurrentLimitsInfos currentLimitsInfos, CurrentLimitsAdder limitAdder) {
+    private void setCurrentLimits(CurrentLimitsInfos currentLimitsInfos, CurrentLimitsAdder limitsAdder) {
         if (currentLimitsInfos != null) {
             boolean hasPermanent = currentLimitsInfos.getPermanentLimit() != null;
             boolean hasTemporary = currentLimitsInfos.getTemporaryLimits() != null && !currentLimitsInfos.getTemporaryLimits().isEmpty();
             if (hasPermanent) {
-                limitAdder.setPermanentLimit(currentLimitsInfos.getPermanentLimit());
+                limitsAdder.setPermanentLimit(currentLimitsInfos.getPermanentLimit());
             }
             if (hasTemporary) {
                 for (CurrentTemporaryLimitCreationInfos limit : currentLimitsInfos.getTemporaryLimits()) {
-                    limitAdder.beginTemporaryLimit().setName(limit.getName()).setValue(limit.getValue()).setAcceptableDuration(limit.getAcceptableDuration()).endTemporaryLimit();
+                    limitsAdder.beginTemporaryLimit().setName(limit.getName()).setValue(limit.getValue()).setAcceptableDuration(limit.getAcceptableDuration()).endTemporaryLimit();
                 }
             }
             if (hasPermanent || hasTemporary) {
-                limitAdder.add();
+                limitsAdder.add();
             }
         }
     }
