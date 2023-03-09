@@ -14,6 +14,7 @@ import com.powsybl.iidm.modification.topology.CreateBranchFeederBaysBuilder;
 import com.powsybl.iidm.network.*;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.CurrentLimitsInfos;
+import org.gridsuite.modification.server.dto.CurrentTemporaryLimitCreationInfos;
 import org.gridsuite.modification.server.dto.LineCreationInfos;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
@@ -65,16 +66,31 @@ public class LineCreation extends AbstractModification {
             addLine(network, voltageLevel1, voltageLevel2, modificationInfos, true, true, subReporter);
         }
 
-        // Set Permanent Current Limits if exist
+        // Set permanent and temporary current limits
         CurrentLimitsInfos currentLimitsInfos1 = modificationInfos.getCurrentLimits1();
         CurrentLimitsInfos currentLimitsInfos2 = modificationInfos.getCurrentLimits2();
-        var line = ModificationUtils.getInstance().getLine(network, modificationInfos.getEquipmentId());
-
-        if (currentLimitsInfos1 != null && currentLimitsInfos1.getPermanentLimit() != null) {
-            line.newCurrentLimits1().setPermanentLimit(currentLimitsInfos1.getPermanentLimit()).add();
+        if (currentLimitsInfos1 != null || currentLimitsInfos2 != null) {
+            var line = ModificationUtils.getInstance().getLine(network, modificationInfos.getEquipmentId());
+            setCurrentLimits(currentLimitsInfos1, line.newCurrentLimits1());
+            setCurrentLimits(currentLimitsInfos2, line.newCurrentLimits2());
         }
-        if (currentLimitsInfos2 != null && currentLimitsInfos2.getPermanentLimit() != null) {
-            line.newCurrentLimits2().setPermanentLimit(currentLimitsInfos2.getPermanentLimit()).add();
+    }
+
+    private void setCurrentLimits(CurrentLimitsInfos currentLimitsInfos, CurrentLimitsAdder limitAdder) {
+        if (currentLimitsInfos != null) {
+            boolean hasPermanent = currentLimitsInfos.getPermanentLimit() != null;
+            boolean hasTemporary = currentLimitsInfos.getTemporaryLimits() != null && !currentLimitsInfos.getTemporaryLimits().isEmpty();
+            if (hasPermanent) {
+                limitAdder.setPermanentLimit(currentLimitsInfos.getPermanentLimit());
+            }
+            if (hasTemporary) {
+                for (CurrentTemporaryLimitCreationInfos limit : currentLimitsInfos.getTemporaryLimits()) {
+                    limitAdder.beginTemporaryLimit().setName(limit.getName()).setValue(limit.getValue()).setAcceptableDuration(limit.getAcceptableDuration()).endTemporaryLimit();
+                }
+            }
+            if (hasPermanent || hasTemporary) {
+                limitAdder.add();
+            }
         }
     }
 
