@@ -85,7 +85,12 @@ public class LineCreation extends AbstractModification {
             }
             if (hasTemporary) {
                 for (CurrentTemporaryLimitCreationInfos limit : currentLimitsInfos.getTemporaryLimits()) {
-                    limitsAdder.beginTemporaryLimit().setName(limit.getName()).setValue(limit.getValue()).setAcceptableDuration(limit.getAcceptableDuration()).endTemporaryLimit();
+                    limitsAdder
+                        .beginTemporaryLimit()
+                        .setName(limit.getName())
+                        .setValue(limit.getValue() == null ? Double.MAX_VALUE : limit.getValue())
+                        .setAcceptableDuration(limit.getAcceptableDuration() == null ? Integer.MAX_VALUE : limit.getAcceptableDuration())
+                        .endTemporaryLimit();
                 }
             }
             if (hasPermanent || hasTemporary) {
