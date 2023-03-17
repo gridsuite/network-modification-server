@@ -182,15 +182,20 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public void moveModifications(UUID groupUuid, UUID originGroupUuid, UUID before, NetworkInfos networkInfos, ReportInfos reportInfos, List<UUID> modificationsToMove, boolean canBuildNode) {
+    public UpdateModificationGroupResult moveModifications(UUID groupUuid, UUID originGroupUuid, UUID before, NetworkInfos networkInfos, ReportInfos reportInfos, List<UUID> modificationsToMove, boolean canBuildNode) {
         List<ModificationInfos> movedModifications = networkModificationRepository.moveModifications(groupUuid, originGroupUuid, modificationsToMove, before)
-            .stream()
-            .map(ModificationEntity::toModificationInfos)
-            .collect(Collectors.toList());
-        if (canBuildNode && !movedModifications.isEmpty() && networkInfos.isVariantPresent()) { // TODO remove canBuildNode and return NetworkDamages() ?
+                .stream()
+                .map(ModificationEntity::toModificationInfos)
+                .collect(Collectors.toList());
+        var result = UpdateModificationGroupResult.builder();
+        if (canBuildNode && !movedModifications.isEmpty() && networkInfos.isVariantPresent()) {
             // try to apply the moved modifications (incremental mode)
-            modificationApplicator.applyModifications(movedModifications, networkInfos, reportInfos);
+            result.networkModificationResult(Optional.of(modificationApplicator.applyModifications(
+                    movedModifications,
+                    networkInfos,
+                    reportInfos)));
         }
+        return result.build();
     }
 
     public void createModificationGroup(UUID sourceGroupUuid, UUID groupUuid) {
@@ -205,22 +210,24 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public List<UUID> duplicateModifications(UUID targetGroupUuid, NetworkInfos networkInfos, ReportInfos reportInfos, List<UUID> modificationsUuids) {
+    public UpdateModificationGroupResult duplicateModifications(UUID targetGroupUuid, NetworkInfos networkInfos, ReportInfos reportInfos, List<UUID> modificationsUuids) {
         List<ModificationEntity> modificationsEntities = networkModificationRepository.getModificationsEntities(modificationsUuids);
         Set<UUID> presentUuids = modificationsEntities.stream().map(ModificationEntity::getId).collect(Collectors.toSet());
         List<ModificationEntity> duplicatedModificationsEntities = modificationsEntities.stream().map(ModificationEntity::copy).collect(Collectors.toList());
         List<UUID> missingModificationList = new ArrayList<>(modificationsUuids);
         missingModificationList.removeAll(presentUuids);
+        var result = UpdateModificationGroupResult.builder().modificationFailures(missingModificationList);
         if (!duplicatedModificationsEntities.isEmpty()) {
             networkModificationRepository.saveModifications(targetGroupUuid, duplicatedModificationsEntities);
             // try to apply the duplicated modifications (incremental mode)
-            if (networkInfos.isVariantPresent()) { // TODO return NetworkDamages() ?
-                modificationApplicator.applyModifications(
-                    duplicatedModificationsEntities.stream().map(ModificationEntity::toModificationInfos).collect(Collectors.toList()),
-                    networkInfos, reportInfos
-                );
+            if (networkInfos.isVariantPresent()) {
+                result.networkModificationResult(Optional.of(modificationApplicator.applyModifications(
+                        duplicatedModificationsEntities.stream().map(ModificationEntity::toModificationInfos).collect(Collectors.toList()),
+                        networkInfos,
+                        reportInfos
+                )));
             }
         }
-        return missingModificationList;
+        return result.build();
     }
 }
