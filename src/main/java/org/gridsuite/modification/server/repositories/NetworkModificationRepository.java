@@ -189,7 +189,10 @@ public class NetworkModificationRepository {
 
     @Transactional(readOnly = true)
     public List<ModificationEntity> getModificationsEntities(@NonNull List<UUID> uuids) {
-        return modificationRepository.findAllById(uuids);
+        // Spring-data findAllById doc says: the order of elements in the result is not guaranteed
+        List<ModificationEntity> entities = modificationRepository.findAllById(uuids);
+        entities.sort(Comparator.comparing(e -> uuids.indexOf(e.getId())));
+        return entities;
     }
 
     @Transactional(readOnly = true)
