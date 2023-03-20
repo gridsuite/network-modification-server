@@ -17,8 +17,10 @@ import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.GeneratorModificationInfos;
 import org.gridsuite.modification.server.dto.ReactiveCapabilityCurveModificationInfos;
 import org.gridsuite.modification.server.dto.VoltageRegulationType;
+import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.IntStream;
 
@@ -193,39 +195,29 @@ public class GeneratorModification extends AbstractModification {
                                                               Generator generator, Reporter subReporter, Reporter subReporterLimits) {
         List<Report> reports = new ArrayList<>();
         ReactiveCapabilityCurveAdder adder = generator.newReactiveCapabilityCurve();
-        List<ReactiveCapabilityCurveModificationInfos> points = modificationInfos.getReactiveCapabilityCurvePoints();
-        IntStream.range(0, points.size())
+
+        List<ReactiveCapabilityCurveModificationInfos> modificationPoints = modificationInfos.getReactiveCapabilityCurvePoints();
+
+        Collection<ReactiveCapabilityCurve.Point> points = generator.getReactiveLimits().getKind() == ReactiveLimitsKind.CURVE ? generator.getReactiveLimits(ReactiveCapabilityCurve.class).getPoints() : List.of();
+        List<ReactiveCapabilityCurve.Point> generatorPoints = new ArrayList<>(points);
+
+        IntStream.range(0, modificationPoints.size())
                 .forEach(i -> {
                     String fieldSuffix;
+                    ReactiveCapabilityCurve.Point oldPoint = i < generatorPoints.size() - 1 ? generatorPoints.get(i) : null;
+                    ReactiveCapabilityCurveModificationInfos newPoint = modificationPoints.get(i);
                     if (i == 0) {
                         fieldSuffix = "min";
-                    } else if (i == (points.size() - 1)) {
+                    } else if (i == (modificationPoints.size() - 1)) {
                         fieldSuffix = "max";
+                        if (!CollectionUtils.isEmpty(generatorPoints)) {
+                            oldPoint = generatorPoints.get(generatorPoints.size() - 1);
+                        }
                     } else {
                         fieldSuffix = Integer.toString(i);
                     }
 
-                    ReactiveCapabilityCurveModificationInfos point = points.get(i);
-                    adder.beginPoint()
-                            .setMaxQ(point.getQmaxP() != null ? point.getQmaxP() : point.getOldQmaxP())
-                            .setMinQ(point.getQminP() != null ? point.getQminP() : point.getOldQminP())
-                            .setP(point.getP() != null ? point.getP() : point.getOldP())
-                            .endPoint();
-                    if (point.getP() != null) {
-                        reports.add(ModificationUtils.getInstance().buildModificationReport(point.getOldP(),
-                                point.getP(),
-                                "P" + fieldSuffix));
-                    }
-                    if (point.getQminP() != null) {
-                        reports.add(ModificationUtils.getInstance().buildModificationReport(point.getOldQminP(),
-                                point.getQminP(),
-                                "QminP" + fieldSuffix));
-                    }
-                    if (point.getQmaxP() != null) {
-                        reports.add(ModificationUtils.getInstance().buildModificationReport(point.getOldQmaxP(),
-                                point.getQmaxP(),
-                                "QmaxP" + fieldSuffix));
-                    }
+                    createReactiveCapabilityCurvePoint(adder, newPoint, oldPoint, reports, fieldSuffix);
                 });
         adder.add();
 
@@ -248,6 +240,44 @@ public class GeneratorModification extends AbstractModification {
                 .build());
         }
         ModificationUtils.getInstance().reportModifications(subReporterReactiveLimits, reports, "curveReactiveLimitsModified", "By diagram");
+    }
+
+    private void createReactiveCapabilityCurvePoint(ReactiveCapabilityCurveAdder adder,
+                                                    ReactiveCapabilityCurveModificationInfos newPoint,
+                                                    ReactiveCapabilityCurve.Point oldPoint,
+                                                    List<Report> reports,
+                                                    String fieldSuffix) {
+        Double oldMaxQ = null;
+        Double oldMinQ = null;
+        Double oldP = null;
+
+        if (oldPoint != null) {
+            oldMaxQ = oldPoint.getMaxQ();
+            oldMinQ = oldPoint.getMinQ();
+            oldP = oldPoint.getP();
+        }
+
+        var maxQ = newPoint.getQmaxP() != null ? newPoint.getQmaxP() : oldMaxQ;
+        var minQ = newPoint.getQminP() != null ? newPoint.getQminP() : oldMinQ;
+        var p = newPoint.getP() != null ? newPoint.getP() : oldP;
+
+        adder.beginPoint()
+                .setMaxQ(maxQ)
+                .setMinQ(minQ)
+                .setP(p)
+                .endPoint();
+
+        addToReports(reports, p, oldP, "P" + fieldSuffix);
+        addToReports(reports, minQ, oldMinQ, "QminP" + fieldSuffix);
+        addToReports(reports, maxQ, oldMaxQ, "QmaxP" + fieldSuffix);
+    }
+
+    private void addToReports(List<Report> reports, Double newValue, Double oldValue, String fieldName) {
+        if (newValue != null) {
+            reports.add(ModificationUtils.getInstance().buildModificationReport(oldValue,
+                    newValue,
+                    fieldName));
+        }
     }
 
     private Reporter modifyGeneratorActiveLimitsAttributes(GeneratorModificationInfos modificationInfos,
