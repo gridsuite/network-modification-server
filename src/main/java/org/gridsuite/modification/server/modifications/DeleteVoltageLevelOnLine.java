@@ -10,7 +10,11 @@ import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.iidm.modification.topology.RevertConnectVoltageLevelOnLine;
 import com.powsybl.iidm.modification.topology.RevertConnectVoltageLevelOnLineBuilder;
 import com.powsybl.iidm.network.Network;
+import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.DeleteVoltageLevelOnLineInfos;
+
+import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_ALREADY_EXISTS;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_NOT_FOUND;
 
 /**
  * @author bendaamerahm <ahmed.bendaamer at rte-france.com>
@@ -21,6 +25,21 @@ public class DeleteVoltageLevelOnLine extends AbstractModification {
 
     public DeleteVoltageLevelOnLine(DeleteVoltageLevelOnLineInfos modificationInfos) {
         this.modificationInfos = modificationInfos;
+    }
+
+    @Override
+    public void check(Network network) throws NetworkModificationException {
+        // check existing lines
+        if (network.getLine(modificationInfos.getLineToAttachTo1Id()) == null) {
+            throw new NetworkModificationException(LINE_NOT_FOUND, modificationInfos.getLineToAttachTo1Id());
+        }
+        if (network.getLine(modificationInfos.getLineToAttachTo2Id()) == null) {
+            throw new NetworkModificationException(LINE_NOT_FOUND, modificationInfos.getLineToAttachTo2Id());
+        }
+        // check future line does not exist
+        if (network.getLine(modificationInfos.getReplacingLine1Id()) != null) {
+            throw new NetworkModificationException(LINE_ALREADY_EXISTS, modificationInfos.getReplacingLine1Id());
+        }
     }
 
     @Override

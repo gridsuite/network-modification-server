@@ -12,9 +12,12 @@ import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.iidm.modification.topology.CreateBranchFeederBays;
 import com.powsybl.iidm.modification.topology.CreateBranchFeederBaysBuilder;
 import com.powsybl.iidm.network.*;
+import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
 
 import java.util.Optional;
+
+import static org.gridsuite.modification.server.NetworkModificationException.Type.TWO_WINDINGS_TRANSFORMER_ALREADY_EXISTS;
 
 public class TwoWindingsTransformerCreation extends AbstractModification {
 
@@ -22,6 +25,16 @@ public class TwoWindingsTransformerCreation extends AbstractModification {
 
     public TwoWindingsTransformerCreation(TwoWindingsTransformerCreationInfos modificationInfos) {
         this.modificationInfos = modificationInfos;
+    }
+
+    @Override
+    public void check(Network network) throws NetworkModificationException {
+        if (network.getTwoWindingsTransformer(modificationInfos.getEquipmentId()) != null) {
+            throw new NetworkModificationException(TWO_WINDINGS_TRANSFORMER_ALREADY_EXISTS, modificationInfos.getEquipmentId());
+        }
+        ModificationUtils.getInstance().controlBranchCreation(network,
+                modificationInfos.getVoltageLevelId1(), modificationInfos.getBusOrBusbarSectionId1(), modificationInfos.getConnectionPosition1(),
+                modificationInfos.getVoltageLevelId2(), modificationInfos.getBusOrBusbarSectionId2(), modificationInfos.getConnectionPosition2());
     }
 
     @Override
@@ -41,12 +54,12 @@ public class TwoWindingsTransformerCreation extends AbstractModification {
     private void create2WTInNodeBreaker(Network network, VoltageLevel voltageLevel1, VoltageLevel voltageLevel2, Reporter subReporter) {
         var twoWindingsTransformerAdder = createTwoWindingsTransformerAdder(network, voltageLevel1, voltageLevel2, modificationInfos, false, false);
 
-        var position1 = modificationInfos.getConnectionPosition1() != null ? modificationInfos.getConnectionPosition1() : ModificationUtils.getInstance().getPosition(modificationInfos.getBusOrBusbarSectionId1(), network, voltageLevel1);
-        var position2 = modificationInfos.getConnectionPosition2() != null ? modificationInfos.getConnectionPosition2() : ModificationUtils.getInstance().getPosition(modificationInfos.getBusOrBusbarSectionId2(), network, voltageLevel2);
+        var position1 = ModificationUtils.getInstance().getPosition(modificationInfos.getConnectionPosition1(), modificationInfos.getBusOrBusbarSectionId1(), network, voltageLevel1);
+        var position2 = ModificationUtils.getInstance().getPosition(modificationInfos.getConnectionPosition2(), modificationInfos.getBusOrBusbarSectionId2(), network, voltageLevel2);
 
         CreateBranchFeederBays algo = new CreateBranchFeederBaysBuilder()
-                .withBbsId1(modificationInfos.getBusOrBusbarSectionId1())
-                .withBbsId2(modificationInfos.getBusOrBusbarSectionId2())
+                .withBusOrBusbarSectionId1(modificationInfos.getBusOrBusbarSectionId1())
+                .withBusOrBusbarSectionId2(modificationInfos.getBusOrBusbarSectionId2())
                 .withFeederName1(modificationInfos.getConnectionName1() != null ? modificationInfos.getConnectionName1() : modificationInfos.getEquipmentId())
                 .withFeederName2(modificationInfos.getConnectionName2() != null ? modificationInfos.getConnectionName2() : modificationInfos.getEquipmentId())
                 .withDirection1(modificationInfos.getConnectionDirection1())

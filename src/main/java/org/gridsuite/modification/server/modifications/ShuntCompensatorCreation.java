@@ -14,8 +14,9 @@ import com.powsybl.iidm.modification.topology.CreateFeederBayBuilder;
 import com.powsybl.iidm.network.*;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ShuntCompensatorCreationInfos;
+import org.gridsuite.modification.server.dto.ShuntCompensatorType;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.VOLTAGE_LEVEL_NOT_FOUND;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -29,17 +30,29 @@ public class ShuntCompensatorCreation extends AbstractModification {
     }
 
     @Override
-    public void apply(Network network, Reporter subReporter) {
+    public void check(Network network) throws NetworkModificationException {
+        if (network.getShuntCompensator(modificationInfos.getEquipmentId()) != null) {
+            throw new NetworkModificationException(SHUNT_COMPENSATOR_ALREADY_EXISTS, modificationInfos.getEquipmentId());
+        }
+        ModificationUtils.getInstance().controlConnectivity(network, modificationInfos.getVoltageLevelId(),
+                modificationInfos.getBusOrBusbarSectionId(), modificationInfos.getConnectionPosition());
+    }
 
+    @Override
+    public void apply(Network network, Reporter subReporter) {
         // create the shunt compensator in the network
-        String voltageLevelId = modificationInfos.getVoltageLevelId();
-        VoltageLevel voltageLevel = network.getVoltageLevel(voltageLevelId);
-        if (voltageLevel == null) {
-            throw new NetworkModificationException(VOLTAGE_LEVEL_NOT_FOUND, voltageLevelId);
+        VoltageLevel voltageLevel = ModificationUtils.getInstance().getVoltageLevel(network, modificationInfos.getVoltageLevelId());
+        if (modificationInfos.getSusceptancePerSection() == null) {
+            Double susceptancePerSection = modificationInfos.getQAtNominalV() / Math.pow(voltageLevel.getNominalV(), 2);
+            modificationInfos.setSusceptancePerSection(
+                    modificationInfos.getShuntCompensatorType() == ShuntCompensatorType.CAPACITOR
+                            ? susceptancePerSection
+                            : -susceptancePerSection);
         }
         if (voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER) {
             ShuntCompensatorAdder shuntCompensatorAdder = createShuntAdderInNodeBreaker(voltageLevel, modificationInfos);
-            var position = ModificationUtils.getInstance().getPosition(modificationInfos.getBusOrBusbarSectionId(), network, voltageLevel);
+            var position = ModificationUtils.getInstance().getPosition(modificationInfos.getConnectionPosition(),
+                    modificationInfos.getBusOrBusbarSectionId(), network, voltageLevel);
             CreateFeederBay algo = new CreateFeederBayBuilder()
                     .withBbsId(modificationInfos.getBusOrBusbarSectionId())
                     .withInjectionDirection(modificationInfos.getConnectionDirection())
