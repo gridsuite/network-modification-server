@@ -14,6 +14,7 @@ import org.gridsuite.modification.server.dto.elasticsearch.EquipmentInfos;
 import org.gridsuite.modification.server.dto.elasticsearch.TombstonedEquipmentInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.impacts.SimpleElementImpact;
+import org.gridsuite.modification.server.utils.ApplicationStatusComparator;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -167,7 +168,12 @@ public class NetworkStoreListener implements NetworkListener {
     }
 
     public void setApplicationStatus(NetworkModificationResult.ApplicationStatus applicationStatus) {
-        this.applicationStatus = applicationStatus;
+        // we keep the worst status
+        this.applicationStatus = worstStatus(this.applicationStatus, applicationStatus);
+    }
+
+    public static NetworkModificationResult.ApplicationStatus worstStatus(NetworkModificationResult.ApplicationStatus firstStatus, NetworkModificationResult.ApplicationStatus secondStatus) {
+        return Collections.max(List.of(firstStatus, secondStatus), new ApplicationStatusComparator());
     }
 
     private void flushEquipmentInfos() {
