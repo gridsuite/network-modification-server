@@ -30,7 +30,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -209,12 +208,9 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public List<UUID> duplicateModifications(UUID targetGroupUuid, NetworkInfos networkInfos, ReportInfos reportInfos, List<UUID> modificationsUuids) {
+    public void duplicateModifications(UUID targetGroupUuid, NetworkInfos networkInfos, ReportInfos reportInfos, List<UUID> modificationsUuids) {
         List<ModificationEntity> modificationsEntities = networkModificationRepository.getModificationsEntities(modificationsUuids);
-        Set<UUID> presentUuids = modificationsEntities.stream().map(ModificationEntity::getId).collect(Collectors.toSet());
         List<ModificationEntity> duplicatedModificationsEntities = modificationsEntities.stream().map(ModificationEntity::copy).collect(Collectors.toList());
-        List<UUID> missingModificationList = new ArrayList<>(modificationsUuids);
-        missingModificationList.removeAll(presentUuids);
         if (!duplicatedModificationsEntities.isEmpty()) {
             networkModificationRepository.saveModifications(targetGroupUuid, duplicatedModificationsEntities);
             // try to apply the duplicated modifications (incremental mode)
@@ -225,6 +221,5 @@ public class NetworkModificationService {
                 );
             }
         }
-        return missingModificationList;
     }
 }
