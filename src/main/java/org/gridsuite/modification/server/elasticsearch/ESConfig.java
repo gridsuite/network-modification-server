@@ -14,6 +14,7 @@ import org.springframework.data.elasticsearch.client.ClientConfiguration;
 import org.springframework.data.elasticsearch.client.ClientConfiguration.TerminalClientConfigurationBuilder;
 import org.springframework.data.elasticsearch.client.RestClients;
 import org.springframework.data.elasticsearch.config.AbstractElasticsearchConfiguration;
+import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 
 import javax.annotation.Nonnull;
 import java.net.InetSocketAddress;
@@ -26,6 +27,7 @@ import java.util.Optional;
  */
 
 @Configuration
+@EnableElasticsearchRepositories
 public class ESConfig extends AbstractElasticsearchConfiguration {
 
     @Value("#{'${spring.data.elasticsearch.embedded:false}' ? 'localhost' : '${spring.data.elasticsearch.host}'}")
@@ -43,7 +45,7 @@ public class ESConfig extends AbstractElasticsearchConfiguration {
     @Value("${spring.data.elasticsearch.password:#{null}}")
     private Optional<String> password;
 
-    @Bean
+    @Bean()
     @Override
     @SuppressWarnings("squid:S2095")
     @Nonnull
