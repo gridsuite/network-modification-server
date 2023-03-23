@@ -184,9 +184,9 @@ public class NetworkModificationService {
     @Transactional
     public UpdateModificationGroupResult moveModifications(UUID groupUuid, UUID originGroupUuid, UUID before, NetworkInfos networkInfos, ReportInfos reportInfos, List<UUID> modificationsToMove, boolean canBuildNode) {
         List<ModificationInfos> movedModifications = networkModificationRepository.moveModifications(groupUuid, originGroupUuid, modificationsToMove, before)
-                .stream()
-                .map(ModificationEntity::toModificationInfos)
-                .collect(Collectors.toList());
+            .stream()
+            .map(ModificationEntity::toModificationInfos)
+            .collect(Collectors.toList());
         var result = UpdateModificationGroupResult.builder();
         if (canBuildNode && !movedModifications.isEmpty() && networkInfos.isVariantPresent()) {
             // try to apply the moved modifications (incremental mode)
