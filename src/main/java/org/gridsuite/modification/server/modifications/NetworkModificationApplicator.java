@@ -40,6 +40,8 @@ import java.util.stream.Stream;
 public class NetworkModificationApplicator {
     private static final Logger LOGGER = LoggerFactory.getLogger(NetworkModificationApplicator.class);
 
+    private static final TypedValueComparator TYPED_VALUE_COMPARATOR = new TypedValueComparator();
+
     private enum ApplicationMode {
         UNITARY,
         MULTIPLE
@@ -137,14 +139,14 @@ public class NetworkModificationApplicator {
                 .map(NetworkModificationApplicator::computeHighestSeverityFromReporterModel);
 
         return Stream.concat(reportsSeverities, subReportersSeverities)
-                .max(new TypedValueComparator()).orElse(TypedValue.TRACE_SEVERITY); // orElse not necessary but we never know
+                .max(TYPED_VALUE_COMPARATOR).orElse(TypedValue.TRACE_SEVERITY); // orElse not necessary but we never know
     }
 
     public static TypedValue computeHighestSeverityFromReport(Report report) {
         return report.getValues().entrySet().stream()
                 .filter(entry -> entry.getKey().equals(Report.REPORT_SEVERITY_KEY))
                 .map(Map.Entry::getValue)
-                .reduce((currentValue, nextValue) -> Collections.max(List.of(currentValue, nextValue), new TypedValueComparator()))
+                .reduce((currentValue, nextValue) -> Collections.max(List.of(currentValue, nextValue), TYPED_VALUE_COMPARATOR))
                 .orElse(TypedValue.TRACE_SEVERITY);
     }
 
