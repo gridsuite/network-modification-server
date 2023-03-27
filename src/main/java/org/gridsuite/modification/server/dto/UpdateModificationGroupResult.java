@@ -15,10 +15,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * This is the return value of the endpoint updateModificationGroup.
+ * TODO : remove this DTO when modificationFailures will not be needed anymore
+ * @author Florent MILLOT <florent.millot at rte-france.com>
+ */
 @Builder
 @Data
 @Schema(description = "Copy or move network modifications result")
-//TODO : remove this DTO when modificationFailures will not be needed anymore
 public class UpdateModificationGroupResult {
 
     @Builder.Default
