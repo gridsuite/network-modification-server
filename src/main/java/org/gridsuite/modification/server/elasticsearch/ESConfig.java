@@ -45,7 +45,7 @@ public class ESConfig extends AbstractElasticsearchConfiguration {
     @Value("${spring.data.elasticsearch.password:#{null}}")
     private Optional<String> password;
 
-    @Bean()
+    @Bean
     @Override
     @SuppressWarnings("squid:S2095")
     @Nonnull
