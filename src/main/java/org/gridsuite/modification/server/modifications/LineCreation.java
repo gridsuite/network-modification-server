@@ -14,7 +14,6 @@ import com.powsybl.iidm.modification.topology.CreateBranchFeederBaysBuilder;
 import com.powsybl.iidm.network.*;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.CurrentLimitsInfos;
-import org.gridsuite.modification.server.dto.CurrentTemporaryLimitCreationInfos;
 import org.gridsuite.modification.server.dto.LineCreationInfos;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
