@@ -24,12 +24,6 @@ public class MatcherTwoWindingsTransformerCreationInfos extends MatcherModificat
         super(ref);
     }
 
-    private boolean matchesCurrentTemporaryLimitsInfos(CurrentTemporaryLimitCreationInfos tl1, CurrentTemporaryLimitCreationInfos tl2) {
-        return (tl1 == null && tl2 == null)
-                || (tl1 != null && tl2 != null && Objects.equals(tl1.getName(), tl2.getName()) && Objects.equals(tl1.getValue(), tl2.getValue()) && Objects.equals(tl1.getAcceptableDuration(), tl2.getAcceptableDuration()));
-
-    }
-
     private boolean matchesCurrentLimitsInfos(CurrentLimitsInfos cl1, CurrentLimitsInfos cl2) {
         return (cl1 == null && cl2 == null)
                 || (((cl1 != null && cl2 != null && cl1.getPermanentLimit() != null && cl2.getPermanentLimit() != null && cl1.getPermanentLimit().equals(cl2.getPermanentLimit()))
