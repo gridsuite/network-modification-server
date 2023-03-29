@@ -12,6 +12,9 @@ import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import java.util.Comparator;
 import java.util.List;
 
+/**
+ * @author Florent MILLOT <florent.millot@rte-france.com>
+ */
 public class ApplicationStatusComparator implements Comparator<NetworkModificationResult.ApplicationStatus> {
 
     private static List<NetworkModificationResult.ApplicationStatus> orderedStatus = List.of(

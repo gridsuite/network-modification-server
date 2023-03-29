@@ -12,6 +12,9 @@ import com.powsybl.commons.reporter.TypedValue;
 import java.util.Comparator;
 import java.util.List;
 
+/**
+ * @author Florent MILLOT <florent.millot@rte-france.com>
+ */
 public class TypedValueComparator implements Comparator<TypedValue> {
 
     private static List<TypedValue> orderedTypedValues = List.of(
