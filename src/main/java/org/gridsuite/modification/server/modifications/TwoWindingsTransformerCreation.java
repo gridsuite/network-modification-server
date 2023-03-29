@@ -54,8 +54,8 @@ public class TwoWindingsTransformerCreation extends AbstractModification {
         CurrentLimitsInfos currentLimitsInfos2 = modificationInfos.getCurrentLimits2();
         if (currentLimitsInfos1 != null || currentLimitsInfos2 != null) {
             TwoWindingsTransformer transformer = (TwoWindingsTransformer) ModificationUtils.getInstance().getEquipmentByIdentifiableType(network, IdentifiableType.TWO_WINDINGS_TRANSFORMER.toString(), modificationInfos.getEquipmentId());
-            setCurrentLimits(currentLimitsInfos1, transformer.newCurrentLimits1());
-            setCurrentLimits(currentLimitsInfos2, transformer.newCurrentLimits2());
+            ModificationUtils.getInstance().setCurrentLimits(currentLimitsInfos1, transformer.newCurrentLimits1());
+            ModificationUtils.getInstance().setCurrentLimits(currentLimitsInfos2, transformer.newCurrentLimits2());
         }
 
     }
@@ -194,29 +194,6 @@ public class TwoWindingsTransformerCreation extends AbstractModification {
                 .withValue("id", twoWindingsTransformerCreationInfos.getEquipmentId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .build());
-    }
-
-    private void setCurrentLimits(CurrentLimitsInfos currentLimitsInfos, CurrentLimitsAdder limitsAdder) {
-        if (currentLimitsInfos != null) {
-            boolean hasPermanent = currentLimitsInfos.getPermanentLimit() != null;
-            boolean hasTemporary = currentLimitsInfos.getTemporaryLimits() != null && !currentLimitsInfos.getTemporaryLimits().isEmpty();
-            if (hasPermanent) {
-                limitsAdder.setPermanentLimit(currentLimitsInfos.getPermanentLimit());
-            }
-            if (hasTemporary) {
-                for (CurrentTemporaryLimitCreationInfos limit : currentLimitsInfos.getTemporaryLimits()) {
-                    limitsAdder
-                            .beginTemporaryLimit()
-                            .setName(limit.getName())
-                            .setValue(limit.getValue() == null ? Double.MAX_VALUE : limit.getValue())
-                            .setAcceptableDuration(limit.getAcceptableDuration() == null ? Integer.MAX_VALUE : limit.getAcceptableDuration())
-                            .endTemporaryLimit();
-                }
-            }
-            if (hasPermanent || hasTemporary) {
-                limitsAdder.add();
-            }
-        }
     }
 
 }
