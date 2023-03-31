@@ -6,10 +6,7 @@
  */
 package org.gridsuite.modification.server.utils;
 
-import org.gridsuite.modification.server.dto.CurrentLimitsInfos;
-import org.gridsuite.modification.server.dto.PhaseTapChangerCreationInfos;
-import org.gridsuite.modification.server.dto.RatioTapChangerCreationInfos;
-import org.gridsuite.modification.server.dto.TwoWindingsTransformerCreationInfos;
+import org.gridsuite.modification.server.dto.*;
 import org.hamcrest.Description;
 
 import java.util.Objects;
@@ -29,8 +26,9 @@ public class MatcherTwoWindingsTransformerCreationInfos extends MatcherModificat
 
     private boolean matchesCurrentLimitsInfos(CurrentLimitsInfos cl1, CurrentLimitsInfos cl2) {
         return (cl1 == null && cl2 == null)
-                || (cl1 != null && cl2 != null && cl1.getPermanentLimit() != null && cl2.getPermanentLimit() != null && cl1.getPermanentLimit().equals(cl2.getPermanentLimit()))
-                || (cl1 != null && cl2 != null && cl1.getPermanentLimit() == null && cl2.getPermanentLimit() == null);
+                || (((cl1 != null && cl2 != null && cl1.getPermanentLimit() != null && cl2.getPermanentLimit() != null && cl1.getPermanentLimit().equals(cl2.getPermanentLimit()))
+                || (cl1 != null && cl2 != null && cl1.getPermanentLimit() == null && cl2.getPermanentLimit() == null))
+                || ((cl1 != null && cl2 != null) && (cl1.getTemporaryLimits().size() == cl2.getTemporaryLimits().size()) && cl1.getTemporaryLimits().containsAll(cl2.getTemporaryLimits())));
     }
 
     private boolean matchesRatioTapChangerInfos(RatioTapChangerCreationInfos rt1, RatioTapChangerCreationInfos rt2) {
