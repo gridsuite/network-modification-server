@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package org.gridsuite.modification.server.utils;
+package org.gridsuite.modification.server.Impacts;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -15,6 +15,8 @@ import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationResult.ApplicationStatus;
 import org.gridsuite.modification.server.impacts.SimpleElementImpact;
 import org.gridsuite.modification.server.impacts.SimpleElementImpact.SimpleImpactType;
+import org.gridsuite.modification.server.utils.MatcherJson;
+import org.hamcrest.MatcherAssert;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -26,9 +28,9 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
-public final class ImpactUtils {
+public final class TestImpactUtils {
 
-    private ImpactUtils() {
+    private TestImpactUtils() {
     }
 
     @SneakyThrows
@@ -53,7 +55,7 @@ public final class ImpactUtils {
             .networkImpacts(List.of())
             .build();
 
-        assertThat(networkModificationResult, new MatcherJson<>(mapper, resultExpected));
+        MatcherAssert.assertThat(networkModificationResult, new MatcherJson<>(mapper, resultExpected));
     }
 
     @SneakyThrows

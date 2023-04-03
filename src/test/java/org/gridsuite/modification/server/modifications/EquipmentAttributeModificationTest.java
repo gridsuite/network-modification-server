@@ -24,8 +24,8 @@ import java.util.Set;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
-import static org.gridsuite.modification.server.utils.ImpactUtils.testElementModificationImpact;
-import static org.gridsuite.modification.server.utils.ImpactUtils.testEmptyImpacts;
+import static org.gridsuite.modification.server.Impacts.TestImpactUtils.testElementModificationImpact;
+import static org.gridsuite.modification.server.Impacts.TestImpactUtils.testEmptyImpacts;
 import static org.gridsuite.modification.server.utils.MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos;
 import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;

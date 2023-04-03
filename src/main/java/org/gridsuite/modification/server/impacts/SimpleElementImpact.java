@@ -12,6 +12,9 @@ import lombok.*;
 import java.util.Set;
 
 /**
+ * This class describes an element type network impact
+ * This type of network impact only describes an individual impacted item and the list of associated subtractions
+ *
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
@@ -30,9 +33,11 @@ public class SimpleElementImpact {
 
     private SimpleImpactType impactType;
 
+    /** The impacted element ID */
     private String elementId;
 
     private IdentifiableType elementType;
 
+    /** The impacted substations IDs */
     private Set<String> substationIds;
 }

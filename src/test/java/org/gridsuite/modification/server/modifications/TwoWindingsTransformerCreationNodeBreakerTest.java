@@ -27,7 +27,7 @@ import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.BUSBAR_SECTION_NOT_FOUND;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.TWO_WINDINGS_TRANSFORMER_ALREADY_EXISTS;
-import static org.gridsuite.modification.server.utils.ImpactUtils.testBranchCreationImpacts;
+import static org.gridsuite.modification.server.Impacts.TestImpactUtils.testBranchCreationImpacts;
 import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;

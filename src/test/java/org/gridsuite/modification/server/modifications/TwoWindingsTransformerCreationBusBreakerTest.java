@@ -25,7 +25,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.BUS_NOT_FOUND;
-import static org.gridsuite.modification.server.utils.ImpactUtils.testElementCreationImpact;
+import static org.gridsuite.modification.server.Impacts.TestImpactUtils.testElementCreationImpact;
 import static org.gridsuite.modification.server.utils.MatcherTwoWindingsTransformerCreationInfos.createMatcherTwoWindingsTransformerCreationInfos;
 import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
