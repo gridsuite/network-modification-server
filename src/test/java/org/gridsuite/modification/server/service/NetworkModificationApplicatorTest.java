@@ -11,6 +11,7 @@ import com.powsybl.commons.reporter.Report;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.commons.reporter.TypedValue;
+import org.gridsuite.modification.server.dto.NetworkModificationResult.ApplicationStatus;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -20,13 +21,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class NetworkModificationApplicatorTest {
 
     @ParameterizedTest
     @MethodSource("provideArgumentsForComputeHigherSeverity")
-    void computeHigherSeverity(List<Report> reports, TypedValue expectedSeverity) {
+    void computeHigherSeverity(List<Report> reports, ApplicationStatus expectedSeverity) {
 
         assertEquals(6, reports.size(), "We need exactly 6 reports to run the test");
 
@@ -44,7 +45,7 @@ class NetworkModificationApplicatorTest {
         subSubReporter1.report(reports.get(4));
         subSubReporter2.report(reports.get(5));
 
-        TypedValue actualSeverity = NetworkModificationApplicator.computeHighestSeverityFromReporterModel(reporterModel);
+        ApplicationStatus actualSeverity = NetworkModificationApplicator.getApplicationStatus(reporterModel);
         assertEquals(expectedSeverity, actualSeverity);
     }
 
@@ -57,7 +58,7 @@ class NetworkModificationApplicatorTest {
                                 infoReport,
                                 warningReport,
                                 errorReport),
-                        TypedValue.ERROR_SEVERITY),
+                        ApplicationStatus.WITH_ERRORS),
                 Arguments.of(List.of(
                                 infoReport,
                                 infoReport,
@@ -65,7 +66,7 @@ class NetworkModificationApplicatorTest {
                                 infoReport,
                                 warningReport,
                                 infoReport),
-                        TypedValue.WARN_SEVERITY),
+                        ApplicationStatus.WITH_WARNINGS),
                 Arguments.of(List.of(
                                 infoReport,
                                 infoReport,
@@ -73,7 +74,7 @@ class NetworkModificationApplicatorTest {
                                 infoReport,
                                 infoReport,
                                 infoReport),
-                        TypedValue.INFO_SEVERITY),
+                        ApplicationStatus.ALL_OK),
                 Arguments.of(List.of(
                                 errorReport,
                                 warningReport,
@@ -81,7 +82,7 @@ class NetworkModificationApplicatorTest {
                                 infoReport,
                                 infoReport,
                                 infoReport),
-                        TypedValue.ERROR_SEVERITY),
+                        ApplicationStatus.WITH_ERRORS),
                 Arguments.of(List.of(
                                 infoReport,
                                 errorReport,
@@ -89,7 +90,7 @@ class NetworkModificationApplicatorTest {
                                 infoReport,
                                 infoReport,
                                 infoReport),
-                        TypedValue.ERROR_SEVERITY),
+                        ApplicationStatus.WITH_ERRORS),
                 Arguments.of(List.of(
                                 infoReport,
                                 infoReport,
@@ -97,7 +98,7 @@ class NetworkModificationApplicatorTest {
                                 warningReport,
                                 infoReport,
                                 infoReport),
-                        TypedValue.ERROR_SEVERITY),
+                        ApplicationStatus.WITH_ERRORS),
                 Arguments.of(List.of(
                                 infoReport,
                                 infoReport,
@@ -105,7 +106,7 @@ class NetworkModificationApplicatorTest {
                                 errorReport,
                                 warningReport,
                                 infoReport),
-                        TypedValue.ERROR_SEVERITY),
+                        ApplicationStatus.WITH_ERRORS),
                 Arguments.of(List.of(
                                 notSeverityReport,
                                 notSeverityReport,
@@ -113,7 +114,7 @@ class NetworkModificationApplicatorTest {
                                 warningReport,
                                 notSeverityReport,
                                 notSeverityReport),
-                        TypedValue.WARN_SEVERITY),
+                        ApplicationStatus.WITH_WARNINGS),
                 Arguments.of(List.of(
                                 notSeverityReport,
                                 notSeverityReport,
@@ -121,7 +122,7 @@ class NetworkModificationApplicatorTest {
                                 notSeverityReport,
                                 notSeverityReport,
                                 notSeverityReport),
-                        TypedValue.TRACE_SEVERITY)
+                        ApplicationStatus.ALL_OK)
         );
     }
 

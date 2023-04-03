@@ -18,18 +18,16 @@ import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.NetworkInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
+import org.gridsuite.modification.server.dto.NetworkModificationResult.ApplicationStatus;
 import org.gridsuite.modification.server.dto.ReportInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.service.ReportService;
-import org.gridsuite.modification.server.utils.TypedValueComparator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -39,8 +37,6 @@ import java.util.stream.Stream;
 @Service
 public class NetworkModificationApplicator {
     private static final Logger LOGGER = LoggerFactory.getLogger(NetworkModificationApplicator.class);
-
-    private static final TypedValueComparator TYPED_VALUE_COMPARATOR = new TypedValueComparator();
 
     private enum ApplicationMode {
         UNITARY,
@@ -95,9 +91,7 @@ public class NetworkModificationApplicator {
                 throw networkModificationException;
             }
         } finally {
-            TypedValue highestSeverity = computeHighestSeverityFromReporterModel(reporter);
-            NetworkModificationResult.ApplicationStatus status = convertTypedValueToApplicationStatus(highestSeverity);
-            listener.setApplicationStatus(status);
+            listener.setApplicationStatus(getApplicationStatus(reporter));
             reportService.sendReport(reportInfos.getReportUuid(), reporter); // TODO : Group report sends ?
         }
     }
@@ -131,32 +125,25 @@ public class NetworkModificationApplicator {
         return networkModificationException;
     }
 
-    public static TypedValue computeHighestSeverityFromReporterModel(ReporterModel reporter) {
-        Stream<TypedValue> reportsSeverities = reporter.getReports().stream()
-                .map(NetworkModificationApplicator::computeHighestSeverityFromReport);
-
-        Stream<TypedValue> subReportersSeverities = reporter.getSubReporters().stream()
-                .map(NetworkModificationApplicator::computeHighestSeverityFromReporterModel);
-
-        return Stream.concat(reportsSeverities, subReportersSeverities)
-                .max(TYPED_VALUE_COMPARATOR).orElse(TypedValue.TRACE_SEVERITY); // orElse not necessary but we never know
-    }
-
-    public static TypedValue computeHighestSeverityFromReport(Report report) {
-        return report.getValues().entrySet().stream()
-                .filter(entry -> entry.getKey().equals(Report.REPORT_SEVERITY_KEY))
-                .map(Map.Entry::getValue)
-                .reduce((currentValue, nextValue) -> Collections.max(List.of(currentValue, nextValue), TYPED_VALUE_COMPARATOR))
-                .orElse(TypedValue.TRACE_SEVERITY);
-    }
-
-    public static NetworkModificationResult.ApplicationStatus convertTypedValueToApplicationStatus(TypedValue typedValue) {
-        if (typedValue.equals(TypedValue.ERROR_SEVERITY)) {
-            return NetworkModificationResult.ApplicationStatus.WITH_ERRORS;
-        } else if (typedValue.equals(TypedValue.WARN_SEVERITY)) {
-            return NetworkModificationResult.ApplicationStatus.WITH_WARNINGS;
+    public static ApplicationStatus getApplicationStatus(Report report) {
+        TypedValue severity = report.getValues().get(Report.REPORT_SEVERITY_KEY);
+        if (severity == null || severity == TypedValue.TRACE_SEVERITY || severity == TypedValue.DEBUG_SEVERITY || severity == TypedValue.INFO_SEVERITY) {
+            return ApplicationStatus.ALL_OK;
+        } else if (severity == TypedValue.WARN_SEVERITY) {
+            return ApplicationStatus.WITH_WARNINGS;
+        } else if (severity == TypedValue.ERROR_SEVERITY) {
+            return ApplicationStatus.WITH_ERRORS;
         } else {
-            return NetworkModificationResult.ApplicationStatus.ALL_OK;
+            throw new IllegalArgumentException(String.format("Report severity '%s' unknown !", severity.getValue()));
         }
+    }
+
+    public static ApplicationStatus getApplicationStatus(ReporterModel reporter) {
+        return Stream.concat(
+                        reporter.getReports().stream().map(NetworkModificationApplicator::getApplicationStatus),
+                        reporter.getSubReporters().stream().map(NetworkModificationApplicator::getApplicationStatus)
+                )
+                .reduce(ApplicationStatus::max)
+                .orElse(ApplicationStatus.ALL_OK);
     }
 }

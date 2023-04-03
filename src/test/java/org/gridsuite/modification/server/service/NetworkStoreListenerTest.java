@@ -8,21 +8,20 @@
 package org.gridsuite.modification.server.service;
 
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
-import org.gridsuite.modification.server.modifications.NetworkStoreListener;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.Assert.assertEquals;
 
 class NetworkStoreListenerTest {
 
     @ParameterizedTest
     @MethodSource("provideArgumentsForWorstStatus")
     void worstStatus(NetworkModificationResult.ApplicationStatus firstStatus, NetworkModificationResult.ApplicationStatus secondStatus) {
-        assertEquals(secondStatus, NetworkStoreListener.worstStatus(firstStatus, secondStatus));
+        assertEquals(secondStatus, firstStatus.max(secondStatus));
     }
 
     private static Stream<Arguments> provideArgumentsForWorstStatus() {
