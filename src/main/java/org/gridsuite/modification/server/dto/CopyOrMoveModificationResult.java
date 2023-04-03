@@ -9,7 +9,7 @@ package org.gridsuite.modification.server.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 
 import java.util.List;
 import java.util.Optional;
@@ -21,7 +21,7 @@ import java.util.UUID;
  * @author Florent MILLOT <florent.millot at rte-france.com>
  */
 @Builder
-@Data
+@Getter
 @Schema(description = "Copy or move network modifications result")
 public class CopyOrMoveModificationResult {
 
