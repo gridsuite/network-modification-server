@@ -65,16 +65,13 @@ public class LineCreation extends AbstractModification {
             addLine(network, voltageLevel1, voltageLevel2, modificationInfos, true, true, subReporter);
         }
 
-        // Set Permanent Current Limits if exist
+        // Set permanent and temporary current limits
         CurrentLimitsInfos currentLimitsInfos1 = modificationInfos.getCurrentLimits1();
         CurrentLimitsInfos currentLimitsInfos2 = modificationInfos.getCurrentLimits2();
-        var line = ModificationUtils.getInstance().getLine(network, modificationInfos.getEquipmentId());
-
-        if (currentLimitsInfos1 != null && currentLimitsInfos1.getPermanentLimit() != null) {
-            line.newCurrentLimits1().setPermanentLimit(currentLimitsInfos1.getPermanentLimit()).add();
-        }
-        if (currentLimitsInfos2 != null && currentLimitsInfos2.getPermanentLimit() != null) {
-            line.newCurrentLimits2().setPermanentLimit(currentLimitsInfos2.getPermanentLimit()).add();
+        if (currentLimitsInfos1 != null || currentLimitsInfos2 != null) {
+            var line = ModificationUtils.getInstance().getLine(network, modificationInfos.getEquipmentId());
+            ModificationUtils.getInstance().setCurrentLimits(currentLimitsInfos1, line.newCurrentLimits1());
+            ModificationUtils.getInstance().setCurrentLimits(currentLimitsInfos2, line.newCurrentLimits2());
         }
     }
 
