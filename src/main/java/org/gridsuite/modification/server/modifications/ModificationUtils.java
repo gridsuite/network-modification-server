@@ -551,5 +551,28 @@ public final class ModificationUtils {
                 return null;
         }
     }
+
+    public void setCurrentLimits(CurrentLimitsInfos currentLimitsInfos, CurrentLimitsAdder limitsAdder) {
+        if (currentLimitsInfos != null) {
+            boolean hasPermanent = currentLimitsInfos.getPermanentLimit() != null;
+            boolean hasTemporary = currentLimitsInfos.getTemporaryLimits() != null && !currentLimitsInfos.getTemporaryLimits().isEmpty();
+            if (hasPermanent) {
+                limitsAdder.setPermanentLimit(currentLimitsInfos.getPermanentLimit());
+            }
+            if (hasTemporary) {
+                for (CurrentTemporaryLimitCreationInfos limit : currentLimitsInfos.getTemporaryLimits()) {
+                    limitsAdder
+                            .beginTemporaryLimit()
+                            .setName(limit.getName())
+                            .setValue(limit.getValue() == null ? Double.MAX_VALUE : limit.getValue())
+                            .setAcceptableDuration(limit.getAcceptableDuration() == null ? Integer.MAX_VALUE : limit.getAcceptableDuration())
+                            .endTemporaryLimit();
+                }
+            }
+            if (hasPermanent || hasTemporary) {
+                limitsAdder.add();
+            }
+        }
+    }
 }
 

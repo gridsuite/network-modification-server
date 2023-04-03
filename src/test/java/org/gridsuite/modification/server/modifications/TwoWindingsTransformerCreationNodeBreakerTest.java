@@ -56,8 +56,8 @@ public class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetwo
                 .busOrBusbarSectionId1("1.1")
                 .voltageLevelId2("v2")
                 .busOrBusbarSectionId2("1A")
-                .currentLimits1(CurrentLimitsInfos.builder().permanentLimit(3.).build())
-                .currentLimits2(CurrentLimitsInfos.builder().permanentLimit(2.).build())
+                .currentLimits1(CurrentLimitsInfos.builder().permanentLimit(3.).temporaryLimits(List.of(CurrentTemporaryLimitCreationInfos.builder().name("IT5").acceptableDuration(2147483647).value(671.).build())).build())
+                .currentLimits2(CurrentLimitsInfos.builder().permanentLimit(2.).temporaryLimits(List.of(CurrentTemporaryLimitCreationInfos.builder().name("IT10").acceptableDuration(683647).value(791.).build())).build())
                 .connectionName1("cn201")
                 .connectionDirection1(ConnectablePosition.Direction.TOP)
                 .connectionName2("cn202")
@@ -161,8 +161,8 @@ public class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetwo
                 .busOrBusbarSectionId1("1.1")
                 .voltageLevelId2("v2")
                 .busOrBusbarSectionId2("1A")
-                .currentLimits1(CurrentLimitsInfos.builder().permanentLimit(3.).build())
-                .currentLimits2(CurrentLimitsInfos.builder().permanentLimit(2.).build())
+                .currentLimits1(CurrentLimitsInfos.builder().permanentLimit(3.).temporaryLimits(List.of(CurrentTemporaryLimitCreationInfos.builder().name("IT5").acceptableDuration(98647).value(45.).build())).build())
+                .currentLimits2(CurrentLimitsInfos.builder().permanentLimit(2.).temporaryLimits(List.of(CurrentTemporaryLimitCreationInfos.builder().name("IT10").acceptableDuration(683647).value(791.).build())).build())
                 .connectionName1("cn2012")
                 .connectionDirection1(ConnectablePosition.Direction.TOP)
                 .connectionName2("cn2022")
@@ -268,7 +268,6 @@ public class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetwo
         assertEquals(4, getNetwork().getTwoWindingsTransformer("new2wt").getRatioTapChanger().getStepCount());
         assertEquals(3, getNetwork().getTwoWindingsTransformer("new2wt").getPhaseTapChanger().getStepCount());
         assertEquals(PhaseTapChanger.RegulationMode.CURRENT_LIMITER, getNetwork().getTwoWindingsTransformer("new2wt").getPhaseTapChanger().getRegulationMode());
-
     }
 
     @SneakyThrows

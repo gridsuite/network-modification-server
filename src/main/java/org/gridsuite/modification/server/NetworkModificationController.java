@@ -64,8 +64,8 @@ public class NetworkModificationController {
 
     @PutMapping(value = "/groups/{groupUuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "For a list of network modifications passed in body, Move them before another one or at the end of the list, or Duplicate them at the end of the list")
-    @ApiResponse(responseCode = "200", description = "The modification list of the group has been updated. Missing modifications are returned.")
-    public ResponseEntity<List<UUID>> updateModificationGroup(@Parameter(description = "updated group UUID, where modifications are pasted") @PathVariable("groupUuid") UUID targetGroupUuid,
+    @ApiResponse(responseCode = "200", description = "The modification list of the group has been updated.")
+    public ResponseEntity<Void> updateModificationGroup(@Parameter(description = "updated group UUID, where modifications are pasted") @PathVariable("groupUuid") UUID targetGroupUuid,
                                                               @Parameter(description = "kind of modification", required = true) @RequestParam(value = "action") GroupModificationAction action,
                                                               @Parameter(description = "the network uuid", required = true) @RequestParam(value = "networkUuid") UUID networkUuid,
                                                               @Parameter(description = "the report uuid", required = true) @RequestParam(value = "reportUuid") UUID reportUuid,
@@ -77,7 +77,8 @@ public class NetworkModificationController {
                                                               @RequestBody List<UUID> modificationsUuidList) {
         switch (action) {
             case COPY:
-                return ResponseEntity.ok().body(networkModificationService.duplicateModifications(targetGroupUuid, networkModificationService.getNetworkInfos(networkUuid, variantId), new ReportInfos(reportUuid, reporterId.toString()), modificationsUuidList));
+                networkModificationService.duplicateModifications(targetGroupUuid, networkModificationService.getNetworkInfos(networkUuid, variantId), new ReportInfos(reportUuid, reporterId.toString()), modificationsUuidList);
+                return ResponseEntity.ok().build();
             case MOVE:
                 UUID sourceGroupUuid = originGroupUuid == null ? targetGroupUuid : originGroupUuid;
                 boolean canBuildNode = build;
@@ -85,7 +86,7 @@ public class NetworkModificationController {
                     canBuildNode = false;
                 }
                 networkModificationService.moveModifications(targetGroupUuid, sourceGroupUuid, before, networkModificationService.getNetworkInfos(networkUuid, variantId), new ReportInfos(reportUuid, reporterId.toString()), modificationsUuidList, canBuildNode);
-                return ResponseEntity.ok().body(List.of());
+                return ResponseEntity.ok().build();
             default:
                 throw new NetworkModificationException(TYPE_MISMATCH);
         }

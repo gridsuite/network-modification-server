@@ -545,7 +545,7 @@ public class BuildTest {
         Message<byte[]> resultMessage = output.receive(TIMEOUT, buildResultDestination);
         assertNotNull(resultMessage);
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
-        testElementImpacts(mapper, new String(resultMessage.getPayload()), 52, Set.of("newSubstation", "s1", "s2"));
+        testElementImpacts(mapper, new String(resultMessage.getPayload()), 53, Set.of("newSubstation", "s1", "s2"));
 
         // test all modifications have been made on variant VARIANT_ID
         network.getVariantManager().setWorkingVariant(NetworkCreation.VARIANT_ID);
@@ -686,7 +686,7 @@ public class BuildTest {
         resultMessage = output.receive(TIMEOUT, buildResultDestination);
         assertNotNull(resultMessage);
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
-        testElementImpacts(mapper, new String(resultMessage.getPayload()), 45, Set.of("newSubstation", "s1", "s2"));
+        testElementImpacts(mapper, new String(resultMessage.getPayload()), 46, Set.of("newSubstation", "s1", "s2"));
 
         // test that only active modifications have been made on variant VARIANT_ID
         network.getVariantManager().setWorkingVariant(NetworkCreation.VARIANT_ID);
