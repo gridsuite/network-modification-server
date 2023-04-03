@@ -388,7 +388,7 @@ public class ModificationControllerTest {
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
         UpdateModificationGroupResult result = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        assertEquals(badModificationUuidList, result.getModificationFailures()); // bad uuids are returned
+        assertEquals(badModificationUuidList, result.getMissingModifications()); // bad uuids are returned
 
         var newModificationList = modificationRepository.getModifications(TEST_GROUP_ID, true, true);
         List<UUID> newModificationUuidList = newModificationList.stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
@@ -425,7 +425,7 @@ public class ModificationControllerTest {
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
         result = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        assertEquals(List.of(), result.getModificationFailures()); // no bad id => no error this time
+        assertEquals(List.of(), result.getMissingModifications()); // no bad id => no error this time
 
         var newModificationListOtherGroup = modificationRepository.getModifications(otherGroupId, true, true);
         List<UUID> newModificationUuidListOtherGroup = newModificationListOtherGroup.stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
@@ -455,7 +455,7 @@ public class ModificationControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         UpdateModificationGroupResult result = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        assertEquals(duplicateModificationUuidList, result.getModificationFailures()); // bad uuids are returned
+        assertEquals(duplicateModificationUuidList, result.getMissingModifications()); // bad uuids are returned
 
         var newModificationList = modificationRepository.getModifications(TEST_GROUP_ID, true, true);
         List<UUID> newModificationUuidList = newModificationList.stream().map(ModificationInfos::getUuid).collect(Collectors.toList());

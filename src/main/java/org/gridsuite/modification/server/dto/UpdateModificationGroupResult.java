@@ -17,7 +17,7 @@ import java.util.UUID;
 
 /**
  * This is the return value of the endpoint updateModificationGroup.
- * TODO : remove this DTO when modificationFailures will not be needed anymore
+ * TODO : remove this DTO and return only networkModificationResult when missingModifications will not be needed anymore
  * @author Florent MILLOT <florent.millot at rte-france.com>
  */
 @Builder
@@ -30,5 +30,5 @@ public class UpdateModificationGroupResult {
 
     @Schema(description = "Network modification failures")
     @Builder.Default
-    private List<UUID> modificationFailures = List.of();
+    private List<UUID> missingModifications = List.of();
 }

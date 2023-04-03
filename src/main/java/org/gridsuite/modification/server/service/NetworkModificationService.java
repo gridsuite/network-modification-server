@@ -216,7 +216,7 @@ public class NetworkModificationService {
         List<ModificationEntity> duplicatedModificationsEntities = modificationsEntities.stream().map(ModificationEntity::copy).collect(Collectors.toList());
         List<UUID> missingModificationList = new ArrayList<>(modificationsUuids);
         missingModificationList.removeAll(presentUuids);
-        var result = UpdateModificationGroupResult.builder().modificationFailures(missingModificationList);
+        var result = UpdateModificationGroupResult.builder().missingModifications(missingModificationList);
         if (!duplicatedModificationsEntities.isEmpty()) {
             networkModificationRepository.saveModifications(targetGroupUuid, duplicatedModificationsEntities);
             // try to apply the duplicated modifications (incremental mode)
