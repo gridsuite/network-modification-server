@@ -182,12 +182,12 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public UpdateModificationGroupResult moveModifications(UUID groupUuid, UUID originGroupUuid, UUID before, NetworkInfos networkInfos, ReportInfos reportInfos, List<UUID> modificationsToMove, boolean canBuildNode) {
+    public CopyOrMoveModificationResult moveModifications(UUID groupUuid, UUID originGroupUuid, UUID before, NetworkInfos networkInfos, ReportInfos reportInfos, List<UUID> modificationsToMove, boolean canBuildNode) {
         List<ModificationInfos> movedModifications = networkModificationRepository.moveModifications(groupUuid, originGroupUuid, modificationsToMove, before)
             .stream()
             .map(ModificationEntity::toModificationInfos)
             .collect(Collectors.toList());
-        var result = UpdateModificationGroupResult.builder();
+        var result = CopyOrMoveModificationResult.builder();
         if (canBuildNode && !movedModifications.isEmpty() && networkInfos.isVariantPresent()) {
             // try to apply the moved modifications (incremental mode)
             result.networkModificationResult(Optional.of(modificationApplicator.applyModifications(
@@ -210,13 +210,13 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public UpdateModificationGroupResult duplicateModifications(UUID targetGroupUuid, NetworkInfos networkInfos, ReportInfos reportInfos, List<UUID> modificationsUuids) {
+    public CopyOrMoveModificationResult duplicateModifications(UUID targetGroupUuid, NetworkInfos networkInfos, ReportInfos reportInfos, List<UUID> modificationsUuids) {
         List<ModificationEntity> modificationsEntities = networkModificationRepository.getModificationsEntities(modificationsUuids);
         Set<UUID> presentUuids = modificationsEntities.stream().map(ModificationEntity::getId).collect(Collectors.toSet());
         List<ModificationEntity> duplicatedModificationsEntities = modificationsEntities.stream().map(ModificationEntity::copy).collect(Collectors.toList());
         List<UUID> missingModificationList = new ArrayList<>(modificationsUuids);
         missingModificationList.removeAll(presentUuids);
-        var result = UpdateModificationGroupResult.builder().missingModifications(missingModificationList);
+        var result = CopyOrMoveModificationResult.builder().missingModifications(missingModificationList);
         if (!duplicatedModificationsEntities.isEmpty()) {
             networkModificationRepository.saveModifications(targetGroupUuid, duplicatedModificationsEntities);
             // try to apply the duplicated modifications (incremental mode)

@@ -23,7 +23,7 @@ import java.util.UUID;
 @Builder
 @Data
 @Schema(description = "Copy or move network modifications result")
-public class UpdateModificationGroupResult {
+public class CopyOrMoveModificationResult {
 
     @Builder.Default
     Optional<NetworkModificationResult> networkModificationResult = Optional.empty();
