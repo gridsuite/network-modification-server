@@ -65,28 +65,26 @@ public class NetworkModificationController {
     @PutMapping(value = "/groups/{groupUuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "For a list of network modifications passed in body, Move them before another one or at the end of the list, or Duplicate them at the end of the list")
     @ApiResponse(responseCode = "200", description = "The modification list of the group has been updated.")
-    public ResponseEntity<Void> updateModificationGroup(@Parameter(description = "updated group UUID, where modifications are pasted") @PathVariable("groupUuid") UUID targetGroupUuid,
-                                                              @Parameter(description = "kind of modification", required = true) @RequestParam(value = "action") GroupModificationAction action,
-                                                              @Parameter(description = "the network uuid", required = true) @RequestParam(value = "networkUuid") UUID networkUuid,
-                                                              @Parameter(description = "the report uuid", required = true) @RequestParam(value = "reportUuid") UUID reportUuid,
-                                                              @Parameter(description = "the reporter id", required = true) @RequestParam(value = "reporterId") UUID reporterId,
-                                                              @Parameter(description = "the variant id", required = true) @RequestParam(value = "variantId") String variantId,
-                                                              @Parameter(description = "the modification Uuid to move before (MOVE option, empty means moving at the end)") @RequestParam(value = "before", required = false) UUID before,
-                                                              @Parameter(description = "origin group UUID, where modifications are copied or cut") @RequestParam(value = "originGroupUuid", required = false) UUID originGroupUuid,
-                                                              @Parameter(description = "destination node can be built (default is true)") @RequestParam(value = "build", required = false, defaultValue = "true") Boolean build,
-                                                              @RequestBody List<UUID> modificationsUuidList) {
+    public ResponseEntity<Optional<NetworkModificationResult>> copyOrMoveNetworkModification(@Parameter(description = "updated group UUID, where modifications are pasted") @PathVariable("groupUuid") UUID targetGroupUuid,
+                                                                                      @Parameter(description = "kind of modification", required = true) @RequestParam(value = "action") GroupModificationAction action,
+                                                                                      @Parameter(description = "the network uuid", required = true) @RequestParam(value = "networkUuid") UUID networkUuid,
+                                                                                      @Parameter(description = "the report uuid", required = true) @RequestParam(value = "reportUuid") UUID reportUuid,
+                                                                                      @Parameter(description = "the reporter id", required = true) @RequestParam(value = "reporterId") UUID reporterId,
+                                                                                      @Parameter(description = "the variant id", required = true) @RequestParam(value = "variantId") String variantId,
+                                                                                      @Parameter(description = "the modification Uuid to move before (MOVE option, empty means moving at the end)") @RequestParam(value = "before", required = false) UUID before,
+                                                                                      @Parameter(description = "origin group UUID, where modifications are copied or cut") @RequestParam(value = "originGroupUuid", required = false) UUID originGroupUuid,
+                                                                                      @Parameter(description = "destination node can be built (default is true)") @RequestParam(value = "build", required = false, defaultValue = "true") Boolean build,
+                                                                                      @RequestBody List<UUID> modificationsUuidList) {
         switch (action) {
             case COPY:
-                networkModificationService.duplicateModifications(targetGroupUuid, networkModificationService.getNetworkInfos(networkUuid, variantId), new ReportInfos(reportUuid, reporterId.toString()), modificationsUuidList);
-                return ResponseEntity.ok().build();
+                return ResponseEntity.ok().body(networkModificationService.duplicateModifications(targetGroupUuid, networkModificationService.getNetworkInfos(networkUuid, variantId), new ReportInfos(reportUuid, reporterId.toString()), modificationsUuidList));
             case MOVE:
                 UUID sourceGroupUuid = originGroupUuid == null ? targetGroupUuid : originGroupUuid;
                 boolean canBuildNode = build;
                 if (sourceGroupUuid.equals(targetGroupUuid)) {
                     canBuildNode = false;
                 }
-                networkModificationService.moveModifications(targetGroupUuid, sourceGroupUuid, before, networkModificationService.getNetworkInfos(networkUuid, variantId), new ReportInfos(reportUuid, reporterId.toString()), modificationsUuidList, canBuildNode);
-                return ResponseEntity.ok().build();
+                return ResponseEntity.ok().body(networkModificationService.moveModifications(targetGroupUuid, sourceGroupUuid, before, networkModificationService.getNetworkInfos(networkUuid, variantId), new ReportInfos(reportUuid, reporterId.toString()), modificationsUuidList, canBuildNode));
             default:
                 throw new NetworkModificationException(TYPE_MISMATCH);
         }
