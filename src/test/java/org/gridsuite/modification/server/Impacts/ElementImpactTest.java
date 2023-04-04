@@ -13,6 +13,7 @@ import nl.jqno.equalsverifier.EqualsVerifier;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationResult.ApplicationStatus;
 import org.gridsuite.modification.server.impacts.SimpleElementImpact;
+import org.gridsuite.modification.server.utils.TestUtils;
 import org.junit.Test;
 
 import java.util.Collection;
@@ -20,7 +21,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.TreeSet;
 
-import static org.gridsuite.modification.server.utils.ImpactUtils.*;
+import static org.gridsuite.modification.server.Impacts.TestImpactUtils.*;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -50,22 +51,13 @@ public class ElementImpactTest {
             .applicationStatus(ApplicationStatus.ALL_OK)
             .networkImpacts((List<SimpleElementImpact>) impacts)
             .build();
-        assertEquals(
-            "{\"applicationStatus\":\"ALL_OK\",\"networkImpacts\":[{\"impactType\":\"CREATION\",\"elementId\":\"lineId\",\"elementType\":\"LINE\",\"substationIds\":[\"s1\",\"s2\"]},{\"impactType\":\"MODIFICATION\",\"elementId\":\"loadId\",\"elementType\":\"LOAD\",\"substationIds\":[\"s3\"]},{\"impactType\":\"DELETION\",\"elementId\":\"generatorId\",\"elementType\":\"GENERATOR\",\"substationIds\":[\"s4\"]}],\"impactedSubstationsIds\":[\"s1\",\"s2\",\"s3\",\"s4\"]}",
-            mapper.writeValueAsString(result)
-        );
+        assertEquals(TestUtils.resourceToString("/network-modification-result-with-all-ok.json"), mapper.writeValueAsString(result));
 
         result.setApplicationStatus(ApplicationStatus.WITH_WARNINGS);
-        assertEquals(
-            "{\"applicationStatus\":\"WITH_WARNINGS\",\"networkImpacts\":[{\"impactType\":\"CREATION\",\"elementId\":\"lineId\",\"elementType\":\"LINE\",\"substationIds\":[\"s1\",\"s2\"]},{\"impactType\":\"MODIFICATION\",\"elementId\":\"loadId\",\"elementType\":\"LOAD\",\"substationIds\":[\"s3\"]},{\"impactType\":\"DELETION\",\"elementId\":\"generatorId\",\"elementType\":\"GENERATOR\",\"substationIds\":[\"s4\"]}],\"impactedSubstationsIds\":[\"s1\",\"s2\",\"s3\",\"s4\"]}",
-            mapper.writeValueAsString(result)
-        );
+        assertEquals(TestUtils.resourceToString("/network-modification-result-with-with-warnings.json"), mapper.writeValueAsString(result));
 
         result.setApplicationStatus(ApplicationStatus.WITH_ERRORS);
-        assertEquals(
-            "{\"applicationStatus\":\"WITH_ERRORS\",\"networkImpacts\":[{\"impactType\":\"CREATION\",\"elementId\":\"lineId\",\"elementType\":\"LINE\",\"substationIds\":[\"s1\",\"s2\"]},{\"impactType\":\"MODIFICATION\",\"elementId\":\"loadId\",\"elementType\":\"LOAD\",\"substationIds\":[\"s3\"]},{\"impactType\":\"DELETION\",\"elementId\":\"generatorId\",\"elementType\":\"GENERATOR\",\"substationIds\":[\"s4\"]}],\"impactedSubstationsIds\":[\"s1\",\"s2\",\"s3\",\"s4\"]}",
-            mapper.writeValueAsString(result)
-        );
+        assertEquals(TestUtils.resourceToString("/network-modification-result-with-with-errors.json"), mapper.writeValueAsString(result));
 
         assertEquals("[s1, s2, s3, s4]", result.getImpactedSubstationsIds().toString());
 

@@ -24,7 +24,7 @@ import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.GROOVY_SCRIPT_EMPTY;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.GROOVY_SCRIPT_ERROR;
-import static org.gridsuite.modification.server.utils.ImpactUtils.testElementModificationImpact;
+import static org.gridsuite.modification.server.Impacts.TestImpactUtils.testElementModificationImpact;
 import static org.gridsuite.modification.server.utils.MatcherGroovyScriptInfos.createMatcherGroovyScriptInfos;
 import static org.junit.Assert.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;

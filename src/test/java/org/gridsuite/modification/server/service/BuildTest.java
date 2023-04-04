@@ -65,7 +65,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import static com.powsybl.iidm.network.ReactiveLimitsKind.MIN_MAX;
 import static org.gridsuite.modification.server.service.BuildWorkerService.CANCEL_MESSAGE;
 import static org.gridsuite.modification.server.service.BuildWorkerService.FAIL_MESSAGE;
-import static org.gridsuite.modification.server.utils.ImpactUtils.*;
+import static org.gridsuite.modification.server.Impacts.TestImpactUtils.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.*;
