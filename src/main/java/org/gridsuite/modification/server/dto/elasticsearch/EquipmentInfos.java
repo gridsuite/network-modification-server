@@ -4,19 +4,15 @@
   License, v. 2.0. If a copy of the MPL was not distributed with this
   file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package org.gridsuite.modification.server.dto;
+package org.gridsuite.modification.server.dto.elasticsearch;
 
 import com.powsybl.iidm.network.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.dto.VoltageLevelInfos;
 import org.springframework.data.annotation.TypeAlias;
-import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.annotations.Field;
-import org.springframework.data.elasticsearch.annotations.FieldType;
-import org.springframework.data.elasticsearch.annotations.InnerField;
-import org.springframework.data.elasticsearch.annotations.MultiField;
-import org.springframework.data.elasticsearch.annotations.Setting;
+import org.springframework.data.elasticsearch.annotations.*;
 import org.springframework.lang.NonNull;
 
 import java.util.Set;

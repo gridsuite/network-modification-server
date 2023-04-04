@@ -17,10 +17,7 @@ import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.BuildInfos;
-import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.dto.NetworkInfos;
-import org.gridsuite.modification.server.dto.ReportInfos;
+import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
@@ -28,9 +25,7 @@ import org.gridsuite.modification.server.repositories.NetworkModificationReposit
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
@@ -112,12 +107,14 @@ public class NetworkModificationService {
     // No transactional because we need to save modification in DB also in case of error
     // Transaction made in 'saveModifications' method
     // TODO Add transaction when errors will no longer be sent to the front
-    public List<ModificationInfos> createNetworkModification(@NonNull NetworkInfos networkInfos, @NonNull UUID groupUuid,
-                                                             @NonNull ReportInfos reportInfos,
-                                                             @NonNull ModificationInfos modificationInfos) {
+    public Optional<NetworkModificationResult> createNetworkModification(@NonNull NetworkInfos networkInfos, @NonNull UUID groupUuid,
+                                                                         @NonNull ReportInfos reportInfos,
+                                                                         @NonNull ModificationInfos modificationInfos) {
         networkModificationRepository.saveModifications(groupUuid, List.of(modificationInfos.toEntity()));
 
-        return networkInfos.isVariantPresent() ? modificationApplicator.applyModification(modificationInfos, networkInfos, reportInfos) : List.of();
+        return networkInfos.isVariantPresent() ?
+            Optional.of(modificationApplicator.applyModification(modificationInfos, networkInfos, reportInfos)) :
+            Optional.empty();
     }
 
     public Network cloneNetworkVariant(UUID networkUuid, String originVariantId, String destinationVariantId) {
@@ -139,7 +136,7 @@ public class NetworkModificationService {
     }
 
     @Transactional(readOnly = true)
-    public List<ModificationInfos> buildVariant(@NonNull NetworkInfos networkInfos, @NonNull BuildInfos buildInfos) {
+    public NetworkModificationResult buildVariant(@NonNull NetworkInfos networkInfos, @NonNull BuildInfos buildInfos) {
         // Apply all modifications belonging to the modification groups uuids in buildInfos
         List<Pair<String, List<ModificationInfos>>> modificationInfos = new ArrayList<>();
 

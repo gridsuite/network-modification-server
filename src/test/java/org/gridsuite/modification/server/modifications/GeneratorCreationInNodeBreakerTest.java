@@ -13,7 +13,10 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.server.dto.GeneratorCreationInfos;
+import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.NetworkModificationResult;
+import org.gridsuite.modification.server.dto.ReactiveCapabilityCurveCreationInfos;
 import org.gridsuite.modification.server.utils.MatcherGeneratorCreationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
@@ -21,7 +24,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.Arrays;
-import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
@@ -164,6 +167,7 @@ public class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificat
 
         // invalid min active power
         generatorCreationInfos.setVoltageLevelId("v2");
+
         generatorCreationInfos.setBusOrBusbarSectionId("1B");
         generatorCreationInfos.setMinActivePower(Double.NaN);
         generatorCreationInfosJson = mapper.writeValueAsString(generatorCreationInfos);
@@ -193,8 +197,8 @@ public class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificat
                     content().string(new NetworkModificationException(GENERATOR_ALREADY_EXISTS, "v5generator").getMessage())
             );
 
-        List<EquipmentModificationInfos> modifications = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertTrue(modifications.isEmpty());  // no modifications returned
+        Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(resultAsString, new TypeReference<>() { });
+        assertTrue(networkModificationResult.isEmpty());  // no modifications returned
         assertNull(getNetwork().getGenerator("idGenerator3"));  // generator was not created
         testNetworkModificationsCount(getGroupId(), 6);  // new modification stored in the database
     }

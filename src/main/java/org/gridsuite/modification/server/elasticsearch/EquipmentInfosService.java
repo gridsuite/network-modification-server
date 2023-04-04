@@ -7,8 +7,8 @@
 package org.gridsuite.modification.server.elasticsearch;
 
 import com.google.common.collect.Lists;
-import org.gridsuite.modification.server.dto.EquipmentInfos;
-import org.gridsuite.modification.server.dto.TombstonedEquipmentInfos;
+import org.gridsuite.modification.server.dto.elasticsearch.EquipmentInfos;
+import org.gridsuite.modification.server.dto.elasticsearch.TombstonedEquipmentInfos;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;

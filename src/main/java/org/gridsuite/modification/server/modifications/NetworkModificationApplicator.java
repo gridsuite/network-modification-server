@@ -17,9 +17,9 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.NetworkInfos;
+import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.ReportInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
-import org.gridsuite.modification.server.service.NetworkStoreListener;
 import org.gridsuite.modification.server.service.ReportService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,19 +59,19 @@ public class NetworkModificationApplicator {
         this.context = context;
     }
 
-    public List<ModificationInfos> applyModification(ModificationInfos modificationInfos, NetworkInfos networkInfos, ReportInfos reportInfos) {
+    public NetworkModificationResult applyModification(ModificationInfos modificationInfos, NetworkInfos networkInfos, ReportInfos reportInfos) {
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService);
         apply(modificationInfos, listener, reportInfos, ApplicationMode.UNITARY);
         return listener.flushNetworkModifications();
     }
 
-    public List<ModificationInfos> applyModifications(List<ModificationInfos> modificationInfosList, NetworkInfos networkInfos, ReportInfos reportInfos) {
+    public NetworkModificationResult applyModifications(List<ModificationInfos> modificationInfosList, NetworkInfos networkInfos, ReportInfos reportInfos) {
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService);
         modificationInfosList.forEach(m -> apply(m, listener, reportInfos, ApplicationMode.MULTIPLE));
         return listener.flushNetworkModifications();
     }
 
-    public List<ModificationInfos> applyModifications(List<Pair<String, List<ModificationInfos>>> modificationInfosGroups, NetworkInfos networkInfos, UUID reportUuid) {
+    public NetworkModificationResult applyModifications(List<Pair<String, List<ModificationInfos>>> modificationInfosGroups, NetworkInfos networkInfos, UUID reportUuid) {
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService);
         modificationInfosGroups.forEach(g -> g.getRight().forEach(m -> apply(m, listener, new ReportInfos(reportUuid, g.getLeft()), ApplicationMode.MULTIPLE)));
         return listener.flushNetworkModifications();
@@ -83,8 +83,8 @@ public class NetworkModificationApplicator {
         Reporter subReporter = modificationInfos.createSubReporter(reporter);
         try {
             apply(modificationInfos.toModification(), listener.getNetwork(), subReporter);
-            listener.addNetworkDamage(modificationInfos);
         } catch (Exception e) {
+            listener.setApplicationStatus(NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
             NetworkModificationException networkModificationException = handleException(modificationInfos.getErrorType(), subReporter, e);
             if (mode == ApplicationMode.UNITARY) {
                 throw networkModificationException;

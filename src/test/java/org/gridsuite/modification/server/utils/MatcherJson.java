@@ -6,27 +6,29 @@
  */
 package org.gridsuite.modification.server.utils;
 
-import org.gridsuite.modification.server.dto.ModificationInfos;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.SneakyThrows;
 import org.hamcrest.Description;
 import org.hamcrest.TypeSafeMatcher;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
-public class MatcherModificationInfos<T extends ModificationInfos> extends TypeSafeMatcher<T> {
+public class MatcherJson<T> extends TypeSafeMatcher<T> {
+
+    ObjectMapper mapper;
+
     T reference;
 
-    public static MatcherModificationInfos createMatcherModificationInfos(ModificationInfos ref) {
-        return new MatcherModificationInfos(ref);
+    public MatcherJson(ObjectMapper mapper, T val) {
+        this.mapper = mapper;
+        this.reference = val;
     }
 
-    protected MatcherModificationInfos(T ref) {
-        this.reference = ref;
-    }
-
+    @SneakyThrows
     @Override
-    public boolean matchesSafely(T m) {
-        return m.getClass().equals(reference.getClass());
+    public boolean matchesSafely(T s) {
+        return mapper.writeValueAsString(reference).equals(mapper.writeValueAsString(s));
     }
 
     @Override

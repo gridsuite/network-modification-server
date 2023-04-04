@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.gridsuite.modification.server.dto.BuildInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.ReportInfos;
 import org.gridsuite.modification.server.service.NetworkModificationService;
 import org.springframework.http.MediaType;
@@ -20,6 +21,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.TYPE_MISMATCH;
@@ -111,7 +113,7 @@ public class NetworkModificationController {
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "The network modification was created"),
         @ApiResponse(responseCode = "404", description = "The network or equipment was not found")})
-    public ResponseEntity<List<ModificationInfos>> createNetworkModification(
+    public ResponseEntity<Optional<NetworkModificationResult>> createNetworkModification(
             @Parameter(description = "Network UUID") @RequestParam("networkUuid") UUID networkUuid,
             @Parameter(description = "Variant ID") @RequestParam(name = "variantId", required = false) String variantId,
             @Parameter(description = "Group UUID") @RequestParam(name = "groupUuid", required = false) UUID groupUuid,

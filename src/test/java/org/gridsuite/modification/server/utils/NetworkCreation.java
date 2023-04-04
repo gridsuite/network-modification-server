@@ -143,11 +143,11 @@ public final class NetworkCreation {
         ThreeWindingsTransformer t3 = createThreeWindingsTransformer(s1, "trf6", "trf6", v1.getId(), v2.getId(), v4.getId(),
             0.5, 0.5, 0.5, 1., 1., 1., 0.1, 0.1,
             400., 225., 225.,
-            5, 16, 1,
+            51, 16, 1,
             "trf61", 5, ConnectablePosition.Direction.TOP,
             "trf62", 5, ConnectablePosition.Direction.TOP,
             "trf63", 3, ConnectablePosition.Direction.TOP);
-        createSwitch(v1, "v1btrf6", "v1btrf6", SwitchKind.BREAKER, true, false, false, 5, 6);
+        createSwitch(v1, "v1btrf6", "v1btrf6", SwitchKind.BREAKER, true, false, false, 51, 6);
         createSwitch(v1, "v1dtrf6", "v1dtrf6", SwitchKind.DISCONNECTOR, true, false, false, 6, 0);
         createSwitch(v2, "v2btrf6", "v2btrf6", SwitchKind.BREAKER, true, false, false, 16, 17);
         createSwitch(v2, "v2dtrf6", "v2dtrf6", SwitchKind.DISCONNECTOR, true, false, false, 17, 0);
