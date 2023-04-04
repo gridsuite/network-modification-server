@@ -86,6 +86,7 @@ public class NetworkModificationApplicator {
         try {
             apply(modificationInfos.toModification(), listener.getNetwork(), subReporter);
         } catch (Exception e) {
+            listener.setApplicationStatus(NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
             NetworkModificationException networkModificationException = handleException(modificationInfos.getErrorType(), subReporter, e);
             if (mode == ApplicationMode.UNITARY) {
                 throw networkModificationException;

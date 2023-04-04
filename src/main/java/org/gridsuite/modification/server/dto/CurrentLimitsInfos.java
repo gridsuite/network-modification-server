@@ -13,6 +13,9 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 import org.gridsuite.modification.server.entities.equipment.creation.CurrentLimitsEntity;
+import org.gridsuite.modification.server.entities.equipment.creation.CurrentTemporaryLimitCreationEmbeddable;
+
+import java.util.List;
 
 /**
  * @author Sylvain Bouzols <sylvain.bouzols at rte-france.com>
@@ -29,7 +32,10 @@ public class CurrentLimitsInfos {
     @Schema(description = "Permanent current limit")
     private Double permanentLimit;
 
+    @Schema(description = "Temporary current limits")
+    private List<CurrentTemporaryLimitCreationInfos> temporaryLimits;
+
     public CurrentLimitsEntity toEntity() {
-        return new CurrentLimitsEntity(null, permanentLimit);
+        return new CurrentLimitsEntity(null, permanentLimit, CurrentTemporaryLimitCreationEmbeddable.toEmbeddableCurrentTemporaryLimits(temporaryLimits));
     }
 }

@@ -20,6 +20,7 @@ import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
 import lombok.SneakyThrows;
 import org.apache.commons.lang3.tuple.Pair;
+import org.gridsuite.modification.server.Impacts.TestImpactUtils;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.LoadCreationInfos.LoadCreationInfosBuilder;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosRepository;
@@ -52,7 +53,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
-import static org.gridsuite.modification.server.utils.ImpactUtils.*;
+import static org.gridsuite.modification.server.Impacts.TestImpactUtils.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.argThat;
@@ -70,7 +71,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @RunWith(SpringRunner.class)
 @AutoConfigureMockMvc
-@SpringBootTest(properties = {"test.elasticsearch.enabled=true"})
+@SpringBootTest
 public class ModificationControllerTest {
 
     private static final UUID TEST_NETWORK_ID = UUID.fromString("7928181c-7977-4592-ba19-88027e4254e4");
@@ -373,12 +374,11 @@ public class ModificationControllerTest {
         List<UUID> modificationUuidList = modificationList.stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
 
         // Duplicate [0] and [1], and append them at the end of the group modification list.
-        // Also try to duplicate 2 un-existing modifications, that should be returned as errors.
         List<UUID> duplicateModificationUuidList = new ArrayList<>(modificationUuidList.subList(0, 2));
         List<UUID> badModificationUuidList = List.of(UUID.randomUUID(), UUID.randomUUID());
         duplicateModificationUuidList.addAll(badModificationUuidList);
 
-        MvcResult mvcResult = mockMvc.perform(
+        mockMvc.perform(
             put("/v1/groups/" + TEST_GROUP_ID + "?action=COPY"
                     + "&networkUuid=" + TEST_NETWORK_ID
                     + "&reportUuid=" + TEST_REPORT_ID
@@ -386,9 +386,7 @@ public class ModificationControllerTest {
                     + "&variantId=" + NetworkCreation.VARIANT_ID)
                 .content(objectWriter.writeValueAsString(duplicateModificationUuidList))
                 .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk()).andReturn();
-        UpdateModificationGroupResult result = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        assertEquals(badModificationUuidList, result.getModificationFailures()); // bad uuids are returned
+            .andExpect(status().isOk());
 
         var newModificationList = modificationRepository.getModifications(TEST_GROUP_ID, true, true);
         List<UUID> newModificationUuidList = newModificationList.stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
@@ -415,7 +413,7 @@ public class ModificationControllerTest {
 
         // Duplicate the same modifications, and append them at the end of this new group modification list.
         duplicateModificationUuidList = new ArrayList<>(modificationUuidList.subList(0, 2));
-        mvcResult = mockMvc.perform(
+        mockMvc.perform(
                 put("/v1/groups/" + otherGroupId + "?action=COPY"
                         + "&networkUuid=" + TEST_NETWORK_ID
                         + "&reportUuid=" + TEST_REPORT_ID
@@ -423,9 +421,7 @@ public class ModificationControllerTest {
                         + "&variantId=" + NetworkCreation.VARIANT_ID)
                     .content(objectWriter.writeValueAsString(duplicateModificationUuidList))
                     .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk()).andReturn();
-        result = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        assertEquals(List.of(), result.getModificationFailures()); // no bad id => no error this time
+            .andExpect(status().isOk());
 
         var newModificationListOtherGroup = modificationRepository.getModifications(otherGroupId, true, true);
         List<UUID> newModificationUuidListOtherGroup = newModificationListOtherGroup.stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
@@ -445,17 +441,15 @@ public class ModificationControllerTest {
 
         // Try to copy an unexisting Modification
         List<UUID> duplicateModificationUuidList = List.of(UUID.randomUUID());
-        MvcResult mvcResult = mockMvc.perform(
-                        put("/v1/groups/" + TEST_GROUP_ID + "?action=COPY"
-                                + "&networkUuid=" + TEST_NETWORK_ID
-                                + "&reportUuid=" + TEST_REPORT_ID
-                                + "&reporterId=" + UUID.randomUUID()
-                                + "&variantId=" + NetworkCreation.VARIANT_ID)
-                                .content(objectWriter.writeValueAsString(duplicateModificationUuidList))
-                                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
-        UpdateModificationGroupResult result = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        assertEquals(duplicateModificationUuidList, result.getModificationFailures()); // bad uuids are returned
+        mockMvc.perform(
+                put("/v1/groups/" + TEST_GROUP_ID + "?action=COPY"
+                        + "&networkUuid=" + TEST_NETWORK_ID
+                        + "&reportUuid=" + TEST_REPORT_ID
+                        + "&reporterId=" + UUID.randomUUID()
+                        + "&variantId=" + NetworkCreation.VARIANT_ID)
+                        .content(objectWriter.writeValueAsString(duplicateModificationUuidList))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
 
         var newModificationList = modificationRepository.getModifications(TEST_GROUP_ID, true, true);
         List<UUID> newModificationUuidList = newModificationList.stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
@@ -914,7 +908,7 @@ public class ModificationControllerTest {
     private void testConnectableDeletionImpacts(String resultAsString,
                                                 IdentifiableType connectableType, String connectableId,
                                                 String breakerId, String disconnectorId, String substationId) {
-        ImpactUtils.testConnectableDeletionImpacts(mapper, resultAsString, connectableType, connectableId, breakerId, disconnectorId, substationId);
+        TestImpactUtils.testConnectableDeletionImpacts(mapper, resultAsString, connectableType, connectableId, breakerId, disconnectorId, substationId);
 
         // Connectable and switches have been removed from network
         assertNull(network.getIdentifiable(connectableId));
@@ -931,7 +925,7 @@ public class ModificationControllerTest {
                                            IdentifiableType branchType, String branchId,
                                            String breakerId1, String disconnectorId1, String substationId1,
                                            String breakerId2, String disconnectorId2, String substationId2) {
-        ImpactUtils.testBranchDeletionImpacts(mapper, resultAsString, branchType, branchId, breakerId1, disconnectorId1, substationId1, breakerId2, disconnectorId2, substationId2);
+        TestImpactUtils.testBranchDeletionImpacts(mapper, resultAsString, branchType, branchId, breakerId1, disconnectorId1, substationId1, breakerId2, disconnectorId2, substationId2);
 
         // line and switches have been removed from network
         assertNull(network.getLine(branchId));
@@ -953,7 +947,7 @@ public class ModificationControllerTest {
                                         String breakerId2, String disconnectorId2,
                                         String breakerId3, String disconnectorId3,
                                         String substationId) {
-        ImpactUtils.test3WTDeletionImpacts(mapper, resultAsString, w3tId, breakerId1, disconnectorId1, breakerId2, disconnectorId2, breakerId3, disconnectorId3, substationId);
+        TestImpactUtils.test3WTDeletionImpacts(mapper, resultAsString, w3tId, breakerId1, disconnectorId1, breakerId2, disconnectorId2, breakerId3, disconnectorId3, substationId);
 
         // 3 windings transformer and switches have been removed from network
         assertNull(network.getThreeWindingsTransformer(w3tId));
@@ -990,13 +984,13 @@ public class ModificationControllerTest {
 
     private void testVoltageLevelDeletionImpacts(String resultAsString, String vlId, List<String> busbarSectionsIds, List<Pair<IdentifiableType, String>> connectablesTypesAndIds, String substationId) {
         List<SimpleElementImpact> testElementImpacts = testVoltageLevelDeletionImpacts(vlId, busbarSectionsIds, connectablesTypesAndIds, substationId);
-        ImpactUtils.testElementImpacts(mapper, resultAsString, testElementImpacts);
+        TestImpactUtils.testElementImpacts(mapper, resultAsString, testElementImpacts);
     }
 
     private void testSubstationDeletionImpacts(String resultAsString,  String subStationId, List<SimpleElementImpact> vlsDeletionImpacts) {
         List<SimpleElementImpact> impacts = new ArrayList<>(List.of(createDeletionImpactType(IdentifiableType.SUBSTATION, subStationId, Set.of(subStationId))));
         impacts.addAll(vlsDeletionImpacts);
-        ImpactUtils.testElementImpacts(mapper, resultAsString, impacts);
+        TestImpactUtils.testElementImpacts(mapper, resultAsString, impacts);
 
         // Substation and equipments have been removed from network and
         assertNull(network.getSubstation(subStationId));

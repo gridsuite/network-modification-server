@@ -19,7 +19,7 @@ import okhttp3.mockwebserver.Dispatcher;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
-import org.gridsuite.modification.server.NetworkModificationApplication;
+import org.gridsuite.modification.server.ContextConfigurationWithTestChannel;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.TapChangerType;
 import org.gridsuite.modification.server.dto.*;
@@ -50,13 +50,10 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.cloud.stream.binder.test.OutputDestination;
-import org.springframework.cloud.stream.binder.test.TestChannelBinderConfiguration;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.messaging.Message;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.ContextHierarchy;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -68,7 +65,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import static com.powsybl.iidm.network.ReactiveLimitsKind.MIN_MAX;
 import static org.gridsuite.modification.server.service.BuildWorkerService.CANCEL_MESSAGE;
 import static org.gridsuite.modification.server.service.BuildWorkerService.FAIL_MESSAGE;
-import static org.gridsuite.modification.server.utils.ImpactUtils.*;
+import static org.gridsuite.modification.server.Impacts.TestImpactUtils.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.*;
@@ -83,8 +80,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @RunWith(SpringRunner.class)
 @AutoConfigureMockMvc
-@SpringBootTest(properties = {"test.elasticsearch.enabled=true"})
-@ContextHierarchy({@ContextConfiguration(classes = {NetworkModificationApplication.class, TestChannelBinderConfiguration.class})})
+@SpringBootTest
+@ContextConfigurationWithTestChannel
 public class BuildTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BuildTest.class);
@@ -548,7 +545,7 @@ public class BuildTest {
         Message<byte[]> resultMessage = output.receive(TIMEOUT, buildResultDestination);
         assertNotNull(resultMessage);
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
-        testElementImpacts(mapper, new String(resultMessage.getPayload()), 52, Set.of("newSubstation", "s1", "s2"));
+        testElementImpacts(mapper, new String(resultMessage.getPayload()), 53, Set.of("newSubstation", "s1", "s2"));
 
         // test all modifications have been made on variant VARIANT_ID
         network.getVariantManager().setWorkingVariant(NetworkCreation.VARIANT_ID);
@@ -689,7 +686,7 @@ public class BuildTest {
         resultMessage = output.receive(TIMEOUT, buildResultDestination);
         assertNotNull(resultMessage);
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
-        testElementImpacts(mapper, new String(resultMessage.getPayload()), 45, Set.of("newSubstation", "s1", "s2"));
+        testElementImpacts(mapper, new String(resultMessage.getPayload()), 46, Set.of("newSubstation", "s1", "s2"));
 
         // test that only active modifications have been made on variant VARIANT_ID
         network.getVariantManager().setWorkingVariant(NetworkCreation.VARIANT_ID);

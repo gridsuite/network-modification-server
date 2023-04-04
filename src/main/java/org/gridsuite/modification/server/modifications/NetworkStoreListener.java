@@ -167,8 +167,7 @@ public class NetworkStoreListener implements NetworkListener {
     }
 
     public void setApplicationStatus(NetworkModificationResult.ApplicationStatus applicationStatus) {
-        // we keep the worst status
-        this.applicationStatus = this.applicationStatus.max(applicationStatus);
+        this.applicationStatus = applicationStatus;
     }
 
     private void flushEquipmentInfos() {
