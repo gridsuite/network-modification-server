@@ -13,6 +13,7 @@ import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.commons.reporter.TypedValue;
 import org.gridsuite.modification.server.dto.NetworkModificationResult.ApplicationStatus;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -22,6 +23,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class NetworkModificationApplicatorTest {
 
@@ -47,6 +49,17 @@ class NetworkModificationApplicatorTest {
 
         ApplicationStatus actualSeverity = NetworkModificationApplicator.getApplicationStatus(reporterModel);
         assertEquals(expectedSeverity, actualSeverity);
+    }
+
+    @Test
+    void shouldThrowExceptionOnBadSeverity() {
+        ReporterModel reporterModel = new ReporterModel("rep1", "");
+        reporterModel.report(Report.builder()
+                .withKey("badSeverity")
+                .withDefaultMessage("Bad severity message")
+                .withValue("reportSeverity", "bad severity")
+                .build());
+        assertThrows(IllegalArgumentException.class, () -> NetworkModificationApplicator.getApplicationStatus(reporterModel));
     }
 
     private static Stream<Arguments> provideArgumentsForComputeHigherSeverity() {
