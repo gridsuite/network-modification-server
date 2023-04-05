@@ -13,7 +13,6 @@ import org.gridsuite.modification.server.dto.BranchStatusModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 
 import javax.persistence.*;
-import java.util.Set;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -45,12 +44,11 @@ public class BranchStatusModificationEntity extends EquipmentModificationEntity 
     }
 
     @Override
-    public BranchStatusModificationInfos toModificationInfos(Set<String> vlUuids) {
+    public BranchStatusModificationInfos toModificationInfos() {
         return BranchStatusModificationInfos
             .builder()
             .uuid(getId())
             .date(getDate())
-            .substationIds(vlUuids)
             .equipmentId(getEquipmentId())
             .action(getAction())
             .build();

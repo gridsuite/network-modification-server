@@ -6,7 +6,7 @@
  */
 package org.gridsuite.modification.server.elasticsearch;
 
-import org.gridsuite.modification.server.dto.TombstonedEquipmentInfos;
+import org.gridsuite.modification.server.dto.elasticsearch.TombstonedEquipmentInfos;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.lang.NonNull;
 
