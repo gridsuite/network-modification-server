@@ -75,7 +75,7 @@ public class LineSplitWithNewVoltageLevelTest extends AbstractNetworkModificatio
             .percent(10.0)
             .mayNewVoltageLevelInfos(vl1)
             .existingVoltageLevelId(null)
-            .bbsOrBusId("v1bbs")
+            .bbsOrBusId("newVoltageLevel_1_1")
             .newLine1Id("nl1v")
             .newLine1Name("NewLine1")
             .newLine2Id("nl2v")

@@ -16,6 +16,8 @@ import org.gridsuite.modification.server.dto.VoltageLevelCreationInfos;
 import com.powsybl.iidm.network.SwitchKind;
 
 import javax.persistence.*;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -55,6 +57,7 @@ public class VoltageLevelCreationEntity extends EquipmentCreationEntity {
 
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable
+    @Enumerated(EnumType.ORDINAL)
     private List<SwitchKind> switchKinds;
 
     @ElementCollection
@@ -119,7 +122,7 @@ public class VoltageLevelCreationEntity extends EquipmentCreationEntity {
         this.ipMax = voltageLevelCreationInfos.getIpMax();
         this.busbarCount = voltageLevelCreationInfos.getBusbarCount();
         this.sectionCount = voltageLevelCreationInfos.getSectionCount();
-        this.switchKinds = voltageLevelCreationInfos.getSwitchKinds();
+        this.switchKinds = new ArrayList<>(voltageLevelCreationInfos.getSwitchKinds());
         this.couplingDevices = toEmbeddableCouplingDevices(voltageLevelCreationInfos.getCouplingDevices());
     }
 }
