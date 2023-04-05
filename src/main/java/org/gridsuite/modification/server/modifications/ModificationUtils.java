@@ -9,10 +9,13 @@ package org.gridsuite.modification.server.modifications;
 import com.powsybl.commons.reporter.Report;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.TypedValue;
+import com.powsybl.iidm.modification.topology.CreateCouplingDeviceBuilder;
+import com.powsybl.iidm.modification.topology.CreateVoltageLevelTopologyBuilder;
 import com.powsybl.iidm.modification.topology.TopologyModificationUtils;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.BusbarSectionPosition;
-import com.powsybl.iidm.network.extensions.BusbarSectionPositionAdder;
+import com.powsybl.iidm.network.extensions.IdentifiableShortCircuitAdder;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
@@ -295,21 +298,6 @@ public final class ModificationUtils {
         if (network.getVoltageLevel(voltageLevelCreationInfos.getEquipmentId()) != null) {
             throw new NetworkModificationException(VOLTAGE_LEVEL_ALREADY_EXISTS, voltageLevelCreationInfos.getEquipmentId());
         }
-        for (BusbarSectionCreationInfos newBbs : voltageLevelCreationInfos.getBusbarSections()) {
-            if (network.getBusbarSection(newBbs.getId()) != null) {
-                throw new NetworkModificationException(BUSBAR_SECTION_ALREADY_EXISTS, newBbs.getId());
-            }
-        }
-        Set<String> allNewBbs = voltageLevelCreationInfos.getBusbarSections().stream().map(BusbarSectionCreationInfos::getId).collect(Collectors.toSet());
-        // From/to connections must use the new VL Busbar sections
-        for (BusbarConnectionCreationInfos bbc : voltageLevelCreationInfos.getBusbarConnections()) {
-            if (!allNewBbs.contains(bbc.getFromBBS())) {
-                throw new NetworkModificationException(BUSBAR_SECTION_NOT_DEFINED, bbc.getFromBBS());
-            }
-            if (!allNewBbs.contains(bbc.getToBBS())) {
-                throw new NetworkModificationException(BUSBAR_SECTION_NOT_DEFINED, bbc.getToBBS());
-            }
-        }
     }
 
     void createVoltageLevel(VoltageLevelCreationInfos voltageLevelCreationInfos,
@@ -325,33 +313,28 @@ public final class ModificationUtils {
             .setName(voltageLevelCreationInfos.getEquipmentName())
             .setTopologyKind(TopologyKind.NODE_BREAKER)
             .setNominalV(voltageLevelCreationInfos.getNominalVoltage())
+            .setLowVoltageLimit(voltageLevelCreationInfos.getLowVoltageLimit())
+            .setHighVoltageLimit(voltageLevelCreationInfos.getHighVoltageLimit())
             .add();
 
-        int nodeRank = voltageLevel.getNodeBreakerView().getMaximumNodeIndex() + 1;
-        Map<String, Integer> idToNodeRank = new TreeMap<>();
-        for (BusbarSectionCreationInfos bbs : voltageLevelCreationInfos.getBusbarSections()) {
-            BusbarSection sjb = voltageLevel.getNodeBreakerView().newBusbarSection()
-                .setId(bbs.getId())
-                .setName(bbs.getName())
-                .setNode(nodeRank)
+        voltageLevel.newExtension(IdentifiableShortCircuitAdder.class).withIpMin(voltageLevelCreationInfos.getIpMin())
+                .withIpMax(voltageLevelCreationInfos.getIpMax())
                 .add();
-            sjb.newExtension(BusbarSectionPositionAdder.class)
-                .withBusbarIndex(bbs.getVertPos())
-                .withSectionIndex(bbs.getHorizPos())
-                .add();
-            idToNodeRank.put(bbs.getId(), nodeRank);
-            nodeRank += 1;
-        }
 
-        int cnxRank = 1;
-        Pair<Integer, Integer> currRanks = Pair.of(nodeRank, cnxRank);
-        List<BusbarConnectionCreationInfos> busbarConnections = voltageLevelCreationInfos.getBusbarConnections();
-        // js empty [] seems to be decoded null on java side some times -> temporary (?) protection
-        if (busbarConnections != null) {
-            for (BusbarConnectionCreationInfos bbsci : busbarConnections) {
-                currRanks = addBusbarConnectionTo(voltageLevelCreationInfos, bbsci, idToNodeRank, currRanks, voltageLevel);
-            }
-        }
+        CreateVoltageLevelTopologyBuilder voltageLevelTopologyBuilder = new CreateVoltageLevelTopologyBuilder();
+        voltageLevelTopologyBuilder.withVoltageLevelId(voltageLevelCreationInfos.getEquipmentId())
+                .withBusbarCount(voltageLevelCreationInfos.getBusbarCount())
+                .withSectionCount(voltageLevelCreationInfos.getSectionCount())
+                .withSwitchKinds(voltageLevelCreationInfos.getSwitchKinds())
+                .build().apply(network);
+
+        voltageLevelCreationInfos.getCouplingDevices().forEach(couplingDevice -> {
+            CreateCouplingDeviceBuilder couplingDeviceBuilder = new CreateCouplingDeviceBuilder();
+            couplingDeviceBuilder.withBusbarSectionId1(couplingDevice.getBusbarSectionId1())
+                .withBusbarSectionId2(couplingDevice.getBusbarSectionId2())
+                .withSwitchPrefixId(voltageLevelCreationInfos.getEquipmentId() + "_COUPL")
+                .build().apply(network);
+        });
 
         subReporter.report(Report.builder()
             .withKey("voltageLevelCreated")

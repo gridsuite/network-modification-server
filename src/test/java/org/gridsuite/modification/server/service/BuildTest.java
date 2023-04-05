@@ -260,8 +260,14 @@ public class BuildTest {
                 .equipmentName("vl9")
                 .nominalVoltage(225)
                 .substationId("s1")
-                .busbarSections(List.of(new BusbarSectionCreationInfos("1.1", "1.1", 1, 1), new BusbarSectionCreationInfos("1.2", "1.2", 1, 2)))
-                .busbarConnections(List.of(new BusbarConnectionCreationInfos("1.1", "1.2", SwitchKind.BREAKER)))
+                .lowVoltageLimit(0.0)
+                .highVoltageLimit(10.0)
+                .ipMin(0.0)
+                .ipMax(10.0)
+                .busbarCount(2)
+                .sectionCount(2)
+                .switchKinds(Arrays.asList(SwitchKind.BREAKER))
+                .couplingDevices(Arrays.asList(CouplingDeviceInfos.builder().busbarSectionId1("bbs.nw").busbarSectionId2("bbs.ne").build()))
                 .build().toEntity());
         modificationRepository.saveModifications(TEST_GROUP_ID_2, entities2);
 
@@ -392,8 +398,14 @@ public class BuildTest {
                 .equipmentName("vl9")
                 .nominalVoltage(225)
                 .substationId("s1")
-                .busbarSections(List.of(new BusbarSectionCreationInfos("1.10", "name 1.10", 1, 1), new BusbarSectionCreationInfos("1.11", "name 1.11", 1, 2)))
-                .busbarConnections(List.of(new BusbarConnectionCreationInfos("1.10", "1.11", SwitchKind.BREAKER)))
+                .lowVoltageLimit(0.0)
+                .highVoltageLimit(10.0)
+                .ipMin(0.0)
+                .ipMax(10.0)
+                .busbarCount(2)
+                .sectionCount(2)
+                .switchKinds(Arrays.asList(SwitchKind.BREAKER))
+                .couplingDevices(Arrays.asList(CouplingDeviceInfos.builder().busbarSectionId1("bbs.nw").busbarSectionId2("bbs.ne").build()))
                 .build().toEntity());
         entities2.add(ShuntCompensatorCreationInfos.builder()
             .equipmentId("shunt9")

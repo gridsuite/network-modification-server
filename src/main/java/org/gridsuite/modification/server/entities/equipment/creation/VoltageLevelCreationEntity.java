@@ -9,10 +9,11 @@ package org.gridsuite.modification.server.entities.equipment.creation;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import org.gridsuite.modification.server.dto.BusbarConnectionCreationInfos;
-import org.gridsuite.modification.server.dto.BusbarSectionCreationInfos;
+import org.gridsuite.modification.server.dto.CouplingDeviceInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.VoltageLevelCreationInfos;
+
+import com.powsybl.iidm.network.SwitchKind;
 
 import javax.persistence.*;
 import java.util.List;
@@ -29,36 +30,47 @@ import java.util.stream.Collectors;
 public class VoltageLevelCreationEntity extends EquipmentCreationEntity {
 
     @Column
+    private String substationId;
+
+    @Column
     private double nominalVoltage;
 
     @Column
-    private String substationId;
+    private double lowVoltageLimit;
+
+    @Column
+    private double highVoltageLimit;
+
+    @Column
+    private Double ipMin;
+
+    @Column
+    private Double ipMax;
+
+    @Column
+    private int busbarCount;
+
+    @Column
+    private int sectionCount;
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable
+    private List<SwitchKind> switchKinds;
 
     @ElementCollection
     @CollectionTable
-    private List<BusbarSectionCreationEmbeddable> busbarSections;
-
-    @ElementCollection
-    @CollectionTable
-    private List<BusbarConnectionCreationEmbeddable> busbarConnections;
+    private List<CouplingDeviceCreationEmbeddable> couplingDevices;
 
     public VoltageLevelCreationEntity(VoltageLevelCreationInfos voltageLevelCreationInfos) {
         super(voltageLevelCreationInfos);
         assignAttributes(voltageLevelCreationInfos);
     }
 
-    public static List<BusbarConnectionCreationEmbeddable> toEmbeddableConnections(
-        List<BusbarConnectionCreationInfos> busbarConnectionsInfos) {
-        return busbarConnectionsInfos == null ? List.of() : busbarConnectionsInfos.stream().map(cnxi ->
-            new BusbarConnectionCreationEmbeddable(cnxi.getFromBBS(), cnxi.getToBBS(), cnxi.getSwitchKind())
-        ).collect(Collectors.toList());
-    }
-
-    public static List<BusbarSectionCreationEmbeddable> toEmbeddableSections(List<BusbarSectionCreationInfos> busbarSectionsInfos) {
-        return busbarSectionsInfos.stream()
-            .map(bbsi ->
-                new BusbarSectionCreationEmbeddable(bbsi.getId(), bbsi.getName(), bbsi.getVertPos(), bbsi.getHorizPos())
-            ).collect(Collectors.toList());
+    public static List<CouplingDeviceCreationEmbeddable> toEmbeddableCouplingDevices(List<CouplingDeviceInfos> couplingDevicesInfos) {
+        return couplingDevicesInfos.stream()
+                .map(couplingDevice -> new CouplingDeviceCreationEmbeddable(couplingDevice.getBusbarSectionId1(),
+                        couplingDevice.getBusbarSectionId2()))
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -71,20 +83,25 @@ public class VoltageLevelCreationEntity extends EquipmentCreationEntity {
     }
 
     private VoltageLevelCreationInfos.VoltageLevelCreationInfosBuilder<?, ?> toVoltageLevelCreationInfosBuilder() {
-        List<BusbarSectionCreationInfos> bbsis = busbarSections.stream().map(bbbse ->
-            new BusbarSectionCreationInfos(bbbse.getId(), bbbse.getName(), bbbse.getVertPos(), bbbse.getHorizPos())).collect(Collectors.toList());
-        List<BusbarConnectionCreationInfos> cnxis = busbarConnections.stream().map(cnxe ->
-            new BusbarConnectionCreationInfos(cnxe.getFromBBS(), cnxe.getToBBS(), cnxe.getSwitchKind())).collect(Collectors.toList());
+        List<CouplingDeviceInfos> couplingDeviceInfos = couplingDevices.stream()
+                .map(cde -> new CouplingDeviceInfos(cde.getBusbarSectionId1(), cde.getBusbarSectionId2()))
+                .collect(Collectors.toList());
         return VoltageLevelCreationInfos
                 .builder()
                 .uuid(getId())
                 .date(getDate())
                 .equipmentId(getEquipmentId())
                 .equipmentName(getEquipmentName())
-                .nominalVoltage(getNominalVoltage())
                 .substationId(getSubstationId())
-                .busbarSections(bbsis)
-                .busbarConnections(cnxis);
+                .nominalVoltage(getNominalVoltage())
+                .lowVoltageLimit(getLowVoltageLimit())
+                .highVoltageLimit(getHighVoltageLimit())
+                .ipMin(getIpMin())
+                .ipMax(getIpMax())
+                .busbarCount(getBusbarCount())
+                .sectionCount(getSectionCount())
+                .switchKinds(getSwitchKinds())
+                .couplingDevices(couplingDeviceInfos);
     }
 
     @Override
@@ -94,12 +111,16 @@ public class VoltageLevelCreationEntity extends EquipmentCreationEntity {
     }
 
     private void assignAttributes(VoltageLevelCreationInfos voltageLevelCreationInfos) {
-        this.nominalVoltage = voltageLevelCreationInfos.getNominalVoltage();
         this.substationId = voltageLevelCreationInfos.getSubstationId();
-        List<BusbarSectionCreationEmbeddable> busBarSections = toEmbeddableSections(voltageLevelCreationInfos.getBusbarSections());
-        List<BusbarConnectionCreationEmbeddable> busBarConnections = toEmbeddableConnections(voltageLevelCreationInfos.getBusbarConnections());
-        this.busbarSections = busBarSections;
-        this.busbarConnections = busBarConnections;
+        this.nominalVoltage = voltageLevelCreationInfos.getNominalVoltage();
+        this.lowVoltageLimit = voltageLevelCreationInfos.getLowVoltageLimit();
+        this.highVoltageLimit = voltageLevelCreationInfos.getHighVoltageLimit();
+        this.ipMin = voltageLevelCreationInfos.getIpMin();
+        this.ipMax = voltageLevelCreationInfos.getIpMax();
+        this.busbarCount = voltageLevelCreationInfos.getBusbarCount();
+        this.sectionCount = voltageLevelCreationInfos.getSectionCount();
+        this.switchKinds = voltageLevelCreationInfos.getSwitchKinds();
+        this.couplingDevices = toEmbeddableCouplingDevices(voltageLevelCreationInfos.getCouplingDevices());
     }
 }
 

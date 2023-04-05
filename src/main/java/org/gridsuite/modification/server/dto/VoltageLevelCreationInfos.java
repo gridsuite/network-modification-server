@@ -10,6 +10,8 @@ import java.util.List;
 
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
+import com.powsybl.iidm.network.SwitchKind;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -33,17 +35,35 @@ import org.gridsuite.modification.server.modifications.VoltageLevelCreation;
 @Schema(description = "Voltage level creation")
 public class VoltageLevelCreationInfos extends EquipmentCreationInfos {
 
-    @Schema(description = "nominal voltage in kV")
-    private double nominalVoltage;
-
     @Schema(description = "substation id")
     private String substationId;
 
-    @Schema(description = "bus bar sections")
-    private List<BusbarSectionCreationInfos> busbarSections;
+    @Schema(description = "nominal voltage in kV")
+    private double nominalVoltage;
 
-    @Schema(description = "connections between bus bar sections")
-    private List<BusbarConnectionCreationInfos> busbarConnections;
+    @Schema(description = "low voltage limit in kV")
+    private double lowVoltageLimit;
+
+    @Schema(description = "high voltage limit  in kV")
+    private double highVoltageLimit;
+
+    @Schema(description = "low short-circuit current limit in kA")
+    private Double ipMin;
+
+    @Schema(description = "high short-circuit current limit in kA")
+    private Double ipMax;
+
+    @Schema(description = "busbar Count")
+    private int busbarCount;
+
+    @Schema(description = "section Count")
+    private int sectionCount;
+
+    @Schema(description = "switchKinds")
+    private List<SwitchKind> switchKinds;
+
+    @Schema(description = "coupling devices infos")
+    private List<CouplingDeviceInfos> couplingDevices;
 
     @Override
     public VoltageLevelCreationEntity toEntity() {
