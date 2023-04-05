@@ -18,6 +18,7 @@ import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.AttributeModification;
 
+import javax.validation.constraints.NotNull;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
@@ -477,6 +478,16 @@ public final class ModificationUtils {
 
             subReporter.report(buildModificationReport(oldValue, newValue, fieldName));
         }
+    }
+
+    public <T> Report buildCreationReport(@NotNull T value, String fieldName) {
+        return Report.builder()
+                .withKey("Creation" + fieldName)
+                .withDefaultMessage("    ${fieldName} : ${value}")
+                .withValue("fieldName", fieldName)
+                .withValue("value", value.toString())
+                .withSeverity(TypedValue.INFO_SEVERITY)
+                .build();
     }
 
     public <T> Report buildModificationReport(T oldValue, T newValue, String fieldName) {

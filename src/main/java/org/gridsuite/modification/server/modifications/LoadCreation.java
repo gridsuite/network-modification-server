@@ -15,6 +15,9 @@ import com.powsybl.iidm.network.*;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.LoadCreationInfos;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 
 /**
@@ -54,13 +57,29 @@ public class LoadCreation extends AbstractModification {
                 .build();
             algo.apply(network, true, subReporter);
         } else {
+            List<Report> reports = new ArrayList<>();
             createLoadInBusBreaker(voltageLevel, modificationInfos);
-            subReporter.report(Report.builder()
-                .withKey("loadCreated")
-                .withDefaultMessage("New load with id=${id} created")
-                .withValue("id", modificationInfos.getEquipmentId())
-                .withSeverity(TypedValue.INFO_SEVERITY)
-                .build());
+            var report = Report.builder()
+                    .withKey("loadCreated")
+                    .withDefaultMessage("New load with id=${id} created")
+                    .withValue("id", modificationInfos.getEquipmentId())
+                    .withSeverity(TypedValue.INFO_SEVERITY)
+                    .build();
+            reports.add(report);
+            if (modificationInfos.getEquipmentName() != null) {
+                reports.add(ModificationUtils.getInstance()
+                        .buildCreationReport(modificationInfos.getEquipmentName(), "Name"));
+            }
+
+            if (modificationInfos.getLoadType() != null) {
+                reports.add(ModificationUtils.getInstance()
+                        .buildCreationReport(modificationInfos.getLoadType(), "Type"));
+            }
+            reports.add(ModificationUtils.getInstance()
+                    .buildCreationReport(modificationInfos.getActivePower(), "Active power"));
+            reports.add(ModificationUtils.getInstance()
+                    .buildCreationReport(modificationInfos.getReactivePower(), "Reactive power"));
+            reports.forEach(subReporter::report);
         }
     }
 
