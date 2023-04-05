@@ -224,8 +224,9 @@ public final class ModificationUtils {
         if (network.getVoltageLevel(voltageLevelCreationInfos.getEquipmentId()) != null) {
             throw new NetworkModificationException(VOLTAGE_LEVEL_ALREADY_EXISTS, voltageLevelCreationInfos.getEquipmentId());
         }
-        if(voltageLevelCreationInfos.getCouplingDevices().stream().anyMatch(cd-> cd.getBusbarSectionId1().equals(cd.getBusbarSectionId2()))){
-                throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR,
+        if (voltageLevelCreationInfos.getCouplingDevices().stream()
+                .anyMatch(cd -> cd.getBusbarSectionId1().equals(cd.getBusbarSectionId2()))) {
+            throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR,
                     "Coupling between same bus bar section is not allowed");
         }
     }
