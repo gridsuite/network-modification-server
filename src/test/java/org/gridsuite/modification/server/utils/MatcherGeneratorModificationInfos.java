@@ -30,7 +30,7 @@ public class MatcherGeneratorModificationInfos extends MatcherModificationInfos<
     public boolean matchesSafely(GeneratorModificationInfos m) {
         return super.matchesSafely(m)
                 && m.getEquipmentId().equals(reference.getEquipmentId())
-                && m.getEquipmentName().equals(reference.getEquipmentName())
+                && Objects.equals(m.getEquipmentName(), reference.getEquipmentName())
                 && ((m.getVoltageLevelId() == null && reference.getVoltageLevelId() == null) || m.getVoltageLevelId().equals(reference.getVoltageLevelId()))
                 && ((m.getBusOrBusbarSectionId() == null && reference.getBusOrBusbarSectionId() == null) || m.getBusOrBusbarSectionId().equals(reference.getBusOrBusbarSectionId()))
                 && Objects.equals(m.getEnergySource(), reference.getEnergySource())

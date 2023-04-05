@@ -12,10 +12,7 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.CurrentLimitsInfos;
-import org.gridsuite.modification.server.dto.EquipmentModificationInfos;
-import org.gridsuite.modification.server.dto.LineCreationInfos;
-import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.utils.MatcherLineCreationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
@@ -23,10 +20,10 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.CREATE_LINE_ERROR;
-import static org.gridsuite.modification.server.NetworkModificationException.Type.VOLTAGE_LEVEL_NOT_FOUND;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.utils.MatcherLineCreationInfos.createMatcherLineCreationInfos;
 import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -46,10 +43,9 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
         String modificationToCreateJson = mapper.writeValueAsString(modificationToCreate);
         MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUriWithBadVariant()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
-        String resultAsString = mvcResult.getResponse().getContentAsString();
-        List<EquipmentModificationInfos> modifications = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertNotNull(modifications);
-        assertTrue(modifications.isEmpty());  // no modifications returned
+        Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertNotNull(networkModificationResult);
+        assertTrue(networkModificationResult.isEmpty());  // no modifications returned
         assertNull(getNetwork().getLine("idLine2"));  // line was not created
         testNetworkModificationsCount(getGroupId(), 1);  // new modification stored in the database
     }
@@ -80,8 +76,8 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
         lineCreationInfosJson = mapper.writeValueAsString(lineCreationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(
-                status().is5xxServerError(),
-                content().string(new NetworkModificationException(CREATE_LINE_ERROR, "Busbar section notFoundBusbarSection1 not found.").getMessage())
+                status().is4xxClientError(),
+                content().string(new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "notFoundBusbarSection1").getMessage())
             );
 
         lineCreationInfos.setVoltageLevelId1("v1");
@@ -102,6 +98,143 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
                 status().is5xxServerError(),
                 content().string(new NetworkModificationException(CREATE_LINE_ERROR, "AC Line 'idLine4': x is invalid").getMessage())
             );
+
+        // try to create an existing line
+        lineCreationInfos.setEquipmentId("line2");
+        lineCreationInfosJson = mapper.writeValueAsString(lineCreationInfos);
+        mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpectAll(
+                        status().is4xxClientError(),
+                        content().string(new NetworkModificationException(LINE_ALREADY_EXISTS, "line2").getMessage()));
+    }
+
+    @Test
+    @SneakyThrows
+    public void testCreateLineWithOnlyPermanentCurrentLimits() {
+        LineCreationInfos lineCreation = LineCreationInfos.builder()
+                .equipmentId("idLineEdited")
+                .equipmentName("nameLineEdited")
+                .seriesResistance(110.0)
+                .seriesReactance(110.0)
+                .shuntConductance1(15.0)
+                .shuntSusceptance1(15.0)
+                .shuntConductance2(25.0)
+                .shuntSusceptance2(25.0)
+                .voltageLevelId1("v2")
+                .busOrBusbarSectionId1("1A")
+                .voltageLevelId2("v1")
+                .busOrBusbarSectionId2("1.1")
+                .currentLimits1(CurrentLimitsInfos.builder().permanentLimit(5.).build())
+                .currentLimits2(CurrentLimitsInfos.builder().permanentLimit(6.).build())
+                .connectionName1("cn1LineEdited")
+                .connectionDirection1(ConnectablePosition.Direction.BOTTOM)
+                .connectionName2("cn2LineEdited")
+                .connectionDirection2(ConnectablePosition.Direction.TOP)
+                .connectionPosition1(0)
+                .connectionPosition2(0)
+                .build();
+
+        String lineCreationJson = mapper.writeValueAsString(lineCreation);
+        mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+
+        LineCreationInfos createdModification = (LineCreationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
+        assertEquals(5., createdModification.getCurrentLimits1().getPermanentLimit(), 0.);
+        assertEquals(6., createdModification.getCurrentLimits2().getPermanentLimit(), 0.);
+        assertTrue(createdModification.getCurrentLimits1().getTemporaryLimits().isEmpty());
+        assertTrue(createdModification.getCurrentLimits2().getTemporaryLimits().isEmpty());
+
+        testNetworkModificationsCount(getGroupId(), 1);
+    }
+
+    @Test
+    @SneakyThrows
+    public void testCreateLineWithOnlyTemporaryCurrentLimits() {
+        LineCreationInfos lineCreation = LineCreationInfos.builder()
+                .equipmentId("idLineEdited")
+                .equipmentName("nameLineEdited")
+                .seriesResistance(110.0)
+                .seriesReactance(110.0)
+                .shuntConductance1(15.0)
+                .shuntSusceptance1(15.0)
+                .shuntConductance2(25.0)
+                .shuntSusceptance2(25.0)
+                .voltageLevelId1("v2")
+                .busOrBusbarSectionId1("1A")
+                .voltageLevelId2("v1")
+                .busOrBusbarSectionId2("1.1")
+                .currentLimits1(CurrentLimitsInfos.builder()
+                    .temporaryLimits(List.of(CurrentTemporaryLimitCreationInfos.builder().name("IT10").value(200.0).acceptableDuration(600).build()))
+                    .build())
+                .currentLimits2(CurrentLimitsInfos.builder()
+                    .temporaryLimits(List.of(
+                        CurrentTemporaryLimitCreationInfos.builder().name("IT10").value(200.0).acceptableDuration(600).build(),
+                        CurrentTemporaryLimitCreationInfos.builder().name("IT20").value(100.0).acceptableDuration(1200).build()))
+                    .build())
+                .connectionName1("cn1LineEdited")
+                .connectionDirection1(ConnectablePosition.Direction.BOTTOM)
+                .connectionName2("cn2LineEdited")
+                .connectionDirection2(ConnectablePosition.Direction.TOP)
+                .connectionPosition1(0)
+                .connectionPosition2(0)
+                .build();
+
+        String lineCreationJson = mapper.writeValueAsString(lineCreation);
+        mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+
+        LineCreationInfos createdModification = (LineCreationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
+        assertNull(createdModification.getCurrentLimits1().getPermanentLimit());
+        assertNull(createdModification.getCurrentLimits2().getPermanentLimit());
+        assertEquals(1, createdModification.getCurrentLimits1().getTemporaryLimits().size());
+        assertEquals(2, createdModification.getCurrentLimits2().getTemporaryLimits().size());
+
+        testNetworkModificationsCount(getGroupId(), 1);
+    }
+
+    @Test
+    @SneakyThrows
+    public void testCreateLineWithBothCurrentLimits() {
+        LineCreationInfos lineCreation = LineCreationInfos.builder()
+                .equipmentId("idLineEdited")
+                .equipmentName("nameLineEdited")
+                .seriesResistance(110.0)
+                .seriesReactance(110.0)
+                .shuntConductance1(15.0)
+                .shuntSusceptance1(15.0)
+                .shuntConductance2(25.0)
+                .shuntSusceptance2(25.0)
+                .voltageLevelId1("v2")
+                .busOrBusbarSectionId1("1A")
+                .voltageLevelId2("v1")
+                .busOrBusbarSectionId2("1.1")
+                .currentLimits1(CurrentLimitsInfos.builder()
+                    .permanentLimit(200.)
+                    .temporaryLimits(List.of(CurrentTemporaryLimitCreationInfos.builder().name("IT10").value(200.0).acceptableDuration(600).build()))
+                    .build())
+                .currentLimits2(CurrentLimitsInfos.builder()
+                    .permanentLimit(100.)
+                    .temporaryLimits(List.of(CurrentTemporaryLimitCreationInfos.builder().name("IT20").value(600.0).acceptableDuration(1200).build()))
+                    .build())
+                .connectionName1("cn1LineEdited")
+                .connectionDirection1(ConnectablePosition.Direction.BOTTOM)
+                .connectionName2("cn2LineEdited")
+                .connectionDirection2(ConnectablePosition.Direction.TOP)
+                .connectionPosition1(0)
+                .connectionPosition2(0)
+                .build();
+
+        String lineCreationJson = mapper.writeValueAsString(lineCreation);
+        mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+
+        LineCreationInfos createdModification = (LineCreationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
+        assertEquals(200., createdModification.getCurrentLimits1().getPermanentLimit(), 0.);
+        assertEquals(100., createdModification.getCurrentLimits2().getPermanentLimit(), 0.);
+        assertEquals(1, createdModification.getCurrentLimits1().getTemporaryLimits().size());
+        assertEquals(1, createdModification.getCurrentLimits2().getTemporaryLimits().size());
+
+        testNetworkModificationsCount(getGroupId(), 1);
     }
 
     @Override

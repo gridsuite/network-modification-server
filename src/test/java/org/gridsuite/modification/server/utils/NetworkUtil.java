@@ -331,7 +331,7 @@ public final class NetworkUtil {
     public static void createVscConverterStation(VoltageLevel vl, String id, String name,
                                                   int node, float lossFactor,
                                                   double reactivePowerSetpoint, boolean voltageRegulatorOn, double voltageSetpoint) {
-        vl.newVscConverterStation()
+        VscConverterStation vsc = vl.newVscConverterStation()
             .setId(id)
             .setName(name)
             .setNode(node)
@@ -340,6 +340,8 @@ public final class NetworkUtil {
             .setVoltageRegulatorOn(voltageRegulatorOn)
             .setVoltageSetpoint(voltageSetpoint)
             .add();
+
+        vsc.newMinMaxReactiveLimits().setMinQ(0).setMaxQ(10).add();
     }
 
     public static void createHvdcLine(Network network, String id, String name,

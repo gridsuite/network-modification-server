@@ -12,14 +12,16 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
 
 import java.time.ZonedDateTime;
-import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -64,10 +66,6 @@ public class ModificationInfos {
     @Schema(description = "Modification date")
     ZonedDateTime date;
 
-    @Schema(description = "Substations ID")
-    @Builder.Default
-    private Set<String> substationIds = Set.of();
-
     @JsonIgnore
     public ModificationEntity toEntity() {
         throw new UnsupportedOperationException("TODO");
@@ -90,6 +88,6 @@ public class ModificationInfos {
 
     @JsonIgnore
     public void check() {
-        // Nothing to check here
+        // To check input DTO before hypothesis creation. Nothing to check here
     }
 }

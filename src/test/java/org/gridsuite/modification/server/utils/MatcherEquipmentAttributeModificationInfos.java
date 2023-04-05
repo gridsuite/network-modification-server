@@ -13,20 +13,17 @@ import org.hamcrest.Description;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Objects;
-import java.util.Set;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
 public class MatcherEquipmentAttributeModificationInfos extends MatcherModificationInfos<EquipmentAttributeModificationInfos> {
 
-    public static MatcherEquipmentAttributeModificationInfos createMatcherEquipmentAttributeModificationInfos(String equipmentId, Set<String> substationIds,
-                                                                                                              String equipmentAttributeName, Object equipmentAttributeValue,
-                                                                                                              IdentifiableType equipmentType) {
+    public static MatcherEquipmentAttributeModificationInfos createMatcherEquipmentAttributeModificationInfos(String equipmentId, String equipmentAttributeName,
+                                                                                                              Object equipmentAttributeValue, IdentifiableType equipmentType) {
         return new MatcherEquipmentAttributeModificationInfos(EquipmentAttributeModificationInfos.builder()
                 .date(ZonedDateTime.now(ZoneOffset.UTC))
                 .equipmentId(equipmentId)
-                .substationIds(substationIds)
                 .equipmentAttributeName(equipmentAttributeName)
                 .equipmentAttributeValue(equipmentAttributeValue)
                 .equipmentType(equipmentType)

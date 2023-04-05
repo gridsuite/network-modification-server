@@ -12,15 +12,10 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.gridsuite.modification.server.dto.CurrentLimitsInfos;
 
+import java.util.List;
 import java.util.UUID;
 
-import javax.persistence.Column;
-
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 /**
  * @author Sylvain Bouzols <sylvain.bouzols at rte-france.com>
@@ -41,13 +36,18 @@ public class CurrentLimitsEntity {
     @Column(name = "permanentLimit")
     private Double permanentLimit;
 
-    public CurrentLimitsInfos toCurrentLimitsInfos() {
-        return toCurrentLimitsInfosBuilder().build();
-    }
+    @ElementCollection
+    @CollectionTable(
+            name = "currentTemporaryLimits",
+            joinColumns = @JoinColumn(name = "id", foreignKey = @ForeignKey(name = "temporaryLimits_fk_constraint"))
+    )
+    private List<CurrentTemporaryLimitCreationEmbeddable> temporaryLimits;
 
-    private CurrentLimitsInfos.CurrentLimitsInfosBuilder<?, ?> toCurrentLimitsInfosBuilder() {
+    public CurrentLimitsInfos toCurrentLimitsInfos() {
         return CurrentLimitsInfos
-            .builder()
-            .permanentLimit(getPermanentLimit());
+                .builder()
+                .permanentLimit(getPermanentLimit())
+                .temporaryLimits(CurrentTemporaryLimitCreationEmbeddable.fromEmbeddableCurrentTemporaryLimits(getTemporaryLimits()))
+                .build();
     }
 }

@@ -7,7 +7,7 @@
 
 package org.gridsuite.modification.server.modifications;
 
-import com.fasterxml.jackson.core.type.TypeReference;
+import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.PhaseTapChanger;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
@@ -25,6 +25,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.BUS_NOT_FOUND;
+import static org.gridsuite.modification.server.Impacts.TestImpactUtils.testElementCreationImpact;
 import static org.gridsuite.modification.server.utils.MatcherTwoWindingsTransformerCreationInfos.createMatcherTwoWindingsTransformerCreationInfos;
 import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -54,8 +55,8 @@ public class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetwor
                 .busOrBusbarSectionId1("bus1")
                 .voltageLevelId2("v12")
                 .busOrBusbarSectionId2("bus12")
-                .currentLimits1(CurrentLimitsInfos.builder().permanentLimit(3.).build())
-                .currentLimits2(CurrentLimitsInfos.builder().permanentLimit(2.).build())
+                .currentLimits1(CurrentLimitsInfos.builder().permanentLimit(3.).temporaryLimits(List.of(CurrentTemporaryLimitCreationInfos.builder().name("IT5").acceptableDuration(98647).value(45.).build())).build())
+                .currentLimits2(CurrentLimitsInfos.builder().permanentLimit(2.).temporaryLimits(List.of(CurrentTemporaryLimitCreationInfos.builder().name("IT10").acceptableDuration(683647).value(791.).build())).build())
                 .connectionName1("cn201")
                 .connectionDirection1(ConnectablePosition.Direction.TOP)
                 .connectionName2("cn202")
@@ -159,8 +160,8 @@ public class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetwor
                 .busOrBusbarSectionId1("bus1")
                 .voltageLevelId2("v2")
                 .busOrBusbarSectionId2("bus3")
-                .currentLimits1(CurrentLimitsInfos.builder().permanentLimit(3.).build())
-                .currentLimits2(CurrentLimitsInfos.builder().permanentLimit(2.).build())
+                .currentLimits1(CurrentLimitsInfos.builder().permanentLimit(3.).temporaryLimits(List.of(CurrentTemporaryLimitCreationInfos.builder().name("IT5").acceptableDuration(98647).value(45.).build())).build())
+                .currentLimits2(CurrentLimitsInfos.builder().permanentLimit(2.).temporaryLimits(List.of(CurrentTemporaryLimitCreationInfos.builder().name("IT10").acceptableDuration(683647).value(791.).build())).build())
                 .connectionName1("cn2012")
                 .connectionDirection1(ConnectablePosition.Direction.TOP)
                 .connectionName2("cn2022")
@@ -324,7 +325,6 @@ public class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetwor
                 .seriesResistance(400)
                 .ratedS(200.)
                 .ratioTapChanger(ratioTapChangerCreationInfos)
-                .substationIds(Set.of("s1")) // for the matcher
                 .build();
         testCreateTwoWindingsTransformerInBusBreaker(twoWindingsTransformerCreationInfos, 1);
         TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos2 = TwoWindingsTransformerCreationInfos.builder()
@@ -343,7 +343,6 @@ public class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetwor
                 .connectionDirection1(ConnectablePosition.Direction.TOP)
                 .connectionDirection2(ConnectablePosition.Direction.TOP)
                 .ratioTapChanger(ratioTapChangerCreationInfos)
-                .substationIds(Set.of("s1")) // for the matcher
                 .build();
         testCreateTwoWindingsTransformerInBusBreaker(twoWindingsTransformerCreationInfos2, 2);
     }
@@ -381,24 +380,18 @@ public class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetwor
                 .connectionName2("cnid2wt2")
                 .connectionDirection2(ConnectablePosition.Direction.TOP)
                 .phaseTapChanger(phaseTapChangerCreationInfos)
-                .substationIds(Set.of("s1")) // for the matcher
                 .build();
         testCreateTwoWindingsTransformerInBusBreaker(twoWindingsTransformerCreationInfos, 1);
     }
 
     private void testCreateTwoWindingsTransformerInBusBreaker(TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos, int actualSize) throws Exception {
         MvcResult mvcResult;
-        String resultAsString;
         final String transformerId = twoWindingsTransformerCreationInfos.getEquipmentId();
 
         String twoWindingsTransformerCreationInfosJson = mapper.writeValueAsString(twoWindingsTransformerCreationInfos);
         mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(twoWindingsTransformerCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        List<TwoWindingsTransformerCreationInfos> bsmlrTwoWindingsTransformer = mapper.readValue(resultAsString, new TypeReference<>() {
-        });
-        assertThat(bsmlrTwoWindingsTransformer.get(0), createMatcherTwoWindingsTransformerCreationInfos(twoWindingsTransformerCreationInfos));
-
+        testElementCreationImpact(mapper, mvcResult.getResponse().getContentAsString(), IdentifiableType.TWO_WINDINGS_TRANSFORMER, twoWindingsTransformerCreationInfos.getEquipmentId(), Set.of("s1"));
         assertNotNull(getNetwork().getTwoWindingsTransformer(transformerId));  // transformer was created
         testNetworkModificationsCount(getGroupId(), actualSize);
     }

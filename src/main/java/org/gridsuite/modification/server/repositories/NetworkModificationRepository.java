@@ -43,6 +43,7 @@ public class NetworkModificationRepository {
     }
 
     @Transactional // To have all create in the same transaction (atomic)
+    // TODO Remove transaction when errors will no longer be sent to the front
     public void saveModifications(UUID groupUuid, List<? extends ModificationEntity> modifications) {
         var modificationGroupEntity = this.modificationGroupRepository
                 .findById(groupUuid)
@@ -51,8 +52,7 @@ public class NetworkModificationRepository {
     }
 
     @Transactional
-    // To have all move in the same transaction (atomic)
-    // When we move modifications, we move them right before referenceModification when it is defined, at the end of list otherwise
+    // TODO Remove transaction when errors will no longer be sent to the front
     public List<ModificationEntity> moveModifications(UUID destinationGroupUuid, UUID originGroupUuid, List<UUID> modificationsUuid, UUID referenceModificationUuid) {
         ModificationGroupEntity originModificationGroupEntity = getModificationGroup(originGroupUuid);
 
@@ -76,7 +76,7 @@ public class NetworkModificationRepository {
                 //if destination is empty, group does not exist, we create it here if needed
                 ModificationGroupEntity destinationModificationGroupEntity = getOrCreateModificationGroup(destinationGroupUuid);
 
-                Map<UUID, ModificationEntity> destinationModifications = modificationRepository.findAllBaseByGroupId(destinationGroupUuid).stream()
+                Map<UUID, ModificationEntity> destinationModifications = getModificationsEntities(destinationGroupUuid).stream()
                         .collect(Collectors.toMap(ModificationEntity::getId, Function.identity(), (x, y) -> y, LinkedHashMap::new));
 
                 // referenceModificationUuid must belong to destination one
@@ -189,7 +189,10 @@ public class NetworkModificationRepository {
 
     @Transactional(readOnly = true)
     public List<ModificationEntity> getModificationsEntities(@NonNull List<UUID> uuids) {
-        return modificationRepository.findAllById(uuids);
+        // Spring-data findAllById doc says: the order of elements in the result is not guaranteed
+        List<ModificationEntity> entities = modificationRepository.findAllById(uuids);
+        entities.sort(Comparator.comparing(e -> uuids.indexOf(e.getId())));
+        return entities;
     }
 
     @Transactional(readOnly = true)

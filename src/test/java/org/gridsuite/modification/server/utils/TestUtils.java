@@ -7,15 +7,18 @@
 
 package org.gridsuite.modification.server.utils;
 
+import com.google.common.io.ByteStreams;
 import com.powsybl.commons.exceptions.UncheckedInterruptedException;
 import com.powsybl.iidm.network.Branch;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.BranchStatus;
 import com.powsybl.iidm.network.extensions.BranchStatusAdder;
 import okhttp3.mockwebserver.MockWebServer;
+import org.junit.platform.commons.util.StringUtils;
 import org.springframework.cloud.stream.binder.test.OutputDestination;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -23,10 +26,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static com.vladmihalcea.sql.SQLStatementCountValidator.assertDeleteCount;
-import static com.vladmihalcea.sql.SQLStatementCountValidator.assertInsertCount;
-import static com.vladmihalcea.sql.SQLStatementCountValidator.assertSelectCount;
-import static com.vladmihalcea.sql.SQLStatementCountValidator.assertUpdateCount;
+import static com.vladmihalcea.sql.SQLStatementCountValidator.*;
 import static org.junit.Assert.*;
 
 /**
@@ -103,5 +103,10 @@ public final class TestUtils {
         Branch<?> branch = network.getBranch(branchName);
         assertNotNull(branch);
         branch.newExtension(BranchStatusAdder .class).withStatus(status).add();
+    }
+
+    public static String resourceToString(String resource) throws IOException {
+        String content = new String(ByteStreams.toByteArray(TestUtils.class.getResourceAsStream(resource)), StandardCharsets.UTF_8);
+        return StringUtils.replaceWhitespaceCharacters(content, "");
     }
 }

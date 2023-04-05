@@ -1,0 +1,36 @@
+{
+  "applicationStatus": "ALL_OK",
+  "networkImpacts": [
+    {
+      "impactType": "CREATION",
+      "elementId": "lineId",
+      "elementType": "LINE",
+      "substationIds": [
+        "s1",
+        "s2"
+      ]
+    },
+    {
+      "impactType": "MODIFICATION",
+      "elementId": "loadId",
+      "elementType": "LOAD",
+      "substationIds": [
+        "s3"
+      ]
+    },
+    {
+      "impactType": "DELETION",
+      "elementId": "generatorId",
+      "elementType": "GENERATOR",
+      "substationIds": [
+        "s4"
+      ]
+    }
+  ],
+  "impactedSubstationsIds": [
+    "s1",
+    "s2",
+    "s3",
+    "s4"
+  ]
+}
