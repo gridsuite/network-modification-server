@@ -267,7 +267,7 @@ public class BuildTest {
                 .busbarCount(2)
                 .sectionCount(2)
                 .switchKinds(Arrays.asList(SwitchKind.BREAKER))
-                .couplingDevices(Arrays.asList(CouplingDeviceInfos.builder().busbarSectionId1("bbs.nw").busbarSectionId2("bbs.ne").build()))
+                .couplingDevices(Arrays.asList(CouplingDeviceInfos.builder().busbarSectionId1("vl9_1_1").busbarSectionId2("vl9_2_1").build()))
                 .build().toEntity());
         modificationRepository.saveModifications(TEST_GROUP_ID_2, entities2);
 
@@ -405,7 +405,7 @@ public class BuildTest {
                 .busbarCount(2)
                 .sectionCount(2)
                 .switchKinds(Arrays.asList(SwitchKind.BREAKER))
-                .couplingDevices(Arrays.asList(CouplingDeviceInfos.builder().busbarSectionId1("bbs.nw").busbarSectionId2("bbs.ne").build()))
+                .couplingDevices(Arrays.asList(CouplingDeviceInfos.builder().busbarSectionId1("vl9_1_1").busbarSectionId2("vl9_2_1").build()))
                 .build().toEntity());
         entities2.add(ShuntCompensatorCreationInfos.builder()
             .equipmentId("shunt9")
