@@ -557,7 +557,7 @@ public class BuildTest {
         Message<byte[]> resultMessage = output.receive(TIMEOUT, buildResultDestination);
         assertNotNull(resultMessage);
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
-        testElementImpacts(mapper, new String(resultMessage.getPayload()), 53, Set.of("newSubstation", "s1", "s2"));
+        testElementImpacts(mapper, new String(resultMessage.getPayload()), 61, Set.of("newSubstation", "s1", "s2"));
 
         // test all modifications have been made on variant VARIANT_ID
         network.getVariantManager().setWorkingVariant(NetworkCreation.VARIANT_ID);
