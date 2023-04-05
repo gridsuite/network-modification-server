@@ -16,7 +16,6 @@ import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.BusbarSectionPosition;
 import com.powsybl.iidm.network.extensions.IdentifiableShortCircuitAdder;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.AttributeModification;
@@ -206,80 +205,6 @@ public final class ModificationUtils {
         return newNode + 2;
     }
 
-    private Pair<Integer, Integer> addBusbarConnectionTo(VoltageLevelCreationInfos voltageLevelCreationInfos,
-                                                         BusbarConnectionCreationInfos bbsci, Map<String, Integer> idToNodeRank, Pair<Integer, Integer> ranks,
-                                                         VoltageLevel voltageLevel) {
-
-        String fromBBSId = bbsci.getFromBBS();
-        Integer rank1 = idToNodeRank.get(fromBBSId);
-        if (rank1 == null) {
-            throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "From side '" + fromBBSId + "' unknown");
-        }
-
-        String toBBSId = bbsci.getToBBS();
-        Integer rank2 = idToNodeRank.get(toBBSId);
-        if (rank2 == null) {
-            throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "To side '" + toBBSId + "' unknown");
-        }
-
-        SwitchKind switchKind = bbsci.getSwitchKind();
-        if (switchKind == SwitchKind.DISCONNECTOR && fromBBSId.equals(toBBSId)) {
-            throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR,
-                "Disconnector between same bus bar section '" + toBBSId + "'");
-        }
-
-        int nodeRank = ranks.getLeft();
-        int cnxRank = ranks.getRight();
-        String infix = voltageLevelCreationInfos.getEquipmentId() + "_" + fromBBSId + "_" + toBBSId + "_";
-        if (switchKind == SwitchKind.DISCONNECTOR) {
-            voltageLevel.getNodeBreakerView().newDisconnector()
-                .setKind(switchKind)
-                .setId(DISCONNECTOR + infix + cnxRank++)
-                .setNode1(rank1)
-                .setNode2(rank2)
-                .setFictitious(false)
-                .setRetained(false)
-                .setOpen(false)
-                .add();
-        } else if (switchKind == SwitchKind.BREAKER) {
-            int preBreakerRank = nodeRank++;
-            int postBreakerRank = nodeRank++;
-            voltageLevel.getNodeBreakerView().newDisconnector()
-                .setKind(SwitchKind.DISCONNECTOR)
-                .setId(DISCONNECTOR + infix + cnxRank++)
-                .setNode1(rank1)
-                .setNode2(preBreakerRank)
-                .setFictitious(false)
-                .setRetained(false)
-                .setOpen(false)
-                .add();
-
-            voltageLevel.getNodeBreakerView().newBreaker()
-                .setKind(switchKind)
-                .setId(BREAKER + infix + cnxRank++)
-                .setNode1(preBreakerRank)
-                .setNode2(postBreakerRank)
-                .setFictitious(false)
-                .setRetained(false)
-                .setOpen(false)
-                .add();
-
-            voltageLevel.getNodeBreakerView().newDisconnector()
-                .setKind(SwitchKind.DISCONNECTOR)
-                .setId(DISCONNECTOR + infix + cnxRank++)
-                .setNode1(postBreakerRank)
-                .setNode2(rank2)
-                .setFictitious(false)
-                .setRetained(false)
-                .setOpen(false)
-                .add();
-        } else {
-            throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "Switch kind '" + switchKind + "' not supported");
-        }
-
-        return Pair.of(nodeRank, cnxRank);
-    }
-
     public void controlNewOrExistingVoltageLevel(VoltageLevelCreationInfos mayNewVL,
                 String existingVoltageLevelId, String bbsOrBusId, Network network) {
         if (mayNewVL != null) {
@@ -298,6 +223,10 @@ public final class ModificationUtils {
     public void controlVoltageLevelCreation(VoltageLevelCreationInfos voltageLevelCreationInfos, Network network) {
         if (network.getVoltageLevel(voltageLevelCreationInfos.getEquipmentId()) != null) {
             throw new NetworkModificationException(VOLTAGE_LEVEL_ALREADY_EXISTS, voltageLevelCreationInfos.getEquipmentId());
+        }
+        if(voltageLevelCreationInfos.getCouplingDevices().stream().anyMatch(cd-> cd.getBusbarSectionId1().equals(cd.getBusbarSectionId2()))){
+                throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR,
+                    "Coupling between same bus bar section is not allowed");
         }
     }
 

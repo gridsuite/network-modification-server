@@ -106,13 +106,13 @@ public class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
         resultAsString = mvcResult.getResponse().getContentAsString();
         assertEquals(resultAsString, new NetworkModificationException(SUBSTATION_NOT_FOUND, "absent_station").getMessage());
 
-        /*vli = (VoltageLevelCreationInfos) buildModification();
-
+        vli = (VoltageLevelCreationInfos) buildModification();
+        vli.getCouplingDevices().get(0).setBusbarSectionId1("bbs.ne");
         String vliJsonObject = mapper.writeValueAsString(vli);
         mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(vliJsonObject).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().is5xxServerError()).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
-        assertEquals(resultAsString, new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "Disconnector between same bus bar section 'bbs.ne'").getMessage());*/
+        assertEquals(resultAsString, new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "Coupling between same bus bar section is not allowed").getMessage());
 
         vli = (VoltageLevelCreationInfos) buildModificationUpdate();
 
@@ -126,7 +126,7 @@ public class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
         // try to create an existing VL
         vli = (VoltageLevelCreationInfos) buildModification();
         vli.setEquipmentId("v1");
-        String vliJsonObject = mapper.writeValueAsString(vli);
+        vliJsonObject = mapper.writeValueAsString(vli);
         mockMvc.perform(post(getNetworkModificationUri()).content(vliJsonObject).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(
                     status().is4xxClientError(),
@@ -134,23 +134,4 @@ public class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
             );
     }
 
-    @SneakyThrows
-    @Test
-    public void testCreateWithConnectionErrors() {
-        VoltageLevelCreationInfos vli = (VoltageLevelCreationInfos) buildModification();
-        // try to create with wrong busbar as 'fromBBS'
-        String vliJsonObject = mapper.writeValueAsString(vli);
-        /*mockMvc.perform(post(getNetworkModificationUri()).content(vliJsonObject).contentType(MediaType.APPLICATION_JSON))
-            .andExpectAll(
-                    status().is4xxClientError(),
-                    content().string(new NetworkModificationException(BUSBAR_SECTION_NOT_DEFINED, "bbs.bad").getMessage())
-            );*/
-        // same test with 'toBBS'
-        vliJsonObject = mapper.writeValueAsString(vli);
-        /*mockMvc.perform(post(getNetworkModificationUri()).content(vliJsonObject).contentType(MediaType.APPLICATION_JSON))
-            .andExpectAll(
-                    status().is4xxClientError(),
-                    content().string(new NetworkModificationException(BUSBAR_SECTION_NOT_DEFINED, "bbs.wrong").getMessage())
-            );*/
-    }
 }
