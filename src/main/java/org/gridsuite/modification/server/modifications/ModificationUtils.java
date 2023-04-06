@@ -244,13 +244,29 @@ public final class ModificationUtils {
             .setName(voltageLevelCreationInfos.getEquipmentName())
             .setTopologyKind(TopologyKind.NODE_BREAKER)
             .setNominalV(voltageLevelCreationInfos.getNominalVoltage())
-            .setLowVoltageLimit(voltageLevelCreationInfos.getLowVoltageLimit())
-            .setHighVoltageLimit(voltageLevelCreationInfos.getHighVoltageLimit())
             .add();
 
-        voltageLevel.newExtension(IdentifiableShortCircuitAdder.class).withIpMin(voltageLevelCreationInfos.getIpMin())
-                .withIpMax(voltageLevelCreationInfos.getIpMax())
-                .add();
+        if (voltageLevelCreationInfos.getLowVoltageLimit() != null) {
+            voltageLevel.setLowVoltageLimit(voltageLevelCreationInfos.getLowVoltageLimit());
+        }
+        if (voltageLevelCreationInfos.getHighVoltageLimit() != null) {
+            voltageLevel.setHighVoltageLimit(voltageLevelCreationInfos.getHighVoltageLimit());
+        }
+
+        if (voltageLevelCreationInfos.getIpMax() != null && voltageLevelCreationInfos.getIpMin() != null) {
+            voltageLevel.newExtension(IdentifiableShortCircuitAdder.class)
+                    .withIpMin(voltageLevelCreationInfos.getIpMin())
+                    .withIpMax(voltageLevelCreationInfos.getIpMax())
+                    .add();
+        } else if (voltageLevelCreationInfos.getIpMax() != null && voltageLevelCreationInfos.getIpMin() == null) {
+            voltageLevel.newExtension(IdentifiableShortCircuitAdder.class)
+                    .withIpMax(voltageLevelCreationInfos.getIpMax())
+                    .add();
+        } else if (voltageLevelCreationInfos.getIpMax() == null && voltageLevelCreationInfos.getIpMin() != null) {
+            voltageLevel.newExtension(IdentifiableShortCircuitAdder.class)
+                    .withIpMin(voltageLevelCreationInfos.getIpMin())
+                    .add();
+        }
 
         CreateVoltageLevelTopologyBuilder voltageLevelTopologyBuilder = new CreateVoltageLevelTopologyBuilder();
         voltageLevelTopologyBuilder.withVoltageLevelId(voltageLevelCreationInfos.getEquipmentId())
