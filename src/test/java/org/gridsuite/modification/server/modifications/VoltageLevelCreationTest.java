@@ -27,6 +27,7 @@ import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -65,7 +66,7 @@ public class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
     }
 
     @Override
-    protected MatcherModificationInfos createMatcher(ModificationInfos modificationInfos) {
+    protected MatcherVoltageLevelCreationInfos createMatcher(ModificationInfos modificationInfos) {
         return MatcherVoltageLevelCreationInfos.createMatcherVoltageLevelCreationInfos((VoltageLevelCreationInfos) modificationInfos);
     }
 
@@ -134,4 +135,29 @@ public class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
             );
     }
 
+    @SneakyThrows
+    @Test
+    public void testCreateWithShortCircuitExtension() {
+        VoltageLevelCreationInfos vli = (VoltageLevelCreationInfos) buildModification();
+        vli.setIpMin(null);
+
+        String vliJson = mapper.writeValueAsString(vli);
+        mockMvc
+                .perform(post(getNetworkModificationUri()).content(vliJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        VoltageLevelCreationInfos createdModification = (VoltageLevelCreationInfos) modificationRepository
+                .getModifications(getGroupId(), false, true).get(0);
+        assertThat(createdModification, createMatcher(vli));
+
+        vli.setIpMin(0.0);
+        vli.setIpMax(null);
+
+        vliJson = mapper.writeValueAsString(vli);
+        mockMvc
+                .perform(post(getNetworkModificationUri()).content(vliJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        createdModification = (VoltageLevelCreationInfos) modificationRepository
+                .getModifications(getGroupId(), false, true).get(0);
+        assertThat(createdModification, createMatcher(vli));
+    }
 }
