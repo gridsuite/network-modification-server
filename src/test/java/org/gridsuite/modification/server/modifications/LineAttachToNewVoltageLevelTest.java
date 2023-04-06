@@ -40,7 +40,6 @@ public class LineAttachToNewVoltageLevelTest extends AbstractNetworkModification
                 .equipmentName("NewVoltageLevel")
                 .nominalVoltage(379.3)
                 .substationId("s1")
-                .nominalVoltage(379.1)
                 .lowVoltageLimit(0.0)
                 .highVoltageLimit(10.0)
                 .ipMin(0.0)

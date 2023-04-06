@@ -42,10 +42,10 @@ public class VoltageLevelCreationInfos extends EquipmentCreationInfos {
     private double nominalVoltage;
 
     @Schema(description = "low voltage limit in kV")
-    private double lowVoltageLimit;
+    private Double lowVoltageLimit;
 
     @Schema(description = "high voltage limit  in kV")
-    private double highVoltageLimit;
+    private Double highVoltageLimit;
 
     @Schema(description = "low short-circuit current limit in kA")
     private Double ipMin;

@@ -38,10 +38,10 @@ public class VoltageLevelCreationEntity extends EquipmentCreationEntity {
     private double nominalVoltage;
 
     @Column
-    private double lowVoltageLimit;
+    private Double lowVoltageLimit;
 
     @Column
-    private double highVoltageLimit;
+    private Double highVoltageLimit;
 
     @Column
     private Double ipMin;
@@ -57,7 +57,6 @@ public class VoltageLevelCreationEntity extends EquipmentCreationEntity {
 
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable
-    @Enumerated(EnumType.ORDINAL)
     private List<SwitchKind> switchKinds;
 
     @ElementCollection
