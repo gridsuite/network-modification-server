@@ -44,6 +44,7 @@ public class LoadCreation extends AbstractModification {
     public void apply(Network network, Reporter subReporter) {
         // create the load in the network
         VoltageLevel voltageLevel = ModificationUtils.getInstance().getVoltageLevel(network, modificationInfos.getVoltageLevelId());
+        List<Report> reports = new ArrayList<>();
         if (voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER) {
             LoadAdder loadAdder = createLoadAdderInNodeBreaker(voltageLevel, modificationInfos);
             var position = ModificationUtils.getInstance().getPosition(modificationInfos.getConnectionPosition(),
@@ -56,8 +57,8 @@ public class LoadCreation extends AbstractModification {
                 .withInjectionAdder(loadAdder)
                 .build();
             algo.apply(network, true, subReporter);
+            addReports(reports);
         } else {
-            List<Report> reports = new ArrayList<>();
             createLoadInBusBreaker(voltageLevel, modificationInfos);
             var report = Report.builder()
                     .withKey("loadCreated")
@@ -66,21 +67,25 @@ public class LoadCreation extends AbstractModification {
                     .withSeverity(TypedValue.INFO_SEVERITY)
                     .build();
             reports.add(report);
-            if (modificationInfos.getEquipmentName() != null) {
-                reports.add(ModificationUtils.getInstance()
-                        .buildCreationReport(modificationInfos.getEquipmentName(), "Name"));
-            }
-
-            if (modificationInfos.getLoadType() != null) {
-                reports.add(ModificationUtils.getInstance()
-                        .buildCreationReport(modificationInfos.getLoadType(), "Type"));
-            }
-            reports.add(ModificationUtils.getInstance()
-                    .buildCreationReport(modificationInfos.getActivePower(), "Active power"));
-            reports.add(ModificationUtils.getInstance()
-                    .buildCreationReport(modificationInfos.getReactivePower(), "Reactive power"));
-            reports.forEach(subReporter::report);
+            addReports(reports);
         }
+        reports.forEach(subReporter::report);
+    }
+
+    private void addReports(List<Report> reports) {
+        if (modificationInfos.getEquipmentName() != null) {
+            reports.add(ModificationUtils.getInstance()
+                    .buildCreationReport(modificationInfos.getEquipmentName(), "Name"));
+        }
+
+        if (modificationInfos.getLoadType() != null) {
+            reports.add(ModificationUtils.getInstance()
+                    .buildCreationReport(modificationInfos.getLoadType(), "Type"));
+        }
+        reports.add(ModificationUtils.getInstance()
+                .buildCreationReport(modificationInfos.getActivePower(), "Active power"));
+        reports.add(ModificationUtils.getInstance()
+                .buildCreationReport(modificationInfos.getReactivePower(), "Reactive power"));
     }
 
     private LoadAdder createLoadAdderInNodeBreaker(VoltageLevel voltageLevel, LoadCreationInfos loadCreationInfos) {
