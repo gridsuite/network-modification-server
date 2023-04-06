@@ -150,13 +150,14 @@ public class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
 
         vli.setIpMin(0.0);
         vli.setIpMax(null);
+        vli.setEquipmentId("vlId2");
 
         vliJson = mapper.writeValueAsString(vli);
         mockMvc
                 .perform(post(getNetworkModificationUri()).content(vliJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         createdModification = (VoltageLevelCreationInfos) modificationRepository
-                .getModifications(getGroupId(), false, true).get(0);
+                .getModifications(getGroupId(), false, true).get(1);
         assertThat(createdModification, createMatcher(vli));
     }
 }
