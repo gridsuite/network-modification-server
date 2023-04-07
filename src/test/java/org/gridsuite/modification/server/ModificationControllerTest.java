@@ -342,7 +342,7 @@ public class ModificationControllerTest {
         mockMvc.perform(post(URI_NETWORK_MODIF).content(groovyScriptInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertNotNull(network.getGenerator("idGenerator"));
-        assertEquals(20,network.getGenerator("idGenerator").getTargetP());
+        assertEquals(20, network.getGenerator("idGenerator").getTargetP(), 0.1);
 
         assertEquals(2, modificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
     }

@@ -21,6 +21,7 @@ import org.junit.platform.commons.util.StringUtils;
 import org.springframework.cloud.stream.binder.test.OutputDestination;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -107,7 +108,8 @@ public final class TestUtils {
     }
 
     public static String resourceToString(String resource) throws IOException {
-        String content = new String(ByteStreams.toByteArray(TestUtils.class.getResourceAsStream(resource)), StandardCharsets.UTF_8);
+        InputStream inputStream = Objects.requireNonNull(TestUtils.class.getResourceAsStream(resource));
+        String content = new String(ByteStreams.toByteArray(inputStream), StandardCharsets.UTF_8);
         return StringUtils.replaceWhitespaceCharacters(content, "");
     }
 

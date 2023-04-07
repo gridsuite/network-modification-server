@@ -17,7 +17,6 @@ import org.gridsuite.modification.server.utils.MatcherLineCreationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.UUID;
 
@@ -152,9 +151,6 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
     @Test
     @SneakyThrows
     public void testCreateLineOptionalParameters5() {
-        MvcResult mvcResult;
-        String resultAsString;
-
         LineCreationInfos lineCreationInfosPermanentLimitNOK = LineCreationInfos.builder()
                 .equipmentId("idLine2")
                 .equipmentName("nameLine2")

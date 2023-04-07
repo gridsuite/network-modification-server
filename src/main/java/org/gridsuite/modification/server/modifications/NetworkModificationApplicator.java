@@ -108,7 +108,7 @@ public class NetworkModificationApplicator {
         if (!isApplicationException && LOGGER.isErrorEnabled()) {
             LOGGER.error(e.toString(), e);
         }
-        String errorMessage = isApplicationException ? e.getMessage() : "Technical error: " + e.toString();
+        String errorMessage = isApplicationException ? e.getMessage() : "Technical error: " + e;
         subReporter.report(Report.builder()
                 .withKey(typeIfError.name())
                 .withDefaultMessage(errorMessage)
