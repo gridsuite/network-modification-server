@@ -264,8 +264,14 @@ public class BuildTest {
                 .equipmentName("vl9")
                 .nominalVoltage(225)
                 .substationId("s1")
-                .busbarSections(List.of(new BusbarSectionCreationInfos("1.1", "1.1", 1, 1), new BusbarSectionCreationInfos("1.2", "1.2", 1, 2)))
-                .busbarConnections(List.of(new BusbarConnectionCreationInfos("1.1", "1.2", SwitchKind.BREAKER)))
+                .lowVoltageLimit(0.0)
+                .highVoltageLimit(10.0)
+                .ipMin(0.0)
+                .ipMax(10.0)
+                .busbarCount(2)
+                .sectionCount(2)
+                .switchKinds(Arrays.asList(SwitchKind.BREAKER))
+                .couplingDevices(Arrays.asList(CouplingDeviceInfos.builder().busbarSectionId1("vl9_1_1").busbarSectionId2("vl9_2_1").build()))
                 .build().toEntity());
         modificationRepository.saveModifications(TEST_GROUP_ID_2, entities2);
 
@@ -398,8 +404,14 @@ public class BuildTest {
                 .equipmentName("vl9")
                 .nominalVoltage(225)
                 .substationId("s1")
-                .busbarSections(List.of(new BusbarSectionCreationInfos("1.10", "name 1.10", 1, 1), new BusbarSectionCreationInfos("1.11", "name 1.11", 1, 2)))
-                .busbarConnections(List.of(new BusbarConnectionCreationInfos("1.10", "1.11", SwitchKind.BREAKER)))
+                .lowVoltageLimit(0.0)
+                .highVoltageLimit(10.0)
+                .ipMin(0.0)
+                .ipMax(10.0)
+                .busbarCount(2)
+                .sectionCount(2)
+                .switchKinds(Arrays.asList(SwitchKind.BREAKER))
+                .couplingDevices(Arrays.asList(CouplingDeviceInfos.builder().busbarSectionId1("vl9_1_1").busbarSectionId2("vl9_2_1").build()))
                 .build().toEntity());
         entities2.add(ShuntCompensatorCreationInfos.builder()
             .equipmentId("shunt9")
@@ -545,7 +557,7 @@ public class BuildTest {
         Message<byte[]> resultMessage = output.receive(TIMEOUT, buildResultDestination);
         assertNotNull(resultMessage);
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
-        testElementImpacts(mapper, new String(resultMessage.getPayload()), 53, Set.of("newSubstation", "s1", "s2"));
+        testElementImpacts(mapper, new String(resultMessage.getPayload()), 62, Set.of("newSubstation", "s1", "s2"));
 
         // test all modifications have been made on variant VARIANT_ID
         network.getVariantManager().setWorkingVariant(NetworkCreation.VARIANT_ID);
@@ -686,7 +698,7 @@ public class BuildTest {
         resultMessage = output.receive(TIMEOUT, buildResultDestination);
         assertNotNull(resultMessage);
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
-        testElementImpacts(mapper, new String(resultMessage.getPayload()), 46, Set.of("newSubstation", "s1", "s2"));
+        testElementImpacts(mapper, new String(resultMessage.getPayload()), 55, Set.of("newSubstation", "s1", "s2"));
 
         // test that only active modifications have been made on variant VARIANT_ID
         network.getVariantManager().setWorkingVariant(NetworkCreation.VARIANT_ID);
