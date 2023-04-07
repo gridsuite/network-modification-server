@@ -20,7 +20,6 @@ import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
 import org.gridsuite.modification.server.ContextConfigurationWithTestChannel;
-import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.TapChangerType;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.elasticsearch.EquipmentInfos;
@@ -63,9 +62,9 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static com.powsybl.iidm.network.ReactiveLimitsKind.MIN_MAX;
+import static org.gridsuite.modification.server.Impacts.TestImpactUtils.*;
 import static org.gridsuite.modification.server.service.BuildWorkerService.CANCEL_MESSAGE;
 import static org.gridsuite.modification.server.service.BuildWorkerService.FAIL_MESSAGE;
-import static org.gridsuite.modification.server.Impacts.TestImpactUtils.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.*;
@@ -817,14 +816,10 @@ public class BuildTest {
         testEmptyImpactsWithErrors(mapper, networkModificationResult);
         assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches(String.format("/v1/reports/%s", reportUuid))));
 
-        // Incremental mode : Error send with exception
-        NetworkInfos networkInfos = networkModificationService.getNetworkInfos(TEST_NETWORK_ID, variantId);
-        ReportInfos reportInfos = new ReportInfos(reportUuid, reporterId);
-        assertEquals("VOLTAGE_LEVEL_NOT_FOUND : unknownVoltageLevelId",
-            assertThrows(NetworkModificationException.class,
-                () -> networkModificationService.createNetworkModification(networkInfos, groupUuid, reportInfos, loadCreationInfos)
-            ).getMessage()
-        );
+        // Incremental mode : No error send with exception
+        Optional<NetworkModificationResult> networkModificationResult2 = networkModificationService.createNetworkModification(networkModificationService.getNetworkInfos(TEST_NETWORK_ID, variantId), groupUuid, new ReportInfos(reportUuid, reporterId), loadCreationInfos);
+        assertTrue(networkModificationResult2.isPresent());
+        testEmptyImpactsWithErrors(mapper, networkModificationResult);
         assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches(String.format("/v1/reports/%s", reportUuid))));
         testNetworkModificationsCount(groupUuid, 1);
 

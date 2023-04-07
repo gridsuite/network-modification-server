@@ -336,13 +336,13 @@ public class ModificationControllerTest {
                 .andExpect(status().isOk());
         assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
 
-        // apply groovy script with error ont the second
-        groovyScriptInfos.setScript("network.getGenerator('idGenerator').targetP=30\nnetwork.getGenerator('there is no generator').targetP=40\n");
+        // apply groovy script with error on the second
+        groovyScriptInfos.setScript("network.getGenerator('there is no generator').targetP=30\nnetwork.getGenerator('idGenerator').targetP=40\n");
         groovyScriptInfosJson = objectWriter.writeValueAsString(groovyScriptInfos);
-        MvcResult mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(groovyScriptInfosJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isBadRequest()).andReturn();
-        String resultAsString = mvcResult.getResponse().getContentAsString();
-        assertEquals(resultAsString, new NetworkModificationException(GROOVY_SCRIPT_ERROR, "Cannot set property 'targetP' on null object").getMessage());
+        mockMvc.perform(post(URI_NETWORK_MODIF).content(groovyScriptInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        assertNotNull(network.getGenerator("idGenerator"));
+        assertEquals(20,network.getGenerator("idGenerator").getTargetP());
 
         assertEquals(2, modificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
     }
@@ -872,10 +872,7 @@ public class ModificationControllerTest {
         equipmentDeletionInfos.setEquipmentType(IdentifiableType.VOLTAGE_LEVEL.name());
         equipmentDeletionInfos.setEquipmentId("v4");
         mockMvc.perform(post(URI_NETWORK_MODIF).content(objectWriter.writeValueAsString(equipmentDeletionInfos)).contentType(MediaType.APPLICATION_JSON))
-            .andExpectAll(
-                status().is5xxServerError(),
-                content().string(new NetworkModificationException(DELETE_EQUIPMENT_ERROR,
-                    new PowsyblException(new AssertionError("The voltage level 'v4' cannot be removed because of a remaining LINE"))).getMessage()));
+            .andExpect(status().isOk());
         assertNotNull(network.getVoltageLevel("v4"));
 
         // delete substation
@@ -895,10 +892,7 @@ public class ModificationControllerTest {
         equipmentDeletionInfos.setEquipmentType(IdentifiableType.SUBSTATION.name());
         equipmentDeletionInfos.setEquipmentId("s2");
         mockMvc.perform(post(URI_NETWORK_MODIF).content(objectWriter.writeValueAsString(equipmentDeletionInfos)).contentType(MediaType.APPLICATION_JSON))
-            .andExpectAll(
-                status().is5xxServerError(),
-                content().string(new NetworkModificationException(DELETE_EQUIPMENT_ERROR,
-                    "The substation s2 is still connected to another substation").getMessage()));
+                .andExpect(status().isOk());
         assertNotNull(network.getSubstation("s2"));
 
         assertTrue(equipmentInfosRepository.findAllByNetworkUuidAndVariantId(TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID).isEmpty());

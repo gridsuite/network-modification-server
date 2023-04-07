@@ -25,14 +25,13 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentMatchers;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.*;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -44,8 +43,8 @@ import java.util.UUID;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.BDDMockito.given;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -83,8 +82,10 @@ public abstract class AbstractNetworkModificationTest {
     @MockBean
     private NetworkStoreService networkStoreService;
 
-    @Autowired
+    @MockBean
     private ReportService reportService;
+
+    protected ReporterModel reporterModel;
 
     @Autowired
     protected NetworkModificationRepository modificationRepository;
@@ -100,21 +101,21 @@ public abstract class AbstractNetworkModificationTest {
 
         initMocks();
 
-        reportService.setReportServerRest(reportServerRest);
-
         modificationRepository.deleteAll();
     }
 
     private void initMocks() {
         when(networkStoreService.getNetwork(NOT_FOUND_NETWORK_ID)).thenThrow(new PowsyblException());
         when(networkStoreService.getNetwork(TEST_NETWORK_ID)).then((Answer<Network>) invocation -> network);
-
-        given(reportServerRest.exchange(eq("/v1/reports/" + TEST_REPORT_ID), eq(HttpMethod.PUT), ArgumentMatchers.any(HttpEntity.class), eq(ReporterModel.class)))
-            .willReturn(new ResponseEntity<>(HttpStatus.OK));
+        doAnswer(invocation -> {
+            reporterModel = invocation.getArgument(1);
+            return Void.class;
+        }).when(reportService).sendReport(any(), any());
     }
 
     @After
     public void tearOff() {
+        reporterModel = null;
         modificationRepository.deleteAll();
     }
 

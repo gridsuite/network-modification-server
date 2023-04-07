@@ -21,9 +21,9 @@ import java.util.UUID;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_ALREADY_EXISTS;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_NOT_FOUND;
 import static org.gridsuite.modification.server.utils.MatcherLinesAttachToSplitLinesInfos.createMatcherLinesAttachToSplitLinesInfos;
+import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -104,27 +104,24 @@ public class LinesAttachToSplitLinesTest extends AbstractNetworkModificationTest
         linesAttachToSplitLinesInfos.setLineToAttachTo1Id("absent_line_id");
         String lineAttachToAbsentLineJson = mapper.writeValueAsString(linesAttachToSplitLinesInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineAttachToAbsentLineJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpectAll(
-                    status().is4xxClientError(),
-                    content().string(new NetworkModificationException(LINE_NOT_FOUND, "absent_line_id").getMessage())
-            );
+                .andExpect(status().isOk());
+        assertLogMessage(new NetworkModificationException(LINE_NOT_FOUND, "absent_line_id").getMessage(),
+                linesAttachToSplitLinesInfos.getErrorType().name(), reporterModel);
         // try to create an already existing line
         linesAttachToSplitLinesInfos = (LinesAttachToSplitLinesInfos) buildModification();
         linesAttachToSplitLinesInfos.setReplacingLine1Id("l1");
         lineAttachToAbsentLineJson = mapper.writeValueAsString(linesAttachToSplitLinesInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineAttachToAbsentLineJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpectAll(
-                    status().is4xxClientError(),
-                    content().string(new NetworkModificationException(LINE_ALREADY_EXISTS, "l1").getMessage())
-            );
+                .andExpect(status().isOk());
+        assertLogMessage(new NetworkModificationException(LINE_ALREADY_EXISTS, "l1").getMessage(),
+                linesAttachToSplitLinesInfos.getErrorType().name(), reporterModel);
         // same test on 'replacingLine2Id'
         linesAttachToSplitLinesInfos = (LinesAttachToSplitLinesInfos) buildModification();
         linesAttachToSplitLinesInfos.setReplacingLine2Id("l1");
         lineAttachToAbsentLineJson = mapper.writeValueAsString(linesAttachToSplitLinesInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineAttachToAbsentLineJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpectAll(
-                    status().is4xxClientError(),
-                    content().string(new NetworkModificationException(LINE_ALREADY_EXISTS, "l1").getMessage())
-            );
+                .andExpect(status().isOk());
+        assertLogMessage(new NetworkModificationException(LINE_ALREADY_EXISTS, "l1").getMessage(),
+                linesAttachToSplitLinesInfos.getErrorType().name(), reporterModel);
     }
 }

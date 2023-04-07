@@ -19,14 +19,12 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.DELETE_ATTACHING_LINE_ERROR;
-import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_ALREADY_EXISTS;
-import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_NOT_FOUND;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.utils.MatcherDeleteAttachingLineInfos.createMatcherDeleteAttachingLineInfos;
+import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -93,10 +91,9 @@ public class DeleteAttachingLineTest extends AbstractNetworkModificationTest {
         var objectWriter = mapper.writer().withDefaultPrettyPrinter();
         String json = objectWriter.writeValueAsString(deleteAttachingLineInfos);
         mockMvc.perform(MockMvcRequestBuilders.post(getNetworkModificationUri()).content(json).contentType(MediaType.APPLICATION_JSON))
-            .andExpectAll(
-                    status().is4xxClientError(),
-                    content().string(new NetworkModificationException(LINE_NOT_FOUND, "ll").getMessage())
-            );
+                .andExpect(status().isOk());
+        assertLogMessage(new NetworkModificationException(LINE_NOT_FOUND, "ll").getMessage(),
+                deleteAttachingLineInfos.getErrorType().name(), reporterModel);
     }
 
     @SneakyThrows
@@ -111,10 +108,9 @@ public class DeleteAttachingLineTest extends AbstractNetworkModificationTest {
         var objectWriter = mapper.writer().withDefaultPrettyPrinter();
         String json = objectWriter.writeValueAsString(deleteAttachingLineInfos);
         mockMvc.perform(MockMvcRequestBuilders.post(getNetworkModificationUri()).content(json).contentType(MediaType.APPLICATION_JSON))
-            .andExpectAll(
-                    status().is5xxServerError(),
-                    content().string(new NetworkModificationException(DELETE_ATTACHING_LINE_ERROR, "Unable to find the attachment point and the tapped voltage level from lines l1, l3 and l1").getMessage())
-            );
+                .andExpect(status().isOk());
+        assertLogMessage("Unable to find the attachment point and the tapped voltage level from lines l1, l3 and l1",
+                deleteAttachingLineInfos.getErrorType().name(), reporterModel);
     }
 
     @SneakyThrows
@@ -125,9 +121,8 @@ public class DeleteAttachingLineTest extends AbstractNetworkModificationTest {
         deleteAttachingLineInfos.setReplacingLine1Id("l2");
         String lineAttachToAbsentLineJson = mapper.writeValueAsString(deleteAttachingLineInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineAttachToAbsentLineJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpectAll(
-                    status().is4xxClientError(),
-                    content().string(new NetworkModificationException(LINE_ALREADY_EXISTS, "l2").getMessage())
-            );
+                .andExpect(status().isOk());
+        assertLogMessage(new NetworkModificationException(LINE_ALREADY_EXISTS, "l2").getMessage(),
+                deleteAttachingLineInfos.getErrorType().name(), reporterModel);
     }
 }

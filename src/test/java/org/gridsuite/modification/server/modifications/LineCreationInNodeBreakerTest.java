@@ -25,9 +25,9 @@ import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.utils.MatcherLineCreationInfos.createMatcherLineCreationInfos;
+import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
@@ -57,55 +57,47 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
         lineCreationInfos.setEquipmentId("");
         String lineCreationInfosJson = mapper.writeValueAsString(lineCreationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpectAll(
-                status().is5xxServerError(),
-                content().string(new NetworkModificationException(CREATE_LINE_ERROR, "Invalid id ''").getMessage())
-            );
+                .andExpect(status().isOk());
+        assertLogMessage("Invalid id ''", lineCreationInfos.getErrorType().name(), reporterModel);
 
         lineCreationInfos.setEquipmentId("idLine4");
         lineCreationInfos.setVoltageLevelId1("notFoundVoltageLevelId1");
         lineCreationInfosJson = mapper.writeValueAsString(lineCreationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpectAll(
-                status().is4xxClientError(),
-                content().string(new NetworkModificationException(VOLTAGE_LEVEL_NOT_FOUND, "notFoundVoltageLevelId1").getMessage())
-            );
+                .andExpect(status().isOk());
+        assertLogMessage(new NetworkModificationException(VOLTAGE_LEVEL_NOT_FOUND, "notFoundVoltageLevelId1").getMessage(),
+                lineCreationInfos.getErrorType().name(), reporterModel);
 
         lineCreationInfos.setVoltageLevelId1("v1");
         lineCreationInfos.setBusOrBusbarSectionId1("notFoundBusbarSection1");
         lineCreationInfosJson = mapper.writeValueAsString(lineCreationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpectAll(
-                status().is4xxClientError(),
-                content().string(new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "notFoundBusbarSection1").getMessage())
-            );
+                .andExpect(status().isOk());
+        assertLogMessage(new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "notFoundBusbarSection1").getMessage(),
+                lineCreationInfos.getErrorType().name(), reporterModel);
 
         lineCreationInfos.setVoltageLevelId1("v1");
         lineCreationInfos.setBusOrBusbarSectionId1("1.1");
         lineCreationInfos.setSeriesResistance(Double.NaN);
         lineCreationInfosJson = mapper.writeValueAsString(lineCreationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpectAll(
-                status().is5xxServerError(),
-                content().string(new NetworkModificationException(CREATE_LINE_ERROR, "AC Line 'idLine4': r is invalid").getMessage())
-            );
+                .andExpect(status().isOk());
+        assertLogMessage("AC Line 'idLine4': r is invalid", lineCreationInfos.getErrorType().name(), reporterModel);
 
         lineCreationInfos.setSeriesResistance(100.0);
         lineCreationInfos.setSeriesReactance(Double.NaN);
         lineCreationInfosJson = mapper.writeValueAsString(lineCreationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpectAll(
-                status().is5xxServerError(),
-                content().string(new NetworkModificationException(CREATE_LINE_ERROR, "AC Line 'idLine4': x is invalid").getMessage())
-            );
+                .andExpect(status().isOk());
+        assertLogMessage("AC Line 'idLine4': x is invalid", lineCreationInfos.getErrorType().name(), reporterModel);
 
         // try to create an existing line
         lineCreationInfos.setEquipmentId("line2");
         lineCreationInfosJson = mapper.writeValueAsString(lineCreationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpectAll(
-                        status().is4xxClientError(),
-                        content().string(new NetworkModificationException(LINE_ALREADY_EXISTS, "line2").getMessage()));
+                .andExpect(status().isOk());
+        assertLogMessage(new NetworkModificationException(LINE_ALREADY_EXISTS, "line2").getMessage(),
+                lineCreationInfos.getErrorType().name(), reporterModel);
     }
 
     @Test

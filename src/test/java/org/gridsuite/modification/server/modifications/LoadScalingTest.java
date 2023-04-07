@@ -35,6 +35,7 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMoc
 import static org.gridsuite.modification.server.NetworkModificationException.Type.LOAD_SCALING_ERROR;
 import static org.gridsuite.modification.server.service.FilterService.setFilterServerBaseUri;
 import static org.gridsuite.modification.server.utils.NetworkUtil.createLoad;
+import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -224,10 +225,9 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri())
                 .content(mapper.writeValueAsString(loadScalingInfo))
                 .contentType(MediaType.APPLICATION_JSON))
-            .andExpectAll(
-                status().is5xxServerError(),
-                content().string(new NetworkModificationException(LOAD_SCALING_ERROR, "All filters contains equipments with wrong ids").getMessage())
-            );
+                .andExpect(status().isOk());
+        assertLogMessage(new NetworkModificationException(LOAD_SCALING_ERROR, "All filters contains equipments with wrong ids").getMessage(),
+                loadScalingInfo.getErrorType().name(), reporterModel);
     }
 
     @SneakyThrows

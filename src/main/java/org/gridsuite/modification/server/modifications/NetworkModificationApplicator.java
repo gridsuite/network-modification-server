@@ -38,11 +38,6 @@ import java.util.stream.Stream;
 public class NetworkModificationApplicator {
     private static final Logger LOGGER = LoggerFactory.getLogger(NetworkModificationApplicator.class);
 
-    private enum ApplicationMode {
-        UNITARY,
-        MULTIPLE
-    }
-
     private static final String NETWORK_MODIFICATION_TYPE_REPORT = "NetworkModification";
 
     private final NetworkStoreService networkStoreService;
@@ -63,34 +58,30 @@ public class NetworkModificationApplicator {
 
     public NetworkModificationResult applyModification(ModificationInfos modificationInfos, NetworkInfos networkInfos, ReportInfos reportInfos) {
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService);
-        apply(modificationInfos, listener, reportInfos, ApplicationMode.UNITARY);
+        apply(modificationInfos, listener, reportInfos);
         return listener.flushNetworkModifications();
     }
 
     public NetworkModificationResult applyModifications(List<ModificationInfos> modificationInfosList, NetworkInfos networkInfos, ReportInfos reportInfos) {
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService);
-        modificationInfosList.forEach(m -> apply(m, listener, reportInfos, ApplicationMode.MULTIPLE));
+        modificationInfosList.forEach(m -> apply(m, listener, reportInfos));
         return listener.flushNetworkModifications();
     }
 
     public NetworkModificationResult applyModifications(List<Pair<String, List<ModificationInfos>>> modificationInfosGroups, NetworkInfos networkInfos, UUID reportUuid) {
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService);
-        modificationInfosGroups.forEach(g -> g.getRight().forEach(m -> apply(m, listener, new ReportInfos(reportUuid, g.getLeft()), ApplicationMode.MULTIPLE)));
+        modificationInfosGroups.forEach(g -> g.getRight().forEach(m -> apply(m, listener, new ReportInfos(reportUuid, g.getLeft()))));
         return listener.flushNetworkModifications();
     }
 
-    private void apply(ModificationInfos modificationInfos, NetworkStoreListener listener, ReportInfos reportInfos, ApplicationMode mode) {
+    private void apply(ModificationInfos modificationInfos, NetworkStoreListener listener, ReportInfos reportInfos) {
         String rootReporterId = reportInfos.getReporterId() + "@" + NETWORK_MODIFICATION_TYPE_REPORT;
         ReporterModel reporter = new ReporterModel(rootReporterId, rootReporterId);
         Reporter subReporter = modificationInfos.createSubReporter(reporter);
         try {
             apply(modificationInfos.toModification(), listener.getNetwork(), subReporter);
         } catch (Exception e) {
-            listener.setApplicationStatus(NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
-            NetworkModificationException networkModificationException = handleException(modificationInfos.getErrorType(), subReporter, e);
-            if (mode == ApplicationMode.UNITARY) {
-                throw networkModificationException;
-            }
+            handleException(modificationInfos.getErrorType(), subReporter, e);
         } finally {
             listener.setApplicationStatus(getApplicationStatus(reporter));
             reportService.sendReport(reportInfos.getReportUuid(), reporter); // TODO : Group report sends ?
@@ -104,26 +95,25 @@ public class NetworkModificationApplicator {
             modification.check(network);
             // apply all changes on the network
             modification.apply(network, subReporter, context);
-        } catch (Error e) { // Powsybl can raise Error
+        } catch (Error e) {
+            // TODO remove this catch with powsybl 5.2.0
+            // Powsybl can raise Error
             // Ex: java.lang.AssertionError: The voltage level 'vlId' cannot be removed because of a remaining LINE
             throw new PowsyblException(e);
         }
     }
 
-    private NetworkModificationException handleException(NetworkModificationException.Type typeIfError, Reporter subReporter, Exception e) {
-        NetworkModificationException networkModificationException;
-        networkModificationException = e instanceof NetworkModificationException ? (NetworkModificationException) e : new NetworkModificationException(typeIfError, e);
+    private void handleException(NetworkModificationException.Type typeIfError, Reporter subReporter, Exception e) {
         boolean isApplicationException = PowsyblException.class.isAssignableFrom(e.getClass());
         if (!isApplicationException && LOGGER.isErrorEnabled()) {
             LOGGER.error(e.toString(), e);
         }
-        String errorMessage = isApplicationException ? e.getMessage() : "Technical error: " + e;
+        String errorMessage = isApplicationException ? e.getMessage() : "Technical error: " + e.toString();
         subReporter.report(Report.builder()
-            .withKey(typeIfError.name())
-            .withDefaultMessage(errorMessage)
-            .withSeverity(TypedValue.ERROR_SEVERITY)
-            .build());
-        return networkModificationException;
+                .withKey(typeIfError.name())
+                .withDefaultMessage(errorMessage)
+                .withSeverity(TypedValue.ERROR_SEVERITY)
+                .build());
     }
 
     public static ApplicationStatus getApplicationStatus(Report report) {

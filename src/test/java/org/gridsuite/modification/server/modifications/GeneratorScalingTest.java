@@ -35,7 +35,9 @@ import java.util.List;
 import java.util.UUID;
 
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.GENERATOR_SCALING_ERROR;
 import static org.gridsuite.modification.server.utils.NetworkUtil.createGenerator;
+import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -195,16 +197,10 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
                 .variations(List.of(variation))
                 .build();
 
-        String modificationToCreateJson = mapper.writeValueAsString(generatorScalingInfo);
-
-        var response = mockMvc.perform(post(getNetworkModificationUri())
-                        .content(modificationToCreateJson)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().is5xxServerError())
-                .andReturn();
-
-        assertEquals(new NetworkModificationException(NetworkModificationException.Type.GENERATOR_SCALING_ERROR, "All filters contains equipments with wrong ids").getMessage(),
-                response.getResponse().getContentAsString());
+        mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(generatorScalingInfo)).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        assertLogMessage(new NetworkModificationException(GENERATOR_SCALING_ERROR, "All filters contains equipments with wrong ids").getMessage(),
+                generatorScalingInfo.getErrorType().name(), reporterModel);
     }
 
     @SneakyThrows

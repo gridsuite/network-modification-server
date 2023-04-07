@@ -21,9 +21,9 @@ import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.BRANCH_ACTION_ERROR;
 import static org.gridsuite.modification.server.utils.MatcherBranchStatusModificationInfos.createMatcherBranchStatusModificationInfos;
+import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class BranchStatusModificationEnergiseSideOneLineTest extends AbstractNetworkModificationTest {
@@ -87,9 +87,8 @@ public class BranchStatusModificationEnergiseSideOneLineTest extends AbstractNet
         modificationInfos.setEquipmentId("line3");
         String modificationJson = mapper.writeValueAsString(modificationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpectAll(
-                    status().is5xxServerError(),
-                    content().string(new NetworkModificationException(BRANCH_ACTION_ERROR, "Unable to energise branch end").getMessage())
-            );
+                .andExpect(status().isOk());
+        assertLogMessage(new NetworkModificationException(BRANCH_ACTION_ERROR, "Unable to energise branch end").getMessage(),
+                modificationInfos.getErrorType().name(), reporterModel);
     }
 }

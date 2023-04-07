@@ -22,12 +22,12 @@ import org.springframework.test.web.servlet.MvcResult;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.BUS_NOT_FOUND;
-import static org.gridsuite.modification.server.NetworkModificationException.Type.CREATE_LINE_ERROR;
 import static org.gridsuite.modification.server.utils.MatcherLineCreationInfos.createMatcherLineCreationInfos;
+import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTest {
@@ -39,10 +39,9 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
         lineCreationInfos.setBusOrBusbarSectionId2("notFoundBus");
         String lineCreationInfosJson = mapper.writeValueAsString(lineCreationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpectAll(
-                status().is4xxClientError(),
-                content().string(new NetworkModificationException(BUS_NOT_FOUND, "notFoundBus").getMessage())
-            );
+                .andExpect(status().isOk());
+        assertLogMessage(new NetworkModificationException(BUS_NOT_FOUND, "notFoundBus").getMessage(),
+                lineCreationInfos.getErrorType().name(), reporterModel);
     }
 
     @Test
@@ -168,10 +167,9 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
                 .currentLimits1(CurrentLimitsInfos.builder().permanentLimit(0.0).build())
                 .build();
         String lineCreationInfosPermanentLimitNOKJson = mapper.writeValueAsString(lineCreationInfosPermanentLimitNOK);
-        mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosPermanentLimitNOKJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().is5xxServerError()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        assertEquals(resultAsString, new NetworkModificationException(CREATE_LINE_ERROR, "AC Line 'idLine2': permanent limit must be defined and be > 0").getMessage());
+        mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosPermanentLimitNOKJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        assertLogMessage("AC Line 'idLine2': permanent limit must be defined and be > 0", lineCreationInfosPermanentLimitNOK.getErrorType().name(), reporterModel);
     }
 
     @Test

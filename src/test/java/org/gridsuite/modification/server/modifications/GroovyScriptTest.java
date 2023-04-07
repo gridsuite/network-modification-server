@@ -22,13 +22,12 @@ import org.springframework.test.web.servlet.MvcResult;
 import java.util.Set;
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.GROOVY_SCRIPT_EMPTY;
-import static org.gridsuite.modification.server.NetworkModificationException.Type.GROOVY_SCRIPT_ERROR;
 import static org.gridsuite.modification.server.Impacts.TestImpactUtils.testElementModificationImpact;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.GROOVY_SCRIPT_EMPTY;
 import static org.gridsuite.modification.server.utils.MatcherGroovyScriptInfos.createMatcherGroovyScriptInfos;
+import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class GroovyScriptTest extends AbstractNetworkModificationTest {
@@ -126,24 +125,23 @@ public class GroovyScriptTest extends AbstractNetworkModificationTest {
         GroovyScriptInfos groovyScriptInfos = (GroovyScriptInfos) buildModification();
         groovyScriptInfos.setScript("");
         // apply empty groovy script
-        mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(groovyScriptInfos))
-                .contentType(MediaType.APPLICATION_JSON)).andExpectAll(
-                        status().isBadRequest(),
-                        content().string(new NetworkModificationException(GROOVY_SCRIPT_EMPTY).getMessage()));
+        mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(groovyScriptInfos)).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        assertLogMessage(new NetworkModificationException(GROOVY_SCRIPT_EMPTY).getMessage(),
+                groovyScriptInfos.getErrorType().name(), reporterModel);
 
         groovyScriptInfos.setScript("      ");
         // apply blank groovy script
-        mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(groovyScriptInfos))
-                .contentType(MediaType.APPLICATION_JSON)).andExpectAll(
-                        status().isBadRequest(),
-                        content().string(new NetworkModificationException(GROOVY_SCRIPT_EMPTY).getMessage()));
+        mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(groovyScriptInfos)).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        assertLogMessage(new NetworkModificationException(GROOVY_SCRIPT_EMPTY).getMessage(),
+                groovyScriptInfos.getErrorType().name(), reporterModel);
 
         groovyScriptInfos.setScript("network.getGenerator('there is no generator').targetP=12\n");
         // apply groovy script with unknown generator
-        mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(groovyScriptInfos))
-                .contentType(MediaType.APPLICATION_JSON)).andExpectAll(
-                        status().isBadRequest(),
-                        content().string(new NetworkModificationException(GROOVY_SCRIPT_ERROR,
-                                "Cannot set property 'targetP' on null object").getMessage()));
+        mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(groovyScriptInfos)).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        assertLogMessage("Technical error: java.lang.NullPointerException: Cannot set property 'targetP' on null object",
+                groovyScriptInfos.getErrorType().name(), reporterModel);
     }
 }
