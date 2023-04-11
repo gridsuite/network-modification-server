@@ -106,7 +106,7 @@ public class LinesAttachToSplitLinesTest extends AbstractNetworkModificationTest
         mockMvc.perform(post(getNetworkModificationUri()).content(lineAttachToAbsentLineJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(LINE_NOT_FOUND, "absent_line_id").getMessage(),
-                linesAttachToSplitLinesInfos.getErrorType().name(), reporterModel);
+                linesAttachToSplitLinesInfos.getErrorType().name(), reportService);
         // try to create an already existing line
         linesAttachToSplitLinesInfos = (LinesAttachToSplitLinesInfos) buildModification();
         linesAttachToSplitLinesInfos.setReplacingLine1Id("l1");
@@ -114,7 +114,7 @@ public class LinesAttachToSplitLinesTest extends AbstractNetworkModificationTest
         mockMvc.perform(post(getNetworkModificationUri()).content(lineAttachToAbsentLineJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(LINE_ALREADY_EXISTS, "l1").getMessage(),
-                linesAttachToSplitLinesInfos.getErrorType().name(), reporterModel);
+                linesAttachToSplitLinesInfos.getErrorType().name(), reportService);
         // same test on 'replacingLine2Id'
         linesAttachToSplitLinesInfos = (LinesAttachToSplitLinesInfos) buildModification();
         linesAttachToSplitLinesInfos.setReplacingLine2Id("l1");
@@ -122,6 +122,6 @@ public class LinesAttachToSplitLinesTest extends AbstractNetworkModificationTest
         mockMvc.perform(post(getNetworkModificationUri()).content(lineAttachToAbsentLineJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(LINE_ALREADY_EXISTS, "l1").getMessage(),
-                linesAttachToSplitLinesInfos.getErrorType().name(), reporterModel);
+                linesAttachToSplitLinesInfos.getErrorType().name(), reportService);
     }
 }

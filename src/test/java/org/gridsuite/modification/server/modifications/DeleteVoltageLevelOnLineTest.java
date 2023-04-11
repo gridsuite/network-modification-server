@@ -95,7 +95,7 @@ public class DeleteVoltageLevelOnLineTest extends AbstractNetworkModificationTes
         mockMvc.perform(MockMvcRequestBuilders.post(getNetworkModificationUri()).content(json).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(LINE_NOT_FOUND, "ll").getMessage(),
-                deleteVoltageLevelOnLineInfos.getErrorType().name(), reporterModel);
+                deleteVoltageLevelOnLineInfos.getErrorType().name(), reportService);
     }
 
     @SneakyThrows
@@ -108,6 +108,6 @@ public class DeleteVoltageLevelOnLineTest extends AbstractNetworkModificationTes
         mockMvc.perform(post(getNetworkModificationUri()).content(lineAttachToAbsentLineJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(LINE_ALREADY_EXISTS, "l2").getMessage(),
-                deleteVoltageLevelOnLineInfos.getErrorType().name(), reporterModel);
+                deleteVoltageLevelOnLineInfos.getErrorType().name(), reportService);
     }
 }

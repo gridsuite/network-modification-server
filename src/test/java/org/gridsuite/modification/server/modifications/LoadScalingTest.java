@@ -227,7 +227,7 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(LOAD_SCALING_ERROR, "All filters contains equipments with wrong ids").getMessage(),
-                loadScalingInfo.getErrorType().name(), reporterModel);
+                loadScalingInfo.getErrorType().name(), reportService);
     }
 
     @SneakyThrows

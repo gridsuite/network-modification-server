@@ -58,7 +58,7 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
         String lineCreationInfosJson = mapper.writeValueAsString(lineCreationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage("Invalid id ''", lineCreationInfos.getErrorType().name(), reporterModel);
+        assertLogMessage("Invalid id ''", lineCreationInfos.getErrorType().name(), reportService);
 
         lineCreationInfos.setEquipmentId("idLine4");
         lineCreationInfos.setVoltageLevelId1("notFoundVoltageLevelId1");
@@ -66,7 +66,7 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(VOLTAGE_LEVEL_NOT_FOUND, "notFoundVoltageLevelId1").getMessage(),
-                lineCreationInfos.getErrorType().name(), reporterModel);
+                lineCreationInfos.getErrorType().name(), reportService);
 
         lineCreationInfos.setVoltageLevelId1("v1");
         lineCreationInfos.setBusOrBusbarSectionId1("notFoundBusbarSection1");
@@ -74,7 +74,7 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "notFoundBusbarSection1").getMessage(),
-                lineCreationInfos.getErrorType().name(), reporterModel);
+                lineCreationInfos.getErrorType().name(), reportService);
 
         lineCreationInfos.setVoltageLevelId1("v1");
         lineCreationInfos.setBusOrBusbarSectionId1("1.1");
@@ -82,14 +82,14 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
         lineCreationInfosJson = mapper.writeValueAsString(lineCreationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage("AC Line 'idLine4': r is invalid", lineCreationInfos.getErrorType().name(), reporterModel);
+        assertLogMessage("AC Line 'idLine4': r is invalid", lineCreationInfos.getErrorType().name(), reportService);
 
         lineCreationInfos.setSeriesResistance(100.0);
         lineCreationInfos.setSeriesReactance(Double.NaN);
         lineCreationInfosJson = mapper.writeValueAsString(lineCreationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage("AC Line 'idLine4': x is invalid", lineCreationInfos.getErrorType().name(), reporterModel);
+        assertLogMessage("AC Line 'idLine4': x is invalid", lineCreationInfos.getErrorType().name(), reportService);
 
         // try to create an existing line
         lineCreationInfos.setEquipmentId("line2");
@@ -97,7 +97,7 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(LINE_ALREADY_EXISTS, "line2").getMessage(),
-                lineCreationInfos.getErrorType().name(), reporterModel);
+                lineCreationInfos.getErrorType().name(), reportService);
     }
 
     @Test

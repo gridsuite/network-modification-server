@@ -86,7 +86,7 @@ public class BranchStatusModificationLockoutLineTest extends AbstractNetworkModi
             .andExpect(status().isOk());
         assertNull(getNetwork().getLine("notFound"));
         assertLogMessage(new NetworkModificationException(BRANCH_NOT_FOUND, "notFound").getMessage(),
-                modificationInfos.getErrorType().name(), reporterModel);
+                modificationInfos.getErrorType().name(), reportService);
 
         // modification action empty
         modificationInfos.setEquipmentId("line2");
@@ -112,7 +112,7 @@ public class BranchStatusModificationLockoutLineTest extends AbstractNetworkModi
                 .andExpect(status().isOk());
         assertNull(getNetwork().getLine("line3").getExtension(BranchStatus.class));
         assertLogMessage(new NetworkModificationException(BRANCH_ACTION_ERROR, "Unable to disconnect all branch ends").getMessage(),
-                modificationInfos.getErrorType().name(), reporterModel);
+                modificationInfos.getErrorType().name(), reportService);
 
     }
 }

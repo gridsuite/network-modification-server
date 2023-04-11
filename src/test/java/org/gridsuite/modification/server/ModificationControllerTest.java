@@ -10,7 +10,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.powsybl.commons.PowsyblException;
-import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.BusbarSectionPositionAdder;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
@@ -57,9 +56,9 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -107,8 +106,6 @@ public class ModificationControllerTest {
     @MockBean
     private ReportService reportService;
 
-    protected ReporterModel reporterModel;
-
     @Autowired
     private NetworkModificationService networkModificationService;
 
@@ -149,11 +146,6 @@ public class ModificationControllerTest {
         when(networkStoreService.getNetwork(TEST_NETWORK_MIXED_TOPOLOGY_ID)).then((Answer<Network>) invocation -> NetworkCreation.createMixedTopology(TEST_NETWORK_MIXED_TOPOLOGY_ID));
 
         doThrow(new PowsyblException()).when(networkStoreService).flush(argThat(n -> TEST_NETWORK_WITH_FLUSH_ERROR_ID.toString().equals(n.getId())));
-
-        doAnswer(invocation -> {
-            reporterModel = invocation.getArgument(1);
-            return Void.class;
-        }).when(reportService).sendReport(any(), any());
 
         // clean DB
         modificationRepository.deleteAll();
@@ -342,7 +334,7 @@ public class ModificationControllerTest {
         assertNotNull(network.getGenerator("idGenerator"));
         assertEquals(20, network.getGenerator("idGenerator").getTargetP(), 0.1);
         assertLogMessage("Technical error: java.lang.NullPointerException: Cannot set property 'targetP' on null object",
-                groovyScriptInfos.getErrorType().name(), reporterModel);
+                groovyScriptInfos.getErrorType().name(), reportService);
 
         assertEquals(2, modificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
     }
@@ -875,7 +867,7 @@ public class ModificationControllerTest {
             .andExpect(status().isOk());
         assertNotNull(network.getVoltageLevel("v4"));
         assertLogMessage(new PowsyblException(new AssertionError("The voltage level 'v4' cannot be removed because of a remaining LINE")).getMessage(),
-                equipmentDeletionInfos.getErrorType().name(), reporterModel);
+                equipmentDeletionInfos.getErrorType().name(), reportService);
 
         // delete substation
         equipmentDeletionInfos.setEquipmentType(IdentifiableType.SUBSTATION.name());
@@ -897,7 +889,7 @@ public class ModificationControllerTest {
                 .andExpect(status().isOk());
         assertNotNull(network.getSubstation("s2"));
         assertLogMessage("The substation s2 is still connected to another substation",
-                equipmentDeletionInfos.getErrorType().name(), reporterModel);
+                equipmentDeletionInfos.getErrorType().name(), reportService);
 
         assertTrue(equipmentInfosRepository.findAllByNetworkUuidAndVariantId(TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID).isEmpty());
         assertEquals(55, tombstonedEquipmentInfosRepository.findAllByNetworkUuidAndVariantId(TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID).size());

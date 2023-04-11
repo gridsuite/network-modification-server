@@ -327,7 +327,7 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
                 .andExpect(status().isOk());
         assertEquals(EnergySource.OTHER, getNetwork().getGenerator("idGenerator").getEnergySource());
         assertLogMessage("Generator '" + "idGenerator" + "': energy source is not set",
-                generatorModificationInfos.getErrorType().name(), reporterModel);
+                generatorModificationInfos.getErrorType().name(), reportService);
     }
 
     @SneakyThrows

@@ -144,7 +144,7 @@ public class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificat
         String generatorCreationInfosJson = mapper.writeValueAsString(generatorCreationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage("Invalid id ''", generatorCreationInfos.getErrorType().name(), reporterModel);
+        assertLogMessage("Invalid id ''", generatorCreationInfos.getErrorType().name(), reportService);
 
         // not found voltage level
         generatorCreationInfos.setEquipmentId("idGenerator1");
@@ -153,7 +153,7 @@ public class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificat
         mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(VOLTAGE_LEVEL_NOT_FOUND, "notFoundVoltageLevelId").getMessage(),
-                generatorCreationInfos.getErrorType().name(), reporterModel);
+                generatorCreationInfos.getErrorType().name(), reportService);
 
         // not found busbar section
         generatorCreationInfos.setVoltageLevelId("v2");
@@ -162,7 +162,7 @@ public class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificat
         mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "notFoundBusbarSection").getMessage(),
-                generatorCreationInfos.getErrorType().name(), reporterModel);
+                generatorCreationInfos.getErrorType().name(), reportService);
 
         // invalid min active power
         generatorCreationInfos.setVoltageLevelId("v2");
@@ -173,7 +173,7 @@ public class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificat
         mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage("Generator 'idGenerator1': invalid value (NaN) for minimum P",
-                generatorCreationInfos.getErrorType().name(), reporterModel);
+                generatorCreationInfos.getErrorType().name(), reportService);
 
         // try to create an existing VL
         generatorCreationInfos = (GeneratorCreationInfos) buildModification();
@@ -182,7 +182,7 @@ public class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificat
         mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(GENERATOR_ALREADY_EXISTS, "v5generator").getMessage(),
-                generatorCreationInfos.getErrorType().name(), reporterModel);
+                generatorCreationInfos.getErrorType().name(), reportService);
 
         // Test create generator on not yet existing variant VARIANT_NOT_EXISTING_ID :
         // Only the modification should be added in the database but the generator cannot be created

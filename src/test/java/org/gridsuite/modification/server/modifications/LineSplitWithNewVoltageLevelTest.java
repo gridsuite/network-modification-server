@@ -42,7 +42,7 @@ public class LineSplitWithNewVoltageLevelTest extends AbstractNetworkModificatio
         mockMvc.perform(post(getNetworkModificationUri()).content(lineSplitAbsentLineJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(LINE_NOT_FOUND, "absent_line_id").getMessage(),
-                lineSplitAbsentLine.getErrorType().name(), reporterModel);
+                lineSplitAbsentLine.getErrorType().name(), reportService);
         testNetworkModificationsCount(getGroupId(), 1);
     }
 

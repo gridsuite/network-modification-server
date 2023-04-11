@@ -138,6 +138,6 @@ public class GeneratorCreationInBusBreakerTest extends AbstractNetworkModificati
         mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(generatorCreationInfos)).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(BUS_NOT_FOUND, "notFoundBus").getMessage(),
-                generatorCreationInfos.getErrorType().name(), reporterModel);
+                generatorCreationInfos.getErrorType().name(), reportService);
     }
 }

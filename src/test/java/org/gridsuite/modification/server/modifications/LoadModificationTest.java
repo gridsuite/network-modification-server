@@ -93,6 +93,6 @@ public class LoadModificationTest extends AbstractNetworkModificationTest {
         String loadModificationInfosJson = mapper.writeValueAsString(loadModificationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(loadModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage("Load 'v1load': load type is null", loadModificationInfos.getErrorType().name(), reporterModel);
+        assertLogMessage("Load 'v1load': load type is null", loadModificationInfos.getErrorType().name(), reportService);
     }
 }

@@ -446,7 +446,7 @@ public class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetwo
         String twoWindingsTransformerCreationInfosJson = mapper.writeValueAsString(twoWindingsTransformerCreationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(twoWindingsTransformerCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage("Invalid id ''", twoWindingsTransformerCreationInfos.getErrorType().name(), reporterModel);
+        assertLogMessage("Invalid id ''", twoWindingsTransformerCreationInfos.getErrorType().name(), reportService);
         testNetworkModificationsCount(getGroupId(), 1);
 
         twoWindingsTransformerCreationInfos.setBusOrBusbarSectionId1("notFoundBus");
@@ -454,7 +454,7 @@ public class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetwo
         mockMvc.perform(post(getNetworkModificationUri()).content(twoWindingsTransformerCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(NetworkModificationException.Type.BUSBAR_SECTION_NOT_FOUND, "notFoundBus").getMessage(),
-                twoWindingsTransformerCreationInfos.getErrorType().name(), reporterModel);
+                twoWindingsTransformerCreationInfos.getErrorType().name(), reportService);
         testNetworkModificationsCount(getGroupId(), 2);
 
         // Test create transformer on not yet existing variant VARIANT_NOT_EXISTING_ID :
@@ -476,7 +476,7 @@ public class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetwo
         mockMvc.perform(post(getNetworkModificationUri()).content(twoWindingsTransformerCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(TWO_WINDINGS_TRANSFORMER_ALREADY_EXISTS, "trf1").getMessage(),
-                twoWindingsTransformerCreationInfos.getErrorType().name(), reporterModel);
+                twoWindingsTransformerCreationInfos.getErrorType().name(), reportService);
         testNetworkModificationsCount(getGroupId(), 4);
     }
 

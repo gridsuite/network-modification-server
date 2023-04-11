@@ -94,7 +94,7 @@ public class EquipmentAttributeModificationTest extends AbstractNetworkModificat
         mockMvc.perform(post(getNetworkModificationUri() + extraParams).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(EQUIPMENT_NOT_FOUND, switchNotFoundId).getMessage(),
-                switchStatusModificationInfos.getErrorType().name(), reporterModel);
+                switchStatusModificationInfos.getErrorType().name(), reportService);
 
         // switch closing when already closed
         switchStatusModificationInfos.setEquipmentId(switchId1);

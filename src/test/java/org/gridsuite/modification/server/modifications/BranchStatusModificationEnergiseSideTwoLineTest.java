@@ -89,6 +89,6 @@ public class BranchStatusModificationEnergiseSideTwoLineTest extends AbstractNet
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(BRANCH_ACTION_ERROR, "Unable to energise branch end").getMessage(),
-                modificationInfos.getErrorType().name(), reporterModel);
+                modificationInfos.getErrorType().name(), reportService);
     }
 }

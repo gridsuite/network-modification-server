@@ -128,20 +128,20 @@ public class GroovyScriptTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(groovyScriptInfos)).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(GROOVY_SCRIPT_EMPTY).getMessage(),
-                groovyScriptInfos.getErrorType().name(), reporterModel);
+                groovyScriptInfos.getErrorType().name(), reportService);
 
         groovyScriptInfos.setScript("      ");
         // apply blank groovy script
         mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(groovyScriptInfos)).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(GROOVY_SCRIPT_EMPTY).getMessage(),
-                groovyScriptInfos.getErrorType().name(), reporterModel);
+                groovyScriptInfos.getErrorType().name(), reportService);
 
         groovyScriptInfos.setScript("network.getGenerator('there is no generator').targetP=12\n");
         // apply groovy script with unknown generator
         mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(groovyScriptInfos)).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage("Technical error: java.lang.NullPointerException: Cannot set property 'targetP' on null object",
-                groovyScriptInfos.getErrorType().name(), reporterModel);
+                groovyScriptInfos.getErrorType().name(), reportService);
     }
 }

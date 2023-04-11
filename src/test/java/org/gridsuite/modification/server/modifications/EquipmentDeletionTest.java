@@ -93,7 +93,7 @@ public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(equipmentDeletionInfos)).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(EQUIPMENT_NOT_FOUND, "Equipment with id=notFoundLoad not found or of bad type").getMessage(),
-                equipmentDeletionInfos.getErrorType().name(), reporterModel);
+                equipmentDeletionInfos.getErrorType().name(), reportService);
 
         // try to delete voltage level (Internal error because the vl is still connected)
         equipmentDeletionInfos.setEquipmentType("VOLTAGE_LEVEL");
@@ -101,7 +101,7 @@ public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(equipmentDeletionInfos)).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new PowsyblException(new AssertionError("The voltage level 'v4' cannot be removed because of a remaining THREE_WINDINGS_TRANSFORMER")).getMessage(),
-                equipmentDeletionInfos.getErrorType().name(), reporterModel);
+                equipmentDeletionInfos.getErrorType().name(), reportService);
         equipmentDeletionInfos.setEquipmentId("v4");
         assertNotNull(getNetwork().getVoltageLevel("v4"));
 
@@ -110,7 +110,7 @@ public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
         equipmentDeletionInfos.setEquipmentId("s2");
         mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(equipmentDeletionInfos)).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage("The substation s2 is still connected to another substation", equipmentDeletionInfos.getErrorType().name(), reporterModel);
+        assertLogMessage("The substation s2 is still connected to another substation", equipmentDeletionInfos.getErrorType().name(), reportService);
         assertNotNull(getNetwork().getSubstation("s2"));
     }
 }

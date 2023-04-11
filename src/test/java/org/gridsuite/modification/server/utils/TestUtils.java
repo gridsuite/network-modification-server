@@ -17,7 +17,9 @@ import com.powsybl.iidm.network.extensions.BranchStatus;
 import com.powsybl.iidm.network.extensions.BranchStatusAdder;
 import okhttp3.mockwebserver.MockWebServer;
 import org.apache.commons.text.StringSubstitutor;
+import org.gridsuite.modification.server.service.ReportService;
 import org.junit.platform.commons.util.StringUtils;
+import org.mockito.ArgumentCaptor;
 import org.springframework.cloud.stream.binder.test.OutputDestination;
 
 import java.io.IOException;
@@ -30,6 +32,7 @@ import java.util.stream.IntStream;
 
 import static com.vladmihalcea.sql.SQLStatementCountValidator.*;
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -113,9 +116,11 @@ public final class TestUtils {
         return StringUtils.replaceWhitespaceCharacters(content, "");
     }
 
-    public static void assertLogMessage(String expectedMessage, String reportKey, ReporterModel reporter) {
-        assertNotNull(reporter);
-        Optional<String> message = getMessageFromReporter(reportKey, reporter);
+    public static void assertLogMessage(String expectedMessage, String reportKey, ReportService reportService) {
+        ArgumentCaptor<ReporterModel> reporterCaptor = ArgumentCaptor.forClass(ReporterModel.class);
+        verify(reportService, atLeast(1)).sendReport(any(UUID.class), reporterCaptor.capture());
+        assertNotNull(reporterCaptor.getValue());
+        Optional<String> message = getMessageFromReporter(reportKey, reporterCaptor.getValue());
         assertTrue(message.isPresent());
         assertEquals(expectedMessage, message.get());
     }

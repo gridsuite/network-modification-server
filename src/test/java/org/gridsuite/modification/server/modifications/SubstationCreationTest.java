@@ -78,6 +78,6 @@ public class SubstationCreationTest extends AbstractNetworkModificationTest {
         String substationCreationInfosJson = mapper.writeValueAsString(substationCreationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(substationCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage("Invalid id ''", substationCreationInfos.getErrorType().name(), reporterModel);
+        assertLogMessage("Invalid id ''", substationCreationInfos.getErrorType().name(), reportService);
     }
 }

@@ -132,7 +132,7 @@ public class LineAttachToVoltageLevelTest extends AbstractNetworkModificationTes
         mockMvc.perform(post(getNetworkModificationUri()).content(tryWithExistingLineJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(LINE_ALREADY_EXISTS, existingLineId).getMessage(),
-                tryWithExistingLine.getErrorType().name(), reporterModel);
+                tryWithExistingLine.getErrorType().name(), reportService);
     }
 
     @SneakyThrows
@@ -144,7 +144,7 @@ public class LineAttachToVoltageLevelTest extends AbstractNetworkModificationTes
         mockMvc.perform(post(getNetworkModificationUri()).content(lineAttachToAbsentLineJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(LINE_NOT_FOUND, "absent_line_id").getMessage(),
-                lineAttachToAbsentLine.getErrorType().name(), reporterModel);
+                lineAttachToAbsentLine.getErrorType().name(), reportService);
         testNetworkModificationsCount(getGroupId(), 1);
 
         LineAttachToVoltageLevelInfos lineMissingLine = (LineAttachToVoltageLevelInfos) buildModification();
@@ -180,6 +180,6 @@ public class LineAttachToVoltageLevelTest extends AbstractNetworkModificationTes
         mockMvc.perform(post(getNetworkModificationUri()).content(tryWithExistingLineJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(VOLTAGE_LEVEL_ALREADY_EXISTS, "v5").getMessage(),
-                tryWithAttachmentPointId.getErrorType().name(), reporterModel);
+                tryWithAttachmentPointId.getErrorType().name(), reportService);
     }
 }

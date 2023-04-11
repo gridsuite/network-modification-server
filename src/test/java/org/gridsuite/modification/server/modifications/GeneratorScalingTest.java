@@ -200,7 +200,7 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(generatorScalingInfo)).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(GENERATOR_SCALING_ERROR, "All filters contains equipments with wrong ids").getMessage(),
-                generatorScalingInfo.getErrorType().name(), reporterModel);
+                generatorScalingInfo.getErrorType().name(), reportService);
     }
 
     @SneakyThrows

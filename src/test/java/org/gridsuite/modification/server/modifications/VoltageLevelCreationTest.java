@@ -99,7 +99,7 @@ public class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(vliJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(SUBSTATION_NOT_FOUND, "absent_station").getMessage(),
-                vli.getErrorType().name(), reporterModel);
+                vli.getErrorType().name(), reportService);
 
         vli = (VoltageLevelCreationInfos) buildModification();
         vli.getCouplingDevices().get(0).setBusbarSectionId1("bbs.ne");
@@ -107,7 +107,7 @@ public class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(vliJsonObject).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "Coupling between same bus bar section is not allowed").getMessage(),
-                vli.getErrorType().name(), reporterModel);
+                vli.getErrorType().name(), reportService);
 
         vli = (VoltageLevelCreationInfos) buildModificationUpdate();
 
@@ -115,7 +115,7 @@ public class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
         String vliJsonS2Object = mapper.writeValueAsString(vli);
         mockMvc.perform(post(getNetworkModificationUri()).content(vliJsonS2Object).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage("Invalid id ''", vli.getErrorType().name(), reporterModel);
+        assertLogMessage("Invalid id ''", vli.getErrorType().name(), reportService);
 
         // try to create an existing VL
         vli = (VoltageLevelCreationInfos) buildModification();
@@ -124,7 +124,7 @@ public class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(vliJsonObject).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(VOLTAGE_LEVEL_ALREADY_EXISTS, "v1").getMessage(),
-                vli.getErrorType().name(), reporterModel);
+                vli.getErrorType().name(), reportService);
     }
 
     @SneakyThrows
