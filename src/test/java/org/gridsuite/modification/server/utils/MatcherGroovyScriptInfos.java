@@ -11,19 +11,16 @@ import org.hamcrest.Description;
 
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-import java.util.Set;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 public class MatcherGroovyScriptInfos extends MatcherModificationInfos<GroovyScriptInfos> {
 
-    public static MatcherGroovyScriptInfos createMatcherGroovyScriptInfos(String script,
-                                                                                                  Set<String> substationIds) {
+    public static MatcherGroovyScriptInfos createMatcherGroovyScriptInfos(String script) {
         return new MatcherGroovyScriptInfos(GroovyScriptInfos.builder()
                 .date(ZonedDateTime.now(ZoneOffset.UTC))
                 .script(script)
-                .substationIds(substationIds)
                 .build());
     }
 

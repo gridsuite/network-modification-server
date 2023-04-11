@@ -26,9 +26,7 @@ public class MatcherModificationInfos<T extends ModificationInfos> extends TypeS
 
     @Override
     public boolean matchesSafely(T m) {
-        return m.getClass().equals(reference.getClass())
-        // TODO we have to set the substations into the input DTO, maybe there is a better way ? Waiting for the new result output class
-            && m.getSubstationIds().equals(reference.getSubstationIds());
+        return m.getClass().equals(reference.getClass());
     }
 
     @Override

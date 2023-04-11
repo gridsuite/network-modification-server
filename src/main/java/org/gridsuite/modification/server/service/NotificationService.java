@@ -7,6 +7,7 @@
 package org.gridsuite.modification.server.service;
 
 import lombok.NonNull;
+import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,13 +33,13 @@ public class NotificationService {
     @Autowired
     private StreamBridge publisher;
 
-    private void sendMessage(Message<String> message, String bindingName) {
+    private void sendMessage(Message<? extends Object> message, String bindingName) {
         OUTPUT_MESSAGE_LOGGER.debug("Sending message : {}", message);
         publisher.send(bindingName, message);
     }
 
-    public void emitBuildResultMessage(@NonNull String payload, @NonNull String receiver) {
-        Message<String> message = MessageBuilder.withPayload(payload)
+    public void emitBuildResultMessage(@NonNull NetworkModificationResult payload, @NonNull String receiver) {
+        Message<NetworkModificationResult> message = MessageBuilder.withPayload(payload)
                 .setHeader(RECEIVER_HEADER, receiver)
                 .build();
         sendMessage(message, "publishResultBuild-out-0");

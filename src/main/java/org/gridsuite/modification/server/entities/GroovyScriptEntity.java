@@ -13,7 +13,6 @@ import org.gridsuite.modification.server.dto.GroovyScriptInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 
 import javax.persistence.*;
-import java.util.Set;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -45,11 +44,6 @@ public class GroovyScriptEntity extends ModificationEntity {
     @Override
     public GroovyScriptInfos toModificationInfos() {
         return toGroovyScriptInfosBuilder().build();
-    }
-
-    @Override
-    public GroovyScriptInfos toModificationInfos(Set<String> uuids) {
-        return toGroovyScriptInfosBuilder().substationIds(uuids).build();
     }
 
     private GroovyScriptInfos.GroovyScriptInfosBuilder<?, ?> toGroovyScriptInfosBuilder() {

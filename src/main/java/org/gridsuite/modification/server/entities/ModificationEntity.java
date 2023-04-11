@@ -16,8 +16,6 @@ import org.gridsuite.modification.server.dto.ModificationInfos;
 import javax.persistence.*;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-import java.util.Collections;
-import java.util.Set;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MISSING_MODIFICATION_DESCRIPTION;
@@ -55,14 +53,9 @@ public class ModificationEntity {
     }
 
     public ModificationInfos toModificationInfos() {
-        return toModificationInfos(Collections.emptySet());
-    }
-
-    public ModificationInfos toModificationInfos(Set<String> substationsIds) {
         return ModificationInfos.builder()
                 .uuid(this.id)
                 .date(this.date)
-                .substationIds(substationsIds)
                 .build();
     }
 

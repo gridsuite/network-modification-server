@@ -13,6 +13,7 @@ import com.powsybl.iidm.network.*;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.LineSplitWithVoltageLevelInfos;
 import org.gridsuite.modification.server.dto.VoltageLevelCreationInfos;
+import org.springframework.lang.NonNull;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 
@@ -28,7 +29,7 @@ public class LineSplitWithVoltageLevel extends AbstractModification {
     }
 
     @Override
-    public void check(Network network) throws NetworkModificationException {
+    public void check(@NonNull Network network) throws NetworkModificationException {
         if (network.getLine(modificationInfos.getLineToSplitId()) == null) {
             throw new NetworkModificationException(LINE_NOT_FOUND, modificationInfos.getLineToSplitId());
         }

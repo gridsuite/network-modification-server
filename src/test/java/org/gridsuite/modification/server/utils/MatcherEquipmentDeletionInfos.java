@@ -9,23 +9,10 @@ package org.gridsuite.modification.server.utils;
 import org.gridsuite.modification.server.dto.EquipmentDeletionInfos;
 import org.hamcrest.Description;
 
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
-import java.util.Set;
-
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 public class MatcherEquipmentDeletionInfos extends MatcherModificationInfos<EquipmentDeletionInfos> {
-
-    public static MatcherEquipmentDeletionInfos createMatcherEquipmentDeletionInfos(String equipmentId, String equipmentType, Set<String> substationIds) {
-        return new MatcherEquipmentDeletionInfos(EquipmentDeletionInfos.builder()
-                .date(ZonedDateTime.now(ZoneOffset.UTC))
-                .equipmentType(equipmentType)
-                .equipmentId(equipmentId)
-                .substationIds(substationIds)
-                .build());
-    }
 
     public static MatcherEquipmentDeletionInfos createMatcherEquipmentDeletionInfos(EquipmentDeletionInfos deletionInfos) {
         return new MatcherEquipmentDeletionInfos(deletionInfos);

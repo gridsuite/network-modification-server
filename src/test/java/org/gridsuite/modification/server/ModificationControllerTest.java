@@ -10,7 +10,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.powsybl.commons.PowsyblException;
-import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.BusbarSectionPositionAdder;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
@@ -19,11 +18,14 @@ import com.powsybl.iidm.network.extensions.GeneratorStartup;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
 import lombok.SneakyThrows;
+import org.apache.commons.lang3.tuple.Pair;
+import org.gridsuite.modification.server.Impacts.TestImpactUtils;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.LoadCreationInfos.LoadCreationInfosBuilder;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosRepository;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.elasticsearch.TombstonedEquipmentInfosRepository;
+import org.gridsuite.modification.server.impacts.SimpleElementImpact;
 import org.gridsuite.modification.server.modifications.ModificationUtils;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.NetworkModificationService;
@@ -36,31 +38,25 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentMatchers;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.*;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static org.gridsuite.modification.server.Impacts.TestImpactUtils.*;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
-import static org.gridsuite.modification.server.utils.MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos;
-import static org.gridsuite.modification.server.utils.MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos;
-import static org.gridsuite.modification.server.utils.MatcherLineCreationInfos.createMatcherLineCreationInfos;
+import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -73,7 +69,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @RunWith(SpringRunner.class)
 @AutoConfigureMockMvc
-@SpringBootTest(properties = {"test.elasticsearch.enabled=true"})
+@SpringBootTest
 public class ModificationControllerTest {
 
     private static final UUID TEST_NETWORK_ID = UUID.fromString("7928181c-7977-4592-ba19-88027e4254e4");
@@ -93,7 +89,6 @@ public class ModificationControllerTest {
     private static final String URI_NETWORK_MODIF_BUS_BREAKER = URI_NETWORK_MODIF_BASE + "?networkUuid=" + TEST_NETWORK_BUS_BREAKER_ID + URI_NETWORK_MODIF_PARAMS;
     private static final String URI_NETWORK_MODIF_BAD_NETWORK = URI_NETWORK_MODIF_BASE + "?networkUuid=" + NOT_FOUND_NETWORK_ID + URI_NETWORK_MODIF_PARAMS;
     private static final String URI_NETWORK_MODIF_BAD_VARIANT = URI_NETWORK_MODIF + "&variantId=" + VARIANT_NOT_EXISTING_ID;
-    private static final String URI_NETWORK_MODIF_2 = URI_NETWORK_MODIF_BASE + "?networkUuid=" + TEST_NETWORK_ID_2 + URI_NETWORK_MODIF_PARAMS;
 
     private static final String URI_NETWORK_WITH_TEE_POINT_MODIF = URI_NETWORK_MODIF_BASE + "?networkUuid=" + TEST_NETWORK_WITH_TEE_POINT_ID + URI_NETWORK_MODIF_PARAMS;
 
@@ -108,12 +103,8 @@ public class ModificationControllerTest {
     @Autowired
     private NetworkModificationRepository modificationRepository;
 
-    @Autowired
-    private ReportService reportService;
-
     @MockBean
-    @Qualifier("reportServer")
-    private RestTemplate reportServerRest;
+    private ReportService reportService;
 
     @Autowired
     private NetworkModificationService networkModificationService;
@@ -138,15 +129,10 @@ public class ModificationControllerTest {
     @Before
     public void setUp() {
         objectWriter = mapper.writer().withDefaultPrettyPrinter();
-        // /!\ create a new network for each invocation (answer)
-        when(networkStoreService.getNetwork(TEST_NETWORK_ID)).then((Answer<Network>) invocation -> {
-            network = NetworkCreation.create(TEST_NETWORK_ID, true);
-            return network;
-        });
-        when(networkStoreService.getNetwork(TEST_NETWORK_ID_2)).then((Answer<Network>) invocation -> {
-            network2 = NetworkCreation.create(TEST_NETWORK_ID_2, false);
-            return network2;
-        });
+        network = NetworkCreation.create(TEST_NETWORK_ID, true);
+        when(networkStoreService.getNetwork(TEST_NETWORK_ID)).then((Answer<Network>) invocation -> network);
+        network2 = NetworkCreation.create(TEST_NETWORK_ID_2, false);
+        when(networkStoreService.getNetwork(TEST_NETWORK_ID_2)).then((Answer<Network>) invocation -> network2);
 
         networkWithTeePoint = NetworkWithTeePoint.create(TEST_NETWORK_WITH_TEE_POINT_ID);
         when(networkStoreService.getNetwork(TEST_NETWORK_WITH_TEE_POINT_ID)).then((Answer<Network>) invocation -> networkWithTeePoint);
@@ -160,10 +146,6 @@ public class ModificationControllerTest {
         when(networkStoreService.getNetwork(TEST_NETWORK_MIXED_TOPOLOGY_ID)).then((Answer<Network>) invocation -> NetworkCreation.createMixedTopology(TEST_NETWORK_MIXED_TOPOLOGY_ID));
 
         doThrow(new PowsyblException()).when(networkStoreService).flush(argThat(n -> TEST_NETWORK_WITH_FLUSH_ERROR_ID.toString().equals(n.getId())));
-
-        reportService.setReportServerRest(reportServerRest);
-        given(reportServerRest.exchange(eq("/v1/reports/" + TEST_REPORT_ID), eq(HttpMethod.PUT), ArgumentMatchers.any(HttpEntity.class), eq(ReporterModel.class)))
-            .willReturn(new ResponseEntity<>(HttpStatus.OK));
 
         // clean DB
         modificationRepository.deleteAll();
@@ -239,9 +221,7 @@ public class ModificationControllerTest {
         List<UUID> bsicListResult = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertEquals(bsicListResult, List.of());
         mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        List<EquipmentAttributeModificationInfos> bsiListResultModificationInfos = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertThat(bsiListResultModificationInfos.get(0), createMatcherEquipmentAttributeModificationInfos("v1b1", Set.of("s1"), "open", true, IdentifiableType.SWITCH));
+        testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), IdentifiableType.SWITCH, "v1b1", Set.of("s1"));
 
          // switch opening to create the default group
         mvcResult = mockMvc.perform(get("/v1/groups")).andExpectAll(
@@ -293,11 +273,9 @@ public class ModificationControllerTest {
         String switchStatusModificationInfosJson = objectWriter.writeValueAsString(switchStatusModificationInfos);
 
         mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
-        List<ModificationInfos> modifications = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        assertNotNull(modifications);
-        assertEquals(1, modifications.size());
+        testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), IdentifiableType.SWITCH, "v1b1", Set.of("s1"));
 
-        modifications = modificationRepository.getModifications(TEST_GROUP_ID, false, true);
+        List<ModificationInfos> modifications = modificationRepository.getModifications(TEST_GROUP_ID, false, true);
         assertEquals(1, modifications.size());
         String uuidString = modifications.get(0).getUuid().toString();
         mockMvc.perform(delete(URI_NETWORK_MODIF_BASE)
@@ -348,13 +326,15 @@ public class ModificationControllerTest {
                 .andExpect(status().isOk());
         assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
 
-        // apply groovy script with error ont the second
-        groovyScriptInfos.setScript("network.getGenerator('idGenerator').targetP=30\nnetwork.getGenerator('there is no generator').targetP=40\n");
+        // apply groovy script with error on the second
+        groovyScriptInfos.setScript("network.getGenerator('there is no generator').targetP=30\nnetwork.getGenerator('idGenerator').targetP=40\n");
         groovyScriptInfosJson = objectWriter.writeValueAsString(groovyScriptInfos);
-        MvcResult mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(groovyScriptInfosJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isBadRequest()).andReturn();
-        String resultAsString = mvcResult.getResponse().getContentAsString();
-        assertEquals(resultAsString, new NetworkModificationException(GROOVY_SCRIPT_ERROR, "Cannot set property 'targetP' on null object").getMessage());
+        mockMvc.perform(post(URI_NETWORK_MODIF).content(groovyScriptInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        assertNotNull(network.getGenerator("idGenerator"));
+        assertEquals(20, network.getGenerator("idGenerator").getTargetP(), 0.1);
+        assertLogMessage("Technical error: java.lang.NullPointerException: Cannot set property 'targetP' on null object",
+                groovyScriptInfos.getErrorType().name(), reportService);
 
         assertEquals(2, modificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
     }
@@ -386,12 +366,11 @@ public class ModificationControllerTest {
         List<UUID> modificationUuidList = modificationList.stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
 
         // Duplicate [0] and [1], and append them at the end of the group modification list.
-        // Also try to duplicate 2 un-existing modifications, that should be returned as errors.
         List<UUID> duplicateModificationUuidList = new ArrayList<>(modificationUuidList.subList(0, 2));
         List<UUID> badModificationUuidList = List.of(UUID.randomUUID(), UUID.randomUUID());
         duplicateModificationUuidList.addAll(badModificationUuidList);
 
-        MvcResult mvcResult = mockMvc.perform(
+        mockMvc.perform(
             put("/v1/groups/" + TEST_GROUP_ID + "?action=COPY"
                     + "&networkUuid=" + TEST_NETWORK_ID
                     + "&reportUuid=" + TEST_REPORT_ID
@@ -399,9 +378,7 @@ public class ModificationControllerTest {
                     + "&variantId=" + NetworkCreation.VARIANT_ID)
                 .content(objectWriter.writeValueAsString(duplicateModificationUuidList))
                 .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk()).andReturn();
-        List<UUID> resultModificationUuidList = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        assertEquals(badModificationUuidList, resultModificationUuidList); // bad uuids are returned
+            .andExpect(status().isOk());
 
         var newModificationList = modificationRepository.getModifications(TEST_GROUP_ID, true, true);
         List<UUID> newModificationUuidList = newModificationList.stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
@@ -428,7 +405,7 @@ public class ModificationControllerTest {
 
         // Duplicate the same modifications, and append them at the end of this new group modification list.
         duplicateModificationUuidList = new ArrayList<>(modificationUuidList.subList(0, 2));
-        mvcResult = mockMvc.perform(
+        mockMvc.perform(
                 put("/v1/groups/" + otherGroupId + "?action=COPY"
                         + "&networkUuid=" + TEST_NETWORK_ID
                         + "&reportUuid=" + TEST_REPORT_ID
@@ -436,9 +413,7 @@ public class ModificationControllerTest {
                         + "&variantId=" + NetworkCreation.VARIANT_ID)
                     .content(objectWriter.writeValueAsString(duplicateModificationUuidList))
                     .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk()).andReturn();
-        resultModificationUuidList = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        assertEquals(List.of(), resultModificationUuidList); // no bad id => no error this time
+            .andExpect(status().isOk());
 
         var newModificationListOtherGroup = modificationRepository.getModifications(otherGroupId, true, true);
         List<UUID> newModificationUuidListOtherGroup = newModificationListOtherGroup.stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
@@ -458,17 +433,15 @@ public class ModificationControllerTest {
 
         // Try to copy an unexisting Modification
         List<UUID> duplicateModificationUuidList = List.of(UUID.randomUUID());
-        MvcResult mvcResult = mockMvc.perform(
-                        put("/v1/groups/" + TEST_GROUP_ID + "?action=COPY"
-                                + "&networkUuid=" + TEST_NETWORK_ID
-                                + "&reportUuid=" + TEST_REPORT_ID
-                                + "&reporterId=" + UUID.randomUUID()
-                                + "&variantId=" + NetworkCreation.VARIANT_ID)
-                                .content(objectWriter.writeValueAsString(duplicateModificationUuidList))
-                                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
-        List<UUID> resultModificationUuidList = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        assertEquals(duplicateModificationUuidList, resultModificationUuidList); // bad uuids are returned
+        mockMvc.perform(
+                put("/v1/groups/" + TEST_GROUP_ID + "?action=COPY"
+                        + "&networkUuid=" + TEST_NETWORK_ID
+                        + "&reportUuid=" + TEST_REPORT_ID
+                        + "&reporterId=" + UUID.randomUUID()
+                        + "&variantId=" + NetworkCreation.VARIANT_ID)
+                        .content(objectWriter.writeValueAsString(duplicateModificationUuidList))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
 
         var newModificationList = modificationRepository.getModifications(TEST_GROUP_ID, true, true);
         List<UUID> newModificationUuidList = newModificationList.stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
@@ -537,13 +510,14 @@ public class ModificationControllerTest {
         assertNull(generatorStartup);
 
         // create and build generator with startup
+        generatorCreationInfos.setEquipmentId("idGenerator21");
         generatorCreationInfos.setMarginalCost(8.);
         generatorCreationInfosJson = objectWriter.writeValueAsString(generatorCreationInfos);
 
         mockMvc.perform(post(URI_NETWORK_MODIF).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
-        generatorStartup = network.getGenerator("idGenerator1").getExtension(GeneratorStartup.class);
+        generatorStartup = network.getGenerator("idGenerator21").getExtension(GeneratorStartup.class);
         assertNotNull(generatorStartup);
         assertEquals(Double.NaN, generatorStartup.getPlannedActivePowerSetpoint(), 0);
         assertEquals(Double.NaN, generatorStartup.getStartupCost(), 0);
@@ -632,7 +606,6 @@ public class ModificationControllerTest {
                 .busOrBusbarSectionId2("bus2")
                 .currentLimits1(c1)
                 .currentLimits2(c2)
-                .substationIds(Set.of("s1", "s2")) // for the matcher
                 .build();
 
         String resultAsString = mockMvc.perform(
@@ -641,9 +614,7 @@ public class ModificationControllerTest {
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString();
-
-        List<LineCreationInfos> modifications = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertThat(modifications.get(0), createMatcherLineCreationInfos(lineCreationInfos));
+        testBranchCreationImpacts(mapper, resultAsString, IdentifiableType.LINE, "idLine1", Set.of("s1", "s2"));
 
         testNetworkModificationsCount(TEST_GROUP_ID, 2);
 
@@ -667,8 +638,8 @@ public class ModificationControllerTest {
         testNetworkModificationsCount(TEST_GROUP_ID, 3);
 
         //create a lineSplit
-        LineSplitWithVoltageLevelInfos lineSplitWoVL = new LineSplitWithVoltageLevelInfos("line3", 10.0, null, "v4", "1.A",
-                "nl1", "NewLine1", "nl2", "NewLine2");
+        LineSplitWithVoltageLevelInfos lineSplitWoVL = new LineSplitWithVoltageLevelInfos("line1", 10.0, null, "v4", "1.A",
+                "nl11", "NewLine11", "nl12", "NewLine12");
 
         mockMvc.perform(
                 post(URI_NETWORK_MODIF)
@@ -743,9 +714,9 @@ public class ModificationControllerTest {
     }
 
     @Test
-    public void testTombstonedEquipmentInfos() throws Exception {
+    @SneakyThrows
+    public void testTombstonedEquipmentInfos() {
         MvcResult mvcResult;
-        String resultAsString;
 
         assertTrue(equipmentInfosRepository.findAllByNetworkUuidAndVariantId(TEST_NETWORK_ID, NetworkCreation.VARIANT_ID).isEmpty());
         assertTrue(equipmentInfosRepository.findAllByNetworkUuidAndVariantId(TEST_NETWORK_ID_2, VariantManagerConstants.INITIAL_VARIANT_ID).isEmpty());
@@ -755,367 +726,267 @@ public class ModificationControllerTest {
         EquipmentDeletionInfos equipmentDeletionInfos = EquipmentDeletionInfos.builder()
                 .equipmentType("LOAD")
                 .equipmentId("v1load")
-                .substationIds(Set.of("s1")) // for the matcher
                 .build();
         String equipmentDeletionInfosJson = objectWriter.writeValueAsString(equipmentDeletionInfos);
 
         // delete load
         mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        List<EquipmentDeletionInfos> bsmlrEquipmentDeletion = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertThat(bsmlrEquipmentDeletion.get(0), createMatcherEquipmentDeletionInfos(equipmentDeletionInfos));
-
+        testConnectableDeletionImpacts(mvcResult.getResponse().getContentAsString(), IdentifiableType.LOAD, "v1load", "v1b1", "v1d1", "s1");
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
-
-        // load and switches have been removed from network and added as TombstonedEquipmentInfos in ElasticSearch
-        assertNull(network.getLoad("v1load"));
-        assertNull(network.getSwitch("v1d1"));
-        assertNull(network.getSwitch("v1b1"));
-        assertTrue(existTombstonedEquipmentInfos("v1load", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos("v1d1", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos("v1b1", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
 
         // Test delete load on not yet existing variant VARIANT_NOT_EXISTING_ID :
         // Only the modification should be added in the database but the load cannot be deleted
-        equipmentDeletionInfos.setEquipmentType("LOAD");
+        equipmentDeletionInfos.setEquipmentType(IdentifiableType.LOAD.name());
         equipmentDeletionInfos.setEquipmentId("v3load");
         equipmentDeletionInfosJson = objectWriter.writeValueAsString(equipmentDeletionInfos);
         mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF_BAD_VARIANT).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        List<EquipmentDeletionInfos> deletions = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertTrue(deletions.isEmpty());  // no modifications returned
+        Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertTrue(networkModificationResult.isEmpty());  // no modification apply
         assertNotNull(network.getLoad("v3load"));  // load was not deleted
         testNetworkModificationsCount(TEST_GROUP_ID, 2);  // new modification stored in the database
 
         // delete shunt compensator
-        equipmentDeletionInfos.setEquipmentType("SHUNT_COMPENSATOR");
+        equipmentDeletionInfos.setEquipmentType(IdentifiableType.SHUNT_COMPENSATOR.name());
         equipmentDeletionInfos.setEquipmentId("v2shunt");
         equipmentDeletionInfosJson = objectWriter.writeValueAsString(equipmentDeletionInfos);
         mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        List<EquipmentDeletionInfos> deletionsEquipmentDeletion = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertThat(deletionsEquipmentDeletion.get(0), createMatcherEquipmentDeletionInfos(equipmentDeletionInfos));
-
+        testConnectableDeletionImpacts(mvcResult.getResponse().getContentAsString(), IdentifiableType.SHUNT_COMPENSATOR, "v2shunt", "v2bshunt", "v2dshunt", "s1");
         testNetworkModificationsCount(TEST_GROUP_ID, 3);
 
-        // shunt compensator and switches have been removed from network and added as TombstonedEquipmentInfos in ElasticSearch
-        assertNull(network.getShuntCompensator("v2shunt"));
-        assertNull(network.getSwitch("v2bshunt"));
-        assertNull(network.getSwitch("v2dshunt"));
-        assertTrue(existTombstonedEquipmentInfos("v2shunt", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos("v2bshunt", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos("v2dshunt", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-
         // delete generator
-        equipmentDeletionInfos.setEquipmentType("GENERATOR");
+        equipmentDeletionInfos.setEquipmentType(IdentifiableType.GENERATOR.name());
         equipmentDeletionInfos.setEquipmentId("idGenerator");
         equipmentDeletionInfosJson = objectWriter.writeValueAsString(equipmentDeletionInfos);
         mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        List<EquipmentDeletionInfos> deletionsDeletionNetwork = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertThat(deletionsDeletionNetwork.get(0), createMatcherEquipmentDeletionInfos(equipmentDeletionInfos));
-
+        testConnectableDeletionImpacts(mvcResult.getResponse().getContentAsString(), IdentifiableType.GENERATOR, "idGenerator", "v2bgenerator", "v2dgenerator", "s1");
         testNetworkModificationsCount(TEST_GROUP_ID, 4);
 
-        // generator and switches have been removed from network and added as TombstonedEquipmentInfos in ElasticSearch
-        assertNull(network.getGenerator("idGenerator"));
-        assertNull(network.getSwitch("v2bgenerator"));
-        assertNull(network.getSwitch("v2dgenerator"));
-        assertTrue(existTombstonedEquipmentInfos("idGenerator", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos("v2bgenerator", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos("v2dgenerator", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-
         // delete line
-        equipmentDeletionInfos.setEquipmentType("LINE");
+        equipmentDeletionInfos.setEquipmentType(IdentifiableType.LINE.name());
         equipmentDeletionInfos.setEquipmentId("line2");
-        equipmentDeletionInfos.setSubstationIds(Set.of("s1", "s2")); // for the matcher
         equipmentDeletionInfosJson = objectWriter.writeValueAsString(equipmentDeletionInfos);
         mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
              .andExpect(status().isOk()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        List<EquipmentDeletionInfos> deletionsDeletionEquipement = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertThat(deletionsDeletionEquipement.get(0), createMatcherEquipmentDeletionInfos(equipmentDeletionInfos));
-
+        testBranchDeletionImpacts(mvcResult.getResponse().getContentAsString(), IdentifiableType.LINE, "line2", "v1bl2", "v1dl2", "s1", "v3bl2", "v3dl2", "s2");
         testNetworkModificationsCount(TEST_GROUP_ID, 5);
 
-        // line and switches have been removed from network and added as TombstonedEquipmentInfos in ElasticSearch
-        assertNull(network.getLine("line2"));
-        assertNull(network.getSwitch("v1dl2"));
-        assertNull(network.getSwitch("v1bl2"));
-        assertNull(network.getSwitch("v3dl2"));
-        assertNull(network.getSwitch("v3bl2"));
-        assertTrue(existTombstonedEquipmentInfos("line2", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos("v1dl2", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos("v1bl2", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos("v3dl2", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos("v3bl2", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-
         // delete two windings transformer
-        equipmentDeletionInfos.setEquipmentType("TWO_WINDINGS_TRANSFORMER");
+        equipmentDeletionInfos.setEquipmentType(IdentifiableType.TWO_WINDINGS_TRANSFORMER.name());
         equipmentDeletionInfos.setEquipmentId("trf1");
-        equipmentDeletionInfos.setSubstationIds(Set.of("s1")); // for the matcher
         equipmentDeletionInfosJson = objectWriter.writeValueAsString(equipmentDeletionInfos);
         mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        List<EquipmentDeletionInfos> deletionsDelEquipement = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertThat(deletionsDelEquipement.get(0), createMatcherEquipmentDeletionInfos(equipmentDeletionInfos));
-
+        testBranchDeletionImpacts(mvcResult.getResponse().getContentAsString(), IdentifiableType.TWO_WINDINGS_TRANSFORMER, "trf1", "v1btrf1", "v1dtrf1", "s1", "v2btrf1", "v2dtrf1", "s1");
         testNetworkModificationsCount(TEST_GROUP_ID, 6);
 
-        // 2 windings transformer and switches have been removed from network and added as TombstonedEquipmentInfos in ElasticSearch
-        assertNull(network.getTwoWindingsTransformer("trf1"));
-        assertNull(network.getSwitch("v1btrf1"));
-        // disconnector 'v1dtrf1' was not removed (2wt 'trf1' in double feeder with 3wt 'trf6' in voltage level 'v1')
-        assertNull(network.getSwitch("v1dtrf1"));
-        assertNull(network.getSwitch("v2btrf1"));
-        assertNull(network.getSwitch("v2dtrf1"));
-        assertTrue(existTombstonedEquipmentInfos("trf1", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos("v1btrf1", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos("v1dtrf1", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos("v2btrf1", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos("v2dtrf1", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-
         // delete three windings transformer
-        equipmentDeletionInfos.setEquipmentType("THREE_WINDINGS_TRANSFORMER");
+        equipmentDeletionInfos.setEquipmentType(IdentifiableType.THREE_WINDINGS_TRANSFORMER.name());
         equipmentDeletionInfos.setEquipmentId("trf6");
         equipmentDeletionInfosJson = objectWriter.writeValueAsString(equipmentDeletionInfos);
         mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        List<EquipmentDeletionInfos> deletionsDelEquip = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertThat(deletionsDelEquip.get(0), createMatcherEquipmentDeletionInfos(equipmentDeletionInfos));
-
+        test3WTDeletionImpacts(mvcResult.getResponse().getContentAsString(), "trf6", "v1btrf6", "v1dtrf6", "v2btrf6", "v2dtrf6", "v4btrf6", "v4dtrf6", "s1");
         testNetworkModificationsCount(TEST_GROUP_ID, 7);
 
-        // 3 windings transformer and switches have been removed from network and added as TombstonedEquipmentInfos in ElasticSearch
-        assertNull(network.getThreeWindingsTransformer("trf6"));
-        // breaker 'v1btrf6' was not removed (special connection of 3wt 'trf6' in voltage level 'v1')
-        // disconnector 'v1dtrf6' was not removed (special connection of 3wt 'trf6' in voltage level 'v1')
-        assertNotNull(network.getSwitch("v1btrf6"));
-        assertNotNull(network.getSwitch("v1dtrf6"));
-        assertNull(network.getSwitch("v2btrf6"));
-        assertNull(network.getSwitch("v2dtrf6"));
-        assertNull(network.getSwitch("v4btrf6"));
-        assertNull(network.getSwitch("v4dtrf6"));
-        assertTrue(existTombstonedEquipmentInfos("trf6", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos("v1btrf6", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos("v1dtrf6", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos("v2btrf6", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos("v2dtrf6", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos("v4btrf6", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos("v4dtrf6", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-
         // delete static var compensator
-        equipmentDeletionInfos.setEquipmentType("STATIC_VAR_COMPENSATOR");
+        equipmentDeletionInfos.setEquipmentType(IdentifiableType.STATIC_VAR_COMPENSATOR.name());
         equipmentDeletionInfos.setEquipmentId("v3Compensator");
-        equipmentDeletionInfos.setSubstationIds(Set.of("s2")); // for the matcher
         equipmentDeletionInfosJson = objectWriter.writeValueAsString(equipmentDeletionInfos);
         mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        List<EquipmentDeletionInfos> deletionsEquipement = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertThat(deletionsEquipement.get(0), createMatcherEquipmentDeletionInfos(equipmentDeletionInfos));
-
+        testConnectableDeletionImpacts(mvcResult.getResponse().getContentAsString(), IdentifiableType.STATIC_VAR_COMPENSATOR, "v3Compensator", "v3bCompensator", "v3dCompensator", "s2");
         testNetworkModificationsCount(TEST_GROUP_ID, 8);
 
-        // static var compensator and switches have been removed from network and added as TombstonedEquipmentInfos in ElasticSearch
-        assertNull(network.getStaticVarCompensator("v3Compensator"));
-        assertNull(network.getSwitch("v3dCompensator"));
-        assertNull(network.getSwitch("v3bCompensator"));
-        assertTrue(existTombstonedEquipmentInfos("v3Compensator", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos("v3dCompensator", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos("v3bCompensator", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-
         // delete battery
-        equipmentDeletionInfos.setEquipmentType("BATTERY");
+        equipmentDeletionInfos.setEquipmentType(IdentifiableType.BATTERY.name());
         equipmentDeletionInfos.setEquipmentId("v3Battery");
         equipmentDeletionInfosJson = objectWriter.writeValueAsString(equipmentDeletionInfos);
         mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        List<EquipmentDeletionInfos> deletionsV3Battery = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertThat(deletionsV3Battery.get(0), createMatcherEquipmentDeletionInfos(equipmentDeletionInfos));
-
+        testConnectableDeletionImpacts(mvcResult.getResponse().getContentAsString(), IdentifiableType.BATTERY, "v3Battery", "v3bBattery", "v3dBattery", "s2");
         testNetworkModificationsCount(TEST_GROUP_ID, 9);
 
-        // battery and switches have been removed from network and added as TombstonedEquipmentInfos in ElasticSearch
-        assertNull(network.getBattery("v3Battery"));
-        assertNull(network.getSwitch("v3dBattery"));
-        assertNull(network.getSwitch("v3bBattery"));
-        assertTrue(existTombstonedEquipmentInfos("v3Battery", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos("v3dBattery", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos("v3bBattery", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-
         // delete dangling line
-        equipmentDeletionInfos.setEquipmentType("DANGLING_LINE");
+        equipmentDeletionInfos.setEquipmentType(IdentifiableType.DANGLING_LINE.name());
         equipmentDeletionInfos.setEquipmentId("v2Dangling");
-        equipmentDeletionInfos.setSubstationIds(Set.of("s1")); // for the matcher
         equipmentDeletionInfosJson = objectWriter.writeValueAsString(equipmentDeletionInfos);
         mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        List<EquipmentDeletionInfos> deletionsV2Dangling = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertThat(deletionsV2Dangling.get(0), createMatcherEquipmentDeletionInfos(equipmentDeletionInfos));
-
+        testConnectableDeletionImpacts(mvcResult.getResponse().getContentAsString(), IdentifiableType.DANGLING_LINE, "v2Dangling", "v2bdangling", "v2ddangling", "s1");
         testNetworkModificationsCount(TEST_GROUP_ID, 10);
 
-        // dangling line and switches have been removed from network and added as TombstonedEquipmentInfos in ElasticSearch
-        assertNull(network.getDanglingLine("v2Dangling"));
-        assertNull(network.getSwitch("v2bdangling"));
-        assertNull(network.getSwitch("v2ddangling"));
-        assertTrue(existTombstonedEquipmentInfos("v2Dangling", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos("v2bdangling", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos("v2ddangling", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-
         // delete hvdc line
-        equipmentDeletionInfos.setEquipmentType("HVDC_LINE");
+        equipmentDeletionInfos.setEquipmentType(IdentifiableType.HVDC_LINE.name());
         equipmentDeletionInfos.setEquipmentId("hvdcLine");
         equipmentDeletionInfosJson = objectWriter.writeValueAsString(equipmentDeletionInfos);
         mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        List<EquipmentDeletionInfos> deletionshHdcLine = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertThat(deletionshHdcLine.get(0), createMatcherEquipmentDeletionInfos(equipmentDeletionInfos));
+        testElementDeletionImpact(mapper, mvcResult.getResponse().getContentAsString(), IdentifiableType.HVDC_LINE, "hvdcLine", Set.of("s1"));
         testNetworkModificationsCount(TEST_GROUP_ID, 11);
 
-        // hvdc line has been removed from network and added as TombstonedEquipmentInfos in ElasticSearch
-        assertNull(network.getHvdcLine("hvdcLine"));
-        assertTrue(existTombstonedEquipmentInfos("hvdcLine", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-
         // delete vsc converter station
-        equipmentDeletionInfos.setEquipmentType("HVDC_CONVERTER_STATION");
+        equipmentDeletionInfos.setEquipmentType(IdentifiableType.HVDC_CONVERTER_STATION.name());
         equipmentDeletionInfos.setEquipmentId("v2vsc");
         equipmentDeletionInfosJson = objectWriter.writeValueAsString(equipmentDeletionInfos);
-        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF_2).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
+        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        List<EquipmentDeletionInfos> deletionsV2Vsc = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertThat(deletionsV2Vsc.get(0), createMatcherEquipmentDeletionInfos(equipmentDeletionInfos));
-
+        testConnectableDeletionImpacts(mvcResult.getResponse().getContentAsString(), IdentifiableType.HVDC_CONVERTER_STATION, "v2vsc", "v2bvsc", "v2dvsc", "s1");
         testNetworkModificationsCount(TEST_GROUP_ID, 12);
 
-        // vsc converter station and switches have been removed from network and added as TombstonedEquipmentInfos in ElasticSearch
-        assertNull(network2.getVscConverterStation("v2vsc"));
-        assertNull(network2.getSwitch("v2bvsc"));
-        assertNull(network2.getSwitch("v2dvsc"));
-        assertTrue(existTombstonedEquipmentInfos("v2vsc", TEST_NETWORK_ID_2, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos("v2bvsc", TEST_NETWORK_ID_2, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos("v2dvsc", TEST_NETWORK_ID_2, VariantManagerConstants.INITIAL_VARIANT_ID));
-
         // delete lcc converter station
-        equipmentDeletionInfos.setEquipmentType("HVDC_CONVERTER_STATION");
+        equipmentDeletionInfos.setEquipmentType(IdentifiableType.HVDC_CONVERTER_STATION.name());
         equipmentDeletionInfos.setEquipmentId("v1lcc");
-        equipmentDeletionInfos.setSubstationIds(Set.of("s1")); // for the matcher
         equipmentDeletionInfosJson = objectWriter.writeValueAsString(equipmentDeletionInfos);
-        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF_2).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
+        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        List<EquipmentDeletionInfos> deletionsV1Lcc = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertThat(deletionsV1Lcc.get(0), createMatcherEquipmentDeletionInfos(equipmentDeletionInfos));
-
+        testConnectableDeletionImpacts(mvcResult.getResponse().getContentAsString(), IdentifiableType.HVDC_CONVERTER_STATION, "v1lcc", "v1blcc", "v1dlcc", "s1");
         testNetworkModificationsCount(TEST_GROUP_ID, 13);
 
-        // lcc converter station and switches have been removed from network and added as TombstonedEquipmentInfos in ElasticSearch
-        assertNull(network2.getLccConverterStation("v1lcc"));
-        assertNull(network2.getSwitch("v1dlcc"));
-        assertNull(network2.getSwitch("v1blcc"));
-        assertTrue(existTombstonedEquipmentInfos("v1lcc", TEST_NETWORK_ID_2, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos("v1dlcc", TEST_NETWORK_ID_2, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos("v1blcc", TEST_NETWORK_ID_2, VariantManagerConstants.INITIAL_VARIANT_ID));
-
         // delete voltage level
-        equipmentDeletionInfos.setEquipmentType("VOLTAGE_LEVEL");
+        equipmentDeletionInfos.setEquipmentType(IdentifiableType.VOLTAGE_LEVEL.name());
         equipmentDeletionInfos.setEquipmentId("v5");
         equipmentDeletionInfosJson = objectWriter.writeValueAsString(equipmentDeletionInfos);
-        mockMvc.perform(post(URI_NETWORK_MODIF).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
+        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
-        List<EquipmentDeletionInfos> deletionsV5 = modificationRepository.getModifications(TEST_GROUP_ID, false, true)
-                .stream().map(EquipmentDeletionInfos.class::cast).collect(Collectors.toList());
-        EquipmentDeletionInfos lastCreatedEquipmentDeletion = deletionsV5.get(deletionsV5.size() - 1);
-//        assertThat(deletionsV5.get(0), createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "v5", "VOLTAGE_LEVEL", Set.of("s3")));
-        assertEquals(EquipmentDeletionInfos.class, lastCreatedEquipmentDeletion.getClass());
-        assertEquals("VOLTAGE_LEVEL", lastCreatedEquipmentDeletion.getEquipmentType());
-        assertEquals("v5", lastCreatedEquipmentDeletion.getEquipmentId());
-
+        testVoltageLevelDeletionImpacts(
+            mvcResult.getResponse().getContentAsString(), "v5", List.of("1A1"),
+            List.of(Pair.of(IdentifiableType.GENERATOR, "v5generator"), Pair.of(IdentifiableType.LOAD, "v5load"),
+                Pair.of(IdentifiableType.SHUNT_COMPENSATOR, "v5shunt"), Pair.of(IdentifiableType.STATIC_VAR_COMPENSATOR, "v5Compensator")),
+            "s3"
+        );
         testNetworkModificationsCount(TEST_GROUP_ID, 14);
 
-        // voltage level and equipments have been removed from network and added as TombstonedEquipmentInfos in ElasticSearch
-        assertNull(network.getVoltageLevel("v5"));
-        assertNull(network.getBusbarSection("1A1"));
-        assertNull(network.getLoad("v5load"));
-        assertNull(network.getGenerator("v5generator"));
-        assertNull(network.getShuntCompensator("v5shunt"));
-        assertNull(network.getStaticVarCompensator("v5Compensator"));
-        assertTrue(existTombstonedEquipmentInfos("v5", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos("1A1", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos("v5load", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos("v5generator", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos("v5shunt", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos("v5Compensator", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-
         // try to delete voltage level (Internal error because the vl is still connected)
-        equipmentDeletionInfos.setEquipmentType("VOLTAGE_LEVEL");
+        equipmentDeletionInfos.setEquipmentType(IdentifiableType.VOLTAGE_LEVEL.name());
         equipmentDeletionInfos.setEquipmentId("v4");
         mockMvc.perform(post(URI_NETWORK_MODIF).content(objectWriter.writeValueAsString(equipmentDeletionInfos)).contentType(MediaType.APPLICATION_JSON))
-            .andExpectAll(
-                status().is5xxServerError(),
-                content().string(new NetworkModificationException(DELETE_EQUIPMENT_ERROR,
-                    new PowsyblException(new AssertionError("The voltage level 'v4' cannot be removed because of a remaining THREE_WINDINGS_TRANSFORMER"))).getMessage()));
+            .andExpect(status().isOk());
         assertNotNull(network.getVoltageLevel("v4"));
+        assertLogMessage(new PowsyblException(new AssertionError("The voltage level 'v4' cannot be removed because of a remaining LINE")).getMessage(),
+                equipmentDeletionInfos.getErrorType().name(), reportService);
 
         // delete substation
-        equipmentDeletionInfos.setEquipmentType("SUBSTATION");
+        equipmentDeletionInfos.setEquipmentType(IdentifiableType.SUBSTATION.name());
         equipmentDeletionInfos.setEquipmentId("s3");
         equipmentDeletionInfosJson = objectWriter.writeValueAsString(equipmentDeletionInfos);
-        mockMvc.perform(post(URI_NETWORK_MODIF).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
+        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
-//        resultAsString = mvcResult.getResponse().getContentAsString();
-//        List<EquipmentDeletionInfos> deletionsS3 = mapper.readValue(resultAsString, new TypeReference<>() { });
-//        assertThat(deletionsS3.get(0), createMatcherEquipmentDeletionInfos(ModificationType.EQUIPMENT_DELETION, "s3", "SUBSTATION", Set.of("s3")));
-        List<EquipmentDeletionInfos> deletionsS3 = modificationRepository.getModifications(TEST_GROUP_ID, false, true)
-                .stream().map(EquipmentDeletionInfos.class::cast).collect(Collectors.toList());
-        lastCreatedEquipmentDeletion = deletionsS3.get(deletionsS3.size() - 1);
-        assertEquals(EquipmentDeletionInfos.class, lastCreatedEquipmentDeletion.getClass());
-        assertEquals("SUBSTATION", lastCreatedEquipmentDeletion.getEquipmentType());
-        assertEquals("s3", lastCreatedEquipmentDeletion.getEquipmentId());
-
+        List<SimpleElementImpact> vlDeletionImpacts = testVoltageLevelDeletionImpacts("v6", List.of("1B1"),
+            List.of(Pair.of(IdentifiableType.GENERATOR, "v6generator"), Pair.of(IdentifiableType.LOAD, "v6load"),
+                Pair.of(IdentifiableType.SHUNT_COMPENSATOR, "v6shunt"), Pair.of(IdentifiableType.STATIC_VAR_COMPENSATOR, "v6Compensator")),
+            "s3");
+        testSubstationDeletionImpacts(mvcResult.getResponse().getContentAsString(), "s3", vlDeletionImpacts);
         testNetworkModificationsCount(TEST_GROUP_ID, 16);
 
-        // substation and equipments have been removed from network and added as TombstonedEquipmentInfos in ElasticSearch
-        assertNull(network.getSubstation("s3"));
-        assertNull(network.getVoltageLevel("v6"));
-        assertNull(network.getBusbarSection("1B1"));
-        assertNull(network.getLoad("v6load"));
-        assertNull(network.getGenerator("v6generator"));
-        assertNull(network.getShuntCompensator("v6shunt"));
-        assertNull(network.getStaticVarCompensator("v6Compensator"));
-        assertTrue(existTombstonedEquipmentInfos("s3", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos("v6", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos("1B1", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos("v6load", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos("v6generator", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos("v6shunt", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos("v6Compensator", TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-
         // try to delete substation (Internal error because the substation is still connected)
-        equipmentDeletionInfos.setEquipmentType("SUBSTATION");
+        equipmentDeletionInfos.setEquipmentType(IdentifiableType.SUBSTATION.name());
         equipmentDeletionInfos.setEquipmentId("s2");
         mockMvc.perform(post(URI_NETWORK_MODIF).content(objectWriter.writeValueAsString(equipmentDeletionInfos)).contentType(MediaType.APPLICATION_JSON))
-            .andExpectAll(
-                status().is5xxServerError(),
-                content().string(new NetworkModificationException(DELETE_EQUIPMENT_ERROR,
-                    "The substation s2 is still connected to another substation").getMessage()));
+                .andExpect(status().isOk());
         assertNotNull(network.getSubstation("s2"));
+        assertLogMessage("The substation s2 is still connected to another substation",
+                equipmentDeletionInfos.getErrorType().name(), reportService);
 
         assertTrue(equipmentInfosRepository.findAllByNetworkUuidAndVariantId(TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID).isEmpty());
-        assertTrue(equipmentInfosRepository.findAllByNetworkUuidAndVariantId(TEST_NETWORK_ID_2, VariantManagerConstants.INITIAL_VARIANT_ID).isEmpty());
         assertEquals(55, tombstonedEquipmentInfosRepository.findAllByNetworkUuidAndVariantId(TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID).size());
-        assertEquals(6, tombstonedEquipmentInfosRepository.findAllByNetworkUuidAndVariantId(TEST_NETWORK_ID_2, VariantManagerConstants.INITIAL_VARIANT_ID).size());
+    }
+
+    private void testConnectableDeletionImpacts(String resultAsString,
+                                                IdentifiableType connectableType, String connectableId,
+                                                String breakerId, String disconnectorId, String substationId) {
+        TestImpactUtils.testConnectableDeletionImpacts(mapper, resultAsString, connectableType, connectableId, breakerId, disconnectorId, substationId);
+
+        // Connectable and switches have been removed from network
+        assertNull(network.getIdentifiable(connectableId));
+        assertNull(network.getSwitch(breakerId));
+        assertNull(network.getSwitch(disconnectorId));
+
+        // Connectable and switches have been added as TombstonedEquipmentInfos in ElasticSearch
+        assertTrue(existTombstonedEquipmentInfos(connectableId, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertTrue(existTombstonedEquipmentInfos(breakerId, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertTrue(existTombstonedEquipmentInfos(disconnectorId, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+    }
+
+    private void testBranchDeletionImpacts(String resultAsString,
+                                           IdentifiableType branchType, String branchId,
+                                           String breakerId1, String disconnectorId1, String substationId1,
+                                           String breakerId2, String disconnectorId2, String substationId2) {
+        TestImpactUtils.testBranchDeletionImpacts(mapper, resultAsString, branchType, branchId, breakerId1, disconnectorId1, substationId1, breakerId2, disconnectorId2, substationId2);
+
+        // line and switches have been removed from network
+        assertNull(network.getLine(branchId));
+        assertNull(network.getSwitch(breakerId1));
+        assertNull(network.getSwitch(disconnectorId1));
+        assertNull(network.getSwitch(breakerId2));
+        assertNull(network.getSwitch(disconnectorId2));
+
+        // line and switches have been added as TombstonedEquipmentInfos in ElasticSearch
+        assertTrue(existTombstonedEquipmentInfos(branchId, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertTrue(existTombstonedEquipmentInfos(breakerId1, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertTrue(existTombstonedEquipmentInfos(disconnectorId1, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertTrue(existTombstonedEquipmentInfos(breakerId2, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertTrue(existTombstonedEquipmentInfos(disconnectorId2, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+    }
+
+    private void test3WTDeletionImpacts(String resultAsString, String w3tId,
+                                        String breakerId1, String disconnectorId1,
+                                        String breakerId2, String disconnectorId2,
+                                        String breakerId3, String disconnectorId3,
+                                        String substationId) {
+        TestImpactUtils.test3WTDeletionImpacts(mapper, resultAsString, w3tId, breakerId1, disconnectorId1, breakerId2, disconnectorId2, breakerId3, disconnectorId3, substationId);
+
+        // 3 windings transformer and switches have been removed from network
+        assertNull(network.getThreeWindingsTransformer(w3tId));
+        assertNull(network.getSwitch(breakerId1));
+        assertNull(network.getSwitch(disconnectorId1));
+        assertNull(network.getSwitch(breakerId2));
+        assertNull(network.getSwitch(disconnectorId2));
+        assertNull(network.getSwitch(breakerId3));
+        assertNull(network.getSwitch(disconnectorId3));
+
+        // 3 windings transformer and switches have been added as TombstonedEquipmentInfos in ElasticSearch
+        assertTrue(existTombstonedEquipmentInfos(disconnectorId1, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertTrue(existTombstonedEquipmentInfos(breakerId1, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertTrue(existTombstonedEquipmentInfos(disconnectorId1, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertTrue(existTombstonedEquipmentInfos(breakerId2, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertTrue(existTombstonedEquipmentInfos(disconnectorId2, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertTrue(existTombstonedEquipmentInfos(breakerId3, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertTrue(existTombstonedEquipmentInfos(disconnectorId3, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+    }
+
+    private List<SimpleElementImpact> testVoltageLevelDeletionImpacts(String vlId, List<String> busbarSectionsIds, List<Pair<IdentifiableType, String>> connectablesTypesAndIds, String substationId) {
+        // Voltage level and equipments have been removed from network
+        assertNull(network.getVoltageLevel(vlId));
+        busbarSectionsIds.forEach(id -> assertNull(network.getBusbarSection(id)));
+        connectablesTypesAndIds.forEach(typeAndId -> assertNull(network.getBusbarSection(typeAndId.getRight())));
+
+        // Voltage level and equipments have been added as TombstonedEquipmentInfos in ElasticSearch
+        assertTrue(existTombstonedEquipmentInfos(vlId, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        busbarSectionsIds.forEach(id -> assertTrue(existTombstonedEquipmentInfos(id, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID)));
+        connectablesTypesAndIds.forEach(typeAndId -> assertTrue(existTombstonedEquipmentInfos(typeAndId.getRight(), TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID)));
+
+        return createVoltageLevelDeletionImpacts(vlId, busbarSectionsIds, connectablesTypesAndIds, substationId);
+    }
+
+    private void testVoltageLevelDeletionImpacts(String resultAsString, String vlId, List<String> busbarSectionsIds, List<Pair<IdentifiableType, String>> connectablesTypesAndIds, String substationId) {
+        List<SimpleElementImpact> testElementImpacts = testVoltageLevelDeletionImpacts(vlId, busbarSectionsIds, connectablesTypesAndIds, substationId);
+        TestImpactUtils.testElementImpacts(mapper, resultAsString, testElementImpacts);
+    }
+
+    private void testSubstationDeletionImpacts(String resultAsString,  String subStationId, List<SimpleElementImpact> vlsDeletionImpacts) {
+        List<SimpleElementImpact> impacts = new ArrayList<>(List.of(createDeletionImpactType(IdentifiableType.SUBSTATION, subStationId, Set.of(subStationId))));
+        impacts.addAll(vlsDeletionImpacts);
+        TestImpactUtils.testElementImpacts(mapper, resultAsString, impacts);
+
+        // Substation and equipments have been removed from network and
+        assertNull(network.getSubstation(subStationId));
+
+        // Substation and equipments  have been  added as TombstonedEquipmentInfos in ElasticSearch
+        assertTrue(existTombstonedEquipmentInfos(subStationId, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
     }
 
     private void testNetworkModificationsCount(UUID groupUuid, int actualSize) throws Exception {

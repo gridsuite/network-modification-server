@@ -15,18 +15,16 @@ import com.powsybl.iidm.network.extensions.ActivePowerControl;
 import com.powsybl.iidm.network.extensions.GeneratorShortCircuit;
 import com.powsybl.iidm.network.extensions.GeneratorStartup;
 import lombok.SneakyThrows;
-import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.utils.MatcherGeneratorModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.List;
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_GENERATOR_ERROR;
+import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -325,13 +323,11 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
         generatorModificationInfos.setEnergySource(new AttributeModification<>(null, OperationType.UNSET));
 
         String generatorModificationInfosJson = mapper.writeValueAsString(generatorModificationInfos);
-        MvcResult mvcResult = mockMvc
-                .perform(post(getNetworkModificationUri()).content(generatorModificationInfosJson)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().is5xxServerError()).andReturn();
-        String resultAsString = mvcResult.getResponse().getContentAsString();
-        assertEquals(resultAsString, new NetworkModificationException(MODIFY_GENERATOR_ERROR, "Generator '" + "idGenerator" + "': energy source is not set").getMessage());
-
+        mockMvc.perform(post(getNetworkModificationUri()).content(generatorModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        assertEquals(EnergySource.OTHER, getNetwork().getGenerator("idGenerator").getEnergySource());
+        assertLogMessage("Generator '" + "idGenerator" + "': energy source is not set",
+                generatorModificationInfos.getErrorType().name(), reportService);
     }
 
     @SneakyThrows

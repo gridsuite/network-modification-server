@@ -9,13 +9,16 @@ package org.gridsuite.modification.server.modifications;
 import com.powsybl.commons.reporter.Report;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.TypedValue;
+import com.powsybl.iidm.modification.topology.CreateCouplingDeviceBuilder;
+import com.powsybl.iidm.modification.topology.CreateVoltageLevelTopologyBuilder;
 import com.powsybl.iidm.modification.topology.TopologyModificationUtils;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.BusbarSectionPosition;
-import com.powsybl.iidm.network.extensions.BusbarSectionPositionAdder;
-import org.apache.commons.lang3.tuple.Pair;
+import com.powsybl.iidm.network.extensions.IdentifiableShortCircuitAdder;
+
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.server.dto.AttributeModification;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -202,80 +205,6 @@ public final class ModificationUtils {
         return newNode + 2;
     }
 
-    private Pair<Integer, Integer> addBusbarConnectionTo(VoltageLevelCreationInfos voltageLevelCreationInfos,
-                                                         BusbarConnectionCreationInfos bbsci, Map<String, Integer> idToNodeRank, Pair<Integer, Integer> ranks,
-                                                         VoltageLevel voltageLevel) {
-
-        String fromBBSId = bbsci.getFromBBS();
-        Integer rank1 = idToNodeRank.get(fromBBSId);
-        if (rank1 == null) {
-            throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "From side '" + fromBBSId + "' unknown");
-        }
-
-        String toBBSId = bbsci.getToBBS();
-        Integer rank2 = idToNodeRank.get(toBBSId);
-        if (rank2 == null) {
-            throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "To side '" + toBBSId + "' unknown");
-        }
-
-        SwitchKind switchKind = bbsci.getSwitchKind();
-        if (switchKind == SwitchKind.DISCONNECTOR && fromBBSId.equals(toBBSId)) {
-            throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR,
-                "Disconnector between same bus bar section '" + toBBSId + "'");
-        }
-
-        int nodeRank = ranks.getLeft();
-        int cnxRank = ranks.getRight();
-        String infix = voltageLevelCreationInfos.getEquipmentId() + "_" + fromBBSId + "_" + toBBSId + "_";
-        if (switchKind == SwitchKind.DISCONNECTOR) {
-            voltageLevel.getNodeBreakerView().newDisconnector()
-                .setKind(switchKind)
-                .setId(DISCONNECTOR + infix + cnxRank++)
-                .setNode1(rank1)
-                .setNode2(rank2)
-                .setFictitious(false)
-                .setRetained(false)
-                .setOpen(false)
-                .add();
-        } else if (switchKind == SwitchKind.BREAKER) {
-            int preBreakerRank = nodeRank++;
-            int postBreakerRank = nodeRank++;
-            voltageLevel.getNodeBreakerView().newDisconnector()
-                .setKind(SwitchKind.DISCONNECTOR)
-                .setId(DISCONNECTOR + infix + cnxRank++)
-                .setNode1(rank1)
-                .setNode2(preBreakerRank)
-                .setFictitious(false)
-                .setRetained(false)
-                .setOpen(false)
-                .add();
-
-            voltageLevel.getNodeBreakerView().newBreaker()
-                .setKind(switchKind)
-                .setId(BREAKER + infix + cnxRank++)
-                .setNode1(preBreakerRank)
-                .setNode2(postBreakerRank)
-                .setFictitious(false)
-                .setRetained(false)
-                .setOpen(false)
-                .add();
-
-            voltageLevel.getNodeBreakerView().newDisconnector()
-                .setKind(SwitchKind.DISCONNECTOR)
-                .setId(DISCONNECTOR + infix + cnxRank++)
-                .setNode1(postBreakerRank)
-                .setNode2(rank2)
-                .setFictitious(false)
-                .setRetained(false)
-                .setOpen(false)
-                .add();
-        } else {
-            throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "Switch kind '" + switchKind + "' not supported");
-        }
-
-        return Pair.of(nodeRank, cnxRank);
-    }
-
     public void controlNewOrExistingVoltageLevel(VoltageLevelCreationInfos mayNewVL,
                 String existingVoltageLevelId, String bbsOrBusId, Network network) {
         if (mayNewVL != null) {
@@ -295,20 +224,10 @@ public final class ModificationUtils {
         if (network.getVoltageLevel(voltageLevelCreationInfos.getEquipmentId()) != null) {
             throw new NetworkModificationException(VOLTAGE_LEVEL_ALREADY_EXISTS, voltageLevelCreationInfos.getEquipmentId());
         }
-        for (BusbarSectionCreationInfos newBbs : voltageLevelCreationInfos.getBusbarSections()) {
-            if (network.getBusbarSection(newBbs.getId()) != null) {
-                throw new NetworkModificationException(BUSBAR_SECTION_ALREADY_EXISTS, newBbs.getId());
-            }
-        }
-        Set<String> allNewBbs = voltageLevelCreationInfos.getBusbarSections().stream().map(BusbarSectionCreationInfos::getId).collect(Collectors.toSet());
-        // From/to connections must use the new VL Busbar sections
-        for (BusbarConnectionCreationInfos bbc : voltageLevelCreationInfos.getBusbarConnections()) {
-            if (!allNewBbs.contains(bbc.getFromBBS())) {
-                throw new NetworkModificationException(BUSBAR_SECTION_NOT_DEFINED, bbc.getFromBBS());
-            }
-            if (!allNewBbs.contains(bbc.getToBBS())) {
-                throw new NetworkModificationException(BUSBAR_SECTION_NOT_DEFINED, bbc.getToBBS());
-            }
+        if (voltageLevelCreationInfos.getCouplingDevices().stream()
+                .anyMatch(cd -> cd.getBusbarSectionId1().equals(cd.getBusbarSectionId2()))) {
+            throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR,
+                    "Coupling between same bus bar section is not allowed");
         }
     }
 
@@ -327,31 +246,42 @@ public final class ModificationUtils {
             .setNominalV(voltageLevelCreationInfos.getNominalVoltage())
             .add();
 
-        int nodeRank = voltageLevel.getNodeBreakerView().getMaximumNodeIndex() + 1;
-        Map<String, Integer> idToNodeRank = new TreeMap<>();
-        for (BusbarSectionCreationInfos bbs : voltageLevelCreationInfos.getBusbarSections()) {
-            BusbarSection sjb = voltageLevel.getNodeBreakerView().newBusbarSection()
-                .setId(bbs.getId())
-                .setName(bbs.getName())
-                .setNode(nodeRank)
-                .add();
-            sjb.newExtension(BusbarSectionPositionAdder.class)
-                .withBusbarIndex(bbs.getVertPos())
-                .withSectionIndex(bbs.getHorizPos())
-                .add();
-            idToNodeRank.put(bbs.getId(), nodeRank);
-            nodeRank += 1;
+        if (voltageLevelCreationInfos.getLowVoltageLimit() != null) {
+            voltageLevel.setLowVoltageLimit(voltageLevelCreationInfos.getLowVoltageLimit());
+        }
+        if (voltageLevelCreationInfos.getHighVoltageLimit() != null) {
+            voltageLevel.setHighVoltageLimit(voltageLevelCreationInfos.getHighVoltageLimit());
         }
 
-        int cnxRank = 1;
-        Pair<Integer, Integer> currRanks = Pair.of(nodeRank, cnxRank);
-        List<BusbarConnectionCreationInfos> busbarConnections = voltageLevelCreationInfos.getBusbarConnections();
-        // js empty [] seems to be decoded null on java side some times -> temporary (?) protection
-        if (busbarConnections != null) {
-            for (BusbarConnectionCreationInfos bbsci : busbarConnections) {
-                currRanks = addBusbarConnectionTo(voltageLevelCreationInfos, bbsci, idToNodeRank, currRanks, voltageLevel);
-            }
+        if (voltageLevelCreationInfos.getIpMax() != null && voltageLevelCreationInfos.getIpMin() != null) {
+            voltageLevel.newExtension(IdentifiableShortCircuitAdder.class)
+                    .withIpMin(voltageLevelCreationInfos.getIpMin())
+                    .withIpMax(voltageLevelCreationInfos.getIpMax())
+                    .add();
+        } else if (voltageLevelCreationInfos.getIpMax() != null && voltageLevelCreationInfos.getIpMin() == null) {
+            voltageLevel.newExtension(IdentifiableShortCircuitAdder.class)
+                    .withIpMax(voltageLevelCreationInfos.getIpMax())
+                    .add();
+        } else if (voltageLevelCreationInfos.getIpMax() == null && voltageLevelCreationInfos.getIpMin() != null) {
+            voltageLevel.newExtension(IdentifiableShortCircuitAdder.class)
+                    .withIpMin(voltageLevelCreationInfos.getIpMin())
+                    .add();
         }
+
+        CreateVoltageLevelTopologyBuilder voltageLevelTopologyBuilder = new CreateVoltageLevelTopologyBuilder();
+        voltageLevelTopologyBuilder.withVoltageLevelId(voltageLevelCreationInfos.getEquipmentId())
+                .withBusbarCount(voltageLevelCreationInfos.getBusbarCount())
+                .withSectionCount(voltageLevelCreationInfos.getSectionCount())
+                .withSwitchKinds(voltageLevelCreationInfos.getSwitchKinds())
+                .build().apply(network);
+
+        voltageLevelCreationInfos.getCouplingDevices().forEach(couplingDevice -> {
+            CreateCouplingDeviceBuilder couplingDeviceBuilder = new CreateCouplingDeviceBuilder();
+            couplingDeviceBuilder.withBusbarSectionId1(couplingDevice.getBusbarSectionId1())
+                .withBusbarSectionId2(couplingDevice.getBusbarSectionId2())
+                .withSwitchPrefixId(voltageLevelCreationInfos.getEquipmentId() + "_COUPL")
+                .build().apply(network);
+        });
 
         subReporter.report(Report.builder()
             .withKey("voltageLevelCreated")
@@ -441,7 +371,7 @@ public final class ModificationUtils {
     }
 
     public <T> Report applyElementaryModificationsAndReturnReport(Consumer<T> setter, Supplier<T> getter,
-            AttributeModification<T> modification, String fieldName) {
+                                                                  AttributeModification<T> modification, String fieldName) {
         if (modification != null) {
             T oldValue = getter.get();
             T newValue = modification.applyModification(oldValue);
@@ -548,6 +478,29 @@ public final class ModificationUtils {
                 return network.getBusbarSection(equipmentId);
             default:
                 return null;
+        }
+    }
+
+    public void setCurrentLimits(CurrentLimitsInfos currentLimitsInfos, CurrentLimitsAdder limitsAdder) {
+        if (currentLimitsInfos != null) {
+            boolean hasPermanent = currentLimitsInfos.getPermanentLimit() != null;
+            boolean hasTemporary = currentLimitsInfos.getTemporaryLimits() != null && !currentLimitsInfos.getTemporaryLimits().isEmpty();
+            if (hasPermanent) {
+                limitsAdder.setPermanentLimit(currentLimitsInfos.getPermanentLimit());
+            }
+            if (hasTemporary) {
+                for (CurrentTemporaryLimitCreationInfos limit : currentLimitsInfos.getTemporaryLimits()) {
+                    limitsAdder
+                            .beginTemporaryLimit()
+                            .setName(limit.getName())
+                            .setValue(limit.getValue() == null ? Double.MAX_VALUE : limit.getValue())
+                            .setAcceptableDuration(limit.getAcceptableDuration() == null ? Integer.MAX_VALUE : limit.getAcceptableDuration())
+                            .endTemporaryLimit();
+                }
+            }
+            if (hasPermanent || hasTemporary) {
+                limitsAdder.add();
+            }
         }
     }
 }

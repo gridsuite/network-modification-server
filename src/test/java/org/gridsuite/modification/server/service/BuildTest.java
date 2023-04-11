@@ -19,10 +19,11 @@ import okhttp3.mockwebserver.Dispatcher;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
-import org.gridsuite.modification.server.NetworkModificationApplication;
-import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.ContextConfigurationWithTestChannel;
 import org.gridsuite.modification.server.TapChangerType;
 import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.server.dto.elasticsearch.EquipmentInfos;
+import org.gridsuite.modification.server.dto.elasticsearch.TombstonedEquipmentInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosRepository;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.elasticsearch.TombstonedEquipmentInfosRepository;
@@ -48,13 +49,10 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.cloud.stream.binder.test.OutputDestination;
-import org.springframework.cloud.stream.binder.test.TestChannelBinderConfiguration;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.messaging.Message;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.ContextHierarchy;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -64,11 +62,13 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static com.powsybl.iidm.network.ReactiveLimitsKind.MIN_MAX;
+import static org.gridsuite.modification.server.Impacts.TestImpactUtils.*;
 import static org.gridsuite.modification.server.service.BuildWorkerService.CANCEL_MESSAGE;
 import static org.gridsuite.modification.server.service.BuildWorkerService.FAIL_MESSAGE;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -79,8 +79,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @RunWith(SpringRunner.class)
 @AutoConfigureMockMvc
-@SpringBootTest(properties = {"test.elasticsearch.enabled=true"})
-@ContextHierarchy({@ContextConfiguration(classes = {NetworkModificationApplication.class, TestChannelBinderConfiguration.class})})
+@SpringBootTest
+@ContextConfigurationWithTestChannel
 public class BuildTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BuildTest.class);
@@ -263,8 +263,14 @@ public class BuildTest {
                 .equipmentName("vl9")
                 .nominalVoltage(225)
                 .substationId("s1")
-                .busbarSections(List.of(new BusbarSectionCreationInfos("1.1", "1.1", 1, 1), new BusbarSectionCreationInfos("1.2", "1.2", 1, 2)))
-                .busbarConnections(List.of(new BusbarConnectionCreationInfos("1.1", "1.2", SwitchKind.BREAKER)))
+                .lowVoltageLimit(0.0)
+                .highVoltageLimit(10.0)
+                .ipMin(0.0)
+                .ipMax(10.0)
+                .busbarCount(2)
+                .sectionCount(2)
+                .switchKinds(Arrays.asList(SwitchKind.BREAKER))
+                .couplingDevices(Arrays.asList(CouplingDeviceInfos.builder().busbarSectionId1("vl9_1_1").busbarSectionId2("vl9_2_1").build()))
                 .build().toEntity());
         modificationRepository.saveModifications(TEST_GROUP_ID_2, entities2);
 
@@ -300,7 +306,8 @@ public class BuildTest {
         resultMessage = output.receive(TIMEOUT, buildResultDestination);
         assertNotNull(resultMessage);
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
-        assertEquals("", new String(resultMessage.getPayload()));
+
+        testEmptyImpacts(mapper, new String(resultMessage.getPayload()));
 
         TestUtils.purgeRequests(server);
     }
@@ -336,7 +343,8 @@ public class BuildTest {
     }
 
     @Test
-    public void runBuildTest() throws Exception {
+    @SneakyThrows
+    public void runBuildTest() {
         // create modification entities in the database
         List<ModificationEntity> entities1 = new ArrayList<>();
         entities1.add(EquipmentAttributeModificationInfos.builder().equipmentId("v1d1").equipmentAttributeName("open").equipmentAttributeValue(true).equipmentType(IdentifiableType.SWITCH).build().toEntity());
@@ -348,7 +356,7 @@ public class BuildTest {
         entities1.add(LoadCreationInfos.builder().equipmentId("newLoad").equipmentName("newLoad").loadType(LoadType.AUXILIARY).voltageLevelId("v1").busOrBusbarSectionId("1.1").activePower(10.).reactivePower(20.).connectionName("vn").connectionDirection(ConnectablePosition.Direction.TOP).build().toEntity());
         entities1.add(LoadCreationInfos.builder().equipmentId("newLoad1").equipmentName("newLoad1").loadType(LoadType.AUXILIARY).voltageLevelId("v1").busOrBusbarSectionId("1.1").activePower(10.).reactivePower(20.).connectionName("cn1").connectionDirection(ConnectablePosition.Direction.BOTTOM).build().toEntity());
         entities1.add(LoadCreationInfos.builder().equipmentId("newLoad2").equipmentName("newLoad2").loadType(LoadType.AUXILIARY).voltageLevelId("v1").busOrBusbarSectionId("1.1").activePower(10.).reactivePower(20.).connectionName("cn2").connectionDirection(ConnectablePosition.Direction.UNDEFINED).build().toEntity());
-        entities1.add(LoadCreationInfos.builder().equipmentId("newLoad2").equipmentName("newLoad2").loadType(LoadType.AUXILIARY).voltageLevelId("v1").busOrBusbarSectionId("1.1").activePower(10.).reactivePower(20.).connectionName(null).connectionDirection(ConnectablePosition.Direction.UNDEFINED).build().toEntity());
+        entities1.add(LoadCreationInfos.builder().equipmentId("newLoad3").equipmentName("newLoad3").loadType(LoadType.AUXILIARY).voltageLevelId("v1").busOrBusbarSectionId("1.1").activePower(10.).reactivePower(20.).connectionName(null).connectionDirection(ConnectablePosition.Direction.UNDEFINED).build().toEntity());
 
         Map<String, String> properties = Map.of("DEMO", "Demo1");
         entities1.add(SubstationCreationInfos.builder()
@@ -395,8 +403,14 @@ public class BuildTest {
                 .equipmentName("vl9")
                 .nominalVoltage(225)
                 .substationId("s1")
-                .busbarSections(List.of(new BusbarSectionCreationInfos("1.10", "name 1.10", 1, 1), new BusbarSectionCreationInfos("1.11", "name 1.11", 1, 2)))
-                .busbarConnections(List.of(new BusbarConnectionCreationInfos("1.10", "1.11", SwitchKind.BREAKER)))
+                .lowVoltageLimit(0.0)
+                .highVoltageLimit(10.0)
+                .ipMin(0.0)
+                .ipMax(10.0)
+                .busbarCount(2)
+                .sectionCount(2)
+                .switchKinds(Arrays.asList(SwitchKind.BREAKER))
+                .couplingDevices(Arrays.asList(CouplingDeviceInfos.builder().busbarSectionId1("vl9_1_1").busbarSectionId2("vl9_2_1").build()))
                 .build().toEntity());
         entities2.add(ShuntCompensatorCreationInfos.builder()
             .equipmentId("shunt9")
@@ -542,7 +556,7 @@ public class BuildTest {
         Message<byte[]> resultMessage = output.receive(TIMEOUT, buildResultDestination);
         assertNotNull(resultMessage);
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
-        assertEquals("newSubstation,s1,s2", new String(resultMessage.getPayload()));
+        testElementImpacts(mapper, new String(resultMessage.getPayload()), 62, Set.of("newSubstation", "s1", "s2"));
 
         // test all modifications have been made on variant VARIANT_ID
         network.getVariantManager().setWorkingVariant(NetworkCreation.VARIANT_ID);
@@ -634,7 +648,7 @@ public class BuildTest {
         resultMessage = output.receive(TIMEOUT, buildResultDestination);
         assertNotNull(resultMessage);
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
-        assertEquals("", new String(resultMessage.getPayload()));
+        testEmptyImpacts(mapper, new String(resultMessage.getPayload()));
 
         List<EquipmentInfos> eqVariant1 = equipmentInfosRepository.findAllByNetworkUuidAndVariantId(TEST_NETWORK_ID, NetworkCreation.VARIANT_ID);
         List<EquipmentInfos> eqVariant2 = equipmentInfosRepository.findAllByNetworkUuidAndVariantId(TEST_NETWORK_ID, VARIANT_ID_2);
@@ -646,6 +660,7 @@ public class BuildTest {
         // v2shunt was deleted from initial variant => v2shunt and the cell switches (breaker and disconnector) have been added as TombstonedEquipmentInfos in ElasticSearch
         assertEquals(3, tbseqVariant1.size());
         assertEquals(tbseqVariant1.size(), tbseqVariant2.size());
+
         // deactivate some modifications and rebuild VARIANT_ID
         network.getVariantManager().cloneVariant(VariantManagerConstants.INITIAL_VARIANT_ID, NetworkCreation.VARIANT_ID, true);
 
@@ -660,7 +675,7 @@ public class BuildTest {
                     lineModificationEntityUuid.set(modificationInfos.getUuid());
                 }
             } else if (modificationInfos.getClass().equals(LoadCreationInfos.class)) {
-                if (((LoadCreationInfos) modificationInfos).getEquipmentId().equals("newLoad")) {
+                if (((LoadCreationInfos) modificationInfos).getEquipmentId().equals("newLoad1")) {
                     loadCreationEntityUuid.set(modificationInfos.getUuid());
                 }
             } else if (modificationInfos.getClass().equals(EquipmentDeletionInfos.class)) {
@@ -682,7 +697,7 @@ public class BuildTest {
         resultMessage = output.receive(TIMEOUT, buildResultDestination);
         assertNotNull(resultMessage);
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
-        assertEquals("newSubstation,s1,s2", new String(resultMessage.getPayload()));
+        testElementImpacts(mapper, new String(resultMessage.getPayload()), 55, Set.of("newSubstation", "s1", "s2"));
 
         // test that only active modifications have been made on variant VARIANT_ID
         network.getVariantManager().setWorkingVariant(NetworkCreation.VARIANT_ID);
@@ -691,7 +706,8 @@ public class BuildTest {
         assertEquals(55., network.getGenerator("idGenerator").getTargetP(), 0.1);
         assertEquals(2, network.getTwoWindingsTransformer("trf1").getRatioTapChanger().getTapPosition());
         assertEquals(0, network.getThreeWindingsTransformer("trf6").getLeg1().getPhaseTapChanger().getTapPosition());
-        assertNull(network.getLoad("newLoad"));
+        assertNotNull(network.getLoad("newLoad"));
+        assertNull(network.getLoad("newLoad1"));
         assertEquals(EnergySource.HYDRO, network.getGenerator(NEW_GENERATOR_ID).getEnergySource());
         assertEquals("v2", network.getGenerator(NEW_GENERATOR_ID).getTerminal().getVoltageLevel().getId());
         assertEquals(500., network.getGenerator(NEW_GENERATOR_ID).getMaxP(), 0.1);
@@ -795,23 +811,20 @@ public class BuildTest {
         String variantId = network.getVariantManager().getWorkingVariantId();
 
         // Building mode : No error send with exception
-        List<ModificationInfos> modificationInfos = networkModificationApplicator.applyModifications(List.of(loadCreationInfos), new NetworkInfos(network, TEST_NETWORK_ID, true), new ReportInfos(reportUuid, reporterId));
-        assertEquals(List.of(), modificationInfos);
+        NetworkModificationResult networkModificationResult = networkModificationApplicator.applyModifications(List.of(loadCreationInfos), new NetworkInfos(network, TEST_NETWORK_ID, true), new ReportInfos(reportUuid, reporterId));
+        assertNotNull(networkModificationResult);
+        testEmptyImpactsWithErrors(mapper, networkModificationResult);
         assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches(String.format("/v1/reports/%s", reportUuid))));
 
-        // Incremental mode : Error send with exception
-        NetworkInfos networkInfos = networkModificationService.getNetworkInfos(TEST_NETWORK_ID, variantId);
-        ReportInfos reportInfos = new ReportInfos(reportUuid, reporterId);
-        assertEquals("VOLTAGE_LEVEL_NOT_FOUND : unknownVoltageLevelId",
-            assertThrows(NetworkModificationException.class,
-                () -> networkModificationService.createNetworkModification(networkInfos, groupUuid, reportInfos, loadCreationInfos)
-            ).getMessage()
-        );
+        // Incremental mode : No error send with exception
+        Optional<NetworkModificationResult> networkModificationResult2 = networkModificationService.createNetworkModification(networkModificationService.getNetworkInfos(TEST_NETWORK_ID, variantId), groupUuid, new ReportInfos(reportUuid, reporterId), loadCreationInfos);
+        assertTrue(networkModificationResult2.isPresent());
+        testEmptyImpactsWithErrors(mapper, networkModificationResult);
         assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches(String.format("/v1/reports/%s", reportUuid))));
         testNetworkModificationsCount(groupUuid, 1);
 
         // Save mode only (variant does not exist) : No log and no error send with exception
-        assertEquals(List.of(), networkModificationService.createNetworkModification(networkModificationService.getNetworkInfos(TEST_NETWORK_ID, UUID.randomUUID().toString()), groupUuid, new ReportInfos(reportUuid, reporterId), loadCreationInfos));
+        assertTrue(networkModificationService.createNetworkModification(networkModificationService.getNetworkInfos(TEST_NETWORK_ID, UUID.randomUUID().toString()), groupUuid, new ReportInfos(reportUuid, reporterId), loadCreationInfos).isEmpty());
         testNetworkModificationsCount(groupUuid, 2);
     }
 

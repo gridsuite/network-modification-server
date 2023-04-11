@@ -11,6 +11,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.TapChangerType;
 import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.server.dto.ModificationInfos;
 
 import javax.persistence.*;
 import java.util.ArrayList;
