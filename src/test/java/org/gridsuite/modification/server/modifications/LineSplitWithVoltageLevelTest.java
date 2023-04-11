@@ -20,12 +20,13 @@ import org.springframework.http.MediaType;
 import java.util.Arrays;
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.BUSBAR_SECTION_NOT_FOUND;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_ALREADY_EXISTS;
 import static org.gridsuite.modification.server.utils.MatcherLineSplitWithVoltageLevelInfos.createMatcherLineSplitWithVoltageLevelInfos;
+import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class LineSplitWithVoltageLevelTest extends AbstractNetworkModificationTest {
@@ -107,19 +108,18 @@ public class LineSplitWithVoltageLevelTest extends AbstractNetworkModificationTe
         tryWithNewLine1Id.setNewLine1Id("line1");
         String tryWithNewLine1IdJson = mapper.writeValueAsString(tryWithNewLine1Id);
         mockMvc.perform(post(getNetworkModificationUri()).content(tryWithNewLine1IdJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpectAll(
-                    status().is4xxClientError(),
-                    content().string(new NetworkModificationException(LINE_ALREADY_EXISTS, "line1").getMessage())
-            );
+                .andExpect(status().isOk());
+        assertLogMessage(new NetworkModificationException(LINE_ALREADY_EXISTS, "line1").getMessage(),
+                tryWithNewLine1Id.getErrorType().name(), reportService);
+
         // same test with "newLine2Id"
         LineSplitWithVoltageLevelInfos tryWithNewLine2Id = (LineSplitWithVoltageLevelInfos) buildModification();
         tryWithNewLine2Id.setNewLine2Id("line1");
         String tryWithNewLine2IdJson = mapper.writeValueAsString(tryWithNewLine2Id);
         mockMvc.perform(post(getNetworkModificationUri()).content(tryWithNewLine2IdJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpectAll(
-                    status().is4xxClientError(),
-                    content().string(new NetworkModificationException(LINE_ALREADY_EXISTS, "line1").getMessage())
-            );
+                .andExpect(status().isOk());
+        assertLogMessage(new NetworkModificationException(LINE_ALREADY_EXISTS, "line1").getMessage(),
+                tryWithNewLine2Id.getErrorType().name(), reportService);
     }
 
     @SneakyThrows
@@ -130,18 +130,17 @@ public class LineSplitWithVoltageLevelTest extends AbstractNetworkModificationTe
         tryWithBadId.setBbsOrBusId("999A");
         String tryWithBadIdJson = mapper.writeValueAsString(tryWithBadId);
         mockMvc.perform(post(getNetworkModificationUri()).content(tryWithBadIdJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpectAll(
-                    status().is4xxClientError(),
-                    content().string(new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "999A").getMessage())
-            );
+                .andExpect(status().isOk());
+        assertLogMessage(new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "999A").getMessage(),
+                tryWithBadId.getErrorType().name(), reportService);
+
         // try with a switch, not a busbar
         LineSplitWithVoltageLevelInfos tryWithSwitchId = (LineSplitWithVoltageLevelInfos) buildModification();
         tryWithSwitchId.setBbsOrBusId("v1d1");
         String tryWithSwitchIdJson = mapper.writeValueAsString(tryWithSwitchId);
         mockMvc.perform(post(getNetworkModificationUri()).content(tryWithSwitchIdJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpectAll(
-                    status().is4xxClientError(),
-                    content().string(new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "v1d1").getMessage())
-            );
+                .andExpect(status().isOk());
+        assertLogMessage(new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "v1d1").getMessage(),
+                tryWithBadId.getErrorType().name(), reportService);
     }
 }
