@@ -71,6 +71,7 @@ public final class NetworkCreation {
         createBusBarSection(v4, "1.A", "1.A", 0);
 
         Substation s3 = createSubstation(network, "s3", "s3", Country.FR);
+        s3.setProperty("tso", "rtefrance");
         VoltageLevel v5 = createVoltageLevel(s3, "v5", "v5", TopologyKind.NODE_BREAKER, 380.0);
         createBusBarSection(v5, "1A1", "1A1", 0);
         createLoad(v5, "v5load", "v5load", 2, 0., 0., "cn5", 5, ConnectablePosition.Direction.TOP);
