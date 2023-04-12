@@ -16,7 +16,6 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @Setter
 @EqualsAndHashCode
-@ToString(callSuper = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Schema(description = "Substation free properties")
 public class SubstationFreePropertyInfos {

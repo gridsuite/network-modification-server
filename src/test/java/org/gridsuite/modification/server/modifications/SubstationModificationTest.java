@@ -11,13 +11,19 @@ import com.powsybl.iidm.network.*;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.utils.MatcherSubstationModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
+import org.junit.Test;
+import lombok.SneakyThrows;
+import org.springframework.http.MediaType;
 
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class SubstationModificationTest extends AbstractNetworkModificationTest {
 
@@ -32,9 +38,10 @@ public class SubstationModificationTest extends AbstractNetworkModificationTest 
             .equipmentId("s3")
             .equipmentName(new AttributeModification<>("newName", OperationType.SET))
             .substationCountry(new AttributeModification<>(Country.BQ, OperationType.SET))
-            .properties(List.of(SubstationFreePropertyInfos.builder().name("p1").value("v1").build(),
-                    SubstationFreePropertyInfos.builder().name("p2").value("v2").build(),
-                    SubstationFreePropertyInfos.builder().name("tso").value("").deletionMark(true).build()))
+            .properties(List.of(SubstationFreePropertyInfos.builder().name("p1").value("v1").build(), // new
+                    SubstationFreePropertyInfos.builder().name("p2").value("v2").build(), // new
+                    SubstationFreePropertyInfos.builder().name("region").value("south").build(), // update
+                    SubstationFreePropertyInfos.builder().name("tso").value("").deletionMark(true).build()))// deletion
             .build();
     }
 
@@ -59,10 +66,11 @@ public class SubstationModificationTest extends AbstractNetworkModificationTest 
         assertNotNull(modifiedStation);
         assertEquals("newName", modifiedStation.getOptionalName().orElse(""));
         assertEquals(Country.BQ, modifiedStation.getCountry().orElse(Country.ZW));
-        // 2 properties added, 'tso' removed
-        assertEquals(Set.of("p1", "p2"), modifiedStation.getPropertyNames());
+        // 2 properties added and 1 updated, 'tso' removed
+        assertEquals(Set.of("p1", "p2", "region"), modifiedStation.getPropertyNames());
         assertEquals("v1", modifiedStation.getProperty("p1", ""));
         assertEquals("v2", modifiedStation.getProperty("p2", ""));
+        assertEquals("south", modifiedStation.getProperty("region", ""));
     }
 
     @Override
@@ -71,25 +79,23 @@ public class SubstationModificationTest extends AbstractNetworkModificationTest 
         assertNotNull(modifiedStation);
         assertEquals("s3", modifiedStation.getOptionalName().orElse(""));
         assertEquals(Country.FR, modifiedStation.getCountry().orElse(Country.ZW));
-        // property 'tso' is back
-        assertEquals(Set.of("tso"), modifiedStation.getPropertyNames());
+        // property 'tso' is back, and region got its origin value
+        assertEquals(Set.of("tso", "region"), modifiedStation.getPropertyNames());
         assertEquals("rtefrance", modifiedStation.getProperty("tso", ""));
+        assertEquals("west", modifiedStation.getProperty("region", ""));
     }
-/*
+
     @SneakyThrows
     @Test
     public void testCreateWithErrors() {
         // Unset an attribute that should not be null
-        LoadModificationInfos loadModificationInfos = LoadModificationInfos.builder()
-                .equipmentId("v1load")
-                .loadType(new AttributeModification<>(null, OperationType.UNSET))
+        SubstationModificationInfos infos = SubstationModificationInfos.builder()
+                .equipmentId("unk")
+                .substationCountry(new AttributeModification<>(Country.JP, OperationType.SET))
                 .build();
-        String loadModificationInfosJson = mapper.writeValueAsString(loadModificationInfos);
-        mockMvc.perform(post(getNetworkModificationUri()).content(loadModificationInfosJson)
-                .contentType(MediaType.APPLICATION_JSON)).andExpectAll(
-                        status().is5xxServerError(),
-                        content().string(
-                                new NetworkModificationException(MODIFY_LOAD_ERROR, "Load 'v1load': load type is null")
-                                        .getMessage()));
-    }*/
+        String infosJson = mapper.writeValueAsString(infos);
+        mockMvc.perform(post(getNetworkModificationUri()).content(infosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        assertLogMessage("SUBSTATION_NOT_FOUND : Substation unk does not exist in network", infos.getErrorType().name(), reportService);
+    }
 }
