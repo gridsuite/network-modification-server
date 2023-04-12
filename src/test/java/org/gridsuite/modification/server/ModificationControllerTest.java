@@ -10,7 +10,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.powsybl.commons.PowsyblException;
-import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.BusbarSectionPositionAdder;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
@@ -31,34 +30,33 @@ import org.gridsuite.modification.server.modifications.ModificationUtils;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.NetworkModificationService;
 import org.gridsuite.modification.server.service.ReportService;
-import org.gridsuite.modification.server.utils.*;
+import org.gridsuite.modification.server.utils.MatcherModificationInfos;
+import org.gridsuite.modification.server.utils.ModificationCreation;
+import org.gridsuite.modification.server.utils.NetworkCreation;
+import org.gridsuite.modification.server.utils.NetworkWithTeePoint;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentMatchers;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.*;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.Impacts.TestImpactUtils.*;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
+import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -105,12 +103,8 @@ public class ModificationControllerTest {
     @Autowired
     private NetworkModificationRepository modificationRepository;
 
-    @Autowired
-    private ReportService reportService;
-
     @MockBean
-    @Qualifier("reportServer")
-    private RestTemplate reportServerRest;
+    private ReportService reportService;
 
     @Autowired
     private NetworkModificationService networkModificationService;
@@ -152,10 +146,6 @@ public class ModificationControllerTest {
         when(networkStoreService.getNetwork(TEST_NETWORK_MIXED_TOPOLOGY_ID)).then((Answer<Network>) invocation -> NetworkCreation.createMixedTopology(TEST_NETWORK_MIXED_TOPOLOGY_ID));
 
         doThrow(new PowsyblException()).when(networkStoreService).flush(argThat(n -> TEST_NETWORK_WITH_FLUSH_ERROR_ID.toString().equals(n.getId())));
-
-        reportService.setReportServerRest(reportServerRest);
-        given(reportServerRest.exchange(eq("/v1/reports/" + TEST_REPORT_ID), eq(HttpMethod.PUT), ArgumentMatchers.any(HttpEntity.class), eq(ReporterModel.class)))
-            .willReturn(new ResponseEntity<>(HttpStatus.OK));
 
         // clean DB
         modificationRepository.deleteAll();
@@ -336,13 +326,15 @@ public class ModificationControllerTest {
                 .andExpect(status().isOk());
         assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
 
-        // apply groovy script with error ont the second
-        groovyScriptInfos.setScript("network.getGenerator('idGenerator').targetP=30\nnetwork.getGenerator('there is no generator').targetP=40\n");
+        // apply groovy script with error on the second
+        groovyScriptInfos.setScript("network.getGenerator('there is no generator').targetP=30\nnetwork.getGenerator('idGenerator').targetP=40\n");
         groovyScriptInfosJson = objectWriter.writeValueAsString(groovyScriptInfos);
-        MvcResult mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(groovyScriptInfosJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isBadRequest()).andReturn();
-        String resultAsString = mvcResult.getResponse().getContentAsString();
-        assertEquals(resultAsString, new NetworkModificationException(GROOVY_SCRIPT_ERROR, "Cannot set property 'targetP' on null object").getMessage());
+        mockMvc.perform(post(URI_NETWORK_MODIF).content(groovyScriptInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        assertNotNull(network.getGenerator("idGenerator"));
+        assertEquals(20, network.getGenerator("idGenerator").getTargetP(), 0.1);
+        assertLogMessage("Technical error: java.lang.NullPointerException: Cannot set property 'targetP' on null object",
+                groovyScriptInfos.getErrorType().name(), reportService);
 
         assertEquals(2, modificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
     }
@@ -872,11 +864,10 @@ public class ModificationControllerTest {
         equipmentDeletionInfos.setEquipmentType(IdentifiableType.VOLTAGE_LEVEL.name());
         equipmentDeletionInfos.setEquipmentId("v4");
         mockMvc.perform(post(URI_NETWORK_MODIF).content(objectWriter.writeValueAsString(equipmentDeletionInfos)).contentType(MediaType.APPLICATION_JSON))
-            .andExpectAll(
-                status().is5xxServerError(),
-                content().string(new NetworkModificationException(DELETE_EQUIPMENT_ERROR,
-                    new PowsyblException(new AssertionError("The voltage level 'v4' cannot be removed because of a remaining LINE"))).getMessage()));
+            .andExpect(status().isOk());
         assertNotNull(network.getVoltageLevel("v4"));
+        assertLogMessage(new PowsyblException(new AssertionError("The voltage level 'v4' cannot be removed because of a remaining LINE")).getMessage(),
+                equipmentDeletionInfos.getErrorType().name(), reportService);
 
         // delete substation
         equipmentDeletionInfos.setEquipmentType(IdentifiableType.SUBSTATION.name());
@@ -895,11 +886,10 @@ public class ModificationControllerTest {
         equipmentDeletionInfos.setEquipmentType(IdentifiableType.SUBSTATION.name());
         equipmentDeletionInfos.setEquipmentId("s2");
         mockMvc.perform(post(URI_NETWORK_MODIF).content(objectWriter.writeValueAsString(equipmentDeletionInfos)).contentType(MediaType.APPLICATION_JSON))
-            .andExpectAll(
-                status().is5xxServerError(),
-                content().string(new NetworkModificationException(DELETE_EQUIPMENT_ERROR,
-                    "The substation s2 is still connected to another substation").getMessage()));
+                .andExpect(status().isOk());
         assertNotNull(network.getSubstation("s2"));
+        assertLogMessage("The substation s2 is still connected to another substation",
+                equipmentDeletionInfos.getErrorType().name(), reportService);
 
         assertTrue(equipmentInfosRepository.findAllByNetworkUuidAndVariantId(TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID).isEmpty());
         assertEquals(55, tombstonedEquipmentInfosRepository.findAllByNetworkUuidAndVariantId(TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID).size());

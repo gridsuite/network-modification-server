@@ -7,7 +7,8 @@
 package org.gridsuite.modification.server.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.*;
+import lombok.Builder;
+import lombok.Data;
 import org.gridsuite.modification.server.impacts.SimpleElementImpact;
 
 import java.util.List;
@@ -23,9 +24,19 @@ import java.util.stream.Collectors;
 @Schema(description = "Network modification result")
 public class NetworkModificationResult {
     public enum ApplicationStatus {
-        ALL_OK,
-        WITH_WARNINGS,
-        WITH_ERRORS
+        ALL_OK(0),
+        WITH_WARNINGS(1),
+        WITH_ERRORS(2);
+
+        private final int severityLevel;
+
+        ApplicationStatus(int severityLevel) {
+            this.severityLevel = severityLevel;
+        }
+
+        public ApplicationStatus max(ApplicationStatus other) {
+            return severityLevel >= other.severityLevel ? this : other;
+        }
     }
 
     @Schema(description = "Application status")
