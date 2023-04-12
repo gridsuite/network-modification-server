@@ -10,12 +10,11 @@ import com.powsybl.iidm.network.Country;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import org.gridsuite.modification.server.dto.AttributeModification;
-import org.gridsuite.modification.server.dto.SubstationModificationInfos;
-import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.dto.OperationType;
+import org.gridsuite.modification.server.dto.*;
 
 import javax.persistence.*;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @NoArgsConstructor
 @Getter
@@ -29,6 +28,11 @@ public class SubstationModificationEntity extends BasicEquipmentModificationEnti
     @Column(name = "substationCountryOp")
     @Enumerated(EnumType.STRING)
     private OperationType substationCountryOp;
+
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "substation_modification_id")
+    @OrderColumn(name = "insert_position")
+    List<SubstationFreePropertyEntity> properties;
 
     public SubstationModificationEntity(@NonNull SubstationModificationInfos substationModificationInfos) {
         super(substationModificationInfos);
@@ -44,6 +48,23 @@ public class SubstationModificationEntity extends BasicEquipmentModificationEnti
     private void assignAttributes(SubstationModificationInfos substationModificationInfos) {
         this.substationCountryValue = substationModificationInfos.getSubstationCountry() != null ? substationModificationInfos.getSubstationCountry().getValue() : null;
         this.substationCountryOp = substationModificationInfos.getSubstationCountry() != null ? substationModificationInfos.getSubstationCountry().getOp() : null;
+        List<SubstationFreePropertyEntity> newProperties = substationModificationInfos.getProperties() == null ? null :
+                substationModificationInfos.getProperties().stream()
+                        .map(prop -> SubstationFreePropertyEntity.builder()
+                                .name(prop.getName())
+                                .value(prop.getValue())
+                                .deletionMark(prop.isDeletionMark())
+                                .build())
+                        .collect(Collectors.toList());
+        if (this.properties != null) {
+            // update using the same reference with clear/add (to avoid JPA exception)
+            this.properties.clear();
+            if (newProperties != null) {
+                this.properties.addAll(newProperties);
+            }
+        } else {
+            this.properties = newProperties;
+        }
     }
 
     @Override
@@ -58,6 +79,15 @@ public class SubstationModificationEntity extends BasicEquipmentModificationEnti
                 .date(getDate())
                 .equipmentId(getEquipmentId())
                 .equipmentName(AttributeModification.toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))
-                .substationCountry(AttributeModification.toAttributeModification(getSubstationCountryValue(), getSubstationCountryOp()));
+                .substationCountry(AttributeModification.toAttributeModification(getSubstationCountryValue(), getSubstationCountryOp()))
+                .properties(getProperties() == null || getProperties().size() == 0 ? null :
+                        getProperties().stream()
+                                .map(prop -> SubstationFreePropertyInfos.builder()
+                                        .name(prop.getName())
+                                        .value(prop.getValue())
+                                        .deletionMark(prop.getDeletionMark())
+                                        .build())
+                                .collect(Collectors.toList())
+                        );
     }
 }
