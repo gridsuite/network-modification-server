@@ -270,15 +270,14 @@ public final class ModificationUtils {
 
         CreateVoltageLevelTopologyBuilder voltageLevelTopologyBuilder = new CreateVoltageLevelTopologyBuilder();
         voltageLevelTopologyBuilder.withVoltageLevelId(voltageLevelCreationInfos.getEquipmentId())
-                .withBusbarCount(voltageLevelCreationInfos.getBusbarCount())
+                .withAlignedBusesOrBusbarCount(voltageLevelCreationInfos.getBusbarCount())
                 .withSectionCount(voltageLevelCreationInfos.getSectionCount())
                 .withSwitchKinds(voltageLevelCreationInfos.getSwitchKinds())
-                .build().apply(network);
 
         voltageLevelCreationInfos.getCouplingDevices().forEach(couplingDevice -> {
             CreateCouplingDeviceBuilder couplingDeviceBuilder = new CreateCouplingDeviceBuilder();
-            couplingDeviceBuilder.withBusbarSectionId1(couplingDevice.getBusbarSectionId1())
-                .withBusbarSectionId2(couplingDevice.getBusbarSectionId2())
+            couplingDeviceBuilder.withBusOrBusbarSectionId1(couplingDevice.getBusbarSectionId1())
+                .withBusOrBusbarSectionId2(couplingDevice.getBusbarSectionId2())
                 .withSwitchPrefixId(voltageLevelCreationInfos.getEquipmentId() + "_COUPL")
                 .build().apply(network);
         });
