@@ -272,7 +272,7 @@ public final class ModificationUtils {
         voltageLevelTopologyBuilder.withVoltageLevelId(voltageLevelCreationInfos.getEquipmentId())
                 .withAlignedBusesOrBusbarCount(voltageLevelCreationInfos.getBusbarCount())
                 .withSectionCount(voltageLevelCreationInfos.getSectionCount())
-                .withSwitchKinds(voltageLevelCreationInfos.getSwitchKinds())
+                .withSwitchKinds(voltageLevelCreationInfos.getSwitchKinds());
 
         voltageLevelCreationInfos.getCouplingDevices().forEach(couplingDevice -> {
             CreateCouplingDeviceBuilder couplingDeviceBuilder = new CreateCouplingDeviceBuilder();
