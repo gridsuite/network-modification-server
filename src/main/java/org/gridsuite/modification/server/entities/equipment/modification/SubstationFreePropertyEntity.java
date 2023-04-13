@@ -18,6 +18,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
+import java.util.UUID;
+
 /**
  * @author David Braquart <david.braquart at rte-france.com>
  */
@@ -29,8 +31,8 @@ import lombok.experimental.SuperBuilder;
 public class SubstationFreePropertyEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name = "id", nullable = false)
-    private Long id;
+    @Column(name = "id")
+    private UUID id;
 
     @Column(name = "name", nullable = false)
     String name;

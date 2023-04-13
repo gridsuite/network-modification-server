@@ -1,11 +1,8 @@
 <?xml version="1.1" encoding="UTF-8" standalone="no"?>
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-4.1.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
-    <changeSet author="braquartdav (generated)" id="1681311257011-7">
-        <createSequence incrementBy="1" sequenceName="hibernate_sequence" startValue="1"/>
-    </changeSet>
-    <changeSet author="braquartdav (generated)" id="1681311257011-8">
+    <changeSet author="braquartdav (generated)" id="1681404412687-5">
         <createTable tableName="substation_free_property">
-            <column autoIncrement="true" name="id" type="BIGINT">
+            <column name="id" type="UUID">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="substation_free_propertyPK"/>
             </column>
             <column name="deletion_mark" type="BOOLEAN"/>
@@ -17,7 +14,7 @@
             <column name="insert_position" type="INT"/>
         </createTable>
     </changeSet>
-    <changeSet author="braquartdav (generated)" id="1681311257011-9">
+    <changeSet author="braquartdav (generated)" id="1681404412687-6">
         <createTable tableName="substation_modification">
             <column name="equipment_id" type="VARCHAR(255)"/>
             <column name="equipment_name_op" type="VARCHAR(255)"/>
@@ -29,10 +26,10 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="braquartdav (generated)" id="1681311257011-10">
+    <changeSet author="braquartdav (generated)" id="1681404412687-7">
         <addForeignKeyConstraint baseColumnNames="substation_modification_id" baseTableName="substation_free_property" constraintName="FKgh3atko9cvvys0hdhf95xpvug" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="substation_modification" validate="true"/>
     </changeSet>
-    <changeSet author="braquartdav (generated)" id="1681311257011-11">
+    <changeSet author="braquartdav (generated)" id="1681404412687-8">
         <addForeignKeyConstraint baseColumnNames="id" baseTableName="substation_modification" constraintName="substationModification_id_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
     </changeSet>
 </databaseChangeLog>

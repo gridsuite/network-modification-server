@@ -10,6 +10,7 @@ import com.powsybl.iidm.network.Country;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import org.springframework.util.CollectionUtils;
 import org.gridsuite.modification.server.dto.*;
 
 import javax.persistence.*;
@@ -80,7 +81,7 @@ public class SubstationModificationEntity extends BasicEquipmentModificationEnti
                 .equipmentId(getEquipmentId())
                 .equipmentName(AttributeModification.toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))
                 .substationCountry(AttributeModification.toAttributeModification(getSubstationCountryValue(), getSubstationCountryOp()))
-                .properties(getProperties() == null || getProperties().size() == 0 ? null :
+                .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
                                 .map(prop -> SubstationFreePropertyInfos.builder()
                                         .name(prop.getName())

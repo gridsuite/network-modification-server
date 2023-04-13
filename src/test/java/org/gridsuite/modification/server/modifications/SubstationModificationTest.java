@@ -25,6 +25,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+/**
+ * @author David Braquart <david.braquart at rte-france.com>
+ */
 public class SubstationModificationTest extends AbstractNetworkModificationTest {
 
     @Override
@@ -57,7 +60,7 @@ public class SubstationModificationTest extends AbstractNetworkModificationTest 
 
     @Override
     protected MatcherSubstationModificationInfos createMatcher(ModificationInfos modificationInfos) {
-        return MatcherSubstationModificationInfos.createMatcherLoadModificationInfos((SubstationModificationInfos) modificationInfos);
+        return MatcherSubstationModificationInfos.createMatcherSubstationModificationInfos((SubstationModificationInfos) modificationInfos);
     }
 
     @Override
@@ -88,14 +91,14 @@ public class SubstationModificationTest extends AbstractNetworkModificationTest 
     @SneakyThrows
     @Test
     public void testCreateWithErrors() {
-        // Unset an attribute that should not be null
+        // Try to modify an unknown substation
         SubstationModificationInfos infos = SubstationModificationInfos.builder()
-                .equipmentId("unk")
+                .equipmentId("unknown")
                 .substationCountry(new AttributeModification<>(Country.JP, OperationType.SET))
                 .build();
         String infosJson = mapper.writeValueAsString(infos);
         mockMvc.perform(post(getNetworkModificationUri()).content(infosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage("SUBSTATION_NOT_FOUND : Substation unk does not exist in network", infos.getErrorType().name(), reportService);
+        assertLogMessage("SUBSTATION_NOT_FOUND : Substation unknown does not exist in network", infos.getErrorType().name(), reportService);
     }
 }

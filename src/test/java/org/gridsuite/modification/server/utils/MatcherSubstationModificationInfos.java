@@ -18,7 +18,7 @@ import java.util.Objects;
  */
 public class MatcherSubstationModificationInfos extends MatcherModificationInfos<SubstationModificationInfos> {
 
-    public static MatcherSubstationModificationInfos createMatcherLoadModificationInfos(SubstationModificationInfos infos) {
+    public static MatcherSubstationModificationInfos createMatcherSubstationModificationInfos(SubstationModificationInfos infos) {
         return new MatcherSubstationModificationInfos(infos);
     }
 

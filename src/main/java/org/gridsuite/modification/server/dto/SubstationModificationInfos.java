@@ -24,6 +24,9 @@ import org.gridsuite.modification.server.modifications.SubstationModification;
 
 import java.util.List;
 
+/**
+ * @author David Braquart <david.braquart at rte-france.com>
+ */
 @SuperBuilder
 @NoArgsConstructor
 @Getter
