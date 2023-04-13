@@ -122,7 +122,6 @@ public class GeneratorCreation extends AbstractModification {
     }
 
     private void addExtensionsToGenerator(GeneratorCreationInfos generatorCreationInfos, Generator generator, VoltageLevel voltageLevel, Reporter subReporter) {
-        List<Report> reports = new ArrayList<>();
         if (generatorCreationInfos.getEquipmentName() != null) {
             ModificationUtils.getInstance().applyElementaryCreation(subReporter, generatorCreationInfos.getEquipmentName(), "Name");
         }
@@ -131,7 +130,7 @@ public class GeneratorCreation extends AbstractModification {
         }
         createGeneratorConnectionAttributes(generatorCreationInfos, subReporter);
         createGeneratorActiveLimitsAttributes(generatorCreationInfos, subReporter);
-        createGeneratorLimitsAttributes(generatorCreationInfos, generator, subReporter, reports);
+        createGeneratorLimitsAttributes(generatorCreationInfos, generator, subReporter);
         createGeneratorVoltageRegulationAndTerminalAttributes(generatorCreationInfos, generator, voltageLevel, subReporter);
         createGeneratorActivePowerAttributes(generatorCreationInfos, generator, subReporter);
         createGeneratorSetPointsAttributes(generatorCreationInfos, subReporter);
@@ -186,9 +185,9 @@ public class GeneratorCreation extends AbstractModification {
         }
     }
 
-    private void createGeneratorLimitsAttributes(GeneratorCreationInfos generatorCreationInfos, Generator generator, Reporter subReporter, List<Report> reports) {
+    private void createGeneratorLimitsAttributes(GeneratorCreationInfos generatorCreationInfos, Generator generator, Reporter subReporter) {
         if (Boolean.TRUE.equals(generatorCreationInfos.getReactiveCapabilityCurve())) {
-            createReactiveCapabilityCuvreAttributes(generatorCreationInfos, generator, subReporter, reports);
+            createReactiveCapabilityCuvreAttributes(generatorCreationInfos, generator, subReporter);
         } else if (Boolean.FALSE.equals(generatorCreationInfos.getReactiveCapabilityCurve())) {
             createMinMaxReactiveLimitsAttributes(generatorCreationInfos, generator, subReporter);
         }
@@ -225,7 +224,7 @@ public class GeneratorCreation extends AbstractModification {
         }
     }
 
-    private void createReactiveCapabilityCuvreAttributes(GeneratorCreationInfos generatorCreationInfos, Generator generator, Reporter subReporter, List<Report> reports) {
+    private void createReactiveCapabilityCuvreAttributes(GeneratorCreationInfos generatorCreationInfos, Generator generator, Reporter subReporter) {
         List<Report> pointsReports = new ArrayList<>();
         ReactiveCapabilityCurveAdder adder = generator.newReactiveCapabilityCurve();
         List<ReactiveCapabilityCurveCreationInfos> points = generatorCreationInfos.getReactiveCapabilityCurvePoints();
@@ -327,24 +326,23 @@ public class GeneratorCreation extends AbstractModification {
     }
 
     private void createGeneratorConnectionAttributes(GeneratorCreationInfos generatorCreationInfos, Reporter subReporter) {
-        if (generatorCreationInfos.getVoltageLevelId() != null && generatorCreationInfos.getBusOrBusbarSectionId() != null) {
-            if (generatorCreationInfos.getConnectionName() != null || generatorCreationInfos.getConnectionDirection() != null ||
-                    generatorCreationInfos.getConnectionPosition() != null) {
-                List<Report> connectionReports = new ArrayList<>();
-                if (generatorCreationInfos.getConnectionName() != null) {
-                    connectionReports.add(ModificationUtils.getInstance().buildCreationReport(
-                            generatorCreationInfos.getConnectionName(), "Name"));
-                }
-                if (generatorCreationInfos.getConnectionDirection() != null) {
-                    connectionReports.add(ModificationUtils.getInstance().buildCreationReport(
-                            generatorCreationInfos.getConnectionDirection(), "Direction"));
-                }
-                if (generatorCreationInfos.getConnectionPosition() != null) {
-                    connectionReports.add(ModificationUtils.getInstance().buildCreationReport(
-                            generatorCreationInfos.getConnectionPosition(), "Position"));
-                }
-                ModificationUtils.getInstance().reportModifications(subReporter, connectionReports, "ConnectionCreated", CONNECTION);
+        if ((generatorCreationInfos.getVoltageLevelId() != null && generatorCreationInfos.getBusOrBusbarSectionId() != null)
+            && (generatorCreationInfos.getConnectionName() != null || generatorCreationInfos.getConnectionDirection() != null ||
+                generatorCreationInfos.getConnectionPosition() != null)) {
+            List<Report> connectionReports = new ArrayList<>();
+            if (generatorCreationInfos.getConnectionName() != null) {
+                connectionReports.add(ModificationUtils.getInstance()
+                        .buildCreationReport(generatorCreationInfos.getConnectionName(), "Name"));
             }
+            if (generatorCreationInfos.getConnectionDirection() != null) {
+                connectionReports.add(ModificationUtils.getInstance()
+                        .buildCreationReport(generatorCreationInfos.getConnectionDirection(), "Direction"));
+            }
+            if (generatorCreationInfos.getConnectionPosition() != null) {
+                connectionReports.add(ModificationUtils.getInstance()
+                        .buildCreationReport(generatorCreationInfos.getConnectionPosition(), "Position"));
+            }
+            ModificationUtils.getInstance().reportModifications(subReporter, connectionReports, "ConnectionCreated", CONNECTION);
         }
     }
 
