@@ -187,7 +187,7 @@ public class GeneratorCreation extends AbstractModification {
 
     private void createGeneratorLimitsAttributes(GeneratorCreationInfos generatorCreationInfos, Generator generator, Reporter subReporter) {
         if (Boolean.TRUE.equals(generatorCreationInfos.getReactiveCapabilityCurve())) {
-            createReactiveCapabilityCuvreAttributes(generatorCreationInfos, generator, subReporter);
+            createReactiveCapabilityCurveAttributes(generatorCreationInfos, generator, subReporter);
         } else if (Boolean.FALSE.equals(generatorCreationInfos.getReactiveCapabilityCurve())) {
             createMinMaxReactiveLimitsAttributes(generatorCreationInfos, generator, subReporter);
         }
@@ -224,7 +224,7 @@ public class GeneratorCreation extends AbstractModification {
         }
     }
 
-    private void createReactiveCapabilityCuvreAttributes(GeneratorCreationInfos generatorCreationInfos, Generator generator, Reporter subReporter) {
+    private void createReactiveCapabilityCurveAttributes(GeneratorCreationInfos generatorCreationInfos, Generator generator, Reporter subReporter) {
         List<Report> pointsReports = new ArrayList<>();
         ReactiveCapabilityCurveAdder adder = generator.newReactiveCapabilityCurve();
         List<ReactiveCapabilityCurveCreationInfos> points = generatorCreationInfos.getReactiveCapabilityCurvePoints();
@@ -297,7 +297,7 @@ public class GeneratorCreation extends AbstractModification {
                             generatorCreationInfos.getQPercent(), "Reactive percentage"));
                 } catch (PowsyblException e) {
                     subReporter.report(Report.builder()
-                            .withKey("TerminalNotFoundError")
+                            .withKey("ReactivePercentageError")
                             .withDefaultMessage("cannot add Coordinated reactive extension on generator with id=${id} :" + e.getMessage())
                             .withValue("id", generatorCreationInfos.getEquipmentId())
                             .withSeverity(TypedValue.ERROR_SEVERITY)

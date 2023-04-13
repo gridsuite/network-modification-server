@@ -140,4 +140,16 @@ public class GeneratorCreationInBusBreakerTest extends AbstractNetworkModificati
         assertLogMessage(new NetworkModificationException(BUS_NOT_FOUND, "notFoundBus").getMessage(),
                 generatorCreationInfos.getErrorType().name(), reportService);
     }
+
+    @SneakyThrows
+    @Test
+    public void testCreateGeneratorTerminalAttributes() {
+        GeneratorCreationInfos generatorCreationInfos = (GeneratorCreationInfos) buildModification();
+        generatorCreationInfos.setVoltageRegulationOn(true);
+        generatorCreationInfos.setRegulatingTerminalType(null);
+        mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(generatorCreationInfos)).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        assertLogMessage("cannot found terminal from identifiable voltage level v1 on generator with id=idGenerator2 :",
+                "TerminalNotFoundError", reportService);
+    }
 }
