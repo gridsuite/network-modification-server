@@ -503,5 +503,20 @@ public final class ModificationUtils {
             }
         }
     }
+
+    public <T> Report buildCreationReport(T value, String fieldName) {
+        String newValueString = value == null ? "NaN" : value.toString();
+        return Report.builder()
+                .withKey("Creation" + fieldName)
+                .withDefaultMessage("    ${fieldName} : ${value}")
+                .withValue("fieldName", fieldName)
+                .withValue("value", newValueString)
+                .withSeverity(TypedValue.INFO_SEVERITY)
+                .build();
+    }
+
+    public <T> void applyElementaryCreation(Reporter subReporter, T value, String fieldName) {
+        subReporter.report(buildCreationReport(value, fieldName));
+    }
 }
 
