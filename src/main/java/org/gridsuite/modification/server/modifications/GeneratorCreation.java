@@ -7,8 +7,6 @@
 package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.commons.PowsyblException;
-import com.powsybl.iidm.network.*;
-import com.powsybl.iidm.network.extensions.*;
 import org.gridsuite.modification.server.NetworkModificationException;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.modifications.ModificationUtils.nanIfNull;
@@ -20,6 +18,16 @@ import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.iidm.modification.topology.CreateFeederBay;
 import com.powsybl.iidm.modification.topology.CreateFeederBayBuilder;
+import com.powsybl.iidm.network.Bus;
+import com.powsybl.iidm.network.Generator;
+import com.powsybl.iidm.network.GeneratorAdder;
+import com.powsybl.iidm.network.Network;
+import com.powsybl.iidm.network.ReactiveCapabilityCurveAdder;
+import com.powsybl.iidm.network.Terminal;
+import com.powsybl.iidm.network.TopologyKind;
+import com.powsybl.iidm.network.VoltageLevel;
+import com.powsybl.iidm.network.extensions.ActivePowerControlAdder;
+import com.powsybl.iidm.network.extensions.GeneratorShortCircuitAdder;
 import com.powsybl.network.store.iidm.impl.extensions.CoordinatedReactiveControlAdderImpl;
 import com.powsybl.network.store.iidm.impl.extensions.GeneratorStartupAdderImpl;
 import org.gridsuite.modification.server.dto.ReactiveCapabilityCurveCreationInfos;
@@ -170,7 +178,6 @@ public class GeneratorCreation extends AbstractModification {
         addToReports(reports, point.getP(), "P" + fieldSuffix);
         addToReports(reports, point.getQminP(), "QminP" + fieldSuffix);
         addToReports(reports, point.getQmaxP(), "QmaxP" + fieldSuffix);
-
     }
 
     private void addToReports(List<Report> reports, Double newValue, String fieldName) {
