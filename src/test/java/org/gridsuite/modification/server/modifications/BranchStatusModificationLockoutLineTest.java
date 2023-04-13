@@ -24,6 +24,8 @@ import static com.powsybl.iidm.network.extensions.BranchStatus.Status.FORCED_OUT
 import static com.powsybl.iidm.network.extensions.BranchStatus.Status.PLANNED_OUTAGE;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.utils.MatcherBranchStatusModificationInfos.createMatcherBranchStatusModificationInfos;
+import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -81,10 +83,10 @@ public class BranchStatusModificationLockoutLineTest extends AbstractNetworkModi
         modificationInfos.setEquipmentId("notFound");
         String modificationJson = mapper.writeValueAsString(modificationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpectAll(
-                    status().isNotFound(),
-                    content().string(new NetworkModificationException(BRANCH_NOT_FOUND, "notFound").getMessage())
-            );
+            .andExpect(status().isOk());
+        assertNull(getNetwork().getLine("notFound"));
+        assertLogMessage(new NetworkModificationException(BRANCH_NOT_FOUND, "notFound").getMessage(),
+                modificationInfos.getErrorType().name(), reportService);
 
         // modification action empty
         modificationInfos.setEquipmentId("line2");
@@ -107,9 +109,10 @@ public class BranchStatusModificationLockoutLineTest extends AbstractNetworkModi
         modificationInfos.setAction(BranchStatusModificationInfos.ActionType.LOCKOUT);
         modificationJson = mapper.writeValueAsString(modificationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpectAll(
-                    status().is5xxServerError(),
-                    content().string(new NetworkModificationException(BRANCH_ACTION_ERROR, "Unable to disconnect all branch ends").getMessage())
-            );
+                .andExpect(status().isOk());
+        assertNull(getNetwork().getLine("line3").getExtension(BranchStatus.class));
+        assertLogMessage(new NetworkModificationException(BRANCH_ACTION_ERROR, "Unable to disconnect all branch ends").getMessage(),
+                modificationInfos.getErrorType().name(), reportService);
+
     }
 }

@@ -25,10 +25,10 @@ import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_NOT_FOUND;
 import static org.gridsuite.modification.server.utils.MatcherLineSplitWithVoltageLevelInfos.createMatcherLineSplitWithVoltageLevelInfos;
+import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class LineSplitWithNewVoltageLevelTest extends AbstractNetworkModificationTest {
@@ -40,10 +40,9 @@ public class LineSplitWithNewVoltageLevelTest extends AbstractNetworkModificatio
         lineSplitAbsentLine.setLineToSplitId("absent_line_id");
         String lineSplitAbsentLineJson = mapper.writeValueAsString(lineSplitAbsentLine);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineSplitAbsentLineJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpectAll(
-                status().is4xxClientError(),
-                content().string(new NetworkModificationException(LINE_NOT_FOUND, "absent_line_id").getMessage())
-            );
+                .andExpect(status().isOk());
+        assertLogMessage(new NetworkModificationException(LINE_NOT_FOUND, "absent_line_id").getMessage(),
+                lineSplitAbsentLine.getErrorType().name(), reportService);
         testNetworkModificationsCount(getGroupId(), 1);
     }
 
