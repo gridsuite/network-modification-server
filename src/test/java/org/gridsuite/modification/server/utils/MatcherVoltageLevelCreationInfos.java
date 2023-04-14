@@ -9,9 +9,10 @@ package org.gridsuite.modification.server.utils;
 import java.util.List;
 import java.util.Objects;
 
-import org.gridsuite.modification.server.dto.BusbarConnectionCreationInfos;
-import org.gridsuite.modification.server.dto.BusbarSectionCreationInfos;
+import org.gridsuite.modification.server.dto.CouplingDeviceInfos;
 import org.gridsuite.modification.server.dto.VoltageLevelCreationInfos;
+
+import com.powsybl.iidm.network.SwitchKind;
 
 /**
  * @author Laurent GARNIER <laurent.garnier at rte-france.com>
@@ -29,23 +30,23 @@ public class MatcherVoltageLevelCreationInfos extends MatcherEquipmentModificati
         return super.matchesSafely(m)
             && Math.abs(reference.getNominalVoltage() - m.getNominalVoltage()) < 0.2
             && Objects.equals(reference.getSubstationId(), m.getSubstationId())
-            && matchesBusbarSections(m.getBusbarSections())
-            && matchesBusbarConnections(m.getBusbarConnections());
+            && matchesCouplingDevices(m.getCouplingDevices())
+            && matchesSwitchKinds(m.getSwitchKinds());
     }
 
-    private boolean matchesBusbarSections(List<BusbarSectionCreationInfos> bbsis) {
-        if ((bbsis == null) != (reference.getBusbarSections() == null)) {
+    private boolean matchesSwitchKinds(List<SwitchKind> switchKinds) {
+        if ((switchKinds == null) != (reference.getSwitchKinds() == null)) {
             return false;
         }
-        if (bbsis == null) {
+        if (switchKinds == null) {
             return true;
         }
-        if (bbsis.size() != reference.getBusbarSections().size()) {
+        if (switchKinds.size() != reference.getSwitchKinds().size()) {
             return false;
         }
 
-        for (int i = 0; i < bbsis.size(); i++) {
-            if (!matches(reference.getBusbarSections().get(i), bbsis.get(i))) {
+        for (int i = 0; i < switchKinds.size(); i++) {
+            if (!Objects.equals(reference.getSwitchKinds().get(i), switchKinds.get(i))) {
                 return false;
             }
         }
@@ -53,32 +54,19 @@ public class MatcherVoltageLevelCreationInfos extends MatcherEquipmentModificati
         return true;
     }
 
-    private static boolean matches(BusbarSectionCreationInfos a, BusbarSectionCreationInfos b) {
-        if ((a == null) != (b == null)) {
+    private boolean matchesCouplingDevices(List<CouplingDeviceInfos> couplingDevices) {
+        if ((couplingDevices == null) != (reference.getCouplingDevices() == null)) {
             return false;
         }
-        if (a == null) {
+        if (couplingDevices == null) {
             return true;
         }
-        return Objects.equals(a.getId(), b.getId())
-            && Objects.equals(a.getName(), b.getName())
-            && a.getVertPos() == b.getVertPos()
-            && a.getHorizPos() == b.getHorizPos();
-    }
-
-    private boolean matchesBusbarConnections(List<BusbarConnectionCreationInfos> cnxis) {
-        if ((cnxis == null) != (reference.getBusbarConnections() == null)) {
-            return false;
-        }
-        if (cnxis == null) {
-            return true;
-        }
-        if (cnxis.size() != reference.getBusbarConnections().size()) {
+        if (couplingDevices.size() != reference.getCouplingDevices().size()) {
             return false;
         }
 
-        for (int i = 0; i < cnxis.size(); i++) {
-            if (!matches(reference.getBusbarConnections().get(i), cnxis.get(i))) {
+        for (int i = 0; i < couplingDevices.size(); i++) {
+            if (!matches(reference.getCouplingDevices().get(i), couplingDevices.get(i))) {
                 return false;
             }
         }
@@ -86,15 +74,14 @@ public class MatcherVoltageLevelCreationInfos extends MatcherEquipmentModificati
         return true;
     }
 
-    private static boolean matches(BusbarConnectionCreationInfos a, BusbarConnectionCreationInfos b) {
+    private static boolean matches(CouplingDeviceInfos a, CouplingDeviceInfos b) {
         if ((a == null) != (b == null)) {
             return false;
         }
         if (a == null) {
             return true;
         }
-        return Objects.equals(a.getFromBBS(), b.getFromBBS())
-            && Objects.equals(a.getToBBS(), b.getToBBS())
-            && a.getSwitchKind() == b.getSwitchKind();
+        return Objects.equals(a.getBusbarSectionId1(), b.getBusbarSectionId1())
+            && Objects.equals(a.getBusbarSectionId2(), b.getBusbarSectionId2());
     }
 }

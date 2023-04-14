@@ -11,25 +11,30 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.google.common.io.ByteStreams;
 import com.powsybl.commons.exceptions.UncheckedInterruptedException;
+import com.powsybl.commons.reporter.Report;
+import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.iidm.network.Branch;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.BranchStatus;
 import com.powsybl.iidm.network.extensions.BranchStatusAdder;
 import okhttp3.mockwebserver.MockWebServer;
+import org.apache.commons.text.StringSubstitutor;
+import org.gridsuite.modification.server.service.ReportService;
 import org.junit.platform.commons.util.StringUtils;
+import org.mockito.ArgumentCaptor;
 import org.springframework.cloud.stream.binder.test.OutputDestination;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static com.vladmihalcea.sql.SQLStatementCountValidator.*;
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -108,8 +113,41 @@ public final class TestUtils {
     }
 
     public static String resourceToString(String resource) throws IOException {
-        String content = new String(ByteStreams.toByteArray(TestUtils.class.getResourceAsStream(resource)), StandardCharsets.UTF_8);
+        InputStream inputStream = Objects.requireNonNull(TestUtils.class.getResourceAsStream(resource));
+        String content = new String(ByteStreams.toByteArray(inputStream), StandardCharsets.UTF_8);
         return StringUtils.replaceWhitespaceCharacters(content, "");
+    }
+
+    public static void assertLogMessage(String expectedMessage, String reportKey, ReportService reportService) {
+        ArgumentCaptor<ReporterModel> reporterCaptor = ArgumentCaptor.forClass(ReporterModel.class);
+        verify(reportService, atLeast(1)).sendReport(any(UUID.class), reporterCaptor.capture());
+        assertNotNull(reporterCaptor.getValue());
+        Optional<String> message = getMessageFromReporter(reportKey, reporterCaptor.getValue());
+        assertTrue(message.isPresent());
+        assertEquals(expectedMessage, message.get());
+    }
+
+    private static Optional<String> getMessageFromReporter(String reportKey, ReporterModel reporterModel) {
+        Optional<String> message = Optional.empty();
+
+        Iterator<Report> reportsIterator = reporterModel.getReports().iterator();
+        while (message.isEmpty() && reportsIterator.hasNext()) {
+            Report report = reportsIterator.next();
+            if (report.getReportKey().equals(reportKey)) {
+                message = Optional.of(formatReportMessage(report, reporterModel));
+            }
+        }
+
+        Iterator<ReporterModel> reportersIterator = reporterModel.getSubReporters().iterator();
+        while (message.isEmpty() && reportersIterator.hasNext()) {
+            message = getMessageFromReporter(reportKey, reportersIterator.next());
+        }
+
+        return message;
+    }
+
+    private static String formatReportMessage(Report report, ReporterModel reporterModel) {
+        return new StringSubstitutor(reporterModel.getTaskValues()).replace(new StringSubstitutor(report.getValues()).replace(report.getDefaultMessage()));
     }
 
     public static void assertWiremockServerRequestsEmptyThenShutdown(WireMockServer wireMockServer) throws UncheckedInterruptedException, IOException {

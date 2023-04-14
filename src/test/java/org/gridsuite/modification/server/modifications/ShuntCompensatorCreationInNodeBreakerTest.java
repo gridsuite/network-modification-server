@@ -22,13 +22,13 @@ import org.springframework.http.MediaType;
 import java.time.ZonedDateTime;
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.SHUNT_COMPENSATOR_ALREADY_EXISTS;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.CONNECTION_POSITION_ERROR;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.SHUNT_COMPENSATOR_ALREADY_EXISTS;
+import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
@@ -98,15 +98,17 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
         modificationToCreate.setMaximumNumberOfSections(2);
         String modificationToCreateJson = mapper.writeValueAsString(modificationToCreate);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().is5xxServerError());
+                .andExpect(status().isOk());
+        assertNull(getNetwork().getShuntCompensator(modificationToCreate.getEquipmentId()));
 
         // try to create an existing equipment
         modificationToCreate.setEquipmentId("v5shunt");
+        assertNotNull(getNetwork().getShuntCompensator("v5shunt"));
         modificationToCreateJson = mapper.writeValueAsString(modificationToCreate);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpectAll(
-                        status().is4xxClientError(),
-                        content().string(new NetworkModificationException(SHUNT_COMPENSATOR_ALREADY_EXISTS, "v5shunt").getMessage()));
+                .andExpect(status().isOk());
+        assertLogMessage(new NetworkModificationException(SHUNT_COMPENSATOR_ALREADY_EXISTS, "v5shunt").getMessage(),
+                modificationToCreate.getErrorType().name(), reportService);
     }
 
     @SneakyThrows
@@ -116,9 +118,9 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
         dto.setConnectionPosition(2);
         String modificationToCreateJson = mapper.writeValueAsString(dto);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpectAll(
-                    status().is4xxClientError(),
-                    content().string(new NetworkModificationException(CONNECTION_POSITION_ERROR, "PositionOrder '2' already taken").getMessage()));
+                .andExpect(status().isOk());
+        assertLogMessage(new NetworkModificationException(CONNECTION_POSITION_ERROR, "PositionOrder '2' already taken").getMessage(),
+                dto.getErrorType().name(), reportService);
     }
 
     @SneakyThrows

@@ -34,12 +34,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_GROUP_NOT_FOUND;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_NOT_FOUND;
@@ -719,22 +718,19 @@ public class ModificationRepositoryTest {
 
     @Test
     public void testVoltageLevelCreation() {
-        List<BusbarSectionCreationInfos> bbses = new ArrayList<>();
-        Stream.iterate(1, n -> n + 1).limit(3 + 1).forEach(i -> bbses.add(new BusbarSectionCreationInfos("bbs" + i, "NW", 1 + i, 1)));
-
-        List<BusbarConnectionCreationInfos> cnxes = new ArrayList<>();
-        Stream.iterate(0, n -> n + 1).limit(3).forEach(i -> {
-            cnxes.add(new BusbarConnectionCreationInfos("bbs.nw", "bbs.ne", SwitchKind.BREAKER));
-            cnxes.add(new BusbarConnectionCreationInfos("bbs.nw", "bbs.ne", SwitchKind.DISCONNECTOR));
-        });
-
         VoltageLevelCreationEntity createVoltLvlEntity1 = VoltageLevelCreationInfos.builder()
                 .equipmentId("idVL1")
                 .equipmentName("VLName")
-                .nominalVoltage(379.0)
                 .substationId("s1")
-                .busbarSections(bbses)
-                .busbarConnections(cnxes)
+                .nominalVoltage(379.0)
+                .lowVoltageLimit(0.0)
+                .highVoltageLimit(10.0)
+                .ipMin(0.0)
+                .ipMax(10.0)
+                .busbarCount(2)
+                .sectionCount(2)
+                .switchKinds(Arrays.asList(SwitchKind.BREAKER))
+                .couplingDevices(Arrays.asList(CouplingDeviceInfos.builder().busbarSectionId1("bbs.nw").busbarSectionId2("bbs.ne").build()))
                 .build().toEntity();
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(createVoltLvlEntity1));
@@ -746,7 +742,7 @@ public class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(createVoltLvlEntity1.getId()));
-        assertRequestsCount(2, 0, 0, 4);
+        assertRequestsCount(3, 0, 0, 4);
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
@@ -757,30 +753,19 @@ public class ModificationRepositoryTest {
         );
     }
 
-    private VoltageLevelCreationInfos makeAVoltageLevelInfos(int nbBBSs, int nbCnxs) {
-        List<BusbarSectionCreationInfos> bbses;
-        if (nbBBSs < 0) {
-            bbses = null;
-        } else {
-            bbses = new ArrayList<>();
-            Stream.iterate(1, n -> n + 1).limit(nbBBSs + 1).forEach(i -> bbses.add(new BusbarSectionCreationInfos("bbs" + i, "NW", 1 + i, 1)));
-        }
-
-        List<BusbarConnectionCreationInfos> cnxes;
-        if (nbCnxs < 0) {
-            cnxes = null;
-        } else {
-            cnxes = new ArrayList<>();
-            Stream.iterate(0, n -> n + 1).limit(nbBBSs).forEach(i -> {
-                cnxes.add(new BusbarConnectionCreationInfos("bbs.nw", "bbs.ne", SwitchKind.BREAKER));
-                cnxes.add(new BusbarConnectionCreationInfos("bbs.nw", "bbs.ne", SwitchKind.DISCONNECTOR));
-            });
-        }
+    private VoltageLevelCreationInfos makeAVoltageLevelInfos() {
 
         VoltageLevelCreationInfos createVoltLvlEntity1 = VoltageLevelCreationInfos.builder()
-            .substationId("s1").nominalVoltage(379.0).equipmentId("idVL1").equipmentName("VLName")
-            .busbarSections(bbses).busbarConnections(cnxes)
-            .build();
+                .substationId("s1").nominalVoltage(379.0).equipmentId("idVL1").equipmentName("VLName")
+                .lowVoltageLimit(0.0)
+                .highVoltageLimit(10.0)
+                .ipMin(0.0)
+                .ipMax(10.0)
+                .busbarCount(2)
+                .sectionCount(2)
+                .switchKinds(Arrays.asList(SwitchKind.BREAKER))
+                .couplingDevices(Arrays.asList(CouplingDeviceInfos.builder().busbarSectionId1("bbs.nw").busbarSectionId2("bbs.ne").build()))
+                .build();
 
         return createVoltLvlEntity1;
     }
@@ -834,7 +819,7 @@ public class ModificationRepositoryTest {
             .newLine2Id("line2Id")
             .newLine2Name("line2Name")
             .build().toEntity();
-        VoltageLevelCreationInfos voltageLevelCreationInfos = makeAVoltageLevelInfos(1, 0);
+        VoltageLevelCreationInfos voltageLevelCreationInfos = makeAVoltageLevelInfos();
         LineSplitWithVoltageLevelEntity lineSplitEntity2 = LineSplitWithVoltageLevelInfos.builder()
             .lineToSplitId("lineId1")
             .percent(30.0)
@@ -864,7 +849,7 @@ public class ModificationRepositoryTest {
         networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(lineSplitEntity1.getId(),
                 voltageLevelCreationEntity.getId(),
                 lineSplitEntity2.getId()));
-        assertRequestsCount(3, 0, 0, 12);
+        assertRequestsCount(4, 0, 0, 12);
 
         modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
         assertEquals(0, modificationInfos.size());
@@ -899,7 +884,7 @@ public class ModificationRepositoryTest {
                 .newLine2Id("line2Id")
                 .newLine2Name("line2Name")
                 .build().toEntity();
-        VoltageLevelCreationInfos voltageLevelCreationInfos = makeAVoltageLevelInfos(1, 0);
+        VoltageLevelCreationInfos voltageLevelCreationInfos = makeAVoltageLevelInfos();
         LineAttachToVoltageLevelEntity lineAttachToEntity2 = LineAttachToVoltageLevelInfos.builder()
                 .lineToAttachToId("lineId1")
                 .percent(40.0)
@@ -930,7 +915,7 @@ public class ModificationRepositoryTest {
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(lineAttachToEntity1.getId(),
                 lineAttachToEntity2.getId()));
-        assertRequestsCount(2, 0, 0, 12);
+        assertRequestsCount(3, 0, 0, 12);
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
