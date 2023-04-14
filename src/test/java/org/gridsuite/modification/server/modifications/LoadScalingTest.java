@@ -100,7 +100,7 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
     public static final String LOAD_WRONG_ID_2 = "wrongId2";
     public static final String PATH = "/v1/filters/export";
     private WireMockServer wireMock;
-    private UUID networkUuid ;
+    private UUID networkUuid;
 
     private WireMockUtils wireMockUtils;
 
@@ -162,7 +162,7 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
     public void testVentilationModeWithoutDistributionKey() {
         IdentifiableAttributes loadNoDK1 = getIdentifiableAttributes(LOAD_ID_2, null);
         IdentifiableAttributes loadNoDK2 = getIdentifiableAttributes(LOAD_ID_3, null);
-        String path = getPath(networkUuid, false);;
+        String path = getPath(networkUuid, false);
         FilterEquipments noDistributionKeyFilter = getFilterEquipments(FILTER_NO_DK, "noDistributionKeyFilter", List.of(loadNoDK1, loadNoDK2), List.of());
 
         UUID stubNonDistributionKey = wireMock.stubFor(WireMock.get(path + FILTER_NO_DK)
@@ -191,7 +191,7 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(modificationToCreate)).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
 
-        wireMockUtils.verifyGetRequest(stubNonDistributionKey, PATH   ,handleQueryParams(networkUuid, FILTER_NO_DK) , false);
+        wireMockUtils.verifyGetRequest(stubNonDistributionKey, PATH, handleQueryParams(networkUuid, FILTER_NO_DK), false);
 
         assertEquals(200, getNetwork().getLoad(LOAD_ID_2).getP0(), 0.01D);
         assertEquals(200, getNetwork().getLoad(LOAD_ID_3).getP0(), 0.01D);
@@ -202,7 +202,7 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
     @SneakyThrows
     @Test
     public void testFilterWithWrongIds() {
-        String path = getPath(networkUuid, false);;
+        String path = getPath(networkUuid, false);
 
         IdentifiableAttributes loadWrongId1 = getIdentifiableAttributes(LOAD_WRONG_ID_1, 2.0);
         IdentifiableAttributes loadWrongId2 = getIdentifiableAttributes(LOAD_WRONG_ID_2, 3.0);
@@ -235,7 +235,7 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(LOAD_SCALING_ERROR, "All filters contains equipments with wrong ids").getMessage(),
                 loadScalingInfo.getErrorType().name(), reportService);
-        wireMockUtils.verifyGetRequest(stubWithWrongId, PATH  , handleQueryParams(networkUuid,FILTER_WRONG_ID_1), false);
+        wireMockUtils.verifyGetRequest(stubWithWrongId, PATH, handleQueryParams(networkUuid, FILTER_WRONG_ID_1), false);
         handleWireMockEmptyMockRequests();
 
     }
@@ -253,7 +253,6 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
 
         FilterEquipments wrongIdFilter2 = getFilterEquipments(FILTER_WRONG_ID_2, "wrongIdFilter2", List.of(loadWrongId1, load10), List.of(LOAD_WRONG_ID_1));
         FilterEquipments filter5 = getFilterEquipments(FILTER_ID_5, "filter5", List.of(load9, load10), List.of());
-
 
         FilterInfos filter = FilterInfos.builder()
             .name("filter")
@@ -290,7 +289,7 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
                 content().string(IsNull.notNullValue())
             );
 
-        wireMockUtils.verifyGetRequest(stubMultipleWrongIds, PATH  , Map.of("networkUuid", WireMock.equalTo(String.valueOf(networkUuid)), "variantId", WireMock.equalTo("variant_1"), "ids", WireMock.matching(".*")), false);
+        wireMockUtils.verifyGetRequest(stubMultipleWrongIds, PATH, Map.of("networkUuid", WireMock.equalTo(String.valueOf(networkUuid)), "variantId", WireMock.equalTo("variant_1"), "ids", WireMock.matching(".*")), false);
         assertEquals(600, getNetwork().getLoad(LOAD_ID_9).getP0(), 0.01D);
         assertEquals(300, getNetwork().getLoad(LOAD_ID_10).getP0(), 0.01D);
 
@@ -449,7 +448,7 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
         return  Map.of("networkUuid", WireMock.equalTo(String.valueOf(networkUuid)), "variantId", WireMock.equalTo("variant_1"), "ids", WireMock.equalTo(String.valueOf(filterId)));
     }
 
-    private void handleWireMockEmptyMockRequests(){
+    private void handleWireMockEmptyMockRequests() {
         try {
 
             TestUtils.assertWiremockServerRequestsEmptyThenShutdown(wireMock);
@@ -460,8 +459,10 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
         }
     }
 
-    private String getPath(UUID networkUuid, boolean isRegexPhat){
-        if(isRegexPhat) return  "/v1/filters/export\\?networkUuid=" + networkUuid + "\\&variantId=variant_1\\&ids=";
+    private String getPath(UUID networkUuid, boolean isRegexPhat) {
+        if (isRegexPhat) {
+            return  "/v1/filters/export\\?networkUuid=" + networkUuid + "\\&variantId=variant_1\\&ids=";
+        }
         return "/v1/filters/export?networkUuid=" + networkUuid + "&variantId=variant_1&ids=";
     }
 

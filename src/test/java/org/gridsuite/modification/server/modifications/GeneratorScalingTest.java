@@ -82,7 +82,7 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
     public static final String GENERATOR_WRONG_ID_2 = "wrongId2";
     public static final String PATH = "/v1/filters/export";
 
-    private UUID networkUuid ;
+    private UUID networkUuid;
 
     private WireMockServer wireMock;
 
@@ -117,7 +117,6 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
         IdentifiableAttributes gen8 = getIdentifiableAttributes(GENERATOR_ID_8, 8.0);
         IdentifiableAttributes gen9 = getIdentifiableAttributes(GENERATOR_ID_9, 0.0);
         IdentifiableAttributes gen10 = getIdentifiableAttributes(GENERATOR_ID_10, 9.0);
-
 
         FilterEquipments filter1 = getFilterEquipments(FILTER_ID_1, "filter1", List.of(gen1, gen2), List.of());
         FilterEquipments filter2 = getFilterEquipments(FILTER_ID_2, "filter2", List.of(gen3, gen4), List.of());
@@ -177,11 +176,10 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
         assertEquals(200, getNetwork().getGenerator(GENERATOR_ID_2).getTargetP(), 0.01D);
         assertEquals(200, getNetwork().getGenerator(GENERATOR_ID_3).getTargetP(), 0.01D);
 
-        wireMockUtils.verifyGetRequest(subNoDk, PATH   ,handleQueryParams(networkUuid, FILTER_NO_DK) , false);
+        wireMockUtils.verifyGetRequest(subNoDk,  PATH, handleQueryParams(networkUuid, FILTER_NO_DK), false);
         handleWireMockEmptyMockRequests();
 
     }
-
 
     @SneakyThrows
     @Test
@@ -193,7 +191,7 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
         FilterEquipments wrongIdFilter1 = getFilterEquipments(FILTER_WRONG_ID_1, "wrongIdFilter1", List.of(genWrongId1, genWrongId2), List.of(GENERATOR_WRONG_ID_1, GENERATOR_WRONG_ID_2));
         String path = getPath(networkUuid, false);
         UUID subWrongId =  wireMock.stubFor(WireMock.get(path + FILTER_WRONG_ID_1)
-        .willReturn(WireMock.ok()
+                .willReturn(WireMock.ok()
                 .withBody(mapper.writeValueAsString(List.of(wrongIdFilter1)))
                 .withHeader("Content-Type", "application/json"))).getId();
 
@@ -215,8 +213,9 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(GENERATOR_SCALING_ERROR, "All filters contains equipments with wrong ids").getMessage(),
                 generatorScalingInfo.getErrorType().name(), reportService);
-        wireMockUtils.verifyGetRequest(subWrongId, PATH   ,handleQueryParams(networkUuid, FILTER_WRONG_ID_1) , false);
+        wireMockUtils.verifyGetRequest(subWrongId, PATH, handleQueryParams(networkUuid, FILTER_WRONG_ID_1), false);
         handleWireMockEmptyMockRequests();
+
     }
 
     @SneakyThrows
@@ -232,7 +231,7 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
 
         String params = "(" + FILTER_ID_5 + "|" + FILTER_WRONG_ID_2 + ")";
         String pathRegex = getPath(networkUuid, true);
-        UUID subFilter= wireMock.stubFor(WireMock.get(WireMock.urlMatching(pathRegex + params + "," + params))
+        UUID subFilter = wireMock.stubFor(WireMock.get(WireMock.urlMatching(pathRegex + params + "," + params))
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(List.of(wrongIdFilter2, filter5)))
                         .withHeader("Content-Type", "application/json"))).getId();
@@ -268,8 +267,7 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
         assertEquals(600, getNetwork().getGenerator(GENERATOR_ID_9).getTargetP(), 0.01D);
         assertEquals(300, getNetwork().getGenerator(GENERATOR_ID_10).getTargetP(), 0.01D);
 
-        wireMockUtils.verifyGetRequest(subFilter, PATH   , Map.of("networkUuid", WireMock.equalTo(String.valueOf(networkUuid)), "variantId", WireMock.equalTo("variant_1"), "ids", WireMock.matching(".*"))
-, false);
+        wireMockUtils.verifyGetRequest(subFilter, PATH, Map.of("networkUuid", WireMock.equalTo(String.valueOf(networkUuid)), "variantId", WireMock.equalTo("variant_1"), "ids", WireMock.matching(".*")), false);
         handleWireMockEmptyMockRequests();
     }
 
@@ -412,20 +410,23 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
                 .notFoundEquipments(notFoundEquipments)
                 .build();
     }
-    private String getPath(UUID networkUuid, boolean isRegexPhat){
-        if(isRegexPhat) return  "/v1/filters/export\\?networkUuid=" + networkUuid + "\\&variantId=variant_1\\&ids=";
+
+    private String getPath(UUID networkUuid, boolean isRegexPhat) {
+
+        if (isRegexPhat) {
+            return  "/v1/filters/export\\?networkUuid=" + networkUuid + "\\&variantId=variant_1\\&ids=";
+        }
         return "/v1/filters/export?networkUuid=" + networkUuid + "&variantId=variant_1&ids=";
     }
 
-
     private Map<String, StringValuePattern> handleQueryParams(UUID networkUuid, UUID filterId) {
+
         return  Map.of("networkUuid", WireMock.equalTo(String.valueOf(networkUuid)), "variantId", WireMock.equalTo("variant_1"), "ids", WireMock.equalTo(String.valueOf(filterId)));
 
     }
 
-    private void handleWireMockEmptyMockRequests(){
-        try {
-
+    private void handleWireMockEmptyMockRequests() {
+        try  {
             TestUtils.assertWiremockServerRequestsEmptyThenShutdown(wireMock);
         } catch (UncheckedInterruptedException e) {
             LOGGER.error("Error while attempting to get the request done : ", e);
