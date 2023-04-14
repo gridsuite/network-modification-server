@@ -182,21 +182,6 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
 
     }
 
-    private Map<String, StringValuePattern> handleQueryParams(UUID networkUuid, UUID filterId) {
-        return  Map.of("networkUuid", WireMock.equalTo(String.valueOf(networkUuid)), "variantId", WireMock.equalTo("variant_1"), "ids", WireMock.equalTo(String.valueOf(filterId)));
-
-    }
-
-    private void handleWireMockEmptyMockRequests(){
-        try {
-
-            TestUtils.assertWiremockServerRequestsEmptyThenShutdown(wireMock);
-        } catch (UncheckedInterruptedException e) {
-            LOGGER.error("Error while attempting to get the request done : ", e);
-        } catch (IOException e) {
-            // Ignoring
-        }
-    }
 
     @SneakyThrows
     @Test
@@ -431,6 +416,24 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
         if(isRegexPhat) return  "/v1/filters/export\\?networkUuid=" + networkUuid + "\\&variantId=variant_1\\&ids=";
         return "/v1/filters/export?networkUuid=" + networkUuid + "&variantId=variant_1&ids=";
     }
+
+
+    private Map<String, StringValuePattern> handleQueryParams(UUID networkUuid, UUID filterId) {
+        return  Map.of("networkUuid", WireMock.equalTo(String.valueOf(networkUuid)), "variantId", WireMock.equalTo("variant_1"), "ids", WireMock.equalTo(String.valueOf(filterId)));
+
+    }
+
+    private void handleWireMockEmptyMockRequests(){
+        try {
+
+            TestUtils.assertWiremockServerRequestsEmptyThenShutdown(wireMock);
+        } catch (UncheckedInterruptedException e) {
+            LOGGER.error("Error while attempting to get the request done : ", e);
+        } catch (IOException e) {
+            // Ignoring
+        }
+    }
+
     @After
     public void shutDown() {
         // TODO: call handleWireMockEmptyMockRequests when doing a refacto
