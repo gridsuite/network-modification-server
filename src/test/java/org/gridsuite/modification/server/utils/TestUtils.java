@@ -7,6 +7,8 @@
 
 package org.gridsuite.modification.server.utils;
 
+import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.client.WireMock;
 import com.google.common.io.ByteStreams;
 import com.powsybl.commons.exceptions.UncheckedInterruptedException;
 import com.powsybl.iidm.network.Branch;
@@ -109,4 +111,14 @@ public final class TestUtils {
         String content = new String(ByteStreams.toByteArray(TestUtils.class.getResourceAsStream(resource)), StandardCharsets.UTF_8);
         return StringUtils.replaceWhitespaceCharacters(content, "");
     }
+
+    public static void assertWiremockServerRequestsEmptyThenShutdown(WireMockServer wireMockServer) throws UncheckedInterruptedException, IOException {
+        try {
+            wireMockServer.checkForUnmatchedRequests(); // requests no matched ? (it returns an exception if a request was not matched by wireMock, but does not complain if it was not verified by 'verify')
+            assertEquals(0, wireMockServer.findAll(WireMock.anyRequestedFor(WireMock.anyUrl())).size()); // requests no verified ?
+        } finally {
+            wireMockServer.shutdown();
+        }
+    }
+
 }

@@ -9,6 +9,8 @@ package org.gridsuite.modification.server.modifications;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.matching.StringValuePattern;
+import com.powsybl.commons.exceptions.UncheckedInterruptedException;
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
@@ -25,13 +27,19 @@ import org.gridsuite.modification.server.dto.ScalingVariationInfos;
 import org.gridsuite.modification.server.service.FilterService;
 import org.gridsuite.modification.server.utils.MatcherGeneratorScalingInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
+import org.gridsuite.modification.server.utils.TestUtils;
+import org.gridsuite.modification.server.utils.WireMockUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 
+import java.io.IOException;
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
@@ -46,6 +54,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 
 public class GeneratorScalingTest extends AbstractNetworkModificationTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(GeneratorScalingTest.class);
 
     private static final UUID GENERATOR_SCALING_ID = UUID.randomUUID();
     private static final UUID FILTER_ID_1 = UUID.randomUUID();
@@ -69,8 +78,13 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
     private static final String GENERATOR_ID_10 = "gen10";
     public static final String GENERATOR_WRONG_ID_1 = "wrongId1";
     public static final String GENERATOR_WRONG_ID_2 = "wrongId2";
+    public static final String PATH = "/v1/filters/export";
+
+    private UUID networkUuid ;
 
     private WireMockServer wireMock;
+
+    private WireMockUtils wireMockUtils;
 
     @SneakyThrows
     @Before
@@ -86,8 +100,9 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
         createGenerator(getNetwork().getVoltageLevel("v3"), GENERATOR_ID_8, 10, 100, 1.0, "cn10", 15, ConnectablePosition.Direction.TOP, 500, -1);
         createGenerator(getNetwork().getVoltageLevel("v4"), GENERATOR_ID_9, 10, 200, 1.0, "cn10", 16, ConnectablePosition.Direction.TOP, 2000, -1);
         createGenerator(getNetwork().getVoltageLevel("v5"), GENERATOR_ID_10, 10, 100, 1.0, "cn10", 17, ConnectablePosition.Direction.TOP, 500, -1);
-
         wireMock = new WireMockServer(wireMockConfig().dynamicPort());
+        wireMockUtils = new WireMockUtils(wireMock);
+
         wireMock.start();
 
         IdentifiableAttributes gen1 = getIdentifiableAttributes(GENERATOR_ID_1, 1.0);
@@ -101,11 +116,6 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
         IdentifiableAttributes gen9 = getIdentifiableAttributes(GENERATOR_ID_9, 0.0);
         IdentifiableAttributes gen10 = getIdentifiableAttributes(GENERATOR_ID_10, 9.0);
 
-        IdentifiableAttributes genWrongId1 = getIdentifiableAttributes(GENERATOR_WRONG_ID_1, 2.0);
-        IdentifiableAttributes genWrongId2 = getIdentifiableAttributes(GENERATOR_WRONG_ID_2, 3.0);
-
-        IdentifiableAttributes genNoDK1 = getIdentifiableAttributes(GENERATOR_ID_2, null);
-        IdentifiableAttributes genNoDK2 = getIdentifiableAttributes(GENERATOR_ID_3, null);
 
         FilterEquipments filter1 = getFilterEquipments(FILTER_ID_1, "filter1", List.of(gen1, gen2), List.of());
         FilterEquipments filter2 = getFilterEquipments(FILTER_ID_2, "filter2", List.of(gen3, gen4), List.of());
@@ -113,36 +123,12 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
         FilterEquipments filter4 = getFilterEquipments(FILTER_ID_4, "filter4", List.of(gen7, gen8), List.of());
         FilterEquipments filter5 = getFilterEquipments(FILTER_ID_5, "filter5", List.of(gen9, gen10), List.of());
 
-        FilterEquipments wrongIdFilter1 = getFilterEquipments(FILTER_WRONG_ID_1, "wrongIdFilter1", List.of(genWrongId1, genWrongId2), List.of(GENERATOR_WRONG_ID_1, GENERATOR_WRONG_ID_2));
-        FilterEquipments wrongIdFilter2 = getFilterEquipments(FILTER_WRONG_ID_2, "wrongIdFilter2", List.of(genWrongId1, gen10), List.of(GENERATOR_WRONG_ID_1));
-        FilterEquipments noDistributionKeyFilter = getFilterEquipments(FILTER_NO_DK, "noDistributionKeyFilter", List.of(genNoDK1, genNoDK2), List.of());
-
-        String path = "/v1/filters/export?networkUuid=" + getNetworkUuid() + "&variantId=variant_1&ids=";
-        String pathRegex = "/v1/filters/export\\?networkUuid=" + getNetworkUuid() + "\\&variantId=variant_1\\&ids=";
+        networkUuid = getNetworkUuid();
+        String pathRegex = getPath(networkUuid, true);
 
         wireMock.stubFor(WireMock.get(WireMock.urlMatching(pathRegex + "(.+,){4}.*"))
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(List.of(filter1, filter2, filter3, filter4, filter5)))
-                        .withHeader("Content-Type", "application/json")));
-
-        wireMock.stubFor(WireMock.get(path + FILTER_WRONG_ID_1)
-                .willReturn(WireMock.ok()
-                        .withBody(mapper.writeValueAsString(List.of(wrongIdFilter1)))
-                        .withHeader("Content-Type", "application/json")));
-
-        String params = "(" + FILTER_ID_5 + "|" + FILTER_WRONG_ID_2 + ")";
-        wireMock.stubFor(WireMock.get(WireMock.urlMatching(pathRegex + params + "," + params))
-                .willReturn(WireMock.ok()
-                        .withBody(mapper.writeValueAsString(List.of(wrongIdFilter2, filter5)))
-                        .withHeader("Content-Type", "application/json")));
-
-        wireMock.stubFor(WireMock.get(path + FILTER_NO_DK)
-                .willReturn(WireMock.ok()
-                        .withBody(mapper.writeValueAsString(List.of(noDistributionKeyFilter)))
-                        .withHeader("Content-Type", "application/json")));
-
-        wireMock.stubFor(WireMock.get(path + FILTER_NOT_FOUND_ID)
-                .willReturn(WireMock.notFound()
                         .withHeader("Content-Type", "application/json")));
 
         FilterService.setFilterServerBaseUri(wireMock.baseUrl());
@@ -151,6 +137,18 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
     @SneakyThrows
     @Test
     public void testVentilationModeWithoutDistributionKey() {
+
+        IdentifiableAttributes genNoDK1 = getIdentifiableAttributes(GENERATOR_ID_2, null);
+        IdentifiableAttributes genNoDK2 = getIdentifiableAttributes(GENERATOR_ID_3, null);
+        FilterEquipments noDistributionKeyFilter = getFilterEquipments(FILTER_NO_DK, "noDistributionKeyFilter", List.of(genNoDK1, genNoDK2), List.of());
+
+        String path = getPath(networkUuid, false);
+
+        UUID subNoDk = wireMock.stubFor(WireMock.get(path + FILTER_NO_DK)
+                .willReturn(WireMock.ok()
+                        .withBody(mapper.writeValueAsString(List.of(noDistributionKeyFilter)))
+                        .withHeader("Content-Type", "application/json"))).getId();
+
         var filter = FilterInfos.builder()
                 .id(FILTER_NO_DK)
                 .name("filter")
@@ -176,11 +174,42 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
 
         assertEquals(200, getNetwork().getGenerator(GENERATOR_ID_2).getTargetP(), 0.01D);
         assertEquals(200, getNetwork().getGenerator(GENERATOR_ID_3).getTargetP(), 0.01D);
+
+        wireMockUtils.verifyGetRequest(subNoDk, PATH   ,handleQueryParams(networkUuid, FILTER_NO_DK) , false);
+        handleWireMockEmptyMockRequests();
+
+    }
+
+    private Map<String, StringValuePattern> handleQueryParams(UUID networkUuid, UUID filterId) {
+        return  Map.of("networkUuid", WireMock.equalTo(String.valueOf(networkUuid)), "variantId", WireMock.equalTo("variant_1"), "ids", WireMock.equalTo(String.valueOf(filterId)));
+
+    }
+
+    private void handleWireMockEmptyMockRequests(){
+        try {
+
+            TestUtils.assertWiremockServerRequestsEmptyThenShutdown(wireMock);
+        } catch (UncheckedInterruptedException e) {
+            LOGGER.error("Error while attempting to get the request done : ", e);
+        } catch (IOException e) {
+            // Ignoring
+        }
     }
 
     @SneakyThrows
     @Test
     public void testFilterWithWrongIds() {
+
+        IdentifiableAttributes genWrongId1 = getIdentifiableAttributes(GENERATOR_WRONG_ID_1, 2.0);
+        IdentifiableAttributes genWrongId2 = getIdentifiableAttributes(GENERATOR_WRONG_ID_2, 3.0);
+
+        FilterEquipments wrongIdFilter1 = getFilterEquipments(FILTER_WRONG_ID_1, "wrongIdFilter1", List.of(genWrongId1, genWrongId2), List.of(GENERATOR_WRONG_ID_1, GENERATOR_WRONG_ID_2));
+        String path = getPath(networkUuid, false);
+        UUID subWrongId =  wireMock.stubFor(WireMock.get(path + FILTER_WRONG_ID_1)
+        .willReturn(WireMock.ok()
+                .withBody(mapper.writeValueAsString(List.of(wrongIdFilter1)))
+                .withHeader("Content-Type", "application/json"))).getId();
+
         var filter = FilterInfos.builder()
                 .name("filter")
                 .id(FILTER_WRONG_ID_1)
@@ -205,11 +234,28 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
 
         assertEquals(new NetworkModificationException(NetworkModificationException.Type.GENERATOR_SCALING_ERROR, "All filters contains equipments with wrong ids").getMessage(),
                 response.getResponse().getContentAsString());
+
+        wireMockUtils.verifyGetRequest(subWrongId, PATH   ,handleQueryParams(networkUuid, FILTER_WRONG_ID_1) , false);
+        handleWireMockEmptyMockRequests();
     }
 
     @SneakyThrows
     @Test
     public void testScalingCreationWithWarning() {
+        IdentifiableAttributes genWrongId1 = getIdentifiableAttributes(GENERATOR_WRONG_ID_1, 2.0);
+        IdentifiableAttributes gen10 = getIdentifiableAttributes(GENERATOR_ID_10, 9.0);
+        IdentifiableAttributes gen9 = getIdentifiableAttributes(GENERATOR_ID_9, 0.0);
+
+        FilterEquipments filter5 = getFilterEquipments(FILTER_ID_5, "filter5", List.of(gen9, gen10), List.of());
+
+        FilterEquipments wrongIdFilter2 = getFilterEquipments(FILTER_WRONG_ID_2, "wrongIdFilter2", List.of(genWrongId1, gen10), List.of(GENERATOR_WRONG_ID_1));
+
+        String params = "(" + FILTER_ID_5 + "|" + FILTER_WRONG_ID_2 + ")";
+        String pathRegex = getPath(networkUuid, true);
+        UUID subFilter= wireMock.stubFor(WireMock.get(WireMock.urlMatching(pathRegex + params + "," + params))
+                .willReturn(WireMock.ok()
+                        .withBody(mapper.writeValueAsString(List.of(wrongIdFilter2, filter5)))
+                        .withHeader("Content-Type", "application/json"))).getId();
         var filter = FilterInfos.builder()
                 .name("filter")
                 .id(FILTER_WRONG_ID_2)
@@ -241,6 +287,10 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
         assertNotNull(response.getResponse().getContentAsString());
         assertEquals(600, getNetwork().getGenerator(GENERATOR_ID_9).getTargetP(), 0.01D);
         assertEquals(300, getNetwork().getGenerator(GENERATOR_ID_10).getTargetP(), 0.01D);
+
+        wireMockUtils.verifyGetRequest(subFilter, PATH   , Map.of("networkUuid", WireMock.equalTo(String.valueOf(networkUuid)), "variantId", WireMock.equalTo("variant_1"), "ids", WireMock.matching(".*"))
+, false);
+        handleWireMockEmptyMockRequests();
     }
 
     @Override
@@ -382,9 +432,13 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
                 .notFoundEquipments(notFoundEquipments)
                 .build();
     }
-
+    private String getPath(UUID networkUuid, boolean isRegexPhat){
+        if(isRegexPhat) return  "/v1/filters/export\\?networkUuid=" + networkUuid + "\\&variantId=variant_1\\&ids=";
+        return "/v1/filters/export?networkUuid=" + networkUuid + "&variantId=variant_1&ids=";
+    }
     @After
     public void shutDown() {
+        // TODO: call handleWireMockEmptyMockRequests when doing a refacto
         wireMock.shutdown();
     }
 }
