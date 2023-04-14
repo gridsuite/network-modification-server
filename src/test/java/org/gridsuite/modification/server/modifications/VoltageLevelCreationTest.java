@@ -8,7 +8,6 @@ package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.SwitchKind;
-
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.CouplingDeviceInfos;
@@ -19,16 +18,15 @@ import org.gridsuite.modification.server.utils.ModificationCreation;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.Arrays;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
-import static org.junit.Assert.*;
+import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -94,44 +92,39 @@ public class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
     @SneakyThrows
     @Test
     public void testCreateWithErrors() {
-        MvcResult mvcResult;
-        String resultAsString;
-
         VoltageLevelCreationInfos vli = (VoltageLevelCreationInfos) buildModification();
         vli.setSubstationId("absent_station");
 
         String vliJson = mapper.writeValueAsString(vli);
-        mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(vliJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().is4xxClientError()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        assertEquals(resultAsString, new NetworkModificationException(SUBSTATION_NOT_FOUND, "absent_station").getMessage());
+        mockMvc.perform(post(getNetworkModificationUri()).content(vliJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        assertLogMessage(new NetworkModificationException(SUBSTATION_NOT_FOUND, "absent_station").getMessage(),
+                vli.getErrorType().name(), reportService);
 
         vli = (VoltageLevelCreationInfos) buildModification();
         vli.getCouplingDevices().get(0).setBusbarSectionId1("bbs.ne");
         String vliJsonObject = mapper.writeValueAsString(vli);
-        mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(vliJsonObject).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().is5xxServerError()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        assertEquals(resultAsString, new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "Coupling between same bus bar section is not allowed").getMessage());
+        mockMvc.perform(post(getNetworkModificationUri()).content(vliJsonObject).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        assertLogMessage(new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "Coupling between same bus bar section is not allowed").getMessage(),
+                vli.getErrorType().name(), reportService);
 
         vli = (VoltageLevelCreationInfos) buildModificationUpdate();
 
         vli.setEquipmentId("");
         String vliJsonS2Object = mapper.writeValueAsString(vli);
-        mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(vliJsonS2Object).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().is5xxServerError()).andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        assertEquals(resultAsString, new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "Invalid id ''").getMessage());
+        mockMvc.perform(post(getNetworkModificationUri()).content(vliJsonS2Object).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        assertLogMessage("Invalid id ''", vli.getErrorType().name(), reportService);
 
         // try to create an existing VL
         vli = (VoltageLevelCreationInfos) buildModification();
         vli.setEquipmentId("v1");
         vliJsonObject = mapper.writeValueAsString(vli);
         mockMvc.perform(post(getNetworkModificationUri()).content(vliJsonObject).contentType(MediaType.APPLICATION_JSON))
-            .andExpectAll(
-                    status().is4xxClientError(),
-                    content().string(new NetworkModificationException(VOLTAGE_LEVEL_ALREADY_EXISTS, "v1").getMessage())
-            );
+                .andExpect(status().isOk());
+        assertLogMessage(new NetworkModificationException(VOLTAGE_LEVEL_ALREADY_EXISTS, "v1").getMessage(),
+                vli.getErrorType().name(), reportService);
     }
 
     @SneakyThrows
