@@ -184,7 +184,7 @@ public class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificat
         generatorCreationInfosJson = mapper.writeValueAsString(generatorCreationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
-        assertLogMessage("cannot assign Min/max reactive power on generator with id=idGenerator1 :Generator 'idGenerator1': maximum reactive power is expected to be greater than or equal to minimum reactive power",
+        assertLogMessage("cannot assign Min/max reactive power on generator with id=idGenerator1 : Generator 'idGenerator1': maximum reactive power is expected to be greater than or equal to minimum reactive power",
             "MinMaxReactiveLimitCreationError", reportService);
 
         // try to create an existing VL
@@ -209,5 +209,18 @@ public class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificat
         assertTrue(networkModificationResult.isEmpty());  // no modifications returned
         assertNull(getNetwork().getGenerator("idGenerator3"));  // generator was not created
         testNetworkModificationsCount(getGroupId(), 7);  // new modification stored in the database
+    }
+
+    @SneakyThrows
+    @Test
+    public void testCreateWithShortCircuitErrors() {
+        // invalid short circuit transient reactance
+        GeneratorCreationInfos generatorCreationInfos = (GeneratorCreationInfos) buildModification();
+        generatorCreationInfos.setTransientReactance(Double.NaN);
+
+        String generatorCreationInfosJson = mapper.writeValueAsString(generatorCreationInfos);
+        mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        assertLogMessage("cannot add short-circuit extension on generator with id=idGenerator1 : Undefined directTransX", "ShortCircuitExtensionAddError", reportService);
     }
 }

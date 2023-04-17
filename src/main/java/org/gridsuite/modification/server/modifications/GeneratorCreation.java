@@ -216,7 +216,7 @@ public class GeneratorCreation extends AbstractModification {
             } catch (PowsyblException e) {
                 subReporter.report(Report.builder()
                         .withKey("MinMaxReactiveLimitCreationError")
-                        .withDefaultMessage("cannot assign Min/max reactive power on generator with id=${id} :" + e.getMessage())
+                        .withDefaultMessage("cannot assign Min/max reactive power on generator with id=${id} : " + e.getMessage())
                         .withValue("id", generatorCreationInfos.getEquipmentId())
                         .withSeverity(TypedValue.ERROR_SEVERITY)
                         .build());
@@ -282,7 +282,7 @@ public class GeneratorCreation extends AbstractModification {
                     } else {
                         subReporter.report(Report.builder()
                             .withKey("TerminalNotFoundError")
-                            .withDefaultMessage("cannot found terminal ${terminalId} from voltage level ${vlId} on generator with id=${id} :")
+                            .withDefaultMessage("cannot found terminal ${terminalId} from voltage level ${vlId} on generator with id=${id}")
                             .withValue("terminalId", generatorCreationInfos.getRegulatingTerminalId())
                             .withValue("vlId", generatorCreationInfos.getRegulatingTerminalVlId())
                             .withValue("id", generatorCreationInfos.getEquipmentId())
@@ -292,7 +292,7 @@ public class GeneratorCreation extends AbstractModification {
                 } catch (PowsyblException e) {
                     subReporter.report(Report.builder()
                             .withKey("TerminalNotFoundError")
-                            .withDefaultMessage("cannot found terminal ${terminalId} from voltage level ${vlId} on generator with id=${id} :")
+                            .withDefaultMessage("cannot found terminal ${terminalId} from voltage level ${vlId} on generator with id=${id}")
                             .withValue("terminalId", generatorCreationInfos.getRegulatingTerminalId())
                             .withValue("vlId", generatorCreationInfos.getRegulatingTerminalVlId())
                             .withValue("id", generatorCreationInfos.getEquipmentId())

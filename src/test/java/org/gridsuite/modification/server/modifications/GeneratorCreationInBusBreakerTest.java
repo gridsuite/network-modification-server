@@ -143,13 +143,28 @@ public class GeneratorCreationInBusBreakerTest extends AbstractNetworkModificati
 
     @SneakyThrows
     @Test
-    public void testCreateGeneratorTerminalAttributes() {
+    public void testCreateWithTerminalTypeError() {
+        // invalid regulating terminal type
         GeneratorCreationInfos generatorCreationInfos = (GeneratorCreationInfos) buildModification();
         generatorCreationInfos.setVoltageRegulationOn(true);
         generatorCreationInfos.setRegulatingTerminalType(null);
         mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(generatorCreationInfos)).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
-        assertLogMessage("cannot found terminal idGenerator1 from voltage level v1 on generator with id=idGenerator2 :",
-                "TerminalNotFoundError", reportService);
+            .andExpect(status().isOk());
+        assertLogMessage("cannot found terminal idGenerator1 from voltage level v1 on generator with id=idGenerator2",
+            "TerminalNotFoundError", reportService);
+    }
+
+    @SneakyThrows
+    @Test
+    public void testCreateWithIncoherentTerminalTypeAndIdError() {
+         // invalid regulating terminal id <---> regulation terminal type
+        GeneratorCreationInfos generatorCreationInfos = (GeneratorCreationInfos) buildModification();
+        generatorCreationInfos.setRegulatingTerminalType("LINE");
+        generatorCreationInfos.setRegulatingTerminalId("titi");
+
+        String generatorCreationInfosJson = mapper.writeValueAsString(generatorCreationInfos);
+        mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
+        assertLogMessage("cannot found terminal titi from voltage level v1 on generator with id=idGenerator2", "TerminalNotFoundError", reportService);
     }
 }
