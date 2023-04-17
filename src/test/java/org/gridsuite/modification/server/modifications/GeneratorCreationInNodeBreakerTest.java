@@ -175,6 +175,18 @@ public class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificat
         assertLogMessage("Generator 'idGenerator1': invalid value (NaN) for minimum P",
                 generatorCreationInfos.getErrorType().name(), reportService);
 
+        // invalid min max reactive limit
+        generatorCreationInfos = (GeneratorCreationInfos) buildModification();
+        generatorCreationInfos.setReactiveCapabilityCurve(false);
+        generatorCreationInfos.setMinimumReactivePower(200.);
+        generatorCreationInfos.setMaximumReactivePower(100.);
+
+        generatorCreationInfosJson = mapper.writeValueAsString(generatorCreationInfos);
+        mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
+        assertLogMessage("cannot assign Min/max reactive power on generator with id=idGenerator1 :Generator 'idGenerator1': maximum reactive power is expected to be greater than or equal to minimum reactive power",
+            "MinMaxReactiveLimitCreationError", reportService);
+
         // try to create an existing VL
         generatorCreationInfos = (GeneratorCreationInfos) buildModification();
         generatorCreationInfos.setEquipmentId("v5generator");
@@ -196,6 +208,6 @@ public class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificat
         Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertTrue(networkModificationResult.isEmpty());  // no modifications returned
         assertNull(getNetwork().getGenerator("idGenerator3"));  // generator was not created
-        testNetworkModificationsCount(getGroupId(), 6);  // new modification stored in the database
+        testNetworkModificationsCount(getGroupId(), 7);  // new modification stored in the database
     }
 }
