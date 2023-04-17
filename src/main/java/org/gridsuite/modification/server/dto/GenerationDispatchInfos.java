@@ -18,7 +18,7 @@ import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.entities.equipment.modification.GenerationDispatchEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
-import org.gridsuite.modification.server.modifications.GenerationDispatchModification;
+import org.gridsuite.modification.server.modifications.GenerationDispatch;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -40,7 +40,7 @@ public class GenerationDispatchInfos extends ModificationInfos {
 
     @Override
     public AbstractModification toModification() {
-        return new GenerationDispatchModification(this);
+        return new GenerationDispatch(this);
     }
 
     @Override
