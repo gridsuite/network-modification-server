@@ -67,26 +67,26 @@ public class GenerationDispatch extends AbstractModification {
         reporter.report(builder.build());
     }
 
-    private static double computeTotalActiveLoad(Component component) {
+    private double computeTotalActiveLoad(Component component) {
         Objects.requireNonNull(component);
         final AtomicDouble totalLoad = new AtomicDouble(0.);
         component.getBusStream().forEach(bus -> totalLoad.addAndGet(bus.getLoadStream().filter(load -> load.getTerminal().isConnected()).mapToDouble(Load::getP0).sum()));
         return totalLoad.get();
     }
 
-    public double computeTotalDemand(Component component, double lossCoefficient) {
+    private double computeTotalDemand(Component component, double lossCoefficient) {
         double totalLoad = computeTotalActiveLoad(component);
         return totalLoad * (1. + lossCoefficient / 100.);
     }
 
-    public double computeTotalAmountFixedSupply(int numCC) {
+    private double computeTotalAmountFixedSupply(int numCC) {
         double totalAmountFixedSupply = 0.;
         totalAmountFixedSupply += fixedSupplyGenerators.get(numCC).stream().filter(generator -> generator.getTerminal().isConnected())
             .mapToDouble(Generator::getTargetP).sum();
         return totalAmountFixedSupply;
     }
 
-    public void computeAdjustableGenerators(Component component, Reporter reporter) {
+    private void computeAdjustableGenerators(Component component, Reporter reporter) {
         List<Generator> generators = new ArrayList<>();
 
         // get all connected generators in the component
