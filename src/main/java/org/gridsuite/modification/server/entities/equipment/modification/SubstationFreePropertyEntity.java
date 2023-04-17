@@ -35,12 +35,12 @@ public class SubstationFreePropertyEntity {
     private UUID id;
 
     @Column(name = "name", nullable = false)
-    String name;
+    private String name;
 
     @Column(name = "value_")
-    String value;
+    private String value;
 
     @Column(name = "deletion_mark")
-    Boolean deletionMark = false;
+    private Boolean deletionMark = false;
 }
 

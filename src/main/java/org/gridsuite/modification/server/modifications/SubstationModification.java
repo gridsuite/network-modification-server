@@ -52,7 +52,7 @@ public class SubstationModification extends AbstractModification {
                     if (station.removeProperty(prop.getName())) {
                         subReporter.report(Report.builder()
                                 .withKey("propertyDeleted")
-                                .withDefaultMessage("    Property '${name}' deleted")
+                                .withDefaultMessage("    Property ${name} deleted")
                                 .withValue("name", prop.getName())
                                 .withSeverity(TypedValue.INFO_SEVERITY)
                                 .build());
@@ -62,7 +62,7 @@ public class SubstationModification extends AbstractModification {
                     if (oldValue != null) { // update
                         subReporter.report(Report.builder()
                                 .withKey("propertyChanged")
-                                .withDefaultMessage("    Property '${name}' changed : '${from}' -> '${to}'")
+                                .withDefaultMessage("    Property ${name} changed : ${from} -> ${to}")
                                 .withValue("name", prop.getName())
                                 .withValue("from", oldValue)
                                 .withValue("to", prop.getValue())
@@ -71,7 +71,7 @@ public class SubstationModification extends AbstractModification {
                     } else { // insert
                         subReporter.report(Report.builder()
                                 .withKey("propertyAdded")
-                                .withDefaultMessage("    Property '${name}' added with value '${value}'")
+                                .withDefaultMessage("    Property ${name} added with value ${value}")
                                 .withValue("name", prop.getName())
                                 .withValue("value", prop.getValue())
                                 .withSeverity(TypedValue.INFO_SEVERITY)
