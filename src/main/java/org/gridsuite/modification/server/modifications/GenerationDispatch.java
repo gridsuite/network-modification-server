@@ -31,8 +31,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
+import static java.util.Comparator.comparingInt;
+import static java.util.stream.Collectors.collectingAndThen;
+import static java.util.stream.Collectors.toCollection;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.GENERATION_DISPATCH_ERROR;
 
 /**
@@ -146,7 +150,9 @@ public class GenerationDispatch extends AbstractModification {
 
     @Override
     public void apply(Network network, Reporter subReporter) {
-        Collection<Component> connectedComponents = network.getBusView().getConnectedComponents();
+        Collection<Component> connectedComponents = network.getBusView().getConnectedComponents()
+            .stream().collect(collectingAndThen(toCollection(() -> new TreeSet<>(comparingInt(Component::getNum))), ArrayList::new)); // TODO: to remove after new powsybl client release
+
         for (Component component : connectedComponents) {
             int componentNum = component.getNum();
 
