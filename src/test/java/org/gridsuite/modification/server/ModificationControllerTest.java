@@ -21,6 +21,7 @@ import lombok.SneakyThrows;
 import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.modification.server.Impacts.TestImpactUtils;
 import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.server.dto.LineType;
 import org.gridsuite.modification.server.dto.LoadCreationInfos.LoadCreationInfosBuilder;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosRepository;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
@@ -34,6 +35,7 @@ import org.gridsuite.modification.server.utils.MatcherModificationInfos;
 import org.gridsuite.modification.server.utils.ModificationCreation;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.gridsuite.modification.server.utils.NetworkWithTeePoint;
+import org.gridsuite.modification.server.utils.TestUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -91,6 +93,9 @@ public class ModificationControllerTest {
     private static final String URI_NETWORK_MODIF_BAD_VARIANT = URI_NETWORK_MODIF + "&variantId=" + VARIANT_NOT_EXISTING_ID;
 
     private static final String URI_NETWORK_WITH_TEE_POINT_MODIF = URI_NETWORK_MODIF_BASE + "?networkUuid=" + TEST_NETWORK_WITH_TEE_POINT_ID + URI_NETWORK_MODIF_PARAMS;
+
+    private static final String URI_LINE_CATALOG = URI_NETWORK_MODIF_BASE + "/line/catalog";
+    private static final String LINE_CATALOG_JSON_FILE = "/line_catalog.json";
 
     @Autowired
     private MockMvc mockMvc;
@@ -1039,5 +1044,62 @@ public class ModificationControllerTest {
         v1.getNodeBreakerView().newSwitch().setId("switch2").setName("switch2").setKind(SwitchKind.BREAKER).setRetained(false).setOpen(false).setFictitious(false).setNode1(1).setNode2(3).add();
 
         assertEquals(0, ModificationUtils.getInstance().getPosition("bbs1", testNetwork, v1));
+    }
+
+    @Test
+    public void testGetLineCatalog() throws Exception {
+        MvcResult mvcResult;
+        String resultAsString;
+
+        // Check if the catalog is empty
+        mvcResult = mockMvc
+                .perform(get("/v1/network-modifications/line/catalog").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNoContent())
+                .andReturn();
+
+        // Fill the catalog with some line types
+        String lineCatalogJson = TestUtils.resourceToString(LINE_CATALOG_JSON_FILE);
+        mockMvc.perform(post(URI_LINE_CATALOG).content(lineCatalogJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        // Check if the catalog is complete
+        mvcResult = mockMvc
+                .perform(get("/v1/network-modifications/line/catalog").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn();
+        resultAsString = mvcResult.getResponse().getContentAsString();
+        List<LineType> lineTypes = mapper.readValue(resultAsString, new TypeReference<>() {
+        });
+        assertEquals(6, lineTypes.size());
+
+        mvcResult = mockMvc
+                .perform(get("/v1/network-modifications/line/catalog?kind=AERIAL").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn();
+        resultAsString = mvcResult.getResponse().getContentAsString();
+        List<LineType> aerialLineTypes = mapper.readValue(resultAsString, new TypeReference<>() {
+        });
+        assertEquals(5, aerialLineTypes.size());
+
+        mvcResult = mockMvc
+                .perform(get("/v1/network-modifications/line/catalog?kind=UNDERGROUND").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn();
+        resultAsString = mvcResult.getResponse().getContentAsString();
+        List<LineType> undergroundLineTypes = mapper.readValue(resultAsString, new TypeReference<>() {
+        });
+        assertEquals(1, undergroundLineTypes.size());
+
+        mockMvc.perform(delete("/v1/network-modifications/line/catalog"))
+                .andExpect(status().isOk());
+
+        // Check if the catalog is empty
+        mvcResult = mockMvc
+                .perform(get("/v1/network-modifications/line/catalog").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNoContent())
+                .andReturn();
     }
 }

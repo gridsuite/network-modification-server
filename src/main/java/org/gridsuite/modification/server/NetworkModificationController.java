@@ -12,10 +12,13 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.gridsuite.modification.server.dto.BuildInfos;
+import org.gridsuite.modification.server.dto.LineType;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.ReportInfos;
+import org.gridsuite.modification.server.service.LineCatalogService;
 import org.gridsuite.modification.server.service.NetworkModificationService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -40,8 +43,12 @@ public class NetworkModificationController {
 
     private final NetworkModificationService networkModificationService;
 
-    public NetworkModificationController(NetworkModificationService networkModificationService) {
+    private final LineCatalogService lineCatalogService;
+
+    public NetworkModificationController(NetworkModificationService networkModificationService,
+            LineCatalogService lineCatalogService) {
         this.networkModificationService = networkModificationService;
+        this.lineCatalogService = lineCatalogService;
     }
 
     @GetMapping(value = "/groups/{groupUuid}/modifications", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -165,6 +172,35 @@ public class NetworkModificationController {
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The build has been stopped")})
     public ResponseEntity<Void> stopBuild(@Parameter(description = "Build receiver") @RequestParam(name = "receiver", required = false) String receiver) {
         networkModificationService.stopBuildRequest(receiver);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping(value = "/network-modifications/line/catalog", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Get a line catalog")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "The line catalog is returned"),
+        @ApiResponse(responseCode = "204", description = "The line catalaog is empty") })
+    public ResponseEntity<List<LineType>> getLineCatalog(@Parameter(description = "type") @RequestParam(name = "kind", required = false, defaultValue = "UNDEFINED") LineKind kind) {
+        List<LineType> res = lineCatalogService.getLineCatalog(kind);
+        if (res.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+        }
+        return ResponseEntity.ok().body(res);
+    }
+
+    @PostMapping(value = "/network-modifications/line/catalog", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Fill a line catalog")
+    @ApiResponse(responseCode = "200", description = "The line catalaog was filled")
+    public ResponseEntity<Void> fillLineCatalog(@RequestBody List<LineType> lineCatalog) {
+        lineCatalogService.fillLineCatalog(lineCatalog);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping(value = "/network-modifications/line/catalog", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Delete line catalog")
+    @ApiResponse(responseCode = "200", description = "The line catalog is deleted")
+    public ResponseEntity<Void> deleteLineCatalog() {
+        lineCatalogService.deleteLineCatalog();
         return ResponseEntity.ok().build();
     }
 }
