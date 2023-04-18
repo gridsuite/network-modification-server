@@ -184,10 +184,10 @@ public class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificat
         generatorCreationInfosJson = mapper.writeValueAsString(generatorCreationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
-        assertLogMessage("cannot assign Min/max reactive power on generator with id=idGenerator1 : Generator 'idGenerator1': maximum reactive power is expected to be greater than or equal to minimum reactive power",
-            "MinMaxReactiveLimitCreationError", reportService);
+        assertLogMessage(new NetworkModificationException(CREATE_GENERATOR_ERROR, "Generator 'idGenerator1' : maximum reactive power is expected to be greater than or equal to minimum reactive power").getMessage(),
+            generatorCreationInfos.getErrorType().name(), reportService);
 
-        // try to create an existing VL
+        // try to create an existing generator
         generatorCreationInfos = (GeneratorCreationInfos) buildModification();
         generatorCreationInfos.setEquipmentId("v5generator");
         generatorCreationInfosJson = mapper.writeValueAsString(generatorCreationInfos);

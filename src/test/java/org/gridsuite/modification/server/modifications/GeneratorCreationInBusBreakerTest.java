@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.BUS_NOT_FOUND;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.EQUIPMENT_NOT_FOUND;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -132,7 +133,7 @@ public class GeneratorCreationInBusBreakerTest extends AbstractNetworkModificati
 
     @SneakyThrows
     @Test
-    public void testCreateWithErrors() {
+    public void testCreateWithBusbarSectionErrors() {
         GeneratorCreationInfos generatorCreationInfos = (GeneratorCreationInfos) buildModification();
         generatorCreationInfos.setBusOrBusbarSectionId("notFoundBus");
         mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(generatorCreationInfos)).contentType(MediaType.APPLICATION_JSON))
@@ -143,20 +144,7 @@ public class GeneratorCreationInBusBreakerTest extends AbstractNetworkModificati
 
     @SneakyThrows
     @Test
-    public void testCreateWithTerminalTypeError() {
-        // invalid regulating terminal type
-        GeneratorCreationInfos generatorCreationInfos = (GeneratorCreationInfos) buildModification();
-        generatorCreationInfos.setVoltageRegulationOn(true);
-        generatorCreationInfos.setRegulatingTerminalType(null);
-        mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(generatorCreationInfos)).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk());
-        assertLogMessage("cannot found terminal idGenerator1 from voltage level v1 on generator with id=idGenerator2",
-            "TerminalNotFoundError", reportService);
-    }
-
-    @SneakyThrows
-    @Test
-    public void testCreateWithIncoherentTerminalTypeAndIdError() {
+    public void testCreateWithRegulatedTerminalError() {
          // invalid regulating terminal id <---> regulation terminal type
         GeneratorCreationInfos generatorCreationInfos = (GeneratorCreationInfos) buildModification();
         generatorCreationInfos.setRegulatingTerminalType("LINE");
@@ -165,6 +153,7 @@ public class GeneratorCreationInBusBreakerTest extends AbstractNetworkModificati
         String generatorCreationInfosJson = mapper.writeValueAsString(generatorCreationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
-        assertLogMessage("cannot found terminal titi from voltage level v1 on generator with id=idGenerator2", "TerminalNotFoundError", reportService);
+        assertLogMessage(new NetworkModificationException(EQUIPMENT_NOT_FOUND, "Equipment with id=titi not found with type LINE").getMessage(),
+            generatorCreationInfos.getErrorType().name(), reportService);
     }
 }

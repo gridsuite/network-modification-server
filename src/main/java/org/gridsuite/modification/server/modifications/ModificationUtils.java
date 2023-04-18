@@ -517,7 +517,7 @@ public final class ModificationUtils {
                 .build();
     }
 
-    public <T> void applyElementaryCreation(Reporter subReporter, T value, String fieldName) {
+    public <T> void reportElementaryCreation(Reporter subReporter, T value, String fieldName) {
         subReporter.report(buildCreationReport(value, fieldName));
     }
 }

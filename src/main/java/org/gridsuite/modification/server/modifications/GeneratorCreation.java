@@ -7,6 +7,7 @@
 package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.commons.PowsyblException;
+import org.apache.commons.collections4.CollectionUtils;
 import org.gridsuite.modification.server.NetworkModificationException;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.modifications.ModificationUtils.nanIfNull;
@@ -56,8 +57,47 @@ public class GeneratorCreation extends AbstractModification {
         if (network.getGenerator(modificationInfos.getEquipmentId()) != null) {
             throw new NetworkModificationException(GENERATOR_ALREADY_EXISTS, modificationInfos.getEquipmentId());
         }
+
+        // check connectivity
         ModificationUtils.getInstance().controlConnectivity(network, modificationInfos.getVoltageLevelId(),
                 modificationInfos.getBusOrBusbarSectionId(), modificationInfos.getConnectionPosition());
+
+        // check min max reactive limits
+        if (modificationInfos.getMinimumReactivePower() != null && modificationInfos.getMaximumReactivePower() != null) {
+            if (Double.isNaN(modificationInfos.getMinimumReactivePower())) {
+                throw new NetworkModificationException(CREATE_GENERATOR_ERROR, "Generator '" + modificationInfos.getEquipmentId() + "' : minimum reactive power is not set");
+            } else if (Double.isNaN(modificationInfos.getMaximumReactivePower())) {
+                throw new NetworkModificationException(CREATE_GENERATOR_ERROR, "Generator '" + modificationInfos.getEquipmentId() + "' : maximum reactive power is not set");
+            } else if (modificationInfos.getMaximumReactivePower() < modificationInfos.getMinimumReactivePower()) {
+                throw new NetworkModificationException(CREATE_GENERATOR_ERROR, "Generator '" + modificationInfos.getEquipmentId() + "' : maximum reactive power is expected to be greater than or equal to minimum reactive power");
+            }
+        }
+
+        // check reactive capability curve limits
+        List<ReactiveCapabilityCurveCreationInfos> points = modificationInfos.getReactiveCapabilityCurvePoints();
+        if (!CollectionUtils.isEmpty(points)) {
+            if (points.size() < 2) {
+                throw new NetworkModificationException(CREATE_GENERATOR_ERROR, "Generator '" + modificationInfos.getEquipmentId() + "' : a reactive capability curve should have at least two points");
+            }
+            IntStream.range(0, points.size())
+                .forEach(i -> {
+                    ReactiveCapabilityCurveCreationInfos newPoint = points.get(i);
+                    if (Double.isNaN(newPoint.getP())) {
+                        throw new NetworkModificationException(CREATE_GENERATOR_ERROR, "Generator '" + modificationInfos.getEquipmentId() + "' : P is not set in a reactive capability curve limits point");
+                    } else if (Double.isNaN(newPoint.getQminP())) {
+                        throw new NetworkModificationException(CREATE_GENERATOR_ERROR, "Generator '" + modificationInfos.getEquipmentId() + "' : min Q is not set in a reactive capability curve limits point");
+                    } else if (Double.isNaN(newPoint.getQmaxP())) {
+                        throw new NetworkModificationException(CREATE_GENERATOR_ERROR, "Generator '" + modificationInfos.getEquipmentId() + "' : max Q is not set in a reactive capability curve limits point");
+                    }
+                });
+        }
+
+        // check regulated terminal
+        VoltageLevel voltageLevel = ModificationUtils.getInstance().getVoltageLevel(network, modificationInfos.getVoltageLevelId());
+        ModificationUtils.getInstance().getTerminalFromIdentifiable(voltageLevel.getNetwork(),
+            modificationInfos.getRegulatingTerminalId(),
+            modificationInfos.getRegulatingTerminalType(),
+            modificationInfos.getRegulatingTerminalVlId());
     }
 
     @Override
@@ -89,19 +129,18 @@ public class GeneratorCreation extends AbstractModification {
         algo.apply(network, true, subReporter);
 
         // CreateFeederBayBuilder already create the generator using
-        // (withInjectionAdder(generatorAdder)) so then we can add extensions
+        // (withInjectionAdder(generatorAdder)) so then we can add the additional informations and extensions
         var generator = ModificationUtils.getInstance().getGenerator(network, generatorCreationInfos.getEquipmentId());
         addExtensionsToGenerator(generatorCreationInfos, generator, voltageLevel, subReporter);
     }
 
     private GeneratorAdder createGeneratorAdderInNodeBreaker(VoltageLevel voltageLevel, GeneratorCreationInfos generatorCreationInfos) {
-
         Terminal terminal = ModificationUtils.getInstance().getTerminalFromIdentifiable(voltageLevel.getNetwork(),
             generatorCreationInfos.getRegulatingTerminalId(),
             generatorCreationInfos.getRegulatingTerminalType(),
             generatorCreationInfos.getRegulatingTerminalVlId());
 
-        // creating the generator
+        // creating the generator adder
         GeneratorAdder generatorAdder = voltageLevel.newGenerator()
             .setId(generatorCreationInfos.getEquipmentId())
             .setName(generatorCreationInfos.getEquipmentName())
@@ -123,19 +162,19 @@ public class GeneratorCreation extends AbstractModification {
 
     private void addExtensionsToGenerator(GeneratorCreationInfos generatorCreationInfos, Generator generator, VoltageLevel voltageLevel, Reporter subReporter) {
         if (generatorCreationInfos.getEquipmentName() != null) {
-            ModificationUtils.getInstance().applyElementaryCreation(subReporter, generatorCreationInfos.getEquipmentName(), "Name");
+            ModificationUtils.getInstance().reportElementaryCreation(subReporter, generatorCreationInfos.getEquipmentName(), "Name");
         }
         if (generatorCreationInfos.getEnergySource() != null) {
-            ModificationUtils.getInstance().applyElementaryCreation(subReporter, generatorCreationInfos.getEnergySource(), "Energy source");
+            ModificationUtils.getInstance().reportElementaryCreation(subReporter, generatorCreationInfos.getEnergySource(), "Energy source");
         }
-        createGeneratorConnectionAttributes(generatorCreationInfos, subReporter);
-        Reporter subReporterLimits = createGeneratorActiveLimitsAttributes(generatorCreationInfos, subReporter);
-        createGeneratorReactiveLimitsAttributes(generatorCreationInfos, generator, subReporterLimits);
-        Reporter subReporterSetpoints = createGeneratorSetPointsAttributes(generatorCreationInfos, subReporter);
-        createGeneratorVoltageRegulationAndTerminalAttributes(generatorCreationInfos, generator, voltageLevel, subReporterSetpoints);
-        createGeneratorActivePowerAttributes(generatorCreationInfos, generator, subReporterSetpoints);
-        createGeneratorShortCircuitAttributes(generatorCreationInfos, generator, subReporter);
-        createGeneratorStartUpAttributes(generatorCreationInfos, generator, subReporter);
+        reportGeneratorConnection(generatorCreationInfos, subReporter);
+        Reporter subReporterLimits = reportGeneratorActiveLimits(generatorCreationInfos, subReporter);
+        createGeneratorReactiveLimits(generatorCreationInfos, generator, subReporterLimits);
+        Reporter subReporterSetpoints = reportGeneratorSetPoints(generatorCreationInfos, subReporter);
+        createGeneratorVoltageRegulation(generatorCreationInfos, generator, voltageLevel, subReporterSetpoints);
+        createGeneratorActivePowerControl(generatorCreationInfos, generator, subReporterSetpoints);
+        createGeneratorShortCircuit(generatorCreationInfos, generator, subReporter);
+        createGeneratorStartUp(generatorCreationInfos, generator, subReporter);
     }
 
     private void createGeneratorInBusBreaker(VoltageLevel voltageLevel, GeneratorCreationInfos generatorCreationInfos, Reporter subReporter) {
@@ -167,176 +206,141 @@ public class GeneratorCreation extends AbstractModification {
                 .build());
     }
 
-    private void createReactiveCapabilityCurvePoint(ReactiveCapabilityCurveAdder adder, ReactiveCapabilityCurveCreationInfos point,
-                                                    List<Report> reports, String fieldSuffix) {
-        adder.beginPoint()
-                .setMaxQ(point.getQmaxP())
-                .setMinQ(point.getQminP())
-                .setP(point.getP())
-                .endPoint();
-        addToReports(reports, point.getP(), "P" + fieldSuffix);
-        addToReports(reports, point.getQminP(), "QminP" + fieldSuffix);
-        addToReports(reports, point.getQmaxP(), "QmaxP" + fieldSuffix);
-    }
-
     private void addToReports(List<Report> reports, Double newValue, String fieldName) {
         if (newValue != null) {
             reports.add(ModificationUtils.getInstance().buildCreationReport(newValue, fieldName));
         }
     }
 
-    private void createGeneratorReactiveLimitsAttributes(GeneratorCreationInfos generatorCreationInfos, Generator generator, Reporter subReporter) {
+    private void createGeneratorReactiveLimits(GeneratorCreationInfos generatorCreationInfos, Generator generator, Reporter subReporter) {
         if (Boolean.TRUE.equals(generatorCreationInfos.getReactiveCapabilityCurve())) {
-            createReactiveCapabilityCurveAttributes(generatorCreationInfos, generator, subReporter);
+            createReactiveCapabilityCurve(generatorCreationInfos, generator, subReporter);
         } else if (Boolean.FALSE.equals(generatorCreationInfos.getReactiveCapabilityCurve())) {
-            createMinMaxReactiveLimitsAttributes(generatorCreationInfos, generator, subReporter);
+            createMinMaxReactiveLimits(generatorCreationInfos, generator, subReporter);
         }
     }
 
-    private void createMinMaxReactiveLimitsAttributes(GeneratorCreationInfos generatorCreationInfos, Generator generator, Reporter subReporter) {
+    private void createMinMaxReactiveLimits(GeneratorCreationInfos generatorCreationInfos, Generator generator, Reporter subReporter) {
         List<Report> minMaxReactiveLimitsReports = new ArrayList<>();
         if (generatorCreationInfos.getMinimumReactivePower() != null && generatorCreationInfos.getMaximumReactivePower() != null) {
-            try {
-                generator.newMinMaxReactiveLimits().setMinQ(generatorCreationInfos.getMinimumReactivePower())
-                        .setMaxQ(generatorCreationInfos.getMaximumReactivePower())
-                        .add();
-                minMaxReactiveLimitsReports.add(ModificationUtils.getInstance().buildCreationReport(
-                    generatorCreationInfos.getMinimumReactivePower(),
-                    "Minimum reactive power"));
-                minMaxReactiveLimitsReports.add(ModificationUtils.getInstance().buildCreationReport(
-                    generatorCreationInfos.getMaximumReactivePower(),
-                    "Maximum reactive power"));
-                Reporter subReporterReactiveLimits = subReporter.createSubReporter(REACTIVE_LIMITS, REACTIVE_LIMITS);
-                subReporterReactiveLimits.report(Report.builder()
-                    .withKey(REACTIVE_LIMITS)
-                    .withDefaultMessage(REACTIVE_LIMITS)
-                    .withSeverity(TypedValue.INFO_SEVERITY)
-                    .build());
-                ModificationUtils.getInstance().reportModifications(subReporter, minMaxReactiveLimitsReports, "minMaxReactiveLimitsCreated", "By range");
-            } catch (PowsyblException e) {
-                subReporter.report(Report.builder()
-                        .withKey("MinMaxReactiveLimitCreationError")
-                        .withDefaultMessage("cannot assign Min/max reactive power on generator with id=${id} : " + e.getMessage())
-                        .withValue("id", generatorCreationInfos.getEquipmentId())
-                        .withSeverity(TypedValue.ERROR_SEVERITY)
-                        .build());
-            }
+            generator.newMinMaxReactiveLimits().setMinQ(generatorCreationInfos.getMinimumReactivePower())
+                .setMaxQ(generatorCreationInfos.getMaximumReactivePower())
+                .add();
+            minMaxReactiveLimitsReports.add(ModificationUtils.getInstance().buildCreationReport(
+                generatorCreationInfos.getMinimumReactivePower(),
+                "Minimum reactive power"));
+            minMaxReactiveLimitsReports.add(ModificationUtils.getInstance().buildCreationReport(
+                generatorCreationInfos.getMaximumReactivePower(),
+                "Maximum reactive power"));
+            Reporter subReporterReactiveLimits = subReporter.createSubReporter(REACTIVE_LIMITS, REACTIVE_LIMITS);
+            subReporterReactiveLimits.report(Report.builder()
+                .withKey(REACTIVE_LIMITS)
+                .withDefaultMessage(REACTIVE_LIMITS)
+                .withSeverity(TypedValue.INFO_SEVERITY)
+                .build());
+            ModificationUtils.getInstance().reportModifications(subReporterReactiveLimits, minMaxReactiveLimitsReports, "minMaxReactiveLimitsCreated", "By range");
         }
     }
 
-    private void createReactiveCapabilityCurveAttributes(GeneratorCreationInfos generatorCreationInfos, Generator generator, Reporter subReporter) {
+    private void createReactiveCapabilityCurvePoint(ReactiveCapabilityCurveAdder adder, ReactiveCapabilityCurveCreationInfos point,
+                                                    List<Report> reports, String fieldSuffix) {
+        adder.beginPoint()
+            .setMaxQ(point.getQmaxP())
+            .setMinQ(point.getQminP())
+            .setP(point.getP())
+            .endPoint();
+        addToReports(reports, point.getP(), "P" + fieldSuffix);
+        addToReports(reports, point.getQminP(), "QminP" + fieldSuffix);
+        addToReports(reports, point.getQmaxP(), "QmaxP" + fieldSuffix);
+    }
+
+    private void createReactiveCapabilityCurve(GeneratorCreationInfos generatorCreationInfos, Generator generator, Reporter subReporter) {
         List<Report> pointsReports = new ArrayList<>();
         ReactiveCapabilityCurveAdder adder = generator.newReactiveCapabilityCurve();
         List<ReactiveCapabilityCurveCreationInfos> points = generatorCreationInfos.getReactiveCapabilityCurvePoints();
-        try {
-            IntStream.range(0, points.size())
-                    .forEach(i -> {
-                        String fieldSuffix;
-                        ReactiveCapabilityCurveCreationInfos newPoint = points.get(i);
-                        if (i == 0) {
-                            fieldSuffix = "min";
-                        } else if (i == (points.size() - 1)) {
-                            fieldSuffix = "max";
-                        } else {
-                            fieldSuffix = Integer.toString(i);
-                        }
-                        createReactiveCapabilityCurvePoint(adder, newPoint, pointsReports, fieldSuffix);
-                    });
-            adder.add();
-            Reporter subReporterReactiveLimits = subReporter.createSubReporter(REACTIVE_LIMITS, REACTIVE_LIMITS);
-            subReporterReactiveLimits.report(Report.builder()
-                    .withKey(REACTIVE_LIMITS)
-                    .withDefaultMessage(REACTIVE_LIMITS)
-                    .withSeverity(TypedValue.INFO_SEVERITY)
-                    .build());
-            ModificationUtils.getInstance().reportModifications(subReporterReactiveLimits, pointsReports, "curveReactiveLimitsCreated", "By diagram");
-        } catch (PowsyblException e) {
-            subReporter.report(Report.builder()
-                    .withKey("ReactiveCapabilityCurvePointsError")
-                    .withDefaultMessage("cannot add reactive capability curve points on generator with id=${id} :" + e.getMessage())
-                    .withValue("id", generatorCreationInfos.getEquipmentId())
-                    .withSeverity(TypedValue.ERROR_SEVERITY)
-                    .build());
-        }
+        IntStream.range(0, points.size())
+            .forEach(i -> {
+                String fieldSuffix;
+                ReactiveCapabilityCurveCreationInfos newPoint = points.get(i);
+                if (i == 0) {
+                    fieldSuffix = "min";
+                } else if (i == (points.size() - 1)) {
+                    fieldSuffix = "max";
+                } else {
+                    fieldSuffix = Integer.toString(i);
+                }
+                createReactiveCapabilityCurvePoint(adder, newPoint, pointsReports, fieldSuffix);
+            });
+        adder.add();
+        Reporter subReporterReactiveLimits = subReporter.createSubReporter(REACTIVE_LIMITS, REACTIVE_LIMITS);
+        subReporterReactiveLimits.report(Report.builder()
+            .withKey(REACTIVE_LIMITS)
+            .withDefaultMessage(REACTIVE_LIMITS)
+            .withSeverity(TypedValue.INFO_SEVERITY)
+            .build());
+        ModificationUtils.getInstance().reportModifications(subReporterReactiveLimits, pointsReports, "curveReactiveLimitsCreated", "By diagram");
     }
 
-    private Reporter createGeneratorSetPointsAttributes(GeneratorCreationInfos generatorCreationInfos, Reporter subReporter) {
-        List<Report> activePowerSetPointReports = new ArrayList<>();
-        activePowerSetPointReports.add(ModificationUtils.getInstance()
+    private Reporter reportGeneratorSetPoints(GeneratorCreationInfos generatorCreationInfos, Reporter subReporter) {
+        List<Report> setPointReports = new ArrayList<>();
+        setPointReports.add(ModificationUtils.getInstance()
                 .buildCreationReport(generatorCreationInfos.getActivePowerSetpoint(), "Active power"));
-        return ModificationUtils.getInstance().reportModifications(subReporter, activePowerSetPointReports, "SetPointCreated", "Setpoints");
+        if (generatorCreationInfos.getReactivePowerSetpoint() != null) {
+            setPointReports.add(ModificationUtils.getInstance()
+                .buildCreationReport(generatorCreationInfos.getReactivePowerSetpoint(), "Reactive power"));
+        }
+        return ModificationUtils.getInstance().reportModifications(subReporter, setPointReports, "SetPointCreated", "Setpoints");
     }
 
-    private void createGeneratorVoltageRegulationAndTerminalAttributes(GeneratorCreationInfos generatorCreationInfos, Generator generator, VoltageLevel voltageLevel, Reporter subReporter) {
+    private void createGeneratorVoltageRegulation(GeneratorCreationInfos generatorCreationInfos, Generator generator, VoltageLevel voltageLevel, Reporter subReporter) {
         if (generatorCreationInfos.isVoltageRegulationOn()) {
             List<Report> voltageReports = new ArrayList<>();
             voltageReports.add(ModificationUtils.getInstance().buildCreationReport(generatorCreationInfos.getVoltageSetpoint(), "Voltage"));
-            if (generatorCreationInfos.getRegulatingTerminalVlId() != null && generatorCreationInfos.getRegulatingTerminalId() != null) {
-                try {
-                    Terminal terminal = ModificationUtils.getInstance().getTerminalFromIdentifiable(voltageLevel.getNetwork(),
-                        generatorCreationInfos.getRegulatingTerminalId(),
-                        generatorCreationInfos.getRegulatingTerminalType(),
-                        generatorCreationInfos.getRegulatingTerminalVlId());
-                    if (terminal != null) {
-                        updateGeneratorRegulatingTerminal(generatorCreationInfos, generator, terminal, subReporter);
-                    } else {
-                        subReporter.report(Report.builder()
-                            .withKey("TerminalNotFoundError")
-                            .withDefaultMessage("cannot found terminal ${terminalId} from voltage level ${vlId} on generator with id=${id}")
-                            .withValue("terminalId", generatorCreationInfos.getRegulatingTerminalId())
-                            .withValue("vlId", generatorCreationInfos.getRegulatingTerminalVlId())
-                            .withValue("id", generatorCreationInfos.getEquipmentId())
-                            .withSeverity(TypedValue.ERROR_SEVERITY)
-                            .build());
-                    }
-                } catch (PowsyblException e) {
-                    subReporter.report(Report.builder()
-                            .withKey("TerminalNotFoundError")
-                            .withDefaultMessage("cannot found terminal ${terminalId} from voltage level ${vlId} on generator with id=${id}")
-                            .withValue("terminalId", generatorCreationInfos.getRegulatingTerminalId())
-                            .withValue("vlId", generatorCreationInfos.getRegulatingTerminalVlId())
-                            .withValue("id", generatorCreationInfos.getEquipmentId())
-                            .withSeverity(TypedValue.ERROR_SEVERITY)
-                            .build());
+            if (generatorCreationInfos.getRegulatingTerminalVlId() != null && generatorCreationInfos.getRegulatingTerminalId() != null &&
+                generatorCreationInfos.getRegulatingTerminalType() != null) {
+                Terminal terminal = ModificationUtils.getInstance().getTerminalFromIdentifiable(voltageLevel.getNetwork(),
+                    generatorCreationInfos.getRegulatingTerminalId(),
+                    generatorCreationInfos.getRegulatingTerminalType(),
+                    generatorCreationInfos.getRegulatingTerminalVlId());
+                if (terminal != null) {
+                    updateGeneratorRegulatingTerminal(generatorCreationInfos, generator, terminal, voltageReports);
                 }
             }
             if (generatorCreationInfos.getQPercent() != null) {
                 try {
                     generator.newExtension(CoordinatedReactiveControlAdderImpl.class)
-                            .withQPercent(generatorCreationInfos.getQPercent()).add();
-                    voltageReports.add(ModificationUtils.getInstance().buildCreationReport(
-                            generatorCreationInfos.getQPercent(), "Reactive percentage"));
+                        .withQPercent(generatorCreationInfos.getQPercent()).add();
+                    voltageReports.add(ModificationUtils.getInstance().buildCreationReport(generatorCreationInfos.getQPercent(), "Reactive percentage"));
                 } catch (PowsyblException e) {
-                    subReporter.report(Report.builder()
-                            .withKey("ReactivePercentageError")
-                            .withDefaultMessage("cannot add Coordinated reactive extension on generator with id=${id} :" + e.getMessage())
-                            .withValue("id", generatorCreationInfos.getEquipmentId())
-                            .withSeverity(TypedValue.ERROR_SEVERITY)
-                            .build());
+                    voltageReports.add(Report.builder()
+                        .withKey("ReactivePercentageError")
+                        .withDefaultMessage("cannot add Coordinated reactive extension on generator with id=${id} :" + e.getMessage())
+                        .withValue("id", generatorCreationInfos.getEquipmentId())
+                        .withSeverity(TypedValue.ERROR_SEVERITY)
+                        .build());
                 }
             }
             ModificationUtils.getInstance().reportModifications(subReporter, voltageReports, "VoltageRegulationCreated", "Voltage regulation");
         }
     }
 
-    private void updateGeneratorRegulatingTerminal(GeneratorCreationInfos generatorCreationInfos, Generator generator, Terminal terminal, Reporter subReporter) {
-        List<Report> terminalReports = new ArrayList<>();
+    private void updateGeneratorRegulatingTerminal(GeneratorCreationInfos generatorCreationInfos, Generator generator,
+                                                   Terminal terminal, List<Report> voltageReports) {
         if (generatorCreationInfos.getRegulatingTerminalId() != null
                 && generatorCreationInfos.getRegulatingTerminalType() != null
                 && generatorCreationInfos.getRegulatingTerminalVlId() != null) {
             generator.setRegulatingTerminal(terminal);
-            terminalReports.add(ModificationUtils.getInstance().buildCreationReport(
+            voltageReports.add(ModificationUtils.getInstance().buildCreationReport(
                     generatorCreationInfos.getRegulatingTerminalVlId(),
                     "Voltage level"));
-            terminalReports.add(ModificationUtils.getInstance().buildCreationReport(
+            voltageReports.add(ModificationUtils.getInstance().buildCreationReport(
                     generatorCreationInfos.getRegulatingTerminalType() + ":"
                             + generatorCreationInfos.getRegulatingTerminalId(),
                     "Equipment"));
-            ModificationUtils.getInstance().reportModifications(subReporter, terminalReports, "terminalCreated", "Terminal");
         }
     }
 
-    private void createGeneratorConnectionAttributes(GeneratorCreationInfos generatorCreationInfos, Reporter subReporter) {
+    private void reportGeneratorConnection(GeneratorCreationInfos generatorCreationInfos, Reporter subReporter) {
         if ((generatorCreationInfos.getVoltageLevelId() != null && generatorCreationInfos.getBusOrBusbarSectionId() != null)
             && (generatorCreationInfos.getConnectionName() != null || generatorCreationInfos.getConnectionDirection() != null ||
                 generatorCreationInfos.getConnectionPosition() != null)) {
@@ -357,7 +361,7 @@ public class GeneratorCreation extends AbstractModification {
         }
     }
 
-    private Reporter createGeneratorActiveLimitsAttributes(GeneratorCreationInfos generatorCreationInfos, Reporter subReporter) {
+    private Reporter reportGeneratorActiveLimits(GeneratorCreationInfos generatorCreationInfos, Reporter subReporter) {
         List<Report> limitsReports = new ArrayList<>();
         Reporter subReporterLimits = subReporter.createSubReporter(LIMITS, LIMITS);
         subReporterLimits.report(Report.builder()
@@ -379,7 +383,7 @@ public class GeneratorCreation extends AbstractModification {
         return subReporterLimits;
     }
 
-    private void createGeneratorActivePowerAttributes(GeneratorCreationInfos generatorCreationInfos, Generator generator, Reporter subReporter) {
+    private void createGeneratorActivePowerControl(GeneratorCreationInfos generatorCreationInfos, Generator generator, Reporter subReporter) {
         if (generatorCreationInfos.getParticipate() != null && generatorCreationInfos.getDroop() != null) {
             List<Report> activePowerRegulationReports = new ArrayList<>();
             try {
@@ -390,19 +394,19 @@ public class GeneratorCreation extends AbstractModification {
                 activePowerRegulationReports.add(ModificationUtils.getInstance().buildCreationReport(
                         generatorCreationInfos.getDroop(),
                         "Droop"));
-                ModificationUtils.getInstance().reportModifications(subReporter, activePowerRegulationReports, "ActivePowerRegulationCreated", "Active power regulation");
             } catch (PowsyblException e) {
-                subReporter.report(Report.builder()
+                activePowerRegulationReports.add(Report.builder()
                         .withKey("ActivePowerExtensionAddError")
                         .withDefaultMessage("cannot add active power extension on generator with id=${id} : " + e.getMessage())
                         .withValue("id", generatorCreationInfos.getEquipmentId())
                         .withSeverity(TypedValue.ERROR_SEVERITY)
                         .build());
             }
+            ModificationUtils.getInstance().reportModifications(subReporter, activePowerRegulationReports, "ActivePowerRegulationCreated", "Active power regulation");
         }
     }
 
-    private void createGeneratorShortCircuitAttributes(GeneratorCreationInfos generatorCreationInfos, Generator generator, Reporter subReporter) {
+    private void createGeneratorShortCircuit(GeneratorCreationInfos generatorCreationInfos, Generator generator, Reporter subReporter) {
         if (generatorCreationInfos.getTransientReactance() != null && generatorCreationInfos.getStepUpTransformerReactance() != null) {
             List<Report> shortCircuitReports = new ArrayList<>();
             try {
@@ -414,19 +418,19 @@ public class GeneratorCreation extends AbstractModification {
                         generatorCreationInfos.getTransientReactance(), "Transient reactance"));
                 shortCircuitReports.add(ModificationUtils.getInstance().buildCreationReport(
                         generatorCreationInfos.getStepUpTransformerReactance(), "Transformer reactance"));
-                ModificationUtils.getInstance().reportModifications(subReporter, shortCircuitReports, "shortCircuitCreated", "Short-circuit");
             } catch (PowsyblException e) {
-                subReporter.report(Report.builder()
+                shortCircuitReports.add(Report.builder()
                         .withKey("ShortCircuitExtensionAddError")
                         .withDefaultMessage("cannot add short-circuit extension on generator with id=${id} : " + e.getMessage())
                         .withValue("id", generatorCreationInfos.getEquipmentId())
                         .withSeverity(TypedValue.ERROR_SEVERITY)
                         .build());
             }
+            ModificationUtils.getInstance().reportModifications(subReporter, shortCircuitReports, "shortCircuitCreated", "Short-circuit");
         }
     }
 
-    private void createGeneratorStartUpAttributes(GeneratorCreationInfos generatorCreationInfos, Generator generator, Reporter subReporter) {
+    private void createGeneratorStartUp(GeneratorCreationInfos generatorCreationInfos, Generator generator, Reporter subReporter) {
         if (generatorCreationInfos.getPlannedActivePowerSetPoint() != null
                 || generatorCreationInfos.getStartupCost() != null
                 || generatorCreationInfos.getMarginalCost() != null
@@ -451,15 +455,15 @@ public class GeneratorCreation extends AbstractModification {
                         generatorCreationInfos.getPlannedOutageRate(), "Planning outage rate"));
                 startupReports.add(ModificationUtils.getInstance().buildCreationReport(
                         generatorCreationInfos.getForcedOutageRate(), "Forced outage rate"));
-                ModificationUtils.getInstance().reportModifications(subReporter, startupReports, "startUpAttributesCreated", "Start up");
             } catch (PowsyblException e) {
-                subReporter.report(Report.builder()
+                startupReports.add(Report.builder()
                         .withKey("StartupExtensionAddError")
                         .withDefaultMessage("cannot add startup extension on generator with id=${id} : " + e.getMessage())
                         .withValue("id", generatorCreationInfos.getEquipmentId())
                         .withSeverity(TypedValue.ERROR_SEVERITY)
                         .build());
             }
+            ModificationUtils.getInstance().reportModifications(subReporter, startupReports, "startUpAttributesCreated", "Start up");
         }
     }
 }
