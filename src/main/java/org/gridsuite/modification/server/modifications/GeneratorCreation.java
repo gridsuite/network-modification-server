@@ -407,17 +407,19 @@ public class GeneratorCreation extends AbstractModification {
     }
 
     private void createGeneratorShortCircuit(GeneratorCreationInfos generatorCreationInfos, Generator generator, Reporter subReporter) {
-        if (generatorCreationInfos.getTransientReactance() != null && generatorCreationInfos.getStepUpTransformerReactance() != null) {
+        if (generatorCreationInfos.getTransientReactance() != null) {
             List<Report> shortCircuitReports = new ArrayList<>();
             try {
-                generator.newExtension(GeneratorShortCircuitAdder.class)
-                        .withDirectTransX(generatorCreationInfos.getTransientReactance())
-                        .withStepUpTransformerX(generatorCreationInfos.getStepUpTransformerReactance())
-                        .add();
-                shortCircuitReports.add(ModificationUtils.getInstance().buildCreationReport(
-                        generatorCreationInfos.getTransientReactance(), "Transient reactance"));
-                shortCircuitReports.add(ModificationUtils.getInstance().buildCreationReport(
-                        generatorCreationInfos.getStepUpTransformerReactance(), "Transformer reactance"));
+                GeneratorShortCircuitAdder shortCircuitAdder = generator.newExtension(GeneratorShortCircuitAdder.class)
+                    .withDirectTransX(generatorCreationInfos.getTransientReactance());
+                if (generatorCreationInfos.getStepUpTransformerReactance() != null) {
+                    shortCircuitAdder.withStepUpTransformerX(generatorCreationInfos.getStepUpTransformerReactance());
+                }
+                shortCircuitAdder.add();
+                shortCircuitReports.add(ModificationUtils.getInstance().buildCreationReport(generatorCreationInfos.getTransientReactance(), "Transient reactance"));
+                if (generatorCreationInfos.getStepUpTransformerReactance() != null) {
+                    shortCircuitReports.add(ModificationUtils.getInstance().buildCreationReport(generatorCreationInfos.getStepUpTransformerReactance(), "Transformer reactance"));
+                }
             } catch (PowsyblException e) {
                 shortCircuitReports.add(Report.builder()
                         .withKey("ShortCircuitExtensionAddError")
