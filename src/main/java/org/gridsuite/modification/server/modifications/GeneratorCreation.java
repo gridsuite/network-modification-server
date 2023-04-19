@@ -52,6 +52,10 @@ public class GeneratorCreation extends AbstractModification {
         this.modificationInfos = modificationInfos;
     }
 
+    private static NetworkModificationException makeGeneratorException(String generatorId, String msgSuffix) {
+        return new NetworkModificationException(CREATE_GENERATOR_ERROR, "Generator '" + generatorId + "' : " + msgSuffix);
+    }
+
     @Override
     public void check(Network network) throws NetworkModificationException {
         if (network.getGenerator(modificationInfos.getEquipmentId()) != null) {
@@ -65,11 +69,11 @@ public class GeneratorCreation extends AbstractModification {
         // check min max reactive limits
         if (modificationInfos.getMinimumReactivePower() != null && modificationInfos.getMaximumReactivePower() != null) {
             if (Double.isNaN(modificationInfos.getMinimumReactivePower())) {
-                throw new NetworkModificationException(CREATE_GENERATOR_ERROR, "Generator '" + modificationInfos.getEquipmentId() + "' : minimum reactive power is not set");
+                throw makeGeneratorException(modificationInfos.getEquipmentId(), "minimum reactive power is not set");
             } else if (Double.isNaN(modificationInfos.getMaximumReactivePower())) {
-                throw new NetworkModificationException(CREATE_GENERATOR_ERROR, "Generator '" + modificationInfos.getEquipmentId() + "' : maximum reactive power is not set");
+                throw makeGeneratorException(modificationInfos.getEquipmentId(), "maximum reactive power is not set");
             } else if (modificationInfos.getMaximumReactivePower() < modificationInfos.getMinimumReactivePower()) {
-                throw new NetworkModificationException(CREATE_GENERATOR_ERROR, "Generator '" + modificationInfos.getEquipmentId() + "' : maximum reactive power is expected to be greater than or equal to minimum reactive power");
+                throw makeGeneratorException(modificationInfos.getEquipmentId(), "maximum reactive power is expected to be greater than or equal to minimum reactive power");
             }
         }
 
@@ -77,17 +81,17 @@ public class GeneratorCreation extends AbstractModification {
         List<ReactiveCapabilityCurveCreationInfos> points = modificationInfos.getReactiveCapabilityCurvePoints();
         if (!CollectionUtils.isEmpty(points)) {
             if (points.size() < 2) {
-                throw new NetworkModificationException(CREATE_GENERATOR_ERROR, "Generator '" + modificationInfos.getEquipmentId() + "' : a reactive capability curve should have at least two points");
+                throw makeGeneratorException(modificationInfos.getEquipmentId(), "a reactive capability curve should have at least two points");
             }
             IntStream.range(0, points.size())
                 .forEach(i -> {
                     ReactiveCapabilityCurveCreationInfos newPoint = points.get(i);
                     if (Double.isNaN(newPoint.getP())) {
-                        throw new NetworkModificationException(CREATE_GENERATOR_ERROR, "Generator '" + modificationInfos.getEquipmentId() + "' : P is not set in a reactive capability curve limits point");
+                        throw makeGeneratorException(modificationInfos.getEquipmentId(), "P is not set in a reactive capability curve limits point");
                     } else if (Double.isNaN(newPoint.getQminP())) {
-                        throw new NetworkModificationException(CREATE_GENERATOR_ERROR, "Generator '" + modificationInfos.getEquipmentId() + "' : min Q is not set in a reactive capability curve limits point");
+                        throw makeGeneratorException(modificationInfos.getEquipmentId(), "min Q is not set in a reactive capability curve limits point");
                     } else if (Double.isNaN(newPoint.getQmaxP())) {
-                        throw new NetworkModificationException(CREATE_GENERATOR_ERROR, "Generator '" + modificationInfos.getEquipmentId() + "' : max Q is not set in a reactive capability curve limits point");
+                        throw makeGeneratorException(modificationInfos.getEquipmentId(), "max Q is not set in a reactive capability curve limits point");
                     }
                 });
         }
@@ -117,7 +121,7 @@ public class GeneratorCreation extends AbstractModification {
                 generatorCreationInfos.getBusOrBusbarSectionId(), network, voltageLevel);
 
         CreateFeederBay algo = new CreateFeederBayBuilder()
-                .withBbsId(generatorCreationInfos.getBusOrBusbarSectionId())
+                .withBusOrBusbarSectionId(generatorCreationInfos.getBusOrBusbarSectionId())
                 .withInjectionDirection(generatorCreationInfos.getConnectionDirection())
                 .withInjectionFeederName(generatorCreationInfos.getConnectionName() != null
                         ? generatorCreationInfos.getConnectionName()
@@ -341,9 +345,13 @@ public class GeneratorCreation extends AbstractModification {
     }
 
     private void reportGeneratorConnection(GeneratorCreationInfos generatorCreationInfos, Reporter subReporter) {
-        if ((generatorCreationInfos.getVoltageLevelId() != null && generatorCreationInfos.getBusOrBusbarSectionId() != null)
-            && (generatorCreationInfos.getConnectionName() != null || generatorCreationInfos.getConnectionDirection() != null ||
-                generatorCreationInfos.getConnectionPosition() != null)) {
+        if (generatorCreationInfos.getVoltageLevelId() == null || generatorCreationInfos.getBusOrBusbarSectionId() == null) {
+            return;
+        }
+
+        if (generatorCreationInfos.getConnectionName() != null ||
+            generatorCreationInfos.getConnectionDirection() != null ||
+            generatorCreationInfos.getConnectionPosition() != null) {
             List<Report> connectionReports = new ArrayList<>();
             if (generatorCreationInfos.getConnectionName() != null) {
                 connectionReports.add(ModificationUtils.getInstance()
