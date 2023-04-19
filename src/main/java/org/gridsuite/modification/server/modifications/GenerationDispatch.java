@@ -46,6 +46,7 @@ public class GenerationDispatch extends AbstractModification {
     private static final String POWER_TO_DISPATCH = "PowerToDispatch";
     private static final String STACKING = "Stacking";
     private static final String RESULT = "Result";
+    private static final double EPSILON = 0.001;
 
     private final Map<Integer, List<Generator>> fixedSupplyGenerators = new HashMap<>();
     private final Map<Integer, List<Generator>> adjustableGenerators = new HashMap<>();
@@ -59,7 +60,7 @@ public class GenerationDispatch extends AbstractModification {
         this.generationDispatchInfos = generationDispatchInfos;
     }
 
-    private void report(Reporter reporter, String key, String defaultMessage, Map<String, Object> values, TypedValue severity) {
+    private static void report(Reporter reporter, String key, String defaultMessage, Map<String, Object> values, TypedValue severity) {
         ReportBuilder builder = Report.builder()
             .withKey(key)
             .withDefaultMessage(defaultMessage)
@@ -70,7 +71,7 @@ public class GenerationDispatch extends AbstractModification {
         reporter.report(builder.build());
     }
 
-    private double computeTotalActiveLoad(Component component) {
+    private static double computeTotalActiveLoad(Component component) {
         Objects.requireNonNull(component);
         return component.getBusStream().flatMap(Bus::getLoadStream)
             .filter(load -> load.getTerminal().isConnected())
@@ -78,7 +79,7 @@ public class GenerationDispatch extends AbstractModification {
             .sum();
     }
 
-    private double computeTotalDemand(Component component, double lossCoefficient) {
+    private static double computeTotalDemand(Component component, double lossCoefficient) {
         double totalLoad = computeTotalActiveLoad(component);
         return totalLoad * (1. + lossCoefficient / 100.);
     }
@@ -122,7 +123,7 @@ public class GenerationDispatch extends AbstractModification {
         }
     }
 
-    private class GeneratorTargetPListener extends DefaultNetworkListener {
+    private static class GeneratorTargetPListener extends DefaultNetworkListener {
         private final Reporter reporter;
 
         GeneratorTargetPListener(Reporter reporter) {
@@ -209,7 +210,7 @@ public class GenerationDispatch extends AbstractModification {
 
             Reporter resultReporter = componentReporter.createSubReporter(RESULT, RESULT);
 
-            if (realized == totalAmountSupplyToBeDispatched) {
+            if (Math.abs(totalAmountSupplyToBeDispatched - realized) < EPSILON) {
                 report(resultReporter, "SupplyDemandBalanceCouldBeMet", "The supply-demand balance could be met",
                     Map.of(), TypedValue.INFO_SEVERITY);
             } else {
