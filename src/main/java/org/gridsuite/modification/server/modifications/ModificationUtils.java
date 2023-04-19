@@ -382,11 +382,12 @@ public final class ModificationUtils {
         return null;
     }
 
-    public void reportModifications(Reporter subReporter, List<Report> reports, String subReporterKey,
+    public Reporter reportModifications(Reporter subReporter, List<Report> reports, String subReporterKey,
             String subReporterDefaultMessage) {
         List<Report> validReports = reports.stream().filter(Objects::nonNull).collect(Collectors.toList());
+        Reporter modificationSubreporter = null;
         if (!validReports.isEmpty()) {
-            Reporter modificationSubreporter = subReporter.createSubReporter(subReporterKey, subReporterDefaultMessage);
+            modificationSubreporter = subReporter.createSubReporter(subReporterKey, subReporterDefaultMessage);
             modificationSubreporter.report(Report.builder()
                     .withKey(subReporterKey)
                     .withDefaultMessage(subReporterDefaultMessage)
@@ -394,6 +395,7 @@ public final class ModificationUtils {
                     .build());
             validReports.stream().forEach(modificationSubreporter::report);
         }
+        return modificationSubreporter;
     }
 
     public <T> void applyElementaryModifications(Consumer<T> setter, Supplier<T> getter,
@@ -502,6 +504,21 @@ public final class ModificationUtils {
                 limitsAdder.add();
             }
         }
+    }
+
+    public <T> Report buildCreationReport(T value, String fieldName) {
+        String newValueString = value == null ? "NaN" : value.toString();
+        return Report.builder()
+                .withKey("Creation" + fieldName)
+                .withDefaultMessage("    ${fieldName} : ${value}")
+                .withValue("fieldName", fieldName)
+                .withValue("value", newValueString)
+                .withSeverity(TypedValue.INFO_SEVERITY)
+                .build();
+    }
+
+    public <T> void reportElementaryCreation(Reporter subReporter, T value, String fieldName) {
+        subReporter.report(buildCreationReport(value, fieldName));
     }
 }
 
