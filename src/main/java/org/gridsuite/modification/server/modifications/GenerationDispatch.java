@@ -6,7 +6,6 @@
  */
 package org.gridsuite.modification.server.modifications;
 
-import com.google.common.util.concurrent.AtomicDouble;
 import com.powsybl.commons.reporter.Report;
 import com.powsybl.commons.reporter.ReportBuilder;
 import com.powsybl.commons.reporter.Reporter;
@@ -73,9 +72,10 @@ public class GenerationDispatch extends AbstractModification {
 
     private double computeTotalActiveLoad(Component component) {
         Objects.requireNonNull(component);
-        final AtomicDouble totalLoad = new AtomicDouble(0.);
-        component.getBusStream().forEach(bus -> totalLoad.addAndGet(bus.getLoadStream().filter(load -> load.getTerminal().isConnected()).mapToDouble(Load::getP0).sum()));
-        return totalLoad.get();
+        return component.getBusStream().flatMap(Bus::getLoadStream)
+            .filter(load -> load.getTerminal().isConnected())
+            .mapToDouble(Load::getP0)
+            .sum();
     }
 
     private double computeTotalDemand(Component component, double lossCoefficient) {
