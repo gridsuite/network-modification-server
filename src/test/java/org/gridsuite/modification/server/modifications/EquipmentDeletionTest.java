@@ -19,11 +19,11 @@ import org.springframework.http.MediaType;
 
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.DELETE_EQUIPMENT_ERROR;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.EQUIPMENT_NOT_FOUND;
-import static org.junit.Assert.*;
+import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
@@ -89,21 +89,17 @@ public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
         // delete load (fail because the load is not found)
         EquipmentDeletionInfos equipmentDeletionInfos = (EquipmentDeletionInfos) buildModification();
         equipmentDeletionInfos.setEquipmentId("notFoundLoad");
-        mockMvc
-                .perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(equipmentDeletionInfos))
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpectAll(status().isNotFound(),
-                        content().string(new NetworkModificationException(EQUIPMENT_NOT_FOUND,
-                                "Equipment with id=notFoundLoad not found or of bad type").getMessage()));
+        mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(equipmentDeletionInfos)).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        assertLogMessage(new NetworkModificationException(EQUIPMENT_NOT_FOUND, "Equipment with id=notFoundLoad not found or of bad type").getMessage(),
+                equipmentDeletionInfos.getErrorType().name(), reportService);
 
         // try to delete substation (Internal error because the substation is still connected)
         equipmentDeletionInfos.setEquipmentType("SUBSTATION");
         equipmentDeletionInfos.setEquipmentId("s2");
         mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(equipmentDeletionInfos)).contentType(MediaType.APPLICATION_JSON))
-                .andExpectAll(
-                        status().is5xxServerError(),
-                        content().string(new NetworkModificationException(DELETE_EQUIPMENT_ERROR,
-                                "The substation s2 is still connected to another substation").getMessage()));
+                .andExpect(status().isOk());
+        assertLogMessage("The substation s2 is still connected to another substation", equipmentDeletionInfos.getErrorType().name(), reportService);
         assertNotNull(getNetwork().getSubstation("s2"));
     }
 }

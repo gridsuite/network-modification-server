@@ -11,10 +11,7 @@ import com.powsybl.iidm.network.EnergySource;
 import com.powsybl.iidm.network.SwitchKind;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import org.gridsuite.modification.server.dto.*;
-
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -25,24 +22,19 @@ public final class ModificationCreation {
     }
 
     public static VoltageLevelCreationInfos getCreationVoltageLevel(String substationId, String voltageLevelId, String voltageLevelName) {
-        List<BusbarSectionCreationInfos> busbarSectionInfos = new ArrayList<>();
-        busbarSectionInfos.add(BusbarSectionCreationInfos.builder().id("bbs.nw").name("SJB NO").vertPos(1).horizPos(1).build());
-        busbarSectionInfos.add(BusbarSectionCreationInfos.builder().id("bbs.ne").name("SJB NE").vertPos(1).horizPos(2).build());
-        busbarSectionInfos.add(BusbarSectionCreationInfos.builder().id("bbs.sw").name("SJB SW").vertPos(2).horizPos(1).build());
-
-        List<BusbarConnectionCreationInfos> busbarConnectionInfos = new ArrayList<>();
-        busbarConnectionInfos.add(
-            BusbarConnectionCreationInfos.builder().fromBBS("bbs.nw").toBBS("bbs.ne").switchKind(SwitchKind.BREAKER).build());
-        busbarConnectionInfos.add(
-            BusbarConnectionCreationInfos.builder().fromBBS("bbs.nw").toBBS("bbs.sw").switchKind(SwitchKind.DISCONNECTOR).build());
-
         return VoltageLevelCreationInfos.builder()
             .equipmentId(voltageLevelId)
             .equipmentName(voltageLevelName)
-            .nominalVoltage(379.1)
             .substationId(substationId)
-            .busbarSections(busbarSectionInfos)
-            .busbarConnections(busbarConnectionInfos)
+            .nominalVoltage(379.1)
+            .lowVoltageLimit(0.0)
+            .highVoltageLimit(10.0)
+            .ipMin(0.0)
+            .ipMax(10.0)
+            .busbarCount(2)
+            .sectionCount(2)
+            .switchKinds(Arrays.asList(SwitchKind.BREAKER))
+            .couplingDevices(Arrays.asList(CouplingDeviceInfos.builder().busbarSectionId1("bbs.nw").busbarSectionId2("bbs.ne").build()))
             .build();
     }
 
