@@ -6,6 +6,7 @@ on:
       - 'main'
     tags:
       - 'v[0-9]*'
+    pull_request:
 
 jobs:
   build:
