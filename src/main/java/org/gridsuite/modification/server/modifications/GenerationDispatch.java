@@ -134,7 +134,7 @@ public class GenerationDispatch extends AbstractModification {
         public void onUpdate(Identifiable identifiable, String attribute, String variantId, Object oldValue, Object newValue) {
             if (identifiable.getType() == IdentifiableType.GENERATOR &&
                 attribute.equals("targetP") &&
-                (double) oldValue != (double) newValue) {
+                Double.compare((double) oldValue, (double) newValue) != 0) {
                 report(reporter, "GeneratorSetTargetP", "Generator ${generator} targetP : ${oldValue} MW --> ${newValue} MW",
                     Map.of("generator", identifiable.getId(), "oldValue", oldValue, "newValue", newValue), TypedValue.INFO_SEVERITY);
             }
@@ -186,27 +186,26 @@ public class GenerationDispatch extends AbstractModification {
 
             // get adjustable generators in the component
             computeAdjustableGenerators(component, powerToDispatchReporter);
-            if (adjustableGenerators.get(componentNum).isEmpty()) {
-                continue;
+            double realized = 0.;
+            if (!adjustableGenerators.get(componentNum).isEmpty()) {
+                // set targetP to 0 for all adjustable generators
+                adjustableGenerators.get(componentNum).forEach(generator -> generator.setTargetP(0.));
+
+                // stacking of adjustable generators to ensure the totalAmountSupplyToBeDispatched
+                List<Scalable> generatorsScalable = adjustableGenerators.get(componentNum).stream().map(generator ->
+                    (Scalable) Scalable.onGenerator(generator.getId(), generator.getMinP(), generator.getMaxP())
+                ).collect(Collectors.toList());
+
+                Reporter stackingReporter = componentReporter.createSubReporter(STACKING, STACKING);
+
+                GeneratorTargetPListener listener = new GeneratorTargetPListener(stackingReporter);
+                network.addListener(listener);
+
+                Scalable scalable = Scalable.stack(generatorsScalable.toArray(Scalable[]::new));
+                realized = scalable.scale(network, totalAmountSupplyToBeDispatched);
+
+                network.removeListener(listener);
             }
-
-            // set targetP to 0 for all adjustable generators
-            adjustableGenerators.get(componentNum).forEach(generator -> generator.setTargetP(0.));
-
-            // stacking of adjustable generators to ensure the totalAmountSupplyToBeDispatched
-            List<Scalable> generatorsScalable = adjustableGenerators.get(componentNum).stream().map(generator ->
-                (Scalable) Scalable.onGenerator(generator.getId(), generator.getMinP(), generator.getMaxP())
-            ).collect(Collectors.toList());
-
-            Reporter stackingReporter = componentReporter.createSubReporter(STACKING, STACKING);
-
-            GeneratorTargetPListener listener = new GeneratorTargetPListener(stackingReporter);
-            network.addListener(listener);
-
-            Scalable scalable = Scalable.stack(generatorsScalable.toArray(Scalable[]::new));
-            double realized = scalable.scale(network, totalAmountSupplyToBeDispatched);
-
-            network.removeListener(listener);
 
             Reporter resultReporter = componentReporter.createSubReporter(RESULT, RESULT);
 
