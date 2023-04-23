@@ -25,6 +25,7 @@ import java.util.UUID;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_NOT_FOUND;
 import static org.junit.Assert.assertNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
@@ -151,5 +152,76 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(LINE_NOT_FOUND, "Line lineNotFound does not exist in network").getMessage(),
                 lineModificationInfos.getErrorType().name(), reportService);
+    }
+
+    @SneakyThrows
+    @Test
+    public void testPermanentLimitUnchanged() {
+        LineModificationInfos lineModificationInfos = (LineModificationInfos) buildModification();
+
+        lineModificationInfos.getCurrentLimits1().setPermanentLimit(null);
+        lineModificationInfos.getCurrentLimits2().setPermanentLimit(null);
+        String modificationToCreateJson = mapper.writeValueAsString(lineModificationInfos);
+
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+
+        LineModificationInfos createdModification = (LineModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
+
+        assertThat(createdModification, createMatcher(lineModificationInfos));
+    }
+
+    @SneakyThrows
+    @Test
+    public void testCharacteristicsUnchanged() {
+        LineModificationInfos lineModificationInfos = (LineModificationInfos) buildModification();
+
+        lineModificationInfos.setSeriesReactance(null);
+        lineModificationInfos.setSeriesResistance(null);
+        lineModificationInfos.setShuntConductance1(null);
+        lineModificationInfos.setShuntSusceptance1(null);
+        lineModificationInfos.setShuntConductance2(null);
+        lineModificationInfos.setShuntSusceptance2(null);
+
+        String modificationToCreateJson = mapper.writeValueAsString(lineModificationInfos);
+
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+
+        LineModificationInfos createdModification = (LineModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
+
+        assertThat(createdModification, createMatcher(lineModificationInfos));
+    }
+
+    @SneakyThrows
+    @Test
+    public void testTemporaryLimitsModification() {
+        Line line = getNetwork().getLine("line1");
+        line.newCurrentLimits1()
+                .setPermanentLimit(10.0)
+                .beginTemporaryLimit()
+                .setName("name31")
+                .setAcceptableDuration(31)
+                .setValue(12.0)
+                .endTemporaryLimit()
+                .add();
+        line.newCurrentLimits2()
+                .setPermanentLimit(11.0)
+                .beginTemporaryLimit()
+                .setName("name32")
+                .setAcceptableDuration(32)
+                .setValue(15.0)
+                .endTemporaryLimit()
+                .add();
+        LineModificationInfos lineModificationInfos = (LineModificationInfos) buildModification();
+
+        String modificationToCreateJson = mapper.writeValueAsString(lineModificationInfos);
+
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+
+        LineModificationInfos createdModification = (LineModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
+
+        assertThat(createdModification, createMatcher(lineModificationInfos));
     }
 }
