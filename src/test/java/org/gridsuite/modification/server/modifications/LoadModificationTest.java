@@ -11,7 +11,6 @@ import com.powsybl.iidm.network.Load;
 import com.powsybl.iidm.network.LoadType;
 import com.powsybl.iidm.network.Network;
 import lombok.SneakyThrows;
-import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.AttributeModification;
 import org.gridsuite.modification.server.dto.LoadModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
@@ -23,11 +22,10 @@ import org.springframework.http.MediaType;
 
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_LOAD_ERROR;
+import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class LoadModificationTest extends AbstractNetworkModificationTest {
@@ -93,11 +91,8 @@ public class LoadModificationTest extends AbstractNetworkModificationTest {
                 .loadType(new AttributeModification<>(null, OperationType.UNSET))
                 .build();
         String loadModificationInfosJson = mapper.writeValueAsString(loadModificationInfos);
-        mockMvc.perform(post(getNetworkModificationUri()).content(loadModificationInfosJson)
-                .contentType(MediaType.APPLICATION_JSON)).andExpectAll(
-                        status().is5xxServerError(),
-                        content().string(
-                                new NetworkModificationException(MODIFY_LOAD_ERROR, "Load 'v1load': load type is null")
-                                        .getMessage()));
+        mockMvc.perform(post(getNetworkModificationUri()).content(loadModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        assertLogMessage("Load 'v1load': load type is null", loadModificationInfos.getErrorType().name(), reportService);
     }
 }

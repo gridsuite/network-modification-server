@@ -19,13 +19,13 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_NOT_FOUND;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_ALREADY_EXISTS;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_NOT_FOUND;
 import static org.gridsuite.modification.server.utils.MatcherDeleteVoltageLevelOnLineInfos.createMatcherDeleteVoltageLevelOnLineInfos;
+import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -93,10 +93,9 @@ public class DeleteVoltageLevelOnLineTest extends AbstractNetworkModificationTes
         var objectWriter = mapper.writer().withDefaultPrettyPrinter();
         String json = objectWriter.writeValueAsString(deleteVoltageLevelOnLineInfos);
         mockMvc.perform(MockMvcRequestBuilders.post(getNetworkModificationUri()).content(json).contentType(MediaType.APPLICATION_JSON))
-            .andExpectAll(
-                    status().is4xxClientError(),
-                    content().string(new NetworkModificationException(LINE_NOT_FOUND, "ll").getMessage())
-            );
+                .andExpect(status().isOk());
+        assertLogMessage(new NetworkModificationException(LINE_NOT_FOUND, "ll").getMessage(),
+                deleteVoltageLevelOnLineInfos.getErrorType().name(), reportService);
     }
 
     @SneakyThrows
@@ -107,9 +106,8 @@ public class DeleteVoltageLevelOnLineTest extends AbstractNetworkModificationTes
         deleteVoltageLevelOnLineInfos.setReplacingLine1Id("l2");
         String lineAttachToAbsentLineJson = mapper.writeValueAsString(deleteVoltageLevelOnLineInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineAttachToAbsentLineJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpectAll(
-                    status().is4xxClientError(),
-                    content().string(new NetworkModificationException(LINE_ALREADY_EXISTS, "l2").getMessage())
-            );
+                .andExpect(status().isOk());
+        assertLogMessage(new NetworkModificationException(LINE_ALREADY_EXISTS, "l2").getMessage(),
+                deleteVoltageLevelOnLineInfos.getErrorType().name(), reportService);
     }
 }

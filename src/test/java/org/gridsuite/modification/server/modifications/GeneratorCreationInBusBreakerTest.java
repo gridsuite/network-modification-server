@@ -19,12 +19,13 @@ import org.gridsuite.modification.server.utils.MatcherGeneratorCreationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.Arrays;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.BUS_NOT_FOUND;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.EQUIPMENT_NOT_FOUND;
+import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -132,12 +133,27 @@ public class GeneratorCreationInBusBreakerTest extends AbstractNetworkModificati
 
     @SneakyThrows
     @Test
-    public void testCreateWithErrors() {
+    public void testCreateWithBusbarSectionErrors() {
         GeneratorCreationInfos generatorCreationInfos = (GeneratorCreationInfos) buildModification();
         generatorCreationInfos.setBusOrBusbarSectionId("notFoundBus");
-        MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(generatorCreationInfos)).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().is4xxClientError()).andReturn();
-        String resultAsString = mvcResult.getResponse().getContentAsString();
-        assertEquals(resultAsString, new NetworkModificationException(BUS_NOT_FOUND, "notFoundBus").getMessage());
+        mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(generatorCreationInfos)).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        assertLogMessage(new NetworkModificationException(BUS_NOT_FOUND, "notFoundBus").getMessage(),
+                generatorCreationInfos.getErrorType().name(), reportService);
+    }
+
+    @SneakyThrows
+    @Test
+    public void testCreateWithRegulatedTerminalError() {
+         // invalid regulating terminal id <---> regulation terminal type
+        GeneratorCreationInfos generatorCreationInfos = (GeneratorCreationInfos) buildModification();
+        generatorCreationInfos.setRegulatingTerminalType("LINE");
+        generatorCreationInfos.setRegulatingTerminalId("titi");
+
+        String generatorCreationInfosJson = mapper.writeValueAsString(generatorCreationInfos);
+        mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
+        assertLogMessage(new NetworkModificationException(EQUIPMENT_NOT_FOUND, "Equipment with id=titi not found with type LINE").getMessage(),
+            generatorCreationInfos.getErrorType().name(), reportService);
     }
 }
