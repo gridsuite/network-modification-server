@@ -411,7 +411,7 @@ public final class ModificationUtils {
     }
 
     public <T> Report buildModificationReport(T oldValue, T newValue, String fieldName) {
-        return buildModificationReportWithIndentation(oldValue, newValue, fieldName, 0);
+        return buildModificationReportWithIndentation(oldValue, newValue, fieldName, 1);
     }
 
     public <T> Report buildModificationReportWithIndentation(T oldValue, T newValue, String fieldName, int indentationLevel) {
