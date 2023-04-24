@@ -51,7 +51,8 @@ import java.util.UUID;
     @JsonSubTypes.Type(value = GeneratorScalingInfos.class, name = "GENERATOR_SCALING"),
     @JsonSubTypes.Type(value = LoadScalingInfos.class, name = "LOAD_SCALING"),
     @JsonSubTypes.Type(value = DeleteVoltageLevelOnLineInfos.class, name = "DELETE_VOLTAGE_LEVEL_ON_LINE"),
-    @JsonSubTypes.Type(value = DeleteAttachingLineInfos.class, name = "DELETE_ATTACHING_LINE")
+    @JsonSubTypes.Type(value = DeleteAttachingLineInfos.class, name = "DELETE_ATTACHING_LINE"),
+    @JsonSubTypes.Type(value = GenerationDispatchInfos.class, name = "GENERATION_DISPATCH")
 })
 @SuperBuilder
 @NoArgsConstructor
