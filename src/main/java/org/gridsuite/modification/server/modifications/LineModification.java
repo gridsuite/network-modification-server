@@ -30,6 +30,8 @@ import com.powsybl.iidm.network.LoadingLimits.TemporaryLimit;
  */
 public class LineModification extends AbstractModification {
 
+    private static final String DURATION = "duration";
+    private static final String NAME = "name";
     private final LineModificationInfos modificationInfos;
 
     public LineModification(LineModificationInfos modificationInfos) {
@@ -189,18 +191,18 @@ public class LineModification extends AbstractModification {
             if (limitToModify == null) {
                 temporaryLimitsReports.add(Report.builder().withKey("temporaryLimitAdded" + limit.getName())
                         .withDefaultMessage("            ${name} (${duration}) added with ${value}")
-                        .withValue("name", limit.getName())
-                        .withValue("duration", limitAcceptableDuration)
+                        .withValue(NAME, limit.getName())
+                        .withValue(DURATION, limitAcceptableDuration)
                         .withValue("value", limitValue)
                         .withSeverity(TypedValue.INFO_SEVERITY)
                         .build());
 
-            } else if (Double.compare(limitToModify.getValue(), limit.getValue()) != 0) {
+            } else if (Double.compare(limitToModify.getValue(), limitValue) != 0) {
                 temporaryLimitsReports.add(Report.builder()
                         .withKey("temporaryLimitModified" + limit.getName())
                         .withDefaultMessage("            ${name} (${duration}) : ${oldValue} -> ${value}")
-                        .withValue("name", limit.getName())
-                        .withValue("duration", limitAcceptableDuration)
+                        .withValue(NAME, limit.getName())
+                        .withValue(DURATION, limitAcceptableDuration)
                         .withValue("value", limitValue)
                         .withValue("oldValue", limitToModify.getValue())
                         .withSeverity(TypedValue.INFO_SEVERITY)
@@ -218,8 +220,8 @@ public class LineModification extends AbstractModification {
                 temporaryLimitsReports.add(Report.builder()
                         .withKey("temporaryLimitDeleted" + limit.getName())
                         .withDefaultMessage("            ${name} (${duration}) deleted")
-                        .withValue("name", limit.getName())
-                        .withValue("duration", limit.getAcceptableDuration())
+                        .withValue(NAME, limit.getName())
+                        .withValue(DURATION, limit.getAcceptableDuration())
                         .withSeverity(TypedValue.INFO_SEVERITY)
                         .build());
             }
