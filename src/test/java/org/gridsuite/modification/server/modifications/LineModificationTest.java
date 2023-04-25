@@ -223,5 +223,17 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
         LineModificationInfos createdModification = (LineModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
 
         assertThat(createdModification, createMatcher(lineModificationInfos));
+
+        //delete temporary limit
+        lineModificationInfos.getCurrentLimits1().setTemporaryLimits(null);
+        lineModificationInfos.getCurrentLimits2().setTemporaryLimits(null);
+        modificationToCreateJson = mapper.writeValueAsString(lineModificationInfos);
+
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+
+        createdModification = (LineModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(1);
+
+        assertThat(createdModification, createMatcher(lineModificationInfos));
     }
 }

@@ -52,7 +52,11 @@ public class MatcherLineModificationInfos extends MatcherModificationInfos<LineM
             return true;
         }
         if (tempLimits1 == null || tempLimits2 == null) {
-            return false;
+            if (tempLimits1 == null && tempLimits2 != null && tempLimits2.isEmpty()) {
+                return true;
+            } else {
+                return tempLimits2 == null && tempLimits1 != null && tempLimits1.isEmpty();
+            }
         }
         if (tempLimits1.size() != tempLimits2.size()) {
             return false;

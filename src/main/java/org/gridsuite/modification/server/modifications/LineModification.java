@@ -172,7 +172,10 @@ public class LineModification extends AbstractModification {
     private void modifyTemporaryLimits(CurrentLimitsInfos currentLimitsInfos, CurrentLimitsAdder limitsAdder,
             CurrentLimits currentLimits, List<Report> limitsReports) {
         // we create a mutable list of temporary limits to be able to remove the limits that are modified
-        List<TemporaryLimit> temporaryLimits = new ArrayList<>(currentLimits.getTemporaryLimits());
+        List<TemporaryLimit> lineTemporaryLimits = null;
+        if (currentLimits != null) {
+            lineTemporaryLimits = new ArrayList<>(currentLimits.getTemporaryLimits());
+        }
         List<Report> temporaryLimitsReports = new ArrayList<>();
         for (CurrentTemporaryLimitCreationInfos limit : currentLimitsInfos.getTemporaryLimits()) {
             int limitAcceptableDuration = limit.getAcceptableDuration() == null ? Integer.MAX_VALUE : limit.getAcceptableDuration();
@@ -181,7 +184,7 @@ public class LineModification extends AbstractModification {
             if (currentLimits != null) {
                 limitToModify = currentLimits.getTemporaryLimit(limitAcceptableDuration);
                 // we remove the limit to modify from the list of temporary limits so we can log the remaining ones (deleted)
-                temporaryLimits.removeIf(temporaryLimit -> temporaryLimit.getAcceptableDuration() == limitAcceptableDuration);
+                lineTemporaryLimits.removeIf(temporaryLimit -> temporaryLimit.getAcceptableDuration() == limitAcceptableDuration);
             }
             if (limitToModify == null) {
                 temporaryLimitsReports.add(Report.builder().withKey("temporaryLimitAdded" + limit.getName())
@@ -210,8 +213,8 @@ public class LineModification extends AbstractModification {
                     .setAcceptableDuration(limitAcceptableDuration)
                     .endTemporaryLimit();
         }
-        if (temporaryLimits != null) {
-            for (TemporaryLimit limit : temporaryLimits) {
+        if (lineTemporaryLimits != null) {
+            for (TemporaryLimit limit : lineTemporaryLimits) {
                 temporaryLimitsReports.add(Report.builder()
                         .withKey("temporaryLimitDeleted" + limit.getName())
                         .withDefaultMessage("            ${name} (${duration}) deleted")
