@@ -46,7 +46,7 @@ public class GeneratorCreation extends AbstractModification {
     private static final String LIMITS = "Limits";
     private static final String ACTIVE_LIMITS = "Active limits";
     private static final String REACTIVE_LIMITS = "Reactive limits";
-    private static final String CONNECTION = "Connectivity";
+    private static final String CONNECTIVITY = "Connectivity";
 
     public GeneratorCreation(GeneratorCreationInfos modificationInfos) {
         this.modificationInfos = modificationInfos;
@@ -120,7 +120,12 @@ public class GeneratorCreation extends AbstractModification {
         var position = ModificationUtils.getInstance().getPosition(generatorCreationInfos.getConnectionPosition(),
                 generatorCreationInfos.getBusOrBusbarSectionId(), network, voltageLevel);
 
-        Reporter connectivitySubreporter = subReporter.createSubReporter("ConnectionCreated", CONNECTION);
+        Reporter connectivitySubreporter = subReporter.createSubReporter("ConnectionCreated", CONNECTIVITY);
+        connectivitySubreporter.report(Report.builder()
+            .withKey("ConnectionCreated")
+            .withDefaultMessage(CONNECTIVITY)
+            .withSeverity(TypedValue.INFO_SEVERITY)
+            .build());
 
         CreateFeederBay algo = new CreateFeederBayBuilder()
                 .withBusOrBusbarSectionId(generatorCreationInfos.getBusOrBusbarSectionId())
@@ -203,7 +208,12 @@ public class GeneratorCreation extends AbstractModification {
             .setTargetV(nanIfNull(generatorCreationInfos.getVoltageSetpoint()))
             .add();
 
-        Reporter connectivitySubreporter = subReporter.createSubReporter("ConnectionCreated", CONNECTION);
+        Reporter connectivitySubreporter = subReporter.createSubReporter("ConnectionCreated", CONNECTIVITY);
+        connectivitySubreporter.report(Report.builder()
+            .withKey("ConnectionCreated")
+            .withDefaultMessage(CONNECTIVITY)
+            .withSeverity(TypedValue.INFO_SEVERITY)
+            .build());
 
         addExtensionsToGenerator(generatorCreationInfos, generator, voltageLevel, subReporter, connectivitySubreporter);
 
