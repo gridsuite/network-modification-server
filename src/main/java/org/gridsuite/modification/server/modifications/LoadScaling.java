@@ -9,6 +9,7 @@ package org.gridsuite.modification.server.modifications;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.iidm.modification.scalable.Scalable;
+import com.powsybl.iidm.modification.scalable.ScalingParameters;
 import com.powsybl.iidm.network.Load;
 import com.powsybl.iidm.network.Network;
 import org.gridsuite.modification.server.NetworkModificationException;
@@ -118,9 +119,9 @@ public class LoadScaling extends AbstractScaling {
     private double scale(Network network, ScalingVariationInfos scalingVariationInfos, double asked, Scalable proportionalScalable) {
         switch (scalingVariationInfos.getReactiveVariationMode()) {
             case CONSTANT_Q:
-                return proportionalScalable.scale(network, asked, Scalable.ScalingConvention.LOAD);
+                return proportionalScalable.scale(network, asked, new ScalingParameters().setScalingConvention(Scalable.ScalingConvention.LOAD));
             case TAN_PHI_FIXED:
-                return proportionalScalable.scaleWithConstantPowerFactor(network, asked, Scalable.ScalingConvention.LOAD); //TODO waiting for to be fixed by PowSyBl
+                return proportionalScalable.scale(network, asked, new ScalingParameters().setScalingConvention(Scalable.ScalingConvention.LOAD).setConstantPowerFactor(true));
             default:
                 throw new NetworkModificationException(LOAD_SCALING_ERROR, "Reactive Variation mode not recognised");
         }

@@ -556,7 +556,7 @@ public class BuildTest {
         Message<byte[]> resultMessage = output.receive(TIMEOUT, buildResultDestination);
         assertNotNull(resultMessage);
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
-        testElementImpacts(mapper, new String(resultMessage.getPayload()), 62, Set.of("newSubstation", "s1", "s2"));
+        testElementImpacts(mapper, new String(resultMessage.getPayload()), 61, Set.of("newSubstation", "s1", "s2"));
 
         // test all modifications have been made on variant VARIANT_ID
         network.getVariantManager().setWorkingVariant(NetworkCreation.VARIANT_ID);
@@ -608,6 +608,7 @@ public class BuildTest {
         assertNull(network.getShuntCompensator("v2shunt"));
         Substation newSubstation = network.getSubstation("newSubstation");
         assertEquals(Country.FR, newSubstation.getCountry().orElse(Country.AF));
+        assertEquals(Set.of("DEMO"), network.getSubstation("newSubstation").getPropertyNames());
         assertEquals("Demo1", network.getSubstation("newSubstation").getProperty("DEMO"));
         assertNotNull(network.getVoltageLevel("vl9"));
         assertNotNull(network.getShuntCompensator("shunt9"));
@@ -619,7 +620,7 @@ public class BuildTest {
         assertNull(network.getLine("line2").getExtension(BranchStatus.class));
         assertEquals(42.1, network.getGenerator("idGenerator").getTargetP(), 0.1);
         assertEquals(1, network.getTwoWindingsTransformer("trf1").getRatioTapChanger().getTapPosition());
-        assertEquals(0, network.getThreeWindingsTransformer("trf6").getLeg1().getPhaseTapChanger().getTapPosition());
+        assertEquals(1, network.getThreeWindingsTransformer("trf6").getLeg1().getPhaseTapChanger().getTapPosition());
         assertNull(network.getLoad("newLoad"));
         assertNull(network.getGenerator(NEW_GENERATOR_ID));
         assertNull(network.getGenerator("newLine"));
