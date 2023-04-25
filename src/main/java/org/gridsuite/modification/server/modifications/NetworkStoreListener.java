@@ -99,16 +99,35 @@ public class NetworkStoreListener implements NetworkListener {
         );
     }
 
+    private void addSimpleModificationImpact(Identifiable<?> identifiable) {
+        networkImpacts.add(
+                SimpleElementImpact.builder()
+                        .impactType(SimpleElementImpact.SimpleImpactType.MODIFICATION)
+                        .elementType(identifiable.getType())
+                        .elementId(identifiable.getId())
+                        .substationIds(getSubstationIds(identifiable))
+                        .build()
+        );
+    }
+
+    @Override
+    public void onElementRemoved(Identifiable identifiable, String attribute, Object oldValue) {
+        addSimpleModificationImpact(identifiable);
+    }
+
+    @Override
+    public void onElementAdded(Identifiable identifiable, String attribute, Object newValue) {
+        addSimpleModificationImpact(identifiable);
+    }
+
+    @Override
+    public void onElementReplaced(Identifiable identifiable, String attribute, Object oldValue, Object newValue) {
+        addSimpleModificationImpact(identifiable);
+    }
+
     @Override
     public void onUpdate(Identifiable identifiable, String attribute, String variantId, Object oldValue, Object newValue) {
-        networkImpacts.add(
-            SimpleElementImpact.builder()
-                .impactType(SimpleElementImpact.SimpleImpactType.MODIFICATION)
-                .elementType(identifiable.getType())
-                .elementId(identifiable.getId())
-                .substationIds(getSubstationIds(identifiable))
-                .build()
-        );
+        addSimpleModificationImpact(identifiable);
     }
 
     @Override
