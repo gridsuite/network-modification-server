@@ -90,7 +90,7 @@ public class TwoWindingsTransformerCreation extends AbstractModification {
         Optional<Substation> optS2 = voltageLevel2.getSubstation();
         Substation s1 = optS1.orElse(null);
         Substation s2 = optS2.orElse(null);
-        BranchAdder<TwoWindingsTransformerAdder> branchAdder;
+        BranchAdder<TwoWindingsTransformer, TwoWindingsTransformerAdder> branchAdder;
 
         if (s1 != null) {
             branchAdder = s1.newTwoWindingsTransformer();

@@ -359,15 +359,15 @@ public class GeneratorCreation extends AbstractModification {
             generatorCreationInfos.getConnectionPosition() != null) {
             if (generatorCreationInfos.getConnectionName() != null) {
                 subReporter.report(ModificationUtils.getInstance()
-                        .buildCreationReport(generatorCreationInfos.getConnectionName(), "Name"));
+                        .buildCreationReport(generatorCreationInfos.getConnectionName(), "Connection name"));
             }
             if (generatorCreationInfos.getConnectionDirection() != null) {
                 subReporter.report(ModificationUtils.getInstance()
-                        .buildCreationReport(generatorCreationInfos.getConnectionDirection(), "Direction"));
+                        .buildCreationReport(generatorCreationInfos.getConnectionDirection(), "Connection direction"));
             }
             if (generatorCreationInfos.getConnectionPosition() != null) {
                 subReporter.report(ModificationUtils.getInstance()
-                        .buildCreationReport(generatorCreationInfos.getConnectionPosition(), "Position"));
+                        .buildCreationReport(generatorCreationInfos.getConnectionPosition(), "Connection position"));
             }
         }
     }
