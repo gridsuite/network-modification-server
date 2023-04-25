@@ -51,9 +51,9 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
         assertEquals(100., getNetwork().getGenerator(GTH1_ID).getTargetP(), 0.001);
         assertEquals(150., getNetwork().getGenerator(GTH2_ID).getTargetP(), 0.001);
         assertEquals(50., getNetwork().getGenerator(TEST1_ID).getTargetP(), 0.001);
-        assertEquals(100., getNetwork().getGenerator(GROUP1_ID).getTargetP(), 0.001);  // not modified
-        assertEquals(100., getNetwork().getGenerator(GROUP2_ID).getTargetP(), 0.001);  // not modified
-        assertEquals(100., getNetwork().getGenerator(GROUP3_ID).getTargetP(), 0.001);  // not modified
+        assertEquals(100., getNetwork().getGenerator(GROUP1_ID).getTargetP(), 0.001);  // not modified : disconnected
+        assertEquals(100., getNetwork().getGenerator(GROUP2_ID).getTargetP(), 0.001);  // not modified : disconnected
+        assertEquals(0., getNetwork().getGenerator(GROUP3_ID).getTargetP(), 0.001);
         assertEquals(100., getNetwork().getGenerator(ABC_ID).getTargetP(), 0.001);
     }
 
@@ -89,9 +89,9 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
         assertEquals(100., getNetwork().getGenerator(GTH1_ID).getTargetP(), 0.001);
         assertEquals(128., getNetwork().getGenerator(GTH2_ID).getTargetP(), 0.001);
         assertEquals(0., getNetwork().getGenerator(TEST1_ID).getTargetP(), 0.001);
-        assertEquals(100., getNetwork().getGenerator(GROUP1_ID).getTargetP(), 0.001);  // not modified
-        assertEquals(100., getNetwork().getGenerator(GROUP2_ID).getTargetP(), 0.001);  // not modified
-        assertEquals(100., getNetwork().getGenerator(GROUP3_ID).getTargetP(), 0.001);  // not modified
+        assertEquals(100., getNetwork().getGenerator(GROUP1_ID).getTargetP(), 0.001);  // not modified : disconnected
+        assertEquals(100., getNetwork().getGenerator(GROUP2_ID).getTargetP(), 0.001);  // not modified : disconnected
+        assertEquals(0., getNetwork().getGenerator(GROUP3_ID).getTargetP(), 0.001);
         assertEquals(0., getNetwork().getGenerator(ABC_ID).getTargetP(), 0.001);
     }
 
