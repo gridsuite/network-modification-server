@@ -92,17 +92,16 @@ public class GenerationDispatch extends AbstractModification {
     }
 
     private void computeAdjustableGenerators(Component component, Reporter reporter) {
-        List<Generator> generators = new ArrayList<>();
+        // get all generators in the component
+        List<Generator> generators = component.getBusStream().flatMap(Bus::getGeneratorStream).collect(Collectors.toList());
 
-        // get all connected generators in the component
-        for (Bus bus : component.getBuses()) {
-            generators.addAll(bus.getGeneratorStream().filter(generator -> generator.getTerminal().isConnected())
-                .collect(Collectors.toList()));
-        }
         // remove non adjustable generators (empty list in this first version)
         generators.removeAll(fixedSupplyGenerators.get(component.getNum()));
 
-        // remove generators without marginal cost
+        // set targetP to 0
+        generators.forEach(generator -> generator.setTargetP(0.));
+
+        // adjustable generators : generators with marginal cost
         adjustableGenerators.put(component.getNum(), generators.stream().filter(generator -> {
             GeneratorStartup startupExtension = generator.getExtension(GeneratorStartup.class);
             boolean marginalCostAvailable = startupExtension != null && !Double.isNaN(startupExtension.getMarginalCost());
@@ -186,11 +185,9 @@ public class GenerationDispatch extends AbstractModification {
 
             // get adjustable generators in the component
             computeAdjustableGenerators(component, powerToDispatchReporter);
+
             double realized = 0.;
             if (!adjustableGenerators.get(componentNum).isEmpty()) {
-                // set targetP to 0 for all adjustable generators
-                adjustableGenerators.get(componentNum).forEach(generator -> generator.setTargetP(0.));
-
                 // stacking of adjustable generators to ensure the totalAmountSupplyToBeDispatched
                 List<Scalable> generatorsScalable = adjustableGenerators.get(componentNum).stream().map(generator ->
                     (Scalable) Scalable.onGenerator(generator.getId(), generator.getMinP(), generator.getMaxP())
