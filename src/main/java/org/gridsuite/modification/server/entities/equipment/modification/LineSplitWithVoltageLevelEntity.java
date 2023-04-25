@@ -24,7 +24,7 @@ import javax.persistence.*;
 @Getter
 @Entity
 @Table(name = "LineSplitWithVoltageLevel")
-public class LineSplitWithVoltageLevelEntity  extends ModificationEntity {
+public class LineSplitWithVoltageLevelEntity extends ModificationEntity {
 
     @Column
     private String lineToSplitId;
