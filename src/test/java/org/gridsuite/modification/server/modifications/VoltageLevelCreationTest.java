@@ -109,6 +109,15 @@ public class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
         assertLogMessage(new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "Coupling between same bus bar section is not allowed").getMessage(),
                 vli.getErrorType().name(), reportService);
 
+        vli = (VoltageLevelCreationInfos) buildModification();
+        vli.setIpMin(0.0);
+        vli.setIpMax(null);
+        vliJsonObject = mapper.writeValueAsString(vli);
+        mockMvc.perform(post(getNetworkModificationUri()).content(vliJsonObject).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        assertLogMessage(new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "IpMax is required").getMessage(),
+                vli.getErrorType().name(), reportService);
+
         vli = (VoltageLevelCreationInfos) buildModificationUpdate();
 
         vli.setEquipmentId("");
