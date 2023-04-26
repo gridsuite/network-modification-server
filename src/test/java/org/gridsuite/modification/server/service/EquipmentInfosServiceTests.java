@@ -41,9 +41,9 @@ public class EquipmentInfosServiceTests {
 
     private static final UUID NETWORK_UUID = UUID.randomUUID();
 
-    private static  final String VARIANT_NAME_1 = "variant1";
-    private static  final String VARIANT_NAME_2 = "variant2";
-    private static  final String VARIANT_NAME_3 = "variant3";
+    private static final String VARIANT_NAME_1 = "variant1";
+    private static final String VARIANT_NAME_2 = "variant2";
+    private static final String VARIANT_NAME_3 = "variant3";
 
     @Autowired
     private EquipmentInfosService equipmentInfosService;

@@ -271,15 +271,15 @@ public final class ModificationUtils {
 
         CreateVoltageLevelTopologyBuilder voltageLevelTopologyBuilder = new CreateVoltageLevelTopologyBuilder();
         voltageLevelTopologyBuilder.withVoltageLevelId(voltageLevelCreationInfos.getEquipmentId())
-                .withBusbarCount(voltageLevelCreationInfos.getBusbarCount())
+                .withAlignedBusesOrBusbarCount(voltageLevelCreationInfos.getBusbarCount())
                 .withSectionCount(voltageLevelCreationInfos.getSectionCount())
                 .withSwitchKinds(voltageLevelCreationInfos.getSwitchKinds())
                 .build().apply(network);
 
         voltageLevelCreationInfos.getCouplingDevices().forEach(couplingDevice -> {
             CreateCouplingDeviceBuilder couplingDeviceBuilder = new CreateCouplingDeviceBuilder();
-            couplingDeviceBuilder.withBusbarSectionId1(couplingDevice.getBusbarSectionId1())
-                .withBusbarSectionId2(couplingDevice.getBusbarSectionId2())
+            couplingDeviceBuilder.withBusOrBusbarSectionId1(couplingDevice.getBusbarSectionId1())
+                .withBusOrBusbarSectionId2(couplingDevice.getBusbarSectionId2())
                 .withSwitchPrefixId(voltageLevelCreationInfos.getEquipmentId() + "_COUPL")
                 .build().apply(network);
         });
@@ -314,7 +314,7 @@ public final class ModificationUtils {
         return lineAdder;
     }
 
-    void setBranchAdderNodeOrBus(BranchAdder<?> branchAdder, VoltageLevel voltageLevel, BranchCreationInfos branchCreationInfos,
+    void setBranchAdderNodeOrBus(BranchAdder<?, ?> branchAdder, VoltageLevel voltageLevel, BranchCreationInfos branchCreationInfos,
                                  Branch.Side side, boolean withSwitch) {
         String busOrBusbarSectionId = (side == Branch.Side.ONE) ? branchCreationInfos.getBusOrBusbarSectionId1() : branchCreationInfos.getBusOrBusbarSectionId2();
         if (voltageLevel.getTopologyKind() == TopologyKind.BUS_BREAKER) {
@@ -326,7 +326,7 @@ public final class ModificationUtils {
         }
     }
 
-    private void setBranchAdderBusBreaker(BranchAdder<?> branchAdder, VoltageLevel voltageLevel, Branch.Side side, String busId) {
+    private void setBranchAdderBusBreaker(BranchAdder<?, ?> branchAdder, VoltageLevel voltageLevel, Branch.Side side, String busId) {
         Bus bus = getBusBreakerBus(voltageLevel, busId);
 
         // complete the lineAdder
@@ -337,7 +337,7 @@ public final class ModificationUtils {
         }
     }
 
-    private void setBranchAdderNodeBreaker(BranchAdder<?> branchAdder, VoltageLevel voltageLevel,
+    private void setBranchAdderNodeBreaker(BranchAdder<?, ?> branchAdder, VoltageLevel voltageLevel,
                                            BranchCreationInfos branchCreationInfos, Branch.Side side,
                                            String currentBusBarSectionId) {
         // create cell switches

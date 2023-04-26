@@ -977,7 +977,7 @@ public class ModificationControllerTest {
         TestImpactUtils.testElementImpacts(mapper, resultAsString, testElementImpacts);
     }
 
-    private void testSubstationDeletionImpacts(String resultAsString,  String subStationId, List<SimpleElementImpact> vlsDeletionImpacts) {
+    private void testSubstationDeletionImpacts(String resultAsString, String subStationId, List<SimpleElementImpact> vlsDeletionImpacts) {
         List<SimpleElementImpact> impacts = new ArrayList<>(List.of(createDeletionImpactType(IdentifiableType.SUBSTATION, subStationId, Set.of(subStationId))));
         impacts.addAll(vlsDeletionImpacts);
         TestImpactUtils.testElementImpacts(mapper, resultAsString, impacts);
