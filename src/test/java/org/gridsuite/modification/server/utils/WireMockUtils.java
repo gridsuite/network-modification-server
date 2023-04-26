@@ -21,24 +21,24 @@ import static org.junit.Assert.assertEquals;
 
 public class WireMockUtils {
 
-    private final WireMockServer wireMock;
+    private final WireMockServer wireMockServer;
 
-    public WireMockUtils(WireMockServer wireMock) {
-        this.wireMock = wireMock;
+    public WireMockUtils(WireMockServer wireMockServer) {
+        this.wireMockServer = wireMockServer;
     }
 
     public  void verifyGetRequest(UUID stubId, String urlPath, Map<String, StringValuePattern> queryParams, boolean regexMatching) {
         RequestPatternBuilder requestBuilder = regexMatching ? WireMock.getRequestedFor(WireMock.urlPathMatching(urlPath)) : WireMock.getRequestedFor(WireMock.urlPathEqualTo(urlPath));
         queryParams.forEach(requestBuilder::withQueryParam);
-        wireMock.verify(1, requestBuilder);
+        wireMockServer.verify(1, requestBuilder);
         removeRequestForStub(stubId, 1);
     }
 
     private void removeRequestForStub(UUID stubId, int nbRequests) {
-        List<ServeEvent> serveEvents = wireMock.getServeEvents(ServeEventQuery.forStubMapping(stubId)).getServeEvents();
+        List<ServeEvent> serveEvents = wireMockServer.getServeEvents(ServeEventQuery.forStubMapping(stubId)).getServeEvents();
         assertEquals(nbRequests, serveEvents.size());
         for (ServeEvent serveEvent : serveEvents) {
-            wireMock.removeServeEvent(serveEvent.getId());
+            wireMockServer.removeServeEvent(serveEvent.getId());
         }
     }
 }

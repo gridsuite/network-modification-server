@@ -99,7 +99,7 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
 
     public static final String LOAD_WRONG_ID_2 = "wrongId2";
     public static final String PATH = "/v1/filters/export";
-    private WireMockServer wireMock;
+    private WireMockServer wireMockServer;
     private UUID networkUuid;
 
     private WireMockUtils wireMockUtils;
@@ -119,9 +119,9 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
         createLoad(getNetwork().getVoltageLevel("v4"), LOAD_ID_9, LOAD_ID_9, 10, 200, 1.0, "cn10", 16, ConnectablePosition.Direction.TOP);
         createLoad(getNetwork().getVoltageLevel("v5"), LOAD_ID_10, LOAD_ID_10, 12, 100, 1.0, "cn10", 17, ConnectablePosition.Direction.TOP);
 
-        wireMock = new WireMockServer(wireMockConfig().dynamicPort());
-        wireMockUtils = new WireMockUtils(wireMock);
-        wireMock.start();
+        wireMockServer = new WireMockServer(wireMockConfig().dynamicPort());
+        wireMockUtils = new WireMockUtils(wireMockServer);
+        wireMockServer.start();
 
         IdentifiableAttributes load1 = getIdentifiableAttributes(LOAD_ID_1, 1.0);
         IdentifiableAttributes load2 = getIdentifiableAttributes(LOAD_ID_2, 2.0);
@@ -143,18 +143,18 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
         networkUuid = getNetworkUuid();
         String pathRegex = getPath(networkUuid, true);
 
-        wireMock.stubFor(WireMock.get(WireMock.urlMatching(pathRegex + "(.+,){4}.*"))
+        wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(pathRegex + "(.+,){4}.*"))
             .willReturn(WireMock.ok()
                 .withBody(mapper.writeValueAsString(List.of(filter1, filter2, filter3, filter4, filter5)))
                 .withHeader("Content-Type", "application/json")));
 
-        setFilterServerBaseUri(wireMock.baseUrl());
+        setFilterServerBaseUri(wireMockServer.baseUrl());
     }
 
     @After
     public void shutDown() {
         // TODO: call handleWireMockEmptyMockRequests when doing a refacto
-        wireMock.shutdown();
+        wireMockServer.shutdown();
     }
 
     @SneakyThrows
@@ -165,7 +165,7 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
         String path = getPath(networkUuid, false);
         FilterEquipments noDistributionKeyFilter = getFilterEquipments(FILTER_NO_DK, "noDistributionKeyFilter", List.of(loadNoDK1, loadNoDK2), List.of());
 
-        UUID stubNonDistributionKey = wireMock.stubFor(WireMock.get(path + FILTER_NO_DK)
+        UUID stubNonDistributionKey = wireMockServer.stubFor(WireMock.get(path + FILTER_NO_DK)
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(List.of(noDistributionKeyFilter)))
                         .withHeader("Content-Type", "application/json"))).getId();
@@ -224,7 +224,7 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
             .variationType(VariationType.TARGET_P)
             .variations(List.of(variation))
             .build();
-        UUID stubWithWrongId = wireMock.stubFor(WireMock.get(path + FILTER_WRONG_ID_1)
+        UUID stubWithWrongId = wireMockServer.stubFor(WireMock.get(path + FILTER_WRONG_ID_1)
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(List.of(wrongIdFilter1)))
                         .withHeader("Content-Type", "application/json"))).getId();
@@ -276,7 +276,7 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
             .variations(List.of(variation))
             .build();
 
-        UUID stubMultipleWrongIds = wireMock.stubFor(WireMock.get(WireMock.urlMatching(pathRegex + params + "," + params))
+        UUID stubMultipleWrongIds = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(pathRegex + params + "," + params))
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(List.of(wrongIdFilter2, filter5)))
                         .withHeader("Content-Type", "application/json"))).getId();
@@ -451,7 +451,7 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
     private void handleWireMockEmptyMockRequests() {
         try {
 
-            TestUtils.assertWiremockServerRequestsEmptyThenShutdown(wireMock);
+            TestUtils.assertWiremockServerRequestsEmptyThenShutdown(wireMockServer);
         } catch (UncheckedInterruptedException e) {
             LOGGER.error("Error while attempting to get the request done : ", e);
         } catch (IOException e) {
