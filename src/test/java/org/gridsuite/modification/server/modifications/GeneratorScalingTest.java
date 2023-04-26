@@ -176,7 +176,7 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
         assertEquals(200, getNetwork().getGenerator(GENERATOR_ID_2).getTargetP(), 0.01D);
         assertEquals(200, getNetwork().getGenerator(GENERATOR_ID_3).getTargetP(), 0.01D);
 
-        wireMockUtils.verifyGetRequest(subNoDk,  PATH, handleQueryParams(networkUuid, FILTER_NO_DK), false);
+        wireMockUtils.verifyGetRequest(subNoDk, PATH, handleQueryParams(networkUuid, FILTER_NO_DK), false);
         handleWireMockEmptyMockRequests();
 
     }
@@ -190,7 +190,7 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
 
         FilterEquipments wrongIdFilter1 = getFilterEquipments(FILTER_WRONG_ID_1, "wrongIdFilter1", List.of(genWrongId1, genWrongId2), List.of(GENERATOR_WRONG_ID_1, GENERATOR_WRONG_ID_2));
         String path = getPath(networkUuid, false);
-        UUID subWrongId =  wireMockServer.stubFor(WireMock.get(path + FILTER_WRONG_ID_1)
+        UUID subWrongId = wireMockServer.stubFor(WireMock.get(path + FILTER_WRONG_ID_1)
                 .willReturn(WireMock.ok()
                 .withBody(mapper.writeValueAsString(List.of(wrongIdFilter1)))
                 .withHeader("Content-Type", "application/json"))).getId();
@@ -414,19 +414,19 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
     private String getPath(UUID networkUuid, boolean isRegexPhat) {
 
         if (isRegexPhat) {
-            return  "/v1/filters/export\\?networkUuid=" + networkUuid + "\\&variantId=variant_1\\&ids=";
+            return "/v1/filters/export\\?networkUuid=" + networkUuid + "\\&variantId=variant_1\\&ids=";
         }
         return "/v1/filters/export?networkUuid=" + networkUuid + "&variantId=variant_1&ids=";
     }
 
     private Map<String, StringValuePattern> handleQueryParams(UUID networkUuid, UUID filterId) {
 
-        return  Map.of("networkUuid", WireMock.equalTo(String.valueOf(networkUuid)), "variantId", WireMock.equalTo("variant_1"), "ids", WireMock.equalTo(String.valueOf(filterId)));
+        return Map.of("networkUuid", WireMock.equalTo(String.valueOf(networkUuid)), "variantId", WireMock.equalTo("variant_1"), "ids", WireMock.equalTo(String.valueOf(filterId)));
 
     }
 
     private void handleWireMockEmptyMockRequests() {
-        try  {
+        try {
             TestUtils.assertWiremockServerRequestsEmptyThenShutdown(wireMockServer);
         } catch (UncheckedInterruptedException e) {
             LOGGER.error("Error while attempting to get the request done : ", e);

@@ -445,7 +445,7 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
     }
 
     private Map<String, StringValuePattern> handleQueryParams(UUID networkUuid, UUID filterId) {
-        return  Map.of("networkUuid", WireMock.equalTo(String.valueOf(networkUuid)), "variantId", WireMock.equalTo("variant_1"), "ids", WireMock.equalTo(String.valueOf(filterId)));
+        return Map.of("networkUuid", WireMock.equalTo(String.valueOf(networkUuid)), "variantId", WireMock.equalTo("variant_1"), "ids", WireMock.equalTo(String.valueOf(filterId)));
     }
 
     private void handleWireMockEmptyMockRequests() {
@@ -461,7 +461,7 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
 
     private String getPath(UUID networkUuid, boolean isRegexPhat) {
         if (isRegexPhat) {
-            return  "/v1/filters/export\\?networkUuid=" + networkUuid + "\\&variantId=variant_1\\&ids=";
+            return "/v1/filters/export\\?networkUuid=" + networkUuid + "\\&variantId=variant_1\\&ids=";
         }
         return "/v1/filters/export?networkUuid=" + networkUuid + "&variantId=variant_1&ids=";
     }
