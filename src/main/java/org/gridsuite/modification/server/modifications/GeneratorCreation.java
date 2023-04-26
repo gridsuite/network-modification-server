@@ -46,7 +46,7 @@ public class GeneratorCreation extends AbstractModification {
     private static final String LIMITS = "Limits";
     private static final String ACTIVE_LIMITS = "Active limits";
     private static final String REACTIVE_LIMITS = "Reactive limits";
-    private static final String CONNECTION = "Connection";
+    private static final String CONNECTIVITY = "Connectivity";
 
     public GeneratorCreation(GeneratorCreationInfos modificationInfos) {
         this.modificationInfos = modificationInfos;
@@ -120,6 +120,13 @@ public class GeneratorCreation extends AbstractModification {
         var position = ModificationUtils.getInstance().getPosition(generatorCreationInfos.getConnectionPosition(),
                 generatorCreationInfos.getBusOrBusbarSectionId(), network, voltageLevel);
 
+        Reporter connectivitySubreporter = subReporter.createSubReporter("ConnectionCreated", CONNECTIVITY);
+        connectivitySubreporter.report(Report.builder()
+            .withKey("ConnectionCreated")
+            .withDefaultMessage(CONNECTIVITY)
+            .withSeverity(TypedValue.INFO_SEVERITY)
+            .build());
+
         CreateFeederBay algo = new CreateFeederBayBuilder()
                 .withBusOrBusbarSectionId(generatorCreationInfos.getBusOrBusbarSectionId())
                 .withInjectionDirection(generatorCreationInfos.getConnectionDirection())
@@ -130,12 +137,12 @@ public class GeneratorCreation extends AbstractModification {
                 .withInjectionAdder(generatorAdder)
                 .build();
 
-        algo.apply(network, true, subReporter);
+        algo.apply(network, true, connectivitySubreporter);
 
         // CreateFeederBayBuilder already create the generator using
         // (withInjectionAdder(generatorAdder)) so then we can add the additional informations and extensions
         var generator = ModificationUtils.getInstance().getGenerator(network, generatorCreationInfos.getEquipmentId());
-        addExtensionsToGenerator(generatorCreationInfos, generator, voltageLevel, subReporter);
+        addExtensionsToGenerator(generatorCreationInfos, generator, voltageLevel, subReporter, connectivitySubreporter);
     }
 
     private GeneratorAdder createGeneratorAdderInNodeBreaker(VoltageLevel voltageLevel, GeneratorCreationInfos generatorCreationInfos) {
@@ -164,14 +171,15 @@ public class GeneratorCreation extends AbstractModification {
         return generatorAdder;
     }
 
-    private void addExtensionsToGenerator(GeneratorCreationInfos generatorCreationInfos, Generator generator, VoltageLevel voltageLevel, Reporter subReporter) {
+    private void addExtensionsToGenerator(GeneratorCreationInfos generatorCreationInfos, Generator generator,
+                                          VoltageLevel voltageLevel, Reporter subReporter, Reporter connectivitySubReporter) {
         if (generatorCreationInfos.getEquipmentName() != null) {
             ModificationUtils.getInstance().reportElementaryCreation(subReporter, generatorCreationInfos.getEquipmentName(), "Name");
         }
         if (generatorCreationInfos.getEnergySource() != null) {
             ModificationUtils.getInstance().reportElementaryCreation(subReporter, generatorCreationInfos.getEnergySource(), "Energy source");
         }
-        reportGeneratorConnection(generatorCreationInfos, subReporter);
+        reportGeneratorConnection(generatorCreationInfos, connectivitySubReporter);
         Reporter subReporterLimits = reportGeneratorActiveLimits(generatorCreationInfos, subReporter);
         createGeneratorReactiveLimits(generatorCreationInfos, generator, subReporterLimits);
         Reporter subReporterSetpoints = reportGeneratorSetPoints(generatorCreationInfos, subReporter);
@@ -200,7 +208,14 @@ public class GeneratorCreation extends AbstractModification {
             .setTargetV(nanIfNull(generatorCreationInfos.getVoltageSetpoint()))
             .add();
 
-        addExtensionsToGenerator(generatorCreationInfos, generator, voltageLevel, subReporter);
+        Reporter connectivitySubreporter = subReporter.createSubReporter("ConnectionCreated", CONNECTIVITY);
+        connectivitySubreporter.report(Report.builder()
+            .withKey("ConnectionCreated")
+            .withDefaultMessage(CONNECTIVITY)
+            .withSeverity(TypedValue.INFO_SEVERITY)
+            .build());
+
+        addExtensionsToGenerator(generatorCreationInfos, generator, voltageLevel, subReporter, connectivitySubreporter);
 
         subReporter.report(Report.builder()
                 .withKey("generatorCreated")
@@ -352,20 +367,18 @@ public class GeneratorCreation extends AbstractModification {
         if (generatorCreationInfos.getConnectionName() != null ||
             generatorCreationInfos.getConnectionDirection() != null ||
             generatorCreationInfos.getConnectionPosition() != null) {
-            List<Report> connectionReports = new ArrayList<>();
             if (generatorCreationInfos.getConnectionName() != null) {
-                connectionReports.add(ModificationUtils.getInstance()
-                        .buildCreationReport(generatorCreationInfos.getConnectionName(), "Name"));
+                subReporter.report(ModificationUtils.getInstance()
+                        .buildCreationReport(generatorCreationInfos.getConnectionName(), "Connection name"));
             }
             if (generatorCreationInfos.getConnectionDirection() != null) {
-                connectionReports.add(ModificationUtils.getInstance()
-                        .buildCreationReport(generatorCreationInfos.getConnectionDirection(), "Direction"));
+                subReporter.report(ModificationUtils.getInstance()
+                        .buildCreationReport(generatorCreationInfos.getConnectionDirection(), "Connection direction"));
             }
             if (generatorCreationInfos.getConnectionPosition() != null) {
-                connectionReports.add(ModificationUtils.getInstance()
-                        .buildCreationReport(generatorCreationInfos.getConnectionPosition(), "Position"));
+                subReporter.report(ModificationUtils.getInstance()
+                        .buildCreationReport(generatorCreationInfos.getConnectionPosition(), "Connection position"));
             }
-            ModificationUtils.getInstance().reportModifications(subReporter, connectionReports, "ConnectionCreated", CONNECTION);
         }
     }
 
