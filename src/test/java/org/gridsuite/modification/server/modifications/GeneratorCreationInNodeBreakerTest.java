@@ -175,7 +175,49 @@ public class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificat
         assertLogMessage("Generator 'idGenerator1': invalid value (NaN) for minimum P",
                 generatorCreationInfos.getErrorType().name(), reportService);
 
-        // try to create an existing VL
+        // invalid min max reactive limit
+        generatorCreationInfos = (GeneratorCreationInfos) buildModification();
+        generatorCreationInfos.setReactiveCapabilityCurve(false);
+        generatorCreationInfos.setMinimumReactivePower(Double.NaN);
+
+        generatorCreationInfosJson = mapper.writeValueAsString(generatorCreationInfos);
+        mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
+        assertLogMessage(new NetworkModificationException(CREATE_GENERATOR_ERROR, "Generator 'idGenerator1' : minimum reactive power is not set").getMessage(),
+            generatorCreationInfos.getErrorType().name(), reportService);
+
+        generatorCreationInfos = (GeneratorCreationInfos) buildModification();
+        generatorCreationInfos.setReactiveCapabilityCurve(false);
+        generatorCreationInfos.setMaximumReactivePower(Double.NaN);
+
+        generatorCreationInfosJson = mapper.writeValueAsString(generatorCreationInfos);
+        mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
+        assertLogMessage(new NetworkModificationException(CREATE_GENERATOR_ERROR, "Generator 'idGenerator1' : maximum reactive power is not set").getMessage(),
+            generatorCreationInfos.getErrorType().name(), reportService);
+
+        generatorCreationInfos = (GeneratorCreationInfos) buildModification();
+        generatorCreationInfos.setReactiveCapabilityCurve(false);
+        generatorCreationInfos.setMinimumReactivePower(200.);
+        generatorCreationInfos.setMaximumReactivePower(100.);
+
+        generatorCreationInfosJson = mapper.writeValueAsString(generatorCreationInfos);
+        mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
+        assertLogMessage(new NetworkModificationException(CREATE_GENERATOR_ERROR, "Generator 'idGenerator1' : maximum reactive power is expected to be greater than or equal to minimum reactive power").getMessage(),
+            generatorCreationInfos.getErrorType().name(), reportService);
+
+        // invalid reactive capability curve limit
+        generatorCreationInfos = (GeneratorCreationInfos) buildModification();
+        generatorCreationInfos.getReactiveCapabilityCurvePoints().get(0).setP(Double.NaN);
+
+        generatorCreationInfosJson = mapper.writeValueAsString(generatorCreationInfos);
+        mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
+        assertLogMessage(new NetworkModificationException(CREATE_GENERATOR_ERROR, "Generator 'idGenerator1' : P is not set in a reactive capability curve limits point").getMessage(),
+            generatorCreationInfos.getErrorType().name(), reportService);
+
+        // try to create an existing generator
         generatorCreationInfos = (GeneratorCreationInfos) buildModification();
         generatorCreationInfos.setEquipmentId("v5generator");
         generatorCreationInfosJson = mapper.writeValueAsString(generatorCreationInfos);
@@ -196,6 +238,19 @@ public class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificat
         Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertTrue(networkModificationResult.isEmpty());  // no modifications returned
         assertNull(getNetwork().getGenerator("idGenerator3"));  // generator was not created
-        testNetworkModificationsCount(getGroupId(), 6);  // new modification stored in the database
+        testNetworkModificationsCount(getGroupId(), 10);  // new modification stored in the database
+    }
+
+    @SneakyThrows
+    @Test
+    public void testCreateWithShortCircuitErrors() {
+        // invalid short circuit transient reactance
+        GeneratorCreationInfos generatorCreationInfos = (GeneratorCreationInfos) buildModification();
+        generatorCreationInfos.setTransientReactance(Double.NaN);
+
+        String generatorCreationInfosJson = mapper.writeValueAsString(generatorCreationInfos);
+        mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        assertLogMessage("cannot add short-circuit extension on generator with id=idGenerator1 : Undefined directTransX", "ShortCircuitExtensionAddError", reportService);
     }
 }
