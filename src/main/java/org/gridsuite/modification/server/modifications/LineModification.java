@@ -12,8 +12,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.CurrentLimitsInfos;
-import org.gridsuite.modification.server.dto.CurrentTemporaryLimitCreationInfos;
+import org.gridsuite.modification.server.dto.CurrentLimitsModificationInfos;
+import org.gridsuite.modification.server.dto.CurrentTemporaryLimitModificationInfos;
 import org.gridsuite.modification.server.dto.LineModificationInfos;
 
 import com.powsybl.commons.reporter.Report;
@@ -66,8 +66,8 @@ public class LineModification extends AbstractModification {
             modifyCharacteristics(line, lineModificationInfos, subReporter);
         }
 
-        CurrentLimitsInfos currentLimitsInfos1 = modificationInfos.getCurrentLimits1();
-        CurrentLimitsInfos currentLimitsInfos2 = modificationInfos.getCurrentLimits2();
+        CurrentLimitsModificationInfos currentLimitsInfos1 = modificationInfos.getCurrentLimits1();
+        CurrentLimitsModificationInfos currentLimitsInfos2 = modificationInfos.getCurrentLimits2();
         List<Report> side1LimitsReports = new ArrayList<>();
         if (currentLimitsInfos1 != null) {
             CurrentLimits currentLimits1 = line.getCurrentLimits1().orElse(null);
@@ -150,7 +150,7 @@ public class LineModification extends AbstractModification {
         }
     }
 
-    private void modifyCurrentLimits(CurrentLimitsInfos currentLimitsInfos, CurrentLimitsAdder limitsAdder, CurrentLimits currentLimits, List<Report> limitsReports) {
+    private void modifyCurrentLimits(CurrentLimitsModificationInfos currentLimitsInfos, CurrentLimitsAdder limitsAdder, CurrentLimits currentLimits, List<Report> limitsReports) {
         boolean hasPermanent = currentLimitsInfos.getPermanentLimit() != null;
         boolean hasTemporary = currentLimitsInfos.getTemporaryLimits() != null
                 && !currentLimitsInfos.getTemporaryLimits().isEmpty();
@@ -171,7 +171,7 @@ public class LineModification extends AbstractModification {
         }
     }
 
-    private void modifyTemporaryLimits(CurrentLimitsInfos currentLimitsInfos, CurrentLimitsAdder limitsAdder,
+    private void modifyTemporaryLimits(CurrentLimitsModificationInfos currentLimitsInfos, CurrentLimitsAdder limitsAdder,
             CurrentLimits currentLimits, List<Report> limitsReports) {
         // we create a mutable list of temporary limits to be able to remove the limits that are modified
         List<TemporaryLimit> lineTemporaryLimits = null;
@@ -179,7 +179,7 @@ public class LineModification extends AbstractModification {
             lineTemporaryLimits = new ArrayList<>(currentLimits.getTemporaryLimits());
         }
         List<Report> temporaryLimitsReports = new ArrayList<>();
-        for (CurrentTemporaryLimitCreationInfos limit : currentLimitsInfos.getTemporaryLimits()) {
+        for (CurrentTemporaryLimitModificationInfos limit : currentLimitsInfos.getTemporaryLimits()) {
             int limitAcceptableDuration = limit.getAcceptableDuration() == null ? Integer.MAX_VALUE : limit.getAcceptableDuration();
             double limitValue = limit.getValue() == null ? Double.MAX_VALUE : limit.getValue();
             TemporaryLimit limitToModify = null;
