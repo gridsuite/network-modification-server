@@ -161,7 +161,7 @@ public class GenerationDispatch extends AbstractModification {
             remainingPowerImbalance.put(componentNum, 0.);
             fixedSupplyGenerators.put(componentNum, new ArrayList<>());  // no fixed supply generators in this first version
 
-            Reporter componentReporter = subReporter.createSubReporter(SYNCHRONOUS_COMPONENT + componentNum, SYNCHRONOUS_COMPONENT + componentNum);
+            Reporter componentReporter = subReporter.createSubReporter("Network CC0 " + SYNCHRONOUS_COMPONENT + componentNum, "Network CC0 " + SYNCHRONOUS_COMPONENT + componentNum);
 
             Reporter powerToDispatchReporter = componentReporter.createSubReporter(POWER_TO_DISPATCH, POWER_TO_DISPATCH);
 
