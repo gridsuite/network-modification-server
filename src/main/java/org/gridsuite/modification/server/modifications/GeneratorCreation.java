@@ -142,7 +142,7 @@ public class GeneratorCreation extends AbstractModification {
         // CreateFeederBayBuilder already create the generator using
         // (withInjectionAdder(generatorAdder)) so then we can add the additional informations and extensions
         var generator = ModificationUtils.getInstance().getGenerator(network, generatorCreationInfos.getEquipmentId());
-        addExtensionsToGenerator(generatorCreationInfos, generator, voltageLevel, subReporter, connectivitySubreporter);
+        addExtensionsToGenerator(generatorCreationInfos, generator, voltageLevel, subReporter);
     }
 
     private GeneratorAdder createGeneratorAdderInNodeBreaker(VoltageLevel voltageLevel, GeneratorCreationInfos generatorCreationInfos) {
@@ -172,14 +172,14 @@ public class GeneratorCreation extends AbstractModification {
     }
 
     private void addExtensionsToGenerator(GeneratorCreationInfos generatorCreationInfos, Generator generator,
-                                          VoltageLevel voltageLevel, Reporter subReporter, Reporter connectivitySubReporter) {
+                                          VoltageLevel voltageLevel, Reporter subReporter) {
         if (generatorCreationInfos.getEquipmentName() != null) {
             ModificationUtils.getInstance().reportElementaryCreation(subReporter, generatorCreationInfos.getEquipmentName(), "Name");
         }
         if (generatorCreationInfos.getEnergySource() != null) {
             ModificationUtils.getInstance().reportElementaryCreation(subReporter, generatorCreationInfos.getEnergySource(), "Energy source");
         }
-        reportGeneratorConnection(generatorCreationInfos, connectivitySubReporter);
+        reportGeneratorConnectivity(generatorCreationInfos, subReporter);
         Reporter subReporterLimits = reportGeneratorActiveLimits(generatorCreationInfos, subReporter);
         createGeneratorReactiveLimits(generatorCreationInfos, generator, subReporterLimits);
         Reporter subReporterSetpoints = reportGeneratorSetPoints(generatorCreationInfos, subReporter);
@@ -215,7 +215,7 @@ public class GeneratorCreation extends AbstractModification {
             .withSeverity(TypedValue.INFO_SEVERITY)
             .build());
 
-        addExtensionsToGenerator(generatorCreationInfos, generator, voltageLevel, subReporter, connectivitySubreporter);
+        addExtensionsToGenerator(generatorCreationInfos, generator, voltageLevel, subReporter);
 
         subReporter.report(Report.builder()
                 .withKey("generatorCreated")
@@ -359,7 +359,7 @@ public class GeneratorCreation extends AbstractModification {
         }
     }
 
-    private void reportGeneratorConnection(GeneratorCreationInfos generatorCreationInfos, Reporter subReporter) {
+    private void reportGeneratorConnectivity(GeneratorCreationInfos generatorCreationInfos, Reporter subReporter) {
         if (generatorCreationInfos.getVoltageLevelId() == null || generatorCreationInfos.getBusOrBusbarSectionId() == null) {
             return;
         }
@@ -367,18 +367,20 @@ public class GeneratorCreation extends AbstractModification {
         if (generatorCreationInfos.getConnectionName() != null ||
             generatorCreationInfos.getConnectionDirection() != null ||
             generatorCreationInfos.getConnectionPosition() != null) {
+            List<Report> connectivityReports = new ArrayList<>();
             if (generatorCreationInfos.getConnectionName() != null) {
-                subReporter.report(ModificationUtils.getInstance()
+                connectivityReports.add(ModificationUtils.getInstance()
                         .buildCreationReport(generatorCreationInfos.getConnectionName(), "Connection name"));
             }
             if (generatorCreationInfos.getConnectionDirection() != null) {
-                subReporter.report(ModificationUtils.getInstance()
+                connectivityReports.add(ModificationUtils.getInstance()
                         .buildCreationReport(generatorCreationInfos.getConnectionDirection(), "Connection direction"));
             }
             if (generatorCreationInfos.getConnectionPosition() != null) {
-                subReporter.report(ModificationUtils.getInstance()
+                connectivityReports.add(ModificationUtils.getInstance()
                         .buildCreationReport(generatorCreationInfos.getConnectionPosition(), "Connection position"));
             }
+            ModificationUtils.getInstance().reportModifications(subReporter, connectivityReports, "ConnectivityCreated", CONNECTIVITY);
         }
     }
 
@@ -468,16 +470,26 @@ public class GeneratorCreation extends AbstractModification {
                         .withPlannedOutageRate(nanIfNull(generatorCreationInfos.getPlannedOutageRate()))
                         .withForcedOutageRate(nanIfNull(generatorCreationInfos.getForcedOutageRate()))
                         .add();
-                startupReports.add(ModificationUtils.getInstance().buildCreationReport(
+                if (generatorCreationInfos.getPlannedActivePowerSetPoint() != null) {
+                    startupReports.add(ModificationUtils.getInstance().buildCreationReport(
                         generatorCreationInfos.getPlannedActivePowerSetPoint(), "Planning active power set point"));
-                startupReports.add(ModificationUtils.getInstance().buildCreationReport(
+                }
+                if (generatorCreationInfos.getStartupCost() != null) {
+                    startupReports.add(ModificationUtils.getInstance().buildCreationReport(
                         generatorCreationInfos.getStartupCost(), "Startup cost"));
-                startupReports.add(ModificationUtils.getInstance().buildCreationReport(
+                }
+                if (generatorCreationInfos.getMarginalCost() != null) {
+                    startupReports.add(ModificationUtils.getInstance().buildCreationReport(
                         generatorCreationInfos.getMarginalCost(), "Marginal cost"));
-                startupReports.add(ModificationUtils.getInstance().buildCreationReport(
+                }
+                if (generatorCreationInfos.getPlannedOutageRate() != null) {
+                    startupReports.add(ModificationUtils.getInstance().buildCreationReport(
                         generatorCreationInfos.getPlannedOutageRate(), "Planning outage rate"));
-                startupReports.add(ModificationUtils.getInstance().buildCreationReport(
+                }
+                if (generatorCreationInfos.getForcedOutageRate() != null) {
+                    startupReports.add(ModificationUtils.getInstance().buildCreationReport(
                         generatorCreationInfos.getForcedOutageRate(), "Forced outage rate"));
+                }
             } catch (PowsyblException e) {
                 startupReports.add(Report.builder()
                         .withKey("StartupExtensionAddError")
