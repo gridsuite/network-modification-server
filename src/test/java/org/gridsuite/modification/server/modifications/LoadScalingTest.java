@@ -7,8 +7,8 @@
 
 package org.gridsuite.modification.server.modifications;
 
-import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.matching.StringValuePattern;
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
@@ -18,22 +18,21 @@ import org.gridsuite.modification.server.ReactiveVariationMode;
 import org.gridsuite.modification.server.VariationMode;
 import org.gridsuite.modification.server.VariationType;
 import org.gridsuite.modification.server.dto.*;
-import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.service.FilterService;
 import org.gridsuite.modification.server.utils.MatcherLoadScalingInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.hamcrest.core.IsNull;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.http.MediaType;
 
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
-import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.LOAD_SCALING_ERROR;
-import static org.gridsuite.modification.server.service.FilterService.setFilterServerBaseUri;
 import static org.gridsuite.modification.server.utils.NetworkUtil.createLoad;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.assertEquals;
@@ -45,7 +44,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @author bendaamerahm <ahmed.bendaamer at rte-france.com>
  */
 public class LoadScalingTest extends AbstractNetworkModificationTest {
-
     private static final UUID LOAD_SCALING_ID = UUID.randomUUID();
 
     private static final UUID FILTER_ID_1 = UUID.randomUUID();
@@ -57,8 +55,6 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
     private static final UUID FILTER_ID_4 = UUID.randomUUID();
 
     private static final UUID FILTER_ID_5 = UUID.randomUUID();
-
-    private static final UUID FILTER_NOT_FOUND_ID = UUID.randomUUID();
 
     private static final UUID FILTER_NO_DK = UUID.randomUUID();
 
@@ -89,12 +85,17 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
     public static final String LOAD_WRONG_ID_1 = "wrongId1";
 
     public static final String LOAD_WRONG_ID_2 = "wrongId2";
-
-    private WireMockServer wireMock;
+    public static final String PATH = "/v1/filters/export";
 
     @SneakyThrows
     @Before
     public void specificSetUp() {
+        FilterService.setFilterServerBaseUri(wireMockServer.baseUrl());
+
+        createLoads();
+    }
+
+    private void createLoads() {
         getNetwork().getVariantManager().setWorkingVariant("variant_1");
         getNetwork().getLoad(LOAD_ID_1).setP0(100).setQ0(10);
         getNetwork().getLoad(LOAD_ID_2).setP0(200).setQ0(20);
@@ -106,10 +107,9 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
         createLoad(getNetwork().getVoltageLevel("v3"), LOAD_ID_8, LOAD_ID_8, 10, 130, 3.0, "cn10", 15, ConnectablePosition.Direction.TOP);
         createLoad(getNetwork().getVoltageLevel("v4"), LOAD_ID_9, LOAD_ID_9, 10, 200, 1.0, "cn10", 16, ConnectablePosition.Direction.TOP);
         createLoad(getNetwork().getVoltageLevel("v5"), LOAD_ID_10, LOAD_ID_10, 12, 100, 1.0, "cn10", 17, ConnectablePosition.Direction.TOP);
+    }
 
-        wireMock = new WireMockServer(wireMockConfig().dynamicPort());
-        wireMock.start();
-
+    private List<FilterEquipments> getTestFilters() {
         IdentifiableAttributes load1 = getIdentifiableAttributes(LOAD_ID_1, 1.0);
         IdentifiableAttributes load2 = getIdentifiableAttributes(LOAD_ID_2, 2.0);
         IdentifiableAttributes load3 = getIdentifiableAttributes(LOAD_ID_3, 2.0);
@@ -121,61 +121,56 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
         IdentifiableAttributes load9 = getIdentifiableAttributes(LOAD_ID_9, 0.0);
         IdentifiableAttributes load10 = getIdentifiableAttributes(LOAD_ID_10, 9.0);
 
-        IdentifiableAttributes loadWrongId1 = getIdentifiableAttributes(LOAD_WRONG_ID_1, 2.0);
-        IdentifiableAttributes loadWrongId2 = getIdentifiableAttributes(LOAD_WRONG_ID_2, 3.0);
-
-        IdentifiableAttributes loadNoDK1 = getIdentifiableAttributes(LOAD_ID_2, null);
-        IdentifiableAttributes loadNoDK2 = getIdentifiableAttributes(LOAD_ID_3, null);
-
         FilterEquipments filter1 = getFilterEquipments(FILTER_ID_1, "filter1", List.of(load1, load2), List.of());
         FilterEquipments filter2 = getFilterEquipments(FILTER_ID_2, "filter2", List.of(load3, load4), List.of());
         FilterEquipments filter3 = getFilterEquipments(FILTER_ID_3, "filter3", List.of(load5, load6), List.of());
         FilterEquipments filter4 = getFilterEquipments(FILTER_ID_4, "filter4", List.of(load7, load8), List.of());
         FilterEquipments filter5 = getFilterEquipments(FILTER_ID_5, "filter5", List.of(load9, load10), List.of());
 
-        FilterEquipments wrongIdFilter1 = getFilterEquipments(FILTER_WRONG_ID_1, "wrongIdFilter1", List.of(loadWrongId1, loadWrongId2), List.of(LOAD_WRONG_ID_1, LOAD_WRONG_ID_2));
-        FilterEquipments wrongIdFilter2 = getFilterEquipments(FILTER_WRONG_ID_2, "wrongIdFilter2", List.of(loadWrongId1, load10), List.of(LOAD_WRONG_ID_1));
-        FilterEquipments noDistributionKeyFilter = getFilterEquipments(FILTER_NO_DK, "noDistributionKeyFilter", List.of(loadNoDK1, loadNoDK2), List.of());
-
-        String path = "/v1/filters/export?networkUuid=" + getNetworkUuid() + "&variantId=variant_1&ids=";
-        String pathRegex = "/v1/filters/export\\?networkUuid=" + getNetworkUuid() + "\\&variantId=variant_1\\&ids=";
-
-        wireMock.stubFor(WireMock.get(WireMock.urlMatching(pathRegex + "(.+,){4}.*"))
-            .willReturn(WireMock.ok()
-                .withBody(mapper.writeValueAsString(List.of(filter1, filter2, filter3, filter4, filter5)))
-                .withHeader("Content-Type", "application/json")));
-
-        String params = "(" + FILTER_ID_5 + "|" + FILTER_WRONG_ID_2 + ")";
-        wireMock.stubFor(WireMock.get(WireMock.urlMatching(pathRegex + params + "," + params))
-            .willReturn(WireMock.ok()
-                .withBody(mapper.writeValueAsString(List.of(wrongIdFilter2, filter5)))
-                .withHeader("Content-Type", "application/json")));
-
-        wireMock.stubFor(WireMock.get(path + FILTER_WRONG_ID_1)
-            .willReturn(WireMock.ok()
-                .withBody(mapper.writeValueAsString(List.of(wrongIdFilter1)))
-                .withHeader("Content-Type", "application/json")));
-
-        wireMock.stubFor(WireMock.get(path + FILTER_NO_DK)
-            .willReturn(WireMock.ok()
-                .withBody(mapper.writeValueAsString(List.of(noDistributionKeyFilter)))
-                .withHeader("Content-Type", "application/json")));
-
-        wireMock.stubFor(WireMock.get(path + FILTER_NOT_FOUND_ID)
-            .willReturn(WireMock.notFound()
-                .withHeader("Content-Type", "application/json")));
-
-        setFilterServerBaseUri(wireMock.baseUrl());
+        return List.of(filter1, filter2, filter3, filter4, filter5);
     }
 
-    @After
-    public void shutDown() {
-        wireMock.shutdown();
+    @Test
+    @SneakyThrows
+    @Override
+    public void testCreate() {
+        List<FilterEquipments> filters = getTestFilters();
+        UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(getPath(getNetworkUuid(), true) + "(.+,){4}.*"))
+                .willReturn(WireMock.ok()
+                        .withBody(mapper.writeValueAsString(filters))
+                        .withHeader("Content-Type", "application/json"))).getId();
+
+        super.testCreate();
+
+        wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(getNetworkUuid(), filters.stream().map(FilterEquipments::getFilterId).collect(Collectors.toList())), false);
+    }
+
+    @Test
+    @SneakyThrows
+    @Override
+    public void testCopy() {
+        List<FilterEquipments> filters = getTestFilters();
+        UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(getPath(getNetworkUuid(), true) + "(.+,){4}.*"))
+                .willReturn(WireMock.ok()
+                        .withBody(mapper.writeValueAsString(filters))
+                        .withHeader("Content-Type", "application/json"))).getId();
+
+        super.testCopy();
+
+        wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(getNetworkUuid(), filters.stream().map(FilterEquipments::getFilterId).collect(Collectors.toList())), false);
     }
 
     @SneakyThrows
     @Test
     public void testVentilationModeWithoutDistributionKey() {
+        IdentifiableAttributes loadNoDK1 = getIdentifiableAttributes(LOAD_ID_2, null);
+        IdentifiableAttributes loadNoDK2 = getIdentifiableAttributes(LOAD_ID_3, null);
+        FilterEquipments noDistributionKeyFilter = getFilterEquipments(FILTER_NO_DK, "noDistributionKeyFilter", List.of(loadNoDK1, loadNoDK2), List.of());
+
+        UUID stubNonDistributionKey = wireMockServer.stubFor(WireMock.get(getPath(getNetworkUuid(), false) + FILTER_NO_DK)
+                .willReturn(WireMock.ok()
+                        .withBody(mapper.writeValueAsString(List.of(noDistributionKeyFilter)))
+                        .withHeader("Content-Type", "application/json"))).getId();
         FilterInfos filter = FilterInfos.builder()
             .id(FILTER_NO_DK)
             .name("filter")
@@ -198,6 +193,8 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(modificationToCreate)).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
 
+        wireMockUtils.verifyGetRequest(stubNonDistributionKey, PATH, handleQueryParams(getNetworkUuid(), FILTER_NO_DK), false);
+
         assertEquals(200, getNetwork().getLoad(LOAD_ID_2).getP0(), 0.01D);
         assertEquals(200, getNetwork().getLoad(LOAD_ID_3).getP0(), 0.01D);
     }
@@ -205,6 +202,10 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
     @SneakyThrows
     @Test
     public void testFilterWithWrongIds() {
+        IdentifiableAttributes loadWrongId1 = getIdentifiableAttributes(LOAD_WRONG_ID_1, 2.0);
+        IdentifiableAttributes loadWrongId2 = getIdentifiableAttributes(LOAD_WRONG_ID_2, 3.0);
+        FilterEquipments wrongIdFilter1 = getFilterEquipments(FILTER_WRONG_ID_1, "wrongIdFilter1", List.of(loadWrongId1, loadWrongId2), List.of(LOAD_WRONG_ID_1, LOAD_WRONG_ID_2));
+
         FilterInfos filter = FilterInfos.builder()
             .name("filter")
             .id(FILTER_WRONG_ID_1)
@@ -221,6 +222,10 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
             .variationType(VariationType.TARGET_P)
             .variations(List.of(variation))
             .build();
+        UUID stubWithWrongId = wireMockServer.stubFor(WireMock.get(getPath(getNetworkUuid(), false) + FILTER_WRONG_ID_1)
+                .willReturn(WireMock.ok()
+                        .withBody(mapper.writeValueAsString(List.of(wrongIdFilter1)))
+                        .withHeader("Content-Type", "application/json"))).getId();
 
         mockMvc.perform(post(getNetworkModificationUri())
                 .content(mapper.writeValueAsString(loadScalingInfo))
@@ -228,11 +233,21 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(LOAD_SCALING_ERROR, "All filters contains equipments with wrong ids").getMessage(),
                 loadScalingInfo.getErrorType().name(), reportService);
+        wireMockUtils.verifyGetRequest(stubWithWrongId, PATH, handleQueryParams(getNetworkUuid(), FILTER_WRONG_ID_1), false);
     }
 
     @SneakyThrows
     @Test
     public void testScalingCreationWithWarning() {
+        String params = "(" + FILTER_ID_5 + "|" + FILTER_WRONG_ID_2 + ")";
+        IdentifiableAttributes loadWrongId1 = getIdentifiableAttributes(LOAD_WRONG_ID_1, 2.0);
+        IdentifiableAttributes load10 = getIdentifiableAttributes(LOAD_ID_10, 9.0);
+
+        IdentifiableAttributes load9 = getIdentifiableAttributes(LOAD_ID_9, 0.0);
+
+        FilterEquipments wrongIdFilter2 = getFilterEquipments(FILTER_WRONG_ID_2, "wrongIdFilter2", List.of(loadWrongId1, load10), List.of(LOAD_WRONG_ID_1));
+        FilterEquipments filter5 = getFilterEquipments(FILTER_ID_5, "filter5", List.of(load9, load10), List.of());
+
         FilterInfos filter = FilterInfos.builder()
             .name("filter")
             .id(FILTER_WRONG_ID_2)
@@ -255,6 +270,11 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
             .variations(List.of(variation))
             .build();
 
+        UUID stubMultipleWrongIds = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(getPath(getNetworkUuid(), true) + params + "," + params))
+                .willReturn(WireMock.ok()
+                        .withBody(mapper.writeValueAsString(List.of(wrongIdFilter2, filter5)))
+                        .withHeader("Content-Type", "application/json"))).getId();
+
         mockMvc.perform(post(getNetworkModificationUri())
                 .content(mapper.writeValueAsString(loadScalingInfo))
                 .contentType(MediaType.APPLICATION_JSON))
@@ -263,6 +283,7 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
                 content().string(IsNull.notNullValue())
             );
 
+        wireMockUtils.verifyGetRequest(stubMultipleWrongIds, PATH, Map.of("networkUuid", WireMock.equalTo(String.valueOf(getNetworkUuid())), "variantId", WireMock.equalTo("variant_1"), "ids", WireMock.matching(".*")), false);
         assertEquals(600, getNetwork().getLoad(LOAD_ID_9).getP0(), 0.01D);
         assertEquals(300, getNetwork().getLoad(LOAD_ID_10).getP0(), 0.01D);
     }
@@ -413,4 +434,20 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
             .notFoundEquipments(notFoundEquipments)
             .build();
     }
+
+    private Map<String, StringValuePattern> handleQueryParams(UUID networkUuid, UUID filterId) {
+        return Map.of("networkUuid", WireMock.equalTo(String.valueOf(networkUuid)), "variantId", WireMock.equalTo("variant_1"), "ids", WireMock.equalTo(String.valueOf(filterId)));
+    }
+
+    private Map<String, StringValuePattern> handleQueryParams(UUID networkUuid, List<UUID> filterIds) {
+        return Map.of("networkUuid", WireMock.equalTo(String.valueOf(networkUuid)), "variantId", WireMock.equalTo("variant_1"), "ids", WireMock.matching(filterIds.stream().map(uuid -> ".+").collect(Collectors.joining(","))));
+    }
+
+    private String getPath(UUID networkUuid, boolean isRegexPhat) {
+        if (isRegexPhat) {
+            return "/v1/filters/export\\?networkUuid=" + networkUuid + "\\&variantId=variant_1\\&ids=";
+        }
+        return "/v1/filters/export?networkUuid=" + networkUuid + "&variantId=variant_1&ids=";
+    }
+
 }
