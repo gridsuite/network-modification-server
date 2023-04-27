@@ -470,16 +470,26 @@ public class GeneratorCreation extends AbstractModification {
                         .withPlannedOutageRate(nanIfNull(generatorCreationInfos.getPlannedOutageRate()))
                         .withForcedOutageRate(nanIfNull(generatorCreationInfos.getForcedOutageRate()))
                         .add();
-                startupReports.add(ModificationUtils.getInstance().buildCreationReport(
+                if (generatorCreationInfos.getPlannedActivePowerSetPoint() != null) {
+                    startupReports.add(ModificationUtils.getInstance().buildCreationReport(
                         generatorCreationInfos.getPlannedActivePowerSetPoint(), "Planning active power set point"));
-                startupReports.add(ModificationUtils.getInstance().buildCreationReport(
+                }
+                if (generatorCreationInfos.getStartupCost() != null) {
+                    startupReports.add(ModificationUtils.getInstance().buildCreationReport(
                         generatorCreationInfos.getStartupCost(), "Startup cost"));
-                startupReports.add(ModificationUtils.getInstance().buildCreationReport(
+                }
+                if (generatorCreationInfos.getMarginalCost() != null) {
+                    startupReports.add(ModificationUtils.getInstance().buildCreationReport(
                         generatorCreationInfos.getMarginalCost(), "Marginal cost"));
-                startupReports.add(ModificationUtils.getInstance().buildCreationReport(
+                }
+                if (generatorCreationInfos.getPlannedOutageRate() != null) {
+                    startupReports.add(ModificationUtils.getInstance().buildCreationReport(
                         generatorCreationInfos.getPlannedOutageRate(), "Planning outage rate"));
-                startupReports.add(ModificationUtils.getInstance().buildCreationReport(
+                }
+                if (generatorCreationInfos.getForcedOutageRate() != null) {
+                    startupReports.add(ModificationUtils.getInstance().buildCreationReport(
                         generatorCreationInfos.getForcedOutageRate(), "Forced outage rate"));
+                }
             } catch (PowsyblException e) {
                 startupReports.add(Report.builder()
                         .withKey("StartupExtensionAddError")
