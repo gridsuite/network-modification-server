@@ -82,7 +82,7 @@ public abstract class AbstractNetworkModificationTest {
     @Autowired
     protected ObjectMapper mapper;
 
-    private Network network;
+    protected Network network;
 
     @Before
     public void setUp() {

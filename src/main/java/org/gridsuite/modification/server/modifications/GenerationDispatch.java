@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.modifications;
 
+import com.google.common.util.concurrent.AtomicDouble;
 import com.powsybl.commons.reporter.Report;
 import com.powsybl.commons.reporter.ReportBuilder;
 import com.powsybl.commons.reporter.Reporter;
@@ -15,6 +16,8 @@ import com.powsybl.iidm.network.Bus;
 import com.powsybl.iidm.network.Component;
 import com.powsybl.iidm.network.DefaultNetworkListener;
 import com.powsybl.iidm.network.Generator;
+import com.powsybl.iidm.network.HvdcConverterStation;
+import com.powsybl.iidm.network.HvdcLine;
 import com.powsybl.iidm.network.Identifiable;
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Load;
@@ -32,6 +35,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.collectingAndThen;
@@ -53,6 +57,7 @@ public class GenerationDispatch extends AbstractModification {
 
     private final Map<Integer, Double> totalDemand = new HashMap<>();
     private final Map<Integer, Double> remainingPowerImbalance = new HashMap<>();
+    private final Map<Integer, Double> hvdcBalance = new HashMap<>();
 
     private final GenerationDispatchInfos generationDispatchInfos;
 
@@ -84,11 +89,47 @@ public class GenerationDispatch extends AbstractModification {
         return totalLoad * (1. + lossCoefficient / 100.);
     }
 
-    private double computeTotalAmountFixedSupply(int numCC) {
+    private double computeTotalAmountFixedSupply(Component component) {
         double totalAmountFixedSupply = 0.;
-        totalAmountFixedSupply += fixedSupplyGenerators.get(numCC).stream().filter(generator -> generator.getTerminal().isConnected())
+        totalAmountFixedSupply += fixedSupplyGenerators.get(component.getNum()).stream().filter(generator -> generator.getTerminal().isConnected())
             .mapToDouble(Generator::getTargetP).sum();
         return totalAmountFixedSupply;
+    }
+
+    private double computeHvdcBalance(Component component) {
+        AtomicDouble hvdcBalance = new AtomicDouble(0.);
+
+        component.getBusStream().forEach(bus -> {
+            double hdvcFlow = Stream.concat(bus.getLccConverterStationStream(), bus.getVscConverterStationStream())
+                .filter(station -> {
+                    // Keep only hvdc linking to another synchronous component
+                    HvdcLine hvdcLine = station.getHvdcLine();
+                    HvdcConverterStation station1 = hvdcLine.getConverterStation1();
+                    HvdcConverterStation station2 = hvdcLine.getConverterStation2();
+                    boolean station2NotInComponent = station1.getId().equals(station.getId()) &&
+                        station2.getTerminal().getBusView().getBus().getSynchronousComponent().getNum() != component.getNum();
+                    boolean station1NotInComponent = station2.getId().equals(station.getId()) &&
+                        station1.getTerminal().getBusView().getBus().getSynchronousComponent().getNum() != component.getNum();
+                    return station1NotInComponent || station2NotInComponent;
+                })
+                .mapToDouble(station -> {
+                    // compute hvdc flux : import or export
+                    HvdcLine hvdcLine = station.getHvdcLine();
+                    HvdcConverterStation station1 = hvdcLine.getConverterStation1();
+                    HvdcConverterStation station2 = hvdcLine.getConverterStation2();
+
+                    if ((station1.getId().equals(station.getId()) &&
+                        hvdcLine.getConvertersMode() == HvdcLine.ConvertersMode.SIDE_1_RECTIFIER_SIDE_2_INVERTER) ||
+                        (station2.getId().equals(station.getId()) &&
+                            hvdcLine.getConvertersMode() == HvdcLine.ConvertersMode.SIDE_1_INVERTER_SIDE_2_RECTIFIER)) {
+                        return -1. * hvdcLine.getActivePowerSetpoint();
+                    } else {
+                        return hvdcLine.getActivePowerSetpoint();
+                    }
+                }).sum();
+            hvdcBalance.addAndGet(hdvcFlow);
+        });
+        return hvdcBalance.get();
     }
 
     private void computeAdjustableGenerators(Component component, Reporter reporter) {
@@ -140,6 +181,18 @@ public class GenerationDispatch extends AbstractModification {
         }
     }
 
+    public double getTotalDemand(int numSC) {
+        return totalDemand.get(numSC);
+    }
+
+    public double getRemainigPowerImbalance(int numSC) {
+        return remainingPowerImbalance.get(numSC);
+    }
+
+    public double getHvdcBalance(int numSC) {
+        return hvdcBalance.get(numSC);
+    }
+
     @Override
     public void check(Network network) throws NetworkModificationException {
         double lossCoefficient = generationDispatchInfos.getLossCoefficient();
@@ -171,11 +224,16 @@ public class GenerationDispatch extends AbstractModification {
                 Map.of("totalDemand", totalDemand.get(componentNum)), TypedValue.INFO_SEVERITY);
 
             // get total supply value for non adjustable generators (will be 0. in this first version)
-            double totalAmountFixedSupply = computeTotalAmountFixedSupply(componentNum);
+            double totalAmountFixedSupply = computeTotalAmountFixedSupply(component);
             report(powerToDispatchReporter, "TotalAmountFixedSupply", "The total amount of fixed supply is : ${totalAmountFixedSupply} MW",
                 Map.of("totalAmountFixedSupply", totalAmountFixedSupply), TypedValue.INFO_SEVERITY);
 
-            double totalAmountSupplyToBeDispatched = totalDemand.get(componentNum) - totalAmountFixedSupply;
+            // compute hvdc balance to other synchronous comppnents
+            hvdcBalance.put(componentNum, computeHvdcBalance(component));
+            report(powerToDispatchReporter, "TotalOutwardHvdcFlow", "The HVDC balance is : ${hvdcBalance} MW",
+                Map.of("hvdcBalance", hvdcBalance.get(componentNum)), TypedValue.INFO_SEVERITY);
+
+            double totalAmountSupplyToBeDispatched = totalDemand.get(componentNum) - totalAmountFixedSupply - hvdcBalance.get(componentNum);
             if (totalAmountSupplyToBeDispatched < 0.) {
                 report(powerToDispatchReporter, "TotalAmountFixedSupplyExceedsTotalDemand", "The total amount of fixed supply exceeds the total demand",
                     Map.of(), TypedValue.WARN_SEVERITY);
