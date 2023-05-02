@@ -120,13 +120,6 @@ public class GeneratorCreation extends AbstractModification {
         var position = ModificationUtils.getInstance().getPosition(generatorCreationInfos.getConnectionPosition(),
                 generatorCreationInfos.getBusOrBusbarSectionId(), network, voltageLevel);
 
-        Reporter connectivitySubreporter = subReporter.createSubReporter("ConnectionCreated", CONNECTIVITY);
-        connectivitySubreporter.report(Report.builder()
-            .withKey("ConnectionCreated")
-            .withDefaultMessage(CONNECTIVITY)
-            .withSeverity(TypedValue.INFO_SEVERITY)
-            .build());
-
         CreateFeederBay algo = new CreateFeederBayBuilder()
                 .withBusOrBusbarSectionId(generatorCreationInfos.getBusOrBusbarSectionId())
                 .withInjectionDirection(generatorCreationInfos.getConnectionDirection())
@@ -137,7 +130,7 @@ public class GeneratorCreation extends AbstractModification {
                 .withInjectionAdder(generatorAdder)
                 .build();
 
-        algo.apply(network, true, connectivitySubreporter);
+        algo.apply(network, true, subReporter);
 
         // CreateFeederBayBuilder already create the generator using
         // (withInjectionAdder(generatorAdder)) so then we can add the additional informations and extensions
@@ -207,13 +200,6 @@ public class GeneratorCreation extends AbstractModification {
             .setVoltageRegulatorOn(generatorCreationInfos.isVoltageRegulationOn())
             .setTargetV(nanIfNull(generatorCreationInfos.getVoltageSetpoint()))
             .add();
-
-        Reporter connectivitySubreporter = subReporter.createSubReporter("ConnectionCreated", CONNECTIVITY);
-        connectivitySubreporter.report(Report.builder()
-            .withKey("ConnectionCreated")
-            .withDefaultMessage(CONNECTIVITY)
-            .withSeverity(TypedValue.INFO_SEVERITY)
-            .build());
 
         addExtensionsToGenerator(generatorCreationInfos, generator, voltageLevel, subReporter);
 
