@@ -35,10 +35,12 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
     private static final String GROUP2_ID = "GROUP2";
     private static final String GROUP3_ID = "GROUP3";
     private static final String ABC_ID = "ABC";
+    private static final String NEW_GROUP1_ID = "newGroup1";
+    private static final String NEW_GROUP2_ID = "newGroup2";
 
     @SneakyThrows
     @Test
-    public void testPartialGenerationDispatch() {
+    public void testGenerationDispatchWithOtherLossCoefficient() {
         ModificationInfos modification = buildModification();
         ((GenerationDispatchInfos) modification).setLossCoefficient(90.);
 
@@ -54,7 +56,9 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
         assertEquals(100., getNetwork().getGenerator(GROUP1_ID).getTargetP(), 0.001);  // not modified : disconnected
         assertEquals(100., getNetwork().getGenerator(GROUP2_ID).getTargetP(), 0.001);  // not modified : disconnected
         assertEquals(0., getNetwork().getGenerator(GROUP3_ID).getTargetP(), 0.001);
-        assertEquals(100., getNetwork().getGenerator(ABC_ID).getTargetP(), 0.001);
+        assertEquals(80., getNetwork().getGenerator(ABC_ID).getTargetP(), 0.001);
+        assertEquals(5., getNetwork().getGenerator(NEW_GROUP1_ID).getTargetP(), 0.001);  // not modified : not in main connected component
+        assertEquals(7., getNetwork().getGenerator(NEW_GROUP2_ID).getTargetP(), 0.001);  // not modified : not in main connected component
     }
 
     @Override
@@ -85,27 +89,31 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
     protected void assertNetworkAfterCreation() {
         assertEquals(100., getNetwork().getGenerator(GH1_ID).getTargetP(), 0.001);
         assertEquals(70., getNetwork().getGenerator(GH2_ID).getTargetP(), 0.001);
-        assertEquals(130., getNetwork().getGenerator(GH3_ID).getTargetP(), 0.001);
+        assertEquals(70., getNetwork().getGenerator(GH3_ID).getTargetP(), 0.001);
         assertEquals(100., getNetwork().getGenerator(GTH1_ID).getTargetP(), 0.001);
-        assertEquals(128., getNetwork().getGenerator(GTH2_ID).getTargetP(), 0.001);
-        assertEquals(0., getNetwork().getGenerator(TEST1_ID).getTargetP(), 0.001);
+        assertEquals(150., getNetwork().getGenerator(GTH2_ID).getTargetP(), 0.001);
+        assertEquals(50., getNetwork().getGenerator(TEST1_ID).getTargetP(), 0.001);
         assertEquals(100., getNetwork().getGenerator(GROUP1_ID).getTargetP(), 0.001);  // not modified : disconnected
         assertEquals(100., getNetwork().getGenerator(GROUP2_ID).getTargetP(), 0.001);  // not modified : disconnected
         assertEquals(0., getNetwork().getGenerator(GROUP3_ID).getTargetP(), 0.001);
         assertEquals(0., getNetwork().getGenerator(ABC_ID).getTargetP(), 0.001);
+        assertEquals(5., getNetwork().getGenerator(NEW_GROUP1_ID).getTargetP(), 0.001);  // not modified : not in main connected component
+        assertEquals(7., getNetwork().getGenerator(NEW_GROUP2_ID).getTargetP(), 0.001);  // not modified : not in main connected component
     }
 
     @Override
     protected void assertNetworkAfterDeletion() {
         assertEquals(85.357, getNetwork().getGenerator(GH1_ID).getTargetP(), 0.001);
-        assertEquals(90.0, getNetwork().getGenerator(GH2_ID).getTargetP(), 0.001);
-        assertEquals(155.714, getNetwork().getGenerator(GH3_ID).getTargetP(), 0.001);
-        assertEquals(100, getNetwork().getGenerator(GTH1_ID).getTargetP(), 0.001);
-        assertEquals(250.9944, getNetwork().getGenerator(GTH2_ID).getTargetP(), 0.001);
+        assertEquals(50., getNetwork().getGenerator(GH2_ID).getTargetP(), 0.001);
+        assertEquals(100., getNetwork().getGenerator(GH3_ID).getTargetP(), 0.001);
+        assertEquals(100., getNetwork().getGenerator(GTH1_ID).getTargetP(), 0.001);
+        assertEquals(100., getNetwork().getGenerator(GTH2_ID).getTargetP(), 0.001);
         assertEquals(24.0, getNetwork().getGenerator(TEST1_ID).getTargetP(), 0.001);
         assertEquals(100., getNetwork().getGenerator(GROUP1_ID).getTargetP(), 0.001);
         assertEquals(100., getNetwork().getGenerator(GROUP2_ID).getTargetP(), 0.001);
         assertEquals(100., getNetwork().getGenerator(GROUP3_ID).getTargetP(), 0.001);
         assertEquals(85.357, getNetwork().getGenerator(ABC_ID).getTargetP(), 0.001);
+        assertEquals(5., getNetwork().getGenerator(NEW_GROUP1_ID).getTargetP(), 0.001);  // not modified : not in main connected component
+        assertEquals(7., getNetwork().getGenerator(NEW_GROUP2_ID).getTargetP(), 0.001);  // not modified : not in main connected component
     }
 }
