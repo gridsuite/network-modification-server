@@ -97,15 +97,15 @@ public class GenerationDispatch extends AbstractModification {
     }
 
     private double computeHvdcBalance(Component component) {
-        AtomicDouble hvdcBalance = new AtomicDouble(0.);
+        AtomicDouble balance = new AtomicDouble(0.);
 
         component.getBusStream().forEach(bus -> {
             double hdvcFlow = Stream.concat(bus.getLccConverterStationStream(), bus.getVscConverterStationStream())
                 .filter(station -> {
                     // Keep only hvdc linking to another synchronous component
                     HvdcLine hvdcLine = station.getHvdcLine();
-                    HvdcConverterStation station1 = hvdcLine.getConverterStation1();
-                    HvdcConverterStation station2 = hvdcLine.getConverterStation2();
+                    HvdcConverterStation<?> station1 = hvdcLine.getConverterStation1();
+                    HvdcConverterStation<?> station2 = hvdcLine.getConverterStation2();
                     boolean station2NotInComponent = station1.getId().equals(station.getId()) &&
                         station2.getTerminal().getBusView().getBus().getSynchronousComponent().getNum() != component.getNum();
                     boolean station1NotInComponent = station2.getId().equals(station.getId()) &&
@@ -115,8 +115,8 @@ public class GenerationDispatch extends AbstractModification {
                 .mapToDouble(station -> {
                     // compute hvdc flux : import or export
                     HvdcLine hvdcLine = station.getHvdcLine();
-                    HvdcConverterStation station1 = hvdcLine.getConverterStation1();
-                    HvdcConverterStation station2 = hvdcLine.getConverterStation2();
+                    HvdcConverterStation<?> station1 = hvdcLine.getConverterStation1();
+                    HvdcConverterStation<?> station2 = hvdcLine.getConverterStation2();
 
                     if ((station1.getId().equals(station.getId()) &&
                         hvdcLine.getConvertersMode() == HvdcLine.ConvertersMode.SIDE_1_RECTIFIER_SIDE_2_INVERTER) ||
@@ -127,9 +127,9 @@ public class GenerationDispatch extends AbstractModification {
                         return hvdcLine.getActivePowerSetpoint();
                     }
                 }).sum();
-            hvdcBalance.addAndGet(hdvcFlow);
+            balance.addAndGet(hdvcFlow);
         });
-        return hvdcBalance.get();
+        return balance.get();
     }
 
     private void computeAdjustableGenerators(Component component, Reporter reporter) {
