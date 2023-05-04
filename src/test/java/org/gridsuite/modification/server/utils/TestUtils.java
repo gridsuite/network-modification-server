@@ -7,6 +7,8 @@
 
 package org.gridsuite.modification.server.utils;
 
+import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.client.WireMock;
 import com.google.common.io.ByteStreams;
 import com.powsybl.commons.exceptions.UncheckedInterruptedException;
 import com.powsybl.commons.reporter.Report;
@@ -147,4 +149,14 @@ public final class TestUtils {
     private static String formatReportMessage(Report report, ReporterModel reporterModel) {
         return new StringSubstitutor(reporterModel.getTaskValues()).replace(new StringSubstitutor(report.getValues()).replace(report.getDefaultMessage()));
     }
+
+    public static void assertWiremockServerRequestsEmptyThenShutdown(WireMockServer wireMockServer) throws UncheckedInterruptedException, IOException {
+        try {
+            wireMockServer.checkForUnmatchedRequests(); // requests no matched ? (it returns an exception if a request was not matched by wireMock, but does not complain if it was not verified by 'verify')
+            assertEquals(0, wireMockServer.findAll(WireMock.anyRequestedFor(WireMock.anyUrl())).size()); // requests no verified ?
+        } finally {
+            wireMockServer.shutdown();
+        }
+    }
+
 }

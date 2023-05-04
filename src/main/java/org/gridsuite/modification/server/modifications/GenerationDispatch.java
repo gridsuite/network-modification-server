@@ -42,7 +42,7 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 public class GenerationDispatch extends AbstractModification {
-    private static final String COMPONENT = "CC";
+    private static final String SYNCHRONOUS_COMPONENT = "SC";
     private static final String POWER_TO_DISPATCH = "PowerToDispatch";
     private static final String STACKING = "Stacking";
     private static final String RESULT = "Result";
@@ -150,16 +150,18 @@ public class GenerationDispatch extends AbstractModification {
 
     @Override
     public void apply(Network network, Reporter subReporter) {
-        Collection<Component> connectedComponents = network.getBusView().getConnectedComponents()
-            .stream().collect(collectingAndThen(toCollection(() -> new TreeSet<>(comparingInt(Component::getNum))), ArrayList::new)); // TODO: to remove after new powsybl client release
+        Collection<Component> synchronousComponents = network.getBusView().getBusStream()
+            .filter(Bus::isInMainConnectedComponent)
+            .map(Bus::getSynchronousComponent)
+            .collect(collectingAndThen(toCollection(() -> new TreeSet<>(comparingInt(Component::getNum))), ArrayList::new));
 
-        for (Component component : connectedComponents) {
+        for (Component component : synchronousComponents) {
             int componentNum = component.getNum();
 
             remainingPowerImbalance.put(componentNum, 0.);
             fixedSupplyGenerators.put(componentNum, new ArrayList<>());  // no fixed supply generators in this first version
 
-            Reporter componentReporter = subReporter.createSubReporter(COMPONENT + componentNum, COMPONENT + componentNum);
+            Reporter componentReporter = subReporter.createSubReporter("Network CC0 " + SYNCHRONOUS_COMPONENT + componentNum, "Network CC0 " + SYNCHRONOUS_COMPONENT + componentNum);
 
             Reporter powerToDispatchReporter = componentReporter.createSubReporter(POWER_TO_DISPATCH, POWER_TO_DISPATCH);
 
