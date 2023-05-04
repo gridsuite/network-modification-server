@@ -7,13 +7,18 @@
 
 package org.gridsuite.modification.server.dto;
 
+import com.powsybl.commons.reporter.Reporter;
+import com.powsybl.commons.reporter.ReporterModel;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.ToString;
 import lombok.experimental.SuperBuilder;
-import org.w3c.dom.Attr;
+import org.gridsuite.modification.server.ModificationType;
+import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.entities.equipment.modification.VoltageLevelModificationEntity;
+import org.gridsuite.modification.server.modifications.AbstractModification;
+import org.gridsuite.modification.server.modifications.VoltageLevelModification;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
@@ -25,9 +30,6 @@ import org.w3c.dom.Attr;
 @Setter
 @Schema(description = "Voltage level modification")
 public class VoltageLevelModificationInfos extends BasicEquipmentModificationInfos {
-    @Schema(description = "substation id")
-    private AttributeModification<String> substationId;
-
     @Schema(description = "nominal voltage in kV")
     private AttributeModification<Double> nominalVoltage;
 
@@ -38,8 +40,28 @@ public class VoltageLevelModificationInfos extends BasicEquipmentModificationInf
     private AttributeModification<Double> highVoltageLimit;
 
     @Schema(description = "low short-circuit current limit in kA")
-    private AttributeModification<Double> lowShortCircuitCurrentLimit;
+    private AttributeModification<Double> ipMin;
 
     @Schema(description = "high short-circuit current limit in kA")
-    private AttributeModification<Double> highShortCircuitCurrentLimit;
+    private AttributeModification<Double> ipMax;
+
+    @Override
+    public AbstractModification toModification() {
+        return new VoltageLevelModification(this);
+    }
+
+    @Override
+    public NetworkModificationException.Type getErrorType() {
+        return NetworkModificationException.Type.MODIFY_VOLTAGE_LEVEL_ERROR;
+    }
+
+    @Override
+    public Reporter createSubReporter(ReporterModel reporter) {
+        return reporter.createSubReporter(ModificationType.VOLTAGE_LEVEL_MODIFICATION.name(), "VoltageLevel modification ${voltageLevelId}", "voltageLevelId", this.getEquipmentId());
+    }
+
+    @Override
+    public VoltageLevelModificationEntity toEntity() {
+        return new VoltageLevelModificationEntity(this);
+    }
 }

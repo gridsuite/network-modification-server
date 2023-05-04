@@ -7,29 +7,34 @@
 
 package org.gridsuite.modification.server.entities.equipment.modification;
 
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.VoltageLevelModificationInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
-import org.gridsuite.modification.server.entities.equipment.modification.attribute.StringModificationEmbedded;
 
 import javax.persistence.AttributeOverride;
 import javax.persistence.AttributeOverrides;
 import javax.persistence.Column;
 import javax.persistence.Embedded;
+import javax.persistence.Entity;
+import javax.persistence.ForeignKey;
+import javax.persistence.PrimaryKeyJoinColumn;
+import javax.persistence.Table;
+
+import static org.gridsuite.modification.server.dto.AttributeModification.toAttributeModification;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
  */
 
+@NoArgsConstructor
+@Getter
+@Entity
+@Table(name = "voltageLevelModification")
+@PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "voltageLevelModification_id_fk_constraint"))
 public class VoltageLevelModificationEntity extends BasicEquipmentModificationEntity {
-    @Embedded
-    @AttributeOverrides(value = {
-            @AttributeOverride(name = "value", column = @Column(name = "substationId")),
-            @AttributeOverride(name = "opType", column = @Column(name = "substationIdOp"))
-    })
-    private StringModificationEmbedded substationId;
-
     @Embedded
     @AttributeOverrides(value = {
             @AttributeOverride(name = "value", column = @Column(name = "nominalVoltage")),
@@ -53,17 +58,22 @@ public class VoltageLevelModificationEntity extends BasicEquipmentModificationEn
 
     @Embedded
     @AttributeOverrides(value = {
-            @AttributeOverride(name = "value", column = @Column(name = "lowShortCircuitCurrentLimit")),
+            @AttributeOverride(name = "value", column = @Column(name = "ipMin")),
             @AttributeOverride(name = "opType", column = @Column(name = "lowShortCircuitCurrentLimitOp"))
     })
-    private DoubleModificationEmbedded lowShortCircuitCurrentLimit;
+    private DoubleModificationEmbedded ipMin;
 
     @Embedded
     @AttributeOverrides(value = {
-            @AttributeOverride(name = "value", column = @Column(name = "highShortCircuitCurrentLimit")),
+            @AttributeOverride(name = "value", column = @Column(name = "ipMax")),
             @AttributeOverride(name = "opType", column = @Column(name = "highShortCircuitCurrentLimitOp"))
     })
-    private DoubleModificationEmbedded highShortCircuitCurrentLimit;
+    private DoubleModificationEmbedded ipMax;
+
+    public VoltageLevelModificationEntity(VoltageLevelModificationInfos voltageLevelModificationInfos) {
+        super(voltageLevelModificationInfos);
+        assignAttributes(voltageLevelModificationInfos);
+    }
 
     @Override
     public void update(@NonNull ModificationInfos modificationInfos) {
@@ -72,11 +82,29 @@ public class VoltageLevelModificationEntity extends BasicEquipmentModificationEn
     }
 
     private void assignAttributes(VoltageLevelModificationInfos voltageLevelModificationInfos) {
-        this.substationId = new StringModificationEmbedded(voltageLevelModificationInfos.getSubstationId());
         this.nominalVoltage = new DoubleModificationEmbedded(voltageLevelModificationInfos.getNominalVoltage());
         this.lowVoltageLimit = new DoubleModificationEmbedded(voltageLevelModificationInfos.getLowVoltageLimit());
         this.highVoltageLimit = new DoubleModificationEmbedded(voltageLevelModificationInfos.getHighVoltageLimit());
-        this.lowShortCircuitCurrentLimit = new DoubleModificationEmbedded(voltageLevelModificationInfos.getLowShortCircuitCurrentLimit());
-        this.highShortCircuitCurrentLimit = new DoubleModificationEmbedded(voltageLevelModificationInfos.getHighShortCircuitCurrentLimit());
+        this.ipMin = new DoubleModificationEmbedded(voltageLevelModificationInfos.getIpMin());
+        this.ipMax = new DoubleModificationEmbedded(voltageLevelModificationInfos.getIpMax());
+    }
+
+    @Override
+    public VoltageLevelModificationInfos toModificationInfos() {
+        return toVoltageLevelModificationInfosBuilder().build();
+    }
+
+    private VoltageLevelModificationInfos.VoltageLevelModificationInfosBuilder<?, ?> toVoltageLevelModificationInfosBuilder() {
+        return VoltageLevelModificationInfos.builder()
+                .uuid(getId())
+                .equipmentId(getEquipmentId())
+                .date(getDate())
+                .equipmentName(toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))
+                .nominalVoltage(toAttributeModification(getNominalVoltage()))
+                .lowVoltageLimit(toAttributeModification(getLowVoltageLimit()))
+                .highVoltageLimit(toAttributeModification(getHighVoltageLimit()))
+                .ipMin(toAttributeModification(this.getIpMin()))
+                .ipMax(toAttributeModification(this.getIpMax()));
+
     }
 }
