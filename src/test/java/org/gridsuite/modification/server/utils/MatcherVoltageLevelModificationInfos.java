@@ -15,7 +15,7 @@ import java.util.Objects;
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
  */
 
-public class MatcherVoltageLevelModificationInfos extends MatcherModificationInfos<VoltageLevelModificationInfos>{
+public class MatcherVoltageLevelModificationInfos extends MatcherModificationInfos<VoltageLevelModificationInfos> {
     protected MatcherVoltageLevelModificationInfos(VoltageLevelModificationInfos ref) {
         super(ref);
     }
