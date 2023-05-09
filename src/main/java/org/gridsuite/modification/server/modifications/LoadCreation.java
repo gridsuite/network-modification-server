@@ -11,14 +11,16 @@ import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.iidm.modification.topology.CreateFeederBay;
 import com.powsybl.iidm.modification.topology.CreateFeederBayBuilder;
-import com.powsybl.iidm.network.*;
+import com.powsybl.iidm.network.Bus;
+import com.powsybl.iidm.network.Load;
+import com.powsybl.iidm.network.LoadAdder;
+import com.powsybl.iidm.network.Network;
+import com.powsybl.iidm.network.TopologyKind;
+import com.powsybl.iidm.network.VoltageLevel;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.LoadCreationInfos;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.LOAD_ALREADY_EXISTS;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -58,18 +60,18 @@ public class LoadCreation extends AbstractModification {
             algo.apply(network, true, subReporter);
         } else {
             createLoadInBusBreaker(voltageLevel, modificationInfos);
-            report(subReporter);
-        }
-    }
-
-    private void report(Reporter subReporter) {
-        subReporter.report(Report.builder()
+            subReporter.report(Report.builder()
                 .withKey("loadCreated")
                 .withDefaultMessage("New load with id=${id} created")
                 .withValue("id", modificationInfos.getEquipmentId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .build());
+        }
 
+        reportElementaryCreations(subReporter);
+    }
+
+    private void reportElementaryCreations(Reporter subReporter) {
         if (modificationInfos.getEquipmentName() != null) {
             ModificationUtils.getInstance()
                     .reportElementaryCreation(subReporter, modificationInfos.getEquipmentName(), "Name");
