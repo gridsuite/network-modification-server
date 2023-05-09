@@ -411,16 +411,6 @@ public final class ModificationUtils {
         }
     }
 
-    public <T> Report buildCreationReport(@NotNull T value, String fieldName) {
-        return Report.builder()
-                .withKey("Creation" + fieldName)
-                .withDefaultMessage("    ${fieldName} : ${value}")
-                .withValue("fieldName", fieldName)
-                .withValue("value", value.toString())
-                .withSeverity(TypedValue.INFO_SEVERITY)
-                .build();
-    }
-
     public <T> Report buildModificationReport(T oldValue, T newValue, String fieldName) {
         return buildModificationReportWithIndentation(oldValue, newValue, fieldName, 1);
     }
