@@ -247,9 +247,9 @@ public class GeneratorModification extends AbstractModification {
                                                     ReactiveCapabilityCurve.Point oldPoint,
                                                     List<Report> reports,
                                                     String fieldSuffix) {
-        Double oldMaxQ = null;
-        Double oldMinQ = null;
-        Double oldP = null;
+        Double oldMaxQ = Double.NaN;
+        Double oldMinQ = Double.NaN;
+        Double oldP = Double.NaN;
 
         if (oldPoint != null) {
             oldMaxQ = oldPoint.getMaxQ();
