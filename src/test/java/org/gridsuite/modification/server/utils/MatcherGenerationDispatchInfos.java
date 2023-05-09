@@ -7,7 +7,9 @@
 package org.gridsuite.modification.server.utils;
 
 import org.gridsuite.modification.server.dto.GenerationDispatchInfos;
+import org.gridsuite.modification.server.dto.GeneratorsWithoutOutageInfos;
 
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -22,8 +24,34 @@ public class MatcherGenerationDispatchInfos extends MatcherModificationInfos<Gen
         return new MatcherGenerationDispatchInfos(generationDispatchInfos);
     }
 
+    private boolean matchesFilter(GeneratorsWithoutOutageInfos filter1, GeneratorsWithoutOutageInfos filter2) {
+        return Objects.equals(filter1.getName(), filter2.getName()) &&
+            Objects.equals(filter1.getId(), filter2.getId());
+    }
+
+    private boolean matchesGeneratorsWithoutOutage(List<GeneratorsWithoutOutageInfos> generatorsWithoutOutageInfos) {
+        if (!matchesList(reference.getGeneratorsWithoutOutage(), generatorsWithoutOutageInfos)) {
+            return false;
+        }
+        for (int index = 0; index < generatorsWithoutOutageInfos.size(); index++) {
+            if (!matchesFilter(reference.getGeneratorsWithoutOutage().get(index), generatorsWithoutOutageInfos.get(index))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     public boolean matchesSafely(GenerationDispatchInfos m) {
         return super.matchesSafely(m)
-                && Objects.equals(reference.getLossCoefficient(), m.getLossCoefficient());
+                && Objects.equals(reference.getLossCoefficient(), m.getLossCoefficient())
+                && Objects.equals(reference.getDefaultOutageRate(), m.getDefaultOutageRate())
+                && matchesGeneratorsWithoutOutage(m.getGeneratorsWithoutOutage());
+    }
+
+    private boolean matchesList(List<?> list1, List<?> list2) {
+        if ((list1 == null) != (list2 == null)) {
+            return false;
+        }
+        return list1 == null || list1.size() == list2.size();
     }
 }

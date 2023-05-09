@@ -23,8 +23,15 @@ import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Load;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.GeneratorStartup;
+import com.powsybl.network.store.iidm.impl.NetworkImpl;
 import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.dto.FilterEquipments;
 import org.gridsuite.modification.server.dto.GenerationDispatchInfos;
+import org.gridsuite.modification.server.dto.GeneratorsWithoutOutageInfos;
+import org.gridsuite.modification.server.dto.IdentifiableAttributes;
+import org.gridsuite.modification.server.service.FilterService;
+import org.springframework.context.ApplicationContext;
+import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -34,6 +41,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TreeSet;
+import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -41,6 +50,7 @@ import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.toCollection;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.GENERATION_DISPATCH_ERROR;
+import static org.gridsuite.modification.server.modifications.ModificationUtils.distinctByKey;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -54,6 +64,7 @@ public class GenerationDispatch extends AbstractModification {
 
     private final Map<Integer, List<Generator>> fixedSupplyGenerators = new HashMap<>();
     private final Map<Integer, List<Generator>> adjustableGenerators = new HashMap<>();
+    private final List<String> generatorsWithoutOutage = new ArrayList<>();
 
     private final Map<Integer, Double> totalDemand = new HashMap<>();
     private final Map<Integer, Double> remainingPowerImbalance = new HashMap<>();
@@ -199,14 +210,73 @@ public class GenerationDispatch extends AbstractModification {
         if (lossCoefficient < 0. || lossCoefficient > 100.) {
             throw new NetworkModificationException(GENERATION_DISPATCH_ERROR, "The loss coefficient must be between 0 and 100");
         }
+        double defaultOutageRate = generationDispatchInfos.getDefaultOutageRate();
+        if (defaultOutageRate < 0. || defaultOutageRate > 100.) {
+            throw new NetworkModificationException(GENERATION_DISPATCH_ERROR, "The default outage rate must be between 0 and 100");
+        }
+    }
+
+    private void collectGeneratorsWithoutOutage(Network network, Reporter subReporter, ApplicationContext context) {
+        if (CollectionUtils.isEmpty(generationDispatchInfos.getGeneratorsWithoutOutage())) {
+            return;
+        }
+        var filters = generationDispatchInfos.getGeneratorsWithoutOutage().stream().filter(distinctByKey(GeneratorsWithoutOutageInfos::getId))
+            .collect(Collectors.toMap(GeneratorsWithoutOutageInfos::getId, GeneratorsWithoutOutageInfos::getName));
+
+        // export filters
+        String workingVariantId = network.getVariantManager().getWorkingVariantId();
+        UUID uuid = ((NetworkImpl) network).getUuid();
+        Map<UUID, FilterEquipments> generatorsFilters = context.getBean(FilterService.class)
+            .exportFilters(new ArrayList<>(filters.keySet()), uuid, workingVariantId).stream()
+            // keep only generators filters
+            .filter(filterEquipments -> !CollectionUtils.isEmpty(filterEquipments.getIdentifiableAttributes()) &&
+                filterEquipments.getIdentifiableAttributes().stream().allMatch(identifiableAttributes -> identifiableAttributes.getType() == IdentifiableType.GENERATOR))
+            .peek(t -> t.setFilterName(filters.get(t.getFilterId())))
+            .collect(Collectors.toMap(FilterEquipments::getFilterId, Function.identity()));
+
+        // filters with generators not found
+        Map<UUID, FilterEquipments> filtersWithGeneratorsNotFound = generatorsFilters.entrySet().stream()
+            .filter(e -> !CollectionUtils.isEmpty(e.getValue().getNotFoundEquipments()))
+            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        filtersWithGeneratorsNotFound.values().forEach(f -> {
+            var generatorsIds = String.join(", ", f.getNotFoundEquipments());
+            report(subReporter, "filterGeneratorsNotFound", "Cannot find the following generators ${generatorsIds} in filter ${filterName}",
+                Map.of("generatorIds", generatorsIds, "filterName", filters.get(f.getFilterId())),
+                TypedValue.WARN_SEVERITY);
+        });
+
+        generatorsWithoutOutage.addAll(generatorsFilters.values()
+            .stream()
+            .filter(f -> !filtersWithGeneratorsNotFound.containsKey(f.getFilterId()))
+            .flatMap(f -> generatorsFilters.get(f.getFilterId()).getIdentifiableAttributes().stream())
+            .map(IdentifiableAttributes::getId)
+            .collect(Collectors.toList()));
+    }
+
+    private double reduceGeneratorMaxPValue(Generator generator) {
+        double res = generator.getMaxP();
+        if (!generatorsWithoutOutage.contains(generator.getId())) {
+            GeneratorStartup startupExtension = generator.getExtension(GeneratorStartup.class);
+            if (startupExtension != null &&
+                !Double.isNaN(startupExtension.getForcedOutageRate()) &&
+                !Double.isNaN(startupExtension.getPlannedOutageRate())) {
+                res *= (1. - startupExtension.getForcedOutageRate()) * (1. - startupExtension.getPlannedOutageRate());
+            } else {
+                res *= 1. - generationDispatchInfos.getDefaultOutageRate() / 100.;
+            }
+        }
+        return res;
     }
 
     @Override
-    public void apply(Network network, Reporter subReporter) {
+    public void apply(Network network, Reporter subReporter, ApplicationContext context) {
         Collection<Component> synchronousComponents = network.getBusView().getBusStream()
             .filter(Bus::isInMainConnectedComponent)
             .map(Bus::getSynchronousComponent)
             .collect(collectingAndThen(toCollection(() -> new TreeSet<>(comparingInt(Component::getNum))), ArrayList::new));
+
+        // get generators for which there will be no reduction of maximal power
+        collectGeneratorsWithoutOutage(network, subReporter, context);
 
         for (Component component : synchronousComponents) {
             int componentNum = component.getNum();
@@ -249,9 +319,11 @@ public class GenerationDispatch extends AbstractModification {
             double realized = 0.;
             if (!adjustableGenerators.get(componentNum).isEmpty()) {
                 // stacking of adjustable generators to ensure the totalAmountSupplyToBeDispatched
-                List<Scalable> generatorsScalable = adjustableGenerators.get(componentNum).stream().map(generator ->
-                    (Scalable) Scalable.onGenerator(generator.getId(), generator.getMinP(), generator.getMaxP())
-                ).collect(Collectors.toList());
+                List<Scalable> generatorsScalable = adjustableGenerators.get(componentNum).stream().map(generator -> {
+                    double minValue = generator.getMinP();
+                    double maxValue = reduceGeneratorMaxPValue(generator);
+                    return (Scalable) Scalable.onGenerator(generator.getId(), minValue, maxValue);
+                }).collect(Collectors.toList());
 
                 Reporter stackingReporter = componentReporter.createSubReporter(STACKING, STACKING);
 

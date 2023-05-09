@@ -7,16 +7,32 @@
 
 package org.gridsuite.modification.server.modifications;
 
+import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.matching.StringValuePattern;
+import com.powsybl.commons.reporter.Reporter;
+import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
 import lombok.SneakyThrows;
+import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.dto.FilterEquipments;
 import org.gridsuite.modification.server.dto.GenerationDispatchInfos;
+import org.gridsuite.modification.server.dto.GeneratorsWithoutOutageInfos;
+import org.gridsuite.modification.server.dto.IdentifiableAttributes;
 import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.service.FilterService;
 import org.gridsuite.modification.server.utils.MatcherGenerationDispatchInfos;
+import org.junit.Before;
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -34,17 +50,64 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
     private static final String ABC_ID = "ABC";
     private static final String NEW_GROUP1_ID = "newGroup1";
     private static final String NEW_GROUP2_ID = "newGroup2";
+    private static final String GEN1_NOT_FOUND_ID = "notFoundGen1";
+    private static final String GEN2_NOT_FOUND_ID = "notFoundGen2";
+    private static final UUID FILTER_ID_1 = UUID.randomUUID();
+    private static final UUID FILTER_ID_2 = UUID.randomUUID();
+    private static final UUID FILTER_ID_3 = UUID.randomUUID();
+    public static final String PATH = "/v1/filters/export";
+
+    @Autowired
+    ApplicationContext context;
+
+    @SneakyThrows
+    @Before
+    public void specificSetUp() {
+        FilterService.setFilterServerBaseUri(wireMockServer.baseUrl());
+    }
+
+    private IdentifiableAttributes getIdentifiableAttributes(String id) {
+        return IdentifiableAttributes.builder()
+            .id(id)
+            .type(IdentifiableType.GENERATOR)
+            .build();
+    }
+
+    private FilterEquipments getFilterEquipments(UUID filterID, String filterName,
+                                                 List<IdentifiableAttributes> identifiableAttributes,
+                                                 List<String> notFoundEquipments) {
+        return FilterEquipments.builder()
+            .filterId(filterID)
+            .filterName(filterName)
+            .identifiableAttributes(identifiableAttributes)
+            .notFoundEquipments(notFoundEquipments)
+            .build();
+    }
+
+    private List<FilterEquipments> getTestFilters() {
+        IdentifiableAttributes gen1 = getIdentifiableAttributes(GTH2_ID);
+        IdentifiableAttributes gen2 = getIdentifiableAttributes(GROUP1_ID);
+        IdentifiableAttributes gen3 = getIdentifiableAttributes(ABC_ID);
+        IdentifiableAttributes gen4 = getIdentifiableAttributes(GH3_ID);
+        IdentifiableAttributes gen5 = getIdentifiableAttributes(GEN1_NOT_FOUND_ID);
+        IdentifiableAttributes gen6 = getIdentifiableAttributes(GEN2_NOT_FOUND_ID);
+
+        FilterEquipments filter1 = getFilterEquipments(FILTER_ID_1, "filter1", List.of(gen1, gen2), List.of());
+        FilterEquipments filter2 = getFilterEquipments(FILTER_ID_2, "filter2", List.of(gen3, gen4), List.of());
+        FilterEquipments filter3 = getFilterEquipments(FILTER_ID_3, "filter3", List.of(gen5, gen6), List.of(GEN1_NOT_FOUND_ID, GEN2_NOT_FOUND_ID));
+
+        return List.of(filter1, filter2, filter3);
+    }
 
     @SneakyThrows
     @Test
     public void testGenerationDispatch() {
         ModificationInfos modification = buildModification();
-        ((GenerationDispatchInfos) modification).setLossCoefficient(20.);
 
-        // network with 2 synchronous components and 2 hvdc lines between them
+        // network with 2 synchronous components, 2 hvdc lines between them and no forcedOutageRate and plannedOutageRate for the generators
         network = Network.read("testGenerationDispatch.xiidm", getClass().getResourceAsStream("/testGenerationDispatch.xiidm"));
         GenerationDispatch generationDispatch = new GenerationDispatch((GenerationDispatchInfos) modification);
-        generationDispatch.apply(network);
+        generationDispatch.apply(network, Reporter.NO_OP, context);
 
         assertNetworkAfterCreationWithStandardLossCoefficient();
 
@@ -66,10 +129,10 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
         ModificationInfos modification = buildModification();
         ((GenerationDispatchInfos) modification).setLossCoefficient(90.);
 
-        // network with 2 synchronous components and 2 hvdc lines between them
+        // network with 2 synchronous components, 2 hvdc lines between them and no forcedOutageRate and plannedOutageRate for the generators
         network = Network.read("testGenerationDispatch.xiidm", getClass().getResourceAsStream("/testGenerationDispatch.xiidm"));
         GenerationDispatch generationDispatch = new GenerationDispatch((GenerationDispatchInfos) modification);
-        generationDispatch.apply(network);
+        generationDispatch.apply(network, Reporter.NO_OP, context);
 
         assertEquals(100., getNetwork().getGenerator(GH1_ID).getTargetP(), 0.001);
         assertEquals(70., getNetwork().getGenerator(GH2_ID).getTargetP(), 0.001);
@@ -102,10 +165,10 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
         ModificationInfos modification = buildModification();
         ((GenerationDispatchInfos) modification).setLossCoefficient(20.);
 
-        // network with unique synchronous component and internal hvdc lines
+        // network with unique synchronous component, 2 internal hvdc lines and no forcedOutageRate and plannedOutageRate for the generators
         network = Network.read("testGenerationDispatchInternalHvdc.xiidm", getClass().getResourceAsStream("/testGenerationDispatchInternalHvdc.xiidm"));
         GenerationDispatch generationDispatch = new GenerationDispatch((GenerationDispatchInfos) modification);
-        generationDispatch.apply(network);
+        generationDispatch.apply(network, Reporter.NO_OP, context);
 
         assertEquals(100., getNetwork().getGenerator(GH1_ID).getTargetP(), 0.001);
         assertEquals(70., getNetwork().getGenerator(GH2_ID).getTargetP(), 0.001);
@@ -127,6 +190,68 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
         assertEquals(68., generationDispatch.getRemainigPowerImbalance(firstSynchronousComponentNum), 0.001);  // supply-demand balance could not be met on unique synchronous component
     }
 
+    @SneakyThrows
+    @Test
+    public void testGenerationDispatchWithMaxPReduction() {
+        ModificationInfos modification = buildModification();
+        ((GenerationDispatchInfos) modification).setDefaultOutageRate(15.);
+        ((GenerationDispatchInfos) modification).setGeneratorsWithoutOutage(
+            List.of(GeneratorsWithoutOutageInfos.builder().id(FILTER_ID_1).name("filter1").build(),
+                    GeneratorsWithoutOutageInfos.builder().id(FILTER_ID_2).name("filter2").build(),
+                    GeneratorsWithoutOutageInfos.builder().id(FILTER_ID_3).name("filter3").build()));
+
+        // network with 2 synchronous components, 2 hvdc lines between them, forcedOutageRate and plannedOutageRate defined for the generators
+        network = Network.read("testGenerationDispatchReduceMaxP.xiidm", getClass().getResourceAsStream("/testGenerationDispatchReduceMaxP.xiidm"));
+        GenerationDispatch generationDispatch = new GenerationDispatch((GenerationDispatchInfos) modification);
+
+        List<FilterEquipments> filters = getTestFilters();
+        UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(getPath(getNetworkUuid()) + "(.+,){2}.*"))
+            .willReturn(WireMock.ok()
+                .withBody(mapper.writeValueAsString(filters))
+                .withHeader("Content-Type", "application/json"))).getId();
+
+        generationDispatch.apply(network, Reporter.NO_OP, context);
+
+        assertEquals(74.82, getNetwork().getGenerator(GH1_ID).getTargetP(), 0.001);
+        assertEquals(59.5, getNetwork().getGenerator(GH2_ID).getTargetP(), 0.001);
+        assertEquals(130., getNetwork().getGenerator(GH3_ID).getTargetP(), 0.001);
+        assertEquals(76.5, getNetwork().getGenerator(GTH1_ID).getTargetP(), 0.001);
+        assertEquals(150., getNetwork().getGenerator(GTH2_ID).getTargetP(), 0.001);
+        assertEquals(42.5, getNetwork().getGenerator(TEST1_ID).getTargetP(), 0.001);
+        assertEquals(100., getNetwork().getGenerator(GROUP1_ID).getTargetP(), 0.001);  // not modified : disconnected
+        assertEquals(100., getNetwork().getGenerator(GROUP2_ID).getTargetP(), 0.001);  // not modified : disconnected
+        assertEquals(0., getNetwork().getGenerator(GROUP3_ID).getTargetP(), 0.001);
+        assertEquals(65.68, getNetwork().getGenerator(ABC_ID).getTargetP(), 0.001);
+        assertEquals(5., getNetwork().getGenerator(NEW_GROUP1_ID).getTargetP(), 0.001);  // not modified : not in main connected component
+        assertEquals(7., getNetwork().getGenerator(NEW_GROUP2_ID).getTargetP(), 0.001);  // not modified : not in main connected component
+
+        // test total demand and remaining power imbalance on synchronous components
+        int firstSynchronousComponentNum = network.getGenerator(GTH1_ID).getTerminal().getBusView().getBus().getSynchronousComponent().getNum(); // GTH1 is in first synchronous component
+        assertEquals(528., generationDispatch.getTotalDemand(firstSynchronousComponentNum), 0.001);
+        assertEquals(90., generationDispatch.getHvdcBalance(firstSynchronousComponentNum), 0.001);
+        assertEquals(169., generationDispatch.getRemainigPowerImbalance(firstSynchronousComponentNum), 0.001); // supply-demand balance could not be met on first synchronous component
+
+        int secondSynchronousComponentNum = network.getGenerator(GH1_ID).getTerminal().getBusView().getBus().getSynchronousComponent().getNum(); // GH1 is in second synchronous component
+        assertEquals(240., generationDispatch.getTotalDemand(secondSynchronousComponentNum), 0.001);
+        assertEquals(-90., generationDispatch.getHvdcBalance(secondSynchronousComponentNum), 0.001);
+        assertEquals(0., generationDispatch.getRemainigPowerImbalance(secondSynchronousComponentNum), 0.001); // supply-demand balance could be met on second synchronous component
+
+        wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(getNetworkUuid(), filters.stream().map(FilterEquipments::getFilterId).collect(Collectors.toList())), false);
+    }
+
+    @SneakyThrows
+    @Test
+    public void testGenerationDispatchErrorCheck() {
+        GenerationDispatchInfos modification = GenerationDispatchInfos.builder().lossCoefficient(150.).defaultOutageRate(0.).build();
+        network = Network.read("testGenerationDispatch.xiidm", getClass().getResourceAsStream("/testGenerationDispatch.xiidm"));
+        final GenerationDispatch generationDispatch1 = new GenerationDispatch(modification);
+        assertThrows("GENERATION_DISPATCH_ERROR : The loss coefficient must be between 0 and 100", NetworkModificationException.class, () -> generationDispatch1.check(network));
+
+        modification = GenerationDispatchInfos.builder().lossCoefficient(20.).defaultOutageRate(140.).build();
+        final GenerationDispatch generationDispatch2 = new GenerationDispatch(modification);
+        assertThrows("GENERATION_DISPATCH_ERROR : The default outage rate must be between 0 and 100", NetworkModificationException.class, () -> generationDispatch2.check(network));
+    }
+
     @Override
     protected Network createNetwork(UUID networkUuid) {
         return Network.read("testGenerationDispatch.xiidm", getClass().getResourceAsStream("/testGenerationDispatch.xiidm"));
@@ -136,6 +261,8 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModification() {
         return GenerationDispatchInfos.builder()
             .lossCoefficient(20.)
+            .defaultOutageRate(0.)
+            .generatorsWithoutOutage(List.of())
             .build();
     }
 
@@ -143,6 +270,8 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModificationUpdate() {
         return GenerationDispatchInfos.builder()
             .lossCoefficient(50.)
+            .defaultOutageRate(25.)
+            .generatorsWithoutOutage(List.of(GeneratorsWithoutOutageInfos.builder().id(UUID.randomUUID()).name("name1").build()))
             .build();
     }
 
@@ -185,5 +314,14 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
         assertEquals(85.357, getNetwork().getGenerator(ABC_ID).getTargetP(), 0.001);
         assertEquals(5., getNetwork().getGenerator(NEW_GROUP1_ID).getTargetP(), 0.001);
         assertEquals(7., getNetwork().getGenerator(NEW_GROUP2_ID).getTargetP(), 0.001);
+    }
+
+    private Map<String, StringValuePattern> handleQueryParams(UUID networkUuid, List<UUID> filterIds) {
+        return Map.of("networkUuid", WireMock.equalTo(String.valueOf(networkUuid)),
+                      "ids", WireMock.matching(filterIds.stream().map(uuid -> ".+").collect(Collectors.joining(","))));
+    }
+
+    private String getPath(UUID networkUuid) {
+        return "/v1/filters/export\\?networkUuid=" + networkUuid + "\\&variantId=InitialState\\&ids=";
     }
 }
