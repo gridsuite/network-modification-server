@@ -230,7 +230,7 @@ public class GenerationDispatch extends AbstractModification {
             report(powerToDispatchReporter, "TotalAmountFixedSupply", "The total amount of fixed supply is : ${totalAmountFixedSupply} MW",
                 Map.of("totalAmountFixedSupply", totalAmountFixedSupply), TypedValue.INFO_SEVERITY);
 
-            // compute hvdc balance to other synchronous comppnents
+            // compute hvdc balance to other synchronous components
             hvdcBalance.put(componentNum, computeHvdcBalance(component));
             report(powerToDispatchReporter, "TotalOutwardHvdcFlow", "The HVDC balance is : ${hvdcBalance} MW",
                 Map.of("hvdcBalance", hvdcBalance.get(componentNum)), TypedValue.INFO_SEVERITY);
