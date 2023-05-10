@@ -96,7 +96,7 @@ public class GenerationDispatch extends AbstractModification {
         return totalAmountFixedSupply;
     }
 
-    private static Component getHvdcStationSynchronousComponent(HvdcConverterStation<?> station) {
+    private static Component getSynchronousComponentFrom(HvdcConverterStation<?> station) {
         return station.getTerminal().getBusView().getBus().getSynchronousComponent();
     }
 
@@ -110,8 +110,8 @@ public class GenerationDispatch extends AbstractModification {
                     HvdcLine hvdcLine = station.getHvdcLine();
                     HvdcConverterStation<?> station1 = hvdcLine.getConverterStation1();
                     HvdcConverterStation<?> station2 = hvdcLine.getConverterStation2();
-                    boolean station2NotInComponent = station1.getId().equals(station.getId()) && getHvdcStationSynchronousComponent(station2).getNum() != component.getNum();
-                    boolean station1NotInComponent = station2.getId().equals(station.getId()) && getHvdcStationSynchronousComponent(station1).getNum() != component.getNum();
+                    boolean station2NotInComponent = station1.getId().equals(station.getId()) && getSynchronousComponentFrom(station2).getNum() != component.getNum();
+                    boolean station1NotInComponent = station2.getId().equals(station.getId()) && getSynchronousComponentFrom(station1).getNum() != component.getNum();
                     return station1NotInComponent || station2NotInComponent;
                 })
                 .mapToDouble(station -> {
