@@ -96,6 +96,10 @@ public class GenerationDispatch extends AbstractModification {
         return totalAmountFixedSupply;
     }
 
+    private static Component getHvdcStationSynchronousComponent(HvdcConverterStation<?> station) {
+        return station.getTerminal().getBusView().getBus().getSynchronousComponent();
+    }
+
     private double computeHvdcBalance(Component component) {
         AtomicDouble balance = new AtomicDouble(0.);
 
@@ -106,10 +110,8 @@ public class GenerationDispatch extends AbstractModification {
                     HvdcLine hvdcLine = station.getHvdcLine();
                     HvdcConverterStation<?> station1 = hvdcLine.getConverterStation1();
                     HvdcConverterStation<?> station2 = hvdcLine.getConverterStation2();
-                    boolean station2NotInComponent = station1.getId().equals(station.getId()) &&
-                        station2.getTerminal().getBusView().getBus().getSynchronousComponent().getNum() != component.getNum();
-                    boolean station1NotInComponent = station2.getId().equals(station.getId()) &&
-                        station1.getTerminal().getBusView().getBus().getSynchronousComponent().getNum() != component.getNum();
+                    boolean station2NotInComponent = station1.getId().equals(station.getId()) && getHvdcStationSynchronousComponent(station2).getNum() != component.getNum();
+                    boolean station1NotInComponent = station2.getId().equals(station.getId()) && getHvdcStationSynchronousComponent(station1).getNum() != component.getNum();
                     return station1NotInComponent || station2NotInComponent;
                 })
                 .mapToDouble(station -> {
