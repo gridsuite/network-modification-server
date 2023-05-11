@@ -1062,7 +1062,7 @@ public class ModificationControllerTest {
         mockMvc.perform(post(URI_LINE_CATALOG).content(lineCatalogJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
-        // Check if the catalog is complete
+        // Check if the catalog is complete avoiding the duplicate entry
         mvcResult = mockMvc
                 .perform(get("/v1/network-modifications/line/catalog").contentType(MediaType.APPLICATION_JSON))
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
@@ -1072,6 +1072,10 @@ public class ModificationControllerTest {
         List<LineType> lineTypes = mapper.readValue(resultAsString, new TypeReference<>() {
         });
         assertEquals(6, lineTypes.size());
+
+        // Fill the catalog another time with same lineTypes following asserts will check if duplicated insertion is avoided
+        mockMvc.perform(post(URI_LINE_CATALOG).content(lineCatalogJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
 
         mvcResult = mockMvc
                 .perform(get("/v1/network-modifications/line/catalog?kind=AERIAL").contentType(MediaType.APPLICATION_JSON))

@@ -22,9 +22,11 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 @ToString
+@EqualsAndHashCode
 @Schema(description = "Line Type")
 public class LineType {
 
+    @EqualsAndHashCode.Exclude
     @Schema(description = "id")
     UUID id;
 

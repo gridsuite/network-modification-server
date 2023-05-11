@@ -65,6 +65,19 @@
         "linearCapacity": 0.00000000877
     },
     {
+        "type": "TEST3 789EF",
+        "kind": "AERIAL",
+        "voltage": 225,
+        "conductorType": "AL - Aluminium",
+        "section": 15,
+        "conductorsNumber": 4,
+        "circuitsNumber": 1,
+        "groundWiresNumber": 2,
+        "linearResistance": 0.00005,
+        "linearReactance": 0.000513,
+        "linearCapacity": 0.00000000877
+    },
+    {
         "type": "TEST4 UNDERGROUND",
         "kind": "UNDERGROUND",
         "voltage": 225,

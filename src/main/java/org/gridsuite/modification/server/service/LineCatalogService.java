@@ -44,7 +44,13 @@ public class LineCatalogService {
 
     @Transactional
     public void fillLineCatalog(List<LineType> lineCatalog) {
-        List<LineTypeEntity> lineTypeEntityCatalog = lineCatalog.stream()
+        Set<LineType> lineCatalogSet = lineCatalog.stream().collect(Collectors.toSet());
+        Set<LineType> currentCatalog = getLineCatalog(LineKind.UNDEFINED).stream().collect(Collectors.toSet());
+        Set<LineType> filteredLineCatalog = lineCatalogSet.stream()
+            .filter(lineType -> !currentCatalog.contains(lineType))
+            .collect(Collectors.toSet());
+
+        List<LineTypeEntity> lineTypeEntityCatalog = filteredLineCatalog.stream()
             .map(LineType::toEntity)
             .collect(Collectors.toList());
 
