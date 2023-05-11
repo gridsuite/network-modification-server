@@ -65,6 +65,7 @@ public class LineTypeEntity {
     private Double linearCapacity;
 
     public LineTypeEntity(LineType lineType) {
+        id = lineType.getId();
         kind = lineType.getKind();
         type = lineType.getType();
         voltage = lineType.getVoltage();
@@ -80,6 +81,7 @@ public class LineTypeEntity {
 
     public LineType toLineType() {
         return LineType.builder()
+                .id(this.id)
                 .kind(this.kind)
                 .type(this.type)
                 .voltage(this.voltage)

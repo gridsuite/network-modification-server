@@ -11,6 +11,7 @@ import org.gridsuite.modification.server.entities.LineTypeEntity;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
+import java.util.UUID;
 
 /**
  * @author Sylvain Bouzols <sylvain.bouzols at rte-france.com>
@@ -23,6 +24,9 @@ import lombok.*;
 @ToString
 @Schema(description = "Line Type")
 public class LineType {
+
+    @Schema(description = "id")
+    UUID id;
 
     @Schema(description = "Kind (AERIAL or UNDERGROUND)")
     private LineKind kind;
