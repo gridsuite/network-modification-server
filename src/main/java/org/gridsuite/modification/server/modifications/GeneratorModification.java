@@ -59,10 +59,7 @@ public class GeneratorModification extends AbstractModification {
         Collection<ReactiveCapabilityCurve.Point> points = generator.getReactiveLimits().getKind() == ReactiveLimitsKind.CURVE ? generator.getReactiveLimits(ReactiveCapabilityCurve.class).getPoints() : List.of();
         List<ReactiveCapabilityCurve.Point> generatorPoints = new ArrayList<>(points);
         List<ReactiveCapabilityCurveModificationInfos> modificationPoints = modificationInfos.getReactiveCapabilityCurvePoints();
-        if (!org.apache.commons.collections4.CollectionUtils.isEmpty(modificationPoints)) {
-            if (generatorPoints.size() < 2) {
-                throw makeGeneratorException(modificationInfos.getEquipmentId(), "a reactive capability curve should have at least two points");
-            }
+        if (!CollectionUtils.isEmpty(points)) {
             IntStream.range(0, modificationPoints.size())
                     .forEach(i -> {
                         ReactiveCapabilityCurve.Point oldPoint = generatorPoints.get(i);
