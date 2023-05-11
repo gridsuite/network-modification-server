@@ -124,7 +124,7 @@ public class GenerationDispatch extends AbstractModification {
                         hvdcLine.getConvertersMode() == HvdcLine.ConvertersMode.SIDE_1_RECTIFIER_SIDE_2_INVERTER) ||
                         (station2.getId().equals(station.getId()) &&
                             hvdcLine.getConvertersMode() == HvdcLine.ConvertersMode.SIDE_1_INVERTER_SIDE_2_RECTIFIER)) {
-                        return -1. * hvdcLine.getActivePowerSetpoint();
+                        return -hvdcLine.getActivePowerSetpoint();
                     } else {
                         return hvdcLine.getActivePowerSetpoint();
                     }

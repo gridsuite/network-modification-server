@@ -95,7 +95,7 @@ public abstract class AbstractNetworkModificationTest {
     @Autowired
     protected ObjectMapper mapper;
 
-    protected Network network;
+    private Network network;
 
     @Before
     public void setUp() {
@@ -246,6 +246,10 @@ public abstract class AbstractNetworkModificationTest {
 
     protected Network getNetwork() {
         return network;
+    }
+
+    protected void setNetwork(Network network) {
+        this.network = network;
     }
 
     protected UUID getNetworkId() {
