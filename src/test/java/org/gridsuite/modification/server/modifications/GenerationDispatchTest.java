@@ -107,7 +107,7 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
         // network with 2 synchronous components, 2 hvdc lines between them and no forcedOutageRate and plannedOutageRate for the generators
         setNetwork(Network.read("testGenerationDispatch.xiidm", getClass().getResourceAsStream("/testGenerationDispatch.xiidm")));
         GenerationDispatch generationDispatch = new GenerationDispatch((GenerationDispatchInfos) modification);
-        generationDispatch.apply(network, Reporter.NO_OP, context);
+        generationDispatch.apply(getNetwork(), Reporter.NO_OP, context);
 
         assertNetworkAfterCreationWithStandardLossCoefficient();
 
@@ -117,7 +117,7 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
         assertEquals(90., generationDispatch.getHvdcBalance(firstSynchronousComponentNum), 0.001);
         assertEquals(138., generationDispatch.getRemainigPowerImbalance(firstSynchronousComponentNum), 0.001); // supply-demand balance could not be met on first synchronous component
 
-        int secondSynchronousComponentNum = network.getGenerator(GH1_ID).getTerminal().getBusView().getBus().getSynchronousComponent().getNum(); // GH1 is in second synchronous component
+        int secondSynchronousComponentNum = getNetwork().getGenerator(GH1_ID).getTerminal().getBusView().getBus().getSynchronousComponent().getNum(); // GH1 is in second synchronous component
         assertEquals(240., generationDispatch.getTotalDemand(secondSynchronousComponentNum), 0.001);
         assertEquals(-90., generationDispatch.getHvdcBalance(secondSynchronousComponentNum), 0.001);
         assertEquals(0., generationDispatch.getRemainigPowerImbalance(secondSynchronousComponentNum), 0.001); // supply-demand balance could be met on second synchronous component
@@ -132,7 +132,7 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
         // network with 2 synchronous components, 2 hvdc lines between them and no forcedOutageRate and plannedOutageRate for the generators
         setNetwork(Network.read("testGenerationDispatch.xiidm", getClass().getResourceAsStream("/testGenerationDispatch.xiidm")));
         GenerationDispatch generationDispatch = new GenerationDispatch((GenerationDispatchInfos) modification);
-        generationDispatch.apply(network, Reporter.NO_OP, context);
+        generationDispatch.apply(getNetwork(), Reporter.NO_OP, context);
 
         assertEquals(100., getNetwork().getGenerator(GH1_ID).getTargetP(), 0.001);
         assertEquals(70., getNetwork().getGenerator(GH2_ID).getTargetP(), 0.001);
@@ -148,12 +148,12 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
         assertEquals(7., getNetwork().getGenerator(NEW_GROUP2_ID).getTargetP(), 0.001);  // not modified : not in main connected component
 
         // test total demand and remaining power imbalance on synchronous components
-        int firstSynchronousComponentNum = network.getGenerator(GTH1_ID).getTerminal().getBusView().getBus().getSynchronousComponent().getNum(); // GTH1 is in first synchronous component
+        int firstSynchronousComponentNum = getNetwork().getGenerator(GTH1_ID).getTerminal().getBusView().getBus().getSynchronousComponent().getNum(); // GTH1 is in first synchronous component
         assertEquals(836., generationDispatch.getTotalDemand(firstSynchronousComponentNum), 0.001);
         assertEquals(90., generationDispatch.getHvdcBalance(firstSynchronousComponentNum), 0.001);
         assertEquals(446., generationDispatch.getRemainigPowerImbalance(firstSynchronousComponentNum), 0.001); // supply-demand balance could not be met on first synchronous component
 
-        int secondSynchronousComponentNum = network.getGenerator(GH1_ID).getTerminal().getBusView().getBus().getSynchronousComponent().getNum(); // GH1 is in second synchronous component
+        int secondSynchronousComponentNum = getNetwork().getGenerator(GH1_ID).getTerminal().getBusView().getBus().getSynchronousComponent().getNum(); // GH1 is in second synchronous component
         assertEquals(380., generationDispatch.getTotalDemand(secondSynchronousComponentNum), 0.001);
         assertEquals(-90., generationDispatch.getHvdcBalance(secondSynchronousComponentNum), 0.001);
         assertEquals(70., generationDispatch.getRemainigPowerImbalance(secondSynchronousComponentNum), 0.001); // supply-demand balance could not be met on second synchronous component
@@ -163,12 +163,11 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
     @Test
     public void testGenerationDispatchWithInternalHvdc() {
         ModificationInfos modification = buildModification();
-        ((GenerationDispatchInfos) modification).setLossCoefficient(20.);
 
         // network with unique synchronous component, 2 internal hvdc lines and no forcedOutageRate and plannedOutageRate for the generators
         setNetwork(Network.read("testGenerationDispatchInternalHvdc.xiidm", getClass().getResourceAsStream("/testGenerationDispatchInternalHvdc.xiidm")));
         GenerationDispatch generationDispatch = new GenerationDispatch((GenerationDispatchInfos) modification);
-        generationDispatch.apply(network, Reporter.NO_OP, context);
+        generationDispatch.apply(getNetwork(), Reporter.NO_OP, context);
 
         assertEquals(100., getNetwork().getGenerator(GH1_ID).getTargetP(), 0.001);
         assertEquals(70., getNetwork().getGenerator(GH2_ID).getTargetP(), 0.001);
@@ -201,7 +200,7 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
                     GeneratorsWithoutOutageInfos.builder().id(FILTER_ID_3).name("filter3").build()));
 
         // network with 2 synchronous components, 2 hvdc lines between them, forcedOutageRate and plannedOutageRate defined for the generators
-        network = Network.read("testGenerationDispatchReduceMaxP.xiidm", getClass().getResourceAsStream("/testGenerationDispatchReduceMaxP.xiidm"));
+        setNetwork(Network.read("testGenerationDispatchReduceMaxP.xiidm", getClass().getResourceAsStream("/testGenerationDispatchReduceMaxP.xiidm")));
         GenerationDispatch generationDispatch = new GenerationDispatch((GenerationDispatchInfos) modification);
 
         List<FilterEquipments> filters = getTestFilters();
@@ -210,7 +209,7 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
                 .withBody(mapper.writeValueAsString(filters))
                 .withHeader("Content-Type", "application/json"))).getId();
 
-        generationDispatch.apply(network, Reporter.NO_OP, context);
+        generationDispatch.apply(getNetwork(), Reporter.NO_OP, context);
 
         assertEquals(74.82, getNetwork().getGenerator(GH1_ID).getTargetP(), 0.001);
         assertEquals(59.5, getNetwork().getGenerator(GH2_ID).getTargetP(), 0.001);
@@ -226,12 +225,12 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
         assertEquals(7., getNetwork().getGenerator(NEW_GROUP2_ID).getTargetP(), 0.001);  // not modified : not in main connected component
 
         // test total demand and remaining power imbalance on synchronous components
-        int firstSynchronousComponentNum = network.getGenerator(GTH1_ID).getTerminal().getBusView().getBus().getSynchronousComponent().getNum(); // GTH1 is in first synchronous component
+        int firstSynchronousComponentNum = getNetwork().getGenerator(GTH1_ID).getTerminal().getBusView().getBus().getSynchronousComponent().getNum(); // GTH1 is in first synchronous component
         assertEquals(528., generationDispatch.getTotalDemand(firstSynchronousComponentNum), 0.001);
         assertEquals(90., generationDispatch.getHvdcBalance(firstSynchronousComponentNum), 0.001);
         assertEquals(169., generationDispatch.getRemainigPowerImbalance(firstSynchronousComponentNum), 0.001); // supply-demand balance could not be met on first synchronous component
 
-        int secondSynchronousComponentNum = network.getGenerator(GH1_ID).getTerminal().getBusView().getBus().getSynchronousComponent().getNum(); // GH1 is in second synchronous component
+        int secondSynchronousComponentNum = getNetwork().getGenerator(GH1_ID).getTerminal().getBusView().getBus().getSynchronousComponent().getNum(); // GH1 is in second synchronous component
         assertEquals(240., generationDispatch.getTotalDemand(secondSynchronousComponentNum), 0.001);
         assertEquals(-90., generationDispatch.getHvdcBalance(secondSynchronousComponentNum), 0.001);
         assertEquals(0., generationDispatch.getRemainigPowerImbalance(secondSynchronousComponentNum), 0.001); // supply-demand balance could be met on second synchronous component
@@ -243,13 +242,13 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
     @Test
     public void testGenerationDispatchErrorCheck() {
         GenerationDispatchInfos modification = GenerationDispatchInfos.builder().lossCoefficient(150.).defaultOutageRate(0.).build();
-        network = Network.read("testGenerationDispatch.xiidm", getClass().getResourceAsStream("/testGenerationDispatch.xiidm"));
+        setNetwork(Network.read("testGenerationDispatch.xiidm", getClass().getResourceAsStream("/testGenerationDispatch.xiidm")));
         final GenerationDispatch generationDispatch1 = new GenerationDispatch(modification);
-        assertThrows("GENERATION_DISPATCH_ERROR : The loss coefficient must be between 0 and 100", NetworkModificationException.class, () -> generationDispatch1.check(network));
+        assertThrows("GENERATION_DISPATCH_ERROR : The loss coefficient must be between 0 and 100", NetworkModificationException.class, () -> generationDispatch1.check(getNetwork()));
 
         modification = GenerationDispatchInfos.builder().lossCoefficient(20.).defaultOutageRate(140.).build();
         final GenerationDispatch generationDispatch2 = new GenerationDispatch(modification);
-        assertThrows("GENERATION_DISPATCH_ERROR : The default outage rate must be between 0 and 100", NetworkModificationException.class, () -> generationDispatch2.check(network));
+        assertThrows("GENERATION_DISPATCH_ERROR : The default outage rate must be between 0 and 100", NetworkModificationException.class, () -> generationDispatch2.check(getNetwork()));
     }
 
     @Override
