@@ -107,6 +107,10 @@ public class GenerationDispatch extends AbstractModification {
         return totalAmountFixedSupply;
     }
 
+    private static Component getSynchronousComponentFrom(HvdcConverterStation<?> station) {
+        return station.getTerminal().getBusView().getBus().getSynchronousComponent();
+    }
+
     private double computeHvdcBalance(Component component) {
         AtomicDouble balance = new AtomicDouble(0.);
 
@@ -117,10 +121,9 @@ public class GenerationDispatch extends AbstractModification {
                     HvdcLine hvdcLine = station.getHvdcLine();
                     HvdcConverterStation<?> station1 = hvdcLine.getConverterStation1();
                     HvdcConverterStation<?> station2 = hvdcLine.getConverterStation2();
-                    boolean station2NotInComponent = station1.getId().equals(station.getId()) &&
-                        station2.getTerminal().getBusView().getBus().getSynchronousComponent().getNum() != component.getNum();
-                    boolean station1NotInComponent = station2.getId().equals(station.getId()) &&
-                        station1.getTerminal().getBusView().getBus().getSynchronousComponent().getNum() != component.getNum();
+
+                    boolean station2NotInComponent = station1.getId().equals(station.getId()) && getSynchronousComponentFrom(station2).getNum() != component.getNum();
+                    boolean station1NotInComponent = station2.getId().equals(station.getId()) && getSynchronousComponentFrom(station1).getNum() != component.getNum();
                     return station1NotInComponent || station2NotInComponent;
                 })
                 .mapToDouble(station -> {
@@ -133,7 +136,7 @@ public class GenerationDispatch extends AbstractModification {
                         hvdcLine.getConvertersMode() == HvdcLine.ConvertersMode.SIDE_1_RECTIFIER_SIDE_2_INVERTER) ||
                         (station2.getId().equals(station.getId()) &&
                             hvdcLine.getConvertersMode() == HvdcLine.ConvertersMode.SIDE_1_INVERTER_SIDE_2_RECTIFIER)) {
-                        return -1. * hvdcLine.getActivePowerSetpoint();
+                        return -hvdcLine.getActivePowerSetpoint();
                     } else {
                         return hvdcLine.getActivePowerSetpoint();
                     }
@@ -298,7 +301,7 @@ public class GenerationDispatch extends AbstractModification {
             report(powerToDispatchReporter, "TotalAmountFixedSupply", "The total amount of fixed supply is : ${totalAmountFixedSupply} MW",
                 Map.of("totalAmountFixedSupply", totalAmountFixedSupply), TypedValue.INFO_SEVERITY);
 
-            // compute hvdc balance to other synchronous comppnents
+            // compute hvdc balance to other synchronous components
             hvdcBalance.put(componentNum, computeHvdcBalance(component));
             report(powerToDispatchReporter, "TotalOutwardHvdcFlow", "The HVDC balance is : ${hvdcBalance} MW",
                 Map.of("hvdcBalance", hvdcBalance.get(componentNum)), TypedValue.INFO_SEVERITY);

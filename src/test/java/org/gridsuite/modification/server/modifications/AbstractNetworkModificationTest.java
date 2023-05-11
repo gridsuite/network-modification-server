@@ -248,6 +248,10 @@ public abstract class AbstractNetworkModificationTest {
         return network;
     }
 
+    protected void setNetwork(Network network) {
+        this.network = network;
+    }
+
     protected UUID getNetworkId() {
         return TEST_NETWORK_ID;
     }
