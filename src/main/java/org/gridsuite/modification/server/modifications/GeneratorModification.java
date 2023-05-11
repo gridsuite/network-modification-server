@@ -24,7 +24,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.IntStream;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.GENERATOR_NOT_FOUND;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_GENERATOR_ERROR;
 
 /**
@@ -51,33 +50,33 @@ public class GeneratorModification extends AbstractModification {
 
     @Override
     public void check(Network network) throws NetworkModificationException {
-        if (network.getGenerator(modificationInfos.getEquipmentId()) == null) {
-            throw new NetworkModificationException(GENERATOR_NOT_FOUND, modificationInfos.getEquipmentId());
+        if (network.getGenerator(modificationInfos.getEquipmentId()) != null) {
+            Generator generator = ModificationUtils.getInstance().getGenerator(network, modificationInfos.getEquipmentId());
+            // check reactive capability curve limits
+            Collection<ReactiveCapabilityCurve.Point> points = generator.getReactiveLimits().getKind() == ReactiveLimitsKind.CURVE ? generator.getReactiveLimits(ReactiveCapabilityCurve.class).getPoints() : List.of();
+            List<ReactiveCapabilityCurve.Point> generatorPoints = new ArrayList<>(points);
+            List<ReactiveCapabilityCurveModificationInfos> modificationPoints = modificationInfos.getReactiveCapabilityCurvePoints();
+            if (!CollectionUtils.isEmpty(points)) {
+                IntStream.range(0, modificationPoints.size())
+                        .forEach(i -> {
+                            ReactiveCapabilityCurve.Point oldPoint = generatorPoints.get(i);
+                            ReactiveCapabilityCurveModificationInfos newPoint = modificationPoints.get(i);
+                            Double oldMaxQ = Double.NaN;
+                            Double oldMinQ = Double.NaN;
+                            if (oldPoint != null) {
+                                oldMaxQ = oldPoint.getMaxQ();
+                                oldMinQ = oldPoint.getMinQ();
+                            }
+                            var maxQ = newPoint.getQmaxP() != null ? newPoint.getQmaxP() : oldMaxQ;
+                            var minQ = newPoint.getQminP() != null ? newPoint.getQminP() : oldMinQ;
+                            if (maxQ < minQ) {
+                                throw makeGeneratorException(modificationInfos.getEquipmentId(),
+                                        "maximum reactive power " + maxQ + " is expected to be greater than or equal to minimum reactive power " + minQ);
+                            }
+                        });
+            }
         }
-        Generator generator = ModificationUtils.getInstance().getGenerator(network, modificationInfos.getEquipmentId());
-        // check reactive capability curve limits
-        Collection<ReactiveCapabilityCurve.Point> points = generator.getReactiveLimits().getKind() == ReactiveLimitsKind.CURVE ? generator.getReactiveLimits(ReactiveCapabilityCurve.class).getPoints() : List.of();
-        List<ReactiveCapabilityCurve.Point> generatorPoints = new ArrayList<>(points);
-        List<ReactiveCapabilityCurveModificationInfos> modificationPoints = modificationInfos.getReactiveCapabilityCurvePoints();
-        if (!CollectionUtils.isEmpty(points)) {
-            IntStream.range(0, modificationPoints.size())
-                    .forEach(i -> {
-                        ReactiveCapabilityCurve.Point oldPoint = generatorPoints.get(i);
-                        ReactiveCapabilityCurveModificationInfos newPoint = modificationPoints.get(i);
-                        Double oldMaxQ = Double.NaN;
-                        Double oldMinQ = Double.NaN;
-                        if (oldPoint != null) {
-                            oldMaxQ = oldPoint.getMaxQ();
-                            oldMinQ = oldPoint.getMinQ();
-                        }
-                        var maxQ = newPoint.getQmaxP() != null ? newPoint.getQmaxP() : oldMaxQ;
-                        var minQ = newPoint.getQminP() != null ? newPoint.getQminP() : oldMinQ;
-                        if (maxQ < minQ) {
-                            throw makeGeneratorException(modificationInfos.getEquipmentId(),
-                                    "maximum reactive power " + maxQ + " is expected to be greater than or equal to minimum reactive power " + minQ);
-                        }
-                    });
-        }
+
     }
 
     @Override
