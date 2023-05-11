@@ -57,26 +57,29 @@ public class GeneratorModification extends AbstractModification {
             List<ReactiveCapabilityCurve.Point> generatorPoints = new ArrayList<>(points);
             List<ReactiveCapabilityCurveModificationInfos> modificationPoints = modificationInfos.getReactiveCapabilityCurvePoints();
             if (!CollectionUtils.isEmpty(points)) {
-                IntStream.range(0, modificationPoints.size())
-                        .forEach(i -> {
-                            ReactiveCapabilityCurve.Point oldPoint = generatorPoints.get(i);
-                            ReactiveCapabilityCurveModificationInfos newPoint = modificationPoints.get(i);
-                            Double oldMaxQ = Double.NaN;
-                            Double oldMinQ = Double.NaN;
-                            if (oldPoint != null) {
-                                oldMaxQ = oldPoint.getMaxQ();
-                                oldMinQ = oldPoint.getMinQ();
-                            }
-                            var maxQ = newPoint.getQmaxP() != null ? newPoint.getQmaxP() : oldMaxQ;
-                            var minQ = newPoint.getQminP() != null ? newPoint.getQminP() : oldMinQ;
-                            if (maxQ < minQ) {
-                                throw makeGeneratorException(modificationInfos.getEquipmentId(),
-                                        "maximum reactive power " + maxQ + " is expected to be greater than or equal to minimum reactive power " + minQ);
-                            }
-                        });
+                checkMaxQGreaterThanMinQ(generatorPoints, modificationPoints);
             }
         }
+    }
 
+    private void checkMaxQGreaterThanMinQ(List<ReactiveCapabilityCurve.Point> generatorPoints, List<ReactiveCapabilityCurveModificationInfos> modificationPoints) {
+        IntStream.range(0, modificationPoints.size())
+                .forEach(i -> {
+                    ReactiveCapabilityCurve.Point oldPoint = generatorPoints.get(i);
+                    ReactiveCapabilityCurveModificationInfos newPoint = modificationPoints.get(i);
+                    Double oldMaxQ = Double.NaN;
+                    Double oldMinQ = Double.NaN;
+                    if (oldPoint != null) {
+                        oldMaxQ = oldPoint.getMaxQ();
+                        oldMinQ = oldPoint.getMinQ();
+                    }
+                    var maxQ = newPoint.getQmaxP() != null ? newPoint.getQmaxP() : oldMaxQ;
+                    var minQ = newPoint.getQminP() != null ? newPoint.getQminP() : oldMinQ;
+                    if (maxQ < minQ) {
+                        throw makeGeneratorException(modificationInfos.getEquipmentId(),
+                                "maximum reactive power " + maxQ + " is expected to be greater than or equal to minimum reactive power " + minQ);
+                    }
+                });
     }
 
     @Override
