@@ -55,6 +55,7 @@ public class SubstationModificationEntity extends BasicEquipmentModificationEnti
                                 .name(prop.getName())
                                 .value(prop.getValue())
                                 .deletionMark(prop.isDeletionMark())
+                                .added(prop.isAdded())
                                 .build())
                         .collect(Collectors.toList());
         if (this.properties != null) {
@@ -87,6 +88,7 @@ public class SubstationModificationEntity extends BasicEquipmentModificationEnti
                                         .name(prop.getName())
                                         .value(prop.getValue())
                                         .deletionMark(prop.getDeletionMark())
+                                        .added(prop.getAdded())
                                         .build())
                                 .collect(Collectors.toList())
                         );
