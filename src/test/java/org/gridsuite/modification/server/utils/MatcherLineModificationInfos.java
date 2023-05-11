@@ -6,8 +6,8 @@
  */
 package org.gridsuite.modification.server.utils;
 
-import org.gridsuite.modification.server.dto.CurrentLimitsInfos;
-import org.gridsuite.modification.server.dto.CurrentTemporaryLimitCreationInfos;
+import org.gridsuite.modification.server.dto.CurrentLimitsModificationInfos;
+import org.gridsuite.modification.server.dto.CurrentTemporaryLimitModificationInfos;
 import org.gridsuite.modification.server.dto.LineModificationInfos;
 import org.hamcrest.Description;
 
@@ -42,12 +42,12 @@ public class MatcherLineModificationInfos extends MatcherModificationInfos<LineM
                 && matchesCurrentLimits(m.getCurrentLimits2(), reference.getCurrentLimits2());
     }
 
-    private static boolean matchesCurrentLimits(CurrentLimitsInfos limits1, CurrentLimitsInfos limits2) {
+    private static boolean matchesCurrentLimits(CurrentLimitsModificationInfos limits1, CurrentLimitsModificationInfos limits2) {
         return Objects.equals(limits1.getPermanentLimit(), limits2.getPermanentLimit())
                 && matchesTemoraryLimits(limits1.getTemporaryLimits(), limits2.getTemporaryLimits());
     }
 
-    private static boolean matchesTemoraryLimits(List<CurrentTemporaryLimitCreationInfos> tempLimits1, List<CurrentTemporaryLimitCreationInfos> tempLimits2) {
+    private static boolean matchesTemoraryLimits(List<CurrentTemporaryLimitModificationInfos> tempLimits1, List<CurrentTemporaryLimitModificationInfos> tempLimits2) {
         if (tempLimits1 == null && tempLimits2 == null) {
             return true;
         }
