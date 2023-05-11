@@ -11,7 +11,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.gridsuite.modification.server.dto.GenerationDispatchInfos;
-import org.gridsuite.modification.server.dto.GeneratorsWithoutOutageInfos;
+import org.gridsuite.modification.server.dto.GeneratorsFilterInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 
@@ -41,7 +41,11 @@ public class GenerationDispatchEntity extends ModificationEntity {
 
     @ElementCollection
     @CollectionTable(name = "generatorsWithoutOutage")
-    private List<GeneratorsWithoutOutageEmbeddable> generatorsWithoutOutage;
+    private List<GeneratorsFilterEmbeddable> generatorsWithoutOutage;
+
+    @ElementCollection
+    @CollectionTable(name = "generatorsWithFixedSupply")
+    private List<GeneratorsFilterEmbeddable> generatorsWithFixedSupply;
 
     public GenerationDispatchEntity(@NotNull GenerationDispatchInfos generationDispatchInfos) {
         super(generationDispatchInfos);
@@ -58,27 +62,31 @@ public class GenerationDispatchEntity extends ModificationEntity {
         lossCoefficient = generationDispatchInfos.getLossCoefficient();
         defaultOutageRate = generationDispatchInfos.getDefaultOutageRate();
         generatorsWithoutOutage = toEmbeddable(generationDispatchInfos.getGeneratorsWithoutOutage());
+        generatorsWithFixedSupply = toEmbeddable(generationDispatchInfos.getGeneratorsWithFixedSupply());
     }
 
-    public static List<GeneratorsWithoutOutageEmbeddable> toEmbeddable(List<GeneratorsWithoutOutageInfos> generators) {
+    public static List<GeneratorsFilterEmbeddable> toEmbeddable(List<GeneratorsFilterInfos> generators) {
         return generators == null ? null : generators.stream()
-            .map(generator -> new GeneratorsWithoutOutageEmbeddable(generator.getId(), generator.getName()))
+            .map(generator -> new GeneratorsFilterEmbeddable(generator.getId(), generator.getName()))
             .collect(Collectors.toList());
+    }
+
+    private List<GeneratorsFilterInfos> toGeneratorsFilters(List<GeneratorsFilterEmbeddable> generatorsFilters) {
+        return generatorsFilters != null ? generatorsFilters
+                .stream()
+                .map(generator -> new GeneratorsFilterInfos(generator.getId(), generator.getName()))
+                .collect(Collectors.toList()) : null;
     }
 
     @Override
     public GenerationDispatchInfos toModificationInfos() {
-        List<GeneratorsWithoutOutageInfos> generators = generatorsWithoutOutage != null ? generatorsWithoutOutage
-                .stream()
-                .map(generator -> new GeneratorsWithoutOutageInfos(generator.getId(), generator.getName()))
-                .collect(Collectors.toList()) : null;
-
         return GenerationDispatchInfos.builder()
                 .date(getDate())
                 .uuid(getId())
                 .lossCoefficient(getLossCoefficient())
                 .defaultOutageRate(getDefaultOutageRate())
-                .generatorsWithoutOutage(generators)
+                .generatorsWithoutOutage(toGeneratorsFilters(generatorsWithoutOutage))
+                .generatorsWithFixedSupply(toGeneratorsFilters(generatorsWithFixedSupply))
                 .build();
     }
 }
