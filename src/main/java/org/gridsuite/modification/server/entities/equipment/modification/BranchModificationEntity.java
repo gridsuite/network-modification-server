@@ -10,7 +10,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.dto.BranchModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.entities.equipment.creation.CurrentLimitsEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
 
 import javax.persistence.*;
@@ -38,20 +37,20 @@ public class BranchModificationEntity extends BasicEquipmentModificationEntity {
     private DoubleModificationEmbedded seriesReactance;
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @JoinColumn(name = "current_limits_id1",
+    @JoinColumn(name = "current_limits_modification_id1",
         referencedColumnName = "id",
         foreignKey = @ForeignKey(
-            name = "current_limits_id1_fk"
+            name = "current_limits_modification_id1_fk"
         ), nullable = true)
-    private CurrentLimitsEntity currentLimits1;
+    private CurrentLimitsModificationEntity currentLimits1;
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @JoinColumn(name = "current_limits_id2",
+    @JoinColumn(name = "current_limits_modification_id2",
         referencedColumnName = "id",
         foreignKey = @ForeignKey(
-            name = "current_limits_id2_fk"
+            name = "current_limits_modification_id2_fk"
         ), nullable = true)
-    private CurrentLimitsEntity currentLimits2;
+    private CurrentLimitsModificationEntity currentLimits2;
 
     protected BranchModificationEntity(BranchModificationInfos branchModificationInfos) {
         super(branchModificationInfos);
