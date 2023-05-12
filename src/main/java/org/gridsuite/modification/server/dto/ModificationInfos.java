@@ -42,6 +42,7 @@ import java.util.UUID;
     @JsonSubTypes.Type(value = SubstationCreationInfos.class, name = "SUBSTATION_CREATION"),
     @JsonSubTypes.Type(value = SubstationModificationInfos.class, name = "SUBSTATION_MODIFICATION"),
     @JsonSubTypes.Type(value = VoltageLevelCreationInfos.class, name = "VOLTAGE_LEVEL_CREATION"),
+    @JsonSubTypes.Type(value = VoltageLevelModificationInfos.class, name = "VOLTAGE_LEVEL_MODIFICATION"),
     @JsonSubTypes.Type(value = ShuntCompensatorCreationInfos.class, name = "SHUNT_COMPENSATOR_CREATION"),
     @JsonSubTypes.Type(value = TwoWindingsTransformerCreationInfos.class, name = "TWO_WINDINGS_TRANSFORMER_CREATION"),
     @JsonSubTypes.Type(value = EquipmentDeletionInfos.class, name = "EQUIPMENT_DELETION"),
