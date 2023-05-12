@@ -10,7 +10,6 @@ package org.gridsuite.modification.server;
  * @author Sylvain Bouzols <sylvain.bouzols at rte-france.com>
  */
 public enum LineKind {
-    UNDEFINED,
     AERIAL,
     UNDERGROUND
 }

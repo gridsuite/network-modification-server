@@ -74,7 +74,7 @@ public class LineTypeEntity {
         linearCapacity = lineType.getLinearCapacity();
     }
 
-    public LineType toLineType() {
+    public LineType toDto() {
         return LineType.builder()
                 .id(this.id)
                 .kind(this.kind)

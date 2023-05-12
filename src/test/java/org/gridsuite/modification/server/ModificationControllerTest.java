@@ -96,7 +96,7 @@ public class ModificationControllerTest {
 
     private static final String URI_NETWORK_WITH_TEE_POINT_MODIF = URI_NETWORK_MODIF_BASE + "?networkUuid=" + TEST_NETWORK_WITH_TEE_POINT_ID + URI_NETWORK_MODIF_PARAMS;
 
-    private static final String URI_LINE_CATALOG = URI_NETWORK_MODIF_BASE + "/line/catalog";
+    private static final String URI_LINE_CATALOG = URI_NETWORK_MODIF_BASE + "/catalog/line-types";
     private static final String LINE_CATALOG_JSON_FILE = "/line_catalog.json";
 
     @Autowired
@@ -1049,7 +1049,7 @@ public class ModificationControllerTest {
     }
 
     @Test
-    public void testGetLineCatalog() throws Exception {
+    public void testGetLineTypesCatalog() throws Exception {
         // Exclude Id for those unit tests because it's exluded in dto
         EqualsVerifier.simple().forClass(LineType.class).withIgnoredFields("id").verify();
         MvcResult mvcResult;
@@ -1057,7 +1057,7 @@ public class ModificationControllerTest {
 
         // Check if the catalog is empty
         mvcResult = mockMvc
-                .perform(get("/v1/network-modifications/line/catalog").contentType(MediaType.APPLICATION_JSON))
+                .perform(get(URI_LINE_CATALOG).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent())
                 .andReturn();
 
@@ -1068,7 +1068,7 @@ public class ModificationControllerTest {
 
         // Check if the catalog is complete avoiding the duplicate entry
         mvcResult = mockMvc
-                .perform(get("/v1/network-modifications/line/catalog").contentType(MediaType.APPLICATION_JSON))
+                .perform(get(URI_LINE_CATALOG).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -1082,7 +1082,7 @@ public class ModificationControllerTest {
                 .andExpect(status().isOk());
 
         mvcResult = mockMvc
-                .perform(get("/v1/network-modifications/line/catalog?kind=AERIAL").contentType(MediaType.APPLICATION_JSON))
+                .perform(get(URI_LINE_CATALOG + "?kind=AERIAL").contentType(MediaType.APPLICATION_JSON))
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -1092,7 +1092,7 @@ public class ModificationControllerTest {
         assertEquals(5, aerialLineTypes.size());
 
         mvcResult = mockMvc
-                .perform(get("/v1/network-modifications/line/catalog?kind=UNDERGROUND").contentType(MediaType.APPLICATION_JSON))
+                .perform(get(URI_LINE_CATALOG + "?kind=UNDERGROUND").contentType(MediaType.APPLICATION_JSON))
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -1101,12 +1101,12 @@ public class ModificationControllerTest {
         });
         assertEquals(1, undergroundLineTypes.size());
 
-        mockMvc.perform(delete("/v1/network-modifications/line/catalog"))
+        mockMvc.perform(delete(URI_LINE_CATALOG))
                 .andExpect(status().isOk());
 
         // Check if the catalog is empty
         mvcResult = mockMvc
-                .perform(get("/v1/network-modifications/line/catalog").contentType(MediaType.APPLICATION_JSON))
+                .perform(get(URI_LINE_CATALOG).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent())
                 .andReturn();
     }

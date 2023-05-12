@@ -16,7 +16,7 @@ import org.gridsuite.modification.server.dto.LineType;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.ReportInfos;
-import org.gridsuite.modification.server.service.LineCatalogService;
+import org.gridsuite.modification.server.service.LineTypesCatalogService;
 import org.gridsuite.modification.server.service.NetworkModificationService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -43,12 +43,12 @@ public class NetworkModificationController {
 
     private final NetworkModificationService networkModificationService;
 
-    private final LineCatalogService lineCatalogService;
+    private final LineTypesCatalogService lineTypesCatalogService;
 
     public NetworkModificationController(NetworkModificationService networkModificationService,
-            LineCatalogService lineCatalogService) {
+            LineTypesCatalogService lineTypesCatalogService) {
         this.networkModificationService = networkModificationService;
-        this.lineCatalogService = lineCatalogService;
+        this.lineTypesCatalogService = lineTypesCatalogService;
     }
 
     @GetMapping(value = "/groups/{groupUuid}/modifications", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -175,32 +175,37 @@ public class NetworkModificationController {
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping(value = "/network-modifications/line/catalog", produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Get a line catalog")
+    @GetMapping(value = "/network-modifications/catalog/line-types", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Get a line types catalog")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "The line catalog is returned"),
-        @ApiResponse(responseCode = "204", description = "The line catalaog is empty") })
-    public ResponseEntity<List<LineType>> getLineCatalog(@Parameter(description = "type") @RequestParam(name = "kind", required = false, defaultValue = "UNDEFINED") LineKind kind) {
-        List<LineType> res = lineCatalogService.getLineCatalog(kind);
+        @ApiResponse(responseCode = "200", description = "The line types catalog is returned"),
+        @ApiResponse(responseCode = "204", description = "The line types catalaog is empty") })
+    public ResponseEntity<List<LineType>> getLineTypesCatalog(@Parameter(description = "type") @RequestParam(name = "kind", required = false) LineKind kind) {
+        List<LineType> res;
+        if (kind != null) {
+            res = lineTypesCatalogService.getLineTypesCatalog(kind);
+        } else {
+            res = lineTypesCatalogService.getAllLineTypesCatalog();
+        }
         if (res.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
         }
         return ResponseEntity.ok().body(res);
     }
 
-    @PostMapping(value = "/network-modifications/line/catalog", consumes = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Fill a line catalog")
-    @ApiResponse(responseCode = "200", description = "The line catalaog was filled")
-    public ResponseEntity<Void> fillLineCatalog(@RequestBody List<LineType> lineCatalog) {
-        lineCatalogService.fillLineCatalog(lineCatalog);
+    @PostMapping(value = "/network-modifications/catalog/line-types", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Fill a line types catalog")
+    @ApiResponse(responseCode = "200", description = "The line types catalaog was filled")
+    public ResponseEntity<Void> fillLineTypesCatalog(@RequestBody List<LineType> lineCatalog) {
+        lineTypesCatalogService.fillLineTypesCatalog(lineCatalog);
         return ResponseEntity.ok().build();
     }
 
-    @DeleteMapping(value = "/network-modifications/line/catalog", produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Delete line catalog")
-    @ApiResponse(responseCode = "200", description = "The line catalog is deleted")
-    public ResponseEntity<Void> deleteLineCatalog() {
-        lineCatalogService.deleteLineCatalog();
+    @DeleteMapping(value = "/network-modifications/catalog/line-types", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Delete line types catalog")
+    @ApiResponse(responseCode = "200", description = "The line types catalog is deleted")
+    public ResponseEntity<Void> deleteLineTypesCatalog() {
+        lineTypesCatalogService.deleteLineTypesCatalog();
         return ResponseEntity.ok().build();
     }
 }

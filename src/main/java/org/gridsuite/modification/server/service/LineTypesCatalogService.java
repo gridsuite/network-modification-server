@@ -7,6 +7,8 @@
 package org.gridsuite.modification.server.service;
 
 import org.gridsuite.modification.server.LineKind;
+import org.gridsuite.modification.server.NetworkModificationException;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_TYPE_KIND_MISMATCH;
 import org.gridsuite.modification.server.dto.LineType;
 import org.gridsuite.modification.server.entities.LineTypeEntity;
 import org.gridsuite.modification.server.repositories.LineCatalogRepository;
@@ -20,32 +22,37 @@ import java.util.stream.Collectors;
  * @author Sylvain Bouzols <sylvain.bouzols at rte-france.com>
  */
 @Service
-public class LineCatalogService {
+public class LineTypesCatalogService {
     private final LineCatalogRepository lineCatalogRepository;
 
-    public LineCatalogService(LineCatalogRepository lineCatalogRepository) {
+    public LineTypesCatalogService(LineCatalogRepository lineCatalogRepository) {
         this.lineCatalogRepository = lineCatalogRepository;
     }
 
     @Transactional(readOnly = true)
-    public List<LineType> getLineCatalog(LineKind kind) {
+    public List<LineType> getLineTypesCatalog(LineKind kind) {
         switch (kind) {
             case AERIAL:
             case UNDERGROUND:
                 return lineCatalogRepository.findAllByKind(kind).stream()
-                .map(LineTypeEntity::toLineType)
+                .map(LineTypeEntity::toDto)
                 .collect(Collectors.toList());
             default:
-                return lineCatalogRepository.findAll().stream()
-                    .map(LineTypeEntity::toLineType)
-                    .collect(Collectors.toList());
+                throw new NetworkModificationException(LINE_TYPE_KIND_MISMATCH);
         }
     }
 
+    @Transactional(readOnly = true)
+    public List<LineType> getAllLineTypesCatalog() {
+        return lineCatalogRepository.findAll().stream()
+            .map(LineTypeEntity::toDto)
+            .collect(Collectors.toList());
+    }
+
     @Transactional
-    public void fillLineCatalog(List<LineType> lineCatalog) {
+    public void fillLineTypesCatalog(List<LineType> lineCatalog) {
         Set<LineType> lineCatalogSet = lineCatalog.stream().collect(Collectors.toSet());
-        Set<LineType> currentCatalog = getLineCatalog(LineKind.UNDEFINED).stream().collect(Collectors.toSet());
+        Set<LineType> currentCatalog = getAllLineTypesCatalog().stream().collect(Collectors.toSet());
         Set<LineType> filteredLineCatalog = lineCatalogSet.stream()
             .filter(lineType -> !currentCatalog.contains(lineType))
             .collect(Collectors.toSet());
@@ -57,7 +64,7 @@ public class LineCatalogService {
         lineCatalogRepository.saveAll(lineTypeEntityCatalog);
     }
 
-    public void deleteLineCatalog() {
+    public void deleteLineTypesCatalog() {
         lineCatalogRepository.deleteAll();
     }
 }
