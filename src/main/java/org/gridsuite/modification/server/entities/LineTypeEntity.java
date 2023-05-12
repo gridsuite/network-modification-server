@@ -21,7 +21,6 @@ import java.util.UUID;
  */
 @NoArgsConstructor
 @Getter
-@Setter
 @Entity
 @Table(name = "line_type_catalog")
 public class LineTypeEntity {

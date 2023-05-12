@@ -1077,6 +1077,17 @@ public class ModificationControllerTest {
         mockMvc.perform(post(URI_LINE_CATALOG).content(lineCatalogJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
+        // test equals for coverage
+        mvcResult = mockMvc
+                .perform(get("/v1/network-modifications/line/catalog").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn();
+        resultAsString = mvcResult.getResponse().getContentAsString();
+        List<LineType> lineTypesAfter = mapper.readValue(resultAsString, new TypeReference<>() {
+        });
+        assertEquals(lineTypesAfter, lineTypes);
+
         mvcResult = mockMvc
                 .perform(get("/v1/network-modifications/line/catalog?kind=AERIAL").contentType(MediaType.APPLICATION_JSON))
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
