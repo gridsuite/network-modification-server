@@ -9,6 +9,7 @@ package org.gridsuite.modification.server.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+import org.gridsuite.modification.server.entities.equipment.modification.attribute.IAttributeModificationEmbeddable;
 
 import java.util.Objects;
 
@@ -24,6 +25,10 @@ import java.util.Objects;
 public class AttributeModification<T> {
     T value;
     OperationType op;
+
+    public static <V> AttributeModification<V> toAttributeModification(IAttributeModificationEmbeddable<V> modificationEmbeddable) {
+        return modificationEmbeddable != null ? toAttributeModification(modificationEmbeddable.getValue(), modificationEmbeddable.getOpType()) : null;
+    }
 
     public static <V> AttributeModification<V> toAttributeModification(V value, OperationType opType) {
         if (Objects.isNull(value) && Objects.isNull(opType)) {
