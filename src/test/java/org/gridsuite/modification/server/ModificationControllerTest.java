@@ -18,6 +18,8 @@ import com.powsybl.iidm.network.extensions.GeneratorStartup;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
 import lombok.SneakyThrows;
+import nl.jqno.equalsverifier.EqualsVerifier;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.modification.server.Impacts.TestImpactUtils;
 import org.gridsuite.modification.server.dto.*;
@@ -1048,6 +1050,7 @@ public class ModificationControllerTest {
 
     @Test
     public void testGetLineCatalog() throws Exception {
+        EqualsVerifier.simple().forClass(LineType.class).verify();
         MvcResult mvcResult;
         String resultAsString;
 
@@ -1076,17 +1079,6 @@ public class ModificationControllerTest {
         // Fill the catalog another time with same lineTypes following asserts will check if duplicated insertion is avoided
         mockMvc.perform(post(URI_LINE_CATALOG).content(lineCatalogJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-
-        // test equals for coverage
-        mvcResult = mockMvc
-                .perform(get("/v1/network-modifications/line/catalog").contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andReturn();
-        resultAsString = mvcResult.getResponse().getContentAsString();
-        List<LineType> lineTypesAfter = mapper.readValue(resultAsString, new TypeReference<>() {
-        });
-        assertEquals(lineTypesAfter, lineTypes);
 
         mvcResult = mockMvc
                 .perform(get("/v1/network-modifications/line/catalog?kind=AERIAL").contentType(MediaType.APPLICATION_JSON))
