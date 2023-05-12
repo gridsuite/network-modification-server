@@ -59,14 +59,14 @@ public class VoltageLevelModificationEntity extends BasicEquipmentModificationEn
     @Embedded
     @AttributeOverrides(value = {
             @AttributeOverride(name = "value", column = @Column(name = "ipMin")),
-            @AttributeOverride(name = "opType", column = @Column(name = "lowShortCircuitCurrentLimitOp"))
+            @AttributeOverride(name = "opType", column = @Column(name = "ipMinOp"))
     })
     private DoubleModificationEmbedded ipMin;
 
     @Embedded
     @AttributeOverrides(value = {
             @AttributeOverride(name = "value", column = @Column(name = "ipMax")),
-            @AttributeOverride(name = "opType", column = @Column(name = "highShortCircuitCurrentLimitOp"))
+            @AttributeOverride(name = "opType", column = @Column(name = "ipMaxOp"))
     })
     private DoubleModificationEmbedded ipMax;
 
