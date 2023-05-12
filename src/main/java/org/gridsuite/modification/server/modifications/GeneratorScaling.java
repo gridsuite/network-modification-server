@@ -68,7 +68,7 @@ public class GeneratorScaling extends AbstractScaling {
                 scalables.add(getScalable(equipment.getId()));
                 percentages.add((float) ((equipment.getDistributionKey() / distributionKeys) * 100));
             });
-            Scalable ventilationScalable = Scalable.proportional(percentages, scalables, true);
+            Scalable ventilationScalable = Scalable.proportional(percentages, scalables);
             scale(network, subReporter, generatorScalingVariation, sum, ventilationScalable);
         }
     }
@@ -93,7 +93,7 @@ public class GeneratorScaling extends AbstractScaling {
                 }).collect(Collectors.toList());
 
         List<Float> percentages = new ArrayList<>(Collections.nCopies(scalables.size(), (float) (100.0 / scalables.size())));
-        Scalable regularDistributionScalable = Scalable.proportional(percentages, scalables, true);
+        Scalable regularDistributionScalable = Scalable.proportional(percentages, scalables);
         scale(network, subReporter, generatorScalingVariation, sum, regularDistributionScalable);
     }
 
@@ -119,7 +119,7 @@ public class GeneratorScaling extends AbstractScaling {
         });
 
         setScalablePercentage(maxPSum, maxPMap, percentages, scalables);
-        Scalable proportionalToPmaxScalable = Scalable.proportional(percentages, scalables, true);
+        Scalable proportionalToPmaxScalable = Scalable.proportional(percentages, scalables);
         scale(network, subReporter, generatorScalingVariation, targetPSum, proportionalToPmaxScalable);
     }
 
@@ -143,7 +143,7 @@ public class GeneratorScaling extends AbstractScaling {
 
         // we calculate percentage of each target P value relative to the sum of target P
         setScalablePercentage(sum, targetPMap, percentages, scalables);
-        Scalable proportionalScalable = Scalable.proportional(percentages, scalables, true);
+        Scalable proportionalScalable = Scalable.proportional(percentages, scalables);
         scale(network, subReporter, generatorScalingVariation, sum, proportionalScalable);
     }
 
