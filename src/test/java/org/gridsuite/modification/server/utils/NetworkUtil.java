@@ -43,7 +43,7 @@ public final class NetworkUtil {
             .setName(name)
             .setNode(node)
             .add();
-        bbs.newExtension(BusbarSectionPositionAdder.class).add();
+        bbs.newExtension(BusbarSectionPositionAdder.class).withBusbarIndex(0).withSectionIndex(0).add();
     }
 
     public static void createBus(VoltageLevel vl, String id, String name) {
