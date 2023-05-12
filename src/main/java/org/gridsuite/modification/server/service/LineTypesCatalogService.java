@@ -11,7 +11,7 @@ import org.gridsuite.modification.server.NetworkModificationException;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_TYPE_KIND_MISMATCH;
 import org.gridsuite.modification.server.dto.LineType;
 import org.gridsuite.modification.server.entities.LineTypeEntity;
-import org.gridsuite.modification.server.repositories.LineCatalogRepository;
+import org.gridsuite.modification.server.repositories.LineTypesCatalogRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,10 +23,10 @@ import java.util.stream.Collectors;
  */
 @Service
 public class LineTypesCatalogService {
-    private final LineCatalogRepository lineCatalogRepository;
+    private final LineTypesCatalogRepository lineTypesCatalogRepository;
 
-    public LineTypesCatalogService(LineCatalogRepository lineCatalogRepository) {
-        this.lineCatalogRepository = lineCatalogRepository;
+    public LineTypesCatalogService(LineTypesCatalogRepository lineTypesCatalogRepository) {
+        this.lineTypesCatalogRepository = lineTypesCatalogRepository;
     }
 
     @Transactional(readOnly = true)
@@ -34,7 +34,7 @@ public class LineTypesCatalogService {
         switch (kind) {
             case AERIAL:
             case UNDERGROUND:
-                return lineCatalogRepository.findAllByKind(kind).stream()
+                return lineTypesCatalogRepository.findAllByKind(kind).stream()
                 .map(LineTypeEntity::toDto)
                 .collect(Collectors.toList());
             default:
@@ -44,7 +44,7 @@ public class LineTypesCatalogService {
 
     @Transactional(readOnly = true)
     public List<LineType> getAllLineTypesCatalog() {
-        return lineCatalogRepository.findAll().stream()
+        return lineTypesCatalogRepository.findAll().stream()
             .map(LineTypeEntity::toDto)
             .collect(Collectors.toList());
     }
@@ -61,10 +61,10 @@ public class LineTypesCatalogService {
             .map(LineType::toEntity)
             .collect(Collectors.toList());
 
-        lineCatalogRepository.saveAll(lineTypeEntityCatalog);
+        lineTypesCatalogRepository.saveAll(lineTypeEntityCatalog);
     }
 
     public void deleteLineTypesCatalog() {
-        lineCatalogRepository.deleteAll();
+        lineTypesCatalogRepository.deleteAll();
     }
 }

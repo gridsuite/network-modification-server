@@ -18,7 +18,7 @@ import java.util.UUID;
  * @author Sylvain Bouzols <sylvain.bouzols at rte-france.com>
  */
 @Repository
-public interface LineCatalogRepository extends JpaRepository<LineTypeEntity, UUID> {
+public interface LineTypesCatalogRepository extends JpaRepository<LineTypeEntity, UUID> {
 
     List<LineTypeEntity> findAllByKind(LineKind kind);
 }
