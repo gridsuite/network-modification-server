@@ -4,14 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package org.gridsuite.modification.server.dto;
-
-import org.gridsuite.modification.server.LineKind;
-import org.gridsuite.modification.server.entities.LineTypeEntity;
+package org.gridsuite.modification.server.dto.catalog;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import java.util.UUID;
+
+import org.gridsuite.modification.server.entities.catalog.LineTypeEntity;
 
 /**
  * @author Sylvain Bouzols <sylvain.bouzols at rte-france.com>
@@ -29,8 +28,8 @@ public class LineType {
     @Schema(description = "id")
     UUID id;
 
-    @Schema(description = "Kind (AERIAL or UNDERGROUND)")
-    private LineKind kind;
+    @Schema(description = "Category (AERIAL or UNDERGROUND)")
+    private LineTypeCategory category;
 
     @Schema(description = "Type Name")
     private String type;

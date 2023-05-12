@@ -1,15 +1,15 @@
 <?xml version="1.1" encoding="UTF-8" standalone="no"?>
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-4.1.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
-    <changeSet author="bouzolssyl (generated)" id="1683896524493-5">
+    <changeSet author="bouzolssyl (generated)" id="1683901254649-5">
         <createTable tableName="line_types_catalog">
             <column name="id" type="UUID">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="line_types_catalogPK"/>
             </column>
+            <column name="category" type="INT"/>
             <column name="circuits_number" type="INT"/>
             <column name="conductor_type" type="VARCHAR(255)"/>
             <column name="conductors_number" type="INT"/>
             <column name="ground_wires_number" type="INT"/>
-            <column name="kind" type="INT"/>
             <column name="linear_capacity" type="FLOAT8"/>
             <column name="linear_reactance" type="FLOAT8"/>
             <column name="linear_resistance" type="FLOAT8"/>

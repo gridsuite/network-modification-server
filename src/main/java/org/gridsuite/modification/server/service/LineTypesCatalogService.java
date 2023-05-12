@@ -6,11 +6,12 @@
  */
 package org.gridsuite.modification.server.service;
 
-import org.gridsuite.modification.server.LineKind;
 import org.gridsuite.modification.server.NetworkModificationException;
-import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_TYPE_KIND_MISMATCH;
-import org.gridsuite.modification.server.dto.LineType;
-import org.gridsuite.modification.server.entities.LineTypeEntity;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_TYPE_CATEGORY_MISMATCH;
+
+import org.gridsuite.modification.server.dto.catalog.LineTypeCategory;
+import org.gridsuite.modification.server.dto.catalog.LineType;
+import org.gridsuite.modification.server.entities.catalog.LineTypeEntity;
 import org.gridsuite.modification.server.repositories.LineTypesCatalogRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,15 +31,15 @@ public class LineTypesCatalogService {
     }
 
     @Transactional(readOnly = true)
-    public List<LineType> getLineTypesCatalog(LineKind kind) {
-        switch (kind) {
+    public List<LineType> getLineTypesCatalog(LineTypeCategory category) {
+        switch (category) {
             case AERIAL:
             case UNDERGROUND:
-                return lineTypesCatalogRepository.findAllByKind(kind).stream()
+                return lineTypesCatalogRepository.findAllByCategory(category).stream()
                 .map(LineTypeEntity::toDto)
                 .collect(Collectors.toList());
             default:
-                throw new NetworkModificationException(LINE_TYPE_KIND_MISMATCH);
+                throw new NetworkModificationException(LINE_TYPE_CATEGORY_MISMATCH);
         }
     }
 

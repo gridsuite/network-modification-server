@@ -12,13 +12,13 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.gridsuite.modification.server.dto.BuildInfos;
-import org.gridsuite.modification.server.dto.LineType;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.ReportInfos;
+import org.gridsuite.modification.server.dto.catalog.LineTypeCategory;
+import org.gridsuite.modification.server.dto.catalog.LineType;
 import org.gridsuite.modification.server.service.LineTypesCatalogService;
 import org.gridsuite.modification.server.service.NetworkModificationService;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -175,33 +175,37 @@ public class NetworkModificationController {
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping(value = "/network-modifications/catalog/line-types", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/network-modifications/catalog/line_types", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Get a line types catalog")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "The line types catalog is returned"),
-        @ApiResponse(responseCode = "204", description = "The line types catalaog is empty") })
-    public ResponseEntity<List<LineType>> getLineTypesCatalog(@Parameter(description = "type") @RequestParam(name = "kind", required = false) LineKind kind) {
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The line types catalog is returned")})
+    public ResponseEntity<List<LineType>> getLineTypesCatalog(@Parameter(description = "type") @RequestParam(name = "category", required = false) LineTypeCategory category) {
         List<LineType> res;
-        if (kind != null) {
-            res = lineTypesCatalogService.getLineTypesCatalog(kind);
+        if (category != null) {
+            res = lineTypesCatalogService.getLineTypesCatalog(category);
         } else {
             res = lineTypesCatalogService.getAllLineTypesCatalog();
-        }
-        if (res.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
         }
         return ResponseEntity.ok().body(res);
     }
 
-    @PostMapping(value = "/network-modifications/catalog/line-types", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/network-modifications/catalog/line_types", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Fill a line types catalog")
-    @ApiResponse(responseCode = "200", description = "The line types catalaog was filled")
+    @ApiResponse(responseCode = "200", description = "The line types catalaog is filled")
     public ResponseEntity<Void> fillLineTypesCatalog(@RequestBody List<LineType> lineCatalog) {
         lineTypesCatalogService.fillLineTypesCatalog(lineCatalog);
         return ResponseEntity.ok().build();
     }
 
-    @DeleteMapping(value = "/network-modifications/catalog/line-types", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/network-modifications/catalog/line_types", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Reset completely a line types catalog")
+    @ApiResponse(responseCode = "200", description = "The line types catalaog is reset")
+    public ResponseEntity<Void> resetLineTypesCatalog(@RequestBody List<LineType> lineCatalog) {
+        lineTypesCatalogService.deleteLineTypesCatalog();
+        lineTypesCatalogService.fillLineTypesCatalog(lineCatalog);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping(value = "/network-modifications/catalog/line_types", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Delete line types catalog")
     @ApiResponse(responseCode = "200", description = "The line types catalog is deleted")
     public ResponseEntity<Void> deleteLineTypesCatalog() {

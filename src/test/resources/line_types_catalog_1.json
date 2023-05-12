@@ -1,7 +1,7 @@
 [
     {
         "type": "TEST1 123AB",
-        "kind": "AERIAL",
+        "category": "AERIAL",
         "voltage": 63,
         "conductorType": "AL - Aluminium",
         "section": 27.5,
@@ -14,7 +14,7 @@
     },
     {
         "type": "TEST1 123AB",
-        "kind": "AERIAL",
+        "category": "AERIAL",
         "voltage": 45,
         "conductorType": "AL - Aluminium",
         "section": 27.5,
@@ -27,7 +27,7 @@
     },
     {
         "type": "TEST2 456CD",
-        "kind": "AERIAL",
+        "category": "AERIAL",
         "voltage": 90,
         "conductorType": "CU - Cuivre",
         "section": 1700,
@@ -40,7 +40,7 @@
     },
     {
         "type": "TEST3 789EF",
-        "kind": "AERIAL",
+        "category": "AERIAL",
         "voltage": 225,
         "conductorType": "CU - Cuivre",
         "section": 15,
@@ -53,7 +53,7 @@
     },
     {
         "type": "TEST3 789EF",
-        "kind": "AERIAL",
+        "category": "AERIAL",
         "voltage": 225,
         "conductorType": "AL - Aluminium",
         "section": 15,
@@ -66,7 +66,7 @@
     },
     {
         "type": "TEST3 789EF",
-        "kind": "AERIAL",
+        "category": "AERIAL",
         "voltage": 225,
         "conductorType": "AL - Aluminium",
         "section": 15,
@@ -79,7 +79,7 @@
     },
     {
         "type": "TEST4 UNDERGROUND",
-        "kind": "UNDERGROUND",
+        "category": "UNDERGROUND",
         "voltage": 225,
         "conductorType": "AL - Aluminium",
         "section": 16,

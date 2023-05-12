@@ -4,11 +4,12 @@
   License, v. 2.0. If a copy of the MPL was not distributed with this
   file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package org.gridsuite.modification.server.entities;
+package org.gridsuite.modification.server.entities.catalog;
 
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.server.LineKind;
-import org.gridsuite.modification.server.dto.LineType;
+
+import org.gridsuite.modification.server.dto.catalog.LineTypeCategory;
+import org.gridsuite.modification.server.dto.catalog.LineType;
 
 import javax.persistence.*;
 import java.util.UUID;
@@ -26,8 +27,8 @@ public class LineTypeEntity {
     @Column(name = "id")
     private UUID id;
 
-    @Column(name = "kind")
-    private LineKind kind;
+    @Column(name = "category")
+    private LineTypeCategory category;
 
     @Column(name = "type")
     private String type;
@@ -61,7 +62,7 @@ public class LineTypeEntity {
 
     public LineTypeEntity(LineType lineType) {
         id = lineType.getId();
-        kind = lineType.getKind();
+        category = lineType.getCategory();
         type = lineType.getType();
         voltage = lineType.getVoltage();
         conductorType = lineType.getConductorType();
@@ -77,7 +78,7 @@ public class LineTypeEntity {
     public LineType toDto() {
         return LineType.builder()
                 .id(this.id)
-                .kind(this.kind)
+                .category(this.category)
                 .type(this.type)
                 .voltage(this.voltage)
                 .conductorType(this.conductorType)

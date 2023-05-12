@@ -23,8 +23,8 @@ import nl.jqno.equalsverifier.EqualsVerifier;
 import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.modification.server.Impacts.TestImpactUtils;
 import org.gridsuite.modification.server.dto.*;
-import org.gridsuite.modification.server.dto.LineType;
 import org.gridsuite.modification.server.dto.LoadCreationInfos.LoadCreationInfosBuilder;
+import org.gridsuite.modification.server.dto.catalog.LineType;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosRepository;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.elasticsearch.TombstonedEquipmentInfosRepository;
@@ -96,8 +96,9 @@ public class ModificationControllerTest {
 
     private static final String URI_NETWORK_WITH_TEE_POINT_MODIF = URI_NETWORK_MODIF_BASE + "?networkUuid=" + TEST_NETWORK_WITH_TEE_POINT_ID + URI_NETWORK_MODIF_PARAMS;
 
-    private static final String URI_LINE_CATALOG = URI_NETWORK_MODIF_BASE + "/catalog/line-types";
-    private static final String LINE_CATALOG_JSON_FILE = "/line_catalog.json";
+    private static final String URI_LINE_CATALOG = URI_NETWORK_MODIF_BASE + "/catalog/line_types";
+    private static final String LINE_TYPES_CATALOG_JSON_FILE_1 = "/line_types_catalog_1.json";
+    private static final String LINE_TYPES_CATALOG_JSON_FILE_2 = "/line_types_catalog_2.json";
 
     @Autowired
     private MockMvc mockMvc;
@@ -1058,12 +1059,16 @@ public class ModificationControllerTest {
         // Check if the catalog is empty
         mvcResult = mockMvc
                 .perform(get(URI_LINE_CATALOG).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNoContent())
+                .andExpect(status().isOk())
                 .andReturn();
+        resultAsString = mvcResult.getResponse().getContentAsString();
+        List<LineType> emptyLineTypes = mapper.readValue(resultAsString, new TypeReference<>() {
+        });
+        assertEquals(0, emptyLineTypes.size());
 
         // Fill the catalog with some line types
-        String lineCatalogJson = TestUtils.resourceToString(LINE_CATALOG_JSON_FILE);
-        mockMvc.perform(post(URI_LINE_CATALOG).content(lineCatalogJson).contentType(MediaType.APPLICATION_JSON))
+        String lineTypesCatalogJson1 = TestUtils.resourceToString(LINE_TYPES_CATALOG_JSON_FILE_1);
+        mockMvc.perform(post(URI_LINE_CATALOG).content(lineTypesCatalogJson1).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
         // Check if the catalog is complete avoiding the duplicate entry
@@ -1078,11 +1083,11 @@ public class ModificationControllerTest {
         assertEquals(6, lineTypes.size());
 
         // Fill the catalog another time with same lineTypes following asserts will check if duplicated insertion is avoided
-        mockMvc.perform(post(URI_LINE_CATALOG).content(lineCatalogJson).contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(post(URI_LINE_CATALOG).content(lineTypesCatalogJson1).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
         mvcResult = mockMvc
-                .perform(get(URI_LINE_CATALOG + "?kind=AERIAL").contentType(MediaType.APPLICATION_JSON))
+                .perform(get(URI_LINE_CATALOG + "?category=AERIAL").contentType(MediaType.APPLICATION_JSON))
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -1092,7 +1097,7 @@ public class ModificationControllerTest {
         assertEquals(5, aerialLineTypes.size());
 
         mvcResult = mockMvc
-                .perform(get(URI_LINE_CATALOG + "?kind=UNDERGROUND").contentType(MediaType.APPLICATION_JSON))
+                .perform(get(URI_LINE_CATALOG + "?category=UNDERGROUND").contentType(MediaType.APPLICATION_JSON))
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -1101,13 +1106,32 @@ public class ModificationControllerTest {
         });
         assertEquals(1, undergroundLineTypes.size());
 
+        // Check if catalog is completely updated
+        String lineTypesCatalogJson2 = TestUtils.resourceToString(LINE_TYPES_CATALOG_JSON_FILE_2);
+        mockMvc.perform(put(URI_LINE_CATALOG).content(lineTypesCatalogJson2).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        mvcResult = mockMvc
+                .perform(get(URI_LINE_CATALOG).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn();
+        resultAsString = mvcResult.getResponse().getContentAsString();
+        List<LineType> lineTypes2 = mapper.readValue(resultAsString, new TypeReference<>() {
+        });
+        assertEquals(2, lineTypes2.size());
+
         mockMvc.perform(delete(URI_LINE_CATALOG))
                 .andExpect(status().isOk());
 
         // Check if the catalog is empty
         mvcResult = mockMvc
                 .perform(get(URI_LINE_CATALOG).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNoContent())
+                .andExpect(status().isOk())
                 .andReturn();
+        resultAsString = mvcResult.getResponse().getContentAsString();
+        emptyLineTypes = mapper.readValue(resultAsString, new TypeReference<>() {
+        });
+        assertEquals(0, emptyLineTypes.size());
     }
 }
