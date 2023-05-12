@@ -1050,7 +1050,8 @@ public class ModificationControllerTest {
 
     @Test
     public void testGetLineCatalog() throws Exception {
-        EqualsVerifier.simple().forClass(LineType.class).verify();
+        // Exclude Id for those unit tests because it's exluded in dto
+        EqualsVerifier.simple().forClass(LineType.class).withIgnoredFields("id").verify();
         MvcResult mvcResult;
         String resultAsString;
 
