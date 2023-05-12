@@ -19,7 +19,6 @@ import java.util.UUID;
  * @author Sylvain Bouzols <sylvain.bouzols at rte-france.com>
  */
 @NoArgsConstructor
-@Getter
 @Entity
 @Table(name = "line_type_catalog")
 public class LineTypeEntity {
