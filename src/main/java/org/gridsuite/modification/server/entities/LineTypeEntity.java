@@ -7,7 +7,6 @@
 package org.gridsuite.modification.server.entities;
 
 import lombok.NoArgsConstructor;
-
 import org.gridsuite.modification.server.LineKind;
 import org.gridsuite.modification.server.dto.LineType;
 
@@ -92,3 +91,4 @@ public class LineTypeEntity {
                 .build();
     }
 }
+
