@@ -1066,7 +1066,7 @@ public class ModificationControllerTest {
         });
         assertEquals(0, emptyLineTypes.size());
 
-        // Fill the catalog with some line types
+        // Create the catalog with some line types
         String lineTypesCatalogJson1 = TestUtils.resourceToString(LINE_TYPES_CATALOG_JSON_FILE_1);
         mockMvc.perform(post(URI_LINE_CATALOG).content(lineTypesCatalogJson1).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
@@ -1081,10 +1081,6 @@ public class ModificationControllerTest {
         List<LineType> lineTypes = mapper.readValue(resultAsString, new TypeReference<>() {
         });
         assertEquals(6, lineTypes.size());
-
-        // Fill the catalog another time with same lineTypes following asserts will check if duplicated insertion is avoided
-        mockMvc.perform(post(URI_LINE_CATALOG).content(lineTypesCatalogJson1).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
 
         mvcResult = mockMvc
                 .perform(get(URI_LINE_CATALOG + "?category=AERIAL").contentType(MediaType.APPLICATION_JSON))
@@ -1108,7 +1104,7 @@ public class ModificationControllerTest {
 
         // Check if catalog is completely updated
         String lineTypesCatalogJson2 = TestUtils.resourceToString(LINE_TYPES_CATALOG_JSON_FILE_2);
-        mockMvc.perform(put(URI_LINE_CATALOG).content(lineTypesCatalogJson2).contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(post(URI_LINE_CATALOG).content(lineTypesCatalogJson2).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
         mvcResult = mockMvc
