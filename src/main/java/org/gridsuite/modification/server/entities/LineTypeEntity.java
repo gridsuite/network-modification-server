@@ -6,7 +6,6 @@
  */
 package org.gridsuite.modification.server.entities;
 
-import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import org.gridsuite.modification.server.LineKind;
