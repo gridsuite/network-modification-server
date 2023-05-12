@@ -30,9 +30,9 @@ public class BranchModificationInfos extends BasicEquipmentModificationInfos {
     private AttributeModification<Double> seriesReactance;
 
     @Schema(description = "Current limits Side 1")
-    private CurrentLimitsInfos currentLimits1;
+    private CurrentLimitsModificationInfos currentLimits1;
 
     @Schema(description = "Current limits Side 2")
-    private CurrentLimitsInfos currentLimits2;
+    private CurrentLimitsModificationInfos currentLimits2;
 
 }

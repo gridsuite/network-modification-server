@@ -13,13 +13,10 @@ import org.gridsuite.modification.server.dto.GenerationDispatchInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.utils.MatcherGenerationDispatchInfos;
 import org.junit.Test;
-import org.springframework.http.MediaType;
 
 import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -40,12 +37,39 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
 
     @SneakyThrows
     @Test
-    public void testGenerationDispatchWithOtherLossCoefficient() {
+    public void testGenerationDispatch() {
+        ModificationInfos modification = buildModification();
+        ((GenerationDispatchInfos) modification).setLossCoefficient(20.);
+
+        // network with 2 synchronous components and 2 hvdc lines between them
+        setNetwork(Network.read("testGenerationDispatch.xiidm", getClass().getResourceAsStream("/testGenerationDispatch.xiidm")));
+        GenerationDispatch generationDispatch = new GenerationDispatch((GenerationDispatchInfos) modification);
+        generationDispatch.apply(getNetwork());
+
+        assertNetworkAfterCreationWithStandardLossCoefficient();
+
+        // test total demand and remaining power imbalance on synchronous components
+        int firstSynchronousComponentNum = getNetwork().getGenerator(GTH1_ID).getTerminal().getBusView().getBus().getSynchronousComponent().getNum(); // GTH1 is in first synchronous component
+        assertEquals(528., generationDispatch.getTotalDemand(firstSynchronousComponentNum), 0.001);
+        assertEquals(90., generationDispatch.getHvdcBalance(firstSynchronousComponentNum), 0.001);
+        assertEquals(138., generationDispatch.getRemainigPowerImbalance(firstSynchronousComponentNum), 0.001); // supply-demand balance could not be met on first synchronous component
+
+        int secondSynchronousComponentNum = getNetwork().getGenerator(GH1_ID).getTerminal().getBusView().getBus().getSynchronousComponent().getNum(); // GH1 is in second synchronous component
+        assertEquals(240., generationDispatch.getTotalDemand(secondSynchronousComponentNum), 0.001);
+        assertEquals(-90., generationDispatch.getHvdcBalance(secondSynchronousComponentNum), 0.001);
+        assertEquals(0., generationDispatch.getRemainigPowerImbalance(secondSynchronousComponentNum), 0.001); // supply-demand balance could be met on second synchronous component
+    }
+
+    @SneakyThrows
+    @Test
+    public void testGenerationDispatchWithHigherLossCoefficient() {
         ModificationInfos modification = buildModification();
         ((GenerationDispatchInfos) modification).setLossCoefficient(90.);
 
-        mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(modification)).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk());
+        // network with 2 synchronous components and 2 hvdc lines between them
+        setNetwork(Network.read("testGenerationDispatch.xiidm", getClass().getResourceAsStream("/testGenerationDispatch.xiidm")));
+        GenerationDispatch generationDispatch = new GenerationDispatch((GenerationDispatchInfos) modification);
+        generationDispatch.apply(getNetwork());
 
         assertEquals(100., getNetwork().getGenerator(GH1_ID).getTargetP(), 0.001);
         assertEquals(70., getNetwork().getGenerator(GH2_ID).getTargetP(), 0.001);
@@ -56,9 +80,51 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
         assertEquals(100., getNetwork().getGenerator(GROUP1_ID).getTargetP(), 0.001);  // not modified : disconnected
         assertEquals(100., getNetwork().getGenerator(GROUP2_ID).getTargetP(), 0.001);  // not modified : disconnected
         assertEquals(0., getNetwork().getGenerator(GROUP3_ID).getTargetP(), 0.001);
-        assertEquals(80., getNetwork().getGenerator(ABC_ID).getTargetP(), 0.001);
+        assertEquals(100., getNetwork().getGenerator(ABC_ID).getTargetP(), 0.001);
         assertEquals(5., getNetwork().getGenerator(NEW_GROUP1_ID).getTargetP(), 0.001);  // not modified : not in main connected component
         assertEquals(7., getNetwork().getGenerator(NEW_GROUP2_ID).getTargetP(), 0.001);  // not modified : not in main connected component
+
+        // test total demand and remaining power imbalance on synchronous components
+        int firstSynchronousComponentNum = getNetwork().getGenerator(GTH1_ID).getTerminal().getBusView().getBus().getSynchronousComponent().getNum(); // GTH1 is in first synchronous component
+        assertEquals(836., generationDispatch.getTotalDemand(firstSynchronousComponentNum), 0.001);
+        assertEquals(90., generationDispatch.getHvdcBalance(firstSynchronousComponentNum), 0.001);
+        assertEquals(446., generationDispatch.getRemainigPowerImbalance(firstSynchronousComponentNum), 0.001); // supply-demand balance could not be met on first synchronous component
+
+        int secondSynchronousComponentNum = getNetwork().getGenerator(GH1_ID).getTerminal().getBusView().getBus().getSynchronousComponent().getNum(); // GH1 is in second synchronous component
+        assertEquals(380., generationDispatch.getTotalDemand(secondSynchronousComponentNum), 0.001);
+        assertEquals(-90., generationDispatch.getHvdcBalance(secondSynchronousComponentNum), 0.001);
+        assertEquals(70., generationDispatch.getRemainigPowerImbalance(secondSynchronousComponentNum), 0.001); // supply-demand balance could not be met on second synchronous component
+    }
+
+    @SneakyThrows
+    @Test
+    public void testGenerationDispatchWithInternalHvdc() {
+        ModificationInfos modification = buildModification();
+        ((GenerationDispatchInfos) modification).setLossCoefficient(20.);
+
+        // network with unique synchronous component and internal hvdc lines
+        setNetwork(Network.read("testGenerationDispatchInternalHvdc.xiidm", getClass().getResourceAsStream("/testGenerationDispatchInternalHvdc.xiidm")));
+        GenerationDispatch generationDispatch = new GenerationDispatch((GenerationDispatchInfos) modification);
+        generationDispatch.apply(getNetwork());
+
+        assertEquals(100., getNetwork().getGenerator(GH1_ID).getTargetP(), 0.001);
+        assertEquals(70., getNetwork().getGenerator(GH2_ID).getTargetP(), 0.001);
+        assertEquals(130., getNetwork().getGenerator(GH3_ID).getTargetP(), 0.001);
+        assertEquals(100., getNetwork().getGenerator(GTH1_ID).getTargetP(), 0.001);
+        assertEquals(150., getNetwork().getGenerator(GTH2_ID).getTargetP(), 0.001);
+        assertEquals(50., getNetwork().getGenerator(TEST1_ID).getTargetP(), 0.001);
+        assertEquals(100., getNetwork().getGenerator(GROUP1_ID).getTargetP(), 0.001);  // not modified : disconnected
+        assertEquals(100., getNetwork().getGenerator(GROUP2_ID).getTargetP(), 0.001);  // not modified : disconnected
+        assertEquals(0., getNetwork().getGenerator(GROUP3_ID).getTargetP(), 0.001);
+        assertEquals(100., getNetwork().getGenerator(ABC_ID).getTargetP(), 0.001);
+        assertEquals(5., getNetwork().getGenerator(NEW_GROUP1_ID).getTargetP(), 0.001);  // not modified : not in main connected component
+        assertEquals(7., getNetwork().getGenerator(NEW_GROUP2_ID).getTargetP(), 0.001);  // not modified : not in main connected component
+
+        // test total demand and remaining power imbalance on unique synchronous component
+        int firstSynchronousComponentNum = getNetwork().getGenerator(GTH1_ID).getTerminal().getBusView().getBus().getSynchronousComponent().getNum(); // GTH1 is in the unique synchronous component
+        assertEquals(768., generationDispatch.getTotalDemand(firstSynchronousComponentNum), 0.001);
+        assertEquals(0., generationDispatch.getHvdcBalance(firstSynchronousComponentNum), 0.001);
+        assertEquals(68., generationDispatch.getRemainigPowerImbalance(firstSynchronousComponentNum), 0.001);  // supply-demand balance could not be met on unique synchronous component
     }
 
     @Override
@@ -85,20 +151,24 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
         return MatcherGenerationDispatchInfos.createMatcherGenerationDispatchInfos((GenerationDispatchInfos) modificationInfos);
     }
 
-    @Override
-    protected void assertNetworkAfterCreation() {
+    private void assertNetworkAfterCreationWithStandardLossCoefficient() {
         assertEquals(100., getNetwork().getGenerator(GH1_ID).getTargetP(), 0.001);
         assertEquals(70., getNetwork().getGenerator(GH2_ID).getTargetP(), 0.001);
-        assertEquals(70., getNetwork().getGenerator(GH3_ID).getTargetP(), 0.001);
+        assertEquals(130., getNetwork().getGenerator(GH3_ID).getTargetP(), 0.001);
         assertEquals(100., getNetwork().getGenerator(GTH1_ID).getTargetP(), 0.001);
         assertEquals(150., getNetwork().getGenerator(GTH2_ID).getTargetP(), 0.001);
         assertEquals(50., getNetwork().getGenerator(TEST1_ID).getTargetP(), 0.001);
         assertEquals(100., getNetwork().getGenerator(GROUP1_ID).getTargetP(), 0.001);  // not modified : disconnected
         assertEquals(100., getNetwork().getGenerator(GROUP2_ID).getTargetP(), 0.001);  // not modified : disconnected
         assertEquals(0., getNetwork().getGenerator(GROUP3_ID).getTargetP(), 0.001);
-        assertEquals(0., getNetwork().getGenerator(ABC_ID).getTargetP(), 0.001);
+        assertEquals(30., getNetwork().getGenerator(ABC_ID).getTargetP(), 0.001);
         assertEquals(5., getNetwork().getGenerator(NEW_GROUP1_ID).getTargetP(), 0.001);  // not modified : not in main connected component
         assertEquals(7., getNetwork().getGenerator(NEW_GROUP2_ID).getTargetP(), 0.001);  // not modified : not in main connected component
+    }
+
+    @Override
+    protected void assertNetworkAfterCreation() {
+        assertNetworkAfterCreationWithStandardLossCoefficient();
     }
 
     @Override
@@ -113,7 +183,7 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
         assertEquals(100., getNetwork().getGenerator(GROUP2_ID).getTargetP(), 0.001);
         assertEquals(100., getNetwork().getGenerator(GROUP3_ID).getTargetP(), 0.001);
         assertEquals(85.357, getNetwork().getGenerator(ABC_ID).getTargetP(), 0.001);
-        assertEquals(5., getNetwork().getGenerator(NEW_GROUP1_ID).getTargetP(), 0.001);  // not modified : not in main connected component
-        assertEquals(7., getNetwork().getGenerator(NEW_GROUP2_ID).getTargetP(), 0.001);  // not modified : not in main connected component
+        assertEquals(5., getNetwork().getGenerator(NEW_GROUP1_ID).getTargetP(), 0.001);
+        assertEquals(7., getNetwork().getGenerator(NEW_GROUP2_ID).getTargetP(), 0.001);
     }
 }
