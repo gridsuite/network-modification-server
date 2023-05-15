@@ -240,6 +240,35 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
         createdModification = (LineModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(5);
 
         assertThat(createdModification, createMatcher(lineModificationInfos));
+
+        // no modification
+        lineModificationInfos.setShuntSusceptance2(null);
+        modificationToCreateJson = mapper.writeValueAsString(lineModificationInfos);
+
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+
+        createdModification = (LineModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(6);
+
+        assertThat(createdModification, createMatcher(lineModificationInfos));
+
+        // Modify all
+        lineModificationInfos.setSeriesReactance(new AttributeModification<>(1.0, OperationType.SET));
+        lineModificationInfos.setSeriesResistance(new AttributeModification<>(2.0, OperationType.SET));
+        lineModificationInfos.setShuntConductance1(new AttributeModification<>(11.0, OperationType.SET));
+        lineModificationInfos.setShuntSusceptance1(new AttributeModification<>(12.0, OperationType.SET));
+        lineModificationInfos.setShuntConductance2(new AttributeModification<>(13.0, OperationType.SET));
+        lineModificationInfos.setShuntSusceptance2(new AttributeModification<>(14.0, OperationType.SET));
+        modificationToCreateJson = mapper.writeValueAsString(lineModificationInfos);
+
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson)
+                        .contentType(MediaType.APPLICATION_JSON))
+                        .andExpect(status().isOk()).andReturn();
+
+        createdModification = (LineModificationInfos) modificationRepository.getModifications(getGroupId(), false, true)
+                        .get(7);
+
+        assertThat(createdModification, createMatcher(lineModificationInfos));
     }
 
     @SneakyThrows
