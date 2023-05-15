@@ -1,0 +1,29 @@
+[
+    {
+        "type": "TEST1 123AB",
+        "category": "AERIAL",
+        "voltage": 63,
+        "conductorType": "AL - Aluminium",
+        "section": 27.5,
+        "conductorsNumber": 1,
+        "circuitsNumber": 1,
+        "groundWiresNumber": 0,
+        "linearResistance": 0.00047,
+        "linearReactance": 0.000345 ,
+        "linearCapacity": 0.00000000727
+    },
+    {
+        "type": "TEST4 UNDERGROUND",
+        "category": "UNDERGROUND",
+        "voltage": 225,
+        "conductorType": "AL - Aluminium",
+        "section": 16,
+        "conductorsNumber": 8,
+        "circuitsNumber": 2,
+        "groundWiresNumber": 4,
+        "linearResistance": 0.00007,
+        "linearReactance": 0.000515,
+        "linearCapacity": 0.00000000879
+    }
+]
+
