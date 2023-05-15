@@ -45,9 +45,9 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
                 .equipmentName(new AttributeModification<>("LineModified", OperationType.SET))
                 .currentLimits1(CurrentLimitsModificationInfos.builder()
                         .temporaryLimits(List.of(CurrentTemporaryLimitModificationInfos.builder()
-                                .acceptableDuration(31)
+                                .acceptableDuration(null)
                                 .name("name31")
-                                .value(41.0)
+                                .value(null)
                                 .build()))
                         .build())
                 .currentLimits2(CurrentLimitsModificationInfos.builder()
@@ -107,10 +107,10 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
         assertEquals(2.0, modifiedLine.getG2());
         assertEquals(2.0, modifiedLine.getB2());
         assertEquals(Double.NaN, modifiedLine.getNullableCurrentLimits1().getPermanentLimit());
-        TemporaryLimit temporaryLimit = modifiedLine.getNullableCurrentLimits1().getTemporaryLimit(31);
-        assertEquals(31, temporaryLimit.getAcceptableDuration());
+        TemporaryLimit temporaryLimit = modifiedLine.getNullableCurrentLimits1().getTemporaryLimit(Integer.MAX_VALUE);
+        assertEquals(Integer.MAX_VALUE, temporaryLimit.getAcceptableDuration());
         assertEquals("name31", temporaryLimit.getName());
-        assertEquals(41.0, temporaryLimit.getValue());
+        assertEquals(Double.MAX_VALUE, temporaryLimit.getValue());
         assertEquals(22.0, modifiedLine.getNullableCurrentLimits2().getPermanentLimit());
         temporaryLimit = modifiedLine.getNullableCurrentLimits2().getTemporaryLimit(32);
         assertEquals(32, temporaryLimit.getAcceptableDuration());
@@ -194,8 +194,8 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
                 .setPermanentLimit(10.0)
                 .beginTemporaryLimit()
                 .setName("name31")
-                .setAcceptableDuration(31)
-                .setValue(12.0)
+                .setAcceptableDuration(Integer.MAX_VALUE)
+                .setValue(Double.MAX_VALUE)
                 .endTemporaryLimit()
                 .add();
         line.newCurrentLimits2()
