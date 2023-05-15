@@ -43,12 +43,6 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModification() {
         return LineModificationInfos.builder().equipmentId("line1")
                 .equipmentName(new AttributeModification<>("LineModified", OperationType.SET))
-                .seriesReactance(new AttributeModification<>(1.0, OperationType.SET))
-                .seriesResistance(new AttributeModification<>(2.0, OperationType.SET))
-                .shuntConductance1(new AttributeModification<>(11.0, OperationType.SET))
-                .shuntSusceptance1(new AttributeModification<>(12.0, OperationType.SET))
-                .shuntConductance2(new AttributeModification<>(13.0, OperationType.SET))
-                .shuntSusceptance2(new AttributeModification<>(14.0, OperationType.SET))
                 .currentLimits1(CurrentLimitsModificationInfos.builder()
                         .permanentLimit(21.0)
                         .temporaryLimits(List.of(CurrentTemporaryLimitModificationInfos.builder()
@@ -107,12 +101,12 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
     protected void assertNetworkAfterCreation() {
         Line modifiedLine = getNetwork().getLine("line1");
         assertEquals("LineModified", modifiedLine.getNameOrId());
-        assertEquals(2.0, modifiedLine.getR());
+        assertEquals(1.0, modifiedLine.getR());
         assertEquals(1.0, modifiedLine.getX());
-        assertEquals(11.0, modifiedLine.getG1());
-        assertEquals(12.0, modifiedLine.getB1());
-        assertEquals(13.0, modifiedLine.getG2());
-        assertEquals(14.0, modifiedLine.getB2());
+        assertEquals(1.0, modifiedLine.getG1());
+        assertEquals(1.0, modifiedLine.getB1());
+        assertEquals(2.0, modifiedLine.getG2());
+        assertEquals(2.0, modifiedLine.getB2());
         assertEquals(21.0, modifiedLine.getNullableCurrentLimits1().getPermanentLimit());
         TemporaryLimit temporaryLimit = modifiedLine.getNullableCurrentLimits1().getTemporaryLimit(31);
         assertEquals(31, temporaryLimit.getAcceptableDuration());
@@ -173,15 +167,15 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
 
     @SneakyThrows
     @Test
-    public void testCharacteristicsUnchanged() {
+    public void testCharacteristicsModification() {
         LineModificationInfos lineModificationInfos = (LineModificationInfos) buildModification();
 
-        lineModificationInfos.setSeriesReactance(null);
-        lineModificationInfos.setSeriesResistance(null);
-        lineModificationInfos.setShuntConductance1(null);
-        lineModificationInfos.setShuntSusceptance1(null);
-        lineModificationInfos.setShuntConductance2(null);
-        lineModificationInfos.setShuntSusceptance2(null);
+        lineModificationInfos.setSeriesReactance(new AttributeModification<>(1.0, OperationType.SET));
+        lineModificationInfos.setSeriesResistance(new AttributeModification<>(2.0, OperationType.SET));
+        lineModificationInfos.setShuntConductance1(new AttributeModification<>(11.0, OperationType.SET));
+        lineModificationInfos.setShuntSusceptance1(new AttributeModification<>(12.0, OperationType.SET));
+        lineModificationInfos.setShuntConductance2(new AttributeModification<>(13.0, OperationType.SET));
+        lineModificationInfos.setShuntSusceptance2(new AttributeModification<>(14.0, OperationType.SET));
 
         String modificationToCreateJson = mapper.writeValueAsString(lineModificationInfos);
 
