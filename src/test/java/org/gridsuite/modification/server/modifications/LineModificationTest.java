@@ -169,12 +169,8 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
     public void testCharacteristicsModification() {
         LineModificationInfos lineModificationInfos = (LineModificationInfos) buildModification();
 
+        // Modify Series Reactance
         lineModificationInfos.setSeriesReactance(new AttributeModification<>(1.0, OperationType.SET));
-        lineModificationInfos.setSeriesResistance(new AttributeModification<>(2.0, OperationType.SET));
-        lineModificationInfos.setShuntConductance1(new AttributeModification<>(11.0, OperationType.SET));
-        lineModificationInfos.setShuntSusceptance1(new AttributeModification<>(12.0, OperationType.SET));
-        lineModificationInfos.setShuntConductance2(new AttributeModification<>(13.0, OperationType.SET));
-        lineModificationInfos.setShuntSusceptance2(new AttributeModification<>(14.0, OperationType.SET));
 
         String modificationToCreateJson = mapper.writeValueAsString(lineModificationInfos);
 
@@ -182,6 +178,66 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
                 .andExpect(status().isOk()).andReturn();
 
         LineModificationInfos createdModification = (LineModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
+
+        assertThat(createdModification, createMatcher(lineModificationInfos));
+
+        // Modify Series Resistance
+        lineModificationInfos.setSeriesReactance(null);
+        lineModificationInfos.setSeriesResistance(new AttributeModification<>(2.0, OperationType.SET));
+        modificationToCreateJson = mapper.writeValueAsString(lineModificationInfos);
+
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+
+        createdModification = (LineModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(1);
+
+        assertThat(createdModification, createMatcher(lineModificationInfos));
+
+        // Modify Shunt Conductance1
+        lineModificationInfos.setSeriesResistance(null);
+        lineModificationInfos.setShuntConductance1(new AttributeModification<>(11.0, OperationType.SET));
+        modificationToCreateJson = mapper.writeValueAsString(lineModificationInfos);
+
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+
+        createdModification = (LineModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(2);
+
+        assertThat(createdModification, createMatcher(lineModificationInfos));
+
+        // Modify Shunt Susceptance1
+        lineModificationInfos.setShuntConductance1(null);
+        lineModificationInfos.setShuntSusceptance1(new AttributeModification<>(12.0, OperationType.SET));
+        modificationToCreateJson = mapper.writeValueAsString(lineModificationInfos);
+
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+
+        createdModification = (LineModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(3);
+
+        assertThat(createdModification, createMatcher(lineModificationInfos));
+
+        // Modify Shunt Conductance2
+        lineModificationInfos.setShuntSusceptance1(null);
+        lineModificationInfos.setShuntConductance2(new AttributeModification<>(13.0, OperationType.SET));
+        modificationToCreateJson = mapper.writeValueAsString(lineModificationInfos);
+
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+
+        createdModification = (LineModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(4);
+
+        assertThat(createdModification, createMatcher(lineModificationInfos));
+
+        // Modify Shunt Susceptance2
+        lineModificationInfos.setShuntConductance2(null);
+        lineModificationInfos.setShuntSusceptance2(new AttributeModification<>(14.0, OperationType.SET));
+        modificationToCreateJson = mapper.writeValueAsString(lineModificationInfos);
+
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+
+        createdModification = (LineModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(5);
 
         assertThat(createdModification, createMatcher(lineModificationInfos));
     }
