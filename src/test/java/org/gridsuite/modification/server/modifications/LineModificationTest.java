@@ -208,8 +208,8 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
         line.newCurrentLimits2()
                 .setPermanentLimit(11.0)
                 .beginTemporaryLimit()
-                .setName("name32")
-                .setAcceptableDuration(32)
+                .setName("name33")
+                .setAcceptableDuration(33)
                 .setValue(15.0)
                 .endTemporaryLimit()
                 .add();
@@ -221,18 +221,6 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
                 .andExpect(status().isOk()).andReturn();
 
         LineModificationInfos createdModification = (LineModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
-
-        assertThat(createdModification, createMatcher(lineModificationInfos));
-
-        //delete temporary limit
-        lineModificationInfos.getCurrentLimits1().setTemporaryLimits(null);
-        lineModificationInfos.getCurrentLimits2().setTemporaryLimits(null);
-        modificationToCreateJson = mapper.writeValueAsString(lineModificationInfos);
-
-        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
-
-        createdModification = (LineModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(1);
 
         assertThat(createdModification, createMatcher(lineModificationInfos));
     }

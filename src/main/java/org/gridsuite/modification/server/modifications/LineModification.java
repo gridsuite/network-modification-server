@@ -262,11 +262,17 @@ public class LineModification extends AbstractModification {
 
     private boolean characteristicsModified(LineModificationInfos lineModificationInfos) {
         return lineModificationInfos.getSeriesReactance() != null
+                && lineModificationInfos.getSeriesResistance().getValue() != null
                 || lineModificationInfos.getSeriesResistance() != null
+                        && lineModificationInfos.getSeriesReactance().getValue() != null
                 || lineModificationInfos.getShuntConductance1() != null
+                        && lineModificationInfos.getShuntSusceptance1().getValue() != null
                 || lineModificationInfos.getShuntSusceptance1() != null
+                        && lineModificationInfos.getShuntConductance1().getValue() != null
                 || lineModificationInfos.getShuntConductance2() != null
-                || lineModificationInfos.getShuntSusceptance2() != null;
+                        && lineModificationInfos.getShuntSusceptance2().getValue() != null
+                || lineModificationInfos.getShuntSusceptance2() != null
+                        && lineModificationInfos.getShuntConductance2().getValue() != null;
     }
 
 }
