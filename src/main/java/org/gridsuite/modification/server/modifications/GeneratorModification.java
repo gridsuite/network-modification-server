@@ -82,7 +82,7 @@ public class GeneratorModification extends AbstractModification {
         Double minReactivePower = modificationInfos.getMinimumReactivePower() != null ? modificationInfos.getMinimumReactivePower().getValue() : previousMinimumReactivePower;
         Double maxReactivePower = modificationInfos.getMaximumReactivePower() != null ? modificationInfos.getMaximumReactivePower().getValue() : previousMaximumReactivePower;
         if (minReactivePower > maxReactivePower) {
-            throw makeGeneratorException(modificationInfos.getEquipmentId(), "maximum reactive power" + maxReactivePower + "is expected to be greater than or equal to minimum reactive power" + minReactivePower);
+            throw makeGeneratorException(modificationInfos.getEquipmentId(), "maximum reactive power " + maxReactivePower + " is expected to be greater than or equal to minimum reactive power " + minReactivePower);
         }
     }
 
