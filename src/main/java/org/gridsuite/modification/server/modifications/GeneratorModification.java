@@ -53,10 +53,8 @@ public class GeneratorModification extends AbstractModification {
         if (network.getGenerator(modificationInfos.getEquipmentId()) != null) {
             Generator generator = ModificationUtils.getInstance().getGenerator(network, modificationInfos.getEquipmentId());
             // check min max reactive limits
-            if (modificationInfos.getMinimumReactivePower() != null || modificationInfos.getMaximumReactivePower() != null) {
-                if (generator.getReactiveLimits().getKind() == ReactiveLimitsKind.MIN_MAX) {
-                    checkMaxReactivePowerGreaterThanMinReactivePower(generator);
-                }
+            if (generator.getReactiveLimits().getKind() == ReactiveLimitsKind.MIN_MAX && (modificationInfos.getMinimumReactivePower() != null || modificationInfos.getMaximumReactivePower() != null)) {
+                checkMaxReactivePowerGreaterThanMinReactivePower(generator);
             }
             // check reactive capability curve limits
             Collection<ReactiveCapabilityCurve.Point> points = generator.getReactiveLimits().getKind() == ReactiveLimitsKind.CURVE ? generator.getReactiveLimits(ReactiveCapabilityCurve.class).getPoints() : List.of();
