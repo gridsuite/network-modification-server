@@ -52,13 +52,39 @@ public class GeneratorModification extends AbstractModification {
     public void check(Network network) throws NetworkModificationException {
         if (network.getGenerator(modificationInfos.getEquipmentId()) != null) {
             Generator generator = ModificationUtils.getInstance().getGenerator(network, modificationInfos.getEquipmentId());
+            // check min max reactive limits
+            if (modificationInfos.getMinimumReactivePower() != null || modificationInfos.getMaximumReactivePower() != null) {
+                if (generator.getReactiveLimits().getKind() == ReactiveLimitsKind.MIN_MAX) {
+                    checkMaxReactivePowerGreaterThanMinReactivePower(generator);
+                }
+            }
             // check reactive capability curve limits
             Collection<ReactiveCapabilityCurve.Point> points = generator.getReactiveLimits().getKind() == ReactiveLimitsKind.CURVE ? generator.getReactiveLimits(ReactiveCapabilityCurve.class).getPoints() : List.of();
             List<ReactiveCapabilityCurve.Point> generatorPoints = new ArrayList<>(points);
             List<ReactiveCapabilityCurveModificationInfos> modificationPoints = modificationInfos.getReactiveCapabilityCurvePoints();
-            if (!CollectionUtils.isEmpty(points)) {
+            if (!CollectionUtils.isEmpty(points) && modificationPoints != null) {
                 checkMaxQGreaterThanMinQ(generatorPoints, modificationPoints);
             }
+            // check regulated terminal
+            if (modificationInfos.getRegulatingTerminalId() != null && modificationInfos.getRegulatingTerminalType() != null &&
+                    modificationInfos.getRegulatingTerminalVlId() != null) {
+                VoltageLevel voltageLevel = ModificationUtils.getInstance().getVoltageLevel(network, modificationInfos.getRegulatingTerminalVlId().getValue());
+                ModificationUtils.getInstance().getTerminalFromIdentifiable(voltageLevel.getNetwork(),
+                        modificationInfos.getRegulatingTerminalId().getValue(),
+                        modificationInfos.getRegulatingTerminalType().getValue(),
+                        modificationInfos.getRegulatingTerminalVlId().getValue());
+            }
+        }
+    }
+
+    private void checkMaxReactivePowerGreaterThanMinReactivePower(Generator generator) {
+        MinMaxReactiveLimits minMaxReactiveLimits = generator.getReactiveLimits(MinMaxReactiveLimits.class);
+        Double previousMinimumReactivePower = minMaxReactiveLimits.getMinQ();
+        Double previousMaximumReactivePower = minMaxReactiveLimits.getMaxQ();
+        Double minReactivePower = modificationInfos.getMinimumReactivePower() != null ? modificationInfos.getMinimumReactivePower().getValue() : previousMinimumReactivePower;
+        Double maxReactivePower = modificationInfos.getMaximumReactivePower() != null ? modificationInfos.getMaximumReactivePower().getValue() : previousMaximumReactivePower;
+        if (minReactivePower > maxReactivePower) {
+            throw makeGeneratorException(modificationInfos.getEquipmentId(), "maximum reactive power" + maxReactivePower + "is expected to be greater than or equal to minimum reactive power" + minReactivePower);
         }
     }
 
