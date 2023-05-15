@@ -70,18 +70,28 @@ public class VoltageLevelModification extends AbstractModification {
 
             if (modificationInfos.getIpMin() != null) {
                 var newIpMin = modificationInfos.getIpMin().getValue();
-                identifiableShortCircuitAdder.withIpMin(newIpMin);
+
+                // We convert the new value from kA to A, and we set it
+                identifiableShortCircuitAdder.withIpMin(newIpMin * 1000);
+
+                // we convert old value to kA to report it like the user set it.
+                var oldIpMinToReport = oldIpMin != null ? oldIpMin * 0.001 : null;
+
                 reports.add(ModificationUtils.getInstance()
-                        .buildModificationReport(oldIpMin, newIpMin, "Low short circuit current limit"));
+                        .buildModificationReport(oldIpMinToReport, newIpMin, "Low short circuit current limit"));
             } else if (oldIpMin != null) {
                 identifiableShortCircuitAdder.withIpMin(oldIpMin);
             }
 
             if (modificationInfos.getIpMax() != null) {
                 var newIpMax = modificationInfos.getIpMax().getValue();
-                identifiableShortCircuitAdder.withIpMax(newIpMax);
+                // We convert the new value from kA to A, and we set it
+                identifiableShortCircuitAdder.withIpMax(newIpMax * 1000);
+
+                // we convert old value to kA to report it like the user set it.
+                var oldIpMaxToReport = oldIpMax != null ? oldIpMax * 0.001 : null;
                 reports.add(ModificationUtils.getInstance()
-                        .buildModificationReport(oldIpMax, newIpMax, "High short circuit current limit"));
+                        .buildModificationReport(oldIpMaxToReport, newIpMax, "High short circuit current limit"));
             } else if (oldIpMax != null) {
                 identifiableShortCircuitAdder.withIpMax(oldIpMax);
             }
