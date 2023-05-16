@@ -80,8 +80,8 @@ public class VoltageLevelModificationTest extends AbstractNetworkModificationTes
         assertEquals(420D, voltageLevel.getNominalV(), 0);
         assertEquals(30D, voltageLevel.getLowVoltageLimit(), 0);
         assertEquals(50D, voltageLevel.getHighVoltageLimit(), 0);
-        assertEquals(800, identifiableShortCircuit.getIpMax(), 0);
-        assertEquals(700, identifiableShortCircuit.getIpMin(), 0);
+        assertEquals(0.8, identifiableShortCircuit.getIpMax(), 0);
+        assertEquals(0.7, identifiableShortCircuit.getIpMin(), 0);
     }
 
     @Override
@@ -111,8 +111,8 @@ public class VoltageLevelModificationTest extends AbstractNetworkModificationTes
 
         IdentifiableShortCircuit<VoltageLevel> identifiableShortCircuit1 = voltageLevel.getExtension(IdentifiableShortCircuit.class);
         assertNotNull(identifiableShortCircuit1);
-        assertEquals(900, identifiableShortCircuit1.getIpMax(), 0);
-        assertEquals(700, identifiableShortCircuit1.getIpMin(), 0);
+        assertEquals(0.9, identifiableShortCircuit1.getIpMax(), 0);
+        assertEquals(0.7, identifiableShortCircuit1.getIpMin(), 0);
 
         VoltageLevelModificationInfos updatedInfos2 = VoltageLevelModificationInfos.builder()
                 .equipmentId("v1")
@@ -120,8 +120,8 @@ public class VoltageLevelModificationTest extends AbstractNetworkModificationTes
                 .build();
         applyModification(updatedInfos2);
         IdentifiableShortCircuit<VoltageLevel> identifiableShortCircuit2 = voltageLevel.getExtension(IdentifiableShortCircuit.class);
-        assertEquals(900, identifiableShortCircuit2.getIpMax(), 0);
-        assertEquals(200, identifiableShortCircuit2.getIpMin(), 0);
+        assertEquals(0.9, identifiableShortCircuit2.getIpMax(), 0);
+        assertEquals(0.2, identifiableShortCircuit2.getIpMin(), 0);
     }
 
     @SneakyThrows
