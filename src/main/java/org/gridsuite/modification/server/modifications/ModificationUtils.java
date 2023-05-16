@@ -229,6 +229,9 @@ public final class ModificationUtils {
             throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR,
                     "Coupling between same bus bar section is not allowed");
         }
+        if (Objects.nonNull(voltageLevelCreationInfos.getIpMin()) && Objects.isNull(voltageLevelCreationInfos.getIpMax())) {
+            throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "IpMax is required");
+        }
     }
 
     void createVoltageLevel(VoltageLevelCreationInfos voltageLevelCreationInfos,
