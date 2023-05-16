@@ -71,27 +71,27 @@ public class VoltageLevelModification extends AbstractModification {
             if (modificationInfos.getIpMin() != null) {
                 var newIpMin = modificationInfos.getIpMin().getValue();
 
-                // We convert the new value from kA to A, and we set it
-                identifiableShortCircuitAdder.withIpMin(newIpMin * 1000);
+                identifiableShortCircuitAdder.withIpMin(newIpMin);
 
-                // we convert old value to kA to report it like the user set it.
+                //convert to kA to report it like the user set it.
                 var oldIpMinToReport = oldIpMin != null ? oldIpMin * 0.001 : null;
+                var newIpMinToReport = newIpMin * 0.001;
 
                 reports.add(ModificationUtils.getInstance()
-                        .buildModificationReport(oldIpMinToReport, newIpMin, "Low short circuit current limit"));
+                        .buildModificationReport(oldIpMinToReport, newIpMinToReport, "Low short circuit current limit"));
             } else if (oldIpMin != null) {
                 identifiableShortCircuitAdder.withIpMin(oldIpMin);
             }
 
             if (modificationInfos.getIpMax() != null) {
                 var newIpMax = modificationInfos.getIpMax().getValue();
-                // We convert the new value from kA to A, and we set it
-                identifiableShortCircuitAdder.withIpMax(newIpMax * 1000);
+                identifiableShortCircuitAdder.withIpMax(newIpMax);
 
-                // we convert old value to kA to report it like the user set it.
+                //Convert to kA to report it like the user set it.
                 var oldIpMaxToReport = oldIpMax != null ? oldIpMax * 0.001 : null;
+                var newIpMaxToReport = newIpMax * 0.001;
                 reports.add(ModificationUtils.getInstance()
-                        .buildModificationReport(oldIpMaxToReport, newIpMax, "High short circuit current limit"));
+                        .buildModificationReport(oldIpMaxToReport, newIpMaxToReport, "High short circuit current limit"));
             } else if (oldIpMax != null) {
                 identifiableShortCircuitAdder.withIpMax(oldIpMax);
             }
