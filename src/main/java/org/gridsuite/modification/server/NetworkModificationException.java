@@ -88,8 +88,7 @@ public class NetworkModificationException extends PowsyblException {
         DELETE_ATTACHING_LINE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         DELETE_ATTACHING_LINE_NOT_FOUND(HttpStatus.NOT_FOUND),
         FILTERS_NOT_FOUND(HttpStatus.NOT_FOUND),
-        GENERATION_DISPATCH_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
-        LINE_TYPE_CATEGORY_MISMATCH(HttpStatus.BAD_REQUEST);
+        GENERATION_DISPATCH_ERROR(HttpStatus.INTERNAL_SERVER_ERROR);
 
 
         public final HttpStatus status;

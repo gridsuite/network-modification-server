@@ -7,8 +7,8 @@
 package org.gridsuite.modification.server.entities.catalog;
 
 import lombok.NoArgsConstructor;
+import lombok.Getter;
 
-import org.gridsuite.modification.server.dto.catalog.LineTypeCategory;
 import org.gridsuite.modification.server.dto.catalog.LineType;
 
 import javax.persistence.*;
@@ -19,6 +19,8 @@ import java.util.UUID;
  */
 @NoArgsConstructor
 @Entity
+@Getter
+@Inheritance(strategy = InheritanceType.JOINED)
 @Table(name = "lineTypesCatalog")
 public class LineTypeEntity {
 
@@ -26,9 +28,6 @@ public class LineTypeEntity {
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "id")
     private UUID id;
-
-    @Column(name = "category")
-    private LineTypeCategory category;
 
     @Column(name = "type")
     private String type;
@@ -42,15 +41,6 @@ public class LineTypeEntity {
     @Column(name = "section")
     private Double section;
 
-    @Column(name = "conductorsNumber")
-    private Integer conductorsNumber;
-
-    @Column(name = "circuitsNumber")
-    private Integer circuitsNumber;
-
-    @Column(name = "groundWiresNumber")
-    private Integer groundWiresNumber;
-
     @Column(name = "linearResistance")
     private Double linearResistance;
 
@@ -60,16 +50,16 @@ public class LineTypeEntity {
     @Column(name = "linearCapacity")
     private Double linearCapacity;
 
-    public LineTypeEntity(LineType lineType) {
+    protected LineTypeEntity(LineType lineType) {
+        assignAttributes(lineType);
+    }
+
+    private void assignAttributes(LineType lineType) {
         id = lineType.getId();
-        category = lineType.getCategory();
         type = lineType.getType();
         voltage = lineType.getVoltage();
         conductorType = lineType.getConductorType();
         section = lineType.getSection();
-        conductorsNumber = lineType.getConductorsNumber();
-        circuitsNumber = lineType.getCircuitsNumber();
-        groundWiresNumber = lineType.getGroundWiresNumber();
         linearResistance = lineType.getLinearResistance();
         linearReactance = lineType.getLinearReactance();
         linearCapacity = lineType.getLinearCapacity();
@@ -78,14 +68,10 @@ public class LineTypeEntity {
     public LineType toDto() {
         return LineType.builder()
                 .id(this.id)
-                .category(this.category)
                 .type(this.type)
                 .voltage(this.voltage)
                 .conductorType(this.conductorType)
                 .section(this.section)
-                .conductorsNumber(this.conductorsNumber)
-                .circuitsNumber(this.circuitsNumber)
-                .groundWiresNumber(this.groundWiresNumber)
                 .linearResistance(this.linearResistance)
                 .linearReactance(this.linearReactance)
                 .linearCapacity(this.linearCapacity)

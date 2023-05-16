@@ -6,10 +6,6 @@
  */
 package org.gridsuite.modification.server.service;
 
-import org.gridsuite.modification.server.NetworkModificationException;
-import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_TYPE_CATEGORY_MISMATCH;
-
-import org.gridsuite.modification.server.dto.catalog.LineTypeCategory;
 import org.gridsuite.modification.server.dto.catalog.LineType;
 import org.gridsuite.modification.server.entities.catalog.LineTypeEntity;
 import org.gridsuite.modification.server.repositories.LineTypesCatalogRepository;
@@ -28,19 +24,6 @@ public class LineTypesCatalogService {
 
     public LineTypesCatalogService(LineTypesCatalogRepository lineTypesCatalogRepository) {
         this.lineTypesCatalogRepository = lineTypesCatalogRepository;
-    }
-
-    @Transactional(readOnly = true)
-    public List<LineType> getLineTypesCatalog(LineTypeCategory category) {
-        switch (category) {
-            case AERIAL:
-            case UNDERGROUND:
-                return lineTypesCatalogRepository.findAllByCategory(category).stream()
-                .map(LineTypeEntity::toDto)
-                .collect(Collectors.toList());
-            default:
-                throw new NetworkModificationException(LINE_TYPE_CATEGORY_MISMATCH);
-        }
     }
 
     @Transactional(readOnly = true)
