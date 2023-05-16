@@ -9,28 +9,26 @@ package org.gridsuite.modification.server.dto;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
-import lombok.experimental.SuperBuilder;
 
 /**
- * @author David Braquart <david.braquart at rte-france.com>
+ * @author Ayoub LABIDI <ayoub.labidi at rte-france.com>
  */
-@SuperBuilder
+@Builder
+@AllArgsConstructor
 @NoArgsConstructor
 @Getter
-@Setter
-@EqualsAndHashCode
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Schema(description = "Substation free properties")
-public class SubstationFreePropertyInfos {
-    @Schema(description = "property name")
+public class CurrentTemporaryLimitModificationInfos {
+
+    @Schema(description = "name")
     private String name;
 
-    @Schema(description = "property value")
-    private String value;
+    @Schema(description = "value")
+    private Double value;
 
-    @Schema(description = "marked as deleted")
-    private boolean deletionMark = false;
+    @Schema(description = "acceptable duration")
+    private Integer acceptableDuration;
 
-    @Schema(description = "property added in current modification")
-    private boolean added = false;
+    @Schema(description = "modification type")
+    private TemporaryLimitModificationType modificationType;
 }

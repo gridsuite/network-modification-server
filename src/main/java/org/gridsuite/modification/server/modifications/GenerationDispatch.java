@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.modifications;
 
+import com.google.common.util.concurrent.AtomicDouble;
 import com.powsybl.commons.reporter.Report;
 import com.powsybl.commons.reporter.ReportBuilder;
 import com.powsybl.commons.reporter.Reporter;
@@ -15,6 +16,8 @@ import com.powsybl.iidm.network.Bus;
 import com.powsybl.iidm.network.Component;
 import com.powsybl.iidm.network.DefaultNetworkListener;
 import com.powsybl.iidm.network.Generator;
+import com.powsybl.iidm.network.HvdcConverterStation;
+import com.powsybl.iidm.network.HvdcLine;
 import com.powsybl.iidm.network.Identifiable;
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Load;
@@ -32,6 +35,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.collectingAndThen;
@@ -42,7 +46,7 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 public class GenerationDispatch extends AbstractModification {
-    private static final String COMPONENT = "CC";
+    private static final String SYNCHRONOUS_COMPONENT = "SC";
     private static final String POWER_TO_DISPATCH = "PowerToDispatch";
     private static final String STACKING = "Stacking";
     private static final String RESULT = "Result";
@@ -53,6 +57,7 @@ public class GenerationDispatch extends AbstractModification {
 
     private final Map<Integer, Double> totalDemand = new HashMap<>();
     private final Map<Integer, Double> remainingPowerImbalance = new HashMap<>();
+    private final Map<Integer, Double> hvdcBalance = new HashMap<>();
 
     private final GenerationDispatchInfos generationDispatchInfos;
 
@@ -84,25 +89,62 @@ public class GenerationDispatch extends AbstractModification {
         return totalLoad * (1. + lossCoefficient / 100.);
     }
 
-    private double computeTotalAmountFixedSupply(int numCC) {
+    private double computeTotalAmountFixedSupply(Component component) {
         double totalAmountFixedSupply = 0.;
-        totalAmountFixedSupply += fixedSupplyGenerators.get(numCC).stream().filter(generator -> generator.getTerminal().isConnected())
+        totalAmountFixedSupply += fixedSupplyGenerators.get(component.getNum()).stream().filter(generator -> generator.getTerminal().isConnected())
             .mapToDouble(Generator::getTargetP).sum();
         return totalAmountFixedSupply;
     }
 
-    private void computeAdjustableGenerators(Component component, Reporter reporter) {
-        List<Generator> generators = new ArrayList<>();
+    private static Component getSynchronousComponentFrom(HvdcConverterStation<?> station) {
+        return station.getTerminal().getBusView().getBus().getSynchronousComponent();
+    }
 
-        // get all connected generators in the component
-        for (Bus bus : component.getBuses()) {
-            generators.addAll(bus.getGeneratorStream().filter(generator -> generator.getTerminal().isConnected())
-                .collect(Collectors.toList()));
-        }
+    private double computeHvdcBalance(Component component) {
+        AtomicDouble balance = new AtomicDouble(0.);
+
+        component.getBusStream().forEach(bus -> {
+            double hdvcFlow = Stream.concat(bus.getLccConverterStationStream(), bus.getVscConverterStationStream())
+                .filter(station -> {
+                    // Keep only hvdc linking to another synchronous component
+                    HvdcLine hvdcLine = station.getHvdcLine();
+                    HvdcConverterStation<?> station1 = hvdcLine.getConverterStation1();
+                    HvdcConverterStation<?> station2 = hvdcLine.getConverterStation2();
+                    boolean station2NotInComponent = station1.getId().equals(station.getId()) && getSynchronousComponentFrom(station2).getNum() != component.getNum();
+                    boolean station1NotInComponent = station2.getId().equals(station.getId()) && getSynchronousComponentFrom(station1).getNum() != component.getNum();
+                    return station1NotInComponent || station2NotInComponent;
+                })
+                .mapToDouble(station -> {
+                    // compute hvdc flux : import or export
+                    HvdcLine hvdcLine = station.getHvdcLine();
+                    HvdcConverterStation<?> station1 = hvdcLine.getConverterStation1();
+                    HvdcConverterStation<?> station2 = hvdcLine.getConverterStation2();
+
+                    if ((station1.getId().equals(station.getId()) &&
+                        hvdcLine.getConvertersMode() == HvdcLine.ConvertersMode.SIDE_1_RECTIFIER_SIDE_2_INVERTER) ||
+                        (station2.getId().equals(station.getId()) &&
+                            hvdcLine.getConvertersMode() == HvdcLine.ConvertersMode.SIDE_1_INVERTER_SIDE_2_RECTIFIER)) {
+                        return -hvdcLine.getActivePowerSetpoint();
+                    } else {
+                        return hvdcLine.getActivePowerSetpoint();
+                    }
+                }).sum();
+            balance.addAndGet(hdvcFlow);
+        });
+        return balance.get();
+    }
+
+    private void computeAdjustableGenerators(Component component, Reporter reporter) {
+        // get all generators in the component
+        List<Generator> generators = component.getBusStream().flatMap(Bus::getGeneratorStream).collect(Collectors.toList());
+
         // remove non adjustable generators (empty list in this first version)
         generators.removeAll(fixedSupplyGenerators.get(component.getNum()));
 
-        // remove generators without marginal cost
+        // set targetP to 0
+        generators.forEach(generator -> generator.setTargetP(0.));
+
+        // adjustable generators : generators with marginal cost
         adjustableGenerators.put(component.getNum(), generators.stream().filter(generator -> {
             GeneratorStartup startupExtension = generator.getExtension(GeneratorStartup.class);
             boolean marginalCostAvailable = startupExtension != null && !Double.isNaN(startupExtension.getMarginalCost());
@@ -141,6 +183,18 @@ public class GenerationDispatch extends AbstractModification {
         }
     }
 
+    public double getTotalDemand(int numSC) {
+        return totalDemand.get(numSC);
+    }
+
+    public double getRemainigPowerImbalance(int numSC) {
+        return remainingPowerImbalance.get(numSC);
+    }
+
+    public double getHvdcBalance(int numSC) {
+        return hvdcBalance.get(numSC);
+    }
+
     @Override
     public void check(Network network) throws NetworkModificationException {
         double lossCoefficient = generationDispatchInfos.getLossCoefficient();
@@ -151,16 +205,18 @@ public class GenerationDispatch extends AbstractModification {
 
     @Override
     public void apply(Network network, Reporter subReporter) {
-        Collection<Component> connectedComponents = network.getBusView().getConnectedComponents()
-            .stream().collect(collectingAndThen(toCollection(() -> new TreeSet<>(comparingInt(Component::getNum))), ArrayList::new)); // TODO: to remove after new powsybl client release
+        Collection<Component> synchronousComponents = network.getBusView().getBusStream()
+            .filter(Bus::isInMainConnectedComponent)
+            .map(Bus::getSynchronousComponent)
+            .collect(collectingAndThen(toCollection(() -> new TreeSet<>(comparingInt(Component::getNum))), ArrayList::new));
 
-        for (Component component : connectedComponents) {
+        for (Component component : synchronousComponents) {
             int componentNum = component.getNum();
 
             remainingPowerImbalance.put(componentNum, 0.);
             fixedSupplyGenerators.put(componentNum, new ArrayList<>());  // no fixed supply generators in this first version
 
-            Reporter componentReporter = subReporter.createSubReporter(COMPONENT + componentNum, COMPONENT + componentNum);
+            Reporter componentReporter = subReporter.createSubReporter("Network CC0 " + SYNCHRONOUS_COMPONENT + componentNum, "Network CC0 " + SYNCHRONOUS_COMPONENT + componentNum);
 
             Reporter powerToDispatchReporter = componentReporter.createSubReporter(POWER_TO_DISPATCH, POWER_TO_DISPATCH);
 
@@ -170,11 +226,16 @@ public class GenerationDispatch extends AbstractModification {
                 Map.of("totalDemand", totalDemand.get(componentNum)), TypedValue.INFO_SEVERITY);
 
             // get total supply value for non adjustable generators (will be 0. in this first version)
-            double totalAmountFixedSupply = computeTotalAmountFixedSupply(componentNum);
+            double totalAmountFixedSupply = computeTotalAmountFixedSupply(component);
             report(powerToDispatchReporter, "TotalAmountFixedSupply", "The total amount of fixed supply is : ${totalAmountFixedSupply} MW",
                 Map.of("totalAmountFixedSupply", totalAmountFixedSupply), TypedValue.INFO_SEVERITY);
 
-            double totalAmountSupplyToBeDispatched = totalDemand.get(componentNum) - totalAmountFixedSupply;
+            // compute hvdc balance to other synchronous components
+            hvdcBalance.put(componentNum, computeHvdcBalance(component));
+            report(powerToDispatchReporter, "TotalOutwardHvdcFlow", "The HVDC balance is : ${hvdcBalance} MW",
+                Map.of("hvdcBalance", hvdcBalance.get(componentNum)), TypedValue.INFO_SEVERITY);
+
+            double totalAmountSupplyToBeDispatched = totalDemand.get(componentNum) - totalAmountFixedSupply - hvdcBalance.get(componentNum);
             if (totalAmountSupplyToBeDispatched < 0.) {
                 report(powerToDispatchReporter, "TotalAmountFixedSupplyExceedsTotalDemand", "The total amount of fixed supply exceeds the total demand",
                     Map.of(), TypedValue.WARN_SEVERITY);
@@ -186,11 +247,9 @@ public class GenerationDispatch extends AbstractModification {
 
             // get adjustable generators in the component
             computeAdjustableGenerators(component, powerToDispatchReporter);
+
             double realized = 0.;
             if (!adjustableGenerators.get(componentNum).isEmpty()) {
-                // set targetP to 0 for all adjustable generators
-                adjustableGenerators.get(componentNum).forEach(generator -> generator.setTargetP(0.));
-
                 // stacking of adjustable generators to ensure the totalAmountSupplyToBeDispatched
                 List<Scalable> generatorsScalable = adjustableGenerators.get(componentNum).stream().map(generator ->
                     (Scalable) Scalable.onGenerator(generator.getId(), generator.getMinP(), generator.getMaxP())

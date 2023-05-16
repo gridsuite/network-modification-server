@@ -44,6 +44,68 @@ public class GeneratorModification extends AbstractModification {
         this.modificationInfos = modificationInfos;
     }
 
+    private static NetworkModificationException makeGeneratorException(String generatorId, String msgSuffix) {
+        return new NetworkModificationException(MODIFY_GENERATOR_ERROR, "Generator '" + generatorId + "' : " + msgSuffix);
+    }
+
+    @Override
+    public void check(Network network) throws NetworkModificationException {
+        if (network.getGenerator(modificationInfos.getEquipmentId()) != null) {
+            Generator generator = ModificationUtils.getInstance().getGenerator(network, modificationInfos.getEquipmentId());
+            // check min max reactive limits
+            if (generator.getReactiveLimits().getKind() == ReactiveLimitsKind.MIN_MAX && (modificationInfos.getMinimumReactivePower() != null || modificationInfos.getMaximumReactivePower() != null)) {
+                checkMaxReactivePowerGreaterThanMinReactivePower(generator);
+            }
+            // check reactive capability curve limits
+            Collection<ReactiveCapabilityCurve.Point> points = generator.getReactiveLimits().getKind() == ReactiveLimitsKind.CURVE ? generator.getReactiveLimits(ReactiveCapabilityCurve.class).getPoints() : List.of();
+            List<ReactiveCapabilityCurve.Point> generatorPoints = new ArrayList<>(points);
+            List<ReactiveCapabilityCurveModificationInfos> modificationPoints = modificationInfos.getReactiveCapabilityCurvePoints();
+            if (!CollectionUtils.isEmpty(points) && modificationPoints != null) {
+                checkMaxQGreaterThanMinQ(generatorPoints, modificationPoints);
+            }
+            // check regulated terminal
+            if (modificationInfos.getRegulatingTerminalId() != null && modificationInfos.getRegulatingTerminalType() != null &&
+                    modificationInfos.getRegulatingTerminalVlId() != null) {
+                VoltageLevel voltageLevel = ModificationUtils.getInstance().getVoltageLevel(network, modificationInfos.getRegulatingTerminalVlId().getValue());
+                ModificationUtils.getInstance().getTerminalFromIdentifiable(voltageLevel.getNetwork(),
+                        modificationInfos.getRegulatingTerminalId().getValue(),
+                        modificationInfos.getRegulatingTerminalType().getValue(),
+                        modificationInfos.getRegulatingTerminalVlId().getValue());
+            }
+        }
+    }
+
+    private void checkMaxReactivePowerGreaterThanMinReactivePower(Generator generator) {
+        MinMaxReactiveLimits minMaxReactiveLimits = generator.getReactiveLimits(MinMaxReactiveLimits.class);
+        Double previousMinimumReactivePower = minMaxReactiveLimits.getMinQ();
+        Double previousMaximumReactivePower = minMaxReactiveLimits.getMaxQ();
+        Double minReactivePower = modificationInfos.getMinimumReactivePower() != null ? modificationInfos.getMinimumReactivePower().getValue() : previousMinimumReactivePower;
+        Double maxReactivePower = modificationInfos.getMaximumReactivePower() != null ? modificationInfos.getMaximumReactivePower().getValue() : previousMaximumReactivePower;
+        if (minReactivePower > maxReactivePower) {
+            throw makeGeneratorException(modificationInfos.getEquipmentId(), "maximum reactive power " + maxReactivePower + " is expected to be greater than or equal to minimum reactive power " + minReactivePower);
+        }
+    }
+
+    private void checkMaxQGreaterThanMinQ(List<ReactiveCapabilityCurve.Point> generatorPoints, List<ReactiveCapabilityCurveModificationInfos> modificationPoints) {
+        IntStream.range(0, modificationPoints.size())
+                .forEach(i -> {
+                    ReactiveCapabilityCurve.Point oldPoint = generatorPoints.get(i);
+                    ReactiveCapabilityCurveModificationInfos newPoint = modificationPoints.get(i);
+                    Double oldMaxQ = Double.NaN;
+                    Double oldMinQ = Double.NaN;
+                    if (oldPoint != null) {
+                        oldMaxQ = oldPoint.getMaxQ();
+                        oldMinQ = oldPoint.getMinQ();
+                    }
+                    var maxQ = newPoint.getQmaxP() != null ? newPoint.getQmaxP() : oldMaxQ;
+                    var minQ = newPoint.getQminP() != null ? newPoint.getQminP() : oldMinQ;
+                    if (maxQ < minQ) {
+                        throw makeGeneratorException(modificationInfos.getEquipmentId(),
+                                "maximum reactive power " + maxQ + " is expected to be greater than or equal to minimum reactive power " + minQ);
+                    }
+                });
+    }
+
     @Override
     public void apply(Network network, Reporter subReporter) {
         if (modificationInfos == null) {
@@ -247,9 +309,9 @@ public class GeneratorModification extends AbstractModification {
                                                     ReactiveCapabilityCurve.Point oldPoint,
                                                     List<Report> reports,
                                                     String fieldSuffix) {
-        Double oldMaxQ = null;
-        Double oldMinQ = null;
-        Double oldP = null;
+        Double oldMaxQ = Double.NaN;
+        Double oldMinQ = Double.NaN;
+        Double oldP = Double.NaN;
 
         if (oldPoint != null) {
             oldMaxQ = oldPoint.getMaxQ();
