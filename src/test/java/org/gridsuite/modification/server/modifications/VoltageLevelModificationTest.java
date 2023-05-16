@@ -47,8 +47,8 @@ public class VoltageLevelModificationTest extends AbstractNetworkModificationTes
                 .nominalVoltage(new AttributeModification<>(420D, OperationType.SET))
                 .lowVoltageLimit(new AttributeModification<>(30D, OperationType.SET))
                 .highVoltageLimit(new AttributeModification<>(50D, OperationType.SET))
-                .ipMax(new AttributeModification<>(8D, OperationType.SET))
-                .ipMin(new AttributeModification<>(7D, OperationType.SET))
+                .ipMax(new AttributeModification<>(0.8, OperationType.SET))
+                .ipMin(new AttributeModification<>(0.7, OperationType.SET))
                 .build();
     }
 
@@ -60,8 +60,8 @@ public class VoltageLevelModificationTest extends AbstractNetworkModificationTes
                 .nominalVoltage(new AttributeModification<>(450D, OperationType.SET))
                 .lowVoltageLimit(new AttributeModification<>(40D, OperationType.SET))
                 .highVoltageLimit(new AttributeModification<>(55D, OperationType.SET))
-                .ipMax(new AttributeModification<>(9D, OperationType.SET))
-                .ipMin(new AttributeModification<>(5D, OperationType.SET))
+                .ipMax(new AttributeModification<>(0.9, OperationType.SET))
+                .ipMin(new AttributeModification<>(0.5, OperationType.SET))
                 .build();
     }
 
@@ -80,8 +80,8 @@ public class VoltageLevelModificationTest extends AbstractNetworkModificationTes
         assertEquals(420D, voltageLevel.getNominalV(), 0);
         assertEquals(30D, voltageLevel.getLowVoltageLimit(), 0);
         assertEquals(50D, voltageLevel.getHighVoltageLimit(), 0);
-        assertEquals(8D, identifiableShortCircuit.getIpMax(), 0);
-        assertEquals(7D, identifiableShortCircuit.getIpMin(), 0);
+        assertEquals(0.8, identifiableShortCircuit.getIpMax(), 0);
+        assertEquals(0.7, identifiableShortCircuit.getIpMin(), 0);
     }
 
     @Override
@@ -103,7 +103,7 @@ public class VoltageLevelModificationTest extends AbstractNetworkModificationTes
 
         VoltageLevelModificationInfos updatedInfos = VoltageLevelModificationInfos.builder()
                 .equipmentId("v1")
-                .ipMax(new AttributeModification<>(13D, OperationType.SET))
+                .ipMax(new AttributeModification<>(0.9, OperationType.SET))
                 .build();
         applyModification(updatedInfos);
         VoltageLevel voltageLevel = getNetwork().getVoltageLevel("v1");
@@ -111,17 +111,17 @@ public class VoltageLevelModificationTest extends AbstractNetworkModificationTes
 
         IdentifiableShortCircuit<VoltageLevel> identifiableShortCircuit1 = voltageLevel.getExtension(IdentifiableShortCircuit.class);
         assertNotNull(identifiableShortCircuit1);
-        assertEquals(13D, identifiableShortCircuit1.getIpMax(), 0);
-        assertEquals(7D, identifiableShortCircuit1.getIpMin(), 0);
+        assertEquals(0.9, identifiableShortCircuit1.getIpMax(), 0);
+        assertEquals(0.7, identifiableShortCircuit1.getIpMin(), 0);
 
         VoltageLevelModificationInfos updatedInfos2 = VoltageLevelModificationInfos.builder()
                 .equipmentId("v1")
-                .ipMin(new AttributeModification<>(2D, OperationType.SET))
+                .ipMin(new AttributeModification<>(0.2, OperationType.SET))
                 .build();
         applyModification(updatedInfos2);
         IdentifiableShortCircuit<VoltageLevel> identifiableShortCircuit2 = voltageLevel.getExtension(IdentifiableShortCircuit.class);
-        assertEquals(13D, identifiableShortCircuit2.getIpMax(), 0);
-        assertEquals(2D, identifiableShortCircuit2.getIpMin(), 0);
+        assertEquals(0.9, identifiableShortCircuit2.getIpMax(), 0);
+        assertEquals(0.2, identifiableShortCircuit2.getIpMin(), 0);
     }
 
     @SneakyThrows
