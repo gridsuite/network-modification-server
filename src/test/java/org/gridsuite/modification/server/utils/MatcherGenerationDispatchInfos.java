@@ -7,7 +7,7 @@
 package org.gridsuite.modification.server.utils;
 
 import org.gridsuite.modification.server.dto.GenerationDispatchInfos;
-import org.gridsuite.modification.server.dto.GeneratorsWithoutOutageInfos;
+import org.gridsuite.modification.server.dto.GeneratorsFilterInfos;
 
 import java.util.List;
 import java.util.Objects;
@@ -24,17 +24,18 @@ public class MatcherGenerationDispatchInfos extends MatcherModificationInfos<Gen
         return new MatcherGenerationDispatchInfos(generationDispatchInfos);
     }
 
-    private boolean matchesFilter(GeneratorsWithoutOutageInfos filter1, GeneratorsWithoutOutageInfos filter2) {
+    private boolean matchesFilter(GeneratorsFilterInfos filter1, GeneratorsFilterInfos filter2) {
         return Objects.equals(filter1.getName(), filter2.getName()) &&
             Objects.equals(filter1.getId(), filter2.getId());
     }
 
-    private boolean matchesGeneratorsWithoutOutage(List<GeneratorsWithoutOutageInfos> generatorsWithoutOutageInfos) {
-        if (!matchesList(reference.getGeneratorsWithoutOutage(), generatorsWithoutOutageInfos)) {
+    private boolean matchesGeneratorsFilters(List<GeneratorsFilterInfos> generatorsFilterInfos,
+                                             List<GeneratorsFilterInfos> refGeneratorsFilterInfos) {
+        if (!matchesList(refGeneratorsFilterInfos, generatorsFilterInfos)) {
             return false;
         }
-        for (int index = 0; index < generatorsWithoutOutageInfos.size(); index++) {
-            if (!matchesFilter(reference.getGeneratorsWithoutOutage().get(index), generatorsWithoutOutageInfos.get(index))) {
+        for (int index = 0; index < generatorsFilterInfos.size(); index++) {
+            if (!matchesFilter(refGeneratorsFilterInfos.get(index), generatorsFilterInfos.get(index))) {
                 return false;
             }
         }
@@ -45,7 +46,8 @@ public class MatcherGenerationDispatchInfos extends MatcherModificationInfos<Gen
         return super.matchesSafely(m)
                 && Objects.equals(reference.getLossCoefficient(), m.getLossCoefficient())
                 && Objects.equals(reference.getDefaultOutageRate(), m.getDefaultOutageRate())
-                && matchesGeneratorsWithoutOutage(m.getGeneratorsWithoutOutage());
+                && matchesGeneratorsFilters(m.getGeneratorsWithoutOutage(), reference.getGeneratorsWithoutOutage())
+                && matchesGeneratorsFilters(m.getGeneratorsWithFixedSupply(), reference.getGeneratorsWithFixedSupply());
     }
 
     private boolean matchesList(List<?> list1, List<?> list2) {

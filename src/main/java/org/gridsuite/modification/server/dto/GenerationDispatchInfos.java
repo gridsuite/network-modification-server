@@ -39,7 +39,10 @@ public class GenerationDispatchInfos extends ModificationInfos {
     Double defaultOutageRate;
 
     @Schema(description = "generators without outage")
-    private List<GeneratorsWithoutOutageInfos> generatorsWithoutOutage;
+    private List<GeneratorsFilterInfos> generatorsWithoutOutage;
+
+    @Schema(description = "generators with fixed supply")
+    private List<GeneratorsFilterInfos> generatorsWithFixedSupply;
 
     @Override
     public GenerationDispatchEntity toEntity() {
