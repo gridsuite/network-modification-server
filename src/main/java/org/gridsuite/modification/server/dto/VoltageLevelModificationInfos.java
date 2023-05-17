@@ -39,10 +39,10 @@ public class VoltageLevelModificationInfos extends BasicEquipmentModificationInf
     @Schema(description = "high voltage limit  in kV")
     private AttributeModification<Double> highVoltageLimit;
 
-    @Schema(description = "low short-circuit current limit in kA")
+    @Schema(description = "low short-circuit current limit in A")
     private AttributeModification<Double> ipMin;
 
-    @Schema(description = "high short-circuit current limit in kA")
+    @Schema(description = "high short-circuit current limit in A")
     private AttributeModification<Double> ipMax;
 
     @Override
