@@ -53,6 +53,7 @@ public class NetworkModificationException extends PowsyblException {
         CREATE_SUBSTATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         MODIFY_SUBSTATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         CREATE_VOLTAGE_LEVEL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
+        MODIFY_VOLTAGE_LEVEL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         SUBSTATION_NOT_FOUND(HttpStatus.NOT_FOUND),
         LOAD_ALREADY_EXISTS(HttpStatus.BAD_REQUEST),
         VOLTAGE_LEVEL_ALREADY_EXISTS(HttpStatus.BAD_REQUEST),
@@ -87,7 +88,9 @@ public class NetworkModificationException extends PowsyblException {
         DELETE_ATTACHING_LINE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         DELETE_ATTACHING_LINE_NOT_FOUND(HttpStatus.NOT_FOUND),
         FILTERS_NOT_FOUND(HttpStatus.NOT_FOUND),
-        GENERATION_DISPATCH_ERROR(HttpStatus.INTERNAL_SERVER_ERROR);
+        GENERATION_DISPATCH_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
+        LINE_TYPE_CATEGORY_MISMATCH(HttpStatus.BAD_REQUEST);
+
 
         public final HttpStatus status;
         private final String message;

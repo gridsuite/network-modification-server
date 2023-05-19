@@ -7,10 +7,7 @@
 
 package org.gridsuite.modification.server.modifications;
 
-import com.powsybl.iidm.network.EnergySource;
-import com.powsybl.iidm.network.Generator;
-import com.powsybl.iidm.network.Network;
-import com.powsybl.iidm.network.ReactiveLimitsKind;
+import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.ActivePowerControl;
 import com.powsybl.iidm.network.extensions.GeneratorShortCircuit;
 import com.powsybl.iidm.network.extensions.GeneratorStartup;
@@ -20,9 +17,14 @@ import org.gridsuite.modification.server.utils.MatcherGeneratorModificationInfos
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
 import org.springframework.http.MediaType;
+import org.springframework.util.CollectionUtils;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.IntStream;
 
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -355,5 +357,51 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
         createdModification = (GeneratorModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
 
         assertEquals(18f, createdModification.getDroop().getValue());
+    }
+
+    @SneakyThrows
+    @Test
+    public void testMinQGreaterThanMaxQ() {
+        GeneratorModificationInfos generatorModificationInfos = (GeneratorModificationInfos) buildModification();
+        Generator generator = getNetwork().getGenerator("idGenerator");
+        generator.newReactiveCapabilityCurve()
+                .beginPoint()
+                .setP(0.)
+                .setMaxQ(100.)
+                .setMinQ(0.)
+                .endPoint()
+                .beginPoint()
+                .setP(200.)
+                .setMaxQ(150.)
+                .setMinQ(0.)
+                .endPoint()
+                .add();
+        Collection<ReactiveCapabilityCurve.Point> points = generator.getReactiveLimits(ReactiveCapabilityCurve.class).getPoints();
+        List<ReactiveCapabilityCurve.Point> generatorPoints = new ArrayList<>(points);
+        List<ReactiveCapabilityCurveModificationInfos> modificationPoints = generatorModificationInfos.getReactiveCapabilityCurvePoints();
+        AtomicReference<Double> maxQ = new AtomicReference<>(Double.NaN);
+        AtomicReference<Double> minQ = new AtomicReference<>(Double.NaN);
+        if (!CollectionUtils.isEmpty(points)) {
+            IntStream.range(0, modificationPoints.size())
+                    .forEach(i -> {
+                        ReactiveCapabilityCurve.Point oldPoint = generatorPoints.get(i);
+                        ReactiveCapabilityCurveModificationInfos newPoint = modificationPoints.get(i);
+                        Double oldMaxQ = Double.NaN;
+                        Double oldMinQ = Double.NaN;
+                        if (oldPoint != null) {
+                            oldMaxQ = oldPoint.getMaxQ();
+                            oldMinQ = oldPoint.getMinQ();
+                        }
+                        newPoint.setQminP(300.0);
+                        newPoint.setOldQmaxP(250.0);
+                        maxQ.set(newPoint.getQmaxP() != null ? newPoint.getQmaxP() : oldMaxQ);
+                        minQ.set(newPoint.getQminP() != null ? newPoint.getQminP() : oldMinQ);
+                    });
+        }
+        String modificationToCreateJson = mapper.writeValueAsString(generatorModificationInfos);
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        assertLogMessage("MODIFY_GENERATOR_ERROR : Generator '" + "idGenerator" + "' : maximum reactive power " + maxQ.get() + " is expected to be greater than or equal to minimum reactive power " + minQ.get(),
+                generatorModificationInfos.getErrorType().name(), reportService);
     }
 }
