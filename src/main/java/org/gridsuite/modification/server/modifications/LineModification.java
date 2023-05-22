@@ -97,24 +97,15 @@ public class LineModification extends AbstractModification {
             .withDefaultMessage("Characteristics")
             .withSeverity(TypedValue.INFO_SEVERITY)
             .build());
-        Double seriesResistance = lineModificationInfos.getSeriesResistance() != null
-                ? lineModificationInfos.getSeriesResistance().getValue()
-                : null;
-        if (seriesResistance != null) {
-            characteristicsReporter
-                    .report(ModificationUtils.getInstance().buildModificationReportWithIndentation(line.getR(),
-                            seriesResistance, "Series resistance", 1));
-            line.setR(seriesResistance);
+        if (lineModificationInfos.getSeriesResistance() != null) {
+            characteristicsReporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(line.getR(),
+                    lineModificationInfos.getSeriesResistance().getValue(), "Series resistance", 1));
+            line.setR(lineModificationInfos.getSeriesResistance().getValue());
         }
-
-        Double seriesReactance = lineModificationInfos.getSeriesReactance() != null
-                ? lineModificationInfos.getSeriesReactance().getValue()
-                : null;
-        if (seriesReactance != null) {
-            characteristicsReporter
-                    .report(ModificationUtils.getInstance().buildModificationReportWithIndentation(line.getX(),
-                            seriesReactance, "Series reactance", 1));
-            line.setX(seriesReactance);
+        if (lineModificationInfos.getSeriesReactance() != null) {
+            characteristicsReporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(line.getX(),
+                    lineModificationInfos.getSeriesReactance().getValue(), "Series reactance", 1));
+            line.setX(lineModificationInfos.getSeriesReactance().getValue());
         }
 
         modifySide1Characteristics(line, lineModificationInfos, characteristicsReporter);
@@ -124,58 +115,46 @@ public class LineModification extends AbstractModification {
 
     private void modifySide1Characteristics(Line line, LineModificationInfos lineModificationInfos,
             Reporter characteristicsReporter) {
-        Double shuntConductance1 = lineModificationInfos.getShuntConductance1() != null
-                ? lineModificationInfos.getShuntConductance1().getValue()
-                : null;
-        Double shuntSusceptance1 = lineModificationInfos.getShuntSusceptance1() != null
-                ? lineModificationInfos.getShuntSusceptance1().getValue()
-                : null;
-        if (shuntConductance1 != null
-                || shuntSusceptance1 != null) {
+        if (lineModificationInfos.getShuntConductance1() != null
+                || lineModificationInfos.getShuntSusceptance1() != null) {
             Reporter side1Reporter = characteristicsReporter.createSubReporter("side1Characteristics", "Side 1");
             side1Reporter.report(Report.builder()
                     .withKey("side1CharacteristicsModification")
                     .withDefaultMessage("    Side 1")
                     .withSeverity(TypedValue.INFO_SEVERITY)
                     .build());
-            if (shuntConductance1 != null) {
+            if (lineModificationInfos.getShuntConductance1() != null) {
                 side1Reporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(line.getG1(),
-                        shuntConductance1, "Shunt conductance", 2));
-                line.setG1(shuntConductance1);
+                        lineModificationInfos.getShuntConductance1().getValue(), "Shunt conductance", 2));
+                line.setG1(lineModificationInfos.getShuntConductance1().getValue());
             }
-            if (shuntSusceptance1 != null) {
+            if (lineModificationInfos.getShuntSusceptance1() != null) {
                 side1Reporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(line.getB1(),
-                        shuntSusceptance1, "Shunt susceptance", 2));
-                line.setB1(shuntSusceptance1);
+                        lineModificationInfos.getShuntSusceptance1().getValue(), "Shunt susceptance", 2));
+                line.setB1(lineModificationInfos.getShuntSusceptance1().getValue());
             }
         }
     }
 
     private void modifySide2Characteristics(Line line, LineModificationInfos lineModificationInfos,
             Reporter characteristicsReporter) {
-        Double shuntConductance2 = lineModificationInfos.getShuntConductance2() != null
-                ? lineModificationInfos.getShuntConductance2().getValue()
-                : null;
-        Double shuntSusceptance2 = lineModificationInfos.getShuntSusceptance2() != null
-                ? lineModificationInfos.getShuntSusceptance2().getValue()
-                : null;
-        if (shuntConductance2 != null
-                || shuntSusceptance2 != null) {
+        if (lineModificationInfos.getShuntConductance2() != null
+                || lineModificationInfos.getShuntSusceptance2() != null) {
             Reporter side2Reporter = characteristicsReporter.createSubReporter("side2Characteristics", "Side 2");
             side2Reporter.report(Report.builder()
                     .withKey("side2CharacteristicsModification")
                     .withDefaultMessage("    Side 2")
                     .withSeverity(TypedValue.INFO_SEVERITY)
                     .build());
-            if (shuntConductance2 != null) {
+            if (lineModificationInfos.getShuntConductance2() != null) {
                 side2Reporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(line.getG2(),
-                        shuntConductance2, "Shunt conductance", 2));
-                line.setG2(shuntConductance2);
+                    lineModificationInfos.getShuntConductance2().getValue(), "Shunt conductance", 2));
+                line.setG2(lineModificationInfos.getShuntConductance2().getValue());
             }
-            if (shuntSusceptance2 != null) {
+            if (lineModificationInfos.getShuntSusceptance2() != null) {
                 side2Reporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(line.getB2(),
-                        shuntSusceptance2, "Shunt susceptance", 2));
-                line.setB2(shuntSusceptance2);
+                    lineModificationInfos.getShuntSusceptance2().getValue(), "Shunt susceptance", 2));
+                line.setB2(lineModificationInfos.getShuntSusceptance2().getValue());
             }
         }
     }
@@ -262,17 +241,17 @@ public class LineModification extends AbstractModification {
 
     private boolean characteristicsModified(LineModificationInfos lineModificationInfos) {
         return lineModificationInfos.getSeriesReactance() != null
-                && lineModificationInfos.getSeriesResistance().getValue() != null
+                && lineModificationInfos.getSeriesReactance().getValue() != null
                 || lineModificationInfos.getSeriesResistance() != null
-                        && lineModificationInfos.getSeriesReactance().getValue() != null
+                        && lineModificationInfos.getSeriesResistance().getValue() != null
                 || lineModificationInfos.getShuntConductance1() != null
-                        && lineModificationInfos.getShuntSusceptance1().getValue() != null
-                || lineModificationInfos.getShuntSusceptance1() != null
                         && lineModificationInfos.getShuntConductance1().getValue() != null
+                || lineModificationInfos.getShuntSusceptance1() != null
+                        && lineModificationInfos.getShuntSusceptance1().getValue() != null
                 || lineModificationInfos.getShuntConductance2() != null
-                        && lineModificationInfos.getShuntSusceptance2().getValue() != null
+                        && lineModificationInfos.getShuntConductance2().getValue() != null
                 || lineModificationInfos.getShuntSusceptance2() != null
-                        && lineModificationInfos.getShuntConductance2().getValue() != null;
+                        && lineModificationInfos.getShuntSusceptance2().getValue() != null;
     }
 
 }
