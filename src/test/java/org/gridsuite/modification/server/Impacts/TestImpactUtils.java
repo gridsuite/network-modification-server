@@ -39,6 +39,7 @@ public final class TestImpactUtils {
         });
         assertTrue(networkModificationResult.isPresent());
         testEmptyImpacts(mapper, networkModificationResult.get());
+        assertTrue(networkModificationResult.get().isApplicationStatusOk());
     }
 
     public static void testEmptyImpacts(ObjectMapper mapper, NetworkModificationResult networkModificationResult) {
@@ -63,7 +64,7 @@ public final class TestImpactUtils {
         Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(resultAsString, new TypeReference<>() {
         });
         assertTrue(networkModificationResult.isPresent());
-
+        assertTrue(networkModificationResult.get().isApplicationStatusOk());
         assertEquals(ApplicationStatus.ALL_OK, networkModificationResult.get().getApplicationStatus());
         assertEquals(new TreeSet<>(substationIds), networkModificationResult.get().getImpactedSubstationsIds());
         assertEquals(nbImpacts, networkModificationResult.get().getNetworkImpacts().size());
@@ -74,6 +75,7 @@ public final class TestImpactUtils {
         Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(resultAsString, new TypeReference<>() {
         });
         assertTrue(networkModificationResult.isPresent());
+        assertTrue(networkModificationResult.get().isApplicationStatusOk());
         NetworkModificationResult resultExpected = NetworkModificationResult.builder()
             .applicationStatus(ApplicationStatus.ALL_OK)
             .networkImpacts(elementImpactsExpected)
@@ -98,6 +100,7 @@ public final class TestImpactUtils {
         Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(resultAsString, new TypeReference<>() {
         });
         assertTrue(networkModificationResult.isPresent());
+        assertTrue(networkModificationResult.get().isApplicationStatusOk());
         NetworkModificationResult resultExpected = NetworkModificationResult.builder()
             .applicationStatus(ApplicationStatus.ALL_OK)
             .networkImpacts(List.of(createElementImpact(impactType, elementType, elementId, new TreeSet<>(substationIds))))
@@ -112,6 +115,7 @@ public final class TestImpactUtils {
         Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(resultAsString, new TypeReference<>() {
         });
         assertTrue(networkModificationResult.isPresent());
+        assertTrue(networkModificationResult.get().isApplicationStatusOk());
         NetworkModificationResult resultExpected = NetworkModificationResult.builder()
             .applicationStatus(ApplicationStatus.ALL_OK)
             .networkImpacts(createConnectableDeletionImpacts(connectableType, connectableId, breakerId, disconnectorId, substationId))
@@ -161,6 +165,7 @@ public final class TestImpactUtils {
         Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(resultAsString, new TypeReference<>() {
         });
         assertTrue(networkModificationResult.isPresent());
+        assertTrue(networkModificationResult.get().isApplicationStatusOk());
         NetworkModificationResult resultExpected = NetworkModificationResult.builder()
             .applicationStatus(ApplicationStatus.ALL_OK)
             .networkImpacts(createBranchImpacts(impactType, branchType, branchId, breakerId1, disconnectorId1, substationId1, breakerId2, disconnectorId2, substationId2))
@@ -196,6 +201,7 @@ public final class TestImpactUtils {
         Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(resultAsString, new TypeReference<>() {
         });
         assertTrue(networkModificationResult.isPresent());
+        assertTrue(networkModificationResult.get().isApplicationStatusOk());
         NetworkModificationResult resultExpected = NetworkModificationResult.builder()
             .applicationStatus(ApplicationStatus.ALL_OK)
             .networkImpacts(create3wtDeletionImpacts(w3tId, breakerId1, disconnectorId1, breakerId2, disconnectorId2, breakerId3, disconnectorId3, substationId))

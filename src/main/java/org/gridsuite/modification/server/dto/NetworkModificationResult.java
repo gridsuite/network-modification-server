@@ -12,6 +12,7 @@ import lombok.Data;
 import org.gridsuite.modification.server.impacts.SimpleElementImpact;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
@@ -48,5 +49,9 @@ public class NetworkModificationResult {
 
     public Set<String> getImpactedSubstationsIds() {
         return networkImpacts.stream().flatMap(impact -> impact.getSubstationIds().stream()).collect(Collectors.toCollection(TreeSet::new));
+    }
+
+    public Boolean isApplicationStatusOk() {
+        return !Objects.equals(this.applicationStatus, ApplicationStatus.WITH_ERRORS);
     }
 }
