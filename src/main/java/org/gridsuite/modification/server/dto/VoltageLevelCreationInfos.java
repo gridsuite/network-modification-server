@@ -47,10 +47,10 @@ public class VoltageLevelCreationInfos extends EquipmentCreationInfos {
     @Schema(description = "high voltage limit  in kV")
     private Double highVoltageLimit;
 
-    @Schema(description = "low short-circuit current limit in kA")
+    @Schema(description = "low short-circuit current limit in A")
     private Double ipMin;
 
-    @Schema(description = "high short-circuit current limit in kA")
+    @Schema(description = "high short-circuit current limit in A")
     private Double ipMax;
 
     @Schema(description = "busbar Count")

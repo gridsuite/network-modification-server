@@ -20,6 +20,8 @@ import org.gridsuite.modification.server.entities.equipment.modification.Generat
 import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.GenerationDispatch;
 
+import java.util.List;
+
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
@@ -32,6 +34,15 @@ public class GenerationDispatchInfos extends ModificationInfos {
 
     @Schema(description = "loss coefficient")
     Double lossCoefficient;
+
+    @Schema(description = "default outage rate")
+    Double defaultOutageRate;
+
+    @Schema(description = "generators without outage")
+    private List<GeneratorsFilterInfos> generatorsWithoutOutage;
+
+    @Schema(description = "generators with fixed supply")
+    private List<GeneratorsFilterInfos> generatorsWithFixedSupply;
 
     @Override
     public GenerationDispatchEntity toEntity() {
