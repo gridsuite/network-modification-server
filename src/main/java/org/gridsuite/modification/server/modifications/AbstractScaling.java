@@ -12,13 +12,7 @@ import com.powsybl.iidm.modification.scalable.Scalable;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.iidm.impl.NetworkImpl;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.FilterEquipments;
-import org.gridsuite.modification.server.dto.FilterInfos;
-import org.gridsuite.modification.server.dto.IdentifiableAttributes;
-import org.gridsuite.modification.server.dto.ScalingInfos;
-import org.gridsuite.modification.server.dto.ScalingVariationInfos;
-import org.gridsuite.modification.server.service.FilterService;
-import org.springframework.context.ApplicationContext;
+import org.gridsuite.modification.server.dto.*;
 import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
@@ -43,7 +37,7 @@ public abstract class AbstractScaling extends AbstractModification {
     }
 
     @Override
-    public void apply(Network network, Reporter subReporter, ApplicationContext context) {
+    public void apply(Network network, Reporter subReporter) {
         // collect all filters from all variations
         var filters = scalingInfos.getVariations().stream()
                 .flatMap(v -> v.getFilters().stream())
@@ -53,7 +47,7 @@ public abstract class AbstractScaling extends AbstractModification {
         // export filters from filter server
         String workingVariantId = network.getVariantManager().getWorkingVariantId();
         UUID uuid = ((NetworkImpl) network).getUuid();
-        Map<UUID, FilterEquipments> exportFilters = context.getBean(FilterService.class)
+        Map<UUID, FilterEquipments> exportFilters = NetworkModificationApplicator.getFilterService()
                 .exportFilters(new ArrayList<>(filters.keySet()), uuid, workingVariantId)
                 .stream()
                 .peek(t -> t.setFilterName(filters.get(t.getFilterId())))

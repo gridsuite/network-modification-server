@@ -11,7 +11,6 @@ import com.powsybl.computation.ComputationManager;
 import com.powsybl.iidm.modification.AbstractNetworkModification;
 import com.powsybl.iidm.network.Network;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.springframework.context.ApplicationContext;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -19,10 +18,6 @@ import org.springframework.context.ApplicationContext;
 public abstract class AbstractModification extends AbstractNetworkModification {
     @Override
     public void apply(Network network, boolean throwException, ComputationManager computationManager, Reporter reporter) {
-        apply(network, reporter);
-    }
-
-    public void apply(Network network, Reporter reporter, ApplicationContext context) {
         apply(network, reporter);
     }
 

@@ -13,6 +13,8 @@ import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.client.NetworkStoreService;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ModificationInfos;
@@ -21,10 +23,10 @@ import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationResult.ApplicationStatus;
 import org.gridsuite.modification.server.dto.ReportInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
+import org.gridsuite.modification.server.service.FilterService;
 import org.gridsuite.modification.server.service.ReportService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -46,14 +48,15 @@ public class NetworkModificationApplicator {
 
     private final ReportService reportService;
 
-    private final ApplicationContext context;
+    @Setter @Getter private static FilterService filterService;
 
     public NetworkModificationApplicator(NetworkStoreService networkStoreService, EquipmentInfosService equipmentInfosService,
-                                         ReportService reportService, ApplicationContext context) {
+                                         ReportService reportService, FilterService filterService) {
         this.networkStoreService = networkStoreService;
         this.equipmentInfosService = equipmentInfosService;
         this.reportService = reportService;
-        this.context = context;
+
+        setFilterService(filterService);
     }
 
     public NetworkModificationResult applyModification(ModificationInfos modificationInfos, NetworkInfos networkInfos, ReportInfos reportInfos) {
@@ -94,7 +97,7 @@ public class NetworkModificationApplicator {
             // check input data but don't change the network
             modification.check(network);
             // apply all changes on the network
-            modification.apply(network, subReporter, context);
+            modification.apply(network, subReporter);
         } catch (Error e) {
             // TODO remove this catch with powsybl 5.2.0
             // Powsybl can raise Error
