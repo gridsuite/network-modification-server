@@ -24,6 +24,8 @@ import com.powsybl.iidm.network.Load;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.GeneratorStartup;
 import com.powsybl.network.store.iidm.impl.NetworkImpl;
+import lombok.Builder;
+import lombok.Getter;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.FilterEquipments;
 import org.gridsuite.modification.server.dto.GenerationDispatchInfos;
@@ -42,6 +44,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.TreeSet;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -92,7 +95,7 @@ public class GenerationDispatch extends AbstractModification {
         return totalLoad * (1. + lossCoefficient / 100.);
     }
 
-    private double computeTotalAmountFixedSupply(Network network, Component component, List<String> generatorsWithFixedSupply, Reporter reporter) {
+    private static double computeTotalAmountFixedSupply(Network network, Component component, List<String> generatorsWithFixedSupply, Reporter reporter) {
         double totalAmountFixedSupply = 0.;
 
         totalAmountFixedSupply += generatorsWithFixedSupply.stream().map(network::getGenerator)
@@ -116,7 +119,7 @@ public class GenerationDispatch extends AbstractModification {
         return station.getTerminal().getBusView().getBus().getSynchronousComponent();
     }
 
-    private double computeHvdcBalance(Component component) {
+    private static double computeHvdcBalance(Component component) {
         AtomicDouble balance = new AtomicDouble(0.);
 
         component.getBusStream().forEach(bus -> {
@@ -151,7 +154,7 @@ public class GenerationDispatch extends AbstractModification {
         return balance.get();
     }
 
-    private List<Generator> computeAdjustableGenerators(Component component, List<String> generatorsWithFixedSupply, Reporter reporter) {
+    private static List<Generator> computeAdjustableGenerators(Component component, List<String> generatorsWithFixedSupply, Reporter reporter) {
         List<Generator> res;
 
         // get all generators in the component
@@ -205,6 +208,13 @@ public class GenerationDispatch extends AbstractModification {
         }
     }
 
+    @Builder
+    @Getter
+    private static class GeneratorsFrequencyReserve {
+        private final List<String> generators;
+        private final double frequencyReserve;
+    }
+
     @Override
     public void check(Network network) throws NetworkModificationException {
         double lossCoefficient = generationDispatchInfos.getLossCoefficient();
@@ -217,8 +227,8 @@ public class GenerationDispatch extends AbstractModification {
         }
     }
 
-    private List<String> exportFilters(List<GeneratorsFilterInfos> generatorsFilters,
-                                       Network network, Reporter subReporter, ApplicationContext context) {
+    private static List<String> exportFilters(List<GeneratorsFilterInfos> generatorsFilters,
+                                              Network network, Reporter subReporter, ApplicationContext context) {
         if (CollectionUtils.isEmpty(generatorsFilters)) {
             return List.of();
         }
@@ -262,7 +272,27 @@ public class GenerationDispatch extends AbstractModification {
         return exportFilters(generationDispatchInfos.getGeneratorsWithFixedSupply(), network, subReporter, context);
     }
 
-    private double reduceGeneratorMaxPValue(Generator generator, List<String> generatorsWithoutOutage) {
+    private List<GeneratorsFrequencyReserve> collectGeneratorsWithFrequencyReserve(Network network, Reporter subReporter, ApplicationContext context) {
+        return generationDispatchInfos.getGeneratorsFrequencyReserve().stream().map(g -> {
+            List<String> generators = exportFilters(g.getGeneratorsFilters(), network, subReporter, context);
+            return GeneratorsFrequencyReserve.builder().generators(generators).frequencyReserve(g.getFrequencyReserve()).build();
+        }).collect(Collectors.toList());
+    }
+
+    private static double computeGenFrequencyReserve(Generator generator,
+                                                     List<GeneratorsFrequencyReserve> generatorsFrequencyReserve) {
+        AtomicReference<Double> freqReserve = new AtomicReference<>(0.);
+        generatorsFrequencyReserve.forEach(g -> {
+            if (g.getGenerators().contains(generator.getId())) {
+                freqReserve.set(g.getFrequencyReserve());
+            }
+        });
+        return freqReserve.get();
+    }
+
+    private double reduceGeneratorMaxPValue(Generator generator,
+                                            List<String> generatorsWithoutOutage,
+                                            List<GeneratorsFrequencyReserve> generatorsFrequencyReserve) {
         double res = generator.getMaxP();
         if (!generatorsWithoutOutage.contains(generator.getId())) {
             GeneratorStartup startupExtension = generator.getExtension(GeneratorStartup.class);
@@ -274,7 +304,8 @@ public class GenerationDispatch extends AbstractModification {
                 res *= 1. - generationDispatchInfos.getDefaultOutageRate() / 100.;
             }
         }
-        return res;
+        double genFrequencyReserve = computeGenFrequencyReserve(generator, generatorsFrequencyReserve);
+        return res * (1. - genFrequencyReserve / 100.);
     }
 
     @Override
@@ -289,6 +320,9 @@ public class GenerationDispatch extends AbstractModification {
 
         // get generators with fixed supply
         List<String> generatorsWithFixedSupply = collectGeneratorsWithFixedSupply(network, subReporter, context);
+
+        // get generators with frequency reserve
+        List<GeneratorsFrequencyReserve> generatorsWithFrequencyReserve = collectGeneratorsWithFrequencyReserve(network, subReporter, context);
 
         for (Component component : synchronousComponents) {
             int componentNum = component.getNum();
@@ -330,7 +364,7 @@ public class GenerationDispatch extends AbstractModification {
                 // stacking of adjustable generators to ensure the totalAmountSupplyToBeDispatched
                 List<Scalable> generatorsScalable = adjustableGenerators.stream().map(generator -> {
                     double minValue = generator.getMinP();
-                    double maxValue = reduceGeneratorMaxPValue(generator, generatorsWithoutOutage);
+                    double maxValue = reduceGeneratorMaxPValue(generator, generatorsWithoutOutage, generatorsWithFrequencyReserve);
                     return (Scalable) Scalable.onGenerator(generator.getId(), minValue, maxValue);
                 }).collect(Collectors.toList());
 
