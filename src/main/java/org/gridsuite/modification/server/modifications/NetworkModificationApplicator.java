@@ -14,7 +14,6 @@ import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.client.NetworkStoreService;
 import lombok.Getter;
-import lombok.Setter;
 import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ModificationInfos;
@@ -48,15 +47,14 @@ public class NetworkModificationApplicator {
 
     private final ReportService reportService;
 
-    @Setter @Getter private static FilterService filterService;
+    @Getter private final FilterService filterService;
 
     public NetworkModificationApplicator(NetworkStoreService networkStoreService, EquipmentInfosService equipmentInfosService,
                                          ReportService reportService, FilterService filterService) {
         this.networkStoreService = networkStoreService;
         this.equipmentInfosService = equipmentInfosService;
         this.reportService = reportService;
-
-        setFilterService(filterService);
+        this.filterService = filterService;
     }
 
     public NetworkModificationResult applyModification(ModificationInfos modificationInfos, NetworkInfos networkInfos, ReportInfos reportInfos) {
@@ -97,7 +95,7 @@ public class NetworkModificationApplicator {
             // check input data but don't change the network
             modification.check(network);
             // apply all changes on the network
-            modification.apply(network, subReporter);
+            modification.apply(network, subReporter, this);
         } catch (Error e) {
             // TODO remove this catch with powsybl 5.2.0
             // Powsybl can raise Error

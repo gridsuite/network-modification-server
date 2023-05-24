@@ -37,7 +37,7 @@ public abstract class AbstractScaling extends AbstractModification {
     }
 
     @Override
-    public void apply(Network network, Reporter subReporter) {
+    public void apply(Network network, Reporter subReporter, NetworkModificationApplicator applicator) {
         // collect all filters from all variations
         var filters = scalingInfos.getVariations().stream()
                 .flatMap(v -> v.getFilters().stream())
@@ -47,7 +47,7 @@ public abstract class AbstractScaling extends AbstractModification {
         // export filters from filter server
         String workingVariantId = network.getVariantManager().getWorkingVariantId();
         UUID uuid = ((NetworkImpl) network).getUuid();
-        Map<UUID, FilterEquipments> exportFilters = NetworkModificationApplicator.getFilterService()
+        Map<UUID, FilterEquipments> exportFilters = applicator.getFilterService()
                 .exportFilters(new ArrayList<>(filters.keySet()), uuid, workingVariantId)
                 .stream()
                 .peek(t -> t.setFilterName(filters.get(t.getFilterId())))
