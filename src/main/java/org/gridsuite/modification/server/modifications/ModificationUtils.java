@@ -9,7 +9,6 @@ package org.gridsuite.modification.server.modifications;
 import com.powsybl.commons.reporter.Report;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.TypedValue;
-import com.powsybl.computation.local.LocalComputationManager;
 import com.powsybl.iidm.modification.topology.CreateCouplingDeviceBuilder;
 import com.powsybl.iidm.modification.topology.CreateVoltageLevelTopologyBuilder;
 import com.powsybl.iidm.modification.topology.TopologyModificationUtils;
@@ -284,7 +283,7 @@ public final class ModificationUtils {
             couplingDeviceBuilder.withBusOrBusbarSectionId1(couplingDevice.getBusbarSectionId1())
                 .withBusOrBusbarSectionId2(couplingDevice.getBusbarSectionId2())
                 .withSwitchPrefixId(voltageLevelCreationInfos.getEquipmentId() + "_COUPL")
-                    .build().apply(network, false, LocalComputationManager.getDefault(), subReporter);
+                    .build().apply(network, subReporter);
         });
 
         subReporter.report(Report.builder()
