@@ -97,12 +97,12 @@ public class LineModification extends AbstractModification {
             .withDefaultMessage("Characteristics")
             .withSeverity(TypedValue.INFO_SEVERITY)
             .build());
-        if (lineModificationInfos.getSeriesResistance() != null) {
+        if (lineModificationInfos.getSeriesResistance() != null && lineModificationInfos.getSeriesResistance().getValue() != null) {
             characteristicsReporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(line.getR(),
                     lineModificationInfos.getSeriesResistance().getValue(), "Series resistance", 1));
             line.setR(lineModificationInfos.getSeriesResistance().getValue());
         }
-        if (lineModificationInfos.getSeriesReactance() != null) {
+        if (lineModificationInfos.getSeriesReactance() != null && lineModificationInfos.getSeriesReactance().getValue() != null) {
             characteristicsReporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(line.getX(),
                     lineModificationInfos.getSeriesReactance().getValue(), "Series reactance", 1));
             line.setX(lineModificationInfos.getSeriesReactance().getValue());
@@ -115,22 +115,28 @@ public class LineModification extends AbstractModification {
 
     private void modifySide1Characteristics(Line line, LineModificationInfos lineModificationInfos,
             Reporter characteristicsReporter) {
-        if (lineModificationInfos.getShuntConductance1() != null
-                || lineModificationInfos.getShuntSusceptance1() != null) {
+        if (lineModificationInfos.getShuntConductance1() != null && lineModificationInfos.getShuntConductance1().getValue() != null
+                || lineModificationInfos.getShuntSusceptance1() != null && lineModificationInfos.getShuntSusceptance1().getValue() != null) {
             Reporter side1Reporter = characteristicsReporter.createSubReporter("side1Characteristics", "Side 1");
             side1Reporter.report(Report.builder()
                     .withKey("side1CharacteristicsModification")
                     .withDefaultMessage("    Side 1")
                     .withSeverity(TypedValue.INFO_SEVERITY)
                     .build());
-            if (lineModificationInfos.getShuntConductance1() != null) {
-                side1Reporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(line.getG1(),
-                        lineModificationInfos.getShuntConductance1().getValue(), "Shunt conductance", 2));
+            if (lineModificationInfos.getShuntConductance1() != null && lineModificationInfos.getShuntConductance1().getValue() != null) {
+                //convert reported value from siemens to microsiemens
+                double shuntConductance1ToReport = lineModificationInfos.getShuntConductance1().getValue() * Math.pow(10, 6);
+                double oldShuntConductance1ToReport = line.getG1() * Math.pow(10, 6);
+                side1Reporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(oldShuntConductance1ToReport,
+                    shuntConductance1ToReport, "Shunt conductance", 2));
                 line.setG1(lineModificationInfos.getShuntConductance1().getValue());
             }
-            if (lineModificationInfos.getShuntSusceptance1() != null) {
-                side1Reporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(line.getB1(),
-                        lineModificationInfos.getShuntSusceptance1().getValue(), "Shunt susceptance", 2));
+            if (lineModificationInfos.getShuntSusceptance1() != null && lineModificationInfos.getShuntSusceptance1().getValue() != null) {
+                //convert reported value from siemens to microsiemens
+                double shuntSusceptance1ToReport = lineModificationInfos.getShuntSusceptance1().getValue() * Math.pow(10, 6);
+                double oldShuntSusceptance1ToReport = line.getB1() * Math.pow(10, 6);
+                side1Reporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(oldShuntSusceptance1ToReport,
+                    shuntSusceptance1ToReport, "Shunt susceptance", 2));
                 line.setB1(lineModificationInfos.getShuntSusceptance1().getValue());
             }
         }
@@ -138,22 +144,28 @@ public class LineModification extends AbstractModification {
 
     private void modifySide2Characteristics(Line line, LineModificationInfos lineModificationInfos,
             Reporter characteristicsReporter) {
-        if (lineModificationInfos.getShuntConductance2() != null
-                || lineModificationInfos.getShuntSusceptance2() != null) {
+        if (lineModificationInfos.getShuntConductance2() != null && lineModificationInfos.getShuntConductance2().getValue() != null
+                || lineModificationInfos.getShuntSusceptance2() != null && lineModificationInfos.getShuntSusceptance2().getValue() != null) {
             Reporter side2Reporter = characteristicsReporter.createSubReporter("side2Characteristics", "Side 2");
             side2Reporter.report(Report.builder()
                     .withKey("side2CharacteristicsModification")
                     .withDefaultMessage("    Side 2")
                     .withSeverity(TypedValue.INFO_SEVERITY)
                     .build());
-            if (lineModificationInfos.getShuntConductance2() != null) {
-                side2Reporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(line.getG2(),
-                    lineModificationInfos.getShuntConductance2().getValue(), "Shunt conductance", 2));
+            if (lineModificationInfos.getShuntConductance2() != null && lineModificationInfos.getShuntConductance2().getValue() != null) {
+                // convert reported value from siemens to microsiemens
+                double shuntConductance2ToReport = lineModificationInfos.getShuntConductance2().getValue() * Math.pow(10, 6);
+                double oldShuntConductance2ToReport = line.getG2() * Math.pow(10, 6);
+                side2Reporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(oldShuntConductance2ToReport,
+                    shuntConductance2ToReport, "Shunt conductance", 2));
                 line.setG2(lineModificationInfos.getShuntConductance2().getValue());
             }
-            if (lineModificationInfos.getShuntSusceptance2() != null) {
-                side2Reporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(line.getB2(),
-                    lineModificationInfos.getShuntSusceptance2().getValue(), "Shunt susceptance", 2));
+            if (lineModificationInfos.getShuntSusceptance2() != null && lineModificationInfos.getShuntSusceptance2().getValue() != null) {
+                // convert reported value from siemens to microsiemens
+                double shuntSusceptance2ToReport = lineModificationInfos.getShuntSusceptance2().getValue() * Math.pow(10, 6);
+                double oldShuntSusceptance2ToReport = line.getB2() * Math.pow(10, 6);
+                side2Reporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(oldShuntSusceptance2ToReport,
+                    shuntSusceptance2ToReport, "Shunt susceptance", 2));
                 line.setB2(lineModificationInfos.getShuntSusceptance2().getValue());
             }
         }
@@ -185,6 +197,8 @@ public class LineModification extends AbstractModification {
         for (CurrentTemporaryLimitModificationInfos limit : currentLimitsInfos.getTemporaryLimits()) {
             int limitAcceptableDuration = limit.getAcceptableDuration() == null ? Integer.MAX_VALUE : limit.getAcceptableDuration();
             double limitValue = limit.getValue() == null ? Double.MAX_VALUE : limit.getValue();
+            String limitDurationToReport = limitAcceptableDuration == Integer.MAX_VALUE ? " " : String.valueOf(limitAcceptableDuration);
+            String limitValueToReport = limitValue == Double.MAX_VALUE ? "no value" : String.valueOf(limitValue);
             TemporaryLimit limitToModify = null;
             if (currentLimits != null) {
                 limitToModify = currentLimits.getTemporaryLimit(limitAcceptableDuration);
@@ -195,8 +209,8 @@ public class LineModification extends AbstractModification {
                 temporaryLimitsReports.add(Report.builder().withKey("temporaryLimitAdded" + limit.getName())
                         .withDefaultMessage("            ${name} (${duration}) added with ${value}")
                         .withValue(NAME, limit.getName())
-                        .withValue(DURATION, limitAcceptableDuration)
-                        .withValue("value", limitValue)
+                        .withValue(DURATION, limitDurationToReport)
+                        .withValue("value", limitValueToReport)
                         .withSeverity(TypedValue.INFO_SEVERITY)
                         .build());
 
@@ -205,9 +219,9 @@ public class LineModification extends AbstractModification {
                         .withKey("temporaryLimitModified" + limit.getName())
                         .withDefaultMessage("            ${name} (${duration}) : ${oldValue} -> ${value}")
                         .withValue(NAME, limit.getName())
-                        .withValue(DURATION, limitAcceptableDuration)
-                        .withValue("value", limitValue)
-                        .withValue("oldValue", limitToModify.getValue())
+                        .withValue(DURATION, limitDurationToReport)
+                        .withValue("value", limitValueToReport)
+                        .withValue("oldValue", limitToModify.getValue() == Double.MAX_VALUE ? "no value" : String.valueOf(limitToModify.getValue()))
                         .withSeverity(TypedValue.INFO_SEVERITY)
                         .build());
             }
@@ -224,7 +238,7 @@ public class LineModification extends AbstractModification {
                         .withKey("temporaryLimitDeleted" + limit.getName())
                         .withDefaultMessage("            ${name} (${duration}) deleted")
                         .withValue(NAME, limit.getName())
-                        .withValue(DURATION, limit.getAcceptableDuration())
+                        .withValue(DURATION, limit.getAcceptableDuration() == Integer.MAX_VALUE ? " " : String.valueOf(limit.getAcceptableDuration()))
                         .withSeverity(TypedValue.INFO_SEVERITY)
                         .build());
             }
