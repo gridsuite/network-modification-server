@@ -230,6 +230,9 @@ public final class ModificationUtils {
             throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR,
                     "Coupling between same bus bar section is not allowed");
         }
+        if (Objects.nonNull(voltageLevelCreationInfos.getIpMin()) && Objects.isNull(voltageLevelCreationInfos.getIpMax())) {
+            throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "IpMax is required");
+        }
     }
 
     void createVoltageLevel(VoltageLevelCreationInfos voltageLevelCreationInfos,
@@ -412,11 +415,19 @@ public final class ModificationUtils {
     }
 
     public <T> Report buildModificationReport(T oldValue, T newValue, String fieldName) {
+        return buildModificationReportWithIndentation(oldValue, newValue, fieldName, 1);
+    }
+
+    public <T> Report buildModificationReportWithIndentation(T oldValue, T newValue, String fieldName, int indentationLevel) {
         String oldValueString = oldValue == null ? "NaN" : oldValue.toString();
         String newValueString = newValue == null ? "NaN" : newValue.toString();
+        StringBuilder indentation = new StringBuilder();
+        for (int i = 0; i < indentationLevel; i++) {
+            indentation.append("    ");
+        }
         return Report.builder()
                 .withKey("Modification" + fieldName)
-                .withDefaultMessage("    ${fieldName} : ${oldValue} -> ${newValue}")
+                .withDefaultMessage(indentation.toString() + "${fieldName} : ${oldValue} -> ${newValue}")
                 .withValue("fieldName", fieldName)
                 .withValue("oldValue", oldValueString)
                 .withValue("newValue", newValueString)

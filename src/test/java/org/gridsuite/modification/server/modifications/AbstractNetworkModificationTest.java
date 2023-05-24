@@ -9,7 +9,9 @@ package org.gridsuite.modification.server.modifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.tomakehurst.wiremock.WireMockServer;
 import com.powsybl.commons.PowsyblException;
+import com.powsybl.commons.exceptions.UncheckedInterruptedException;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.iidm.impl.NetworkImpl;
@@ -19,12 +21,16 @@ import org.gridsuite.modification.server.repositories.NetworkModificationReposit
 import org.gridsuite.modification.server.service.ReportService;
 import org.gridsuite.modification.server.utils.MatcherModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
+import org.gridsuite.modification.server.utils.TestUtils;
+import org.gridsuite.modification.server.utils.WireMockUtils;
 import org.gridsuite.modification.server.utils.elasticsearch.DisableElasticsearch;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.stubbing.Answer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -34,9 +40,11 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -56,6 +64,7 @@ If you want to add a test specific to a modification, add it in its own class.
 @DisableElasticsearch
 @AutoConfigureMockMvc
 public abstract class AbstractNetworkModificationTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractNetworkModificationTest.class);
 
     private static final UUID TEST_NETWORK_ID = UUID.randomUUID();
     private static final UUID NOT_FOUND_NETWORK_ID = UUID.randomUUID();
@@ -69,6 +78,10 @@ public abstract class AbstractNetworkModificationTest {
 
     @Autowired
     protected MockMvc mockMvc;
+
+    protected WireMockServer wireMockServer;
+
+    protected WireMockUtils wireMockUtils;
 
     @MockBean
     private NetworkStoreService networkStoreService;
@@ -88,9 +101,13 @@ public abstract class AbstractNetworkModificationTest {
     public void setUp() {
         network = createNetwork(TEST_NETWORK_ID);
 
+        modificationRepository.deleteAll();
+
         initMocks();
 
-        modificationRepository.deleteAll();
+        wireMockServer = new WireMockServer(wireMockConfig().dynamicPort());
+        wireMockUtils = new WireMockUtils(wireMockServer);
+        wireMockServer.start();
     }
 
     private void initMocks() {
@@ -101,6 +118,14 @@ public abstract class AbstractNetworkModificationTest {
     @After
     public void tearOff() {
         modificationRepository.deleteAll();
+
+        try {
+            TestUtils.assertWiremockServerRequestsEmptyThenShutdown(wireMockServer);
+        } catch (UncheckedInterruptedException e) {
+            LOGGER.error("Error while attempting to get the request done : ", e);
+        } catch (IOException e) {
+            // Ignoring
+        }
     }
 
     @Test
@@ -221,6 +246,10 @@ public abstract class AbstractNetworkModificationTest {
 
     protected Network getNetwork() {
         return network;
+    }
+
+    protected void setNetwork(Network network) {
+        this.network = network;
     }
 
     protected UUID getNetworkId() {
