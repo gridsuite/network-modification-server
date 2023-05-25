@@ -177,15 +177,15 @@ public class NetworkModificationController {
     @GetMapping(value = "/network-modifications/catalog/line_types", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Get a line types catalog")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The line types catalog is returned")})
-    public ResponseEntity<List<LineTypeInfos>> getLineTypesCatalog() {
-        return ResponseEntity.ok().body(lineTypesCatalogService.getAllLineTypesCatalog());
+    public ResponseEntity<List<LineTypeInfos>> getLineTypes() {
+        return ResponseEntity.ok().body(lineTypesCatalogService.getAllLineTypes());
     }
 
     @PostMapping(value = "/network-modifications/catalog/line_types", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Create or reset completely a line types catalog")
     @ApiResponse(responseCode = "200", description = "The line types catalog is created or reset")
-    public ResponseEntity<Void> resetLineTypesCatalog(@RequestBody List<LineTypeInfos> lineTypesCatalog) {
-        lineTypesCatalogService.resetLineTypesCatalog(lineTypesCatalog);
+    public ResponseEntity<Void> resetLineTypes(@RequestBody List<LineTypeInfos> lineTypes) {
+        lineTypesCatalogService.resetLineTypes(lineTypes);
         return ResponseEntity.ok().build();
     }
 

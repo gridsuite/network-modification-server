@@ -27,7 +27,7 @@ public class LineTypesCatalogService {
     }
 
     @Transactional(readOnly = true)
-    public List<LineTypeInfos> getAllLineTypesCatalog() {
+    public List<LineTypeInfos> getAllLineTypes() {
         return lineTypesCatalogRepository.findAll().stream()
             .map(LineTypeEntity::toDto)
             .collect(Collectors.toList());
@@ -37,14 +37,14 @@ public class LineTypesCatalogService {
         lineTypesCatalogRepository.deleteAll();
     }
 
-    public void resetLineTypesCatalog(List<LineTypeInfos> lineTypesCatalog) {
-        lineTypesCatalogRepository.deleteAll();
+    public void resetLineTypes(List<LineTypeInfos> lineTypes) {
+        deleteLineTypesCatalog();
         // remove duplicates in file
-        Set<LineTypeInfos> lineTypesCatalogSet = lineTypesCatalog.stream().collect(Collectors.toSet());
+        Set<LineTypeInfos> lineTypesSet = lineTypes.stream().collect(Collectors.toSet());
 
-        List<LineTypeEntity> lineTypesEntityCatalog = lineTypesCatalogSet.stream()
+        List<LineTypeEntity> lineTypesEntities = lineTypesSet.stream()
             .map(LineTypeInfos::toEntity)
             .collect(Collectors.toList());
-        lineTypesCatalogRepository.saveAll(lineTypesEntityCatalog);
+        lineTypesCatalogRepository.saveAll(lineTypesEntities);
     }
 }
