@@ -283,7 +283,7 @@ public final class ModificationUtils {
             couplingDeviceBuilder.withBusOrBusbarSectionId1(couplingDevice.getBusbarSectionId1())
                 .withBusOrBusbarSectionId2(couplingDevice.getBusbarSectionId2())
                 .withSwitchPrefixId(voltageLevelCreationInfos.getEquipmentId() + "_COUPL")
-                .build().apply(network);
+                    .build().apply(network, subReporter);
         });
 
         subReporter.report(Report.builder()
