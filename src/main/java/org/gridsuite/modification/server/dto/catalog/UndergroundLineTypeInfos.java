@@ -22,7 +22,7 @@ import org.gridsuite.modification.server.entities.catalog.UndergroundLineTypeEnt
 @SuperBuilder
 @EqualsAndHashCode(callSuper = true)
 @Schema(description = "Underground Line Type")
-public class UndergroundLineType extends LineType {
+public class UndergroundLineTypeInfos extends LineTypeInfos {
 
     @Schema(description = "Insulator")
     private String insulator;

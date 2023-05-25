@@ -8,7 +8,7 @@ package org.gridsuite.modification.server.entities.catalog;
 
 import lombok.NoArgsConstructor;
 
-import org.gridsuite.modification.server.dto.catalog.AerialLineType;
+import org.gridsuite.modification.server.dto.catalog.AerialLineTypeInfos;
 
 import javax.persistence.*;
 
@@ -30,20 +30,20 @@ public class AerialLineTypeEntity extends LineTypeEntity {
     @Column(name = "groundWiresNumber")
     private Integer groundWiresNumber;
 
-    public AerialLineTypeEntity(AerialLineType aerialLineType) {
+    public AerialLineTypeEntity(AerialLineTypeInfos aerialLineType) {
         super(aerialLineType);
         assignAttributes(aerialLineType);
     }
 
-    private void assignAttributes(AerialLineType aerialLineType) {
+    private void assignAttributes(AerialLineTypeInfos aerialLineType) {
         conductorsNumber = aerialLineType.getConductorsNumber();
         circuitsNumber = aerialLineType.getCircuitsNumber();
         groundWiresNumber = aerialLineType.getGroundWiresNumber();
     }
 
     @Override
-    public AerialLineType toDto() {
-        return AerialLineType.builder()
+    public AerialLineTypeInfos toDto() {
+        return AerialLineTypeInfos.builder()
                 .id(this.getId())
                 .type(this.getType())
                 .voltage(this.getVoltage())

@@ -6,7 +6,7 @@
  */
 package org.gridsuite.modification.server.service;
 
-import org.gridsuite.modification.server.dto.catalog.LineType;
+import org.gridsuite.modification.server.dto.catalog.LineTypeInfos;
 import org.gridsuite.modification.server.entities.catalog.LineTypeEntity;
 import org.gridsuite.modification.server.repositories.LineTypesCatalogRepository;
 import org.springframework.stereotype.Service;
@@ -27,7 +27,7 @@ public class LineTypesCatalogService {
     }
 
     @Transactional(readOnly = true)
-    public List<LineType> getAllLineTypesCatalog() {
+    public List<LineTypeInfos> getAllLineTypesCatalog() {
         return lineTypesCatalogRepository.findAll().stream()
             .map(LineTypeEntity::toDto)
             .collect(Collectors.toList());
@@ -37,13 +37,13 @@ public class LineTypesCatalogService {
         lineTypesCatalogRepository.deleteAll();
     }
 
-    public void resetLineTypesCatalog(List<LineType> lineTypesCatalog) {
+    public void resetLineTypesCatalog(List<LineTypeInfos> lineTypesCatalog) {
         lineTypesCatalogRepository.deleteAll();
         // remove duplicates in file
-        Set<LineType> lineTypesCatalogSet = lineTypesCatalog.stream().collect(Collectors.toSet());
+        Set<LineTypeInfos> lineTypesCatalogSet = lineTypesCatalog.stream().collect(Collectors.toSet());
 
         List<LineTypeEntity> lineTypesEntityCatalog = lineTypesCatalogSet.stream()
-            .map(LineType::toEntity)
+            .map(LineTypeInfos::toEntity)
             .collect(Collectors.toList());
         lineTypesCatalogRepository.saveAll(lineTypesEntityCatalog);
     }

@@ -22,7 +22,7 @@ import org.gridsuite.modification.server.entities.catalog.AerialLineTypeEntity;
 @SuperBuilder
 @EqualsAndHashCode(callSuper = true)
 @Schema(description = "Aerial Line Type")
-public class AerialLineType extends LineType {
+public class AerialLineTypeInfos extends LineTypeInfos {
 
     @Schema(description = "Number of conductors")
     private Integer conductorsNumber;

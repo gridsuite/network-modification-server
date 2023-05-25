@@ -24,9 +24,9 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.modification.server.Impacts.TestImpactUtils;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.LoadCreationInfos.LoadCreationInfosBuilder;
-import org.gridsuite.modification.server.dto.catalog.AerialLineType;
-import org.gridsuite.modification.server.dto.catalog.LineType;
-import org.gridsuite.modification.server.dto.catalog.UndergroundLineType;
+import org.gridsuite.modification.server.dto.catalog.AerialLineTypeInfos;
+import org.gridsuite.modification.server.dto.catalog.LineTypeInfos;
+import org.gridsuite.modification.server.dto.catalog.UndergroundLineTypeInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosRepository;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.elasticsearch.TombstonedEquipmentInfosRepository;
@@ -1054,9 +1054,9 @@ public class ModificationControllerTest {
     @Test
     public void testGetLineTypesCatalog() throws Exception {
         // Exclude Id for those unit tests because it's exluded in dto
-        EqualsVerifier.simple().forClass(LineType.class).withIgnoredFields("id").verify();
-        EqualsVerifier.simple().forClass(AerialLineType.class).withIgnoredFields("id").verify();
-        EqualsVerifier.simple().forClass(UndergroundLineType.class).withIgnoredFields("id").verify();
+        EqualsVerifier.simple().forClass(LineTypeInfos.class).withIgnoredFields("id").verify();
+        EqualsVerifier.simple().forClass(AerialLineTypeInfos.class).withIgnoredFields("id").verify();
+        EqualsVerifier.simple().forClass(UndergroundLineTypeInfos.class).withIgnoredFields("id").verify();
 
         MvcResult mvcResult;
         String resultAsString;
@@ -1067,7 +1067,7 @@ public class ModificationControllerTest {
                 .andExpect(status().isOk())
                 .andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
-        List<LineType> emptyLineTypes = mapper.readValue(resultAsString, new TypeReference<>() {
+        List<LineTypeInfos> emptyLineTypes = mapper.readValue(resultAsString, new TypeReference<>() {
         });
         assertEquals(0, emptyLineTypes.size());
 
@@ -1083,7 +1083,7 @@ public class ModificationControllerTest {
                 .andExpect(status().isOk())
                 .andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
-        List<LineType> lineTypes = mapper.readValue(resultAsString, new TypeReference<>() {
+        List<LineTypeInfos> lineTypes = mapper.readValue(resultAsString, new TypeReference<>() {
         });
         assertEquals(8, lineTypes.size());
 
@@ -1098,7 +1098,7 @@ public class ModificationControllerTest {
                 .andExpect(status().isOk())
                 .andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
-        List<LineType> lineTypes2 = mapper.readValue(resultAsString, new TypeReference<>() {
+        List<LineTypeInfos> lineTypes2 = mapper.readValue(resultAsString, new TypeReference<>() {
         });
         assertEquals(2, lineTypes2.size());
 

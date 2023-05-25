@@ -8,7 +8,7 @@ package org.gridsuite.modification.server.entities.catalog;
 
 import lombok.NoArgsConstructor;
 
-import org.gridsuite.modification.server.dto.catalog.UndergroundLineType;
+import org.gridsuite.modification.server.dto.catalog.UndergroundLineTypeInfos;
 
 import javax.persistence.*;
 
@@ -27,19 +27,19 @@ public class UndergroundLineTypeEntity extends LineTypeEntity {
     @Column(name = "screen")
     private String screen;
 
-    public UndergroundLineTypeEntity(UndergroundLineType undergroundLineType) {
+    public UndergroundLineTypeEntity(UndergroundLineTypeInfos undergroundLineType) {
         super(undergroundLineType);
         assignAttributes(undergroundLineType);
     }
 
-    private void assignAttributes(UndergroundLineType undergroundLineType) {
+    private void assignAttributes(UndergroundLineTypeInfos undergroundLineType) {
         insulator = undergroundLineType.getInsulator();
         screen = undergroundLineType.getScreen();
     }
 
     @Override
-    public UndergroundLineType toDto() {
-        return UndergroundLineType.builder()
+    public UndergroundLineTypeInfos toDto() {
+        return UndergroundLineTypeInfos.builder()
                 .id(this.getId())
                 .type(this.getType())
                 .voltage(this.getVoltage())

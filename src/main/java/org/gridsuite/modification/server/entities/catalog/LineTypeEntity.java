@@ -9,7 +9,7 @@ package org.gridsuite.modification.server.entities.catalog;
 import lombok.NoArgsConstructor;
 import lombok.Getter;
 
-import org.gridsuite.modification.server.dto.catalog.LineType;
+import org.gridsuite.modification.server.dto.catalog.LineTypeInfos;
 
 import javax.persistence.*;
 import java.util.UUID;
@@ -50,11 +50,11 @@ public class LineTypeEntity {
     @Column(name = "linearCapacity")
     private Double linearCapacity;
 
-    protected LineTypeEntity(LineType lineType) {
+    protected LineTypeEntity(LineTypeInfos lineType) {
         assignAttributes(lineType);
     }
 
-    private void assignAttributes(LineType lineType) {
+    private void assignAttributes(LineTypeInfos lineType) {
         id = lineType.getId();
         type = lineType.getType();
         voltage = lineType.getVoltage();
@@ -65,8 +65,8 @@ public class LineTypeEntity {
         linearCapacity = lineType.getLinearCapacity();
     }
 
-    public LineType toDto() {
-        return LineType.builder()
+    public LineTypeInfos toDto() {
+        return LineTypeInfos.builder()
                 .id(this.id)
                 .type(this.type)
                 .voltage(this.voltage)

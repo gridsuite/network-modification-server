@@ -30,11 +30,11 @@ import org.gridsuite.modification.server.entities.catalog.LineTypeEntity;
     property = "category"
 )
 @JsonSubTypes({
-    @JsonSubTypes.Type(value = AerialLineType.class, name = "AERIAL"),
-    @JsonSubTypes.Type(value = UndergroundLineType.class, name = "UNDERGROUND"),
+    @JsonSubTypes.Type(value = AerialLineTypeInfos.class, name = "AERIAL"),
+    @JsonSubTypes.Type(value = UndergroundLineTypeInfos.class, name = "UNDERGROUND"),
 })
 @Schema(description = "Line Type")
-public class LineType {
+public class LineTypeInfos {
 
     @EqualsAndHashCode.Exclude
     @Schema(description = "id")

@@ -15,7 +15,7 @@ import org.gridsuite.modification.server.dto.BuildInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.ReportInfos;
-import org.gridsuite.modification.server.dto.catalog.LineType;
+import org.gridsuite.modification.server.dto.catalog.LineTypeInfos;
 import org.gridsuite.modification.server.service.LineTypesCatalogService;
 import org.gridsuite.modification.server.service.NetworkModificationService;
 import org.springframework.http.MediaType;
@@ -177,14 +177,14 @@ public class NetworkModificationController {
     @GetMapping(value = "/network-modifications/catalog/line_types", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Get a line types catalog")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The line types catalog is returned")})
-    public ResponseEntity<List<LineType>> getLineTypesCatalog() {
+    public ResponseEntity<List<LineTypeInfos>> getLineTypesCatalog() {
         return ResponseEntity.ok().body(lineTypesCatalogService.getAllLineTypesCatalog());
     }
 
     @PostMapping(value = "/network-modifications/catalog/line_types", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Create or reset completely a line types catalog")
     @ApiResponse(responseCode = "200", description = "The line types catalog is created or reset")
-    public ResponseEntity<Void> resetLineTypesCatalog(@RequestBody List<LineType> lineTypesCatalog) {
+    public ResponseEntity<Void> resetLineTypesCatalog(@RequestBody List<LineTypeInfos> lineTypesCatalog) {
         lineTypesCatalogService.resetLineTypesCatalog(lineTypesCatalog);
         return ResponseEntity.ok().build();
     }
