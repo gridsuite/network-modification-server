@@ -8,7 +8,11 @@ package org.gridsuite.modification.server.dto.catalog;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 import java.util.UUID;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import org.gridsuite.modification.server.entities.catalog.LineTypeEntity;
 
@@ -19,17 +23,22 @@ import org.gridsuite.modification.server.entities.catalog.LineTypeEntity;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@SuperBuilder
 @EqualsAndHashCode
+@JsonTypeInfo(
+    use = JsonTypeInfo.Id.NAME,
+    property = "category"
+)
+@JsonSubTypes({
+    @JsonSubTypes.Type(value = AerialLineTypeInfos.class, name = "AERIAL"),
+    @JsonSubTypes.Type(value = UndergroundLineTypeInfos.class, name = "UNDERGROUND"),
+})
 @Schema(description = "Line Type")
-public class LineType {
+public class LineTypeInfos {
 
     @EqualsAndHashCode.Exclude
     @Schema(description = "id")
     UUID id;
-
-    @Schema(description = "Category (AERIAL or UNDERGROUND)")
-    private LineTypeCategory category;
 
     @Schema(description = "Type Name")
     private String type;
@@ -37,20 +46,12 @@ public class LineType {
     @Schema(description = "Voltage")
     private Integer voltage;
 
+    // same for Conductor type (Aerial) or Conductor (Underground)
     @Schema(description = "Conductor type")
     private String conductorType;
 
     @Schema(description = "Section")
     private Double section;
-
-    @Schema(description = "Number of conductors")
-    private Integer conductorsNumber;
-
-    @Schema(description = "Number of circuits")
-    private Integer circuitsNumber;
-
-    @Schema(description = "Number of ground wires")
-    private Integer groundWiresNumber;
 
     @Schema(description = "Linear resistance")
     private Double linearResistance;
@@ -61,7 +62,8 @@ public class LineType {
     @Schema(description = "Linear capacity")
     private Double linearCapacity;
 
+    @JsonIgnore
     public LineTypeEntity toEntity() {
-        return new LineTypeEntity(this);
+        throw new UnsupportedOperationException("TODO");
     }
 }
