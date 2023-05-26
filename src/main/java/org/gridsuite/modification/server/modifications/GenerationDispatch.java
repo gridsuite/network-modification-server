@@ -251,6 +251,7 @@ public class GenerationDispatch extends AbstractModification {
             .filter(f -> !filtersWithGeneratorsNotFound.containsKey(f.getFilterId()))
             .flatMap(f -> exportedGenerators.get(f.getFilterId()).getIdentifiableAttributes().stream())
             .map(IdentifiableAttributes::getId)
+            .distinct()
             .collect(Collectors.toList());
     }
 
