@@ -68,23 +68,23 @@ public class GenerationDispatchEntity extends ModificationEntity {
     private void assignAttributes(GenerationDispatchInfos generationDispatchInfos) {
         lossCoefficient = generationDispatchInfos.getLossCoefficient();
         defaultOutageRate = generationDispatchInfos.getDefaultOutageRate();
-        generatorsWithoutOutage = toEmbeddableFilters(generationDispatchInfos.getGeneratorsWithoutOutage());
-        generatorsWithFixedSupply = toEmbeddableFilters(generationDispatchInfos.getGeneratorsWithFixedSupply());
+        generatorsWithoutOutage = toEmbeddableGeneratorsFilters(generationDispatchInfos.getGeneratorsWithoutOutage());
+        generatorsWithFixedSupply = toEmbeddableGeneratorsFilters(generationDispatchInfos.getGeneratorsWithFixedSupply());
         if (generatorsFrequencyReserve == null) {
-            generatorsFrequencyReserve = toEmbeddableFrequencyReserve(generationDispatchInfos.getGeneratorsFrequencyReserve());
+            generatorsFrequencyReserve = toEmbeddableGeneratorsFrequencyReserve(generationDispatchInfos.getGeneratorsFrequencyReserve());
         } else {
             generatorsFrequencyReserve.clear();
-            generatorsFrequencyReserve.addAll(toEmbeddableFrequencyReserve(generationDispatchInfos.getGeneratorsFrequencyReserve()));
+            generatorsFrequencyReserve.addAll(toEmbeddableGeneratorsFrequencyReserve(generationDispatchInfos.getGeneratorsFrequencyReserve()));
         }
     }
 
-    public static List<GeneratorsFilterEmbeddable> toEmbeddableFilters(List<GeneratorsFilterInfos> generators) {
+    public static List<GeneratorsFilterEmbeddable> toEmbeddableGeneratorsFilters(List<GeneratorsFilterInfos> generators) {
         return generators == null ? null : generators.stream()
             .map(generator -> new GeneratorsFilterEmbeddable(generator.getId(), generator.getName()))
             .collect(Collectors.toList());
     }
 
-    public static List<GeneratorsFrequencyReserveEntity> toEmbeddableFrequencyReserve(List<GeneratorsFrequencyReserveInfos> generators) {
+    public static List<GeneratorsFrequencyReserveEntity> toEmbeddableGeneratorsFrequencyReserve(List<GeneratorsFrequencyReserveInfos> generators) {
         List<GeneratorsFrequencyReserveEntity> generatorsFrequencyReserveEntities = null;
         if (generators != null) {
             generatorsFrequencyReserveEntities = generators.stream().map(generator -> {
