@@ -29,7 +29,7 @@ import org.gridsuite.modification.server.modifications.LineModification;
 @Getter
 @Setter
 @ToString(callSuper = true)
-@Schema(description = "Line creation")
+@Schema(description = "Line modification")
 public class LineModificationInfos extends BranchModificationInfos {
 
     @Schema(description = "Shunt conductance Side 1")
