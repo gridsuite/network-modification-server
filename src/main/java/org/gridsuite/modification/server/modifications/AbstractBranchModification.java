@@ -94,9 +94,9 @@ public abstract class AbstractBranchModification extends AbstractModification {
     protected void modifyTemporaryLimits(CurrentLimitsModificationInfos currentLimitsInfos, CurrentLimitsAdder limitsAdder,
                                          CurrentLimits currentLimits, List<Report> limitsReports) {
         // we create a mutable list of temporary limits to be able to remove the limits that are modified
-        List<LoadingLimits.TemporaryLimit> lineTemporaryLimits = null;
+        List<LoadingLimits.TemporaryLimit> branchTemporaryLimits = null;
         if (currentLimits != null) {
-            lineTemporaryLimits = new ArrayList<>(currentLimits.getTemporaryLimits());
+            branchTemporaryLimits = new ArrayList<>(currentLimits.getTemporaryLimits());
         }
         List<Report> temporaryLimitsReports = new ArrayList<>();
         for (CurrentTemporaryLimitModificationInfos limit : currentLimitsInfos.getTemporaryLimits()) {
@@ -108,7 +108,7 @@ public abstract class AbstractBranchModification extends AbstractModification {
             if (currentLimits != null) {
                 limitToModify = currentLimits.getTemporaryLimit(limitAcceptableDuration);
                 // we remove the limit to modify from the list of temporary limits so we can log the remaining ones (deleted)
-                lineTemporaryLimits.removeIf(temporaryLimit -> temporaryLimit.getAcceptableDuration() == limitAcceptableDuration);
+                branchTemporaryLimits.removeIf(temporaryLimit -> temporaryLimit.getAcceptableDuration() == limitAcceptableDuration);
             }
             if (limitToModify == null) {
                 temporaryLimitsReports.add(Report.builder().withKey("temporaryLimitAdded" + limit.getName())
@@ -137,8 +137,8 @@ public abstract class AbstractBranchModification extends AbstractModification {
                     .setAcceptableDuration(limitAcceptableDuration)
                     .endTemporaryLimit();
         }
-        if (lineTemporaryLimits != null) {
-            for (LoadingLimits.TemporaryLimit limit : lineTemporaryLimits) {
+        if (branchTemporaryLimits != null) {
+            for (LoadingLimits.TemporaryLimit limit : branchTemporaryLimits) {
                 temporaryLimitsReports.add(Report.builder()
                         .withKey("temporaryLimitDeleted" + limit.getName())
                         .withDefaultMessage("            ${name} (${duration}) deleted")
@@ -165,5 +165,5 @@ public abstract class AbstractBranchModification extends AbstractModification {
                 && branchModificationInfos.getSeriesResistance().getValue() != null;
     }
 
-    protected abstract void modifyCharacteristics(Branch branch, BranchModificationInfos lineModificationInfos, Reporter subReporter);
+    protected abstract void modifyCharacteristics(Branch branch, BranchModificationInfos branchModificationInfos, Reporter subReporter);
 }
