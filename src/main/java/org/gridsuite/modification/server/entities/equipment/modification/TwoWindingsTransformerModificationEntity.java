@@ -21,7 +21,6 @@ import javax.persistence.*;
  */
 @NoArgsConstructor
 @Getter
-@EqualsAndHashCode
 @Entity
 @Table(name = "twoWindingsTransformerModification")
 @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "twoWindingsTransformerModification_id_fk_constraint"))
