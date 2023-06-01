@@ -43,23 +43,16 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModification() {
         return LineModificationInfos.builder().equipmentId("line1")
                 .equipmentName(new AttributeModification<>("LineModified", OperationType.SET))
-                .seriesReactance(new AttributeModification<>(1.0, OperationType.SET))
-                .seriesResistance(new AttributeModification<>(2.0, OperationType.SET))
-                .shuntConductance1(new AttributeModification<>(11.0, OperationType.SET))
-                .shuntSusceptance1(new AttributeModification<>(12.0, OperationType.SET))
-                .shuntConductance2(new AttributeModification<>(13.0, OperationType.SET))
-                .shuntSusceptance2(new AttributeModification<>(14.0, OperationType.SET))
-                .currentLimits1(CurrentLimitsInfos.builder()
-                        .permanentLimit(21.0)
-                        .temporaryLimits(List.of(CurrentTemporaryLimitCreationInfos.builder()
-                                .acceptableDuration(31)
+                .currentLimits1(CurrentLimitsModificationInfos.builder()
+                        .temporaryLimits(List.of(CurrentTemporaryLimitModificationInfos.builder()
+                                .acceptableDuration(null)
                                 .name("name31")
-                                .value(41.0)
+                                .value(null)
                                 .build()))
                         .build())
-                .currentLimits2(CurrentLimitsInfos.builder()
+                .currentLimits2(CurrentLimitsModificationInfos.builder()
                         .permanentLimit(22.0)
-                        .temporaryLimits(List.of(CurrentTemporaryLimitCreationInfos.builder()
+                        .temporaryLimits(List.of(CurrentTemporaryLimitModificationInfos.builder()
                                 .acceptableDuration(32)
                                 .name("name32")
                                 .value(42.0)
@@ -78,17 +71,17 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
                 .shuntSusceptance1(new AttributeModification<>(12.1, OperationType.SET))
                 .shuntConductance2(new AttributeModification<>(13.1, OperationType.SET))
                 .shuntSusceptance2(new AttributeModification<>(14.1, OperationType.SET))
-                .currentLimits1(CurrentLimitsInfos.builder()
+                .currentLimits1(CurrentLimitsModificationInfos.builder()
                         .permanentLimit(21.1)
-                        .temporaryLimits(List.of(CurrentTemporaryLimitCreationInfos.builder()
+                        .temporaryLimits(List.of(CurrentTemporaryLimitModificationInfos.builder()
                                 .acceptableDuration(33)
                                 .name("name33")
                                 .value(41.1)
                                 .build()))
                         .build())
-                .currentLimits2(CurrentLimitsInfos.builder()
+                .currentLimits2(CurrentLimitsModificationInfos.builder()
                         .permanentLimit(22.1)
-                        .temporaryLimits(List.of(CurrentTemporaryLimitCreationInfos.builder()
+                        .temporaryLimits(List.of(CurrentTemporaryLimitModificationInfos.builder()
                                 .acceptableDuration(35)
                                 .name("name35")
                                 .value(42.1)
@@ -107,17 +100,17 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
     protected void assertNetworkAfterCreation() {
         Line modifiedLine = getNetwork().getLine("line1");
         assertEquals("LineModified", modifiedLine.getNameOrId());
-        assertEquals(2.0, modifiedLine.getR());
+        assertEquals(1.0, modifiedLine.getR());
         assertEquals(1.0, modifiedLine.getX());
-        assertEquals(11.0, modifiedLine.getG1());
-        assertEquals(12.0, modifiedLine.getB1());
-        assertEquals(13.0, modifiedLine.getG2());
-        assertEquals(14.0, modifiedLine.getB2());
-        assertEquals(21.0, modifiedLine.getNullableCurrentLimits1().getPermanentLimit());
-        TemporaryLimit temporaryLimit = modifiedLine.getNullableCurrentLimits1().getTemporaryLimit(31);
-        assertEquals(31, temporaryLimit.getAcceptableDuration());
+        assertEquals(1.0, modifiedLine.getG1());
+        assertEquals(1.0, modifiedLine.getB1());
+        assertEquals(2.0, modifiedLine.getG2());
+        assertEquals(2.0, modifiedLine.getB2());
+        assertEquals(Double.NaN, modifiedLine.getNullableCurrentLimits1().getPermanentLimit());
+        TemporaryLimit temporaryLimit = modifiedLine.getNullableCurrentLimits1().getTemporaryLimit(Integer.MAX_VALUE);
+        assertEquals(Integer.MAX_VALUE, temporaryLimit.getAcceptableDuration());
         assertEquals("name31", temporaryLimit.getName());
-        assertEquals(41.0, temporaryLimit.getValue());
+        assertEquals(Double.MAX_VALUE, temporaryLimit.getValue());
         assertEquals(22.0, modifiedLine.getNullableCurrentLimits2().getPermanentLimit());
         temporaryLimit = modifiedLine.getNullableCurrentLimits2().getTemporaryLimit(32);
         assertEquals(32, temporaryLimit.getAcceptableDuration());
@@ -173,15 +166,11 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
 
     @SneakyThrows
     @Test
-    public void testCharacteristicsUnchanged() {
+    public void testCharacteristicsModification() {
         LineModificationInfos lineModificationInfos = (LineModificationInfos) buildModification();
 
-        lineModificationInfos.setSeriesReactance(null);
-        lineModificationInfos.setSeriesResistance(null);
-        lineModificationInfos.setShuntConductance1(null);
-        lineModificationInfos.setShuntSusceptance1(null);
-        lineModificationInfos.setShuntConductance2(null);
-        lineModificationInfos.setShuntSusceptance2(null);
+        // Modify Series Reactance
+        lineModificationInfos.setSeriesReactance(new AttributeModification<>(1.0, OperationType.SET));
 
         String modificationToCreateJson = mapper.writeValueAsString(lineModificationInfos);
 
@@ -189,6 +178,95 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
                 .andExpect(status().isOk()).andReturn();
 
         LineModificationInfos createdModification = (LineModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
+
+        assertThat(createdModification, createMatcher(lineModificationInfos));
+
+        // Modify Series Resistance
+        lineModificationInfos.setSeriesReactance(null);
+        lineModificationInfos.setSeriesResistance(new AttributeModification<>(2.0, OperationType.SET));
+        modificationToCreateJson = mapper.writeValueAsString(lineModificationInfos);
+
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+
+        createdModification = (LineModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(1);
+
+        assertThat(createdModification, createMatcher(lineModificationInfos));
+
+        // Modify Shunt Conductance1
+        lineModificationInfos.setSeriesResistance(null);
+        lineModificationInfos.setShuntConductance1(new AttributeModification<>(11.0, OperationType.SET));
+        modificationToCreateJson = mapper.writeValueAsString(lineModificationInfos);
+
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+
+        createdModification = (LineModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(2);
+
+        assertThat(createdModification, createMatcher(lineModificationInfos));
+
+        // Modify Shunt Susceptance1
+        lineModificationInfos.setShuntConductance1(null);
+        lineModificationInfos.setShuntSusceptance1(new AttributeModification<>(12.0, OperationType.SET));
+        modificationToCreateJson = mapper.writeValueAsString(lineModificationInfos);
+
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+
+        createdModification = (LineModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(3);
+
+        assertThat(createdModification, createMatcher(lineModificationInfos));
+
+        // Modify Shunt Conductance2
+        lineModificationInfos.setShuntSusceptance1(null);
+        lineModificationInfos.setShuntConductance2(new AttributeModification<>(13.0, OperationType.SET));
+        modificationToCreateJson = mapper.writeValueAsString(lineModificationInfos);
+
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+
+        createdModification = (LineModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(4);
+
+        assertThat(createdModification, createMatcher(lineModificationInfos));
+
+        // Modify Shunt Susceptance2
+        lineModificationInfos.setShuntConductance2(null);
+        lineModificationInfos.setShuntSusceptance2(new AttributeModification<>(14.0, OperationType.SET));
+        modificationToCreateJson = mapper.writeValueAsString(lineModificationInfos);
+
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+
+        createdModification = (LineModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(5);
+
+        assertThat(createdModification, createMatcher(lineModificationInfos));
+
+        // no modification
+        lineModificationInfos.setShuntSusceptance2(null);
+        modificationToCreateJson = mapper.writeValueAsString(lineModificationInfos);
+
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+
+        createdModification = (LineModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(6);
+
+        assertThat(createdModification, createMatcher(lineModificationInfos));
+
+        // Modify all
+        lineModificationInfos.setSeriesReactance(new AttributeModification<>(1.0, OperationType.SET));
+        lineModificationInfos.setSeriesResistance(new AttributeModification<>(2.0, OperationType.SET));
+        lineModificationInfos.setShuntConductance1(new AttributeModification<>(11.0, OperationType.SET));
+        lineModificationInfos.setShuntSusceptance1(new AttributeModification<>(12.0, OperationType.SET));
+        lineModificationInfos.setShuntConductance2(new AttributeModification<>(13.0, OperationType.SET));
+        lineModificationInfos.setShuntSusceptance2(new AttributeModification<>(14.0, OperationType.SET));
+        modificationToCreateJson = mapper.writeValueAsString(lineModificationInfos);
+
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson)
+                        .contentType(MediaType.APPLICATION_JSON))
+                        .andExpect(status().isOk()).andReturn();
+
+        createdModification = (LineModificationInfos) modificationRepository.getModifications(getGroupId(), false, true)
+                        .get(7);
 
         assertThat(createdModification, createMatcher(lineModificationInfos));
     }
@@ -201,8 +279,8 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
                 .setPermanentLimit(10.0)
                 .beginTemporaryLimit()
                 .setName("name31")
-                .setAcceptableDuration(31)
-                .setValue(12.0)
+                .setAcceptableDuration(Integer.MAX_VALUE)
+                .setValue(Double.MAX_VALUE)
                 .endTemporaryLimit()
                 .add();
         line.newCurrentLimits2()
@@ -210,6 +288,11 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
                 .beginTemporaryLimit()
                 .setName("name32")
                 .setAcceptableDuration(32)
+                .setValue(15.0)
+                .endTemporaryLimit()
+                .beginTemporaryLimit()
+                .setName("name33")
+                .setAcceptableDuration(33)
                 .setValue(15.0)
                 .endTemporaryLimit()
                 .add();
@@ -221,18 +304,6 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
                 .andExpect(status().isOk()).andReturn();
 
         LineModificationInfos createdModification = (LineModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
-
-        assertThat(createdModification, createMatcher(lineModificationInfos));
-
-        //delete temporary limit
-        lineModificationInfos.getCurrentLimits1().setTemporaryLimits(null);
-        lineModificationInfos.getCurrentLimits2().setTemporaryLimits(null);
-        modificationToCreateJson = mapper.writeValueAsString(lineModificationInfos);
-
-        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
-
-        createdModification = (LineModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(1);
 
         assertThat(createdModification, createMatcher(lineModificationInfos));
     }

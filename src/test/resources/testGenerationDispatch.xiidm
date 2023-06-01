@@ -7,13 +7,13 @@
                 <iidm:switch id="S3VL1_BBS_LINES2S3_DISCONNECTOR" name="S3VL1_BBS_LINES2S3_DISCONNECTOR" kind="DISCONNECTOR" retained="false" open="false" node1="0" node2="1"/>
                 <iidm:switch id="S3VL1_LINES2S3_BREAKER" name="S3VL1_LINES2S3_BREAKER" kind="BREAKER" retained="true" open="false" node1="1" node2="2"/>
                 <iidm:switch id="S3VL1_BBS_LD5_DISCONNECTOR" name="S3VL1_BBS_LD5_DISCONNECTOR" kind="DISCONNECTOR" retained="false" open="false" node1="0" node2="3"/>
-                <iidm:switch id="S3VL1_LD5_BREAKER" name="S3VL1_LD5_BREAKER" kind="BREAKER" retained="true" open="false" node1="3" node2="4"/>
                 <iidm:switch id="S3VL1_BBS_GTH2_DISCONNECTOR" name="S3VL1_BBS_GTH2_DISCONNECTOR" kind="DISCONNECTOR" retained="false" open="false" node1="0" node2="5"/>
                 <iidm:switch id="S3VL1_GTH2_BREAKER" name="S3VL1_GTH2_BREAKER" kind="BREAKER" retained="true" open="false" node1="5" node2="6"/>
                 <iidm:switch id="S3VL1_BBS_LINES3S4_DISCONNECTOR" name="S3VL1_BBS_LINES3S4_DISCONNECTOR" kind="DISCONNECTOR" retained="false" open="false" node1="0" node2="7"/>
                 <iidm:switch id="S3VL1_LINES3S4_BREAKER" name="S3VL1_LINES3S4_BREAKER" kind="BREAKER" retained="true" open="false" node1="7" node2="8"/>
                 <iidm:switch id="S3VL1_BBS_LCC2_DISCONNECTOR" name="S3VL1_BBS_LCC2_DISCONNECTOR" kind="DISCONNECTOR" retained="false" open="false" node1="0" node2="9"/>
                 <iidm:switch id="S3VL1_LCC2_BREAKER" name="S3VL1_LCC2_BREAKER" kind="BREAKER" retained="true" open="false" node1="9" node2="10"/>
+                <iidm:switch id="S3VL1_LD5_BREAKER" name="S3VL1_LD5_BREAKER" kind="BREAKER" retained="true" open="false" node1="3" node2="4"/>
             </iidm:nodeBreakerTopology>
             <iidm:generator id="GTH2" energySource="THERMAL" minP="0.0" maxP="150.0" voltageRegulatorOn="true" targetP="100.0" targetV="400.0" targetQ="71.8487" node="6" p="-250.9944" q="71.8487">
                 <iidm:reactiveCapabilityCurve>
@@ -213,6 +213,20 @@
             <iidm:currentLimits2 permanentLimit="1031.0"/>
         </iidm:twoWindingsTransformer>
     </iidm:substation>
+    <iidm:substation id="CC2_site2" name="CC2_site2">
+        <iidm:voltageLevel id="CC2_poste2" name="CC2_poste2" nominalV="225.0" topologyKind="NODE_BREAKER">
+            <iidm:nodeBreakerTopology>
+                <iidm:busbarSection id="CC2_poste2_1_1" node="0"/>
+                <iidm:switch id="newLine2_BREAKER" kind="BREAKER" retained="true" open="false" node1="1" node2="2"/>
+                <iidm:switch id="newLine2_DISCONNECTOR" kind="DISCONNECTOR" retained="false" open="false" node1="2" node2="0"/>
+                <iidm:switch id="newGroup2_BREAKER" kind="BREAKER" retained="true" open="false" node1="3" node2="4"/>
+                <iidm:switch id="newGroup2_DISCONNECTOR" kind="DISCONNECTOR" retained="false" open="false" node1="4" node2="0"/>
+            </iidm:nodeBreakerTopology>
+            <iidm:generator id="newGroup2" energySource="OTHER" minP="0.0" maxP="15.0" voltageRegulatorOn="false" targetP="7.0" targetQ="4.0" node="3">
+                <iidm:minMaxReactiveLimits minQ="-1.7976931348623157E308" maxQ="1.7976931348623157E308"/>
+            </iidm:generator>
+        </iidm:voltageLevel>
+    </iidm:substation>
     <iidm:substation id="S2">
         <iidm:voltageLevel id="S2VL1" nominalV="400.0" lowVoltageLimit="390.0" highVoltageLimit="440.0" topologyKind="NODE_BREAKER">
             <iidm:nodeBreakerTopology>
@@ -234,20 +248,6 @@
             <iidm:vscConverterStation id="VSC2" name="VSC2" voltageRegulatorOn="false" lossFactor="1.1" voltageSetpoint="0.0" reactivePowerSetpoint="120.0" node="4" p="-9.89" q="-120.0">
                 <iidm:minMaxReactiveLimits minQ="-400.0" maxQ="500.0"/>
             </iidm:vscConverterStation>
-        </iidm:voltageLevel>
-    </iidm:substation>
-    <iidm:substation id="CC2_site2" name="CC2_site2">
-        <iidm:voltageLevel id="CC2_poste2" name="CC2_poste2" nominalV="225.0" topologyKind="NODE_BREAKER">
-            <iidm:nodeBreakerTopology>
-                <iidm:busbarSection id="CC2_poste2_1_1" node="0"/>
-                <iidm:switch id="newLine2_BREAKER" kind="BREAKER" retained="true" open="false" node1="1" node2="2"/>
-                <iidm:switch id="newLine2_DISCONNECTOR" kind="DISCONNECTOR" retained="false" open="false" node1="2" node2="0"/>
-                <iidm:switch id="newGroup2_BREAKER" kind="BREAKER" retained="true" open="false" node1="3" node2="4"/>
-                <iidm:switch id="newGroup2_DISCONNECTOR" kind="DISCONNECTOR" retained="false" open="false" node1="4" node2="0"/>
-            </iidm:nodeBreakerTopology>
-            <iidm:generator id="newGroup2" energySource="OTHER" minP="0.0" maxP="15.0" voltageRegulatorOn="false" targetP="7.0" targetQ="4.0" node="3">
-                <iidm:minMaxReactiveLimits minQ="-1.7976931348623157E308" maxQ="1.7976931348623157E308"/>
-            </iidm:generator>
         </iidm:voltageLevel>
     </iidm:substation>
     <iidm:line id="LINE_S3S4" r="0.009999999" x="13.100000024" g1="0.0" b1="0.0" g2="0.0" b2="0.0" node1="8" voltageLevelId1="S3VL1" node2="6" voltageLevelId2="S4VL1" p1="240.0036" q1="2.1751" p2="-240.0" q2="2.5415">

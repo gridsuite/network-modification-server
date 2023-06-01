@@ -229,6 +229,9 @@ public final class ModificationUtils {
             throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR,
                     "Coupling between same bus bar section is not allowed");
         }
+        if (Objects.nonNull(voltageLevelCreationInfos.getIpMin()) && Objects.isNull(voltageLevelCreationInfos.getIpMax())) {
+            throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "IpMax is required");
+        }
     }
 
     void createVoltageLevel(VoltageLevelCreationInfos voltageLevelCreationInfos,
@@ -280,7 +283,7 @@ public final class ModificationUtils {
             couplingDeviceBuilder.withBusOrBusbarSectionId1(couplingDevice.getBusbarSectionId1())
                 .withBusOrBusbarSectionId2(couplingDevice.getBusbarSectionId2())
                 .withSwitchPrefixId(voltageLevelCreationInfos.getEquipmentId() + "_COUPL")
-                .build().apply(network);
+                    .build().apply(network, subReporter);
         });
 
         subReporter.report(Report.builder()

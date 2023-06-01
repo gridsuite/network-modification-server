@@ -1,0 +1,47 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-4.1.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
+    <changeSet author="labidiayo (generated)" id="1682595308035-5">
+        <createTable tableName="current_limits_modification">
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="current_limits_modificationPK"/>
+            </column>
+            <column name="permanent_limit" type="FLOAT8"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="labidiayo (generated)" id="1682595308035-6">
+        <createTable tableName="current_temporary_limits_modification">
+            <column name="id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="acceptable_duration" type="INT"/>
+            <column name="modification_type" type="VARCHAR(255)"/>
+            <column name="name" type="VARCHAR(255)"/>
+            <column name="value_" type="FLOAT8"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="labidiayo (generated)" id="1682595308035-7">
+        <addColumn tableName="line_modification">
+            <column name="current_limits_modification_id1" type="uuid"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="labidiayo (generated)" id="1682595308035-8">
+        <addColumn tableName="line_modification">
+            <column name="current_limits_modification_id2" type="uuid"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="labidiayo (generated)" id="1682595308035-9">
+        <addForeignKeyConstraint baseColumnNames="current_limits_modification_id1" baseTableName="line_modification" constraintName="current_limits_modification_id1_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="current_limits_modification" validate="true"/>
+    </changeSet>
+    <changeSet author="labidiayo (generated)" id="1682595308035-10">
+        <addForeignKeyConstraint baseColumnNames="current_limits_modification_id2" baseTableName="line_modification" constraintName="current_limits_modification_id2_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="current_limits_modification" validate="true"/>
+    </changeSet>
+    <changeSet author="labidiayo (generated)" id="1682595308035-11">
+        <addForeignKeyConstraint baseColumnNames="id" baseTableName="current_temporary_limits_modification" constraintName="temporaryLimitsModification_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="current_limits_modification" validate="true"/>
+    </changeSet>
+    <changeSet author="labidiayo (generated)" id="1682595308035-12">
+        <dropColumn columnName="CURRENT_LIMITS_ID1" tableName="LINE_MODIFICATION"/>
+    </changeSet>
+    <changeSet author="labidiayo (generated)" id="1682595308035-13">
+        <dropColumn columnName="CURRENT_LIMITS_ID2" tableName="LINE_MODIFICATION"/>
+    </changeSet>
+</databaseChangeLog>
