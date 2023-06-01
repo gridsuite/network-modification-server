@@ -43,6 +43,13 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
     protected ModificationInfos buildModification() {
         return TwoWindingsTransformerModificationInfos.builder().equipmentId("trf1")
                 .equipmentName(new AttributeModification<>("2wt modified name", OperationType.SET))
+                .seriesResistance(new AttributeModification<>(1., OperationType.SET))
+                .seriesReactance(new AttributeModification<>(2., OperationType.SET))
+                .magnetizingConductance(new AttributeModification<>(3., OperationType.SET))
+                .magnetizingSusceptance(new AttributeModification<>(4., OperationType.SET))
+                .ratedVoltage1(new AttributeModification<>(5., OperationType.SET))
+                .ratedVoltage2(new AttributeModification<>(6., OperationType.SET))
+                .ratedS(new AttributeModification<>(7., OperationType.SET))
                 .currentLimits1(CurrentLimitsModificationInfos.builder()
                         .temporaryLimits(List.of(CurrentTemporaryLimitModificationInfos.builder()
                                 .acceptableDuration(null)
@@ -65,13 +72,13 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
     protected ModificationInfos buildModificationUpdate() {
         return TwoWindingsTransformerModificationInfos.builder().equipmentId("trf1")
                 .equipmentName(new AttributeModification<>("2wt modified name again", OperationType.SET))
-                .seriesReactance(new AttributeModification<>(1.1, OperationType.SET))
-                .seriesResistance(new AttributeModification<>(2.1, OperationType.SET))
-                .magnetizingConductance(new AttributeModification<>(3., OperationType.SET))
-                .magnetizingSusceptance(new AttributeModification<>(4., OperationType.SET))
-                .ratedVoltage1(new AttributeModification<>(5., OperationType.SET))
-                .ratedVoltage2(new AttributeModification<>(6., OperationType.SET))
-                .ratedS(new AttributeModification<>(1., OperationType.SET))
+                .seriesResistance(new AttributeModification<>(1.1, OperationType.SET))
+                .seriesReactance(new AttributeModification<>(2.1, OperationType.SET))
+                .magnetizingConductance(new AttributeModification<>(3.1, OperationType.SET))
+                .magnetizingSusceptance(new AttributeModification<>(4.1, OperationType.SET))
+                .ratedVoltage1(new AttributeModification<>(5.1, OperationType.SET))
+                .ratedVoltage2(new AttributeModification<>(6.1, OperationType.SET))
+                .ratedS(new AttributeModification<>(7.1, OperationType.SET))
                 .currentLimits1(CurrentLimitsModificationInfos.builder()
                         .permanentLimit(21.1)
                         .temporaryLimits(List.of(CurrentTemporaryLimitModificationInfos.builder()
@@ -105,12 +112,13 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
         assertEquals(1, getNetwork().getVoltageLevel("v2").getTwoWindingsTransformerStream().filter(transformer -> transformer.getId().equals("trf1")).count());
         assertEquals("v1", modifiedTwoWindingsTransformer.getTerminal1().getVoltageLevel().getId());
         assertEquals("v2", modifiedTwoWindingsTransformer.getTerminal2().getVoltageLevel().getId());
-        assertEquals(2.0, modifiedTwoWindingsTransformer.getR(), 0.1);
-        assertEquals(14.745, modifiedTwoWindingsTransformer.getX(), 0.1);
-        assertEquals(0.0, modifiedTwoWindingsTransformer.getG(), 0.1);
-        assertEquals(3.2E-5, modifiedTwoWindingsTransformer.getB(), 0.1);
-        assertEquals(400.0, modifiedTwoWindingsTransformer.getRatedU1(), 0.1);
-        assertEquals(225.0, modifiedTwoWindingsTransformer.getRatedU2(), 0.1);
+        assertEquals(1.0, modifiedTwoWindingsTransformer.getR(), 0.1);
+        assertEquals(2.0, modifiedTwoWindingsTransformer.getX(), 0.1);
+        assertEquals(3.0, modifiedTwoWindingsTransformer.getG(), 0.1);
+        assertEquals(4.0, modifiedTwoWindingsTransformer.getB(), 0.1);
+        assertEquals(5.0, modifiedTwoWindingsTransformer.getRatedU1(), 0.1);
+        assertEquals(6.0, modifiedTwoWindingsTransformer.getRatedU2(), 0.1);
+        assertEquals(7.0, modifiedTwoWindingsTransformer.getRatedS(), 0.1);
         // limits
         assertNotNull(modifiedTwoWindingsTransformer.getNullableCurrentLimits1());
         assertEquals(Double.NaN, modifiedTwoWindingsTransformer.getNullableCurrentLimits1().getPermanentLimit());
