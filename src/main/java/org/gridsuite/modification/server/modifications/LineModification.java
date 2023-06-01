@@ -43,7 +43,7 @@ public class LineModification extends AbstractBranchModification {
     }
 
     @Override
-    protected void modifyCharacteristics(Branch branch, BranchModificationInfos branchModificationInfos, Reporter subReporter) {
+    protected void modifyCharacteristics(Branch<? extends Branch<?>> branch, BranchModificationInfos branchModificationInfos, Reporter subReporter) {
         Line line = (Line) branch;
         Reporter characteristicsReporter = subReporter.createSubReporter("characteristics", "Characteristics");
         characteristicsReporter.report(Report.builder()

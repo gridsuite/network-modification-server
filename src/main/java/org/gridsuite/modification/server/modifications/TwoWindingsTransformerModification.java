@@ -47,7 +47,7 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
     }
 
     @Override
-    protected void modifyCharacteristics(Branch branch, BranchModificationInfos branchModificationInfos, Reporter subReporter) {
+    protected void modifyCharacteristics(Branch<? extends Branch<?>> branch, BranchModificationInfos branchModificationInfos, Reporter subReporter) {
         TwoWindingsTransformer twoWindingsTransformer = (TwoWindingsTransformer) branch;
         Reporter characteristicsReporter = subReporter.createSubReporter("characteristics", "Characteristics");
         characteristicsReporter.report(Report.builder()

@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.entities.equipment.modification;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.dto.AttributeModification;
@@ -20,6 +21,7 @@ import javax.persistence.*;
  */
 @NoArgsConstructor
 @Getter
+@EqualsAndHashCode
 @Entity
 @Table(name = "twoWindingsTransformerModification")
 @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "twoWindingsTransformerModification_id_fk_constraint"))

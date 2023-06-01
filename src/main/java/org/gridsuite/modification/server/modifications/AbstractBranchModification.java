@@ -29,11 +29,11 @@ public abstract class AbstractBranchModification extends AbstractModification {
     private static final String NAME = "name";
     protected final BranchModificationInfos modificationInfos;
 
-    public AbstractBranchModification(BranchModificationInfos modificationInfos) {
+    protected AbstractBranchModification(BranchModificationInfos modificationInfos) {
         this.modificationInfos = modificationInfos;
     }
 
-    protected void modifyBranch(Branch branch, BranchModificationInfos branchModificationInfos, Reporter subReporter, String reporterKey, String reporterDefaultMessage) {
+    protected void modifyBranch(Branch<? extends Branch<?>> branch, BranchModificationInfos branchModificationInfos, Reporter subReporter, String reporterKey, String reporterDefaultMessage) {
 
         subReporter.report(Report.builder()
                 .withKey(reporterKey)
@@ -54,12 +54,10 @@ public abstract class AbstractBranchModification extends AbstractModification {
         CurrentLimitsModificationInfos currentLimitsInfos1 = modificationInfos.getCurrentLimits1();
         CurrentLimitsModificationInfos currentLimitsInfos2 = modificationInfos.getCurrentLimits2();
         List<Report> side1LimitsReports = new ArrayList<>();
-        //TODO FM why need to cast ???
-        CurrentLimits currentLimits1 = (CurrentLimits) branch.getCurrentLimits1().orElse(null);
+        CurrentLimits currentLimits1 = branch.getCurrentLimits1().orElse(null);
         modifyCurrentLimits(currentLimitsInfos1, branch.newCurrentLimits1(), currentLimits1, side1LimitsReports);
         List<Report> side2LimitsReports = new ArrayList<>();
-        //TODO FM why need to cast ???
-        CurrentLimits currentLimits2 = (CurrentLimits) branch.getCurrentLimits2().orElse(null);
+        CurrentLimits currentLimits2 = branch.getCurrentLimits2().orElse(null);
         modifyCurrentLimits(currentLimitsInfos2, branch.newCurrentLimits2(), currentLimits2, side2LimitsReports);
 
         if (!side1LimitsReports.isEmpty() || !side2LimitsReports.isEmpty()) {
@@ -165,5 +163,5 @@ public abstract class AbstractBranchModification extends AbstractModification {
                 && branchModificationInfos.getSeriesResistance().getValue() != null;
     }
 
-    protected abstract void modifyCharacteristics(Branch branch, BranchModificationInfos branchModificationInfos, Reporter subReporter);
+    protected abstract void modifyCharacteristics(Branch<? extends Branch<?>> branch, BranchModificationInfos branchModificationInfos, Reporter subReporter);
 }
