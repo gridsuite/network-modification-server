@@ -1,0 +1,62 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-4.1.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd" logicalFilePath="db/changelog/changesets/changelog_2023-03-31T00:02:31Z.xml">
+    <changeSet author="labidiayo (generated)" id="1680220969284-5">
+        <createTable tableName="voltage_level_creation_entity_coupling_devices">
+            <column name="voltage_level_creation_entity_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="busbar_section_id1" type="VARCHAR(255)"/>
+            <column name="busbar_section_id2" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="labidiayo (generated)" id="1680220969284-6">
+        <createTable tableName="voltage_level_creation_entity_switch_kinds">
+            <column name="voltage_level_creation_entity_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="switch_kinds" type="INT"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="labidiayo (generated)" id="1680220969284-7">
+        <addColumn tableName="voltage_level_creation_entity">
+            <column name="busbar_count" type="int4"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="labidiayo (generated)" id="1680220969284-8">
+        <addColumn tableName="voltage_level_creation_entity">
+            <column name="high_voltage_limit" type="float8"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="labidiayo (generated)" id="1680220969284-9">
+        <addColumn tableName="voltage_level_creation_entity">
+            <column name="ip_max" type="float8"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="labidiayo (generated)" id="1680220969284-10">
+        <addColumn tableName="voltage_level_creation_entity">
+            <column name="ip_min" type="float8"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="labidiayo (generated)" id="1680220969284-11">
+        <addColumn tableName="voltage_level_creation_entity">
+            <column name="low_voltage_limit" type="float8"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="labidiayo (generated)" id="1680220969284-12">
+        <addColumn tableName="voltage_level_creation_entity">
+            <column name="section_count" type="int4"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="labidiayo (generated)" id="1680220969284-13">
+        <addForeignKeyConstraint baseColumnNames="voltage_level_creation_entity_id" baseTableName="voltage_level_creation_entity_coupling_devices" constraintName="FK6o47oyfd5actxnvhsxbyp1d8i" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="voltage_level_creation_entity" validate="true"/>
+    </changeSet>
+    <changeSet author="labidiayo (generated)" id="1680220969284-14">
+        <addForeignKeyConstraint baseColumnNames="voltage_level_creation_entity_id" baseTableName="voltage_level_creation_entity_switch_kinds" constraintName="FKh9bl9rsrry4i76ek05n0oj3x" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="voltage_level_creation_entity" validate="true"/>
+    </changeSet>
+    <changeSet author="labidiayo (generated)" id="1680220969284-17">
+        <dropTable tableName="VOLTAGE_LEVEL_CREATION_ENTITY_BUSBAR_CONNECTIONS"/>
+    </changeSet>
+    <changeSet author="labidiayo (generated)" id="1680220969284-18">
+        <dropTable tableName="VOLTAGE_LEVEL_CREATION_ENTITY_BUSBAR_SECTIONS"/>
+    </changeSet>
+</databaseChangeLog>
