@@ -25,6 +25,7 @@ import javax.persistence.*;
 @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "twoWindingsTransformerModification_id_fk_constraint"))
 public class TwoWindingsTransformerModificationEntity extends BranchModificationEntity {
 
+    @Column(name = "magnetizingConductance")
     @Embedded
     @AttributeOverrides(value = {
         @AttributeOverride(name = "value", column = @Column(name = "magnetizingConductance")),

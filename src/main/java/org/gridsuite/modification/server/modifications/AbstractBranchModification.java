@@ -33,7 +33,7 @@ public abstract class AbstractBranchModification extends AbstractModification {
         this.modificationInfos = modificationInfos;
     }
 
-    protected void modifyBranch(Branch<? extends Branch<?>> branch, BranchModificationInfos branchModificationInfos, Reporter subReporter, String reporterKey, String reporterDefaultMessage) {
+    protected void modifyBranch(Branch<?> branch, BranchModificationInfos branchModificationInfos, Reporter subReporter, String reporterKey, String reporterDefaultMessage) {
 
         subReporter.report(Report.builder()
                 .withKey(reporterKey)
@@ -163,5 +163,5 @@ public abstract class AbstractBranchModification extends AbstractModification {
                 && branchModificationInfos.getSeriesResistance().getValue() != null;
     }
 
-    protected abstract void modifyCharacteristics(Branch<? extends Branch<?>> branch, BranchModificationInfos branchModificationInfos, Reporter subReporter);
+    protected abstract void modifyCharacteristics(Branch<?> branch, BranchModificationInfos branchModificationInfos, Reporter subReporter);
 }

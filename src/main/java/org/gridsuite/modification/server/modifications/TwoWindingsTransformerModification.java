@@ -42,12 +42,12 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
         modifyTwoWindingsTransformer(twoWindingsTransformer, modificationInfos, subReporter);
     }
 
-    private void modifyTwoWindingsTransformer(TwoWindingsTransformer line, BranchModificationInfos twoWindingsTransformerModificationInfos, Reporter subReporter) {
-        modifyBranch(line, twoWindingsTransformerModificationInfos, subReporter, "twoWindingsTransformerModification", "TwoWindingsTransformer with id=${id} modified :");
+    private void modifyTwoWindingsTransformer(TwoWindingsTransformer twoWindingsTransformer, BranchModificationInfos twoWindingsTransformerModificationInfos, Reporter subReporter) {
+        modifyBranch(twoWindingsTransformer, twoWindingsTransformerModificationInfos, subReporter, "twoWindingsTransformerModification", "TwoWindingsTransformer with id=${id} modified :");
     }
 
     @Override
-    protected void modifyCharacteristics(Branch<? extends Branch<?>> branch, BranchModificationInfos branchModificationInfos, Reporter subReporter) {
+    protected void modifyCharacteristics(Branch<?> branch, BranchModificationInfos branchModificationInfos, Reporter subReporter) {
         TwoWindingsTransformer twoWindingsTransformer = (TwoWindingsTransformer) branch;
         Reporter characteristicsReporter = subReporter.createSubReporter("characteristics", "Characteristics");
         characteristicsReporter.report(Report.builder()
