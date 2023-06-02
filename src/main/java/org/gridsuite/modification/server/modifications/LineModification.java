@@ -6,36 +6,25 @@
  */
 package org.gridsuite.modification.server.modifications;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_NOT_FOUND;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.CurrentLimitsModificationInfos;
-import org.gridsuite.modification.server.dto.CurrentTemporaryLimitModificationInfos;
-import org.gridsuite.modification.server.dto.LineModificationInfos;
-
 import com.powsybl.commons.reporter.Report;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.TypedValue;
-import com.powsybl.iidm.network.CurrentLimits;
-import com.powsybl.iidm.network.CurrentLimitsAdder;
+import com.powsybl.iidm.network.Branch;
 import com.powsybl.iidm.network.Line;
 import com.powsybl.iidm.network.Network;
-import com.powsybl.iidm.network.LoadingLimits.TemporaryLimit;
+import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.dto.BranchModificationInfos;
+import org.gridsuite.modification.server.dto.LineModificationInfos;
+
+import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_NOT_FOUND;
 
 /**
  * @author Ayoub Labidi <ayoub.labidi at rte-france.com>
  */
-public class LineModification extends AbstractModification {
-
-    private static final String DURATION = "duration";
-    private static final String NAME = "name";
-    private final LineModificationInfos modificationInfos;
+public class LineModification extends AbstractBranchModification {
 
     public LineModification(LineModificationInfos modificationInfos) {
-        this.modificationInfos = modificationInfos;
+        super(modificationInfos);
     }
 
     @Override
@@ -49,65 +38,31 @@ public class LineModification extends AbstractModification {
         modifyLine(line, modificationInfos, subReporter);
     }
 
-    private void modifyLine(Line line, LineModificationInfos lineModificationInfos, Reporter subReporter) {
-        subReporter.report(Report.builder()
-            .withKey("lineModification")
-            .withDefaultMessage("Line with id=${id} modified :")
-            .withValue("id", lineModificationInfos.getEquipmentId())
-            .withSeverity(TypedValue.INFO_SEVERITY)
-            .build());
-        if (lineModificationInfos.getEquipmentName() != null) {
-            subReporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(line.getNameOrId(),
-                    lineModificationInfos.getEquipmentName().getValue(), "Name", 0));
-            line.setName(lineModificationInfos.getEquipmentName().getValue());
-        }
-
-        if (characteristicsModified(lineModificationInfos)) {
-            modifyCharacteristics(line, lineModificationInfos, subReporter);
-        }
-
-        CurrentLimitsModificationInfos currentLimitsInfos1 = modificationInfos.getCurrentLimits1();
-        CurrentLimitsModificationInfos currentLimitsInfos2 = modificationInfos.getCurrentLimits2();
-        List<Report> side1LimitsReports = new ArrayList<>();
-        CurrentLimits currentLimits1 = line.getCurrentLimits1().orElse(null);
-        modifyCurrentLimits(currentLimitsInfos1, line.newCurrentLimits1(), currentLimits1, side1LimitsReports);
-
-        List<Report> side2LimitsReports = new ArrayList<>();
-        CurrentLimits currentLimits2 = line.getCurrentLimits2().orElse(null);
-        modifyCurrentLimits(currentLimitsInfos2, line.newCurrentLimits2(), currentLimits2, side2LimitsReports);
-
-        if (!side1LimitsReports.isEmpty() || !side2LimitsReports.isEmpty()) {
-            Reporter limitsReporter = subReporter.createSubReporter("limits", "Limits");
-            limitsReporter.report(Report.builder()
-                    .withKey("limitsModification")
-                    .withDefaultMessage("Limits")
-                    .withSeverity(TypedValue.INFO_SEVERITY)
-                    .build());
-            ModificationUtils.getInstance().reportModifications(limitsReporter, side1LimitsReports, "side1LimitsModification",
-                    "    Side 1");
-            ModificationUtils.getInstance().reportModifications(limitsReporter, side2LimitsReports, "side2LimitsModification",
-                    "    Side 2");
-        }
+    private void modifyLine(Line line, BranchModificationInfos lineModificationInfos, Reporter subReporter) {
+        modifyBranch(line, lineModificationInfos, subReporter, "lineModification", "Line with id=${id} modified :");
     }
 
-    private void modifyCharacteristics(Line line, LineModificationInfos lineModificationInfos, Reporter subReporter) {
+    @Override
+    protected void modifyCharacteristics(Branch<?> branch, BranchModificationInfos branchModificationInfos, Reporter subReporter) {
+        Line line = (Line) branch;
         Reporter characteristicsReporter = subReporter.createSubReporter("characteristics", "Characteristics");
         characteristicsReporter.report(Report.builder()
             .withKey("characteristicsModification")
             .withDefaultMessage("Characteristics")
             .withSeverity(TypedValue.INFO_SEVERITY)
             .build());
-        if (lineModificationInfos.getSeriesResistance() != null && lineModificationInfos.getSeriesResistance().getValue() != null) {
+        if (branchModificationInfos.getSeriesResistance() != null && branchModificationInfos.getSeriesResistance().getValue() != null) {
             characteristicsReporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(line.getR(),
-                    lineModificationInfos.getSeriesResistance().getValue(), "Series resistance", 1));
-            line.setR(lineModificationInfos.getSeriesResistance().getValue());
+                    branchModificationInfos.getSeriesResistance().getValue(), "Series resistance", 1));
+            line.setR(branchModificationInfos.getSeriesResistance().getValue());
         }
-        if (lineModificationInfos.getSeriesReactance() != null && lineModificationInfos.getSeriesReactance().getValue() != null) {
+        if (branchModificationInfos.getSeriesReactance() != null && branchModificationInfos.getSeriesReactance().getValue() != null) {
             characteristicsReporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(line.getX(),
-                    lineModificationInfos.getSeriesReactance().getValue(), "Series reactance", 1));
-            line.setX(lineModificationInfos.getSeriesReactance().getValue());
+                    branchModificationInfos.getSeriesReactance().getValue(), "Series reactance", 1));
+            line.setX(branchModificationInfos.getSeriesReactance().getValue());
         }
 
+        LineModificationInfos lineModificationInfos = (LineModificationInfos) branchModificationInfos;
         modifySide1Characteristics(line, lineModificationInfos, characteristicsReporter);
         modifySide2Characteristics(line, lineModificationInfos, characteristicsReporter);
 
@@ -171,93 +126,10 @@ public class LineModification extends AbstractModification {
         }
     }
 
-    private void modifyCurrentLimits(CurrentLimitsModificationInfos currentLimitsInfos, CurrentLimitsAdder limitsAdder, CurrentLimits currentLimits, List<Report> limitsReports) {
-        boolean hasPermanent = currentLimitsInfos.getPermanentLimit() != null;
-        if (hasPermanent) {
-            limitsReports.add(ModificationUtils.getInstance().buildModificationReportWithIndentation(currentLimits != null ? currentLimits.getPermanentLimit() : Double.NaN,
-                    currentLimitsInfos.getPermanentLimit(), "IST", 2));
-            limitsAdder.setPermanentLimit(currentLimitsInfos.getPermanentLimit());
-        } else {
-            if (currentLimits != null) {
-                limitsAdder.setPermanentLimit(currentLimits.getPermanentLimit());
-            }
-        }
-        modifyTemporaryLimits(currentLimitsInfos, limitsAdder, currentLimits, limitsReports);
-        limitsAdder.add();
-    }
-
-    private void modifyTemporaryLimits(CurrentLimitsModificationInfos currentLimitsInfos, CurrentLimitsAdder limitsAdder,
-            CurrentLimits currentLimits, List<Report> limitsReports) {
-        // we create a mutable list of temporary limits to be able to remove the limits that are modified
-        List<TemporaryLimit> lineTemporaryLimits = null;
-        if (currentLimits != null) {
-            lineTemporaryLimits = new ArrayList<>(currentLimits.getTemporaryLimits());
-        }
-        List<Report> temporaryLimitsReports = new ArrayList<>();
-        for (CurrentTemporaryLimitModificationInfos limit : currentLimitsInfos.getTemporaryLimits()) {
-            int limitAcceptableDuration = limit.getAcceptableDuration() == null ? Integer.MAX_VALUE : limit.getAcceptableDuration();
-            double limitValue = limit.getValue() == null ? Double.MAX_VALUE : limit.getValue();
-            String limitDurationToReport = limitAcceptableDuration == Integer.MAX_VALUE ? " " : String.valueOf(limitAcceptableDuration);
-            String limitValueToReport = limitValue == Double.MAX_VALUE ? "no value" : String.valueOf(limitValue);
-            TemporaryLimit limitToModify = null;
-            if (currentLimits != null) {
-                limitToModify = currentLimits.getTemporaryLimit(limitAcceptableDuration);
-                // we remove the limit to modify from the list of temporary limits so we can log the remaining ones (deleted)
-                lineTemporaryLimits.removeIf(temporaryLimit -> temporaryLimit.getAcceptableDuration() == limitAcceptableDuration);
-            }
-            if (limitToModify == null) {
-                temporaryLimitsReports.add(Report.builder().withKey("temporaryLimitAdded" + limit.getName())
-                        .withDefaultMessage("            ${name} (${duration}) added with ${value}")
-                        .withValue(NAME, limit.getName())
-                        .withValue(DURATION, limitDurationToReport)
-                        .withValue("value", limitValueToReport)
-                        .withSeverity(TypedValue.INFO_SEVERITY)
-                        .build());
-
-            } else if (Double.compare(limitToModify.getValue(), limitValue) != 0) {
-                temporaryLimitsReports.add(Report.builder()
-                        .withKey("temporaryLimitModified" + limit.getName())
-                        .withDefaultMessage("            ${name} (${duration}) : ${oldValue} -> ${value}")
-                        .withValue(NAME, limit.getName())
-                        .withValue(DURATION, limitDurationToReport)
-                        .withValue("value", limitValueToReport)
-                        .withValue("oldValue", limitToModify.getValue() == Double.MAX_VALUE ? "no value" : String.valueOf(limitToModify.getValue()))
-                        .withSeverity(TypedValue.INFO_SEVERITY)
-                        .build());
-            }
-            limitsAdder
-                    .beginTemporaryLimit()
-                    .setName(limit.getName())
-                    .setValue(limitValue)
-                    .setAcceptableDuration(limitAcceptableDuration)
-                    .endTemporaryLimit();
-        }
-        if (lineTemporaryLimits != null) {
-            for (TemporaryLimit limit : lineTemporaryLimits) {
-                temporaryLimitsReports.add(Report.builder()
-                        .withKey("temporaryLimitDeleted" + limit.getName())
-                        .withDefaultMessage("            ${name} (${duration}) deleted")
-                        .withValue(NAME, limit.getName())
-                        .withValue(DURATION, limit.getAcceptableDuration() == Integer.MAX_VALUE ? " " : String.valueOf(limit.getAcceptableDuration()))
-                        .withSeverity(TypedValue.INFO_SEVERITY)
-                        .build());
-            }
-        }
-        if (!temporaryLimitsReports.isEmpty()) {
-            temporaryLimitsReports.add(0, Report.builder()
-                    .withKey("temporaryLimitsModification")
-                    .withDefaultMessage("        Temporary current limits :")
-                    .withSeverity(TypedValue.INFO_SEVERITY)
-                    .build());
-            limitsReports.addAll(temporaryLimitsReports);
-        }
-    }
-
-    private boolean characteristicsModified(LineModificationInfos lineModificationInfos) {
-        return lineModificationInfos.getSeriesReactance() != null
-                && lineModificationInfos.getSeriesReactance().getValue() != null
-                || lineModificationInfos.getSeriesResistance() != null
-                        && lineModificationInfos.getSeriesResistance().getValue() != null
+    @Override
+    protected boolean characteristicsModified(BranchModificationInfos branchModificationInfos) {
+        LineModificationInfos lineModificationInfos = (LineModificationInfos) branchModificationInfos;
+        return super.characteristicsModified(branchModificationInfos)
                 || lineModificationInfos.getShuntConductance1() != null
                         && lineModificationInfos.getShuntConductance1().getValue() != null
                 || lineModificationInfos.getShuntSusceptance1() != null

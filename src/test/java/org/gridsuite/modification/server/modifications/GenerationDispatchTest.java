@@ -16,6 +16,7 @@ import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.FilterEquipments;
 import org.gridsuite.modification.server.dto.GenerationDispatchInfos;
 import org.gridsuite.modification.server.dto.GeneratorsFilterInfos;
+import org.gridsuite.modification.server.dto.GeneratorsFrequencyReserveInfos;
 import org.gridsuite.modification.server.dto.IdentifiableAttributes;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.service.FilterService;
@@ -59,6 +60,8 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
     private static final UUID FILTER_ID_2 = UUID.randomUUID();
     private static final UUID FILTER_ID_3 = UUID.randomUUID();
     private static final UUID FILTER_ID_4 = UUID.randomUUID();
+    private static final UUID FILTER_ID_5 = UUID.randomUUID();
+    private static final UUID FILTER_ID_6 = UUID.randomUUID();
     public static final String PATH = "/v1/filters/export";
 
     @Autowired
@@ -319,6 +322,84 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
 
     @SneakyThrows
     @Test
+    public void testGenerationDispatchWithFrequencyReserve() {
+        ModificationInfos modification = buildModification();
+        ((GenerationDispatchInfos) modification).setDefaultOutageRate(15.);
+        ((GenerationDispatchInfos) modification).setGeneratorsWithoutOutage(
+            List.of(GeneratorsFilterInfos.builder().id(FILTER_ID_1).name("filter1").build(),
+                GeneratorsFilterInfos.builder().id(FILTER_ID_2).name("filter2").build(),
+                GeneratorsFilterInfos.builder().id(FILTER_ID_3).name("filter3").build()));
+        ((GenerationDispatchInfos) modification).setGeneratorsFrequencyReserve(
+            List.of(GeneratorsFrequencyReserveInfos.builder().frequencyReserve(3.)
+                    .generatorsFilters(List.of(GeneratorsFilterInfos.builder().id(FILTER_ID_4).name("filter4").build(),
+                                               GeneratorsFilterInfos.builder().id(FILTER_ID_5).name("filter5").build())).build(),
+                    GeneratorsFrequencyReserveInfos.builder().frequencyReserve(5.)
+                        .generatorsFilters(List.of(GeneratorsFilterInfos.builder().id(FILTER_ID_6).name("filter6").build())).build()));
+
+        // network with 2 synchronous components, 2 hvdc lines between them, forcedOutageRate and plannedOutageRate defined for the generators
+        setNetwork(Network.read("testGenerationDispatchReduceMaxP.xiidm", getClass().getResourceAsStream("/testGenerationDispatchReduceMaxP.xiidm")));
+
+        List<FilterEquipments> filtersForPmaxReduction = List.of(getFilterEquipments(FILTER_ID_1, "filter1", List.of(getIdentifiableAttributes(GTH2_ID), getIdentifiableAttributes(GROUP1_ID)), List.of()),
+            getFilterEquipments(FILTER_ID_2, "filter2", List.of(getIdentifiableAttributes(ABC_ID), getIdentifiableAttributes(GH3_ID)), List.of()),
+            getFilterEquipments(FILTER_ID_3, "filter3", List.of(getIdentifiableAttributes(GEN1_NOT_FOUND_ID), getIdentifiableAttributes(GEN2_NOT_FOUND_ID)), List.of(GEN1_NOT_FOUND_ID, GEN2_NOT_FOUND_ID)));
+
+        UUID stubIdForPmaxReduction = wireMockServer.stubFor(WireMock.get(getPath(getNetworkUuid(), false) + FILTER_ID_1 + "," + FILTER_ID_2 + "," + FILTER_ID_3)
+            .willReturn(WireMock.ok()
+                .withBody(mapper.writeValueAsString(filtersForPmaxReduction))
+                .withHeader("Content-Type", "application/json"))).getId();
+
+        List<FilterEquipments> filtersForFrequencyReserve1 = List.of(getFilterEquipments(FILTER_ID_4, "filter4", List.of(getIdentifiableAttributes(GTH1_ID)), List.of()),
+            getFilterEquipments(FILTER_ID_5, "filter5", List.of(getIdentifiableAttributes(GTH2_ID), getIdentifiableAttributes(GH3_ID)), List.of()));
+        List<FilterEquipments> filtersForFrequencyReserve2 = List.of(getFilterEquipments(FILTER_ID_6, "filter6", List.of(getIdentifiableAttributes(TEST1_ID)), List.of()));
+
+        UUID stubIdForFrequencyReserve1 = wireMockServer.stubFor(WireMock.get(getPath(getNetworkUuid(), false) + FILTER_ID_4 + "," + FILTER_ID_5)
+            .willReturn(WireMock.ok()
+                .withBody(mapper.writeValueAsString(filtersForFrequencyReserve1))
+                .withHeader("Content-Type", "application/json"))).getId();
+        UUID stubIdForFrequencyReserve2 = wireMockServer.stubFor(WireMock.get(getPath(getNetworkUuid(), false) + FILTER_ID_6)
+            .willReturn(WireMock.ok()
+                .withBody(mapper.writeValueAsString(filtersForFrequencyReserve2))
+                .withHeader("Content-Type", "application/json"))).getId();
+
+        String modificationJson = mapper.writeValueAsString(modification);
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
+
+        assertEquals(74.82, getNetwork().getGenerator(GH1_ID).getTargetP(), 0.001);
+        assertEquals(59.5, getNetwork().getGenerator(GH2_ID).getTargetP(), 0.001);
+        assertEquals(126.1, getNetwork().getGenerator(GH3_ID).getTargetP(), 0.001);
+        assertEquals(74.205, getNetwork().getGenerator(GTH1_ID).getTargetP(), 0.001);
+        assertEquals(145.5, getNetwork().getGenerator(GTH2_ID).getTargetP(), 0.001);
+        assertEquals(40.375, getNetwork().getGenerator(TEST1_ID).getTargetP(), 0.001);
+        assertEquals(100., getNetwork().getGenerator(GROUP1_ID).getTargetP(), 0.001);  // not modified : disconnected
+        assertEquals(100., getNetwork().getGenerator(GROUP2_ID).getTargetP(), 0.001);  // not modified : disconnected
+        assertEquals(0., getNetwork().getGenerator(GROUP3_ID).getTargetP(), 0.001);
+        assertEquals(69.58, getNetwork().getGenerator(ABC_ID).getTargetP(), 0.001);
+        assertEquals(5., getNetwork().getGenerator(NEW_GROUP1_ID).getTargetP(), 0.001);  // not modified : not in main connected component
+        assertEquals(7., getNetwork().getGenerator(NEW_GROUP2_ID).getTargetP(), 0.001);  // not modified : not in main connected component
+
+        // test total demand and remaining power imbalance on synchronous components
+        int firstSynchronousComponentNum = getNetwork().getGenerator(GTH1_ID).getTerminal().getBusView().getBus().getSynchronousComponent().getNum(); // GTH1 is in first synchronous component
+        assertLogMessage("The total demand is : 528.0 MW", "TotalDemand" + firstSynchronousComponentNum, reportService);
+        assertLogMessage("The total amount of fixed supply is : 0.0 MW", "TotalAmountFixedSupply" + firstSynchronousComponentNum, reportService);
+        assertLogMessage("The HVDC balance is : 90.0 MW", "TotalOutwardHvdcFlow" + firstSynchronousComponentNum, reportService);
+        assertLogMessage("The total amount of supply to be dispatched is : 438.0 MW", "TotalAmountSupplyToBeDispatched" + firstSynchronousComponentNum, reportService);
+        assertLogMessage("The supply-demand balance could not be met : the remaining power imbalance is 177.92000000000002 MW", "SupplyDemandBalanceCouldNotBeMet" + firstSynchronousComponentNum, reportService);
+
+        int secondSynchronousComponentNum = getNetwork().getGenerator(GH1_ID).getTerminal().getBusView().getBus().getSynchronousComponent().getNum(); // GH1 is in second synchronous component
+        assertLogMessage("The total demand is : 240.0 MW", "TotalDemand" + secondSynchronousComponentNum, reportService);
+        assertLogMessage("The total amount of fixed supply is : 0.0 MW", "TotalAmountFixedSupply" + secondSynchronousComponentNum, reportService);
+        assertLogMessage("The HVDC balance is : -90.0 MW", "TotalOutwardHvdcFlow" + secondSynchronousComponentNum, reportService);
+        assertLogMessage("The total amount of supply to be dispatched is : 330.0 MW", "TotalAmountSupplyToBeDispatched" + secondSynchronousComponentNum, reportService);
+        assertLogMessage("The supply-demand balance could be met", "SupplyDemandBalanceCouldBeMet" + secondSynchronousComponentNum, reportService);
+
+        wireMockUtils.verifyGetRequest(stubIdForPmaxReduction, PATH, handleQueryParams(getNetworkUuid(), filtersForPmaxReduction.stream().map(FilterEquipments::getFilterId).collect(Collectors.toList())), false);
+        wireMockUtils.verifyGetRequest(stubIdForFrequencyReserve1, PATH, handleQueryParams(getNetworkUuid(), filtersForFrequencyReserve1.stream().map(FilterEquipments::getFilterId).collect(Collectors.toList())), false);
+        wireMockUtils.verifyGetRequest(stubIdForFrequencyReserve2, PATH, handleQueryParams(getNetworkUuid(), filtersForFrequencyReserve2.stream().map(FilterEquipments::getFilterId).collect(Collectors.toList())), false);
+    }
+
+    @SneakyThrows
+    @Test
     public void testGenerationDispatchErrorCheck() {
         GenerationDispatchInfos modification = GenerationDispatchInfos.builder().lossCoefficient(150.).defaultOutageRate(0.).build();
         setNetwork(Network.read("testGenerationDispatch.xiidm", getClass().getResourceAsStream("/testGenerationDispatch.xiidm")));
@@ -342,6 +423,7 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
             .defaultOutageRate(0.)
             .generatorsWithoutOutage(List.of())
             .generatorsWithFixedSupply(List.of())
+            .generatorsFrequencyReserve(List.of())
             .build();
     }
 
@@ -352,6 +434,10 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
             .defaultOutageRate(25.)
             .generatorsWithoutOutage(List.of(GeneratorsFilterInfos.builder().id(UUID.randomUUID()).name("name1").build()))
             .generatorsWithFixedSupply(List.of(GeneratorsFilterInfos.builder().id(UUID.randomUUID()).name("name2").build()))
+            .generatorsFrequencyReserve(List.of(GeneratorsFrequencyReserveInfos.builder().frequencyReserve(0.02)
+                                                .generatorsFilters(List.of(
+                                                    GeneratorsFilterInfos.builder().id(UUID.randomUUID()).name("name3").build(),
+                                                    GeneratorsFilterInfos.builder().id(UUID.randomUUID()).name("name4").build())).build()))
             .build();
     }
 

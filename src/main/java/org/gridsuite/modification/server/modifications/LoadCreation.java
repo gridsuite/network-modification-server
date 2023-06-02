@@ -62,6 +62,26 @@ public class LoadCreation extends AbstractModification {
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .build());
         }
+
+        reportElementaryCreations(subReporter);
+    }
+
+    private void reportElementaryCreations(Reporter subReporter) {
+        if (modificationInfos.getEquipmentName() != null) {
+            ModificationUtils.getInstance()
+                    .reportElementaryCreation(subReporter, modificationInfos.getEquipmentName(), "Name");
+        }
+
+        if (modificationInfos.getLoadType() != null) {
+            ModificationUtils.getInstance()
+                    .reportElementaryCreation(subReporter, modificationInfos.getLoadType(), "Type");
+        }
+
+        ModificationUtils.getInstance()
+                .reportElementaryCreation(subReporter, modificationInfos.getActivePower(), "Active power");
+
+        ModificationUtils.getInstance()
+                .reportElementaryCreation(subReporter, modificationInfos.getReactivePower(), "Reactive power");
     }
 
     private LoadAdder createLoadAdderInNodeBreaker(VoltageLevel voltageLevel, LoadCreationInfos loadCreationInfos) {

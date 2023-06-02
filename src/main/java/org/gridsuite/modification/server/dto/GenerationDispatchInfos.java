@@ -44,6 +44,9 @@ public class GenerationDispatchInfos extends ModificationInfos {
     @Schema(description = "generators with fixed supply")
     private List<GeneratorsFilterInfos> generatorsWithFixedSupply;
 
+    @Schema(description = "generators frequency reserve")
+    private List<GeneratorsFrequencyReserveInfos> generatorsFrequencyReserve;
+
     @Override
     public GenerationDispatchEntity toEntity() {
         return new GenerationDispatchEntity(this);

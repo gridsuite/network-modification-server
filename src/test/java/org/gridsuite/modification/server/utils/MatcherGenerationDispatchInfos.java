@@ -8,6 +8,7 @@ package org.gridsuite.modification.server.utils;
 
 import org.gridsuite.modification.server.dto.GenerationDispatchInfos;
 import org.gridsuite.modification.server.dto.GeneratorsFilterInfos;
+import org.gridsuite.modification.server.dto.GeneratorsFrequencyReserveInfos;
 
 import java.util.List;
 import java.util.Objects;
@@ -42,12 +43,43 @@ public class MatcherGenerationDispatchInfos extends MatcherModificationInfos<Gen
         return true;
     }
 
+    private boolean matchesFrequencyReserve(GeneratorsFrequencyReserveInfos generatorsFrequencyReserve,
+                                            GeneratorsFrequencyReserveInfos refGeneratorsFrequencyReserve) {
+        if (!Objects.equals(refGeneratorsFrequencyReserve.getFrequencyReserve(), generatorsFrequencyReserve.getFrequencyReserve())) {
+            return false;
+        }
+
+        if (!matchesList(generatorsFrequencyReserve.getGeneratorsFilters(), refGeneratorsFrequencyReserve.getGeneratorsFilters())) {
+            return false;
+        }
+        for (int index = 0; index < generatorsFrequencyReserve.getGeneratorsFilters().size(); index++) {
+            if (!matchesFilter(generatorsFrequencyReserve.getGeneratorsFilters().get(index), refGeneratorsFrequencyReserve.getGeneratorsFilters().get(index))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean matchesGeneratorsFrequencyReserve(List<GeneratorsFrequencyReserveInfos> generatorsFrequencyReserveInfos,
+                                                      List<GeneratorsFrequencyReserveInfos> refGeneratorsFrequencyReserveInfos) {
+        if (!matchesList(refGeneratorsFrequencyReserveInfos, generatorsFrequencyReserveInfos)) {
+            return false;
+        }
+        for (int index = 0; index < generatorsFrequencyReserveInfos.size(); index++) {
+            if (!matchesFrequencyReserve(refGeneratorsFrequencyReserveInfos.get(index), generatorsFrequencyReserveInfos.get(index))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     public boolean matchesSafely(GenerationDispatchInfos m) {
         return super.matchesSafely(m)
                 && Objects.equals(reference.getLossCoefficient(), m.getLossCoefficient())
                 && Objects.equals(reference.getDefaultOutageRate(), m.getDefaultOutageRate())
                 && matchesGeneratorsFilters(m.getGeneratorsWithoutOutage(), reference.getGeneratorsWithoutOutage())
-                && matchesGeneratorsFilters(m.getGeneratorsWithFixedSupply(), reference.getGeneratorsWithFixedSupply());
+                && matchesGeneratorsFilters(m.getGeneratorsWithFixedSupply(), reference.getGeneratorsWithFixedSupply())
+                && matchesGeneratorsFrequencyReserve(m.getGeneratorsFrequencyReserve(), reference.getGeneratorsFrequencyReserve());
     }
 
     private boolean matchesList(List<?> list1, List<?> list2) {
