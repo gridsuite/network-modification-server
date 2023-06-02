@@ -20,7 +20,7 @@ import lombok.experimental.SuperBuilder;
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 @SuperBuilder
-@NoArgsConstructor
+@NoArgsConstructor(force = true)
 @Getter
 @Setter
 @ToString(callSuper = true)

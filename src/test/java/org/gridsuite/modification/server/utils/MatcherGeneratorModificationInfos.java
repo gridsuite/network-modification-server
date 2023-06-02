@@ -31,8 +31,8 @@ public class MatcherGeneratorModificationInfos extends MatcherModificationInfos<
         return super.matchesSafely(m)
                 && m.getEquipmentId().equals(reference.getEquipmentId())
                 && Objects.equals(m.getEquipmentName(), reference.getEquipmentName())
-                && ((m.getVoltageLevelId() == null && reference.getVoltageLevelId() == null) || m.getVoltageLevelId().equals(reference.getVoltageLevelId()))
-                && ((m.getBusOrBusbarSectionId() == null && reference.getBusOrBusbarSectionId() == null) || m.getBusOrBusbarSectionId().equals(reference.getBusOrBusbarSectionId()))
+                && (m.getVoltageLevelId() == null && reference.getVoltageLevelId() == null || m.getVoltageLevelId().equals(reference.getVoltageLevelId()))
+                && (m.getBusOrBusbarSectionId() == null && reference.getBusOrBusbarSectionId() == null || m.getBusOrBusbarSectionId().equals(reference.getBusOrBusbarSectionId()))
                 && Objects.equals(m.getEnergySource(), reference.getEnergySource())
                 && Objects.equals(m.getMinActivePower(), reference.getMinActivePower())
                 && Objects.equals(m.getMaxActivePower(), reference.getMaxActivePower())
@@ -80,11 +80,11 @@ public class MatcherGeneratorModificationInfos extends MatcherModificationInfos<
     }
 
     private static boolean matchesReactiveCapabilityCurve(ReactiveCapabilityCurveModificationInfos point1, ReactiveCapabilityCurveModificationInfos point2) {
-        return (point1 == null && point2 == null) ||
-                (point1 != null && point2 != null &&
+        return point1 == null && point2 == null ||
+                point1 != null && point2 != null &&
                         Objects.equals(point1.getP(), point2.getP()) &&
                         Objects.equals(point1.getQmaxP(), point2.getQmaxP()) &&
-                        Objects.equals(point1.getQminP(), point2.getQminP())) &&
+                        Objects.equals(point1.getQminP(), point2.getQminP()) &&
                         Objects.equals(point1.getOldP(), point2.getOldP()) &&
                         Objects.equals(point1.getOldQmaxP(), point2.getOldQmaxP()) &&
                         Objects.equals(point1.getOldQminP(), point2.getOldQminP());

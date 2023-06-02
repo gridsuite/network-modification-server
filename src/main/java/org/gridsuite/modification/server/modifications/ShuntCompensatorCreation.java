@@ -54,7 +54,7 @@ public class ShuntCompensatorCreation extends AbstractModification {
             var position = ModificationUtils.getInstance().getPosition(modificationInfos.getConnectionPosition(),
                     modificationInfos.getBusOrBusbarSectionId(), network, voltageLevel);
             CreateFeederBay algo = new CreateFeederBayBuilder()
-                    .withBbsId(modificationInfos.getBusOrBusbarSectionId())
+                    .withBusOrBusbarSectionId(modificationInfos.getBusOrBusbarSectionId())
                     .withInjectionDirection(modificationInfos.getConnectionDirection())
                     .withInjectionFeederName(modificationInfos.getConnectionName())
                     .withInjectionPositionOrder(position)

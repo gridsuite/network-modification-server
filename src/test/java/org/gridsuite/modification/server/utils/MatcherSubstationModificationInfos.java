@@ -27,10 +27,10 @@ public class MatcherSubstationModificationInfos extends MatcherModificationInfos
     }
 
     private boolean matchesProperties(List<SubstationFreePropertyInfos> l1, List<SubstationFreePropertyInfos> l2) {
-        return (l1 == null && l2 == null)
-                || (l1 == null && l2.isEmpty())
-                || (l2 == null && l1.isEmpty())
-                || (l1 != null && l2 != null && l1.size() == l2.size() && l1.equals(l2));
+        return l1 == null && l2 == null
+                || l1 == null && l2.isEmpty()
+                || l2 == null && l1.isEmpty()
+                || l1 != null && l2 != null && l1.size() == l2.size() && l1.equals(l2);
     }
 
     @Override

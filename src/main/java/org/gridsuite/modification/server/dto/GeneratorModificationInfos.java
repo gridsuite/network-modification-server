@@ -8,6 +8,7 @@ package org.gridsuite.modification.server.dto;
 
 import java.util.List;
 
+import lombok.EqualsAndHashCode;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
@@ -31,6 +32,7 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @NoArgsConstructor
 @Data
+@EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
 @Schema(description = "generator modification")
 public class GeneratorModificationInfos extends InjectionModificationInfos {

@@ -37,36 +37,36 @@ import static org.gridsuite.modification.server.dto.AttributeModification.toAttr
 public class VoltageLevelModificationEntity extends BasicEquipmentModificationEntity {
     @Embedded
     @AttributeOverrides(value = {
-            @AttributeOverride(name = "value", column = @Column(name = "nominalVoltage")),
-            @AttributeOverride(name = "opType", column = @Column(name = "nominalVoltageOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "nominalVoltage")),
+        @AttributeOverride(name = "opType", column = @Column(name = "nominalVoltageOp"))
     })
     private DoubleModificationEmbedded nominalVoltage;
 
     @Embedded
     @AttributeOverrides(value = {
-            @AttributeOverride(name = "value", column = @Column(name = "lowVoltageLimit")),
-            @AttributeOverride(name = "opType", column = @Column(name = "lowVoltageLimitOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "lowVoltageLimit")),
+        @AttributeOverride(name = "opType", column = @Column(name = "lowVoltageLimitOp"))
     })
     private DoubleModificationEmbedded lowVoltageLimit;
 
     @Embedded
     @AttributeOverrides(value = {
-            @AttributeOverride(name = "value", column = @Column(name = "highVoltageLimit")),
-            @AttributeOverride(name = "opType", column = @Column(name = "highVoltageLimitOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "highVoltageLimit")),
+        @AttributeOverride(name = "opType", column = @Column(name = "highVoltageLimitOp"))
     })
     private DoubleModificationEmbedded highVoltageLimit;
 
     @Embedded
     @AttributeOverrides(value = {
-            @AttributeOverride(name = "value", column = @Column(name = "ipMin")),
-            @AttributeOverride(name = "opType", column = @Column(name = "ipMinOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "ipMin")),
+        @AttributeOverride(name = "opType", column = @Column(name = "ipMinOp"))
     })
     private DoubleModificationEmbedded ipMin;
 
     @Embedded
     @AttributeOverrides(value = {
-            @AttributeOverride(name = "value", column = @Column(name = "ipMax")),
-            @AttributeOverride(name = "opType", column = @Column(name = "ipMaxOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "ipMax")),
+        @AttributeOverride(name = "opType", column = @Column(name = "ipMaxOp"))
     })
     private DoubleModificationEmbedded ipMax;
 

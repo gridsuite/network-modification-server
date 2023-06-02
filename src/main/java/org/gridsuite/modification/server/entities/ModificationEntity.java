@@ -6,7 +6,6 @@
  */
 package org.gridsuite.modification.server.entities;
 
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -27,7 +26,6 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
 @Getter
 @Setter
 @Entity
-@EqualsAndHashCode
 @Inheritance(strategy = InheritanceType.JOINED)
 @Table(name = "modification")
 public class ModificationEntity {

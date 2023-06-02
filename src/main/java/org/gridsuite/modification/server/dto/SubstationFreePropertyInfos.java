@@ -29,8 +29,10 @@ public class SubstationFreePropertyInfos {
     private String value;
 
     @Schema(description = "marked as deleted")
+    @Builder.Default
     private boolean deletionMark = false;
 
     @Schema(description = "property added in current modification")
+    @Builder.Default
     private boolean added = false;
 }

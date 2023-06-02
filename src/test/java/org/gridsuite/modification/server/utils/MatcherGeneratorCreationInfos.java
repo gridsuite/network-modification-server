@@ -84,10 +84,10 @@ public class MatcherGeneratorCreationInfos extends MatcherModificationInfos<Gene
     }
 
     private static boolean matchesReactiveCapabilityCurve(ReactiveCapabilityCurveCreationInfos point1, ReactiveCapabilityCurveCreationInfos point2) {
-        return (point1 == null && point2 == null) ||
-               (point1 != null && point2 != null &&
+        return point1 == null && point2 == null ||
+               point1 != null && point2 != null &&
                 Objects.equals(point1.getP(), point2.getP()) &&
                 Objects.equals(point1.getQmaxP(), point2.getQmaxP()) &&
-                Objects.equals(point1.getQminP(), point2.getQminP()));
+                Objects.equals(point1.getQminP(), point2.getQminP());
     }
 }

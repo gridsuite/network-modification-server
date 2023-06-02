@@ -14,6 +14,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
@@ -41,9 +42,11 @@ public class SubstationFreePropertyEntity {
     private String value;
 
     @Column(name = "deletion_mark")
+    @Builder.Default
     private Boolean deletionMark = false;
 
     @Column(name = "added")
+    @Builder.Default
     private Boolean added = false;
 }
 

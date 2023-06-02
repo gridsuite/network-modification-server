@@ -26,12 +26,12 @@ public class MatcherLoadModificationInfos extends MatcherModificationInfos<LoadM
     public boolean matchesSafely(LoadModificationInfos m) {
         return super.matchesSafely(m)
                 && m.getEquipmentId().equals(reference.getEquipmentId())
-                && ((m.getEquipmentName() == null && reference.getEquipmentName() == null) || m.getEquipmentName().equals(reference.getEquipmentName()))
-                && ((m.getVoltageLevelId() == null && reference.getVoltageLevelId() == null) || m.getVoltageLevelId().equals(reference.getVoltageLevelId()))
-                && ((m.getBusOrBusbarSectionId() == null && reference.getBusOrBusbarSectionId() == null) || m.getBusOrBusbarSectionId().equals(reference.getBusOrBusbarSectionId()))
-                && ((m.getLoadType() == null && reference.getLoadType() == null) || m.getLoadType().equals(reference.getLoadType()))
-                && ((m.getActivePower() == null && reference.getActivePower() == null) || m.getActivePower().equals(reference.getActivePower()))
-                && ((m.getReactivePower() == null && reference.getReactivePower() == null) || m.getReactivePower().equals(reference.getReactivePower()));
+                && (m.getEquipmentName() == null && reference.getEquipmentName() == null || m.getEquipmentName().equals(reference.getEquipmentName()))
+                && (m.getVoltageLevelId() == null && reference.getVoltageLevelId() == null || m.getVoltageLevelId().equals(reference.getVoltageLevelId()))
+                && (m.getBusOrBusbarSectionId() == null && reference.getBusOrBusbarSectionId() == null || m.getBusOrBusbarSectionId().equals(reference.getBusOrBusbarSectionId()))
+                && (m.getLoadType() == null && reference.getLoadType() == null || m.getLoadType().equals(reference.getLoadType()))
+                && (m.getActivePower() == null && reference.getActivePower() == null || m.getActivePower().equals(reference.getActivePower()))
+                && (m.getReactivePower() == null && reference.getReactivePower() == null || m.getReactivePower().equals(reference.getReactivePower()));
     }
 
     @Override
