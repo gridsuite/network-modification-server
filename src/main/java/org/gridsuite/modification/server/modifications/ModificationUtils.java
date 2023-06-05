@@ -39,6 +39,7 @@ public final class ModificationUtils {
 
     public static final String DISCONNECTOR = "disconnector_";
     public static final String BREAKER = "breaker_";
+    public static final String BUS_BAR_SECTION_ID = "busbarSectionId";
 
     private ModificationUtils() {
     }
@@ -240,8 +241,8 @@ public final class ModificationUtils {
         if (busOrBbs1 == null) {
             subReporter.report(Report.builder()
                     .withKey("notFoundBurOrBusbarSection")
-                    .withDefaultMessage("Bur or busbar section ${busbarSectionId} not found. Coupler was not created.")
-                    .withValue("busbarSectionId", busbarSectionId1)
+                    .withDefaultMessage("Bus or busbar section ID ${busbarSectionId} not found. Coupler was not created.")
+                    .withValue(BUS_BAR_SECTION_ID, busbarSectionId1)
                     .withSeverity(TypedValue.ERROR_SEVERITY)
                     .build());
             return false;
@@ -249,8 +250,8 @@ public final class ModificationUtils {
         if (busOrBbs2 == null) {
             subReporter.report(Report.builder()
                     .withKey("notFoundBurOrBusbarSection")
-                    .withDefaultMessage("Bur or busbar section ${busbarSectionId} not found. Coupler was not created.")
-                    .withValue("busbarSectionId", busbarSectionId2)
+                    .withDefaultMessage("Bus or busbar section ID ${busbarSectionId} not found. Coupler was not created.")
+                    .withValue(BUS_BAR_SECTION_ID, busbarSectionId2)
                     .withSeverity(TypedValue.ERROR_SEVERITY)
                     .build());
             return false;
