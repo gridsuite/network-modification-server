@@ -234,6 +234,30 @@ public final class ModificationUtils {
         }
     }
 
+    private boolean checkBbs(Network network, String busbarSectionId1, String busbarSectionId2, Reporter subReporter) {
+        Identifiable<?> busOrBbs1 = network.getIdentifiable(busbarSectionId1);
+        Identifiable<?> busOrBbs2 = network.getIdentifiable(busbarSectionId2);
+        if (busOrBbs1 == null) {
+            subReporter.report(Report.builder()
+                    .withKey("notFoundBurOrBusbarSection")
+                    .withDefaultMessage("Bur or busbar section ${busbarSectionId} not found. Coupler was not created.")
+                    .withValue("busbarSectionId", busbarSectionId1)
+                    .withSeverity(TypedValue.ERROR_SEVERITY)
+                    .build());
+            return false;
+        }
+        if (busOrBbs2 == null) {
+            subReporter.report(Report.builder()
+                    .withKey("notFoundBurOrBusbarSection")
+                    .withDefaultMessage("Bur or busbar section ${busbarSectionId} not found. Coupler was not created.")
+                    .withValue("busbarSectionId", busbarSectionId2)
+                    .withSeverity(TypedValue.ERROR_SEVERITY)
+                    .build());
+            return false;
+        }
+        return true;
+    }
+
     void createVoltageLevel(VoltageLevelCreationInfos voltageLevelCreationInfos,
                                    Reporter subReporter, Network network) {
         String substationId = voltageLevelCreationInfos.getSubstationId();
@@ -279,6 +303,9 @@ public final class ModificationUtils {
                 .build().apply(network);
 
         voltageLevelCreationInfos.getCouplingDevices().forEach(couplingDevice -> {
+            if (!checkBbs(network, couplingDevice.getBusbarSectionId1(), couplingDevice.getBusbarSectionId2(), subReporter)) {
+                return;
+            }
             CreateCouplingDeviceBuilder couplingDeviceBuilder = new CreateCouplingDeviceBuilder();
             couplingDeviceBuilder.withBusOrBusbarSectionId1(couplingDevice.getBusbarSectionId1())
                 .withBusOrBusbarSectionId2(couplingDevice.getBusbarSectionId2())
