@@ -39,6 +39,7 @@ public final class ModificationUtils {
 
     public static final String DISCONNECTOR = "disconnector_";
     public static final String BREAKER = "breaker_";
+    public static final String NO_VALUE = "No value";
 
     private ModificationUtils() {
     }
@@ -419,9 +420,9 @@ public final class ModificationUtils {
 
     public <T> Report buildModificationReportWithIndentation(T oldValue, T newValue, String fieldName, int indentationLevel) {
         boolean isOldValueDoubleNaN = (oldValue instanceof Double) && Double.isNaN((Double) oldValue);
-        String oldValueString = (oldValue == null || isOldValueDoubleNaN) ? "No value" : oldValue.toString();
+        String oldValueString = (oldValue == null || isOldValueDoubleNaN) ? NO_VALUE : oldValue.toString();
         boolean isNewValueDoubleNaN = (newValue instanceof Double) && Double.isNaN((Double) newValue);
-        String newValueString = (newValue == null || isNewValueDoubleNaN) ? "No value" : newValue.toString();
+        String newValueString = (newValue == null || isNewValueDoubleNaN) ? NO_VALUE : newValue.toString();
         StringBuilder indentation = new StringBuilder();
         for (int i = 0; i < indentationLevel; i++) {
             indentation.append("    ");
@@ -520,7 +521,7 @@ public final class ModificationUtils {
     }
 
     public <T> Report buildCreationReport(T value, String fieldName) {
-        String newValueString = value == null ? "No value" : value.toString();
+        String newValueString = value == null ? NO_VALUE : value.toString();
         return Report.builder()
                 .withKey("Creation" + fieldName)
                 .withDefaultMessage("    ${fieldName} : ${value}")
