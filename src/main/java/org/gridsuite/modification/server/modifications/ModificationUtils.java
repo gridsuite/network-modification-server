@@ -418,8 +418,10 @@ public final class ModificationUtils {
     }
 
     public <T> Report buildModificationReportWithIndentation(T oldValue, T newValue, String fieldName, int indentationLevel) {
-        String oldValueString = oldValue == null ? "NaN" : oldValue.toString();
-        String newValueString = newValue == null ? "NaN" : newValue.toString();
+        boolean isOldValueDoubleNaN = (oldValue instanceof Double) ? Double.isNaN((Double) oldValue) : false;
+        String oldValueString = (oldValue == null || isOldValueDoubleNaN) ? "No value" : oldValue.toString();
+        boolean isNewValueDoubleNaN = (newValue instanceof Double) ? Double.isNaN((Double) newValue) : false;
+        String newValueString = (newValue == null || isNewValueDoubleNaN) ? "No value" : newValue.toString();
         StringBuilder indentation = new StringBuilder();
         for (int i = 0; i < indentationLevel; i++) {
             indentation.append("    ");
@@ -518,7 +520,7 @@ public final class ModificationUtils {
     }
 
     public <T> Report buildCreationReport(T value, String fieldName) {
-        String newValueString = value == null ? "NaN" : value.toString();
+        String newValueString = value == null ? "No value" : value.toString();
         return Report.builder()
                 .withKey("Creation" + fieldName)
                 .withDefaultMessage("    ${fieldName} : ${value}")
