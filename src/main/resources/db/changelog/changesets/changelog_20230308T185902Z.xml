@@ -1,0 +1,16 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-4.1.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd" logicalFilePath="db/changelog/changesets/changelog_2023-03-08T18:59:02Z.xml">
+    <changeSet author="braquartdav (generated)" id="1678369466506-7">
+        <createTable tableName="current_temporary_limits">
+            <column name="id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="acceptable_duration" type="INT"/>
+            <column name="name" type="VARCHAR(255)"/>
+            <column name="value_" type="FLOAT8"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="braquartdav (generated)" id="1678369466506-8">
+        <addForeignKeyConstraint baseColumnNames="id" baseTableName="current_temporary_limits" constraintName="temporaryLimits_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="current_limits" validate="true"/>
+    </changeSet>
+</databaseChangeLog>
