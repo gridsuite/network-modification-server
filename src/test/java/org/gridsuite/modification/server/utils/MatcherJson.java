@@ -7,6 +7,7 @@
 package org.gridsuite.modification.server.utils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import org.hamcrest.Description;
 import org.hamcrest.TypeSafeMatcher;
@@ -14,16 +15,11 @@ import org.hamcrest.TypeSafeMatcher;
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
+@AllArgsConstructor
 public class MatcherJson<T> extends TypeSafeMatcher<T> {
+    private ObjectMapper mapper;
 
-    ObjectMapper mapper;
-
-    T reference;
-
-    public MatcherJson(ObjectMapper mapper, T val) {
-        this.mapper = mapper;
-        this.reference = val;
-    }
+    private T reference;
 
     @SneakyThrows
     @Override

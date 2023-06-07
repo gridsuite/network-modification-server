@@ -8,11 +8,10 @@ package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.SwitchKind;
-
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
-import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.utils.MatcherLineAttachToVoltageLevelInfos;
 import org.gridsuite.modification.server.utils.MatcherModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
@@ -22,7 +21,6 @@ import java.util.Arrays;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
-import static org.gridsuite.modification.server.utils.MatcherLineAttachToVoltageLevelInfos.createMatcherLineAttachToVoltageLevelInfos;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -103,7 +101,7 @@ public class LineAttachToVoltageLevelTest extends AbstractNetworkModificationTes
 
     @Override
     protected MatcherModificationInfos createMatcher(ModificationInfos modificationInfos) {
-        return createMatcherLineAttachToVoltageLevelInfos((LineAttachToVoltageLevelInfos) modificationInfos);
+        return new MatcherLineAttachToVoltageLevelInfos((LineAttachToVoltageLevelInfos) modificationInfos);
     }
 
     @Override

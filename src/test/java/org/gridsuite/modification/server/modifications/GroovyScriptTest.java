@@ -24,7 +24,6 @@ import java.util.UUID;
 
 import static org.gridsuite.modification.server.Impacts.TestImpactUtils.testElementModificationImpact;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.GROOVY_SCRIPT_EMPTY;
-import static org.gridsuite.modification.server.utils.MatcherGroovyScriptInfos.createMatcherGroovyScriptInfos;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -53,7 +52,7 @@ public class GroovyScriptTest extends AbstractNetworkModificationTest {
 
     @Override
     protected MatcherGroovyScriptInfos createMatcher(ModificationInfos modificationInfos) {
-        return createMatcherGroovyScriptInfos((GroovyScriptInfos) modificationInfos);
+        return new MatcherGroovyScriptInfos((GroovyScriptInfos) modificationInfos);
     }
 
     @Override

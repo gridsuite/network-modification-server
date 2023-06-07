@@ -12,6 +12,7 @@ import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.BranchStatusModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.utils.MatcherBranchStatusModificationInfos;
 import org.gridsuite.modification.server.utils.MatcherModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.gridsuite.modification.server.utils.TestUtils;
@@ -23,7 +24,6 @@ import java.util.UUID;
 import static com.powsybl.iidm.network.extensions.BranchStatus.Status.FORCED_OUTAGE;
 import static com.powsybl.iidm.network.extensions.BranchStatus.Status.PLANNED_OUTAGE;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
-import static org.gridsuite.modification.server.utils.MatcherBranchStatusModificationInfos.createMatcherBranchStatusModificationInfos;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -61,7 +61,7 @@ public class BranchStatusModificationLockoutLineTest extends AbstractNetworkModi
 
     @Override
     protected MatcherModificationInfos createMatcher(ModificationInfos modificationInfos) {
-        return createMatcherBranchStatusModificationInfos((BranchStatusModificationInfos) modificationInfos);
+        return new MatcherBranchStatusModificationInfos((BranchStatusModificationInfos) modificationInfos);
     }
 
     @Override

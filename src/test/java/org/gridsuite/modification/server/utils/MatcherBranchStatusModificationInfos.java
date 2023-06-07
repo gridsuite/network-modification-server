@@ -7,34 +7,30 @@
 package org.gridsuite.modification.server.utils;
 
 import org.gridsuite.modification.server.dto.BranchStatusModificationInfos;
+import org.gridsuite.modification.server.dto.BranchStatusModificationInfos.ActionType;
 
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.util.Objects;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
 public class MatcherBranchStatusModificationInfos extends MatcherEquipmentModificationInfos<BranchStatusModificationInfos> {
-
-    protected MatcherBranchStatusModificationInfos(BranchStatusModificationInfos ref) {
+    public MatcherBranchStatusModificationInfos(BranchStatusModificationInfos ref) {
         super(ref);
     }
 
-    public static MatcherBranchStatusModificationInfos createMatcherBranchStatusModificationInfos(String equipmentId, BranchStatusModificationInfos.ActionType action) {
-        return new MatcherBranchStatusModificationInfos(BranchStatusModificationInfos.builder()
+    public MatcherBranchStatusModificationInfos(String equipmentId, ActionType action) {
+        this(BranchStatusModificationInfos.builder()
             .date(ZonedDateTime.now(ZoneOffset.UTC))
             .equipmentId(equipmentId)
             .action(action)
             .build());
     }
 
-    public static MatcherBranchStatusModificationInfos createMatcherBranchStatusModificationInfos(BranchStatusModificationInfos modificationInfos) {
-        return new MatcherBranchStatusModificationInfos(modificationInfos);
-    }
-
     @Override
     public boolean matchesSafely(BranchStatusModificationInfos m) {
-        return super.matchesSafely(m)
-            && m.getAction().equals(reference.getAction());
+        return super.matchesSafely(m) && Objects.equals(m.getAction(), getReference().getAction());
     }
 }

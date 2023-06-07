@@ -16,7 +16,6 @@ import org.gridsuite.modification.server.utils.NetworkCreation;
 
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.utils.MatcherLineCreationInfos.createMatcherLineCreationInfos;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
@@ -80,7 +79,7 @@ public class LineCreationInMixedTypologyTest extends AbstractNetworkModification
 
     @Override
     protected MatcherLineCreationInfos createMatcher(ModificationInfos modificationInfos) {
-        return createMatcherLineCreationInfos((LineCreationInfos) modificationInfos);
+        return new MatcherLineCreationInfos((LineCreationInfos) modificationInfos);
     }
 
     @Override

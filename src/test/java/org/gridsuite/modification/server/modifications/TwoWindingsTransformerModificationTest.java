@@ -100,7 +100,7 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
 
     @Override
     protected MatcherTwoWindingsTransformerModificationInfos createMatcher(ModificationInfos modificationInfos) {
-        return MatcherTwoWindingsTransformerModificationInfos.createMatcherTwoWindingsTransformerModificationInfos((TwoWindingsTransformerModificationInfos) modificationInfos);
+        return new MatcherTwoWindingsTransformerModificationInfos((TwoWindingsTransformerModificationInfos) modificationInfos);
     }
 
     @Override

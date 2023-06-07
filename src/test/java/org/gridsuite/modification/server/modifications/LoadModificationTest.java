@@ -59,7 +59,7 @@ public class LoadModificationTest extends AbstractNetworkModificationTest {
 
     @Override
     protected MatcherLoadModificationInfos createMatcher(ModificationInfos modificationInfos) {
-        return MatcherLoadModificationInfos.createMatcherLoadModificationInfos((LoadModificationInfos) modificationInfos);
+        return new MatcherLoadModificationInfos((LoadModificationInfos) modificationInfos);
     }
 
     @Override

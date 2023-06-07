@@ -118,7 +118,7 @@ public class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificat
 
     @Override
     protected MatcherGeneratorCreationInfos createMatcher(ModificationInfos modificationInfos) {
-        return MatcherGeneratorCreationInfos.createMatcherGeneratorCreationInfos((GeneratorCreationInfos) modificationInfos);
+        return new MatcherGeneratorCreationInfos((GeneratorCreationInfos) modificationInfos);
     }
 
     @Override

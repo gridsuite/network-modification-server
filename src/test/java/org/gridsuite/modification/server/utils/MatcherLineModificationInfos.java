@@ -7,7 +7,6 @@
 package org.gridsuite.modification.server.utils;
 
 import org.gridsuite.modification.server.dto.LineModificationInfos;
-import org.hamcrest.Description;
 
 import java.util.Objects;
 
@@ -17,32 +16,22 @@ import static org.gridsuite.modification.server.utils.MatcherUtils.matchesCurren
  * @author Ayoub Labidi <ayoub.labidi at rte-france.com>
  */
 public class MatcherLineModificationInfos extends MatcherModificationInfos<LineModificationInfos> {
-
-    protected MatcherLineModificationInfos(LineModificationInfos ref) {
+    public MatcherLineModificationInfos(LineModificationInfos ref) {
         super(ref);
-    }
-
-    public static MatcherLineModificationInfos createMatcherLineModificationInfos(LineModificationInfos lineModificationInfos) {
-        return new MatcherLineModificationInfos(lineModificationInfos);
     }
 
     @Override
     public boolean matchesSafely(LineModificationInfos m) {
         return super.matchesSafely(m)
-                && m.getEquipmentId().equals(reference.getEquipmentId())
-                && Objects.equals(m.getEquipmentName(), reference.getEquipmentName())
-                && Objects.equals(m.getSeriesReactance(), reference.getSeriesReactance())
-                && Objects.equals(m.getSeriesResistance(), reference.getSeriesResistance())
-                && Objects.equals(m.getShuntConductance1(), reference.getShuntConductance1())
-                && Objects.equals(m.getShuntSusceptance1(), reference.getShuntSusceptance1())
-                && Objects.equals(m.getShuntConductance2(), reference.getShuntConductance2())
-                && Objects.equals(m.getShuntSusceptance2(), reference.getShuntSusceptance2())
-                && matchesCurrentLimits(m.getCurrentLimits1(), reference.getCurrentLimits1())
-                && matchesCurrentLimits(m.getCurrentLimits2(), reference.getCurrentLimits2());
-    }
-
-    @Override
-    public void describeTo(Description description) {
-        description.appendValue(reference);
+                && Objects.equals(m.getEquipmentId(), getReference().getEquipmentId())
+                && Objects.equals(m.getEquipmentName(), getReference().getEquipmentName())
+                && Objects.equals(m.getSeriesReactance(), getReference().getSeriesReactance())
+                && Objects.equals(m.getSeriesResistance(), getReference().getSeriesResistance())
+                && Objects.equals(m.getShuntConductance1(), getReference().getShuntConductance1())
+                && Objects.equals(m.getShuntSusceptance1(), getReference().getShuntSusceptance1())
+                && Objects.equals(m.getShuntConductance2(), getReference().getShuntConductance2())
+                && Objects.equals(m.getShuntSusceptance2(), getReference().getShuntSusceptance2())
+                && matchesCurrentLimits(m.getCurrentLimits1(), getReference().getCurrentLimits1())
+                && matchesCurrentLimits(m.getCurrentLimits2(), getReference().getCurrentLimits2());
     }
 }

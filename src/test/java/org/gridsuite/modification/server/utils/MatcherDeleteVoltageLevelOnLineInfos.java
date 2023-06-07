@@ -15,20 +15,17 @@ import java.util.Objects;
  * @author bendaamerahm <ahmed.bendaamer at rte-france.com>
  */
 public class MatcherDeleteVoltageLevelOnLineInfos extends MatcherModificationInfos<DeleteVoltageLevelOnLineInfos> {
-    protected MatcherDeleteVoltageLevelOnLineInfos(DeleteVoltageLevelOnLineInfos ref) {
+    public MatcherDeleteVoltageLevelOnLineInfos(DeleteVoltageLevelOnLineInfos ref) {
         super(ref);
     }
 
-    public static MatcherDeleteVoltageLevelOnLineInfos createMatcherDeleteVoltageLevelOnLineInfos(DeleteVoltageLevelOnLineInfos toDeleteVoltageLevelOnLineInfos) {
-        return new MatcherDeleteVoltageLevelOnLineInfos(toDeleteVoltageLevelOnLineInfos);
-    }
-
+    @Override
     public boolean matchesSafely(DeleteVoltageLevelOnLineInfos m) {
         return super.matchesSafely(m)
-                && Objects.equals(reference.getLineToAttachTo1Id(), m.getLineToAttachTo1Id())
-                && Objects.equals(reference.getLineToAttachTo2Id(), m.getLineToAttachTo2Id())
-                && Objects.equals(reference.getReplacingLine1Id(), m.getReplacingLine1Id())
-                && Objects.equals(reference.getReplacingLine1Name(), m.getReplacingLine1Name());
+                && Objects.equals(getReference().getLineToAttachTo1Id(), m.getLineToAttachTo1Id())
+                && Objects.equals(getReference().getLineToAttachTo2Id(), m.getLineToAttachTo2Id())
+                && Objects.equals(getReference().getReplacingLine1Id(), m.getReplacingLine1Id())
+                && Objects.equals(getReference().getReplacingLine1Name(), m.getReplacingLine1Name());
     }
 }
 

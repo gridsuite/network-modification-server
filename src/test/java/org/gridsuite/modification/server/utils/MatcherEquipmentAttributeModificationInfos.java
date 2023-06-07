@@ -8,7 +8,6 @@ package org.gridsuite.modification.server.utils;
 
 import com.powsybl.iidm.network.IdentifiableType;
 import org.gridsuite.modification.server.dto.EquipmentAttributeModificationInfos;
-import org.hamcrest.Description;
 
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -18,10 +17,9 @@ import java.util.Objects;
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
 public class MatcherEquipmentAttributeModificationInfos extends MatcherModificationInfos<EquipmentAttributeModificationInfos> {
-
-    public static MatcherEquipmentAttributeModificationInfos createMatcherEquipmentAttributeModificationInfos(String equipmentId, String equipmentAttributeName,
-                                                                                                              Object equipmentAttributeValue, IdentifiableType equipmentType) {
-        return new MatcherEquipmentAttributeModificationInfos(EquipmentAttributeModificationInfos.builder()
+    public MatcherEquipmentAttributeModificationInfos(String equipmentId, String equipmentAttributeName,
+                                                      Object equipmentAttributeValue, IdentifiableType equipmentType) {
+        this(EquipmentAttributeModificationInfos.builder()
                 .date(ZonedDateTime.now(ZoneOffset.UTC))
                 .equipmentId(equipmentId)
                 .equipmentAttributeName(equipmentAttributeName)
@@ -30,25 +28,16 @@ public class MatcherEquipmentAttributeModificationInfos extends MatcherModificat
                 .build());
     }
 
-    public static MatcherEquipmentAttributeModificationInfos createMatcherEquipmentAttributeModificationInfos(EquipmentAttributeModificationInfos modificationInfos) {
-        return new MatcherEquipmentAttributeModificationInfos(modificationInfos);
-    }
-
-    protected MatcherEquipmentAttributeModificationInfos(EquipmentAttributeModificationInfos ref) {
+    public MatcherEquipmentAttributeModificationInfos(EquipmentAttributeModificationInfos ref) {
         super(ref);
     }
 
     @Override
     public boolean matchesSafely(EquipmentAttributeModificationInfos m) {
         return super.matchesSafely(m)
-                && m.getEquipmentId().equals(reference.getEquipmentId())
-                && m.getEquipmentType().equals(reference.getEquipmentType())
-                && m.getEquipmentAttributeName().equals(reference.getEquipmentAttributeName())
-                && Objects.equals(m.getEquipmentAttributeValue(), reference.getEquipmentAttributeValue());
-    }
-
-    @Override
-    public void describeTo(Description description) {
-        description.appendValue(reference);
+                && Objects.equals(m.getEquipmentId(), getReference().getEquipmentId())
+                && Objects.equals(m.getEquipmentType(), getReference().getEquipmentType())
+                && Objects.equals(m.getEquipmentAttributeName(), getReference().getEquipmentAttributeName())
+                && Objects.equals(m.getEquipmentAttributeValue(), getReference().getEquipmentAttributeValue());
     }
 }

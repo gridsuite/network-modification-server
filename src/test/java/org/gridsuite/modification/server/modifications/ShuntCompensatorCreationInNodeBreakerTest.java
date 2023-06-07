@@ -75,7 +75,7 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
 
     @Override
     protected MatcherShuntCompensatorCreationInfos createMatcher(ModificationInfos modificationInfos) {
-        return MatcherShuntCompensatorCreationInfos.createMatcher((ShuntCompensatorCreationInfos) modificationInfos);
+        return new MatcherShuntCompensatorCreationInfos((ShuntCompensatorCreationInfos) modificationInfos);
     }
 
     @Override

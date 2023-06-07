@@ -6,35 +6,24 @@
  */
 package org.gridsuite.modification.server.utils;
 
-import java.util.Objects;
-
 import org.gridsuite.modification.server.dto.SubstationCreationInfos;
-import org.hamcrest.Description;
+
+import java.util.Objects;
 
 /**
  * @author Abdelsalem HEDHILI <abdelsalem.hedhili at rte-france.com>
  */
 public class MatcherSubstationCreationInfos extends MatcherModificationInfos<SubstationCreationInfos> {
-
-    public static MatcherSubstationCreationInfos createMatcherSubstationCreationInfos(SubstationCreationInfos substationCreationInfos) {
-        return new MatcherSubstationCreationInfos(substationCreationInfos);
-    }
-
-    protected MatcherSubstationCreationInfos(SubstationCreationInfos ref) {
+    public MatcherSubstationCreationInfos(SubstationCreationInfos ref) {
         super(ref);
     }
 
     @Override
     public boolean matchesSafely(SubstationCreationInfos m) {
         return super.matchesSafely(m)
-                && m.getEquipmentId().equals(reference.getEquipmentId())
-                && m.getEquipmentName().equals(reference.getEquipmentName())
-                && m.getSubstationCountry().equals(reference.getSubstationCountry())
-                && Objects.equals(m.getProperties(), reference.getProperties());
-    }
-
-    @Override
-    public void describeTo(Description description) {
-        description.appendValue(reference);
+                && m.getEquipmentId().equals(getReference().getEquipmentId())
+                && m.getEquipmentName().equals(getReference().getEquipmentName())
+                && m.getSubstationCountry().equals(getReference().getSubstationCountry())
+                && Objects.equals(m.getProperties(), getReference().getProperties());
     }
 }

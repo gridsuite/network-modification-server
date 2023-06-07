@@ -91,7 +91,7 @@ public class ShuntCompensatorCreationInBusBreakerTest extends AbstractNetworkMod
 
     @Override
     protected MatcherShuntCompensatorCreationInfos createMatcher(ModificationInfos modificationInfos) {
-        return MatcherShuntCompensatorCreationInfos.createMatcher((ShuntCompensatorCreationInfos) modificationInfos);
+        return new MatcherShuntCompensatorCreationInfos((ShuntCompensatorCreationInfos) modificationInfos);
     }
 
     @Override

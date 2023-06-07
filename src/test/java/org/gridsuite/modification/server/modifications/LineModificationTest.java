@@ -8,11 +8,9 @@
 package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.iidm.network.Line;
-import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.LoadingLimits.TemporaryLimit;
-
+import com.powsybl.iidm.network.Network;
 import lombok.SneakyThrows;
-
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.utils.MatcherLineModificationInfos;
@@ -22,13 +20,14 @@ import org.springframework.http.MediaType;
 
 import java.util.List;
 import java.util.UUID;
+
 import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_NOT_FOUND;
+import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 /**
  * @author Ayoub LABIDI <ayoub.labidi at rte-france.com>
  */
@@ -92,8 +91,7 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
 
     @Override
     protected MatcherLineModificationInfos createMatcher(ModificationInfos modificationInfos) {
-        return MatcherLineModificationInfos
-                .createMatcherLineModificationInfos((LineModificationInfos) modificationInfos);
+        return new MatcherLineModificationInfos((LineModificationInfos) modificationInfos);
     }
 
     @Override

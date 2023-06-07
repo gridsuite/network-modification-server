@@ -7,33 +7,30 @@
 
 package org.gridsuite.modification.server.utils;
 
-import java.util.Objects;
-
 import org.gridsuite.modification.server.dto.LineSplitWithVoltageLevelInfos;
+
+import java.util.Objects;
 
 /**
  * @author Laurent GARNIER <laurent.garnier at rte-france.com>
  */
 public class MatcherLineSplitWithVoltageLevelInfos extends MatcherModificationInfos<LineSplitWithVoltageLevelInfos> {
-    protected MatcherLineSplitWithVoltageLevelInfos(LineSplitWithVoltageLevelInfos ref) {
+    public MatcherLineSplitWithVoltageLevelInfos(LineSplitWithVoltageLevelInfos ref) {
         super(ref);
     }
 
-    public static MatcherLineSplitWithVoltageLevelInfos createMatcherLineSplitWithVoltageLevelInfos(LineSplitWithVoltageLevelInfos toLineSplitWithVoltageLevelInfos) {
-        return new MatcherLineSplitWithVoltageLevelInfos(toLineSplitWithVoltageLevelInfos);
-    }
-
+    @Override
     public boolean matchesSafely(LineSplitWithVoltageLevelInfos m) {
         return super.matchesSafely(m)
-            && Math.abs(reference.getPercent() - m.getPercent()) < 0.2
-            && Objects.equals(reference.getLineToSplitId(), m.getLineToSplitId())
-            && (reference.getMayNewVoltageLevelInfos() == null && m.getMayNewVoltageLevelInfos() == null
-              || new MatcherVoltageLevelCreationInfos(reference.getMayNewVoltageLevelInfos()).matchesSafely(m.getMayNewVoltageLevelInfos()))
-            && Objects.equals(reference.getExistingVoltageLevelId(), m.getExistingVoltageLevelId())
-            && Objects.equals(reference.getBbsOrBusId(), m.getBbsOrBusId())
-            && Objects.equals(reference.getNewLine1Id(), m.getNewLine1Id())
-            && Objects.equals(reference.getNewLine1Name(), m.getNewLine1Name())
-            && Objects.equals(reference.getNewLine2Id(), m.getNewLine2Id())
-            && Objects.equals(reference.getNewLine2Name(), m.getNewLine2Name());
+            && Math.abs(getReference().getPercent() - m.getPercent()) < 0.2
+            && Objects.equals(getReference().getLineToSplitId(), m.getLineToSplitId())
+            && (getReference().getMayNewVoltageLevelInfos() == null && m.getMayNewVoltageLevelInfos() == null
+              || new MatcherVoltageLevelCreationInfos(getReference().getMayNewVoltageLevelInfos()).matchesSafely(m.getMayNewVoltageLevelInfos()))
+            && Objects.equals(getReference().getExistingVoltageLevelId(), m.getExistingVoltageLevelId())
+            && Objects.equals(getReference().getBbsOrBusId(), m.getBbsOrBusId())
+            && Objects.equals(getReference().getNewLine1Id(), m.getNewLine1Id())
+            && Objects.equals(getReference().getNewLine1Name(), m.getNewLine1Name())
+            && Objects.equals(getReference().getNewLine2Id(), m.getNewLine2Id())
+            && Objects.equals(getReference().getNewLine2Name(), m.getNewLine2Name());
     }
 }

@@ -102,7 +102,7 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
 
     @Override
     protected MatcherGeneratorModificationInfos createMatcher(ModificationInfos modificationInfos) {
-        return MatcherGeneratorModificationInfos.createMatcherGeneratorModificationInfos((GeneratorModificationInfos) modificationInfos);
+        return new MatcherGeneratorModificationInfos((GeneratorModificationInfos) modificationInfos);
     }
 
     @Override

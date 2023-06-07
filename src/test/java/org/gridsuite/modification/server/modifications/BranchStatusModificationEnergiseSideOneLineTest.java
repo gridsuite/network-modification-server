@@ -12,6 +12,7 @@ import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.BranchStatusModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.utils.MatcherBranchStatusModificationInfos;
 import org.gridsuite.modification.server.utils.MatcherModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
@@ -20,7 +21,6 @@ import org.springframework.http.MediaType;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.BRANCH_ACTION_ERROR;
-import static org.gridsuite.modification.server.utils.MatcherBranchStatusModificationInfos.createMatcherBranchStatusModificationInfos;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -57,7 +57,7 @@ public class BranchStatusModificationEnergiseSideOneLineTest extends AbstractNet
 
     @Override
     protected MatcherModificationInfos createMatcher(ModificationInfos modificationInfos) {
-        return createMatcherBranchStatusModificationInfos((BranchStatusModificationInfos) modificationInfos);
+        return new MatcherBranchStatusModificationInfos((BranchStatusModificationInfos) modificationInfos);
     }
 
     @Override

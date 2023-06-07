@@ -11,6 +11,7 @@ import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.DeleteAttachingLineInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.utils.MatcherDeleteAttachingLineInfos;
 import org.gridsuite.modification.server.utils.MatcherModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkWithTeePoint;
 import org.junit.Test;
@@ -19,8 +20,8 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
-import static org.gridsuite.modification.server.utils.MatcherDeleteAttachingLineInfos.createMatcherDeleteAttachingLineInfos;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_ALREADY_EXISTS;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_NOT_FOUND;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -61,7 +62,7 @@ public class DeleteAttachingLineTest extends AbstractNetworkModificationTest {
 
     @Override
     protected MatcherModificationInfos createMatcher(ModificationInfos modificationInfos) {
-        return createMatcherDeleteAttachingLineInfos((DeleteAttachingLineInfos) modificationInfos);
+        return new MatcherDeleteAttachingLineInfos((DeleteAttachingLineInfos) modificationInfos);
     }
 
     @Override

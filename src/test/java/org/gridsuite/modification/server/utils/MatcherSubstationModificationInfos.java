@@ -8,7 +8,6 @@ package org.gridsuite.modification.server.utils;
 
 import org.gridsuite.modification.server.dto.SubstationFreePropertyInfos;
 import org.gridsuite.modification.server.dto.SubstationModificationInfos;
-import org.hamcrest.Description;
 
 import java.util.List;
 import java.util.Objects;
@@ -17,16 +16,11 @@ import java.util.Objects;
  * @author David Braquart <david.braquart at rte-france.com>
  */
 public class MatcherSubstationModificationInfos extends MatcherModificationInfos<SubstationModificationInfos> {
-
-    public static MatcherSubstationModificationInfos createMatcherSubstationModificationInfos(SubstationModificationInfos infos) {
-        return new MatcherSubstationModificationInfos(infos);
-    }
-
-    protected MatcherSubstationModificationInfos(SubstationModificationInfos ref) {
+    public MatcherSubstationModificationInfos(SubstationModificationInfos ref) {
         super(ref);
     }
 
-    private boolean matchesProperties(List<SubstationFreePropertyInfos> l1, List<SubstationFreePropertyInfos> l2) {
+    private static boolean matchesProperties(List<SubstationFreePropertyInfos> l1, List<SubstationFreePropertyInfos> l2) {
         return (l1 == null && l2 == null)
                 || (l1 == null && l2.isEmpty())
                 || (l2 == null && l1.isEmpty())
@@ -36,14 +30,9 @@ public class MatcherSubstationModificationInfos extends MatcherModificationInfos
     @Override
     public boolean matchesSafely(SubstationModificationInfos m) {
         return super.matchesSafely(m)
-                && m.getEquipmentId().equals(reference.getEquipmentId())
-                && Objects.equals(m.getEquipmentName(), reference.getEquipmentName())
-                && Objects.equals(m.getSubstationCountry(), reference.getSubstationCountry())
-                && matchesProperties(m.getProperties(), reference.getProperties());
-    }
-
-    @Override
-    public void describeTo(Description description) {
-        description.appendValue(reference);
+                && m.getEquipmentId().equals(getReference().getEquipmentId())
+                && Objects.equals(m.getEquipmentName(), getReference().getEquipmentName())
+                && Objects.equals(m.getSubstationCountry(), getReference().getSubstationCountry())
+                && matchesProperties(m.getProperties(), getReference().getProperties());
     }
 }

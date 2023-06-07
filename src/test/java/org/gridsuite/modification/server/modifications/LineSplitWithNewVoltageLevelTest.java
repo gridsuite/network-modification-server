@@ -8,13 +8,13 @@ package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.SwitchKind;
-
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.CouplingDeviceInfos;
 import org.gridsuite.modification.server.dto.LineSplitWithVoltageLevelInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.VoltageLevelCreationInfos;
+import org.gridsuite.modification.server.utils.MatcherLineSplitWithVoltageLevelInfos;
 import org.gridsuite.modification.server.utils.MatcherModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
@@ -24,7 +24,6 @@ import java.util.Arrays;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_NOT_FOUND;
-import static org.gridsuite.modification.server.utils.MatcherLineSplitWithVoltageLevelInfos.createMatcherLineSplitWithVoltageLevelInfos;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -98,7 +97,7 @@ public class LineSplitWithNewVoltageLevelTest extends AbstractNetworkModificatio
 
     @Override
     protected MatcherModificationInfos createMatcher(ModificationInfos modificationInfos) {
-        return createMatcherLineSplitWithVoltageLevelInfos((LineSplitWithVoltageLevelInfos) modificationInfos);
+        return new MatcherLineSplitWithVoltageLevelInfos((LineSplitWithVoltageLevelInfos) modificationInfos);
     }
 
     @Override

@@ -386,7 +386,7 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
 
     @Override
     protected MatcherLoadScalingInfos createMatcher(ModificationInfos modificationInfos) {
-        return MatcherLoadScalingInfos.createMatcherLoadScalingInfos((LoadScalingInfos) modificationInfos);
+        return new MatcherLoadScalingInfos((LoadScalingInfos) modificationInfos);
     }
 
     //TODO update values after PowSyBl release

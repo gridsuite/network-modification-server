@@ -55,7 +55,7 @@ public class SubstationCreationTest extends AbstractNetworkModificationTest {
 
     @Override
     protected MatcherSubstationCreationInfos createMatcher(ModificationInfos modificationInfos) {
-        return MatcherSubstationCreationInfos.createMatcherSubstationCreationInfos((SubstationCreationInfos) modificationInfos);
+        return new MatcherSubstationCreationInfos((SubstationCreationInfos) modificationInfos);
     }
 
     @Override

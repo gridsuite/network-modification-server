@@ -7,30 +7,21 @@
 package org.gridsuite.modification.server.utils;
 
 import org.gridsuite.modification.server.dto.EquipmentDeletionInfos;
-import org.hamcrest.Description;
+
+import java.util.Objects;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 public class MatcherEquipmentDeletionInfos extends MatcherModificationInfos<EquipmentDeletionInfos> {
-
-    public static MatcherEquipmentDeletionInfos createMatcherEquipmentDeletionInfos(EquipmentDeletionInfos deletionInfos) {
-        return new MatcherEquipmentDeletionInfos(deletionInfos);
-    }
-
-    protected MatcherEquipmentDeletionInfos(EquipmentDeletionInfos ref) {
+    public MatcherEquipmentDeletionInfos(EquipmentDeletionInfos ref) {
         super(ref);
     }
 
     @Override
     public boolean matchesSafely(EquipmentDeletionInfos m) {
         return super.matchesSafely(m)
-                && m.getEquipmentId().equals(reference.getEquipmentId())
-            && m.getEquipmentType().equals(reference.getEquipmentType());
-    }
-
-    @Override
-    public void describeTo(Description description) {
-        description.appendValue(reference);
+            && Objects.equals(m.getEquipmentId(), getReference().getEquipmentId())
+            && Objects.equals(m.getEquipmentType(), getReference().getEquipmentType());
     }
 }

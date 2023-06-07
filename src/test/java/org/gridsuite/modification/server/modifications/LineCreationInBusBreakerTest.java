@@ -21,7 +21,6 @@ import org.springframework.http.MediaType;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.BUS_NOT_FOUND;
-import static org.gridsuite.modification.server.utils.MatcherLineCreationInfos.createMatcherLineCreationInfos;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertNotNull;
@@ -62,7 +61,7 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosNoShuntJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         LineCreationInfos createdModification = (LineCreationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
-        assertThat(createdModification, createMatcherLineCreationInfos(lineCreationInfosNoShunt));
+        assertThat(createdModification, new MatcherLineCreationInfos(lineCreationInfosNoShunt));
 
         testNetworkModificationsCount(getGroupId(), 1);
     }
@@ -91,7 +90,7 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosNoShuntJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         LineCreationInfos createdModification = (LineCreationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
-        assertThat(createdModification, createMatcherLineCreationInfos(lineCreationInfosNoShunt));
+        assertThat(createdModification, new MatcherLineCreationInfos(lineCreationInfosNoShunt));
 
         testNetworkModificationsCount(getGroupId(), 1);
     }
@@ -116,7 +115,7 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
                 .andExpect(status().isOk()).andReturn();
 
         LineCreationInfos createdModification = (LineCreationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
-        assertThat(createdModification, createMatcherLineCreationInfos(lineCreationInfosPermanentLimitOK));
+        assertThat(createdModification, new MatcherLineCreationInfos(lineCreationInfosPermanentLimitOK));
 
         testNetworkModificationsCount(getGroupId(), 1);
     }
@@ -143,7 +142,7 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
 
         lineCreationInfosPermanentLimitOK.setCurrentLimits2(null); // if permanentLimit is null then no currentLimit created
         LineCreationInfos createdModification = (LineCreationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
-        assertThat(createdModification, createMatcherLineCreationInfos(lineCreationInfosPermanentLimitOK));
+        assertThat(createdModification, new MatcherLineCreationInfos(lineCreationInfosPermanentLimitOK));
 
         testNetworkModificationsCount(getGroupId(), 1);
     }
@@ -236,7 +235,7 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
 
     @Override
     protected MatcherLineCreationInfos createMatcher(ModificationInfos modificationInfos) {
-        return createMatcherLineCreationInfos((LineCreationInfos) modificationInfos);
+        return new MatcherLineCreationInfos((LineCreationInfos) modificationInfos);
     }
 
     @Override

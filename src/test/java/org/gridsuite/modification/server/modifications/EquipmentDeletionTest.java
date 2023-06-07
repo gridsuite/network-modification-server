@@ -52,7 +52,7 @@ public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
 
     @Override
     protected MatcherEquipmentDeletionInfos createMatcher(ModificationInfos modificationInfos) {
-        return MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos((EquipmentDeletionInfos) modificationInfos);
+        return new MatcherEquipmentDeletionInfos((EquipmentDeletionInfos) modificationInfos);
     }
 
     @Override

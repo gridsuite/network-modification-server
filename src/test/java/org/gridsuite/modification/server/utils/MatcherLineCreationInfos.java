@@ -8,7 +8,6 @@ package org.gridsuite.modification.server.utils;
 
 import org.gridsuite.modification.server.dto.CurrentLimitsInfos;
 import org.gridsuite.modification.server.dto.LineCreationInfos;
-import org.hamcrest.Description;
 
 import java.util.Objects;
 
@@ -16,16 +15,11 @@ import java.util.Objects;
  * @author Sylvain Bouzols <sylvain.bouzols at rte-france.com>
  */
 public class MatcherLineCreationInfos extends MatcherModificationInfos<LineCreationInfos> {
-
-    public static MatcherLineCreationInfos createMatcherLineCreationInfos(LineCreationInfos lineCreationInfos) {
-        return new MatcherLineCreationInfos(lineCreationInfos);
-    }
-
-    protected MatcherLineCreationInfos(LineCreationInfos ref) {
+    public MatcherLineCreationInfos(LineCreationInfos ref) {
         super(ref);
     }
 
-    public boolean matchesCurrentLimitsInfos(CurrentLimitsInfos cl1, CurrentLimitsInfos cl2) {
+    public static boolean matchesCurrentLimitsInfos(CurrentLimitsInfos cl1, CurrentLimitsInfos cl2) {
         return (cl1 == null && cl2 == null)
             || (cl1 != null && cl2 != null && cl1.getPermanentLimit() != null && cl2.getPermanentLimit() != null && cl1.getPermanentLimit().equals(cl2.getPermanentLimit()))
             || (cl1 != null && cl2 != null && cl1.getPermanentLimit() == null && cl2.getPermanentLimit() == null);
@@ -34,28 +28,23 @@ public class MatcherLineCreationInfos extends MatcherModificationInfos<LineCreat
     @Override
     public boolean matchesSafely(LineCreationInfos m) {
         return super.matchesSafely(m)
-            && m.getEquipmentId().equals(reference.getEquipmentId())
-            && Objects.equals(m.getEquipmentName(), reference.getEquipmentName())
-            && m.getSeriesResistance() == reference.getSeriesResistance()
-            && m.getSeriesReactance() == reference.getSeriesReactance()
-            && m.getShuntConductance1() != null && m.getShuntConductance1().equals(reference.getShuntConductance1())
-            || m.getShuntConductance1() == null && reference.getShuntConductance1() == null
-            && m.getShuntSusceptance1() != null && m.getShuntSusceptance1().equals(reference.getShuntSusceptance1())
-            || m.getShuntSusceptance1() == null && reference.getShuntSusceptance1() == null
-            && m.getShuntConductance2() != null && m.getShuntConductance2().equals(reference.getShuntConductance2())
-            || m.getShuntConductance2() == null && reference.getShuntConductance2() == null
-            && m.getShuntSusceptance2() != null && m.getShuntSusceptance2().equals(reference.getShuntSusceptance2())
-            || m.getShuntSusceptance2() == null && reference.getShuntSusceptance2() == null
-            && Objects.equals(m.getVoltageLevelId1(), reference.getVoltageLevelId1())
-            && Objects.equals(m.getBusOrBusbarSectionId1(), reference.getBusOrBusbarSectionId1())
-            && Objects.equals(m.getVoltageLevelId2(), reference.getVoltageLevelId2())
-            && Objects.equals(m.getBusOrBusbarSectionId2(), reference.getBusOrBusbarSectionId2())
-            && matchesCurrentLimitsInfos(m.getCurrentLimits1(), reference.getCurrentLimits1())
-            && matchesCurrentLimitsInfos(m.getCurrentLimits2(), reference.getCurrentLimits2());
-    }
-
-    @Override
-    public void describeTo(Description description) {
-        description.appendValue(reference);
+            && m.getEquipmentId().equals(getReference().getEquipmentId())
+            && Objects.equals(m.getEquipmentName(), getReference().getEquipmentName())
+            && m.getSeriesResistance() == getReference().getSeriesResistance()
+            && m.getSeriesReactance() == getReference().getSeriesReactance()
+            && m.getShuntConductance1() != null && m.getShuntConductance1().equals(getReference().getShuntConductance1())
+            || m.getShuntConductance1() == null && getReference().getShuntConductance1() == null
+            && m.getShuntSusceptance1() != null && m.getShuntSusceptance1().equals(getReference().getShuntSusceptance1())
+            || m.getShuntSusceptance1() == null && getReference().getShuntSusceptance1() == null
+            && m.getShuntConductance2() != null && m.getShuntConductance2().equals(getReference().getShuntConductance2())
+            || m.getShuntConductance2() == null && getReference().getShuntConductance2() == null
+            && m.getShuntSusceptance2() != null && m.getShuntSusceptance2().equals(getReference().getShuntSusceptance2())
+            || m.getShuntSusceptance2() == null && getReference().getShuntSusceptance2() == null
+            && Objects.equals(m.getVoltageLevelId1(), getReference().getVoltageLevelId1())
+            && Objects.equals(m.getBusOrBusbarSectionId1(), getReference().getBusOrBusbarSectionId1())
+            && Objects.equals(m.getVoltageLevelId2(), getReference().getVoltageLevelId2())
+            && Objects.equals(m.getBusOrBusbarSectionId2(), getReference().getBusOrBusbarSectionId2())
+            && matchesCurrentLimitsInfos(m.getCurrentLimits1(), getReference().getCurrentLimits1())
+            && matchesCurrentLimitsInfos(m.getCurrentLimits2(), getReference().getCurrentLimits2());
     }
 }

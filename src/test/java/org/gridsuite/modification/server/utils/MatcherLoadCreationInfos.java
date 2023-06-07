@@ -7,35 +7,24 @@
 package org.gridsuite.modification.server.utils;
 
 import org.gridsuite.modification.server.dto.LoadCreationInfos;
-import org.hamcrest.Description;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 public class MatcherLoadCreationInfos extends MatcherModificationInfos<LoadCreationInfos> {
-
-    public static MatcherLoadCreationInfos createMatcherLoadCreationInfos(LoadCreationInfos loadCreationInfos) {
-        return new MatcherLoadCreationInfos(loadCreationInfos);
-    }
-
-    protected MatcherLoadCreationInfos(LoadCreationInfos ref) {
+    public MatcherLoadCreationInfos(LoadCreationInfos ref) {
         super(ref);
     }
 
     @Override
     public boolean matchesSafely(LoadCreationInfos m) {
         return super.matchesSafely(m)
-            && m.getEquipmentId().equals(reference.getEquipmentId())
-            && m.getEquipmentName().equals(reference.getEquipmentName())
-            && m.getVoltageLevelId().equals(reference.getVoltageLevelId())
-            && m.getBusOrBusbarSectionId().equals(reference.getBusOrBusbarSectionId())
-            && m.getLoadType() == reference.getLoadType()
-            && m.getActivePower() == reference.getActivePower()
-            && m.getReactivePower() == reference.getReactivePower();
-    }
-
-    @Override
-    public void describeTo(Description description) {
-        description.appendValue(reference);
+            && m.getEquipmentId().equals(getReference().getEquipmentId())
+            && m.getEquipmentName().equals(getReference().getEquipmentName())
+            && m.getVoltageLevelId().equals(getReference().getVoltageLevelId())
+            && m.getBusOrBusbarSectionId().equals(getReference().getBusOrBusbarSectionId())
+            && m.getLoadType() == getReference().getLoadType()
+            && m.getActivePower() == getReference().getActivePower()
+            && m.getReactivePower() == getReference().getReactivePower();
     }
 }

@@ -178,7 +178,7 @@ public abstract class AbstractNetworkModificationTest {
                 .andExpect(status().isOk());
 
         // TODO Need a test for substations impacted
-        //assertThat(bsmListResult.get(0), createMatcherEquipmentModificationInfos(ModificationType.LOAD_CREATION, "idLoad1", Set.of("s1")));
+        //assertThat(bsmListResult.get(0), new MatcherEquipmentModificationInfos(ModificationType.LOAD_CREATION, "idLoad1", Set.of("s1")));
 
         ModificationInfos updatedModification = modificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
 

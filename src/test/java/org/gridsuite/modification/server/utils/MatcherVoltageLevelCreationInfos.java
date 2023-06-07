@@ -6,47 +6,43 @@
  */
 package org.gridsuite.modification.server.utils;
 
-import java.util.List;
-import java.util.Objects;
-
+import com.powsybl.iidm.network.SwitchKind;
 import org.gridsuite.modification.server.dto.CouplingDeviceInfos;
 import org.gridsuite.modification.server.dto.VoltageLevelCreationInfos;
 
-import com.powsybl.iidm.network.SwitchKind;
+import java.util.List;
+import java.util.Objects;
 
 /**
  * @author Laurent GARNIER <laurent.garnier at rte-france.com>
  */
 public class MatcherVoltageLevelCreationInfos extends MatcherEquipmentModificationInfos<VoltageLevelCreationInfos> {
-    protected MatcherVoltageLevelCreationInfos(VoltageLevelCreationInfos ref) {
+    public MatcherVoltageLevelCreationInfos(VoltageLevelCreationInfos ref) {
         super(ref);
     }
 
-    public static MatcherVoltageLevelCreationInfos createMatcherVoltageLevelCreationInfos(VoltageLevelCreationInfos ref) {
-        return new MatcherVoltageLevelCreationInfos(ref);
-    }
-
+    @Override
     public boolean matchesSafely(VoltageLevelCreationInfos m) {
         return super.matchesSafely(m)
-            && Math.abs(reference.getNominalVoltage() - m.getNominalVoltage()) < 0.2
-            && Objects.equals(reference.getSubstationId(), m.getSubstationId())
+            && Math.abs(getReference().getNominalVoltage() - m.getNominalVoltage()) < 0.2
+            && Objects.equals(getReference().getSubstationId(), m.getSubstationId())
             && matchesCouplingDevices(m.getCouplingDevices())
             && matchesSwitchKinds(m.getSwitchKinds());
     }
 
     private boolean matchesSwitchKinds(List<SwitchKind> switchKinds) {
-        if ((switchKinds == null) != (reference.getSwitchKinds() == null)) {
+        if ((switchKinds == null) != (getReference().getSwitchKinds() == null)) {
             return false;
         }
         if (switchKinds == null) {
             return true;
         }
-        if (switchKinds.size() != reference.getSwitchKinds().size()) {
+        if (switchKinds.size() != getReference().getSwitchKinds().size()) {
             return false;
         }
 
         for (int i = 0; i < switchKinds.size(); i++) {
-            if (!Objects.equals(reference.getSwitchKinds().get(i), switchKinds.get(i))) {
+            if (!Objects.equals(getReference().getSwitchKinds().get(i), switchKinds.get(i))) {
                 return false;
             }
         }
@@ -55,18 +51,18 @@ public class MatcherVoltageLevelCreationInfos extends MatcherEquipmentModificati
     }
 
     private boolean matchesCouplingDevices(List<CouplingDeviceInfos> couplingDevices) {
-        if ((couplingDevices == null) != (reference.getCouplingDevices() == null)) {
+        if ((couplingDevices == null) != (getReference().getCouplingDevices() == null)) {
             return false;
         }
         if (couplingDevices == null) {
             return true;
         }
-        if (couplingDevices.size() != reference.getCouplingDevices().size()) {
+        if (couplingDevices.size() != getReference().getCouplingDevices().size()) {
             return false;
         }
 
         for (int i = 0; i < couplingDevices.size(); i++) {
-            if (!matches(reference.getCouplingDevices().get(i), couplingDevices.get(i))) {
+            if (!matches(getReference().getCouplingDevices().get(i), couplingDevices.get(i))) {
                 return false;
             }
         }

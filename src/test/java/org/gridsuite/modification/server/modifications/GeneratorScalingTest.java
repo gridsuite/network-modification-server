@@ -357,7 +357,7 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
 
     @Override
     protected MatcherGeneratorScalingInfos createMatcher(ModificationInfos modificationInfos) {
-        return MatcherGeneratorScalingInfos.createMatcherGeneratorScalingInfos((GeneratorScalingInfos) modificationInfos);
+        return new MatcherGeneratorScalingInfos((GeneratorScalingInfos) modificationInfos);
     }
 
     @Override

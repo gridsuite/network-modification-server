@@ -114,7 +114,7 @@ public class GeneratorCreationInBusBreakerTest extends AbstractNetworkModificati
 
     @Override
     protected MatcherGeneratorCreationInfos createMatcher(ModificationInfos modificationInfos) {
-        return MatcherGeneratorCreationInfos.createMatcherGeneratorCreationInfos((GeneratorCreationInfos) modificationInfos);
+        return new MatcherGeneratorCreationInfos((GeneratorCreationInfos) modificationInfos);
     }
 
     @Override

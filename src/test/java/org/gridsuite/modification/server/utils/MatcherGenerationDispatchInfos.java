@@ -17,21 +17,17 @@ import java.util.Objects;
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 public class MatcherGenerationDispatchInfos extends MatcherModificationInfos<GenerationDispatchInfos> {
-    protected MatcherGenerationDispatchInfos(GenerationDispatchInfos ref) {
+    public MatcherGenerationDispatchInfos(GenerationDispatchInfos ref) {
         super(ref);
     }
 
-    public static MatcherGenerationDispatchInfos createMatcherGenerationDispatchInfos(GenerationDispatchInfos generationDispatchInfos) {
-        return new MatcherGenerationDispatchInfos(generationDispatchInfos);
+    private static boolean matchesFilter(GeneratorsFilterInfos filter1, GeneratorsFilterInfos filter2) {
+        return Objects.equals(filter1.getName(), filter2.getName())
+            && Objects.equals(filter1.getId(), filter2.getId());
     }
 
-    private boolean matchesFilter(GeneratorsFilterInfos filter1, GeneratorsFilterInfos filter2) {
-        return Objects.equals(filter1.getName(), filter2.getName()) &&
-            Objects.equals(filter1.getId(), filter2.getId());
-    }
-
-    private boolean matchesGeneratorsFilters(List<GeneratorsFilterInfos> generatorsFilterInfos,
-                                             List<GeneratorsFilterInfos> refGeneratorsFilterInfos) {
+    private static boolean matchesGeneratorsFilters(List<GeneratorsFilterInfos> generatorsFilterInfos,
+                                                    List<GeneratorsFilterInfos> refGeneratorsFilterInfos) {
         if (!matchesList(refGeneratorsFilterInfos, generatorsFilterInfos)) {
             return false;
         }
@@ -43,8 +39,8 @@ public class MatcherGenerationDispatchInfos extends MatcherModificationInfos<Gen
         return true;
     }
 
-    private boolean matchesFrequencyReserve(GeneratorsFrequencyReserveInfos generatorsFrequencyReserve,
-                                            GeneratorsFrequencyReserveInfos refGeneratorsFrequencyReserve) {
+    private static boolean matchesFrequencyReserve(GeneratorsFrequencyReserveInfos generatorsFrequencyReserve,
+                                                   GeneratorsFrequencyReserveInfos refGeneratorsFrequencyReserve) {
         if (!Objects.equals(refGeneratorsFrequencyReserve.getFrequencyReserve(), generatorsFrequencyReserve.getFrequencyReserve())) {
             return false;
         }
@@ -60,8 +56,8 @@ public class MatcherGenerationDispatchInfos extends MatcherModificationInfos<Gen
         return true;
     }
 
-    private boolean matchesGeneratorsFrequencyReserve(List<GeneratorsFrequencyReserveInfos> generatorsFrequencyReserveInfos,
-                                                      List<GeneratorsFrequencyReserveInfos> refGeneratorsFrequencyReserveInfos) {
+    private static boolean matchesGeneratorsFrequencyReserve(List<GeneratorsFrequencyReserveInfos> generatorsFrequencyReserveInfos,
+                                                             List<GeneratorsFrequencyReserveInfos> refGeneratorsFrequencyReserveInfos) {
         if (!matchesList(refGeneratorsFrequencyReserveInfos, generatorsFrequencyReserveInfos)) {
             return false;
         }
@@ -73,16 +69,17 @@ public class MatcherGenerationDispatchInfos extends MatcherModificationInfos<Gen
         return true;
     }
 
+    @Override
     public boolean matchesSafely(GenerationDispatchInfos m) {
         return super.matchesSafely(m)
-                && Objects.equals(reference.getLossCoefficient(), m.getLossCoefficient())
-                && Objects.equals(reference.getDefaultOutageRate(), m.getDefaultOutageRate())
-                && matchesGeneratorsFilters(m.getGeneratorsWithoutOutage(), reference.getGeneratorsWithoutOutage())
-                && matchesGeneratorsFilters(m.getGeneratorsWithFixedSupply(), reference.getGeneratorsWithFixedSupply())
-                && matchesGeneratorsFrequencyReserve(m.getGeneratorsFrequencyReserve(), reference.getGeneratorsFrequencyReserve());
+            && Objects.equals(getReference().getLossCoefficient(), m.getLossCoefficient())
+            && Objects.equals(getReference().getDefaultOutageRate(), m.getDefaultOutageRate())
+            && matchesGeneratorsFilters(m.getGeneratorsWithoutOutage(), getReference().getGeneratorsWithoutOutage())
+            && matchesGeneratorsFilters(m.getGeneratorsWithFixedSupply(), getReference().getGeneratorsWithFixedSupply())
+            && matchesGeneratorsFrequencyReserve(m.getGeneratorsFrequencyReserve(), getReference().getGeneratorsFrequencyReserve());
     }
 
-    private boolean matchesList(List<?> list1, List<?> list2) {
+    private static boolean matchesList(List<?> list1, List<?> list2) {
         if ((list1 == null) != (list2 == null)) {
             return false;
         }

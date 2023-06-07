@@ -15,25 +15,22 @@ import java.util.Objects;
  * @author bendaamerahm <ahmed.bendaamer at rte-france.com>
  */
 public class MatcherLinesAttachToSplitLinesInfos extends MatcherModificationInfos<LinesAttachToSplitLinesInfos> {
-    protected MatcherLinesAttachToSplitLinesInfos(LinesAttachToSplitLinesInfos ref) {
+    public MatcherLinesAttachToSplitLinesInfos(LinesAttachToSplitLinesInfos ref) {
         super(ref);
     }
 
-    public static MatcherLinesAttachToSplitLinesInfos createMatcherLinesAttachToSplitLinesInfos(LinesAttachToSplitLinesInfos toLinesAttachToSplitLinesInfos) {
-        return new MatcherLinesAttachToSplitLinesInfos(toLinesAttachToSplitLinesInfos);
-    }
-
+    @Override
     public boolean matchesSafely(LinesAttachToSplitLinesInfos m) {
         return super.matchesSafely(m)
-                && Objects.equals(reference.getLineToAttachTo1Id(), m.getLineToAttachTo1Id())
-                && Objects.equals(reference.getLineToAttachTo2Id(), m.getLineToAttachTo2Id())
-                && Objects.equals(reference.getAttachedLineId(), m.getAttachedLineId())
-                && Objects.equals(reference.getVoltageLevelId(), m.getVoltageLevelId())
-                && Objects.equals(reference.getBbsBusId(), m.getBbsBusId())
-                && Objects.equals(reference.getReplacingLine1Id(), m.getReplacingLine1Id())
-                && Objects.equals(reference.getReplacingLine1Name(), m.getReplacingLine1Name())
-                && Objects.equals(reference.getReplacingLine2Id(), m.getReplacingLine2Id())
-                && Objects.equals(reference.getReplacingLine2Name(), m.getReplacingLine2Name());
+                && Objects.equals(getReference().getLineToAttachTo1Id(), m.getLineToAttachTo1Id())
+                && Objects.equals(getReference().getLineToAttachTo2Id(), m.getLineToAttachTo2Id())
+                && Objects.equals(getReference().getAttachedLineId(), m.getAttachedLineId())
+                && Objects.equals(getReference().getVoltageLevelId(), m.getVoltageLevelId())
+                && Objects.equals(getReference().getBbsBusId(), m.getBbsBusId())
+                && Objects.equals(getReference().getReplacingLine1Id(), m.getReplacingLine1Id())
+                && Objects.equals(getReference().getReplacingLine1Name(), m.getReplacingLine1Name())
+                && Objects.equals(getReference().getReplacingLine2Id(), m.getReplacingLine2Id())
+                && Objects.equals(getReference().getReplacingLine2Name(), m.getReplacingLine2Name());
     }
 }
 

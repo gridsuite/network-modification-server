@@ -25,7 +25,8 @@ import org.springframework.test.web.servlet.MvcResult;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.BUSBAR_SECTION_NOT_FOUND;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.VOLTAGE_LEVEL_NOT_FOUND;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -129,7 +130,7 @@ public class LoadCreationInNodeBreakerTest extends AbstractNetworkModificationTe
 
     @Override
     protected MatcherLoadCreationInfos createMatcher(ModificationInfos modificationInfos) {
-        return MatcherLoadCreationInfos.createMatcherLoadCreationInfos((LoadCreationInfos) modificationInfos);
+        return new MatcherLoadCreationInfos((LoadCreationInfos) modificationInfos);
     }
 
     @Override

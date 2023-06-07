@@ -11,6 +11,7 @@ import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.DeleteVoltageLevelOnLineInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.utils.MatcherDeleteVoltageLevelOnLineInfos;
 import org.gridsuite.modification.server.utils.MatcherModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
@@ -21,7 +22,6 @@ import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_ALREADY_EXISTS;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_NOT_FOUND;
-import static org.gridsuite.modification.server.utils.MatcherDeleteVoltageLevelOnLineInfos.createMatcherDeleteVoltageLevelOnLineInfos;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -60,7 +60,7 @@ public class DeleteVoltageLevelOnLineTest extends AbstractNetworkModificationTes
 
     @Override
     protected MatcherModificationInfos createMatcher(ModificationInfos modificationInfos) {
-        return createMatcherDeleteVoltageLevelOnLineInfos((DeleteVoltageLevelOnLineInfos) modificationInfos);
+        return new MatcherDeleteVoltageLevelOnLineInfos((DeleteVoltageLevelOnLineInfos) modificationInfos);
     }
 
     @Override

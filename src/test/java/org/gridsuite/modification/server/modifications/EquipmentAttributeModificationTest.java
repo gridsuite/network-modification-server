@@ -12,6 +12,7 @@ import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.EquipmentAttributeModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.utils.MatcherEquipmentAttributeModificationInfos;
 import org.gridsuite.modification.server.utils.MatcherModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
@@ -23,10 +24,9 @@ import java.time.ZonedDateTime;
 import java.util.Set;
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.Impacts.TestImpactUtils.testElementModificationImpact;
 import static org.gridsuite.modification.server.Impacts.TestImpactUtils.testEmptyImpacts;
-import static org.gridsuite.modification.server.utils.MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -180,7 +180,7 @@ public class EquipmentAttributeModificationTest extends AbstractNetworkModificat
 
     @Override
     protected MatcherModificationInfos createMatcher(ModificationInfos modificationInfos) {
-        return createMatcherEquipmentAttributeModificationInfos((EquipmentAttributeModificationInfos) modificationInfos);
+        return new MatcherEquipmentAttributeModificationInfos((EquipmentAttributeModificationInfos) modificationInfos);
     }
 
     @Override

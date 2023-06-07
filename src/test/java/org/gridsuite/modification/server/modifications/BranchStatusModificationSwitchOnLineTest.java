@@ -11,12 +11,12 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.Terminal;
 import org.gridsuite.modification.server.dto.BranchStatusModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.utils.MatcherBranchStatusModificationInfos;
 import org.gridsuite.modification.server.utils.MatcherModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.utils.MatcherBranchStatusModificationInfos.createMatcherBranchStatusModificationInfos;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -50,7 +50,7 @@ public class BranchStatusModificationSwitchOnLineTest extends AbstractNetworkMod
 
     @Override
     protected MatcherModificationInfos createMatcher(ModificationInfos modificationInfos) {
-        return createMatcherBranchStatusModificationInfos((BranchStatusModificationInfos) modificationInfos);
+        return new MatcherBranchStatusModificationInfos((BranchStatusModificationInfos) modificationInfos);
     }
 
     @Override

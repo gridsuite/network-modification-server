@@ -8,18 +8,18 @@ package org.gridsuite.modification.server.utils;
 
 import org.gridsuite.modification.server.dto.EquipmentModificationInfos;
 
+import java.util.Objects;
+
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 public class MatcherEquipmentModificationInfos<T extends EquipmentModificationInfos> extends MatcherModificationInfos<T> {
-
-    protected MatcherEquipmentModificationInfos(T ref) {
+    public MatcherEquipmentModificationInfos(T ref) {
         super(ref);
     }
 
     @Override
     public boolean matchesSafely(T m) {
-        return super.matchesSafely(m)
-                && m.getEquipmentId().equals(reference.getEquipmentId());
+        return super.matchesSafely(m) && Objects.equals(m.getEquipmentId(), getReference().getEquipmentId());
     }
 }

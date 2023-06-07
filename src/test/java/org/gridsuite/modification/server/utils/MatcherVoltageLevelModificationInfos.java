@@ -16,22 +16,18 @@ import java.util.Objects;
  */
 
 public class MatcherVoltageLevelModificationInfos extends MatcherModificationInfos<VoltageLevelModificationInfos> {
-    protected MatcherVoltageLevelModificationInfos(VoltageLevelModificationInfos ref) {
+    public MatcherVoltageLevelModificationInfos(VoltageLevelModificationInfos ref) {
         super(ref);
-    }
-
-    public static MatcherVoltageLevelModificationInfos createMatcherVoltageLevelModificationInfos(VoltageLevelModificationInfos infos) {
-        return new MatcherVoltageLevelModificationInfos(infos);
     }
 
     @Override
     public boolean matchesSafely(VoltageLevelModificationInfos m) {
-        return Objects.equals(m.getEquipmentId(), reference.getEquipmentId()) &&
-                Objects.equals(m.getEquipmentName(), reference.getEquipmentName()) &&
-                Objects.equals(m.getNominalVoltage(), reference.getNominalVoltage()) &&
-                Objects.equals(m.getLowVoltageLimit(), reference.getLowVoltageLimit()) &&
-                Objects.equals(m.getHighVoltageLimit(), reference.getHighVoltageLimit()) &&
-                Objects.equals(m.getIpMin(), reference.getIpMin()) &&
-                Objects.equals(m.getIpMax(), reference.getIpMax());
+        return Objects.equals(m.getEquipmentId(), getReference().getEquipmentId()) &&
+                Objects.equals(m.getEquipmentName(), getReference().getEquipmentName()) &&
+                Objects.equals(m.getNominalVoltage(), getReference().getNominalVoltage()) &&
+                Objects.equals(m.getLowVoltageLimit(), getReference().getLowVoltageLimit()) &&
+                Objects.equals(m.getHighVoltageLimit(), getReference().getHighVoltageLimit()) &&
+                Objects.equals(m.getIpMin(), getReference().getIpMin()) &&
+                Objects.equals(m.getIpMax(), getReference().getIpMax());
     }
 }

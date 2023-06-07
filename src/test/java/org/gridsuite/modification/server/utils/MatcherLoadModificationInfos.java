@@ -7,35 +7,24 @@
 package org.gridsuite.modification.server.utils;
 
 import org.gridsuite.modification.server.dto.LoadModificationInfos;
-import org.hamcrest.Description;
 
 /**
  * @author Nicolas Noir <nicolas.noir at rte-france.com>
  */
 public class MatcherLoadModificationInfos extends MatcherModificationInfos<LoadModificationInfos> {
-
-    public static MatcherLoadModificationInfos createMatcherLoadModificationInfos(LoadModificationInfos loadModificationInfos) {
-        return new MatcherLoadModificationInfos(loadModificationInfos);
-    }
-
-    protected MatcherLoadModificationInfos(LoadModificationInfos ref) {
+    public MatcherLoadModificationInfos(LoadModificationInfos ref) {
         super(ref);
     }
 
     @Override
     public boolean matchesSafely(LoadModificationInfos m) {
         return super.matchesSafely(m)
-                && m.getEquipmentId().equals(reference.getEquipmentId())
-                && ((m.getEquipmentName() == null && reference.getEquipmentName() == null) || m.getEquipmentName().equals(reference.getEquipmentName()))
-                && ((m.getVoltageLevelId() == null && reference.getVoltageLevelId() == null) || m.getVoltageLevelId().equals(reference.getVoltageLevelId()))
-                && ((m.getBusOrBusbarSectionId() == null && reference.getBusOrBusbarSectionId() == null) || m.getBusOrBusbarSectionId().equals(reference.getBusOrBusbarSectionId()))
-                && ((m.getLoadType() == null && reference.getLoadType() == null) || m.getLoadType().equals(reference.getLoadType()))
-                && ((m.getActivePower() == null && reference.getActivePower() == null) || m.getActivePower().equals(reference.getActivePower()))
-                && ((m.getReactivePower() == null && reference.getReactivePower() == null) || m.getReactivePower().equals(reference.getReactivePower()));
-    }
-
-    @Override
-    public void describeTo(Description description) {
-        description.appendValue(reference);
+                && m.getEquipmentId().equals(getReference().getEquipmentId())
+                && ((m.getEquipmentName() == null && getReference().getEquipmentName() == null) || m.getEquipmentName().equals(getReference().getEquipmentName()))
+                && ((m.getVoltageLevelId() == null && getReference().getVoltageLevelId() == null) || m.getVoltageLevelId().equals(getReference().getVoltageLevelId()))
+                && ((m.getBusOrBusbarSectionId() == null && getReference().getBusOrBusbarSectionId() == null) || m.getBusOrBusbarSectionId().equals(getReference().getBusOrBusbarSectionId()))
+                && ((m.getLoadType() == null && getReference().getLoadType() == null) || m.getLoadType().equals(getReference().getLoadType()))
+                && ((m.getActivePower() == null && getReference().getActivePower() == null) || m.getActivePower().equals(getReference().getActivePower()))
+                && ((m.getReactivePower() == null && getReference().getReactivePower() == null) || m.getReactivePower().equals(getReference().getReactivePower()));
     }
 }

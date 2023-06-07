@@ -8,7 +8,6 @@ package org.gridsuite.modification.server.Impacts;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.iidm.network.IdentifiableType;
-import lombok.SneakyThrows;
 import nl.jqno.equalsverifier.EqualsVerifier;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationResult.ApplicationStatus;
@@ -16,6 +15,7 @@ import org.gridsuite.modification.server.impacts.SimpleElementImpact;
 import org.gridsuite.modification.server.utils.TestUtils;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -28,12 +28,10 @@ import static org.junit.Assert.assertEquals;
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
 public class ElementImpactTest {
-
-    ObjectMapper mapper = new ObjectMapper();
+    private ObjectMapper mapper = new ObjectMapper();
 
     @Test
-    @SneakyThrows
-    public void testElementImpact() {
+    public void testElementImpact() throws IOException {
         EqualsVerifier.simple().forClass(NetworkModificationResult.class).verify();
         EqualsVerifier.simple().forClass(SimpleElementImpact.class).verify();
 

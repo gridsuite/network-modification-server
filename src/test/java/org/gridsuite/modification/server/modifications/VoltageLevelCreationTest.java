@@ -64,7 +64,7 @@ public class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
 
     @Override
     protected MatcherVoltageLevelCreationInfos createMatcher(ModificationInfos modificationInfos) {
-        return MatcherVoltageLevelCreationInfos.createMatcherVoltageLevelCreationInfos((VoltageLevelCreationInfos) modificationInfos);
+        return new MatcherVoltageLevelCreationInfos((VoltageLevelCreationInfos) modificationInfos);
     }
 
     @Override

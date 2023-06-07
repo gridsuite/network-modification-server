@@ -6,6 +6,9 @@
  */
 package org.gridsuite.modification.server.utils;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.hamcrest.Description;
 import org.hamcrest.TypeSafeMatcher;
@@ -13,16 +16,10 @@ import org.hamcrest.TypeSafeMatcher;
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
+@AllArgsConstructor
 public class MatcherModificationInfos<T extends ModificationInfos> extends TypeSafeMatcher<T> {
-    T reference;
-
-    public static MatcherModificationInfos createMatcherModificationInfos(ModificationInfos ref) {
-        return new MatcherModificationInfos(ref);
-    }
-
-    protected MatcherModificationInfos(T ref) {
-        this.reference = ref;
-    }
+    @Getter(AccessLevel.PROTECTED)
+    private T reference;
 
     @Override
     public boolean matchesSafely(T m) {

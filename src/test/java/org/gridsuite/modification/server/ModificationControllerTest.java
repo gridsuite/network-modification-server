@@ -19,7 +19,6 @@ import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
 import lombok.SneakyThrows;
 import nl.jqno.equalsverifier.EqualsVerifier;
-
 import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.modification.server.Impacts.TestImpactUtils;
 import org.gridsuite.modification.server.dto.*;
@@ -35,11 +34,7 @@ import org.gridsuite.modification.server.modifications.ModificationUtils;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.NetworkModificationService;
 import org.gridsuite.modification.server.service.ReportService;
-import org.gridsuite.modification.server.utils.MatcherModificationInfos;
-import org.gridsuite.modification.server.utils.ModificationCreation;
-import org.gridsuite.modification.server.utils.NetworkCreation;
-import org.gridsuite.modification.server.utils.NetworkWithTeePoint;
-import org.gridsuite.modification.server.utils.TestUtils;
+import org.gridsuite.modification.server.utils.*;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -396,10 +391,10 @@ public class ModificationControllerTest {
         assertEquals(5, newModificationList.size());
         assertEquals(modificationUuidList, newModificationUuidList.subList(0, 3));
         // compare duplicates 0 and 3 (same data except uuid)
-        assertThat(newModificationList.get(3), MatcherModificationInfos.createMatcherModificationInfos(modificationList.get(0)));
+        assertThat(newModificationList.get(3), new MatcherModificationInfos<>(modificationList.get(0)));
 
         // compare duplicates 1 and 4 (same data except uuid)
-        assertThat(newModificationList.get(4), MatcherModificationInfos.createMatcherModificationInfos(modificationList.get(1)));
+        assertThat(newModificationList.get(4), new MatcherModificationInfos<>(modificationList.get(1)));
 
         // bad request error case: wrong action param
         mockMvc.perform(
@@ -431,8 +426,8 @@ public class ModificationControllerTest {
         assertEquals(3, newModificationListOtherGroup.size());
         assertEquals(modificationUuidListOtherGroup, newModificationUuidListOtherGroup.subList(0, 1));
         // compare duplicates
-        assertThat(newModificationListOtherGroup.get(1), MatcherModificationInfos.createMatcherModificationInfos(modificationList.get(0)));
-        assertThat(newModificationListOtherGroup.get(2), MatcherModificationInfos.createMatcherModificationInfos(modificationList.get(1)));
+        assertThat(newModificationListOtherGroup.get(1), new MatcherModificationInfos<>(modificationList.get(0)));
+        assertThat(newModificationListOtherGroup.get(2), new MatcherModificationInfos<>(modificationList.get(1)));
     }
 
     @Test

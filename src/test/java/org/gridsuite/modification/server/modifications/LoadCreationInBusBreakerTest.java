@@ -58,7 +58,7 @@ public class LoadCreationInBusBreakerTest extends AbstractNetworkModificationTes
 
     @Override
     protected MatcherLoadCreationInfos createMatcher(ModificationInfos modificationInfos) {
-        return MatcherLoadCreationInfos.createMatcherLoadCreationInfos((LoadCreationInfos) modificationInfos);
+        return new MatcherLoadCreationInfos((LoadCreationInfos) modificationInfos);
     }
 
     @Override

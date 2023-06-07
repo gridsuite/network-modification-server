@@ -7,12 +7,14 @@
 
 package org.gridsuite.modification.server.modifications;
 
-import com.powsybl.iidm.network.*;
+import com.powsybl.iidm.network.Country;
+import com.powsybl.iidm.network.Network;
+import com.powsybl.iidm.network.Substation;
+import lombok.SneakyThrows;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.utils.MatcherSubstationModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
-import lombok.SneakyThrows;
 import org.springframework.http.MediaType;
 
 import java.util.List;
@@ -60,7 +62,7 @@ public class SubstationModificationTest extends AbstractNetworkModificationTest 
 
     @Override
     protected MatcherSubstationModificationInfos createMatcher(ModificationInfos modificationInfos) {
-        return MatcherSubstationModificationInfos.createMatcherSubstationModificationInfos((SubstationModificationInfos) modificationInfos);
+        return new MatcherSubstationModificationInfos((SubstationModificationInfos) modificationInfos);
     }
 
     @Override

@@ -24,7 +24,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
-import static org.gridsuite.modification.server.utils.MatcherLineCreationInfos.createMatcherLineCreationInfos;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -286,7 +285,7 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
 
     @Override
     protected MatcherLineCreationInfos createMatcher(ModificationInfos modificationInfos) {
-        return createMatcherLineCreationInfos((LineCreationInfos) modificationInfos);
+        return new MatcherLineCreationInfos((LineCreationInfos) modificationInfos);
     }
 
     @Override

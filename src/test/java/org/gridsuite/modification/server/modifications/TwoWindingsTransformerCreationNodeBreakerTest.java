@@ -251,7 +251,7 @@ public class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetwo
 
     @Override
     protected MatcherTwoWindingsTransformerCreationInfos createMatcher(ModificationInfos modificationInfos) {
-        return MatcherTwoWindingsTransformerCreationInfos.createMatcherTwoWindingsTransformerCreationInfos((TwoWindingsTransformerCreationInfos) modificationInfos);
+        return new MatcherTwoWindingsTransformerCreationInfos((TwoWindingsTransformerCreationInfos) modificationInfos);
     }
 
     @Override
