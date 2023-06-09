@@ -125,7 +125,7 @@ public class GeneratorModification extends AbstractModification {
                 .build());
 
         if (modificationInfos.getEquipmentName() != null && modificationInfos.getEquipmentName().getValue() != null) {
-            ModificationUtils.getInstance().applyElementaryModifications(generator::setName, generator::getNameOrId, modificationInfos.getEquipmentName(), subReporter, "Name");
+            ModificationUtils.getInstance().applyElementaryModifications(generator::setName, () -> generator.getOptionalName().orElse("No value"), modificationInfos.getEquipmentName(), subReporter, "Name");
         }
         ModificationUtils.getInstance().applyElementaryModifications(generator::setEnergySource, generator::getEnergySource, modificationInfos.getEnergySource(), subReporter, "Energy source");
 
