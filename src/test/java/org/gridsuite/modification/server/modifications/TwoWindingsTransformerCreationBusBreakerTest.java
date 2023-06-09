@@ -273,7 +273,7 @@ public class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetwor
     }
 
     @Override
-    protected void assertNetworkAfterCreation() {
+    protected void assertAfterNetworkModificationCreation() {
         assertNotNull(getNetwork().getTwoWindingsTransformer("new2wt"));
         assertEquals(1, getNetwork().getVoltageLevel("v1").getTwoWindingsTransformerStream().filter(transformer -> transformer.getId().equals("new2wt")).count());
         assertEquals(1, getNetwork().getVoltageLevel("v12").getTwoWindingsTransformerStream().filter(transformer -> transformer.getId().equals("new2wt")).count());
@@ -289,7 +289,7 @@ public class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetwor
 
     @SneakyThrows
     @Override
-    protected void assertNetworkAfterDeletion() {
+    protected void assertAfterNetworkModificationDeletion() {
         assertNull(getNetwork().getTwoWindingsTransformer("new2wt"));
         assertEquals(0, getNetwork().getVoltageLevel("v1").getTwoWindingsTransformerStream().filter(transformer -> transformer.getId().equals("new2wt")).count());
         assertEquals(0, getNetwork().getVoltageLevel("v2").getTwoWindingsTransformerStream().filter(transformer -> transformer.getId().equals("new2wt")).count());

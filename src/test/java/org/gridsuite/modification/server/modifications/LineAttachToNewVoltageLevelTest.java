@@ -98,7 +98,7 @@ public class LineAttachToNewVoltageLevelTest extends AbstractNetworkModification
     }
 
     @Override
-    protected void assertNetworkAfterCreation() {
+    protected void assertAfterNetworkModificationCreation() {
         // new equipments in the network:
         assertNotNull(getNetwork().getLine("attachmentLine"));
         assertNotNull(getNetwork().getLine("nl1"));
@@ -110,7 +110,7 @@ public class LineAttachToNewVoltageLevelTest extends AbstractNetworkModification
     }
 
     @Override
-    protected void assertNetworkAfterDeletion() {
+    protected void assertAfterNetworkModificationDeletion() {
         assertNull(getNetwork().getLine("attachmentLine"));
         assertNull(getNetwork().getLine("nl1"));
         assertNull(getNetwork().getLine("nl2"));

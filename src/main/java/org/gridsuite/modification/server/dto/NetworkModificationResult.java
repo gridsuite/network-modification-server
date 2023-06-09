@@ -51,7 +51,7 @@ public class NetworkModificationResult {
         return networkImpacts.stream().flatMap(impact -> impact.getSubstationIds().stream()).collect(Collectors.toCollection(TreeSet::new));
     }
 
-    public Boolean isApplicationStatusOk() {
-        return !Objects.equals(this.applicationStatus, ApplicationStatus.WITH_ERRORS);
+    public boolean isApplicationStatusOk() {
+        return this.applicationStatus != ApplicationStatus.WITH_ERRORS;
     }
 }

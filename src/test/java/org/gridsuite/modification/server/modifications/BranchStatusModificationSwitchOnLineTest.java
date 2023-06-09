@@ -54,7 +54,7 @@ public class BranchStatusModificationSwitchOnLineTest extends AbstractNetworkMod
     }
 
     @Override
-    protected void assertNetworkAfterCreation() {
+    protected void assertAfterNetworkModificationCreation() {
         // terminals are now all connected
         Line line = getNetwork().getLine(TARGET_LINE_ID);
         assertNotNull(line);
@@ -62,7 +62,7 @@ public class BranchStatusModificationSwitchOnLineTest extends AbstractNetworkMod
     }
 
     @Override
-    protected void assertNetworkAfterDeletion() {
+    protected void assertAfterNetworkModificationDeletion() {
         // back to init state : no more connected terminals
         Line line = getNetwork().getLine(TARGET_LINE_ID);
         assertNotNull(line);

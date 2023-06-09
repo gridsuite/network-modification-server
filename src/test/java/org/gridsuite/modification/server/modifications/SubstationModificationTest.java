@@ -64,7 +64,7 @@ public class SubstationModificationTest extends AbstractNetworkModificationTest 
     }
 
     @Override
-    protected void assertNetworkAfterCreation() {
+    protected void assertAfterNetworkModificationCreation() {
         Substation modifiedStation = getNetwork().getSubstation("s3");
         assertNotNull(modifiedStation);
         assertEquals("newName", modifiedStation.getOptionalName().orElse(""));
@@ -77,7 +77,7 @@ public class SubstationModificationTest extends AbstractNetworkModificationTest 
     }
 
     @Override
-    protected void assertNetworkAfterDeletion() {
+    protected void assertAfterNetworkModificationDeletion() {
         Substation modifiedStation = getNetwork().getSubstation("s3");
         assertNotNull(modifiedStation);
         assertEquals("s3", modifiedStation.getOptionalName().orElse(""));

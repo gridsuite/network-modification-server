@@ -100,7 +100,7 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
 
-        assertNetworkAfterCreationWithStandardLossCoefficient();
+        assertAfterNetworkModificationCreationWithStandardLossCoefficient();
 
         // test total demand and remaining power imbalance on synchronous components
         int firstSynchronousComponentNum = getNetwork().getGenerator(GTH1_ID).getTerminal().getBusView().getBus().getSynchronousComponent().getNum(); // GTH1 is in first synchronous component
@@ -360,7 +360,7 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
         return MatcherGenerationDispatchInfos.createMatcherGenerationDispatchInfos((GenerationDispatchInfos) modificationInfos);
     }
 
-    private void assertNetworkAfterCreationWithStandardLossCoefficient() {
+    private void assertAfterNetworkModificationCreationWithStandardLossCoefficient() {
         assertEquals(100., getNetwork().getGenerator(GH1_ID).getTargetP(), 0.001);
         assertEquals(70., getNetwork().getGenerator(GH2_ID).getTargetP(), 0.001);
         assertEquals(130., getNetwork().getGenerator(GH3_ID).getTargetP(), 0.001);
@@ -376,12 +376,12 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
     }
 
     @Override
-    protected void assertNetworkAfterCreation() {
-        assertNetworkAfterCreationWithStandardLossCoefficient();
+    protected void assertAfterNetworkModificationCreation() {
+        assertAfterNetworkModificationCreationWithStandardLossCoefficient();
     }
 
     @Override
-    protected void assertNetworkAfterDeletion() {
+    protected void assertAfterNetworkModificationDeletion() {
         assertEquals(85.357, getNetwork().getGenerator(GH1_ID).getTargetP(), 0.001);
         assertEquals(50., getNetwork().getGenerator(GH2_ID).getTargetP(), 0.001);
         assertEquals(100., getNetwork().getGenerator(GH3_ID).getTargetP(), 0.001);

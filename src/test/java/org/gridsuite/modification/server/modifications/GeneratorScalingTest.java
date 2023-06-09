@@ -361,7 +361,7 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
     }
 
     @Override
-    protected void assertNetworkAfterCreation() {
+    protected void assertAfterNetworkModificationCreation() {
         assertEquals(118.46, getNetwork().getGenerator(GENERATOR_ID_1).getTargetP(), 0.01D);
         assertEquals(258.46, getNetwork().getGenerator(GENERATOR_ID_2).getTargetP(), 0.01D);
         assertEquals(225, getNetwork().getGenerator(GENERATOR_ID_3).getTargetP(), 0.01D);
@@ -375,7 +375,7 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
     }
 
     @Override
-    protected void assertNetworkAfterDeletion() {
+    protected void assertAfterNetworkModificationDeletion() {
         assertEquals(100, getNetwork().getGenerator(GENERATOR_ID_1).getTargetP(), 0);
         assertEquals(200, getNetwork().getGenerator(GENERATOR_ID_2).getTargetP(), 0);
         assertEquals(200, getNetwork().getGenerator(GENERATOR_ID_3).getTargetP(), 0);

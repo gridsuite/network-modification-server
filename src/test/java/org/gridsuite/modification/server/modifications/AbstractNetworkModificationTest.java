@@ -17,6 +17,7 @@ import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.iidm.impl.NetworkImpl;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.ReportService;
 import org.gridsuite.modification.server.utils.MatcherModificationInfos;
@@ -42,6 +43,7 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
@@ -135,14 +137,15 @@ public abstract class AbstractNetworkModificationTest {
         ModificationInfos modificationToCreate = buildModification();
         String modificationToCreateJson = mapper.writeValueAsString(modificationToCreate);
 
-        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+        MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
+        Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
 
         ModificationInfos createdModification = modificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
 
         assertThat(createdModification, createMatcher(modificationToCreate));
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
-        assertNetworkAfterCreation();
+        assertAfterNetworkModificationCreation();
     }
 
     @Test
@@ -202,7 +205,7 @@ public abstract class AbstractNetworkModificationTest {
         List<ModificationInfos> storedModifications = modificationRepository.getModifications(TEST_GROUP_ID, false, true);
 
         assertTrue(storedModifications.isEmpty());
-        assertNetworkAfterDeletion();
+        assertAfterNetworkModificationDeletion();
     }
 
     @Test
@@ -280,7 +283,7 @@ public abstract class AbstractNetworkModificationTest {
 
     protected abstract MatcherModificationInfos createMatcher(ModificationInfos modificationInfos);
 
-    protected abstract void assertNetworkAfterCreation();
+    protected abstract void assertAfterNetworkModificationCreation();
 
-    protected abstract void assertNetworkAfterDeletion();
+    protected abstract void assertAfterNetworkModificationDeletion();
 }

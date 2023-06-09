@@ -97,7 +97,7 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
     }
 
     @Override
-    protected void assertNetworkAfterCreation() {
+    protected void assertAfterNetworkModificationCreation() {
         Line modifiedLine = getNetwork().getLine("line1");
         assertEquals("LineModified", modifiedLine.getNameOrId());
         assertEquals(1.0, modifiedLine.getR());
@@ -120,7 +120,7 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
     }
 
     @Override
-    protected void assertNetworkAfterDeletion() {
+    protected void assertAfterNetworkModificationDeletion() {
         Line line = getNetwork().getLine("line1");
         assertEquals("line1", line.getNameOrId());
         assertEquals(1.0, line.getR());

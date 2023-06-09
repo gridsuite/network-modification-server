@@ -118,14 +118,14 @@ public class GeneratorCreationInBusBreakerTest extends AbstractNetworkModificati
     }
 
     @Override
-    protected void assertNetworkAfterCreation() {
+    protected void assertAfterNetworkModificationCreation() {
         assertNotNull(getNetwork().getGenerator("idGenerator2"));
         assertEquals(1, getNetwork().getVoltageLevel("v1").getGeneratorStream()
                 .filter(transformer -> transformer.getId().equals("idGenerator2")).count());
     }
 
     @Override
-    protected void assertNetworkAfterDeletion() {
+    protected void assertAfterNetworkModificationDeletion() {
         assertNull(getNetwork().getGenerator("idGenerator2"));
         assertEquals(0, getNetwork().getVoltageLevel("v1").getGeneratorStream()
                 .filter(transformer -> transformer.getId().equals("idGenerator2")).count());

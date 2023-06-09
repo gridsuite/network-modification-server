@@ -84,12 +84,12 @@ public class LineCreationInMixedTypologyTest extends AbstractNetworkModification
     }
 
     @Override
-    protected void assertNetworkAfterCreation() {
+    protected void assertAfterNetworkModificationCreation() {
         assertNotNull(getNetwork().getLine("idLine1"));
     }
 
     @Override
-    protected void assertNetworkAfterDeletion() {
+    protected void assertAfterNetworkModificationDeletion() {
         assertNull(getNetwork().getLine("idLine1"));
     }
 }

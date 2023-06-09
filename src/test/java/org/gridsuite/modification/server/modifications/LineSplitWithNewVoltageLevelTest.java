@@ -102,7 +102,7 @@ public class LineSplitWithNewVoltageLevelTest extends AbstractNetworkModificatio
     }
 
     @Override
-    protected void assertNetworkAfterCreation() {
+    protected void assertAfterNetworkModificationCreation() {
         assertNull(getNetwork().getLine("line2"));
         assertNotNull(getNetwork().getVoltageLevel("newVoltageLevel"));
         assertNotNull(getNetwork().getLine("nl1v"));
@@ -110,7 +110,7 @@ public class LineSplitWithNewVoltageLevelTest extends AbstractNetworkModificatio
     }
 
     @Override
-    protected void assertNetworkAfterDeletion() {
+    protected void assertAfterNetworkModificationDeletion() {
         assertNotNull(getNetwork().getLine("line2"));
         assertNull(getNetwork().getVoltageLevel("newVoltageLevel"));
         assertNull(getNetwork().getLine("nl1v"));

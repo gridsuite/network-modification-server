@@ -57,12 +57,12 @@ public class GroovyScriptTest extends AbstractNetworkModificationTest {
     }
 
     @Override
-    protected void assertNetworkAfterCreation() {
+    protected void assertAfterNetworkModificationCreation() {
         assertEquals(12, getNetwork().getGenerator("idGenerator").getTargetP(), 0);
     }
 
     @Override
-    protected void assertNetworkAfterDeletion() {
+    protected void assertAfterNetworkModificationDeletion() {
         assertEquals(42.1, getNetwork().getGenerator("idGenerator").getTargetP(), 0);
     }
 

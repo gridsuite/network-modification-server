@@ -106,7 +106,7 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
     }
 
     @Override
-    protected void assertNetworkAfterCreation() {
+    protected void assertAfterNetworkModificationCreation() {
         Generator modifiedGenerator = getNetwork().getGenerator("idGenerator");
         assertEquals("newV1Generator", modifiedGenerator.getNameOrId());
         assertEquals(EnergySource.SOLAR, modifiedGenerator.getEnergySource());
@@ -130,7 +130,7 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
     }
 
     @Override
-    protected void assertNetworkAfterDeletion() {
+    protected void assertAfterNetworkModificationDeletion() {
         Generator generator = getNetwork().getGenerator("idGenerator");
         assertEquals("idGenerator", generator.getNameOrId());
         assertEquals(EnergySource.OTHER, generator.getEnergySource());

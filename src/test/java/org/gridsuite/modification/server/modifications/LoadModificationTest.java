@@ -63,7 +63,7 @@ public class LoadModificationTest extends AbstractNetworkModificationTest {
     }
 
     @Override
-    protected void assertNetworkAfterCreation() {
+    protected void assertAfterNetworkModificationCreation() {
         Load modifiedLoad = getNetwork().getLoad("v1load");
         assertNotNull(modifiedLoad);
         assertEquals(LoadType.FICTITIOUS, modifiedLoad.getLoadType());
@@ -73,7 +73,7 @@ public class LoadModificationTest extends AbstractNetworkModificationTest {
     }
 
     @Override
-    protected void assertNetworkAfterDeletion() {
+    protected void assertAfterNetworkModificationDeletion() {
         Load modifiedLoad = getNetwork().getLoad("v1load");
         assertNotNull(modifiedLoad);
         assertEquals(LoadType.UNDEFINED, modifiedLoad.getLoadType());

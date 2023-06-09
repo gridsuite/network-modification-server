@@ -59,14 +59,14 @@ public class SubstationCreationTest extends AbstractNetworkModificationTest {
     }
 
     @Override
-    protected void assertNetworkAfterCreation() {
+    protected void assertAfterNetworkModificationCreation() {
         Substation substation = getNetwork().getSubstation("SubstationId");
         assertNotNull(substation);
         assertEquals("DemoC", substation.getProperty("DEMO"));
     }
 
     @Override
-    protected void assertNetworkAfterDeletion() {
+    protected void assertAfterNetworkModificationDeletion() {
         assertNull(getNetwork().getSubstation("SubstationId"));
     }
 
