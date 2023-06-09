@@ -9,13 +9,13 @@ package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
-import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.ShuntCompensatorCreationInfos;
 import org.gridsuite.modification.server.dto.ShuntCompensatorType;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
+import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 
 import java.time.ZonedDateTime;
@@ -30,6 +30,7 @@ import static org.junit.Assert.assertNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@Tag("IntegrationTest")
 public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
 
     @Override
@@ -82,9 +83,8 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
         assertNull(getNetwork().getShuntCompensator("shuntOneId"));
     }
 
-    @SneakyThrows
     @Test
-    public void testCreateWithError() {
+    public void testCreateWithError() throws Exception {
         ShuntCompensatorCreationInfos modificationToCreate = (ShuntCompensatorCreationInfos) buildModification();
         // Current number of sections above maximum allowed
         modificationToCreate.setIsIdenticalSection(false);
@@ -105,9 +105,8 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
                 modificationToCreate.getErrorType().name(), reportService);
     }
 
-    @SneakyThrows
     @Test
-    public void testCreateWithExistingConnectionPosition() {
+    public void testCreateWithExistingConnectionPosition() throws Exception {
         ShuntCompensatorCreationInfos dto = (ShuntCompensatorCreationInfos) buildModification();
         dto.setConnectionPosition(2);
         String modificationToCreateJson = mapper.writeValueAsString(dto);
@@ -117,9 +116,8 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
                 dto.getErrorType().name(), reportService);
     }
 
-    @SneakyThrows
     @Test
-    public void testCreateWithQAtNominalV() {
+    public void testCreateWithQAtNominalV() throws Exception {
         ShuntCompensatorCreationInfos dto = (ShuntCompensatorCreationInfos) buildModification();
         dto.setSusceptancePerSection(null);
         dto.setQAtNominalV(80.0);

@@ -6,17 +6,22 @@
  */
 package org.gridsuite.modification.server.Impacts;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.iidm.network.IdentifiableType;
-import lombok.SneakyThrows;
 import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationResult.ApplicationStatus;
 import org.gridsuite.modification.server.impacts.SimpleElementImpact;
 import org.gridsuite.modification.server.impacts.SimpleElementImpact.SimpleImpactType;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.utils.Assertions.*;
@@ -27,14 +32,11 @@ import static org.junit.Assert.assertTrue;
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
 public final class TestImpactUtils {
-
     private TestImpactUtils() {
     }
 
-    @SneakyThrows
-    public static void testEmptyImpacts(ObjectMapper mapper, String resultAsString) {
-        Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(resultAsString, new TypeReference<>() {
-        });
+    public static void testEmptyImpacts(ObjectMapper mapper, String resultAsString) throws JsonProcessingException {
+        Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertTrue(networkModificationResult.isPresent());
         testEmptyImpacts(mapper, networkModificationResult.get());
     }
@@ -55,10 +57,8 @@ public final class TestImpactUtils {
         assertThat(networkModificationResult).usingRecursiveComparison().isEqualTo(resultExpected);
     }
 
-    @SneakyThrows
-    public static void testElementImpacts(ObjectMapper mapper, String resultAsString, int nbImpacts, Set<String> substationIds) {
-        Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(resultAsString, new TypeReference<>() {
-        });
+    public static void testElementImpacts(ObjectMapper mapper, String resultAsString, int nbImpacts, Set<String> substationIds) throws JsonProcessingException {
+        Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertTrue(networkModificationResult.isPresent());
 
         assertEquals(ApplicationStatus.ALL_OK, networkModificationResult.get().getApplicationStatus());
@@ -66,10 +66,8 @@ public final class TestImpactUtils {
         assertEquals(nbImpacts, networkModificationResult.get().getNetworkImpacts().size());
     }
 
-    @SneakyThrows
-    public static void testElementImpacts(ObjectMapper mapper, String resultAsString, List<SimpleElementImpact> elementImpactsExpected) {
-        Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(resultAsString, new TypeReference<>() {
-        });
+    public static void testElementImpacts(ObjectMapper mapper, String resultAsString, List<SimpleElementImpact> elementImpactsExpected) throws JsonProcessingException {
+        Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertTrue(networkModificationResult.isPresent());
         NetworkModificationResult resultExpected = NetworkModificationResult.builder()
             .applicationStatus(ApplicationStatus.ALL_OK)
@@ -80,22 +78,20 @@ public final class TestImpactUtils {
                 .isEqualTo(resultExpected);
     }
 
-    public static void testElementCreationImpact(ObjectMapper mapper, String resultAsString, IdentifiableType elementType, String elementId, Set<String> substationIds) {
+    public static void testElementCreationImpact(ObjectMapper mapper, String resultAsString, IdentifiableType elementType, String elementId, Set<String> substationIds) throws JsonProcessingException {
         testElementImpact(SimpleImpactType.CREATION, mapper, resultAsString, elementType, elementId, substationIds);
     }
 
-    public static void testElementModificationImpact(ObjectMapper mapper, String resultAsString, IdentifiableType elementType, String elementId, Set<String> substationIds) {
+    public static void testElementModificationImpact(ObjectMapper mapper, String resultAsString, IdentifiableType elementType, String elementId, Set<String> substationIds) throws JsonProcessingException {
         testElementImpact(SimpleImpactType.MODIFICATION, mapper, resultAsString, elementType, elementId, substationIds);
     }
 
-    public static void testElementDeletionImpact(ObjectMapper mapper, String resultAsString, IdentifiableType elementType, String elementId, Set<String> substationIds) {
+    public static void testElementDeletionImpact(ObjectMapper mapper, String resultAsString, IdentifiableType elementType, String elementId, Set<String> substationIds) throws JsonProcessingException {
         testElementImpact(SimpleImpactType.DELETION, mapper, resultAsString, elementType, elementId, substationIds);
     }
 
-    @SneakyThrows
-    public static void testElementImpact(SimpleImpactType impactType, ObjectMapper mapper, String resultAsString, IdentifiableType elementType, String elementId, Set<String> substationIds) {
-        Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(resultAsString, new TypeReference<>() {
-        });
+    public static void testElementImpact(SimpleImpactType impactType, ObjectMapper mapper, String resultAsString, IdentifiableType elementType, String elementId, Set<String> substationIds) throws JsonProcessingException {
+        Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertTrue(networkModificationResult.isPresent());
         NetworkModificationResult resultExpected = NetworkModificationResult.builder()
             .applicationStatus(ApplicationStatus.ALL_OK)
@@ -106,12 +102,10 @@ public final class TestImpactUtils {
                 .isEqualTo(resultExpected);
     }
 
-    @SneakyThrows
     public static void testConnectableDeletionImpacts(ObjectMapper mapper, String resultAsString,
                                                       IdentifiableType connectableType, String connectableId,
-                                                      String breakerId, String disconnectorId, String substationId) {
-        Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(resultAsString, new TypeReference<>() {
-        });
+                                                      String breakerId, String disconnectorId, String substationId) throws JsonProcessingException {
+        Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertTrue(networkModificationResult.isPresent());
         NetworkModificationResult resultExpected = NetworkModificationResult.builder()
             .applicationStatus(ApplicationStatus.ALL_OK)
@@ -129,16 +123,14 @@ public final class TestImpactUtils {
         );
     }
 
-    @SneakyThrows
     public static void testBranchCreationImpacts(ObjectMapper mapper, String resultAsString,
                                                  IdentifiableType branchType, String branchId,
                                                  String breakerId1, String disconnectorId1, String substationId1,
-                                                 String breakerId2, String disconnectorId2, String substationId2) {
+                                                 String breakerId2, String disconnectorId2, String substationId2) throws JsonProcessingException {
         testBranchImpacts(mapper, SimpleImpactType.CREATION, resultAsString, branchType, branchId, breakerId1, disconnectorId1, substationId1, breakerId2, disconnectorId2, substationId2);
     }
 
-    @SneakyThrows
-    public static void testBranchCreationImpacts(ObjectMapper mapper, String resultAsString, IdentifiableType elementType, String elementId, Set<String> substationIds) {
+    public static void testBranchCreationImpacts(ObjectMapper mapper, String resultAsString, IdentifiableType elementType, String elementId, Set<String> substationIds) throws JsonProcessingException {
         List<SimpleElementImpact> impacts = List.of(
             createElementImpact(SimpleImpactType.CREATION, elementType, elementId, new TreeSet<>(substationIds)),
             createElementImpact(SimpleImpactType.MODIFICATION, elementType, elementId, new TreeSet<>(substationIds)) // case with newCurrentLimits1
@@ -146,21 +138,18 @@ public final class TestImpactUtils {
         testElementImpacts(mapper, resultAsString, impacts);
     }
 
-    @SneakyThrows
     public static void testBranchDeletionImpacts(ObjectMapper mapper, String resultAsString,
                                                  IdentifiableType branchType, String branchId,
                                                  String breakerId1, String disconnectorId1, String substationId1,
-                                                 String breakerId2, String disconnectorId2, String substationId2) {
+                                                 String breakerId2, String disconnectorId2, String substationId2) throws JsonProcessingException {
         testBranchImpacts(mapper, SimpleImpactType.DELETION, resultAsString, branchType, branchId, breakerId1, disconnectorId1, substationId1, breakerId2, disconnectorId2, substationId2);
     }
 
-    @SneakyThrows
     public static void testBranchImpacts(ObjectMapper mapper, SimpleImpactType impactType, String resultAsString,
                                          IdentifiableType branchType, String branchId,
                                          String breakerId1, String disconnectorId1, String substationId1,
-                                         String breakerId2, String disconnectorId2, String substationId2) {
-        Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(resultAsString, new TypeReference<>() {
-        });
+                                         String breakerId2, String disconnectorId2, String substationId2) throws JsonProcessingException {
+        Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertTrue(networkModificationResult.isPresent());
         NetworkModificationResult resultExpected = NetworkModificationResult.builder()
             .applicationStatus(ApplicationStatus.ALL_OK)
@@ -190,14 +179,12 @@ public final class TestImpactUtils {
         return impacts;
     }
 
-    @SneakyThrows
     public static void test3WTDeletionImpacts(ObjectMapper mapper, String resultAsString, String w3tId,
                                               String breakerId1, String disconnectorId1,
                                               String breakerId2, String disconnectorId2,
                                               String breakerId3, String disconnectorId3,
-                                              String substationId) {
-        Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(resultAsString, new TypeReference<>() {
-        });
+                                              String substationId) throws JsonProcessingException {
+        Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertTrue(networkModificationResult.isPresent());
         NetworkModificationResult resultExpected = NetworkModificationResult.builder()
             .applicationStatus(ApplicationStatus.ALL_OK)

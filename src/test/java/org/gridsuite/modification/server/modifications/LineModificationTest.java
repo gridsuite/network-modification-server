@@ -10,7 +10,6 @@ package org.gridsuite.modification.server.modifications;
 import com.powsybl.iidm.network.Line;
 import com.powsybl.iidm.network.LoadingLimits.TemporaryLimit;
 import com.powsybl.iidm.network.Network;
-import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.AttributeModification;
 import org.gridsuite.modification.server.dto.CurrentLimitsModificationInfos;
@@ -20,6 +19,7 @@ import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.OperationType;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
+import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 
 import java.util.List;
@@ -32,10 +32,11 @@ import static org.junit.Assert.assertNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 /**
  * @author Ayoub LABIDI <ayoub.labidi at rte-france.com>
  */
-
+@Tag("IntegrationTest")
 public class LineModificationTest extends AbstractNetworkModificationTest {
     @Override
     protected Network createNetwork(UUID networkUuid) {
@@ -130,9 +131,8 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
         assertNull(line.getNullableCurrentLimits2());
     }
 
-    @SneakyThrows
     @Test
-    public void testCreateWithErrors() {
+    public void testCreateWithErrors() throws Exception {
         LineModificationInfos lineModificationInfos = (LineModificationInfos) buildModification();
         lineModificationInfos.setEquipmentId("lineNotFound");
         String lineModificationInfosJson = mapper.writeValueAsString(lineModificationInfos);
@@ -144,9 +144,8 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
                 lineModificationInfos.getErrorType().name(), reportService);
     }
 
-    @SneakyThrows
     @Test
-    public void testPermanentLimitUnchanged() {
+    public void testPermanentLimitUnchanged() throws Exception {
         LineModificationInfos lineModificationInfos = (LineModificationInfos) buildModification();
 
         lineModificationInfos.getCurrentLimits1().setPermanentLimit(null);
@@ -161,9 +160,8 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
         assertThat(createdModification).recursivelyEquals(lineModificationInfos);
     }
 
-    @SneakyThrows
     @Test
-    public void testCharacteristicsModification() {
+    public void testCharacteristicsModification() throws Exception {
         LineModificationInfos lineModificationInfos = (LineModificationInfos) buildModification();
 
         // Modify Series Reactance
@@ -268,9 +266,8 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
         assertThat(createdModification).recursivelyEquals(lineModificationInfos);
     }
 
-    @SneakyThrows
     @Test
-    public void testTemporaryLimitsModification() {
+    public void testTemporaryLimitsModification() throws Exception {
         Line line = getNetwork().getLine("line1");
         line.newCurrentLimits1()
                 .setPermanentLimit(10.0)

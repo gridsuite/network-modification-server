@@ -8,13 +8,13 @@
 package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.iidm.network.Network;
-import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.CurrentLimitsInfos;
 import org.gridsuite.modification.server.dto.LineCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
+import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 
 import java.util.Collections;
@@ -28,11 +28,11 @@ import static org.junit.Assert.assertNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@Tag("IntegrationTest")
 public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTest {
 
     @Test
-    @SneakyThrows
-    public void testCreateWithErrors() {
+    public void testCreateWithErrors() throws Exception {
         LineCreationInfos lineCreationInfos = (LineCreationInfos) buildModification();
         lineCreationInfos.setBusOrBusbarSectionId2("notFoundBus");
         String lineCreationInfosJson = mapper.writeValueAsString(lineCreationInfos);
@@ -43,8 +43,7 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
     }
 
     @Test
-    @SneakyThrows
-    public void testCreateLineOptionalParameters() {
+    public void testCreateLineOptionalParameters() throws Exception {
         // create new line without shunt conductance or reactance
         LineCreationInfos lineCreationInfosNoShunt = LineCreationInfos.builder()
                 .equipmentId("idLine1")
@@ -67,8 +66,7 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
     }
 
     @Test
-    @SneakyThrows
-    public void testCreateLineOptionalParameters2() {
+    public void testCreateLineOptionalParameters2() throws Exception {
         // create new line without shunt conductance or reactance
         LineCreationInfos lineCreationInfosNoShunt = LineCreationInfos.builder()
                 .equipmentId("idLine1")
@@ -96,8 +94,7 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
     }
 
     @Test
-    @SneakyThrows
-    public void testCreateLineOptionalParameters3() {
+    public void testCreateLineOptionalParameters3() throws Exception {
         LineCreationInfos lineCreationInfosPermanentLimitOK = LineCreationInfos.builder()
                 .equipmentId("idLine2")
                 .equipmentName("nameLine2")
@@ -121,8 +118,7 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
     }
 
     @Test
-    @SneakyThrows
-    public void testCreateLineOptionalParameters4() {
+    public void testCreateLineOptionalParameters4() throws Exception {
         LineCreationInfos lineCreationInfosPermanentLimitOK = LineCreationInfos.builder()
                 .equipmentId("idLine2")
                 .equipmentName("nameLine2")
@@ -148,8 +144,7 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
     }
 
     @Test
-    @SneakyThrows
-    public void testCreateLineOptionalParameters5() {
+    public void testCreateLineOptionalParameters5() throws Exception {
         LineCreationInfos lineCreationInfosPermanentLimitNOK = LineCreationInfos.builder()
                 .equipmentId("idLine2")
                 .equipmentName("nameLine2")
@@ -168,8 +163,7 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
     }
 
     @Test
-    @SneakyThrows
-    public void testCreateLineOptionalParameters6() {
+    public void testCreateLineOptionalParameters6() throws Exception {
         LineCreationInfos lineCreationInfosOK = LineCreationInfos.builder()
                 .equipmentId("idLine3")
                 .equipmentName("nameLine3")

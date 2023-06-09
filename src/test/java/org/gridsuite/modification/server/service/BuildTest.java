@@ -11,9 +11,12 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import com.powsybl.commons.exceptions.UncheckedInterruptedException;
 import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.iidm.network.*;
-import com.powsybl.iidm.network.extensions.*;
+import com.powsybl.iidm.network.extensions.ActivePowerControl;
+import com.powsybl.iidm.network.extensions.BranchStatus;
+import com.powsybl.iidm.network.extensions.ConnectablePosition;
+import com.powsybl.iidm.network.extensions.GeneratorShortCircuit;
+import com.powsybl.iidm.network.extensions.GeneratorStartup;
 import com.powsybl.network.store.client.NetworkStoreService;
-import lombok.SneakyThrows;
 import okhttp3.HttpUrl;
 import okhttp3.mockwebserver.Dispatcher;
 import okhttp3.mockwebserver.MockResponse;
@@ -39,6 +42,7 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.jupiter.api.Tag;
 import org.junit.runner.RunWith;
 import org.mockito.stubbing.Answer;
 import org.slf4j.Logger;
@@ -58,16 +62,25 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static com.powsybl.iidm.network.ReactiveLimitsKind.MIN_MAX;
-import static org.gridsuite.modification.server.Impacts.TestImpactUtils.*;
+import static org.gridsuite.modification.server.Impacts.TestImpactUtils.testElementImpacts;
+import static org.gridsuite.modification.server.Impacts.TestImpactUtils.testEmptyImpacts;
+import static org.gridsuite.modification.server.Impacts.TestImpactUtils.testEmptyImpactsWithErrors;
 import static org.gridsuite.modification.server.service.BuildWorkerService.CANCEL_MESSAGE;
 import static org.gridsuite.modification.server.service.BuildWorkerService.FAIL_MESSAGE;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.startsWith;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -81,8 +94,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @SpringBootTest
 @ContextConfigurationWithTestChannel
+@Tag("IntegrationTest")
 public class BuildTest {
-
     private static final Logger LOGGER = LoggerFactory.getLogger(BuildTest.class);
 
     @Autowired
@@ -161,7 +174,7 @@ public class BuildTest {
     private MockWebServer server;
 
     @Before
-    public void setUp() {
+    public void setUp() throws IOException {
         objectWriter = mapper.writer().withDefaultPrettyPrinter();
         // create a new network for each invocation (answer)
         when(networkStoreService.getNetwork(TEST_NETWORK_ID)).then((Answer<Network>) invocation -> {
@@ -190,8 +203,7 @@ public class BuildTest {
         equipmentInfosService.deleteVariants(TEST_NETWORK_ID, List.of(VariantManagerConstants.INITIAL_VARIANT_ID, NetworkCreation.VARIANT_ID, VARIANT_ID_2));
     }
 
-    @SneakyThrows
-    private void initMockWebServer() {
+    private void initMockWebServer() throws IOException {
         server = new MockWebServer();
         server.start();
 
@@ -201,7 +213,6 @@ public class BuildTest {
         reportService.setReportServerBaseUri(baseUrl);
 
         final Dispatcher dispatcher = new Dispatcher() {
-            @SneakyThrows
             @Override
             @NotNull
             public MockResponse dispatch(RecordedRequest request) {
@@ -343,8 +354,7 @@ public class BuildTest {
     }
 
     @Test
-    @SneakyThrows
-    public void runBuildTest() {
+    public void runBuildTest() throws Exception {
         // create modification entities in the database
         List<ModificationEntity> entities1 = new ArrayList<>();
         entities1.add(EquipmentAttributeModificationInfos.builder().equipmentId("v1d1").equipmentAttributeName("open").equipmentAttributeValue(true).equipmentType(IdentifiableType.SWITCH).build().toEntity());

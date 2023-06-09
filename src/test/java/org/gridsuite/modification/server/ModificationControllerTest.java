@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
@@ -17,7 +18,6 @@ import com.powsybl.iidm.network.extensions.ConnectablePositionAdder;
 import com.powsybl.iidm.network.extensions.GeneratorStartup;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
-import lombok.SneakyThrows;
 import nl.jqno.equalsverifier.EqualsVerifier;
 import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.modification.server.Impacts.TestImpactUtils;
@@ -41,6 +41,7 @@ import org.gridsuite.modification.server.utils.TestUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.jupiter.api.Tag;
 import org.junit.runner.RunWith;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -94,6 +95,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @RunWith(SpringRunner.class)
 @AutoConfigureMockMvc
 @SpringBootTest
+@Tag("IntegrationTest")
 public class ModificationControllerTest {
 
     private static final UUID TEST_NETWORK_ID = UUID.fromString("7928181c-7977-4592-ba19-88027e4254e4");
@@ -209,9 +211,8 @@ public class ModificationControllerTest {
         assertEquals(errorMessage, assertThrows(NullPointerException.class, () -> loadCreationInfos.setEquipmentId(null)).getMessage());
     }
 
-    @SneakyThrows
     @Test
-    public void testNetworkNotFound() {
+    public void testNetworkNotFound() throws Exception {
         mockMvc.perform(post(URI_NETWORK_MODIF_BAD_NETWORK)
             .content(objectWriter.writeValueAsString(LoadCreationInfos.builder().equipmentId("id").build()))
             .contentType(MediaType.APPLICATION_JSON))
@@ -513,9 +514,8 @@ public class ModificationControllerTest {
         testMoveModification(TEST_GROUP_ID, Boolean.TRUE);
     }
 
-    @SneakyThrows
     @Test
-    public void createGeneratorWithStartup() {
+    public void createGeneratorWithStartup() throws Exception {
 
         // create and build generator without startup
         GeneratorCreationInfos generatorCreationInfos = ModificationCreation.getCreationGenerator("v2", "idGenerator1", "nameGenerator1", "1B", "v2load", "LOAD", "v1");
@@ -742,8 +742,7 @@ public class ModificationControllerTest {
     }
 
     @Test
-    @SneakyThrows
-    public void testTombstonedEquipmentInfos() {
+    public void testTombstonedEquipmentInfos() throws Exception {
         MvcResult mvcResult;
 
         assertTrue(equipmentInfosRepository.findAllByNetworkUuidAndVariantId(TEST_NETWORK_ID, NetworkCreation.VARIANT_ID).isEmpty());
@@ -925,7 +924,7 @@ public class ModificationControllerTest {
 
     private void testConnectableDeletionImpacts(String resultAsString,
                                                 IdentifiableType connectableType, String connectableId,
-                                                String breakerId, String disconnectorId, String substationId) {
+                                                String breakerId, String disconnectorId, String substationId) throws JsonProcessingException {
         TestImpactUtils.testConnectableDeletionImpacts(mapper, resultAsString, connectableType, connectableId, breakerId, disconnectorId, substationId);
 
         // Connectable and switches have been removed from network
@@ -942,7 +941,7 @@ public class ModificationControllerTest {
     private void testBranchDeletionImpacts(String resultAsString,
                                            IdentifiableType branchType, String branchId,
                                            String breakerId1, String disconnectorId1, String substationId1,
-                                           String breakerId2, String disconnectorId2, String substationId2) {
+                                           String breakerId2, String disconnectorId2, String substationId2) throws JsonProcessingException {
         TestImpactUtils.testBranchDeletionImpacts(mapper, resultAsString, branchType, branchId, breakerId1, disconnectorId1, substationId1, breakerId2, disconnectorId2, substationId2);
 
         // line and switches have been removed from network
@@ -964,7 +963,7 @@ public class ModificationControllerTest {
                                         String breakerId1, String disconnectorId1,
                                         String breakerId2, String disconnectorId2,
                                         String breakerId3, String disconnectorId3,
-                                        String substationId) {
+                                        String substationId) throws JsonProcessingException {
         TestImpactUtils.test3WTDeletionImpacts(mapper, resultAsString, w3tId, breakerId1, disconnectorId1, breakerId2, disconnectorId2, breakerId3, disconnectorId3, substationId);
 
         // 3 windings transformer and switches have been removed from network
@@ -1000,12 +999,12 @@ public class ModificationControllerTest {
         return createVoltageLevelDeletionImpacts(vlId, busbarSectionsIds, connectablesTypesAndIds, substationId);
     }
 
-    private void testVoltageLevelDeletionImpacts(String resultAsString, String vlId, List<String> busbarSectionsIds, List<Pair<IdentifiableType, String>> connectablesTypesAndIds, String substationId) {
+    private void testVoltageLevelDeletionImpacts(String resultAsString, String vlId, List<String> busbarSectionsIds, List<Pair<IdentifiableType, String>> connectablesTypesAndIds, String substationId) throws JsonProcessingException {
         List<SimpleElementImpact> testElementImpacts = testVoltageLevelDeletionImpacts(vlId, busbarSectionsIds, connectablesTypesAndIds, substationId);
         TestImpactUtils.testElementImpacts(mapper, resultAsString, testElementImpacts);
     }
 
-    private void testSubstationDeletionImpacts(String resultAsString, String subStationId, List<SimpleElementImpact> vlsDeletionImpacts) {
+    private void testSubstationDeletionImpacts(String resultAsString, String subStationId, List<SimpleElementImpact> vlsDeletionImpacts) throws JsonProcessingException {
         List<SimpleElementImpact> impacts = new ArrayList<>(List.of(createDeletionImpactType(IdentifiableType.SUBSTATION, subStationId, Set.of(subStationId))));
         impacts.addAll(vlsDeletionImpacts);
         TestImpactUtils.testElementImpacts(mapper, resultAsString, impacts);

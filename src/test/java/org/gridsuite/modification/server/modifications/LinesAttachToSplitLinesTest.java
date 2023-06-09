@@ -7,12 +7,12 @@
 package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.iidm.network.Network;
-import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.LinesAttachToSplitLinesInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkWithTeePoint;
 import org.junit.Test;
+import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 
 import java.util.UUID;
@@ -29,6 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * @author David Braquart <david.braquart at rte-france.com>
  */
+@Tag("IntegrationTest")
 public class LinesAttachToSplitLinesTest extends AbstractNetworkModificationTest {
 
     @Override
@@ -91,9 +92,8 @@ public class LinesAttachToSplitLinesTest extends AbstractNetworkModificationTest
         assertNull(getNetwork().getLine("nl2"));
     }
 
-    @SneakyThrows
     @Test
-    public void testCreateWithErrors() {
+    public void testCreateWithErrors() throws Exception {
         // use an unexisting line
         LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos = (LinesAttachToSplitLinesInfos) buildModification();
         linesAttachToSplitLinesInfos.setLineToAttachTo1Id("absent_line_id");

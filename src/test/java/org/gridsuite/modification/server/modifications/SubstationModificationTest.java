@@ -10,7 +10,6 @@ package org.gridsuite.modification.server.modifications;
 import com.powsybl.iidm.network.Country;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.Substation;
-import lombok.SneakyThrows;
 import org.gridsuite.modification.server.dto.AttributeModification;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.OperationType;
@@ -18,6 +17,7 @@ import org.gridsuite.modification.server.dto.SubstationFreePropertyInfos;
 import org.gridsuite.modification.server.dto.SubstationModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
+import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 
 import java.util.List;
@@ -33,6 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * @author David Braquart <david.braquart at rte-france.com>
  */
+@Tag("IntegrationTest")
 public class SubstationModificationTest extends AbstractNetworkModificationTest {
 
     @Override
@@ -88,9 +89,8 @@ public class SubstationModificationTest extends AbstractNetworkModificationTest 
         assertEquals("west", modifiedStation.getProperty("region", ""));
     }
 
-    @SneakyThrows
     @Test
-    public void testCreateWithErrors() {
+    public void testCreateWithErrors() throws Exception {
         // Try to modify an unknown substation
         SubstationModificationInfos infos = SubstationModificationInfos.builder()
                 .equipmentId("unknown")

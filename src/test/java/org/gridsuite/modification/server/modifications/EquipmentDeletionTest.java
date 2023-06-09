@@ -9,12 +9,12 @@ package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.iidm.network.Network;
-import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.EquipmentDeletionInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
+import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 
 import java.util.UUID;
@@ -26,6 +26,7 @@ import static org.junit.Assert.assertNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@Tag("IntegrationTest")
 public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
 
     @Override
@@ -59,9 +60,8 @@ public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
         assertNotNull(getNetwork().getLoad("v1load"));
     }
 
-    @SneakyThrows
     @Test
-    public void testOkWhenRemovingIsolatedEquipment() {
+    public void testOkWhenRemovingIsolatedEquipment() throws Exception {
 
         EquipmentDeletionInfos equipmentDeletionInfos = EquipmentDeletionInfos.builder()
                 .equipmentType("LOAD")
@@ -78,9 +78,8 @@ public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
         assertNull(v5.getNodeBreakerView().getTerminal(2));
     }
 
-    @SneakyThrows
     @Test
-    public void testCreateWithErrors() {
+    public void testCreateWithErrors() throws Exception {
         // delete load (fail because the load is not found)
         EquipmentDeletionInfos equipmentDeletionInfos = (EquipmentDeletionInfos) buildModification();
         equipmentDeletionInfos.setEquipmentId("notFoundLoad");

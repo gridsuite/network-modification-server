@@ -12,7 +12,6 @@ import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.PhaseTapChanger;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
-import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.CurrentLimitsInfos;
 import org.gridsuite.modification.server.dto.CurrentTemporaryLimitCreationInfos;
@@ -24,6 +23,7 @@ import org.gridsuite.modification.server.dto.TapChangerStepCreationInfos;
 import org.gridsuite.modification.server.dto.TwoWindingsTransformerCreationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
+import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -41,6 +41,7 @@ import static org.junit.Assert.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@Tag("IntegrationTest")
 public class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetworkModificationTest {
 
     @Override
@@ -273,7 +274,6 @@ public class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetwo
         assertEquals(PhaseTapChanger.RegulationMode.CURRENT_LIMITER, getNetwork().getTwoWindingsTransformer("new2wt").getPhaseTapChanger().getRegulationMode());
     }
 
-    @SneakyThrows
     @Override
     protected void assertNetworkAfterDeletion() {
         assertNull(getNetwork().getTwoWindingsTransformer("new2wt"));
@@ -281,9 +281,8 @@ public class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetwo
         assertEquals(0, getNetwork().getVoltageLevel("v2").getTwoWindingsTransformerStream().filter(transformer -> transformer.getId().equals("new2wt")).count());
     }
 
-    @SneakyThrows
     @Test
-    public void testCreateTwoWindingsTransformerWithRatioTapChangerInNodeBreaker() {
+    public void testCreateTwoWindingsTransformerWithRatioTapChangerInNodeBreaker() throws Exception {
         // create new 2wt in voltage level with Node/breaker topology, having a RatioTapChanger
         RatioTapChangerCreationInfos ratioTapChangerCreationInfos = RatioTapChangerCreationInfos.builder()
                 .lowTapPosition(0)
@@ -442,9 +441,8 @@ public class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetwo
         testCreateTwoWindingsTransformerInNodeBreaker(twoWindingsTransformerCreationInfos3, 3);
     }
 
-    @SneakyThrows
     @Test
-    public void testCreateWithErrors() {
+    public void testCreateWithErrors() throws Exception {
         TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos = (TwoWindingsTransformerCreationInfos) buildModification();
         twoWindingsTransformerCreationInfos.setEquipmentId("");
         String twoWindingsTransformerCreationInfosJson = mapper.writeValueAsString(twoWindingsTransformerCreationInfos);

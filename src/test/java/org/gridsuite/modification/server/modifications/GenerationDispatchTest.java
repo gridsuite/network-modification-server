@@ -11,7 +11,6 @@ import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.matching.StringValuePattern;
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
-import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.FilterEquipments;
 import org.gridsuite.modification.server.dto.GenerationDispatchInfos;
@@ -22,6 +21,7 @@ import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.service.FilterService;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.jupiter.api.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.MediaType;
@@ -40,6 +40,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
+@Tag("IntegrationTest")
 public class GenerationDispatchTest extends AbstractNetworkModificationTest {
     private static final String GH1_ID = "GH1";
     private static final String GH2_ID = "GH2";
@@ -66,7 +67,6 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
     @Autowired
     ApplicationContext context;
 
-    @SneakyThrows
     @Before
     public void specificSetUp() {
         FilterService.setFilterServerBaseUri(wireMockServer.baseUrl());
@@ -90,9 +90,8 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
             .build();
     }
 
-    @SneakyThrows
     @Test
-    public void testGenerationDispatch() {
+    public void testGenerationDispatch() throws Exception {
         ModificationInfos modification = buildModification();
 
         // network with 2 synchronous components, 2 hvdc lines between them and no forcedOutageRate and plannedOutageRate for the generators
@@ -120,9 +119,8 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
         assertLogMessage("The supply-demand balance could be met", "SupplyDemandBalanceCouldBeMet" + secondSynchronousComponentNum, reportService);
     }
 
-    @SneakyThrows
     @Test
-    public void testGenerationDispatchWithHigherLossCoefficient() {
+    public void testGenerationDispatchWithHigherLossCoefficient() throws Exception {
         ModificationInfos modification = buildModification();
         ((GenerationDispatchInfos) modification).setLossCoefficient(90.);
 
@@ -162,9 +160,8 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
         assertLogMessage("The supply-demand balance could not be met : the remaining power imbalance is 70.0 MW", "SupplyDemandBalanceCouldNotBeMet" + secondSynchronousComponentNum, reportService);
     }
 
-    @SneakyThrows
     @Test
-    public void testGenerationDispatchWithInternalHvdc() {
+    public void testGenerationDispatchWithInternalHvdc() throws Exception {
         ModificationInfos modification = buildModification();
 
         // network with unique synchronous component, 2 internal hvdc lines and no forcedOutageRate and plannedOutageRate for the generators
@@ -196,9 +193,8 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
         assertLogMessage("The supply-demand balance could not be met : the remaining power imbalance is 68.0 MW", "SupplyDemandBalanceCouldNotBeMet" + firstSynchronousComponentNum, reportService);
     }
 
-    @SneakyThrows
     @Test
-    public void testGenerationDispatchWithMaxPReduction() {
+    public void testGenerationDispatchWithMaxPReduction() throws Exception {
         ModificationInfos modification = buildModification();
         ((GenerationDispatchInfos) modification).setDefaultOutageRate(15.);
         ((GenerationDispatchInfos) modification).setGeneratorsWithoutOutage(
@@ -253,9 +249,8 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
         wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(getNetworkUuid(), filters.stream().map(FilterEquipments::getFilterId).collect(Collectors.toList())), false);
     }
 
-    @SneakyThrows
     @Test
-    public void testGenerationDispatchGeneratorsWithFixedSupply() {
+    public void testGenerationDispatchGeneratorsWithFixedSupply() throws Exception {
         ModificationInfos modification = buildModification();
         ((GenerationDispatchInfos) modification).setDefaultOutageRate(15.);
         ((GenerationDispatchInfos) modification).setGeneratorsWithoutOutage(
@@ -319,9 +314,8 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
         wireMockUtils.verifyGetRequest(stubIdForFixedSupply, PATH, handleQueryParams(getNetworkUuid(), filtersForFixedSupply.stream().map(FilterEquipments::getFilterId).collect(Collectors.toList())), false);
     }
 
-    @SneakyThrows
     @Test
-    public void testGenerationDispatchWithFrequencyReserve() {
+    public void testGenerationDispatchWithFrequencyReserve() throws Exception {
         ModificationInfos modification = buildModification();
         ((GenerationDispatchInfos) modification).setDefaultOutageRate(15.);
         ((GenerationDispatchInfos) modification).setGeneratorsWithoutOutage(
@@ -397,7 +391,6 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
         wireMockUtils.verifyGetRequest(stubIdForFrequencyReserve2, PATH, handleQueryParams(getNetworkUuid(), filtersForFrequencyReserve2.stream().map(FilterEquipments::getFilterId).collect(Collectors.toList())), false);
     }
 
-    @SneakyThrows
     @Test
     public void testGenerationDispatchErrorCheck() {
         GenerationDispatchInfos modification = GenerationDispatchInfos.builder().lossCoefficient(150.).defaultOutageRate(0.).build();

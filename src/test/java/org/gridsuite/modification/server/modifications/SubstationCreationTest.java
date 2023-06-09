@@ -10,11 +10,11 @@ package org.gridsuite.modification.server.modifications;
 import com.powsybl.iidm.network.Country;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.Substation;
-import lombok.SneakyThrows;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.SubstationCreationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
+import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 
 import java.util.Map;
@@ -27,6 +27,7 @@ import static org.junit.Assert.assertNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@Tag("IntegrationTest")
 public class SubstationCreationTest extends AbstractNetworkModificationTest {
 
     @Override
@@ -66,9 +67,8 @@ public class SubstationCreationTest extends AbstractNetworkModificationTest {
         assertNull(getNetwork().getSubstation("SubstationId"));
     }
 
-    @SneakyThrows
     @Test
-    public void testCreateWithErrors() {
+    public void testCreateWithErrors() throws Exception {
         SubstationCreationInfos substationCreationInfos = (SubstationCreationInfos) buildModification();
         substationCreationInfos.setEquipmentId("");
         String substationCreationInfosJson = mapper.writeValueAsString(substationCreationInfos);

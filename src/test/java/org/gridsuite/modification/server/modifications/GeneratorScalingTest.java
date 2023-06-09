@@ -12,7 +12,6 @@ import com.github.tomakehurst.wiremock.matching.StringValuePattern;
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
-import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.VariationMode;
 import org.gridsuite.modification.server.VariationType;
@@ -26,6 +25,7 @@ import org.gridsuite.modification.server.service.FilterService;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 
 import java.time.ZonedDateTime;
@@ -45,7 +45,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
  */
-
+@Tag("IntegrationTest")
 public class GeneratorScalingTest extends AbstractNetworkModificationTest {
     private static final UUID GENERATOR_SCALING_ID = UUID.randomUUID();
     private static final UUID FILTER_ID_1 = UUID.randomUUID();
@@ -70,7 +70,6 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
     public static final String GENERATOR_WRONG_ID_2 = "wrongId2";
     public static final String PATH = "/v1/filters/export";
 
-    @SneakyThrows
     @Before
     public void specificSetUp() {
         FilterService.setFilterServerBaseUri(wireMockServer.baseUrl());
@@ -114,9 +113,8 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
     }
 
     @Test
-    @SneakyThrows
     @Override
-    public void testCreate() {
+    public void testCreate() throws Exception {
         List<FilterEquipments> filters = getTestFilters();
         UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(getPath(getNetworkUuid(), true) + "(.+,){4}.*"))
                 .willReturn(WireMock.ok()
@@ -129,9 +127,8 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
     }
 
     @Test
-    @SneakyThrows
     @Override
-    public void testCopy() {
+    public void testCopy() throws Exception {
         List<FilterEquipments> filters = getTestFilters();
         UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(getPath(getNetworkUuid(), true) + "(.+,){4}.*"))
                 .willReturn(WireMock.ok()
@@ -143,9 +140,8 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
         wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(getNetworkUuid(), filters.stream().map(FilterEquipments::getFilterId).collect(Collectors.toList())), false);
     }
 
-    @SneakyThrows
     @Test
-    public void testVentilationModeWithoutDistributionKey() {
+    public void testVentilationModeWithoutDistributionKey() throws Exception {
         IdentifiableAttributes genNoDK1 = getIdentifiableAttributes(GENERATOR_ID_2, null);
         IdentifiableAttributes genNoDK2 = getIdentifiableAttributes(GENERATOR_ID_3, null);
         FilterEquipments noDistributionKeyFilter = getFilterEquipments(FILTER_NO_DK, "noDistributionKeyFilter", List.of(genNoDK1, genNoDK2), List.of());
@@ -184,9 +180,8 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
         wireMockUtils.verifyGetRequest(subNoDk, PATH, handleQueryParams(getNetworkUuid(), FILTER_NO_DK), false);
     }
 
-    @SneakyThrows
     @Test
-    public void testFilterWithWrongIds() {
+    public void testFilterWithWrongIds() throws Exception {
 
         IdentifiableAttributes genWrongId1 = getIdentifiableAttributes(GENERATOR_WRONG_ID_1, 2.0);
         IdentifiableAttributes genWrongId2 = getIdentifiableAttributes(GENERATOR_WRONG_ID_2, 3.0);
@@ -218,9 +213,8 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
         wireMockUtils.verifyGetRequest(subWrongId, PATH, handleQueryParams(getNetworkUuid(), FILTER_WRONG_ID_1), false);
     }
 
-    @SneakyThrows
     @Test
-    public void testScalingCreationWithWarning() {
+    public void testScalingCreationWithWarning() throws Exception {
         IdentifiableAttributes genWrongId1 = getIdentifiableAttributes(GENERATOR_WRONG_ID_1, 2.0);
         IdentifiableAttributes gen10 = getIdentifiableAttributes(GENERATOR_ID_10, 9.0);
         IdentifiableAttributes gen9 = getIdentifiableAttributes(GENERATOR_ID_9, 0.0);

@@ -8,7 +8,6 @@ package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.SwitchKind;
-import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.CouplingDeviceInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
@@ -16,6 +15,7 @@ import org.gridsuite.modification.server.dto.VoltageLevelCreationInfos;
 import org.gridsuite.modification.server.utils.ModificationCreation;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
+import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 
 import java.util.Arrays;
@@ -37,6 +37,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * @author walid Sahnoun <walid.sahnoun at rte-france.com>
  */
+@Tag("IntegrationTest")
 public class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
 
     @Override
@@ -89,9 +90,8 @@ public class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
         assertEquals(0, getNetwork().getSubstation("s2").getVoltageLevelStream().filter(vl -> vl.getId().equals("vlId")).count());
     }
 
-    @SneakyThrows
     @Test
-    public void testCreateWithErrors() {
+    public void testCreateWithErrors() throws Exception {
         VoltageLevelCreationInfos vli = (VoltageLevelCreationInfos) buildModification();
         vli.setSubstationId("absent_station");
 
@@ -137,9 +137,8 @@ public class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
                 vli.getErrorType().name(), reportService);
     }
 
-    @SneakyThrows
     @Test
-    public void testCreateWithBbsNotExist() {
+    public void testCreateWithBbsNotExist() throws Exception {
         VoltageLevelCreationInfos vli = (VoltageLevelCreationInfos) buildModification();
         vli.setEquipmentId("vl_1");
         vli.getCouplingDevices().get(0).setBusbarSectionId1("1.1");
@@ -158,9 +157,7 @@ public class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
         assertNotNull(getNetwork().getVoltageLevel("vl_2"));
     }
 
-    @SneakyThrows
-    @Test
-    public void testCreateWithShortCircuitExtension() {
+    public void testCreateWithShortCircuitExtension() throws Exception {
         VoltageLevelCreationInfos vli = (VoltageLevelCreationInfos) buildModification();
         vli.setIpMin(null);
 

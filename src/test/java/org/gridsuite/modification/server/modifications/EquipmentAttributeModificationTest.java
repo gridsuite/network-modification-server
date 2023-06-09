@@ -8,11 +8,11 @@ package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
-import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.EquipmentAttributeModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
+import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -34,11 +34,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@Tag("IntegrationTest")
 public class EquipmentAttributeModificationTest extends AbstractNetworkModificationTest {
 
-    @SneakyThrows
     @Test
-    public void testEquipmentAttributeModificationInfos() {
+    public void testEquipmentAttributeModificationInfos() throws Exception {
         MvcResult mvcResult;
         UUID modificationUuid = UUID.randomUUID();
         EquipmentAttributeModificationInfos modificationInfos = EquipmentAttributeModificationInfos.builder()
@@ -73,7 +73,7 @@ public class EquipmentAttributeModificationTest extends AbstractNetworkModificat
     }
 
     @Test
-    public void testSwitch() {
+    public void testSwitch() throws Exception {
         // switches modifications on initial variant
         switchModifications("", "v1b1", "disc1Variant", "v2b1", "v3b1", Set.of("s1"), Set.of("s2"), 5);
 
@@ -81,10 +81,9 @@ public class EquipmentAttributeModificationTest extends AbstractNetworkModificat
         switchModifications("&variantId=" + NetworkCreation.VARIANT_ID, "break1Variant", "notFound", "disc1Variant", "break2Variant", Set.of("s1Variant"), Set.of("s2Variant"), 10);
     }
 
-    @SneakyThrows
     private void switchModifications(String extraParams, String switchId1, String switchNotFoundId, String switchId2, String switchId3,
                                      Set<String> substationsIds, Set<String> otherSubstationsIds,
-                                     int modificationsCount) {
+                                     int modificationsCount) throws Exception {
         MvcResult mvcResult;
 
         EquipmentAttributeModificationInfos switchStatusModificationInfos = buildModification();
@@ -127,9 +126,8 @@ public class EquipmentAttributeModificationTest extends AbstractNetworkModificat
         testNetworkModificationsCount(getGroupId(), modificationsCount);
     }
 
-    @SneakyThrows
     @Test
-    public void testWithErrors() {
+    public void testWithErrors() throws Exception {
         // bad equipment attribute name
         EquipmentAttributeModificationInfos switchStatusModificationInfos = EquipmentAttributeModificationInfos.builder()
             .equipmentType(IdentifiableType.SWITCH)

@@ -8,7 +8,6 @@ package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.SwitchKind;
-import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.CouplingDeviceInfos;
 import org.gridsuite.modification.server.dto.LineSplitWithVoltageLevelInfos;
@@ -16,6 +15,7 @@ import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.VoltageLevelCreationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
+import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 
 import java.util.Arrays;
@@ -29,6 +29,7 @@ import static org.junit.Assert.assertNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@Tag("IntegrationTest")
 public class LineSplitWithVoltageLevelTest extends AbstractNetworkModificationTest {
 
     @Override
@@ -95,9 +96,8 @@ public class LineSplitWithVoltageLevelTest extends AbstractNetworkModificationTe
         assertNull(getNetwork().getLine("nl2v"));
     }
 
-    @SneakyThrows
     @Test
-    public void testCreateWithExistingLines() {
+    public void testCreateWithExistingLines() throws Exception {
         // try to create an already existing line
         LineSplitWithVoltageLevelInfos tryWithNewLine1Id = (LineSplitWithVoltageLevelInfos) buildModification();
         tryWithNewLine1Id.setNewLine1Id("line1");
@@ -117,9 +117,8 @@ public class LineSplitWithVoltageLevelTest extends AbstractNetworkModificationTe
                 tryWithNewLine2Id.getErrorType().name(), reportService);
     }
 
-    @SneakyThrows
     @Test
-    public void testCreateWithWrongBusBar() {
+    public void testCreateWithWrongBusBar() throws Exception {
         // not existing busbar
         LineSplitWithVoltageLevelInfos tryWithBadId = (LineSplitWithVoltageLevelInfos) buildModification();
         tryWithBadId.setBbsOrBusId("999A");

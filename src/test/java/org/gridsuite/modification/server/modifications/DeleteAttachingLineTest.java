@@ -7,12 +7,12 @@
 package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.iidm.network.Network;
-import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.DeleteAttachingLineInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkWithTeePoint;
 import org.junit.Test;
+import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
@@ -29,6 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * @author bendaamerahm <ahmed.bendaamer at rte-france.com>
  */
+@Tag("IntegrationTest")
 public class DeleteAttachingLineTest extends AbstractNetworkModificationTest {
 
     @Override
@@ -72,9 +73,8 @@ public class DeleteAttachingLineTest extends AbstractNetworkModificationTest {
         assertNull(getNetwork().getLine("replacingLineId"));
     }
 
-    @SneakyThrows
     @Test
-    public void createWithInvalidLineIdTest() {
+    public void createWithInvalidLineIdTest() throws Exception {
         // test create with incorrect line id
         DeleteAttachingLineInfos deleteAttachingLineInfos = DeleteAttachingLineInfos.builder()
                 .lineToAttachTo1Id("l1")
@@ -90,9 +90,8 @@ public class DeleteAttachingLineTest extends AbstractNetworkModificationTest {
                 deleteAttachingLineInfos.getErrorType().name(), reportService);
     }
 
-    @SneakyThrows
     @Test
-    public void createWithNoAttachmentPointTest() {
+    public void createWithNoAttachmentPointTest() throws Exception {
         DeleteAttachingLineInfos deleteAttachingLineInfos = DeleteAttachingLineInfos.builder()
                 .lineToAttachTo1Id("l1")
                 .lineToAttachTo2Id("l3")
@@ -107,9 +106,8 @@ public class DeleteAttachingLineTest extends AbstractNetworkModificationTest {
                 deleteAttachingLineInfos.getErrorType().name(), reportService);
     }
 
-    @SneakyThrows
     @Test
-    public void createNewLineWithExistingIdTest() {
+    public void createNewLineWithExistingIdTest() throws Exception {
         // try to create an already existing line
         DeleteAttachingLineInfos deleteAttachingLineInfos = (DeleteAttachingLineInfos) buildModification();
         deleteAttachingLineInfos.setReplacingLine1Id("l2");

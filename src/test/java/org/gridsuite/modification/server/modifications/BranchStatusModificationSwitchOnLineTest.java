@@ -12,12 +12,14 @@ import com.powsybl.iidm.network.Terminal;
 import org.gridsuite.modification.server.dto.BranchStatusModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
+import org.junit.jupiter.api.Tag;
 
 import java.util.UUID;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+@Tag("IntegrationTest")
 public class BranchStatusModificationSwitchOnLineTest extends AbstractNetworkModificationTest {
 
     private static final String TARGET_LINE_ID = "line2";

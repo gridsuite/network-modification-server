@@ -8,12 +8,12 @@ package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.iidm.network.Line;
 import com.powsybl.iidm.network.Network;
-import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.BranchStatusModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
+import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 
 import java.util.UUID;
@@ -26,6 +26,7 @@ import static org.junit.Assert.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@Tag("IntegrationTest")
 public class BranchStatusModificationEnergiseSideTwoLineTest extends AbstractNetworkModificationTest {
 
     private static final String TARGET_LINE_ID = "line2";
@@ -73,9 +74,8 @@ public class BranchStatusModificationEnergiseSideTwoLineTest extends AbstractNet
         assertFalse(line.getTerminal2().isConnected());
     }
 
-    @SneakyThrows
     @Test
-    public void testCreateWithErrors() {
+    public void testCreateWithErrors() throws Exception {
         // line not existing
         BranchStatusModificationInfos modificationInfos = (BranchStatusModificationInfos) buildModification();
         // disconnection error

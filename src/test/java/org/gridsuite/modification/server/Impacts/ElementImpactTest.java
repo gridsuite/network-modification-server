@@ -14,6 +14,7 @@ import org.gridsuite.modification.server.dto.NetworkModificationResult.Applicati
 import org.gridsuite.modification.server.impacts.SimpleElementImpact;
 import org.gridsuite.modification.server.utils.TestUtils;
 import org.junit.Test;
+import org.junit.jupiter.api.Tag;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -21,12 +22,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.TreeSet;
 
-import static org.gridsuite.modification.server.Impacts.TestImpactUtils.*;
+import static org.gridsuite.modification.server.Impacts.TestImpactUtils.createCreationImpactType;
+import static org.gridsuite.modification.server.Impacts.TestImpactUtils.createDeletionImpactType;
+import static org.gridsuite.modification.server.Impacts.TestImpactUtils.createModificationImpactType;
 import static org.junit.Assert.assertEquals;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
+@Tag("UnitTest")
 public class ElementImpactTest {
     private ObjectMapper mapper = new ObjectMapper();
 

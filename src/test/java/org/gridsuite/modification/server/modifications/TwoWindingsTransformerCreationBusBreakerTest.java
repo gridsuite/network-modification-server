@@ -11,7 +11,6 @@ import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.PhaseTapChanger;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
-import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.CurrentLimitsInfos;
 import org.gridsuite.modification.server.dto.CurrentTemporaryLimitCreationInfos;
@@ -22,6 +21,7 @@ import org.gridsuite.modification.server.dto.TapChangerStepCreationInfos;
 import org.gridsuite.modification.server.dto.TwoWindingsTransformerCreationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
+import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -38,6 +38,7 @@ import static org.junit.Assert.assertNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@Tag("IntegrationTest")
 public class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetworkModificationTest {
 
     @Override
@@ -255,9 +256,8 @@ public class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetwor
                 .build();
     }
 
-    @SneakyThrows
     @Test
-    public void testCreateWithErrors() {
+    public void testCreateWithErrors() throws Exception {
         TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos = (TwoWindingsTransformerCreationInfos) buildModification();
         twoWindingsTransformerCreationInfos.setEquipmentId("");
         String twoWindingsTransformerCreationInfosJson = mapper.writeValueAsString(twoWindingsTransformerCreationInfos);
@@ -288,7 +288,6 @@ public class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetwor
         assertEquals(PhaseTapChanger.RegulationMode.CURRENT_LIMITER, getNetwork().getTwoWindingsTransformer("new2wt").getPhaseTapChanger().getRegulationMode());
     }
 
-    @SneakyThrows
     @Override
     protected void assertNetworkAfterDeletion() {
         assertNull(getNetwork().getTwoWindingsTransformer("new2wt"));

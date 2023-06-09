@@ -14,6 +14,7 @@ import org.gridsuite.modification.server.dto.LineCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.VoltageLevelCreationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
+import org.junit.jupiter.api.Tag;
 
 import java.util.Arrays;
 import java.util.UUID;
@@ -24,6 +25,7 @@ import static org.junit.Assert.assertNull;
 /**
  * @author David Braquart <david.braquart at rte-france.com>
  */
+@Tag("IntegrationTest")
 public class LineAttachToNewVoltageLevelTest extends AbstractNetworkModificationTest {
 
     private LineCreationInfos getAttachmentLine() {
