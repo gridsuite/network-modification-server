@@ -58,7 +58,7 @@ public class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
                 .busbarCount(2)
                 .sectionCount(2)
                 .switchKinds(Arrays.asList(SwitchKind.BREAKER))
-                .couplingDevices(Arrays.asList(CouplingDeviceInfos.builder().busbarSectionId1("bbs.nw").busbarSectionId2("bbs.ne").build()))
+                .couplingDevices(Arrays.asList(CouplingDeviceInfos.builder().busbarSectionId1("1A").busbarSectionId2("1.A").build()))
                 .build();
     }
 
@@ -102,7 +102,8 @@ public class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
                 vli.getErrorType().name(), reportService);
 
         vli = (VoltageLevelCreationInfos) buildModification();
-        vli.getCouplingDevices().get(0).setBusbarSectionId1("bbs.ne");
+        vli.getCouplingDevices().get(0).setBusbarSectionId1("1.1");
+        vli.getCouplingDevices().get(0).setBusbarSectionId2("1.1");
         String vliJsonObject = mapper.writeValueAsString(vli);
         mockMvc.perform(post(getNetworkModificationUri()).content(vliJsonObject).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
@@ -134,6 +135,27 @@ public class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(VOLTAGE_LEVEL_ALREADY_EXISTS, "v1").getMessage(),
                 vli.getErrorType().name(), reportService);
+    }
+
+    @SneakyThrows
+    @Test
+    public void testCreateWithBbsNotExist() {
+        VoltageLevelCreationInfos vli = (VoltageLevelCreationInfos) buildModification();
+        vli.setEquipmentId("vl_1");
+        vli.getCouplingDevices().get(0).setBusbarSectionId1("1.1");
+        vli.getCouplingDevices().get(0).setBusbarSectionId2("bbs");
+        String vliJsonObject = mapper.writeValueAsString(vli);
+        mockMvc.perform(post(getNetworkModificationUri()).content(vliJsonObject).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        assertNotNull(getNetwork().getVoltageLevel("vl_1"));
+
+        vli.setEquipmentId("vl_2");
+        vli.getCouplingDevices().get(0).setBusbarSectionId1("bbs");
+        vli.getCouplingDevices().get(0).setBusbarSectionId2("1.1");
+        String vliJsonObject2 = mapper.writeValueAsString(vli);
+        mockMvc.perform(post(getNetworkModificationUri()).content(vliJsonObject2).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        assertNotNull(getNetwork().getVoltageLevel("vl_2"));
     }
 
     @SneakyThrows
