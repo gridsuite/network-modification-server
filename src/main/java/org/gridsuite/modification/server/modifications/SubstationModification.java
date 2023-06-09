@@ -27,6 +27,7 @@ public class SubstationModification extends AbstractModification {
         this.modificationInfos = modificationInfos;
     }
 
+    @SuppressWarnings("checkstyle:NoWhitespaceBefore")
     @Override
     public void apply(Network network, Reporter subReporter) {
         Substation station = network.getSubstation(modificationInfos.getEquipmentId());

@@ -33,6 +33,7 @@ public abstract class AbstractBranchModification extends AbstractModification {
         this.modificationInfos = modificationInfos;
     }
 
+    @SuppressWarnings({"checkstyle:NoWhitespaceBefore", "checkstyle:WhitespaceAround"})
     protected void modifyBranch(Branch<?> branch, BranchModificationInfos branchModificationInfos, Reporter subReporter, String reporterKey, String reporterDefaultMessage) {
 
         subReporter.report(Report.builder()
