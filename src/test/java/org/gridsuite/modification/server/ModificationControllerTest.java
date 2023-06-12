@@ -864,12 +864,8 @@ public class ModificationControllerTest {
             .andExpect(status().isOk()).andReturn();
         testVoltageLevelDeletionImpacts(
             mvcResult.getResponse().getContentAsString(), "v5", List.of("1A1"),
-            List.of(
-                    Pair.of(IdentifiableType.GENERATOR, "v5generator"),
-                    Pair.of(IdentifiableType.LOAD, "v5load"),
-                    Pair.of(IdentifiableType.SHUNT_COMPENSATOR, "v5shunt"),
-                    Pair.of(IdentifiableType.STATIC_VAR_COMPENSATOR, "v5Compensator")
-            ),
+                List.of(Pair.of(IdentifiableType.GENERATOR, "v5generator"), Pair.of(IdentifiableType.LOAD, "v5load"),
+                        Pair.of(IdentifiableType.SHUNT_COMPENSATOR, "v5shunt"), Pair.of(IdentifiableType.STATIC_VAR_COMPENSATOR, "v5Compensator")),
             "s3"
         );
 
