@@ -7,7 +7,9 @@
 
 package org.gridsuite.modification.server.modifications;
 
+import com.powsybl.commons.reporter.Report;
 import com.powsybl.commons.reporter.Reporter;
+import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.ShuntCompensator;
 import com.powsybl.iidm.network.ShuntCompensatorLinearModel;
@@ -39,6 +41,13 @@ public class ShuntCompensatorModification extends AbstractModification {
         }
         VoltageLevel voltageLevel = network.getVoltageLevel(modificationInfos.getVoltageLevelId().getValue());
 
+        subReporter.report(Report.builder()
+                .withKey("shuntCompensatorModification")
+                .withDefaultMessage("Shunt Compensator with id=${id} modified :")
+                .withValue("id", modificationInfos.getEquipmentId())
+                .withSeverity(TypedValue.INFO_SEVERITY)
+                .build());
+
         ModificationUtils.getInstance().applyElementaryModifications(shuntCompensator::setName, shuntCompensator::getNameOrId, modificationInfos.getEquipmentName(), subReporter, "Name");
 
         if (shuntCompensator.getModelType() == ShuntCompensatorModelType.LINEAR) {
@@ -60,7 +69,7 @@ public class ShuntCompensatorModification extends AbstractModification {
             Double susceptancePerSection = modificationInfos.getQAtNominalV().getValue() / Math.pow(voltageLevel.getNominalV(), 2);
 
             model.setBPerSection(type == ShuntCompensatorType.CAPACITOR ? susceptancePerSection : -susceptancePerSection);
-            subReporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(olQAtNominalV, modificationInfos.getQAtNominalV(), "Q at nominal voltage", 2));
+            subReporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(olQAtNominalV, modificationInfos.getQAtNominalV().getValue(), "Q at nominal voltage", 2));
         }
 
         ModificationUtils.getInstance().applyElementaryModifications(model::setBPerSection, model::getBPerSection, modificationInfos.getSusceptancePerSection(), subReporter, "Susceptance per section");
