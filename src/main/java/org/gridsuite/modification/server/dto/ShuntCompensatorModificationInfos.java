@@ -7,6 +7,7 @@
 
 package org.gridsuite.modification.server.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -41,6 +42,7 @@ public class ShuntCompensatorModificationInfos extends InjectionModificationInfo
     @Schema(description = "Susceptance per section")
     private AttributeModification<Double> susceptancePerSection;
 
+    @JsonProperty("qAtNominalV")
     @Schema(description = "Q at Nominal Voltage")
     private AttributeModification<Double> qAtNominalV;
 
