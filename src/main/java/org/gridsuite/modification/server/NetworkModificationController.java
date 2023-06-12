@@ -15,6 +15,8 @@ import org.gridsuite.modification.server.dto.BuildInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.ReportInfos;
+import org.gridsuite.modification.server.dto.catalog.LineTypeInfos;
+import org.gridsuite.modification.server.service.LineTypesCatalogService;
 import org.gridsuite.modification.server.service.NetworkModificationService;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -40,8 +42,12 @@ public class NetworkModificationController {
 
     private final NetworkModificationService networkModificationService;
 
-    public NetworkModificationController(NetworkModificationService networkModificationService) {
+    private final LineTypesCatalogService lineTypesCatalogService;
+
+    public NetworkModificationController(NetworkModificationService networkModificationService,
+            LineTypesCatalogService lineTypesCatalogService) {
         this.networkModificationService = networkModificationService;
+        this.lineTypesCatalogService = lineTypesCatalogService;
     }
 
     @GetMapping(value = "/groups/{groupUuid}/modifications", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -165,6 +171,29 @@ public class NetworkModificationController {
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The build has been stopped")})
     public ResponseEntity<Void> stopBuild(@Parameter(description = "Build receiver") @RequestParam(name = "receiver", required = false) String receiver) {
         networkModificationService.stopBuildRequest(receiver);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping(value = "/network-modifications/catalog/line_types", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Get a line types catalog")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The line types catalog is returned")})
+    public ResponseEntity<List<LineTypeInfos>> getLineTypes() {
+        return ResponseEntity.ok().body(lineTypesCatalogService.getAllLineTypes());
+    }
+
+    @PostMapping(value = "/network-modifications/catalog/line_types", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Create or reset completely a line types catalog")
+    @ApiResponse(responseCode = "200", description = "The line types catalog is created or reset")
+    public ResponseEntity<Void> resetLineTypes(@RequestBody List<LineTypeInfos> lineTypes) {
+        lineTypesCatalogService.resetLineTypes(lineTypes);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping(value = "/network-modifications/catalog/line_types", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Delete line types catalog")
+    @ApiResponse(responseCode = "200", description = "The line types catalog is deleted")
+    public ResponseEntity<Void> deleteLineTypesCatalog() {
+        lineTypesCatalogService.deleteLineTypesCatalog();
         return ResponseEntity.ok().build();
     }
 }

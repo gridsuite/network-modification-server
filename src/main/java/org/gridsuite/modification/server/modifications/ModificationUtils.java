@@ -39,6 +39,8 @@ public final class ModificationUtils {
 
     public static final String DISCONNECTOR = "disconnector_";
     public static final String BREAKER = "breaker_";
+    public static final String BUS_BAR_SECTION_ID = "busbarSectionId";
+    public static final String NO_VALUE = "No value";
 
     private ModificationUtils() {
     }
@@ -229,6 +231,33 @@ public final class ModificationUtils {
             throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR,
                     "Coupling between same bus bar section is not allowed");
         }
+        if (Objects.nonNull(voltageLevelCreationInfos.getIpMin()) && Objects.isNull(voltageLevelCreationInfos.getIpMax())) {
+            throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "IpMax is required");
+        }
+    }
+
+    private boolean checkBbs(Network network, String busbarSectionId1, String busbarSectionId2, Reporter subReporter) {
+        Identifiable<?> busOrBbs1 = network.getIdentifiable(busbarSectionId1);
+        Identifiable<?> busOrBbs2 = network.getIdentifiable(busbarSectionId2);
+        if (busOrBbs1 == null) {
+            subReporter.report(Report.builder()
+                    .withKey("notFoundBurOrBusbarSection")
+                    .withDefaultMessage("Bus or busbar section ID ${busbarSectionId} not found. Coupler was not created.")
+                    .withValue(BUS_BAR_SECTION_ID, busbarSectionId1)
+                    .withSeverity(TypedValue.ERROR_SEVERITY)
+                    .build());
+            return false;
+        }
+        if (busOrBbs2 == null) {
+            subReporter.report(Report.builder()
+                    .withKey("notFoundBurOrBusbarSection")
+                    .withDefaultMessage("Bus or busbar section ID ${busbarSectionId} not found. Coupler was not created.")
+                    .withValue(BUS_BAR_SECTION_ID, busbarSectionId2)
+                    .withSeverity(TypedValue.ERROR_SEVERITY)
+                    .build());
+            return false;
+        }
+        return true;
     }
 
     void createVoltageLevel(VoltageLevelCreationInfos voltageLevelCreationInfos,
@@ -276,11 +305,14 @@ public final class ModificationUtils {
                 .build().apply(network);
 
         voltageLevelCreationInfos.getCouplingDevices().forEach(couplingDevice -> {
+            if (!checkBbs(network, couplingDevice.getBusbarSectionId1(), couplingDevice.getBusbarSectionId2(), subReporter)) {
+                return;
+            }
             CreateCouplingDeviceBuilder couplingDeviceBuilder = new CreateCouplingDeviceBuilder();
             couplingDeviceBuilder.withBusOrBusbarSectionId1(couplingDevice.getBusbarSectionId1())
                 .withBusOrBusbarSectionId2(couplingDevice.getBusbarSectionId2())
                 .withSwitchPrefixId(voltageLevelCreationInfos.getEquipmentId() + "_COUPL")
-                .build().apply(network);
+                    .build().apply(network, subReporter);
         });
 
         subReporter.report(Report.builder()
@@ -411,11 +443,21 @@ public final class ModificationUtils {
     }
 
     public <T> Report buildModificationReport(T oldValue, T newValue, String fieldName) {
-        String oldValueString = oldValue == null ? "NaN" : oldValue.toString();
-        String newValueString = newValue == null ? "NaN" : newValue.toString();
+        return buildModificationReportWithIndentation(oldValue, newValue, fieldName, 1);
+    }
+
+    public <T> Report buildModificationReportWithIndentation(T oldValue, T newValue, String fieldName, int indentationLevel) {
+        boolean isOldValueDoubleNaN = (oldValue instanceof Double) && Double.isNaN((Double) oldValue);
+        String oldValueString = (oldValue == null || isOldValueDoubleNaN) ? NO_VALUE : oldValue.toString();
+        boolean isNewValueDoubleNaN = (newValue instanceof Double) && Double.isNaN((Double) newValue);
+        String newValueString = (newValue == null || isNewValueDoubleNaN) ? NO_VALUE : newValue.toString();
+        StringBuilder indentation = new StringBuilder();
+        for (int i = 0; i < indentationLevel; i++) {
+            indentation.append("    ");
+        }
         return Report.builder()
                 .withKey("Modification" + fieldName)
-                .withDefaultMessage("    ${fieldName} : ${oldValue} -> ${newValue}")
+                .withDefaultMessage(indentation.toString() + "${fieldName} : ${oldValue} -> ${newValue}")
                 .withValue("fieldName", fieldName)
                 .withValue("oldValue", oldValueString)
                 .withValue("newValue", newValueString)
@@ -507,7 +549,7 @@ public final class ModificationUtils {
     }
 
     public <T> Report buildCreationReport(T value, String fieldName) {
-        String newValueString = value == null ? "NaN" : value.toString();
+        String newValueString = value == null ? NO_VALUE : value.toString();
         return Report.builder()
                 .withKey("Creation" + fieldName)
                 .withDefaultMessage("    ${fieldName} : ${value}")

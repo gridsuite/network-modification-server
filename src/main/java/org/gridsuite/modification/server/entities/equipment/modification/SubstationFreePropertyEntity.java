@@ -42,5 +42,8 @@ public class SubstationFreePropertyEntity {
 
     @Column(name = "deletion_mark")
     private Boolean deletionMark = false;
+
+    @Column(name = "added")
+    private Boolean added = false;
 }
 

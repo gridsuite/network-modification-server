@@ -33,6 +33,7 @@ public class NetworkModificationException extends PowsyblException {
         BRANCH_NOT_FOUND(HttpStatus.NOT_FOUND),
         LOAD_NOT_FOUND(HttpStatus.NOT_FOUND),
         GENERATOR_NOT_FOUND(HttpStatus.NOT_FOUND),
+        TWO_WINDINGS_TRANSFORMER_NOT_FOUND(HttpStatus.NOT_FOUND),
         UNKNOWN_MODIFICATION_TYPE(HttpStatus.INTERNAL_SERVER_ERROR),
         UNKNOWN_EQUIPMENT_TYPE(HttpStatus.INTERNAL_SERVER_ERROR),
         WRONG_EQUIPMENT_TYPE(HttpStatus.INTERNAL_SERVER_ERROR),
@@ -48,10 +49,13 @@ public class NetworkModificationException extends PowsyblException {
         EQUIPMENT_NOT_FOUND(HttpStatus.NOT_FOUND),
         ATTRIBUTE_NOT_EDITABLE(HttpStatus.BAD_REQUEST),
         CREATE_LINE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
+        MODIFY_LINE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         CREATE_TWO_WINDINGS_TRANSFORMER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
+        MODIFY_TWO_WINDINGS_TRANSFORMER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         CREATE_SUBSTATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         MODIFY_SUBSTATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         CREATE_VOLTAGE_LEVEL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
+        MODIFY_VOLTAGE_LEVEL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         SUBSTATION_NOT_FOUND(HttpStatus.NOT_FOUND),
         LOAD_ALREADY_EXISTS(HttpStatus.BAD_REQUEST),
         VOLTAGE_LEVEL_ALREADY_EXISTS(HttpStatus.BAD_REQUEST),
@@ -87,6 +91,7 @@ public class NetworkModificationException extends PowsyblException {
         DELETE_ATTACHING_LINE_NOT_FOUND(HttpStatus.NOT_FOUND),
         FILTERS_NOT_FOUND(HttpStatus.NOT_FOUND),
         GENERATION_DISPATCH_ERROR(HttpStatus.INTERNAL_SERVER_ERROR);
+
 
         public final HttpStatus status;
         private final String message;

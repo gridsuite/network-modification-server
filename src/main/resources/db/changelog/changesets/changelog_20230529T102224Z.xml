@@ -1,0 +1,32 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-4.1.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
+    <changeSet author="florent (generated)" id="1685355756378-5">
+        <createTable tableName="two_windings_transformer_modification">
+            <column name="equipment_id" type="VARCHAR(255)"/>
+            <column name="equipment_name_op" type="VARCHAR(255)"/>
+            <column name="equipment_name_value" type="VARCHAR(255)"/>
+            <column name="series_reactance_op" type="VARCHAR(255)"/>
+            <column name="series_reactance" type="FLOAT8"/>
+            <column name="series_resistance_op" type="VARCHAR(255)"/>
+            <column name="series_resistance" type="FLOAT8"/>
+            <column name="magnetizing_conductance_op" type="VARCHAR(255)"/>
+            <column name="magnetizing_conductance" type="FLOAT8"/>
+            <column name="magnetizing_susceptance_op" type="VARCHAR(255)"/>
+            <column name="magnetizing_susceptance" type="FLOAT8"/>
+            <column name="rateds_op" type="VARCHAR(255)"/>
+            <column name="rateds" type="FLOAT8"/>
+            <column name="rated_voltage1op" type="VARCHAR(255)"/>
+            <column name="rated_voltage1" type="FLOAT8"/>
+            <column name="rated_voltage2op" type="VARCHAR(255)"/>
+            <column name="rated_voltage2" type="FLOAT8"/>
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="two_windings_transformer_modificationPK"/>
+            </column>
+            <column name="current_limits_modification_id1" type="UUID"/>
+            <column name="current_limits_modification_id2" type="UUID"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="florent (generated)" id="1685355756378-6">
+        <addForeignKeyConstraint baseColumnNames="id" baseTableName="two_windings_transformer_modification" constraintName="twoWindingsTransformerModification_id_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
+    </changeSet>
+</databaseChangeLog>

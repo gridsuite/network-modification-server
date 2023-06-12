@@ -30,4 +30,7 @@ public class SubstationFreePropertyInfos {
 
     @Schema(description = "marked as deleted")
     private boolean deletionMark = false;
+
+    @Schema(description = "property added in current modification")
+    private boolean added = false;
 }
