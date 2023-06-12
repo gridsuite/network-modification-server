@@ -42,7 +42,10 @@ public class VoltageLevelDeletionTest extends AbstractNetworkModificationTest {
 
     @Override
     protected ModificationInfos buildModificationUpdate() {
-        return null;
+        return EquipmentDeletionInfos.builder()
+                .equipmentType("VOLTAGE_LEVEL")
+                .equipmentId("v1")
+                .build();
     }
 
     @Override
