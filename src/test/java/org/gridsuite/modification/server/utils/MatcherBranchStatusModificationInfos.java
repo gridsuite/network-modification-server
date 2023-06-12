@@ -20,11 +20,12 @@ public class MatcherBranchStatusModificationInfos extends MatcherEquipmentModifi
         super(ref);
     }
 
-    public static MatcherBranchStatusModificationInfos createMatcherBranchStatusModificationInfos(String equipmentId, BranchStatusModificationInfos.ActionType action) {
+    public static MatcherBranchStatusModificationInfos createMatcherBranchStatusModificationInfos(String equipmentId, BranchStatusModificationInfos.ActionType action, String energizedVoltageLevelId) {
         return new MatcherBranchStatusModificationInfos(BranchStatusModificationInfos.builder()
             .date(ZonedDateTime.now(ZoneOffset.UTC))
             .equipmentId(equipmentId)
             .action(action)
+            .energizedVoltageLevelId(energizedVoltageLevelId)
             .build());
     }
 
