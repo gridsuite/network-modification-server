@@ -19,6 +19,9 @@ import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ShuntCompensatorModificationInfos;
 import org.gridsuite.modification.server.dto.ShuntCompensatorType;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static org.gridsuite.modification.server.NetworkModificationException.Type.SHUNT_COMPENSATOR_NOT_FOUND;
 
 /**
@@ -57,21 +60,29 @@ public class ShuntCompensatorModification extends AbstractModification {
     }
 
     private void applyModificationOnLinearModel(Reporter subReporter, ShuntCompensator shuntCompensator, VoltageLevel voltageLevel) {
+        List<Report> reports = new ArrayList<>();
         ShuntCompensatorLinearModel model = shuntCompensator.getModel(ShuntCompensatorLinearModel.class);
+        var shuntCompensatorType = model.getBPerSection() > 0 ? ShuntCompensatorType.CAPACITOR : ShuntCompensatorType.REACTOR;
 
-        if (modificationInfos.getQAtNominalV() != null) {
-            var olQAtNominalV = Math.abs(Math.pow(voltageLevel.getNominalV(), 2) * model.getBPerSection());
-
-            var oldType = model.getBPerSection() > 0 ? ShuntCompensatorType.CAPACITOR : ShuntCompensatorType.REACTOR;
-            var type = modificationInfos.getShuntCompensatorType() != null ?
-                    modificationInfos.getShuntCompensatorType().getValue() : oldType;
-
-            Double susceptancePerSection = modificationInfos.getQAtNominalV().getValue() / Math.pow(voltageLevel.getNominalV(), 2);
-
-            model.setBPerSection(type == ShuntCompensatorType.CAPACITOR ? susceptancePerSection : -susceptancePerSection);
-            subReporter.report(ModificationUtils.getInstance().buildModificationReport(olQAtNominalV, modificationInfos.getQAtNominalV().getValue(), "Q at nominal voltage"));
+        if (modificationInfos.getShuntCompensatorType() != null) {
+            shuntCompensatorType = modificationInfos.getShuntCompensatorType().getValue();
+            reports.add(ModificationUtils.getInstance().buildModificationReport(shuntCompensatorType, modificationInfos.getShuntCompensatorType().getValue(), "Type"));
+            if (modificationInfos.getQAtNominalV() == null) {
+                // we retrieve the absolute value of susceptance per section, then we determine the sign using the type
+                double bPerSectionAbsoluteValue = Math.abs(model.getBPerSection());
+                double newBPerSection = shuntCompensatorType == ShuntCompensatorType.CAPACITOR ? bPerSectionAbsoluteValue : -bPerSectionAbsoluteValue;
+                model.setBPerSection(newBPerSection);
+            }
         }
 
+        if (modificationInfos.getQAtNominalV() != null) {
+            double olQAtNominalV = Math.abs(Math.pow(voltageLevel.getNominalV(), 2) * model.getBPerSection());
+            double susceptancePerSection = modificationInfos.getQAtNominalV().getValue() / Math.pow(voltageLevel.getNominalV(), 2);
+
+            model.setBPerSection(shuntCompensatorType == ShuntCompensatorType.CAPACITOR ? susceptancePerSection : -susceptancePerSection);
+            reports.add(ModificationUtils.getInstance().buildModificationReport(olQAtNominalV, modificationInfos.getQAtNominalV().getValue(), "Q at nominal voltage"));
+        }
+        reports.forEach(subReporter::report);
         ModificationUtils.getInstance().applyElementaryModifications(model::setBPerSection, model::getBPerSection, modificationInfos.getSusceptancePerSection(), subReporter, "Susceptance per section");
     }
 }
