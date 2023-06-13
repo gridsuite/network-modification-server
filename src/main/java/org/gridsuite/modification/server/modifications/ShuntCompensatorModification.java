@@ -65,8 +65,8 @@ public class ShuntCompensatorModification extends AbstractModification {
         var shuntCompensatorType = model.getBPerSection() > 0 ? ShuntCompensatorType.CAPACITOR : ShuntCompensatorType.REACTOR;
 
         if (modificationInfos.getShuntCompensatorType() != null) {
-            shuntCompensatorType = modificationInfos.getShuntCompensatorType().getValue();
             reports.add(ModificationUtils.getInstance().buildModificationReport(shuntCompensatorType, modificationInfos.getShuntCompensatorType().getValue(), "Type"));
+            shuntCompensatorType = modificationInfos.getShuntCompensatorType().getValue();
             if (modificationInfos.getQAtNominalV() == null) {
                 // we retrieve the absolute value of susceptance per section, then we determine the sign using the type
                 double bPerSectionAbsoluteValue = Math.abs(model.getBPerSection());
