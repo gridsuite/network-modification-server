@@ -27,6 +27,7 @@ import org.junit.Test;
 import org.springframework.http.MediaType;
 
 import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -185,7 +186,7 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
 
         ModificationInfos modificationToCreate = LoadScalingInfos.builder()
             .uuid(LOAD_SCALING_ID)
-            .date(ZonedDateTime.now())
+            .date(ZonedDateTime.now().truncatedTo(ChronoUnit.MICROS);)
             .variationType(VariationType.DELTA_P)
             .variations(List.of(variation1))
             .build();
@@ -356,7 +357,7 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
             .build();
 
         return LoadScalingInfos.builder()
-            .date(ZonedDateTime.now())
+            .date(ZonedDateTime.now().truncatedTo(ChronoUnit.MICROS);)
             .variationType(VariationType.DELTA_P)
             .variations(List.of(variation1, variation2, variation3, variation4, variation5))
             .build();
@@ -378,7 +379,7 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
 
         return LoadScalingInfos.builder()
             .uuid(LOAD_SCALING_ID)
-            .date(ZonedDateTime.now())
+            .date(ZonedDateTime.now().truncatedTo(ChronoUnit.MICROS);)
             .variationType(VariationType.TARGET_P)
             .variations(List.of(variation5))
             .build();
