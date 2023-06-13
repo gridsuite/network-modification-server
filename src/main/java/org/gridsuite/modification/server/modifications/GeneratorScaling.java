@@ -10,6 +10,7 @@ package org.gridsuite.modification.server.modifications;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.iidm.modification.scalable.Scalable;
+import com.powsybl.iidm.modification.scalable.ScalingParameters;
 import com.powsybl.iidm.network.Generator;
 import com.powsybl.iidm.network.Network;
 import org.gridsuite.modification.server.VariationType;
@@ -159,7 +160,7 @@ public class GeneratorScaling extends AbstractScaling {
 
     private void scale(Network network, Reporter subReporter, ScalingVariationInfos scalingVariationInfos, AtomicReference<Double> sum, Scalable scalable) {
         double asked = getAsked(scalingVariationInfos, sum);
-        double done = scalable.scale(network, asked);
+        double done = scalable.scale(network, asked, new ScalingParameters().setIterative(true));
         createReport(subReporter,
                 "scalingApplied",
                 String.format("successfully scaled for mode %s with variation value asked is %s. variation done is  %s", scalingVariationInfos.getVariationMode(), asked, done),
