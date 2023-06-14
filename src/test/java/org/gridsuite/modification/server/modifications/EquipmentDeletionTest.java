@@ -13,17 +13,18 @@ import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.EquipmentDeletionInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.ShuntCompensatorSelectionInfos;
 import org.gridsuite.modification.server.utils.MatcherEquipmentDeletionInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
 import org.springframework.http.MediaType;
 
+import java.util.List;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.EQUIPMENT_NOT_FOUND;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -112,5 +113,38 @@ public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
                 .andExpect(status().isOk());
         assertLogMessage("The substation s2 is still connected to another substation", equipmentDeletionInfos.getErrorType().name(), reportService);
         assertNotNull(getNetwork().getSubstation("s2"));
+    }
+
+    @SneakyThrows
+    public void deleteHvdcLineWithShuntCompensator(boolean selected) {
+        final String hvdcLineName = "hvdcLine"; // this line uses LCC converter stations
+        final String ShuntNameToBeRemoved = "v2shunt"; // to be removed if selected
+        assertNotNull(getNetwork().getHvdcLine(hvdcLineName));
+        assertNotNull(getNetwork().getShuntCompensator(ShuntNameToBeRemoved));
+
+        EquipmentDeletionInfos equipmentDeletionInfos = EquipmentDeletionInfos.builder()
+                .equipmentType("HVDC_LINE")
+                .equipmentId(hvdcLineName)
+                .hvdcWithLCC(true)
+                .mcsOnSide2(List.of(new ShuntCompensatorSelectionInfos(ShuntNameToBeRemoved, selected)))
+                .build();
+        String equipmentDeletionInfosJson = mapper.writeValueAsString(equipmentDeletionInfos);
+
+        mockMvc.perform(post(getNetworkModificationUri()).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        assertNull(getNetwork().getHvdcLine(hvdcLineName));
+        assertEquals(selected, getNetwork().getShuntCompensator(ShuntNameToBeRemoved) == null);
+    }
+
+    @Test
+    public void testDeleteHvdcWithLCCWithShuntCompensatorSelected() {
+        deleteHvdcLineWithShuntCompensator(true);
+    }
+
+    @Test
+    public void testDeleteHvdcWithLCCWithShuntCompensatorNotSelected() {
+        deleteHvdcLineWithShuntCompensator(false);
     }
 }

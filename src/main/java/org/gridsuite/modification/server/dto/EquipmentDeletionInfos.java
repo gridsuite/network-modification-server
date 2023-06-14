@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.entities.equipment.deletion.EquipmentDeletionEntity;
@@ -20,6 +21,8 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
+import java.util.List;
+
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
@@ -32,6 +35,17 @@ import lombok.experimental.SuperBuilder;
 public class EquipmentDeletionInfos extends EquipmentModificationInfos {
     @Schema(description = "Equipment type")
     private String equipmentType;
+
+    @Schema(description = "HVDC having a LCC or not")
+    private boolean hvdcWithLCC;
+
+    @Schema(description = "LCC HVDC converter station Shunt Compensator side 1")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private List<ShuntCompensatorSelectionInfos> mcsOnSide1;
+
+    @Schema(description = "LCC HVDC converter station Shunt Compensator side 2")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private List<ShuntCompensatorSelectionInfos> mcsOnSide2;
 
     @Override
     public EquipmentDeletionEntity toEntity() {

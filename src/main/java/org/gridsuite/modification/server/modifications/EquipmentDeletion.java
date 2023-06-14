@@ -10,9 +10,17 @@ import com.powsybl.commons.reporter.Report;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.iidm.modification.topology.RemoveFeederBay;
+import com.powsybl.iidm.modification.topology.RemoveHvdcLineBuilder;
+import com.powsybl.iidm.modification.topology.RemoveHvdcLine;
 import com.powsybl.iidm.network.*;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.EquipmentDeletionInfos;
+import org.gridsuite.modification.server.dto.ShuntCompensatorSelectionInfos;
+
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import static org.gridsuite.modification.server.NetworkModificationException.Type.EQUIPMENT_NOT_FOUND;
 
 /**
@@ -36,7 +44,19 @@ public class EquipmentDeletion extends AbstractModification {
         if (identifiable instanceof Connectable) {
             new RemoveFeederBay(modificationInfos.getEquipmentId()).apply(network, true, subReporter);
         } else if (identifiable instanceof HvdcLine) {
-            ((HvdcLine) identifiable).remove();
+            List<String> shuntCompensatorIds = Stream.concat(
+                    modificationInfos.getMcsOnSide1() != null ? modificationInfos.getMcsOnSide1().stream() : Stream.of(),
+                    modificationInfos.getMcsOnSide2() != null ? modificationInfos.getMcsOnSide2().stream() : Stream.of())
+                .filter(ShuntCompensatorSelectionInfos::isSelected)
+                .map(ShuntCompensatorSelectionInfos::getId)
+                .collect(Collectors.toList());
+            RemoveHvdcLine algo = new RemoveHvdcLineBuilder()
+                .withHvdcLineId(modificationInfos.getEquipmentId())
+                .withShuntCompensatorIds(shuntCompensatorIds)
+                .build();
+            // TODO RemoveHvdcLine class has been locally duplicated from Powsybl-core - should be removed when
+            // https://github.com/powsybl/powsybl-core/pull/2620 is merged and delivered to Gridsuite
+            algo.apply(network, true, subReporter);
         } else if (identifiable instanceof VoltageLevel) {
             ((VoltageLevel) identifiable).remove();
         } else if (identifiable instanceof Substation) {

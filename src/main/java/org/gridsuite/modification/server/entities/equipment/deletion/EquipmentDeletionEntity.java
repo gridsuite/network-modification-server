@@ -11,9 +11,12 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.gridsuite.modification.server.dto.EquipmentDeletionInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.ShuntCompensatorSelectionInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
 
 import javax.persistence.*;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -26,6 +29,17 @@ import javax.persistence.*;
 public class EquipmentDeletionEntity extends EquipmentModificationEntity {
     @Column(name = "equipmentType")
     private String equipmentType;
+
+    @Column(name = "hvdcWithLCC", columnDefinition = "boolean default false")
+    private boolean hvdcWithLCC;
+
+    @ElementCollection
+    @CollectionTable(name = "shuntCompensatorsSide1")
+    private List<ShuntCompensatorSelectionEmbeddable> shuntCompensatorsSide1;
+
+    @ElementCollection
+    @CollectionTable(name = "shuntCompensatorsSide2")
+    private List<ShuntCompensatorSelectionEmbeddable> shuntCompensatorsSide2;
 
     public EquipmentDeletionEntity(EquipmentDeletionInfos equipmentDeletionInfos) {
         super(equipmentDeletionInfos);
@@ -40,6 +54,9 @@ public class EquipmentDeletionEntity extends EquipmentModificationEntity {
 
     private void assignAttributes(EquipmentDeletionInfos equipmentDeletionInfos) {
         this.equipmentType = equipmentDeletionInfos.getEquipmentType();
+        this.hvdcWithLCC = equipmentDeletionInfos.isHvdcWithLCC();
+        this.shuntCompensatorsSide1 = toEmbeddableShuntCompensators(equipmentDeletionInfos.getMcsOnSide1());
+        this.shuntCompensatorsSide2 = toEmbeddableShuntCompensators(equipmentDeletionInfos.getMcsOnSide2());
     }
 
     @Override
@@ -53,6 +70,22 @@ public class EquipmentDeletionEntity extends EquipmentModificationEntity {
             .uuid(getId())
             .date(getDate())
             .equipmentId(getEquipmentId())
-            .equipmentType(getEquipmentType());
+            .equipmentType(getEquipmentType())
+            .hvdcWithLCC(isHvdcWithLCC())
+            .mcsOnSide1(toShuntCompensators(getShuntCompensatorsSide1()))
+            .mcsOnSide2(toShuntCompensators(getShuntCompensatorsSide2()));
+    }
+
+    private List<ShuntCompensatorSelectionInfos> toShuntCompensators(List<ShuntCompensatorSelectionEmbeddable> shuntCompensators) {
+        return shuntCompensators != null ? shuntCompensators
+                .stream()
+                .map(s -> new ShuntCompensatorSelectionInfos(s.getShuntCompensatorId(), s.isSelected()))
+                .collect(Collectors.toList()) : null;
+    }
+
+    private static List<ShuntCompensatorSelectionEmbeddable> toEmbeddableShuntCompensators(List<ShuntCompensatorSelectionInfos> shuntCompensators) {
+        return shuntCompensators == null ? null : shuntCompensators.stream()
+                .map(s -> new ShuntCompensatorSelectionEmbeddable(s.getId(), s.isSelected()))
+                .collect(Collectors.toList());
     }
 }
