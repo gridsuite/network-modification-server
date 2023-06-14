@@ -12,6 +12,7 @@ import org.hamcrest.Description;
 
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 
 /**
@@ -22,7 +23,7 @@ public class MatcherEquipmentAttributeModificationInfos extends MatcherModificat
     public static MatcherEquipmentAttributeModificationInfos createMatcherEquipmentAttributeModificationInfos(String equipmentId, String equipmentAttributeName,
                                                                                                               Object equipmentAttributeValue, IdentifiableType equipmentType) {
         return new MatcherEquipmentAttributeModificationInfos(EquipmentAttributeModificationInfos.builder()
-                .date(ZonedDateTime.now(ZoneOffset.UTC))
+                .date(ZonedDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.MICROS))
                 .equipmentId(equipmentId)
                 .equipmentAttributeName(equipmentAttributeName)
                 .equipmentAttributeValue(equipmentAttributeValue)
