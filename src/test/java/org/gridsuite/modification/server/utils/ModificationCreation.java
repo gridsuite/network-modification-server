@@ -37,28 +37,6 @@ public final class ModificationCreation {
             .couplingDevices(Arrays.asList(CouplingDeviceInfos.builder().busbarSectionId1("1A").busbarSectionId2("1B").build())).build();
     }
 
-    public static BatteryCreationInfos getCreationBattery(String vlId, String batteryId, String batteryName, String busOrBusbarSectionId) {
-        return BatteryCreationInfos.builder()
-                .equipmentId(batteryId)
-                .equipmentName(batteryName)
-                .voltageLevelId(vlId)
-                .busOrBusbarSectionId(busOrBusbarSectionId)
-                .minActivePower(100.0)
-                .maxActivePower(600.0)
-                .activePowerSetpoint(400.)
-                .reactivePowerSetpoint(50.)
-                .minimumReactivePower(20.0)
-                .maximumReactivePower(25.0)
-                .droop(5f)
-                .participate(true)
-                .reactiveCapabilityCurve(true)
-                .reactiveCapabilityCurvePoints(Arrays.asList(new ReactiveCapabilityCurveCreationInfos(2.0, 3.0, 3.1),
-                        new ReactiveCapabilityCurveCreationInfos(5.6, 9.8, 10.8)))
-                .connectionName("top")
-                .connectionDirection(ConnectablePosition.Direction.TOP)
-                .build();
-    }
-
     public static GeneratorCreationInfos getCreationGenerator(String vlId, String generatorId, String generatorName, String busOrBusbarSectionId,
                                                               String regulatingTerminalId, String regulatingTerminalType, String regulatingTerminalVlId) {
         return GeneratorCreationInfos.builder()

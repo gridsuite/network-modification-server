@@ -73,14 +73,6 @@ public final class ModificationUtils {
         return line;
     }
 
-    Battery getBattery(Network network, String batteryId) {
-        Battery battery = network.getBattery(batteryId);
-        if (battery == null) {
-            throw new NetworkModificationException(BATTERY_NOT_FOUND, "Battery " + batteryId + " does not exist in network");
-        }
-        return battery;
-    }
-
     Generator getGenerator(Network network, String generatorId) {
         Generator generator = network.getGenerator(generatorId);
         if (generator == null) {
