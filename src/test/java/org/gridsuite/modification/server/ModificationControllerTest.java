@@ -31,6 +31,7 @@ import org.gridsuite.modification.server.elasticsearch.EquipmentInfosRepository;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.elasticsearch.TombstonedEquipmentInfosRepository;
 import org.gridsuite.modification.server.impacts.SimpleElementImpact;
+import org.gridsuite.modification.server.modifications.BatteryCreation;
 import org.gridsuite.modification.server.modifications.ModificationUtils;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.NetworkModificationService;
@@ -493,6 +494,51 @@ public class ModificationControllerTest {
     @Test
     public void testMoveModificationWithOrigin() throws Exception {
         testMoveModification(TEST_GROUP_ID, Boolean.TRUE);
+    }
+
+    @SneakyThrows
+    @Test
+    public void createBattery() {
+
+        // create and build generator without startup
+        BatteryCreationInfos batteryCreationInfos = ModificationCreation.getCreationBattery("v2", "idBattery1", "nameBattery1", "1B");
+        String batteryCreationInfosJson = objectWriter.writeValueAsString(batteryCreationInfos);
+
+        mockMvc.perform(post(URI_NETWORK_MODIF).content(batteryCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        BatteryCreation batteryCreation = network.getBattery("idGenerator1").getExtension(BatteryCreation.class);
+        assertNull(batteryCreation);
+
+        // same for bus breaker
+        BatteryCreationInfos batteryCreationInfosBusBreaker = ModificationCreation.getCreationBattery("v1", "idGenerator2", "nameGenerator2", "bus1");
+        batteryCreationInfosJson = objectWriter.writeValueAsString(batteryCreationInfosBusBreaker);
+
+        mockMvc.perform(post(URI_NETWORK_MODIF_BUS_BREAKER).content(batteryCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        batteryCreation = networkStoreService.getNetwork(TEST_NETWORK_BUS_BREAKER_ID).getBattery("idBattery2").getExtension(BatteryCreation.class);
+        assertNull(batteryCreation);
+
+        // create and build generator with startup
+        batteryCreationInfos.setEquipmentId("idBattery21");
+        batteryCreationInfosJson = objectWriter.writeValueAsString(batteryCreationInfos);
+
+        mockMvc.perform(post(URI_NETWORK_MODIF).content(batteryCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        batteryCreation = network.getBattery("idBattery21").getExtension(BatteryCreation.class);
+        assertNotNull(batteryCreation);
+
+        // same for bus breaker
+        batteryCreationInfosBusBreaker.setEquipmentId("idGenerator3");
+        batteryCreationInfosJson = objectWriter.writeValueAsString(batteryCreationInfosBusBreaker);
+
+        mockMvc.perform(post(URI_NETWORK_MODIF_BUS_BREAKER).content(batteryCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        batteryCreation = networkStoreService.getNetwork(TEST_NETWORK_BUS_BREAKER_ID).getBattery("idGenerator3").getExtension(BatteryCreation.class);
+        assertNotNull(batteryCreation);
     }
 
     @SneakyThrows
