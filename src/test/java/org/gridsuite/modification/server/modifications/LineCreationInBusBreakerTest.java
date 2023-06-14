@@ -13,16 +13,16 @@ import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.CurrentLimitsInfos;
 import org.gridsuite.modification.server.dto.LineCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.utils.MatcherLineCreationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
 import org.springframework.http.MediaType;
 
+import java.util.Collections;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.BUS_NOT_FOUND;
+import static org.gridsuite.modification.server.utils.Assertions.*;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -61,7 +61,7 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosNoShuntJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         LineCreationInfos createdModification = (LineCreationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
-        assertThat(createdModification, new MatcherLineCreationInfos(lineCreationInfosNoShunt));
+        assertThat(createdModification).recursivelyEquals(lineCreationInfosNoShunt);
 
         testNetworkModificationsCount(getGroupId(), 1);
     }
@@ -90,7 +90,7 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosNoShuntJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         LineCreationInfos createdModification = (LineCreationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
-        assertThat(createdModification, new MatcherLineCreationInfos(lineCreationInfosNoShunt));
+        assertThat(createdModification).recursivelyEquals(lineCreationInfosNoShunt);
 
         testNetworkModificationsCount(getGroupId(), 1);
     }
@@ -107,7 +107,7 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
                 .busOrBusbarSectionId1("bus1")
                 .voltageLevelId2("v2")
                 .busOrBusbarSectionId2("bus2")
-                .currentLimits2(CurrentLimitsInfos.builder().permanentLimit(1.0).build())
+                .currentLimits2(CurrentLimitsInfos.builder().permanentLimit(1.0).temporaryLimits(Collections.emptyList()).build())
                 .build();
 
         String lineCreationInfosPermanentLimitOKJson = mapper.writeValueAsString(lineCreationInfosPermanentLimitOK);
@@ -115,7 +115,7 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
                 .andExpect(status().isOk()).andReturn();
 
         LineCreationInfos createdModification = (LineCreationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
-        assertThat(createdModification, new MatcherLineCreationInfos(lineCreationInfosPermanentLimitOK));
+        assertThat(createdModification).recursivelyEquals(lineCreationInfosPermanentLimitOK);
 
         testNetworkModificationsCount(getGroupId(), 1);
     }
@@ -132,7 +132,7 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
                 .busOrBusbarSectionId1("bus1")
                 .voltageLevelId2("v2")
                 .busOrBusbarSectionId2("bus2")
-                .currentLimits1(CurrentLimitsInfos.builder().permanentLimit(5.0).build())
+                .currentLimits1(CurrentLimitsInfos.builder().permanentLimit(5.0).temporaryLimits(Collections.emptyList()).build())
                 .currentLimits2(null)
                 .build();
 
@@ -142,7 +142,7 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
 
         lineCreationInfosPermanentLimitOK.setCurrentLimits2(null); // if permanentLimit is null then no currentLimit created
         LineCreationInfos createdModification = (LineCreationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
-        assertThat(createdModification, new MatcherLineCreationInfos(lineCreationInfosPermanentLimitOK));
+        assertThat(createdModification).recursivelyEquals(lineCreationInfosPermanentLimitOK);
 
         testNetworkModificationsCount(getGroupId(), 1);
     }
@@ -208,8 +208,8 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
             .shuntSusceptance2(20.0)
             .voltageLevelId1("v1")
             .busOrBusbarSectionId1("bus1")
-            .currentLimits1(CurrentLimitsInfos.builder().permanentLimit(5.).build())
-            .currentLimits2(CurrentLimitsInfos.builder().permanentLimit(5.).build())
+            .currentLimits1(CurrentLimitsInfos.builder().permanentLimit(5.).temporaryLimits(Collections.emptyList()).build())
+            .currentLimits2(CurrentLimitsInfos.builder().permanentLimit(5.).temporaryLimits(Collections.emptyList()).build())
             .voltageLevelId2("v2")
             .busOrBusbarSectionId2("bus2")
             .build();
@@ -231,11 +231,6 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
             .voltageLevelId2("v3")
             .busOrBusbarSectionId2("bus4")
             .build();
-    }
-
-    @Override
-    protected MatcherLineCreationInfos createMatcher(ModificationInfos modificationInfos) {
-        return new MatcherLineCreationInfos((LineCreationInfos) modificationInfos);
     }
 
     @Override

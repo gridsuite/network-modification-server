@@ -34,7 +34,10 @@ import org.gridsuite.modification.server.modifications.ModificationUtils;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.NetworkModificationService;
 import org.gridsuite.modification.server.service.ReportService;
-import org.gridsuite.modification.server.utils.*;
+import org.gridsuite.modification.server.utils.ModificationCreation;
+import org.gridsuite.modification.server.utils.NetworkCreation;
+import org.gridsuite.modification.server.utils.NetworkWithTeePoint;
+import org.gridsuite.modification.server.utils.TestUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -49,18 +52,38 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
-import static org.gridsuite.modification.server.Impacts.TestImpactUtils.*;
-import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
+import static org.gridsuite.modification.server.Impacts.TestImpactUtils.createDeletionImpactType;
+import static org.gridsuite.modification.server.Impacts.TestImpactUtils.createVoltageLevelDeletionImpacts;
+import static org.gridsuite.modification.server.Impacts.TestImpactUtils.testBranchCreationImpacts;
+import static org.gridsuite.modification.server.Impacts.TestImpactUtils.testElementDeletionImpact;
+import static org.gridsuite.modification.server.Impacts.TestImpactUtils.testElementModificationImpact;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.BUSBAR_SECTION_NOT_FOUND;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_ERROR;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_GROUP_NOT_FOUND;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_NOT_FOUND;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.NETWORK_NOT_FOUND;
+import static org.gridsuite.modification.server.utils.Assertions.*;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -391,10 +414,10 @@ public class ModificationControllerTest {
         assertEquals(5, newModificationList.size());
         assertEquals(modificationUuidList, newModificationUuidList.subList(0, 3));
         // compare duplicates 0 and 3 (same data except uuid)
-        assertThat(newModificationList.get(3), new MatcherModificationInfos<>(modificationList.get(0)));
+        assertThat(newModificationList.get(3)).recursivelyEquals(modificationList.get(0));
 
         // compare duplicates 1 and 4 (same data except uuid)
-        assertThat(newModificationList.get(4), new MatcherModificationInfos<>(modificationList.get(1)));
+        assertThat(newModificationList.get(4)).recursivelyEquals(modificationList.get(1));
 
         // bad request error case: wrong action param
         mockMvc.perform(
@@ -426,8 +449,8 @@ public class ModificationControllerTest {
         assertEquals(3, newModificationListOtherGroup.size());
         assertEquals(modificationUuidListOtherGroup, newModificationUuidListOtherGroup.subList(0, 1));
         // compare duplicates
-        assertThat(newModificationListOtherGroup.get(1), new MatcherModificationInfos<>(modificationList.get(0)));
-        assertThat(newModificationListOtherGroup.get(2), new MatcherModificationInfos<>(modificationList.get(1)));
+        assertThat(newModificationListOtherGroup.get(1)).recursivelyEquals(modificationList.get(0));
+        assertThat(newModificationListOtherGroup.get(2)).recursivelyEquals(modificationList.get(1));
     }
 
     @Test

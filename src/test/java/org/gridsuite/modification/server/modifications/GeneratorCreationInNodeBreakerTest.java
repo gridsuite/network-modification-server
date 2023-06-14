@@ -17,7 +17,6 @@ import org.gridsuite.modification.server.dto.GeneratorCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.ReactiveCapabilityCurveCreationInfos;
-import org.gridsuite.modification.server.utils.MatcherGeneratorCreationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
 import org.springframework.http.MediaType;
@@ -27,9 +26,15 @@ import java.util.Arrays;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.BUSBAR_SECTION_NOT_FOUND;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.CREATE_GENERATOR_ERROR;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.GENERATOR_ALREADY_EXISTS;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.VOLTAGE_LEVEL_NOT_FOUND;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -114,11 +119,6 @@ public class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificat
                 .connectionName("top")
                 .connectionDirection(ConnectablePosition.Direction.TOP)
                 .build();
-    }
-
-    @Override
-    protected MatcherGeneratorCreationInfos createMatcher(ModificationInfos modificationInfos) {
-        return new MatcherGeneratorCreationInfos((GeneratorCreationInfos) modificationInfos);
     }
 
     @Override

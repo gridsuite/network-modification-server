@@ -11,8 +11,6 @@ import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.DeleteAttachingLineInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.utils.MatcherDeleteAttachingLineInfos;
-import org.gridsuite.modification.server.utils.MatcherModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkWithTeePoint;
 import org.junit.Test;
 import org.springframework.http.MediaType;
@@ -58,11 +56,6 @@ public class DeleteAttachingLineTest extends AbstractNetworkModificationTest {
                 .replacingLine1Id("replacingLineIdEdited")
                 .replacingLine1Name("replacingLine")
                 .build();
-    }
-
-    @Override
-    protected MatcherModificationInfos createMatcher(ModificationInfos modificationInfos) {
-        return new MatcherDeleteAttachingLineInfos((DeleteAttachingLineInfos) modificationInfos);
     }
 
     @Override

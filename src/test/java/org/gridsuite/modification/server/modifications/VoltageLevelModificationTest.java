@@ -15,14 +15,15 @@ import org.gridsuite.modification.server.dto.AttributeModification;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.OperationType;
 import org.gridsuite.modification.server.dto.VoltageLevelModificationInfos;
-import org.gridsuite.modification.server.utils.MatcherVoltageLevelModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
 import org.springframework.http.MediaType;
 
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -60,11 +61,6 @@ public class VoltageLevelModificationTest extends AbstractNetworkModificationTes
                 .ipMax(new AttributeModification<>(0.9, OperationType.SET))
                 .ipMin(new AttributeModification<>(0.5, OperationType.SET))
                 .build();
-    }
-
-    @Override
-    protected MatcherVoltageLevelModificationInfos createMatcher(ModificationInfos modificationInfos) {
-        return new MatcherVoltageLevelModificationInfos((VoltageLevelModificationInfos) modificationInfos);
     }
 
     @Override

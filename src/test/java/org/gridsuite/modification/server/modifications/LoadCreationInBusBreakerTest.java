@@ -12,7 +12,6 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import org.gridsuite.modification.server.dto.LoadCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.utils.MatcherLoadCreationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 
 import java.util.UUID;
@@ -54,11 +53,6 @@ public class LoadCreationInBusBreakerTest extends AbstractNetworkModificationTes
             .connectionName("bottom")
             .connectionDirection(ConnectablePosition.Direction.BOTTOM)
             .build();
-    }
-
-    @Override
-    protected MatcherLoadCreationInfos createMatcher(ModificationInfos modificationInfos) {
-        return new MatcherLoadCreationInfos((LoadCreationInfos) modificationInfos);
     }
 
     @Override

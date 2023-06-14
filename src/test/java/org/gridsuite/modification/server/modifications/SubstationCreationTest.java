@@ -13,7 +13,6 @@ import com.powsybl.iidm.network.Substation;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.SubstationCreationInfos;
-import org.gridsuite.modification.server.utils.MatcherSubstationCreationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
 import org.springframework.http.MediaType;
@@ -22,7 +21,9 @@ import java.util.Map;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -51,11 +52,6 @@ public class SubstationCreationTest extends AbstractNetworkModificationTest {
                 .substationCountry(Country.CI)
                 .properties(Map.of("DEMO", "DemoU"))
                 .build();
-    }
-
-    @Override
-    protected MatcherSubstationCreationInfos createMatcher(ModificationInfos modificationInfos) {
-        return new MatcherSubstationCreationInfos((SubstationCreationInfos) modificationInfos);
     }
 
     @Override

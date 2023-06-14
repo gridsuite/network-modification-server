@@ -16,7 +16,6 @@ import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.LoadCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
-import org.gridsuite.modification.server.utils.MatcherLoadCreationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
 import org.springframework.http.MediaType;
@@ -28,7 +27,9 @@ import java.util.UUID;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.BUSBAR_SECTION_NOT_FOUND;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.VOLTAGE_LEVEL_NOT_FOUND;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -126,11 +127,6 @@ public class LoadCreationInNodeBreakerTest extends AbstractNetworkModificationTe
             .connectionDirection(ConnectablePosition.Direction.BOTTOM)
             .connectionName("topEdited")
             .build();
-    }
-
-    @Override
-    protected MatcherLoadCreationInfos createMatcher(ModificationInfos modificationInfos) {
-        return new MatcherLoadCreationInfos((LoadCreationInfos) modificationInfos);
     }
 
     @Override

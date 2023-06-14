@@ -10,9 +10,11 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.SwitchKind;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.*;
-import org.gridsuite.modification.server.utils.MatcherLineAttachToVoltageLevelInfos;
-import org.gridsuite.modification.server.utils.MatcherModificationInfos;
+import org.gridsuite.modification.server.dto.CouplingDeviceInfos;
+import org.gridsuite.modification.server.dto.LineAttachToVoltageLevelInfos;
+import org.gridsuite.modification.server.dto.LineCreationInfos;
+import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.VoltageLevelCreationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
 import org.springframework.http.MediaType;
@@ -20,7 +22,10 @@ import org.springframework.http.MediaType;
 import java.util.Arrays;
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_ALREADY_EXISTS;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_ATTACH_DESCRIPTION_ERROR;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_NOT_FOUND;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.VOLTAGE_LEVEL_ALREADY_EXISTS;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -97,11 +102,6 @@ public class LineAttachToVoltageLevelTest extends AbstractNetworkModificationTes
                 .newLine2Id("newLine2Id")
                 .newLine2Name("newLine2Name")
                 .build();
-    }
-
-    @Override
-    protected MatcherModificationInfos createMatcher(ModificationInfos modificationInfos) {
-        return new MatcherLineAttachToVoltageLevelInfos((LineAttachToVoltageLevelInfos) modificationInfos);
     }
 
     @Override

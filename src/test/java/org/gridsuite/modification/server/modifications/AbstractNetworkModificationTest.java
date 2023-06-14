@@ -19,7 +19,6 @@ import lombok.SneakyThrows;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.ReportService;
-import org.gridsuite.modification.server.utils.MatcherModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.gridsuite.modification.server.utils.TestUtils;
 import org.gridsuite.modification.server.utils.WireMockUtils;
@@ -45,11 +44,14 @@ import java.util.List;
 import java.util.UUID;
 
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
-import static org.hamcrest.MatcherAssert.assertThat;
+import static org.gridsuite.modification.server.utils.Assertions.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /*
@@ -140,7 +142,7 @@ public abstract class AbstractNetworkModificationTest {
 
         ModificationInfos createdModification = modificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
 
-        assertThat(createdModification, createMatcher(modificationToCreate));
+        assertThat(createdModification).recursivelyEquals(modificationToCreate);
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
         assertNetworkAfterCreation();
     }
@@ -159,7 +161,7 @@ public abstract class AbstractNetworkModificationTest {
         ModificationInfos receivedModification = mapper.readValue(resultAsString, new TypeReference<>() {
         });
 
-        assertThat(receivedModification, createMatcher(modificationToRead));
+        assertThat(receivedModification).recursivelyEquals(modificationToRead);
     }
 
     @Test
@@ -178,11 +180,11 @@ public abstract class AbstractNetworkModificationTest {
                 .andExpect(status().isOk());
 
         // TODO Need a test for substations impacted
-        //assertThat(bsmListResult.get(0), new MatcherEquipmentModificationInfos(ModificationType.LOAD_CREATION, "idLoad1", Set.of("s1")));
+        //assertThat(bsmListResult.get(0)).recursivelyEquals(ModificationType.LOAD_CREATION, "idLoad1", Set.of("s1"));
 
         ModificationInfos updatedModification = modificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
 
-        assertThat(updatedModification, createMatcher(modificationToUpdate));
+        assertThat(updatedModification).recursivelyEquals(modificationToUpdate);
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
     }
 
@@ -222,8 +224,8 @@ public abstract class AbstractNetworkModificationTest {
                 .getModifications(TEST_GROUP_ID, false, true);
 
         assertEquals(2, modifications.size());
-        assertThat(modifications.get(0), createMatcher(modificationToCopy));
-        assertThat(modifications.get(1), createMatcher(modificationToCopy));
+        assertThat(modifications.get(0)).recursivelyEquals(modificationToCopy);
+        assertThat(modifications.get(1)).recursivelyEquals(modificationToCopy);
     }
 
     @SneakyThrows
@@ -277,8 +279,6 @@ public abstract class AbstractNetworkModificationTest {
     protected abstract ModificationInfos buildModification();
 
     protected abstract ModificationInfos buildModificationUpdate();
-
-    protected abstract MatcherModificationInfos createMatcher(ModificationInfos modificationInfos);
 
     protected abstract void assertNetworkAfterCreation();
 

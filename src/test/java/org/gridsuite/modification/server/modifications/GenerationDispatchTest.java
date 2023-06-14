@@ -13,9 +13,13 @@ import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.server.dto.FilterEquipments;
+import org.gridsuite.modification.server.dto.GenerationDispatchInfos;
+import org.gridsuite.modification.server.dto.GeneratorsFilterInfos;
+import org.gridsuite.modification.server.dto.GeneratorsFrequencyReserveInfos;
+import org.gridsuite.modification.server.dto.IdentifiableAttributes;
+import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.service.FilterService;
-import org.gridsuite.modification.server.utils.MatcherGenerationDispatchInfos;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -434,11 +438,6 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
                                                     GeneratorsFilterInfos.builder().id(UUID.randomUUID()).name("name3").build(),
                                                     GeneratorsFilterInfos.builder().id(UUID.randomUUID()).name("name4").build())).build()))
             .build();
-    }
-
-    @Override
-    protected MatcherGenerationDispatchInfos createMatcher(ModificationInfos modificationInfos) {
-        return new MatcherGenerationDispatchInfos((GenerationDispatchInfos) modificationInfos);
     }
 
     private void assertNetworkAfterCreationWithStandardLossCoefficient() {

@@ -10,8 +10,6 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.BranchStatus;
 import org.gridsuite.modification.server.dto.BranchStatusModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.utils.MatcherBranchStatusModificationInfos;
-import org.gridsuite.modification.server.utils.MatcherModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.gridsuite.modification.server.utils.TestUtils;
 
@@ -47,11 +45,6 @@ public class BranchStatusModificationTrip2WTransformerTest extends AbstractNetwo
         return BranchStatusModificationInfos.builder()
                 .equipmentId(UPDATE_BRANCH_ID)
                 .action(BranchStatusModificationInfos.ActionType.SWITCH_ON).build();
-    }
-
-    @Override
-    protected MatcherModificationInfos createMatcher(ModificationInfos modificationInfos) {
-        return new MatcherBranchStatusModificationInfos((BranchStatusModificationInfos) modificationInfos);
     }
 
     @Override

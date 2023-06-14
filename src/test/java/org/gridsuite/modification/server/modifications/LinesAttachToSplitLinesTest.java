@@ -11,8 +11,6 @@ import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.LinesAttachToSplitLinesInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.utils.MatcherLinesAttachToSplitLinesInfos;
-import org.gridsuite.modification.server.utils.MatcherModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkWithTeePoint;
 import org.junit.Test;
 import org.springframework.http.MediaType;
@@ -22,7 +20,9 @@ import java.util.UUID;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_ALREADY_EXISTS;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_NOT_FOUND;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -64,11 +64,6 @@ public class LinesAttachToSplitLinesTest extends AbstractNetworkModificationTest
                 .replacingLine2Id("newnl5")
                 .replacingLine2Name("newNewLine5")
                 .build();
-    }
-
-    @Override
-    protected MatcherModificationInfos createMatcher(ModificationInfos modificationInfos) {
-        return new MatcherLinesAttachToSplitLinesInfos((LinesAttachToSplitLinesInfos) modificationInfos);
     }
 
     @Override

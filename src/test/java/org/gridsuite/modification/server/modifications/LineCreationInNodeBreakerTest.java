@@ -12,20 +12,29 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.*;
-import org.gridsuite.modification.server.utils.MatcherLineCreationInfos;
+import org.gridsuite.modification.server.dto.CurrentLimitsInfos;
+import org.gridsuite.modification.server.dto.CurrentTemporaryLimitCreationInfos;
+import org.gridsuite.modification.server.dto.LineCreationInfos;
+import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.BUSBAR_SECTION_NOT_FOUND;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_ALREADY_EXISTS;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.VOLTAGE_LEVEL_NOT_FOUND;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -272,8 +281,8 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
                 .busOrBusbarSectionId1("1A")
                 .voltageLevelId2("v1")
                 .busOrBusbarSectionId2("1.1")
-                .currentLimits1(CurrentLimitsInfos.builder().permanentLimit(5.).build())
-                .currentLimits2(CurrentLimitsInfos.builder().permanentLimit(5.).build())
+                .currentLimits1(CurrentLimitsInfos.builder().permanentLimit(5.).temporaryLimits(Collections.emptyList()).build())
+                .currentLimits2(CurrentLimitsInfos.builder().permanentLimit(5.).temporaryLimits(Collections.emptyList()).build())
                 .connectionName1("cn1LineEdited")
                 .connectionDirection1(ConnectablePosition.Direction.BOTTOM)
                 .connectionName2("cn2LineEdited")
@@ -281,11 +290,6 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
                 .connectionPosition1(0)
                 .connectionPosition2(0)
                 .build();
-    }
-
-    @Override
-    protected MatcherLineCreationInfos createMatcher(ModificationInfos modificationInfos) {
-        return new MatcherLineCreationInfos((LineCreationInfos) modificationInfos);
     }
 
     @Override

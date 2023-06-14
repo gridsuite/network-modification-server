@@ -15,7 +15,6 @@ import org.gridsuite.modification.server.dto.AttributeModification;
 import org.gridsuite.modification.server.dto.LoadModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.OperationType;
-import org.gridsuite.modification.server.utils.MatcherLoadModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
 import org.springframework.http.MediaType;
@@ -55,11 +54,6 @@ public class LoadModificationTest extends AbstractNetworkModificationTest {
             .activePower(new AttributeModification<>(300.0, OperationType.SET))
             .reactivePower(new AttributeModification<>(50.0, OperationType.SET))
             .build();
-    }
-
-    @Override
-    protected MatcherLoadModificationInfos createMatcher(ModificationInfos modificationInfos) {
-        return new MatcherLoadModificationInfos((LoadModificationInfos) modificationInfos);
     }
 
     @Override

@@ -11,9 +11,6 @@ import com.powsybl.iidm.network.Network;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.EquipmentAttributeModificationInfos;
-import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.utils.MatcherEquipmentAttributeModificationInfos;
-import org.gridsuite.modification.server.utils.MatcherModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
 import org.springframework.http.MediaType;
@@ -26,9 +23,13 @@ import java.util.UUID;
 
 import static org.gridsuite.modification.server.Impacts.TestImpactUtils.testElementModificationImpact;
 import static org.gridsuite.modification.server.Impacts.TestImpactUtils.testEmptyImpacts;
-import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.EQUIPMENT_ATTRIBUTE_NAME_ERROR;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.EQUIPMENT_ATTRIBUTE_VALUE_ERROR;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.EQUIPMENT_NOT_FOUND;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -176,11 +177,6 @@ public class EquipmentAttributeModificationTest extends AbstractNetworkModificat
             .equipmentAttributeValue(false)
             .equipmentId("v1b1Edited")
             .build();
-    }
-
-    @Override
-    protected MatcherModificationInfos createMatcher(ModificationInfos modificationInfos) {
-        return new MatcherEquipmentAttributeModificationInfos((EquipmentAttributeModificationInfos) modificationInfos);
     }
 
     @Override

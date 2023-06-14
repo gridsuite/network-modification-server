@@ -16,9 +16,13 @@ import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.VariationMode;
 import org.gridsuite.modification.server.VariationType;
-import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.server.dto.FilterEquipments;
+import org.gridsuite.modification.server.dto.FilterInfos;
+import org.gridsuite.modification.server.dto.GeneratorScalingInfos;
+import org.gridsuite.modification.server.dto.IdentifiableAttributes;
+import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.ScalingVariationInfos;
 import org.gridsuite.modification.server.service.FilterService;
-import org.gridsuite.modification.server.utils.MatcherGeneratorScalingInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Before;
 import org.junit.Test;
@@ -353,11 +357,6 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
                 .variationType(VariationType.TARGET_P)
                 .variations(List.of(variation5))
                 .build();
-    }
-
-    @Override
-    protected MatcherGeneratorScalingInfos createMatcher(ModificationInfos modificationInfos) {
-        return new MatcherGeneratorScalingInfos((GeneratorScalingInfos) modificationInfos);
     }
 
     @Override

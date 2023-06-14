@@ -11,8 +11,11 @@ import com.powsybl.iidm.network.Country;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.Substation;
 import lombok.SneakyThrows;
-import org.gridsuite.modification.server.dto.*;
-import org.gridsuite.modification.server.utils.MatcherSubstationModificationInfos;
+import org.gridsuite.modification.server.dto.AttributeModification;
+import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.OperationType;
+import org.gridsuite.modification.server.dto.SubstationFreePropertyInfos;
+import org.gridsuite.modification.server.dto.SubstationModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
 import org.springframework.http.MediaType;
@@ -56,13 +59,8 @@ public class SubstationModificationTest extends AbstractNetworkModificationTest 
             .equipmentId("s3")
             .equipmentName(new AttributeModification<>("newNameEdited1", OperationType.SET))
             .substationCountry(new AttributeModification<>(Country.JP, OperationType.SET))
-            .properties(List.of())
+            .properties(null)
             .build();
-    }
-
-    @Override
-    protected MatcherSubstationModificationInfos createMatcher(ModificationInfos modificationInfos) {
-        return new MatcherSubstationModificationInfos((SubstationModificationInfos) modificationInfos);
     }
 
     @Override

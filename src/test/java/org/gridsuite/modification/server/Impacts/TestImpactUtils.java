@@ -15,13 +15,11 @@ import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationResult.ApplicationStatus;
 import org.gridsuite.modification.server.impacts.SimpleElementImpact;
 import org.gridsuite.modification.server.impacts.SimpleElementImpact.SimpleImpactType;
-import org.gridsuite.modification.server.utils.MatcherJson;
-import org.hamcrest.MatcherAssert;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static org.hamcrest.MatcherAssert.assertThat;
+import static org.gridsuite.modification.server.utils.Assertions.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -54,8 +52,7 @@ public final class TestImpactUtils {
             .applicationStatus(applicationStatusExpected)
             .networkImpacts(List.of())
             .build();
-
-        MatcherAssert.assertThat(networkModificationResult, new MatcherJson<>(mapper, resultExpected));
+        assertThat(networkModificationResult).usingRecursiveComparison().isEqualTo(resultExpected);
     }
 
     @SneakyThrows
@@ -78,7 +75,9 @@ public final class TestImpactUtils {
             .applicationStatus(ApplicationStatus.ALL_OK)
             .networkImpacts(elementImpactsExpected)
             .build();
-        assertThat(networkModificationResult.get(), new MatcherJson<>(mapper, resultExpected));
+        assertThat(networkModificationResult.get()).usingRecursiveComparison()
+                .ignoringCollectionOrderInFields("networkImpacts.substationIds")
+                .isEqualTo(resultExpected);
     }
 
     public static void testElementCreationImpact(ObjectMapper mapper, String resultAsString, IdentifiableType elementType, String elementId, Set<String> substationIds) {
@@ -102,7 +101,9 @@ public final class TestImpactUtils {
             .applicationStatus(ApplicationStatus.ALL_OK)
             .networkImpacts(List.of(createElementImpact(impactType, elementType, elementId, new TreeSet<>(substationIds))))
             .build();
-        assertThat(networkModificationResult.get(), new MatcherJson<>(mapper, resultExpected));
+        assertThat(networkModificationResult.get()).usingRecursiveComparison()
+                .ignoringCollectionOrderInFields("networkImpacts.substationIds")
+                .isEqualTo(resultExpected);
     }
 
     @SneakyThrows
@@ -116,7 +117,7 @@ public final class TestImpactUtils {
             .applicationStatus(ApplicationStatus.ALL_OK)
             .networkImpacts(createConnectableDeletionImpacts(connectableType, connectableId, breakerId, disconnectorId, substationId))
             .build();
-        assertThat(networkModificationResult.get(), new MatcherJson<>(mapper, resultExpected));
+        assertThat(networkModificationResult.get()).usingRecursiveComparison().isEqualTo(resultExpected);
     }
 
     private static List<SimpleElementImpact> createConnectableDeletionImpacts(IdentifiableType connectableType, String connectableId,
@@ -165,7 +166,9 @@ public final class TestImpactUtils {
             .applicationStatus(ApplicationStatus.ALL_OK)
             .networkImpacts(createBranchImpacts(impactType, branchType, branchId, breakerId1, disconnectorId1, substationId1, breakerId2, disconnectorId2, substationId2))
             .build();
-        assertThat(networkModificationResult.get(), new MatcherJson<>(mapper, resultExpected));
+        assertThat(networkModificationResult.get()).usingRecursiveComparison()
+                .ignoringCollectionOrderInFields("networkImpacts.substationIds")
+                .isEqualTo(resultExpected);
     }
 
     private static List<SimpleElementImpact> createBranchImpacts(SimpleImpactType impactType, IdentifiableType branchType, String branchId,
@@ -200,7 +203,7 @@ public final class TestImpactUtils {
             .applicationStatus(ApplicationStatus.ALL_OK)
             .networkImpacts(create3wtDeletionImpacts(w3tId, breakerId1, disconnectorId1, breakerId2, disconnectorId2, breakerId3, disconnectorId3, substationId))
             .build();
-        assertThat(networkModificationResult.get(), new MatcherJson<>(mapper, resultExpected));
+        assertThat(networkModificationResult.get()).usingRecursiveComparison().isEqualTo(resultExpected);
     }
 
     private static List<SimpleElementImpact> create3wtDeletionImpacts(String w3tId,

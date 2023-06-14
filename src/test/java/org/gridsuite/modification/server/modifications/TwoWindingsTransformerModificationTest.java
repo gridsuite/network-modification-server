@@ -12,8 +12,12 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.TwoWindingsTransformer;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.*;
-import org.gridsuite.modification.server.utils.MatcherTwoWindingsTransformerModificationInfos;
+import org.gridsuite.modification.server.dto.AttributeModification;
+import org.gridsuite.modification.server.dto.CurrentLimitsModificationInfos;
+import org.gridsuite.modification.server.dto.CurrentTemporaryLimitModificationInfos;
+import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.OperationType;
+import org.gridsuite.modification.server.dto.TwoWindingsTransformerModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
 import org.springframework.http.MediaType;
@@ -96,11 +100,6 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
                                 .build()))
                         .build())
                 .build();
-    }
-
-    @Override
-    protected MatcherTwoWindingsTransformerModificationInfos createMatcher(ModificationInfos modificationInfos) {
-        return new MatcherTwoWindingsTransformerModificationInfos((TwoWindingsTransformerModificationInfos) modificationInfos);
     }
 
     @Override

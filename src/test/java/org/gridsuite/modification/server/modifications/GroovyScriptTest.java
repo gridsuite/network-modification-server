@@ -13,7 +13,6 @@ import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.GroovyScriptInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.utils.MatcherGroovyScriptInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
 import org.springframework.http.MediaType;
@@ -48,11 +47,6 @@ public class GroovyScriptTest extends AbstractNetworkModificationTest {
         return GroovyScriptInfos.builder()
                 .script("network.getGenerator('idGenerator').targetP=15\n")
                 .build();
-    }
-
-    @Override
-    protected MatcherGroovyScriptInfos createMatcher(ModificationInfos modificationInfos) {
-        return new MatcherGroovyScriptInfos((GroovyScriptInfos) modificationInfos);
     }
 
     @Override

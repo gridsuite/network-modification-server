@@ -11,7 +11,6 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import org.gridsuite.modification.server.dto.LineCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.utils.MatcherLineCreationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 
 import java.util.UUID;
@@ -75,11 +74,6 @@ public class LineCreationInMixedTypologyTest extends AbstractNetworkModification
             .connectionPosition1(0)
             .connectionPosition2(0)
             .build();
-    }
-
-    @Override
-    protected MatcherLineCreationInfos createMatcher(ModificationInfos modificationInfos) {
-        return new MatcherLineCreationInfos((LineCreationInfos) modificationInfos);
     }
 
     @Override

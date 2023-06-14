@@ -13,7 +13,6 @@ import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.EquipmentDeletionInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.utils.MatcherEquipmentDeletionInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
 import org.springframework.http.MediaType;
@@ -48,11 +47,6 @@ public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
                 .equipmentType("GENERATOR")
                 .equipmentId("idGenerator")
                 .build();
-    }
-
-    @Override
-    protected MatcherEquipmentDeletionInfos createMatcher(ModificationInfos modificationInfos) {
-        return new MatcherEquipmentDeletionInfos((EquipmentDeletionInfos) modificationInfos);
     }
 
     @Override

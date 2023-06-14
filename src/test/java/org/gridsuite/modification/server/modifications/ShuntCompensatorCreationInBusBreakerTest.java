@@ -13,7 +13,6 @@ import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.ShuntCompensatorCreationInfos;
-import org.gridsuite.modification.server.utils.MatcherShuntCompensatorCreationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
 import org.springframework.http.MediaType;
@@ -87,11 +86,6 @@ public class ShuntCompensatorCreationInBusBreakerTest extends AbstractNetworkMod
                 .connectionName("cnEdited")
                 .connectionDirection(ConnectablePosition.Direction.UNDEFINED)
                 .build();
-    }
-
-    @Override
-    protected MatcherShuntCompensatorCreationInfos createMatcher(ModificationInfos modificationInfos) {
-        return new MatcherShuntCompensatorCreationInfos((ShuntCompensatorCreationInfos) modificationInfos);
     }
 
     @Override

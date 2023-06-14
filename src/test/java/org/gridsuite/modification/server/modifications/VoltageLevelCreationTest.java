@@ -13,7 +13,6 @@ import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.CouplingDeviceInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.VoltageLevelCreationInfos;
-import org.gridsuite.modification.server.utils.MatcherVoltageLevelCreationInfos;
 import org.gridsuite.modification.server.utils.ModificationCreation;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
@@ -22,10 +21,16 @@ import org.springframework.http.MediaType;
 import java.util.Arrays;
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.CREATE_VOLTAGE_LEVEL_ERROR;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.SUBSTATION_NOT_FOUND;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.VOLTAGE_LEVEL_ALREADY_EXISTS;
+import static org.gridsuite.modification.server.utils.Assertions.*;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -60,11 +65,6 @@ public class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
                 .switchKinds(Arrays.asList(SwitchKind.BREAKER))
                 .couplingDevices(Arrays.asList(CouplingDeviceInfos.builder().busbarSectionId1("1A").busbarSectionId2("1.A").build()))
                 .build();
-    }
-
-    @Override
-    protected MatcherVoltageLevelCreationInfos createMatcher(ModificationInfos modificationInfos) {
-        return new MatcherVoltageLevelCreationInfos((VoltageLevelCreationInfos) modificationInfos);
     }
 
     @Override
@@ -170,7 +170,7 @@ public class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
                 .andExpect(status().isOk()).andReturn();
         VoltageLevelCreationInfos createdModification = (VoltageLevelCreationInfos) modificationRepository
                 .getModifications(getGroupId(), false, true).get(0);
-        assertThat(createdModification, createMatcher(vli));
+        assertThat(createdModification).recursivelyEquals(vli);
 
         vli.setIpMin(0.0);
         vli.setIpMax(null);
@@ -182,6 +182,6 @@ public class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
                 .andExpect(status().isOk()).andReturn();
         createdModification = (VoltageLevelCreationInfos) modificationRepository
                 .getModifications(getGroupId(), false, true).get(1);
-        assertThat(createdModification, createMatcher(vli));
+        assertThat(createdModification).recursivelyEquals(vli);
     }
 }

@@ -12,8 +12,12 @@ import com.powsybl.iidm.network.LoadingLimits.TemporaryLimit;
 import com.powsybl.iidm.network.Network;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.*;
-import org.gridsuite.modification.server.utils.MatcherLineModificationInfos;
+import org.gridsuite.modification.server.dto.AttributeModification;
+import org.gridsuite.modification.server.dto.CurrentLimitsModificationInfos;
+import org.gridsuite.modification.server.dto.CurrentTemporaryLimitModificationInfos;
+import org.gridsuite.modification.server.dto.LineModificationInfos;
+import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.OperationType;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
 import org.springframework.http.MediaType;
@@ -22,8 +26,8 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_NOT_FOUND;
+import static org.gridsuite.modification.server.utils.Assertions.*;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -87,11 +91,6 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
                                 .build()))
                         .build())
                 .build();
-    }
-
-    @Override
-    protected MatcherLineModificationInfos createMatcher(ModificationInfos modificationInfos) {
-        return new MatcherLineModificationInfos((LineModificationInfos) modificationInfos);
     }
 
     @Override
@@ -159,7 +158,7 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
 
         LineModificationInfos createdModification = (LineModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
 
-        assertThat(createdModification, createMatcher(lineModificationInfos));
+        assertThat(createdModification).recursivelyEquals(lineModificationInfos);
     }
 
     @SneakyThrows
@@ -177,7 +176,7 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
 
         LineModificationInfos createdModification = (LineModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
 
-        assertThat(createdModification, createMatcher(lineModificationInfos));
+        assertThat(createdModification).recursivelyEquals(lineModificationInfos);
 
         // Modify Series Resistance
         lineModificationInfos.setSeriesReactance(null);
@@ -189,7 +188,7 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
 
         createdModification = (LineModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(1);
 
-        assertThat(createdModification, createMatcher(lineModificationInfos));
+        assertThat(createdModification).recursivelyEquals(lineModificationInfos);
 
         // Modify Shunt Conductance1
         lineModificationInfos.setSeriesResistance(null);
@@ -201,7 +200,7 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
 
         createdModification = (LineModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(2);
 
-        assertThat(createdModification, createMatcher(lineModificationInfos));
+        assertThat(createdModification).recursivelyEquals(lineModificationInfos);
 
         // Modify Shunt Susceptance1
         lineModificationInfos.setShuntConductance1(null);
@@ -213,7 +212,7 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
 
         createdModification = (LineModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(3);
 
-        assertThat(createdModification, createMatcher(lineModificationInfos));
+        assertThat(createdModification).recursivelyEquals(lineModificationInfos);
 
         // Modify Shunt Conductance2
         lineModificationInfos.setShuntSusceptance1(null);
@@ -225,7 +224,7 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
 
         createdModification = (LineModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(4);
 
-        assertThat(createdModification, createMatcher(lineModificationInfos));
+        assertThat(createdModification).recursivelyEquals(lineModificationInfos);
 
         // Modify Shunt Susceptance2
         lineModificationInfos.setShuntConductance2(null);
@@ -237,7 +236,7 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
 
         createdModification = (LineModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(5);
 
-        assertThat(createdModification, createMatcher(lineModificationInfos));
+        assertThat(createdModification).recursivelyEquals(lineModificationInfos);
 
         // no modification
         lineModificationInfos.setShuntSusceptance2(null);
@@ -248,7 +247,7 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
 
         createdModification = (LineModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(6);
 
-        assertThat(createdModification, createMatcher(lineModificationInfos));
+        assertThat(createdModification).recursivelyEquals(lineModificationInfos);
 
         // Modify all
         lineModificationInfos.setSeriesReactance(new AttributeModification<>(1.0, OperationType.SET));
@@ -266,7 +265,7 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
         createdModification = (LineModificationInfos) modificationRepository.getModifications(getGroupId(), false, true)
                         .get(7);
 
-        assertThat(createdModification, createMatcher(lineModificationInfos));
+        assertThat(createdModification).recursivelyEquals(lineModificationInfos);
     }
 
     @SneakyThrows
@@ -303,6 +302,6 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
 
         LineModificationInfos createdModification = (LineModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
 
-        assertThat(createdModification, createMatcher(lineModificationInfos));
+        assertThat(createdModification).recursivelyEquals(lineModificationInfos);
     }
 }

@@ -14,8 +14,6 @@ import org.gridsuite.modification.server.dto.CouplingDeviceInfos;
 import org.gridsuite.modification.server.dto.LineSplitWithVoltageLevelInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.VoltageLevelCreationInfos;
-import org.gridsuite.modification.server.utils.MatcherLineSplitWithVoltageLevelInfos;
-import org.gridsuite.modification.server.utils.MatcherModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
 import org.springframework.http.MediaType;
@@ -93,11 +91,6 @@ public class LineSplitWithNewVoltageLevelTest extends AbstractNetworkModificatio
             .newLine2Id("nl2vEdited")
             .newLine2Name("NewLine2Edited")
             .build();
-    }
-
-    @Override
-    protected MatcherModificationInfos createMatcher(ModificationInfos modificationInfos) {
-        return new MatcherLineSplitWithVoltageLevelInfos((LineSplitWithVoltageLevelInfos) modificationInfos);
     }
 
     @Override

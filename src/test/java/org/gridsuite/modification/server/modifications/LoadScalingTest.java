@@ -17,9 +17,13 @@ import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.ReactiveVariationMode;
 import org.gridsuite.modification.server.VariationMode;
 import org.gridsuite.modification.server.VariationType;
-import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.server.dto.FilterEquipments;
+import org.gridsuite.modification.server.dto.FilterInfos;
+import org.gridsuite.modification.server.dto.IdentifiableAttributes;
+import org.gridsuite.modification.server.dto.LoadScalingInfos;
+import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.ScalingVariationInfos;
 import org.gridsuite.modification.server.service.FilterService;
-import org.gridsuite.modification.server.utils.MatcherLoadScalingInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.hamcrest.core.IsNull;
 import org.junit.Before;
@@ -382,11 +386,6 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
             .variationType(VariationType.TARGET_P)
             .variations(List.of(variation5))
             .build();
-    }
-
-    @Override
-    protected MatcherLoadScalingInfos createMatcher(ModificationInfos modificationInfos) {
-        return new MatcherLoadScalingInfos((LoadScalingInfos) modificationInfos);
     }
 
     //TODO update values after PowSyBl release

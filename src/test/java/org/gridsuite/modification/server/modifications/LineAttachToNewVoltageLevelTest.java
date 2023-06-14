@@ -8,9 +8,11 @@ package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.SwitchKind;
-import org.gridsuite.modification.server.dto.*;
-import org.gridsuite.modification.server.utils.MatcherLineAttachToVoltageLevelInfos;
-import org.gridsuite.modification.server.utils.MatcherModificationInfos;
+import org.gridsuite.modification.server.dto.CouplingDeviceInfos;
+import org.gridsuite.modification.server.dto.LineAttachToVoltageLevelInfos;
+import org.gridsuite.modification.server.dto.LineCreationInfos;
+import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.VoltageLevelCreationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 
 import java.util.Arrays;
@@ -88,11 +90,6 @@ public class LineAttachToNewVoltageLevelTest extends AbstractNetworkModification
                 .newLine2Id("nl2")
                 .newLine2Name("NewLine2")
                 .build();
-    }
-
-    @Override
-    protected MatcherModificationInfos createMatcher(ModificationInfos modificationInfos) {
-        return new MatcherLineAttachToVoltageLevelInfos((LineAttachToVoltageLevelInfos) modificationInfos);
     }
 
     @Override

@@ -11,8 +11,6 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.Terminal;
 import org.gridsuite.modification.server.dto.BranchStatusModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.utils.MatcherBranchStatusModificationInfos;
-import org.gridsuite.modification.server.utils.MatcherModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 
 import java.util.UUID;
@@ -46,11 +44,6 @@ public class BranchStatusModificationSwitchOnLineTest extends AbstractNetworkMod
         return BranchStatusModificationInfos.builder()
                 .equipmentId("line1")
                 .action(BranchStatusModificationInfos.ActionType.TRIP).build();
-    }
-
-    @Override
-    protected MatcherModificationInfos createMatcher(ModificationInfos modificationInfos) {
-        return new MatcherBranchStatusModificationInfos((BranchStatusModificationInfos) modificationInfos);
     }
 
     @Override
