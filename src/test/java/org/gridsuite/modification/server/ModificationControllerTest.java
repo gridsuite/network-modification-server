@@ -576,7 +576,6 @@ public class ModificationControllerTest {
         generatorStartup = network.getGenerator("idGenerator21").getExtension(GeneratorStartup.class);
         assertNotNull(generatorStartup);
         assertEquals(Double.NaN, generatorStartup.getPlannedActivePowerSetpoint(), 0);
-        assertEquals(Double.NaN, generatorStartup.getStartupCost(), 0);
         assertEquals(8., generatorStartup.getMarginalCost(), 0);
         assertEquals(Double.NaN, generatorStartup.getPlannedOutageRate(), 0);
         assertEquals(Double.NaN, generatorStartup.getForcedOutageRate(), 0);
@@ -592,7 +591,6 @@ public class ModificationControllerTest {
         generatorStartup = networkStoreService.getNetwork(TEST_NETWORK_BUS_BREAKER_ID).getGenerator("idGenerator3").getExtension(GeneratorStartup.class);
         assertNotNull(generatorStartup);
         assertEquals(Double.NaN, generatorStartup.getPlannedActivePowerSetpoint(), 0);
-        assertEquals(Double.NaN, generatorStartup.getStartupCost(), 0);
         assertEquals(Double.NaN, generatorStartup.getMarginalCost(), 0);
         assertEquals(80., generatorStartup.getPlannedOutageRate(), 0);
         assertEquals(Double.NaN, generatorStartup.getForcedOutageRate(), 0);

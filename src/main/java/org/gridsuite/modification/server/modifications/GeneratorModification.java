@@ -453,13 +453,11 @@ public class GeneratorModification extends AbstractModification {
         GeneratorStartup generatorStartup = generator.getExtension(GeneratorStartup.class);
         GeneratorStartupAdder generatorStartupAdder = generator.newExtension(GeneratorStartupAdder.class);
         boolean plannedActivePowerSetPointUpdated = addPlannedActivePowerSetPoint(modificationInfos, generatorStartupAdder, generatorStartup, reports);
-        boolean startupCostUpdated = addStartupCost(modificationInfos, generatorStartupAdder, generatorStartup, reports);
         boolean marginalCostUpdated = addMarginalCost(modificationInfos, generatorStartupAdder, generatorStartup, reports);
         boolean plannedOutageRateUpdated = addPlannedOutageRate(modificationInfos, generatorStartupAdder, generatorStartup, reports);
         boolean forcedOutageRateUpdated = addForcedOutageRate(modificationInfos, generatorStartupAdder, generatorStartup, reports);
 
         if (plannedActivePowerSetPointUpdated ||
-                startupCostUpdated ||
                 marginalCostUpdated ||
                 plannedOutageRateUpdated ||
                 forcedOutageRateUpdated) {
@@ -512,22 +510,6 @@ public class GeneratorModification extends AbstractModification {
         } else {
             generatorStartupAdder
                     .withMarginalCost(oldMarginalCost);
-        }
-        return false;
-    }
-
-    private boolean addStartupCost(GeneratorModificationInfos modificationInfos, GeneratorStartupAdder generatorStartupAdder, GeneratorStartup generatorStartup, List<Report> reports) {
-        Double oldStartupCost = generatorStartup != null ? generatorStartup.getStartupCost() : Double.NaN;
-        if (modificationInfos.getStartupCost() != null) {
-            generatorStartupAdder
-                    .withStartupCost(modificationInfos.getStartupCost().getValue());
-            reports.add(ModificationUtils.getInstance().buildModificationReport(oldStartupCost,
-                    modificationInfos.getStartupCost().getValue(),
-                    "Startup cost"));
-            return true;
-        } else {
-            generatorStartupAdder
-                    .withStartupCost(oldStartupCost);
         }
         return false;
     }
