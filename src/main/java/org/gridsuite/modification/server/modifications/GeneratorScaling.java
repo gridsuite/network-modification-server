@@ -50,7 +50,7 @@ public class GeneratorScaling extends AbstractScaling {
                     sum.set(network.getGenerator(equipment.getId()).getTargetP() + sum.get());
                     return getScalable(equipment.getId());
                 }).toArray(Scalable[]::new));
-        scale(network, subReporter, generatorScalingVariation, sum, stackingUpScalable);
+        scale(network, subReporter, generatorScalingVariation, sum, stackingUpScalable, new ScalingParameters());
     }
 
     @Override
@@ -70,7 +70,7 @@ public class GeneratorScaling extends AbstractScaling {
                 percentages.add((float) ((equipment.getDistributionKey() / distributionKeys) * 100));
             });
             Scalable ventilationScalable = Scalable.proportional(percentages, scalables);
-            scale(network, subReporter, generatorScalingVariation, sum, ventilationScalable);
+            scale(network, subReporter, generatorScalingVariation, sum, ventilationScalable, new ScalingParameters().setIterative(true));
         }
     }
 
@@ -95,7 +95,7 @@ public class GeneratorScaling extends AbstractScaling {
 
         List<Float> percentages = new ArrayList<>(Collections.nCopies(scalables.size(), (float) (100.0 / scalables.size())));
         Scalable regularDistributionScalable = Scalable.proportional(percentages, scalables);
-        scale(network, subReporter, generatorScalingVariation, sum, regularDistributionScalable);
+        scale(network, subReporter, generatorScalingVariation, sum, regularDistributionScalable, new ScalingParameters().setIterative(true));
     }
 
     @Override
@@ -121,7 +121,7 @@ public class GeneratorScaling extends AbstractScaling {
 
         setScalablePercentage(maxPSum, maxPMap, percentages, scalables);
         Scalable proportionalToPmaxScalable = Scalable.proportional(percentages, scalables);
-        scale(network, subReporter, generatorScalingVariation, targetPSum, proportionalToPmaxScalable);
+        scale(network, subReporter, generatorScalingVariation, targetPSum, proportionalToPmaxScalable, new ScalingParameters().setIterative(true));
     }
 
     @Override
@@ -145,7 +145,7 @@ public class GeneratorScaling extends AbstractScaling {
         // we calculate percentage of each target P value relative to the sum of target P
         setScalablePercentage(sum, targetPMap, percentages, scalables);
         Scalable proportionalScalable = Scalable.proportional(percentages, scalables);
-        scale(network, subReporter, generatorScalingVariation, sum, proportionalScalable);
+        scale(network, subReporter, generatorScalingVariation, sum, proportionalScalable, new ScalingParameters().setIterative(true));
     }
 
     private void setScalablePercentage(AtomicReference<Double> sum,
@@ -158,9 +158,9 @@ public class GeneratorScaling extends AbstractScaling {
         });
     }
 
-    private void scale(Network network, Reporter subReporter, ScalingVariationInfos scalingVariationInfos, AtomicReference<Double> sum, Scalable scalable) {
+    private void scale(Network network, Reporter subReporter, ScalingVariationInfos scalingVariationInfos, AtomicReference<Double> sum, Scalable scalable, ScalingParameters scalingParameters) {
         double asked = getAsked(scalingVariationInfos, sum);
-        double done = scalable.scale(network, asked, new ScalingParameters().setIterative(true));
+        double done = scalable.scale(network, asked, scalingParameters);
         createReport(subReporter,
                 "scalingApplied",
                 String.format("successfully scaled for mode %s with variation value asked is %s. variation done is  %s", scalingVariationInfos.getVariationMode(), asked, done),
