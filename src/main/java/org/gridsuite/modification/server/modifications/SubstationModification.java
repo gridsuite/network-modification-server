@@ -27,7 +27,6 @@ public class SubstationModification extends AbstractModification {
         this.modificationInfos = modificationInfos;
     }
 
-    @SuppressWarnings("checkstyle:NoWhitespaceBefore")
     @Override
     public void apply(Network network, Reporter subReporter) {
         Substation station = network.getSubstation(modificationInfos.getEquipmentId());
@@ -44,8 +43,7 @@ public class SubstationModification extends AbstractModification {
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .build());
         // name and country
-        ModificationUtils.getInstance().applyElementaryModifications(station::setName, () -> station.getOptionalName().orElse("No value")
-                , modificationInfos.getEquipmentName(), subReporter, "Name");
+        ModificationUtils.getInstance().applyElementaryModifications(station::setName, () -> station.getOptionalName().orElse("No value"), modificationInfos.getEquipmentName(), subReporter, "Name");
         ModificationUtils.getInstance().applyElementaryModifications(station::setCountry, station::getNullableCountry, modificationInfos.getSubstationCountry(), subReporter, "Country");
         // properties
         if (modificationInfos.getProperties() != null) {

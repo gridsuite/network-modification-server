@@ -33,7 +33,6 @@ public abstract class AbstractBranchModification extends AbstractModification {
         this.modificationInfos = modificationInfos;
     }
 
-    @SuppressWarnings({"checkstyle:NoWhitespaceBefore", "checkstyle:WhitespaceAround"})
     protected void modifyBranch(Branch<?> branch, BranchModificationInfos branchModificationInfos, Reporter subReporter, String reporterKey, String reporterDefaultMessage) {
 
         subReporter.report(Report.builder()
@@ -43,8 +42,7 @@ public abstract class AbstractBranchModification extends AbstractModification {
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .build());
         if (branchModificationInfos.getEquipmentName() != null) {
-            subReporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(branch.getOptionalName().isEmpty() ? "No value" :branch.getOptionalName().get() ,
-                    branchModificationInfos.getEquipmentName().getValue(), "Name", 0));
+            subReporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(branchModificationInfos.getEquipmentName().getValue(), branch.getOptionalName().isEmpty() ? "No value" : branch.getOptionalName().get(), "Name", 0));
             branch.setName(branchModificationInfos.getEquipmentName().getValue());
         }
 
