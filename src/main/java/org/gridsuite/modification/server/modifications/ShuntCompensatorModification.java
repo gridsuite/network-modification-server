@@ -51,7 +51,7 @@ public class ShuntCompensatorModification extends AbstractModification {
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .build());
 
-        ModificationUtils.getInstance().applyElementaryModifications(shuntCompensator::setName, shuntCompensator::getNameOrId, modificationInfos.getEquipmentName(), subReporter, "Name");
+        ModificationUtils.getInstance().applyElementaryModifications(shuntCompensator::setName, () -> shuntCompensator.getOptionalName().orElse("No value"), modificationInfos.getEquipmentName(), subReporter, "Name");
 
         if (shuntCompensator.getModelType() == ShuntCompensatorModelType.LINEAR) {
             applyModificationOnLinearModel(subReporter, shuntCompensator, voltageLevel);
