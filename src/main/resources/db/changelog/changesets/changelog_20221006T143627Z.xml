@@ -1,0 +1,116 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-4.1.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd" logicalFilePath="db/changelog/changesets/changelog_2022-10-06T14:36:27Z.xml">
+    <changeSet author="marcelinhug (generated)" id="1665066998157-7">
+        <createTable tableName="tap_changer_step_creation">
+            <column name="modification_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="alpha" type="FLOAT8"/>
+            <column name="b" type="FLOAT8"/>
+            <column name="g" type="FLOAT8"/>
+            <column name="index" type="INT"/>
+            <column name="r" type="FLOAT8"/>
+            <column name="rho" type="FLOAT8"/>
+            <column name="tapchangertype" type="VARCHAR(255)"/>
+            <column name="x" type="FLOAT8"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="marcelinhug (generated)" id="1665066998157-8">
+        <addColumn tableName="two_windings_transformer_creation">
+            <column name="phasetapchangerlowtapposition" type="int4"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="marcelinhug (generated)" id="1665066998157-9">
+        <addColumn tableName="two_windings_transformer_creation">
+            <column name="phasetapchangerregulating" type="boolean"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="marcelinhug (generated)" id="1665066998157-10">
+        <addColumn tableName="two_windings_transformer_creation">
+            <column name="phasetapchangerregulationmode" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="marcelinhug (generated)" id="1665066998157-11">
+        <addColumn tableName="two_windings_transformer_creation">
+            <column name="phasetapchangerregulationvalue" type="float8"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="marcelinhug (generated)" id="1665066998157-12">
+        <addColumn tableName="two_windings_transformer_creation">
+            <column name="phasetapchangertapposition" type="int4"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="marcelinhug (generated)" id="1665066998157-13">
+        <addColumn tableName="two_windings_transformer_creation">
+            <column name="phasetapchangertargetdeadband" type="float8"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="marcelinhug (generated)" id="1665066998157-14">
+        <addColumn tableName="two_windings_transformer_creation">
+            <column name="phasetapchangerterminalrefconnectableid" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="marcelinhug (generated)" id="1665066998157-15">
+        <addColumn tableName="two_windings_transformer_creation">
+            <column name="phasetapchangerterminalreftype" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="marcelinhug (generated)" id="1665066998157-16">
+        <addColumn tableName="two_windings_transformer_creation">
+            <column name="phasetapchangerterminalrefvoltagelevelid" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="marcelinhug (generated)" id="1665066998157-17">
+        <addColumn tableName="two_windings_transformer_creation">
+            <column name="rateds" type="float8"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="marcelinhug (generated)" id="1665066998157-18">
+        <addColumn tableName="two_windings_transformer_creation">
+            <column name="ratiotapchangerloadtapchangingcapabilities" type="boolean"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="marcelinhug (generated)" id="1665066998157-19">
+        <addColumn tableName="two_windings_transformer_creation">
+            <column name="ratiotapchangerlowtapposition" type="int4"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="marcelinhug (generated)" id="1665066998157-20">
+        <addColumn tableName="two_windings_transformer_creation">
+            <column name="ratiotapchangerregulating" type="boolean"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="marcelinhug (generated)" id="1665066998157-21">
+        <addColumn tableName="two_windings_transformer_creation">
+            <column name="ratiotapchangertapposition" type="int4"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="marcelinhug (generated)" id="1665066998157-22">
+        <addColumn tableName="two_windings_transformer_creation">
+            <column name="ratiotapchangertargetdeadband" type="float8"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="marcelinhug (generated)" id="1665066998157-23">
+        <addColumn tableName="two_windings_transformer_creation">
+            <column name="ratiotapchangertargetv" type="float8"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="marcelinhug (generated)" id="1665066998157-24">
+        <addColumn tableName="two_windings_transformer_creation">
+            <column name="ratiotapchangerterminalrefconnectableid" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="marcelinhug (generated)" id="1665066998157-25">
+        <addColumn tableName="two_windings_transformer_creation">
+            <column name="ratiotapchangerterminalreftype" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="marcelinhug (generated)" id="1665066998157-26">
+        <addColumn tableName="two_windings_transformer_creation">
+            <column name="ratiotapchangerterminalrefvoltagelevelid" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="marcelinhug (generated)" id="1665066998157-27">
+        <addForeignKeyConstraint baseColumnNames="modification_id" baseTableName="tap_changer_step_creation" constraintName="FK6b8jxfk6o3nuexg2vgtc3yuo5" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="two_windings_transformer_creation" validate="true"/>
+    </changeSet>
+</databaseChangeLog>

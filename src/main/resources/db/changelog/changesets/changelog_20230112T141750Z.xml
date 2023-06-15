@@ -1,0 +1,73 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-4.1.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd" logicalFilePath="db/changelog/changesets/changelog_2023-01-12T14:17:50Z.xml">
+    <changeSet author="bendaamerahm (generated)" id="1673533079660-7">
+        <createTable tableName="load_scaling">
+            <column name="variation_type" type="VARCHAR(255)"/>
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="load_scalingPK"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="bendaamerahm (generated)" id="1673533079660-8">
+        <createTable tableName="load_scaling_variations">
+            <column name="load_scaling_entity_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="variations_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="bendaamerahm (generated)" id="1673533079660-9">
+        <createTable tableName="scaling_variation">
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="scaling_variationPK"/>
+            </column>
+            <column name="reactive_variation_mode" type="INT"/>
+            <column name="variation_mode" type="VARCHAR(255)"/>
+            <column name="variation_value" type="FLOAT8"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="bendaamerahm (generated)" id="1673533079660-10">
+        <createTable tableName="scaling_variation_filters">
+            <column name="id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="filter_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="bendaamerahm (generated)" id="1673533079660-11">
+        <createTable tableName="variation_filter">
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="variation_filterPK"/>
+            </column>
+            <column name="filter_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="bendaamerahm (generated)" id="1673533079660-12">
+        <addUniqueConstraint columnNames="variations_id" constraintName="UK_1oqy7rx258vwcet98eclj09sq" tableName="load_scaling_variations"/>
+    </changeSet>
+    <changeSet author="bendaamerahm (generated)" id="1673533079660-13">
+        <addUniqueConstraint columnNames="filter_id" constraintName="UK_j7lwgf59hux07bl6bpdii0ky9" tableName="scaling_variation_filters"/>
+    </changeSet>
+    <changeSet author="bendaamerahm (generated)" id="1673533079660-14">
+        <addForeignKeyConstraint baseColumnNames="id" baseTableName="load_scaling" constraintName="FK33orx38asf16ndr1lyn4iamw5" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
+    </changeSet>
+    <changeSet author="bendaamerahm (generated)" id="1673533079660-15">
+        <addForeignKeyConstraint baseColumnNames="filter_id" baseTableName="scaling_variation_filters" constraintName="FKi3lmg46j4hi3bm05aypuf99ew" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="variation_filter" validate="true"/>
+    </changeSet>
+    <changeSet author="bendaamerahm (generated)" id="1673533079660-16">
+        <addForeignKeyConstraint baseColumnNames="id" baseTableName="scaling_variation_filters" constraintName="FKiuy7b5kava3o6j2b05qpub92m" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="scaling_variation" validate="true"/>
+    </changeSet>
+    <changeSet author="bendaamerahm (generated)" id="1673533079660-17">
+        <addForeignKeyConstraint baseColumnNames="variations_id" baseTableName="load_scaling_variations" constraintName="FKolnravu34hxa68dje4cunp7i6" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="scaling_variation" validate="true"/>
+    </changeSet>
+    <changeSet author="bendaamerahm (generated)" id="1673533079660-18">
+        <addForeignKeyConstraint baseColumnNames="load_scaling_entity_id" baseTableName="load_scaling_variations" constraintName="FKsutx6c58v150o0s1cmcip12hh" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="load_scaling" validate="true"/>
+    </changeSet>
+</databaseChangeLog>

@@ -11,6 +11,7 @@ import org.hamcrest.Description;
 
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -19,7 +20,7 @@ public class MatcherGroovyScriptInfos extends MatcherModificationInfos<GroovyScr
 
     public static MatcherGroovyScriptInfos createMatcherGroovyScriptInfos(String script) {
         return new MatcherGroovyScriptInfos(GroovyScriptInfos.builder()
-                .date(ZonedDateTime.now(ZoneOffset.UTC))
+                .date(ZonedDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.MICROS))
                 .script(script)
                 .build());
     }
