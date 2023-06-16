@@ -118,15 +118,15 @@ public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
     @SneakyThrows
     public void deleteHvdcLineWithShuntCompensator(boolean selected) {
         final String hvdcLineName = "hvdcLine"; // this line uses LCC converter stations
-        final String ShuntNameToBeRemoved = "v2shunt"; // to be removed if selected
+        final String shuntNameToBeRemoved = "v2shunt"; // to be removed if selected
         assertNotNull(getNetwork().getHvdcLine(hvdcLineName));
-        assertNotNull(getNetwork().getShuntCompensator(ShuntNameToBeRemoved));
+        assertNotNull(getNetwork().getShuntCompensator(shuntNameToBeRemoved));
 
         EquipmentDeletionInfos equipmentDeletionInfos = EquipmentDeletionInfos.builder()
                 .equipmentType("HVDC_LINE")
                 .equipmentId(hvdcLineName)
                 .hvdcWithLCC(true)
-                .mcsOnSide2(List.of(new ShuntCompensatorSelectionInfos(ShuntNameToBeRemoved, selected)))
+                .mcsOnSide2(List.of(new ShuntCompensatorSelectionInfos(shuntNameToBeRemoved, selected)))
                 .build();
         String equipmentDeletionInfosJson = mapper.writeValueAsString(equipmentDeletionInfos);
 
@@ -135,7 +135,7 @@ public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
                 .andReturn();
 
         assertNull(getNetwork().getHvdcLine(hvdcLineName));
-        assertEquals(selected, getNetwork().getShuntCompensator(ShuntNameToBeRemoved) == null);
+        assertEquals(selected, getNetwork().getShuntCompensator(shuntNameToBeRemoved) == null);
     }
 
     @Test
