@@ -8,7 +8,9 @@
 package com.powsybl.iidm.modification.topology;
 
 import com.powsybl.commons.PowsyblException;
+import com.powsybl.commons.reporter.Report;
 import com.powsybl.commons.reporter.Reporter;
+import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.computation.ComputationManager;
 import com.powsybl.iidm.modification.AbstractNetworkModification;
 import com.powsybl.iidm.network.*;
@@ -20,8 +22,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import static com.powsybl.iidm.modification.util.ModificationReports.*;
 
 /**
  * TODO RemoveHvdcLine class has been locally duplicated from Powsybl-core - should be removed when
@@ -37,6 +37,82 @@ public class RemoveHvdcLine extends AbstractNetworkModification {
     RemoveHvdcLine(String hvdcLineId, List<String> shuntCompensatorIds) {
         this.hvdcLineId = Objects.requireNonNull(hvdcLineId);
         this.shuntCompensatorIds = Objects.requireNonNull(shuntCompensatorIds);
+    }
+
+    private static void ignoredVscShunts(Reporter reporter, String shuntsIds, String converterStationId1, String converterStationId2) {
+        reporter.report(Report.builder()
+                .withKey("ignoredVscShunts")
+                .withDefaultMessage("Shunts ${shuntsIds} are ignored since converter stations ${converterStationId1} and ${converterStationId2} are VSC")
+                .withValue("shuntsIds", shuntsIds)
+                .withValue("converterStationId1", converterStationId1)
+                .withValue("converterStationId2", converterStationId2)
+                .withSeverity(TypedValue.WARN_SEVERITY)
+                .build());
+    }
+
+    private static void removedHvdcLineReport(Reporter reporter, String hvdcLineId) {
+        reporter.report(Report.builder()
+                .withKey("removeHvdcLine")
+                .withDefaultMessage("Hvdc line ${hvdcLineId} has been removed")
+                .withValue("hvdcLineId", hvdcLineId)
+                .withSeverity(TypedValue.INFO_SEVERITY)
+                .build());
+    }
+
+    private static void notFoundHvdcLineReport(Reporter reporter, String hvdcLineId) {
+        reporter.report(Report.builder()
+                .withKey("HvdcNotFound")
+                .withDefaultMessage("Hvdc line ${hvdcLineId} is not found")
+                .withValue("hvdcLineId", hvdcLineId)
+                .withSeverity(TypedValue.ERROR_SEVERITY)
+                .build());
+    }
+
+    private static void removedVscConverterStationReport(Reporter reporter, String vscConverterStationId) {
+        reporter.report(Report.builder()
+                .withKey("removeVscConverterStation")
+                .withDefaultMessage("Vsc converter station ${vscConverterStationId} has been removed")
+                .withValue("vscConverterStationId", vscConverterStationId)
+                .withSeverity(TypedValue.INFO_SEVERITY)
+                .build());
+    }
+
+    private static void removedLccConverterStationReport(Reporter reporter, String lccConverterStationId) {
+        reporter.report(Report.builder()
+                .withKey("removeLccConverterStation")
+                .withDefaultMessage("Lcc converter station ${lccConverterStationId} has been removed")
+                .withValue("lccConverterStationId", lccConverterStationId)
+                .withSeverity(TypedValue.INFO_SEVERITY)
+                .build());
+    }
+
+    private static void removedShuntCompensatorReport(Reporter reporter, String shuntCompensatorId) {
+        reporter.report(Report.builder()
+                .withKey("removeShuntCompensator")
+                .withDefaultMessage("Shunt compensator ${shuntCompensatorId} has been removed")
+                .withValue("shuntCompensatorId", shuntCompensatorId)
+                .withSeverity(TypedValue.INFO_SEVERITY)
+                .build());
+    }
+
+    private static void ignoredShuntInAnotherVoltageLevel(Reporter reporter, String shuntId, String voltageLevelId1, String voltageLevelId2) {
+        reporter.report(Report.builder()
+                .withKey("ignoredShuntInAnotherVoltageLevel")
+                .withDefaultMessage("Shunt compensator ${shuntId} has been ignored because it is not in the same voltage levels as the Lcc (${voltageLevelId1} or ${voltageLevelId2})")
+                .withValue("shuntId", shuntId)
+                .withValue("voltageLevelId1", voltageLevelId1)
+                .withValue("voltageLevelId2", voltageLevelId2)
+                .withSeverity(TypedValue.WARN_SEVERITY)
+                .build());
+    }
+
+    private static void notFoundShuntReport(Reporter reporter, String shuntId) {
+        reporter.report(Report.builder()
+                .withKey("notFoundShunt")
+                .withDefaultMessage("Shunt ${shuntId} not found")
+                .withValue("shuntId", shuntId)
+                .withSeverity(TypedValue.ERROR_SEVERITY)
+                .build());
     }
 
     @Override
