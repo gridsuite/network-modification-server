@@ -43,6 +43,9 @@ public class BatteryCreationEntity extends InjectionCreationEntity {
     @Column(name = "maxActivePower")
     private double maxActivePower;
 
+    @Column(name = "reactiveCapabilityCurve")
+    private Boolean reactiveCapabilityCurve;
+
     @Column(name = "minimumReactivePower")
     private Double minimumReactivePower;
 
@@ -82,6 +85,7 @@ public class BatteryCreationEntity extends InjectionCreationEntity {
         this.connectionPosition = batteryCreationInfos.getConnectionPosition();
         this.minActivePower = batteryCreationInfos.getMinActivePower();
         this.maxActivePower = batteryCreationInfos.getMaxActivePower();
+        this.reactiveCapabilityCurve = batteryCreationInfos.getReactiveCapabilityCurve();
         this.minimumReactivePower = batteryCreationInfos.getMinimumReactivePower();
         this.maximumReactivePower = batteryCreationInfos.getMaximumReactivePower();
         this.reactiveCapabilityCurvePoints = toEmbeddablePoints(batteryCreationInfos.getReactiveCapabilityCurvePoints());
@@ -127,6 +131,7 @@ public class BatteryCreationEntity extends InjectionCreationEntity {
                 .connectionPosition(getConnectionPosition())
                 .minActivePower(getMinActivePower())
                 .maxActivePower(getMaxActivePower())
+                .reactiveCapabilityCurve(this.getReactiveCapabilityCurve())
                 .minimumReactivePower(this.getMinimumReactivePower())
                 .maximumReactivePower(this.getMaximumReactivePower())
                 .reactiveCapabilityCurvePoints(points)

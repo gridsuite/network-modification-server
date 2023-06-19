@@ -37,23 +37,11 @@ import org.gridsuite.modification.server.modifications.BatteryCreation;
 @Schema(description = "Battery creation")
 public class BatteryCreationInfos extends InjectionCreationInfos {
 
-    @Schema(description = "Connection Name")
-    private String connectionName;
-
-    @Schema(description = "Connection Direction")
-    private ConnectablePosition.Direction connectionDirection;
-
-    @Schema(description = "Connection Position")
-    private Integer connectionPosition;
-
     @Schema(description = "Minimum active power")
     private double minActivePower;
 
     @Schema(description = "Maximum active power")
     private double maxActivePower;
-
-    @Schema(description = "Reactive capability curve")
-    private Boolean reactiveCapabilityCurve;
 
     @Schema(description = "Minimum reactive power")
     private Double minimumReactivePower;
@@ -75,6 +63,18 @@ public class BatteryCreationInfos extends InjectionCreationInfos {
 
     @Schema(description = "Droop")
     private Float droop;
+
+    @Schema(description = "Reactive capability curve")
+    private Boolean reactiveCapabilityCurve;
+
+    @Schema(description = "Connection Name")
+    private String connectionName;
+
+    @Schema(description = "Connection Direction")
+    private ConnectablePosition.Direction connectionDirection;
+
+    @Schema(description = "Connection Position")
+    private Integer connectionPosition;
 
     @Override
     public BatteryCreationEntity toEntity() {

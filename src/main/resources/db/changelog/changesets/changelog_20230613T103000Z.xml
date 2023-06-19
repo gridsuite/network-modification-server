@@ -17,6 +17,7 @@
             <column name="reactive_power_setpoint" type="FLOAT8"/>
             <column name="participate" type="boolean"/>
             <column name="droop" type="float4"/>
+            <column name="reactive_capability_curve" type="boolean"/>
             <column name="id" type="UUID">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="battery_creationPK"/>
             </column>
