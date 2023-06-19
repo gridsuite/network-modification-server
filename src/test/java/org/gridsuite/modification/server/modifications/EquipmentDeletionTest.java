@@ -7,19 +7,23 @@
 
 package org.gridsuite.modification.server.modifications;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.iidm.network.Network;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.EquipmentDeletionInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.ShuntCompensatorSelectionInfos;
 import org.gridsuite.modification.server.utils.MatcherEquipmentDeletionInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
 import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.EQUIPMENT_NOT_FOUND;
@@ -116,7 +120,7 @@ public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
     }
 
     @SneakyThrows
-    public void deleteHvdcLineWithShuntCompensator(boolean selected) {
+    private void deleteHvdcLineWithShuntCompensator(boolean selected) {
         final String hvdcLineName = "hvdcLine"; // this line uses LCC converter stations
         final String shuntNameToBeRemoved = "v2shunt"; // to be removed if selected
         assertNotNull(getNetwork().getHvdcLine(hvdcLineName));
@@ -130,9 +134,12 @@ public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
                 .build();
         String equipmentDeletionInfosJson = mapper.writeValueAsString(equipmentDeletionInfos);
 
-        mockMvc.perform(post(getNetworkModificationUri()).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
+        MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();
+        Optional<NetworkModificationResult> modifResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertTrue(modifResult.isPresent());
+        assertNotEquals(NetworkModificationResult.ApplicationStatus.WITH_ERRORS, modifResult.get().getApplicationStatus());
 
         assertNull(getNetwork().getHvdcLine(hvdcLineName));
         assertEquals(selected, getNetwork().getShuntCompensator(shuntNameToBeRemoved) == null);
