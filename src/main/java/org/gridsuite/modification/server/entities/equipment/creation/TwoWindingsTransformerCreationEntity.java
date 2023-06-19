@@ -176,6 +176,7 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
         TwoWindingsTransformerCreationInfos.TwoWindingsTransformerCreationInfosBuilder<?, ?> builder = TwoWindingsTransformerCreationInfos
                 .builder()
                 .uuid(getId())
+                .groupUuid(getGroup().getId())
                 .date(getDate())
                 .equipmentId(getEquipmentId())
                 .equipmentName(getEquipmentName())

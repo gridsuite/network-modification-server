@@ -181,6 +181,7 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
         return GeneratorCreationInfos
             .builder()
             .uuid(getId())
+            .groupUuid(getGroup().getId())
             .date(getDate())
             .equipmentId(getEquipmentId())
             .equipmentName(getEquipmentName())

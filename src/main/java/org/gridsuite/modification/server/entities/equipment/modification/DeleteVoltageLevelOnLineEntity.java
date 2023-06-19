@@ -58,6 +58,7 @@ public class DeleteVoltageLevelOnLineEntity extends ModificationEntity {
         return DeleteVoltageLevelOnLineInfos
                 .builder()
                 .uuid(getId())
+                .groupUuid(getGroup().getId())
                 .date(getDate())
                 .lineToAttachTo1Id(getLineToAttachTo1Id())
                 .lineToAttachTo2Id(getLineToAttachTo2Id())

@@ -51,6 +51,7 @@ public class EquipmentDeletionEntity extends EquipmentModificationEntity {
         return EquipmentDeletionInfos
             .builder()
             .uuid(getId())
+            .groupUuid(getGroup().getId())
             .date(getDate())
             .equipmentId(getEquipmentId())
             .equipmentType(getEquipmentType());

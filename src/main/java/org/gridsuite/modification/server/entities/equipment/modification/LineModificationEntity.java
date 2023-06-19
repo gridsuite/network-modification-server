@@ -82,6 +82,7 @@ public class LineModificationEntity extends BranchModificationEntity {
         LineModificationInfos.LineModificationInfosBuilder<?, ?> builder = LineModificationInfos
             .builder()
             .uuid(getId())
+            .groupUuid(getGroup().getId())
             .date(getDate())
             .equipmentId(getEquipmentId())
             .equipmentName(AttributeModification.toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))

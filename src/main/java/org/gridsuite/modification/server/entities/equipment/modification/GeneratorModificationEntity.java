@@ -276,6 +276,7 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
         return GeneratorModificationInfos
                 .builder()
                 .uuid(getId())
+                .groupUuid(getGroup().getId())
                 .date(getDate())
                 .equipmentId(getEquipmentId())
                 .equipmentName(AttributeModification.toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))

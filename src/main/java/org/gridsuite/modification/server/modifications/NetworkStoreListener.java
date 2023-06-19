@@ -42,6 +42,7 @@ public class NetworkStoreListener implements NetworkListener {
 
     // TODO : Move to the NetworkModificationApplicator class
     private NetworkModificationResult.ApplicationStatus applicationStatus = NetworkModificationResult.ApplicationStatus.ALL_OK;
+    private Map<UUID, NetworkModificationResult.ApplicationStatus> applicationStatusByGroup = new HashMap<>();
 
     protected NetworkStoreListener(Network network, UUID networkUuid,
                                    NetworkStoreService networkStoreService, EquipmentInfosService equipmentInfosService) {
@@ -181,12 +182,22 @@ public class NetworkStoreListener implements NetworkListener {
         return
             NetworkModificationResult.builder()
                 .applicationStatus(applicationStatus)
+                .modificationsGroupApplicationStatus(applicationStatusByGroup)
                 .networkImpacts(new ArrayList<>(networkImpacts))
                 .build();
     }
 
     public void setApplicationStatus(NetworkModificationResult.ApplicationStatus applicationStatus) {
         this.applicationStatus = this.applicationStatus.max(applicationStatus);
+    }
+
+    public void addModificationGroupApplicationStatus(UUID modificationGroupUuid, NetworkModificationResult.ApplicationStatus applicationStatus) {
+        var previousApplicationStatus = this.applicationStatusByGroup.get(modificationGroupUuid);
+        if (previousApplicationStatus != null) {
+            this.applicationStatusByGroup.put(modificationGroupUuid, previousApplicationStatus.max(applicationStatus));
+        } else {
+            this.applicationStatusByGroup.put(modificationGroupUuid, applicationStatus);
+        }
     }
 
     private void flushEquipmentInfos() {

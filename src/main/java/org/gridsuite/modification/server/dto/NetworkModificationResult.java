@@ -9,11 +9,10 @@ package org.gridsuite.modification.server.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Data;
+import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.modification.server.impacts.SimpleElementImpact;
 
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -39,8 +38,11 @@ public class NetworkModificationResult {
         }
     }
 
-    @Schema(description = "Application status")
+    @Schema(description = "Operation application status")
     ApplicationStatus applicationStatus;
+
+    @Schema(description = "Map of modification groups and their corresponding application status")
+    Map<UUID, ApplicationStatus> modificationsGroupApplicationStatus;
 
     @Schema(description = "Network modification impacts")
     @Builder.Default

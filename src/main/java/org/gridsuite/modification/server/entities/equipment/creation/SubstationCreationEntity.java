@@ -63,6 +63,7 @@ public class SubstationCreationEntity extends EquipmentCreationEntity {
         return SubstationCreationInfos
                 .builder()
                 .uuid(getId())
+                .groupUuid(getGroup().getId())
                 .date(getDate())
                 .equipmentId(getEquipmentId())
                 .equipmentName(getEquipmentName())

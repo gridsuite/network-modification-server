@@ -48,6 +48,7 @@ public class BranchStatusModificationEntity extends EquipmentModificationEntity 
         return BranchStatusModificationInfos
             .builder()
             .uuid(getId())
+            .groupUuid(getGroup().getId())
             .date(getDate())
             .equipmentId(getEquipmentId())
             .action(getAction())

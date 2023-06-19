@@ -84,6 +84,9 @@ public class NetworkModificationApplicator {
             handleException(modificationInfos.getErrorType(), subReporter, e);
         } finally {
             listener.setApplicationStatus(getApplicationStatus(reporter));
+            if (modificationInfos.getGroupUuid() != null) {
+                listener.addModificationGroupApplicationStatus(modificationInfos.getGroupUuid(), getApplicationStatus(reporter));
+            }
             reportService.sendReport(reportInfos.getReportUuid(), reporter); // TODO : Group report sends ?
         }
     }
