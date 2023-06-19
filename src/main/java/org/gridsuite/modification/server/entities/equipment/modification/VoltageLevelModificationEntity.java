@@ -97,7 +97,7 @@ public class VoltageLevelModificationEntity extends BasicEquipmentModificationEn
     private VoltageLevelModificationInfos.VoltageLevelModificationInfosBuilder<?, ?> toVoltageLevelModificationInfosBuilder() {
         return VoltageLevelModificationInfos.builder()
                 .uuid(getId())
-                .groupUuid(getGroup().getId())
+                .groupUuid(getGroup() != null ? getGroup().getId() : null)
                 .equipmentId(getEquipmentId())
                 .date(getDate())
                 .equipmentName(toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))

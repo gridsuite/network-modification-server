@@ -91,7 +91,7 @@ public class ShuntCompensatorCreationEntity extends InjectionCreationEntity {
         return ShuntCompensatorCreationInfos
             .builder()
             .uuid(getId())
-            .groupUuid(getGroup().getId())
+            .groupUuid(getGroup() != null ? getGroup().getId() : null)
             .date(getDate())
             .equipmentId(getEquipmentId())
             .equipmentName(getEquipmentName())

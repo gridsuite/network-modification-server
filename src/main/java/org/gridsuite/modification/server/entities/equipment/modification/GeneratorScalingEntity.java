@@ -35,7 +35,7 @@ public class GeneratorScalingEntity extends ScalingEntity {
         return GeneratorScalingInfos.builder()
                 .date(getDate())
                 .uuid(getId())
-                .groupUuid(getGroup().getId())
+                .groupUuid(getGroup() != null ? getGroup().getId() : null)
                 .variationType(getVariationType())
                 .variations(getVariations().stream()
                         .map(ScalingVariationEntity::toScalingVariationInfos)

@@ -67,7 +67,7 @@ public class EquipmentAttributeModificationEntity<T> extends EquipmentModificati
         return EquipmentAttributeModificationInfos
             .builder()
             .uuid(getId())
-            .groupUuid(getGroup().getId())
+            .groupUuid(getGroup() != null ? getGroup().getId() : null)
             .date(getDate())
             .equipmentId(getEquipmentId())
             .equipmentAttributeName(getAttributeName())

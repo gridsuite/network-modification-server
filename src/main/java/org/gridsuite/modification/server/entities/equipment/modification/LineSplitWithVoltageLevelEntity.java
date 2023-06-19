@@ -88,7 +88,7 @@ public class LineSplitWithVoltageLevelEntity extends ModificationEntity {
         return LineSplitWithVoltageLevelInfos
             .builder()
             .uuid(getId())
-            .groupUuid(getGroup().getId())
+            .groupUuid(getGroup() != null ? getGroup().getId() : null)
             .date(getDate())
             .lineToSplitId(getLineToSplitId())
             .percent(getPercent())

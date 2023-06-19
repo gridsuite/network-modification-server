@@ -85,7 +85,7 @@ public class LinesAttachToSplitLinesEntity extends ModificationEntity {
         return LinesAttachToSplitLinesInfos
                 .builder()
                 .uuid(getId())
-                .groupUuid(getGroup().getId())
+                .groupUuid(getGroup() != null ? getGroup().getId() : null)
                 .date(getDate())
                 .lineToAttachTo1Id(getLineToAttachTo1Id())
                 .lineToAttachTo2Id(getLineToAttachTo2Id())

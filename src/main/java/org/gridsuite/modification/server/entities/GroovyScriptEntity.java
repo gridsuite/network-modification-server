@@ -50,7 +50,7 @@ public class GroovyScriptEntity extends ModificationEntity {
         return GroovyScriptInfos
                 .builder()
                 .uuid(getId())
-                .groupUuid(getGroup().getId())
+                .groupUuid(getGroup() != null ? getGroup().getId() : null)
                 .date(getDate())
                 .script(getScript());
     }

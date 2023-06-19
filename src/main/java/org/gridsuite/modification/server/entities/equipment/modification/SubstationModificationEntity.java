@@ -78,7 +78,7 @@ public class SubstationModificationEntity extends BasicEquipmentModificationEnti
         return SubstationModificationInfos
                 .builder()
                 .uuid(getId())
-                .groupUuid(getGroup().getId())
+                .groupUuid(getGroup() != null ? getGroup().getId() : null)
                 .date(getDate())
                 .equipmentId(getEquipmentId())
                 .equipmentName(AttributeModification.toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))

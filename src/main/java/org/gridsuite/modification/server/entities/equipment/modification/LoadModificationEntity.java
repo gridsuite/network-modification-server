@@ -76,7 +76,7 @@ public class LoadModificationEntity extends InjectionModificationEntity {
         return LoadModificationInfos
                 .builder()
                 .uuid(getId())
-                .groupUuid(getGroup().getId())
+                .groupUuid(getGroup() != null ? getGroup().getId() : null)
                 .date(getDate())
                 .equipmentId(getEquipmentId())
                 .equipmentName(AttributeModification.toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))
