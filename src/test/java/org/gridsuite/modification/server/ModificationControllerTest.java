@@ -829,32 +829,20 @@ public class ModificationControllerTest {
         testConnectableDeletionImpacts(mvcResult.getResponse().getContentAsString(), IdentifiableType.DANGLING_LINE, "v2Dangling", "v2bdangling", "v2ddangling", "s1");
         testNetworkModificationsCount(TEST_GROUP_ID, 10);
 
-        // delete hvdc line
+        // delete hvdc line => also delete converter stations
         equipmentDeletionInfos.setEquipmentType(IdentifiableType.HVDC_LINE.name());
         equipmentDeletionInfos.setEquipmentId("hvdcLine");
         equipmentDeletionInfosJson = objectWriter.writeValueAsString(equipmentDeletionInfos);
         mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk()).andReturn();
-        testElementDeletionImpact(mapper, mvcResult.getResponse().getContentAsString(), IdentifiableType.HVDC_LINE, "hvdcLine", Set.of("s1"));
+                .andExpect(status().isOk()).andReturn();
+        testMultipleDeletionImpacts(IdentifiableType.HVDC_LINE,
+                mvcResult.getResponse().getContentAsString(), "hvdcLine", List.of(),
+                List.of(Pair.of(IdentifiableType.SWITCH, "v1blcc"), Pair.of(IdentifiableType.SWITCH, "v1dlcc"), Pair.of(IdentifiableType.HVDC_CONVERTER_STATION, "v1lcc"),
+                        Pair.of(IdentifiableType.SWITCH, "v2bvsc"), Pair.of(IdentifiableType.SWITCH, "v2dvsc"), Pair.of(IdentifiableType.HVDC_CONVERTER_STATION, "v2vsc")
+                ),
+                "s1"
+        );
         testNetworkModificationsCount(TEST_GROUP_ID, 11);
-
-        // delete vsc converter station
-        equipmentDeletionInfos.setEquipmentType(IdentifiableType.HVDC_CONVERTER_STATION.name());
-        equipmentDeletionInfos.setEquipmentId("v2vsc");
-        equipmentDeletionInfosJson = objectWriter.writeValueAsString(equipmentDeletionInfos);
-        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk()).andReturn();
-        testConnectableDeletionImpacts(mvcResult.getResponse().getContentAsString(), IdentifiableType.HVDC_CONVERTER_STATION, "v2vsc", "v2bvsc", "v2dvsc", "s1");
-        testNetworkModificationsCount(TEST_GROUP_ID, 12);
-
-        // delete lcc converter station
-        equipmentDeletionInfos.setEquipmentType(IdentifiableType.HVDC_CONVERTER_STATION.name());
-        equipmentDeletionInfos.setEquipmentId("v1lcc");
-        equipmentDeletionInfosJson = objectWriter.writeValueAsString(equipmentDeletionInfos);
-        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk()).andReturn();
-        testConnectableDeletionImpacts(mvcResult.getResponse().getContentAsString(), IdentifiableType.HVDC_CONVERTER_STATION, "v1lcc", "v1blcc", "v1dlcc", "s1");
-        testNetworkModificationsCount(TEST_GROUP_ID, 13);
 
         // delete voltage level
         equipmentDeletionInfos.setEquipmentType(IdentifiableType.VOLTAGE_LEVEL.name());
@@ -862,13 +850,13 @@ public class ModificationControllerTest {
         equipmentDeletionInfosJson = objectWriter.writeValueAsString(equipmentDeletionInfos);
         mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
-        testVoltageLevelDeletionImpacts(
+        testMultipleDeletionImpacts(IdentifiableType.VOLTAGE_LEVEL,
             mvcResult.getResponse().getContentAsString(), "v5", List.of("1A1"),
             List.of(Pair.of(IdentifiableType.GENERATOR, "v5generator"), Pair.of(IdentifiableType.LOAD, "v5load"),
                 Pair.of(IdentifiableType.SHUNT_COMPENSATOR, "v5shunt"), Pair.of(IdentifiableType.STATIC_VAR_COMPENSATOR, "v5Compensator")),
             "s3"
         );
-        testNetworkModificationsCount(TEST_GROUP_ID, 14);
+        testNetworkModificationsCount(TEST_GROUP_ID, 12);
 
         // try to delete voltage level (Internal error because the vl is still connected)
         equipmentDeletionInfos.setEquipmentType(IdentifiableType.VOLTAGE_LEVEL.name());
@@ -885,12 +873,12 @@ public class ModificationControllerTest {
         equipmentDeletionInfosJson = objectWriter.writeValueAsString(equipmentDeletionInfos);
         mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
-        List<SimpleElementImpact> vlDeletionImpacts = testVoltageLevelDeletionImpacts("v6", List.of("1B1"),
+        List<SimpleElementImpact> vlDeletionImpacts = testMultipleDeletionImpacts(IdentifiableType.VOLTAGE_LEVEL, "v6", List.of("1B1"),
             List.of(Pair.of(IdentifiableType.GENERATOR, "v6generator"), Pair.of(IdentifiableType.LOAD, "v6load"),
                 Pair.of(IdentifiableType.SHUNT_COMPENSATOR, "v6shunt"), Pair.of(IdentifiableType.STATIC_VAR_COMPENSATOR, "v6Compensator")),
             "s3");
         testSubstationDeletionImpacts(mvcResult.getResponse().getContentAsString(), "s3", vlDeletionImpacts);
-        testNetworkModificationsCount(TEST_GROUP_ID, 16);
+        testNetworkModificationsCount(TEST_GROUP_ID, 14);
 
         // try to delete substation (Internal error because the substation is still connected)
         equipmentDeletionInfos.setEquipmentType(IdentifiableType.SUBSTATION.name());
@@ -968,22 +956,22 @@ public class ModificationControllerTest {
         assertTrue(existTombstonedEquipmentInfos(disconnectorId3, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
     }
 
-    private List<SimpleElementImpact> testVoltageLevelDeletionImpacts(String vlId, List<String> busbarSectionsIds, List<Pair<IdentifiableType, String>> connectablesTypesAndIds, String substationId) {
-        // Voltage level and equipments have been removed from network
-        assertNull(network.getVoltageLevel(vlId));
+    private List<SimpleElementImpact> testMultipleDeletionImpacts(IdentifiableType equipmentType, String equipmentId, List<String> busbarSectionsIds, List<Pair<IdentifiableType, String>> connectablesTypesAndIds, String substationId) {
+        // All equipments have been removed from network
+        assertNull(network.getIdentifiable(equipmentId));
         busbarSectionsIds.forEach(id -> assertNull(network.getBusbarSection(id)));
         connectablesTypesAndIds.forEach(typeAndId -> assertNull(network.getBusbarSection(typeAndId.getRight())));
 
-        // Voltage level and equipments have been added as TombstonedEquipmentInfos in ElasticSearch
-        assertTrue(existTombstonedEquipmentInfos(vlId, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        // All equipments have been added as TombstonedEquipmentInfos in ElasticSearch
+        assertTrue(existTombstonedEquipmentInfos(equipmentId, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
         busbarSectionsIds.forEach(id -> assertTrue(existTombstonedEquipmentInfos(id, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID)));
         connectablesTypesAndIds.forEach(typeAndId -> assertTrue(existTombstonedEquipmentInfos(typeAndId.getRight(), TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID)));
 
-        return createVoltageLevelDeletionImpacts(vlId, busbarSectionsIds, connectablesTypesAndIds, substationId);
+        return createMultipleDeletionImpacts(equipmentType, equipmentId, busbarSectionsIds, connectablesTypesAndIds, substationId);
     }
 
-    private void testVoltageLevelDeletionImpacts(String resultAsString, String vlId, List<String> busbarSectionsIds, List<Pair<IdentifiableType, String>> connectablesTypesAndIds, String substationId) {
-        List<SimpleElementImpact> testElementImpacts = testVoltageLevelDeletionImpacts(vlId, busbarSectionsIds, connectablesTypesAndIds, substationId);
+    private void testMultipleDeletionImpacts(IdentifiableType equipmentType, String resultAsString, String equipmentId, List<String> busbarSectionsIds, List<Pair<IdentifiableType, String>> connectablesTypesAndIds, String substationId) {
+        List<SimpleElementImpact> testElementImpacts = testMultipleDeletionImpacts(equipmentType, equipmentId, busbarSectionsIds, connectablesTypesAndIds, substationId);
         TestImpactUtils.testElementImpacts(mapper, resultAsString, testElementImpacts);
     }
 

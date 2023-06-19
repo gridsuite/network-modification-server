@@ -7,12 +7,10 @@
 package org.gridsuite.modification.server.dto;
 
 import lombok.*;
-import lombok.experimental.SuperBuilder;
 
 /**
  * @author David Braquart <david.braquart at rte-france.com>
  */
-@SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
