@@ -70,6 +70,7 @@ public class ShuntCompensatorModificationEntity extends BasicEquipmentModificati
     }
 
     private void assignAttributes(ShuntCompensatorModificationInfos shuntCompensatorModificationInfos) {
+        this.voltageLevelId = shuntCompensatorModificationInfos.getVoltageLevelId();
         this.qAtNominalV = new DoubleModificationEmbedded(shuntCompensatorModificationInfos.getQAtNominalV());
         this.shuntCompensatorType = new EnumModificationEmbedded<>(shuntCompensatorModificationInfos.getShuntCompensatorType());
         this.susceptancePerSection = new DoubleModificationEmbedded(shuntCompensatorModificationInfos.getSusceptancePerSection());

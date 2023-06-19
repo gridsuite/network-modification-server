@@ -34,7 +34,7 @@ import org.gridsuite.modification.server.modifications.ShuntCompensatorModificat
 @Schema(description = "Shunt compensator modification")
 public class ShuntCompensatorModificationInfos extends BasicEquipmentModificationInfos {
 
-    @Schema(description = "Susceptance per section")
+    @Schema(description = "voltage level id")
     private String voltageLevelId;
 
     @Schema(description = "Susceptance per section")
