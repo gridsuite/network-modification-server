@@ -32,12 +32,10 @@ import org.gridsuite.modification.server.modifications.ShuntCompensatorModificat
 @Setter
 @ToString(callSuper = true)
 @Schema(description = "Shunt compensator modification")
-public class ShuntCompensatorModificationInfos extends InjectionModificationInfos {
-    @Schema(description = "Maximum number of sections")
-    private AttributeModification<Integer> maximumNumberOfSections;
+public class ShuntCompensatorModificationInfos extends BasicEquipmentModificationInfos {
 
-    @Schema(description = "Current number of sections")
-    private AttributeModification<Integer> currentNumberOfSections;
+    @Schema(description = "Susceptance per section")
+    private String voltageLevelId;
 
     @Schema(description = "Susceptance per section")
     private AttributeModification<Double> susceptancePerSection;
@@ -48,9 +46,6 @@ public class ShuntCompensatorModificationInfos extends InjectionModificationInfo
 
     @Schema(description = "Shunt Compensator Type")
     private AttributeModification<ShuntCompensatorType> shuntCompensatorType;
-
-    @Schema(description = "Identical sections")
-    private AttributeModification<Boolean> isIdenticalSection;
 
     @Override
     public ShuntCompensatorModificationEntity toEntity() {

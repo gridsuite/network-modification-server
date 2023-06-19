@@ -42,7 +42,7 @@ public class ShuntCompensatorModification extends AbstractModification {
             throw new NetworkModificationException(SHUNT_COMPENSATOR_NOT_FOUND,
                     String.format("Shunt compensator %s does not exist in network", modificationInfos.getEquipmentId()));
         }
-        VoltageLevel voltageLevel = network.getVoltageLevel(modificationInfos.getVoltageLevelId().getValue());
+        VoltageLevel voltageLevel = network.getVoltageLevel(modificationInfos.getVoltageLevelId());
 
         subReporter.report(Report.builder()
                 .withKey("shuntCompensatorModification")

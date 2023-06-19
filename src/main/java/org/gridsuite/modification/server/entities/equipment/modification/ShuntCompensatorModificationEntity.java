@@ -33,7 +33,10 @@ import static org.gridsuite.modification.server.dto.AttributeModification.toAttr
 @Getter
 @Entity
 @Table(name = "shuntCompensatorModification")
-public class ShuntCompensatorModificationEntity extends InjectionModificationEntity {
+public class ShuntCompensatorModificationEntity extends BasicEquipmentModificationEntity {
+    @Column(name = "voltageLevelId")
+    private String voltageLevelId;
+
     @Embedded
     @AttributeOverrides(value = {
             @AttributeOverride(name = "value", column = @Column(name = "susceptancePerSection")),
@@ -82,7 +85,7 @@ public class ShuntCompensatorModificationEntity extends InjectionModificationEnt
                 .builder()
                 .uuid(getId())
                 .date(getDate())
-                .voltageLevelId(toAttributeModification(getVoltageLevelIdValue(), getVoltageLevelIdOp()))
+                .voltageLevelId(getVoltageLevelId())
                 .equipmentId(getEquipmentId())
                 .equipmentName(toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))
                 .shuntCompensatorType(toAttributeModification(getShuntCompensatorType()))
