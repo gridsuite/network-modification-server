@@ -9,7 +9,6 @@ package org.gridsuite.modification.server.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Data;
-import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.modification.server.impacts.SimpleElementImpact;
 
 import java.util.*;
