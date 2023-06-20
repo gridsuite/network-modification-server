@@ -96,13 +96,6 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
 
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "startupCost")),
-        @AttributeOverride(name = "opType", column = @Column(name = "startupCostOp"))
-    })
-    DoubleModificationEmbedded startupCost;
-
-    @Embedded
-    @AttributeOverrides(value = {
         @AttributeOverride(name = "value", column = @Column(name = "marginalCost")),
         @AttributeOverride(name = "opType", column = @Column(name = "marginalCostOp"))
     })
@@ -231,7 +224,6 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
         this.voltageRegulationOn = new BooleanModificationEmbedded(generatorModificationInfos.getVoltageRegulationOn());
         this.voltageSetpoint = new DoubleModificationEmbedded(generatorModificationInfos.getVoltageSetpoint());
         this.plannedActivePowerSetPoint = new DoubleModificationEmbedded(generatorModificationInfos.getPlannedActivePowerSetPoint());
-        this.startupCost = new DoubleModificationEmbedded(generatorModificationInfos.getStartupCost());
         this.marginalCost = new DoubleModificationEmbedded(generatorModificationInfos.getMarginalCost());
         this.plannedOutageRate = new DoubleModificationEmbedded(generatorModificationInfos.getPlannedOutageRate());
         this.forcedOutageRate = new DoubleModificationEmbedded(generatorModificationInfos.getForcedOutageRate());
@@ -290,7 +282,6 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
                 .voltageRegulationOn(toAttributeModification(getVoltageRegulationOn()))
                 .voltageSetpoint(toAttributeModification(getVoltageSetpoint()))
                 .plannedActivePowerSetPoint(toAttributeModification(getPlannedActivePowerSetPoint()))
-                .startupCost(toAttributeModification(getStartupCost()))
                 .marginalCost(toAttributeModification(getMarginalCost()))
                 .plannedOutageRate(toAttributeModification(getPlannedOutageRate()))
                 .forcedOutageRate(toAttributeModification(getForcedOutageRate()))
