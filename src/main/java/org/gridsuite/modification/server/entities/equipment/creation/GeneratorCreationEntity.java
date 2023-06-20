@@ -55,9 +55,6 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
     @Column(name = "plannedActivePowerSetPoint")
     private Double plannedActivePowerSetPoint;
 
-    @Column(name = "startupCost")
-    private Double startupCost;
-
     @Column(name = "marginalCost")
     private Double marginalCost;
 
@@ -134,7 +131,6 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
         this.voltageRegulationOn = generatorCreationInfos.isVoltageRegulationOn();
         this.voltageSetpoint = generatorCreationInfos.getVoltageSetpoint();
         this.plannedActivePowerSetPoint = generatorCreationInfos.getPlannedActivePowerSetPoint();
-        this.startupCost = generatorCreationInfos.getStartupCost();
         this.marginalCost = generatorCreationInfos.getMarginalCost();
         this.plannedOutageRate = generatorCreationInfos.getPlannedOutageRate();
         this.forcedOutageRate = generatorCreationInfos.getForcedOutageRate();
@@ -195,7 +191,6 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
             .voltageRegulationOn(isVoltageRegulationOn())
             .voltageSetpoint(getVoltageSetpoint())
             .plannedActivePowerSetPoint(getPlannedActivePowerSetPoint())
-            .startupCost(getStartupCost())
             .marginalCost(getMarginalCost())
             .plannedOutageRate(getPlannedOutageRate())
             .forcedOutageRate(getForcedOutageRate())
