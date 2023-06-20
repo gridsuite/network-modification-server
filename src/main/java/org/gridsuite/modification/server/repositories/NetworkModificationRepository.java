@@ -145,10 +145,14 @@ public class NetworkModificationRepository {
 
     @Transactional(readOnly = true)
     public UUID getModificationGroupUuid(UUID modificationUuid) {
-        return modificationRepository
-            .findById(modificationUuid)
-            .orElseThrow(() -> new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, modificationUuid.toString()))
-            .getGroup().getId();
+        try {
+            return modificationRepository
+                .findById(modificationUuid)
+                .orElseThrow(() -> new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, modificationUuid.toString()))
+                .getGroup().getId();
+        } catch (NetworkModificationException e) {
+            return null;
+        }
     }
 
     @Transactional // To have the 2 delete in the same transaction (atomic)

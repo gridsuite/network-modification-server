@@ -90,7 +90,9 @@ public class NetworkModificationApplicator {
             listener.setApplicationStatus(getApplicationStatus(reporter));
             if (modificationInfos.getUuid() != null) {
                 UUID modificationGroupUuid = networkModificationRepository.getModificationGroupUuid(modificationInfos.getUuid());
-                listener.addModificationGroupApplicationStatus(modificationGroupUuid, getApplicationStatus(reporter));
+                if (modificationGroupUuid != null) {
+                    listener.addModificationGroupApplicationStatus(modificationGroupUuid, getApplicationStatus(reporter));
+                }
             }
             reportService.sendReport(reportInfos.getReportUuid(), reporter); // TODO : Group report sends ?
         }
