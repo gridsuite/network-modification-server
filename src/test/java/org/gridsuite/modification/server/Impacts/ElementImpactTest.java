@@ -16,10 +16,7 @@ import org.gridsuite.modification.server.impacts.SimpleElementImpact;
 import org.gridsuite.modification.server.utils.TestUtils;
 import org.junit.Test;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.TreeSet;
+import java.util.*;
 
 import static org.gridsuite.modification.server.Impacts.TestImpactUtils.*;
 import static org.junit.Assert.assertEquals;
@@ -49,6 +46,7 @@ public class ElementImpactTest {
 
         NetworkModificationResult result = NetworkModificationResult.builder()
             .applicationStatus(ApplicationStatus.ALL_OK)
+            .modificationsGroupApplicationStatus(Map.of())
             .networkImpacts((List<SimpleElementImpact>) impacts)
             .build();
         assertEquals(TestUtils.resourceToString("/network-modification-result-with-all-ok.json"), mapper.writeValueAsString(result));
