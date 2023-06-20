@@ -720,6 +720,7 @@ public class ModificationRepositoryTest {
     public void testVoltageLevelCreation() {
         VoltageLevelCreationEntity createVoltLvlEntity1 = VoltageLevelCreationInfos.builder()
                 .equipmentId("idVL1")
+                .groupUuid(TEST_GROUP_ID)
                 .equipmentName("VLName")
                 .substationId("s1")
                 .nominalVoltage(379.0)
