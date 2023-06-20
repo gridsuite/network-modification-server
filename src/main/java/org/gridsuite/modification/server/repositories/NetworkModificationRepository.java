@@ -144,7 +144,7 @@ public class NetworkModificationRepository {
     }
 
     @Transactional(readOnly = true)
-    public UUID getModificationGroupEntity(UUID modificationUuid) {
+    public UUID getModificationGroupUuid(UUID modificationUuid) {
         return modificationRepository
             .findById(modificationUuid)
             .orElseThrow(() -> new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, modificationUuid.toString()))
