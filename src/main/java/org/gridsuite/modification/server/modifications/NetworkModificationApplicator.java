@@ -21,8 +21,6 @@ import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationResult.ApplicationStatus;
 import org.gridsuite.modification.server.dto.ReportInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
-import org.gridsuite.modification.server.entities.ModificationEntity;
-import org.gridsuite.modification.server.entities.ModificationGroupEntity;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.ReportService;
 import org.slf4j.Logger;
@@ -92,7 +90,6 @@ public class NetworkModificationApplicator {
             listener.setApplicationStatus(getApplicationStatus(reporter));
             UUID modificationGroupUuid = networkModificationRepository.getModificationGroupUuid(modificationInfos.getUuid());
             listener.addModificationGroupApplicationStatus(modificationGroupUuid, getApplicationStatus(reporter));
-
             reportService.sendReport(reportInfos.getReportUuid(), reporter); // TODO : Group report sends ?
         }
     }
