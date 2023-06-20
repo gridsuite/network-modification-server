@@ -22,9 +22,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.TreeSet;
 
-import static org.gridsuite.modification.server.Impacts.TestImpactUtils.createCreationImpactType;
-import static org.gridsuite.modification.server.Impacts.TestImpactUtils.createDeletionImpactType;
-import static org.gridsuite.modification.server.Impacts.TestImpactUtils.createModificationImpactType;
+import static org.gridsuite.modification.server.Impacts.TestImpactUtils.*;
 import static org.junit.Assert.assertEquals;
 
 /**

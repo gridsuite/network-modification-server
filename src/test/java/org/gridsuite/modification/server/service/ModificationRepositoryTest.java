@@ -6,11 +6,7 @@
  */
 package org.gridsuite.modification.server.service;
 
-import com.powsybl.iidm.network.Country;
-import com.powsybl.iidm.network.EnergySource;
-import com.powsybl.iidm.network.IdentifiableType;
-import com.powsybl.iidm.network.LoadType;
-import com.powsybl.iidm.network.SwitchKind;
+import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import com.vladmihalcea.sql.SQLStatementCountValidator;
 import nl.jqno.equalsverifier.EqualsVerifier;
@@ -19,12 +15,7 @@ import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationGroupEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.VoltageLevelCreationEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.BranchStatusModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.DeleteAttachingLineEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.DeleteVoltageLevelOnLineEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.LineAttachToVoltageLevelEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.LineSplitWithVoltageLevelEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.LinesAttachToSplitLinesEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.*;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.BooleanModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.EnumModificationEmbedded;
@@ -41,20 +32,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_GROUP_NOT_FOUND;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_NOT_FOUND;
-import static org.gridsuite.modification.server.utils.Assertions.*;
+import static org.gridsuite.modification.server.utils.Assertions.assertThat;
 import static org.gridsuite.modification.server.utils.TestUtils.assertRequestsCount;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 
 /**

@@ -9,6 +9,11 @@ import java.time.temporal.Temporal;
 import java.util.Objects;
 import java.util.UUID;
 
+/**
+ * Base implementation of AssertJ assertions for all subclass of {@link ModificationInfos}
+ * @param <SELF>
+ * @param <ACTUAL>
+ */
 public abstract class AbstractModificationInfosAssert<SELF extends AbstractModificationInfosAssert<SELF, ACTUAL>, ACTUAL extends ModificationInfos>
     extends AbstractAssert<SELF, ACTUAL> {
     protected AbstractModificationInfosAssert(ACTUAL actual, Class<SELF> assertClass) {
@@ -31,11 +36,17 @@ public abstract class AbstractModificationInfosAssert<SELF extends AbstractModif
         return myself;
     }
 
+    /**
+     * Configuration for the comparison of all fields recursively, except some fields.
+     * We don't use the {@code .equals(Object)} function because we need to ignore some fields,
+     *   and we don't want to test the {@literal equals()} implementation but the DTO content.
+     * The configuration can be completed by subtypes.
+     * @return the comparison configuration
+     */
     protected RecursiveComparisonConfiguration recursiveConfiguration() {
         return RecursiveComparisonConfiguration.builder()
             .withIgnoreAllOverriddenEquals(true)
             .withIgnoredFieldsMatchingRegexes("^(\\w+\\.)?date$", "^(\\w+\\.)?uuid$")
-            .withIgnoredFieldsOfTypes(UUID.class)
             .withIgnoreCollectionOrder(false) //maybe the order is not needed on some types
             .build();
     }

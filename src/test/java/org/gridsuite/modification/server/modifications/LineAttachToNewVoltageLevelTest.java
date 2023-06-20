@@ -8,11 +8,7 @@ package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.SwitchKind;
-import org.gridsuite.modification.server.dto.CouplingDeviceInfos;
-import org.gridsuite.modification.server.dto.LineAttachToVoltageLevelInfos;
-import org.gridsuite.modification.server.dto.LineCreationInfos;
-import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.dto.VoltageLevelCreationInfos;
+import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 

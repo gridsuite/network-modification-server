@@ -7,20 +7,11 @@
 
 package org.gridsuite.modification.server.modifications;
 
-import com.powsybl.iidm.network.EnergySource;
-import com.powsybl.iidm.network.Generator;
-import com.powsybl.iidm.network.Network;
-import com.powsybl.iidm.network.ReactiveCapabilityCurve;
-import com.powsybl.iidm.network.ReactiveLimitsKind;
+import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.ActivePowerControl;
 import com.powsybl.iidm.network.extensions.GeneratorShortCircuit;
 import com.powsybl.iidm.network.extensions.GeneratorStartup;
-import org.gridsuite.modification.server.dto.AttributeModification;
-import org.gridsuite.modification.server.dto.GeneratorModificationInfos;
-import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.dto.OperationType;
-import org.gridsuite.modification.server.dto.ReactiveCapabilityCurveModificationInfos;
-import org.gridsuite.modification.server.dto.VoltageRegulationType;
+import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
 import org.junit.jupiter.api.Tag;

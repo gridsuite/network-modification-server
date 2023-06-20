@@ -1,33 +1,16 @@
 package org.gridsuite.modification.server.utils;
 
 import org.assertj.core.util.CheckReturnValue;
-import org.gridsuite.modification.server.dto.LineAttachToVoltageLevelInfos;
-import org.gridsuite.modification.server.dto.LineSplitWithVoltageLevelInfos;
-import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.dto.TwoWindingsTransformerCreationInfos;
-import org.gridsuite.modification.server.dto.VoltageLevelCreationInfos;
+import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
-import org.gridsuite.modification.server.utils.assertions.AbstractModificationInfosAssert;
-import org.gridsuite.modification.server.utils.assertions.LineAttachToVoltageLevelInfosAssert;
-import org.gridsuite.modification.server.utils.assertions.LineSplitWithVoltageLevelInfosAssert;
-import org.gridsuite.modification.server.utils.assertions.ModificationInfosAssert;
-import org.gridsuite.modification.server.utils.assertions.TwoWindingsTransformerCreationInfosAssert;
-import org.gridsuite.modification.server.utils.assertions.VoltageLevelCreationInfosAssert;
+import org.gridsuite.modification.server.utils.assertions.*;
 
 import java.util.UUID;
 
+/**
+ * {@link org.assertj.core.api.Assertions Assertions} completed with our custom assertions classes.
+ */
 public class Assertions extends org.assertj.core.api.Assertions {
-    /* *
-     * Create assertion for {@link ModificationInfos}.
-     *
-     * @param actual the actual value.
-     * @return the created assertion object.
-     * /
-    @CheckReturnValue
-    public static ModificationInfosAssert assertThat(ModificationInfos actual) {
-            return new ModificationInfosAssert(actual);
-    }*/
-
     /**
      * Create assertion for {@link ModificationInfos}.
      *
@@ -50,6 +33,8 @@ public class Assertions extends org.assertj.core.api.Assertions {
             return assertThat((VoltageLevelCreationInfos) actual);
         } else if (actual instanceof TwoWindingsTransformerCreationInfos) {
             return assertThat((TwoWindingsTransformerCreationInfos) actual);
+        } else if (actual instanceof ScalingInfos) {
+            return assertThat((ScalingInfos) actual);
         } else {
             return new ModificationInfosAssert(actual);
         }
@@ -97,5 +82,16 @@ public class Assertions extends org.assertj.core.api.Assertions {
     @CheckReturnValue
     public static TwoWindingsTransformerCreationInfosAssert assertThat(TwoWindingsTransformerCreationInfos actual) {
         return new TwoWindingsTransformerCreationInfosAssert(actual);
+    }
+
+    /**
+     * Create assertion for {@link ScalingInfos}.
+     *
+     * @param actual the actual value.
+     * @return the created assertion object.
+     */
+    @CheckReturnValue
+    public static ScalingInfosAssert assertThat(ScalingInfos actual) {
+        return new ScalingInfosAssert(actual);
     }
 }

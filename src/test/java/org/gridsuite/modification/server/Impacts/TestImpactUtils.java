@@ -16,12 +16,7 @@ import org.gridsuite.modification.server.dto.NetworkModificationResult.Applicati
 import org.gridsuite.modification.server.impacts.SimpleElementImpact;
 import org.gridsuite.modification.server.impacts.SimpleElementImpact.SimpleImpactType;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.utils.Assertions.*;

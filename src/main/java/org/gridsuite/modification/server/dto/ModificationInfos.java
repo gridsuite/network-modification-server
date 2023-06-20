@@ -69,7 +69,7 @@ public class ModificationInfos {
     private UUID uuid;
 
     @Schema(description = "Modification date")
-    ZonedDateTime date /*= ZonedDateTime.now(ZoneOffset.UTC)*/;
+    ZonedDateTime date;
 
     @JsonIgnore
     public ModificationEntity toEntity() {

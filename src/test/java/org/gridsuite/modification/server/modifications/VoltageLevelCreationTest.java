@@ -21,16 +21,10 @@ import org.springframework.http.MediaType;
 import java.util.Arrays;
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.CREATE_VOLTAGE_LEVEL_ERROR;
-import static org.gridsuite.modification.server.NetworkModificationException.Type.SUBSTATION_NOT_FOUND;
-import static org.gridsuite.modification.server.NetworkModificationException.Type.VOLTAGE_LEVEL_ALREADY_EXISTS;
-import static org.gridsuite.modification.server.utils.Assertions.*;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
+import static org.gridsuite.modification.server.utils.Assertions.assertThat;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
