@@ -37,13 +37,13 @@ public class SubstationModification extends AbstractModification {
 
         // modify the substation in the network
         subReporter.report(Report.builder()
-            .withKey("substationModification")
-            .withDefaultMessage("Substation with id=${id} modified :")
-            .withValue("id", modificationInfos.getEquipmentId())
-            .withSeverity(TypedValue.INFO_SEVERITY)
-            .build());
+                .withKey("substationModification")
+                .withDefaultMessage("Substation with id=${id} modified :")
+                .withValue("id", modificationInfos.getEquipmentId())
+                .withSeverity(TypedValue.INFO_SEVERITY)
+                .build());
         // name and country
-        ModificationUtils.getInstance().applyElementaryModifications(station::setName, station::getNameOrId, modificationInfos.getEquipmentName(), subReporter, "Name");
+        ModificationUtils.getInstance().applyElementaryModifications(station::setName, () -> station.getOptionalName().orElse("No value"), modificationInfos.getEquipmentName(), subReporter, "Name");
         ModificationUtils.getInstance().applyElementaryModifications(station::setCountry, station::getNullableCountry, modificationInfos.getSubstationCountry(), subReporter, "Country");
         // properties
         if (modificationInfos.getProperties() != null) {
