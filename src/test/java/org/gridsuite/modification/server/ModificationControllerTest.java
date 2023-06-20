@@ -603,6 +603,7 @@ public class ModificationControllerTest {
         c2.setPermanentLimit(200.0);
         LineCreationInfos lineCreationInfos = LineCreationInfos.builder()
                 .equipmentId("idLine1")
+                .groupUuid(TEST_GROUP_ID)
                 .equipmentName("nameLine1")
                 .seriesResistance(100.0)
                 .seriesReactance(100.0)
@@ -631,6 +632,7 @@ public class ModificationControllerTest {
         //create a lineAttached
         LineCreationInfos attachmentLine = LineCreationInfos.builder()
                 .equipmentId("attachmentLine")
+                .groupUuid(TEST_GROUP_ID)
                 .seriesResistance(50.6)
                 .seriesReactance(25.3)
                 .build();

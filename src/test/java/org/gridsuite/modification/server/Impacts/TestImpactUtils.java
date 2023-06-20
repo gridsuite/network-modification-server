@@ -21,6 +21,7 @@ import org.hamcrest.MatcherAssert;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static java.util.Map.entry;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -75,9 +76,12 @@ public final class TestImpactUtils {
         Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(resultAsString, new TypeReference<>() {
         });
         assertTrue(networkModificationResult.isPresent());
+        Map<UUID, NetworkModificationResult.ApplicationStatus> modificationGroupApplicationStatus = networkModificationResult.get().getModificationsGroupApplicationStatus().keySet().stream().findFirst().isPresent() ? Map.ofEntries(
+            entry(networkModificationResult.get().getModificationsGroupApplicationStatus().keySet().stream().findFirst().get(), ApplicationStatus.ALL_OK)
+        ) : Map.of();
         NetworkModificationResult resultExpected = NetworkModificationResult.builder()
             .applicationStatus(ApplicationStatus.ALL_OK)
-            .modificationsGroupApplicationStatus(Map.of())
+            .modificationsGroupApplicationStatus(modificationGroupApplicationStatus)
             .networkImpacts(elementImpactsExpected)
             .build();
         assertThat(networkModificationResult.get(), new MatcherJson<>(mapper, resultExpected));
