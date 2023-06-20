@@ -42,14 +42,6 @@ public class ShuntCompensatorCreationInfos extends InjectionCreationInfos {
     @Schema(description = "Susceptance per section")
     private Double susceptancePerSection;
 
-    public void setqAtNominalV(Double qAtNominalV) {
-        this.qAtNominalV = qAtNominalV;
-    }
-
-    public Double getqAtNominalV() {
-        return qAtNominalV;
-    }
-
     @JsonProperty("qAtNominalV")
     @Schema(description = "Q at Nominal Voltage")
     private Double qAtNominalV;
