@@ -25,6 +25,7 @@ import org.springframework.http.MediaType;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.SHUNT_COMPENSATOR_NOT_FOUND;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.VOLTAGE_LEVEL_NOT_FOUND;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -52,6 +53,21 @@ public class ShuntCompensatorModificationTest extends AbstractNetworkModificatio
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(SHUNT_COMPENSATOR_NOT_FOUND,
                         String.format("Shunt compensator wrong id does not exist in network")).getMessage(),
+                shuntCompensator.getErrorType().name(), reportService);
+    }
+
+    @SneakyThrows
+    @Test
+    public void testWrongVoltageLevelId() {
+        var shuntCompensator = ShuntCompensatorModificationInfos.builder()
+                .equipmentId("v5shunt")
+                .voltageLevelId("wrongVLId")
+                .build();
+
+        mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(shuntCompensator)).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        assertLogMessage(new NetworkModificationException(VOLTAGE_LEVEL_NOT_FOUND,
+                        String.format("Voltage level wrongVLId does not exist in network")).getMessage(),
                 shuntCompensator.getErrorType().name(), reportService);
     }
 
