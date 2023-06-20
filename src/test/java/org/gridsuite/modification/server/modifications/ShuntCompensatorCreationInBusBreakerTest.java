@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 
 import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.BUS_NOT_FOUND;
@@ -57,7 +58,7 @@ public class ShuntCompensatorCreationInBusBreakerTest extends AbstractNetworkMod
     @Override
     protected ModificationInfos buildModification() {
         return ShuntCompensatorCreationInfos.builder()
-            .date(ZonedDateTime.now())
+            .date(ZonedDateTime.now().truncatedTo(ChronoUnit.MICROS))
             .equipmentId("shuntOneId")
             .equipmentName("hopOne")
             .currentNumberOfSections(4)
@@ -74,7 +75,7 @@ public class ShuntCompensatorCreationInBusBreakerTest extends AbstractNetworkMod
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return ShuntCompensatorCreationInfos.builder()
-                .date(ZonedDateTime.now())
+                .date(ZonedDateTime.now().truncatedTo(ChronoUnit.MICROS))
                 .equipmentId("shuntOneIdEdited")
                 .equipmentName("hopEdited")
                 .currentNumberOfSections(6)

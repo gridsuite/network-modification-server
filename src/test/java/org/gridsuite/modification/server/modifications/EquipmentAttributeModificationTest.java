@@ -18,6 +18,7 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Set;
 import java.util.UUID;
 
@@ -41,9 +42,10 @@ public class EquipmentAttributeModificationTest extends AbstractNetworkModificat
     public void testEquipmentAttributeModificationInfos() throws Exception {
         MvcResult mvcResult;
         UUID modificationUuid = UUID.randomUUID();
+        //We need to limit the precision to avoid database precision storage limit issue (postgres has a precision of 6 digits while h2 can go to 9)
         EquipmentAttributeModificationInfos modificationInfos = EquipmentAttributeModificationInfos.builder()
             .uuid(modificationUuid)
-            .date(ZonedDateTime.of(2021, 2, 19, 0, 0, 0, 0, ZoneOffset.UTC))
+            .date(ZonedDateTime.of(2021, 2, 19, 0, 0, 0, 0, ZoneOffset.UTC).truncatedTo(ChronoUnit.MICROS))
             .equipmentId("equipmentId")
             .equipmentAttributeName("equipmentAttributeName")
             .equipmentAttributeValue("equipmentAttributeValue")
