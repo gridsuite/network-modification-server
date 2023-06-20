@@ -68,7 +68,7 @@ public abstract class AbstractNetworkModificationTest {
 
     private static final UUID TEST_NETWORK_ID = UUID.randomUUID();
     private static final UUID NOT_FOUND_NETWORK_ID = UUID.randomUUID();
-    protected static final UUID TEST_GROUP_ID = UUID.randomUUID();
+    private static final UUID TEST_GROUP_ID = UUID.randomUUID();
     private static final UUID TEST_REPORT_ID = UUID.randomUUID();
 
     private static final String URI_NETWORK_MODIF_BASE = "/v1/network-modifications";
