@@ -73,6 +73,26 @@ public class ShuntCompensatorModificationTest extends AbstractNetworkModificatio
 
     @SneakyThrows
     @Test
+    public void testCreateModificationWithShuntCompensatorType() {
+        var shuntCompensator = getNetwork().getShuntCompensator("v5shunt");
+        var model = shuntCompensator.getModel(ShuntCompensatorLinearModel.class);
+        assertNotNull(model);
+
+        assertEquals(1.0, model.getBPerSection(), 0);
+        ShuntCompensatorModificationInfos modificationInfos = ShuntCompensatorModificationInfos.builder()
+                .equipmentId("v5shunt")
+                .voltageLevelId("v5")
+                .shuntCompensatorType(new AttributeModification<>(ShuntCompensatorType.REACTOR, OperationType.SET))
+                .build();
+
+        mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(modificationInfos)).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        assertEquals(-1.0, model.getBPerSection(), 0);
+    }
+
+    @SneakyThrows
+    @Test
     public void testCreateModificationWithQAtNominalV() {
         ShuntCompensatorModificationInfos modificationInfos1 = ShuntCompensatorModificationInfos.builder()
                         .equipmentId("v5shunt")
