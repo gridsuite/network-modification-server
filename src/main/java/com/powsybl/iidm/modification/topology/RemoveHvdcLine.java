@@ -24,8 +24,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * TODO RemoveHvdcLine class has been locally duplicated from Powsybl-core - should be removed when
- * https://github.com/powsybl/powsybl-core/pull/2620 is merged and delivered to Gridsuite
+ * @author Anis Touri <anis-1.touri@rte-france.com>
  */
 public class RemoveHvdcLine extends AbstractNetworkModification {
 

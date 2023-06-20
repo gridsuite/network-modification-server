@@ -54,8 +54,6 @@ public class EquipmentDeletion extends AbstractModification {
                 .withHvdcLineId(modificationInfos.getEquipmentId())
                 .withShuntCompensatorIds(shuntCompensatorIds)
                 .build();
-            // TODO RemoveHvdcLine class has been locally duplicated from Powsybl-core - should be removed when
-            // https://github.com/powsybl/powsybl-core/pull/2620 is merged and delivered to Gridsuite
             algo.apply(network, true, subReporter);
         } else if (identifiable instanceof VoltageLevel) {
             ((VoltageLevel) identifiable).remove();
