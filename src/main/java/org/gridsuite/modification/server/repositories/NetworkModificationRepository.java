@@ -143,6 +143,14 @@ public class NetworkModificationRepository {
             .toModificationInfos();
     }
 
+    @Transactional(readOnly = true)
+    public UUID getModificationGroupEntity(UUID modificationUuid) {
+        return modificationRepository
+            .findById(modificationUuid)
+            .orElseThrow(() -> new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, modificationUuid.toString()))
+            .getGroup().getId();
+    }
+
     @Transactional // To have the 2 delete in the same transaction (atomic)
     public void deleteModificationGroup(UUID groupUuid, boolean errorOnGroupNotFound) {
         try {

@@ -106,7 +106,6 @@ public class LineAttachToVoltageLevelEntity extends ModificationEntity {
         return LineAttachToVoltageLevelInfos
                 .builder()
                 .uuid(getId())
-                .groupUuid(getGroup() != null ? getGroup().getId() : null)
                 .date(getDate())
                 .lineToAttachToId(getLineToAttachToId())
                 .percent(getPercent())

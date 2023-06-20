@@ -68,9 +68,6 @@ public class ModificationInfos {
     @Schema(description = "Modification id")
     private UUID uuid;
 
-    @Schema(description = "Group modification id")
-    private UUID groupUuid;
-
     @Schema(description = "Modification date")
     ZonedDateTime date;
 

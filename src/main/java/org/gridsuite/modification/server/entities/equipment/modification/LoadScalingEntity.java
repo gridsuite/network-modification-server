@@ -35,7 +35,6 @@ public class LoadScalingEntity extends ScalingEntity {
         return LoadScalingInfos
                 .builder()
                 .uuid(getId())
-                .groupUuid(getGroup() != null ? getGroup().getId() : null)
                 .date(getDate())
                 .variationType(getVariationType())
                 .variations(getVariations().stream()

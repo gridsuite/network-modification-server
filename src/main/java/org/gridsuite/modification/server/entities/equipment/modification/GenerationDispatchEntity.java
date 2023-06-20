@@ -121,7 +121,6 @@ public class GenerationDispatchEntity extends ModificationEntity {
         return GenerationDispatchInfos.builder()
                 .date(getDate())
                 .uuid(getId())
-                .groupUuid(getGroup() != null ? getGroup().getId() : null)
                 .lossCoefficient(getLossCoefficient())
                 .defaultOutageRate(getDefaultOutageRate())
                 .generatorsWithoutOutage(toGeneratorsFilters(generatorsWithoutOutage))

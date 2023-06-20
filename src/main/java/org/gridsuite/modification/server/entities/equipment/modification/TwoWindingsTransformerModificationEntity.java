@@ -95,7 +95,6 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
         TwoWindingsTransformerModificationInfos.TwoWindingsTransformerModificationInfosBuilder<?, ?> builder = TwoWindingsTransformerModificationInfos
                 .builder()
                 .uuid(getId())
-                .groupUuid(getGroup() != null ? getGroup().getId() : null)
                 .date(getDate())
                 .equipmentId(getEquipmentId())
                 .equipmentName(AttributeModification.toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))

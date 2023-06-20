@@ -57,7 +57,6 @@ public class ModificationEntity {
     public ModificationInfos toModificationInfos() {
         return ModificationInfos.builder()
                 .uuid(this.id)
-                .groupUuid(this.group.getId())
                 .date(this.date)
                 .build();
     }

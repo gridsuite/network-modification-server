@@ -72,7 +72,6 @@ public class LoadCreationEntity extends InjectionCreationEntity {
         return LoadCreationInfos
             .builder()
             .uuid(getId())
-            .groupUuid(getGroup() != null ? getGroup().getId() : null)
             .date(getDate())
             .equipmentId(getEquipmentId())
             .equipmentName(getEquipmentName())

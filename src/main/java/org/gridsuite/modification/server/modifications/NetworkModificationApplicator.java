@@ -21,6 +21,9 @@ import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationResult.ApplicationStatus;
 import org.gridsuite.modification.server.dto.ReportInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
+import org.gridsuite.modification.server.entities.ModificationEntity;
+import org.gridsuite.modification.server.entities.ModificationGroupEntity;
+import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.ReportService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,12 +51,15 @@ public class NetworkModificationApplicator {
 
     private final ApplicationContext context;
 
+    private final NetworkModificationRepository networkModificationRepository;
+
     public NetworkModificationApplicator(NetworkStoreService networkStoreService, EquipmentInfosService equipmentInfosService,
-                                         ReportService reportService, ApplicationContext context) {
+                                         ReportService reportService, ApplicationContext context, NetworkModificationRepository networkModificationRepository) {
         this.networkStoreService = networkStoreService;
         this.equipmentInfosService = equipmentInfosService;
         this.reportService = reportService;
         this.context = context;
+        this.networkModificationRepository = networkModificationRepository;
     }
 
     public NetworkModificationResult applyModification(ModificationInfos modificationInfos, NetworkInfos networkInfos, ReportInfos reportInfos) {
@@ -84,9 +90,9 @@ public class NetworkModificationApplicator {
             handleException(modificationInfos.getErrorType(), subReporter, e);
         } finally {
             listener.setApplicationStatus(getApplicationStatus(reporter));
-            if (modificationInfos.getGroupUuid() != null) {
-                listener.addModificationGroupApplicationStatus(modificationInfos.getGroupUuid(), getApplicationStatus(reporter));
-            }
+            UUID modificationGroupUuid = networkModificationRepository.getModificationGroupEntity(modificationInfos.getUuid());
+            listener.addModificationGroupApplicationStatus(modificationGroupUuid, getApplicationStatus(reporter));
+
             reportService.sendReport(reportInfos.getReportUuid(), reporter); // TODO : Group report sends ?
         }
     }

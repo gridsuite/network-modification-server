@@ -60,7 +60,6 @@ public class DeleteAttachingLineEntity extends ModificationEntity {
         return DeleteAttachingLineInfos
                 .builder()
                 .uuid(getId())
-                .groupUuid(getGroup() != null ? getGroup().getId() : null)
                 .date(getDate())
                 .lineToAttachTo1Id(getLineToAttachTo1Id())
                 .lineToAttachTo2Id(getLineToAttachTo2Id())

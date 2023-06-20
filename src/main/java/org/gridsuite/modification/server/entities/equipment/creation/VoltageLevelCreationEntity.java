@@ -91,7 +91,6 @@ public class VoltageLevelCreationEntity extends EquipmentCreationEntity {
         return VoltageLevelCreationInfos
                 .builder()
                 .uuid(getId())
-                .groupUuid(getGroup() != null ? getGroup().getId() : null)
                 .date(getDate())
                 .equipmentId(getEquipmentId())
                 .equipmentName(getEquipmentName())
