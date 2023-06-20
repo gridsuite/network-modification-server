@@ -88,8 +88,10 @@ public class NetworkModificationApplicator {
             handleException(modificationInfos.getErrorType(), subReporter, e);
         } finally {
             listener.setApplicationStatus(getApplicationStatus(reporter));
-            UUID modificationGroupUuid = networkModificationRepository.getModificationGroupUuid(modificationInfos.getUuid());
-            listener.addModificationGroupApplicationStatus(modificationGroupUuid, getApplicationStatus(reporter));
+            if (modificationInfos.getUuid() != null) {
+                UUID modificationGroupUuid = networkModificationRepository.getModificationGroupUuid(modificationInfos.getUuid());
+                listener.addModificationGroupApplicationStatus(modificationGroupUuid, getApplicationStatus(reporter));
+            }
             reportService.sendReport(reportInfos.getReportUuid(), reporter); // TODO : Group report sends ?
         }
     }
