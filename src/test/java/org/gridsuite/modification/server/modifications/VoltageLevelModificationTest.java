@@ -49,7 +49,6 @@ public class VoltageLevelModificationTest extends AbstractNetworkModificationTes
                 .highVoltageLimit(new AttributeModification<>(50D, OperationType.SET))
                 .ipMax(new AttributeModification<>(0.8, OperationType.SET))
                 .ipMin(new AttributeModification<>(0.7, OperationType.SET))
-                .groupUuid(TEST_GROUP_ID)
                 .build();
     }
 
@@ -63,7 +62,6 @@ public class VoltageLevelModificationTest extends AbstractNetworkModificationTes
                 .highVoltageLimit(new AttributeModification<>(55D, OperationType.SET))
                 .ipMax(new AttributeModification<>(0.9, OperationType.SET))
                 .ipMin(new AttributeModification<>(0.5, OperationType.SET))
-                .groupUuid(TEST_GROUP_ID)
                 .build();
     }
 
