@@ -311,7 +311,7 @@ public class BatteryCreation extends AbstractModification {
             } catch (PowsyblException e) {
                 activePowerRegulationReports.add(Report.builder()
                         .withKey("ActivePowerExtensionAddError")
-                        .withDefaultMessage("cannot add active power extension on generator with id=${id} : " + e.getMessage())
+                        .withDefaultMessage("cannot add active power extension on battery with id=${id} : " + e.getMessage())
                         .withValue("id", batteryCreationInfos.getEquipmentId())
                         .withSeverity(TypedValue.ERROR_SEVERITY)
                         .build());
