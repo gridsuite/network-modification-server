@@ -10,6 +10,7 @@ import org.gridsuite.modification.server.dto.BranchStatusModificationInfos;
 
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -22,7 +23,7 @@ public class MatcherBranchStatusModificationInfos extends MatcherEquipmentModifi
 
     public static MatcherBranchStatusModificationInfos createMatcherBranchStatusModificationInfos(String equipmentId, BranchStatusModificationInfos.ActionType action) {
         return new MatcherBranchStatusModificationInfos(BranchStatusModificationInfos.builder()
-            .date(ZonedDateTime.now(ZoneOffset.UTC))
+            .date(ZonedDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.MICROS))
             .equipmentId(equipmentId)
             .action(action)
             .build());

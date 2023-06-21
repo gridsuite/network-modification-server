@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.BRANCH_NOT_FOUND;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.BRANCH_ACTION_ERROR;
@@ -144,7 +145,7 @@ public class BranchStatusModification extends AbstractModification {
     }
 
     private boolean disconnectAllTerminals(Branch<?> branch) {
-        return branch.getTerminals().stream().allMatch(this::disconnectOneTerminal);
+        return Stream.of(branch.getTerminal1(), branch.getTerminal2()).allMatch(this::disconnectOneTerminal);
     }
 
     private boolean disconnectOneTerminal(Terminal terminal) {
@@ -152,7 +153,7 @@ public class BranchStatusModification extends AbstractModification {
     }
 
     private boolean connectAllTerminals(Branch<?> branch) {
-        return branch.getTerminals().stream().allMatch(this::connectOneTerminal);
+        return Stream.of(branch.getTerminal1(), branch.getTerminal2()).allMatch(this::connectOneTerminal);
     }
 
     private boolean connectOneTerminal(Terminal terminal) {
