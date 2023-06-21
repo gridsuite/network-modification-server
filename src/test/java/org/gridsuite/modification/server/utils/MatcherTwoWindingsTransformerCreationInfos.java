@@ -33,7 +33,7 @@ public class MatcherTwoWindingsTransformerCreationInfos extends MatcherModificat
 
     private boolean matchesRatioTapChangerInfos(RatioTapChangerCreationInfos rt1, RatioTapChangerCreationInfos rt2) {
         return (rt1 == null && rt2 == null)
-                || (rt1 != null && rt2 != null && rt1.isLoadTapChangingCapabilities() == rt2.isLoadTapChangingCapabilities() && rt1.isRegulating() == rt2.isRegulating() && Objects.equals(rt1.getTargetV(), rt2.getTargetV()) && Objects.equals(rt1.getTargetDeadband(), rt2.getTargetDeadband()) && Objects.equals(rt1.getRegulatingTerminalVlId(), rt2.getRegulatingTerminalVlId()) && Objects.equals(rt1.getRegulatingTerminalType(), rt2.getRegulatingTerminalType()) && Objects.equals(rt1.getRegulatingTerminalId(), rt2.getRegulatingTerminalId()) && rt1.getLowTapPosition() == rt2.getLowTapPosition() && rt1.getTapPosition() == rt2.getTapPosition());
+                || (rt1 != null && rt2 != null && rt1.getLoadTapChangingCapabilities() == rt2.getLoadTapChangingCapabilities() && rt1.isRegulating() == rt2.isRegulating() && Objects.equals(rt1.getTargetV(), rt2.getTargetV()) && Objects.equals(rt1.getTargetDeadband(), rt2.getTargetDeadband()) && Objects.equals(rt1.getRegulatingTerminalVlId(), rt2.getRegulatingTerminalVlId()) && Objects.equals(rt1.getRegulatingTerminalType(), rt2.getRegulatingTerminalType()) && Objects.equals(rt1.getRegulatingTerminalId(), rt2.getRegulatingTerminalId()) && rt1.getLowTapPosition() == rt2.getLowTapPosition() && rt1.getTapPosition() == rt2.getTapPosition());
     }
 
     private boolean matchesPhaseTapChangerInfos(PhaseTapChangerCreationInfos pt1, PhaseTapChangerCreationInfos pt2) {

@@ -22,7 +22,7 @@ import lombok.experimental.SuperBuilder;
 public class RatioTapChangerCreationInfos extends TapChangerCreationInfos {
 
     @Schema(description = "loadTapChangingCapabilities")
-    private boolean loadTapChangingCapabilities;
+    private Boolean loadTapChangingCapabilities;
 
     @Schema(description = "targetV")
     private Double targetV;

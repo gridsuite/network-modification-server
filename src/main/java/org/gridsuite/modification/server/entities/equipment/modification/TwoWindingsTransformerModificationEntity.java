@@ -8,10 +8,20 @@ package org.gridsuite.modification.server.entities.equipment.modification;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import org.gridsuite.modification.server.TapChangerType;
 import org.gridsuite.modification.server.dto.AttributeModification;
 import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.RatioTapChangerCreationInfos;
+import org.gridsuite.modification.server.dto.TapChangerStepCreationInfos;
 import org.gridsuite.modification.server.dto.TwoWindingsTransformerModificationInfos;
+import org.gridsuite.modification.server.entities.equipment.creation.TapChangerStepCreationEmbeddable;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import javax.persistence.*;
 
@@ -65,6 +75,40 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
     })
     private DoubleModificationEmbedded ratedS;
 
+    @Column(name = "ratiotapchangerlowtapposition")
+    private Integer ratioTapChangerLowTapPosition;
+
+    @Column(name = "ratiotapchangertapposition")
+    private Integer ratioTapChangerTapPosition;
+
+    @Column(name = "ratiotapchangerregulating")
+    private Boolean ratioTapChangerRegulating;
+
+    @Column(name = "ratiotapchangertargetdeadband")
+    private Double ratioTapChangerTargetDeadband;
+
+    @Column(name = "ratiotapchangerterminalrefconnectableid")
+    private String ratioTapChangerTerminalRefConnectableId;
+
+    @Column(name = "ratiotapchangerterminalrefvoltagelevelid")
+    private String ratioTapChangerTerminalRefVoltageLevelId;
+
+    @Column(name = "ratiotapchangerterminalreftype")
+    private String ratioTapChangerTerminalRefType;
+
+    @Column(name = "ratiotapchangerloadtapchangingcapabilities")
+    private Boolean ratioTapChangerLoadTapChangingCapabilities;
+
+    @Column(name = "ratiotapchangertargetv")
+    private Double ratioTapChangerTargetV;
+
+    @ElementCollection
+    @CollectionTable(
+            name = "tapChangerStepModification",
+            joinColumns = @JoinColumn(name = "modification_id")
+    )
+    private List<TapChangerStepCreationEmbeddable> tapChangerSteps;
+
     public TwoWindingsTransformerModificationEntity(TwoWindingsTransformerModificationInfos twoWindingsTransformerModificationInfos) {
         super(twoWindingsTransformerModificationInfos);
         assignAttributes(twoWindingsTransformerModificationInfos);
@@ -83,6 +127,25 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
         this.ratedVoltage1 = new DoubleModificationEmbedded(twoWindingsTransformerModificationInfos.getRatedVoltage1());
         this.ratedVoltage2 = new DoubleModificationEmbedded(twoWindingsTransformerModificationInfos.getRatedVoltage2());
         this.ratedS = new DoubleModificationEmbedded(twoWindingsTransformerModificationInfos.getRatedS());
+        this.tapChangerSteps = new ArrayList<>();
+        assignTapChanger(twoWindingsTransformerModificationInfos);
+    }
+
+    private void assignTapChanger(TwoWindingsTransformerModificationInfos twoWindingsTransformerModificationInfos) {
+        Optional.ofNullable(twoWindingsTransformerModificationInfos.getRatioTapChanger()).ifPresent(this::assignRatioTapChanger);
+    }
+
+    private void assignRatioTapChanger(RatioTapChangerCreationInfos ratioTapChanger) {
+        this.ratioTapChangerLowTapPosition = ratioTapChanger.getLowTapPosition();
+        this.ratioTapChangerTapPosition = ratioTapChanger.getTapPosition();
+        this.ratioTapChangerRegulating = ratioTapChanger.isRegulating();
+        this.ratioTapChangerTargetDeadband = ratioTapChanger.getTargetDeadband();
+        this.ratioTapChangerTerminalRefConnectableId = ratioTapChanger.getRegulatingTerminalId();
+        this.ratioTapChangerTerminalRefVoltageLevelId = ratioTapChanger.getRegulatingTerminalVlId();
+        this.ratioTapChangerTerminalRefType = ratioTapChanger.getRegulatingTerminalType();
+        this.ratioTapChangerLoadTapChangingCapabilities = ratioTapChanger.getLoadTapChangingCapabilities();
+        this.ratioTapChangerTargetV = ratioTapChanger.getTargetV();
+        this.tapChangerSteps.addAll(TapChangerStepCreationEmbeddable.toEmbeddableRatioTapChangerSteps(ratioTapChanger.getSteps()));
     }
 
     @Override
@@ -91,6 +154,11 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
     }
 
     private TwoWindingsTransformerModificationInfos.TwoWindingsTransformerModificationInfosBuilder<?, ?> toTwoWindingsTransformerModificationInfosBuilder() {
+
+        List<TapChangerStepCreationEmbeddable> ratioTapChangerSteps = new ArrayList<>();
+        if (getTapChangerSteps() != null && getTapChangerSteps().size() > 0) {
+            ratioTapChangerSteps = getTapChangerSteps().stream().filter(step -> step.getTapChangerType().equals(TapChangerType.RATIO)).sorted(Comparator.comparing(TapChangerStepCreationEmbeddable::getIndex)).collect(Collectors.toList());
+        }
 
         TwoWindingsTransformerModificationInfos.TwoWindingsTransformerModificationInfosBuilder<?, ?> builder = TwoWindingsTransformerModificationInfos
                 .builder()
@@ -111,6 +179,22 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
         }
         if (getCurrentLimits2() != null) {
             builder.currentLimits2(getCurrentLimits2().toCurrentLimitsInfos());
+        }
+
+        if (!ratioTapChangerSteps.isEmpty()) {
+            List<TapChangerStepCreationInfos> ratioTapChangerStepCreationInfos = ratioTapChangerSteps.stream().map(TapChangerStepCreationEmbeddable::toModificationInfos).collect(Collectors.toList());
+            builder.ratioTapChanger(RatioTapChangerCreationInfos.builder()
+                    .lowTapPosition(getRatioTapChangerLowTapPosition())
+                    .tapPosition(getRatioTapChangerTapPosition())
+                    .targetDeadband(getRatioTapChangerTargetDeadband())
+                    .regulating(getRatioTapChangerRegulating())
+                    .loadTapChangingCapabilities(getRatioTapChangerLoadTapChangingCapabilities())
+                    .targetV(getRatioTapChangerTargetV())
+                    .regulatingTerminalId(getRatioTapChangerTerminalRefConnectableId())
+                    .regulatingTerminalVlId(getRatioTapChangerTerminalRefVoltageLevelId())
+                    .regulatingTerminalType(getRatioTapChangerTerminalRefType())
+                    .steps(ratioTapChangerStepCreationInfos)
+                    .build());
         }
 
         return builder;
