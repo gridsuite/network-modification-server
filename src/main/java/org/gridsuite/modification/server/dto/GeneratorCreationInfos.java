@@ -64,9 +64,6 @@ public class GeneratorCreationInfos extends InjectionCreationInfos {
     @Schema(description = "Planning active power set point")
     private Double plannedActivePowerSetPoint;
 
-    @Schema(description = "Startup cost")
-    private Double startupCost;
-
     @Schema(description = "Marginal cost")
     private Double marginalCost;
 

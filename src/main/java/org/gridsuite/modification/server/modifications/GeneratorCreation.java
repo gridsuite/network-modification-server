@@ -443,7 +443,6 @@ public class GeneratorCreation extends AbstractModification {
 
     private void createGeneratorStartUp(GeneratorCreationInfos generatorCreationInfos, Generator generator, Reporter subReporter) {
         if (generatorCreationInfos.getPlannedActivePowerSetPoint() != null
-                || generatorCreationInfos.getStartupCost() != null
                 || generatorCreationInfos.getMarginalCost() != null
                 || generatorCreationInfos.getPlannedOutageRate() != null
                 || generatorCreationInfos.getForcedOutageRate() != null) {
@@ -451,7 +450,6 @@ public class GeneratorCreation extends AbstractModification {
             try {
                 generator.newExtension(GeneratorStartupAdderImpl.class)
                         .withPlannedActivePowerSetpoint(nanIfNull(generatorCreationInfos.getPlannedActivePowerSetPoint()))
-                        .withStartupCost(nanIfNull(generatorCreationInfos.getStartupCost()))
                         .withMarginalCost(nanIfNull(generatorCreationInfos.getMarginalCost()))
                         .withPlannedOutageRate(nanIfNull(generatorCreationInfos.getPlannedOutageRate()))
                         .withForcedOutageRate(nanIfNull(generatorCreationInfos.getForcedOutageRate()))
@@ -459,10 +457,6 @@ public class GeneratorCreation extends AbstractModification {
                 if (generatorCreationInfos.getPlannedActivePowerSetPoint() != null) {
                     startupReports.add(ModificationUtils.getInstance().buildCreationReport(
                         generatorCreationInfos.getPlannedActivePowerSetPoint(), "Planning active power set point"));
-                }
-                if (generatorCreationInfos.getStartupCost() != null) {
-                    startupReports.add(ModificationUtils.getInstance().buildCreationReport(
-                        generatorCreationInfos.getStartupCost(), "Startup cost"));
                 }
                 if (generatorCreationInfos.getMarginalCost() != null) {
                     startupReports.add(ModificationUtils.getInstance().buildCreationReport(
