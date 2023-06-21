@@ -61,9 +61,6 @@ public class GeneratorModificationInfos extends InjectionModificationInfos {
     @Schema(description = "Planning active power set point")
     private AttributeModification<Double> plannedActivePowerSetPoint;
 
-    @Schema(description = "Startup cost")
-    private AttributeModification<Double> startupCost;
-
     @Schema(description = "Marginal cost")
     private AttributeModification<Double> marginalCost;
 

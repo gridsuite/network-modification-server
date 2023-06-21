@@ -43,7 +43,7 @@ public class LinesAttachToSplitLinesTest extends AbstractNetworkModificationTest
                 .lineToAttachTo2Id("l2")
                 .attachedLineId("l3")
                 .voltageLevelId("v4")
-                .bbsBusId("bbs2")
+                .bbsBusId("bbs4")
                 .replacingLine1Id("nl1")
                 .replacingLine1Name("NewLine1")
                 .replacingLine2Id("nl2")
