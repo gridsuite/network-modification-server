@@ -46,14 +46,6 @@ public class ShuntCompensatorCreationInfos extends InjectionCreationInfos {
     @Schema(description = "Q at Nominal Voltage")
     private Double qAtNominalV;
 
-    public Double getQAtNominalV() {
-        return qAtNominalV;
-    }
-
-    public void setqAtNominalV(Double qAtNominalV) {
-        this.qAtNominalV = qAtNominalV;
-    }
-
     @Schema(description = "Shunt Compensator Type")
     private ShuntCompensatorType shuntCompensatorType;
 
