@@ -375,7 +375,7 @@ public class BuildTest {
                 .activePowerSetpoint(100).reactivePowerSetpoint(50.)
                 .voltageRegulationOn(true).voltageSetpoint(225.)
                 .plannedActivePowerSetPoint(80.)
-                .startupCost(81.).marginalCost(82.)
+                .marginalCost(82.)
                 .plannedOutageRate(83.).forcedOutageRate(84.)
                 .minimumReactivePower(20.).maximumReactivePower(50.)
                 .participate(true).droop(9F).transientReactance(35.)
@@ -583,7 +583,6 @@ public class BuildTest {
         assertEquals(500., network.getGenerator(NEW_GENERATOR_ID).getMaxP(), 0.1);
         assertEquals(100., network.getGenerator(NEW_GENERATOR_ID).getTargetP(), 0.1);
         assertEquals(80., network.getGenerator(NEW_GENERATOR_ID).getExtension(GeneratorStartup.class).getPlannedActivePowerSetpoint(), 0);
-        assertEquals(81., network.getGenerator(NEW_GENERATOR_ID).getExtension(GeneratorStartup.class).getStartupCost(), 0);
         assertEquals(82., network.getGenerator(NEW_GENERATOR_ID).getExtension(GeneratorStartup.class).getMarginalCost(), 0);
         assertEquals(83., network.getGenerator(NEW_GENERATOR_ID).getExtension(GeneratorStartup.class).getPlannedOutageRate(), 0);
         assertEquals(84., network.getGenerator(NEW_GENERATOR_ID).getExtension(GeneratorStartup.class).getForcedOutageRate(), 0);
