@@ -214,9 +214,9 @@ public final class TestImpactUtils {
         );
     }
 
-    public static List<SimpleElementImpact> createMultipleDeletionImpacts(IdentifiableType equipmentType, String vlId, List<String> busbarSectionsIds,
+    public static List<SimpleElementImpact> createMultipleDeletionImpacts(IdentifiableType equipmentType, String equipmentId, List<String> busbarSectionsIds,
                                                                           List<Pair<IdentifiableType, String>> connectablesTypesAndIds, String substationId) {
-        List<SimpleElementImpact> impacts = new ArrayList<>(List.of(createDeletionImpactType(equipmentType, vlId, Set.of(substationId))));
+        List<SimpleElementImpact> impacts = new ArrayList<>(List.of(createDeletionImpactType(equipmentType, equipmentId, Set.of(substationId))));
         impacts.addAll(busbarSectionsIds.stream().map(id -> createDeletionImpactType(IdentifiableType.BUSBAR_SECTION, id, Set.of(substationId))).toList());
         impacts.addAll(connectablesTypesAndIds.stream().map(typeAndId -> createDeletionImpactType(typeAndId.getLeft(), typeAndId.getRight(), Set.of(substationId))).toList());
         return impacts;
