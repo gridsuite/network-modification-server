@@ -113,7 +113,7 @@ public class NetworkModificationService {
         networkModificationRepository.saveModifications(groupUuid, List.of(modificationInfos.toEntity()));
 
         return networkInfos.isVariantPresent() ?
-            Optional.of(modificationApplicator.applyModification(modificationInfos, networkInfos, reportInfos)) :
+            Optional.of(modificationApplicator.applyModifications(List.of(modificationInfos), networkInfos, reportInfos)) :
             Optional.empty();
     }
 

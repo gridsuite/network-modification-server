@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.modifications;
 
+import com.google.common.collect.Streams;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.reporter.Report;
 import com.powsybl.commons.reporter.Reporter;
@@ -21,7 +22,6 @@ import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationResult.ApplicationStatus;
 import org.gridsuite.modification.server.dto.ReportInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
-import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.ReportService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,53 +49,49 @@ public class NetworkModificationApplicator {
 
     private final ApplicationContext context;
 
-    private final NetworkModificationRepository networkModificationRepository;
-
     public NetworkModificationApplicator(NetworkStoreService networkStoreService, EquipmentInfosService equipmentInfosService,
-                                         ReportService reportService, ApplicationContext context, NetworkModificationRepository networkModificationRepository) {
+                                         ReportService reportService, ApplicationContext context) {
         this.networkStoreService = networkStoreService;
         this.equipmentInfosService = equipmentInfosService;
         this.reportService = reportService;
         this.context = context;
-        this.networkModificationRepository = networkModificationRepository;
-    }
-
-    public NetworkModificationResult applyModification(ModificationInfos modificationInfos, NetworkInfos networkInfos, ReportInfos reportInfos) {
-        NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService);
-        apply(modificationInfos, listener, reportInfos);
-        return listener.flushNetworkModifications();
     }
 
     public NetworkModificationResult applyModifications(List<ModificationInfos> modificationInfosList, NetworkInfos networkInfos, ReportInfos reportInfos) {
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService);
-        modificationInfosList.forEach(m -> apply(m, listener, reportInfos));
+        listener.setApplicationStatus(apply(modificationInfosList, listener.getNetwork(), reportInfos));
         return listener.flushNetworkModifications();
     }
 
     public NetworkModificationResult applyModifications(List<Pair<String, List<ModificationInfos>>> modificationInfosGroups, NetworkInfos networkInfos, UUID reportUuid) {
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService);
-        modificationInfosGroups.forEach(g -> g.getRight().forEach(m -> apply(m, listener, new ReportInfos(reportUuid, g.getLeft()))));
+        Stream<ApplicationStatus> groupsApplicationStatuses =
+                modificationInfosGroups.stream()
+                        .map(g -> apply(g.getRight(), listener.getNetwork(), new ReportInfos(reportUuid, g.getLeft())));
+        listener.setApplicationStatus(groupsApplicationStatuses.reduce(ApplicationStatus::max).orElse(ApplicationStatus.ALL_OK));
+        listener.setLastGroupApplicationStatus(Streams.findLast(groupsApplicationStatuses));
         return listener.flushNetworkModifications();
     }
 
-    private void apply(ModificationInfos modificationInfos, NetworkStoreListener listener, ReportInfos reportInfos) {
+    private ApplicationStatus apply(List<ModificationInfos> modificationInfosList, Network network, ReportInfos reportInfos) {
         String rootReporterId = reportInfos.getReporterId() + "@" + NETWORK_MODIFICATION_TYPE_REPORT;
         ReporterModel reporter = new ReporterModel(rootReporterId, rootReporterId);
+        ApplicationStatus applicationStatus = modificationInfosList.stream()
+                .map(m -> apply(m, network, reporter))
+                .reduce(ApplicationStatus::max)
+                .orElse(ApplicationStatus.ALL_OK);
+        reportService.sendReport(reportInfos.getReportUuid(), reporter);
+        return applicationStatus;
+    }
+
+    private ApplicationStatus apply(ModificationInfos modificationInfos, Network network, ReporterModel reporter) {
         Reporter subReporter = modificationInfos.createSubReporter(reporter);
         try {
-            apply(modificationInfos.toModification(), listener.getNetwork(), subReporter);
+            apply(modificationInfos.toModification(), network, subReporter);
         } catch (Exception e) {
             handleException(modificationInfos.getErrorType(), subReporter, e);
-        } finally {
-            listener.setApplicationStatus(getApplicationStatus(reporter));
-            if (modificationInfos.getUuid() != null) {
-                UUID modificationGroupUuid = networkModificationRepository.getModificationGroupUuid(modificationInfos.getUuid());
-                if (modificationGroupUuid != null) {
-                    listener.addModificationGroupApplicationStatus(modificationGroupUuid, getApplicationStatus(reporter));
-                }
-            }
-            reportService.sendReport(reportInfos.getReportUuid(), reporter); // TODO : Group report sends ?
         }
+        return getApplicationStatus(reporter);
     }
 
     @SuppressWarnings("squid:S1181")

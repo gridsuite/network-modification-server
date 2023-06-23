@@ -8,8 +8,10 @@ package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.iidm.network.*;
 import com.powsybl.network.store.client.NetworkStoreService;
+import lombok.Setter;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
+import org.gridsuite.modification.server.dto.NetworkModificationResult.ApplicationStatus;
 import org.gridsuite.modification.server.dto.elasticsearch.EquipmentInfos;
 import org.gridsuite.modification.server.dto.elasticsearch.TombstonedEquipmentInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
@@ -41,8 +43,10 @@ public class NetworkStoreListener implements NetworkListener {
     private final Set<SimpleElementImpact> networkImpacts = new LinkedHashSet<>();
 
     // TODO : Move to the NetworkModificationApplicator class
-    private NetworkModificationResult.ApplicationStatus applicationStatus = NetworkModificationResult.ApplicationStatus.ALL_OK;
-    private Map<UUID, NetworkModificationResult.ApplicationStatus> applicationStatusByGroup = new HashMap<>();
+    @Setter
+    private ApplicationStatus applicationStatus;
+    @Setter
+    private Optional<ApplicationStatus> lastGroupApplicationStatus = Optional.empty();
 
     protected NetworkStoreListener(Network network, UUID networkUuid,
                                    NetworkStoreService networkStoreService, EquipmentInfosService equipmentInfosService) {
@@ -182,22 +186,9 @@ public class NetworkStoreListener implements NetworkListener {
         return
             NetworkModificationResult.builder()
                 .applicationStatus(applicationStatus)
-                .modificationsGroupApplicationStatus(applicationStatusByGroup)
+                .lastGroupApplicationStatus(lastGroupApplicationStatus)
                 .networkImpacts(new ArrayList<>(networkImpacts))
                 .build();
-    }
-
-    public void setApplicationStatus(NetworkModificationResult.ApplicationStatus applicationStatus) {
-        this.applicationStatus = this.applicationStatus.max(applicationStatus);
-    }
-
-    public void addModificationGroupApplicationStatus(UUID modificationGroupUuid, NetworkModificationResult.ApplicationStatus applicationStatus) {
-        var previousApplicationStatus = this.applicationStatusByGroup.get(modificationGroupUuid);
-        if (previousApplicationStatus != null) {
-            this.applicationStatusByGroup.put(modificationGroupUuid, previousApplicationStatus.max(applicationStatus));
-        } else {
-            this.applicationStatusByGroup.put(modificationGroupUuid, applicationStatus);
-        }
     }
 
     private void flushEquipmentInfos() {

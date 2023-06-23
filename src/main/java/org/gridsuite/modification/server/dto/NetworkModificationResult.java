@@ -37,11 +37,11 @@ public class NetworkModificationResult {
         }
     }
 
-    @Schema(description = "Operation application status")
+    @Schema(description = "Global application status")
     ApplicationStatus applicationStatus;
 
-    @Schema(description = "Map of modification groups and their corresponding application status")
-    Map<UUID, ApplicationStatus> modificationsGroupApplicationStatus;
+    @Schema(description = "Last group application status")
+    Optional<ApplicationStatus> lastGroupApplicationStatus;
 
     @Schema(description = "Network modification impacts")
     @Builder.Default
