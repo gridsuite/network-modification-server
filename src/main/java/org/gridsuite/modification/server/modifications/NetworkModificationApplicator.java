@@ -6,7 +6,6 @@
  */
 package org.gridsuite.modification.server.modifications;
 
-import com.google.common.collect.Streams;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.reporter.Report;
 import com.powsybl.commons.reporter.Reporter;
@@ -30,6 +29,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -59,17 +59,21 @@ public class NetworkModificationApplicator {
 
     public NetworkModificationResult applyModifications(List<ModificationInfos> modificationInfosList, NetworkInfos networkInfos, ReportInfos reportInfos) {
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService);
-        listener.setApplicationStatus(apply(modificationInfosList, listener.getNetwork(), reportInfos));
+        ApplicationStatus applicationStatus = apply(modificationInfosList, listener.getNetwork(), reportInfos);
+        listener.setApplicationStatus(applicationStatus);
+        listener.setLastGroupApplicationStatus(applicationStatus);
         return listener.flushNetworkModifications();
     }
 
     public NetworkModificationResult applyModifications(List<Pair<String, List<ModificationInfos>>> modificationInfosGroups, NetworkInfos networkInfos, UUID reportUuid) {
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService);
-        Stream<ApplicationStatus> groupsApplicationStatuses =
+        List<ApplicationStatus> groupsApplicationStatuses =
                 modificationInfosGroups.stream()
-                        .map(g -> apply(g.getRight(), listener.getNetwork(), new ReportInfos(reportUuid, g.getLeft())));
-        listener.setApplicationStatus(groupsApplicationStatuses.reduce(ApplicationStatus::max).orElse(ApplicationStatus.ALL_OK));
-        listener.setLastGroupApplicationStatus(Streams.findLast(groupsApplicationStatuses));
+                .map(g -> apply(g.getRight(), listener.getNetwork(), new ReportInfos(reportUuid, g.getLeft())))
+                .collect(Collectors.toList());
+        listener.setApplicationStatus(groupsApplicationStatuses.stream().reduce(ApplicationStatus::max).orElse(ApplicationStatus.ALL_OK));
+        ApplicationStatus lastGroupApplicationStatus = groupsApplicationStatuses.size() > 0 ? groupsApplicationStatuses.get(groupsApplicationStatuses.size() - 1) : ApplicationStatus.ALL_OK;
+        listener.setLastGroupApplicationStatus(lastGroupApplicationStatus);
         return listener.flushNetworkModifications();
     }
 
@@ -80,7 +84,10 @@ public class NetworkModificationApplicator {
                 .map(m -> apply(m, network, reporter))
                 .reduce(ApplicationStatus::max)
                 .orElse(ApplicationStatus.ALL_OK);
-        reportService.sendReport(reportInfos.getReportUuid(), reporter);
+
+        if (!modificationInfosList.isEmpty()) {
+            reportService.sendReport(reportInfos.getReportUuid(), reporter);
+        }
         return applicationStatus;
     }
 

@@ -41,7 +41,7 @@ public class NetworkModificationResult {
     ApplicationStatus applicationStatus;
 
     @Schema(description = "Last group application status")
-    Optional<ApplicationStatus> lastGroupApplicationStatus;
+    ApplicationStatus lastGroupApplicationStatus;
 
     @Schema(description = "Network modification impacts")
     @Builder.Default

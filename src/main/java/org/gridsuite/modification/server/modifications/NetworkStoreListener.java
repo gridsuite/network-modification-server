@@ -46,7 +46,7 @@ public class NetworkStoreListener implements NetworkListener {
     @Setter
     private ApplicationStatus applicationStatus;
     @Setter
-    private Optional<ApplicationStatus> lastGroupApplicationStatus = Optional.empty();
+    private ApplicationStatus lastGroupApplicationStatus;
 
     protected NetworkStoreListener(Network network, UUID networkUuid,
                                    NetworkStoreService networkStoreService, EquipmentInfosService equipmentInfosService) {

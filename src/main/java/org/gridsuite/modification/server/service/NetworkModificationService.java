@@ -153,14 +153,14 @@ public class NetworkModificationService {
 
                 if (modificationsByGroup.isEmpty()) {
                     reportService.sendReport(buildInfos.getReportUuid(), new ReporterModel(reporterId, reporterId));
-                } else {
-                    modificationInfos.add(
-                        Pair.of(reporterId,
-                            modificationsByGroup.stream()
-                                .filter(e -> !buildInfos.getModificationsToExclude().contains(e.getUuid()))
-                                .collect(Collectors.toList()))
-                    );
                 }
+                modificationInfos.add(
+                    Pair.of(reporterId,
+                        modificationsByGroup.stream()
+                            .filter(e -> !buildInfos.getModificationsToExclude().contains(e.getUuid()))
+                            .collect(Collectors.toList()))
+                );
+
             }
         );
 

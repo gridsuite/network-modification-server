@@ -21,7 +21,6 @@ import org.hamcrest.MatcherAssert;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static java.util.Map.entry;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -53,7 +52,7 @@ public final class TestImpactUtils {
     private static void testEmptyImpacts(ObjectMapper mapper, ApplicationStatus applicationStatusExpected, NetworkModificationResult networkModificationResult) {
         NetworkModificationResult resultExpected = NetworkModificationResult.builder()
             .applicationStatus(applicationStatusExpected)
-            .modificationsGroupApplicationStatus(Map.of())
+            .lastGroupApplicationStatus(applicationStatusExpected)
             .networkImpacts(List.of())
             .build();
 
@@ -76,12 +75,9 @@ public final class TestImpactUtils {
         Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(resultAsString, new TypeReference<>() {
         });
         assertTrue(networkModificationResult.isPresent());
-        Map<UUID, NetworkModificationResult.ApplicationStatus> modificationGroupApplicationStatus = networkModificationResult.get().getModificationsGroupApplicationStatus().keySet().stream().findFirst().isPresent() ? Map.ofEntries(
-            entry(networkModificationResult.get().getModificationsGroupApplicationStatus().keySet().stream().findFirst().get(), ApplicationStatus.ALL_OK)
-        ) : Map.of();
         NetworkModificationResult resultExpected = NetworkModificationResult.builder()
             .applicationStatus(ApplicationStatus.ALL_OK)
-            .modificationsGroupApplicationStatus(modificationGroupApplicationStatus)
+            .lastGroupApplicationStatus(ApplicationStatus.ALL_OK)
             .networkImpacts(elementImpactsExpected)
             .build();
         assertThat(networkModificationResult.get(), new MatcherJson<>(mapper, resultExpected));
@@ -106,7 +102,7 @@ public final class TestImpactUtils {
         assertTrue(networkModificationResult.isPresent());
         NetworkModificationResult resultExpected = NetworkModificationResult.builder()
             .applicationStatus(ApplicationStatus.ALL_OK)
-            .modificationsGroupApplicationStatus(Map.of())
+            .lastGroupApplicationStatus(ApplicationStatus.ALL_OK)
             .networkImpacts(List.of(createElementImpact(impactType, elementType, elementId, new TreeSet<>(substationIds))))
             .build();
         assertThat(networkModificationResult.get(), new MatcherJson<>(mapper, resultExpected));
@@ -121,7 +117,7 @@ public final class TestImpactUtils {
         assertTrue(networkModificationResult.isPresent());
         NetworkModificationResult resultExpected = NetworkModificationResult.builder()
             .applicationStatus(ApplicationStatus.ALL_OK)
-            .modificationsGroupApplicationStatus(Map.of())
+            .lastGroupApplicationStatus(ApplicationStatus.ALL_OK)
             .networkImpacts(createConnectableDeletionImpacts(connectableType, connectableId, breakerId, disconnectorId, substationId))
             .build();
         assertThat(networkModificationResult.get(), new MatcherJson<>(mapper, resultExpected));
@@ -171,7 +167,7 @@ public final class TestImpactUtils {
         assertTrue(networkModificationResult.isPresent());
         NetworkModificationResult resultExpected = NetworkModificationResult.builder()
             .applicationStatus(ApplicationStatus.ALL_OK)
-            .modificationsGroupApplicationStatus(Map.of())
+            .lastGroupApplicationStatus(ApplicationStatus.ALL_OK)
             .networkImpacts(createBranchImpacts(impactType, branchType, branchId, breakerId1, disconnectorId1, substationId1, breakerId2, disconnectorId2, substationId2))
             .build();
         assertThat(networkModificationResult.get(), new MatcherJson<>(mapper, resultExpected));
@@ -207,7 +203,7 @@ public final class TestImpactUtils {
         assertTrue(networkModificationResult.isPresent());
         NetworkModificationResult resultExpected = NetworkModificationResult.builder()
             .applicationStatus(ApplicationStatus.ALL_OK)
-            .modificationsGroupApplicationStatus(Map.of())
+            .lastGroupApplicationStatus(ApplicationStatus.ALL_OK)
             .networkImpacts(create3wtDeletionImpacts(w3tId, breakerId1, disconnectorId1, breakerId2, disconnectorId2, breakerId3, disconnectorId3, substationId))
             .build();
         assertThat(networkModificationResult.get(), new MatcherJson<>(mapper, resultExpected));
