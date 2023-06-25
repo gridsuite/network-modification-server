@@ -72,7 +72,7 @@ public class NetworkModificationApplicator {
                 .map(g -> apply(g.getRight(), listener.getNetwork(), new ReportInfos(reportUuid, g.getLeft())))
                 .collect(Collectors.toList());
         listener.setApplicationStatus(groupsApplicationStatuses.stream().reduce(ApplicationStatus::max).orElse(ApplicationStatus.ALL_OK));
-        ApplicationStatus lastGroupApplicationStatus = groupsApplicationStatuses.size() > 0 ? groupsApplicationStatuses.get(groupsApplicationStatuses.size() - 1) : ApplicationStatus.ALL_OK;
+        ApplicationStatus lastGroupApplicationStatus = !groupsApplicationStatuses.isEmpty() ? groupsApplicationStatuses.get(groupsApplicationStatuses.size() - 1) : ApplicationStatus.ALL_OK;
         listener.setLastGroupApplicationStatus(lastGroupApplicationStatus);
         return listener.flushNetworkModifications();
     }
