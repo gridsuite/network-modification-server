@@ -12,4 +12,5 @@ package org.gridsuite.modification.server.dto;
 public enum TemporaryLimitModificationType {
     ADDED,
     MODIFIED,
+    DELETED,
 }
