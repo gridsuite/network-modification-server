@@ -43,8 +43,8 @@ public class VoltageLevelDeletionTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return EquipmentDeletionInfos.builder()
-                .equipmentType("VOLTAGE_LEVEL")
-                .equipmentId("v1")
+                .equipmentType("LINE")
+                .equipmentId("v2")
                 .build();
     }
 
@@ -56,31 +56,15 @@ public class VoltageLevelDeletionTest extends AbstractNetworkModificationTest {
     @Override
     protected void assertNetworkAfterCreation() {
         assertNull(getNetwork().getVoltageLevel("v1"));
-    }
-
-    @Override
-    protected void assertNetworkAfterDeletion() {
-        assertNotNull(getNetwork().getVoltageLevel("v1"));
-    }
-
-    @SneakyThrows
-    @Test
-    public void testRemoveVoltageLevel() {
-        EquipmentDeletionInfos equipmentDeletionInfos = EquipmentDeletionInfos.builder()
-                .equipmentType(IdentifiableType.VOLTAGE_LEVEL.name())
-                .equipmentId("v1")
-                .build();
-        String equipmentDeletionInfosJson = mapper.writeValueAsString(equipmentDeletionInfos);
-
-        mockMvc.perform(post(getNetworkModificationUri()).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andReturn();
-
-        assertNull(getNetwork().getVoltageLevel("v1"));
         assertNull(getNetwork().getLoad("v1load"));
         assertNull(getNetwork().getLccConverterStation("v1lcc"));
         assertNull(getNetwork().getSwitch("v1d1"));
         assertNull(getNetwork().getLine("line2"));
         assertNull(getNetwork().getHvdcLine("hvdcLine"));
+    }
+
+    @Override
+    protected void assertNetworkAfterDeletion() {
+        assertNotNull(getNetwork().getVoltageLevel("v1"));
     }
 }
