@@ -2,26 +2,26 @@
   "applicationStatus": "WITH_ERRORS",
   "networkImpacts": [
     {
+      "elementType": "LINE",
       "impactType": "CREATION",
       "elementId": "lineId",
-      "elementType": "LINE",
       "substationIds": [
         "s1",
         "s2"
       ]
     },
     {
+      "elementType": "LOAD",
       "impactType": "MODIFICATION",
       "elementId": "loadId",
-      "elementType": "LOAD",
       "substationIds": [
         "s3"
       ]
     },
     {
+      "elementType": "GENERATOR",
       "impactType": "DELETION",
       "elementId": "generatorId",
-      "elementType": "GENERATOR",
       "substationIds": [
         "s4"
       ]

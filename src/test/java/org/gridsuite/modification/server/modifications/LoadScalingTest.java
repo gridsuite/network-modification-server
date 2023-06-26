@@ -96,6 +96,8 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
         createLoads();
     }
 
+    // Add a test here to check for collection impact ?
+
     private void createLoads() {
         getNetwork().getVariantManager().setWorkingVariant("variant_1");
         getNetwork().getLoad(LOAD_ID_1).setP0(100).setQ0(10);

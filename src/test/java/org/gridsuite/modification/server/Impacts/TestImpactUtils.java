@@ -13,7 +13,10 @@ import lombok.SneakyThrows;
 import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationResult.ApplicationStatus;
+import org.gridsuite.modification.server.impacts.BaseImpact;
+import org.gridsuite.modification.server.impacts.CollectionElementImpact;
 import org.gridsuite.modification.server.impacts.SimpleElementImpact;
+import org.gridsuite.modification.server.impacts.CollectionElementImpact.CollectionImpactType;
 import org.gridsuite.modification.server.impacts.SimpleElementImpact.SimpleImpactType;
 import org.gridsuite.modification.server.utils.MatcherJson;
 import org.hamcrest.MatcherAssert;
@@ -70,7 +73,7 @@ public final class TestImpactUtils {
     }
 
     @SneakyThrows
-    public static void testElementImpacts(ObjectMapper mapper, String resultAsString, List<SimpleElementImpact> elementImpactsExpected) {
+    public static void testElementImpacts(ObjectMapper mapper, String resultAsString, List<BaseImpact> elementImpactsExpected) {
         Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(resultAsString, new TypeReference<>() {
         });
         assertTrue(networkModificationResult.isPresent());
@@ -119,7 +122,7 @@ public final class TestImpactUtils {
         assertThat(networkModificationResult.get(), new MatcherJson<>(mapper, resultExpected));
     }
 
-    private static List<SimpleElementImpact> createConnectableDeletionImpacts(IdentifiableType connectableType, String connectableId,
+    private static List<BaseImpact> createConnectableDeletionImpacts(IdentifiableType connectableType, String connectableId,
                                                                               String breakerId, String disconnectorId, String substationId) {
         return List.of(
             createDeletionImpactType(IdentifiableType.SWITCH, breakerId, Set.of(substationId)),
@@ -138,7 +141,7 @@ public final class TestImpactUtils {
 
     @SneakyThrows
     public static void testBranchCreationImpacts(ObjectMapper mapper, String resultAsString, IdentifiableType elementType, String elementId, Set<String> substationIds) {
-        List<SimpleElementImpact> impacts = List.of(
+        List<BaseImpact> impacts = List.of(
             createElementImpact(SimpleImpactType.CREATION, elementType, elementId, new TreeSet<>(substationIds)),
             createElementImpact(SimpleImpactType.MODIFICATION, elementType, elementId, new TreeSet<>(substationIds)) // case with newCurrentLimits1
         );
@@ -168,10 +171,10 @@ public final class TestImpactUtils {
         assertThat(networkModificationResult.get(), new MatcherJson<>(mapper, resultExpected));
     }
 
-    private static List<SimpleElementImpact> createBranchImpacts(SimpleImpactType impactType, IdentifiableType branchType, String branchId,
+    private static List<BaseImpact> createBranchImpacts(SimpleImpactType impactType, IdentifiableType branchType, String branchId,
                                                                  String breakerId1, String disconnectorId1, String substationId1,
                                                                  String breakerId2, String disconnectorId2, String substationId2) {
-        LinkedList<SimpleElementImpact> impacts = new LinkedList<>(List.of(createElementImpact(impactType, branchType, branchId, new TreeSet<>(List.of(substationId1, substationId2)))));
+        LinkedList<BaseImpact> impacts = new LinkedList<>(List.of(createElementImpact(impactType, branchType, branchId, new TreeSet<>(List.of(substationId1, substationId2)))));
         List<SimpleElementImpact> switchImpacts = List.of(
             createElementImpact(impactType, IdentifiableType.SWITCH, breakerId1, Set.of(substationId1)),
             createElementImpact(impactType, IdentifiableType.SWITCH, disconnectorId1, Set.of(substationId1)),
@@ -203,7 +206,7 @@ public final class TestImpactUtils {
         assertThat(networkModificationResult.get(), new MatcherJson<>(mapper, resultExpected));
     }
 
-    private static List<SimpleElementImpact> create3wtDeletionImpacts(String w3tId,
+    private static List<BaseImpact> create3wtDeletionImpacts(String w3tId,
                                                                       String breakerId1, String disconnectorId1,
                                                                       String breakerId2, String disconnectorId2,
                                                                       String breakerId3, String disconnectorId3,
@@ -219,9 +222,9 @@ public final class TestImpactUtils {
         );
     }
 
-    public static List<SimpleElementImpact> createVoltageLevelDeletionImpacts(String vlId, List<String> busbarSectionsIds,
+    public static List<BaseImpact> createVoltageLevelDeletionImpacts(String vlId, List<String> busbarSectionsIds,
                                                                               List<Pair<IdentifiableType, String>> connectablesTypesAndIds, String substationId) {
-        List<SimpleElementImpact> impacts = new ArrayList<>(List.of(createDeletionImpactType(IdentifiableType.VOLTAGE_LEVEL, vlId, Set.of(substationId))));
+        List<BaseImpact> impacts = new ArrayList<>(List.of(createDeletionImpactType(IdentifiableType.VOLTAGE_LEVEL, vlId, Set.of(substationId))));
         impacts.addAll(busbarSectionsIds.stream().map(id -> createDeletionImpactType(IdentifiableType.BUSBAR_SECTION, id, Set.of(substationId))).collect(Collectors.toList()));
         impacts.addAll(connectablesTypesAndIds.stream().map(typeAndId -> createDeletionImpactType(typeAndId.getLeft(), typeAndId.getRight(), Set.of(substationId))).collect(Collectors.toList()));
         return impacts;
@@ -245,5 +248,12 @@ public final class TestImpactUtils {
             .elementType(elementType)
             .elementId(elementId)
             .substationIds(substationIds).build();
+    }
+
+    public static CollectionElementImpact createCollectionElementImpact(IdentifiableType elementType) {
+        return CollectionElementImpact.builder()
+            .impactType(CollectionImpactType.COLLECTION)
+            .elementType(elementType)
+            .build();
     }
 }

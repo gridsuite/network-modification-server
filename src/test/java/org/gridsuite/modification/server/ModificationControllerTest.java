@@ -30,7 +30,7 @@ import org.gridsuite.modification.server.dto.catalog.UndergroundLineTypeInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosRepository;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.elasticsearch.TombstonedEquipmentInfosRepository;
-import org.gridsuite.modification.server.impacts.SimpleElementImpact;
+import org.gridsuite.modification.server.impacts.BaseImpact;
 import org.gridsuite.modification.server.modifications.ModificationUtils;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.NetworkModificationService;
@@ -883,7 +883,7 @@ public class ModificationControllerTest {
         equipmentDeletionInfosJson = objectWriter.writeValueAsString(equipmentDeletionInfos);
         mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
-        List<SimpleElementImpact> vlDeletionImpacts = testVoltageLevelDeletionImpacts("v6", List.of("1B1"),
+        List<BaseImpact> vlDeletionImpacts = testVoltageLevelDeletionImpacts("v6", List.of("1B1"),
             List.of(Pair.of(IdentifiableType.GENERATOR, "v6generator"), Pair.of(IdentifiableType.LOAD, "v6load"),
                 Pair.of(IdentifiableType.SHUNT_COMPENSATOR, "v6shunt"), Pair.of(IdentifiableType.STATIC_VAR_COMPENSATOR, "v6Compensator")),
             "s3");
@@ -966,7 +966,7 @@ public class ModificationControllerTest {
         assertTrue(existTombstonedEquipmentInfos(disconnectorId3, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
     }
 
-    private List<SimpleElementImpact> testVoltageLevelDeletionImpacts(String vlId, List<String> busbarSectionsIds, List<Pair<IdentifiableType, String>> connectablesTypesAndIds, String substationId) {
+    private List<BaseImpact> testVoltageLevelDeletionImpacts(String vlId, List<String> busbarSectionsIds, List<Pair<IdentifiableType, String>> connectablesTypesAndIds, String substationId) {
         // Voltage level and equipments have been removed from network
         assertNull(network.getVoltageLevel(vlId));
         busbarSectionsIds.forEach(id -> assertNull(network.getBusbarSection(id)));
@@ -981,12 +981,12 @@ public class ModificationControllerTest {
     }
 
     private void testVoltageLevelDeletionImpacts(String resultAsString, String vlId, List<String> busbarSectionsIds, List<Pair<IdentifiableType, String>> connectablesTypesAndIds, String substationId) {
-        List<SimpleElementImpact> testElementImpacts = testVoltageLevelDeletionImpacts(vlId, busbarSectionsIds, connectablesTypesAndIds, substationId);
+        List<BaseImpact> testElementImpacts = testVoltageLevelDeletionImpacts(vlId, busbarSectionsIds, connectablesTypesAndIds, substationId);
         TestImpactUtils.testElementImpacts(mapper, resultAsString, testElementImpacts);
     }
 
-    private void testSubstationDeletionImpacts(String resultAsString, String subStationId, List<SimpleElementImpact> vlsDeletionImpacts) {
-        List<SimpleElementImpact> impacts = new ArrayList<>(List.of(createDeletionImpactType(IdentifiableType.SUBSTATION, subStationId, Set.of(subStationId))));
+    private void testSubstationDeletionImpacts(String resultAsString, String subStationId, List<BaseImpact> vlsDeletionImpacts) {
+        List<BaseImpact> impacts = new ArrayList<>(List.of(createDeletionImpactType(IdentifiableType.SUBSTATION, subStationId, Set.of(subStationId))));
         impacts.addAll(vlsDeletionImpacts);
         TestImpactUtils.testElementImpacts(mapper, resultAsString, impacts);
 

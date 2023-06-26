@@ -75,6 +75,8 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
         createGenerators();
     }
 
+    // Add a test here to check for collection impact ?
+
     private void createGenerators() {
         getNetwork().getVariantManager().setWorkingVariant("variant_1");
         getNetwork().getGenerator(GENERATOR_ID_1).setTargetP(100).setMaxP(500);
