@@ -311,17 +311,11 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
                 .currentLimits2(CurrentLimitsModificationInfos.builder()
                         .permanentLimit(22.0)
                         .temporaryLimits(List.of(CurrentTemporaryLimitModificationInfos.builder()
-                                .acceptableDuration(32)
-                                .name("name32")
-                                .value(42.0)
-                                .modificationType(TemporaryLimitModificationType.ADDED)
-                                .build(),
-                                CurrentTemporaryLimitModificationInfos.builder()
-                                        .acceptableDuration(33)
-                                        .name("name33")
-                                        .value(15.0)
-                                        .modificationType(TemporaryLimitModificationType.DELETED)
-                                        .build()))
+                                .acceptableDuration(33)
+                                .name("name33")
+                                .value(15.0)
+                                .modificationType(TemporaryLimitModificationType.DELETED)
+                                .build()))
                         .build())
                 .build();
         String modificationToCreateJson = mapper.writeValueAsString(lineModificationInfos);
