@@ -84,10 +84,7 @@ public class NetworkModificationApplicator {
                 .map(m -> apply(m, network, reporter))
                 .reduce(ApplicationStatus::max)
                 .orElse(ApplicationStatus.ALL_OK);
-
-        if (!modificationInfosList.isEmpty()) {
-            reportService.sendReport(reportInfos.getReportUuid(), reporter);
-        }
+        reportService.sendReport(reportInfos.getReportUuid(), reporter);
         return applicationStatus;
     }
 

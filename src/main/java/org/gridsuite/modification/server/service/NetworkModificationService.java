@@ -9,7 +9,6 @@ package org.gridsuite.modification.server.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Streams;
 import com.powsybl.commons.PowsyblException;
-import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.NetworkStoreService;
@@ -149,10 +148,6 @@ public class NetworkModificationService {
                     if (e.getType() != MODIFICATION_GROUP_NOT_FOUND) { // May not exist
                         throw e;
                     }
-                }
-
-                if (modificationsByGroup.isEmpty()) {
-                    reportService.sendReport(buildInfos.getReportUuid(), new ReporterModel(reporterId, reporterId));
                 }
                 modificationInfos.add(
                     Pair.of(reporterId,
