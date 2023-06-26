@@ -9,7 +9,6 @@ package org.gridsuite.modification.server.modifications;
 import com.powsybl.iidm.network.*;
 import com.powsybl.network.store.client.NetworkStoreService;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.elasticsearch.EquipmentInfos;
 import org.gridsuite.modification.server.dto.elasticsearch.TombstonedEquipmentInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
@@ -39,9 +38,6 @@ public class NetworkStoreListener implements NetworkListener {
     private final List<EquipmentInfos> createdEquipments = new ArrayList<>();
 
     private final Set<SimpleElementImpact> networkImpacts = new LinkedHashSet<>();
-
-    // TODO : Move to the NetworkModificationApplicator class
-    private NetworkModificationResult.ApplicationStatus applicationStatus = NetworkModificationResult.ApplicationStatus.ALL_OK;
 
     protected NetworkStoreListener(Network network, UUID networkUuid,
                                    NetworkStoreService networkStoreService, EquipmentInfosService equipmentInfosService) {
@@ -168,7 +164,7 @@ public class NetworkStoreListener implements NetworkListener {
         // Do nothing
     }
 
-    public NetworkModificationResult flushNetworkModifications() {
+    public Set<SimpleElementImpact> flushNetworkModifications() {
         try {
             networkStoreService.flush(network); // At first
             flushEquipmentInfos();
@@ -177,16 +173,7 @@ public class NetworkStoreListener implements NetworkListener {
             throw new NetworkModificationException(MODIFICATION_ERROR, e);
         }
 
-        // TODO : Move to the NetworkModificationApplicator class
-        return
-            NetworkModificationResult.builder()
-                .applicationStatus(applicationStatus)
-                .networkImpacts(new ArrayList<>(networkImpacts))
-                .build();
-    }
-
-    public void setApplicationStatus(NetworkModificationResult.ApplicationStatus applicationStatus) {
-        this.applicationStatus = this.applicationStatus.max(applicationStatus);
+        return networkImpacts;
     }
 
     private void flushEquipmentInfos() {
