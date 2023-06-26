@@ -19,6 +19,7 @@ import okhttp3.mockwebserver.Dispatcher;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
+import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.modification.server.ContextConfigurationWithTestChannel;
 import org.gridsuite.modification.server.TapChangerType;
 import org.gridsuite.modification.server.dto.*;
@@ -826,6 +827,25 @@ public class BuildTest {
         // Save mode only (variant does not exist) : No log and no error send with exception
         assertTrue(networkModificationService.createNetworkModification(networkModificationService.getNetworkInfos(TEST_NETWORK_ID, UUID.randomUUID().toString()), groupUuid, new ReportInfos(reportUuid, reporterId), loadCreationInfos).isEmpty());
         testNetworkModificationsCount(groupUuid, 2);
+    }
+
+    @Test
+    public void testLastGroupModificationStatus() {
+        Network network = NetworkCreation.create(TEST_NETWORK_ID, true);
+        LoadCreationInfos loadCreationInfos = LoadCreationInfos.builder().voltageLevelId("unknownVoltageLevelId").equipmentId("loadId").build();
+        UUID reportUuid = UUID.randomUUID();
+        String reporterId = UUID.randomUUID().toString();
+        String reporterId2 = UUID.randomUUID().toString();
+
+        List<Pair<String, List<ModificationInfos>>> modificationInfosGroups = new ArrayList<>();
+        modificationInfosGroups.add(Pair.of(reporterId,List.of(loadCreationInfos)));
+        modificationInfosGroups.add(Pair.of(reporterId2,List.of()));
+
+        //Global application status should be in error and last application status should be OK
+        NetworkModificationResult networkModificationResult = networkModificationApplicator.applyModifications(modificationInfosGroups, new NetworkInfos(network, TEST_NETWORK_ID, true), reportUuid);
+        assertNotNull(networkModificationResult);
+        testEmptyImpactsWithErrorsLastOK(mapper, networkModificationResult);
+        assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches(String.format("/v1/reports/%s", reportUuid))));
     }
 
     private void testNetworkModificationsCount(UUID groupUuid, int actualSize) {

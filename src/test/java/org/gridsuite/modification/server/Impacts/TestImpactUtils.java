@@ -42,17 +42,21 @@ public final class TestImpactUtils {
     }
 
     public static void testEmptyImpacts(ObjectMapper mapper, NetworkModificationResult networkModificationResult) {
-        testEmptyImpacts(mapper, ApplicationStatus.ALL_OK, networkModificationResult);
+        testEmptyImpacts(mapper, ApplicationStatus.ALL_OK, ApplicationStatus.ALL_OK, networkModificationResult);
     }
 
     public static void testEmptyImpactsWithErrors(ObjectMapper mapper, NetworkModificationResult networkModificationResult) {
-        testEmptyImpacts(mapper, ApplicationStatus.WITH_ERRORS, networkModificationResult);
+        testEmptyImpacts(mapper, ApplicationStatus.WITH_ERRORS, ApplicationStatus.WITH_ERRORS, networkModificationResult);
     }
 
-    private static void testEmptyImpacts(ObjectMapper mapper, ApplicationStatus applicationStatusExpected, NetworkModificationResult networkModificationResult) {
+    public static void testEmptyImpactsWithErrorsLastOK(ObjectMapper mapper, NetworkModificationResult networkModificationResult) {
+        testEmptyImpacts(mapper, ApplicationStatus.WITH_ERRORS, ApplicationStatus.ALL_OK, networkModificationResult);
+    }
+
+    private static void testEmptyImpacts(ObjectMapper mapper, ApplicationStatus globalApplicationStatusExpected, ApplicationStatus localApplicationStatusExpected, NetworkModificationResult networkModificationResult) {
         NetworkModificationResult resultExpected = NetworkModificationResult.builder()
-            .applicationStatus(applicationStatusExpected)
-            .lastGroupApplicationStatus(applicationStatusExpected)
+            .applicationStatus(globalApplicationStatusExpected)
+            .lastGroupApplicationStatus(localApplicationStatusExpected)
             .networkImpacts(List.of())
             .build();
 
@@ -81,6 +85,17 @@ public final class TestImpactUtils {
             .networkImpacts(elementImpactsExpected)
             .build();
         assertThat(networkModificationResult.get(), new MatcherJson<>(mapper, resultExpected));
+    }
+
+
+    @SneakyThrows
+    public static void testElementImpacts(ObjectMapper mapper, NetworkModificationResult networkModificationResult, ApplicationStatus globalApplicationStatus, ApplicationStatus lastGroupApplicationStatus, List<SimpleElementImpact> elementImpacts) {
+        NetworkModificationResult resultExpected = NetworkModificationResult.builder()
+            .applicationStatus(globalApplicationStatus)
+            .lastGroupApplicationStatus(lastGroupApplicationStatus)
+            .networkImpacts(elementImpacts)
+            .build();
+        assertThat(networkModificationResult, new MatcherJson<>(mapper, resultExpected));
     }
 
     public static void testElementCreationImpact(ObjectMapper mapper, String resultAsString, IdentifiableType elementType, String elementId, Set<String> substationIds) {
