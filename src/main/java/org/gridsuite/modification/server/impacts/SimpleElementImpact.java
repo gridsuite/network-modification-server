@@ -6,25 +6,25 @@
  */
 package org.gridsuite.modification.server.impacts;
 
-import com.powsybl.iidm.network.IdentifiableType;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 import java.util.Set;
 
 /**
  * This class describes an element type network impact
- * This type of network impact only describes an individual impacted item and the list of associated subtractions
+ * This type of network impact only describes an individual impacted item and the list of associated substations
  *
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Setter
 @Getter
-@Builder
+@SuperBuilder
 @NoArgsConstructor
-@EqualsAndHashCode(callSuper = false)
+@EqualsAndHashCode(callSuper = true)
 @ToString
-public class SimpleElementImpact {
+public class SimpleElementImpact extends BaseImpact {
     public enum SimpleImpactType {
         CREATION,
         MODIFICATION,
@@ -36,8 +36,6 @@ public class SimpleElementImpact {
     /** The impacted element ID */
     private String elementId;
 
-    private IdentifiableType elementType;
-
-    /** The impacted substations IDs */
+    /** The impacted substation IDs */
     private Set<String> substationIds;
 }
