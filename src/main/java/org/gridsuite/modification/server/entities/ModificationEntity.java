@@ -16,6 +16,7 @@ import org.gridsuite.modification.server.dto.ModificationInfos;
 import javax.persistence.*;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MISSING_MODIFICATION_DESCRIPTION;
@@ -49,7 +50,8 @@ public class ModificationEntity {
         if (modificationInfos == null) {
             throw new NetworkModificationException(MISSING_MODIFICATION_DESCRIPTION, "Missing network modification description");
         }
-        this.date = ZonedDateTime.now(ZoneOffset.UTC);
+        //We need to limit the precision to avoid database precision storage limit issue (postgres has a precision of 6 digits while h2 can go to 9)
+        this.date = ZonedDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.MICROS);
     }
 
     public ModificationInfos toModificationInfos() {

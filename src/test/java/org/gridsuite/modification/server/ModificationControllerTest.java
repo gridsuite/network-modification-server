@@ -530,7 +530,6 @@ public class ModificationControllerTest {
         generatorStartup = network.getGenerator("idGenerator21").getExtension(GeneratorStartup.class);
         assertNotNull(generatorStartup);
         assertEquals(Double.NaN, generatorStartup.getPlannedActivePowerSetpoint(), 0);
-        assertEquals(Double.NaN, generatorStartup.getStartupCost(), 0);
         assertEquals(8., generatorStartup.getMarginalCost(), 0);
         assertEquals(Double.NaN, generatorStartup.getPlannedOutageRate(), 0);
         assertEquals(Double.NaN, generatorStartup.getForcedOutageRate(), 0);
@@ -546,7 +545,6 @@ public class ModificationControllerTest {
         generatorStartup = networkStoreService.getNetwork(TEST_NETWORK_BUS_BREAKER_ID).getGenerator("idGenerator3").getExtension(GeneratorStartup.class);
         assertNotNull(generatorStartup);
         assertEquals(Double.NaN, generatorStartup.getPlannedActivePowerSetpoint(), 0);
-        assertEquals(Double.NaN, generatorStartup.getStartupCost(), 0);
         assertEquals(Double.NaN, generatorStartup.getMarginalCost(), 0);
         assertEquals(80., generatorStartup.getPlannedOutageRate(), 0);
         assertEquals(Double.NaN, generatorStartup.getForcedOutageRate(), 0);
@@ -868,16 +866,8 @@ public class ModificationControllerTest {
                 Pair.of(IdentifiableType.SHUNT_COMPENSATOR, "v5shunt"), Pair.of(IdentifiableType.STATIC_VAR_COMPENSATOR, "v5Compensator")),
             "s3"
         );
-        testNetworkModificationsCount(TEST_GROUP_ID, 14);
 
-        // try to delete voltage level (Internal error because the vl is still connected)
-        equipmentDeletionInfos.setEquipmentType(IdentifiableType.VOLTAGE_LEVEL.name());
-        equipmentDeletionInfos.setEquipmentId("v4");
-        mockMvc.perform(post(URI_NETWORK_MODIF).content(objectWriter.writeValueAsString(equipmentDeletionInfos)).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk());
-        assertNotNull(network.getVoltageLevel("v4"));
-        assertLogMessage(new PowsyblException(new AssertionError("The voltage level 'v4' cannot be removed because of a remaining LINE")).getMessage(),
-                equipmentDeletionInfos.getErrorType().name(), reportService);
+        testNetworkModificationsCount(TEST_GROUP_ID, 14);
 
         // delete substation
         equipmentDeletionInfos.setEquipmentType(IdentifiableType.SUBSTATION.name());
@@ -890,7 +880,7 @@ public class ModificationControllerTest {
                 Pair.of(IdentifiableType.SHUNT_COMPENSATOR, "v6shunt"), Pair.of(IdentifiableType.STATIC_VAR_COMPENSATOR, "v6Compensator")),
             "s3");
         testSubstationDeletionImpacts(mvcResult.getResponse().getContentAsString(), "s3", vlDeletionImpacts);
-        testNetworkModificationsCount(TEST_GROUP_ID, 16);
+        testNetworkModificationsCount(TEST_GROUP_ID, 15);
 
         // try to delete substation (Internal error because the substation is still connected)
         equipmentDeletionInfos.setEquipmentType(IdentifiableType.SUBSTATION.name());

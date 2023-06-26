@@ -42,8 +42,7 @@ public abstract class AbstractBranchModification extends AbstractModification {
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .build());
         if (branchModificationInfos.getEquipmentName() != null) {
-            subReporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(branch.getNameOrId(),
-                    branchModificationInfos.getEquipmentName().getValue(), "Name", 0));
+            subReporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(branch.getOptionalName().isEmpty() ? null : branch.getOptionalName().get(), branchModificationInfos.getEquipmentName().getValue(), "Name", 0));
             branch.setName(branchModificationInfos.getEquipmentName().getValue());
         }
 
