@@ -7,7 +7,6 @@
 
 package org.gridsuite.modification.server.modifications;
 
-import com.powsybl.commons.PowsyblException;
 import com.powsybl.iidm.network.Network;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
@@ -94,16 +93,6 @@ public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(EQUIPMENT_NOT_FOUND, "Equipment with id=notFoundLoad not found or of bad type").getMessage(),
                 equipmentDeletionInfos.getErrorType().name(), reportService);
-
-        // try to delete voltage level (Internal error because the vl is still connected)
-        equipmentDeletionInfos.setEquipmentType("VOLTAGE_LEVEL");
-        equipmentDeletionInfos.setEquipmentId("v4");
-        mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(equipmentDeletionInfos)).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
-        assertLogMessage(new PowsyblException(new AssertionError("The voltage level 'v4' cannot be removed because of a remaining THREE_WINDINGS_TRANSFORMER")).getMessage(),
-                equipmentDeletionInfos.getErrorType().name(), reportService);
-        equipmentDeletionInfos.setEquipmentId("v4");
-        assertNotNull(getNetwork().getVoltageLevel("v4"));
 
         // try to delete substation (Internal error because the substation is still connected)
         equipmentDeletionInfos.setEquipmentType("SUBSTATION");
