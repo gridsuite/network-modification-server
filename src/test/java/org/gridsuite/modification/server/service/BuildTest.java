@@ -838,8 +838,8 @@ public class BuildTest {
         String reporterId2 = UUID.randomUUID().toString();
 
         List<Pair<String, List<ModificationInfos>>> modificationInfosGroups = new ArrayList<>();
-        modificationInfosGroups.add(Pair.of(reporterId,List.of(loadCreationInfos)));
-        modificationInfosGroups.add(Pair.of(reporterId2,List.of()));
+        modificationInfosGroups.add(Pair.of(reporterId, List.of(loadCreationInfos)));
+        modificationInfosGroups.add(Pair.of(reporterId2, List.of()));
 
         //Global application status should be in error and last application status should be OK
         NetworkModificationResult networkModificationResult = networkModificationApplicator.applyModifications(modificationInfosGroups, new NetworkInfos(network, TEST_NETWORK_ID, true), reportUuid);

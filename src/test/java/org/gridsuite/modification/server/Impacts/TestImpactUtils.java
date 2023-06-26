@@ -87,7 +87,6 @@ public final class TestImpactUtils {
         assertThat(networkModificationResult.get(), new MatcherJson<>(mapper, resultExpected));
     }
 
-
     @SneakyThrows
     public static void testElementImpacts(ObjectMapper mapper, NetworkModificationResult networkModificationResult, ApplicationStatus globalApplicationStatus, ApplicationStatus lastGroupApplicationStatus, List<SimpleElementImpact> elementImpacts) {
         NetworkModificationResult resultExpected = NetworkModificationResult.builder()
