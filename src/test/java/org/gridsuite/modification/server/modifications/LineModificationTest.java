@@ -48,6 +48,7 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
                                 .acceptableDuration(null)
                                 .name("name31")
                                 .value(null)
+                                .modificationType(TemporaryLimitModificationType.ADDED)
                                 .build()))
                         .build())
                 .currentLimits2(CurrentLimitsModificationInfos.builder()
@@ -56,6 +57,7 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
                                 .acceptableDuration(32)
                                 .name("name32")
                                 .value(42.0)
+                                .modificationType(TemporaryLimitModificationType.ADDED)
                                 .build()))
                         .build())
                 .build();
