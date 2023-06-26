@@ -9,12 +9,14 @@ package org.gridsuite.modification.server.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Data;
+
+import org.gridsuite.modification.server.impacts.BaseImpact;
+import org.gridsuite.modification.server.impacts.CollectionElementImpact;
 import org.gridsuite.modification.server.impacts.SimpleElementImpact;
 
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.stream.Collectors;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -44,9 +46,17 @@ public class NetworkModificationResult {
 
     @Schema(description = "Network modification impacts")
     @Builder.Default
-    private List<SimpleElementImpact> networkImpacts = List.of();
+    private List<BaseImpact> networkImpacts = List.of();
 
     public Set<String> getImpactedSubstationsIds() {
-        return networkImpacts.stream().flatMap(impact -> impact.getSubstationIds().stream()).collect(Collectors.toCollection(TreeSet::new));
+        Set<String> ids = new TreeSet<>();
+        networkImpacts.stream().forEach(impact -> {
+            if (impact instanceof SimpleElementImpact) {
+                ids.addAll(((SimpleElementImpact) impact).getSubstationIds());
+            } else if (impact instanceof CollectionElementImpact) {
+                // DO nothing;
+            }
+        });
+        return ids;
     }
 }
