@@ -44,17 +44,7 @@ public class EquipmentDeletion extends AbstractModification {
         if (identifiable instanceof Connectable) {
             new RemoveFeederBay(modificationInfos.getEquipmentId()).apply(network, true, subReporter);
         } else if (identifiable instanceof HvdcLine) {
-            List<String> shuntCompensatorIds = Stream.concat(
-                    modificationInfos.getMcsOnSide1() != null ? modificationInfos.getMcsOnSide1().stream() : Stream.of(),
-                    modificationInfos.getMcsOnSide2() != null ? modificationInfos.getMcsOnSide2().stream() : Stream.of())
-                .filter(ShuntCompensatorSelectionInfos::isSelected)
-                .map(ShuntCompensatorSelectionInfos::getId)
-                .collect(Collectors.toList());
-            RemoveHvdcLine algo = new RemoveHvdcLineBuilder()
-                .withHvdcLineId(modificationInfos.getEquipmentId())
-                .withShuntCompensatorIds(shuntCompensatorIds)
-                .build();
-            algo.apply(network, true, subReporter);
+            removeHvdcLine(network, subReporter);
         } else if (identifiable instanceof VoltageLevel) {
             ((VoltageLevel) identifiable).remove();
         } else if (identifiable instanceof Substation) {
@@ -68,5 +58,31 @@ public class EquipmentDeletion extends AbstractModification {
             .withValue("id", modificationInfos.getEquipmentId())
             .withSeverity(TypedValue.INFO_SEVERITY)
             .build());
+    }
+
+    private void removeHvdcLine(Network network, Reporter subReporter) {
+        List<String> shuntCompensatorIds = Stream.concat(
+                        modificationInfos.getMcsOnSide1() != null ? modificationInfos.getMcsOnSide1().stream() : Stream.of(),
+                        modificationInfos.getMcsOnSide2() != null ? modificationInfos.getMcsOnSide2().stream() : Stream.of())
+                .filter(mcsInfo -> {
+                    if (mcsInfo.isSelected() && network.getShuntCompensator(mcsInfo.getId()) == null) {
+                        subReporter.report(Report.builder()
+                                .withKey("shuntCompensatorNotDeleted")
+                                .withDefaultMessage("Shunt compensator with id=${id} not found in the network")
+                                .withValue("id", mcsInfo.getId())
+                                .withSeverity(TypedValue.WARN_SEVERITY)
+                                .build());
+                        return false;
+                    } else {
+                        return mcsInfo.isSelected();
+                    }
+                })
+                .map(ShuntCompensatorSelectionInfos::getId)
+                .collect(Collectors.toList());
+        RemoveHvdcLine algo = new RemoveHvdcLineBuilder()
+                .withHvdcLineId(modificationInfos.getEquipmentId())
+                .withShuntCompensatorIds(shuntCompensatorIds)
+                .build();
+        algo.apply(network, true, subReporter);
     }
 }
