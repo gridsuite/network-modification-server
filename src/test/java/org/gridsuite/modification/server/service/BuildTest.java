@@ -845,7 +845,7 @@ public class BuildTest {
         NetworkModificationResult networkModificationResult = networkModificationApplicator.applyModifications(modificationInfosGroups, new NetworkInfos(network, TEST_NETWORK_ID, true), reportUuid);
         assertNotNull(networkModificationResult);
         testEmptyImpactsWithErrorsLastOK(mapper, networkModificationResult);
-        assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches(String.format("/v1/reports/%s", reportUuid))));
+        assertTrue(TestUtils.getRequestsDone(2, server).stream().anyMatch(r -> r.matches(String.format("/v1/reports/%s", reportUuid))));
     }
 
     private void testNetworkModificationsCount(UUID groupUuid, int actualSize) {

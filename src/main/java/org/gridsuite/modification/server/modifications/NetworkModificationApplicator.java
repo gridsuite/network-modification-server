@@ -78,7 +78,7 @@ public class NetworkModificationApplicator {
     }
 
     private ApplicationStatus apply(List<ModificationInfos> modificationInfosList, Network network, ReportInfos reportInfos) {
-        String rootReporterId = reportInfos.getReporterId() + "@" + NETWORK_MODIFICATION_TYPE_REPORT;
+        String rootReporterId = modificationInfosList.isEmpty() ? reportInfos.getReporterId() : reportInfos.getReporterId() + "@" + NETWORK_MODIFICATION_TYPE_REPORT;
         ReporterModel reporter = new ReporterModel(rootReporterId, rootReporterId);
         ApplicationStatus applicationStatus = modificationInfosList.stream()
                 .map(m -> apply(m, network, reporter))
