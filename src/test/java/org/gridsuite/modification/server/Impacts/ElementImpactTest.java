@@ -16,8 +16,10 @@ import org.gridsuite.modification.server.impacts.SimpleElementImpact;
 import org.gridsuite.modification.server.utils.TestUtils;
 import org.junit.Test;
 
-import java.util.*;
-
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.TreeSet;
 import static org.gridsuite.modification.server.Impacts.TestImpactUtils.*;
 import static org.junit.Assert.assertEquals;
 

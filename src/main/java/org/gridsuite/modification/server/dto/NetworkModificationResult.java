@@ -11,7 +11,9 @@ import lombok.Builder;
 import lombok.Data;
 import org.gridsuite.modification.server.impacts.SimpleElementImpact;
 
-import java.util.*;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 /**
