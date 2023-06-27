@@ -17,6 +17,8 @@ import org.gridsuite.modification.server.impacts.SimpleElementImpact;
 import org.gridsuite.modification.server.impacts.SimpleElementImpact.SimpleImpactType;
 import org.gridsuite.modification.server.utils.MatcherJson;
 import org.hamcrest.MatcherAssert;
+import org.skyscreamer.jsonassert.JSONAssert;
+import org.skyscreamer.jsonassert.JSONCompareMode;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -84,7 +86,7 @@ public final class TestImpactUtils {
             .lastGroupApplicationStatus(ApplicationStatus.ALL_OK)
             .networkImpacts(elementImpactsExpected)
             .build();
-        assertThat(networkModificationResult.get(), new MatcherJson<>(mapper, resultExpected));
+        JSONAssert.assertEquals(mapper.writeValueAsString(resultExpected), resultAsString, JSONCompareMode.NON_EXTENSIBLE);
     }
 
     @SneakyThrows
