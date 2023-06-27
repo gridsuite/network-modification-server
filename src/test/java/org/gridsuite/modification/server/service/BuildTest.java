@@ -64,6 +64,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static com.powsybl.iidm.network.ReactiveLimitsKind.MIN_MAX;
 import static org.gridsuite.modification.server.Impacts.TestImpactUtils.*;
+import static org.gridsuite.modification.server.modifications.NetworkModificationApplicator.NETWORK_MODIFICATION_TYPE_REPORT;
 import static org.gridsuite.modification.server.service.BuildWorkerService.CANCEL_MESSAGE;
 import static org.gridsuite.modification.server.service.BuildWorkerService.FAIL_MESSAGE;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -322,7 +323,7 @@ public class BuildTest {
             List.of(TEST_GROUP_ID),
             List.of(TEST_SUB_REPORTER_ID_1),
             new HashSet<>());
-        String expectedBody = mapper.writeValueAsString(new ReporterModel(TEST_SUB_REPORTER_ID_1, TEST_SUB_REPORTER_ID_1));
+        String expectedBody = mapper.writeValueAsString(new ReporterModel(TEST_SUB_REPORTER_ID_1 + "@" + NETWORK_MODIFICATION_TYPE_REPORT, TEST_SUB_REPORTER_ID_1 + "@" + NETWORK_MODIFICATION_TYPE_REPORT));
 
         // Group does not exist
         String uriString = "/v1/networks/{networkUuid}/build?receiver=me";

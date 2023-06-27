@@ -39,7 +39,7 @@ import java.util.stream.Stream;
 public class NetworkModificationApplicator {
     private static final Logger LOGGER = LoggerFactory.getLogger(NetworkModificationApplicator.class);
 
-    private static final String NETWORK_MODIFICATION_TYPE_REPORT = "NetworkModification";
+    public static final String NETWORK_MODIFICATION_TYPE_REPORT = "NetworkModification";
 
     private final NetworkStoreService networkStoreService;
 
