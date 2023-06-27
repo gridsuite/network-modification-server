@@ -12,6 +12,7 @@ import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.iidm.modification.topology.RemoveFeederBay;
 import com.powsybl.iidm.modification.topology.RemoveHvdcLineBuilder;
 import com.powsybl.iidm.modification.topology.RemoveHvdcLine;
+import com.powsybl.iidm.modification.topology.RemoveVoltageLevel;
 import com.powsybl.iidm.network.*;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.EquipmentDeletionInfos;
@@ -46,7 +47,7 @@ public class EquipmentDeletion extends AbstractModification {
         } else if (identifiable instanceof HvdcLine) {
             removeHvdcLine(network, subReporter);
         } else if (identifiable instanceof VoltageLevel) {
-            ((VoltageLevel) identifiable).remove();
+            new RemoveVoltageLevel(modificationInfos.getEquipmentId()).apply(network, true, subReporter);
         } else if (identifiable instanceof Substation) {
             ((Substation) identifiable).remove();
         }

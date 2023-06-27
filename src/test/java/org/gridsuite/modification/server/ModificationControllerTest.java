@@ -856,15 +856,6 @@ public class ModificationControllerTest {
         );
         testNetworkModificationsCount(TEST_GROUP_ID, 12);
 
-        // try to delete voltage level (Internal error because the vl is still connected)
-        equipmentDeletionInfos.setEquipmentType(IdentifiableType.VOLTAGE_LEVEL.name());
-        equipmentDeletionInfos.setEquipmentId("v4");
-        mockMvc.perform(post(URI_NETWORK_MODIF).content(objectWriter.writeValueAsString(equipmentDeletionInfos)).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk());
-        assertNotNull(network.getVoltageLevel("v4"));
-        assertLogMessage(new PowsyblException(new AssertionError("The voltage level 'v4' cannot be removed because of a remaining LINE")).getMessage(),
-                equipmentDeletionInfos.getErrorType().name(), reportService);
-
         // delete substation
         equipmentDeletionInfos.setEquipmentType(IdentifiableType.SUBSTATION.name());
         equipmentDeletionInfos.setEquipmentId("s3");
@@ -876,7 +867,7 @@ public class ModificationControllerTest {
                 Pair.of(IdentifiableType.SHUNT_COMPENSATOR, "v6shunt"), Pair.of(IdentifiableType.STATIC_VAR_COMPENSATOR, "v6Compensator")),
             "s3");
         testSubstationDeletionImpacts(mvcResult.getResponse().getContentAsString(), "s3", vlDeletionImpacts);
-        testNetworkModificationsCount(TEST_GROUP_ID, 14);
+        testNetworkModificationsCount(TEST_GROUP_ID, 13);
 
         // try to delete substation (Internal error because the substation is still connected)
         equipmentDeletionInfos.setEquipmentType(IdentifiableType.SUBSTATION.name());
