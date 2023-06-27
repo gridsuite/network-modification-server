@@ -6,14 +6,19 @@
  */
 package org.gridsuite.modification.server.entities.equipment.modification;
 
+import com.powsybl.iidm.network.PhaseTapChanger;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.server.dto.AttributeModification;
-import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.dto.TwoWindingsTransformerModificationInfos;
+import org.gridsuite.modification.server.TapChangerType;
+import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
 
 import javax.persistence.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * @author Florent MILLOT <florent.millot at rte-france.com>
@@ -65,6 +70,41 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
     })
     private DoubleModificationEmbedded ratedS;
 
+    @Column(name = "phasetapchangerlowtapposition")
+    private Integer phaseTapChangerLowTapPosition;
+
+    @Column(name = "phasetapchangertapposition")
+    private Integer phaseTapChangerTapPosition;
+
+    @Column(name = "phasetapchangerregulating")
+    private Boolean phaseTapChangerRegulating;
+
+    @Column(name = "phasetapchangertargetdeadband")
+    private Double phaseTapChangerTargetDeadband;
+
+    @Column(name = "phasetapchangerterminalrefconnectableid")
+    private String phaseTapChangerTerminalRefConnectableId;
+
+    @Column(name = "phasetapchangerterminalrefvoltagelevelid")
+    private String phaseTapChangerTerminalRefVoltageLevelId;
+
+    @Column(name = "phasetapchangerterminalreftype")
+    private String phaseTapChangerTerminalRefType;
+
+    @Column(name = "phasetapchangerregulationmode")
+    @Enumerated(EnumType.STRING)
+    private PhaseTapChanger.RegulationMode phaseTapChangerRegulationMode;
+
+    @Column(name = "phasetapchangerregulationvalue")
+    private Double phaseTapChangerRegulationValue;
+
+    @ElementCollection
+    @CollectionTable(
+        name = "tapChangerStepModification",
+        joinColumns = @JoinColumn(name = "modification_id")
+    )
+    private List<TapChangerStepModificationEmbeddable> tapChangerSteps;
+
     public TwoWindingsTransformerModificationEntity(TwoWindingsTransformerModificationInfos twoWindingsTransformerModificationInfos) {
         super(twoWindingsTransformerModificationInfos);
         assignAttributes(twoWindingsTransformerModificationInfos);
@@ -83,6 +123,25 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
         this.ratedVoltage1 = new DoubleModificationEmbedded(twoWindingsTransformerModificationInfos.getRatedVoltage1());
         this.ratedVoltage2 = new DoubleModificationEmbedded(twoWindingsTransformerModificationInfos.getRatedVoltage2());
         this.ratedS = new DoubleModificationEmbedded(twoWindingsTransformerModificationInfos.getRatedS());
+        this.tapChangerSteps = new ArrayList<>();
+        assignTapChanger(twoWindingsTransformerModificationInfos);
+    }
+
+    private void assignTapChanger(TwoWindingsTransformerModificationInfos twoWindingsTransformerModificationInfos) {
+        Optional.ofNullable(twoWindingsTransformerModificationInfos.getPhaseTapChanger()).ifPresent(this::assignPhaseTapChanger);
+    }
+
+    private void assignPhaseTapChanger(PhaseTapChangerModificationInfos phaseTapChanger) {
+        this.phaseTapChangerRegulating = phaseTapChanger.getRegulating();
+        this.phaseTapChangerRegulationMode = phaseTapChanger.getRegulationMode();
+        this.phaseTapChangerRegulationValue = phaseTapChanger.getRegulationValue();
+        this.phaseTapChangerLowTapPosition = phaseTapChanger.getLowTapPosition();
+        this.phaseTapChangerTapPosition = phaseTapChanger.getTapPosition();
+        this.phaseTapChangerTargetDeadband = phaseTapChanger.getTargetDeadband();
+        this.phaseTapChangerTerminalRefConnectableId = phaseTapChanger.getRegulatingTerminalId();
+        this.phaseTapChangerTerminalRefVoltageLevelId = phaseTapChanger.getRegulatingTerminalVlId();
+        this.phaseTapChangerTerminalRefType = phaseTapChanger.getRegulatingTerminalType();
+        this.tapChangerSteps.addAll(TapChangerStepModificationEmbeddable.toEmbeddablePhaseTapChangerSteps(phaseTapChanger.getSteps()));
     }
 
     @Override
@@ -91,6 +150,11 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
     }
 
     private TwoWindingsTransformerModificationInfos.TwoWindingsTransformerModificationInfosBuilder<?, ?> toTwoWindingsTransformerModificationInfosBuilder() {
+
+        List<TapChangerStepModificationEmbeddable> phaseTapChangerSteps = new ArrayList<>();
+        if (getTapChangerSteps() != null && getTapChangerSteps().size() > 0) {
+            phaseTapChangerSteps = getTapChangerSteps().stream().filter(step -> step.getTapChangerType().equals(TapChangerType.PHASE)).sorted(Comparator.comparing(TapChangerStepModificationEmbeddable::getIndex)).collect(Collectors.toList());
+        }
 
         TwoWindingsTransformerModificationInfos.TwoWindingsTransformerModificationInfosBuilder<?, ?> builder = TwoWindingsTransformerModificationInfos
                 .builder()
@@ -111,6 +175,22 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
         }
         if (getCurrentLimits2() != null) {
             builder.currentLimits2(getCurrentLimits2().toCurrentLimitsInfos());
+        }
+
+        if (!phaseTapChangerSteps.isEmpty()) {
+            List<TapChangerStepModificationInfos> phaseTapChangerStepModificationInfos = phaseTapChangerSteps.stream().map(TapChangerStepModificationEmbeddable::toModificationInfos).collect(Collectors.toList());
+            builder.phaseTapChanger(PhaseTapChangerModificationInfos.builder()
+                .lowTapPosition(getPhaseTapChangerLowTapPosition())
+                .tapPosition(getPhaseTapChangerTapPosition())
+                .targetDeadband(getPhaseTapChangerTargetDeadband())
+                .regulating(getPhaseTapChangerRegulating())
+                .regulationMode(getPhaseTapChangerRegulationMode())
+                .regulationValue(getPhaseTapChangerRegulationValue())
+                .regulatingTerminalId(getPhaseTapChangerTerminalRefConnectableId())
+                .regulatingTerminalVlId(getPhaseTapChangerTerminalRefVoltageLevelId())
+                .regulatingTerminalType(getPhaseTapChangerTerminalRefType())
+                .steps(phaseTapChangerStepModificationInfos)
+                .build());
         }
 
         return builder;
