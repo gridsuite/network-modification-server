@@ -24,7 +24,7 @@ public class ShuntCompensatorSelectionEmbeddable {
     @Column(name = "shuntCompensatorId")
     private String shuntCompensatorId;
 
-    @Column(name = "selected")
-    private boolean selected;
+    @Column(name = "connectedToHvdc")
+    private boolean connectedToHvdc;
 }
 

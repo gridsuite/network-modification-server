@@ -118,7 +118,6 @@ public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
         EquipmentDeletionInfos equipmentDeletionInfos = EquipmentDeletionInfos.builder()
                 .equipmentType("HVDC_LINE")
                 .equipmentId(hvdcLineName)
-                .hvdcWithLCC(true)
                 .mcsOnSide2(List.of(new ShuntCompensatorSelectionInfos(shuntNameToBeRemoved, selected)))
                 .build();
         String equipmentDeletionInfosJson = mapper.writeValueAsString(equipmentDeletionInfos);

@@ -66,7 +66,8 @@ public class EquipmentDeletion extends AbstractModification {
                         modificationInfos.getMcsOnSide1() != null ? modificationInfos.getMcsOnSide1().stream() : Stream.of(),
                         modificationInfos.getMcsOnSide2() != null ? modificationInfos.getMcsOnSide2().stream() : Stream.of())
                 .filter(mcsInfo -> {
-                    if (mcsInfo.isSelected() && network.getShuntCompensator(mcsInfo.getId()) == null) {
+                    // isConnectedToHvdc means: selected to be removed (can be changed by the Front)
+                    if (mcsInfo.isConnectedToHvdc() && network.getShuntCompensator(mcsInfo.getId()) == null) {
                         subReporter.report(Report.builder()
                                 .withKey("shuntCompensatorNotDeleted")
                                 .withDefaultMessage("Shunt compensator with id=${id} not found in the network")
@@ -75,7 +76,7 @@ public class EquipmentDeletion extends AbstractModification {
                                 .build());
                         return false;
                     } else {
-                        return mcsInfo.isSelected();
+                        return mcsInfo.isConnectedToHvdc();
                     }
                 })
                 .map(ShuntCompensatorSelectionInfos::getId)

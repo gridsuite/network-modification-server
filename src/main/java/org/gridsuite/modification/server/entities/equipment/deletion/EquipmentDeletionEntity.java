@@ -30,9 +30,6 @@ public class EquipmentDeletionEntity extends EquipmentModificationEntity {
     @Column(name = "equipmentType")
     private String equipmentType;
 
-    @Column(name = "hvdcWithLCC", columnDefinition = "boolean default false")
-    private boolean hvdcWithLCC;
-
     @ElementCollection
     @CollectionTable(name = "shuntCompensatorsSide1")
     private List<ShuntCompensatorSelectionEmbeddable> shuntCompensatorsSide1;
@@ -54,7 +51,6 @@ public class EquipmentDeletionEntity extends EquipmentModificationEntity {
 
     private void assignAttributes(EquipmentDeletionInfos equipmentDeletionInfos) {
         this.equipmentType = equipmentDeletionInfos.getEquipmentType();
-        this.hvdcWithLCC = equipmentDeletionInfos.isHvdcWithLCC();
         this.shuntCompensatorsSide1 = toEmbeddableShuntCompensators(equipmentDeletionInfos.getMcsOnSide1());
         this.shuntCompensatorsSide2 = toEmbeddableShuntCompensators(equipmentDeletionInfos.getMcsOnSide2());
     }
@@ -71,7 +67,6 @@ public class EquipmentDeletionEntity extends EquipmentModificationEntity {
             .date(getDate())
             .equipmentId(getEquipmentId())
             .equipmentType(getEquipmentType())
-            .hvdcWithLCC(isHvdcWithLCC())
             .mcsOnSide1(toShuntCompensators(getShuntCompensatorsSide1()))
             .mcsOnSide2(toShuntCompensators(getShuntCompensatorsSide2()));
     }
@@ -79,13 +74,13 @@ public class EquipmentDeletionEntity extends EquipmentModificationEntity {
     private List<ShuntCompensatorSelectionInfos> toShuntCompensators(List<ShuntCompensatorSelectionEmbeddable> shuntCompensators) {
         return shuntCompensators != null ? shuntCompensators
                 .stream()
-                .map(s -> new ShuntCompensatorSelectionInfos(s.getShuntCompensatorId(), s.isSelected()))
+                .map(s -> new ShuntCompensatorSelectionInfos(s.getShuntCompensatorId(), s.isConnectedToHvdc()))
                 .collect(Collectors.toList()) : null;
     }
 
     private static List<ShuntCompensatorSelectionEmbeddable> toEmbeddableShuntCompensators(List<ShuntCompensatorSelectionInfos> shuntCompensators) {
         return shuntCompensators == null ? null : shuntCompensators.stream()
-                .map(s -> new ShuntCompensatorSelectionEmbeddable(s.getId(), s.isSelected()))
+                .map(s -> new ShuntCompensatorSelectionEmbeddable(s.getId(), s.isConnectedToHvdc()))
                 .collect(Collectors.toList());
     }
 }

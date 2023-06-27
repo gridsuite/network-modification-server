@@ -36,9 +36,6 @@ public class EquipmentDeletionInfos extends EquipmentModificationInfos {
     @Schema(description = "Equipment type")
     private String equipmentType;
 
-    @Schema(description = "HVDC having a LCC or not")
-    private boolean hvdcWithLCC;
-
     @Schema(description = "LCC HVDC converter station Shunt Compensator side 1")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private List<ShuntCompensatorSelectionInfos> mcsOnSide1;

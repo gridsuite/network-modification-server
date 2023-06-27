@@ -18,5 +18,5 @@ import lombok.*;
 public class ShuntCompensatorSelectionInfos {
     private String id;
 
-    private boolean selected;
+    private boolean connectedToHvdc;
 }
