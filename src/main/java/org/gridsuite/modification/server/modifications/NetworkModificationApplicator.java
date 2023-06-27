@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.modifications;
 
+import com.google.common.collect.Streams;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.reporter.Report;
 import com.powsybl.commons.reporter.Reporter;
@@ -66,18 +67,17 @@ public class NetworkModificationApplicator {
 
     public NetworkModificationResult applyModifications(List<Pair<String, List<ModificationInfos>>> modificationInfosGroups, NetworkInfos networkInfos, UUID reportUuid) {
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService);
-        List<ApplicationStatus> groupsApplicationStatuses =
+        List<ApplicationStatus> groupsStatuses =
                 modificationInfosGroups.stream()
-                .map(g -> apply(g.getRight(), listener.getNetwork(), new ReportInfos(reportUuid, g.getLeft())))
-                .toList();
-        listener.setApplicationStatus(groupsApplicationStatuses.stream().reduce(ApplicationStatus::max).orElse(ApplicationStatus.ALL_OK));
-        ApplicationStatus lastGroupApplicationStatus = !groupsApplicationStatuses.isEmpty() ? groupsApplicationStatuses.get(groupsApplicationStatuses.size() - 1) : ApplicationStatus.ALL_OK;
-        listener.setLastGroupApplicationStatus(lastGroupApplicationStatus);
+                        .map(g -> apply(g.getRight(), listener.getNetwork(), new ReportInfos(reportUuid, g.getLeft())))
+                        .toList();
+        listener.setApplicationStatus(groupsStatuses.stream().reduce(ApplicationStatus::max).orElse(ApplicationStatus.ALL_OK));
+        listener.setLastGroupApplicationStatus(Streams.findLast(groupsStatuses.stream()).orElse(ApplicationStatus.ALL_OK));
         return listener.flushNetworkModifications();
     }
 
     private ApplicationStatus apply(List<ModificationInfos> modificationInfosList, Network network, ReportInfos reportInfos) {
-        String rootReporterId = modificationInfosList.isEmpty() ? reportInfos.getReporterId() : reportInfos.getReporterId() + "@" + NETWORK_MODIFICATION_TYPE_REPORT;
+        String rootReporterId = reportInfos.getReporterId() + "@" + NETWORK_MODIFICATION_TYPE_REPORT;
         ReporterModel reporter = new ReporterModel(rootReporterId, rootReporterId);
         ApplicationStatus applicationStatus = modificationInfosList.stream()
                 .map(m -> apply(m, network, reporter))
