@@ -45,19 +45,16 @@ public class NetworkModificationService {
 
     private final NotificationService notificationService;
 
-    private final ReportService reportService;
-
     private final ObjectMapper objectMapper;
 
     public NetworkModificationService(NetworkStoreService networkStoreService, NetworkModificationRepository networkModificationRepository,
-                                      EquipmentInfosService equipmentInfosService, NotificationService notificationService, ReportService reportService,
+                                      EquipmentInfosService equipmentInfosService, NotificationService notificationService,
                                       NetworkModificationApplicator applicationService, ObjectMapper objectMapper) {
         this.networkStoreService = networkStoreService;
         this.networkModificationRepository = networkModificationRepository;
         this.equipmentInfosService = equipmentInfosService;
         this.notificationService = notificationService;
         this.modificationApplicator = applicationService;
-        this.reportService = reportService;
         this.objectMapper = objectMapper;
     }
 
