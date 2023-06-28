@@ -47,6 +47,7 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
                                 .acceptableDuration(null)
                                 .name("name31")
                                 .value(null)
+                                .modificationType(TemporaryLimitModificationType.ADDED)
                                 .build()))
                         .build())
                 .currentLimits2(CurrentLimitsModificationInfos.builder()
@@ -55,6 +56,7 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
                                 .acceptableDuration(32)
                                 .name("name32")
                                 .value(42.0)
+                                .modificationType(TemporaryLimitModificationType.ADDED)
                                 .build()))
                         .build())
                 .build();
@@ -285,8 +287,27 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
                 .setValue(15.0)
                 .endTemporaryLimit()
                 .add();
-        LineModificationInfos lineModificationInfos = (LineModificationInfos) buildModification();
-
+        LineModificationInfos lineModificationInfos = LineModificationInfos.builder()
+                .equipmentId("line1")
+                .equipmentName(new AttributeModification<>("LineModified", OperationType.SET))
+                .currentLimits1(CurrentLimitsModificationInfos.builder()
+                        .temporaryLimits(List.of(CurrentTemporaryLimitModificationInfos.builder()
+                                .acceptableDuration(null)
+                                .name("name31")
+                                .value(22.0)
+                                .modificationType(TemporaryLimitModificationType.MODIFIED)
+                                .build()))
+                        .build())
+                .currentLimits2(CurrentLimitsModificationInfos.builder()
+                        .permanentLimit(22.0)
+                        .temporaryLimits(List.of(CurrentTemporaryLimitModificationInfos.builder()
+                                .acceptableDuration(33)
+                                .name("name33")
+                                .value(15.0)
+                                .modificationType(TemporaryLimitModificationType.DELETED)
+                                .build()))
+                        .build())
+                .build();
         String modificationToCreateJson = mapper.writeValueAsString(lineModificationInfos);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))

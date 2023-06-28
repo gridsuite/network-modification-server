@@ -94,4 +94,15 @@ public class Assertions extends org.assertj.core.api.Assertions {
     public static ScalingInfosAssert assertThat(ScalingInfos actual) {
         return new ScalingInfosAssert(actual);
     }
+
+    /**
+     * Create assertion for {@link NetworkModificationResult}.
+     *
+     * @param actual the actual value.
+     * @return the created assertion object.
+     */
+    @CheckReturnValue
+    public static NetworkModificationResultAssert assertThat(NetworkModificationResult actual) {
+        return new NetworkModificationResultAssert(actual);
+    }
 }

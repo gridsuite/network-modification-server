@@ -12,6 +12,7 @@ import com.powsybl.commons.reporter.ReportBuilder;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.iidm.modification.scalable.Scalable;
+import com.powsybl.iidm.modification.scalable.ScalingParameters;
 import com.powsybl.iidm.network.Bus;
 import com.powsybl.iidm.network.Component;
 import com.powsybl.iidm.network.DefaultNetworkListener;
@@ -375,7 +376,7 @@ public class GenerationDispatch extends AbstractModification {
                 network.addListener(listener);
 
                 Scalable scalable = Scalable.stack(generatorsScalable.toArray(Scalable[]::new));
-                realized = scalable.scale(network, totalAmountSupplyToBeDispatched);
+                realized = scalable.scale(network, totalAmountSupplyToBeDispatched, new ScalingParameters().setAllowsGeneratorOutOfActivePowerLimits(true));
 
                 network.removeListener(listener);
             }
