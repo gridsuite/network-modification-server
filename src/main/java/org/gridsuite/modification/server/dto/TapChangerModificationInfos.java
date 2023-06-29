@@ -27,25 +27,25 @@ import java.util.List;
 public class TapChangerModificationInfos {
 
     @Schema(description = "lowTapPosition")
-    private Integer lowTapPosition;
+    private AttributeModification<Integer> lowTapPosition;
 
     @Schema(description = "tapPosition")
-    private Integer tapPosition;
+    private AttributeModification<Integer> tapPosition;
 
     @Schema(description = "regulating")
-    private Boolean regulating;
+    private AttributeModification<Boolean> regulating;
 
     @Schema(description = "targetDeadband")
-    private Double targetDeadband;
+    private AttributeModification<Double> targetDeadband;
 
     @Schema(description = "Regulating terminal equipment id")
-    private String regulatingTerminalId;
+    private AttributeModification<String> regulatingTerminalId;
 
     @Schema(description = "Regulating terminal equipment type")
-    private String regulatingTerminalType;
+    private AttributeModification<String> regulatingTerminalType;
 
     @Schema(description = "Regulating terminal voltage level id")
-    private String regulatingTerminalVlId;
+    private AttributeModification<String> regulatingTerminalVlId;
 
     @Schema(description = "steps")
     private List<TapChangerStepModificationInfos> steps;

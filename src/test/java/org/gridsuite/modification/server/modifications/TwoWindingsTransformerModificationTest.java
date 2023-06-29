@@ -9,6 +9,7 @@ package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.iidm.network.LoadingLimits;
 import com.powsybl.iidm.network.Network;
+import com.powsybl.iidm.network.PhaseTapChanger;
 import com.powsybl.iidm.network.TwoWindingsTransformer;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
@@ -65,6 +66,23 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
                                 .value(42.0)
                                 .build()))
                         .build())
+                .phaseTapChanger(PhaseTapChangerModificationInfos.builder()
+                    .regulating(new AttributeModification<>(true, OperationType.SET))
+                    .regulationMode(new AttributeModification<>(PhaseTapChanger.RegulationMode.CURRENT_LIMITER, OperationType.SET))
+                    .regulationValue(new AttributeModification<>(100., OperationType.SET))
+                    .targetDeadband(new AttributeModification<>(100., OperationType.SET))
+                    .lowTapPosition(new AttributeModification<>(1, OperationType.SET))
+                    .tapPosition(new AttributeModification<>(1, OperationType.SET))
+                    .steps(List.of(TapChangerStepModificationInfos.builder()
+                        .index(1)
+                        .r(0)
+                        .g(0)
+                        .b(0)
+                        .x(0)
+                        .rho(1)
+                        .alpha(1.)
+                        .build()))
+                    .build())
                 .build();
     }
 
@@ -95,6 +113,23 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
                                 .value(42.1)
                                 .build()))
                         .build())
+                .phaseTapChanger(PhaseTapChangerModificationInfos.builder()
+                    .regulating(new AttributeModification<>(true, OperationType.SET))
+                    .regulationMode(new AttributeModification<>(PhaseTapChanger.RegulationMode.CURRENT_LIMITER, OperationType.SET))
+                    .regulationValue(new AttributeModification<>(100.1, OperationType.SET))
+                    .targetDeadband(new AttributeModification<>(100.1, OperationType.SET))
+                    .lowTapPosition(new AttributeModification<>(1, OperationType.SET))
+                    .tapPosition(new AttributeModification<>(1, OperationType.SET))
+                    .steps(List.of(TapChangerStepModificationInfos.builder()
+                            .index(1)
+                            .r(0)
+                            .g(0)
+                            .b(0)
+                            .x(0)
+                            .rho(1)
+                            .alpha(1.)
+                        .build()))
+                    .build())
                 .build();
     }
 
@@ -132,6 +167,8 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
         assertEquals(32, temporaryLimit.getAcceptableDuration());
         assertEquals("name32", temporaryLimit.getName());
         assertEquals(42.0, temporaryLimit.getValue());
+        //phase tap
+
     }
 
     @SneakyThrows

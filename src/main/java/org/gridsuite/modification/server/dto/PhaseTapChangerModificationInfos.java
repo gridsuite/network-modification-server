@@ -23,8 +23,8 @@ import lombok.experimental.SuperBuilder;
 public class PhaseTapChangerModificationInfos extends TapChangerModificationInfos {
 
     @Schema(description = "regulationMode")
-    private PhaseTapChanger.RegulationMode regulationMode;
+    private AttributeModification<PhaseTapChanger.RegulationMode> regulationMode;
 
     @Schema(description = "regulationValue")
-    private Double regulationValue;
+    private AttributeModification<Double> regulationValue;
 }

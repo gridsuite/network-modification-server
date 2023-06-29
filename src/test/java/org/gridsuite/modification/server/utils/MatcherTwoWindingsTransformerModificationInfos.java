@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.utils;
 
+import org.gridsuite.modification.server.dto.PhaseTapChangerModificationInfos;
 import org.gridsuite.modification.server.dto.TwoWindingsTransformerModificationInfos;
 import org.hamcrest.Description;
 
@@ -26,6 +27,11 @@ public class MatcherTwoWindingsTransformerModificationInfos extends MatcherModif
         return new MatcherTwoWindingsTransformerModificationInfos(twoWindingsTransformerModificationInfos);
     }
 
+    private boolean matchesPhaseTapChangerInfos(PhaseTapChangerModificationInfos pt1, PhaseTapChangerModificationInfos pt2) {
+        return (pt1 == null && pt2 == null)
+            || (pt1 != null && pt2 != null && pt1.getRegulationMode().equals(pt2.getRegulationMode()) && Objects.equals(pt1.getRegulating(), pt2.getRegulating()) && Objects.equals(pt1.getRegulationMode(), pt2.getRegulationMode()) && Objects.equals(pt1.getRegulationValue(), pt2.getRegulationValue()) && Objects.equals(pt1.getTargetDeadband(), pt2.getTargetDeadband()) && Objects.equals(pt1.getRegulatingTerminalVlId(), pt2.getRegulatingTerminalVlId()) && Objects.equals(pt1.getRegulatingTerminalType(), pt2.getRegulatingTerminalType()) && Objects.equals(pt1.getRegulatingTerminalId(), pt2.getRegulatingTerminalId()) && Objects.equals(pt1.getLowTapPosition(), pt2.getLowTapPosition()) && Objects.equals(pt1.getTapPosition(), pt2.getTapPosition()));
+    }
+
     @Override
     public boolean matchesSafely(TwoWindingsTransformerModificationInfos m) {
         return super.matchesSafely(m)
@@ -39,7 +45,8 @@ public class MatcherTwoWindingsTransformerModificationInfos extends MatcherModif
                 && Objects.equals(m.getSeriesResistance(), reference.getSeriesResistance())
                 && Objects.equals(m.getRatedS(), reference.getRatedS())
                 && matchesCurrentLimits(m.getCurrentLimits1(), reference.getCurrentLimits1())
-                && matchesCurrentLimits(m.getCurrentLimits2(), reference.getCurrentLimits2());
+                && matchesCurrentLimits(m.getCurrentLimits2(), reference.getCurrentLimits2())
+                && matchesPhaseTapChangerInfos(m.getPhaseTapChanger(), reference.getPhaseTapChanger());
     }
 
     @Override
