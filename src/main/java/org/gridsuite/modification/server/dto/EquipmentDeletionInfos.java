@@ -21,8 +21,6 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
-import java.util.List;
-
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
@@ -36,13 +34,9 @@ public class EquipmentDeletionInfos extends EquipmentModificationInfos {
     @Schema(description = "Equipment type")
     private String equipmentType;
 
-    @Schema(description = "LCC HVDC converter station Shunt Compensator side 1")
+    @Schema(description = "equipment-specific optional data")
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private List<ShuntCompensatorSelectionInfos> mcsOnSide1;
-
-    @Schema(description = "LCC HVDC converter station Shunt Compensator side 2")
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    private List<ShuntCompensatorSelectionInfos> mcsOnSide2;
+    private AbstractEquipmentDeletionInfos specificData;
 
     @Override
     public EquipmentDeletionEntity toEntity() {

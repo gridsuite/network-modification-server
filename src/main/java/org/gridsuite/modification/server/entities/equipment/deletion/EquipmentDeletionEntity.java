@@ -10,8 +10,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.gridsuite.modification.server.dto.EquipmentDeletionInfos;
+import org.gridsuite.modification.server.dto.HvdcLccDeletionInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.dto.ShuntCompensatorSelectionInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
 
 import javax.persistence.*;
@@ -51,34 +51,29 @@ public class EquipmentDeletionEntity extends EquipmentModificationEntity {
 
     private void assignAttributes(EquipmentDeletionInfos equipmentDeletionInfos) {
         this.equipmentType = equipmentDeletionInfos.getEquipmentType();
-        this.shuntCompensatorsSide1 = toEmbeddableShuntCompensators(equipmentDeletionInfos.getMcsOnSide1());
-        this.shuntCompensatorsSide2 = toEmbeddableShuntCompensators(equipmentDeletionInfos.getMcsOnSide2());
+        if (equipmentDeletionInfos.getSpecificData() instanceof HvdcLccDeletionInfos) {
+            HvdcLccDeletionInfos specificInfos = (HvdcLccDeletionInfos) equipmentDeletionInfos.getSpecificData();
+            this.shuntCompensatorsSide1 = toEmbeddableShuntCompensators(specificInfos.getMcsOnSide1());
+            this.shuntCompensatorsSide2 = toEmbeddableShuntCompensators(specificInfos.getMcsOnSide2());
+        }
     }
 
     @Override
     public EquipmentDeletionInfos toModificationInfos() {
-        return toEquipmentDeletionInfosBuilder().build();
+        var builder = EquipmentDeletionInfos
+                .builder()
+                .uuid(getId())
+                .date(getDate())
+                .equipmentId(getEquipmentId())
+                .equipmentType(getEquipmentType());
+        if (shuntCompensatorsSide1 != null && !shuntCompensatorsSide1.isEmpty() ||
+                shuntCompensatorsSide2 != null && !shuntCompensatorsSide2.isEmpty()) {
+            builder.specificData(new HvdcLccDeletionInfos(shuntCompensatorsSide1, shuntCompensatorsSide2));
+        }
+        return builder.build();
     }
 
-    private EquipmentDeletionInfos.EquipmentDeletionInfosBuilder<?, ?> toEquipmentDeletionInfosBuilder() {
-        return EquipmentDeletionInfos
-            .builder()
-            .uuid(getId())
-            .date(getDate())
-            .equipmentId(getEquipmentId())
-            .equipmentType(getEquipmentType())
-            .mcsOnSide1(toShuntCompensators(getShuntCompensatorsSide1()))
-            .mcsOnSide2(toShuntCompensators(getShuntCompensatorsSide2()));
-    }
-
-    private List<ShuntCompensatorSelectionInfos> toShuntCompensators(List<ShuntCompensatorSelectionEmbeddable> shuntCompensators) {
-        return shuntCompensators != null ? shuntCompensators
-                .stream()
-                .map(s -> new ShuntCompensatorSelectionInfos(s.getShuntCompensatorId(), s.isConnectedToHvdc()))
-                .collect(Collectors.toList()) : null;
-    }
-
-    private static List<ShuntCompensatorSelectionEmbeddable> toEmbeddableShuntCompensators(List<ShuntCompensatorSelectionInfos> shuntCompensators) {
+    private static List<ShuntCompensatorSelectionEmbeddable> toEmbeddableShuntCompensators(List<HvdcLccDeletionInfos.ShuntCompensatorInfos> shuntCompensators) {
         return shuntCompensators == null ? null : shuntCompensators.stream()
                 .map(s -> new ShuntCompensatorSelectionEmbeddable(s.getId(), s.isConnectedToHvdc()))
                 .collect(Collectors.toList());

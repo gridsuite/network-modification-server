@@ -16,7 +16,7 @@ import com.powsybl.iidm.modification.topology.RemoveVoltageLevel;
 import com.powsybl.iidm.network.*;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.EquipmentDeletionInfos;
-import org.gridsuite.modification.server.dto.ShuntCompensatorSelectionInfos;
+import org.gridsuite.modification.server.dto.HvdcLccDeletionInfos;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -62,9 +62,10 @@ public class EquipmentDeletion extends AbstractModification {
     }
 
     private void removeHvdcLine(Network network, Reporter subReporter) {
-        List<String> shuntCompensatorIds = Stream.concat(
-                        modificationInfos.getMcsOnSide1() != null ? modificationInfos.getMcsOnSide1().stream() : Stream.of(),
-                        modificationInfos.getMcsOnSide2() != null ? modificationInfos.getMcsOnSide2().stream() : Stream.of())
+        HvdcLccDeletionInfos specificInfos = (HvdcLccDeletionInfos) modificationInfos.getSpecificData();
+        List<String> shuntCompensatorIds = specificInfos == null ? List.of() : Stream.concat(
+                        specificInfos.getMcsOnSide1() != null ? specificInfos.getMcsOnSide1().stream() : Stream.of(),
+                        specificInfos.getMcsOnSide2() != null ? specificInfos.getMcsOnSide2().stream() : Stream.of())
                 .filter(mcsInfo -> {
                     // isConnectedToHvdc means: selected to be removed (can be changed by the Front)
                     if (mcsInfo.isConnectedToHvdc() && network.getShuntCompensator(mcsInfo.getId()) == null) {
@@ -79,7 +80,7 @@ public class EquipmentDeletion extends AbstractModification {
                         return mcsInfo.isConnectedToHvdc();
                     }
                 })
-                .map(ShuntCompensatorSelectionInfos::getId)
+                .map(mcsInfo -> mcsInfo.getId())
                 .collect(Collectors.toList());
         RemoveHvdcLine algo = new RemoveHvdcLineBuilder()
                 .withHvdcLineId(modificationInfos.getEquipmentId())

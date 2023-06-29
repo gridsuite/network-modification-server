@@ -11,10 +11,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.EquipmentDeletionInfos;
-import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.dto.NetworkModificationResult;
-import org.gridsuite.modification.server.dto.ShuntCompensatorSelectionInfos;
+import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.server.entities.equipment.deletion.ShuntCompensatorSelectionEmbeddable;
 import org.gridsuite.modification.server.utils.MatcherEquipmentDeletionInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
@@ -118,7 +116,8 @@ public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
         EquipmentDeletionInfos equipmentDeletionInfos = EquipmentDeletionInfos.builder()
                 .equipmentType("HVDC_LINE")
                 .equipmentId(hvdcLineName)
-                .mcsOnSide2(List.of(new ShuntCompensatorSelectionInfos(shuntNameToBeRemoved, selected)))
+                .specificData(
+                    new HvdcLccDeletionInfos(null, List.of(new ShuntCompensatorSelectionEmbeddable(shuntNameToBeRemoved, selected))))
                 .build();
         String equipmentDeletionInfosJson = mapper.writeValueAsString(equipmentDeletionInfos);
 
