@@ -22,13 +22,11 @@ import java.util.stream.Collectors;
 @NoArgsConstructor
 @Getter
 @Setter
-@ToString(callSuper = true)
 @Schema(description = "Hvdc with Lcc deletion")
 public class HvdcLccDeletionInfos extends AbstractEquipmentDeletionInfos {
 
     @Builder
     @Getter
-    @EqualsAndHashCode
     public static class ShuntCompensatorInfos {
         private String id;
         private boolean connectedToHvdc;

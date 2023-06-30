@@ -107,17 +107,23 @@ public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
     }
 
     @SneakyThrows
-    private void deleteHvdcLineWithShuntCompensator(boolean selected) {
+    private void deleteHvdcLineWithShuntCompensator(String shuntNameToBeRemoved, boolean selected, int side, boolean warningCase) {
         final String hvdcLineName = "hvdcLine"; // this line uses LCC converter stations
-        final String shuntNameToBeRemoved = "v2shunt"; // to be removed if selected
         assertNotNull(getNetwork().getHvdcLine(hvdcLineName));
-        assertNotNull(getNetwork().getShuntCompensator(shuntNameToBeRemoved));
+        assertEquals(warningCase, getNetwork().getShuntCompensator(shuntNameToBeRemoved) == null);
 
+        NetworkModificationResult.ApplicationStatus expectedStatus = warningCase ?
+                NetworkModificationResult.ApplicationStatus.WITH_WARNINGS :
+                NetworkModificationResult.ApplicationStatus.ALL_OK;
+
+        List<ShuntCompensatorSelectionEmbeddable> shuntData = List.of(new ShuntCompensatorSelectionEmbeddable(shuntNameToBeRemoved, selected));
+        HvdcLccDeletionInfos hvdcLccDeletionInfos = side == 1 ?
+                new HvdcLccDeletionInfos(shuntData, null) :
+                new HvdcLccDeletionInfos(null, shuntData);
         EquipmentDeletionInfos equipmentDeletionInfos = EquipmentDeletionInfos.builder()
                 .equipmentType("HVDC_LINE")
                 .equipmentId(hvdcLineName)
-                .specificData(
-                    new HvdcLccDeletionInfos(null, List.of(new ShuntCompensatorSelectionEmbeddable(shuntNameToBeRemoved, selected))))
+                .specificData(hvdcLccDeletionInfos)
                 .build();
         String equipmentDeletionInfosJson = mapper.writeValueAsString(equipmentDeletionInfos);
 
@@ -126,19 +132,35 @@ public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
                 .andReturn();
         Optional<NetworkModificationResult> modifResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertTrue(modifResult.isPresent());
-        assertNotEquals(NetworkModificationResult.ApplicationStatus.WITH_ERRORS, modifResult.get().getApplicationStatus());
+        assertEquals(expectedStatus, modifResult.get().getApplicationStatus());
 
         assertNull(getNetwork().getHvdcLine(hvdcLineName));
         assertEquals(selected, getNetwork().getShuntCompensator(shuntNameToBeRemoved) == null);
     }
 
     @Test
-    public void testDeleteHvdcWithLCCWithShuntCompensatorSelected() {
-        deleteHvdcLineWithShuntCompensator(true);
+    public void testDeleteHvdcWithLCCWithShuntCompensatorSelectedSide1() {
+        deleteHvdcLineWithShuntCompensator("v2shunt", true, 1, false);
     }
 
     @Test
-    public void testDeleteHvdcWithLCCWithShuntCompensatorNotSelected() {
-        deleteHvdcLineWithShuntCompensator(false);
+    public void testDeleteHvdcWithLCCWithShuntCompensatorSelectedSide2() {
+        deleteHvdcLineWithShuntCompensator("v2shunt", true, 2, false);
+    }
+
+    @Test
+    public void testDeleteHvdcWithLCCWithShuntCompensatorNotSelectedSide1() {
+        deleteHvdcLineWithShuntCompensator("v2shunt", false, 1, false);
+    }
+
+    @Test
+    public void testDeleteHvdcWithLCCWithShuntCompensatorNotSelectedSide2() {
+        deleteHvdcLineWithShuntCompensator("v2shunt", false, 2, false);
+    }
+
+    @Test
+    public void testDeleteHvdcWithLCCWithAlreadyDeletedShuntCompensator() {
+        // we select an unexisting shunt: will produce a warning
+        deleteHvdcLineWithShuntCompensator("deletedOrMissingShuntId", true, 1, true);
     }
 }
