@@ -1,5 +1,5 @@
 /*
-  Copyright (c) 2021, RTE (http://www.rte-france.com)
+  Copyright (c) 2023, RTE (http://www.rte-france.com)
   This Source Code Form is subject to the terms of the Mozilla Public
   License, v. 2.0. If a copy of the MPL was not distributed with this
   file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -9,18 +9,16 @@ package org.gridsuite.modification.server.dto;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
-import lombok.experimental.SuperBuilder;
 import org.gridsuite.modification.server.entities.equipment.deletion.AbstractEquipmentDeletionEntity;
 import org.gridsuite.modification.server.entities.equipment.deletion.HvdcLccDeletionEntity;
 import org.gridsuite.modification.server.entities.equipment.deletion.ShuntCompensatorSelectionEmbeddable;
-
 import java.util.List;
 import java.util.stream.Collectors;
 
 /**
  * @author David Braquart<david.braquart at rte-france.com>
  */
-@SuperBuilder
+
 @NoArgsConstructor
 @Getter
 @Setter
@@ -45,18 +43,8 @@ public class HvdcLccDeletionInfos extends AbstractEquipmentDeletionInfos {
     private List<ShuntCompensatorInfos> mcsOnSide2;
 
     public HvdcLccDeletionInfos(List<ShuntCompensatorSelectionEmbeddable> mcs1, List<ShuntCompensatorSelectionEmbeddable> mcs2) {
-        mcsOnSide1 = mcs1 != null ? mcs1
-                .stream()
-                .map(s -> new ShuntCompensatorInfos.ShuntCompensatorInfosBuilder()
-                        .id(s.getShuntCompensatorId())
-                        .connectedToHvdc(s.isConnectedToHvdc()).build())
-                .collect(Collectors.toList()) : null;
-        mcsOnSide2 = mcs2 != null ? mcs2
-                .stream()
-                .map(s -> new ShuntCompensatorInfos.ShuntCompensatorInfosBuilder()
-                        .id(s.getShuntCompensatorId())
-                        .connectedToHvdc(s.isConnectedToHvdc()).build())
-                .collect(Collectors.toList()) : null;
+        mcsOnSide1 = toShuntCompensators(mcs1);
+        mcsOnSide2 = toShuntCompensators(mcs2);
     }
 
     @Override
@@ -66,10 +54,18 @@ public class HvdcLccDeletionInfos extends AbstractEquipmentDeletionInfos {
             : null;
     }
 
-    private static List<ShuntCompensatorSelectionEmbeddable> toEmbeddableShuntCompensators(List<HvdcLccDeletionInfos.ShuntCompensatorInfos> shuntCompensators) {
+    private List<ShuntCompensatorSelectionEmbeddable> toEmbeddableShuntCompensators(List<HvdcLccDeletionInfos.ShuntCompensatorInfos> shuntCompensators) {
         return shuntCompensators == null ? null : shuntCompensators.stream()
                 .map(s -> new ShuntCompensatorSelectionEmbeddable(s.getId(), s.isConnectedToHvdc()))
                 .collect(Collectors.toList());
     }
 
+    private List<ShuntCompensatorInfos> toShuntCompensators(List<ShuntCompensatorSelectionEmbeddable> shuntCompensators) {
+        return shuntCompensators != null ? shuntCompensators
+            .stream()
+            .map(s -> new ShuntCompensatorInfos.ShuntCompensatorInfosBuilder()
+                    .id(s.getShuntCompensatorId())
+                    .connectedToHvdc(s.isConnectedToHvdc()).build())
+            .collect(Collectors.toList()) : null;
+    }
 }

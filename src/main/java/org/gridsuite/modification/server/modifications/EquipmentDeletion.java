@@ -63,25 +63,28 @@ public class EquipmentDeletion extends AbstractModification {
 
     private void removeHvdcLine(Network network, Reporter subReporter) {
         HvdcLccDeletionInfos specificInfos = (HvdcLccDeletionInfos) modificationInfos.getSpecificData();
-        List<String> shuntCompensatorIds = specificInfos == null ? List.of() : Stream.concat(
-                        specificInfos.getMcsOnSide1() != null ? specificInfos.getMcsOnSide1().stream() : Stream.of(),
-                        specificInfos.getMcsOnSide2() != null ? specificInfos.getMcsOnSide2().stream() : Stream.of())
-                .filter(mcsInfo -> {
-                    // isConnectedToHvdc means: selected to be removed (can be changed by the Front)
-                    if (mcsInfo.isConnectedToHvdc() && network.getShuntCompensator(mcsInfo.getId()) == null) {
-                        subReporter.report(Report.builder()
-                                .withKey("shuntCompensatorNotDeleted")
-                                .withDefaultMessage("Shunt compensator with id=${id} not found in the network")
-                                .withValue("id", mcsInfo.getId())
-                                .withSeverity(TypedValue.WARN_SEVERITY)
-                                .build());
-                        return false;
-                    } else {
-                        return mcsInfo.isConnectedToHvdc();
-                    }
-                })
-                .map(mcsInfo -> mcsInfo.getId())
-                .collect(Collectors.toList());
+        List<String> shuntCompensatorIds = List.of();
+        if (specificInfos != null) {
+            shuntCompensatorIds = Stream.concat(
+                            specificInfos.getMcsOnSide1() != null ? specificInfos.getMcsOnSide1().stream() : Stream.of(),
+                            specificInfos.getMcsOnSide2() != null ? specificInfos.getMcsOnSide2().stream() : Stream.of())
+                    .filter(mcsInfo -> {
+                        // isConnectedToHvdc means: selected to be removed (can be changed by the Front)
+                        if (mcsInfo.isConnectedToHvdc() && network.getShuntCompensator(mcsInfo.getId()) == null) {
+                            subReporter.report(Report.builder()
+                                    .withKey("shuntCompensatorNotDeleted")
+                                    .withDefaultMessage("Shunt compensator with id=${id} not found in the network")
+                                    .withValue("id", mcsInfo.getId())
+                                    .withSeverity(TypedValue.WARN_SEVERITY)
+                                    .build());
+                            return false;
+                        } else {
+                            return mcsInfo.isConnectedToHvdc();
+                        }
+                    })
+                    .map(mcsInfo -> mcsInfo.getId())
+                    .collect(Collectors.toList());
+        }
         RemoveHvdcLine algo = new RemoveHvdcLineBuilder()
                 .withHvdcLineId(modificationInfos.getEquipmentId())
                 .withShuntCompensatorIds(shuntCompensatorIds)

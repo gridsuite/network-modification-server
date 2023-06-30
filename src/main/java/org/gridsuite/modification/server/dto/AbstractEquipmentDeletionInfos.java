@@ -11,7 +11,6 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.experimental.SuperBuilder;
 import org.gridsuite.modification.server.entities.equipment.deletion.AbstractEquipmentDeletionEntity;
 
 /**
@@ -20,18 +19,15 @@ import org.gridsuite.modification.server.entities.equipment.deletion.AbstractEqu
 
 @JsonTypeInfo(
     use = JsonTypeInfo.Id.NAME,
-    property = "type"
+    property = "specificType"
 )
 @JsonSubTypes({
     @JsonSubTypes.Type(value = HvdcLccDeletionInfos.class, name = "HVDC_LINE_WITH_LCC")
 })
 
-@SuperBuilder
 @NoArgsConstructor
 @Getter
 @Setter
 public abstract class AbstractEquipmentDeletionInfos {
-    public AbstractEquipmentDeletionEntity toEntity() {
-        return null;
-    }
+    public abstract AbstractEquipmentDeletionEntity toEntity();
 }
