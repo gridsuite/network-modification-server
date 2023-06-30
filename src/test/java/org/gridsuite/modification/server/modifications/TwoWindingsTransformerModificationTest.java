@@ -55,6 +55,7 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
                                 .acceptableDuration(null)
                                 .name("name31")
                                 .value(null)
+                                .modificationType(TemporaryLimitModificationType.ADDED)
                                 .build()))
                         .build())
                 .currentLimits2(CurrentLimitsModificationInfos.builder()
@@ -63,6 +64,7 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
                                 .acceptableDuration(32)
                                 .name("name32")
                                 .value(42.0)
+                                .modificationType(TemporaryLimitModificationType.ADDED)
                                 .build()))
                         .build())
                 .build();
