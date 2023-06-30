@@ -10,6 +10,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+import org.gridsuite.modification.server.entities.equipment.deletion.AbstractEquipmentDeletionEntity;
+import org.gridsuite.modification.server.entities.equipment.deletion.HvdcLccDeletionEntity;
 import org.gridsuite.modification.server.entities.equipment.deletion.ShuntCompensatorSelectionEmbeddable;
 
 import java.util.List;
@@ -56,4 +58,18 @@ public class HvdcLccDeletionInfos extends AbstractEquipmentDeletionInfos {
                         .connectedToHvdc(s.isConnectedToHvdc()).build())
                 .collect(Collectors.toList()) : null;
     }
+
+    @Override
+    public AbstractEquipmentDeletionEntity toEntity() {
+        return mcsOnSide1 != null && !mcsOnSide1.isEmpty() || mcsOnSide2 != null && !mcsOnSide2.isEmpty() ?
+            new HvdcLccDeletionEntity(toEmbeddableShuntCompensators(mcsOnSide1), toEmbeddableShuntCompensators(mcsOnSide2))
+            : null;
+    }
+
+    private static List<ShuntCompensatorSelectionEmbeddable> toEmbeddableShuntCompensators(List<HvdcLccDeletionInfos.ShuntCompensatorInfos> shuntCompensators) {
+        return shuntCompensators == null ? null : shuntCompensators.stream()
+                .map(s -> new ShuntCompensatorSelectionEmbeddable(s.getId(), s.isConnectedToHvdc()))
+                .collect(Collectors.toList());
+    }
+
 }

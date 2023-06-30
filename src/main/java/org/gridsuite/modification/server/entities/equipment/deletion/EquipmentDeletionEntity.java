@@ -10,13 +10,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.gridsuite.modification.server.dto.EquipmentDeletionInfos;
-import org.gridsuite.modification.server.dto.HvdcLccDeletionInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
-
 import javax.persistence.*;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -30,13 +26,13 @@ public class EquipmentDeletionEntity extends EquipmentModificationEntity {
     @Column(name = "equipmentType")
     private String equipmentType;
 
-    @ElementCollection
-    @CollectionTable(name = "shuntCompensatorsSide1")
-    private List<ShuntCompensatorSelectionEmbeddable> shuntCompensatorsSide1;
-
-    @ElementCollection
-    @CollectionTable(name = "shuntCompensatorsSide2")
-    private List<ShuntCompensatorSelectionEmbeddable> shuntCompensatorsSide2;
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JoinColumn(name = "specific_deletion_data_id",
+            referencedColumnName = "id",
+            foreignKey = @ForeignKey(
+                    name = "specific_deletion_data_id_fk"
+            ), nullable = true)
+    private AbstractEquipmentDeletionEntity specificDeletionData;
 
     public EquipmentDeletionEntity(EquipmentDeletionInfos equipmentDeletionInfos) {
         super(equipmentDeletionInfos);
@@ -51,10 +47,8 @@ public class EquipmentDeletionEntity extends EquipmentModificationEntity {
 
     private void assignAttributes(EquipmentDeletionInfos equipmentDeletionInfos) {
         this.equipmentType = equipmentDeletionInfos.getEquipmentType();
-        if (equipmentDeletionInfos.getSpecificData() instanceof HvdcLccDeletionInfos) {
-            HvdcLccDeletionInfos specificInfos = (HvdcLccDeletionInfos) equipmentDeletionInfos.getSpecificData();
-            this.shuntCompensatorsSide1 = toEmbeddableShuntCompensators(specificInfos.getMcsOnSide1());
-            this.shuntCompensatorsSide2 = toEmbeddableShuntCompensators(specificInfos.getMcsOnSide2());
+        if (equipmentDeletionInfos.getSpecificData() != null) {
+            specificDeletionData = equipmentDeletionInfos.getSpecificData().toEntity();
         }
     }
 
@@ -66,16 +60,9 @@ public class EquipmentDeletionEntity extends EquipmentModificationEntity {
                 .date(getDate())
                 .equipmentId(getEquipmentId())
                 .equipmentType(getEquipmentType());
-        if (shuntCompensatorsSide1 != null && !shuntCompensatorsSide1.isEmpty() ||
-                shuntCompensatorsSide2 != null && !shuntCompensatorsSide2.isEmpty()) {
-            builder.specificData(new HvdcLccDeletionInfos(shuntCompensatorsSide1, shuntCompensatorsSide2));
+        if (specificDeletionData != null) {
+            builder.specificData(specificDeletionData.toSpecificInfos());
         }
         return builder.build();
-    }
-
-    private static List<ShuntCompensatorSelectionEmbeddable> toEmbeddableShuntCompensators(List<HvdcLccDeletionInfos.ShuntCompensatorInfos> shuntCompensators) {
-        return shuntCompensators == null ? null : shuntCompensators.stream()
-                .map(s -> new ShuntCompensatorSelectionEmbeddable(s.getId(), s.isConnectedToHvdc()))
-                .collect(Collectors.toList());
     }
 }

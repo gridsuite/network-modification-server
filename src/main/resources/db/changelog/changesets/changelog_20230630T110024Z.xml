@@ -1,0 +1,39 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-4.1.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
+    <changeSet author="braquartdav (generated)" id="1688122846439-5">
+        <createTable tableName="hvdc_lcc_deletion">
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="abstract_equiPK"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="braquartdav (generated)" id="1688122846439-6">
+        <createTable tableName="shunt_compensators_side1">
+            <column name="hvdc_lcc_deletion_entity_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="connected_to_hvdc" type="BOOLEAN"/>
+            <column name="shunt_compensator_id" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="braquartdav (generated)" id="1688122846439-7">
+        <createTable tableName="shunt_compensators_side2">
+            <column name="hvdc_lcc_deletion_entity_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="connected_to_hvdc" type="BOOLEAN"/>
+            <column name="shunt_compensator_id" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="braquartdav (generated)" id="1688122846439-8">
+        <addColumn tableName="equipment_deletion">
+            <column name="specific_deletion_data_id" type="uuid"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="braquartdav (generated)" id="1688122846439-9">
+        <addForeignKeyConstraint baseColumnNames="hvdc_lcc_deletion_entity_id" baseTableName="shunt_compensators_side2" constraintName="FKe1885gck7ubh0vsh8r6luc37v" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="hvdc_lcc_deletion" validate="true"/>
+    </changeSet>
+    <changeSet author="braquartdav (generated)" id="1688122846439-10">
+        <addForeignKeyConstraint baseColumnNames="hvdc_lcc_deletion_entity_id" baseTableName="shunt_compensators_side1" constraintName="FKmhwpx4hh8a0pql3suibhk6qy6" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="hvdc_lcc_deletion" validate="true"/>
+    </changeSet>
+</databaseChangeLog>
