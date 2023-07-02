@@ -18,7 +18,7 @@ import lombok.*;
 @NoArgsConstructor
 @Getter
 @Setter
-@ToString(callSuper = true)
+@ToString
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class TapChangerStepCreationInfos {
 

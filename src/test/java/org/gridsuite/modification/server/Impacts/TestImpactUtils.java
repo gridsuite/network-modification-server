@@ -19,7 +19,7 @@ import org.gridsuite.modification.server.impacts.SimpleElementImpact.SimpleImpac
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static org.gridsuite.modification.server.utils.Assertions.*;
+import static org.gridsuite.modification.server.utils.assertions.Assertions.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -88,7 +88,7 @@ public final class TestImpactUtils {
         assertTrue(networkModificationResult.isPresent());
         NetworkModificationResult resultExpected = NetworkModificationResult.builder()
             .applicationStatus(ApplicationStatus.ALL_OK)
-            .networkImpacts(List.of(createElementImpact(impactType, elementType, elementId, new TreeSet<>(substationIds))))
+            .networkImpacts(List.of(createElementImpact(impactType, elementType, elementId, new HashSet<>(substationIds))))
             .build();
         assertThat(networkModificationResult.get()).recursivelyEquals(resultExpected);
     }
@@ -152,7 +152,7 @@ public final class TestImpactUtils {
     private static List<SimpleElementImpact> createBranchImpacts(SimpleImpactType impactType, IdentifiableType branchType, String branchId,
                                                                  String breakerId1, String disconnectorId1, String substationId1,
                                                                  String breakerId2, String disconnectorId2, String substationId2) {
-        LinkedList<SimpleElementImpact> impacts = new LinkedList<>(List.of(createElementImpact(impactType, branchType, branchId, new TreeSet<>(List.of(substationId1, substationId2)))));
+        LinkedList<SimpleElementImpact> impacts = new LinkedList<>(List.of(createElementImpact(impactType, branchType, branchId, new HashSet<>(List.of(substationId1, substationId2)))));
         List<SimpleElementImpact> switchImpacts = List.of(
             createElementImpact(impactType, IdentifiableType.SWITCH, breakerId1, Set.of(substationId1)),
             createElementImpact(impactType, IdentifiableType.SWITCH, disconnectorId1, Set.of(substationId1)),

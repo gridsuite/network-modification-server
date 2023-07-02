@@ -120,6 +120,12 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
         super.testCreate();
 
         wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(getNetworkUuid(), filters.stream().map(FilterEquipments::getFilterId).collect(Collectors.toList())), false);
+
+        assertEquals(
+            String.format("ScalingInfos(super=ModificationInfos(uuid=null, date=null), variations=[ScalingVariationInfos(id=null, filters=[FilterInfos(id=%s, name=filter1)], variationMode=PROPORTIONAL_TO_PMAX, variationValue=50.0, reactiveVariationMode=null), ScalingVariationInfos(id=null, filters=[FilterInfos(id=%s, name=filter2)], variationMode=REGULAR_DISTRIBUTION, variationValue=50.0, reactiveVariationMode=null), ScalingVariationInfos(id=null, filters=[FilterInfos(id=%s, name=filter3)], variationMode=STACKING_UP, variationValue=50.0, reactiveVariationMode=null), ScalingVariationInfos(id=null, filters=[FilterInfos(id=%s, name=filter4)], variationMode=VENTILATION, variationValue=50.0, reactiveVariationMode=null), ScalingVariationInfos(id=null, filters=[FilterInfos(id=%s, name=filter1), FilterInfos(id=%s, name=filter5)], variationMode=PROPORTIONAL, variationValue=50.0, reactiveVariationMode=null)], variationType=DELTA_P)",
+                FILTER_ID_1, FILTER_ID_2, FILTER_ID_3, FILTER_ID_4, FILTER_ID_1, FILTER_ID_5),
+            buildModification().toString()
+        );
     }
 
     @Test
@@ -322,7 +328,7 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
                 .build();
 
         return GeneratorScalingInfos.builder()
-                .date(ZonedDateTime.now().truncatedTo(ChronoUnit.MICROS))
+                //.date(ZonedDateTime.now().truncatedTo(ChronoUnit.MICROS))
                 .variationType(VariationType.DELTA_P)
                 .variations(List.of(variation1, variation2, variation3, variation4, variation5))
                 .build();
@@ -343,7 +349,7 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
 
         return GeneratorScalingInfos.builder()
                 .uuid(GENERATOR_SCALING_ID)
-                .date(ZonedDateTime.now().truncatedTo(ChronoUnit.MICROS))
+                //.date(ZonedDateTime.now().truncatedTo(ChronoUnit.MICROS))
                 .variationType(VariationType.TARGET_P)
                 .variations(List.of(variation5))
                 .build();
