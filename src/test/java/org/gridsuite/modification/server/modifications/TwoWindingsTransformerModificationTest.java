@@ -130,7 +130,7 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
                         .build())
                 .phaseTapChanger(PhaseTapChangerModificationInfos.builder()
                     .regulating(new AttributeModification<>(true, OperationType.SET))
-                    .regulationMode(new AttributeModification<>(PhaseTapChanger.RegulationMode.CURRENT_LIMITER, OperationType.SET))
+                    .regulationMode(new AttributeModification<>(PhaseTapChanger.RegulationMode.ACTIVE_POWER_CONTROL, OperationType.SET))
                     .regulationValue(new AttributeModification<>(100.1, OperationType.SET))
                     .targetDeadband(new AttributeModification<>(100.1, OperationType.SET))
                     .lowTapPosition(new AttributeModification<>(1, OperationType.SET))
@@ -196,7 +196,9 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
         assertEquals("name32", temporaryLimit.getName());
         assertEquals(42.0, temporaryLimit.getValue());
         //phase tap
-
+        assertEquals("    Fixed tap", ModificationUtils.getInstance().formatRegulationModeReport(PhaseTapChanger.RegulationMode.FIXED_TAP));
+        assertEquals("    Active power control", ModificationUtils.getInstance().formatRegulationModeReport(PhaseTapChanger.RegulationMode.ACTIVE_POWER_CONTROL));
+        assertEquals("    Current limiter", ModificationUtils.getInstance().formatRegulationModeReport(PhaseTapChanger.RegulationMode.CURRENT_LIMITER));
     }
 
     @SneakyThrows
