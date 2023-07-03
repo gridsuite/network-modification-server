@@ -22,7 +22,6 @@ import java.util.List;
 @NoArgsConstructor
 @Getter
 @Setter
-@ToString(callSuper = true)
 @Schema(description = "TapChanger attributes")
 public class TapChangerModificationInfos {
 
