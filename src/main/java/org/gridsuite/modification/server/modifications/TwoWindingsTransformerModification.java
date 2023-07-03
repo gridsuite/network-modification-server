@@ -130,16 +130,10 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
             && phaseTapChangerModificationInfos.getRegulationMode().getValue() != null
             || phaseTapChangerModificationInfos.getRegulationValue() != null
             && phaseTapChangerModificationInfos.getRegulationValue().getValue() != null
-            || phaseTapChangerModificationInfos.getRegulatingTerminalVlId() != null
-            && phaseTapChangerModificationInfos.getRegulatingTerminalVlId().getValue() != null
             || phaseTapChangerModificationInfos.getRegulatingTerminalId() != null
             && phaseTapChangerModificationInfos.getRegulatingTerminalId().getValue() != null
-            || phaseTapChangerModificationInfos.getRegulatingTerminalType() != null
-            && phaseTapChangerModificationInfos.getRegulatingTerminalType().getValue() != null
             || phaseTapChangerModificationInfos.getTargetDeadband() != null
             && phaseTapChangerModificationInfos.getTargetDeadband().getValue() != null
-            || phaseTapChangerModificationInfos.getLowTapPosition() != null
-            && phaseTapChangerModificationInfos.getLowTapPosition().getValue() != null
             || phaseTapChangerModificationInfos.getTapPosition() != null
             && phaseTapChangerModificationInfos.getTapPosition().getValue() != null
             || phaseTapChangerModificationInfos.getSteps() != null);
