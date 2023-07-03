@@ -10,6 +10,7 @@ package org.gridsuite.modification.server.utils;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
+import org.gridsuite.modification.server.modifications.ModificationUtils;
 
 import java.util.UUID;
 
@@ -103,6 +104,10 @@ public final class NetworkCreation {
         createSwitch(v3, "v3dBattery", "v3dBattery", SwitchKind.DISCONNECTOR, true, false, false, 0, 5);
         createSwitch(v3, "v3bBattery", "v3bBattery", SwitchKind.BREAKER, true, false, false, 5, 6);
 
+        Terminal phaseTapChangerTerminal = ModificationUtils.getInstance().getTerminalFromIdentifiable(network,
+            "v3load",
+            "LOAD",
+            "V3");
         TwoWindingsTransformer t2 = createTwoWindingsTransformer(s1, "trf1", "trf1", 2.0, 14.745, 0.0, 3.2E-5, 400.0, 225.0,
             4, 14, v1.getId(), v2.getId(),
             "trf1", 1, ConnectablePosition.Direction.TOP,
@@ -140,7 +145,7 @@ public final class NetworkCreation {
         t2.newPhaseTapChanger()
             .setLowTapPosition(0)
             .setTapPosition(1)
-            .setRegulationTerminal(t2.getTerminal1())
+            .setRegulationTerminal(phaseTapChangerTerminal)
             .setRegulationMode(PhaseTapChanger.RegulationMode.CURRENT_LIMITER)
             .setRegulationValue(100.)
             .setTargetDeadband(2.)
