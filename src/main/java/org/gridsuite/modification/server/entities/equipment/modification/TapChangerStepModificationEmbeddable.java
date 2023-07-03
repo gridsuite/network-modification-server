@@ -50,13 +50,6 @@ public class TapChangerStepModificationEmbeddable {
     @Column(name = "alpha")
     private Double alpha;
 
-    public static List<TapChangerStepModificationEmbeddable> toEmbeddableRatioTapChangerSteps(List<TapChangerStepModificationInfos> tapChangerSteps) {
-        return tapChangerSteps == null ? null :
-            tapChangerSteps.stream()
-                .map(tapChangerStep -> new TapChangerStepModificationEmbeddable(TapChangerType.RATIO, tapChangerStep.getIndex(), tapChangerStep.getRho(), tapChangerStep.getR(), tapChangerStep.getX(), tapChangerStep.getG(), tapChangerStep.getB(), null))
-                .collect(Collectors.toList());
-    }
-
     public static List<TapChangerStepModificationEmbeddable> toEmbeddablePhaseTapChangerSteps(List<TapChangerStepModificationInfos> tapChangerSteps) {
         return tapChangerSteps == null ? null :
             tapChangerSteps.stream()
@@ -78,14 +71,6 @@ public class TapChangerStepModificationEmbeddable {
                 .g(getG())
                 .b(getB())
                 .alpha(getAlpha());
-        } else if (getTapChangerType().equals(TapChangerType.RATIO)) {
-            return TapChangerStepModificationInfos.builder()
-                .index(getIndex())
-                .rho(getRho())
-                .r(getR())
-                .x(getX())
-                .g(getG())
-                .b(getB());
         }
         return TapChangerStepModificationInfos.builder();
     }
