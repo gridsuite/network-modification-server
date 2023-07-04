@@ -22,7 +22,7 @@ import java.util.List;
 @NoArgsConstructor
 @Getter
 @Setter
-@ToString(callSuper = true)
+@ToString
 @Schema(description = "TapChanger attributes")
 public class TapChangerCreationInfos {
 

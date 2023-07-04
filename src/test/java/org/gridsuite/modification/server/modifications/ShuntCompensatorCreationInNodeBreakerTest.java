@@ -9,14 +9,13 @@ package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
-import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.ShuntCompensatorCreationInfos;
 import org.gridsuite.modification.server.dto.ShuntCompensatorType;
-import org.gridsuite.modification.server.utils.MatcherShuntCompensatorCreationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
+import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 
 import java.time.ZonedDateTime;
@@ -25,13 +24,14 @@ import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.CONNECTION_POSITION_ERROR;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.SHUNT_COMPENSATOR_ALREADY_EXISTS;
+import static org.gridsuite.modification.server.utils.assertions.Assertions.*;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@Tag("IntegrationTest")
 public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
 
     @Override
@@ -75,11 +75,6 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
     }
 
     @Override
-    protected MatcherShuntCompensatorCreationInfos createMatcher(ModificationInfos modificationInfos) {
-        return MatcherShuntCompensatorCreationInfos.createMatcher((ShuntCompensatorCreationInfos) modificationInfos);
-    }
-
-    @Override
     protected void assertNetworkAfterCreation() {
         assertNotNull(getNetwork().getShuntCompensator("shuntOneId"));
     }
@@ -89,9 +84,8 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
         assertNull(getNetwork().getShuntCompensator("shuntOneId"));
     }
 
-    @SneakyThrows
     @Test
-    public void testCreateWithError() {
+    public void testCreateWithError() throws Exception {
         ShuntCompensatorCreationInfos modificationToCreate = (ShuntCompensatorCreationInfos) buildModification();
         // Current number of sections above maximum allowed
         modificationToCreate.setIsIdenticalSection(false);
@@ -112,9 +106,8 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
                 modificationToCreate.getErrorType().name(), reportService);
     }
 
-    @SneakyThrows
     @Test
-    public void testCreateWithExistingConnectionPosition() {
+    public void testCreateWithExistingConnectionPosition() throws Exception {
         ShuntCompensatorCreationInfos dto = (ShuntCompensatorCreationInfos) buildModification();
         dto.setConnectionPosition(2);
         String modificationToCreateJson = mapper.writeValueAsString(dto);
@@ -124,9 +117,8 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
                 dto.getErrorType().name(), reportService);
     }
 
-    @SneakyThrows
     @Test
-    public void testCreateWithQAtNominalV() {
+    public void testCreateWithQAtNominalV() throws Exception {
         ShuntCompensatorCreationInfos dto = (ShuntCompensatorCreationInfos) buildModification();
         dto.setSusceptancePerSection(null);
         dto.setQAtNominalV(80.0);
@@ -136,7 +128,7 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
         ShuntCompensatorCreationInfos createdModification = (ShuntCompensatorCreationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
-        assertThat(createdModification, createMatcher(dto));
+        assertThat(createdModification).recursivelyEquals(dto);
         //REACTOR test
         dto.setShuntCompensatorType(ShuntCompensatorType.REACTOR);
         dto.setEquipmentId("shuntTwoId");
@@ -145,6 +137,6 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
         createdModification = (ShuntCompensatorCreationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(1);
-        assertThat(createdModification, createMatcher(dto));
+        assertThat(createdModification).recursivelyEquals(dto);
     }
 }

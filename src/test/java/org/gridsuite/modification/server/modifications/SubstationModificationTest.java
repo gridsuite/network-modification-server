@@ -7,12 +7,13 @@
 
 package org.gridsuite.modification.server.modifications;
 
-import com.powsybl.iidm.network.*;
+import com.powsybl.iidm.network.Country;
+import com.powsybl.iidm.network.Network;
+import com.powsybl.iidm.network.Substation;
 import org.gridsuite.modification.server.dto.*;
-import org.gridsuite.modification.server.utils.MatcherSubstationModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
-import lombok.SneakyThrows;
+import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 
 import java.util.List;
@@ -28,6 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * @author David Braquart <david.braquart at rte-france.com>
  */
+@Tag("IntegrationTest")
 public class SubstationModificationTest extends AbstractNetworkModificationTest {
 
     @Override
@@ -54,13 +56,8 @@ public class SubstationModificationTest extends AbstractNetworkModificationTest 
             .equipmentId("s3")
             .equipmentName(new AttributeModification<>("newNameEdited1", OperationType.SET))
             .substationCountry(new AttributeModification<>(Country.JP, OperationType.SET))
-            .properties(List.of())
+            .properties(null)
             .build();
-    }
-
-    @Override
-    protected MatcherSubstationModificationInfos createMatcher(ModificationInfos modificationInfos) {
-        return MatcherSubstationModificationInfos.createMatcherSubstationModificationInfos((SubstationModificationInfos) modificationInfos);
     }
 
     @Override
@@ -88,9 +85,8 @@ public class SubstationModificationTest extends AbstractNetworkModificationTest 
         assertEquals("west", modifiedStation.getProperty("region", ""));
     }
 
-    @SneakyThrows
     @Test
-    public void testCreateWithErrors() {
+    public void testCreateWithErrors() throws Exception {
         // Try to modify an unknown substation
         SubstationModificationInfos infos = SubstationModificationInfos.builder()
                 .equipmentId("unknown")

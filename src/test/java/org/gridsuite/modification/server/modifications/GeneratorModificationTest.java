@@ -11,11 +11,10 @@ import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.ActivePowerControl;
 import com.powsybl.iidm.network.extensions.GeneratorShortCircuit;
 import com.powsybl.iidm.network.extensions.GeneratorStartup;
-import lombok.SneakyThrows;
 import org.gridsuite.modification.server.dto.*;
-import org.gridsuite.modification.server.utils.MatcherGeneratorModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
+import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 import org.springframework.util.CollectionUtils;
 
@@ -26,12 +25,13 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.IntStream;
 
+import static org.gridsuite.modification.server.utils.assertions.Assertions.*;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@Tag("IntegrationTest")
 public class GeneratorModificationTest extends AbstractNetworkModificationTest {
     @Override
     protected Network createNetwork(UUID networkUuid) {
@@ -99,11 +99,6 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
     }
 
     @Override
-    protected MatcherGeneratorModificationInfos createMatcher(ModificationInfos modificationInfos) {
-        return MatcherGeneratorModificationInfos.createMatcherGeneratorModificationInfos((GeneratorModificationInfos) modificationInfos);
-    }
-
-    @Override
     protected void assertNetworkAfterCreation() {
         Generator modifiedGenerator = getNetwork().getGenerator("idGenerator");
         assertEquals("newV1Generator", modifiedGenerator.getNameOrId());
@@ -141,9 +136,8 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
         assertEquals(ReactiveLimitsKind.MIN_MAX, generator.getReactiveLimits().getKind());
     }
 
-    @SneakyThrows
     @Test
-    public void testMinMaxReactiveLimitsAttributesModification() {
+    public void testMinMaxReactiveLimitsAttributesModification() throws Exception {
         GeneratorModificationInfos generatorModificationInfos = (GeneratorModificationInfos) buildModification();
 
         //setting ReactiveCapabilityCurve to false with null min and max reactive limits
@@ -171,7 +165,7 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
 
         GeneratorModificationInfos createdModification = (GeneratorModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
 
-        assertThat(createdModification, createMatcher(generatorModificationInfos));
+        assertThat(createdModification).recursivelyEquals(generatorModificationInfos);
         testNetworkModificationsCount(getGroupId(), 1);
 
         // Modifying only min reactive limit
@@ -183,7 +177,7 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
 
         createdModification = (GeneratorModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(1);
 
-        assertThat(createdModification, createMatcher(generatorModificationInfos));
+        assertThat(createdModification).recursivelyEquals(generatorModificationInfos);
         testNetworkModificationsCount(getGroupId(), 2);
 
         // Modifying only max reactive limit
@@ -196,7 +190,7 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
 
         createdModification = (GeneratorModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(2);
 
-        assertThat(createdModification, createMatcher(generatorModificationInfos));
+        assertThat(createdModification).recursivelyEquals(generatorModificationInfos);
         testNetworkModificationsCount(getGroupId(), 3);
 
         // Modifying both min and max reactive limits
@@ -208,7 +202,7 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
 
         createdModification = (GeneratorModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(3);
 
-        assertThat(createdModification, createMatcher(generatorModificationInfos));
+        assertThat(createdModification).recursivelyEquals(generatorModificationInfos);
         testNetworkModificationsCount(getGroupId(), 4);
 
         // nothing before reactive limits modification
@@ -222,13 +216,12 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         createdModification = (GeneratorModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(4);
-        assertThat(createdModification, createMatcher(generatorModificationInfos));
+        assertThat(createdModification).recursivelyEquals(generatorModificationInfos);
         testNetworkModificationsCount(getGroupId(), 5);
     }
 
-    @SneakyThrows
     @Test
-    public void testGeneratorShortCircuitAttributesModification() {
+    public void testGeneratorShortCircuitAttributesModification() throws Exception {
         GeneratorModificationInfos generatorModificationInfos = (GeneratorModificationInfos) buildModification();
 
         // setting transient reactance to null, modifying only step up transformer reactance
@@ -240,7 +233,7 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
 
         GeneratorModificationInfos createdModification = (GeneratorModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
 
-        assertThat(createdModification, createMatcher(generatorModificationInfos));
+        assertThat(createdModification).recursivelyEquals(generatorModificationInfos);
         testNetworkModificationsCount(getGroupId(), 1);
 
         // setting step up transformer reactance to null, modifying only transient reactance
@@ -253,13 +246,12 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
 
         createdModification = (GeneratorModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(1);
 
-        assertThat(createdModification, createMatcher(generatorModificationInfos));
+        assertThat(createdModification).recursivelyEquals(generatorModificationInfos);
         testNetworkModificationsCount(getGroupId(), 2);
     }
 
-    @SneakyThrows
     @Test
-    public void testGeneratorVoltageRegulatorAttributesModification() {
+    public void testGeneratorVoltageRegulatorAttributesModification() throws Exception {
         GeneratorModificationInfos generatorModificationInfos = (GeneratorModificationInfos) buildModification();
 
         // setting voltageRegulatorOn to true, applying qPercent and regulatingTerminal
@@ -271,7 +263,7 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
 
         GeneratorModificationInfos createdModification = (GeneratorModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
 
-        assertThat(createdModification, createMatcher(generatorModificationInfos));
+        assertThat(createdModification).recursivelyEquals(generatorModificationInfos);
         testNetworkModificationsCount(getGroupId(), 1);
 
         // setting voltageRegulatorOn to null, no modification on voltageRegulationOn
@@ -283,7 +275,7 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
 
         createdModification = (GeneratorModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(1);
 
-        assertThat(createdModification, createMatcher(generatorModificationInfos));
+        assertThat(createdModification).recursivelyEquals(generatorModificationInfos);
         testNetworkModificationsCount(getGroupId(), 2);
 
         // setting voltageRegulationType to local, setting reginingTerminal to null
@@ -295,7 +287,7 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
 
         createdModification = (GeneratorModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(2);
 
-        assertThat(createdModification, createMatcher(generatorModificationInfos));
+        assertThat(createdModification).recursivelyEquals(generatorModificationInfos);
         testNetworkModificationsCount(getGroupId(), 3);
 
         // no modification in setpoints
@@ -310,13 +302,12 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
                 .andExpect(status().isOk()).andReturn();
 
         createdModification = (GeneratorModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(3);
-        assertThat(createdModification, createMatcher(generatorModificationInfos));
+        assertThat(createdModification).recursivelyEquals(generatorModificationInfos);
         testNetworkModificationsCount(getGroupId(), 4);
     }
 
-    @SneakyThrows
     @Test
-    public void testCreateWithErrors() {
+    public void testCreateWithErrors() throws Exception {
         GeneratorModificationInfos generatorModificationInfos = (GeneratorModificationInfos) buildModification();
         // Unset an attribute that should not be null
         generatorModificationInfos.setEnergySource(new AttributeModification<>(null, OperationType.UNSET));
@@ -329,9 +320,8 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
                 generatorModificationInfos.getErrorType().name(), reportService);
     }
 
-    @SneakyThrows
     @Test
-    public void testDroopUnchanged() {
+    public void testDroopUnchanged() throws Exception {
         GeneratorModificationInfos generatorModificationInfos = (GeneratorModificationInfos) buildModification();
 
         generatorModificationInfos.getDroop().setValue(18f);
@@ -342,7 +332,7 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
 
         GeneratorModificationInfos createdModification = (GeneratorModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
 
-        assertThat(createdModification, createMatcher(generatorModificationInfos));
+        assertThat(createdModification).recursivelyEquals(generatorModificationInfos);
 
         // setting droop to null, modifying only participate
         generatorModificationInfos.setDroop(null);
@@ -356,9 +346,8 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
         assertEquals(18f, createdModification.getDroop().getValue());
     }
 
-    @SneakyThrows
     @Test
-    public void testMinQGreaterThanMaxQ() {
+    public void testMinQGreaterThanMaxQ() throws Exception {
         GeneratorModificationInfos generatorModificationInfos = (GeneratorModificationInfos) buildModification();
         Generator generator = getNetwork().getGenerator("idGenerator");
         generator.newReactiveCapabilityCurve()
