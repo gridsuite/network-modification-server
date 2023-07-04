@@ -1,0 +1,121 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-4.1.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
+    <changeSet author="labidiayo (generated)" id="1688295291684-5">
+        <createTable tableName="tap_changer_step_modification">
+            <column name="modification_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="alpha" type="FLOAT8"/>
+            <column name="b" type="FLOAT8"/>
+            <column name="g" type="FLOAT8"/>
+            <column name="index" type="INT"/>
+            <column name="r" type="FLOAT8"/>
+            <column name="rho" type="FLOAT8"/>
+            <column name="tapchangertype" type="VARCHAR(255)"/>
+            <column name="x" type="FLOAT8"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="labidiayo (generated)" id="1688295291684-6">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="ratio_tap_changer_enabled" type="boolean"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="labidiayo (generated)" id="1688295291684-7">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="ratio_tap_changer_enabled_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="labidiayo (generated)" id="1688295291684-8">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="ratiotapchangerloadtapchangingcapabilities" type="boolean"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="labidiayo (generated)" id="1688295291684-9">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="ratiotapchangerloadtapchangingcapabilities_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="labidiayo (generated)" id="1688295291684-10">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="ratiotapchangerlowtapposition" type="int4"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="labidiayo (generated)" id="1688295291684-11">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="ratiotapchangerlowtapposition_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="labidiayo (generated)" id="1688295291684-12">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="ratiotapchangerregulating" type="boolean"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="labidiayo (generated)" id="1688295291684-13">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="ratiotapchangerregulating_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="labidiayo (generated)" id="1688295291684-14">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="ratiotapchangertapposition" type="int4"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="labidiayo (generated)" id="1688295291684-15">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="ratiotapchangertapposition_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="labidiayo (generated)" id="1688295291684-16">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="ratiotapchangertargetdeadband" type="float8"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="labidiayo (generated)" id="1688295291684-17">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="ratiotapchangertargetdeadband_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="labidiayo (generated)" id="1688295291684-18">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="ratiotapchangertargetv" type="float8"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="labidiayo (generated)" id="1688295291684-19">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="ratiotapchangertargetv_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="labidiayo (generated)" id="1688295291684-20">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="ratiotapchangerterminalrefconnectableid" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="labidiayo (generated)" id="1688295291684-21">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="ratiotapchangerterminalrefconnectableid_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="labidiayo (generated)" id="1688295291684-22">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="ratiotapchangerterminalreftype" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="labidiayo (generated)" id="1688295291684-23">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="ratiotapchangerterminalreftype_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="labidiayo (generated)" id="1688295291684-24">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="ratiotapchangerterminalrefvoltagelevelid" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="labidiayo (generated)" id="1688295291684-25">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="ratiotapchangerterminalrefvoltagelevelid_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="labidiayo (generated)" id="1688295291684-26">
+        <addForeignKeyConstraint baseColumnNames="modification_id" baseTableName="tap_changer_step_modification" constraintName="FKqhs8e1ch62yyr7nbtyn9e8edt" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="two_windings_transformer_modification" validate="true"/>
+    </changeSet>
+</databaseChangeLog>

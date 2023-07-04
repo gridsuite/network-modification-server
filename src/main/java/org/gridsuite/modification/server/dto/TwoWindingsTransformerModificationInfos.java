@@ -47,7 +47,7 @@ public class TwoWindingsTransformerModificationInfos extends BranchModificationI
     private AttributeModification<Double> ratedS;
 
     @Schema(description = "Ratio tap changer")
-    private RatioTapChangerCreationInfos ratioTapChanger;
+    private RatioTapChangerModificationInfos ratioTapChanger;
 
     @Override
     public TwoWindingsTransformerModificationEntity toEntity() {
