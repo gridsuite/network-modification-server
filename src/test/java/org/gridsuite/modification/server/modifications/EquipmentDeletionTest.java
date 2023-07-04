@@ -7,15 +7,13 @@
 
 package org.gridsuite.modification.server.modifications;
 
-import com.powsybl.commons.PowsyblException;
 import com.powsybl.iidm.network.Network;
-import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.EquipmentDeletionInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.utils.MatcherEquipmentDeletionInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
+import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 
 import java.util.UUID;
@@ -27,6 +25,7 @@ import static org.junit.Assert.assertNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@Tag("IntegrationTest")
 public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
 
     @Override
@@ -51,11 +50,6 @@ public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
     }
 
     @Override
-    protected MatcherEquipmentDeletionInfos createMatcher(ModificationInfos modificationInfos) {
-        return MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos((EquipmentDeletionInfos) modificationInfos);
-    }
-
-    @Override
     protected void assertNetworkAfterCreation() {
         assertNull(getNetwork().getLoad("v1load"));
     }
@@ -65,9 +59,8 @@ public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
         assertNotNull(getNetwork().getLoad("v1load"));
     }
 
-    @SneakyThrows
     @Test
-    public void testOkWhenRemovingIsolatedEquipment() {
+    public void testOkWhenRemovingIsolatedEquipment() throws Exception {
 
         EquipmentDeletionInfos equipmentDeletionInfos = EquipmentDeletionInfos.builder()
                 .equipmentType("LOAD")
@@ -84,9 +77,8 @@ public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
         assertNull(v5.getNodeBreakerView().getTerminal(2));
     }
 
-    @SneakyThrows
     @Test
-    public void testCreateWithErrors() {
+    public void testCreateWithErrors() throws Exception {
         // delete load (fail because the load is not found)
         EquipmentDeletionInfos equipmentDeletionInfos = (EquipmentDeletionInfos) buildModification();
         equipmentDeletionInfos.setEquipmentId("notFoundLoad");
@@ -94,16 +86,6 @@ public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(EQUIPMENT_NOT_FOUND, "Equipment with id=notFoundLoad not found or of bad type").getMessage(),
                 equipmentDeletionInfos.getErrorType().name(), reportService);
-
-        // try to delete voltage level (Internal error because the vl is still connected)
-        equipmentDeletionInfos.setEquipmentType("VOLTAGE_LEVEL");
-        equipmentDeletionInfos.setEquipmentId("v4");
-        mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(equipmentDeletionInfos)).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
-        assertLogMessage(new PowsyblException(new AssertionError("The voltage level 'v4' cannot be removed because of a remaining THREE_WINDINGS_TRANSFORMER")).getMessage(),
-                equipmentDeletionInfos.getErrorType().name(), reportService);
-        equipmentDeletionInfos.setEquipmentId("v4");
-        assertNotNull(getNetwork().getVoltageLevel("v4"));
 
         // try to delete substation (Internal error because the substation is still connected)
         equipmentDeletionInfos.setEquipmentType("SUBSTATION");

@@ -8,34 +8,31 @@ package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.SwitchKind;
-
-import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.CouplingDeviceInfos;
 import org.gridsuite.modification.server.dto.LineSplitWithVoltageLevelInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.VoltageLevelCreationInfos;
-import org.gridsuite.modification.server.utils.MatcherModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
+import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 
 import java.util.Arrays;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_NOT_FOUND;
-import static org.gridsuite.modification.server.utils.MatcherLineSplitWithVoltageLevelInfos.createMatcherLineSplitWithVoltageLevelInfos;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@Tag("IntegrationTest")
 public class LineSplitWithNewVoltageLevelTest extends AbstractNetworkModificationTest {
 
-    @SneakyThrows
     @Test
-    public void testCreateWithErrors() {
+    public void testCreateWithErrors() throws Exception {
         LineSplitWithVoltageLevelInfos lineSplitAbsentLine = (LineSplitWithVoltageLevelInfos) buildModification();
         lineSplitAbsentLine.setLineToSplitId("absent_line_id");
         String lineSplitAbsentLineJson = mapper.writeValueAsString(lineSplitAbsentLine);
@@ -94,11 +91,6 @@ public class LineSplitWithNewVoltageLevelTest extends AbstractNetworkModificatio
             .newLine2Id("nl2vEdited")
             .newLine2Name("NewLine2Edited")
             .build();
-    }
-
-    @Override
-    protected MatcherModificationInfos createMatcher(ModificationInfos modificationInfos) {
-        return createMatcherLineSplitWithVoltageLevelInfos((LineSplitWithVoltageLevelInfos) modificationInfos);
     }
 
     @Override

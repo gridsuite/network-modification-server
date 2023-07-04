@@ -10,14 +10,13 @@ package org.gridsuite.modification.server.modifications;
 import com.powsybl.iidm.network.EnergySource;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
-import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.GeneratorCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.ReactiveCapabilityCurveCreationInfos;
-import org.gridsuite.modification.server.utils.MatcherGeneratorCreationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
+import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 
 import java.util.Arrays;
@@ -30,6 +29,7 @@ import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@Tag("IntegrationTest")
 public class GeneratorCreationInBusBreakerTest extends AbstractNetworkModificationTest {
     @Override
     protected Network createNetwork(UUID networkUuid) {
@@ -56,7 +56,6 @@ public class GeneratorCreationInBusBreakerTest extends AbstractNetworkModificati
                 .minimumReactivePower(20.0)
                 .maximumReactivePower(25.0)
                 .plannedActivePowerSetPoint(222.)
-                .startupCost(301.)
                 .marginalCost(0.50)
                 .plannedOutageRate(.85)
                 .forcedOutageRate(.96)
@@ -94,7 +93,6 @@ public class GeneratorCreationInBusBreakerTest extends AbstractNetworkModificati
                 .minimumReactivePower(23.0)
                 .maximumReactivePower(26.0)
                 .plannedActivePowerSetPoint(111.)
-                .startupCost(201.)
                 .marginalCost(0.40)
                 .plannedOutageRate(.45)
                 .forcedOutageRate(.66)
@@ -113,11 +111,6 @@ public class GeneratorCreationInBusBreakerTest extends AbstractNetworkModificati
     }
 
     @Override
-    protected MatcherGeneratorCreationInfos createMatcher(ModificationInfos modificationInfos) {
-        return MatcherGeneratorCreationInfos.createMatcherGeneratorCreationInfos((GeneratorCreationInfos) modificationInfos);
-    }
-
-    @Override
     protected void assertNetworkAfterCreation() {
         assertNotNull(getNetwork().getGenerator("idGenerator2"));
         assertEquals(1, getNetwork().getVoltageLevel("v1").getGeneratorStream()
@@ -131,9 +124,8 @@ public class GeneratorCreationInBusBreakerTest extends AbstractNetworkModificati
                 .filter(transformer -> transformer.getId().equals("idGenerator2")).count());
     }
 
-    @SneakyThrows
     @Test
-    public void testCreateWithBusbarSectionErrors() {
+    public void testCreateWithBusbarSectionErrors() throws Exception {
         GeneratorCreationInfos generatorCreationInfos = (GeneratorCreationInfos) buildModification();
         generatorCreationInfos.setBusOrBusbarSectionId("notFoundBus");
         mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(generatorCreationInfos)).contentType(MediaType.APPLICATION_JSON))
@@ -142,9 +134,8 @@ public class GeneratorCreationInBusBreakerTest extends AbstractNetworkModificati
                 generatorCreationInfos.getErrorType().name(), reportService);
     }
 
-    @SneakyThrows
     @Test
-    public void testCreateWithRegulatedTerminalError() {
+    public void testCreateWithRegulatedTerminalError() throws Exception {
          // invalid regulating terminal id <---> regulation terminal type
         GeneratorCreationInfos generatorCreationInfos = (GeneratorCreationInfos) buildModification();
         generatorCreationInfos.setRegulatingTerminalType("LINE");

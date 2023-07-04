@@ -13,7 +13,6 @@ import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.*;
 import com.powsybl.network.store.client.NetworkStoreService;
-import lombok.SneakyThrows;
 import okhttp3.HttpUrl;
 import okhttp3.mockwebserver.Dispatcher;
 import okhttp3.mockwebserver.MockResponse;
@@ -39,6 +38,7 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.jupiter.api.Tag;
 import org.junit.runner.RunWith;
 import org.mockito.stubbing.Answer;
 import org.slf4j.Logger;
@@ -81,8 +81,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @SpringBootTest
 @ContextConfigurationWithTestChannel
+@Tag("IntegrationTest")
 public class BuildTest {
-
     private static final Logger LOGGER = LoggerFactory.getLogger(BuildTest.class);
 
     @Autowired
@@ -161,7 +161,7 @@ public class BuildTest {
     private MockWebServer server;
 
     @Before
-    public void setUp() {
+    public void setUp() throws IOException {
         objectWriter = mapper.writer().withDefaultPrettyPrinter();
         // create a new network for each invocation (answer)
         when(networkStoreService.getNetwork(TEST_NETWORK_ID)).then((Answer<Network>) invocation -> {
@@ -190,8 +190,7 @@ public class BuildTest {
         equipmentInfosService.deleteVariants(TEST_NETWORK_ID, List.of(VariantManagerConstants.INITIAL_VARIANT_ID, NetworkCreation.VARIANT_ID, VARIANT_ID_2));
     }
 
-    @SneakyThrows
-    private void initMockWebServer() {
+    private void initMockWebServer() throws IOException {
         server = new MockWebServer();
         server.start();
 
@@ -201,7 +200,6 @@ public class BuildTest {
         reportService.setReportServerBaseUri(baseUrl);
 
         final Dispatcher dispatcher = new Dispatcher() {
-            @SneakyThrows
             @Override
             @NotNull
             public MockResponse dispatch(RecordedRequest request) {
@@ -343,8 +341,7 @@ public class BuildTest {
     }
 
     @Test
-    @SneakyThrows
-    public void runBuildTest() {
+    public void runBuildTest() throws Exception {
         // create modification entities in the database
         List<ModificationEntity> entities1 = new ArrayList<>();
         entities1.add(EquipmentAttributeModificationInfos.builder().equipmentId("v1d1").equipmentAttributeName("open").equipmentAttributeValue(true).equipmentType(IdentifiableType.SWITCH).build().toEntity());
@@ -375,7 +372,7 @@ public class BuildTest {
                 .activePowerSetpoint(100).reactivePowerSetpoint(50.)
                 .voltageRegulationOn(true).voltageSetpoint(225.)
                 .plannedActivePowerSetPoint(80.)
-                .startupCost(81.).marginalCost(82.)
+                .marginalCost(82.)
                 .plannedOutageRate(83.).forcedOutageRate(84.)
                 .minimumReactivePower(20.).maximumReactivePower(50.)
                 .participate(true).droop(9F).transientReactance(35.)
@@ -583,7 +580,6 @@ public class BuildTest {
         assertEquals(500., network.getGenerator(NEW_GENERATOR_ID).getMaxP(), 0.1);
         assertEquals(100., network.getGenerator(NEW_GENERATOR_ID).getTargetP(), 0.1);
         assertEquals(80., network.getGenerator(NEW_GENERATOR_ID).getExtension(GeneratorStartup.class).getPlannedActivePowerSetpoint(), 0);
-        assertEquals(81., network.getGenerator(NEW_GENERATOR_ID).getExtension(GeneratorStartup.class).getStartupCost(), 0);
         assertEquals(82., network.getGenerator(NEW_GENERATOR_ID).getExtension(GeneratorStartup.class).getMarginalCost(), 0);
         assertEquals(83., network.getGenerator(NEW_GENERATOR_ID).getExtension(GeneratorStartup.class).getPlannedOutageRate(), 0);
         assertEquals(84., network.getGenerator(NEW_GENERATOR_ID).getExtension(GeneratorStartup.class).getForcedOutageRate(), 0);

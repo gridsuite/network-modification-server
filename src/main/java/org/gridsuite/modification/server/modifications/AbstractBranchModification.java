@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.modifications;
 
+import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.reporter.Report;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.TypedValue;
@@ -16,6 +17,7 @@ import com.powsybl.iidm.network.LoadingLimits;
 import org.gridsuite.modification.server.dto.BranchModificationInfos;
 import org.gridsuite.modification.server.dto.CurrentLimitsModificationInfos;
 import org.gridsuite.modification.server.dto.CurrentTemporaryLimitModificationInfos;
+import org.gridsuite.modification.server.dto.TemporaryLimitModificationType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,8 +44,7 @@ public abstract class AbstractBranchModification extends AbstractModification {
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .build());
         if (branchModificationInfos.getEquipmentName() != null) {
-            subReporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(branch.getNameOrId(),
-                    branchModificationInfos.getEquipmentName().getValue(), "Name", 0));
+            subReporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(branch.getOptionalName().isEmpty() ? null : branch.getOptionalName().get(), branchModificationInfos.getEquipmentName().getValue(), "Name", 0));
             branch.setName(branchModificationInfos.getEquipmentName().getValue());
         }
 
@@ -91,10 +92,10 @@ public abstract class AbstractBranchModification extends AbstractModification {
 
     protected void modifyTemporaryLimits(CurrentLimitsModificationInfos currentLimitsInfos, CurrentLimitsAdder limitsAdder,
                                          CurrentLimits currentLimits, List<Report> limitsReports) {
-        // we create a mutable list of temporary limits to be able to remove the limits that are modified
-        List<LoadingLimits.TemporaryLimit> branchTemporaryLimits = null;
+        // we create a mutable list of temporary limits to be able to remove the limits that are modified in current modification
+        List<LoadingLimits.TemporaryLimit> branchTemporaryLimits = new ArrayList<>();
         if (currentLimits != null) {
-            branchTemporaryLimits = new ArrayList<>(currentLimits.getTemporaryLimits());
+            branchTemporaryLimits.addAll(currentLimits.getTemporaryLimits());
         }
         List<Report> temporaryLimitsReports = new ArrayList<>();
         for (CurrentTemporaryLimitModificationInfos limit : currentLimitsInfos.getTemporaryLimits()) {
@@ -105,10 +106,13 @@ public abstract class AbstractBranchModification extends AbstractModification {
             LoadingLimits.TemporaryLimit limitToModify = null;
             if (currentLimits != null) {
                 limitToModify = currentLimits.getTemporaryLimit(limitAcceptableDuration);
-                // we remove the limit to modify from the list of temporary limits so we can log the remaining ones (deleted)
+                if (limitToModify != null && !limitToModify.getName().equals(limit.getName())) {
+                    throw new PowsyblException("2temporary limits have the same duration " + limitAcceptableDuration);
+                }
+                // we remove the limit to modify from the list of temporary limits so we can get the list of temporary limits comming from previous modifications
                 branchTemporaryLimits.removeIf(temporaryLimit -> temporaryLimit.getAcceptableDuration() == limitAcceptableDuration);
             }
-            if (limitToModify == null) {
+            if (limitToModify == null && limit.getModificationType() == TemporaryLimitModificationType.ADDED) {
                 temporaryLimitsReports.add(Report.builder().withKey("temporaryLimitAdded" + limit.getName())
                         .withDefaultMessage("            ${name} (${duration}) added with ${value}")
                         .withValue(NAME, limit.getName())
@@ -117,16 +121,33 @@ public abstract class AbstractBranchModification extends AbstractModification {
                         .withSeverity(TypedValue.INFO_SEVERITY)
                         .build());
 
-            } else if (Double.compare(limitToModify.getValue(), limitValue) != 0) {
-                temporaryLimitsReports.add(Report.builder()
-                        .withKey("temporaryLimitModified" + limit.getName())
-                        .withDefaultMessage("            ${name} (${duration}) : ${oldValue} -> ${value}")
-                        .withValue(NAME, limit.getName())
-                        .withValue(DURATION, limitDurationToReport)
-                        .withValue("value", limitValueToReport)
-                        .withValue("oldValue", limitToModify.getValue() == Double.MAX_VALUE ? "no value" : String.valueOf(limitToModify.getValue()))
-                        .withSeverity(TypedValue.INFO_SEVERITY)
-                        .build());
+            } else if (limitToModify != null) {
+                if (limit.getModificationType() == TemporaryLimitModificationType.DELETED) {
+                    temporaryLimitsReports.add(Report.builder()
+                            .withKey("temporaryLimitDeleted" + limit.getName())
+                            .withDefaultMessage("            ${name} (${duration}) deleted")
+                            .withValue(NAME, limit.getName())
+                            .withValue(DURATION, limitDurationToReport)
+                            .withSeverity(TypedValue.INFO_SEVERITY)
+                            .build());
+                    continue;
+                } else if (Double.compare(limitToModify.getValue(), limitValue) != 0 && limit.getModificationType() != null) {
+                    temporaryLimitsReports.add(Report.builder()
+                            .withKey("temporaryLimitModified" + limit.getName())
+                            .withDefaultMessage("            ${name} (${duration}) : ${oldValue} -> ${value}")
+                            .withValue(NAME, limit.getName())
+                            .withValue(DURATION, limitDurationToReport)
+                            .withValue("value", limitValueToReport)
+                            .withValue("oldValue",
+                                    limitToModify.getValue() == Double.MAX_VALUE ? "no value"
+                                            : String.valueOf(limitToModify.getValue()))
+                            .withSeverity(TypedValue.INFO_SEVERITY)
+                            .build());
+                } else {
+                    limitValue = limitToModify.getValue();
+                }
+            } else {
+                continue;
             }
             limitsAdder
                     .beginTemporaryLimit()
@@ -135,15 +156,15 @@ public abstract class AbstractBranchModification extends AbstractModification {
                     .setAcceptableDuration(limitAcceptableDuration)
                     .endTemporaryLimit();
         }
-        if (branchTemporaryLimits != null) {
+        // we add the temporary limits comming from previous modifications
+        if (!branchTemporaryLimits.isEmpty()) {
             for (LoadingLimits.TemporaryLimit limit : branchTemporaryLimits) {
-                temporaryLimitsReports.add(Report.builder()
-                        .withKey("temporaryLimitDeleted" + limit.getName())
-                        .withDefaultMessage("            ${name} (${duration}) deleted")
-                        .withValue(NAME, limit.getName())
-                        .withValue(DURATION, limit.getAcceptableDuration() == Integer.MAX_VALUE ? " " : String.valueOf(limit.getAcceptableDuration()))
-                        .withSeverity(TypedValue.INFO_SEVERITY)
-                        .build());
+                limitsAdder
+                        .beginTemporaryLimit()
+                        .setName(limit.getName())
+                        .setValue(limit.getValue())
+                        .setAcceptableDuration(limit.getAcceptableDuration())
+                        .endTemporaryLimit();
             }
         }
         if (!temporaryLimitsReports.isEmpty()) {
@@ -163,5 +184,6 @@ public abstract class AbstractBranchModification extends AbstractModification {
                 && branchModificationInfos.getSeriesResistance().getValue() != null;
     }
 
-    protected abstract void modifyCharacteristics(Branch<?> branch, BranchModificationInfos branchModificationInfos, Reporter subReporter);
+    protected abstract void modifyCharacteristics(Branch<?> branch, BranchModificationInfos branchModificationInfos,
+            Reporter subReporter);
 }

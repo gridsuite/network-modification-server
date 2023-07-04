@@ -9,13 +9,12 @@ package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
-import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.ShuntCompensatorCreationInfos;
-import org.gridsuite.modification.server.utils.MatcherShuntCompensatorCreationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
+import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 
 import java.time.ZonedDateTime;
@@ -29,11 +28,11 @@ import static org.junit.Assert.assertNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@Tag("IntegrationTest")
 public class ShuntCompensatorCreationInBusBreakerTest extends AbstractNetworkModificationTest {
 
-    @SneakyThrows
     @Test
-    public void testCreateWithErrors() {
+    public void testCreateWithErrors() throws Exception {
         ShuntCompensatorCreationInfos shunt = (ShuntCompensatorCreationInfos) buildModification();
         shunt.setCurrentNumberOfSections(6);
         shunt.setMaximumNumberOfSections(2);
@@ -88,11 +87,6 @@ public class ShuntCompensatorCreationInBusBreakerTest extends AbstractNetworkMod
                 .connectionName("cnEdited")
                 .connectionDirection(ConnectablePosition.Direction.UNDEFINED)
                 .build();
-    }
-
-    @Override
-    protected MatcherShuntCompensatorCreationInfos createMatcher(ModificationInfos modificationInfos) {
-        return MatcherShuntCompensatorCreationInfos.createMatcher((ShuntCompensatorCreationInfos) modificationInfos);
     }
 
     @Override

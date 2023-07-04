@@ -44,13 +44,14 @@
     </developers>
 
     <properties>
-        <gridsuite-dependencies.version>24</gridsuite-dependencies.version>
+        <gridsuite-dependencies.version>25</gridsuite-dependencies.version>
         <db-util.version>1.0.5</db-util.version>
         <commons-lang3.version>3.9</commons-lang3.version>
         <log4j2-mock-version>0.0.2</log4j2-mock-version>
         <equalsverifier-version>3.7.1</equalsverifier-version>
         <testcontainers.version>1.16.2</testcontainers.version>
         <liquibase-hibernate-package>org.gridsuite.modification.server</liquibase-hibernate-package>
+        <assertj.version>3.24.2</assertj.version>
     </properties>
 
     <build>
@@ -86,6 +87,18 @@
     <dependencyManagement>
         <dependencies>
             <!-- overrides of imports -->
+            <dependency><!-- TODO: to delete when spring is updated -->
+                <groupId>org.assertj</groupId>
+                <artifactId>assertj-core</artifactId>
+                <version>${assertj.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.assertj</groupId>
+                <artifactId>assertj-guava</artifactId>
+                <version>${assertj.version}</version>
+                <scope>test</scope>
+            </dependency>
 
             <!-- imports -->
             <dependency>
@@ -218,6 +231,11 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-guava</artifactId>
             <scope>test</scope>
         </dependency>
 
