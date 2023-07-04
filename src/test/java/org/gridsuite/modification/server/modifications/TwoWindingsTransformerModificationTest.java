@@ -78,7 +78,7 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
                     .regulatingTerminalId(new AttributeModification<>("trf1", OperationType.SET))
                     .regulatingTerminalType(new AttributeModification<>("TWO_WINDINGS_TRANSFORMER", OperationType.SET))
                     .regulatingTerminalVlId(new AttributeModification<>("v1", OperationType.SET))
-                    .steps(List.of(TapChangerStepModificationInfos.builder()
+                    .steps(List.of(TapChangerStepCreationInfos.builder()
                         .index(0)
                         .r(0)
                         .g(0)
@@ -87,7 +87,7 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
                         .rho(1)
                         .alpha(1.)
                         .build(),
-                        TapChangerStepModificationInfos.builder()
+                        TapChangerStepCreationInfos.builder()
                             .index(1)
                             .r(0)
                             .g(0)
@@ -138,7 +138,7 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
                     .regulatingTerminalId(new AttributeModification<>("trf1", OperationType.SET))
                     .regulatingTerminalType(new AttributeModification<>("TWO_WINDINGS_TRANSFORMER", OperationType.SET))
                     .regulatingTerminalVlId(new AttributeModification<>("v1", OperationType.SET))
-                    .steps(List.of(TapChangerStepModificationInfos.builder()
+                    .steps(List.of(TapChangerStepCreationInfos.builder()
                             .index(0)
                             .r(0)
                             .g(0)
@@ -147,7 +147,7 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
                             .rho(1)
                             .alpha(1.2)
                             .build(),
-                        TapChangerStepModificationInfos.builder()
+                        TapChangerStepCreationInfos.builder()
                             .index(1)
                             .r(0)
                             .g(0)
@@ -196,9 +196,19 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
         assertEquals("name32", temporaryLimit.getName());
         assertEquals(42.0, temporaryLimit.getValue());
         //phase tap
+        assertEquals(PhaseTapChanger.RegulationMode.CURRENT_LIMITER, modifiedTwoWindingsTransformer.getPhaseTapChanger().getRegulationMode());
+        //assertEquals(false, modifiedTwoWindingsTransformer.getPhaseTapChanger().isRegulating());
+        assertEquals(100., modifiedTwoWindingsTransformer.getPhaseTapChanger().getTargetDeadband());
+        assertEquals(100., modifiedTwoWindingsTransformer.getPhaseTapChanger().getRegulationValue());
+        assertEquals(1, modifiedTwoWindingsTransformer.getPhaseTapChanger().getLowTapPosition());
+        assertEquals(1, modifiedTwoWindingsTransformer.getPhaseTapChanger().getTapPosition());
+        assertEquals(2, modifiedTwoWindingsTransformer.getPhaseTapChanger().getStepCount());
+
         assertEquals("    Fixed tap", ModificationUtils.getInstance().formatRegulationModeReport(PhaseTapChanger.RegulationMode.FIXED_TAP));
         assertEquals("    Active power control", ModificationUtils.getInstance().formatRegulationModeReport(PhaseTapChanger.RegulationMode.ACTIVE_POWER_CONTROL));
         assertEquals("    Current limiter", ModificationUtils.getInstance().formatRegulationModeReport(PhaseTapChanger.RegulationMode.CURRENT_LIMITER));
+
+
     }
 
     @SneakyThrows

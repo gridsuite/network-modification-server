@@ -14,7 +14,7 @@ import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.TapChangerType;
 import org.gridsuite.modification.server.dto.BranchModificationInfos;
 import org.gridsuite.modification.server.dto.PhaseTapChangerModificationInfos;
-import org.gridsuite.modification.server.dto.TapChangerStepModificationInfos;
+import org.gridsuite.modification.server.dto.TapChangerStepCreationInfos;
 import org.gridsuite.modification.server.dto.TwoWindingsTransformerModificationInfos;
 
 import java.util.ArrayList;
@@ -125,8 +125,9 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
     }
 
     protected boolean tapChangerModified(PhaseTapChangerModificationInfos phaseTapChangerModificationInfos) {
-        return (phaseTapChangerModificationInfos != null) &&
-            (phaseTapChangerModificationInfos.getRegulationMode() != null
+        return (phaseTapChangerModificationInfos == null) ||
+            (phaseTapChangerModificationInfos != null &&
+            phaseTapChangerModificationInfos.getRegulationMode() != null
             && phaseTapChangerModificationInfos.getRegulationMode().getValue() != null
             || phaseTapChangerModificationInfos.getRegulationValue() != null
             && phaseTapChangerModificationInfos.getRegulationValue().getValue() != null
@@ -139,13 +140,23 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
             || phaseTapChangerModificationInfos.getSteps() != null);
     }
 
+    protected boolean tapChangerStepsModified(PhaseTapChangerModificationInfos phaseTapChangerModificationInfos, PhaseTapChanger phaseTapChanger) {
+        for ( TapChangerStepCreationInfos step : phaseTapChangerModificationInfos.getSteps()) {
+            PhaseTapChangerStep matchingStep = phaseTapChanger.getStep(step.getIndex());
+            if(matchingStep == null || matchingStep.getR() != step.getR() || matchingStep.getG() != step.getG() || matchingStep.getB() != step.getB() || matchingStep.getX() != step.getX() || matchingStep.getRho() != step.getRho() || matchingStep.getAlpha() != step.getAlpha()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private void modifyTapChangers(Network network, TwoWindingsTransformerModificationInfos twoWindingsTransformerModificationInfos, com.powsybl.iidm.network.TwoWindingsTransformer twt, Reporter subReporter) {
         if (tapChangerModified(twoWindingsTransformerModificationInfos.getPhaseTapChanger())) {
             modifyPhaseTapChanger(network, twoWindingsTransformerModificationInfos, twt, subReporter);
         }
     }
 
-    private void modifyPhaseTapChanger(Network network, TwoWindingsTransformerModificationInfos twoWindingsTransformerModificationInfos, TwoWindingsTransformer twt, Reporter subReporter) {
+        private void modifyPhaseTapChanger(Network network, TwoWindingsTransformerModificationInfos twoWindingsTransformerModificationInfos, TwoWindingsTransformer twt, Reporter subReporter) {
         PhaseTapChangerAdder phaseTapChangerAdder = twt.newPhaseTapChanger();
         PhaseTapChangerModificationInfos phaseTapChangerInfos = twoWindingsTransformerModificationInfos.getPhaseTapChanger();
         PhaseTapChanger phaseTapChanger = twt.getPhaseTapChanger();
@@ -223,12 +234,12 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
         }
 
         List<Report> tapChangerStepsReports = new ArrayList<>();
-        if (phaseTapChangerInfos.getSteps() != null) {
+        if (phaseTapChangerInfos.getSteps() != null && tapChangerStepsModified(phaseTapChangerInfos, phaseTapChanger)) {
             tapChangerStepsReports.add(Report.builder().withKey("stepModifiedTitle")
                 .withDefaultMessage("            Taps were replaced by new ones below")
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .build());
-            for (TapChangerStepModificationInfos step : phaseTapChangerInfos.getSteps()) {
+            for (TapChangerStepCreationInfos step : phaseTapChangerInfos.getSteps()) {
                 tapChangerStepsReports.add(Report.builder().withKey("stepModifiedIndex" + step.getIndex())
                     .withDefaultMessage("            Tap (${index})")
                     .withValue("index", step.getIndex())
@@ -274,8 +285,13 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
                 phaseTapChangerAdder.beginStep().setR(step.getR()).setX(step.getX()).setG(step.getG()).setB(step.getB()).setRho(step.getRho()).setAlpha(step.getAlpha()).endStep();
             }
 
-            if (!tapChangerReports.isEmpty() || !tapChangerStepsReports.isEmpty()) {
-                Reporter tapChangerReporter = ModificationUtils.getInstance().reportModifications(phaseTapChangerSubreporter, tapChangerReports, "phaseTapChangerModification", "    Tap changer");
+            Reporter tapChangerReporter = null;
+            if (!tapChangerReports.isEmpty()) {
+                tapChangerReporter = ModificationUtils.getInstance().reportModifications(phaseTapChangerSubreporter, tapChangerReports, "phaseTapChangerModification", "    Tap changer");
+            } else {
+                tapChangerReporter = subReporter.createSubReporter("phaseTapChangerModification",  "    Tap changer");
+            }
+            if(!tapChangerStepsReports.isEmpty()) {
                 ModificationUtils.getInstance().reportModifications(tapChangerReporter, tapChangerStepsReports, "phaseTapChangerStepsModification", "        Taps");
             }
             phaseTapChangerAdder.add();

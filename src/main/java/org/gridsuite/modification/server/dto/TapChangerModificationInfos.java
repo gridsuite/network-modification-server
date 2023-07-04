@@ -46,5 +46,5 @@ public class TapChangerModificationInfos {
     private AttributeModification<String> regulatingTerminalVlId;
 
     @Schema(description = "steps")
-    private List<TapChangerStepModificationInfos> steps;
+    private List<TapChangerStepCreationInfos> steps;
 }
