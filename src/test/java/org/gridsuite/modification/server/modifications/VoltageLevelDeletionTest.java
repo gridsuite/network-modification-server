@@ -9,7 +9,6 @@ package org.gridsuite.modification.server.modifications;
 import com.powsybl.iidm.network.Network;
 import org.gridsuite.modification.server.dto.EquipmentDeletionInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.utils.MatcherEquipmentDeletionInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 
 import java.util.UUID;
@@ -40,11 +39,6 @@ public class VoltageLevelDeletionTest extends AbstractNetworkModificationTest {
                 .equipmentType("LINE")
                 .equipmentId("v2")
                 .build();
-    }
-
-    @Override
-    protected MatcherEquipmentDeletionInfos createMatcher(ModificationInfos modificationInfos) {
-        return MatcherEquipmentDeletionInfos.createMatcherEquipmentDeletionInfos((EquipmentDeletionInfos) modificationInfos);
     }
 
     @Override

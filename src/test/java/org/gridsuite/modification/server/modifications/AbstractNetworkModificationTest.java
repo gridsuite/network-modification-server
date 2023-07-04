@@ -15,11 +15,9 @@ import com.powsybl.commons.exceptions.UncheckedInterruptedException;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.iidm.impl.NetworkImpl;
-import lombok.SneakyThrows;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.ReportService;
-import org.gridsuite.modification.server.utils.MatcherModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.gridsuite.modification.server.utils.TestUtils;
 import org.gridsuite.modification.server.utils.WireMockUtils;
@@ -45,7 +43,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
-import static org.hamcrest.MatcherAssert.assertThat;
+import static org.gridsuite.modification.server.utils.assertions.Assertions.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
@@ -63,7 +61,7 @@ If you want to add a test specific to a modification, add it in its own class.
 @SpringBootTest
 @DisableElasticsearch
 @AutoConfigureMockMvc
-public abstract class AbstractNetworkModificationTest {
+abstract class AbstractNetworkModificationTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractNetworkModificationTest.class);
 
     private static final UUID TEST_NETWORK_ID = UUID.randomUUID();
@@ -129,8 +127,7 @@ public abstract class AbstractNetworkModificationTest {
     }
 
     @Test
-    @SneakyThrows
-    public void testCreate() {
+    public void testCreate() throws Exception {
 
         ModificationInfos modificationToCreate = buildModification();
         String modificationToCreateJson = mapper.writeValueAsString(modificationToCreate);
@@ -140,14 +137,13 @@ public abstract class AbstractNetworkModificationTest {
 
         ModificationInfos createdModification = modificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
 
-        assertThat(createdModification, createMatcher(modificationToCreate));
+        assertThat(createdModification).recursivelyEquals(modificationToCreate);
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
         assertNetworkAfterCreation();
     }
 
     @Test
-    @SneakyThrows
-    public void testRead() {
+    public void testRead() throws Exception {
 
         ModificationInfos modificationToRead = buildModification();
 
@@ -159,12 +155,11 @@ public abstract class AbstractNetworkModificationTest {
         ModificationInfos receivedModification = mapper.readValue(resultAsString, new TypeReference<>() {
         });
 
-        assertThat(receivedModification, createMatcher(modificationToRead));
+        assertThat(receivedModification).recursivelyEquals(modificationToRead);
     }
 
     @Test
-    @SneakyThrows
-    public void testUpdate() {
+    public void testUpdate() throws Exception {
 
         ModificationInfos modificationToUpdate = buildModification();
 
@@ -178,17 +173,16 @@ public abstract class AbstractNetworkModificationTest {
                 .andExpect(status().isOk());
 
         // TODO Need a test for substations impacted
-        //assertThat(bsmListResult.get(0), createMatcherEquipmentModificationInfos(ModificationType.LOAD_CREATION, "idLoad1", Set.of("s1")));
+        //assertThat(bsmListResult.get(0)).recursivelyEquals(ModificationType.LOAD_CREATION, "idLoad1", Set.of("s1"));
 
         ModificationInfos updatedModification = modificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
 
-        assertThat(updatedModification, createMatcher(modificationToUpdate));
+        assertThat(updatedModification).recursivelyEquals(modificationToUpdate);
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
     }
 
     @Test
-    @SneakyThrows
-    public void testDelete() {
+    public void testDelete() throws Exception {
 
         ModificationInfos modificationToDelete = buildModification();
 
@@ -206,8 +200,7 @@ public abstract class AbstractNetworkModificationTest {
     }
 
     @Test
-    @SneakyThrows
-    public void testCopy() {
+    public void testCopy() throws Exception {
 
         ModificationInfos modificationToCopy = buildModification();
 
@@ -222,12 +215,11 @@ public abstract class AbstractNetworkModificationTest {
                 .getModifications(TEST_GROUP_ID, false, true);
 
         assertEquals(2, modifications.size());
-        assertThat(modifications.get(0), createMatcher(modificationToCopy));
-        assertThat(modifications.get(1), createMatcher(modificationToCopy));
+        assertThat(modifications.get(0)).recursivelyEquals(modificationToCopy);
+        assertThat(modifications.get(1)).recursivelyEquals(modificationToCopy);
     }
 
-    @SneakyThrows
-    protected void testNetworkModificationsCount(UUID groupUuid, int actualSize) {
+    protected void testNetworkModificationsCount(UUID groupUuid, int actualSize) throws Exception {
         MvcResult mvcResult;
         String resultAsString;
         // get all modifications for the given group of a network
@@ -277,8 +269,6 @@ public abstract class AbstractNetworkModificationTest {
     protected abstract ModificationInfos buildModification();
 
     protected abstract ModificationInfos buildModificationUpdate();
-
-    protected abstract MatcherModificationInfos createMatcher(ModificationInfos modificationInfos);
 
     protected abstract void assertNetworkAfterCreation();
 

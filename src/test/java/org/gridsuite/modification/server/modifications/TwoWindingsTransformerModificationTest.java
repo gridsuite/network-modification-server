@@ -11,12 +11,11 @@ import com.powsybl.iidm.network.LoadingLimits;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.PhaseTapChanger;
 import com.powsybl.iidm.network.TwoWindingsTransformer;
-import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
-import org.gridsuite.modification.server.utils.MatcherTwoWindingsTransformerModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
+import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 
 import java.util.List;
@@ -33,6 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * @author Florent MILLOT <florent.millot at rte-france.com>
  */
+@Tag("IntegrationTest")
 public class TwoWindingsTransformerModificationTest extends AbstractNetworkModificationTest {
 
     @Override
@@ -162,11 +162,6 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
     }
 
     @Override
-    protected MatcherTwoWindingsTransformerModificationInfos createMatcher(ModificationInfos modificationInfos) {
-        return MatcherTwoWindingsTransformerModificationInfos.createMatcherTwoWindingsTransformerModificationInfos((TwoWindingsTransformerModificationInfos) modificationInfos);
-    }
-
-    @Override
     protected void assertNetworkAfterCreation() {
         TwoWindingsTransformer modifiedTwoWindingsTransformer = getNetwork().getTwoWindingsTransformer("trf1");
         assertNotNull(modifiedTwoWindingsTransformer);
@@ -201,7 +196,6 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
         assertEquals("    Current limiter", ModificationUtils.getInstance().formatRegulationModeReport(PhaseTapChanger.RegulationMode.CURRENT_LIMITER));
     }
 
-    @SneakyThrows
     @Override
     protected void assertNetworkAfterDeletion() {
         TwoWindingsTransformer modifiedTwoWindingsTransformer = getNetwork().getTwoWindingsTransformer("trf1");
@@ -222,9 +216,8 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
         assertNull(modifiedTwoWindingsTransformer.getNullableCurrentLimits2());
     }
 
-    @SneakyThrows
     @Test
-    public void testCreateWithErrors() {
+    public void testCreateWithErrors() throws Exception {
         TwoWindingsTransformerModificationInfos twoWindingsTransformerModificationInfos = (TwoWindingsTransformerModificationInfos) buildModification();
         twoWindingsTransformerModificationInfos.setEquipmentId("2wt_not_existing");
         String modificationInfosJson = mapper.writeValueAsString(twoWindingsTransformerModificationInfos);
