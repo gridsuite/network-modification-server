@@ -25,7 +25,7 @@ import java.util.List;
 @NoArgsConstructor
 @Getter
 @Setter
-@ToString(callSuper = true)
+@ToString
 @Schema(description = "Current Limits")
 public class CurrentLimitsInfos {
 

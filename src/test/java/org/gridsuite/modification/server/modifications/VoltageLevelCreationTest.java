@@ -8,23 +8,22 @@ package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.SwitchKind;
-import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.CouplingDeviceInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.VoltageLevelCreationInfos;
-import org.gridsuite.modification.server.utils.MatcherVoltageLevelCreationInfos;
 import org.gridsuite.modification.server.utils.ModificationCreation;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
+import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 
 import java.util.Arrays;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
+import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -32,6 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * @author walid Sahnoun <walid.sahnoun at rte-france.com>
  */
+@Tag("IntegrationTest")
 public class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
 
     @Override
@@ -63,11 +63,6 @@ public class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
     }
 
     @Override
-    protected MatcherVoltageLevelCreationInfos createMatcher(ModificationInfos modificationInfos) {
-        return MatcherVoltageLevelCreationInfos.createMatcherVoltageLevelCreationInfos((VoltageLevelCreationInfos) modificationInfos);
-    }
-
-    @Override
     protected void assertNetworkAfterCreation() {
         assertNotNull(getNetwork().getVoltageLevel("vlId"));
         assertNotNull(getNetwork().getBusbarSection("vlId_1_1"));
@@ -89,9 +84,8 @@ public class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
         assertEquals(0, getNetwork().getSubstation("s2").getVoltageLevelStream().filter(vl -> vl.getId().equals("vlId")).count());
     }
 
-    @SneakyThrows
     @Test
-    public void testCreateWithErrors() {
+    public void testCreateWithErrors() throws Exception {
         VoltageLevelCreationInfos vli = (VoltageLevelCreationInfos) buildModification();
         vli.setSubstationId("absent_station");
 
@@ -137,9 +131,8 @@ public class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
                 vli.getErrorType().name(), reportService);
     }
 
-    @SneakyThrows
     @Test
-    public void testCreateWithBbsNotExist() {
+    public void testCreateWithBbsNotExist() throws Exception {
         VoltageLevelCreationInfos vli = (VoltageLevelCreationInfos) buildModification();
         vli.setEquipmentId("vl_1");
         vli.getCouplingDevices().get(0).setBusbarSectionId1("1.1");
@@ -158,9 +151,7 @@ public class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
         assertNotNull(getNetwork().getVoltageLevel("vl_2"));
     }
 
-    @SneakyThrows
-    @Test
-    public void testCreateWithShortCircuitExtension() {
+    public void testCreateWithShortCircuitExtension() throws Exception {
         VoltageLevelCreationInfos vli = (VoltageLevelCreationInfos) buildModification();
         vli.setIpMin(null);
 
@@ -170,7 +161,7 @@ public class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
                 .andExpect(status().isOk()).andReturn();
         VoltageLevelCreationInfos createdModification = (VoltageLevelCreationInfos) modificationRepository
                 .getModifications(getGroupId(), false, true).get(0);
-        assertThat(createdModification, createMatcher(vli));
+        assertThat(createdModification).recursivelyEquals(vli);
 
         vli.setIpMin(0.0);
         vli.setIpMax(null);
@@ -182,6 +173,6 @@ public class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
                 .andExpect(status().isOk()).andReturn();
         createdModification = (VoltageLevelCreationInfos) modificationRepository
                 .getModifications(getGroupId(), false, true).get(1);
-        assertThat(createdModification, createMatcher(vli));
+        assertThat(createdModification).recursivelyEquals(vli);
     }
 }
