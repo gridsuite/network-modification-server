@@ -16,6 +16,7 @@ import org.gridsuite.modification.server.dto.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.TWO_WINDINGS_TRANSFORMER_NOT_FOUND;
 
@@ -109,42 +110,32 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
     protected boolean characteristicsModified(BranchModificationInfos branchModificationInfos) {
         TwoWindingsTransformerModificationInfos twoWindingsTransformerModificationInfos = (TwoWindingsTransformerModificationInfos) branchModificationInfos;
         return super.characteristicsModified(branchModificationInfos)
-                || twoWindingsTransformerModificationInfos.getMagnetizingConductance() != null
-                && twoWindingsTransformerModificationInfos.getMagnetizingConductance().getValue() != null
-                || twoWindingsTransformerModificationInfos.getMagnetizingSusceptance() != null
-                && twoWindingsTransformerModificationInfos.getMagnetizingSusceptance().getValue() != null
-                || twoWindingsTransformerModificationInfos.getRatedVoltage1() != null
-                && twoWindingsTransformerModificationInfos.getRatedVoltage1().getValue() != null
-                || twoWindingsTransformerModificationInfos.getRatedVoltage2() != null
-                && twoWindingsTransformerModificationInfos.getRatedVoltage2().getValue() != null
-                || twoWindingsTransformerModificationInfos.getRatedS() != null
-                && twoWindingsTransformerModificationInfos.getRatedS().getValue() != null;
+            || twoWindingsTransformerModificationInfos.getMagnetizingConductance() != null
+            && twoWindingsTransformerModificationInfos.getMagnetizingConductance().getValue() != null
+            || twoWindingsTransformerModificationInfos.getMagnetizingSusceptance() != null
+            && twoWindingsTransformerModificationInfos.getMagnetizingSusceptance().getValue() != null
+            || twoWindingsTransformerModificationInfos.getRatedVoltage1() != null
+            && twoWindingsTransformerModificationInfos.getRatedVoltage1().getValue() != null
+            || twoWindingsTransformerModificationInfos.getRatedVoltage2() != null
+            && twoWindingsTransformerModificationInfos.getRatedVoltage2().getValue() != null
+            || twoWindingsTransformerModificationInfos.getRatedS() != null
+            && twoWindingsTransformerModificationInfos.getRatedS().getValue() != null;
     }
 
-    protected boolean tapChangerModified(PhaseTapChangerModificationInfos phaseTapChangerModificationInfos) {
+    private boolean tapChangerModified(PhaseTapChangerModificationInfos phaseTapChangerModificationInfos) {
         return (phaseTapChangerModificationInfos == null) ||
             (phaseTapChangerModificationInfos != null &&
-            phaseTapChangerModificationInfos.getRegulationMode() != null
-            && phaseTapChangerModificationInfos.getRegulationMode().getValue() != null
-            || phaseTapChangerModificationInfos.getRegulationValue() != null
-            && phaseTapChangerModificationInfos.getRegulationValue().getValue() != null
-            || phaseTapChangerModificationInfos.getRegulatingTerminalId() != null
-            && phaseTapChangerModificationInfos.getRegulatingTerminalId().getValue() != null
-            || phaseTapChangerModificationInfos.getTargetDeadband() != null
-            && phaseTapChangerModificationInfos.getTargetDeadband().getValue() != null
-            || phaseTapChangerModificationInfos.getTapPosition() != null
-            && phaseTapChangerModificationInfos.getTapPosition().getValue() != null
-            || phaseTapChangerModificationInfos.getSteps() != null);
-    }
-
-    protected boolean tapChangerStepsModified(PhaseTapChangerModificationInfos phaseTapChangerModificationInfos, PhaseTapChanger phaseTapChanger) {
-        for (TapChangerStepCreationInfos step : phaseTapChangerModificationInfos.getSteps()) {
-            PhaseTapChangerStep matchingStep = phaseTapChanger.getStep(step.getIndex());
-            if (matchingStep == null || matchingStep.getR() != step.getR() || matchingStep.getG() != step.getG() || matchingStep.getB() != step.getB() || matchingStep.getX() != step.getX() || matchingStep.getRho() != step.getRho() || matchingStep.getAlpha() != step.getAlpha()) {
-                return true;
-            }
-        }
-        return false;
+                phaseTapChangerModificationInfos.getRegulationMode() != null
+                && phaseTapChangerModificationInfos.getRegulationMode().getValue() != null
+                || phaseTapChangerModificationInfos.getRegulationValue() != null
+                && phaseTapChangerModificationInfos.getRegulationValue().getValue() != null
+                || phaseTapChangerModificationInfos.getRegulatingTerminalId() != null
+                && phaseTapChangerModificationInfos.getRegulatingTerminalId().getValue() != null
+                || phaseTapChangerModificationInfos.getTargetDeadband() != null
+                && phaseTapChangerModificationInfos.getTargetDeadband().getValue() != null
+                || phaseTapChangerModificationInfos.getTapPosition() != null
+                && phaseTapChangerModificationInfos.getTapPosition().getValue() != null
+                || phaseTapChangerModificationInfos.getSteps() != null);
     }
 
     private void modifyTapChangers(Network network, TwoWindingsTransformerModificationInfos twoWindingsTransformerModificationInfos, com.powsybl.iidm.network.TwoWindingsTransformer twt, Reporter subReporter) {
@@ -206,10 +197,9 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
                 } else {
                     phaseTapChangerAdder.setRegulationTerminal(phaseTapChanger.getRegulationTerminal());
                 }
-
-                if (!regulationReports.isEmpty()) {
-                    ModificationUtils.getInstance().reportModifications(phaseTapChangerSubreporter, regulationReports, regulationMode.name(), ModificationUtils.getInstance().formatRegulationModeReport(regulationMode));
-                }
+            }
+            if (!regulationReports.isEmpty()) {
+                ModificationUtils.getInstance().reportModifications(phaseTapChangerSubreporter, regulationReports, regulationMode.name(), ModificationUtils.getInstance().formatRegulationModeReport(regulationMode));
             }
         }
         addTapChanger(phaseTapChangerInfos, phaseTapChanger, phaseTapChangerAdder, phaseTapChangerSubreporter);
@@ -226,10 +216,6 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
     }
 
     private <T> void addTapchangerSteps(List<Report> tapChangerStepsReports, TapChangerModificationInfos tapChangerModificationInfos, T adder) {
-        tapChangerStepsReports.add(Report.builder().withKey("tapChangerStepsModification")
-            .withDefaultMessage("            Taps were replaced by new ones below")
-            .withSeverity(TypedValue.INFO_SEVERITY)
-            .build());
         for (TapChangerStepCreationInfos step : tapChangerModificationInfos.getSteps()) {
             addStepAttributeReport(tapChangerStepsReports, "newStepIndex" + step.getIndex(),
                 "            Tap (${index})", "index", String.valueOf(step.getIndex()));
@@ -243,12 +229,15 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
                 "                Δ susceptance : ${b}", "b", String.valueOf(step.getB()));
             addStepAttributeReport(tapChangerStepsReports, "newStepRatio" + step.getRho(),
                 "                Ratio : ${rho}", "rho", String.valueOf(step.getRho()));
+            if (!Double.isNaN(step.getAlpha())) {
+                addStepAttributeReport(tapChangerStepsReports, "newStepAlpha" + step.getAlpha(),
+                    "                Shift angle : ${alpha}", "alpha", String.valueOf(step.getAlpha()));
+            }
+
             if (adder instanceof RatioTapChangerAdder) {
                 ((RatioTapChangerAdder) adder).beginStep().setR(step.getR()).setX(step.getX()).setG(step.getG()).setB(step.getB()).setRho(step.getRho()).endStep();
             } else {
-                addStepAttributeReport(tapChangerStepsReports, "newStepAlpha" + step.getAlpha(),
-                    "                Shift angle : ${alpha}", "alpha", String.valueOf(step.getAlpha()));
-                ((PhaseTapChangerAdder) adder).beginStep().setR(step.getR()).setX(step.getX()).setG(step.getG()).setB(step.getB()).setRho(step.getRho()).endStep();
+                ((PhaseTapChangerAdder) adder).beginStep().setR(step.getR()).setX(step.getX()).setG(step.getG()).setB(step.getB()).setRho(step.getRho()).setAlpha(step.getAlpha()).endStep();
             }
         }
         if (adder instanceof RatioTapChangerAdder) {
@@ -270,7 +259,16 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
                 ((PhaseTapChangerAdder) adder)
                     .setLowTapPosition(tapChangerModificationInfos.getLowTapPosition().getValue());
             }
+        } else {
+            if (adder instanceof RatioTapChangerAdder) {
+                ((RatioTapChangerAdder) adder)
+                    .setLowTapPosition(tapChanger.getLowTapPosition());
+            } else {
+                ((PhaseTapChangerAdder) adder)
+                    .setLowTapPosition(tapChanger.getLowTapPosition());
+            }
         }
+
         if (tapChangerModificationInfos.getTapPosition() != null && tapChangerModificationInfos.getTapPosition().getValue() != null) {
             tapChangerReports.add(ModificationUtils.getInstance().buildModificationReportWithIndentation(tapChanger.getTapPosition(),
                 tapChangerModificationInfos.getTapPosition().getValue(), "Tap position", 2));
@@ -281,14 +279,35 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
                 ((PhaseTapChangerAdder) adder)
                     .setTapPosition(tapChangerModificationInfos.getTapPosition().getValue());
             }
+        } else {
+            if (adder instanceof RatioTapChangerAdder) {
+                ((RatioTapChangerAdder) adder)
+                    .setTapPosition(tapChanger.getTapPosition());
+            } else {
+                ((PhaseTapChangerAdder) adder)
+                    .setTapPosition(tapChanger.getTapPosition());
+            }
         }
-        if (tapChangerModificationInfos.getSteps() != null && tapChangerStepsModified((PhaseTapChangerModificationInfos) tapChangerModificationInfos, (PhaseTapChanger) tapChanger)) {
+
+        if (tapChangerModificationInfos.getSteps() != null) {
             tapChangerReports.add(Report.builder()
                 .withKey("tapsModification")
                 .withDefaultMessage("        Taps")
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .build());
+            tapChangerReports.add(Report.builder().withKey("tapChangerStepsModification")
+                .withDefaultMessage("            Taps were replaced by new ones below")
+                .withSeverity(TypedValue.INFO_SEVERITY)
+                .build());
             addTapchangerSteps(tapChangerReports, tapChangerModificationInfos, adder);
+        } else {
+            for (TapChangerStep<?> tapStep : tapChanger.getAllSteps().values()) {
+                if (tapStep instanceof RatioTapChangerStep step) {
+                    ((RatioTapChangerAdder) adder).beginStep().setR(step.getR()).setX(step.getX()).setG(step.getG()).setB(step.getB()).setRho(step.getRho()).endStep();
+                } else if (tapStep instanceof PhaseTapChangerStep step) {
+                    ((PhaseTapChangerAdder) adder).beginStep().setR(step.getR()).setX(step.getX()).setG(step.getG()).setB(step.getB()).setRho(step.getRho()).setAlpha(step.getAlpha()).endStep();
+                }
+            }
         }
         if (!tapChangerReports.isEmpty()) {
             ModificationUtils.getInstance().reportModifications(subReporter, tapChangerReports, "tapChangerModification", "    Tap changer");
