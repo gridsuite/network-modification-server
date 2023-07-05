@@ -203,7 +203,7 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
         this.ratioTapChangerTerminalRefType = new StringModificationEmbedded(ratioTapChanger.getRegulatingTerminalType());
         this.ratioTapChangerLoadTapChangingCapabilities = new BooleanModificationEmbedded(ratioTapChanger.getLoadTapChangingCapabilities());
         this.ratioTapChangerTargetV = new DoubleModificationEmbedded(ratioTapChanger.getTargetV());
-        if (ratioTapChanger.getSteps() != null){
+        if (ratioTapChanger.getSteps() != null) {
             this.tapChangerSteps.addAll(TapChangerStepCreationEmbeddable.toEmbeddableRatioTapChangerSteps(ratioTapChanger.getSteps()));
         }
     }
@@ -242,7 +242,7 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
         }
 
         List<TapChangerStepCreationInfos> ratioTapChangerStepCreationInfos = null;
-        if (ratioTapChangerSteps != null && ratioTapChangerSteps.isEmpty() == false) {
+        if (ratioTapChangerSteps != null && !ratioTapChangerSteps.isEmpty()) {
             ratioTapChangerStepCreationInfos = ratioTapChangerSteps.stream().map(TapChangerStepCreationEmbeddable::toModificationInfos).collect(Collectors.toList());
         }
         builder.ratioTapChanger(RatioTapChangerModificationInfos.builder()

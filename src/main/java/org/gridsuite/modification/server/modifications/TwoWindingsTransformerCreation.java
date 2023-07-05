@@ -161,7 +161,6 @@ public class TwoWindingsTransformerCreation extends AbstractModification {
     }
 
     private void addRatioTapChangersToTwoWindingsTransformer(Network network, TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos, TwoWindingsTransformer twt) {
-        RatioTapChanger ratioTapChanger = twt.getRatioTapChanger();
         RatioTapChangerCreationInfos ratioTapChangerInfos = twoWindingsTransformerCreationInfos.getRatioTapChanger();
         RatioTapChangerAdder ratioTapChangerAdder = twt.newRatioTapChanger();
         Terminal terminal = ModificationUtils.getInstance().getTerminalFromIdentifiable(network,
