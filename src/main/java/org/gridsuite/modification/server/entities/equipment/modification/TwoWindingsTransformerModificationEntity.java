@@ -215,7 +215,7 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
 
     private TwoWindingsTransformerModificationInfos.TwoWindingsTransformerModificationInfosBuilder<?, ?> toTwoWindingsTransformerModificationInfosBuilder() {
 
-        List<TapChangerStepCreationEmbeddable> ratioTapChangerSteps = new ArrayList<>();
+        List<TapChangerStepCreationEmbeddable> ratioTapChangerSteps = null;
         if (getTapChangerSteps() != null && getTapChangerSteps().size() > 0) {
             ratioTapChangerSteps = getTapChangerSteps().stream().filter(step -> step.getTapChangerType().equals(TapChangerType.RATIO)).sorted(Comparator.comparing(TapChangerStepCreationEmbeddable::getIndex)).collect(Collectors.toList());
         }

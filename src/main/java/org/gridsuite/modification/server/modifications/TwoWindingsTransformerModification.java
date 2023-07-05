@@ -17,7 +17,6 @@ import com.powsybl.iidm.network.RatioTapChanger;
 import com.powsybl.iidm.network.RatioTapChangerAdder;
 import com.powsybl.iidm.network.RatioTapChangerStep;
 import com.powsybl.iidm.network.TapChanger;
-import com.powsybl.iidm.network.TapChangerStep;
 import com.powsybl.iidm.network.Terminal;
 import com.powsybl.iidm.network.TwoWindingsTransformer;
 
@@ -129,7 +128,7 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
                 .withDefaultMessage("The ratio tap changer has been removed")
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .build());
-            // TODO when powsybl will support removing ratio tap changer
+            // uncomment when powsybl will support removing ratio tap changer
             //twt.getRatioTapChanger().remove();
         }
 
@@ -172,7 +171,7 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
         }
     }
 
-    private <T> void modifyTapPositions(TapChangerModificationInfos tapChangerModificationInfos, T adder, TapChanger tapChanger, List<Report> tapChangerReports) {
+    private <T> void modifyTapPositions(TapChangerModificationInfos tapChangerModificationInfos, T adder, TapChanger<?, ?> tapChanger, List<Report> tapChangerReports) {
         if (tapChangerModificationInfos.getLowTapPosition() != null && tapChangerModificationInfos.getLowTapPosition().getValue() != null) {
             tapChangerReports.add(ModificationUtils.getInstance().buildModificationReportWithIndentation(tapChanger.getLowTapPosition(),
                 tapChangerModificationInfos.getLowTapPosition().getValue(), "Low tap position", 2));
@@ -226,11 +225,13 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
                 .build());
             addTapchangerSteps(tapChangerReports, tapChangerModificationInfos, adder);
         } else {
-            for (TapChangerStep<?> step : tapChanger.getAllSteps().values()) {
+            for (Object step : tapChanger.getAllSteps().values()) {
                 if (step instanceof RatioTapChangerStep) {
-                    ((RatioTapChangerAdder) adder).beginStep().setR(step.getR()).setX(step.getX()).setG(step.getG()).setB(step.getB()).setRho(step.getRho()).endStep();
+                    RatioTapChangerStep ratioStep = (RatioTapChangerStep) step;
+                    ((RatioTapChangerAdder) adder).beginStep().setR(ratioStep.getR()).setX(ratioStep.getX()).setG(ratioStep.getG()).setB(ratioStep.getB()).setRho(ratioStep.getRho()).endStep();
                 } else if (step instanceof PhaseTapChangerStep) {
-                    ((PhaseTapChangerAdder) adder).beginStep().setR(step.getR()).setX(step.getX()).setG(step.getG()).setB(step.getB()).setRho(step.getRho()).setAlpha(((PhaseTapChangerStep) step).getAlpha()).endStep();
+                    PhaseTapChangerStep phaseStep = (PhaseTapChangerStep) step;
+                    ((PhaseTapChangerAdder) adder).beginStep().setR(phaseStep.getR()).setX(phaseStep.getX()).setG(phaseStep.getG()).setB(phaseStep.getB()).setRho(phaseStep.getRho()).setAlpha(phaseStep.getAlpha()).endStep();
                 }
             }
         }
