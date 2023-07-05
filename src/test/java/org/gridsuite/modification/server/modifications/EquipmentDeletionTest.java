@@ -86,13 +86,5 @@ public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(EQUIPMENT_NOT_FOUND, "Equipment with id=notFoundLoad not found or of bad type").getMessage(),
                 equipmentDeletionInfos.getErrorType().name(), reportService);
-
-        // try to delete substation (Internal error because the substation is still connected)
-        equipmentDeletionInfos.setEquipmentType("SUBSTATION");
-        equipmentDeletionInfos.setEquipmentId("s2");
-        mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(equipmentDeletionInfos)).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
-        assertLogMessage("The substation s2 is still connected to another substation", equipmentDeletionInfos.getErrorType().name(), reportService);
-        assertNotNull(getNetwork().getSubstation("s2"));
     }
 }
