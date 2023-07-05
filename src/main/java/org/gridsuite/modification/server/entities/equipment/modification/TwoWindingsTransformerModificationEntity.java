@@ -237,7 +237,7 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
             .regulatingTerminalType(AttributeModification.toAttributeModification(getPhaseTapChangerTerminalRefType()));
 
         List<TapChangerStepCreationInfos> phaseTapChangerStepCreationInfos = phaseTapChangerSteps.stream().map(TapChangerStepCreationEmbeddable::toModificationInfos).collect(Collectors.toList());
-        if(!phaseTapChangerStepCreationInfos.isEmpty()) {
+        if (!phaseTapChangerStepCreationInfos.isEmpty()) {
             phaseTapChangerModificationInfosBuilder.steps(phaseTapChangerStepCreationInfos);
         }
         builder.phaseTapChanger(phaseTapChangerModificationInfosBuilder.build());

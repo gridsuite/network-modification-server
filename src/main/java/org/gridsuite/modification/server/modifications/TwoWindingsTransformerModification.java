@@ -16,7 +16,6 @@ import org.gridsuite.modification.server.dto.*;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.TWO_WINDINGS_TRANSFORMER_NOT_FOUND;
 
@@ -308,11 +307,11 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
                 .build());
             addTapchangerSteps(tapChangerReports, tapChangerModificationInfos, adder);
         } else {
-            for (TapChangerStep<?> tapStep : tapChanger.getAllSteps().values()) {
-                if (tapStep instanceof RatioTapChangerStep step) {
+            for (TapChangerStep step : tapChanger.getAllSteps().values()) {
+                if (step instanceof RatioTapChangerStep) {
                     ((RatioTapChangerAdder) adder).beginStep().setR(step.getR()).setX(step.getX()).setG(step.getG()).setB(step.getB()).setRho(step.getRho()).endStep();
-                } else if (tapStep instanceof PhaseTapChangerStep step) {
-                    ((PhaseTapChangerAdder) adder).beginStep().setR(step.getR()).setX(step.getX()).setG(step.getG()).setB(step.getB()).setRho(step.getRho()).setAlpha(step.getAlpha()).endStep();
+                } else if (step instanceof PhaseTapChangerStep) {
+                    ((PhaseTapChangerAdder) adder).beginStep().setR(step.getR()).setX(step.getX()).setG(step.getG()).setB(step.getB()).setRho(step.getRho()).setAlpha(((PhaseTapChangerStep) step).getAlpha()).endStep();
                 }
             }
         }
