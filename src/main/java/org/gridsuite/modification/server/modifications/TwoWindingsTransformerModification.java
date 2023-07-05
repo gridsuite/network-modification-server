@@ -122,9 +122,7 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
     }
 
     private boolean tapChangerModified(PhaseTapChangerModificationInfos phaseTapChangerModificationInfos) {
-        return (phaseTapChangerModificationInfos == null) ||
-            (phaseTapChangerModificationInfos != null &&
-                phaseTapChangerModificationInfos.getRegulationMode() != null
+        return phaseTapChangerModificationInfos.getRegulationMode() != null
                 && phaseTapChangerModificationInfos.getRegulationMode().getValue() != null
                 || phaseTapChangerModificationInfos.getRegulationValue() != null
                 && phaseTapChangerModificationInfos.getRegulationValue().getValue() != null
@@ -134,7 +132,7 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
                 && phaseTapChangerModificationInfos.getTargetDeadband().getValue() != null
                 || phaseTapChangerModificationInfos.getTapPosition() != null
                 && phaseTapChangerModificationInfos.getTapPosition().getValue() != null
-                || phaseTapChangerModificationInfos.getSteps() != null);
+                || phaseTapChangerModificationInfos.getSteps() != null;
     }
 
     private void modifyTapChangers(Network network, TwoWindingsTransformerModificationInfos twoWindingsTransformerModificationInfos, com.powsybl.iidm.network.TwoWindingsTransformer twt, Reporter subReporter) {
@@ -308,9 +306,9 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
             addTapchangerSteps(tapChangerReports, tapChangerModificationInfos, adder);
         } else {
             for (TapChangerStep<?> step : tapChanger.getAllSteps().values()) {
-                if (step instanceof RatioTapChangerStep) {
+                if (adder instanceof RatioTapChangerAdder && step instanceof RatioTapChangerStep) {
                     ((RatioTapChangerAdder) adder).beginStep().setR(step.getR()).setX(step.getX()).setG(step.getG()).setB(step.getB()).setRho(step.getRho()).endStep();
-                } else if (step instanceof PhaseTapChangerStep) {
+                } else if (adder instanceof PhaseTapChangerAdder && step instanceof PhaseTapChangerStep) {
                     ((PhaseTapChangerAdder) adder).beginStep().setR(step.getR()).setX(step.getX()).setG(step.getG()).setB(step.getB()).setRho(step.getRho()).setAlpha(((PhaseTapChangerStep) step).getAlpha()).endStep();
                 }
             }

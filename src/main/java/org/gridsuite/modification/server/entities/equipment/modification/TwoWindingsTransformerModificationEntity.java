@@ -199,7 +199,7 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
 
     private TwoWindingsTransformerModificationInfos.TwoWindingsTransformerModificationInfosBuilder<?, ?> toTwoWindingsTransformerModificationInfosBuilder() {
 
-        List<TapChangerStepCreationEmbeddable> phaseTapChangerSteps = new ArrayList<>();
+        List<TapChangerStepCreationEmbeddable> phaseTapChangerSteps = null;
         if (getTapChangerSteps() != null && getTapChangerSteps().size() > 0) {
             phaseTapChangerSteps = getTapChangerSteps().stream().filter(step -> step.getTapChangerType().equals(TapChangerType.PHASE)).sorted(Comparator.comparing(TapChangerStepCreationEmbeddable::getIndex)).collect(Collectors.toList());
         }
@@ -236,9 +236,11 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
             .regulatingTerminalVlId(AttributeModification.toAttributeModification(getPhaseTapChangerTerminalRefVoltageLevelId()))
             .regulatingTerminalType(AttributeModification.toAttributeModification(getPhaseTapChangerTerminalRefType()));
 
-        List<TapChangerStepCreationInfos> phaseTapChangerStepCreationInfos = phaseTapChangerSteps.stream().map(TapChangerStepCreationEmbeddable::toModificationInfos).collect(Collectors.toList());
-        if (!phaseTapChangerStepCreationInfos.isEmpty()) {
-            phaseTapChangerModificationInfosBuilder.steps(phaseTapChangerStepCreationInfos);
+        if (phaseTapChangerSteps != null) {
+            List<TapChangerStepCreationInfos> phaseTapChangerStepCreationInfos = phaseTapChangerSteps.stream().map(TapChangerStepCreationEmbeddable::toModificationInfos).toList();
+            if (!phaseTapChangerStepCreationInfos.isEmpty()) {
+                phaseTapChangerModificationInfosBuilder.steps(phaseTapChangerStepCreationInfos);
+            }
         }
         builder.phaseTapChanger(phaseTapChangerModificationInfosBuilder.build());
 
