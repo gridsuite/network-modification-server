@@ -123,7 +123,7 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
 
     private void modifyTapChangers(Network network, TwoWindingsTransformerModificationInfos twoWindingsTransformerModificationInfos, com.powsybl.iidm.network.TwoWindingsTransformer twt, Reporter subReporter) {
         modifyPhaseTapChanger(network, twoWindingsTransformerModificationInfos, twt, subReporter);
-        if (twt.getPhaseTapChanger() != null){
+        if (twt.getPhaseTapChanger() != null) {
             Reporter phaseTapChangerSubreporter = subReporter.createSubReporter(TapChangerType.PHASE.name(), "Phase tap changer");
             phaseTapChangerSubreporter.report(Report.builder().withKey("PhaseTapChangerRemoved").withDefaultMessage("The phase tap changer has been removed").withSeverity(TypedValue.INFO_SEVERITY).build());
             twt.getPhaseTapChanger().remove();
