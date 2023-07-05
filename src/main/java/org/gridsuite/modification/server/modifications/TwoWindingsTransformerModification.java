@@ -144,7 +144,7 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
         } else {
             Reporter phaseTapChangerSubreporter = subReporter.createSubReporter(TapChangerType.PHASE.name(), "Phase tap changer");
             phaseTapChangerSubreporter.report(Report.builder().withKey("PhaseTapChangerRemoved").withDefaultMessage("The phase tap changer has been removed").withSeverity(TypedValue.INFO_SEVERITY).build());
-            //twt.getPhaseTapChanger().remove();
+            twt.getPhaseTapChanger().remove();
         }
     }
 
