@@ -141,6 +141,10 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
     private void modifyTapChangers(Network network, TwoWindingsTransformerModificationInfos twoWindingsTransformerModificationInfos, com.powsybl.iidm.network.TwoWindingsTransformer twt, Reporter subReporter) {
         if (tapChangerModified(twoWindingsTransformerModificationInfos.getPhaseTapChanger())) {
             modifyPhaseTapChanger(network, twoWindingsTransformerModificationInfos, twt, subReporter);
+        } else {
+            Reporter phaseTapChangerSubreporter = subReporter.createSubReporter(TapChangerType.PHASE.name(), "Phase tap changer");
+            phaseTapChangerSubreporter.report(Report.builder().withKey("PhaseTapChangerRemoved").withDefaultMessage("The phase tap changer has been removed").withSeverity(TypedValue.INFO_SEVERITY).build());
+            //twt.getPhaseTapChanger().remove();
         }
     }
 
@@ -162,6 +166,7 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
         List<Report> regulationReports = new ArrayList<>();
         PhaseTapChanger.RegulationMode regulationMode = phaseTapChangerInfos.getRegulationMode() != null && phaseTapChangerInfos.getRegulationMode().getValue() != null ? phaseTapChangerInfos.getRegulationMode().getValue() : twt.getPhaseTapChanger().getRegulationMode();
         if (!PhaseTapChanger.RegulationMode.FIXED_TAP.equals(regulationMode)) {
+            phaseTapChangerAdder.setRegulating(true);
             if (phaseTapChangerInfos.getRegulationValue() != null && phaseTapChangerInfos.getRegulationValue().getValue() != null) {
                 regulationReports.add(ModificationUtils.getInstance().buildModificationReportWithIndentation(twt.getPhaseTapChanger().getRegulationValue(),
                     twoWindingsTransformerModificationInfos.getPhaseTapChanger().getRegulationValue().getValue(), regulationMode.equals(PhaseTapChanger.RegulationMode.CURRENT_LIMITER) ? "Value" : "Flow set point", 2));
@@ -201,6 +206,8 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
             if (!regulationReports.isEmpty()) {
                 ModificationUtils.getInstance().reportModifications(phaseTapChangerSubreporter, regulationReports, regulationMode.name(), ModificationUtils.getInstance().formatRegulationModeReport(regulationMode));
             }
+        } else {
+            phaseTapChangerAdder.setRegulating(false);
         }
         addTapChanger(phaseTapChangerInfos, phaseTapChanger, phaseTapChangerAdder, phaseTapChangerSubreporter);
         phaseTapChangerAdder.add();
