@@ -307,7 +307,7 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
                 .build());
             addTapchangerSteps(tapChangerReports, tapChangerModificationInfos, adder);
         } else {
-            for (TapChangerStep step : tapChanger.getAllSteps().values()) {
+            for (TapChangerStep<?> step : tapChanger.getAllSteps().values()) {
                 if (step instanceof RatioTapChangerStep) {
                     ((RatioTapChangerAdder) adder).beginStep().setR(step.getR()).setX(step.getX()).setG(step.getG()).setB(step.getB()).setRho(step.getRho()).endStep();
                 } else if (step instanceof PhaseTapChangerStep) {
