@@ -12,14 +12,15 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import org.gridsuite.modification.server.dto.LoadCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.utils.MatcherLoadCreationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
+import org.junit.jupiter.api.Tag;
 
 import java.util.UUID;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
+@Tag("IntegrationTest")
 public class LoadCreationInBusBreakerTest extends AbstractNetworkModificationTest {
     @Override
     protected Network createNetwork(UUID networkUuid) {
@@ -54,11 +55,6 @@ public class LoadCreationInBusBreakerTest extends AbstractNetworkModificationTes
             .connectionName("bottom")
             .connectionDirection(ConnectablePosition.Direction.BOTTOM)
             .build();
-    }
-
-    @Override
-    protected MatcherLoadCreationInfos createMatcher(ModificationInfos modificationInfos) {
-        return MatcherLoadCreationInfos.createMatcherLoadCreationInfos((LoadCreationInfos) modificationInfos);
     }
 
     @Override
