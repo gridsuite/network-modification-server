@@ -120,7 +120,7 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
     }
 
     private void addTapChangersToTwoWindingsTransformer(Network network, TwoWindingsTransformerModificationInfos twoWindingsTransformerModificationInfos, com.powsybl.iidm.network.TwoWindingsTransformer twt, Reporter subReporter) {
-        if(twoWindingsTransformerModificationInfos.getRatioTapChanger() != null && twoWindingsTransformerModificationInfos.getRatioTapChanger().getEnabled().getValue()) {
+        if (twoWindingsTransformerModificationInfos.getRatioTapChanger() != null && twoWindingsTransformerModificationInfos.getRatioTapChanger().getEnabled().getValue()) {
             if (ratioTapChangerModified(twoWindingsTransformerModificationInfos.getRatioTapChanger())) {
                 addRatioTapChangersToTwoWindingsTransformer(network, twoWindingsTransformerModificationInfos, twt, subReporter);
             }
