@@ -10,11 +10,7 @@ import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.computation.ComputationManager;
 import com.powsybl.iidm.modification.AbstractNetworkModification;
 import com.powsybl.iidm.network.Network;
-
-import java.util.Set;
-
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.impacts.BaseImpact;
 import org.springframework.context.ApplicationContext;
 
 /**
@@ -26,9 +22,8 @@ public abstract class AbstractModification extends AbstractNetworkModification {
         apply(network, reporter);
     }
 
-    public Set<BaseImpact> apply(Network network, Reporter reporter, ApplicationContext context) {
+    public void apply(Network network, Reporter reporter, ApplicationContext context) {
         apply(network, reporter);
-        return Set.of();
     }
 
     public void check(Network network) throws NetworkModificationException {

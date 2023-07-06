@@ -11,25 +11,18 @@ import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.iidm.modification.scalable.Scalable;
 import com.powsybl.iidm.network.Generator;
-import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
 import org.gridsuite.modification.server.VariationType;
 import org.gridsuite.modification.server.dto.GeneratorScalingInfos;
 import org.gridsuite.modification.server.dto.IdentifiableAttributes;
 import org.gridsuite.modification.server.dto.ScalingVariationInfos;
-import org.gridsuite.modification.server.impacts.BaseImpact;
-import org.gridsuite.modification.server.impacts.CollectionElementImpact;
-import org.gridsuite.modification.server.impacts.CollectionElementImpact.CollectionImpactType;
-import org.springframework.context.ApplicationContext;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -43,19 +36,6 @@ public class GeneratorScaling extends AbstractScaling {
 
     public GeneratorScaling(GeneratorScalingInfos generatorScalableInfos) {
         super(generatorScalableInfos);
-    }
-
-    @Override
-    public Set<BaseImpact> apply(Network network, Reporter subReporter, ApplicationContext context) {
-        super.apply(network, subReporter, context);
-        // must return a Collection Impact here
-        Set<BaseImpact> impacts = new HashSet<>();
-        impacts.add(CollectionElementImpact.builder()
-            .impactType(CollectionImpactType.COLLECTION)
-            .elementType(IdentifiableType.GENERATOR)
-            .build()
-        );
-        return impacts;
     }
 
     @Override

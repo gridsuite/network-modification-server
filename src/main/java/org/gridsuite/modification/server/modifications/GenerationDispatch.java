@@ -31,7 +31,6 @@ import org.gridsuite.modification.server.dto.FilterEquipments;
 import org.gridsuite.modification.server.dto.GenerationDispatchInfos;
 import org.gridsuite.modification.server.dto.GeneratorsFilterInfos;
 import org.gridsuite.modification.server.dto.IdentifiableAttributes;
-import org.gridsuite.modification.server.impacts.BaseImpact;
 import org.gridsuite.modification.server.service.FilterService;
 import org.springframework.context.ApplicationContext;
 import org.springframework.util.CollectionUtils;
@@ -43,7 +42,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
@@ -312,7 +310,7 @@ public class GenerationDispatch extends AbstractModification {
     }
 
     @Override
-    public Set<BaseImpact> apply(Network network, Reporter subReporter, ApplicationContext context) {
+    public void apply(Network network, Reporter subReporter, ApplicationContext context) {
         Collection<Component> synchronousComponents = network.getBusView().getBusStream()
             .filter(Bus::isInMainConnectedComponent)
             .map(Bus::getSynchronousComponent)
@@ -393,6 +391,5 @@ public class GenerationDispatch extends AbstractModification {
                     Map.of("remainingPower", remainingPowerImbalance), TypedValue.WARN_SEVERITY);
             }
         }
-        return Set.of();
     }
 }

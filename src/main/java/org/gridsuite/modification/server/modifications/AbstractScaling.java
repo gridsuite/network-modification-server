@@ -17,7 +17,6 @@ import org.gridsuite.modification.server.dto.FilterInfos;
 import org.gridsuite.modification.server.dto.IdentifiableAttributes;
 import org.gridsuite.modification.server.dto.ScalingInfos;
 import org.gridsuite.modification.server.dto.ScalingVariationInfos;
-import org.gridsuite.modification.server.impacts.BaseImpact;
 import org.gridsuite.modification.server.service.FilterService;
 import org.springframework.context.ApplicationContext;
 import org.springframework.util.CollectionUtils;
@@ -25,7 +24,6 @@ import org.springframework.util.CollectionUtils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
@@ -45,7 +43,7 @@ public abstract class AbstractScaling extends AbstractModification {
     }
 
     @Override
-    public Set<BaseImpact> apply(Network network, Reporter subReporter, ApplicationContext context) {
+    public void apply(Network network, Reporter subReporter, ApplicationContext context) {
         // collect all filters from all variations
         var filters = scalingInfos.getVariations().stream()
                 .flatMap(v -> v.getFilters().stream())
@@ -111,7 +109,6 @@ public abstract class AbstractScaling extends AbstractModification {
             }
         });
         createReport(subReporter, "scalingCreated", "new scaling created", TypedValue.INFO_SEVERITY);
-        return Set.of();
     }
 
     private void applyVariation(Network network,
