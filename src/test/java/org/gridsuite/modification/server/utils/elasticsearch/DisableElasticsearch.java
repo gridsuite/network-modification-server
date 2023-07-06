@@ -9,6 +9,7 @@ package org.gridsuite.modification.server.utils.elasticsearch;
 
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosRepository;
 import org.gridsuite.modification.server.elasticsearch.TombstonedEquipmentInfosRepository;
+import org.junit.jupiter.api.Tag;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.MockBeans;
 
@@ -23,5 +24,6 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @MockBeans({@MockBean(EmbeddedElasticsearch.class), @MockBean(EquipmentInfosRepository.class), @MockBean(TombstonedEquipmentInfosRepository.class)})
+@Tag("Docker")
 public @interface DisableElasticsearch {
 }

@@ -8,6 +8,7 @@
 package org.gridsuite.modification.server.service;
 
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -16,8 +17,8 @@ import java.util.stream.Stream;
 
 import static org.junit.Assert.assertEquals;
 
+@Tag("UnitTest")
 class NetworkStoreListenerTest {
-
     @ParameterizedTest
     @MethodSource("provideArgumentsForWorstStatus")
     void worstStatus(NetworkModificationResult.ApplicationStatus firstStatus, NetworkModificationResult.ApplicationStatus secondStatus) {

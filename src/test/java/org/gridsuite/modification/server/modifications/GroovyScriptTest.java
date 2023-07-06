@@ -9,13 +9,12 @@ package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
-import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.GroovyScriptInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.utils.MatcherGroovyScriptInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
+import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -24,12 +23,12 @@ import java.util.UUID;
 
 import static org.gridsuite.modification.server.Impacts.TestImpactUtils.testElementModificationImpact;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.GROOVY_SCRIPT_EMPTY;
-import static org.gridsuite.modification.server.utils.MatcherGroovyScriptInfos.createMatcherGroovyScriptInfos;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@Tag("IntegrationTest")
 public class GroovyScriptTest extends AbstractNetworkModificationTest {
 
     @Override
@@ -52,11 +51,6 @@ public class GroovyScriptTest extends AbstractNetworkModificationTest {
     }
 
     @Override
-    protected MatcherGroovyScriptInfos createMatcher(ModificationInfos modificationInfos) {
-        return createMatcherGroovyScriptInfos((GroovyScriptInfos) modificationInfos);
-    }
-
-    @Override
     protected void assertNetworkAfterCreation() {
         assertEquals(12, getNetwork().getGenerator("idGenerator").getTargetP(), 0);
     }
@@ -66,9 +60,8 @@ public class GroovyScriptTest extends AbstractNetworkModificationTest {
         assertEquals(42.1, getNetwork().getGenerator("idGenerator").getTargetP(), 0);
     }
 
-    @SneakyThrows
     @Test
-    public void testGroovy() {
+    public void testGroovy() throws Exception {
         MvcResult mvcResult;
 
         GroovyScriptInfos groovyScriptInfos = GroovyScriptInfos.builder()
@@ -119,9 +112,8 @@ public class GroovyScriptTest extends AbstractNetworkModificationTest {
         testNetworkModificationsCount(getGroupId(), 6);
     }
 
-    @SneakyThrows
     @Test
-    public void testCreateWithErrors() {
+    public void testCreateWithErrors() throws Exception {
         GroovyScriptInfos groovyScriptInfos = (GroovyScriptInfos) buildModification();
         groovyScriptInfos.setScript("");
         // apply empty groovy script

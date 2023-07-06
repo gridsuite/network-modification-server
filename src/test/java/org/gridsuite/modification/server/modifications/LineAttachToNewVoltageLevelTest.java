@@ -8,22 +8,20 @@ package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.SwitchKind;
-
 import org.gridsuite.modification.server.dto.*;
-import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.utils.MatcherModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
+import org.junit.jupiter.api.Tag;
 
 import java.util.Arrays;
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.utils.MatcherLineAttachToVoltageLevelInfos.createMatcherLineAttachToVoltageLevelInfos;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 /**
  * @author David Braquart <david.braquart at rte-france.com>
  */
+@Tag("IntegrationTest")
 public class LineAttachToNewVoltageLevelTest extends AbstractNetworkModificationTest {
 
     private LineCreationInfos getAttachmentLine() {
@@ -90,11 +88,6 @@ public class LineAttachToNewVoltageLevelTest extends AbstractNetworkModification
                 .newLine2Id("nl2")
                 .newLine2Name("NewLine2")
                 .build();
-    }
-
-    @Override
-    protected MatcherModificationInfos createMatcher(ModificationInfos modificationInfos) {
-        return createMatcherLineAttachToVoltageLevelInfos((LineAttachToVoltageLevelInfos) modificationInfos);
     }
 
     @Override

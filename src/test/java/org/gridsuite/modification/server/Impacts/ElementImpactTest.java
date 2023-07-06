@@ -6,42 +6,41 @@
  */
 package org.gridsuite.modification.server.Impacts;
 
-import static org.gridsuite.modification.server.Impacts.TestImpactUtils.createCollectionElementImpact;
-import static org.gridsuite.modification.server.Impacts.TestImpactUtils.createCreationImpactType;
-import static org.gridsuite.modification.server.Impacts.TestImpactUtils.createDeletionImpactType;
-import static org.gridsuite.modification.server.Impacts.TestImpactUtils.createModificationImpactType;
-import static org.junit.Assert.assertEquals;
-
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.powsybl.iidm.network.IdentifiableType;
+import nl.jqno.equalsverifier.EqualsVerifier;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationResult.ApplicationStatus;
 import org.gridsuite.modification.server.impacts.BaseImpact;
 import org.gridsuite.modification.server.impacts.CollectionElementImpact;
 import org.gridsuite.modification.server.impacts.SimpleElementImpact;
+import static org.gridsuite.modification.server.Impacts.TestImpactUtils.createCollectionElementImpact;
+import static org.gridsuite.modification.server.Impacts.TestImpactUtils.createCreationImpactType;
+import static org.gridsuite.modification.server.Impacts.TestImpactUtils.createDeletionImpactType;
+import static org.gridsuite.modification.server.Impacts.TestImpactUtils.createModificationImpactType;
 import org.gridsuite.modification.server.utils.TestUtils;
+import static org.junit.Assert.assertEquals;
 import org.junit.Test;
+import org.junit.jupiter.api.Tag;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.powsybl.iidm.network.IdentifiableType;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.List;
+import java.util.TreeSet;
 
 import lombok.SneakyThrows;
-import nl.jqno.equalsverifier.EqualsVerifier;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
+@Tag("UnitTest")
 public class ElementImpactTest {
-
-    ObjectMapper mapper = new ObjectMapper();
+    private ObjectMapper mapper = new ObjectMapper();
 
     @Test
-    @SneakyThrows
-    public void testSimpleElementImpact() {
+    public void testSimpleElementImpact() throws IOException {
         EqualsVerifier.simple().forClass(NetworkModificationResult.class).verify();
         EqualsVerifier.simple().forClass(SimpleElementImpact.class).verify();
 
