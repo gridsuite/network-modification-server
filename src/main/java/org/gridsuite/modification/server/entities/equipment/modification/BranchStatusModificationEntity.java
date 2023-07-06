@@ -28,6 +28,9 @@ public class BranchStatusModificationEntity extends EquipmentModificationEntity 
     @Enumerated(EnumType.STRING)
     private BranchStatusModificationInfos.ActionType action;
 
+    @Column
+    private String energizedVoltageLevelId;
+
     public BranchStatusModificationEntity(@NonNull BranchStatusModificationInfos branchStatusModificationInfos) {
         super(branchStatusModificationInfos);
         assignAttributes(branchStatusModificationInfos);
@@ -41,6 +44,7 @@ public class BranchStatusModificationEntity extends EquipmentModificationEntity 
 
     private void assignAttributes(BranchStatusModificationInfos branchStatusModificationInfos) {
         action = branchStatusModificationInfos.getAction();
+        energizedVoltageLevelId = branchStatusModificationInfos.getEnergizedVoltageLevelId();
     }
 
     @Override
@@ -51,6 +55,7 @@ public class BranchStatusModificationEntity extends EquipmentModificationEntity 
             .date(getDate())
             .equipmentId(getEquipmentId())
             .action(getAction())
+            .energizedVoltageLevelId(getEnergizedVoltageLevelId())
             .build();
     }
 }

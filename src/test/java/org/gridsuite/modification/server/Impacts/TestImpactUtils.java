@@ -37,16 +37,21 @@ public final class TestImpactUtils {
     }
 
     public static void testEmptyImpacts(ObjectMapper mapper, NetworkModificationResult networkModificationResult) {
-        testEmptyImpacts(mapper, ApplicationStatus.ALL_OK, networkModificationResult);
+        testEmptyImpacts(mapper, ApplicationStatus.ALL_OK, ApplicationStatus.ALL_OK, networkModificationResult);
     }
 
     public static void testEmptyImpactsWithErrors(ObjectMapper mapper, NetworkModificationResult networkModificationResult) {
-        testEmptyImpacts(mapper, ApplicationStatus.WITH_ERRORS, networkModificationResult);
+        testEmptyImpacts(mapper, ApplicationStatus.WITH_ERRORS, ApplicationStatus.WITH_ERRORS, networkModificationResult);
     }
 
-    private static void testEmptyImpacts(ObjectMapper mapper, ApplicationStatus applicationStatusExpected, NetworkModificationResult networkModificationResult) {
+    public static void testEmptyImpactsWithErrorsLastOK(ObjectMapper mapper, NetworkModificationResult networkModificationResult) {
+        testEmptyImpacts(mapper, ApplicationStatus.WITH_ERRORS, ApplicationStatus.ALL_OK, networkModificationResult);
+    }
+
+    private static void testEmptyImpacts(ObjectMapper mapper, ApplicationStatus globalApplicationStatusExpected, ApplicationStatus localApplicationStatusExpected, NetworkModificationResult networkModificationResult) {
         NetworkModificationResult resultExpected = NetworkModificationResult.builder()
-            .applicationStatus(applicationStatusExpected)
+            .applicationStatus(globalApplicationStatusExpected)
+            .lastGroupApplicationStatus(localApplicationStatusExpected)
             .networkImpacts(List.of())
             .build();
         assertThat(networkModificationResult).recursivelyEquals(resultExpected);
@@ -66,6 +71,7 @@ public final class TestImpactUtils {
         assertTrue(networkModificationResult.isPresent());
         NetworkModificationResult resultExpected = NetworkModificationResult.builder()
             .applicationStatus(ApplicationStatus.ALL_OK)
+            .lastGroupApplicationStatus(ApplicationStatus.ALL_OK)
             .networkImpacts(elementImpactsExpected)
             .build();
         assertThat(networkModificationResult.get()).recursivelyEquals(resultExpected);
@@ -88,6 +94,7 @@ public final class TestImpactUtils {
         assertTrue(networkModificationResult.isPresent());
         NetworkModificationResult resultExpected = NetworkModificationResult.builder()
             .applicationStatus(ApplicationStatus.ALL_OK)
+            .lastGroupApplicationStatus(ApplicationStatus.ALL_OK)
             .networkImpacts(List.of(createElementImpact(impactType, elementType, elementId, new HashSet<>(substationIds))))
             .build();
         assertThat(networkModificationResult.get()).recursivelyEquals(resultExpected);
@@ -100,6 +107,7 @@ public final class TestImpactUtils {
         assertTrue(networkModificationResult.isPresent());
         NetworkModificationResult resultExpected = NetworkModificationResult.builder()
             .applicationStatus(ApplicationStatus.ALL_OK)
+            .lastGroupApplicationStatus(ApplicationStatus.ALL_OK)
             .networkImpacts(createConnectableDeletionImpacts(connectableType, connectableId, breakerId, disconnectorId, substationId))
             .build();
         assertThat(networkModificationResult.get()).recursivelyEquals(resultExpected);
@@ -144,6 +152,7 @@ public final class TestImpactUtils {
         assertTrue(networkModificationResult.isPresent());
         NetworkModificationResult resultExpected = NetworkModificationResult.builder()
             .applicationStatus(ApplicationStatus.ALL_OK)
+            .lastGroupApplicationStatus(ApplicationStatus.ALL_OK)
             .networkImpacts(createBranchImpacts(impactType, branchType, branchId, breakerId1, disconnectorId1, substationId1, breakerId2, disconnectorId2, substationId2))
             .build();
         assertThat(networkModificationResult.get()).recursivelyEquals(resultExpected);
@@ -177,6 +186,7 @@ public final class TestImpactUtils {
         assertTrue(networkModificationResult.isPresent());
         NetworkModificationResult resultExpected = NetworkModificationResult.builder()
             .applicationStatus(ApplicationStatus.ALL_OK)
+            .lastGroupApplicationStatus(ApplicationStatus.ALL_OK)
             .networkImpacts(create3wtDeletionImpacts(w3tId, breakerId1, disconnectorId1, breakerId2, disconnectorId2, breakerId3, disconnectorId3, substationId))
             .build();
         assertThat(networkModificationResult.get()).recursivelyEquals(resultExpected);
