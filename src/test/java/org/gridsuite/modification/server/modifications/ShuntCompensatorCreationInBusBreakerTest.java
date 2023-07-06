@@ -34,12 +34,11 @@ public class ShuntCompensatorCreationInBusBreakerTest extends AbstractNetworkMod
     @Test
     public void testCreateWithErrors() throws Exception {
         ShuntCompensatorCreationInfos shunt = (ShuntCompensatorCreationInfos) buildModification();
-        shunt.setCurrentNumberOfSections(6);
-        shunt.setMaximumNumberOfSections(2);
+        shunt.setMaximumNumberOfSections(0);
         String shuntJson = mapper.writeValueAsString(shunt);
         mockMvc.perform(post(getNetworkModificationUri()).content(shuntJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage(String.format("Shunt compensator '%s': the current number (%s) of section should be lesser than the maximum number of section (%s)", shunt.getEquipmentId(), 6, 2),
+        assertLogMessage(String.format("Shunt compensator '%s': the maximum number of section (%s) should be greater than %s", shunt.getEquipmentId(), 0, 0),
                 shunt.getErrorType().name(), reportService);
 
         shunt.setBusOrBusbarSectionId("notFoundBus");

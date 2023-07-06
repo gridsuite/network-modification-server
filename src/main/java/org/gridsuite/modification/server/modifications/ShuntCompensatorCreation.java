@@ -100,7 +100,7 @@ public class ShuntCompensatorCreation extends AbstractModification {
         /* when we create non linear shunt, this is where we branch ;) */
         shuntAdder.newLinearModel()
                 .setBPerSection(shuntCompensatorInfos.getSusceptancePerSection())
-                .setMaximumSectionCount(1).add();
+                .setMaximumSectionCount(shuntCompensatorInfos.getMaximumNumberOfSections()).add();
 
         return shuntAdder;
     }
@@ -116,7 +116,7 @@ public class ShuntCompensatorCreation extends AbstractModification {
             .setConnectableBus(bus.getId())
             .newLinearModel()
             .setBPerSection(shuntCompensatorInfos.getSusceptancePerSection())
-            .setMaximumSectionCount(1)
+            .setMaximumSectionCount(shuntCompensatorInfos.getMaximumNumberOfSections())
             .add()
             .add();
     }
