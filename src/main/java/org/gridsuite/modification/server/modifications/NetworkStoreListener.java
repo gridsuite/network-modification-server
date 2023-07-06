@@ -8,8 +8,10 @@ package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.iidm.network.*;
 import com.powsybl.network.store.client.NetworkStoreService;
+import lombok.Setter;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
+import org.gridsuite.modification.server.dto.NetworkModificationResult.ApplicationStatus;
 import org.gridsuite.modification.server.dto.elasticsearch.EquipmentInfos;
 import org.gridsuite.modification.server.dto.elasticsearch.TombstonedEquipmentInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
@@ -41,7 +43,10 @@ public class NetworkStoreListener implements NetworkListener {
     private final Set<SimpleElementImpact> networkImpacts = new LinkedHashSet<>();
 
     // TODO : Move to the NetworkModificationApplicator class
-    private NetworkModificationResult.ApplicationStatus applicationStatus = NetworkModificationResult.ApplicationStatus.ALL_OK;
+    @Setter
+    private ApplicationStatus applicationStatus;
+    @Setter
+    private ApplicationStatus lastGroupApplicationStatus;
 
     protected NetworkStoreListener(Network network, UUID networkUuid,
                                    NetworkStoreService networkStoreService, EquipmentInfosService equipmentInfosService) {
@@ -181,12 +186,9 @@ public class NetworkStoreListener implements NetworkListener {
         return
             NetworkModificationResult.builder()
                 .applicationStatus(applicationStatus)
+                .lastGroupApplicationStatus(lastGroupApplicationStatus)
                 .networkImpacts(new ArrayList<>(networkImpacts))
                 .build();
-    }
-
-    public void setApplicationStatus(NetworkModificationResult.ApplicationStatus applicationStatus) {
-        this.applicationStatus = this.applicationStatus.max(applicationStatus);
     }
 
     private void flushEquipmentInfos() {

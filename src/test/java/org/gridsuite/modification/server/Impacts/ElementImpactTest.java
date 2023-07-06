@@ -21,7 +21,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.TreeSet;
-
 import static org.gridsuite.modification.server.Impacts.TestImpactUtils.*;
 import static org.junit.Assert.assertEquals;
 
@@ -49,14 +48,17 @@ public class ElementImpactTest {
 
         NetworkModificationResult result = NetworkModificationResult.builder()
             .applicationStatus(ApplicationStatus.ALL_OK)
+            .lastGroupApplicationStatus(ApplicationStatus.ALL_OK)
             .networkImpacts((List<SimpleElementImpact>) impacts)
             .build();
         assertEquals(TestUtils.resourceToString("/network-modification-result-with-all-ok.json"), mapper.writeValueAsString(result));
 
         result.setApplicationStatus(ApplicationStatus.WITH_WARNINGS);
+        result.setLastGroupApplicationStatus(ApplicationStatus.WITH_WARNINGS);
         assertEquals(TestUtils.resourceToString("/network-modification-result-with-with-warnings.json"), mapper.writeValueAsString(result));
 
         result.setApplicationStatus(ApplicationStatus.WITH_ERRORS);
+        result.setLastGroupApplicationStatus(ApplicationStatus.WITH_ERRORS);
         assertEquals(TestUtils.resourceToString("/network-modification-result-with-with-errors.json"), mapper.writeValueAsString(result));
 
         assertEquals("[s1, s2, s3, s4]", result.getImpactedSubstationsIds().toString());
