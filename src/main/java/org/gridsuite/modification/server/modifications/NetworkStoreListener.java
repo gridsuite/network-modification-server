@@ -12,7 +12,10 @@ import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.elasticsearch.EquipmentInfos;
 import org.gridsuite.modification.server.dto.elasticsearch.TombstonedEquipmentInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
+import org.gridsuite.modification.server.impacts.BaseImpact;
+import org.gridsuite.modification.server.impacts.CollectionElementImpact;
 import org.gridsuite.modification.server.impacts.SimpleElementImpact;
+import org.gridsuite.modification.server.impacts.CollectionElementImpact.CollectionImpactType;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -37,7 +40,7 @@ public class NetworkStoreListener implements NetworkListener {
 
     private final List<EquipmentInfos> createdEquipments = new ArrayList<>();
 
-    private final Set<SimpleElementImpact> networkImpacts = new LinkedHashSet<>();
+    private final Set<BaseImpact> networkImpacts = new LinkedHashSet<>();
 
     protected NetworkStoreListener(Network network, UUID networkUuid,
                                    NetworkStoreService networkStoreService, EquipmentInfosService equipmentInfosService) {
@@ -85,7 +88,7 @@ public class NetworkStoreListener implements NetworkListener {
 
     @Override
     public void onUpdate(Identifiable identifiable, String attribute, Object oldValue, Object newValue) {
-        networkImpacts.add(
+        addNetworkImpact(
             SimpleElementImpact.builder()
                 .impactType(SimpleElementImpact.SimpleImpactType.MODIFICATION)
                 .elementType(identifiable.getType())
@@ -96,7 +99,7 @@ public class NetworkStoreListener implements NetworkListener {
     }
 
     private void addSimpleModificationImpact(Identifiable<?> identifiable) {
-        networkImpacts.add(
+        addNetworkImpact(
                 SimpleElementImpact.builder()
                         .impactType(SimpleElementImpact.SimpleImpactType.MODIFICATION)
                         .elementType(identifiable.getType())
@@ -136,7 +139,7 @@ public class NetworkStoreListener implements NetworkListener {
             .type(identifiable.getType().name())
             .voltageLevels(EquipmentInfos.getVoltageLevels(identifiable))
             .build());
-        networkImpacts.add(
+        addNetworkImpact(
             SimpleElementImpact.builder()
                 .impactType(SimpleElementImpact.SimpleImpactType.CREATION)
                 .elementType(identifiable.getType())
@@ -149,7 +152,7 @@ public class NetworkStoreListener implements NetworkListener {
     @Override
     public void beforeRemoval(Identifiable identifiable) {
         deletedEquipmentsIds.add(identifiable.getId());
-        networkImpacts.add(
+        addNetworkImpact(
             SimpleElementImpact.builder()
                 .impactType(SimpleElementImpact.SimpleImpactType.DELETION)
                 .elementType(identifiable.getType())
@@ -164,7 +167,7 @@ public class NetworkStoreListener implements NetworkListener {
         // Do nothing
     }
 
-    public Set<SimpleElementImpact> flushNetworkModifications() {
+    public Set<BaseImpact> flushNetworkModifications() {
         try {
             networkStoreService.flush(network); // At first
             flushEquipmentInfos();
@@ -197,5 +200,33 @@ public class NetworkStoreListener implements NetworkListener {
         equipmentInfosService.deleteEquipmentInfosList(equipmentDeletionsIds, networkUuid, variantId);
         equipmentInfosService.addAllTombstonedEquipmentInfos(tombstonedEquipmentInfos);
         equipmentInfosService.addAllEquipmentInfos(createdEquipments);
+    }
+
+    private void addNetworkImpact(BaseImpact impact) {
+        BaseImpact computedImpact = computeImpacts(impact);
+        networkImpacts.add(computedImpact);
+    }
+
+    private BaseImpact computeImpacts(BaseImpact impact) {
+        // for impact identifiableType
+        // check number of this type SimpleElementimpacts
+        Set<BaseImpact> typedNetworkImpacts = networkImpacts.stream().filter(i -> impact.getElementType() == i.getElementType()).collect(Collectors.toSet());
+        long nbTypedImpacts = typedNetworkImpacts.size();
+        // check number of this type in the network
+        String variantId = network.getVariantManager().getWorkingVariantId();
+        long nbTypedEquipment = equipmentInfosService.findAllEquipmentInfosList(networkUuid, variantId, impact.getElementType().toString()).size();
+        // compare using a parameter (ex: if nbLoadImpacts >= 0.7 * nbLoads)
+        if (nbTypedImpacts > nbTypedEquipment * 0.7) {
+            // replace by Collection impact if necessarry
+            // - remove impacts of this type
+            networkImpacts.removeAll(typedNetworkImpacts);
+            // - add collection impact
+            return CollectionElementImpact.builder()
+                .impactType(CollectionImpactType.COLLECTION)
+                .elementType(impact.getElementType())
+                .build();
+        }
+        // otherwise return impact
+        return impact;
     }
 }

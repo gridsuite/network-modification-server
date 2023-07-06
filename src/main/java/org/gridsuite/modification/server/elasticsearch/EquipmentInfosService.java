@@ -86,6 +86,10 @@ public class EquipmentInfosService {
         return equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(equipmentIds, networkUuid, variantId);
     }
 
+    public List<EquipmentInfos> findAllEquipmentInfosList(UUID networkUuid, String variantId, String type) {
+        return equipmentInfosRepository.findAllByNetworkUuidAndVariantIdAndType(networkUuid, variantId, type);
+    }
+
     public void deleteAll() {
         equipmentInfosRepository.deleteAll();
         tombstonedEquipmentInfosRepository.deleteAll();

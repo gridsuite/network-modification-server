@@ -17,6 +17,9 @@ import java.util.UUID;
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
 public interface EquipmentInfosRepository extends ElasticsearchRepository<EquipmentInfos, String> {
+
+    List<EquipmentInfos> findAllByNetworkUuidAndVariantIdAndType(@NonNull UUID networkUuid, @NonNull String variantId, @NonNull String type);
+
     List<EquipmentInfos> findAllByNetworkUuidAndVariantId(@NonNull UUID networkUuid, @NonNull String variantId);
 
     List<EquipmentInfos> findByIdInAndNetworkUuidAndVariantId(@NonNull List<String> equipmentIds, @NonNull UUID networkUuid, @NonNull String variantId);
