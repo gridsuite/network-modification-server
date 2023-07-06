@@ -10,15 +10,14 @@ package org.gridsuite.modification.server.modifications;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
-import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.BatteryCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.ReactiveCapabilityCurveCreationInfos;
-import org.gridsuite.modification.server.utils.MatcherBatteryCreationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
+import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -32,6 +31,7 @@ import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@Tag("IntegrationTest")
 public class BatteryCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
     @Override
     protected Network createNetwork(UUID networkUuid) {
@@ -86,11 +86,6 @@ public class BatteryCreationInNodeBreakerTest extends AbstractNetworkModificatio
     }
 
     @Override
-    protected MatcherBatteryCreationInfos createMatcher(ModificationInfos modificationInfos) {
-        return MatcherBatteryCreationInfos.createMatcherBatteryCreationInfos((BatteryCreationInfos) modificationInfos);
-    }
-
-    @Override
     protected void assertNetworkAfterCreation() {
         assertNotNull(getNetwork().getBattery("idBattery1"));
         assertEquals(1, getNetwork().getVoltageLevel("v2").getBatteryStream()
@@ -104,9 +99,8 @@ public class BatteryCreationInNodeBreakerTest extends AbstractNetworkModificatio
                 .filter(transformer -> transformer.getId().equals("idBattery1")).count());
     }
 
-    @SneakyThrows
     @Test
-    public void testCreateWithErrors() {
+    public void testCreateWithErrors() throws Exception {
         // invalid Battery id
         BatteryCreationInfos batteryCreationInfos = (BatteryCreationInfos) buildModification();
         batteryCreationInfos.setEquipmentId("");
@@ -194,9 +188,6 @@ public class BatteryCreationInNodeBreakerTest extends AbstractNetworkModificatio
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(BATTERY_ALREADY_EXISTS, "v5battery").getMessage(),
                 batteryCreationInfos.getErrorType().name(), reportService);
-
-        // Test create battery on not yet existing variant VARIANT_NOT_EXISTING_ID :
-        // Only the modification should be added in the database but the battery cannot be created
         batteryCreationInfos.setEquipmentId("idBattery3");
         batteryCreationInfos.setEquipmentName("nameBattery3");
         batteryCreationInfos.setVoltageLevelId("v2");

@@ -9,14 +9,13 @@ package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
-import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.BatteryCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.ReactiveCapabilityCurveCreationInfos;
-import org.gridsuite.modification.server.utils.MatcherBatteryCreationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
+import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 
 import java.util.Arrays;
@@ -28,6 +27,7 @@ import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@Tag("IntegrationTest")
 public class BatteryCreationInBusBreakerTest extends AbstractNetworkModificationTest {
     @Override
     protected Network createNetwork(UUID networkUuid) {
@@ -81,11 +81,6 @@ public class BatteryCreationInBusBreakerTest extends AbstractNetworkModification
     }
 
     @Override
-    protected MatcherBatteryCreationInfos createMatcher(ModificationInfos modificationInfos) {
-        return MatcherBatteryCreationInfos.createMatcherBatteryCreationInfos((BatteryCreationInfos) modificationInfos);
-    }
-
-    @Override
     protected void assertNetworkAfterCreation() {
         assertNotNull(getNetwork().getBattery("idBattery2"));
         assertEquals(1, getNetwork().getVoltageLevel("v1").getBatteryStream()
@@ -99,9 +94,8 @@ public class BatteryCreationInBusBreakerTest extends AbstractNetworkModification
                 .filter(transformer -> transformer.getId().equals("idBattery2")).count());
     }
 
-    @SneakyThrows
     @Test
-    public void testCreateWithBusbarSectionErrors() {
+    public void testCreateWithBusbarSectionErrors() throws Exception {
         BatteryCreationInfos batteryCreationInfos = (BatteryCreationInfos) buildModification();
         batteryCreationInfos.setBusOrBusbarSectionId("notFoundBus");
         mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(batteryCreationInfos)).contentType(MediaType.APPLICATION_JSON))
