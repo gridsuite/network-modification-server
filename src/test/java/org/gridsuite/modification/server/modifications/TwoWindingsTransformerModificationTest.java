@@ -273,8 +273,9 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
         //twoWindingsTransformerModificationInfos.getRatioTapChanger().setRegulating(null);
         //twoWindingsTransformerModificationInfos.getRatioTapChanger().setTargetV(new AttributeModification<>(250.0, OperationType.SET));
 
+        twoWindingsTransformerModificationInfos.getPhaseTapChanger().setRegulationMode(null);
         twoWindingsTransformerModificationInfos.getPhaseTapChanger().setTapPosition(new AttributeModification<>(1, OperationType.SET));
-        twoWindingsTransformerModificationInfos.getPhaseTapChanger().setRegulationValue(new AttributeModification<>(250.0, OperationType.SET));
+        //twoWindingsTransformerModificationInfos.getPhaseTapChanger().setRegulationValue(new AttributeModification<>(250.0, OperationType.SET));
 
         modificationToCreateJson = mapper.writeValueAsString(twoWindingsTransformerModificationInfos);
 
