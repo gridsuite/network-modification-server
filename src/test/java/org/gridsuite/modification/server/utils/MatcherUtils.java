@@ -23,6 +23,12 @@ public final class MatcherUtils {
     }
 
     public static boolean matchesCurrentLimits(CurrentLimitsModificationInfos limits1, CurrentLimitsModificationInfos limits2) {
+        if (limits1 == null && limits2 == null) {
+            return true;
+        }
+        if (limits1 == null || limits2 == null) {
+            return false;
+        }
         return Objects.equals(limits1.getPermanentLimit(), limits2.getPermanentLimit())
                 && matchesTemporaryLimits(limits1.getTemporaryLimits(), limits2.getTemporaryLimits());
     }
