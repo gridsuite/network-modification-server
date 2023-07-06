@@ -124,12 +124,11 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
                 addRatioTapChangersToTwoWindingsTransformer(network, twoWindingsTransformerModificationInfos, twt, subReporter);
             }
         } else {
+            twt.getRatioTapChanger().remove();
             subReporter.report(Report.builder().withKey("RatioTapChangerRemoved")
                 .withDefaultMessage("The ratio tap changer has been removed")
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .build());
-            // uncomment when powsybl will support removing ratio tap changer
-            //twt.getRatioTapChanger().remove();
         }
 
     }
@@ -245,8 +244,7 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
 
         String oldVoltageLevel = null;
         String oldEquipment = null;
-        // If there is no regulating terminal in file, regulating terminal voltage level
-        // is equal to generator voltage level
+
         if (regulatingTerminal != null) {
             oldVoltageLevel = regulatingTerminal.getVoltageLevel().getId();
             oldEquipment = regulatingTerminal.getConnectable().getType().name() + ":"
