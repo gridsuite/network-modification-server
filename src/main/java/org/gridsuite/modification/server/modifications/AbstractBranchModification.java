@@ -56,11 +56,14 @@ public abstract class AbstractBranchModification extends AbstractModification {
         CurrentLimitsModificationInfos currentLimitsInfos2 = modificationInfos.getCurrentLimits2();
         List<Report> side1LimitsReports = new ArrayList<>();
         CurrentLimits currentLimits1 = branch.getCurrentLimits1().orElse(null);
-        modifyCurrentLimits(currentLimitsInfos1, branch.newCurrentLimits1(), currentLimits1, side1LimitsReports);
+        if (currentLimitsInfos1 != null) {
+            modifyCurrentLimits(currentLimitsInfos1, branch.newCurrentLimits1(), currentLimits1, side1LimitsReports);
+        }
         List<Report> side2LimitsReports = new ArrayList<>();
         CurrentLimits currentLimits2 = branch.getCurrentLimits2().orElse(null);
-        modifyCurrentLimits(currentLimitsInfos2, branch.newCurrentLimits2(), currentLimits2, side2LimitsReports);
-
+        if (currentLimitsInfos2 != null) {
+            modifyCurrentLimits(currentLimitsInfos2, branch.newCurrentLimits2(), currentLimits2, side2LimitsReports);
+        }
         if (!side1LimitsReports.isEmpty() || !side2LimitsReports.isEmpty()) {
             Reporter limitsReporter = subReporter.createSubReporter("limits", "Limits");
             limitsReporter.report(Report.builder()
