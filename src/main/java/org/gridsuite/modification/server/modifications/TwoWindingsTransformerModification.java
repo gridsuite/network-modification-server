@@ -122,7 +122,8 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
     }
 
     private boolean tapChangerModified(PhaseTapChangerModificationInfos phaseTapChangerModificationInfos) {
-        return phaseTapChangerModificationInfos.getRegulationMode() != null
+        return phaseTapChangerModificationInfos.getEnabled().getValue() == true &&
+            (phaseTapChangerModificationInfos.getRegulationMode() != null
                 && phaseTapChangerModificationInfos.getRegulationMode().getValue() != null
                 || phaseTapChangerModificationInfos.getRegulationValue() != null
                 && phaseTapChangerModificationInfos.getRegulationValue().getValue() != null
@@ -132,16 +133,17 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
                 && phaseTapChangerModificationInfos.getTargetDeadband().getValue() != null
                 || phaseTapChangerModificationInfos.getTapPosition() != null
                 && phaseTapChangerModificationInfos.getTapPosition().getValue() != null
-                || phaseTapChangerModificationInfos.getSteps() != null;
+                || phaseTapChangerModificationInfos.getSteps() != null);
     }
 
     private void modifyTapChangers(Network network, TwoWindingsTransformerModificationInfos twoWindingsTransformerModificationInfos, com.powsybl.iidm.network.TwoWindingsTransformer twt, Reporter subReporter) {
         if (tapChangerModified(twoWindingsTransformerModificationInfos.getPhaseTapChanger())) {
             modifyPhaseTapChanger(network, twoWindingsTransformerModificationInfos, twt, subReporter);
-        } else if (twt.getPhaseTapChanger() != null) {
-            Reporter phaseTapChangerSubreporter = subReporter.createSubReporter(TapChangerType.PHASE.name(), "Phase tap changer");
+        } else if (twt.getPhaseTapChanger() != null && twoWindingsTransformerModificationInfos.getPhaseTapChanger().getEnabled().getValue() == false ) {
+            //TODO Uncomment this section once remove methods for tap changers have been implemented
+            /*Reporter phaseTapChangerSubreporter = subReporter.createSubReporter(TapChangerType.PHASE.name(), "Phase tap changer");
             phaseTapChangerSubreporter.report(Report.builder().withKey("PhaseTapChangerRemoved").withDefaultMessage("The phase tap changer has been removed").withSeverity(TypedValue.INFO_SEVERITY).build());
-            twt.getPhaseTapChanger().remove();
+            twt.getPhaseTapChanger().remove();*/
         }
     }
 
@@ -163,7 +165,10 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
         List<Report> regulationReports = new ArrayList<>();
         PhaseTapChanger.RegulationMode regulationMode = phaseTapChangerInfos.getRegulationMode() != null && phaseTapChangerInfos.getRegulationMode().getValue() != null ? phaseTapChangerInfos.getRegulationMode().getValue() : twt.getPhaseTapChanger().getRegulationMode();
         if (!PhaseTapChanger.RegulationMode.FIXED_TAP.equals(regulationMode)) {
-            phaseTapChangerAdder.setRegulating(true);
+            if (phaseTapChangerInfos.getRegulationMode() != null && !phaseTapChanger.getRegulationMode().equals(phaseTapChangerInfos.getRegulationMode().getValue())) {
+                //phaseTapChangerAdder.setRegulating(true);
+            }
+
             if (phaseTapChangerInfos.getRegulationValue() != null && phaseTapChangerInfos.getRegulationValue().getValue() != null) {
                 regulationReports.add(ModificationUtils.getInstance().buildModificationReportWithIndentation(twt.getPhaseTapChanger().getRegulationValue(),
                     twoWindingsTransformerModificationInfos.getPhaseTapChanger().getRegulationValue().getValue(), regulationMode.equals(PhaseTapChanger.RegulationMode.CURRENT_LIMITER) ? "Value" : "Flow set point", 2));
@@ -199,6 +204,8 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
                 } else {
                     phaseTapChangerAdder.setRegulationTerminal(phaseTapChanger.getRegulationTerminal());
                 }
+            } else {
+                phaseTapChangerAdder.setRegulationTerminal(phaseTapChanger.getRegulationTerminal());
             }
             if (!regulationReports.isEmpty()) {
                 ModificationUtils.getInstance().reportModifications(phaseTapChangerSubreporter, regulationReports, regulationMode.name(), ModificationUtils.getInstance().formatRegulationModeReport(regulationMode));

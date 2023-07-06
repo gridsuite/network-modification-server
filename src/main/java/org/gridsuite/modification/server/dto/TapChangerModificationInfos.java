@@ -24,14 +24,14 @@ import java.util.List;
 @Schema(description = "TapChanger attributes")
 public class TapChangerModificationInfos {
 
+    @Schema(description = "enabled")
+    private AttributeModification<Boolean> enabled;
+
     @Schema(description = "lowTapPosition")
     private AttributeModification<Integer> lowTapPosition;
 
     @Schema(description = "tapPosition")
     private AttributeModification<Integer> tapPosition;
-
-    @Schema(description = "regulating")
-    private AttributeModification<Boolean> regulating;
 
     @Schema(description = "targetDeadband")
     private AttributeModification<Double> targetDeadband;

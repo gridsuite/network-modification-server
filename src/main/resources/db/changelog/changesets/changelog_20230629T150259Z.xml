@@ -15,6 +15,16 @@
             <column name="x" type="FLOAT8"/>
         </createTable>
     </changeSet>
+    <changeSet author="marcelinhug (generated)" id="1688295291684-6">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="phasetapchangerenabled" type="boolean"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="marcelinhug (generated)" id="1688295291684-7">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="phasetapchangerenabled_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
     <changeSet author="marcelinhug (generated)" id="1688050991404-6">
         <addColumn tableName="two_windings_transformer_modification">
             <column name="phasetapchangerlowtapposition" type="int4"/>
@@ -23,16 +33,6 @@
     <changeSet author="marcelinhug (generated)" id="1688050991404-7">
         <addColumn tableName="two_windings_transformer_modification">
             <column name="phasetapchangerlowtapposition_op" type="varchar(255)"/>
-        </addColumn>
-    </changeSet>
-    <changeSet author="marcelinhug (generated)" id="1688050991404-8">
-        <addColumn tableName="two_windings_transformer_modification">
-            <column name="phasetapchangerregulating" type="boolean"/>
-        </addColumn>
-    </changeSet>
-    <changeSet author="marcelinhug (generated)" id="1688050991404-9">
-        <addColumn tableName="two_windings_transformer_modification">
-            <column name="phasetapchangerregulating_op" type="varchar(255)"/>
         </addColumn>
     </changeSet>
     <changeSet author="marcelinhug (generated)" id="1688050991404-10">
