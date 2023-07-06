@@ -122,7 +122,7 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
     }
 
     private boolean tapChangerModified(PhaseTapChangerModificationInfos phaseTapChangerModificationInfos) {
-        return phaseTapChangerModificationInfos.getEnabled().getValue() == true &&
+        return phaseTapChangerModificationInfos.getEnabled().getValue() &&
             (phaseTapChangerModificationInfos.getRegulationMode() != null
                 && phaseTapChangerModificationInfos.getRegulationMode().getValue() != null
                 || phaseTapChangerModificationInfos.getRegulationValue() != null
@@ -139,7 +139,7 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
     private void modifyTapChangers(Network network, TwoWindingsTransformerModificationInfos twoWindingsTransformerModificationInfos, com.powsybl.iidm.network.TwoWindingsTransformer twt, Reporter subReporter) {
         if (tapChangerModified(twoWindingsTransformerModificationInfos.getPhaseTapChanger())) {
             modifyPhaseTapChanger(network, twoWindingsTransformerModificationInfos, twt, subReporter);
-        } else if (twt.getPhaseTapChanger() != null && twoWindingsTransformerModificationInfos.getPhaseTapChanger().getEnabled().getValue() == false ) {
+        } else if (twt.getPhaseTapChanger() != null && !twoWindingsTransformerModificationInfos.getPhaseTapChanger().getEnabled().getValue()) {
             //TODO Uncomment this section once remove methods for tap changers have been implemented
             /*Reporter phaseTapChangerSubreporter = subReporter.createSubReporter(TapChangerType.PHASE.name(), "Phase tap changer");
             phaseTapChangerSubreporter.report(Report.builder().withKey("PhaseTapChangerRemoved").withDefaultMessage("The phase tap changer has been removed").withSeverity(TypedValue.INFO_SEVERITY).build());

@@ -23,9 +23,8 @@ import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.TWO_WINDINGS_TRANSFORMER_NOT_FOUND;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.gridsuite.modification.server.utils.assertions.Assertions.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -227,6 +226,64 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(TWO_WINDINGS_TRANSFORMER_NOT_FOUND, "Two windings transformer with ID '2wt_not_existing' does not exist in the network").getMessage(),
                 twoWindingsTransformerModificationInfos.getErrorType().name(), reportService);
+    }
+
+    @Test
+    public void testCharacteristicsModification() throws Exception {
+        TwoWindingsTransformerModificationInfos twoWindingsTransformerModificationInfos = TwoWindingsTransformerModificationInfos.builder()
+            .equipmentId("trf1")
+            .currentLimits1(CurrentLimitsModificationInfos.builder()
+                .temporaryLimits(List.of())
+                .build())
+            .currentLimits2(CurrentLimitsModificationInfos.builder()
+                .temporaryLimits(List.of())
+                .build())
+            .build();
+
+        //disable the tap changer
+        //twoWindingsTransformerModificationInfos.setRatioTapChanger(RatioTapChangerModificationInfos.builder().enabled(new AttributeModification<>(false, OperationType.SET)).build());
+        twoWindingsTransformerModificationInfos.setPhaseTapChanger(PhaseTapChangerModificationInfos.builder().enabled(new AttributeModification<>(false, OperationType.SET)).build());
+
+        String modificationToCreateJson = mapper.writeValueAsString(twoWindingsTransformerModificationInfos);
+
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk()).andReturn();
+
+        TwoWindingsTransformerModificationInfos createdModification = (TwoWindingsTransformerModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
+
+        assertThat(createdModification).recursivelyEquals(twoWindingsTransformerModificationInfos);
+
+        //enable the tap changer and set regulating
+        //twoWindingsTransformerModificationInfos.getRatioTapChanger().setEnabled(new AttributeModification<>(true, OperationType.SET));
+        //twoWindingsTransformerModificationInfos.getRatioTapChanger().setRegulating(new AttributeModification<>(true, OperationType.SET));
+
+        twoWindingsTransformerModificationInfos.getPhaseTapChanger().setEnabled(new AttributeModification<>(true, OperationType.SET));
+        twoWindingsTransformerModificationInfos.getPhaseTapChanger().setRegulationMode(new AttributeModification<>(PhaseTapChanger.RegulationMode.ACTIVE_POWER_CONTROL, OperationType.SET));
+
+        modificationToCreateJson = mapper.writeValueAsString(twoWindingsTransformerModificationInfos);
+
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk()).andReturn();
+
+        createdModification = (TwoWindingsTransformerModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(1);
+
+        assertThat(createdModification).recursivelyEquals(twoWindingsTransformerModificationInfos);
+
+        //unset regulating and modify target voltage
+        //twoWindingsTransformerModificationInfos.getRatioTapChanger().setRegulating(null);
+        //twoWindingsTransformerModificationInfos.getRatioTapChanger().setTargetV(new AttributeModification<>(250.0, OperationType.SET));
+
+        twoWindingsTransformerModificationInfos.getPhaseTapChanger().setTapPosition(new AttributeModification<>(1, OperationType.SET));
+        twoWindingsTransformerModificationInfos.getPhaseTapChanger().setRegulationValue(new AttributeModification<>(250.0, OperationType.SET));
+
+        modificationToCreateJson = mapper.writeValueAsString(twoWindingsTransformerModificationInfos);
+
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk()).andReturn();
+
+        createdModification = (TwoWindingsTransformerModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(2);
+
+        assertThat(createdModification).recursivelyEquals(twoWindingsTransformerModificationInfos);
     }
 }
 

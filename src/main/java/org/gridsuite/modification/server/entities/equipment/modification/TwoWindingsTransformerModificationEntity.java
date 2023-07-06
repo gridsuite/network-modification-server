@@ -71,7 +71,6 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
     })
     private DoubleModificationEmbedded ratedS;
 
-
     @Column(name = "phasetapchangerenabled")
     @Embedded
     @AttributeOverrides(value = {
