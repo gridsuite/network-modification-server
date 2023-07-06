@@ -87,10 +87,8 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
     @Test
     public void testCreateWithError() throws Exception {
         ShuntCompensatorCreationInfos modificationToCreate = (ShuntCompensatorCreationInfos) buildModification();
-        // Current number of sections above maximum allowed
         modificationToCreate.setIsIdenticalSection(false);
-        modificationToCreate.setCurrentNumberOfSections(6);
-        modificationToCreate.setMaximumNumberOfSections(2);
+        modificationToCreate.setMaximumNumberOfSections(0);
         String modificationToCreateJson = mapper.writeValueAsString(modificationToCreate);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
