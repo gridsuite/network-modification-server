@@ -136,21 +136,17 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
                 || phaseTapChangerModificationInfos.getSteps() != null);
     }
 
-
     private void addTapChangersToTwoWindingsTransformer(Network network, TwoWindingsTransformerModificationInfos twoWindingsTransformerModificationInfos, com.powsybl.iidm.network.TwoWindingsTransformer twt, Reporter subReporter) {
         if (twoWindingsTransformerModificationInfos.getPhaseTapChanger() != null && twoWindingsTransformerModificationInfos.getPhaseTapChanger().getEnabled().getValue()) {
             if (tapChangerModified(twoWindingsTransformerModificationInfos.getPhaseTapChanger())) {
                 addPhaseTapChangersToTwoWindingsTransformer(network, twoWindingsTransformerModificationInfos, twt, subReporter);
             }
-        }else {
+        } else {
             Reporter phaseTapChangerSubreporter = subReporter.createSubReporter(TapChangerType.PHASE.name(), "Phase tap changer");
             phaseTapChangerSubreporter.report(Report.builder().withKey("PhaseTapChangerRemoved").withDefaultMessage("The phase tap changer has been removed").withSeverity(TypedValue.INFO_SEVERITY).build());
             twt.getPhaseTapChanger().remove();
         }
-
     }
-
-
 
     private void addPhaseTapChangersToTwoWindingsTransformer(Network network, TwoWindingsTransformerModificationInfos twoWindingsTransformerModificationInfos, TwoWindingsTransformer twt, Reporter subReporter) {
         PhaseTapChangerAdder phaseTapChangerAdder = twt.newPhaseTapChanger();
@@ -327,7 +323,6 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
             }
         }
     }
-
 
     private void modifyPhaseTapRegulation(PhaseTapChangerModificationInfos phaseTapChangerInfos, PhaseTapChanger phaseTapChanger, PhaseTapChangerAdder phaseTapChangerAdder, List<Report> phaseTapChangerReporter, PhaseTapChanger.RegulationMode regulationMode) {
         if (phaseTapChangerInfos.getRegulationMode() != null && phaseTapChangerInfos.getRegulationMode().getValue() != null && !phaseTapChanger.getRegulationMode().equals(phaseTapChangerInfos.getRegulationMode().getValue())) {
