@@ -28,6 +28,7 @@ import static org.gridsuite.modification.server.utils.assertions.Assertions.*;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -45,7 +46,7 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
                 .date(ZonedDateTime.now().truncatedTo(ChronoUnit.MICROS))
                 .equipmentId("shuntOneId")
                 .equipmentName("hop")
-                .currentNumberOfSections(4)
+                .currentNumberOfSections(1)
                 .maximumNumberOfSections(9)
                 .susceptancePerSection(1.)
                 .isIdenticalSection(true)
@@ -65,7 +66,7 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
                 .equipmentName("hopEdited")
                 .currentNumberOfSections(6)
                 .maximumNumberOfSections(12)
-                .susceptancePerSection(1.)
+                .susceptancePerSection(0.)
                 .isIdenticalSection(false)
                 .voltageLevelId("v4")
                 .busOrBusbarSectionId("1.A")
@@ -136,5 +137,15 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
             .andExpect(status().isOk()).andReturn();
         createdModification = (ShuntCompensatorCreationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(1);
         assertThat(createdModification).recursivelyEquals(dto);
+    }
+
+    @Test
+    public void testCreateToAssignSectionCount() throws Exception {
+        ShuntCompensatorCreationInfos dto = (ShuntCompensatorCreationInfos) buildModification();
+        String modificationToCreateJson = mapper.writeValueAsString(dto);
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        ShuntCompensatorCreationInfos createdModification = (ShuntCompensatorCreationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
+        assertEquals(1, createdModification.getCurrentNumberOfSections());
     }
 }
