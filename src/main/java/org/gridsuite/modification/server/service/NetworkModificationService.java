@@ -162,7 +162,7 @@ public class NetworkModificationService {
             }
         );
 
-        PreloadingStrategy preloadingStrategy = computePreloadingStrategy(modificationInfos.stream().map(m -> m.getRight()).flatMap(Collection::stream).collect(Collectors.toList()));
+        PreloadingStrategy preloadingStrategy = computePreloadingStrategy(modificationInfos.stream().map(Pair::getRight).flatMap(Collection::stream).collect(Collectors.toList()));
         Network network = cloneNetworkVariant(networkUuid, buildInfos.getOriginVariantId(), buildInfos.getDestinationVariantId(), preloadingStrategy);
         NetworkInfos networkInfos = new NetworkInfos(network, networkUuid, true);
 
@@ -186,7 +186,7 @@ public class NetworkModificationService {
     private PreloadingStrategy computePreloadingStrategy(List<ModificationInfos> modificationInfos) {
         return modificationInfos.stream().map(m -> m.getType().getStrategy()).reduce(PreloadingStrategy.NONE,
             (strategy1, strategy2) -> ((strategy1 == PreloadingStrategy.NONE && (strategy2 == PreloadingStrategy.COLLECTION || strategy2 == PreloadingStrategy.ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW))
-                || ((strategy1 == PreloadingStrategy.COLLECTION && strategy2 == PreloadingStrategy.ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW))) ? strategy2 : strategy1
+                || (strategy1 == PreloadingStrategy.COLLECTION && strategy2 == PreloadingStrategy.ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW)) ? strategy2 : strategy1
         );
     }
 
