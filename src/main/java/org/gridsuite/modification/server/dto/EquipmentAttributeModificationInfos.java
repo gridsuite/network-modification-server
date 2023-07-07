@@ -61,6 +61,11 @@ public class EquipmentAttributeModificationInfos extends EquipmentModificationIn
     }
 
     @Override
+    public ModificationType getType() {
+        return ModificationType.EQUIPMENT_ATTRIBUTE_MODIFICATION;
+    }
+
+    @Override
     public Reporter createSubReporter(ReporterModel reporter) {
         return reporter.createSubReporter(ModificationType.EQUIPMENT_ATTRIBUTE_MODIFICATION.name(), "${EquipmentType} '${EquipmentId}' change",
             Map.of("EquipmentType", new TypedValue(equipmentType.name(), TypedValue.UNTYPED), "EquipmentId", new TypedValue(getEquipmentId(), TypedValue.UNTYPED)));

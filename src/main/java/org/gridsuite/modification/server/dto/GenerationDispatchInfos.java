@@ -63,6 +63,11 @@ public class GenerationDispatchInfos extends ModificationInfos {
     }
 
     @Override
+    public ModificationType getType() {
+        return ModificationType.GENERATION_DISPATCH;
+    }
+
+    @Override
     public Reporter createSubReporter(ReporterModel reporter) {
         return reporter.createSubReporter(ModificationType.GENERATION_DISPATCH.name(), "Generation dispatch");
     }

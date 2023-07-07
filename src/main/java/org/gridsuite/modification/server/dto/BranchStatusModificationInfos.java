@@ -59,6 +59,11 @@ public class BranchStatusModificationInfos extends EquipmentModificationInfos {
     }
 
     @Override
+    public ModificationType getType() {
+        return ModificationType.BRANCH_STATUS_MODIFICATION;
+    }
+
+    @Override
     public Reporter createSubReporter(ReporterModel reporter) {
         String defaultName;
         switch (action) {

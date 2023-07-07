@@ -17,6 +17,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
+import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
@@ -89,6 +90,11 @@ public class ModificationInfos {
 
     @JsonIgnore
     public NetworkModificationException.Type getErrorType() {
+        throw new UnsupportedOperationException("TODO");
+    }
+
+    @JsonIgnore
+    public ModificationType getType() {
         throw new UnsupportedOperationException("TODO");
     }
 

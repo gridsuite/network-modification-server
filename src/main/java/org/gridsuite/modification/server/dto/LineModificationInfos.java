@@ -60,6 +60,11 @@ public class LineModificationInfos extends BranchModificationInfos {
     }
 
     @Override
+    public ModificationType getType() {
+        return ModificationType.LINE_MODIFICATION;
+    }
+
+    @Override
     public Reporter createSubReporter(ReporterModel reporter) {
         return reporter.createSubReporter(ModificationType.LINE_MODIFICATION.name(), "Line modification ${lineId}", "lineId", this.getEquipmentId());
     }

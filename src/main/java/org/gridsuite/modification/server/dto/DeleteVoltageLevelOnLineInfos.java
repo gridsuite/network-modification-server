@@ -58,6 +58,11 @@ public class DeleteVoltageLevelOnLineInfos extends ModificationInfos {
     }
 
     @Override
+    public ModificationType getType() {
+        return ModificationType.DELETE_VOLTAGE_LEVEL_ON_LINE;
+    }
+
+    @Override
     public Reporter createSubReporter(ReporterModel reporter) {
         return reporter.createSubReporter(ModificationType.DELETE_VOLTAGE_LEVEL_ON_LINE.name(), "Delete voltage level on line");
     }

@@ -13,6 +13,7 @@ import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.NetworkStoreService;
+import com.powsybl.network.store.client.PreloadingStrategy;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -81,10 +82,10 @@ public class NetworkModificationService {
         networkModificationRepository.deleteModificationGroup(groupUuid, errorOnGroupNotFound);
     }
 
-    public NetworkInfos getNetworkInfos(UUID networkUuid, String variantId) {
+    public NetworkInfos getNetworkInfos(UUID networkUuid, String variantId, PreloadingStrategy preloadingStrategy) {
         Network network;
         try {
-            network = networkStoreService.getNetwork(networkUuid);
+            network = networkStoreService.getNetwork(networkUuid, preloadingStrategy);
         } catch (PowsyblException e) {
             throw new NetworkModificationException(NETWORK_NOT_FOUND, networkUuid.toString());
         }
@@ -107,9 +108,11 @@ public class NetworkModificationService {
     // No transactional because we need to save modification in DB also in case of error
     // Transaction made in 'saveModifications' method
     // TODO Add transaction when errors will no longer be sent to the front
-    public Optional<NetworkModificationResult> createNetworkModification(@NonNull NetworkInfos networkInfos, @NonNull UUID groupUuid,
+    public Optional<NetworkModificationResult> createNetworkModification(@NonNull UUID networkUuid, String variantId, @NonNull UUID groupUuid,
                                                                          @NonNull ReportInfos reportInfos,
                                                                          @NonNull ModificationInfos modificationInfos) {
+        NetworkInfos networkInfos = getNetworkInfos(networkUuid, variantId, modificationInfos.getType().getStrategy());
+
         networkModificationRepository.saveModifications(groupUuid, List.of(modificationInfos.toEntity()));
 
         return networkInfos.isVariantPresent() ?
@@ -117,10 +120,13 @@ public class NetworkModificationService {
             Optional.empty();
     }
 
-    public Network cloneNetworkVariant(UUID networkUuid, String originVariantId, String destinationVariantId) {
+    public Network cloneNetworkVariant(UUID networkUuid,
+                                       String originVariantId,
+                                       String destinationVariantId,
+                                       PreloadingStrategy preloadingStrategy) {
         Network network;
         try {
-            network = networkStoreService.getNetwork(networkUuid);
+            network = networkStoreService.getNetwork(networkUuid, preloadingStrategy);
             network.addListener(new NetworkVariantsListener(network, networkUuid, equipmentInfosService));
         } catch (PowsyblException e) {
             throw new NetworkModificationException(NETWORK_NOT_FOUND, networkUuid.toString());
@@ -136,7 +142,7 @@ public class NetworkModificationService {
     }
 
     @Transactional(readOnly = true)
-    public NetworkModificationResult buildVariant(@NonNull NetworkInfos networkInfos, @NonNull BuildInfos buildInfos) {
+    public NetworkModificationResult buildVariant(@NonNull UUID networkUuid, @NonNull BuildInfos buildInfos) {
         // Apply all modifications belonging to the modification groups uuids in buildInfos
         List<Pair<String, List<ModificationInfos>>> modificationInfos = new ArrayList<>();
 
@@ -164,6 +170,10 @@ public class NetworkModificationService {
             }
         );
 
+        PreloadingStrategy preloadingStrategy = computePreloadingStrategy(modificationInfos.stream().map(m -> m.getRight()).flatMap(Collection::stream).collect(Collectors.toList()));
+        Network network = cloneNetworkVariant(networkUuid, buildInfos.getOriginVariantId(), buildInfos.getDestinationVariantId(), preloadingStrategy);
+        NetworkInfos networkInfos = new NetworkInfos(network, networkUuid, true);
+
         return modificationApplicator.applyModifications(modificationInfos, networkInfos, buildInfos.getReportUuid());
     }
 
@@ -181,12 +191,26 @@ public class NetworkModificationService {
         }
     }
 
+    private PreloadingStrategy computePreloadingStrategy(List<ModificationInfos> modificationInfos) {
+        return modificationInfos.stream().map(m -> m.getType().getStrategy()).reduce(PreloadingStrategy.NONE,
+            (strategy1, strategy2) -> ((strategy1 == PreloadingStrategy.NONE && (strategy2 == PreloadingStrategy.COLLECTION || strategy2 == PreloadingStrategy.ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW))
+                || ((strategy1 == PreloadingStrategy.COLLECTION && strategy2 == PreloadingStrategy.ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW))) ? strategy2 : strategy1
+        );
+    }
+
     @Transactional
-    public Optional<NetworkModificationResult> moveModifications(UUID groupUuid, UUID originGroupUuid, UUID before, NetworkInfos networkInfos, ReportInfos reportInfos, List<UUID> modificationsToMove, boolean canBuildNode) {
+    public Optional<NetworkModificationResult> moveModifications(UUID groupUuid, UUID originGroupUuid,
+                                                                 UUID before, UUID networkUuid, String variantId,
+                                                                 ReportInfos reportInfos, List<UUID> modificationsToMove,
+                                                                 boolean canBuildNode) {
         List<ModificationInfos> movedModifications = networkModificationRepository.moveModifications(groupUuid, originGroupUuid, modificationsToMove, before)
             .stream()
             .map(ModificationEntity::toModificationInfos)
             .collect(Collectors.toList());
+
+        PreloadingStrategy preloadingStrategy = computePreloadingStrategy(movedModifications);
+        NetworkInfos networkInfos = getNetworkInfos(networkUuid, variantId, preloadingStrategy);
+
         if (canBuildNode && !movedModifications.isEmpty() && networkInfos.isVariantPresent()) { // TODO remove canBuildNode and return NetworkDamages() ?
             // try to apply the moved modifications (incremental mode)
             return Optional.of(modificationApplicator.applyModifications(
@@ -209,17 +233,24 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public Optional<NetworkModificationResult> duplicateModifications(UUID targetGroupUuid, NetworkInfos networkInfos, ReportInfos reportInfos, List<UUID> modificationsUuids) {
+    public Optional<NetworkModificationResult> duplicateModifications(UUID targetGroupUuid,
+                                                                      UUID networkUuid, String variantId,
+                                                                      ReportInfos reportInfos, List<UUID> modificationsUuids) {
         List<ModificationEntity> modificationsEntities = networkModificationRepository.getModificationsEntities(modificationsUuids);
         List<ModificationEntity> duplicatedModificationsEntities = modificationsEntities.stream().map(ModificationEntity::copy).collect(Collectors.toList());
         if (!duplicatedModificationsEntities.isEmpty()) {
             networkModificationRepository.saveModifications(targetGroupUuid, duplicatedModificationsEntities);
+
+            List<ModificationInfos> modificationInfos = duplicatedModificationsEntities.stream().map(ModificationEntity::toModificationInfos).collect(Collectors.toList());
+            PreloadingStrategy preloadingStrategy = computePreloadingStrategy(modificationInfos);
+            NetworkInfos networkInfos = getNetworkInfos(networkUuid, variantId, preloadingStrategy);
+
             // try to apply the duplicated modifications (incremental mode)
             if (networkInfos.isVariantPresent()) {
                 return Optional.of(modificationApplicator.applyModifications(
-                        duplicatedModificationsEntities.stream().map(ModificationEntity::toModificationInfos).collect(Collectors.toList()),
-                        networkInfos,
-                        reportInfos
+                    modificationInfos,
+                    networkInfos,
+                    reportInfos
                 ));
             }
         }

@@ -73,6 +73,11 @@ public class LinesAttachToSplitLinesInfos extends ModificationInfos {
     }
 
     @Override
+    public ModificationType getType() {
+        return ModificationType.LINES_ATTACH_TO_SPLIT_LINES;
+    }
+
+    @Override
     public Reporter createSubReporter(ReporterModel reporter) {
         return reporter.createSubReporter(ModificationType.LINES_ATTACH_TO_SPLIT_LINES.name(), "Lines attach to split lines");
     }

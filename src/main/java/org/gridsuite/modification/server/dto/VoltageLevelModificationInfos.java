@@ -56,6 +56,11 @@ public class VoltageLevelModificationInfos extends BasicEquipmentModificationInf
     }
 
     @Override
+    public ModificationType getType() {
+        return ModificationType.VOLTAGE_LEVEL_MODIFICATION;
+    }
+
+    @Override
     public Reporter createSubReporter(ReporterModel reporter) {
         return reporter.createSubReporter(ModificationType.VOLTAGE_LEVEL_MODIFICATION.name(), "VoltageLevel modification ${voltageLevelId}", "voltageLevelId", this.getEquipmentId());
     }

@@ -64,6 +64,11 @@ public class DeleteAttachingLineInfos extends ModificationInfos {
     }
 
     @Override
+    public ModificationType getType() {
+        return ModificationType.DELETE_ATTACHING_LINE;
+    }
+
+    @Override
     public Reporter createSubReporter(ReporterModel reporter) {
         return reporter.createSubReporter(ModificationType.DELETE_ATTACHING_LINE.name(), "Delete attaching line");
     }

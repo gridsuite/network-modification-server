@@ -58,6 +58,11 @@ public class SubstationModificationInfos extends BasicEquipmentModificationInfos
     }
 
     @Override
+    public ModificationType getType() {
+        return ModificationType.SUBSTATION_MODIFICATION;
+    }
+
+    @Override
     public Reporter createSubReporter(ReporterModel reporter) {
         return reporter.createSubReporter(ModificationType.SUBSTATION_MODIFICATION.name(), "Substation modification ${substationId}", "substationId", this.getEquipmentId());
     }

@@ -128,6 +128,11 @@ public class GeneratorModificationInfos extends InjectionModificationInfos {
     }
 
     @Override
+    public ModificationType getType() {
+        return ModificationType.GENERATOR_MODIFICATION;
+    }
+
+    @Override
     public Reporter createSubReporter(ReporterModel reporter) {
         return reporter.createSubReporter(ModificationType.GENERATOR_MODIFICATION.name(), "Generator modification ${generatorId}", "generatorId", this.getEquipmentId());
     }

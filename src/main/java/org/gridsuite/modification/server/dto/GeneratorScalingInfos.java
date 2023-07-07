@@ -47,6 +47,11 @@ public class GeneratorScalingInfos extends ScalingInfos {
     }
 
     @Override
+    public ModificationType getType() {
+        return ModificationType.GENERATOR_SCALING;
+    }
+
+    @Override
     public Reporter createSubReporter(ReporterModel reporter) {
         return reporter.createSubReporter(ModificationType.GENERATOR_SCALING.name(), "Generator scaling");
     }

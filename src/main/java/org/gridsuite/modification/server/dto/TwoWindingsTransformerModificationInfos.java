@@ -62,6 +62,11 @@ public class TwoWindingsTransformerModificationInfos extends BranchModificationI
     }
 
     @Override
+    public ModificationType getType() {
+        return ModificationType.TWO_WINDINGS_TRANSFORMER_MODIFICATION;
+    }
+
+    @Override
     public Reporter createSubReporter(ReporterModel reporter) {
         return reporter.createSubReporter(ModificationType.TWO_WINDINGS_TRANSFORMER_MODIFICATION.name(), "Two windings transformer modification ${twoWindingsTransformerId}", "twoWindingsTransformerId", getEquipmentId());
     }

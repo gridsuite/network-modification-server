@@ -49,6 +49,11 @@ public class GroovyScriptInfos extends ModificationInfos {
     }
 
     @Override
+    public ModificationType getType() {
+        return ModificationType.GROOVY_SCRIPT;
+    }
+
+    @Override
     public Reporter createSubReporter(ReporterModel reporter) {
         return reporter.createSubReporter(ModificationType.GROOVY_SCRIPT.name(), "Apply groovy script");
     }

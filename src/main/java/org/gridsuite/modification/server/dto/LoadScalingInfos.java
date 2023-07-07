@@ -47,6 +47,11 @@ public class LoadScalingInfos extends ScalingInfos {
     }
 
     @Override
+    public ModificationType getType() {
+        return ModificationType.LOAD_SCALING;
+    }
+
+    @Override
     public Reporter createSubReporter(ReporterModel reporter) {
         return reporter.createSubReporter(ModificationType.LOAD_SCALING.name(), "Load Scaling");
     }

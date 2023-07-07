@@ -81,6 +81,11 @@ public class VoltageLevelCreationInfos extends EquipmentCreationInfos {
     }
 
     @Override
+    public ModificationType getType() {
+        return ModificationType.VOLTAGE_LEVEL_CREATION;
+    }
+
+    @Override
     public Reporter createSubReporter(ReporterModel reporter) {
         return reporter.createSubReporter(ModificationType.VOLTAGE_LEVEL_CREATION.name(), "VoltageLevel creation ${voltageLevelId}", "voltageLevelId", this.getEquipmentId());
     }

@@ -81,6 +81,11 @@ public class LineAttachToVoltageLevelInfos extends ModificationInfos {
     }
 
     @Override
+    public ModificationType getType() {
+        return ModificationType.LINE_ATTACH_TO_VOLTAGE_LEVEL;
+    }
+
+    @Override
     public Reporter createSubReporter(ReporterModel reporter) {
         return reporter.createSubReporter(ModificationType.LINE_ATTACH_TO_VOLTAGE_LEVEL.name(), "Line attach to voltage level");
     }

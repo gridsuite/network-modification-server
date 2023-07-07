@@ -60,6 +60,11 @@ public class LineCreationInfos extends BranchCreationInfos {
     }
 
     @Override
+    public ModificationType getType() {
+        return ModificationType.LINE_CREATION;
+    }
+
+    @Override
     public Reporter createSubReporter(ReporterModel reporter) {
         return reporter.createSubReporter(ModificationType.LINE_CREATION.name(), "Creation of line " + getEquipmentId());
     }

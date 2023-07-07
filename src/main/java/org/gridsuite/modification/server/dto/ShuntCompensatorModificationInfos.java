@@ -63,6 +63,11 @@ public class ShuntCompensatorModificationInfos extends BasicEquipmentModificatio
     }
 
     @Override
+    public ModificationType getType() {
+        return ModificationType.SHUNT_COMPENSATOR_MODIFICATION;
+    }
+
+    @Override
     public Reporter createSubReporter(ReporterModel reporter) {
         return reporter.createSubReporter(ModificationType.SHUNT_COMPENSATOR_MODIFICATION.name(), "Modification of shunt compensator " + getEquipmentId());
     }

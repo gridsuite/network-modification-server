@@ -13,6 +13,7 @@ import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.*;
 import com.powsybl.network.store.client.NetworkStoreService;
+import com.powsybl.network.store.client.PreloadingStrategy;
 import okhttp3.HttpUrl;
 import okhttp3.mockwebserver.Dispatcher;
 import okhttp3.mockwebserver.MockResponse;
@@ -69,6 +70,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.*;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -164,14 +167,14 @@ public class BuildTest {
     public void setUp() throws IOException {
         objectWriter = mapper.writer().withDefaultPrettyPrinter();
         // create a new network for each invocation (answer)
-        when(networkStoreService.getNetwork(TEST_NETWORK_ID)).then((Answer<Network>) invocation -> {
+        when(networkStoreService.getNetwork(eq(TEST_NETWORK_ID), any(PreloadingStrategy.class))).then((Answer<Network>) invocation -> {
             network = NetworkCreation.create(TEST_NETWORK_ID, true);
             return network;
         });
 
         waitStartBuild = new CountDownLatch(1);
         blockBuild = new CountDownLatch(1);
-        when(networkStoreService.getNetwork(TEST_NETWORK_STOP_BUILD_ID)).then((Answer<Network>) invocation -> {
+        when(networkStoreService.getNetwork(eq(TEST_NETWORK_STOP_BUILD_ID), any(PreloadingStrategy.class))).then((Answer<Network>) invocation -> {
             // Needed so the stop call doesn't arrive too late
             waitStartBuild.countDown();
             blockBuild.await();
@@ -334,7 +337,7 @@ public class BuildTest {
 
         // Group is empty
         modificationGroupRepository.save(new ModificationGroupEntity(TEST_GROUP_ID));
-        networkModificationService.buildVariant(new NetworkInfos(network, TEST_NETWORK_ID, true), buildInfos);
+        networkModificationService.buildVariant(TEST_NETWORK_ID, buildInfos);
         request = server.takeRequest(TIMEOUT, TimeUnit.MILLISECONDS);
         assertNotNull(request);
         assertEquals(expectedBody, request.getBody().readUtf8());
@@ -814,14 +817,14 @@ public class BuildTest {
         assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches(String.format("/v1/reports/%s", reportUuid))));
 
         // Incremental mode : No error send with exception
-        Optional<NetworkModificationResult> networkModificationResult2 = networkModificationService.createNetworkModification(networkModificationService.getNetworkInfos(TEST_NETWORK_ID, variantId), groupUuid, new ReportInfos(reportUuid, reporterId), loadCreationInfos);
+        Optional<NetworkModificationResult> networkModificationResult2 = networkModificationService.createNetworkModification(TEST_NETWORK_ID, variantId, groupUuid, new ReportInfos(reportUuid, reporterId), loadCreationInfos);
         assertTrue(networkModificationResult2.isPresent());
         testEmptyImpactsWithErrors(mapper, networkModificationResult);
         assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches(String.format("/v1/reports/%s", reportUuid))));
         testNetworkModificationsCount(groupUuid, 1);
 
         // Save mode only (variant does not exist) : No log and no error send with exception
-        assertTrue(networkModificationService.createNetworkModification(networkModificationService.getNetworkInfos(TEST_NETWORK_ID, UUID.randomUUID().toString()), groupUuid, new ReportInfos(reportUuid, reporterId), loadCreationInfos).isEmpty());
+        assertTrue(networkModificationService.createNetworkModification(TEST_NETWORK_ID, UUID.randomUUID().toString(), groupUuid, new ReportInfos(reportUuid, reporterId), loadCreationInfos).isEmpty());
         testNetworkModificationsCount(groupUuid, 2);
     }
 

@@ -73,6 +73,11 @@ public class LineSplitWithVoltageLevelInfos extends ModificationInfos {
     }
 
     @Override
+    public ModificationType getType() {
+        return ModificationType.LINE_SPLIT_WITH_VOLTAGE_LEVEL;
+    }
+
+    @Override
     public Reporter createSubReporter(ReporterModel reporter) {
         return reporter.createSubReporter(ModificationType.LINE_SPLIT_WITH_VOLTAGE_LEVEL.name(), "Line split with voltage level");
     }
