@@ -47,7 +47,7 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
                 .equipmentId("shuntOneId")
                 .equipmentName("hop")
                 .currentNumberOfSections(0)
-                .maximumNumberOfSections(9)
+                .maximumNumberOfSections(1)
                 .susceptancePerSection(0.)
                 .isIdenticalSection(true)
                 .voltageLevelId("v2")
@@ -65,7 +65,7 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
                 .equipmentId("shuntOneIdEdited")
                 .equipmentName("hopEdited")
                 .currentNumberOfSections(6)
-                .maximumNumberOfSections(12)
+                .maximumNumberOfSections(1)
                 .susceptancePerSection(0.)
                 .isIdenticalSection(false)
                 .voltageLevelId("v4")
@@ -88,17 +88,10 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
     @Test
     public void testCreateWithError() throws Exception {
         ShuntCompensatorCreationInfos modificationToCreate = (ShuntCompensatorCreationInfos) buildModification();
-        modificationToCreate.setIsIdenticalSection(false);
-        modificationToCreate.setMaximumNumberOfSections(0);
-        String modificationToCreateJson = mapper.writeValueAsString(modificationToCreate);
-        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
-        assertNull(getNetwork().getShuntCompensator(modificationToCreate.getEquipmentId()));
-
         // try to create an existing equipment
         modificationToCreate.setEquipmentId("v5shunt");
         assertNotNull(getNetwork().getShuntCompensator("v5shunt"));
-        modificationToCreateJson = mapper.writeValueAsString(modificationToCreate);
+        String modificationToCreateJson = mapper.writeValueAsString(modificationToCreate);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(SHUNT_COMPENSATOR_ALREADY_EXISTS, "v5shunt").getMessage(),
@@ -146,6 +139,12 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         ShuntCompensatorCreationInfos createdModification = (ShuntCompensatorCreationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
+        assertEquals(0, createdModification.getCurrentNumberOfSections());
+        dto.setQAtNominalV(0.);
+        modificationToCreateJson = mapper.writeValueAsString(dto);
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        createdModification = (ShuntCompensatorCreationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
         assertEquals(0, createdModification.getCurrentNumberOfSections());
     }
 }
