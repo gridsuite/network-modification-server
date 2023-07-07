@@ -46,9 +46,9 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
                 .date(ZonedDateTime.now().truncatedTo(ChronoUnit.MICROS))
                 .equipmentId("shuntOneId")
                 .equipmentName("hop")
-                .currentNumberOfSections(1)
+                .currentNumberOfSections(0)
                 .maximumNumberOfSections(9)
-                .susceptancePerSection(1.)
+                .susceptancePerSection(0.)
                 .isIdenticalSection(true)
                 .voltageLevelId("v2")
                 .busOrBusbarSectionId("1B")
@@ -146,6 +146,6 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         ShuntCompensatorCreationInfos createdModification = (ShuntCompensatorCreationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
-        assertEquals(1, createdModification.getCurrentNumberOfSections());
+        assertEquals(0, createdModification.getCurrentNumberOfSections());
     }
 }
