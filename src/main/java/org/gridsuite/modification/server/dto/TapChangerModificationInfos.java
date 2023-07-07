@@ -10,17 +10,19 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
 import java.util.List;
 
 /**
- * @author Hugo Marcellin <hugo.marcelin at rte-france.com
+ * @author Ayoub LABIDI <ayoub.labidi at rte-france.com
  */
 @SuperBuilder
 @NoArgsConstructor
 @Getter
 @Setter
+@ToString(callSuper = true)
 @Schema(description = "TapChanger attributes")
 public class TapChangerModificationInfos {
 
@@ -32,6 +34,9 @@ public class TapChangerModificationInfos {
 
     @Schema(description = "tapPosition")
     private AttributeModification<Integer> tapPosition;
+
+    @Schema(description = "regulating")
+    private AttributeModification<Boolean> regulating;
 
     @Schema(description = "targetDeadband")
     private AttributeModification<Double> targetDeadband;

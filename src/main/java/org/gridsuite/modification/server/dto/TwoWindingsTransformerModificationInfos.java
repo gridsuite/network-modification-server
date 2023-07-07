@@ -46,6 +46,9 @@ public class TwoWindingsTransformerModificationInfos extends BranchModificationI
     @Schema(description = "Rated conductance in Siemens")
     private AttributeModification<Double> ratedS;
 
+    @Schema(description = "Ratio tap changer")
+    private RatioTapChangerModificationInfos ratioTapChanger;
+
     @Schema(description = "Phase tap changer")
     private PhaseTapChangerModificationInfos phaseTapChanger;
 
