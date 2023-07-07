@@ -9,7 +9,6 @@ package org.gridsuite.modification.server.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Streams;
 import com.powsybl.commons.PowsyblException;
-import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.NetworkStoreService;
@@ -47,19 +46,16 @@ public class NetworkModificationService {
 
     private final NotificationService notificationService;
 
-    private final ReportService reportService;
-
     private final ObjectMapper objectMapper;
 
     public NetworkModificationService(NetworkStoreService networkStoreService, NetworkModificationRepository networkModificationRepository,
-                                      EquipmentInfosService equipmentInfosService, NotificationService notificationService, ReportService reportService,
+                                      EquipmentInfosService equipmentInfosService, NotificationService notificationService,
                                       NetworkModificationApplicator applicationService, ObjectMapper objectMapper) {
         this.networkStoreService = networkStoreService;
         this.networkModificationRepository = networkModificationRepository;
         this.equipmentInfosService = equipmentInfosService;
         this.notificationService = notificationService;
         this.modificationApplicator = applicationService;
-        this.reportService = reportService;
         this.objectMapper = objectMapper;
     }
 
@@ -116,7 +112,7 @@ public class NetworkModificationService {
         networkModificationRepository.saveModifications(groupUuid, List.of(modificationInfos.toEntity()));
 
         return networkInfos.isVariantPresent() ?
-            Optional.of(modificationApplicator.applyModification(modificationInfos, networkInfos, reportInfos)) :
+            Optional.of(modificationApplicator.applyModifications(List.of(modificationInfos), networkInfos, reportInfos)) :
             Optional.empty();
     }
 
@@ -156,17 +152,13 @@ public class NetworkModificationService {
                         throw e;
                     }
                 }
+                modificationInfos.add(
+                    Pair.of(reporterId,
+                        modificationsByGroup.stream()
+                            .filter(e -> !buildInfos.getModificationsToExclude().contains(e.getUuid()))
+                            .collect(Collectors.toList()))
+                );
 
-                if (modificationsByGroup.isEmpty()) {
-                    reportService.sendReport(buildInfos.getReportUuid(), new ReporterModel(reporterId, reporterId));
-                } else {
-                    modificationInfos.add(
-                        Pair.of(reporterId,
-                            modificationsByGroup.stream()
-                                .filter(e -> !buildInfos.getModificationsToExclude().contains(e.getUuid()))
-                                .collect(Collectors.toList()))
-                    );
-                }
             }
         );
 

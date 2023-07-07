@@ -35,6 +35,9 @@ public class BranchStatusModificationInfos extends EquipmentModificationInfos {
     @Schema(description = "Action type")
     ActionType action;
 
+    @Schema(description = "Energized end one or two voltage level ID")
+    private String energizedVoltageLevelId;
+
     public enum ActionType {
         LOCKOUT,
         TRIP,
