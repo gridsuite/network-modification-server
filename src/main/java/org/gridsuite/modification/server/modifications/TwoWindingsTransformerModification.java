@@ -127,7 +127,7 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
                 addRatioTapChangersToTwoWindingsTransformer(network, twoWindingsTransformerModificationInfos, twt, subReporter);
             }
         } else {
-            twt.getRatioTapChanger().remove();
+            //twt.getRatioTapChanger().remove();
             subReporter.report(Report.builder().withKey("RatioTapChangerRemoved")
                 .withDefaultMessage("The ratio tap changer has been removed")
                 .withSeverity(TypedValue.INFO_SEVERITY)
@@ -141,7 +141,7 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
         } else {
             Reporter phaseTapChangerSubreporter = subReporter.createSubReporter(TapChangerType.PHASE.name(), "Phase tap changer");
             phaseTapChangerSubreporter.report(Report.builder().withKey("PhaseTapChangerRemoved").withDefaultMessage("The phase tap changer has been removed").withSeverity(TypedValue.INFO_SEVERITY).build());
-            twt.getPhaseTapChanger().remove();
+            //twt.getPhaseTapChanger().remove();
         }
 
     }

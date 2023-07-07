@@ -68,7 +68,7 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
                                 .modificationType(TemporaryLimitModificationType.ADDED)
                                 .build()))
                         .build())
-                /*.ratioTapChanger(RatioTapChangerModificationInfos.builder()
+                .ratioTapChanger(RatioTapChangerModificationInfos.builder()
                         .enabled(new AttributeModification<>(true, OperationType.SET))
                         .loadTapChangingCapabilities(new AttributeModification<>(true, OperationType.SET))
                         .regulating(new AttributeModification<>(true, OperationType.SET))
@@ -96,7 +96,7 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
                                 .rho(1)
                                 .build()
                                 ))
-                        .build())*/
+                        .build())
                 .phaseTapChanger(PhaseTapChangerModificationInfos.builder()
                     .enabled(new AttributeModification<>(true, OperationType.SET))
                     .regulationMode(new AttributeModification<>(PhaseTapChanger.RegulationMode.CURRENT_LIMITER, OperationType.SET))
@@ -157,7 +157,7 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
                                 .value(42.1)
                                 .build()))
                         .build())
-                /*.ratioTapChanger(RatioTapChangerModificationInfos.builder()
+                .ratioTapChanger(RatioTapChangerModificationInfos.builder()
                         .enabled(new AttributeModification<>(true, OperationType.SET))
                         .loadTapChangingCapabilities(new AttributeModification<>(true, OperationType.SET))
                         .regulating(new AttributeModification<>(true, OperationType.SET))
@@ -185,7 +185,7 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
                                 .rho(3)
                                 .build()
                                 ))
-                        .build())*/
+                        .build())
                 .phaseTapChanger(PhaseTapChangerModificationInfos.builder()
                     .enabled(new AttributeModification<>(true, OperationType.SET))
                     .regulationMode(new AttributeModification<>(PhaseTapChanger.RegulationMode.ACTIVE_POWER_CONTROL, OperationType.SET))
@@ -311,9 +311,6 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
 
         assertThat(createdModification).recursivelyEquals(twoWindingsTransformerModificationInfos);
 
-        //enable the tap changer and set regulation mode
-        twoWindingsTransformerModificationInfos.getPhaseTapChanger().setEnabled(new AttributeModification<>(true, OperationType.SET));
-        twoWindingsTransformerModificationInfos.getPhaseTapChanger().setRegulationMode(new AttributeModification<>(PhaseTapChanger.RegulationMode.ACTIVE_POWER_CONTROL, OperationType.SET));
         //enable the tap changer and set regulating
         twoWindingsTransformerModificationInfos.getRatioTapChanger().setEnabled(new AttributeModification<>(true, OperationType.SET));
         twoWindingsTransformerModificationInfos.getRatioTapChanger().setRegulating(new AttributeModification<>(true, OperationType.SET));
@@ -327,9 +324,6 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
 
         assertThat(createdModification).recursivelyEquals(twoWindingsTransformerModificationInfos);
 
-        //unset regulation mode and modify tap position
-        twoWindingsTransformerModificationInfos.getPhaseTapChanger().setRegulationMode(null);
-        twoWindingsTransformerModificationInfos.getPhaseTapChanger().setTapPosition(new AttributeModification<>(1, OperationType.SET));
         //unset regulating and modify target voltage
         twoWindingsTransformerModificationInfos.getRatioTapChanger().setRegulating(null);
         twoWindingsTransformerModificationInfos.getRatioTapChanger().setTargetV(new AttributeModification<>(250.0, OperationType.SET));
@@ -340,6 +334,21 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
                 .andExpect(status().isOk()).andReturn();
 
         createdModification = (TwoWindingsTransformerModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(2);
+
+        assertThat(createdModification).recursivelyEquals(twoWindingsTransformerModificationInfos);
+
+        //unset regulation mode and modify tap position
+        twoWindingsTransformerModificationInfos.getPhaseTapChanger().setRegulationMode(null);
+        twoWindingsTransformerModificationInfos.getPhaseTapChanger().setTapPosition(new AttributeModification<>(1, OperationType.SET));
+        twoWindingsTransformerModificationInfos.getPhaseTapChanger().setEnabled(new AttributeModification<>(true, OperationType.SET));
+        twoWindingsTransformerModificationInfos.getRatioTapChanger().setEnabled(new AttributeModification<>(false, OperationType.SET));
+
+        modificationToCreateJson = mapper.writeValueAsString(twoWindingsTransformerModificationInfos);
+
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk()).andReturn();
+
+        createdModification = (TwoWindingsTransformerModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(3);
 
         assertThat(createdModification).recursivelyEquals(twoWindingsTransformerModificationInfos);
     }
