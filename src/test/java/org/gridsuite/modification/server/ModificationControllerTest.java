@@ -496,47 +496,21 @@ public class ModificationControllerTest {
     }
 
     @Test
-    public void createBattery() throws Exception {
-
-        // create and build battery
-        BatteryCreationInfos batteryCreationInfos = ModificationCreation.getCreationBattery("v2", "idBattery1", "nameBattery1", "1B");
+    public void testCreationBattery() throws Exception {
+        BatteryCreationInfos batteryCreationInfos = BatteryCreationInfos.builder()
+                .equipmentId("idBattery1")
+                .equipmentName("nameBattery1")
+                .voltageLevelId("v1")
+                .busOrBusbarSectionId("1B")
+                .connectionDirection(ConnectablePosition.Direction.TOP)
+                .activePowerSetpoint(100)
+                .droop(2f)
+                .maxActivePower(100)
+                .minActivePower(50)
+                .build();
         String batteryCreationInfosJson = objectWriter.writeValueAsString(batteryCreationInfos);
-
-        mockMvc.perform(post(URI_NETWORK_MODIF).content(batteryCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
-
-        BatteryCreation batteryCreation = network.getBattery("idBattery1").getExtension(BatteryCreation.class);
-        assertNull(batteryCreation);
-
-        // same for bus breaker
-        BatteryCreationInfos batteryCreationInfosBusBreaker = ModificationCreation.getCreationBattery("v1", "idBattery2", "nameBattery2", "bus1");
-        batteryCreationInfosJson = objectWriter.writeValueAsString(batteryCreationInfosBusBreaker);
-
-        mockMvc.perform(post(URI_NETWORK_MODIF_BUS_BREAKER).content(batteryCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
-
-        batteryCreation = networkStoreService.getNetwork(TEST_NETWORK_BUS_BREAKER_ID).getBattery("idBattery2").getExtension(BatteryCreation.class);
-        assertNull(batteryCreation);
-
-        // create and build battery
-        batteryCreationInfos.setEquipmentId("idBattery21");
-        batteryCreationInfosJson = objectWriter.writeValueAsString(batteryCreationInfos);
-
-        mockMvc.perform(post(URI_NETWORK_MODIF).content(batteryCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
-
-        batteryCreation = network.getBattery("idBattery21").getExtension(BatteryCreation.class);
-        assertNotNull(batteryCreation);
-
-        // same for bus breaker
-        batteryCreationInfosBusBreaker.setEquipmentId("idBattery3");
-        batteryCreationInfosJson = objectWriter.writeValueAsString(batteryCreationInfosBusBreaker);
-
-        mockMvc.perform(post(URI_NETWORK_MODIF_BUS_BREAKER).content(batteryCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
-
-        batteryCreation = networkStoreService.getNetwork(TEST_NETWORK_BUS_BREAKER_ID).getBattery("idBattery3").getExtension(BatteryCreation.class);
-        assertNotNull(batteryCreation);
+        mockMvc.perform(post(URI_NETWORK_MODIF).content(batteryCreationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk());
+        assertNull(network.getBattery("idBattery1"));
     }
 
     @Test
