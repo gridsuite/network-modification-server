@@ -182,11 +182,11 @@ public class BatteryCreationInNodeBreakerTest extends AbstractNetworkModificatio
 
         // try to create an existing battery
         batteryCreationInfos = (BatteryCreationInfos) buildModification();
-        batteryCreationInfos.setEquipmentId("v5battery");
+        batteryCreationInfos.setEquipmentId("v3Battery");
         batteryCreationInfosJson = mapper.writeValueAsString(batteryCreationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(batteryCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage(new NetworkModificationException(BATTERY_ALREADY_EXISTS, "v5battery").getMessage(),
+        assertLogMessage(new NetworkModificationException(BATTERY_ALREADY_EXISTS, "v3Battery").getMessage(),
                 batteryCreationInfos.getErrorType().name(), reportService);
         batteryCreationInfos.setEquipmentId("idBattery3");
         batteryCreationInfos.setEquipmentName("nameBattery3");
@@ -198,6 +198,6 @@ public class BatteryCreationInNodeBreakerTest extends AbstractNetworkModificatio
         Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertTrue(networkModificationResult.isEmpty());  // no modifications returned
         assertNull(getNetwork().getBattery("idBattery3"));  // battery was not created
-        testNetworkModificationsCount(UUID.randomUUID(), 10);  // new modification stored in the database
+        testNetworkModificationsCount(getGroupId(), 10);  // new modification stored in the database
     }
 }
