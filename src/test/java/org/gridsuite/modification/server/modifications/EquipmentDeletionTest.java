@@ -117,7 +117,7 @@ public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
         EquipmentDeletionInfos equipmentDeletionInfos = EquipmentDeletionInfos.builder()
                 .equipmentType("HVDC_LINE")
                 .equipmentId(hvdcLineName)
-                .specificData(hvdcLccDeletionInfos)
+                .specificEquipmentInfos(hvdcLccDeletionInfos)
                 .build();
         String equipmentDeletionInfosJson = mapper.writeValueAsString(equipmentDeletionInfos);
 

@@ -62,7 +62,7 @@ public class EquipmentDeletion extends AbstractModification {
     }
 
     private void removeHvdcLine(Network network, Reporter subReporter) {
-        HvdcLccDeletionInfos specificInfos = (HvdcLccDeletionInfos) modificationInfos.getSpecificData();
+        HvdcLccDeletionInfos specificInfos = (HvdcLccDeletionInfos) modificationInfos.getSpecificEquipmentInfos();
         List<String> shuntCompensatorIds = List.of();
         if (specificInfos != null) {
             shuntCompensatorIds = Stream.concat(
@@ -82,7 +82,7 @@ public class EquipmentDeletion extends AbstractModification {
                             return mcsInfo.isConnectedToHvdc();
                         }
                     })
-                    .map(mcsInfo -> mcsInfo.getId())
+                    .map(HvdcLccDeletionInfos.ShuntCompensatorInfos::getId)
                     .collect(Collectors.toList());
         }
         RemoveHvdcLine algo = new RemoveHvdcLineBuilder()

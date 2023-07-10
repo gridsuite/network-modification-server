@@ -34,9 +34,9 @@ public class EquipmentDeletionInfos extends EquipmentModificationInfos {
     @Schema(description = "Equipment type")
     private String equipmentType;
 
-    @Schema(description = "equipment-specific optional data")
+    @Schema(description = "Equipment specific infos (optional)")
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private AbstractEquipmentDeletionInfos specificData;
+    private AbstractEquipmentDeletionInfos specificEquipmentInfos;
 
     @Override
     public EquipmentDeletionEntity toEntity() {

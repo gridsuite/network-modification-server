@@ -59,11 +59,10 @@ public class HvdcLccDeletionInfos extends AbstractEquipmentDeletionInfos {
     }
 
     private List<ShuntCompensatorInfos> toShuntCompensators(List<ShuntCompensatorSelectionEmbeddable> shuntCompensators) {
-        return shuntCompensators != null ? shuntCompensators
-            .stream()
+        return shuntCompensators != null ? shuntCompensators.stream()
             .map(s -> new ShuntCompensatorInfos.ShuntCompensatorInfosBuilder()
-                    .id(s.getShuntCompensatorId())
-                    .connectedToHvdc(s.isConnectedToHvdc()).build())
+                .id(s.getShuntCompensatorId())
+                .connectedToHvdc(s.isConnectedToHvdc()).build())
             .collect(Collectors.toList()) : null;
     }
 }

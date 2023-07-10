@@ -17,7 +17,6 @@ import org.gridsuite.modification.server.impacts.SimpleElementImpact;
 import org.gridsuite.modification.server.impacts.SimpleElementImpact.SimpleImpactType;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.utils.assertions.Assertions.*;
 import static org.junit.Assert.assertEquals;

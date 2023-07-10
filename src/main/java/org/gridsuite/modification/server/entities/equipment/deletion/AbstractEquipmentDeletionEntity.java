@@ -21,5 +21,5 @@ public abstract class AbstractEquipmentDeletionEntity {
     @Column(name = "id")
     private UUID id;
 
-    public abstract AbstractEquipmentDeletionInfos toSpecificInfos();
+    public abstract AbstractEquipmentDeletionInfos toModificationInfos();
 }

@@ -32,7 +32,7 @@ public class EquipmentDeletionEntity extends EquipmentModificationEntity {
             foreignKey = @ForeignKey(
                     name = "specific_deletion_data_id_fk"
             ), nullable = true)
-    private AbstractEquipmentDeletionEntity specificDeletionData;
+    private AbstractEquipmentDeletionEntity specificEquipmentInfos;
 
     public EquipmentDeletionEntity(EquipmentDeletionInfos equipmentDeletionInfos) {
         super(equipmentDeletionInfos);
@@ -47,8 +47,8 @@ public class EquipmentDeletionEntity extends EquipmentModificationEntity {
 
     private void assignAttributes(EquipmentDeletionInfos equipmentDeletionInfos) {
         this.equipmentType = equipmentDeletionInfos.getEquipmentType();
-        specificDeletionData = equipmentDeletionInfos.getSpecificData() != null ?
-            equipmentDeletionInfos.getSpecificData().toEntity() : null;
+        specificEquipmentInfos = equipmentDeletionInfos.getSpecificEquipmentInfos() != null ?
+            equipmentDeletionInfos.getSpecificEquipmentInfos().toEntity() : null;
     }
 
     @Override
@@ -59,8 +59,8 @@ public class EquipmentDeletionEntity extends EquipmentModificationEntity {
                 .date(getDate())
                 .equipmentId(getEquipmentId())
                 .equipmentType(getEquipmentType());
-        if (specificDeletionData != null) {
-            builder.specificData(specificDeletionData.toSpecificInfos());
+        if (specificEquipmentInfos != null) {
+            builder.specificEquipmentInfos(specificEquipmentInfos.toModificationInfos());
         }
         return builder.build();
     }
