@@ -26,7 +26,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @Getter
 @Setter
-@ToString(callSuper = true)
+@ToString
 @Schema(description = "Scaling creation")
 public class ScalingVariationInfos {
 

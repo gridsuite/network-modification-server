@@ -13,12 +13,12 @@ import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.*;
 import com.powsybl.network.store.client.NetworkStoreService;
-import lombok.SneakyThrows;
 import okhttp3.HttpUrl;
 import okhttp3.mockwebserver.Dispatcher;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
+import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.modification.server.ContextConfigurationWithTestChannel;
 import org.gridsuite.modification.server.TapChangerType;
 import org.gridsuite.modification.server.dto.*;
@@ -39,6 +39,7 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.jupiter.api.Tag;
 import org.junit.runner.RunWith;
 import org.mockito.stubbing.Answer;
 import org.slf4j.Logger;
@@ -63,6 +64,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static com.powsybl.iidm.network.ReactiveLimitsKind.MIN_MAX;
 import static org.gridsuite.modification.server.Impacts.TestImpactUtils.*;
+import static org.gridsuite.modification.server.modifications.NetworkModificationApplicator.NETWORK_MODIFICATION_TYPE_REPORT;
 import static org.gridsuite.modification.server.service.BuildWorkerService.CANCEL_MESSAGE;
 import static org.gridsuite.modification.server.service.BuildWorkerService.FAIL_MESSAGE;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -81,8 +83,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @SpringBootTest
 @ContextConfigurationWithTestChannel
+@Tag("IntegrationTest")
 public class BuildTest {
-
     private static final Logger LOGGER = LoggerFactory.getLogger(BuildTest.class);
 
     @Autowired
@@ -161,7 +163,7 @@ public class BuildTest {
     private MockWebServer server;
 
     @Before
-    public void setUp() {
+    public void setUp() throws IOException {
         objectWriter = mapper.writer().withDefaultPrettyPrinter();
         // create a new network for each invocation (answer)
         when(networkStoreService.getNetwork(TEST_NETWORK_ID)).then((Answer<Network>) invocation -> {
@@ -190,8 +192,7 @@ public class BuildTest {
         equipmentInfosService.deleteVariants(TEST_NETWORK_ID, List.of(VariantManagerConstants.INITIAL_VARIANT_ID, NetworkCreation.VARIANT_ID, VARIANT_ID_2));
     }
 
-    @SneakyThrows
-    private void initMockWebServer() {
+    private void initMockWebServer() throws IOException {
         server = new MockWebServer();
         server.start();
 
@@ -201,7 +202,6 @@ public class BuildTest {
         reportService.setReportServerBaseUri(baseUrl);
 
         final Dispatcher dispatcher = new Dispatcher() {
-            @SneakyThrows
             @Override
             @NotNull
             public MockResponse dispatch(RecordedRequest request) {
@@ -321,7 +321,7 @@ public class BuildTest {
             List.of(TEST_GROUP_ID),
             List.of(TEST_SUB_REPORTER_ID_1),
             new HashSet<>());
-        String expectedBody = mapper.writeValueAsString(new ReporterModel(TEST_SUB_REPORTER_ID_1, TEST_SUB_REPORTER_ID_1));
+        String expectedBody = mapper.writeValueAsString(new ReporterModel(TEST_SUB_REPORTER_ID_1 + "@" + NETWORK_MODIFICATION_TYPE_REPORT, TEST_SUB_REPORTER_ID_1 + "@" + NETWORK_MODIFICATION_TYPE_REPORT));
 
         // Group does not exist
         String uriString = "/v1/networks/{networkUuid}/build?receiver=me";
@@ -343,8 +343,7 @@ public class BuildTest {
     }
 
     @Test
-    @SneakyThrows
-    public void runBuildTest() {
+    public void runBuildTest() throws Exception {
         // create modification entities in the database
         List<ModificationEntity> entities1 = new ArrayList<>();
         entities1.add(EquipmentAttributeModificationInfos.builder().equipmentId("v1d1").equipmentAttributeName("open").equipmentAttributeValue(true).equipmentType(IdentifiableType.SWITCH).build().toEntity());
@@ -826,6 +825,25 @@ public class BuildTest {
         // Save mode only (variant does not exist) : No log and no error send with exception
         assertTrue(networkModificationService.createNetworkModification(networkModificationService.getNetworkInfos(TEST_NETWORK_ID, UUID.randomUUID().toString()), groupUuid, new ReportInfos(reportUuid, reporterId), loadCreationInfos).isEmpty());
         testNetworkModificationsCount(groupUuid, 2);
+    }
+
+    @Test
+    public void testLastGroupModificationStatus() {
+        Network network = NetworkCreation.create(TEST_NETWORK_ID, true);
+        LoadCreationInfos loadCreationInfos = LoadCreationInfos.builder().voltageLevelId("unknownVoltageLevelId").equipmentId("loadId").build();
+        UUID reportUuid = UUID.randomUUID();
+        String reporterId = UUID.randomUUID().toString();
+        String reporterId2 = UUID.randomUUID().toString();
+
+        List<Pair<String, List<ModificationInfos>>> modificationInfosGroups = new ArrayList<>();
+        modificationInfosGroups.add(Pair.of(reporterId, List.of(loadCreationInfos)));
+        modificationInfosGroups.add(Pair.of(reporterId2, List.of()));
+
+        //Global application status should be in error and last application status should be OK
+        NetworkModificationResult networkModificationResult = networkModificationApplicator.applyModifications(modificationInfosGroups, new NetworkInfos(network, TEST_NETWORK_ID, true), reportUuid);
+        assertNotNull(networkModificationResult);
+        testEmptyImpactsWithErrorsLastOK(mapper, networkModificationResult);
+        assertTrue(TestUtils.getRequestsDone(2, server).stream().anyMatch(r -> r.matches(String.format("/v1/reports/%s", reportUuid))));
     }
 
     private void testNetworkModificationsCount(UUID groupUuid, int actualSize) {
