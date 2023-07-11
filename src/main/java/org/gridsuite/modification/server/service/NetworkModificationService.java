@@ -16,6 +16,7 @@ import com.powsybl.network.store.client.PreloadingStrategy;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
@@ -162,7 +163,11 @@ public class NetworkModificationService {
             }
         );
 
-        PreloadingStrategy preloadingStrategy = computePreloadingStrategy(modificationInfos.stream().map(Pair::getRight).flatMap(Collection::stream).collect(Collectors.toList()));
+        PreloadingStrategy preloadingStrategy = modificationInfos.stream().map(Pair::getRight)
+                .flatMap(Collection::stream)
+                .map(ModificationInfos::getType)
+                .reduce(ModificationType::maxStrategy).map(ModificationType::getStrategy).orElse(PreloadingStrategy.NONE);
+
         Network network = cloneNetworkVariant(networkUuid, buildInfos.getOriginVariantId(), buildInfos.getDestinationVariantId(), preloadingStrategy);
         NetworkInfos networkInfos = new NetworkInfos(network, networkUuid, true);
 
@@ -183,10 +188,6 @@ public class NetworkModificationService {
         }
     }
 
-    private PreloadingStrategy computePreloadingStrategy(List<ModificationInfos> modificationInfos) {
-        return modificationInfos.stream().map(m -> m.getType().getStrategy()).max(Comparator.comparing(Enum::ordinal)).orElse(PreloadingStrategy.NONE);
-    }
-
     @Transactional
     public Optional<NetworkModificationResult> moveModifications(UUID groupUuid, UUID originGroupUuid,
                                                                  UUID before, UUID networkUuid, String variantId,
@@ -197,7 +198,9 @@ public class NetworkModificationService {
             .map(ModificationEntity::toModificationInfos)
             .collect(Collectors.toList());
 
-        PreloadingStrategy preloadingStrategy = computePreloadingStrategy(movedModifications);
+        PreloadingStrategy preloadingStrategy = movedModifications.stream()
+                .map(ModificationInfos::getType)
+                .reduce(ModificationType::maxStrategy).map(ModificationType::getStrategy).orElse(PreloadingStrategy.NONE);
         NetworkInfos networkInfos = getNetworkInfos(networkUuid, variantId, preloadingStrategy);
 
         if (canBuildNode && !movedModifications.isEmpty() && networkInfos.isVariantPresent()) { // TODO remove canBuildNode and return NetworkDamages() ?
@@ -231,7 +234,10 @@ public class NetworkModificationService {
             networkModificationRepository.saveModifications(targetGroupUuid, duplicatedModificationsEntities);
 
             List<ModificationInfos> modificationInfos = duplicatedModificationsEntities.stream().map(ModificationEntity::toModificationInfos).collect(Collectors.toList());
-            PreloadingStrategy preloadingStrategy = computePreloadingStrategy(modificationInfos);
+
+            PreloadingStrategy preloadingStrategy = modificationInfos.stream()
+                    .map(ModificationInfos::getType)
+                    .reduce(ModificationType::maxStrategy).map(ModificationType::getStrategy).orElse(PreloadingStrategy.NONE);
             NetworkInfos networkInfos = getNetworkInfos(networkUuid, variantId, preloadingStrategy);
 
             // try to apply the duplicated modifications (incremental mode)

@@ -49,4 +49,8 @@ public enum ModificationType {
     public PreloadingStrategy getStrategy() {
         return strategy;
     }
+
+    public ModificationType maxStrategy(ModificationType other) {
+        return strategy.ordinal() >= other.strategy.ordinal() ? this : other;
+    }
 }
