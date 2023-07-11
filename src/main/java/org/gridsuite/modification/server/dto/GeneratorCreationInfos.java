@@ -7,6 +7,7 @@
 package org.gridsuite.modification.server.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.iidm.network.EnergySource;
@@ -36,6 +37,7 @@ import org.gridsuite.modification.server.modifications.GeneratorCreation;
 @Setter
 @ToString(callSuper = true)
 @Schema(description = "Generator creation")
+@JsonTypeName("GENERATOR_CREATION")
 public class GeneratorCreationInfos extends InjectionCreationInfos {
     @Schema(description = "Energy source")
     private EnergySource energySource;
@@ -134,11 +136,6 @@ public class GeneratorCreationInfos extends InjectionCreationInfos {
     @Override
     public NetworkModificationException.Type getErrorType() {
         return NetworkModificationException.Type.CREATE_GENERATOR_ERROR;
-    }
-
-    @Override
-    public ModificationType getType() {
-        return ModificationType.GENERATOR_CREATION;
     }
 
     @Override

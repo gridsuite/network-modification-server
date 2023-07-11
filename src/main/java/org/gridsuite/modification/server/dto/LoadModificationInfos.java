@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.dto;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.entities.equipment.modification.LoadModificationEntity;
@@ -29,6 +30,7 @@ import lombok.experimental.SuperBuilder;
 @ToString(callSuper = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Schema(description = "Load modification")
+@JsonTypeName("LOAD_MODIFICATION")
 public class LoadModificationInfos extends InjectionModificationInfos {
     @Schema(description = "Load type modification")
     private AttributeModification<LoadType> loadType;
@@ -52,11 +54,6 @@ public class LoadModificationInfos extends InjectionModificationInfos {
     @Override
     public NetworkModificationException.Type getErrorType() {
         return NetworkModificationException.Type.MODIFY_LOAD_ERROR;
-    }
-
-    @Override
-    public ModificationType getType() {
-        return ModificationType.LOAD_MODIFICATION;
     }
 
     @Override

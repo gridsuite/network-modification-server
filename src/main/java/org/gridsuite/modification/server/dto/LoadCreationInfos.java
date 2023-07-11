@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.dto;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.iidm.network.LoadType;
@@ -32,6 +33,7 @@ import org.gridsuite.modification.server.modifications.LoadCreation;
 @Setter
 @ToString(callSuper = true)
 @Schema(description = "Load creation")
+@JsonTypeName("LOAD_CREATION")
 public class LoadCreationInfos extends InjectionCreationInfos {
     @Schema(description = "Load type")
     private LoadType loadType;
@@ -64,11 +66,6 @@ public class LoadCreationInfos extends InjectionCreationInfos {
     @Override
     public NetworkModificationException.Type getErrorType() {
         return NetworkModificationException.Type.CREATE_LOAD_ERROR;
-    }
-
-    @Override
-    public ModificationType getType() {
-        return ModificationType.LOAD_CREATION;
     }
 
     @Override

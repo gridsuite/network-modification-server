@@ -6,12 +6,10 @@
  */
 package org.gridsuite.modification.server.dto;
 
-import java.util.List;
-
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.iidm.network.SwitchKind;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -24,6 +22,8 @@ import org.gridsuite.modification.server.entities.equipment.creation.VoltageLeve
 import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.VoltageLevelCreation;
 
+import java.util.List;
+
 /**
  * @author Laurent GARNIER <laurent.garnier at rte-france.com>
  */
@@ -33,6 +33,7 @@ import org.gridsuite.modification.server.modifications.VoltageLevelCreation;
 @Setter
 @ToString(callSuper = true)
 @Schema(description = "Voltage level creation")
+@JsonTypeName("VOLTAGE_LEVEL_CREATION")
 public class VoltageLevelCreationInfos extends EquipmentCreationInfos {
 
     @Schema(description = "substation id")
@@ -78,11 +79,6 @@ public class VoltageLevelCreationInfos extends EquipmentCreationInfos {
     @Override
     public NetworkModificationException.Type getErrorType() {
         return NetworkModificationException.Type.CREATE_VOLTAGE_LEVEL_ERROR;
-    }
-
-    @Override
-    public ModificationType getType() {
-        return ModificationType.VOLTAGE_LEVEL_CREATION;
     }
 
     @Override

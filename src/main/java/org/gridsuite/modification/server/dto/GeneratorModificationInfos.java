@@ -8,6 +8,7 @@ package org.gridsuite.modification.server.dto;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
@@ -33,6 +34,7 @@ import lombok.experimental.SuperBuilder;
 @Data
 @ToString(callSuper = true)
 @Schema(description = "generator modification")
+@JsonTypeName("GENERATOR_MODIFICATION")
 public class GeneratorModificationInfos extends InjectionModificationInfos {
     @Schema(description = "Energy source")
     private AttributeModification<EnergySource> energySource;
@@ -125,11 +127,6 @@ public class GeneratorModificationInfos extends InjectionModificationInfos {
     @Override
     public NetworkModificationException.Type getErrorType() {
         return NetworkModificationException.Type.MODIFY_GENERATOR_ERROR;
-    }
-
-    @Override
-    public ModificationType getType() {
-        return ModificationType.GENERATOR_MODIFICATION;
     }
 
     @Override

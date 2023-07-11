@@ -7,6 +7,7 @@
 
 package org.gridsuite.modification.server.dto;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -29,6 +30,7 @@ import org.gridsuite.modification.server.modifications.VoltageLevelModification;
 @Getter
 @Setter
 @Schema(description = "Voltage level modification")
+@JsonTypeName("VOLTAGE_LEVEL_MODIFICATION")
 public class VoltageLevelModificationInfos extends BasicEquipmentModificationInfos {
     @Schema(description = "nominal voltage in kV")
     private AttributeModification<Double> nominalVoltage;
@@ -53,11 +55,6 @@ public class VoltageLevelModificationInfos extends BasicEquipmentModificationInf
     @Override
     public NetworkModificationException.Type getErrorType() {
         return NetworkModificationException.Type.MODIFY_VOLTAGE_LEVEL_ERROR;
-    }
-
-    @Override
-    public ModificationType getType() {
-        return ModificationType.VOLTAGE_LEVEL_MODIFICATION;
     }
 
     @Override

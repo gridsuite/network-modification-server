@@ -7,6 +7,7 @@
 package org.gridsuite.modification.server.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.iidm.network.Country;
@@ -34,6 +35,7 @@ import java.util.Map;
 @Setter
 @ToString(callSuper = true)
 @Schema(description = "Substation creation")
+@JsonTypeName("SUBSTATION_CREATION")
 public class SubstationCreationInfos extends EquipmentCreationInfos {
 
     @Schema(description = "Substation country")
@@ -56,11 +58,6 @@ public class SubstationCreationInfos extends EquipmentCreationInfos {
     @Override
     public NetworkModificationException.Type getErrorType() {
         return NetworkModificationException.Type.CREATE_SUBSTATION_ERROR;
-    }
-
-    @Override
-    public ModificationType getType() {
-        return ModificationType.SUBSTATION_CREATION;
     }
 
     @Override

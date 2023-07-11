@@ -9,6 +9,7 @@ package org.gridsuite.modification.server.dto;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -33,17 +34,18 @@ import java.util.UUID;
     property = "type"
 )
 @JsonSubTypes({
-    @JsonSubTypes.Type(value = GroovyScriptInfos.class, name = "GROOVY_SCRIPT"),
-    @JsonSubTypes.Type(value = LoadCreationInfos.class, name = "LOAD_CREATION"),
-    @JsonSubTypes.Type(value = LoadModificationInfos.class, name = "LOAD_MODIFICATION"),
-    @JsonSubTypes.Type(value = GeneratorCreationInfos.class, name = "GENERATOR_CREATION"),
-    @JsonSubTypes.Type(value = GeneratorModificationInfos.class, name = "GENERATOR_MODIFICATION"),
-    @JsonSubTypes.Type(value = LineCreationInfos.class, name = "LINE_CREATION"),
-    @JsonSubTypes.Type(value = LineModificationInfos.class, name = "LINE_MODIFICATION"),
-    @JsonSubTypes.Type(value = SubstationCreationInfos.class, name = "SUBSTATION_CREATION"),
-    @JsonSubTypes.Type(value = SubstationModificationInfos.class, name = "SUBSTATION_MODIFICATION"),
-    @JsonSubTypes.Type(value = VoltageLevelCreationInfos.class, name = "VOLTAGE_LEVEL_CREATION"),
-    @JsonSubTypes.Type(value = VoltageLevelModificationInfos.class, name = "VOLTAGE_LEVEL_MODIFICATION"),
+    @JsonSubTypes.Type(value = GroovyScriptInfos.class),
+    @JsonSubTypes.Type(value = LoadCreationInfos.class),
+    @JsonSubTypes.Type(value = LoadModificationInfos.class),
+    @JsonSubTypes.Type(value = GeneratorCreationInfos.class),
+    @JsonSubTypes.Type(value = GeneratorModificationInfos.class),
+    @JsonSubTypes.Type(value = LineCreationInfos.class),
+    @JsonSubTypes.Type(value = LineModificationInfos.class),
+    @JsonSubTypes.Type(value = SubstationCreationInfos.class),
+    @JsonSubTypes.Type(value = SubstationModificationInfos.class),
+    @JsonSubTypes.Type(value = VoltageLevelCreationInfos.class),
+    @JsonSubTypes.Type(value = VoltageLevelModificationInfos.class),
+
     @JsonSubTypes.Type(value = ShuntCompensatorCreationInfos.class, name = "SHUNT_COMPENSATOR_CREATION"),
     @JsonSubTypes.Type(value = ShuntCompensatorModificationInfos.class, name = "SHUNT_COMPENSATOR_MODIFICATION"),
     @JsonSubTypes.Type(value = TwoWindingsTransformerCreationInfos.class, name = "TWO_WINDINGS_TRANSFORMER_CREATION"),
@@ -95,7 +97,7 @@ public class ModificationInfos {
 
     @JsonIgnore
     public ModificationType getType() {
-        throw new UnsupportedOperationException("TODO");
+        return ModificationType.valueOf(this.getClass().getAnnotation(JsonTypeName.class).value());
     }
 
     @JsonIgnore

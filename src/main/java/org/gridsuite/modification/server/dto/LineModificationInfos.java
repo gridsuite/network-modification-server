@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.dto;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -30,6 +31,7 @@ import org.gridsuite.modification.server.modifications.LineModification;
 @Setter
 @ToString(callSuper = true)
 @Schema(description = "Line modification")
+@JsonTypeName("LINE_MODIFICATION")
 public class LineModificationInfos extends BranchModificationInfos {
 
     @Schema(description = "Shunt conductance Side 1")
@@ -57,11 +59,6 @@ public class LineModificationInfos extends BranchModificationInfos {
     @Override
     public NetworkModificationException.Type getErrorType() {
         return NetworkModificationException.Type.MODIFY_LINE_ERROR;
-    }
-
-    @Override
-    public ModificationType getType() {
-        return ModificationType.LINE_MODIFICATION;
     }
 
     @Override
