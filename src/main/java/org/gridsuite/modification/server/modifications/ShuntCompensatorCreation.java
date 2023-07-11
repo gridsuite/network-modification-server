@@ -116,7 +116,7 @@ public class ShuntCompensatorCreation extends AbstractModification {
             .setConnectableBus(bus.getId())
             .newLinearModel()
             .setBPerSection(shuntCompensatorInfos.getSusceptancePerSection())
-            .setMaximumSectionCount(shuntCompensatorInfos.getMaximumNumberOfSections())
+            .setMaximumSectionCount(shuntCompensatorInfos.getMaximumNumberOfSections() != null ? shuntCompensatorInfos.getMaximumNumberOfSections() : 1)
             .add()
             .add();
     }

@@ -71,12 +71,12 @@ public class ShuntCompensatorCreationEntity extends InjectionCreationEntity {
     public void update(ModificationInfos modificationInfos) {
         super.update(modificationInfos);
         ShuntCompensatorCreationInfos shuntCompensatorCreationInfos = (ShuntCompensatorCreationInfos) modificationInfos;
-        maximumNumberOfSections = shuntCompensatorCreationInfos.getMaximumNumberOfSections();
-        currentNumberOfSections = shuntCompensatorCreationInfos.getCurrentNumberOfSections();
+        maximumNumberOfSections = shuntCompensatorCreationInfos.getMaximumNumberOfSections() != null ? shuntCompensatorCreationInfos.getMaximumNumberOfSections() : 1;
+        currentNumberOfSections = shuntCompensatorCreationInfos.getCurrentNumberOfSections() != null ? shuntCompensatorCreationInfos.getCurrentNumberOfSections() : 1;
         susceptancePerSection = shuntCompensatorCreationInfos.getSusceptancePerSection();
         qAtNominalV = shuntCompensatorCreationInfos.getQAtNominalV();
         shuntCompensatorType = shuntCompensatorCreationInfos.getShuntCompensatorType();
-        isIdenticalSections = shuntCompensatorCreationInfos.getIsIdenticalSection();
+        isIdenticalSections = shuntCompensatorCreationInfos.getIsIdenticalSection() != null ? shuntCompensatorCreationInfos.getIsIdenticalSection() : true;
         connectionName = shuntCompensatorCreationInfos.getConnectionName();
         connectionDirection = shuntCompensatorCreationInfos.getConnectionDirection();
         connectionPosition = shuntCompensatorCreationInfos.getConnectionPosition();
