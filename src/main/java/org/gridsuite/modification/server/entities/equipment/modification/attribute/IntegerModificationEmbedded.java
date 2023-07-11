@@ -16,6 +16,9 @@ import javax.persistence.Embeddable;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 
+/**
+ * @author Ayoub Labidi <ayoub.labidi at rte-france.com>
+ */
 @Embeddable
 @Getter
 public class IntegerModificationEmbedded implements IAttributeModificationEmbeddable<Integer> {
