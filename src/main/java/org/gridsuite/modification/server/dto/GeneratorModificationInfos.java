@@ -9,8 +9,7 @@ package org.gridsuite.modification.server.dto;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import org.gridsuite.modification.server.ModificationType;
-import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
 import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.GeneratorModification;
@@ -35,6 +34,7 @@ import lombok.experimental.SuperBuilder;
 @ToString(callSuper = true)
 @Schema(description = "generator modification")
 @JsonTypeName("GENERATOR_MODIFICATION")
+@ModificationErrorTypeName("MODIFY_GENERATOR_ERROR")
 public class GeneratorModificationInfos extends InjectionModificationInfos {
     @Schema(description = "Energy source")
     private AttributeModification<EnergySource> energySource;
@@ -125,12 +125,7 @@ public class GeneratorModificationInfos extends InjectionModificationInfos {
     }
 
     @Override
-    public NetworkModificationException.Type getErrorType() {
-        return NetworkModificationException.Type.MODIFY_GENERATOR_ERROR;
-    }
-
-    @Override
     public Reporter createSubReporter(ReporterModel reporter) {
-        return reporter.createSubReporter(ModificationType.GENERATOR_MODIFICATION.name(), "Generator modification ${generatorId}", "generatorId", this.getEquipmentId());
+        return reporter.createSubReporter(getType().name(), "Generator modification ${generatorId}", "generatorId", this.getEquipmentId());
     }
 }

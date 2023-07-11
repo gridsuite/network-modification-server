@@ -17,8 +17,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
-import org.gridsuite.modification.server.ModificationType;
-import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
 import org.gridsuite.modification.server.entities.equipment.modification.SubstationModificationEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.SubstationModification;
@@ -36,6 +35,7 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Schema(description = "Substation modification")
 @JsonTypeName("SUBSTATION_MODIFICATION")
+@ModificationErrorTypeName("MODIFY_SUBSTATION_ERROR")
 public class SubstationModificationInfos extends BasicEquipmentModificationInfos {
     @Schema(description = "country modification")
     private AttributeModification<Country> substationCountry;
@@ -55,12 +55,7 @@ public class SubstationModificationInfos extends BasicEquipmentModificationInfos
     }
 
     @Override
-    public NetworkModificationException.Type getErrorType() {
-        return NetworkModificationException.Type.MODIFY_SUBSTATION_ERROR;
-    }
-
-    @Override
     public Reporter createSubReporter(ReporterModel reporter) {
-        return reporter.createSubReporter(ModificationType.SUBSTATION_MODIFICATION.name(), "Substation modification ${substationId}", "substationId", this.getEquipmentId());
+        return reporter.createSubReporter(getType().name(), "Substation modification ${substationId}", "substationId", this.getEquipmentId());
     }
 }

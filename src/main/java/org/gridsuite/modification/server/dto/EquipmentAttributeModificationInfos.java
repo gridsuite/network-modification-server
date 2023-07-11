@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.dto;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
@@ -18,8 +19,8 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.*;
 import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.EquipmentAttributeModification;
@@ -39,6 +40,8 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
 @Setter
 @ToString(callSuper = true)
 @Schema(description = "Equipment attribute modification")
+@JsonTypeName("EQUIPMENT_ATTRIBUTE_MODIFICATION")
+@ModificationErrorTypeName("MODIFICATION_ERROR")
 public class EquipmentAttributeModificationInfos extends EquipmentModificationInfos {
     @Schema(description = "Equipment attribute name")
     private String equipmentAttributeName;
@@ -56,18 +59,8 @@ public class EquipmentAttributeModificationInfos extends EquipmentModificationIn
     }
 
     @Override
-    public NetworkModificationException.Type getErrorType() {
-        return NetworkModificationException.Type.MODIFICATION_ERROR;
-    }
-
-    @Override
-    public ModificationType getType() {
-        return ModificationType.EQUIPMENT_ATTRIBUTE_MODIFICATION;
-    }
-
-    @Override
     public Reporter createSubReporter(ReporterModel reporter) {
-        return reporter.createSubReporter(ModificationType.EQUIPMENT_ATTRIBUTE_MODIFICATION.name(), "${EquipmentType} '${EquipmentId}' change",
+        return reporter.createSubReporter(getType().name(), "${EquipmentType} '${EquipmentId}' change",
             Map.of("EquipmentType", new TypedValue(equipmentType.name(), TypedValue.UNTYPED), "EquipmentId", new TypedValue(getEquipmentId(), TypedValue.UNTYPED)));
     }
 

@@ -15,8 +15,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
-import org.gridsuite.modification.server.ModificationType;
-import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
 import org.gridsuite.modification.server.entities.equipment.creation.LineCreationEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.LineCreation;
@@ -32,6 +31,7 @@ import org.gridsuite.modification.server.modifications.LineCreation;
 @ToString(callSuper = true)
 @Schema(description = "Line creation")
 @JsonTypeName("LINE_CREATION")
+@ModificationErrorTypeName("CREATE_LINE_ERROR")
 public class LineCreationInfos extends BranchCreationInfos {
 
     @Schema(description = "Shunt conductance Side 1")
@@ -57,12 +57,7 @@ public class LineCreationInfos extends BranchCreationInfos {
     }
 
     @Override
-    public NetworkModificationException.Type getErrorType() {
-        return NetworkModificationException.Type.CREATE_LINE_ERROR;
-    }
-
-    @Override
     public Reporter createSubReporter(ReporterModel reporter) {
-        return reporter.createSubReporter(ModificationType.LINE_CREATION.name(), "Creation of line " + getEquipmentId());
+        return reporter.createSubReporter(getType().name(), "Creation of line " + getEquipmentId());
     }
 }

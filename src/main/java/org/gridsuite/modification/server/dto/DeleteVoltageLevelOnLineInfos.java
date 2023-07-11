@@ -6,13 +6,13 @@
  */
 package org.gridsuite.modification.server.dto;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-import org.gridsuite.modification.server.ModificationType;
-import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
 import org.gridsuite.modification.server.entities.equipment.modification.DeleteVoltageLevelOnLineEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.DeleteVoltageLevelOnLine;
@@ -28,6 +28,8 @@ import org.gridsuite.modification.server.modifications.DeleteVoltageLevelOnLine;
 @Setter
 @ToString(callSuper = true)
 @Schema(description = "Delete voltage level on line infos")
+@JsonTypeName("DELETE_VOLTAGE_LEVEL_ON_LINE")
+@ModificationErrorTypeName("DELETE_VOLTAGE_LEVEL_ON_LINE_ERROR")
 public class DeleteVoltageLevelOnLineInfos extends ModificationInfos {
 
     @Schema(description = "line 1 id")
@@ -53,17 +55,7 @@ public class DeleteVoltageLevelOnLineInfos extends ModificationInfos {
     }
 
     @Override
-    public NetworkModificationException.Type getErrorType() {
-        return NetworkModificationException.Type.DELETE_VOLTAGE_LEVEL_ON_LINE_ERROR;
-    }
-
-    @Override
-    public ModificationType getType() {
-        return ModificationType.DELETE_VOLTAGE_LEVEL_ON_LINE;
-    }
-
-    @Override
     public Reporter createSubReporter(ReporterModel reporter) {
-        return reporter.createSubReporter(ModificationType.DELETE_VOLTAGE_LEVEL_ON_LINE.name(), "Delete voltage level on line");
+        return reporter.createSubReporter(getType().name(), "Delete voltage level on line");
     }
 }

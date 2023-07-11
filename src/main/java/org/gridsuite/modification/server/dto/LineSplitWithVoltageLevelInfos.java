@@ -6,14 +6,14 @@
  */
 package org.gridsuite.modification.server.dto;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
-import org.gridsuite.modification.server.ModificationType;
-import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
 import org.gridsuite.modification.server.entities.equipment.modification.LineSplitWithVoltageLevelEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.LineSplitWithVoltageLevel;
@@ -28,6 +28,8 @@ import org.gridsuite.modification.server.modifications.LineSplitWithVoltageLevel
 @Setter
 @ToString(callSuper = true)
 @Schema(description = "Line split with voltage level")
+@JsonTypeName("LINE_SPLIT_WITH_VOLTAGE_LEVEL")
+@ModificationErrorTypeName("LINE_SPLIT_ERROR")
 public class LineSplitWithVoltageLevelInfos extends ModificationInfos {
 
     @Schema(description = "line to split ID")
@@ -68,17 +70,7 @@ public class LineSplitWithVoltageLevelInfos extends ModificationInfos {
     }
 
     @Override
-    public NetworkModificationException.Type getErrorType() {
-        return NetworkModificationException.Type.LINE_SPLIT_ERROR;
-    }
-
-    @Override
-    public ModificationType getType() {
-        return ModificationType.LINE_SPLIT_WITH_VOLTAGE_LEVEL;
-    }
-
-    @Override
     public Reporter createSubReporter(ReporterModel reporter) {
-        return reporter.createSubReporter(ModificationType.LINE_SPLIT_WITH_VOLTAGE_LEVEL.name(), "Line split with voltage level");
+        return reporter.createSubReporter(getType().name(), "Line split with voltage level");
     }
 }

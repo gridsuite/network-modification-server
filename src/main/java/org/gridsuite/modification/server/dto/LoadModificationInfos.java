@@ -7,8 +7,7 @@
 package org.gridsuite.modification.server.dto;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import org.gridsuite.modification.server.ModificationType;
-import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
 import org.gridsuite.modification.server.entities.equipment.modification.LoadModificationEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.LoadModification;
@@ -31,6 +30,7 @@ import lombok.experimental.SuperBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Schema(description = "Load modification")
 @JsonTypeName("LOAD_MODIFICATION")
+@ModificationErrorTypeName("MODIFY_LOAD_ERROR")
 public class LoadModificationInfos extends InjectionModificationInfos {
     @Schema(description = "Load type modification")
     private AttributeModification<LoadType> loadType;
@@ -52,12 +52,7 @@ public class LoadModificationInfos extends InjectionModificationInfos {
     }
 
     @Override
-    public NetworkModificationException.Type getErrorType() {
-        return NetworkModificationException.Type.MODIFY_LOAD_ERROR;
-    }
-
-    @Override
     public Reporter createSubReporter(ReporterModel reporter) {
-        return reporter.createSubReporter(ModificationType.LOAD_MODIFICATION.name(), "Load modification ${loadId}", "loadId", this.getEquipmentId());
+        return reporter.createSubReporter(getType().name(), "Load modification ${loadId}", "loadId", this.getEquipmentId());
     }
 }
