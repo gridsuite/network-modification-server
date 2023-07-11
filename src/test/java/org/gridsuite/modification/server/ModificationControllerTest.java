@@ -430,6 +430,27 @@ public class ModificationControllerTest {
         // compare duplicates
         assertThat(newModificationListOtherGroup.get(1)).recursivelyEquals(modificationList.get(0));
         assertThat(newModificationListOtherGroup.get(2)).recursivelyEquals(modificationList.get(1));
+
+        // Duplicate all modifications in TEST_GROUP_ID, and append them at the end of otherGroupId
+        mockMvc.perform(
+                put("/v1/groups/" + otherGroupId + "/duplications"
+                    + "?networkUuid=" + TEST_NETWORK_ID
+                    + "&reportUuid=" + TEST_REPORT_ID
+                    + "&reporterId=" + UUID.randomUUID()
+                    + "&variantId=" + NetworkCreation.VARIANT_ID
+                    + "&duplicateFrom=" + TEST_GROUP_ID)
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
+
+        newModificationListOtherGroup = modificationRepository.getModifications(otherGroupId, true, true);
+        // now 8 modifications in new group: first 3 are still the same, 5 last are new duplicates from first group
+        assertEquals(8, newModificationListOtherGroup.size());
+
+        // compare duplicates
+        modificationList = modificationRepository.getModifications(TEST_GROUP_ID, true, true);
+        for (int i = 3; i < 8; ++i) {
+            assertThat(newModificationListOtherGroup.get(i)).recursivelyEquals(modificationList.get(i - 3));
+        }
     }
 
     @Test
@@ -1112,5 +1133,36 @@ public class ModificationControllerTest {
         emptyLineTypes = mapper.readValue(resultAsString, new TypeReference<>() {
         });
         assertEquals(0, emptyLineTypes.size());
+    }
+
+    @Test
+    public void testCreateModificationsVoltageInit() throws Exception {
+        // Create the modifications
+        MassiveEquipmentsModificationsInfos modificationsInfos1 = MassiveEquipmentsModificationsInfos.builder()
+                .modifications(List.of(
+                        GeneratorModificationInfos.builder()
+                                .equipmentId("G1")
+                                .reactivePowerSetpoint(new AttributeModification<>(10., OperationType.SET))
+                                .build(),
+                        GeneratorModificationInfos.builder()
+                                .equipmentId("G2")
+                                .voltageSetpoint(new AttributeModification<>(226., OperationType.SET))
+                                .build())).build();
+
+        MvcResult mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF_BASE + "/voltage-init")
+                        .content(objectWriter.writeValueAsString(modificationsInfos1))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn();
+        UUID groupUuid = UUID.fromString(mapper.readValue(mvcResult.getResponse().getContentAsString(), String.class));
+
+        // Get the modifications
+        mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/modifications", groupUuid)).andExpectAll(
+                status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
+                .andReturn();
+
+        List<MassiveEquipmentsModificationsInfos> modificationsInfos2 = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertEquals(1, modificationsInfos2.size());
+        assertThat(modificationsInfos2.get(0)).recursivelyEquals(modificationsInfos1);
     }
 }

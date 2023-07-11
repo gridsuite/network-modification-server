@@ -117,6 +117,10 @@ public class ModificationRepositoryTest {
         return (DeleteVoltageLevelOnLineInfos) networkModificationRepository.getModificationInfo(modificationUuid);
     }
 
+    private MassiveEquipmentsModificationsInfos getMassiveEquipmentsModifications(UUID modificationUuid) {
+        return (MassiveEquipmentsModificationsInfos) networkModificationRepository.getModificationInfo(modificationUuid);
+    }
+
     @Test
     public void test() {
         assertEquals(List.of(), this.networkModificationRepository.getModificationGroupsUuids());
@@ -1059,5 +1063,39 @@ public class ModificationRepositoryTest {
         testModificationEmbedded(new DoubleModificationEmbedded(new AttributeModification<>(10., OperationType.SET)), 10.);
         testModificationEmbedded(new EnumModificationEmbedded<>(new AttributeModification<>(OperationType.SET, OperationType.SET)), OperationType.SET);
         testModificationEmbedded(new BooleanModificationEmbedded(new AttributeModification<>(true, OperationType.SET)), true);
+    }
+
+    @Test
+    public void testMassiveEquipmentsModification() {
+        var massiveEquipmentsModificationsEntity = MassiveEquipmentsModificationsInfos.builder()
+            .modifications(List.of(
+                GeneratorModificationInfos.builder()
+                    .equipmentId("G1")
+                    .reactivePowerSetpoint(new AttributeModification<>(10., OperationType.SET))
+                    .build(),
+                GeneratorModificationInfos.builder()
+                    .equipmentId("G2")
+                    .voltageSetpoint(new AttributeModification<>(226., OperationType.SET))
+                    .build()))
+            .build().toEntity();
+
+        networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(massiveEquipmentsModificationsEntity));
+        assertRequestsCount(1, 9, 1, 0);
+
+        List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
+        assertEquals(1, modificationInfos.size());
+
+        assertThat(getMassiveEquipmentsModifications(modificationInfos.get(0).getUuid()))
+            .recursivelyEquals(massiveEquipmentsModificationsEntity.toModificationInfos());
+
+        assertEquals(List.of(TEST_GROUP_ID), this.networkModificationRepository.getModificationGroupsUuids());
+
+        SQLStatementCountValidator.reset();
+        networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(massiveEquipmentsModificationsEntity.getId()));
+        assertRequestsCount(3, 0, 0, 9);
+
+        SQLStatementCountValidator.reset();
+        assertEquals(0, networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
+        assertRequestsCount(2, 0, 0, 0);
     }
 }

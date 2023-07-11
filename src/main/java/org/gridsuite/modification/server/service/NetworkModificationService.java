@@ -251,4 +251,39 @@ public class NetworkModificationService {
         }
         return Optional.empty();
     }
+
+    public UUID createVoltageInitResultModifications(@NonNull MassiveEquipmentsModificationsInfos modificationsInfos) {
+        UUID groupUuid = UUID.randomUUID();
+        networkModificationRepository.saveModifications(groupUuid, List.of(modificationsInfos.toEntity()));
+        return groupUuid;
+    }
+
+    @Transactional
+    public Optional<NetworkModificationResult> duplicateModificationsInGroup(UUID targetGroupUuid,
+                                                                             UUID networkUuid, String variantId,
+                                                                             ReportInfos reportInfos,
+                                                                             UUID originGroupUuid) {
+        List<ModificationEntity> duplicatedModificationsEntities = networkModificationRepository.copyModificationsEntities(originGroupUuid);
+        if (!duplicatedModificationsEntities.isEmpty()) {
+            networkModificationRepository.saveModifications(targetGroupUuid, duplicatedModificationsEntities);
+
+            List<ModificationInfos> modificationInfos = duplicatedModificationsEntities.stream().map(ModificationEntity::toModificationInfos).collect(Collectors.toList());
+
+            PreloadingStrategy preloadingStrategy = modificationInfos.stream()
+                .map(ModificationInfos::getType)
+                .reduce(ModificationType::maxStrategy).map(ModificationType::getStrategy).orElse(PreloadingStrategy.NONE);
+            NetworkInfos networkInfos = getNetworkInfos(networkUuid, variantId, preloadingStrategy);
+
+            // try to apply the duplicated modifications (incremental mode)
+            if (networkInfos.isVariantPresent()) {
+                return Optional.of(modificationApplicator.applyModifications(
+                    modificationInfos,
+                    networkInfos,
+                    reportInfos
+                ));
+            }
+        }
+        return Optional.empty();
+    }
+
 }
