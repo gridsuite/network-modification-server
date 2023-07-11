@@ -62,7 +62,7 @@ public class ShuntCompensatorCreationEntity extends InjectionCreationEntity {
         susceptancePerSection = creationInfos.getSusceptancePerSection();
         qAtNominalV = creationInfos.getQAtNominalV();
         shuntCompensatorType = creationInfos.getShuntCompensatorType();
-        isIdenticalSections = BooleanUtils.toBooleanDefaultIfNull(creationInfos.getIsIdenticalSection(),true);
+        isIdenticalSections = BooleanUtils.toBooleanDefaultIfNull(creationInfos.getIsIdenticalSection(), true);
         connectionName = creationInfos.getConnectionName();
         connectionDirection = creationInfos.getConnectionDirection();
         connectionPosition = creationInfos.getConnectionPosition();
@@ -77,7 +77,7 @@ public class ShuntCompensatorCreationEntity extends InjectionCreationEntity {
         susceptancePerSection = shuntCompensatorCreationInfos.getSusceptancePerSection();
         qAtNominalV = shuntCompensatorCreationInfos.getQAtNominalV();
         shuntCompensatorType = shuntCompensatorCreationInfos.getShuntCompensatorType();
-        isIdenticalSections = BooleanUtils.toBooleanDefaultIfNull(shuntCompensatorCreationInfos.getIsIdenticalSection(),true);
+        isIdenticalSections = BooleanUtils.toBooleanDefaultIfNull(shuntCompensatorCreationInfos.getIsIdenticalSection(), true);
         connectionName = shuntCompensatorCreationInfos.getConnectionName();
         connectionDirection = shuntCompensatorCreationInfos.getConnectionDirection();
         connectionPosition = shuntCompensatorCreationInfos.getConnectionPosition();
