@@ -51,6 +51,7 @@ public enum ModificationType {
     }
 
     public ModificationType maxStrategy(ModificationType other) {
-        return strategy.ordinal() >= other.strategy.ordinal() ? this : other;
+        return ((strategy == PreloadingStrategy.NONE && (other.strategy == PreloadingStrategy.COLLECTION || other.strategy == PreloadingStrategy.ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW))
+                || (strategy == PreloadingStrategy.COLLECTION && other.strategy == PreloadingStrategy.ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW)) ? other : this;
     }
 }
