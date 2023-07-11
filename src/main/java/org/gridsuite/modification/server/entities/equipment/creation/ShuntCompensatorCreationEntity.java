@@ -56,11 +56,12 @@ public class ShuntCompensatorCreationEntity extends InjectionCreationEntity {
 
     public ShuntCompensatorCreationEntity(ShuntCompensatorCreationInfos creationInfos) {
         super(creationInfos);
-        maximumNumberOfSections = 1;
+        maximumNumberOfSections = creationInfos.getMaximumNumberOfSections() != null ? creationInfos.getMaximumNumberOfSections() : 1;
+        currentNumberOfSections = creationInfos.getCurrentNumberOfSections() != null ? creationInfos.getCurrentNumberOfSections() : 1;
         susceptancePerSection = creationInfos.getSusceptancePerSection();
         qAtNominalV = creationInfos.getQAtNominalV();
         shuntCompensatorType = creationInfos.getShuntCompensatorType();
-        isIdenticalSections = true;
+        isIdenticalSections = creationInfos.getIsIdenticalSection() != null ? creationInfos.getIsIdenticalSection() : true;
         connectionName = creationInfos.getConnectionName();
         connectionDirection = creationInfos.getConnectionDirection();
         connectionPosition = creationInfos.getConnectionPosition();
@@ -70,7 +71,7 @@ public class ShuntCompensatorCreationEntity extends InjectionCreationEntity {
     public void update(ModificationInfos modificationInfos) {
         super.update(modificationInfos);
         ShuntCompensatorCreationInfos shuntCompensatorCreationInfos = (ShuntCompensatorCreationInfos) modificationInfos;
-        maximumNumberOfSections = 1;
+        maximumNumberOfSections = shuntCompensatorCreationInfos.getMaximumNumberOfSections();
         currentNumberOfSections = shuntCompensatorCreationInfos.getCurrentNumberOfSections();
         susceptancePerSection = shuntCompensatorCreationInfos.getSusceptancePerSection();
         qAtNominalV = shuntCompensatorCreationInfos.getQAtNominalV();
