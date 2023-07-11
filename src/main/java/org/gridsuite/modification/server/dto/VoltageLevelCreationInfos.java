@@ -17,7 +17,7 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 import org.gridsuite.modification.server.ModificationType;
-import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
 import org.gridsuite.modification.server.entities.equipment.creation.VoltageLevelCreationEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.VoltageLevelCreation;
@@ -34,6 +34,7 @@ import java.util.List;
 @ToString(callSuper = true)
 @Schema(description = "Voltage level creation")
 @JsonTypeName("VOLTAGE_LEVEL_CREATION")
+@ModificationErrorTypeName("CREATE_VOLTAGE_LEVEL_ERROR")
 public class VoltageLevelCreationInfos extends EquipmentCreationInfos {
 
     @Schema(description = "substation id")
@@ -74,11 +75,6 @@ public class VoltageLevelCreationInfos extends EquipmentCreationInfos {
     @Override
     public AbstractModification toModification() {
         return new VoltageLevelCreation(this);
-    }
-
-    @Override
-    public NetworkModificationException.Type getErrorType() {
-        return NetworkModificationException.Type.CREATE_VOLTAGE_LEVEL_ERROR;
     }
 
     @Override
