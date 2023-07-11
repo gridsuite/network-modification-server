@@ -184,10 +184,7 @@ public class NetworkModificationService {
     }
 
     private PreloadingStrategy computePreloadingStrategy(List<ModificationInfos> modificationInfos) {
-        return modificationInfos.stream().map(m -> m.getType().getStrategy()).reduce(PreloadingStrategy.NONE,
-            (strategy1, strategy2) -> ((strategy1 == PreloadingStrategy.NONE && (strategy2 == PreloadingStrategy.COLLECTION || strategy2 == PreloadingStrategy.ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW))
-                || (strategy1 == PreloadingStrategy.COLLECTION && strategy2 == PreloadingStrategy.ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW)) ? strategy2 : strategy1
-        );
+        return modificationInfos.stream().map(m -> m.getType().getStrategy()).max(Comparator.comparing(Enum::ordinal)).orElse(PreloadingStrategy.NONE);
     }
 
     @Transactional
