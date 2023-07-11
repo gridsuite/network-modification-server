@@ -10,6 +10,7 @@ package org.gridsuite.modification.server.entities.equipment.creation;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.apache.commons.lang3.BooleanUtils;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.ShuntCompensatorCreationInfos;
 import org.gridsuite.modification.server.dto.ShuntCompensatorType;
@@ -61,7 +62,7 @@ public class ShuntCompensatorCreationEntity extends InjectionCreationEntity {
         susceptancePerSection = creationInfos.getSusceptancePerSection();
         qAtNominalV = creationInfos.getQAtNominalV();
         shuntCompensatorType = creationInfos.getShuntCompensatorType();
-        isIdenticalSections = creationInfos.getIsIdenticalSection() != null ? creationInfos.getIsIdenticalSection() : true;
+        isIdenticalSections = BooleanUtils.toBooleanDefaultIfNull(creationInfos.getIsIdenticalSection(),true);
         connectionName = creationInfos.getConnectionName();
         connectionDirection = creationInfos.getConnectionDirection();
         connectionPosition = creationInfos.getConnectionPosition();
@@ -76,7 +77,7 @@ public class ShuntCompensatorCreationEntity extends InjectionCreationEntity {
         susceptancePerSection = shuntCompensatorCreationInfos.getSusceptancePerSection();
         qAtNominalV = shuntCompensatorCreationInfos.getQAtNominalV();
         shuntCompensatorType = shuntCompensatorCreationInfos.getShuntCompensatorType();
-        isIdenticalSections = shuntCompensatorCreationInfos.getIsIdenticalSection() != null ? shuntCompensatorCreationInfos.getIsIdenticalSection() : true;
+        isIdenticalSections = BooleanUtils.toBooleanDefaultIfNull(shuntCompensatorCreationInfos.getIsIdenticalSection(),true);
         connectionName = shuntCompensatorCreationInfos.getConnectionName();
         connectionDirection = shuntCompensatorCreationInfos.getConnectionDirection();
         connectionPosition = shuntCompensatorCreationInfos.getConnectionPosition();
