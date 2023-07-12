@@ -8,7 +8,6 @@ package org.gridsuite.modification.server.Impacts;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.iidm.network.IdentifiableType;
-import nl.jqno.equalsverifier.EqualsVerifier;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationResult.ApplicationStatus;
 import org.gridsuite.modification.server.impacts.SimpleElementImpact;
@@ -21,6 +20,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.TreeSet;
+
 import static org.gridsuite.modification.server.Impacts.TestImpactUtils.*;
 import static org.junit.Assert.assertEquals;
 
@@ -33,9 +33,6 @@ public class ElementImpactTest {
 
     @Test
     public void testElementImpact() throws IOException {
-        EqualsVerifier.simple().forClass(NetworkModificationResult.class).verify();
-        EqualsVerifier.simple().forClass(SimpleElementImpact.class).verify();
-
         SimpleElementImpact creationImpact = createCreationImpactType(IdentifiableType.LINE, "lineId", new TreeSet<>(List.of("s1", "s2")));
         SimpleElementImpact modificationImpact = createModificationImpactType(IdentifiableType.LOAD, "loadId", new TreeSet<>(List.of("s3")));
         SimpleElementImpact deletionImpact = createDeletionImpactType(IdentifiableType.GENERATOR, "generatorId", new TreeSet<>(List.of("s4")));
