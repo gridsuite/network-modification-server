@@ -49,6 +49,7 @@ public class ShuntCompensatorCreation extends AbstractModification {
                             ? susceptancePerSection
                             : -susceptancePerSection);
         }
+        determinateSectionCount(modificationInfos);
         if (voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER) {
             ShuntCompensatorAdder shuntCompensatorAdder = createShuntAdderInNodeBreaker(voltageLevel, modificationInfos);
             var position = ModificationUtils.getInstance().getPosition(modificationInfos.getConnectionPosition(),
@@ -69,6 +70,23 @@ public class ShuntCompensatorCreation extends AbstractModification {
                     .withValue("id", modificationInfos.getEquipmentId())
                     .withSeverity(TypedValue.INFO_SEVERITY)
                     .build());
+        }
+    }
+
+    private void determinateSectionCount(ShuntCompensatorCreationInfos modificationInfos) {
+        if (modificationInfos.getSusceptancePerSection() != null) {
+            if (modificationInfos.getSusceptancePerSection() == 0) {
+                modificationInfos.setCurrentNumberOfSections(0);
+            } else {
+                modificationInfos.setCurrentNumberOfSections(1);
+            }
+        }
+        if (modificationInfos.getQAtNominalV() != null) {
+            if (modificationInfos.getQAtNominalV() == 0) {
+                modificationInfos.setCurrentNumberOfSections(0);
+            } else {
+                modificationInfos.setCurrentNumberOfSections(1);
+            }
         }
     }
 
@@ -98,7 +116,7 @@ public class ShuntCompensatorCreation extends AbstractModification {
             .setConnectableBus(bus.getId())
             .newLinearModel()
             .setBPerSection(shuntCompensatorInfos.getSusceptancePerSection())
-            .setMaximumSectionCount(shuntCompensatorInfos.getMaximumNumberOfSections())
+            .setMaximumSectionCount(shuntCompensatorInfos.getMaximumNumberOfSections() != null ? shuntCompensatorInfos.getMaximumNumberOfSections() : 1)
             .add()
             .add();
     }

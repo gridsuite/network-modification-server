@@ -10,6 +10,7 @@ package org.gridsuite.modification.server.entities.equipment.creation;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.apache.commons.lang3.BooleanUtils;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.ShuntCompensatorCreationInfos;
 import org.gridsuite.modification.server.dto.ShuntCompensatorType;
@@ -56,12 +57,12 @@ public class ShuntCompensatorCreationEntity extends InjectionCreationEntity {
 
     public ShuntCompensatorCreationEntity(ShuntCompensatorCreationInfos creationInfos) {
         super(creationInfos);
-        maximumNumberOfSections = creationInfos.getMaximumNumberOfSections();
-        currentNumberOfSections = creationInfos.getCurrentNumberOfSections();
+        maximumNumberOfSections = creationInfos.getMaximumNumberOfSections() != null ? creationInfos.getMaximumNumberOfSections() : 1;
+        currentNumberOfSections = creationInfos.getCurrentNumberOfSections() != null ? creationInfos.getCurrentNumberOfSections() : 1;
         susceptancePerSection = creationInfos.getSusceptancePerSection();
         qAtNominalV = creationInfos.getQAtNominalV();
         shuntCompensatorType = creationInfos.getShuntCompensatorType();
-        isIdenticalSections = creationInfos.getIsIdenticalSection();
+        isIdenticalSections = BooleanUtils.toBooleanDefaultIfNull(creationInfos.getIsIdenticalSection(), true);
         connectionName = creationInfos.getConnectionName();
         connectionDirection = creationInfos.getConnectionDirection();
         connectionPosition = creationInfos.getConnectionPosition();
@@ -71,12 +72,12 @@ public class ShuntCompensatorCreationEntity extends InjectionCreationEntity {
     public void update(ModificationInfos modificationInfos) {
         super.update(modificationInfos);
         ShuntCompensatorCreationInfos shuntCompensatorCreationInfos = (ShuntCompensatorCreationInfos) modificationInfos;
-        maximumNumberOfSections = shuntCompensatorCreationInfos.getMaximumNumberOfSections();
-        currentNumberOfSections = shuntCompensatorCreationInfos.getCurrentNumberOfSections();
+        maximumNumberOfSections = shuntCompensatorCreationInfos.getMaximumNumberOfSections() != null ? shuntCompensatorCreationInfos.getMaximumNumberOfSections() : 1;
+        currentNumberOfSections = shuntCompensatorCreationInfos.getCurrentNumberOfSections() != null ? shuntCompensatorCreationInfos.getCurrentNumberOfSections() : 1;
         susceptancePerSection = shuntCompensatorCreationInfos.getSusceptancePerSection();
         qAtNominalV = shuntCompensatorCreationInfos.getQAtNominalV();
         shuntCompensatorType = shuntCompensatorCreationInfos.getShuntCompensatorType();
-        isIdenticalSections = shuntCompensatorCreationInfos.getIsIdenticalSection();
+        isIdenticalSections = BooleanUtils.toBooleanDefaultIfNull(shuntCompensatorCreationInfos.getIsIdenticalSection(), true);
         connectionName = shuntCompensatorCreationInfos.getConnectionName();
         connectionDirection = shuntCompensatorCreationInfos.getConnectionDirection();
         connectionPosition = shuntCompensatorCreationInfos.getConnectionPosition();
