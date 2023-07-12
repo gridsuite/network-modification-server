@@ -228,12 +228,6 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
     public void testRatioTapChangerModification() throws Exception {
         TwoWindingsTransformerModificationInfos twoWindingsTransformerModificationInfos = TwoWindingsTransformerModificationInfos.builder()
                 .equipmentId("trf1")
-                .currentLimits1(CurrentLimitsModificationInfos.builder()
-                        .temporaryLimits(List.of())
-                        .build())
-                .currentLimits2(CurrentLimitsModificationInfos.builder()
-                        .temporaryLimits(List.of())
-                                .build())
                         .build();
 
         //disable the tap changer

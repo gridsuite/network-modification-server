@@ -123,7 +123,7 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
             if (ratioTapChangerModified(twoWindingsTransformerModificationInfos.getRatioTapChanger())) {
                 addRatioTapChangersToTwoWindingsTransformer(network, twoWindingsTransformerModificationInfos, twt, subReporter);
             }
-        } else {
+        } else if (twt.hasRatioTapChanger()) {
             twt.getRatioTapChanger().remove();
             subReporter.report(Report.builder().withKey("RatioTapChangerRemoved")
                 .withDefaultMessage("The ratio tap changer has been removed")

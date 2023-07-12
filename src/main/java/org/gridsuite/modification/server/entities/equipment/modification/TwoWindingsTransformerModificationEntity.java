@@ -215,9 +215,9 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
 
     private TwoWindingsTransformerModificationInfos.TwoWindingsTransformerModificationInfosBuilder<?, ?> toTwoWindingsTransformerModificationInfosBuilder() {
 
-        List<TapChangerStepCreationEmbeddable> ratioTapChangerSteps = null;
+        List<TapChangerStepCreationEmbeddable> ratioTapChangerStepsEmbeddable = null;
         if (getTapChangerSteps() != null && getTapChangerSteps().size() > 0) {
-            ratioTapChangerSteps = getTapChangerSteps().stream().filter(step -> step.getTapChangerType().equals(TapChangerType.RATIO)).sorted(Comparator.comparing(TapChangerStepCreationEmbeddable::getIndex)).collect(Collectors.toList());
+            ratioTapChangerStepsEmbeddable = getTapChangerSteps().stream().filter(step -> step.getTapChangerType().equals(TapChangerType.RATIO)).sorted(Comparator.comparing(TapChangerStepCreationEmbeddable::getIndex)).collect(Collectors.toList());
         }
 
         TwoWindingsTransformerModificationInfos.TwoWindingsTransformerModificationInfosBuilder<?, ?> builder = TwoWindingsTransformerModificationInfos
@@ -242,8 +242,8 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
         }
 
         List<TapChangerStepCreationInfos> ratioTapChangerStepCreationInfos = null;
-        if (ratioTapChangerSteps != null && !ratioTapChangerSteps.isEmpty()) {
-            ratioTapChangerStepCreationInfos = ratioTapChangerSteps.stream().map(TapChangerStepCreationEmbeddable::toModificationInfos).collect(Collectors.toList());
+        if (ratioTapChangerStepsEmbeddable != null && !ratioTapChangerStepsEmbeddable.isEmpty()) {
+            ratioTapChangerStepCreationInfos = ratioTapChangerStepsEmbeddable.stream().map(TapChangerStepCreationEmbeddable::toModificationInfos).collect(Collectors.toList());
         }
         builder.ratioTapChanger(RatioTapChangerModificationInfos.builder()
                 .enabled(AttributeModification.toAttributeModification(getRatioTapChangerEnabled()))
