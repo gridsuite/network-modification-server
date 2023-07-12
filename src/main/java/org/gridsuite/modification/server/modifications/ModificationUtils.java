@@ -125,7 +125,7 @@ public final class ModificationUtils {
 
     public int getPosition(Integer defaultPosition, String busOrBusbarSectionId, Network network, VoltageLevel voltageLevel) {
         return defaultPosition != null
-               ? defaultPosition
+                ? defaultPosition
                 : getPosition(busOrBusbarSectionId, network, voltageLevel);
     }
 

@@ -1,4 +1,3 @@
-
 /*
  *  Copyright (c) 2023, All partners of the iTesla project (http://www.itesla-project.eu/consortium)
  *  This Source Code Form is subject to the terms of the Mozilla Public
