@@ -16,6 +16,22 @@ import org.gridsuite.modification.server.dto.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import com.powsybl.iidm.network.Branch;
+import com.powsybl.iidm.network.Network;
+import com.powsybl.iidm.network.PhaseTapChangerAdder;
+import com.powsybl.iidm.network.PhaseTapChangerStep;
+import com.powsybl.iidm.network.RatioTapChanger;
+import com.powsybl.iidm.network.RatioTapChangerAdder;
+import com.powsybl.iidm.network.RatioTapChangerStep;
+import com.powsybl.iidm.network.TapChanger;
+import com.powsybl.iidm.network.Terminal;
+import com.powsybl.iidm.network.TwoWindingsTransformer;
+
+import org.gridsuite.modification.server.dto.BranchModificationInfos;
+import org.gridsuite.modification.server.dto.RatioTapChangerModificationInfos;
+import org.gridsuite.modification.server.dto.TapChangerModificationInfos;
+import org.gridsuite.modification.server.dto.TapChangerStepCreationInfos;
+import org.gridsuite.modification.server.dto.TwoWindingsTransformerModificationInfos;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.TWO_WINDINGS_TRANSFORMER_NOT_FOUND;
 
@@ -421,7 +437,7 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
         }
         modifyRegulatingTerminal(phaseTapChangerInfos, phaseTapChangerAdder, phaseTapChanger, regulationReports, network);
         if (!regulationReports.isEmpty()) {
-            ModificationUtils.getInstance().reportModifications(phaseTapChangerSubreporter, regulationReports, regulationMode != null ? regulationMode.name() : null, formatRegulationModeReport(regulationMode));
+            ModificationUtils.getInstance().reportModifications(phaseTapChangerSubreporter, regulationReports, regulationMode != null ? regulationMode.name() : null, ModificationUtils.getInstance().formatRegulationModeReport(regulationMode));
         }
 
         addTapChanger(phaseTapChangerInfos, phaseTapChanger, phaseTapChangerAdder, phaseTapChangerSubreporter);
@@ -447,19 +463,5 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
             phaseTapChangerAdder.setTargetDeadband(phaseTapChanger.getTargetDeadband());
         }
 
-    }
-
-    private String formatRegulationModeReport(PhaseTapChanger.RegulationMode regulationMode) {
-        switch (regulationMode) {
-            case FIXED_TAP:
-                return "    Fixed tap";
-            case CURRENT_LIMITER :
-                return "    Current limiter";
-            case ACTIVE_POWER_CONTROL :
-                return "    Active power control";
-            default :
-                return "";
-
-        }
     }
 }

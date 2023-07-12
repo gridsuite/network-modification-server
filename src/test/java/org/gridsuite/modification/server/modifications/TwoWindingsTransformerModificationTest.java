@@ -423,6 +423,8 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
         //enable the tap changer and set regulating
         twoWindingsTransformerModificationInfos.getPhaseTapChanger().setEnabled(new AttributeModification<>(true, OperationType.SET));
         twoWindingsTransformerModificationInfos.getPhaseTapChanger().setRegulationMode(new AttributeModification<>(PhaseTapChanger.RegulationMode.CURRENT_LIMITER, OperationType.SET));
+        twoWindingsTransformerModificationInfos.getPhaseTapChanger().setRegulationValue(new AttributeModification<>(100.0, OperationType.SET));
+        twoWindingsTransformerModificationInfos.getPhaseTapChanger().setTargetDeadband(new AttributeModification<>(10.0, OperationType.SET));
 
         modificationToCreateJson = mapper.writeValueAsString(twoWindingsTransformerModificationInfos);
 
@@ -434,7 +436,6 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
         assertThat(createdModification).recursivelyEquals(twoWindingsTransformerModificationInfos);
 
         //unset regulating and modify target voltage
-        twoWindingsTransformerModificationInfos.getPhaseTapChanger().setRegulating(null);
         twoWindingsTransformerModificationInfos.getPhaseTapChanger().setRegulationMode(null);
         twoWindingsTransformerModificationInfos.getPhaseTapChanger().setRegulationValue(new AttributeModification<>(250.0, OperationType.SET));
 
