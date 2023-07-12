@@ -158,7 +158,7 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
             name = "tapChangerStepModification",
             joinColumns = @JoinColumn(name = "modification_id")
     )
-    private List<TapChangerStepCreationEmbeddable> ratioTapChangerSteps;
+    private List<TapChangerStepCreationEmbeddable> tapChangerSteps;
 
     @Column(name = "phasetapchangerenabled")
     @Embedded
@@ -233,13 +233,6 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
     })
     private DoubleModificationEmbedded phaseTapChangerRegulationValue;
 
-    @ElementCollection
-    @CollectionTable(
-        name = "tapChangerStepModification",
-        joinColumns = @JoinColumn(name = "modification_id")
-    )
-    private List<TapChangerStepCreationEmbeddable> phaseTapChangerSteps;
-
     public TwoWindingsTransformerModificationEntity(TwoWindingsTransformerModificationInfos twoWindingsTransformerModificationInfos) {
         super(twoWindingsTransformerModificationInfos);
         assignAttributes(twoWindingsTransformerModificationInfos);
@@ -258,8 +251,7 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
         this.ratedVoltage1 = new DoubleModificationEmbedded(twoWindingsTransformerModificationInfos.getRatedVoltage1());
         this.ratedVoltage2 = new DoubleModificationEmbedded(twoWindingsTransformerModificationInfos.getRatedVoltage2());
         this.ratedS = new DoubleModificationEmbedded(twoWindingsTransformerModificationInfos.getRatedS());
-        this.ratioTapChangerSteps = new ArrayList<>();
-        this.phaseTapChangerSteps = new ArrayList<>();
+        this.tapChangerSteps = new ArrayList<>();
         assignTapChanger(twoWindingsTransformerModificationInfos);
     }
 
@@ -280,7 +272,7 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
         this.ratioTapChangerLoadTapChangingCapabilities = new BooleanModificationEmbedded(ratioTapChanger.getLoadTapChangingCapabilities());
         this.ratioTapChangerTargetV = new DoubleModificationEmbedded(ratioTapChanger.getTargetV());
         if (ratioTapChanger.getSteps() != null) {
-            this.ratioTapChangerSteps.addAll(TapChangerStepCreationEmbeddable.toEmbeddableRatioTapChangerSteps(ratioTapChanger.getSteps()));
+            this.tapChangerSteps.addAll(TapChangerStepCreationEmbeddable.toEmbeddableRatioTapChangerSteps(ratioTapChanger.getSteps()));
         }
     }
 
@@ -295,7 +287,7 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
         this.phaseTapChangerTerminalRefVoltageLevelId = new StringModificationEmbedded(phaseTapChanger.getRegulatingTerminalVlId());
         this.phaseTapChangerTerminalRefType = new StringModificationEmbedded(phaseTapChanger.getRegulatingTerminalType());
         if (phaseTapChanger.getSteps() != null) {
-            this.phaseTapChangerSteps.addAll(TapChangerStepCreationEmbeddable.toEmbeddablePhaseTapChangerSteps(phaseTapChanger.getSteps()));
+            this.tapChangerSteps.addAll(TapChangerStepCreationEmbeddable.toEmbeddablePhaseTapChangerSteps(phaseTapChanger.getSteps()));
         }
     }
 
@@ -305,13 +297,13 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
     }
 
     private TwoWindingsTransformerModificationInfos.TwoWindingsTransformerModificationInfosBuilder<?, ?> toTwoWindingsTransformerModificationInfosBuilder() {
-        List<TapChangerStepCreationEmbeddable> ratioTapChangerSteps = null;
-        if (getRatioTapChangerSteps() != null && getRatioTapChangerSteps().size() > 0) {
-            ratioTapChangerSteps = getRatioTapChangerSteps().stream().filter(step -> step.getTapChangerType().equals(TapChangerType.RATIO)).sorted(Comparator.comparing(TapChangerStepCreationEmbeddable::getIndex)).collect(Collectors.toList());
-        }
+
+        List<TapChangerStepCreationEmbeddable> ratioTapChangerStepsEmbeddable = null;
         List<TapChangerStepCreationEmbeddable> phaseTapChangerStepsEmbeddable = null;
-        if (getPhaseTapChangerSteps() != null && getPhaseTapChangerSteps().size() > 0) {
-            phaseTapChangerStepsEmbeddable = getPhaseTapChangerSteps().stream().filter(step -> step.getTapChangerType().equals(TapChangerType.PHASE)).sorted(Comparator.comparing(TapChangerStepCreationEmbeddable::getIndex)).collect(Collectors.toList());
+        if (getTapChangerSteps() != null && getTapChangerSteps().size() > 0) {
+            ratioTapChangerStepsEmbeddable = getTapChangerSteps().stream().filter(step -> step.getTapChangerType().equals(TapChangerType.RATIO)).sorted(Comparator.comparing(TapChangerStepCreationEmbeddable::getIndex)).collect(Collectors.toList());
+            phaseTapChangerStepsEmbeddable = getTapChangerSteps().stream().filter(step -> step.getTapChangerType().equals(TapChangerType.PHASE)).sorted(Comparator.comparing(TapChangerStepCreationEmbeddable::getIndex)).collect(Collectors.toList());
+
         }
 
         TwoWindingsTransformerModificationInfos.TwoWindingsTransformerModificationInfosBuilder<?, ?> builder = TwoWindingsTransformerModificationInfos
@@ -336,8 +328,8 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
         }
 
         List<TapChangerStepCreationInfos> ratioTapChangerStepCreationInfos = null;
-        if (ratioTapChangerSteps != null && !ratioTapChangerSteps.isEmpty()) {
-            ratioTapChangerStepCreationInfos = ratioTapChangerSteps.stream().map(TapChangerStepCreationEmbeddable::toModificationInfos).collect(Collectors.toList());
+        if (ratioTapChangerStepsEmbeddable != null && !ratioTapChangerStepsEmbeddable.isEmpty()) {
+            ratioTapChangerStepCreationInfos = ratioTapChangerStepsEmbeddable.stream().map(TapChangerStepCreationEmbeddable::toModificationInfos).collect(Collectors.toList());
         }
         builder.ratioTapChanger(RatioTapChangerModificationInfos.builder()
                 .enabled(AttributeModification.toAttributeModification(getRatioTapChangerEnabled()))

@@ -372,6 +372,35 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
 
         assertThat(createdModification).recursivelyEquals(twoWindingsTransformerModificationInfos);
 
+        //unset tap position and modify steps
+        twoWindingsTransformerModificationInfos.getRatioTapChanger().setTapPosition(null);
+        twoWindingsTransformerModificationInfos.getRatioTapChanger().setSteps(List.of(TapChangerStepCreationInfos.builder()
+                                .index(0)
+                                .r(0)
+                                .g(0)
+                                .b(0)
+                                .x(0)
+                                .rho(1)
+                                .build(),
+                                TapChangerStepCreationInfos.builder()
+                                .index(1)
+                                .r(0)
+                                .g(0)
+                                .b(0)
+                                .x(0)
+                                .rho(3)
+                                .build()
+                                ));
+
+        modificationToCreateJson = mapper.writeValueAsString(twoWindingsTransformerModificationInfos);
+
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+
+        createdModification = (TwoWindingsTransformerModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(6);
+
+        assertThat(createdModification).recursivelyEquals(twoWindingsTransformerModificationInfos);
+
     }
 
     @Test
