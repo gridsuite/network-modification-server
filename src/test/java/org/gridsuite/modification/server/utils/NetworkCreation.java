@@ -142,7 +142,12 @@ public final class NetworkCreation {
             .setRho(1.0)
             .endStep()
             .add();
-        t2.newPhaseTapChanger()
+
+        TwoWindingsTransformer twt2 = createTwoWindingsTransformer(s1, "trf2", "trf2", 2.0, 14.745, 0.0, 3.2E-5, 400.0, 225.0,
+            4, 14, v1.getId(), v2.getId(),
+            "trf1", 1, ConnectablePosition.Direction.TOP,
+            "trf1", 2, ConnectablePosition.Direction.TOP);
+        twt2.newPhaseTapChanger()
             .setLowTapPosition(0)
             .setTapPosition(1)
             .setRegulationTerminal(phaseTapChangerTerminal)

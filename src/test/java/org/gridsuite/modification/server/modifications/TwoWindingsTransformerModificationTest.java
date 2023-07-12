@@ -377,7 +377,7 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
     @Test
     public void testPhaseTapChangerModification() throws Exception {
         TwoWindingsTransformerModificationInfos twoWindingsTransformerModificationInfos = TwoWindingsTransformerModificationInfos.builder()
-                .equipmentId("trf1")
+                .equipmentId("trf2")
                 .ratioTapChanger(RatioTapChangerModificationInfos.builder()
                         .enabled(new AttributeModification<Boolean>(false, OperationType.SET))
                         .build())
