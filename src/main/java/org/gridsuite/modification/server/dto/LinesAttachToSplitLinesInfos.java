@@ -6,13 +6,13 @@
  */
 package org.gridsuite.modification.server.dto;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-import org.gridsuite.modification.server.ModificationType;
-import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
 import org.gridsuite.modification.server.entities.equipment.modification.LinesAttachToSplitLinesEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.LinesAttachToSplitLines;
@@ -28,6 +28,8 @@ import org.gridsuite.modification.server.modifications.LinesAttachToSplitLines;
 @Setter
 @ToString(callSuper = true)
 @Schema(description = "Line attach to split line")
+@JsonTypeName("LINES_ATTACH_TO_SPLIT_LINES")
+@ModificationErrorTypeName("LINE_ATTACH_ERROR")
 public class LinesAttachToSplitLinesInfos extends ModificationInfos {
 
     @Schema(description = "line 1 id")
@@ -68,12 +70,7 @@ public class LinesAttachToSplitLinesInfos extends ModificationInfos {
     }
 
     @Override
-    public NetworkModificationException.Type getErrorType() {
-        return NetworkModificationException.Type.LINE_ATTACH_ERROR;
-    }
-
-    @Override
     public Reporter createSubReporter(ReporterModel reporter) {
-        return reporter.createSubReporter(ModificationType.LINES_ATTACH_TO_SPLIT_LINES.name(), "Lines attach to split lines");
+        return reporter.createSubReporter(getType().name(), "Lines attach to split lines");
     }
 }

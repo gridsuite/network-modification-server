@@ -7,6 +7,7 @@
 package org.gridsuite.modification.server.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.iidm.network.EnergySource;
@@ -20,8 +21,7 @@ import lombok.experimental.SuperBuilder;
 
 import java.util.List;
 
-import org.gridsuite.modification.server.ModificationType;
-import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
 import org.gridsuite.modification.server.entities.equipment.creation.GeneratorCreationEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.GeneratorCreation;
@@ -36,6 +36,8 @@ import org.gridsuite.modification.server.modifications.GeneratorCreation;
 @Setter
 @ToString(callSuper = true)
 @Schema(description = "Generator creation")
+@JsonTypeName("GENERATOR_CREATION")
+@ModificationErrorTypeName("CREATE_GENERATOR_ERROR")
 public class GeneratorCreationInfos extends InjectionCreationInfos {
     @Schema(description = "Energy source")
     private EnergySource energySource;
@@ -132,12 +134,7 @@ public class GeneratorCreationInfos extends InjectionCreationInfos {
     }
 
     @Override
-    public NetworkModificationException.Type getErrorType() {
-        return NetworkModificationException.Type.CREATE_GENERATOR_ERROR;
-    }
-
-    @Override
     public Reporter createSubReporter(ReporterModel reporter) {
-        return reporter.createSubReporter(ModificationType.GENERATOR_CREATION.name(), "Generator creation ${generatorId}", "generatorId", this.getEquipmentId());
+        return reporter.createSubReporter(getType().name(), "Generator creation ${generatorId}", "generatorId", this.getEquipmentId());
     }
 }
