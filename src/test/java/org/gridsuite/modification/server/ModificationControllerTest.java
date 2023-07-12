@@ -19,14 +19,11 @@ import com.powsybl.iidm.network.extensions.GeneratorStartup;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
-import nl.jqno.equalsverifier.EqualsVerifier;
 import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.modification.server.Impacts.TestImpactUtils;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.LoadCreationInfos.LoadCreationInfosBuilder;
-import org.gridsuite.modification.server.dto.catalog.AerialLineTypeInfos;
 import org.gridsuite.modification.server.dto.catalog.LineTypeInfos;
-import org.gridsuite.modification.server.dto.catalog.UndergroundLineTypeInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosRepository;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.elasticsearch.TombstonedEquipmentInfosRepository;
@@ -59,12 +56,10 @@ import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.Impacts.TestImpactUtils.*;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
-import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
+import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
 import static org.junit.Assert.*;
-import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.nullable;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -1043,11 +1038,6 @@ public class ModificationControllerTest {
 
     @Test
     public void testGetLineTypesCatalog() throws Exception {
-        // Exclude Id for those unit tests because it's exluded in dto
-        EqualsVerifier.simple().forClass(LineTypeInfos.class).withIgnoredFields("id").verify();
-        EqualsVerifier.simple().forClass(AerialLineTypeInfos.class).withIgnoredFields("id").verify();
-        EqualsVerifier.simple().forClass(UndergroundLineTypeInfos.class).withIgnoredFields("id").verify();
-
         MvcResult mvcResult;
         String resultAsString;
 
