@@ -7,6 +7,7 @@
 package org.gridsuite.modification.server.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.iidm.network.Country;
@@ -16,8 +17,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
-import org.gridsuite.modification.server.ModificationType;
-import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
 import org.gridsuite.modification.server.entities.equipment.creation.SubstationCreationEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.SubstationCreation;
@@ -34,6 +34,8 @@ import java.util.Map;
 @Setter
 @ToString(callSuper = true)
 @Schema(description = "Substation creation")
+@JsonTypeName("SUBSTATION_CREATION")
+@ModificationErrorTypeName("CREATE_SUBSTATION_ERROR")
 public class SubstationCreationInfos extends EquipmentCreationInfos {
 
     @Schema(description = "Substation country")
@@ -54,12 +56,7 @@ public class SubstationCreationInfos extends EquipmentCreationInfos {
     }
 
     @Override
-    public NetworkModificationException.Type getErrorType() {
-        return NetworkModificationException.Type.CREATE_SUBSTATION_ERROR;
-    }
-
-    @Override
     public Reporter createSubReporter(ReporterModel reporter) {
-        return reporter.createSubReporter(ModificationType.SUBSTATION_CREATION.name(), "Substation creation ${substationId}", "substationId", getEquipmentId());
+        return reporter.createSubReporter(getType().name(), "Substation creation ${substationId}", "substationId", getEquipmentId());
     }
 }

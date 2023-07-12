@@ -17,6 +17,7 @@ import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import com.powsybl.iidm.network.extensions.ConnectablePositionAdder;
 import com.powsybl.iidm.network.extensions.GeneratorStartup;
 import com.powsybl.network.store.client.NetworkStoreService;
+import com.powsybl.network.store.client.PreloadingStrategy;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
 import nl.jqno.equalsverifier.EqualsVerifier;
 import org.apache.commons.lang3.tuple.Pair;
@@ -62,6 +63,8 @@ import static org.gridsuite.modification.server.utils.assertions.Assertions.asse
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -140,20 +143,20 @@ public class ModificationControllerTest {
     public void setUp() {
         objectWriter = mapper.writer().withDefaultPrettyPrinter();
         network = NetworkCreation.create(TEST_NETWORK_ID, true);
-        when(networkStoreService.getNetwork(TEST_NETWORK_ID)).then((Answer<Network>) invocation -> network);
+        when(networkStoreService.getNetwork(eq(TEST_NETWORK_ID), nullable(PreloadingStrategy.class))).then((Answer<Network>) invocation -> network);
         network2 = NetworkCreation.create(TEST_NETWORK_ID_2, false);
-        when(networkStoreService.getNetwork(TEST_NETWORK_ID_2)).then((Answer<Network>) invocation -> network2);
+        when(networkStoreService.getNetwork(eq(TEST_NETWORK_ID_2), nullable(PreloadingStrategy.class))).then((Answer<Network>) invocation -> network2);
 
         networkWithTeePoint = NetworkWithTeePoint.create(TEST_NETWORK_WITH_TEE_POINT_ID);
-        when(networkStoreService.getNetwork(TEST_NETWORK_WITH_TEE_POINT_ID)).then((Answer<Network>) invocation -> networkWithTeePoint);
+        when(networkStoreService.getNetwork(eq(TEST_NETWORK_WITH_TEE_POINT_ID), nullable(PreloadingStrategy.class))).then((Answer<Network>) invocation -> networkWithTeePoint);
 
-        when(networkStoreService.getNetwork(NOT_FOUND_NETWORK_ID)).thenThrow(new PowsyblException());
-        when(networkStoreService.getNetwork(TEST_NETWORK_WITH_FLUSH_ERROR_ID)).then((Answer<Network>) invocation -> NetworkCreation.create(TEST_NETWORK_WITH_FLUSH_ERROR_ID, true));
+        when(networkStoreService.getNetwork(eq(NOT_FOUND_NETWORK_ID), nullable(PreloadingStrategy.class))).thenThrow(new PowsyblException());
+        when(networkStoreService.getNetwork(eq(TEST_NETWORK_WITH_FLUSH_ERROR_ID), nullable(PreloadingStrategy.class))).then((Answer<Network>) invocation -> NetworkCreation.create(TEST_NETWORK_WITH_FLUSH_ERROR_ID, true));
 
         networkBusBreaker = NetworkCreation.createBusBreaker(TEST_NETWORK_BUS_BREAKER_ID);
-        when(networkStoreService.getNetwork(TEST_NETWORK_BUS_BREAKER_ID)).then((Answer<Network>) invocation -> networkBusBreaker);
+        when(networkStoreService.getNetwork(eq(TEST_NETWORK_BUS_BREAKER_ID), nullable(PreloadingStrategy.class))).then((Answer<Network>) invocation -> networkBusBreaker);
 
-        when(networkStoreService.getNetwork(TEST_NETWORK_MIXED_TOPOLOGY_ID)).then((Answer<Network>) invocation -> NetworkCreation.createMixedTopology(TEST_NETWORK_MIXED_TOPOLOGY_ID));
+        when(networkStoreService.getNetwork(eq(TEST_NETWORK_MIXED_TOPOLOGY_ID), nullable(PreloadingStrategy.class))).then((Answer<Network>) invocation -> NetworkCreation.createMixedTopology(TEST_NETWORK_MIXED_TOPOLOGY_ID));
 
         doThrow(new PowsyblException()).when(networkStoreService).flush(argThat(n -> TEST_NETWORK_WITH_FLUSH_ERROR_ID.toString().equals(n.getId())));
 
@@ -514,7 +517,7 @@ public class ModificationControllerTest {
         mockMvc.perform(post(URI_NETWORK_MODIF_BUS_BREAKER).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
-        generatorStartup = networkStoreService.getNetwork(TEST_NETWORK_BUS_BREAKER_ID).getGenerator("idGenerator2").getExtension(GeneratorStartup.class);
+        generatorStartup = networkStoreService.getNetwork(TEST_NETWORK_BUS_BREAKER_ID, null).getGenerator("idGenerator2").getExtension(GeneratorStartup.class);
         assertNull(generatorStartup);
 
         // create and build generator with startup
@@ -540,7 +543,7 @@ public class ModificationControllerTest {
         mockMvc.perform(post(URI_NETWORK_MODIF_BUS_BREAKER).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
-        generatorStartup = networkStoreService.getNetwork(TEST_NETWORK_BUS_BREAKER_ID).getGenerator("idGenerator3").getExtension(GeneratorStartup.class);
+        generatorStartup = networkStoreService.getNetwork(TEST_NETWORK_BUS_BREAKER_ID, null).getGenerator("idGenerator3").getExtension(GeneratorStartup.class);
         assertNotNull(generatorStartup);
         assertEquals(Double.NaN, generatorStartup.getPlannedActivePowerSetpoint(), 0);
         assertEquals(Double.NaN, generatorStartup.getMarginalCost(), 0);
@@ -999,8 +1002,8 @@ public class ModificationControllerTest {
 
     @Test
     public void shouldGetPosition() {
-        var network = networkStoreService.getNetwork(TEST_NETWORK_ID);
-        var network2 = networkStoreService.getNetwork(TEST_NETWORK_MIXED_TOPOLOGY_ID);
+        var network = networkStoreService.getNetwork(TEST_NETWORK_ID, null);
+        var network2 = networkStoreService.getNetwork(TEST_NETWORK_MIXED_TOPOLOGY_ID, null);
         var vl = network.getVoltageLevel("v2");
         var vl2 = network2.getVoltageLevel("v2");
         assertEquals(9, vl.getConnectableCount());

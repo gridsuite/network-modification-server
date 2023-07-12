@@ -83,14 +83,14 @@ public class NetworkModificationController {
                                                                                       @RequestBody List<UUID> modificationsUuidList) {
         switch (action) {
             case COPY:
-                return ResponseEntity.ok().body(networkModificationService.duplicateModifications(targetGroupUuid, networkModificationService.getNetworkInfos(networkUuid, variantId), new ReportInfos(reportUuid, reporterId.toString()), modificationsUuidList));
+                return ResponseEntity.ok().body(networkModificationService.duplicateModifications(targetGroupUuid, networkUuid, variantId, new ReportInfos(reportUuid, reporterId.toString()), modificationsUuidList));
             case MOVE:
                 UUID sourceGroupUuid = originGroupUuid == null ? targetGroupUuid : originGroupUuid;
                 boolean canBuildNode = build;
                 if (sourceGroupUuid.equals(targetGroupUuid)) {
                     canBuildNode = false;
                 }
-                return ResponseEntity.ok().body(networkModificationService.moveModifications(targetGroupUuid, sourceGroupUuid, before, networkModificationService.getNetworkInfos(networkUuid, variantId), new ReportInfos(reportUuid, reporterId.toString()), modificationsUuidList, canBuildNode));
+                return ResponseEntity.ok().body(networkModificationService.moveModifications(targetGroupUuid, sourceGroupUuid, before, networkUuid, variantId, new ReportInfos(reportUuid, reporterId.toString()), modificationsUuidList, canBuildNode));
             default:
                 throw new NetworkModificationException(TYPE_MISMATCH);
         }
@@ -125,7 +125,7 @@ public class NetworkModificationController {
             @Parameter(description = "Reporter ID") @RequestParam("reporterId") String reporterId,
             @RequestBody ModificationInfos modificationInfos) {
         modificationInfos.check();
-        return ResponseEntity.ok().body(networkModificationService.createNetworkModification(networkModificationService.getNetworkInfos(networkUuid, variantId), groupUuid, new ReportInfos(reportUuid, reporterId), modificationInfos));
+        return ResponseEntity.ok().body(networkModificationService.createNetworkModification(networkUuid, variantId, groupUuid, new ReportInfos(reportUuid, reporterId), modificationInfos));
     }
 
     @PutMapping(value = "/network-modifications/{uuid}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
