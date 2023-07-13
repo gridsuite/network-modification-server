@@ -10,10 +10,9 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Getter;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
 import org.gridsuite.modification.server.entities.equipment.creation.LineCreationEntity;
@@ -23,17 +22,14 @@ import org.gridsuite.modification.server.modifications.LineCreation;
 /**
  * @author Sylvain Bouzols <sylvain.bouzols at rte-france.com>
  */
-
 @SuperBuilder
 @NoArgsConstructor
-@Getter
-@Setter
-@ToString(callSuper = true)
+@AllArgsConstructor
+@Data
 @Schema(description = "Line creation")
 @JsonTypeName("LINE_CREATION")
 @ModificationErrorTypeName("CREATE_LINE_ERROR")
 public class LineCreationInfos extends BranchCreationInfos {
-
     @Schema(description = "Shunt conductance Side 1")
     private Double shuntConductance1;
 

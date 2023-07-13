@@ -6,20 +6,18 @@
  */
 package org.gridsuite.modification.server.dto;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.ToString;
-import lombok.experimental.SuperBuilder;
 
 /**
  * @author Nicolas Noir <nicolas.noir at rte-france.com>
  */
-@SuperBuilder
+@Builder
 @NoArgsConstructor
-@Getter
-@ToString
-@EqualsAndHashCode
+@AllArgsConstructor
+@Data
 public class VoltageLevelInfos {
     private String id;
     private String name;

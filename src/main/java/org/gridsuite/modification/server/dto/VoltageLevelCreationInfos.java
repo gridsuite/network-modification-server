@@ -11,10 +11,9 @@ import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.iidm.network.SwitchKind;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Getter;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
 import org.gridsuite.modification.server.entities.equipment.creation.VoltageLevelCreationEntity;
@@ -28,14 +27,12 @@ import java.util.List;
  */
 @SuperBuilder
 @NoArgsConstructor
-@Getter
-@Setter
-@ToString(callSuper = true)
+@AllArgsConstructor
+@Data
 @Schema(description = "Voltage level creation")
 @JsonTypeName("VOLTAGE_LEVEL_CREATION")
 @ModificationErrorTypeName("CREATE_VOLTAGE_LEVEL_ERROR")
 public class VoltageLevelCreationInfos extends EquipmentCreationInfos {
-
     @Schema(description = "substation id")
     private String substationId;
 

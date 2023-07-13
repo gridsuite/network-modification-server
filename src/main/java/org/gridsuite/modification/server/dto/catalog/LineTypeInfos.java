@@ -6,25 +6,26 @@
  */
 package org.gridsuite.modification.server.dto.catalog;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.*;
-import lombok.experimental.SuperBuilder;
-import java.util.UUID;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 import org.gridsuite.modification.server.entities.catalog.LineTypeEntity;
+
+import java.util.UUID;
 
 /**
  * @author Sylvain Bouzols <sylvain.bouzols at rte-france.com>
  */
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-@EqualsAndHashCode
 @JsonTypeInfo(
     use = JsonTypeInfo.Id.NAME,
     property = "category"

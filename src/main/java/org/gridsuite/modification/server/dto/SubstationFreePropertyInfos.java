@@ -8,17 +8,18 @@ package org.gridsuite.modification.server.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.*;
-import lombok.experimental.SuperBuilder;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * @author David Braquart <david.braquart at rte-france.com>
  */
-@SuperBuilder
+@Builder
 @NoArgsConstructor
-@Getter
-@Setter
-@EqualsAndHashCode
+@AllArgsConstructor
+@Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Schema(description = "Substation free properties")
 public class SubstationFreePropertyInfos {
@@ -28,9 +29,11 @@ public class SubstationFreePropertyInfos {
     @Schema(description = "property value")
     private String value;
 
+    @Builder.Default
     @Schema(description = "marked as deleted")
     private boolean deletionMark = false;
 
+    @Builder.Default
     @Schema(description = "property added in current modification")
     private boolean added = false;
 }

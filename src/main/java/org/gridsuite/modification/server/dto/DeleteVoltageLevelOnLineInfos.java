@@ -10,7 +10,9 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
 import org.gridsuite.modification.server.entities.equipment.modification.DeleteVoltageLevelOnLineEntity;
@@ -24,14 +26,11 @@ import org.gridsuite.modification.server.modifications.DeleteVoltageLevelOnLine;
 @SuperBuilder
 @AllArgsConstructor
 @NoArgsConstructor
-@Getter
-@Setter
-@ToString(callSuper = true)
+@Data
 @Schema(description = "Delete voltage level on line infos")
 @JsonTypeName("DELETE_VOLTAGE_LEVEL_ON_LINE")
 @ModificationErrorTypeName("DELETE_VOLTAGE_LEVEL_ON_LINE_ERROR")
 public class DeleteVoltageLevelOnLineInfos extends ModificationInfos {
-
     @Schema(description = "line 1 id")
     private String lineToAttachTo1Id;
 

@@ -12,10 +12,9 @@ import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.iidm.network.LoadType;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Getter;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
 import org.gridsuite.modification.server.entities.equipment.creation.LoadCreationEntity;
@@ -25,12 +24,10 @@ import org.gridsuite.modification.server.modifications.LoadCreation;
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
-
 @SuperBuilder
 @NoArgsConstructor
-@Getter
-@Setter
-@ToString(callSuper = true)
+@AllArgsConstructor
+@Data
 @Schema(description = "Load creation")
 @JsonTypeName("LOAD_CREATION")
 @ModificationErrorTypeName("CREATE_LOAD_ERROR")

@@ -10,16 +10,16 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Getter;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
 import org.gridsuite.modification.server.entities.equipment.modification.BranchStatusModificationEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.BranchStatusModification;
+
 import static org.gridsuite.modification.server.NetworkModificationException.Type.BRANCH_ACTION_TYPE_EMPTY;
 
 /**
@@ -27,9 +27,8 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
  */
 @SuperBuilder
 @NoArgsConstructor
-@Getter
-@Setter
-@ToString(callSuper = true)
+@AllArgsConstructor
+@Data
 @Schema(description = "Branch status modification")
 @JsonTypeName("BRANCH_STATUS_MODIFICATION")
 @ModificationErrorTypeName("BRANCH_ACTION_ERROR")

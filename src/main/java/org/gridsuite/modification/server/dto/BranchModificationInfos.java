@@ -5,11 +5,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 package org.gridsuite.modification.server.dto;
+
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Getter;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
 /**
@@ -17,12 +17,10 @@ import lombok.experimental.SuperBuilder;
  */
 @SuperBuilder
 @NoArgsConstructor
-@Getter
-@Setter
-@ToString(callSuper = true)
+@AllArgsConstructor
+@Data
 @Schema(description = "Branch creation")
 public class BranchModificationInfos extends BasicEquipmentModificationInfos {
-
     @Schema(description = "Series resistance")
     private AttributeModification<Double> seriesResistance;
 
@@ -34,5 +32,4 @@ public class BranchModificationInfos extends BasicEquipmentModificationInfos {
 
     @Schema(description = "Current limits Side 2")
     private CurrentLimitsModificationInfos currentLimits2;
-
 }

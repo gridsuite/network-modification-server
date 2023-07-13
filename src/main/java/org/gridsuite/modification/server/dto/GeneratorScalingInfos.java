@@ -11,9 +11,8 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
 import org.gridsuite.modification.server.entities.equipment.modification.GeneratorScalingEntity;
@@ -23,16 +22,13 @@ import org.gridsuite.modification.server.modifications.GeneratorScaling;
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
  */
-
 @SuperBuilder
 @NoArgsConstructor
-@Getter
-@Setter
+@Data
 @JsonTypeName("GENERATOR_SCALING")
 @ModificationErrorTypeName("GENERATOR_SCALING_ERROR")
 @Schema(description = "Generator scaling creation")
 public class GeneratorScalingInfos extends ScalingInfos {
-
     @Override
     public GeneratorScalingEntity toEntity() {
         return new GeneratorScalingEntity(this);

@@ -7,23 +7,21 @@
 package org.gridsuite.modification.server.dto.catalog;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
-
 import org.gridsuite.modification.server.entities.catalog.AerialLineTypeEntity;
 
 /**
  * @author Sylvain Bouzols <sylvain.bouzols at rte-france.com>
  */
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-@EqualsAndHashCode(callSuper = true)
 @Schema(description = "Aerial Line Type")
 public class AerialLineTypeInfos extends LineTypeInfos {
-
     @Schema(description = "Number of conductors")
     private Integer conductorsNumber;
 

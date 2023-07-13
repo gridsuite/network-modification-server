@@ -7,12 +7,10 @@
 package org.gridsuite.modification.server.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Getter;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
-import lombok.experimental.SuperBuilder;
-
 import org.gridsuite.modification.server.entities.equipment.modification.CurrentLimitsModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.CurrentTemporaryLimitModificationEmbeddable;
 
@@ -21,15 +19,12 @@ import java.util.List;
 /**
  * @author Ayoub LABIDI <ayoub.labidi at rte-france.com>
  */
-
-@SuperBuilder
+@Builder
 @NoArgsConstructor
-@Getter
-@Setter
-@ToString(callSuper = true)
+@AllArgsConstructor
+@Data
 @Schema(description = "Current Limits")
 public class CurrentLimitsModificationInfos {
-
     @Schema(description = "Permanent current limit")
     private Double permanentLimit;
 

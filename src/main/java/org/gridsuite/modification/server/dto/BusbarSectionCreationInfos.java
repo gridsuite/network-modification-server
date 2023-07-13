@@ -8,21 +8,17 @@ package org.gridsuite.modification.server.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Builder;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
-import lombok.experimental.SuperBuilder;
 
 /**
  * @author Laurent GARNIER <laurent.garnier at rte-france.com>
  */
-@ToString(callSuper = true)
-@SuperBuilder
+@Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Getter
-@Setter
 @Schema(description = "Voltage level bus bar section creation")
 public class BusbarSectionCreationInfos {
     @Schema(description = "bus bar section id")

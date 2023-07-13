@@ -8,7 +8,9 @@ package org.gridsuite.modification.server.dto;
 
 import com.powsybl.iidm.network.PhaseTapChanger;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 /**
@@ -16,12 +18,10 @@ import lombok.experimental.SuperBuilder;
  */
 @SuperBuilder
 @NoArgsConstructor
-@Getter
-@Setter
-@ToString(callSuper = true)
+@AllArgsConstructor
+@Data
 @Schema(description = "PhaseTapChanger attributes")
 public class PhaseTapChangerCreationInfos extends TapChangerCreationInfos {
-
     @Schema(description = "regulationMode")
     private PhaseTapChanger.RegulationMode regulationMode;
 

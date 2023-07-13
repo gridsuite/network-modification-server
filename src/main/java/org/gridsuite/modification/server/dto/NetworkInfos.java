@@ -9,7 +9,8 @@ package org.gridsuite.modification.server.dto;
 import com.powsybl.iidm.network.Network;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.UUID;
 
@@ -17,7 +18,8 @@ import java.util.UUID;
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 @AllArgsConstructor
-@Getter
+@NoArgsConstructor
+@Data
 @Schema(description = "Network infos")
 public class NetworkInfos {
     private Network network;

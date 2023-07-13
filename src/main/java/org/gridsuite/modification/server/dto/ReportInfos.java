@@ -8,15 +8,17 @@ package org.gridsuite.modification.server.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.UUID;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
+@NoArgsConstructor
 @AllArgsConstructor
-@Getter
+@Data
 @Schema(description = "Report infos")
 public class ReportInfos {
     private UUID reportUuid;

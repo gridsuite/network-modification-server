@@ -13,12 +13,10 @@ import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.iidm.network.IdentifiableType;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Getter;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
 import lombok.experimental.SuperBuilder;
-
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.*;
@@ -29,16 +27,16 @@ import org.springframework.lang.NonNull;
 import java.util.Map;
 import java.util.Set;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.EQUIPMENT_ATTRIBUTE_NAME_ERROR;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.EQUIPMENT_ATTRIBUTE_VALUE_ERROR;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 @SuperBuilder
 @NoArgsConstructor
-@Getter
-@Setter
-@ToString(callSuper = true)
+@AllArgsConstructor
+@Data
 @Schema(description = "Equipment attribute modification")
 @JsonTypeName("EQUIPMENT_ATTRIBUTE_MODIFICATION")
 @ModificationErrorTypeName("MODIFICATION_ERROR")
