@@ -20,31 +20,29 @@ import javax.persistence.*;
 /**
  * @author Jacques Borsenberger <jacques.borsenberger at rte-france.com>
  */
-
 @NoArgsConstructor
 @Getter
 @Entity
 @Table
 @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "shuntCompensatorCreation_id_fk_constraint"))
 public class ShuntCompensatorCreationEntity extends InjectionCreationEntity {
+    @Column
+    private int maximumNumberOfSections;
 
     @Column
-    int maximumNumberOfSections;
+    private int currentNumberOfSections;
 
     @Column
-    int currentNumberOfSections;
+    private Double susceptancePerSection;
 
     @Column
-    Double susceptancePerSection;
-
-    @Column
-    Double qAtNominalV;
+    private Double qAtNominalV;
 
     @Column
     private ShuntCompensatorType shuntCompensatorType;
 
     @Column
-    boolean isIdenticalSections;
+    private boolean isIdenticalSections;
 
     @Column
     private String connectionName;
@@ -107,5 +105,4 @@ public class ShuntCompensatorCreationEntity extends InjectionCreationEntity {
             .connectionDirection(getConnectionDirection())
             .connectionPosition(getConnectionPosition());
     }
-
 }
