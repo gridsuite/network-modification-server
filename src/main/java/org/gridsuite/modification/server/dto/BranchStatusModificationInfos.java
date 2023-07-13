@@ -34,9 +34,8 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
 @JsonTypeName("BRANCH_STATUS_MODIFICATION")
 @ModificationErrorTypeName("BRANCH_ACTION_ERROR")
 public class BranchStatusModificationInfos extends EquipmentModificationInfos {
-
     @Schema(description = "Action type")
-    ActionType action;
+    private ActionType action;
 
     @Schema(description = "Energized end one or two voltage level ID")
     private String energizedVoltageLevelId;
