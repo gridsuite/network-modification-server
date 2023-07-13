@@ -73,7 +73,7 @@ public class ModificationInfos {
     private UUID uuid;
 
     @Schema(description = "Modification date")
-    ZonedDateTime date;
+    private ZonedDateTime date;
 
     @JsonIgnore
     public ModificationEntity toEntity() {
