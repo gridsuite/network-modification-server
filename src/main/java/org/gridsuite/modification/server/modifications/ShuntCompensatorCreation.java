@@ -12,6 +12,7 @@ import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.iidm.modification.topology.CreateFeederBay;
 import com.powsybl.iidm.modification.topology.CreateFeederBayBuilder;
 import com.powsybl.iidm.network.*;
+import org.apache.commons.lang3.ObjectUtils;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ShuntCompensatorCreationInfos;
 import org.gridsuite.modification.server.dto.ShuntCompensatorType;
@@ -95,12 +96,13 @@ public class ShuntCompensatorCreation extends AbstractModification {
         ShuntCompensatorAdder shuntAdder = voltageLevel.newShuntCompensator()
                 .setId(shuntCompensatorInfos.getEquipmentId())
                 .setName(shuntCompensatorInfos.getEquipmentName())
-                .setSectionCount(shuntCompensatorInfos.getCurrentNumberOfSections() != null ? shuntCompensatorInfos.getCurrentNumberOfSections() : 1);
+                .setSectionCount(ObjectUtils.defaultIfNull(shuntCompensatorInfos.getCurrentNumberOfSections(), 1));
 
-        /* when we create non linear shunt, this is where we branch ;) */
+        /* when we create non-linear shunt, this is where we branch ;) */
         shuntAdder.newLinearModel()
                 .setBPerSection(shuntCompensatorInfos.getSusceptancePerSection())
-                .setMaximumSectionCount(shuntCompensatorInfos.getMaximumNumberOfSections() != null ? shuntCompensatorInfos.getMaximumNumberOfSections() : 1).add();
+                .setMaximumSectionCount(ObjectUtils.defaultIfNull(shuntCompensatorInfos.getMaximumNumberOfSections(), 1))
+                .add();
 
         return shuntAdder;
     }
@@ -111,12 +113,12 @@ public class ShuntCompensatorCreation extends AbstractModification {
         voltageLevel.newShuntCompensator()
             .setId(shuntCompensatorInfos.getEquipmentId())
             .setName(shuntCompensatorInfos.getEquipmentName())
-            .setSectionCount(shuntCompensatorInfos.getCurrentNumberOfSections() != null ? shuntCompensatorInfos.getMaximumNumberOfSections() : 1)
+            .setSectionCount(ObjectUtils.defaultIfNull(shuntCompensatorInfos.getCurrentNumberOfSections(), 1))
             .setBus(bus.getId())
             .setConnectableBus(bus.getId())
             .newLinearModel()
             .setBPerSection(shuntCompensatorInfos.getSusceptancePerSection())
-            .setMaximumSectionCount(shuntCompensatorInfos.getMaximumNumberOfSections() != null ? shuntCompensatorInfos.getMaximumNumberOfSections() : 1)
+            .setMaximumSectionCount(ObjectUtils.defaultIfNull(shuntCompensatorInfos.getMaximumNumberOfSections(), 1))
             .add()
             .add();
     }
