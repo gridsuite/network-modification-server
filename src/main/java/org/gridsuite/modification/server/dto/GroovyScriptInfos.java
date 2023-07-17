@@ -6,8 +6,8 @@
  */
 package org.gridsuite.modification.server.dto;
 
-import org.gridsuite.modification.server.ModificationType;
-import org.gridsuite.modification.server.NetworkModificationException;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
 import org.gridsuite.modification.server.entities.GroovyScriptEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.GroovyScript;
@@ -29,6 +29,8 @@ import lombok.experimental.SuperBuilder;
 @Setter
 @ToString(callSuper = true)
 @Schema(description = "Groovy script modification")
+@JsonTypeName("GROOVY_SCRIPT")
+@ModificationErrorTypeName("GROOVY_SCRIPT_ERROR")
 public class GroovyScriptInfos extends ModificationInfos {
     @Schema(description = "Groovy script")
     private String script;
@@ -44,12 +46,7 @@ public class GroovyScriptInfos extends ModificationInfos {
     }
 
     @Override
-    public NetworkModificationException.Type getErrorType() {
-        return NetworkModificationException.Type.GROOVY_SCRIPT_ERROR;
-    }
-
-    @Override
     public Reporter createSubReporter(ReporterModel reporter) {
-        return reporter.createSubReporter(ModificationType.GROOVY_SCRIPT.name(), "Apply groovy script");
+        return reporter.createSubReporter(getType().name(), "Apply groovy script");
     }
 }

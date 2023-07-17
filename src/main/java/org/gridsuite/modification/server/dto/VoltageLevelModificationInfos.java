@@ -7,6 +7,7 @@
 
 package org.gridsuite.modification.server.dto;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -14,8 +15,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
-import org.gridsuite.modification.server.ModificationType;
-import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
 import org.gridsuite.modification.server.entities.equipment.modification.VoltageLevelModificationEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.VoltageLevelModification;
@@ -29,6 +29,8 @@ import org.gridsuite.modification.server.modifications.VoltageLevelModification;
 @Getter
 @Setter
 @Schema(description = "Voltage level modification")
+@JsonTypeName("VOLTAGE_LEVEL_MODIFICATION")
+@ModificationErrorTypeName("MODIFY_VOLTAGE_LEVEL_ERROR")
 public class VoltageLevelModificationInfos extends BasicEquipmentModificationInfos {
     @Schema(description = "nominal voltage in kV")
     private AttributeModification<Double> nominalVoltage;
@@ -51,13 +53,8 @@ public class VoltageLevelModificationInfos extends BasicEquipmentModificationInf
     }
 
     @Override
-    public NetworkModificationException.Type getErrorType() {
-        return NetworkModificationException.Type.MODIFY_VOLTAGE_LEVEL_ERROR;
-    }
-
-    @Override
     public Reporter createSubReporter(ReporterModel reporter) {
-        return reporter.createSubReporter(ModificationType.VOLTAGE_LEVEL_MODIFICATION.name(), "VoltageLevel modification ${voltageLevelId}", "voltageLevelId", this.getEquipmentId());
+        return reporter.createSubReporter(getType().name(), "VoltageLevel modification ${voltageLevelId}", "voltageLevelId", this.getEquipmentId());
     }
 
     @Override

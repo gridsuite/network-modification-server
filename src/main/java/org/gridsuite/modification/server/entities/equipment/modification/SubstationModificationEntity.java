@@ -33,7 +33,7 @@ public class SubstationModificationEntity extends BasicEquipmentModificationEnti
     @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "substation_modification_id")
     @OrderColumn(name = "insert_position")
-    List<SubstationFreePropertyEntity> properties;
+    private List<SubstationFreePropertyEntity> properties;
 
     public SubstationModificationEntity(@NonNull SubstationModificationInfos substationModificationInfos) {
         super(substationModificationInfos);

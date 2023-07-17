@@ -8,10 +8,8 @@ package org.gridsuite.modification.server.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Sets;
-import com.powsybl.iidm.network.Network;
 import lombok.NonNull;
 import org.gridsuite.modification.server.dto.BuildInfos;
-import org.gridsuite.modification.server.dto.NetworkInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -84,9 +82,8 @@ public class BuildWorkerService {
             buildRequests.add(execContext.getReceiver()); // receiver is the node uuid to build
 
             CompletableFuture<NetworkModificationResult> future = CompletableFuture.supplyAsync(() -> {
-                    Network network = networkModificationService.cloneNetworkVariant(networkUuid, buildInfos.getOriginVariantId(), buildInfos.getDestinationVariantId());
                     LOGGER.info("Starting build on variant : {}", buildInfos.getDestinationVariantId());
-                    return networkModificationService.buildVariant(new NetworkInfos(network, networkUuid, true), buildInfos);
+                    return networkModificationService.buildVariant(networkUuid, buildInfos);
                 }
             );
 

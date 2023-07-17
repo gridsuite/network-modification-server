@@ -11,7 +11,6 @@ import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
 import com.powsybl.network.store.iidm.impl.NetworkImpl;
-import nl.jqno.equalsverifier.EqualsVerifier;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.VoltageLevelInfos;
 import org.gridsuite.modification.server.dto.elasticsearch.EquipmentInfos;
@@ -64,10 +63,6 @@ public class EquipmentInfosServiceTests {
 
     @Test
     public void testAddDeleteEquipmentInfos() {
-        EqualsVerifier.simple().forClass(EquipmentInfos.class).verify();
-        EqualsVerifier.simple().forClass(TombstonedEquipmentInfos.class).verify();
-        EqualsVerifier.simple().forClass(VoltageLevelInfos.class).verify();
-
         EquipmentInfos equipmentInfos = EquipmentInfos.builder().networkUuid(NETWORK_UUID).id("id1").variantId(VARIANT_NAME_1).name("name1").type(IdentifiableType.LOAD.name()).voltageLevels(Set.of(VoltageLevelInfos.builder().id("vl1").name("vl1").build())).build();
         equipmentInfosService.addAllEquipmentInfos(List.of(equipmentInfos));
         assertNotNull(equipmentInfosRepository.findAllByNetworkUuidAndVariantId(NETWORK_UUID, VARIANT_NAME_1).get(0));

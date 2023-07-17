@@ -21,8 +21,6 @@ import lombok.experimental.SuperBuilder;
 @ToString
 @EqualsAndHashCode
 public class VoltageLevelInfos {
-
-    String id;
-
-    String name;
+    private String id;
+    private String name;
 }

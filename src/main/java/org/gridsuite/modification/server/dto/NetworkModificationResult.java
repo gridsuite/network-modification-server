@@ -40,10 +40,10 @@ public class NetworkModificationResult {
     }
 
     @Schema(description = "Global application status")
-    ApplicationStatus applicationStatus;
+    private ApplicationStatus applicationStatus;
 
     @Schema(description = "Last group application status")
-    ApplicationStatus lastGroupApplicationStatus;
+    private ApplicationStatus lastGroupApplicationStatus;
 
     @Schema(description = "Network modification impacts")
     @Builder.Default

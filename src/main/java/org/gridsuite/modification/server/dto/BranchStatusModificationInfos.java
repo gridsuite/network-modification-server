@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.dto;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -14,8 +15,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
 import org.gridsuite.modification.server.entities.equipment.modification.BranchStatusModificationEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.BranchStatusModification;
@@ -30,10 +31,11 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
 @Setter
 @ToString(callSuper = true)
 @Schema(description = "Branch status modification")
+@JsonTypeName("BRANCH_STATUS_MODIFICATION")
+@ModificationErrorTypeName("BRANCH_ACTION_ERROR")
 public class BranchStatusModificationInfos extends EquipmentModificationInfos {
-
     @Schema(description = "Action type")
-    ActionType action;
+    private ActionType action;
 
     @Schema(description = "Energized end one or two voltage level ID")
     private String energizedVoltageLevelId;
@@ -57,11 +59,6 @@ public class BranchStatusModificationInfos extends EquipmentModificationInfos {
     }
 
     @Override
-    public NetworkModificationException.Type getErrorType() {
-        return NetworkModificationException.Type.BRANCH_ACTION_ERROR;
-    }
-
-    @Override
     public Reporter createSubReporter(ReporterModel reporter) {
         String defaultName;
         switch (action) {
@@ -81,7 +78,7 @@ public class BranchStatusModificationInfos extends EquipmentModificationInfos {
             default:
                 defaultName = "";
         }
-        return reporter.createSubReporter(ModificationType.BRANCH_STATUS_MODIFICATION.name() + "_" + action, defaultName, "branchId", this.getEquipmentId());
+        return reporter.createSubReporter(getType().name() + "_" + action, defaultName, "branchId", this.getEquipmentId());
     }
 
     @Override
