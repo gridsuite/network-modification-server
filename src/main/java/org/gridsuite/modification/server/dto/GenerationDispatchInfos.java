@@ -33,12 +33,11 @@ import java.util.List;
 @JsonTypeName("GENERATION_DISPATCH")
 @ModificationErrorTypeName("GENERATION_DISPATCH_ERROR")
 public class GenerationDispatchInfos extends ModificationInfos {
-
     @Schema(description = "loss coefficient")
-    Double lossCoefficient;
+    private Double lossCoefficient;
 
     @Schema(description = "default outage rate")
-    Double defaultOutageRate;
+    private Double defaultOutageRate;
 
     @Schema(description = "generators without outage")
     private List<GeneratorsFilterInfos> generatorsWithoutOutage;
