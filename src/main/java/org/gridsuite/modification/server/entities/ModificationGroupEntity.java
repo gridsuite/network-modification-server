@@ -31,7 +31,6 @@ public class ModificationGroupEntity extends AbstractManuallyAssignedIdentifierE
             mappedBy = "group",
             cascade = CascadeType.ALL
     )
-
     @OrderColumn
     private List<ModificationEntity> modifications = new ArrayList<>();
 

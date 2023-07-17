@@ -29,5 +29,5 @@ public class GeneratorsFrequencyReserveInfos {
     private List<GeneratorsFilterInfos> generatorsFilters;
 
     @Schema(description = "frequency reserve")
-    Double frequencyReserve;
+    private Double frequencyReserve;
 }
