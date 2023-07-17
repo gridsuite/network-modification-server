@@ -18,6 +18,7 @@ public enum ModificationType {
     EQUIPMENT_ATTRIBUTE_MODIFICATION(PreloadingStrategy.NONE),
     LOAD_CREATION(PreloadingStrategy.NONE),
     LOAD_MODIFICATION(PreloadingStrategy.NONE),
+    BATTERY_CREATION(PreloadingStrategy.NONE),
     GENERATOR_CREATION(PreloadingStrategy.NONE),
     GENERATOR_MODIFICATION(PreloadingStrategy.NONE),
     EQUIPMENT_DELETION(PreloadingStrategy.NONE),
