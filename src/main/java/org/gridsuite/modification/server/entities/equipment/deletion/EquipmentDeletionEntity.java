@@ -27,12 +27,12 @@ public class EquipmentDeletionEntity extends EquipmentModificationEntity {
     private String equipmentType;
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @JoinColumn(name = "specific_deletion_data_id",
+    @JoinColumn(name = "additional_equipment_deletion_entity_id",
             referencedColumnName = "id",
             foreignKey = @ForeignKey(
-                    name = "specific_deletion_data_id_fk"
+                    name = "additional_equipment_deletion_entity_id_fk"
             ), nullable = true)
-    private AbstractEquipmentDeletionEntity specificEquipmentInfos;
+    private AbstractEquipmentDeletionEntity equipmentInfos;
 
     public EquipmentDeletionEntity(EquipmentDeletionInfos equipmentDeletionInfos) {
         super(equipmentDeletionInfos);
@@ -47,7 +47,7 @@ public class EquipmentDeletionEntity extends EquipmentModificationEntity {
 
     private void assignAttributes(EquipmentDeletionInfos equipmentDeletionInfos) {
         this.equipmentType = equipmentDeletionInfos.getEquipmentType();
-        specificEquipmentInfos = equipmentDeletionInfos.getSpecificEquipmentInfos() != null ?
+        equipmentInfos = equipmentDeletionInfos.getSpecificEquipmentInfos() != null ?
             equipmentDeletionInfos.getSpecificEquipmentInfos().toEntity() : null;
     }
 
@@ -59,8 +59,8 @@ public class EquipmentDeletionEntity extends EquipmentModificationEntity {
                 .date(getDate())
                 .equipmentId(getEquipmentId())
                 .equipmentType(getEquipmentType());
-        if (specificEquipmentInfos != null) {
-            builder.specificEquipmentInfos(specificEquipmentInfos.toModificationInfos());
+        if (equipmentInfos != null) {
+            builder.specificEquipmentInfos(equipmentInfos.toModificationInfos());
         }
         return builder.build();
     }

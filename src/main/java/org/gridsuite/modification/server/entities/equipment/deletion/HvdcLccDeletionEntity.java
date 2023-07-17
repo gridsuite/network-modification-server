@@ -24,11 +24,15 @@ import java.util.List;
 @Table(name = "hvdcLccDeletion")
 public class HvdcLccDeletionEntity extends AbstractEquipmentDeletionEntity {
     @ElementCollection
-    @CollectionTable(name = "shuntCompensatorsSide1")
+    @CollectionTable(name = "HvdcLccDeletionShuntCompensatorsSide1",
+        indexes = {@Index(name = "HvdcLccDeletionEntity_shuntCompensatorsSide1_idx1", columnList = "hvdc_lcc_deletion_entity_id")},
+        foreignKey = @ForeignKey(name = "HvdcLccDeletionEntity_shuntCompensatorsSide1_fk1"))
     private List<ShuntCompensatorSelectionEmbeddable> shuntCompensatorsSide1;
 
     @ElementCollection
-    @CollectionTable(name = "shuntCompensatorsSide2")
+    @CollectionTable(name = "HvdcLccDeletionShuntCompensatorsSide2",
+        indexes = {@Index(name = "HvdcLccDeletionEntity_shuntCompensatorsSide2_idx1", columnList = "hvdc_lcc_deletion_entity_id")},
+        foreignKey = @ForeignKey(name = "HvdcLccDeletionEntity_shuntCompensatorsSide2_fk1"))
     private List<ShuntCompensatorSelectionEmbeddable> shuntCompensatorsSide2;
 
     @Override
