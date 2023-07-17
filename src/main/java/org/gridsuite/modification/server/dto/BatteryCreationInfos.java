@@ -1,4 +1,3 @@
-
 /**
  * Copyright (c) 2023, RTE (http://www.rte-france.com)
  * This Source Code Form is subject to the terms of the Mozilla Public
@@ -7,6 +6,7 @@
  */
 package org.gridsuite.modification.server.dto;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
@@ -21,6 +21,7 @@ import java.util.List;
 
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
 import org.gridsuite.modification.server.entities.equipment.creation.BatteryCreationEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.BatteryCreation;
@@ -35,6 +36,8 @@ import org.gridsuite.modification.server.modifications.BatteryCreation;
 @Setter
 @ToString(callSuper = true)
 @Schema(description = "Battery creation")
+@JsonTypeName("BATTERY_CREATION")
+@ModificationErrorTypeName("CREATE_BATTERY_ERROR")
 public class BatteryCreationInfos extends InjectionCreationInfos {
 
     @Schema(description = "Minimum active power")
