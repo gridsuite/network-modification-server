@@ -169,7 +169,7 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
                     "                Δ resistance : ${r}", "r", String.valueOf(step.getR()));
             addStepAttributeReport(tapChangerStepsReports, "newStepReactance" + step.getX(),
                                     "                Δ reactance : ${x}", "x", String.valueOf(step.getX()));
-            addStepAttributeReport(tapChangerStepsReports, "newStepConductance" + step.getX(),
+            addStepAttributeReport(tapChangerStepsReports, "newStepConductance" + step.getG(),
                                     "                Δ conductance : ${g}", "g", String.valueOf(step.getG()));
             addStepAttributeReport(tapChangerStepsReports, "newStepSusceptance" + step.getB(),
                                     "                Δ susceptance : ${b}", "b", String.valueOf(step.getB()));
