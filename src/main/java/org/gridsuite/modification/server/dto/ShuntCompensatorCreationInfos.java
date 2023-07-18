@@ -75,6 +75,6 @@ public class ShuntCompensatorCreationInfos extends InjectionCreationInfos {
 
     @Override
     public Reporter createSubReporter(ReporterModel reporter) {
-        return reporter.createSubReporter(getType().name(), "Creation of shunt compensator " + getEquipmentId());
+        return reporter.createSubReporter(getType().name(), "shunt compensator creation ${shuntCompensatorId}", "shuntCompensatorId", this.getEquipmentId());
     }
 }
