@@ -10,6 +10,8 @@ import com.powsybl.commons.reporter.Report;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.iidm.network.*;
+import com.powsybl.iidm.network.extensions.ActivePowerControl;
+import com.powsybl.iidm.network.extensions.ActivePowerControlAdder;
 import com.powsybl.network.store.iidm.impl.MinMaxReactiveLimitsImpl;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.BatteryModificationInfos;
@@ -147,7 +149,7 @@ public class BatteryModification extends AbstractModification {
         Reporter subReporterLimits = modifyBatteryActiveLimitsAttributes(modificationInfos, battery, subReporter);
         modifyBatteryReactiveLimitsAttributes(modificationInfos, battery, subReporter, subReporterLimits);
     }
-/*
+
     private void modifyBatteryMinMaxReactiveLimits(BatteryModificationInfos modificationInfos, Battery battery,
                                                    Reporter subReporter, Reporter subReporterLimits) {
         List<Report> reports = new ArrayList<>();
@@ -221,7 +223,7 @@ public class BatteryModification extends AbstractModification {
                     .build());
         }
         ModificationUtils.getInstance().reportModifications(subReporterReactiveLimits, reports, "minMaxReactiveLimitsModified", "By range");
-    }*/
+    }
 
     private void modifyBatteryReactiveCapabilityCurvePoints(BatteryModificationInfos modificationInfos,
                                                             Battery battery, Reporter subReporter, Reporter subReporterLimits) {

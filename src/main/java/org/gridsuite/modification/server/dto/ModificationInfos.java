@@ -37,6 +37,7 @@ import java.util.UUID;
 @JsonSubTypes({
     @JsonSubTypes.Type(value = GroovyScriptInfos.class, name = "GROOVY_SCRIPT"),
     @JsonSubTypes.Type(value = BatteryCreationInfos.class, name = "BATTERY_CREATION"),
+    @JsonSubTypes.Type(value = BatteryModificationInfos.class, name = "BATTERY_MODIFICATION"),
     @JsonSubTypes.Type(value = LoadCreationInfos.class, name = "LOAD_CREATION"),
     @JsonSubTypes.Type(value = LoadModificationInfos.class, name = "LOAD_MODIFICATION"),
     @JsonSubTypes.Type(value = GeneratorCreationInfos.class, name = "GENERATOR_CREATION"),
