@@ -6,7 +6,6 @@
  */
 package org.gridsuite.modification.server.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
@@ -16,7 +15,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 import org.gridsuite.modification.server.ModificationType;
-import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.MassiveEquipmentsModificationsEntity;
@@ -39,22 +37,17 @@ public class MassiveEquipmentsModificationsInfos extends ModificationInfos {
     @Schema(description = "equipments modifications")
     private List<ModificationInfos> modifications;
 
-    @JsonIgnore
+    @Override
     public ModificationEntity toEntity() {
         return new MassiveEquipmentsModificationsEntity(this);
     }
 
-    @JsonIgnore
+    @Override
     public AbstractModification toModification() {
         return new MassiveEquipmentsModifications(this);
     }
 
-    @JsonIgnore
-    public NetworkModificationException.Type getErrorType() {
-        return NetworkModificationException.Type.MASSIVE_EQUIPMENTS_MODIFICATIONS_ERROR;
-    }
-
-    @JsonIgnore
+    @Override
     public Reporter createSubReporter(ReporterModel reporter) {
         return reporter.createSubReporter(ModificationType.MASSIVE_EQUIPMENTS_MODIFICATIONS.name(), "Massive equipments modifications");
     }
