@@ -61,6 +61,6 @@ public class ShuntCompensatorModificationInfos extends BasicEquipmentModificatio
 
     @Override
     public Reporter createSubReporter(ReporterModel reporter) {
-        return reporter.createSubReporter(getType().name(), "shunt compensator modification ${shuntCompensatorId}", "shuntCompensatorId", this.getEquipmentId());
+        return reporter.createSubReporter(getType().name(), "Shunt compensator modification ${shuntCompensatorId}", "shuntCompensatorId", this.getEquipmentId());
     }
 }
