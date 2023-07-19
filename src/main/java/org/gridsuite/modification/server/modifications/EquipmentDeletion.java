@@ -9,10 +9,7 @@ package org.gridsuite.modification.server.modifications;
 import com.powsybl.commons.reporter.Report;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.TypedValue;
-import com.powsybl.iidm.modification.topology.RemoveFeederBay;
-import com.powsybl.iidm.modification.topology.RemoveHvdcLineBuilder;
-import com.powsybl.iidm.modification.topology.RemoveHvdcLine;
-import com.powsybl.iidm.modification.topology.RemoveVoltageLevel;
+import com.powsybl.iidm.modification.topology.*;
 import com.powsybl.iidm.network.*;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.EquipmentDeletionInfos;
@@ -49,8 +46,7 @@ public class EquipmentDeletion extends AbstractModification {
         } else if (identifiable instanceof VoltageLevel) {
             new RemoveVoltageLevel(modificationInfos.getEquipmentId()).apply(network, true, subReporter);
         } else if (identifiable instanceof Substation) {
-            return;
-            //new RemoveSubstation(modificationInfos.getEquipmentId()).apply(network, true, subReporter);
+            new RemoveSubstation(modificationInfos.getEquipmentId()).apply(network, true, subReporter);
         }
 
         subReporter.report(Report.builder()
@@ -63,7 +59,7 @@ public class EquipmentDeletion extends AbstractModification {
     }
 
     private void removeHvdcLine(Network network, Reporter subReporter) {
-        HvdcLccDeletionInfos specificInfos = (HvdcLccDeletionInfos) modificationInfos.getSpecificEquipmentInfos();
+        HvdcLccDeletionInfos specificInfos = (HvdcLccDeletionInfos) modificationInfos.getEquipmentInfos();
         List<String> shuntCompensatorIds = List.of();
         if (specificInfos != null) {
             shuntCompensatorIds = Stream.concat(
