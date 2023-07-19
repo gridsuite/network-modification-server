@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.dto;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -14,8 +15,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
-import org.gridsuite.modification.server.ModificationType;
-import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
 import org.gridsuite.modification.server.entities.equipment.modification.LineModificationEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.LineModification;
@@ -30,6 +30,8 @@ import org.gridsuite.modification.server.modifications.LineModification;
 @Setter
 @ToString(callSuper = true)
 @Schema(description = "Line modification")
+@JsonTypeName("LINE_MODIFICATION")
+@ModificationErrorTypeName("MODIFY_LINE_ERROR")
 public class LineModificationInfos extends BranchModificationInfos {
 
     @Schema(description = "Shunt conductance Side 1")
@@ -55,12 +57,7 @@ public class LineModificationInfos extends BranchModificationInfos {
     }
 
     @Override
-    public NetworkModificationException.Type getErrorType() {
-        return NetworkModificationException.Type.MODIFY_LINE_ERROR;
-    }
-
-    @Override
     public Reporter createSubReporter(ReporterModel reporter) {
-        return reporter.createSubReporter(ModificationType.LINE_MODIFICATION.name(), "Line modification ${lineId}", "lineId", this.getEquipmentId());
+        return reporter.createSubReporter(getType().name(), "Line modification ${lineId}", "lineId", this.getEquipmentId());
     }
 }

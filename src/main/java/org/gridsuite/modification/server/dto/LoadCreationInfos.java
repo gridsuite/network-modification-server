@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.dto;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.iidm.network.LoadType;
@@ -16,8 +17,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
-import org.gridsuite.modification.server.ModificationType;
-import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
 import org.gridsuite.modification.server.entities.equipment.creation.LoadCreationEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.LoadCreation;
@@ -32,6 +32,8 @@ import org.gridsuite.modification.server.modifications.LoadCreation;
 @Setter
 @ToString(callSuper = true)
 @Schema(description = "Load creation")
+@JsonTypeName("LOAD_CREATION")
+@ModificationErrorTypeName("CREATE_LOAD_ERROR")
 public class LoadCreationInfos extends InjectionCreationInfos {
     @Schema(description = "Load type")
     private LoadType loadType;
@@ -62,12 +64,7 @@ public class LoadCreationInfos extends InjectionCreationInfos {
     }
 
     @Override
-    public NetworkModificationException.Type getErrorType() {
-        return NetworkModificationException.Type.CREATE_LOAD_ERROR;
-    }
-
-    @Override
     public Reporter createSubReporter(ReporterModel reporter) {
-        return reporter.createSubReporter(ModificationType.LOAD_CREATION.name(), "Load creation ${loadId}", "loadId", getEquipmentId());
+        return reporter.createSubReporter(getType().name(), "Load creation ${loadId}", "loadId", getEquipmentId());
     }
 }

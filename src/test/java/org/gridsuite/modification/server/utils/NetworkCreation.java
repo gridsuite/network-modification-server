@@ -270,16 +270,19 @@ public final class NetworkCreation {
     }
 
     /**
-     *     VL1            VL2            VL3
+     * Create a network as following:
+     * <pre>
+     *     VL1            VL2             VL3
      *
      *     ld1            g2              ld3
      *      |              |               |
      *     br1            br2             br3
-     *      |             |                |
-     *     d1             d2               d3
+     *      |              |               |
+     *     d1             d2              d3
      *      |              |               |
      *     bbs1 ----------bbs2------------bbs3
-     *            l1             l2
+     *              l1             l2
+     * </pre>
      */
     public static Network createForDeleteVoltageLevelOnLine(UUID uuid) {
         Network network = new NetworkFactoryImpl().createNetwork(uuid.toString(), "NetworkForDeleteVoltageLevelOnLine");

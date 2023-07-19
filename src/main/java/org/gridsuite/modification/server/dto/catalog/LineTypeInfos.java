@@ -35,10 +35,9 @@ import org.gridsuite.modification.server.entities.catalog.LineTypeEntity;
 })
 @Schema(description = "Line Type")
 public class LineTypeInfos {
-
     @EqualsAndHashCode.Exclude
     @Schema(description = "id")
-    UUID id;
+    private UUID id;
 
     @Schema(description = "Type Name")
     private String type;

@@ -7,21 +7,25 @@
 
 package org.gridsuite.modification.server.modifications;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
+import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.EquipmentDeletionInfos;
-import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.server.entities.equipment.deletion.ShuntCompensatorSelectionEmbeddable;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
 import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MvcResult;
 
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.EQUIPMENT_NOT_FOUND;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -94,5 +98,63 @@ public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
                 .andExpect(status().isOk());
         assertLogMessage("The substation s2 is still connected to another substation", equipmentDeletionInfos.getErrorType().name(), reportService);
         assertNotNull(getNetwork().getSubstation("s2"));
+    }
+
+    @SneakyThrows
+    private void deleteHvdcLineWithShuntCompensator(String shuntNameToBeRemoved, boolean selected, int side, boolean warningCase) {
+        final String hvdcLineName = "hvdcLine"; // this line uses LCC converter stations
+        assertNotNull(getNetwork().getHvdcLine(hvdcLineName));
+        assertEquals(warningCase, getNetwork().getShuntCompensator(shuntNameToBeRemoved) == null);
+
+        NetworkModificationResult.ApplicationStatus expectedStatus = warningCase ?
+                NetworkModificationResult.ApplicationStatus.WITH_WARNINGS :
+                NetworkModificationResult.ApplicationStatus.ALL_OK;
+
+        List<ShuntCompensatorSelectionEmbeddable> shuntData = List.of(new ShuntCompensatorSelectionEmbeddable(shuntNameToBeRemoved, selected));
+        HvdcLccDeletionInfos hvdcLccDeletionInfos = side == 1 ?
+                new HvdcLccDeletionInfos(shuntData, null) :
+                new HvdcLccDeletionInfos(null, shuntData);
+        EquipmentDeletionInfos equipmentDeletionInfos = EquipmentDeletionInfos.builder()
+                .equipmentType("HVDC_LINE")
+                .equipmentId(hvdcLineName)
+                .specificEquipmentInfos(hvdcLccDeletionInfos)
+                .build();
+        String equipmentDeletionInfosJson = mapper.writeValueAsString(equipmentDeletionInfos);
+
+        MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn();
+        Optional<NetworkModificationResult> modifResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertTrue(modifResult.isPresent());
+        assertEquals(expectedStatus, modifResult.get().getApplicationStatus());
+
+        assertNull(getNetwork().getHvdcLine(hvdcLineName));
+        assertEquals(selected, getNetwork().getShuntCompensator(shuntNameToBeRemoved) == null);
+    }
+
+    @Test
+    public void testDeleteHvdcWithLCCWithShuntCompensatorSelectedSide1() {
+        deleteHvdcLineWithShuntCompensator("v2shunt", true, 1, false);
+    }
+
+    @Test
+    public void testDeleteHvdcWithLCCWithShuntCompensatorSelectedSide2() {
+        deleteHvdcLineWithShuntCompensator("v2shunt", true, 2, false);
+    }
+
+    @Test
+    public void testDeleteHvdcWithLCCWithShuntCompensatorNotSelectedSide1() {
+        deleteHvdcLineWithShuntCompensator("v2shunt", false, 1, false);
+    }
+
+    @Test
+    public void testDeleteHvdcWithLCCWithShuntCompensatorNotSelectedSide2() {
+        deleteHvdcLineWithShuntCompensator("v2shunt", false, 2, false);
+    }
+
+    @Test
+    public void testDeleteHvdcWithLCCWithAlreadyDeletedShuntCompensator() {
+        // we select an unexisting shunt: will produce a warning
+        deleteHvdcLineWithShuntCompensator("deletedOrMissingShuntId", true, 1, true);
     }
 }
