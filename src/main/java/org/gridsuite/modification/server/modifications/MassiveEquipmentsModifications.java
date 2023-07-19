@@ -8,6 +8,7 @@
 package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.commons.reporter.Reporter;
+import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.iidm.network.Network;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.MassiveEquipmentsModificationsInfos;
@@ -37,7 +38,7 @@ public class MassiveEquipmentsModifications extends AbstractModification {
     @Override
     public void apply(Network network, Reporter subReporter) {
         massiveEquipmentsModificationsInfos.getModifications().forEach(m -> {
-            Reporter equipmentReporter = subReporter.createSubReporter(EQUIPMENT_MODIFICATION, EQUIPMENT_MODIFICATION);
+            Reporter equipmentReporter = m.createSubReporter((ReporterModel) subReporter);
             m.toModification().apply(network, equipmentReporter);
         });
     }
