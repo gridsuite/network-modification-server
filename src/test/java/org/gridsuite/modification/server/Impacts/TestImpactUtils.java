@@ -17,7 +17,6 @@ import org.gridsuite.modification.server.impacts.SimpleElementImpact;
 import org.gridsuite.modification.server.impacts.SimpleElementImpact.SimpleImpactType;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.utils.assertions.Assertions.*;
 import static org.junit.Assert.assertEquals;
@@ -37,16 +36,21 @@ public final class TestImpactUtils {
     }
 
     public static void testEmptyImpacts(ObjectMapper mapper, NetworkModificationResult networkModificationResult) {
-        testEmptyImpacts(mapper, ApplicationStatus.ALL_OK, networkModificationResult);
+        testEmptyImpacts(mapper, ApplicationStatus.ALL_OK, ApplicationStatus.ALL_OK, networkModificationResult);
     }
 
     public static void testEmptyImpactsWithErrors(ObjectMapper mapper, NetworkModificationResult networkModificationResult) {
-        testEmptyImpacts(mapper, ApplicationStatus.WITH_ERRORS, networkModificationResult);
+        testEmptyImpacts(mapper, ApplicationStatus.WITH_ERRORS, ApplicationStatus.WITH_ERRORS, networkModificationResult);
     }
 
-    private static void testEmptyImpacts(ObjectMapper mapper, ApplicationStatus applicationStatusExpected, NetworkModificationResult networkModificationResult) {
+    public static void testEmptyImpactsWithErrorsLastOK(ObjectMapper mapper, NetworkModificationResult networkModificationResult) {
+        testEmptyImpacts(mapper, ApplicationStatus.WITH_ERRORS, ApplicationStatus.ALL_OK, networkModificationResult);
+    }
+
+    private static void testEmptyImpacts(ObjectMapper mapper, ApplicationStatus globalApplicationStatusExpected, ApplicationStatus localApplicationStatusExpected, NetworkModificationResult networkModificationResult) {
         NetworkModificationResult resultExpected = NetworkModificationResult.builder()
-            .applicationStatus(applicationStatusExpected)
+            .applicationStatus(globalApplicationStatusExpected)
+            .lastGroupApplicationStatus(localApplicationStatusExpected)
             .networkImpacts(List.of())
             .build();
         assertThat(networkModificationResult).recursivelyEquals(resultExpected);
@@ -66,6 +70,7 @@ public final class TestImpactUtils {
         assertTrue(networkModificationResult.isPresent());
         NetworkModificationResult resultExpected = NetworkModificationResult.builder()
             .applicationStatus(ApplicationStatus.ALL_OK)
+            .lastGroupApplicationStatus(ApplicationStatus.ALL_OK)
             .networkImpacts(elementImpactsExpected)
             .build();
         assertThat(networkModificationResult.get()).recursivelyEquals(resultExpected);
@@ -79,15 +84,12 @@ public final class TestImpactUtils {
         testElementImpact(SimpleImpactType.MODIFICATION, mapper, resultAsString, elementType, elementId, substationIds);
     }
 
-    public static void testElementDeletionImpact(ObjectMapper mapper, String resultAsString, IdentifiableType elementType, String elementId, Set<String> substationIds) throws JsonProcessingException {
-        testElementImpact(SimpleImpactType.DELETION, mapper, resultAsString, elementType, elementId, substationIds);
-    }
-
     public static void testElementImpact(SimpleImpactType impactType, ObjectMapper mapper, String resultAsString, IdentifiableType elementType, String elementId, Set<String> substationIds) throws JsonProcessingException {
         Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertTrue(networkModificationResult.isPresent());
         NetworkModificationResult resultExpected = NetworkModificationResult.builder()
             .applicationStatus(ApplicationStatus.ALL_OK)
+            .lastGroupApplicationStatus(ApplicationStatus.ALL_OK)
             .networkImpacts(List.of(createElementImpact(impactType, elementType, elementId, new HashSet<>(substationIds))))
             .build();
         assertThat(networkModificationResult.get()).recursivelyEquals(resultExpected);
@@ -100,6 +102,7 @@ public final class TestImpactUtils {
         assertTrue(networkModificationResult.isPresent());
         NetworkModificationResult resultExpected = NetworkModificationResult.builder()
             .applicationStatus(ApplicationStatus.ALL_OK)
+            .lastGroupApplicationStatus(ApplicationStatus.ALL_OK)
             .networkImpacts(createConnectableDeletionImpacts(connectableType, connectableId, breakerId, disconnectorId, substationId))
             .build();
         assertThat(networkModificationResult.get()).recursivelyEquals(resultExpected);
@@ -144,6 +147,7 @@ public final class TestImpactUtils {
         assertTrue(networkModificationResult.isPresent());
         NetworkModificationResult resultExpected = NetworkModificationResult.builder()
             .applicationStatus(ApplicationStatus.ALL_OK)
+            .lastGroupApplicationStatus(ApplicationStatus.ALL_OK)
             .networkImpacts(createBranchImpacts(impactType, branchType, branchId, breakerId1, disconnectorId1, substationId1, breakerId2, disconnectorId2, substationId2))
             .build();
         assertThat(networkModificationResult.get()).recursivelyEquals(resultExpected);
@@ -177,6 +181,7 @@ public final class TestImpactUtils {
         assertTrue(networkModificationResult.isPresent());
         NetworkModificationResult resultExpected = NetworkModificationResult.builder()
             .applicationStatus(ApplicationStatus.ALL_OK)
+            .lastGroupApplicationStatus(ApplicationStatus.ALL_OK)
             .networkImpacts(create3wtDeletionImpacts(w3tId, breakerId1, disconnectorId1, breakerId2, disconnectorId2, breakerId3, disconnectorId3, substationId))
             .build();
         assertThat(networkModificationResult.get()).recursivelyEquals(resultExpected);
@@ -198,11 +203,11 @@ public final class TestImpactUtils {
         );
     }
 
-    public static List<SimpleElementImpact> createVoltageLevelDeletionImpacts(String vlId, List<String> busbarSectionsIds,
-                                                                              List<Pair<IdentifiableType, String>> connectablesTypesAndIds, String substationId) {
-        List<SimpleElementImpact> impacts = new ArrayList<>(List.of(createDeletionImpactType(IdentifiableType.VOLTAGE_LEVEL, vlId, Set.of(substationId))));
-        impacts.addAll(busbarSectionsIds.stream().map(id -> createDeletionImpactType(IdentifiableType.BUSBAR_SECTION, id, Set.of(substationId))).collect(Collectors.toList()));
-        impacts.addAll(connectablesTypesAndIds.stream().map(typeAndId -> createDeletionImpactType(typeAndId.getLeft(), typeAndId.getRight(), Set.of(substationId))).collect(Collectors.toList()));
+    public static List<SimpleElementImpact> createMultipleDeletionImpacts(IdentifiableType equipmentType, String equipmentId, List<String> busbarSectionsIds,
+                                                                          List<Pair<IdentifiableType, String>> connectablesTypesAndIds, String substationId) {
+        List<SimpleElementImpact> impacts = new ArrayList<>(List.of(createDeletionImpactType(equipmentType, equipmentId, Set.of(substationId))));
+        impacts.addAll(busbarSectionsIds.stream().map(id -> createDeletionImpactType(IdentifiableType.BUSBAR_SECTION, id, Set.of(substationId))).toList());
+        impacts.addAll(connectablesTypesAndIds.stream().map(typeAndId -> createDeletionImpactType(typeAndId.getLeft(), typeAndId.getRight(), Set.of(substationId))).toList());
         return impacts;
     }
 

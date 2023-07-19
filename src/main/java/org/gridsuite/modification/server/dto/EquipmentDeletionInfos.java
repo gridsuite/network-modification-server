@@ -6,8 +6,9 @@
  */
 package org.gridsuite.modification.server.dto;
 
-import org.gridsuite.modification.server.ModificationType;
-import org.gridsuite.modification.server.NetworkModificationException;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
 import org.gridsuite.modification.server.entities.equipment.deletion.EquipmentDeletionEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.EquipmentDeletion;
@@ -29,9 +30,15 @@ import lombok.experimental.SuperBuilder;
 @Setter
 @ToString(callSuper = true)
 @Schema(description = "Equipment deletion")
+@JsonTypeName("EQUIPMENT_DELETION")
+@ModificationErrorTypeName("DELETE_EQUIPMENT_ERROR")
 public class EquipmentDeletionInfos extends EquipmentModificationInfos {
     @Schema(description = "Equipment type")
     private String equipmentType;
+
+    @Schema(description = "Equipment specific infos (optional)")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private AbstractEquipmentDeletionInfos specificEquipmentInfos;
 
     @Override
     public EquipmentDeletionEntity toEntity() {
@@ -44,12 +51,7 @@ public class EquipmentDeletionInfos extends EquipmentModificationInfos {
     }
 
     @Override
-    public NetworkModificationException.Type getErrorType() {
-        return NetworkModificationException.Type.DELETE_EQUIPMENT_ERROR;
-    }
-
-    @Override
     public Reporter createSubReporter(ReporterModel reporter) {
-        return reporter.createSubReporter(ModificationType.EQUIPMENT_DELETION.name(), "Equipment deletion ${equipmentId}", "equipmentId", this.getEquipmentId());
+        return reporter.createSubReporter(getType().name(), "Equipment deletion ${equipmentId}", "equipmentId", this.getEquipmentId());
     }
 }

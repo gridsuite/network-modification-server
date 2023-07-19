@@ -7,6 +7,7 @@
 
 package org.gridsuite.modification.server.dto;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -14,8 +15,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
-import org.gridsuite.modification.server.ModificationType;
-import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
 import org.gridsuite.modification.server.entities.equipment.modification.GeneratorScalingEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.GeneratorScaling;
@@ -28,6 +28,8 @@ import org.gridsuite.modification.server.modifications.GeneratorScaling;
 @NoArgsConstructor
 @Getter
 @Setter
+@JsonTypeName("GENERATOR_SCALING")
+@ModificationErrorTypeName("GENERATOR_SCALING_ERROR")
 @Schema(description = "Generator scaling creation")
 public class GeneratorScalingInfos extends ScalingInfos {
 
@@ -42,12 +44,7 @@ public class GeneratorScalingInfos extends ScalingInfos {
     }
 
     @Override
-    public NetworkModificationException.Type getErrorType() {
-        return NetworkModificationException.Type.GENERATOR_SCALING_ERROR;
-    }
-
-    @Override
     public Reporter createSubReporter(ReporterModel reporter) {
-        return reporter.createSubReporter(ModificationType.GENERATOR_SCALING.name(), "Generator scaling");
+        return reporter.createSubReporter(getType().name(), "Generator scaling");
     }
 }

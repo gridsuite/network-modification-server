@@ -8,6 +8,7 @@
 package org.gridsuite.modification.server.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -16,8 +17,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
-import org.gridsuite.modification.server.ModificationType;
-import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
 import org.gridsuite.modification.server.entities.equipment.modification.ShuntCompensatorModificationEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.ShuntCompensatorModification;
@@ -32,6 +32,8 @@ import org.gridsuite.modification.server.modifications.ShuntCompensatorModificat
 @Setter
 @ToString(callSuper = true)
 @Schema(description = "Shunt compensator modification")
+@JsonTypeName("SHUNT_COMPENSATOR_MODIFICATION")
+@ModificationErrorTypeName("MODIFY_SHUNT_COMPENSATOR_ERROR")
 public class ShuntCompensatorModificationInfos extends BasicEquipmentModificationInfos {
 
     @Schema(description = "voltage level id")
@@ -58,12 +60,7 @@ public class ShuntCompensatorModificationInfos extends BasicEquipmentModificatio
     }
 
     @Override
-    public NetworkModificationException.Type getErrorType() {
-        return NetworkModificationException.Type.MODIFY_SHUNT_COMPENSATOR_ERROR;
-    }
-
-    @Override
     public Reporter createSubReporter(ReporterModel reporter) {
-        return reporter.createSubReporter(ModificationType.SHUNT_COMPENSATOR_MODIFICATION.name(), "Modification of shunt compensator " + getEquipmentId());
+        return reporter.createSubReporter(getType().name(), "Shunt compensator modification ${shuntCompensatorId}", "shuntCompensatorId", this.getEquipmentId());
     }
 }

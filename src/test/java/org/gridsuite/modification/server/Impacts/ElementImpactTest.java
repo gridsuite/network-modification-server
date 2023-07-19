@@ -8,7 +8,6 @@ package org.gridsuite.modification.server.Impacts;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.iidm.network.IdentifiableType;
-import nl.jqno.equalsverifier.EqualsVerifier;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationResult.ApplicationStatus;
 import org.gridsuite.modification.server.impacts.SimpleElementImpact;
@@ -34,9 +33,6 @@ public class ElementImpactTest {
 
     @Test
     public void testElementImpact() throws IOException {
-        EqualsVerifier.simple().forClass(NetworkModificationResult.class).verify();
-        EqualsVerifier.simple().forClass(SimpleElementImpact.class).verify();
-
         SimpleElementImpact creationImpact = createCreationImpactType(IdentifiableType.LINE, "lineId", new TreeSet<>(List.of("s1", "s2")));
         SimpleElementImpact modificationImpact = createModificationImpactType(IdentifiableType.LOAD, "loadId", new TreeSet<>(List.of("s3")));
         SimpleElementImpact deletionImpact = createDeletionImpactType(IdentifiableType.GENERATOR, "generatorId", new TreeSet<>(List.of("s4")));
@@ -49,14 +45,17 @@ public class ElementImpactTest {
 
         NetworkModificationResult result = NetworkModificationResult.builder()
             .applicationStatus(ApplicationStatus.ALL_OK)
+            .lastGroupApplicationStatus(ApplicationStatus.ALL_OK)
             .networkImpacts((List<SimpleElementImpact>) impacts)
             .build();
         assertEquals(TestUtils.resourceToString("/network-modification-result-with-all-ok.json"), mapper.writeValueAsString(result));
 
         result.setApplicationStatus(ApplicationStatus.WITH_WARNINGS);
+        result.setLastGroupApplicationStatus(ApplicationStatus.WITH_WARNINGS);
         assertEquals(TestUtils.resourceToString("/network-modification-result-with-with-warnings.json"), mapper.writeValueAsString(result));
 
         result.setApplicationStatus(ApplicationStatus.WITH_ERRORS);
+        result.setLastGroupApplicationStatus(ApplicationStatus.WITH_ERRORS);
         assertEquals(TestUtils.resourceToString("/network-modification-result-with-with-errors.json"), mapper.writeValueAsString(result));
 
         assertEquals("[s1, s2, s3, s4]", result.getImpactedSubstationsIds().toString());

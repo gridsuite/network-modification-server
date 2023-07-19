@@ -12,6 +12,7 @@ import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.iidm.modification.topology.CreateFeederBay;
 import com.powsybl.iidm.modification.topology.CreateFeederBayBuilder;
 import com.powsybl.iidm.network.*;
+import org.apache.commons.lang3.ObjectUtils;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ShuntCompensatorCreationInfos;
 import org.gridsuite.modification.server.dto.ShuntCompensatorType;
@@ -49,6 +50,7 @@ public class ShuntCompensatorCreation extends AbstractModification {
                             ? susceptancePerSection
                             : -susceptancePerSection);
         }
+        determinateSectionCount(modificationInfos);
         if (voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER) {
             ShuntCompensatorAdder shuntCompensatorAdder = createShuntAdderInNodeBreaker(voltageLevel, modificationInfos);
             var position = ModificationUtils.getInstance().getPosition(modificationInfos.getConnectionPosition(),
@@ -72,17 +74,35 @@ public class ShuntCompensatorCreation extends AbstractModification {
         }
     }
 
+    private void determinateSectionCount(ShuntCompensatorCreationInfos modificationInfos) {
+        if (modificationInfos.getSusceptancePerSection() != null) {
+            if (modificationInfos.getSusceptancePerSection() == 0) {
+                modificationInfos.setCurrentNumberOfSections(0);
+            } else {
+                modificationInfos.setCurrentNumberOfSections(1);
+            }
+        }
+        if (modificationInfos.getQAtNominalV() != null) {
+            if (modificationInfos.getQAtNominalV() == 0) {
+                modificationInfos.setCurrentNumberOfSections(0);
+            } else {
+                modificationInfos.setCurrentNumberOfSections(1);
+            }
+        }
+    }
+
     private ShuntCompensatorAdder createShuntAdderInNodeBreaker(VoltageLevel voltageLevel, ShuntCompensatorCreationInfos shuntCompensatorInfos) {
         // creating the shunt compensator
         ShuntCompensatorAdder shuntAdder = voltageLevel.newShuntCompensator()
                 .setId(shuntCompensatorInfos.getEquipmentId())
                 .setName(shuntCompensatorInfos.getEquipmentName())
-                .setSectionCount(shuntCompensatorInfos.getCurrentNumberOfSections());
+                .setSectionCount(ObjectUtils.defaultIfNull(shuntCompensatorInfos.getCurrentNumberOfSections(), 1));
 
-        /* when we create non linear shunt, this is where we branch ;) */
+        /* when we create non-linear shunt, this is where we branch ;) */
         shuntAdder.newLinearModel()
                 .setBPerSection(shuntCompensatorInfos.getSusceptancePerSection())
-                .setMaximumSectionCount(shuntCompensatorInfos.getMaximumNumberOfSections()).add();
+                .setMaximumSectionCount(ObjectUtils.defaultIfNull(shuntCompensatorInfos.getMaximumNumberOfSections(), 1))
+                .add();
 
         return shuntAdder;
     }
@@ -93,12 +113,12 @@ public class ShuntCompensatorCreation extends AbstractModification {
         voltageLevel.newShuntCompensator()
             .setId(shuntCompensatorInfos.getEquipmentId())
             .setName(shuntCompensatorInfos.getEquipmentName())
-            .setSectionCount(shuntCompensatorInfos.getCurrentNumberOfSections())
+            .setSectionCount(ObjectUtils.defaultIfNull(shuntCompensatorInfos.getCurrentNumberOfSections(), 1))
             .setBus(bus.getId())
             .setConnectableBus(bus.getId())
             .newLinearModel()
             .setBPerSection(shuntCompensatorInfos.getSusceptancePerSection())
-            .setMaximumSectionCount(shuntCompensatorInfos.getMaximumNumberOfSections())
+            .setMaximumSectionCount(ObjectUtils.defaultIfNull(shuntCompensatorInfos.getMaximumNumberOfSections(), 1))
             .add()
             .add();
     }

@@ -29,18 +29,17 @@ import java.util.UUID;
 @ToString
 @Schema(description = "Scaling creation")
 public class ScalingVariationInfos {
-
     @Schema(description = "id")
-    UUID id;
+    private UUID id;
 
     @Schema(description = "filters")
-    List<FilterInfos> filters;
+    private List<FilterInfos> filters;
 
     @Schema(description = "variation mode")
-    VariationMode variationMode;
+    private VariationMode variationMode;
 
     @Schema(description = "variation value")
-    Double variationValue;
+    private Double variationValue;
 
     @Schema(description = "reactiveVariationMode")
     private ReactiveVariationMode reactiveVariationMode;

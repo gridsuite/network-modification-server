@@ -32,6 +32,7 @@ public class NetworkModificationException extends PowsyblException {
         LINE_NOT_FOUND(HttpStatus.NOT_FOUND),
         BRANCH_NOT_FOUND(HttpStatus.NOT_FOUND),
         LOAD_NOT_FOUND(HttpStatus.NOT_FOUND),
+        BATTERY_NOT_FOUND(HttpStatus.NOT_FOUND),
         GENERATOR_NOT_FOUND(HttpStatus.NOT_FOUND),
         TWO_WINDINGS_TRANSFORMER_NOT_FOUND(HttpStatus.NOT_FOUND),
         UNKNOWN_MODIFICATION_TYPE(HttpStatus.INTERNAL_SERVER_ERROR),
@@ -43,6 +44,7 @@ public class NetworkModificationException extends PowsyblException {
         MODIFY_LOAD_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         BUSBAR_SECTION_NOT_FOUND(HttpStatus.NOT_FOUND),
         BUS_NOT_FOUND(HttpStatus.NOT_FOUND),
+        CREATE_BATTERY_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         CREATE_GENERATOR_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         CREATE_SHUNT_COMPENSATOR_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         MODIFY_SHUNT_COMPENSATOR_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
@@ -58,6 +60,7 @@ public class NetworkModificationException extends PowsyblException {
         CREATE_VOLTAGE_LEVEL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         MODIFY_VOLTAGE_LEVEL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         SUBSTATION_NOT_FOUND(HttpStatus.NOT_FOUND),
+        BATTERY_ALREADY_EXISTS(HttpStatus.BAD_REQUEST),
         LOAD_ALREADY_EXISTS(HttpStatus.BAD_REQUEST),
         VOLTAGE_LEVEL_ALREADY_EXISTS(HttpStatus.BAD_REQUEST),
         BUSBAR_SECTION_ALREADY_EXISTS(HttpStatus.BAD_REQUEST),
@@ -92,8 +95,8 @@ public class NetworkModificationException extends PowsyblException {
         DELETE_ATTACHING_LINE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         DELETE_ATTACHING_LINE_NOT_FOUND(HttpStatus.NOT_FOUND),
         FILTERS_NOT_FOUND(HttpStatus.NOT_FOUND),
-        GENERATION_DISPATCH_ERROR(HttpStatus.INTERNAL_SERVER_ERROR);
-
+        GENERATION_DISPATCH_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
+        PRELOADING_STRATEGY_NOT_ALLOWED(HttpStatus.INTERNAL_SERVER_ERROR);
 
         public final HttpStatus status;
         private final String message;
