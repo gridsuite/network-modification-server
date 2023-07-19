@@ -7,6 +7,7 @@
 package org.gridsuite.modification.server.dto;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
 import org.gridsuite.modification.server.entities.equipment.deletion.EquipmentDeletionEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
@@ -34,6 +35,10 @@ import lombok.experimental.SuperBuilder;
 public class EquipmentDeletionInfos extends EquipmentModificationInfos {
     @Schema(description = "Equipment type")
     private String equipmentType;
+
+    @Schema(description = "Equipment specific infos (optional)")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private AbstractEquipmentDeletionInfos specificEquipmentInfos;
 
     @Override
     public EquipmentDeletionEntity toEntity() {

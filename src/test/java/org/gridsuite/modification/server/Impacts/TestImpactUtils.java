@@ -17,7 +17,6 @@ import org.gridsuite.modification.server.impacts.SimpleElementImpact;
 import org.gridsuite.modification.server.impacts.SimpleElementImpact.SimpleImpactType;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.utils.assertions.Assertions.*;
 import static org.junit.Assert.assertEquals;
@@ -83,10 +82,6 @@ public final class TestImpactUtils {
 
     public static void testElementModificationImpact(ObjectMapper mapper, String resultAsString, IdentifiableType elementType, String elementId, Set<String> substationIds) throws JsonProcessingException {
         testElementImpact(SimpleImpactType.MODIFICATION, mapper, resultAsString, elementType, elementId, substationIds);
-    }
-
-    public static void testElementDeletionImpact(ObjectMapper mapper, String resultAsString, IdentifiableType elementType, String elementId, Set<String> substationIds) throws JsonProcessingException {
-        testElementImpact(SimpleImpactType.DELETION, mapper, resultAsString, elementType, elementId, substationIds);
     }
 
     public static void testElementImpact(SimpleImpactType impactType, ObjectMapper mapper, String resultAsString, IdentifiableType elementType, String elementId, Set<String> substationIds) throws JsonProcessingException {
@@ -208,11 +203,11 @@ public final class TestImpactUtils {
         );
     }
 
-    public static List<SimpleElementImpact> createVoltageLevelDeletionImpacts(String vlId, List<String> busbarSectionsIds,
-                                                                              List<Pair<IdentifiableType, String>> connectablesTypesAndIds, String substationId) {
-        List<SimpleElementImpact> impacts = new ArrayList<>(List.of(createDeletionImpactType(IdentifiableType.VOLTAGE_LEVEL, vlId, Set.of(substationId))));
-        impacts.addAll(busbarSectionsIds.stream().map(id -> createDeletionImpactType(IdentifiableType.BUSBAR_SECTION, id, Set.of(substationId))).collect(Collectors.toList()));
-        impacts.addAll(connectablesTypesAndIds.stream().map(typeAndId -> createDeletionImpactType(typeAndId.getLeft(), typeAndId.getRight(), Set.of(substationId))).collect(Collectors.toList()));
+    public static List<SimpleElementImpact> createMultipleDeletionImpacts(IdentifiableType equipmentType, String equipmentId, List<String> busbarSectionsIds,
+                                                                          List<Pair<IdentifiableType, String>> connectablesTypesAndIds, String substationId) {
+        List<SimpleElementImpact> impacts = new ArrayList<>(List.of(createDeletionImpactType(equipmentType, equipmentId, Set.of(substationId))));
+        impacts.addAll(busbarSectionsIds.stream().map(id -> createDeletionImpactType(IdentifiableType.BUSBAR_SECTION, id, Set.of(substationId))).toList());
+        impacts.addAll(connectablesTypesAndIds.stream().map(typeAndId -> createDeletionImpactType(typeAndId.getLeft(), typeAndId.getRight(), Set.of(substationId))).toList());
         return impacts;
     }
 
