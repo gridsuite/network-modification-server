@@ -20,8 +20,6 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
  */
 
 public class MassiveEquipmentsModifications extends AbstractModification {
-    private static final String EQUIPMENT_MODIFICATION = "EquipmentModification";
-
     private MassiveEquipmentsModificationsInfos massiveEquipmentsModificationsInfos;
 
     public MassiveEquipmentsModifications(MassiveEquipmentsModificationsInfos massiveEquipmentsModificationsInfos) {
