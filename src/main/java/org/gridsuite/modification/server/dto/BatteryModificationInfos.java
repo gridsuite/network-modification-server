@@ -6,9 +6,7 @@
  */
 package org.gridsuite.modification.server.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.powsybl.iidm.network.EnergySource;
 import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
 import org.gridsuite.modification.server.entities.equipment.modification.BatteryModificationEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
