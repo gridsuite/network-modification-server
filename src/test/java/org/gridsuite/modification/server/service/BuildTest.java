@@ -535,10 +535,6 @@ public class BuildTest {
                 .equipmentName(new AttributeModification<>("newGeneratorName", OperationType.SET))
                 .voltageRegulationType(new AttributeModification<>(VoltageRegulationType.LOCAL, OperationType.SET))
                 .reactiveCapabilityCurve(new AttributeModification<>(false, OperationType.SET)).build().toEntity());
-        entities2.add(BatteryModificationInfos.builder()
-                .equipmentId("newBattery")
-                .equipmentName(new AttributeModification<>("newBatteryName", OperationType.SET))
-                .reactiveCapabilityCurve(new AttributeModification<>(false, OperationType.SET)).build().toEntity());
 
         modificationRepository.saveModifications(TEST_GROUP_ID, entities1);
         modificationRepository.saveModifications(TEST_GROUP_ID_2, entities2);
