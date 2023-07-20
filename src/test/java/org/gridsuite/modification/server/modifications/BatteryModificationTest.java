@@ -39,7 +39,7 @@ public class BatteryModificationTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModification() {
         return BatteryModificationInfos.builder()
-                .equipmentId("idBattery")
+                .equipmentId("v3Battery")
                 .equipmentName(new AttributeModification<>("newV1Battery", OperationType.SET))
                 .activePowerSetpoint(new AttributeModification<>(80.0, OperationType.SET))
                 .reactivePowerSetpoint(new AttributeModification<>(40.0, OperationType.SET))
@@ -72,7 +72,7 @@ public class BatteryModificationTest extends AbstractNetworkModificationTest {
 
     @Override
     protected void assertNetworkAfterCreation() {
-        Battery modifiedBattery = getNetwork().getBattery("idBattery");
+        Battery modifiedBattery = getNetwork().getBattery("v3Battery");
         assertEquals("newV1Battery", modifiedBattery.getNameOrId());
         assertEquals(80.0, modifiedBattery.getTargetP());
         assertEquals(40.0, modifiedBattery.getTargetQ());
@@ -85,12 +85,12 @@ public class BatteryModificationTest extends AbstractNetworkModificationTest {
 
     @Override
     protected void assertNetworkAfterDeletion() {
-        Battery battery = getNetwork().getBattery("idBattery");
-        assertEquals("idBattery", battery.getNameOrId());
-        assertEquals(42.1, battery.getTargetP());
+        Battery battery = getNetwork().getBattery("v3Battery");
+        assertEquals("v3Battery", battery.getNameOrId());
+        assertEquals(1.0, battery.getTargetP());
         assertEquals(1.0, battery.getTargetQ());
-        assertEquals(-1.1, battery.getMinP());
-        assertEquals(1000.0, battery.getMaxP());
+        assertEquals(0.0, battery.getMinP());
+        assertEquals(10.0, battery.getMaxP());
         assertEquals(ReactiveLimitsKind.MIN_MAX, battery.getReactiveLimits().getKind());
     }
 
@@ -103,7 +103,7 @@ public class BatteryModificationTest extends AbstractNetworkModificationTest {
         batteryModificationInfos.setMaximumReactivePower(null);
         batteryModificationInfos.setMinimumReactivePower(null);
         //setting ReactiveCapabilityCurvePoints for the battery we are modifying
-        Battery battery = getNetwork().getBattery("idBattery");
+        Battery battery = getNetwork().getBattery("v3Battery");
         battery.newReactiveCapabilityCurve()
                 .beginPoint()
                 .setP(0.)
@@ -205,7 +205,7 @@ public class BatteryModificationTest extends AbstractNetworkModificationTest {
     @Test
     public void testMinQGreaterThanMaxQ() throws Exception {
         BatteryModificationInfos batteryModificationInfos = (BatteryModificationInfos) buildModification();
-        Battery battery = getNetwork().getBattery("idBattery");
+        Battery battery = getNetwork().getBattery("v3Battery");
         battery.newReactiveCapabilityCurve()
                 .beginPoint()
                 .setP(0.)
@@ -243,7 +243,7 @@ public class BatteryModificationTest extends AbstractNetworkModificationTest {
         String modificationToCreateJson = mapper.writeValueAsString(batteryModificationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
-        assertLogMessage("MODIFY_GENERATOR_ERROR : Battery '" + "idBattery" + "' : maximum reactive power " + maxQ.get() + " is expected to be greater than or equal to minimum reactive power " + minQ.get(),
+        assertLogMessage("MODIFY_BATTERY_ERROR : Battery '" + "v3Battery" + "' : maximum reactive power " + maxQ.get() + " is expected to be greater than or equal to minimum reactive power " + minQ.get(),
                 batteryModificationInfos.getErrorType().name(), reportService);
     }
 }

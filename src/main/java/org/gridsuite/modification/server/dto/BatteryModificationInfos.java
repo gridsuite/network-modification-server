@@ -32,7 +32,7 @@ import java.util.List;
 @ToString(callSuper = true)
 @Schema(description = "Battery modification")
 @JsonTypeName("BATTERY_MODIFICATION")
-@ModificationErrorTypeName("MODIFICATION_BATTERY_ERROR")
+@ModificationErrorTypeName("MODIFY_BATTERY_ERROR")
 public class BatteryModificationInfos extends InjectionModificationInfos {
     @Schema(description = "Minimum active power")
     private AttributeModification<Double> minActivePower;
