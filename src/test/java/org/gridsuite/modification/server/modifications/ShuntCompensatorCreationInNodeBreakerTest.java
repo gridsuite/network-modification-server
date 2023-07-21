@@ -28,7 +28,6 @@ import static org.gridsuite.modification.server.utils.assertions.Assertions.*;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -136,11 +135,11 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         ShuntCompensatorCreationInfos createdModification = (ShuntCompensatorCreationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
-        assertEquals(null, createdModification.getCurrentNumberOfSections());
+        assertNull(createdModification.getCurrentNumberOfSections());
         modificationToCreateJson = mapper.writeValueAsString(dto);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         createdModification = (ShuntCompensatorCreationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
-        assertEquals(null, createdModification.getCurrentNumberOfSections());
+        assertNull(createdModification.getCurrentNumberOfSections());
     }
 }
