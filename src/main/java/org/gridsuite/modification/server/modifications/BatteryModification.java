@@ -125,7 +125,6 @@ public class BatteryModification extends AbstractModification {
                                                   Battery battery, Reporter subReporter) {
         Report reportActivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(battery::setTargetP, battery::getTargetP, modificationInfos.getActivePowerSetpoint(), "Active power");
         Report reportReactivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(battery::setTargetQ, battery::getTargetQ, modificationInfos.getReactivePowerSetpoint(), "Reactive power");
-
         Reporter subReporterSetpoints = null;
         if (reportActivePower != null || reportReactivePower != null) {
             subReporterSetpoints = subReporter.createSubReporter(SETPOINTS, SETPOINTS);
@@ -153,7 +152,6 @@ public class BatteryModification extends AbstractModification {
     private void modifyBatteryMinMaxReactiveLimits(BatteryModificationInfos modificationInfos, Battery battery,
                                                    Reporter subReporter, Reporter subReporterLimits) {
         List<Report> reports = new ArrayList<>();
-        // we get previous min max values if they exist
         MinMaxReactiveLimits minMaxReactiveLimits = null;
         ReactiveLimits reactiveLimits = battery.getReactiveLimits();
         if (reactiveLimits != null) {
@@ -162,10 +160,6 @@ public class BatteryModification extends AbstractModification {
                 minMaxReactiveLimits = battery.getReactiveLimits(MinMaxReactiveLimitsImpl.class);
             }
         }
-
-        // (if the min and max reactive limits are null and there is no previous min max
-        // limits set we set them to Double max and Double min values)
-        // The user can change the value of MinimumReactivePower, MaximumReactivePower or both
         if (modificationInfos.getMinimumReactivePower() != null
                 && modificationInfos.getMaximumReactivePower() != null) {
             battery.newMinMaxReactiveLimits().setMinQ(modificationInfos.getMinimumReactivePower().getValue())
@@ -203,7 +197,6 @@ public class BatteryModification extends AbstractModification {
                     Double.MAX_VALUE,
                     MAX_REACTIVE_POWER_FIELDNAME));
         }
-
         Reporter subReporterReactiveLimits = null;
         Reporter subReporterLimits2 = subReporterLimits;
         if (subReporterLimits == null && !reports.isEmpty()) {
@@ -229,12 +222,9 @@ public class BatteryModification extends AbstractModification {
                                                             Battery battery, Reporter subReporter, Reporter subReporterLimits) {
         List<Report> reports = new ArrayList<>();
         ReactiveCapabilityCurveAdder adder = battery.newReactiveCapabilityCurve();
-
         List<ReactiveCapabilityCurveModificationInfos> modificationPoints = modificationInfos.getReactiveCapabilityCurvePoints();
-
         Collection<ReactiveCapabilityCurve.Point> points = battery.getReactiveLimits().getKind() == ReactiveLimitsKind.CURVE ? battery.getReactiveLimits(ReactiveCapabilityCurve.class).getPoints() : List.of();
         List<ReactiveCapabilityCurve.Point> batteryPoints = new ArrayList<>(points);
-
         IntStream.range(0, modificationPoints.size())
                 .forEach(i -> {
                     String fieldSuffix;
@@ -250,11 +240,9 @@ public class BatteryModification extends AbstractModification {
                     } else {
                         fieldSuffix = Integer.toString(i);
                     }
-
                     createReactiveCapabilityCurvePoint(adder, newPoint, oldPoint, reports, fieldSuffix);
                 });
         adder.add();
-
         Reporter subReporterReactiveLimits = null;
         Reporter subReporterLimits2 = subReporterLimits;
         if (subReporterLimits == null && !reports.isEmpty()) {
@@ -284,13 +272,11 @@ public class BatteryModification extends AbstractModification {
         Double oldMaxQ = Double.NaN;
         Double oldMinQ = Double.NaN;
         Double oldP = Double.NaN;
-
         if (oldPoint != null) {
             oldMaxQ = oldPoint.getMaxQ();
             oldMinQ = oldPoint.getMinQ();
             oldP = oldPoint.getP();
         }
-
         var maxQ = newPoint.getQmaxP() != null ? newPoint.getQmaxP() : oldMaxQ;
         var minQ = newPoint.getQminP() != null ? newPoint.getQminP() : oldMinQ;
         var p = newPoint.getP() != null ? newPoint.getP() : oldP;
@@ -300,7 +286,6 @@ public class BatteryModification extends AbstractModification {
                 .setMinQ(minQ)
                 .setP(p)
                 .endPoint();
-
         addToReports(reports, p, oldP, "P" + fieldSuffix);
         addToReports(reports, minQ, oldMinQ, "QminP" + fieldSuffix);
         addToReports(reports, maxQ, oldMaxQ, "QmaxP" + fieldSuffix);
@@ -317,7 +302,6 @@ public class BatteryModification extends AbstractModification {
     private Reporter modifyBatteryActiveLimitsAttributes(BatteryModificationInfos modificationInfos,
                                                          Battery battery, Reporter subReporter) {
         Reporter subReporterLimits = null;
-
         Report reportMaxActivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(battery::setMaxP, battery::getMaxP, modificationInfos.getMaxActivePower(), "Max active power");
         Report reportMinActivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(battery::setMinP, battery::getMinP, modificationInfos.getMinActivePower(), "Min active power");
         if (reportMaxActivePower != null || reportMinActivePower != null) {
@@ -346,11 +330,7 @@ public class BatteryModification extends AbstractModification {
 
     private void modifyBatteryReactiveLimitsAttributes(BatteryModificationInfos modificationInfos,
                                                        Battery battery, Reporter subReporter, Reporter subReporterLimits) {
-        // if reactive capability curve is true and there was modifications on the
-        // reactive capability curve points,
-        // then we have to apply the reactive capability curve modifications
-        // else if reactive capability curve is false we have to apply the min and max
-        // reactive limits modifications
+
         if (modificationInfos.getReactiveCapabilityCurve() != null) {
             if (Boolean.TRUE.equals(modificationInfos.getReactiveCapabilityCurve().getValue()
                     && modificationInfos.getReactiveCapabilityCurvePoints() != null
@@ -365,12 +345,9 @@ public class BatteryModification extends AbstractModification {
     private Reporter modifyBatteryActivePowerControlAttributes(BatteryModificationInfos modificationInfos,
                                                                Battery battery, Reporter subReporter, Reporter subReporterSetpoints) {
         List<Report> reports = new ArrayList<>();
-
         ActivePowerControl<Battery> activePowerControl = battery.getExtension(ActivePowerControl.class);
         double oldDroop = activePowerControl != null ? activePowerControl.getDroop() : Double.NaN;
         Boolean participate = null;
-        // if participate is null and droop was modified, we consider that participate
-        // is true
         if (modificationInfos.getParticipate() != null) {
             participate = modificationInfos.getParticipate().getValue();
             reports.add(ModificationUtils.getInstance().buildModificationReport(activePowerControl != null ? activePowerControl.isParticipate() : null,
@@ -379,8 +356,6 @@ public class BatteryModification extends AbstractModification {
         } else if (modificationInfos.getDroop() != null) {
             participate = true;
         }
-        // if no modification were done to ActivePowerControl or if neither the old nor the new droop values are valid,
-        // we don't apply modifications
         if (participate != null) {
             if (Boolean.TRUE.equals(participate)) {
                 if (modificationInfos.getDroop() != null) {
@@ -410,7 +385,6 @@ public class BatteryModification extends AbstractModification {
                     .withSeverity(TypedValue.INFO_SEVERITY)
                     .build());
         }
-
         ModificationUtils.getInstance().reportModifications(subReporterSetpoints2, reports, "activePowerRegulationModified", "Active power regulation");
         return subReporterSetpoints2;
     }
