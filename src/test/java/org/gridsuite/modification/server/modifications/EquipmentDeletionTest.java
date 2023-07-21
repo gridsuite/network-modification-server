@@ -8,10 +8,16 @@
 package org.gridsuite.modification.server.modifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.powsybl.commons.PowsyblException;
+import com.powsybl.commons.reporter.Reporter;
+import com.powsybl.iidm.modification.topology.RemoveSubstation;
 import com.powsybl.iidm.network.Network;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.server.dto.EquipmentDeletionInfos;
+import org.gridsuite.modification.server.dto.HvdcLccDeletionInfos;
+import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.entities.equipment.deletion.ShuntCompensatorSelectionEmbeddable;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
@@ -26,6 +32,8 @@ import java.util.UUID;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.EQUIPMENT_NOT_FOUND;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -148,5 +156,13 @@ public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
     public void testDeleteHvdcWithLCCWithAlreadyDeletedShuntCompensator() {
         // we select an unexisting shunt: will produce a warning
         deleteHvdcLineWithShuntCompensator("deletedOrMissingShuntId", true, 1, true);
+    }
+
+    @Test
+    public void testRemoveUnknownSubstation() {
+        Network network = Network.create("empty", "test");
+        RemoveSubstation removeSubstation = new RemoveSubstation("unknownSubstation");
+        PowsyblException e = assertThrows(PowsyblException.class, () -> removeSubstation.apply(network, true, Reporter.NO_OP));
+        assertEquals("Substation not found: unknownSubstation", e.getMessage());
     }
 }
