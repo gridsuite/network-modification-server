@@ -420,9 +420,7 @@ public class BuildTest {
             .voltageLevelId("v2")
             .busOrBusbarSectionId("1A")
             .maximumNumberOfSections(2)
-            .currentNumberOfSections(2)
             .susceptancePerSection(1.)
-            .isIdenticalSection(true)
             .connectionDirection(ConnectablePosition.Direction.UNDEFINED)
             .connectionName("shunt9")
             .build().toEntity());
