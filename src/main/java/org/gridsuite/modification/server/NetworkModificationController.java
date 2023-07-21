@@ -194,11 +194,11 @@ public class NetworkModificationController {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping(value = "/network-modifications/voltage-init", consumes = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Create a group of modifications resulting from the voltage initialization")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The modifications have been created")})
-    public ResponseEntity<UUID> createVoltageInitResultModifications(@RequestBody MassiveEquipmentsModificationsInfos modificationsInfos) {
-        return ResponseEntity.ok().body(networkModificationService.createVoltageInitResultModifications(modificationsInfos));
+    @PostMapping(value = "/groups/massive-modifications", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Create a group of massive modifications")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The group of massive modifications have been created")})
+    public ResponseEntity<UUID> createMassiveModificationsGroup(@RequestBody MassiveEquipmentsModificationsInfos modificationsInfos) {
+        return ResponseEntity.ok().body(networkModificationService.createMassiveModifications(modificationsInfos));
     }
 
     @PutMapping(value = "/groups/{groupUuid}/duplications", produces = MediaType.APPLICATION_JSON_VALUE)

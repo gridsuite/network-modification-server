@@ -46,12 +46,16 @@ public class MassiveEquipmentsModificationsEntity extends ModificationEntity {
         assignAttributes((MassiveEquipmentsModificationsInfos) massiveEquipmentsModificationsInfos);
     }
 
+    private List<ModificationEntity> createModificationsEntities(MassiveEquipmentsModificationsInfos massiveEquipmentsModificationsInfos) {
+        return massiveEquipmentsModificationsInfos.getModifications().stream().map(ModificationInfos::toEntity).collect(Collectors.toList());
+    }
+
     private void assignAttributes(MassiveEquipmentsModificationsInfos massiveEquipmentsModificationsInfos) {
         if (modifications == null) {
-            modifications = massiveEquipmentsModificationsInfos.getModifications().stream().map(ModificationInfos::toEntity).collect(Collectors.toList());
+            modifications = createModificationsEntities(massiveEquipmentsModificationsInfos);
         } else {
             modifications.clear();
-            modifications.addAll(massiveEquipmentsModificationsInfos.getModifications().stream().map(ModificationInfos::toEntity).collect(Collectors.toList()));
+            modifications.addAll(createModificationsEntities(massiveEquipmentsModificationsInfos));
         }
     }
 

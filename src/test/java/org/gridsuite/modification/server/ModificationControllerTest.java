@@ -1123,7 +1123,7 @@ public class ModificationControllerTest {
     }
 
     @Test
-    public void testCreateModificationsVoltageInit() throws Exception {
+    public void testCreateMassiveModifications() throws Exception {
         // Create the modifications
         MassiveEquipmentsModificationsInfos modificationsInfos1 = MassiveEquipmentsModificationsInfos.builder()
                 .modifications(List.of(
@@ -1136,7 +1136,7 @@ public class ModificationControllerTest {
                                 .voltageSetpoint(new AttributeModification<>(226., OperationType.SET))
                                 .build())).build();
 
-        MvcResult mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF_BASE + "/voltage-init")
+        MvcResult mvcResult = mockMvc.perform(post("/v1/groups/massive-modifications")
                         .content(objectWriter.writeValueAsString(modificationsInfos1))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())

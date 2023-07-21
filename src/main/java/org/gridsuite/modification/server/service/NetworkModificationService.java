@@ -252,7 +252,7 @@ public class NetworkModificationService {
         return Optional.empty();
     }
 
-    public UUID createVoltageInitResultModifications(@NonNull MassiveEquipmentsModificationsInfos modificationsInfos) {
+    public UUID createMassiveModifications(@NonNull MassiveEquipmentsModificationsInfos modificationsInfos) {
         UUID groupUuid = UUID.randomUUID();
         networkModificationRepository.saveModifications(groupUuid, List.of(modificationsInfos.toEntity()));
         return groupUuid;
