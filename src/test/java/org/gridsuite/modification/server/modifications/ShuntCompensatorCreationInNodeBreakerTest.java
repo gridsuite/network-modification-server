@@ -46,10 +46,8 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
                 .date(ZonedDateTime.now().truncatedTo(ChronoUnit.MICROS))
                 .equipmentId("shuntOneId")
                 .equipmentName("hop")
-                .currentNumberOfSections(0)
                 .maximumNumberOfSections(1)
                 .susceptancePerSection(0.)
-                .isIdenticalSection(true)
                 .voltageLevelId("v2")
                 .busOrBusbarSectionId("1B")
                 .connectionName("cn")
@@ -64,10 +62,8 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
                 .date(ZonedDateTime.now().truncatedTo(ChronoUnit.MICROS))
                 .equipmentId("shuntOneIdEdited")
                 .equipmentName("hopEdited")
-                .currentNumberOfSections(6)
                 .maximumNumberOfSections(1)
                 .susceptancePerSection(0.)
-                .isIdenticalSection(false)
                 .voltageLevelId("v4")
                 .busOrBusbarSectionId("1.A")
                 .connectionName("cnEdited")
@@ -140,11 +136,11 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         ShuntCompensatorCreationInfos createdModification = (ShuntCompensatorCreationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
-        assertEquals(0, createdModification.getCurrentNumberOfSections());
+        assertEquals(null, createdModification.getCurrentNumberOfSections());
         modificationToCreateJson = mapper.writeValueAsString(dto);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         createdModification = (ShuntCompensatorCreationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
-        assertEquals(0, createdModification.getCurrentNumberOfSections());
+        assertEquals(null, createdModification.getCurrentNumberOfSections());
     }
 }
