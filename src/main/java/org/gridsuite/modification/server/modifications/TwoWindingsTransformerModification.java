@@ -17,12 +17,7 @@ import org.gridsuite.modification.server.dto.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.gridsuite.modification.server.NetworkModificationException;
-
 import static org.gridsuite.modification.server.NetworkModificationException.Type.TWO_WINDINGS_TRANSFORMER_NOT_FOUND;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author Florent MILLOT <florent.millot at rte-france.com>
@@ -430,7 +425,7 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
             ModificationUtils.getInstance().reportModifications(phaseTapChangerSubreporter, regulationReports, regulationMode != null ? regulationMode.name() : null, ModificationUtils.getInstance().formatRegulationModeReport(regulationMode));
         }
 
-        addTapChanger(phaseTapChangerInfos, phaseTapChanger, phaseTapChangerAdder, phaseTapChangerSubreporter);
+        addTapChangerPositionsAndSteps(phaseTapChangerInfos, phaseTapChanger, phaseTapChangerAdder, phaseTapChangerSubreporter);
         phaseTapChangerAdder.add();
     }
 

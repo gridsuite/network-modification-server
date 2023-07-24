@@ -28,7 +28,6 @@ import static org.gridsuite.modification.server.utils.assertions.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.gridsuite.modification.server.utils.assertions.Assertions.*;
 
 /**
  * @author Florent MILLOT <florent.millot at rte-france.com>
