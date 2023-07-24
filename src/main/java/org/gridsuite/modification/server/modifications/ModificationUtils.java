@@ -23,6 +23,7 @@ import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.AttributeModification;
 import org.springframework.util.CollectionUtils;
 
+import javax.annotation.Nonnull;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
@@ -431,8 +432,8 @@ public final class ModificationUtils {
         return null;
     }
 
-    public Reporter reportModifications(Reporter subReporter, List<Report> reports, String subReporterKey,
-            String subReporterDefaultMessage) {
+    public Reporter reportModifications(@Nonnull Reporter subReporter, List<Report> reports, String subReporterKey,
+                                        String subReporterDefaultMessage) {
         List<Report> validReports = reports.stream().filter(Objects::nonNull).collect(Collectors.toList());
         Reporter modificationSubreporter = null;
         if (!validReports.isEmpty()) {
