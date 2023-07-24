@@ -93,12 +93,12 @@ public class ModificationInfos {
     }
 
     @JsonIgnore
-    public NetworkModificationException.Type getErrorType() {
+    public final NetworkModificationException.Type getErrorType() {
         return NetworkModificationException.Type.valueOf(this.getClass().getAnnotation(ModificationErrorTypeName.class).value());
     }
 
     @JsonIgnore
-    public ModificationType getType() {
+    public final ModificationType getType() {
         return ModificationType.valueOf(this.getClass().getAnnotation(JsonTypeName.class).value());
     }
 
