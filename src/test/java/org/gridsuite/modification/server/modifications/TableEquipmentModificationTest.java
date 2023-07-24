@@ -14,7 +14,7 @@ import com.powsybl.iidm.network.Generator;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import org.gridsuite.modification.server.dto.AttributeModification;
 import org.gridsuite.modification.server.dto.GeneratorModificationInfos;
-import org.gridsuite.modification.server.dto.MassiveEquipmentsModificationsInfos;
+import org.gridsuite.modification.server.dto.TableEquipmentModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.OperationType;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -31,7 +31,7 @@ import static org.junit.Assert.assertEquals;
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 @Tag("IntegrationTest")
-public class MassiveEquipmentsModificationsTest extends AbstractNetworkModificationTest {
+public class TableEquipmentModificationTest extends AbstractNetworkModificationTest {
     @Override
     protected Network createNetwork(UUID networkUuid) {
         Network network = NetworkCreation.create(networkUuid, true);
@@ -50,7 +50,7 @@ public class MassiveEquipmentsModificationsTest extends AbstractNetworkModificat
 
     @Override
     protected ModificationInfos buildModification() {
-        return MassiveEquipmentsModificationsInfos.builder()
+        return TableEquipmentModificationInfos.builder()
             .modifications(List.of(
                 GeneratorModificationInfos.builder()
                     .equipmentId("idGenerator")
@@ -65,7 +65,7 @@ public class MassiveEquipmentsModificationsTest extends AbstractNetworkModificat
 
     @Override
     protected ModificationInfos buildModificationUpdate() {
-        return MassiveEquipmentsModificationsInfos.builder()
+        return TableEquipmentModificationInfos.builder()
             .modifications(List.of(
                 GeneratorModificationInfos.builder()
                     .equipmentId("idGenerator")

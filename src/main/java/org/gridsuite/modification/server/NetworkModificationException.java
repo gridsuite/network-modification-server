@@ -97,7 +97,7 @@ public class NetworkModificationException extends PowsyblException {
         FILTERS_NOT_FOUND(HttpStatus.NOT_FOUND),
         GENERATION_DISPATCH_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         PRELOADING_STRATEGY_NOT_ALLOWED(HttpStatus.INTERNAL_SERVER_ERROR),
-        MASSIVE_EQUIPMENTS_MODIFICATIONS_ERROR(HttpStatus.INTERNAL_SERVER_ERROR);
+        TABLE_EQUIPMENT_MODIFICATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR);
 
         public final HttpStatus status;
         private final String message;

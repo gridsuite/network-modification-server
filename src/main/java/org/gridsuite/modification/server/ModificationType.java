@@ -42,7 +42,7 @@ public enum ModificationType {
     DELETE_VOLTAGE_LEVEL_ON_LINE(PreloadingStrategy.NONE),
     DELETE_ATTACHING_LINE(PreloadingStrategy.NONE),
     GENERATION_DISPATCH(PreloadingStrategy.COLLECTION),
-    MASSIVE_EQUIPMENTS_MODIFICATIONS(PreloadingStrategy.COLLECTION);
+    TABLE_EQUIPMENT_MODIFICATION(PreloadingStrategy.COLLECTION);
 
     private final PreloadingStrategy strategy;
 

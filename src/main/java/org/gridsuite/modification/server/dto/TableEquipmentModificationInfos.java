@@ -17,9 +17,9 @@ import lombok.experimental.SuperBuilder;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
 import org.gridsuite.modification.server.entities.ModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.MassiveEquipmentsModificationsEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.TableEquipmentModificationEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
-import org.gridsuite.modification.server.modifications.MassiveEquipmentsModifications;
+import org.gridsuite.modification.server.modifications.TableEquipmentModification;
 
 import java.util.List;
 
@@ -30,25 +30,25 @@ import java.util.List;
 @NoArgsConstructor
 @Getter
 @Setter
-@Schema(description = "Massive equipments modifications infos")
-@JsonTypeName("MASSIVE_EQUIPMENTS_MODIFICATIONS")
-@ModificationErrorTypeName("MASSIVE_EQUIPMENTS_MODIFICATIONS_ERROR")
-public class MassiveEquipmentsModificationsInfos extends ModificationInfos {
-    @Schema(description = "equipments modifications")
+@Schema(description = "Table equipment modification infos")
+@JsonTypeName("TABLE_EQUIPMENT_MODIFICATION")
+@ModificationErrorTypeName("TABLE_EQUIPMENT_MODIFICATION_ERROR")
+public class TableEquipmentModificationInfos extends ModificationInfos {
+    @Schema(description = "equipment modifications")
     private List<ModificationInfos> modifications;
 
     @Override
     public ModificationEntity toEntity() {
-        return new MassiveEquipmentsModificationsEntity(this);
+        return new TableEquipmentModificationEntity(this);
     }
 
     @Override
     public AbstractModification toModification() {
-        return new MassiveEquipmentsModifications(this);
+        return new TableEquipmentModification(this);
     }
 
     @Override
     public Reporter createSubReporter(ReporterModel reporter) {
-        return reporter.createSubReporter(ModificationType.MASSIVE_EQUIPMENTS_MODIFICATIONS.name(), "Massive equipments modifications");
+        return reporter.createSubReporter(ModificationType.TABLE_EQUIPMENT_MODIFICATION.name(), "Table equipment modification");
     }
 }

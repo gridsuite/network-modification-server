@@ -62,7 +62,7 @@ import java.util.UUID;
     @JsonSubTypes.Type(value = DeleteVoltageLevelOnLineInfos.class),
     @JsonSubTypes.Type(value = DeleteAttachingLineInfos.class),
     @JsonSubTypes.Type(value = GenerationDispatchInfos.class),
-    @JsonSubTypes.Type(value = MassiveEquipmentsModificationsInfos.class)
+    @JsonSubTypes.Type(value = TableEquipmentModificationInfos.class)
 })
 @SuperBuilder
 @NoArgsConstructor

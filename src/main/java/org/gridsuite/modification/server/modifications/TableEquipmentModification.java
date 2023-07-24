@@ -11,31 +11,31 @@ import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.iidm.network.Network;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.MassiveEquipmentsModificationsInfos;
+import org.gridsuite.modification.server.dto.TableEquipmentModificationInfos;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.MASSIVE_EQUIPMENTS_MODIFICATIONS_ERROR;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.TABLE_EQUIPMENT_MODIFICATION_ERROR;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 
-public class MassiveEquipmentsModifications extends AbstractModification {
-    private MassiveEquipmentsModificationsInfos massiveEquipmentsModificationsInfos;
+public class TableEquipmentModification extends AbstractModification {
+    private TableEquipmentModificationInfos tableEquipmentModificationInfos;
 
-    public MassiveEquipmentsModifications(MassiveEquipmentsModificationsInfos massiveEquipmentsModificationsInfos) {
-        this.massiveEquipmentsModificationsInfos = massiveEquipmentsModificationsInfos;
+    public TableEquipmentModification(TableEquipmentModificationInfos tableEquipmentModificationInfos) {
+        this.tableEquipmentModificationInfos = tableEquipmentModificationInfos;
     }
 
     @Override
     public void check(Network network) throws NetworkModificationException {
-        if (massiveEquipmentsModificationsInfos == null) {
-            throw new NetworkModificationException(MASSIVE_EQUIPMENTS_MODIFICATIONS_ERROR, "No equipment modification to apply !!");
+        if (tableEquipmentModificationInfos == null) {
+            throw new NetworkModificationException(TABLE_EQUIPMENT_MODIFICATION_ERROR, "No equipment modification to apply !!");
         }
     }
 
     @Override
     public void apply(Network network, Reporter subReporter) {
-        massiveEquipmentsModificationsInfos.getModifications().forEach(m -> {
+        tableEquipmentModificationInfos.getModifications().forEach(m -> {
             Reporter equipmentReporter = m.createSubReporter((ReporterModel) subReporter);
             m.toModification().apply(network, equipmentReporter);
         });

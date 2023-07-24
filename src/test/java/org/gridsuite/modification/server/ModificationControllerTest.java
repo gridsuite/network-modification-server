@@ -1132,9 +1132,9 @@ public class ModificationControllerTest {
     }
 
     @Test
-    public void testCreateMassiveModifications() throws Exception {
-        // Create the modifications
-        MassiveEquipmentsModificationsInfos modificationsInfos1 = MassiveEquipmentsModificationsInfos.builder()
+    public void testCreateTableEquipmentModification() throws Exception {
+        // Create the modification
+        TableEquipmentModificationInfos modificationsInfos1 = TableEquipmentModificationInfos.builder()
                 .modifications(List.of(
                         GeneratorModificationInfos.builder()
                                 .equipmentId("G1")
@@ -1145,7 +1145,7 @@ public class ModificationControllerTest {
                                 .voltageSetpoint(new AttributeModification<>(226., OperationType.SET))
                                 .build())).build();
 
-        MvcResult mvcResult = mockMvc.perform(post("/v1/groups/massive-modifications")
+        MvcResult mvcResult = mockMvc.perform(post("/v1/groups/table-equipment-modification")
                         .content(objectWriter.writeValueAsString(modificationsInfos1))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -1157,7 +1157,7 @@ public class ModificationControllerTest {
                 status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
 
-        List<MassiveEquipmentsModificationsInfos> modificationsInfos2 = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        List<TableEquipmentModificationInfos> modificationsInfos2 = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertEquals(1, modificationsInfos2.size());
         assertThat(modificationsInfos2.get(0)).recursivelyEquals(modificationsInfos1);
     }

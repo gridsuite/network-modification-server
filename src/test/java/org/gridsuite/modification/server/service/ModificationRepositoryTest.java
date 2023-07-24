@@ -117,8 +117,8 @@ public class ModificationRepositoryTest {
         return (DeleteVoltageLevelOnLineInfos) networkModificationRepository.getModificationInfo(modificationUuid);
     }
 
-    private MassiveEquipmentsModificationsInfos getMassiveEquipmentsModifications(UUID modificationUuid) {
-        return (MassiveEquipmentsModificationsInfos) networkModificationRepository.getModificationInfo(modificationUuid);
+    private TableEquipmentModificationInfos getTableEquipmentModification(UUID modificationUuid) {
+        return (TableEquipmentModificationInfos) networkModificationRepository.getModificationInfo(modificationUuid);
     }
 
     @Test
@@ -1066,8 +1066,8 @@ public class ModificationRepositoryTest {
     }
 
     @Test
-    public void testMassiveEquipmentsModification() {
-        var massiveEquipmentsModificationsEntity = MassiveEquipmentsModificationsInfos.builder()
+    public void testTableEquipmentModification() {
+        var tableEquipmentModificationEntity = TableEquipmentModificationInfos.builder()
             .modifications(List.of(
                 GeneratorModificationInfos.builder()
                     .equipmentId("G1")
@@ -1079,19 +1079,19 @@ public class ModificationRepositoryTest {
                     .build()))
             .build().toEntity();
 
-        networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(massiveEquipmentsModificationsEntity));
+        networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(tableEquipmentModificationEntity));
         assertRequestsCount(1, 9, 1, 0);
 
         List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
         assertEquals(1, modificationInfos.size());
 
-        assertThat(getMassiveEquipmentsModifications(modificationInfos.get(0).getUuid()))
-            .recursivelyEquals(massiveEquipmentsModificationsEntity.toModificationInfos());
+        assertThat(getTableEquipmentModification(modificationInfos.get(0).getUuid()))
+            .recursivelyEquals(tableEquipmentModificationEntity.toModificationInfos());
 
         assertEquals(List.of(TEST_GROUP_ID), this.networkModificationRepository.getModificationGroupsUuids());
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(massiveEquipmentsModificationsEntity.getId()));
+        networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(tableEquipmentModificationEntity.getId()));
         assertRequestsCount(3, 0, 0, 9);
 
         SQLStatementCountValidator.reset();
