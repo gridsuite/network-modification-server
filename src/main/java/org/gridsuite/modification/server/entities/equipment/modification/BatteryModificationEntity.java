@@ -109,7 +109,7 @@ public class BatteryModificationEntity extends InjectionModificationEntity {
                 .map(point -> new ReactiveCapabilityCurveModificationEmbeddable(point.getQminP(), point.getOldQminP(),
                         point.getQmaxP(), point.getOldQmaxP(), point.getP(),
                         point.getOldP()))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -119,7 +119,8 @@ public class BatteryModificationEntity extends InjectionModificationEntity {
 
     private BatteryModificationInfos.BatteryModificationInfosBuilder<?, ?> toBatteryModificationInfosBuilder() {
         List<ReactiveCapabilityCurveModificationEmbeddable> pointsEmbeddable = getReactiveCapabilityCurvePoints();
-        List<ReactiveCapabilityCurveModificationInfos> points = pointsEmbeddable != null ? getReactiveCapabilityCurvePoints()
+        List<ReactiveCapabilityCurveModificationInfos> points;
+        points = pointsEmbeddable != null ? getReactiveCapabilityCurvePoints()
                 .stream()
                 .map(value -> new ReactiveCapabilityCurveModificationInfos(value.getQminP(), value.getOldQminP(),
                         value.getQmaxP(), value.getOldQmaxP(),
