@@ -24,7 +24,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * @author Anis Touri <anis-1.touri@rte-france.com>
+ * @author David Braquart <david.braquart at rte-france.com>
+ * Hack : remove this class with the next powsybl version
  */
 public class RemoveHvdcLine extends AbstractNetworkModification {
 
