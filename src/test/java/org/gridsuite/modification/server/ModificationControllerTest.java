@@ -916,7 +916,7 @@ public class ModificationControllerTest {
             Set.of("s1")
         ));
         expectedImpacts.addAll(createMultipleDeletionImpacts(
-            List.of(Pair.of(IdentifiableType.LINE, "line1"), Pair.of(IdentifiableType.LINE, "line3")), new HashSet<>(Set.of("s1", "s2"))
+            List.of(Pair.of(IdentifiableType.LINE, "line1"), Pair.of(IdentifiableType.LINE, "line3")), Set.of("s1", "s2")
         ));
         testMultipleDeletionImpacts(mvcResult.getResponse().getContentAsString(), expectedImpacts);
         testNetworkModificationsCount(TEST_GROUP_ID, 14);
