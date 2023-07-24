@@ -31,10 +31,7 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
  */
 public class GeneratorModification extends AbstractModification {
 
-    private static final String MIN_REACTIVE_POWER_FIELDNAME = "Minimum reactive power";
-    private static final String MAX_REACTIVE_POWER_FIELDNAME = "Maximum reactive power";
     private static final String LIMITS = "Limits";
-    private static final String REACTIVE_LIMITS = "Reactive limits";
     private static final String ACTIVE_LIMITS = "Active limits";
     private static final String SETPOINTS = "Setpoints";
 
@@ -258,7 +255,7 @@ public class GeneratorModification extends AbstractModification {
     private Reporter modifyGeneratorActivePowerControlAttributes(GeneratorModificationInfos modificationInfos,
                                                                  Generator generator, Reporter subReporter, Reporter subReporterSetpoints) {
         ActivePowerControl<Generator> activePowerControl = generator.getExtension(ActivePowerControl.class);
-        ActivePowerControlAdder activePowerControlAdder = generator.newExtension(ActivePowerControlAdder.class);
+        ActivePowerControlAdder<Generator> activePowerControlAdder = generator.newExtension(ActivePowerControlAdder.class);
         return ModificationUtils.getInstance().modifyActivePowerControlAttributes(activePowerControl, activePowerControlAdder, modificationInfos.getParticipate(), modificationInfos.getDroop(), subReporter, subReporterSetpoints);
     }
 

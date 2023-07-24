@@ -23,14 +23,12 @@ import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.AttributeModification;
 import org.springframework.util.CollectionUtils;
 
-import javax.annotation.Nonnull;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
@@ -432,11 +430,11 @@ public final class ModificationUtils {
         return null;
     }
 
-    public Reporter reportModifications(@Nonnull Reporter subReporter, List<Report> reports, String subReporterKey,
+    public Reporter reportModifications(Reporter subReporter, List<Report> reports, String subReporterKey,
                                         String subReporterDefaultMessage) {
-        List<Report> validReports = reports.stream().filter(Objects::nonNull).collect(Collectors.toList());
+        List<Report> validReports = reports.stream().filter(Objects::nonNull).toList();
         Reporter modificationSubreporter = null;
-        if (!validReports.isEmpty()) {
+        if (!validReports.isEmpty() && subReporter != null) {
             modificationSubreporter = subReporter.createSubReporter(subReporterKey, subReporterDefaultMessage);
             modificationSubreporter.report(Report.builder()
                     .withKey(subReporterKey)
@@ -721,7 +719,12 @@ public final class ModificationUtils {
         reportModifications(subReporterReactiveLimits, reports, "minMaxReactiveLimitsModified", "By range");
     }
 
-    public Reporter modifyActivePowerControlAttributes(ActivePowerControl activePowerControl, ActivePowerControlAdder activePowerControlAdder, AttributeModification<Boolean> participateInfo, AttributeModification<Float> droopInfo, Reporter subReporter, Reporter subReporterSetpoints) {
+    public Reporter modifyActivePowerControlAttributes(ActivePowerControl<?> activePowerControl,
+                                                       ActivePowerControlAdder<?> activePowerControlAdder,
+                                                       AttributeModification<Boolean> participateInfo,
+                                                       AttributeModification<Float> droopInfo,
+                                                       Reporter subReporter,
+                                                       Reporter subReporterSetpoints) {
         List<Report> reports = new ArrayList<>();
         double oldDroop = activePowerControl != null ? activePowerControl.getDroop() : Double.NaN;
         Boolean participate = null;

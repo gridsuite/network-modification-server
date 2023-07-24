@@ -217,7 +217,7 @@ public class BatteryModification extends AbstractModification {
     private Reporter modifyBatteryActivePowerControlAttributes(BatteryModificationInfos modificationInfos,
                                                                Battery battery, Reporter subReporter, Reporter subReporterSetpoints) {
         ActivePowerControl<Battery> activePowerControl = battery.getExtension(ActivePowerControl.class);
-        ActivePowerControlAdder activePowerControlAdder = battery.newExtension(ActivePowerControlAdder.class);
+        ActivePowerControlAdder<Battery> activePowerControlAdder = battery.newExtension(ActivePowerControlAdder.class);
         return ModificationUtils.getInstance().modifyActivePowerControlAttributes(activePowerControl, activePowerControlAdder, modificationInfos.getParticipate(), modificationInfos.getDroop(), subReporter, subReporterSetpoints);
     }
 }
