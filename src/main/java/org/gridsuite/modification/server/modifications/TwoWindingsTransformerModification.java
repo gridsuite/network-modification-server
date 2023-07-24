@@ -213,7 +213,7 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
         }
     }
 
-    private <T> void addTapChanger(TapChangerModificationInfos tapChangerModificationInfos, TapChanger<?, ?> tapChanger, T adder, Reporter subReporter) {
+    private <T> void addTapChangerPositionsAndSteps(TapChangerModificationInfos tapChangerModificationInfos, TapChanger<?, ?> tapChanger, T adder, Reporter subReporter) {
         List<Report> tapChangerReports = new ArrayList<>();
         modifyTapPositions(tapChangerModificationInfos, adder, tapChanger, tapChangerReports);
 
@@ -342,13 +342,15 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
             ratioTapChangerAdder.setRegulating(ratioTapChanger.isRegulating());
         }
         modifyRatioVoltageRegulation(ratioTapChangerInfos, ratioTapChanger, ratioTapChangerAdder, ratioTapChangerReporter, network);
-        addTapChanger(ratioTapChangerInfos, ratioTapChanger, ratioTapChangerAdder, ratioTapChangerReporter);
+        addTapChangerPositionsAndSteps(ratioTapChangerInfos, ratioTapChanger, ratioTapChangerAdder, ratioTapChangerReporter);
         ratioTapChangerAdder.add();
     }
 
     private boolean ratioTapChangerModified(RatioTapChangerModificationInfos ratioTapChangerModificationInfos) {
         return ratioTapChangerModificationInfos != null && (
-                ratioTapChangerModificationInfos.getRegulating() != null
+                ratioTapChangerModificationInfos.getLoadTapChangingCapabilities() != null
+                && ratioTapChangerModificationInfos.getLoadTapChangingCapabilities().getValue() != null
+                || ratioTapChangerModificationInfos.getRegulating() != null
                 && ratioTapChangerModificationInfos.getRegulating().getValue() != null
                 || ratioTapChangerModificationInfos.getTargetV() != null
                 && ratioTapChangerModificationInfos.getTargetV().getValue() != null
