@@ -17,7 +17,6 @@ import org.gridsuite.modification.server.impacts.SimpleElementImpact;
 import org.gridsuite.modification.server.impacts.SimpleElementImpact.SimpleImpactType;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.utils.assertions.Assertions.*;
 import static org.junit.Assert.assertEquals;
@@ -33,22 +32,22 @@ public final class TestImpactUtils {
     public static void testEmptyImpacts(ObjectMapper mapper, String resultAsString) throws JsonProcessingException {
         Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertTrue(networkModificationResult.isPresent());
-        testEmptyImpacts(mapper, networkModificationResult.get());
+        testEmptyImpacts(networkModificationResult.get());
     }
 
-    public static void testEmptyImpacts(ObjectMapper mapper, NetworkModificationResult networkModificationResult) {
-        testEmptyImpacts(mapper, ApplicationStatus.ALL_OK, ApplicationStatus.ALL_OK, networkModificationResult);
+    public static void testEmptyImpacts(NetworkModificationResult networkModificationResult) {
+        testEmptyImpacts(ApplicationStatus.ALL_OK, ApplicationStatus.ALL_OK, networkModificationResult);
     }
 
-    public static void testEmptyImpactsWithErrors(ObjectMapper mapper, NetworkModificationResult networkModificationResult) {
-        testEmptyImpacts(mapper, ApplicationStatus.WITH_ERRORS, ApplicationStatus.WITH_ERRORS, networkModificationResult);
+    public static void testEmptyImpactsWithErrors(NetworkModificationResult networkModificationResult) {
+        testEmptyImpacts(ApplicationStatus.WITH_ERRORS, ApplicationStatus.WITH_ERRORS, networkModificationResult);
     }
 
-    public static void testEmptyImpactsWithErrorsLastOK(ObjectMapper mapper, NetworkModificationResult networkModificationResult) {
-        testEmptyImpacts(mapper, ApplicationStatus.WITH_ERRORS, ApplicationStatus.ALL_OK, networkModificationResult);
+    public static void testEmptyImpactsWithErrorsLastOK(NetworkModificationResult networkModificationResult) {
+        testEmptyImpacts(ApplicationStatus.WITH_ERRORS, ApplicationStatus.ALL_OK, networkModificationResult);
     }
 
-    private static void testEmptyImpacts(ObjectMapper mapper, ApplicationStatus globalApplicationStatusExpected, ApplicationStatus localApplicationStatusExpected, NetworkModificationResult networkModificationResult) {
+    private static void testEmptyImpacts(ApplicationStatus globalApplicationStatusExpected, ApplicationStatus localApplicationStatusExpected, NetworkModificationResult networkModificationResult) {
         NetworkModificationResult resultExpected = NetworkModificationResult.builder()
             .applicationStatus(globalApplicationStatusExpected)
             .lastGroupApplicationStatus(localApplicationStatusExpected)
@@ -83,10 +82,6 @@ public final class TestImpactUtils {
 
     public static void testElementModificationImpact(ObjectMapper mapper, String resultAsString, IdentifiableType elementType, String elementId, Set<String> substationIds) throws JsonProcessingException {
         testElementImpact(SimpleImpactType.MODIFICATION, mapper, resultAsString, elementType, elementId, substationIds);
-    }
-
-    public static void testElementDeletionImpact(ObjectMapper mapper, String resultAsString, IdentifiableType elementType, String elementId, Set<String> substationIds) throws JsonProcessingException {
-        testElementImpact(SimpleImpactType.DELETION, mapper, resultAsString, elementType, elementId, substationIds);
     }
 
     public static void testElementImpact(SimpleImpactType impactType, ObjectMapper mapper, String resultAsString, IdentifiableType elementType, String elementId, Set<String> substationIds) throws JsonProcessingException {
@@ -208,12 +203,8 @@ public final class TestImpactUtils {
         );
     }
 
-    public static List<SimpleElementImpact> createVoltageLevelDeletionImpacts(String vlId, List<String> busbarSectionsIds,
-                                                                              List<Pair<IdentifiableType, String>> connectablesTypesAndIds, String substationId) {
-        List<SimpleElementImpact> impacts = new ArrayList<>(List.of(createDeletionImpactType(IdentifiableType.VOLTAGE_LEVEL, vlId, Set.of(substationId))));
-        impacts.addAll(busbarSectionsIds.stream().map(id -> createDeletionImpactType(IdentifiableType.BUSBAR_SECTION, id, Set.of(substationId))).collect(Collectors.toList()));
-        impacts.addAll(connectablesTypesAndIds.stream().map(typeAndId -> createDeletionImpactType(typeAndId.getLeft(), typeAndId.getRight(), Set.of(substationId))).collect(Collectors.toList()));
-        return impacts;
+    public static List<SimpleElementImpact> createMultipleDeletionImpacts(List<Pair<IdentifiableType, String>> deletedIdentifiables, Set<String> impactedSubstationIds) {
+        return new ArrayList<>(deletedIdentifiables.stream().map(identifiable -> createDeletionImpactType(identifiable.getLeft(), identifiable.getRight(), impactedSubstationIds)).toList());
     }
 
     public static SimpleElementImpact createCreationImpactType(IdentifiableType elementType, String elementId, Set<String> substationIds) {

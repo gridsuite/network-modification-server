@@ -36,168 +36,168 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
         @AttributeOverride(name = "value", column = @Column(name = "energySource")),
         @AttributeOverride(name = "opType", column = @Column(name = "energySourceOp"))
     })
-    EnumModificationEmbedded<EnergySource> energySource;
+    private EnumModificationEmbedded<EnergySource> energySource;
 
     @Embedded
     @AttributeOverrides(value = {
         @AttributeOverride(name = "value", column = @Column(name = "minActivePower")),
         @AttributeOverride(name = "opType", column = @Column(name = "minActivePowerOp"))
     })
-    DoubleModificationEmbedded minActivePower;
+    private DoubleModificationEmbedded minActivePower;
 
     @Embedded
     @AttributeOverrides(value = {
         @AttributeOverride(name = "value", column = @Column(name = "maxActivePower")),
         @AttributeOverride(name = "opType", column = @Column(name = "maxActivePowerOp"))
     })
-    DoubleModificationEmbedded maxActivePower;
+    private DoubleModificationEmbedded maxActivePower;
 
     @Embedded
     @AttributeOverrides(value = {
         @AttributeOverride(name = "value", column = @Column(name = "ratedNominalPower")),
         @AttributeOverride(name = "opType", column = @Column(name = "ratedNominalPowerOp"))
     })
-    DoubleModificationEmbedded ratedNominalPower;
+    private DoubleModificationEmbedded ratedNominalPower;
 
     @Embedded
     @AttributeOverrides(value = {
         @AttributeOverride(name = "value", column = @Column(name = "activePowerSetpoint")),
         @AttributeOverride(name = "opType", column = @Column(name = "activePowerSetpointOp"))
     })
-    DoubleModificationEmbedded activePowerSetpoint;
+    private DoubleModificationEmbedded activePowerSetpoint;
 
     @Embedded
     @AttributeOverrides(value = {
         @AttributeOverride(name = "value", column = @Column(name = "reactivePowerSetpoint")),
         @AttributeOverride(name = "opType", column = @Column(name = "reactivePowerSetpointOp"))
     })
-    DoubleModificationEmbedded reactivePowerSetpoint;
+    private DoubleModificationEmbedded reactivePowerSetpoint;
 
     @Embedded
     @AttributeOverrides(value = {
         @AttributeOverride(name = "value", column = @Column(name = "voltageRegulationOn")),
         @AttributeOverride(name = "opType", column = @Column(name = "voltageRegulationOnOp"))
     })
-    BooleanModificationEmbedded voltageRegulationOn;
+    private BooleanModificationEmbedded voltageRegulationOn;
 
     @Embedded
     @AttributeOverrides(value = {
         @AttributeOverride(name = "value", column = @Column(name = "voltageSetpoint")),
         @AttributeOverride(name = "opType", column = @Column(name = "voltageSetpointOp"))
     })
-    DoubleModificationEmbedded voltageSetpoint;
+    private DoubleModificationEmbedded voltageSetpoint;
 
     @Embedded
     @AttributeOverrides(value = {
         @AttributeOverride(name = "value", column = @Column(name = "plannedActivePowerSetPoint")),
         @AttributeOverride(name = "opType", column = @Column(name = "plannedActivePowerSetPointOp"))
     })
-    DoubleModificationEmbedded plannedActivePowerSetPoint;
+    private DoubleModificationEmbedded plannedActivePowerSetPoint;
 
     @Embedded
     @AttributeOverrides(value = {
         @AttributeOverride(name = "value", column = @Column(name = "marginalCost")),
         @AttributeOverride(name = "opType", column = @Column(name = "marginalCostOp"))
     })
-    DoubleModificationEmbedded marginalCost;
+    private DoubleModificationEmbedded marginalCost;
 
     @Embedded
     @AttributeOverrides(value = {
         @AttributeOverride(name = "value", column = @Column(name = "plannedOutageRate")),
         @AttributeOverride(name = "opType", column = @Column(name = "plannedOutageRateOp"))
     })
-    DoubleModificationEmbedded plannedOutageRate;
+    private DoubleModificationEmbedded plannedOutageRate;
 
     @Embedded
     @AttributeOverrides(value = {
         @AttributeOverride(name = "value", column = @Column(name = "forcedOutageRate")),
         @AttributeOverride(name = "opType", column = @Column(name = "forcedOutageRateOp"))
     })
-    DoubleModificationEmbedded forcedOutageRate;
+    private DoubleModificationEmbedded forcedOutageRate;
 
     @Embedded
     @AttributeOverrides(value = {
         @AttributeOverride(name = "value", column = @Column(name = "minimumReactivePower")),
         @AttributeOverride(name = "opType", column = @Column(name = "minimumReactivePowerOp"))
     })
-    DoubleModificationEmbedded minimumReactivePower;
+    private DoubleModificationEmbedded minimumReactivePower;
 
     @Embedded
     @AttributeOverrides(value = {
         @AttributeOverride(name = "value", column = @Column(name = "maximumReactivePower")),
         @AttributeOverride(name = "opType", column = @Column(name = "maximumReactivePowerOp"))
     })
-    DoubleModificationEmbedded maximumReactivePower;
+    private DoubleModificationEmbedded maximumReactivePower;
 
     @Embedded
     @AttributeOverrides(value = {
         @AttributeOverride(name = "value", column = @Column(name = "participate")),
         @AttributeOverride(name = "opType", column = @Column(name = "participateOp"))
     })
-    BooleanModificationEmbedded participate;
+    private BooleanModificationEmbedded participate;
 
     @Embedded
     @AttributeOverrides(value = {
         @AttributeOverride(name = "value", column = @Column(name = "droop")),
         @AttributeOverride(name = "opType", column = @Column(name = "droopOp"))
     })
-    FloatModificationEmbedded droop;
+    private FloatModificationEmbedded droop;
 
     @Embedded
     @AttributeOverrides(value = {
         @AttributeOverride(name = "value", column = @Column(name = "transientReactance")),
         @AttributeOverride(name = "opType", column = @Column(name = "transientReactanceOp"))
     })
-    DoubleModificationEmbedded transientReactance;
+    private DoubleModificationEmbedded transientReactance;
 
     @Embedded
     @AttributeOverrides(value = {
         @AttributeOverride(name = "value", column = @Column(name = "stepUpTransformerReactance")),
         @AttributeOverride(name = "opType", column = @Column(name = "stepUpTransformerReactanceOp"))
     })
-    DoubleModificationEmbedded stepUpTransformerReactance;
+    private DoubleModificationEmbedded stepUpTransformerReactance;
 
     @Embedded
     @AttributeOverrides(value = {
         @AttributeOverride(name = "value", column = @Column(name = "voltageRegulationType")),
         @AttributeOverride(name = "opType", column = @Column(name = "voltageRegulationTypeOp"))
     })
-    EnumModificationEmbedded<VoltageRegulationType> voltageRegulationType;
+    private EnumModificationEmbedded<VoltageRegulationType> voltageRegulationType;
 
     @Embedded
     @AttributeOverrides(value = {
         @AttributeOverride(name = "value", column = @Column(name = "regulatingTerminalId")),
         @AttributeOverride(name = "opType", column = @Column(name = "regulatingTerminalIdOp"))
     })
-    StringModificationEmbedded regulatingTerminalId;
+    private StringModificationEmbedded regulatingTerminalId;
 
     @Embedded
     @AttributeOverrides(value = {
         @AttributeOverride(name = "value", column = @Column(name = "regulatingTerminalType")),
         @AttributeOverride(name = "opType", column = @Column(name = "regulatingTerminalTypeOp"))
     })
-    StringModificationEmbedded regulatingTerminalType;
+    private StringModificationEmbedded regulatingTerminalType;
 
     @Embedded
     @AttributeOverrides(value = {
         @AttributeOverride(name = "value", column = @Column(name = "regulatingTerminalVlId")),
         @AttributeOverride(name = "opType", column = @Column(name = "regulatingTerminalVlIdOp"))
     })
-    StringModificationEmbedded regulatingTerminalVlId;
+    private StringModificationEmbedded regulatingTerminalVlId;
 
     @Embedded
     @AttributeOverrides(value = {
         @AttributeOverride(name = "value", column = @Column(name = "qPercent")),
         @AttributeOverride(name = "opType", column = @Column(name = "qPercentOp"))
     })
-    DoubleModificationEmbedded qPercent;
+    private DoubleModificationEmbedded qPercent;
 
     @Embedded
     @AttributeOverrides(value = {
         @AttributeOverride(name = "value", column = @Column(name = "reactiveCapabilityCurve")),
         @AttributeOverride(name = "opType", column = @Column(name = "reactiveCapabilityCurveOp"))
     })
-    BooleanModificationEmbedded reactiveCapabilityCurve;
+    private BooleanModificationEmbedded reactiveCapabilityCurve;
 
     @ElementCollection
     @CollectionTable

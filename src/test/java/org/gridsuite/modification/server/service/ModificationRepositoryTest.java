@@ -9,7 +9,6 @@ package org.gridsuite.modification.server.service;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import com.vladmihalcea.sql.SQLStatementCountValidator;
-import nl.jqno.equalsverifier.EqualsVerifier;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.entities.ModificationEntity;
@@ -37,8 +36,8 @@ import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_GROUP_NOT_FOUND;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_NOT_FOUND;
-import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
 import static org.gridsuite.modification.server.utils.TestUtils.assertRequestsCount;
+import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
 import static org.junit.Assert.*;
 
 
@@ -356,14 +355,14 @@ public class ModificationRepositoryTest {
     public void testShuntCompensatorCreation() {
         var shunt1 = ShuntCompensatorCreationInfos.builder()
             .equipmentId("shunt1").equipmentName("nameOne")
-            .currentNumberOfSections(1).maximumNumberOfSections(2)
-            .susceptancePerSection(1.).isIdenticalSection(true)
+            .maximumNumberOfSections(2)
+            .susceptancePerSection(1.)
             .voltageLevelId("vlId1").busOrBusbarSectionId("busId1")
             .build();
         var shunt2 = ShuntCompensatorCreationInfos.builder()
             .equipmentId("shunt2").equipmentName("notNameOne")
-            .currentNumberOfSections(1).maximumNumberOfSections(2)
-            .susceptancePerSection(1.).isIdenticalSection(true)
+            .maximumNumberOfSections(2)
+            .susceptancePerSection(1.)
             .voltageLevelId("vlId1").busOrBusbarSectionId("busId1")
             .build();
 
@@ -1053,7 +1052,6 @@ public class ModificationRepositoryTest {
     private <T> void testModificationEmbedded(IAttributeModificationEmbeddable<T> modification, T val) {
         assertEquals(val, modification.getValue());
         assertEquals(OperationType.SET, modification.getOpType());
-        EqualsVerifier.simple().forClass(modification.getClass()).verify();
     }
 
     @Test

@@ -16,24 +16,13 @@ import org.gridsuite.modification.server.dto.*;
 
 import java.util.ArrayList;
 import java.util.List;
-import com.powsybl.iidm.network.Branch;
-import com.powsybl.iidm.network.Network;
-import com.powsybl.iidm.network.PhaseTapChangerAdder;
-import com.powsybl.iidm.network.PhaseTapChangerStep;
-import com.powsybl.iidm.network.RatioTapChanger;
-import com.powsybl.iidm.network.RatioTapChangerAdder;
-import com.powsybl.iidm.network.RatioTapChangerStep;
-import com.powsybl.iidm.network.TapChanger;
-import com.powsybl.iidm.network.Terminal;
-import com.powsybl.iidm.network.TwoWindingsTransformer;
 
-import org.gridsuite.modification.server.dto.BranchModificationInfos;
-import org.gridsuite.modification.server.dto.RatioTapChangerModificationInfos;
-import org.gridsuite.modification.server.dto.TapChangerModificationInfos;
-import org.gridsuite.modification.server.dto.TapChangerStepCreationInfos;
-import org.gridsuite.modification.server.dto.TwoWindingsTransformerModificationInfos;
+import org.gridsuite.modification.server.NetworkModificationException;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.TWO_WINDINGS_TRANSFORMER_NOT_FOUND;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Florent MILLOT <florent.millot at rte-france.com>
@@ -145,7 +134,6 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .build());
         }
-
     }
 
     private void addStepAttributeReport(List<Report> tapChangerStepsReports, String key, String defaultMessage,
@@ -228,7 +216,7 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
         }
     }
 
-    private <T> void addTapChanger(TapChangerModificationInfos tapChangerModificationInfos, TapChanger<?, ?> tapChanger, T adder, Reporter subReporter) {
+    private <T> void addTapChangerPositionsAndSteps(TapChangerModificationInfos tapChangerModificationInfos, TapChanger<?, ?> tapChanger, T adder, Reporter subReporter) {
         List<Report> tapChangerReports = new ArrayList<>();
         modifyTapPositions(tapChangerModificationInfos, adder, tapChanger, tapChangerReports);
 
@@ -357,13 +345,15 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
             ratioTapChangerAdder.setRegulating(ratioTapChanger.isRegulating());
         }
         modifyRatioVoltageRegulation(ratioTapChangerInfos, ratioTapChanger, ratioTapChangerAdder, ratioTapChangerReporter, network);
-        addTapChanger(ratioTapChangerInfos, ratioTapChanger, ratioTapChangerAdder, ratioTapChangerReporter);
+        addTapChangerPositionsAndSteps(ratioTapChangerInfos, ratioTapChanger, ratioTapChangerAdder, ratioTapChangerReporter);
         ratioTapChangerAdder.add();
     }
 
     private boolean ratioTapChangerModified(RatioTapChangerModificationInfos ratioTapChangerModificationInfos) {
         return ratioTapChangerModificationInfos != null && (
-                ratioTapChangerModificationInfos.getRegulating() != null
+                ratioTapChangerModificationInfos.getLoadTapChangingCapabilities() != null
+                && ratioTapChangerModificationInfos.getLoadTapChangingCapabilities().getValue() != null
+                || ratioTapChangerModificationInfos.getRegulating() != null
                 && ratioTapChangerModificationInfos.getRegulating().getValue() != null
                 || ratioTapChangerModificationInfos.getTargetV() != null
                 && ratioTapChangerModificationInfos.getTargetV().getValue() != null

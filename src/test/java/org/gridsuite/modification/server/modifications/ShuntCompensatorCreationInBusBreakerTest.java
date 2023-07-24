@@ -34,16 +34,8 @@ public class ShuntCompensatorCreationInBusBreakerTest extends AbstractNetworkMod
     @Test
     public void testCreateWithErrors() throws Exception {
         ShuntCompensatorCreationInfos shunt = (ShuntCompensatorCreationInfos) buildModification();
-        shunt.setCurrentNumberOfSections(6);
-        shunt.setMaximumNumberOfSections(2);
-        String shuntJson = mapper.writeValueAsString(shunt);
-        mockMvc.perform(post(getNetworkModificationUri()).content(shuntJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
-        assertLogMessage(String.format("Shunt compensator '%s': the current number (%s) of section should be lesser than the maximum number of section (%s)", shunt.getEquipmentId(), 6, 2),
-                shunt.getErrorType().name(), reportService);
-
         shunt.setBusOrBusbarSectionId("notFoundBus");
-        shuntJson = mapper.writeValueAsString(shunt);
+        String shuntJson = mapper.writeValueAsString(shunt);
         mockMvc.perform(post(getNetworkModificationUri()).content(shuntJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(BUS_NOT_FOUND, "notFoundBus").getMessage(),
@@ -61,10 +53,8 @@ public class ShuntCompensatorCreationInBusBreakerTest extends AbstractNetworkMod
             .date(ZonedDateTime.now().truncatedTo(ChronoUnit.MICROS))
             .equipmentId("shuntOneId")
             .equipmentName("hopOne")
-            .currentNumberOfSections(4)
-            .maximumNumberOfSections(9)
-            .susceptancePerSection(1.)
-            .isIdenticalSection(true)
+            .maximumNumberOfSections(1)
+            .susceptancePerSection(0.)
             .voltageLevelId("v2")
             .busOrBusbarSectionId("bus2")
             .connectionName("cn2")
@@ -78,10 +68,8 @@ public class ShuntCompensatorCreationInBusBreakerTest extends AbstractNetworkMod
                 .date(ZonedDateTime.now().truncatedTo(ChronoUnit.MICROS))
                 .equipmentId("shuntOneIdEdited")
                 .equipmentName("hopEdited")
-                .currentNumberOfSections(6)
-                .maximumNumberOfSections(12)
+                .maximumNumberOfSections(1)
                 .susceptancePerSection(1.)
-                .isIdenticalSection(false)
                 .voltageLevelId("v4")
                 .busOrBusbarSectionId("bus3")
                 .connectionName("cnEdited")

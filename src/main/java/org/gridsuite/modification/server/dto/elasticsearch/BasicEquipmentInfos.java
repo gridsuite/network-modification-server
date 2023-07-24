@@ -27,7 +27,7 @@ import java.util.UUID;
 @EqualsAndHashCode
 public class BasicEquipmentInfos {
     @Id
-    String uniqueId;
+    private String uniqueId;
 
     @MultiField(
         mainField = @Field(name = "equipmentId", type = FieldType.Text),
@@ -36,9 +36,9 @@ public class BasicEquipmentInfos {
             @InnerField(suffix = "raw", type = FieldType.Keyword)
         }
     )
-    String id;
+    private String id;
 
-    UUID networkUuid;
+    private UUID networkUuid;
 
-    String variantId;
+    private String variantId;
 }

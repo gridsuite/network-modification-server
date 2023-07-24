@@ -45,10 +45,8 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
                 .date(ZonedDateTime.now().truncatedTo(ChronoUnit.MICROS))
                 .equipmentId("shuntOneId")
                 .equipmentName("hop")
-                .currentNumberOfSections(4)
-                .maximumNumberOfSections(9)
-                .susceptancePerSection(1.)
-                .isIdenticalSection(true)
+                .maximumNumberOfSections(1)
+                .susceptancePerSection(0.)
                 .voltageLevelId("v2")
                 .busOrBusbarSectionId("1B")
                 .connectionName("cn")
@@ -63,10 +61,8 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
                 .date(ZonedDateTime.now().truncatedTo(ChronoUnit.MICROS))
                 .equipmentId("shuntOneIdEdited")
                 .equipmentName("hopEdited")
-                .currentNumberOfSections(6)
-                .maximumNumberOfSections(12)
-                .susceptancePerSection(1.)
-                .isIdenticalSection(false)
+                .maximumNumberOfSections(1)
+                .susceptancePerSection(0.)
                 .voltageLevelId("v4")
                 .busOrBusbarSectionId("1.A")
                 .connectionName("cnEdited")
@@ -87,19 +83,10 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
     @Test
     public void testCreateWithError() throws Exception {
         ShuntCompensatorCreationInfos modificationToCreate = (ShuntCompensatorCreationInfos) buildModification();
-        // Current number of sections above maximum allowed
-        modificationToCreate.setIsIdenticalSection(false);
-        modificationToCreate.setCurrentNumberOfSections(6);
-        modificationToCreate.setMaximumNumberOfSections(2);
-        String modificationToCreateJson = mapper.writeValueAsString(modificationToCreate);
-        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
-        assertNull(getNetwork().getShuntCompensator(modificationToCreate.getEquipmentId()));
-
         // try to create an existing equipment
         modificationToCreate.setEquipmentId("v5shunt");
         assertNotNull(getNetwork().getShuntCompensator("v5shunt"));
-        modificationToCreateJson = mapper.writeValueAsString(modificationToCreate);
+        String modificationToCreateJson = mapper.writeValueAsString(modificationToCreate);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(SHUNT_COMPENSATOR_ALREADY_EXISTS, "v5shunt").getMessage(),
@@ -138,5 +125,21 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
             .andExpect(status().isOk()).andReturn();
         createdModification = (ShuntCompensatorCreationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(1);
         assertThat(createdModification).recursivelyEquals(dto);
+    }
+
+    @Test
+    public void testCreateToAssignSectionCount() throws Exception {
+        ShuntCompensatorCreationInfos dto = (ShuntCompensatorCreationInfos) buildModification();
+        dto.setQAtNominalV(0.);
+        String modificationToCreateJson = mapper.writeValueAsString(dto);
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        ShuntCompensatorCreationInfos createdModification = (ShuntCompensatorCreationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
+        assertNull(createdModification.getCurrentNumberOfSections());
+        modificationToCreateJson = mapper.writeValueAsString(dto);
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        createdModification = (ShuntCompensatorCreationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
+        assertNull(createdModification.getCurrentNumberOfSections());
     }
 }

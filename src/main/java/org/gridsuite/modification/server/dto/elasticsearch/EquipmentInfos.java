@@ -40,13 +40,13 @@ public class EquipmentInfos extends BasicEquipmentInfos {
             @InnerField(suffix = "raw", type = FieldType.Keyword)
         }
     )
-    String name;
+    private String name;
 
     @Field("equipmentType")
-    String type;
+    private String type;
 
     @Field(type = FieldType.Nested, includeInParent = true)
-    Set<VoltageLevelInfos> voltageLevels;
+    private Set<VoltageLevelInfos> voltageLevels;
 
     public static Set<VoltageLevelInfos> getVoltageLevels(@NonNull Identifiable<?> identifiable) {
         if (identifiable instanceof Substation) {

@@ -12,7 +12,6 @@ import lombok.NonNull;
 import org.gridsuite.modification.server.dto.EquipmentDeletionInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
-
 import javax.persistence.*;
 
 /**
@@ -27,6 +26,14 @@ public class EquipmentDeletionEntity extends EquipmentModificationEntity {
     @Column(name = "equipmentType")
     private String equipmentType;
 
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JoinColumn(name = "additional_equipment_deletion_entity_id",
+            referencedColumnName = "id",
+            foreignKey = @ForeignKey(
+                    name = "additional_equipment_deletion_entity_id_fk"
+            ), nullable = true)
+    private AbstractEquipmentDeletionEntity equipmentInfos;
+
     public EquipmentDeletionEntity(EquipmentDeletionInfos equipmentDeletionInfos) {
         super(equipmentDeletionInfos);
         assignAttributes(equipmentDeletionInfos);
@@ -40,19 +47,21 @@ public class EquipmentDeletionEntity extends EquipmentModificationEntity {
 
     private void assignAttributes(EquipmentDeletionInfos equipmentDeletionInfos) {
         this.equipmentType = equipmentDeletionInfos.getEquipmentType();
+        equipmentInfos = equipmentDeletionInfos.getEquipmentInfos() != null ?
+            equipmentDeletionInfos.getEquipmentInfos().toEntity() : null;
     }
 
     @Override
     public EquipmentDeletionInfos toModificationInfos() {
-        return toEquipmentDeletionInfosBuilder().build();
-    }
-
-    private EquipmentDeletionInfos.EquipmentDeletionInfosBuilder<?, ?> toEquipmentDeletionInfosBuilder() {
-        return EquipmentDeletionInfos
-            .builder()
-            .uuid(getId())
-            .date(getDate())
-            .equipmentId(getEquipmentId())
-            .equipmentType(getEquipmentType());
+        var builder = EquipmentDeletionInfos
+                .builder()
+                .uuid(getId())
+                .date(getDate())
+                .equipmentId(getEquipmentId())
+                .equipmentType(getEquipmentType());
+        if (equipmentInfos != null) {
+            builder.equipmentInfos(equipmentInfos.toModificationInfos());
+        }
+        return builder.build();
     }
 }

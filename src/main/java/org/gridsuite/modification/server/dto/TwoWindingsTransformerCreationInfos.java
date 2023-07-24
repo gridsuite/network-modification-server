@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.dto;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -14,8 +15,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
-import org.gridsuite.modification.server.ModificationType;
-import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
 import org.gridsuite.modification.server.entities.equipment.creation.TwoWindingsTransformerCreationEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.TwoWindingsTransformerCreation;
@@ -30,6 +30,8 @@ import org.gridsuite.modification.server.modifications.TwoWindingsTransformerCre
 @Setter
 @ToString(callSuper = true)
 @Schema(description = "Two windings transformer creation")
+@JsonTypeName("TWO_WINDINGS_TRANSFORMER_CREATION")
+@ModificationErrorTypeName("CREATE_TWO_WINDINGS_TRANSFORMER_ERROR")
 public class TwoWindingsTransformerCreationInfos extends BranchCreationInfos {
 
     @Schema(description = "Magnetizing conductance")
@@ -64,13 +66,8 @@ public class TwoWindingsTransformerCreationInfos extends BranchCreationInfos {
     }
 
     @Override
-    public NetworkModificationException.Type getErrorType() {
-        return NetworkModificationException.Type.CREATE_TWO_WINDINGS_TRANSFORMER_ERROR;
-    }
-
-    @Override
     public Reporter createSubReporter(ReporterModel reporter) {
-        return reporter.createSubReporter(ModificationType.TWO_WINDINGS_TRANSFORMER_CREATION.name(), "Two windings transformer creation ${twoWindingsTransformerId}", "twoWindingsTransformerId", getEquipmentId());
+        return reporter.createSubReporter(getType().name(), "Two windings transformer creation ${twoWindingsTransformerId}", "twoWindingsTransformerId", getEquipmentId());
     }
 
 }

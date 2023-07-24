@@ -28,6 +28,7 @@ import static org.gridsuite.modification.server.utils.assertions.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.gridsuite.modification.server.utils.assertions.Assertions.*;
 
 /**
  * @author Florent MILLOT <florent.millot at rte-france.com>
@@ -286,10 +287,7 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
     public void testRatioTapChangerModification() throws Exception {
         TwoWindingsTransformerModificationInfos twoWindingsTransformerModificationInfos = TwoWindingsTransformerModificationInfos.builder()
                 .equipmentId("trf1")
-                .phaseTapChanger(PhaseTapChangerModificationInfos.builder()
-                        .enabled(new AttributeModification<Boolean>(false, OperationType.SET))
-                        .build())
-                .build();
+                        .build();
 
         //disable the tap changer
         twoWindingsTransformerModificationInfos.setRatioTapChanger(RatioTapChangerModificationInfos.builder().enabled(new AttributeModification<>(false, OperationType.SET)).build());

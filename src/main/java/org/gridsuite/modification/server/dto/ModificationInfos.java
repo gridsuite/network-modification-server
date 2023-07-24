@@ -9,6 +9,7 @@ package org.gridsuite.modification.server.dto;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -17,7 +18,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
+import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
 
@@ -33,6 +36,7 @@ import java.util.UUID;
 )
 @JsonSubTypes({
     @JsonSubTypes.Type(value = GroovyScriptInfos.class, name = "GROOVY_SCRIPT"),
+    @JsonSubTypes.Type(value = BatteryCreationInfos.class, name = "BATTERY_CREATION"),
     @JsonSubTypes.Type(value = LoadCreationInfos.class, name = "LOAD_CREATION"),
     @JsonSubTypes.Type(value = LoadModificationInfos.class, name = "LOAD_MODIFICATION"),
     @JsonSubTypes.Type(value = GeneratorCreationInfos.class, name = "GENERATOR_CREATION"),
@@ -70,7 +74,7 @@ public class ModificationInfos {
     private UUID uuid;
 
     @Schema(description = "Modification date")
-    ZonedDateTime date;
+    private ZonedDateTime date;
 
     @JsonIgnore
     public ModificationEntity toEntity() {
@@ -88,8 +92,13 @@ public class ModificationInfos {
     }
 
     @JsonIgnore
-    public NetworkModificationException.Type getErrorType() {
-        throw new UnsupportedOperationException("TODO");
+    public final NetworkModificationException.Type getErrorType() {
+        return NetworkModificationException.Type.valueOf(this.getClass().getAnnotation(ModificationErrorTypeName.class).value());
+    }
+
+    @JsonIgnore
+    public final ModificationType getType() {
+        return ModificationType.valueOf(this.getClass().getAnnotation(JsonTypeName.class).value());
     }
 
     @JsonIgnore

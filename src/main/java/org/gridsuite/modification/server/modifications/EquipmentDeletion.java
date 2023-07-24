@@ -9,11 +9,16 @@ package org.gridsuite.modification.server.modifications;
 import com.powsybl.commons.reporter.Report;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.TypedValue;
-import com.powsybl.iidm.modification.topology.RemoveFeederBay;
-import com.powsybl.iidm.modification.topology.RemoveVoltageLevel;
+import com.powsybl.iidm.modification.topology.*;
 import com.powsybl.iidm.network.*;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.EquipmentDeletionInfos;
+import org.gridsuite.modification.server.dto.HvdcLccDeletionInfos;
+
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import static org.gridsuite.modification.server.NetworkModificationException.Type.EQUIPMENT_NOT_FOUND;
 
 /**
@@ -37,11 +42,11 @@ public class EquipmentDeletion extends AbstractModification {
         if (identifiable instanceof Connectable) {
             new RemoveFeederBay(modificationInfos.getEquipmentId()).apply(network, true, subReporter);
         } else if (identifiable instanceof HvdcLine) {
-            ((HvdcLine) identifiable).remove();
+            removeHvdcLine(network, subReporter);
         } else if (identifiable instanceof VoltageLevel) {
             new RemoveVoltageLevel(modificationInfos.getEquipmentId()).apply(network, true, subReporter);
         } else if (identifiable instanceof Substation) {
-            ((Substation) identifiable).remove();
+            new RemoveSubstation(modificationInfos.getEquipmentId()).apply(network, true, subReporter);
         }
 
         subReporter.report(Report.builder()
@@ -51,5 +56,36 @@ public class EquipmentDeletion extends AbstractModification {
             .withValue("id", modificationInfos.getEquipmentId())
             .withSeverity(TypedValue.INFO_SEVERITY)
             .build());
+    }
+
+    private void removeHvdcLine(Network network, Reporter subReporter) {
+        HvdcLccDeletionInfos specificInfos = (HvdcLccDeletionInfos) modificationInfos.getEquipmentInfos();
+        List<String> shuntCompensatorIds = List.of();
+        if (specificInfos != null) {
+            shuntCompensatorIds = Stream.concat(
+                            specificInfos.getMcsOnSide1() != null ? specificInfos.getMcsOnSide1().stream() : Stream.of(),
+                            specificInfos.getMcsOnSide2() != null ? specificInfos.getMcsOnSide2().stream() : Stream.of())
+                    .filter(mcsInfo -> {
+                        // isConnectedToHvdc means: selected to be removed (can be changed by the Front)
+                        if (mcsInfo.isConnectedToHvdc() && network.getShuntCompensator(mcsInfo.getId()) == null) {
+                            subReporter.report(Report.builder()
+                                    .withKey("shuntCompensatorNotDeleted")
+                                    .withDefaultMessage("Shunt compensator with id=${id} not found in the network")
+                                    .withValue("id", mcsInfo.getId())
+                                    .withSeverity(TypedValue.WARN_SEVERITY)
+                                    .build());
+                            return false;
+                        } else {
+                            return mcsInfo.isConnectedToHvdc();
+                        }
+                    })
+                    .map(HvdcLccDeletionInfos.ShuntCompensatorInfos::getId)
+                    .collect(Collectors.toList());
+        }
+        RemoveHvdcLine algo = new RemoveHvdcLineBuilder()
+                .withHvdcLineId(modificationInfos.getEquipmentId())
+                .withShuntCompensatorIds(shuntCompensatorIds)
+                .build();
+        algo.apply(network, true, subReporter);
     }
 }
