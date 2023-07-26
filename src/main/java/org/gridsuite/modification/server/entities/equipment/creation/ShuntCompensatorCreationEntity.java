@@ -95,8 +95,6 @@ public class ShuntCompensatorCreationEntity extends InjectionCreationEntity {
             .equipmentName(getEquipmentName())
             .voltageLevelId(getVoltageLevelId())
             .busOrBusbarSectionId(getBusOrBusbarSectionId())
-            .isIdenticalSection(isIdenticalSections())
-            .currentNumberOfSections(getCurrentNumberOfSections())
             .maximumNumberOfSections(getMaximumNumberOfSections())
             .susceptancePerSection(getSusceptancePerSection())
             .qAtNominalV(getQAtNominalV())
