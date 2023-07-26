@@ -11,8 +11,8 @@ import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.dto.InjectionCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 
-import javax.persistence.Column;
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.Column;
+import jakarta.persistence.MappedSuperclass;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>

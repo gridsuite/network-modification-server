@@ -6,18 +6,14 @@
  */
 package org.gridsuite.modification.server.elasticsearch;
 
-import org.elasticsearch.client.RestHighLevelClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
-import org.springframework.data.elasticsearch.client.ClientConfiguration.TerminalClientConfigurationBuilder;
-import org.springframework.data.elasticsearch.client.RestClients;
-import org.springframework.data.elasticsearch.config.AbstractElasticsearchConfiguration;
+import org.springframework.data.elasticsearch.client.elc.ElasticsearchConfiguration;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 
 import javax.annotation.Nonnull;
-import java.net.InetSocketAddress;
 import java.util.Optional;
 
 /**
@@ -28,7 +24,7 @@ import java.util.Optional;
 
 @Configuration
 @EnableElasticsearchRepositories
-public class ESConfig extends AbstractElasticsearchConfiguration {
+public class ESConfig extends ElasticsearchConfiguration {
 
     @Value("#{'${spring.data.elasticsearch.embedded:false}' ? 'localhost' : '${spring.data.elasticsearch.host}'}")
     private String esHost;
@@ -49,15 +45,15 @@ public class ESConfig extends AbstractElasticsearchConfiguration {
     @Override
     @SuppressWarnings("squid:S2095")
     @Nonnull
-    public RestHighLevelClient elasticsearchClient() {
-        TerminalClientConfigurationBuilder clientConfiguration = ClientConfiguration.builder()
-            .connectedTo(InetSocketAddress.createUnresolved(esHost, esPort))
-            .withConnectTimeout(timeout * 1000L).withSocketTimeout(timeout * 1000L);
+    public ClientConfiguration clientConfiguration() {
+        var clientConfiguration = ClientConfiguration.builder()
+                .connectedTo(esHost + ":" + esPort)
+                .withConnectTimeout(timeout * 1000L).withSocketTimeout(timeout * 1000L);
 
         if (username.isPresent() && password.isPresent()) {
-            clientConfiguration = clientConfiguration.withBasicAuth(username.get(), password.get());
+            clientConfiguration.withBasicAuth(username.get(), password.get());
         }
 
-        return RestClients.create(clientConfiguration.build()).rest();
+        return clientConfiguration.build();
     }
 }

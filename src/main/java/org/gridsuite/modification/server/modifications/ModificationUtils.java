@@ -455,9 +455,9 @@ public final class ModificationUtils {
     }
 
     public <T> Report buildModificationReportWithIndentation(T oldValue, T newValue, String fieldName, int indentationLevel) {
-        boolean isOldValueDoubleNaN = (oldValue instanceof Double) && Double.isNaN((Double) oldValue);
+        boolean isOldValueDoubleNaN = oldValue instanceof Double && Double.isNaN((Double) oldValue);
         String oldValueString = (oldValue == null || isOldValueDoubleNaN) ? NO_VALUE : oldValue.toString();
-        boolean isNewValueDoubleNaN = (newValue instanceof Double) && Double.isNaN((Double) newValue);
+        boolean isNewValueDoubleNaN = newValue instanceof Double && Double.isNaN((Double) newValue);
         String newValueString = (newValue == null || isNewValueDoubleNaN) ? NO_VALUE : newValue.toString();
         StringBuilder indentation = new StringBuilder();
         for (int i = 0; i < indentationLevel; i++) {

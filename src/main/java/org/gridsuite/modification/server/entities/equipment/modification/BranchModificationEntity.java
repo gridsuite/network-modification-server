@@ -12,7 +12,7 @@ import org.gridsuite.modification.server.dto.BranchModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 /**
  * @author Ayoub LABIDI <ayoub.labidi at rte-france.com>

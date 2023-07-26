@@ -13,7 +13,7 @@ import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.TwoWindingsTransformerModificationInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 /**
  * @author Florent MILLOT <florent.millot at rte-france.com>

@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 
 import org.gridsuite.modification.server.dto.catalog.UndergroundLineTypeInfos;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 /**
  * @author Sylvain Bouzols <sylvain.bouzols at rte-france.com>

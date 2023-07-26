@@ -14,7 +14,7 @@ import org.gridsuite.modification.server.dto.LineModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
 import static org.gridsuite.modification.server.entities.equipment.modification.attribute.IAttributeModificationEmbeddable.toAttributeModification;
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 /**
  * @author Ayoub LABIDI <ayoub.labidi at rte-france.com>

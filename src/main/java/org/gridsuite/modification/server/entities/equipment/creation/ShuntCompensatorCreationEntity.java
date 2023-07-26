@@ -15,7 +15,7 @@ import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.ShuntCompensatorCreationInfos;
 import org.gridsuite.modification.server.dto.ShuntCompensatorType;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 /**
  * @author Jacques Borsenberger <jacques.borsenberger at rte-france.com>
