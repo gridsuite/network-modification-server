@@ -401,6 +401,9 @@ public class GeneratorCreation extends AbstractModification {
                         .withDroop(generatorCreationInfos.getDroop())
                         .add();
                 activePowerRegulationReports.add(ModificationUtils.getInstance().buildCreationReport(
+                        generatorCreationInfos.getParticipate(),
+                        "Participate"));
+                activePowerRegulationReports.add(ModificationUtils.getInstance().buildCreationReport(
                         generatorCreationInfos.getDroop(),
                         "Droop"));
             } catch (PowsyblException e) {
