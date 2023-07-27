@@ -407,7 +407,7 @@ public class GeneratorModification extends AbstractModification {
             participate = modificationInfos.getParticipate().getValue();
             reports.add(ModificationUtils.getInstance().buildModificationReport(activePowerControl != null ? activePowerControl.isParticipate() : null,
                     participate,
-                    "ON/OFF"));
+                    "VoltageRegulationOn"));
         } else if (modificationInfos.getDroop() != null) {
             participate = true;
         }
@@ -588,7 +588,7 @@ public class GeneratorModification extends AbstractModification {
         if (modificationInfos.getVoltageRegulationOn() != null) {
             isVoltageRegulationOn = modificationInfos.getVoltageRegulationOn().getValue();
             voltageRegulationReports.add(ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setVoltageRegulatorOn, generator::isVoltageRegulatorOn,
-                    modificationInfos.getVoltageRegulationOn(), "ON/OFF"));
+                    modificationInfos.getVoltageRegulationOn(), "VoltageRegulationOn"));
         } else {
             isVoltageRegulationOn = generator.isVoltageRegulatorOn();
         }
