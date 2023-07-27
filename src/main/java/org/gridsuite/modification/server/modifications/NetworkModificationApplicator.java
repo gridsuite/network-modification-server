@@ -31,7 +31,6 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.HashSet;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -65,14 +64,7 @@ public class NetworkModificationApplicator {
     public NetworkModificationResult applyModification(ModificationInfos modificationInfos, NetworkInfos networkInfos, ReportInfos reportInfos) {
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService);
         apply(modificationInfos, listener, reportInfos);
-        // here get impacts from the modification itself ?
-        Set<BaseImpact> networkImpacts = new HashSet<>();
-        // Then append impacts from listerner
-        networkImpacts.addAll(listener.flushNetworkModifications());
-        // Bonus: Add a method wich cleans impacts
-        // ex1: collection LOAD impact remove simpleElementImpact on a single Load)
-        // ex2: if nb of simpleElementImpact of a type > N then replace by Collection impact etc...
-        // Then build the NetworkModificationResult here
+        Set<BaseImpact> networkImpacts = listener.flushNetworkModifications();
         return
             NetworkModificationResult.builder()
                 .applicationStatus(applicationStatus)

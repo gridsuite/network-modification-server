@@ -204,7 +204,9 @@ public class NetworkStoreListener implements NetworkListener {
 
     private void addNetworkImpact(BaseImpact impact) {
         BaseImpact computedImpact = computeImpacts(impact);
-        networkImpacts.add(computedImpact);
+        if (computedImpact != null) {
+            networkImpacts.add(computedImpact);
+        }
     }
 
     private BaseImpact computeImpacts(BaseImpact impact) {
@@ -214,17 +216,22 @@ public class NetworkStoreListener implements NetworkListener {
         long nbTypedImpacts = typedNetworkImpacts.size();
         // check number of this type in the network
         String variantId = network.getVariantManager().getWorkingVariantId();
-        long nbTypedEquipment = equipmentInfosService.findAllEquipmentInfosList(networkUuid, variantId, impact.getElementType().toString()).size();
+        long nbTypedEquipment = equipmentInfosService.findAllEquipmentInfosList(networkUuid, variantId, impact.getElementType().name()).size();
         // compare using a parameter (ex: if nbLoadImpacts >= 0.7 * nbLoads)
         if (nbTypedImpacts > nbTypedEquipment * 0.7) {
+            CollectionElementImpact colImpact = CollectionElementImpact.builder()
+                .impactType(CollectionImpactType.COLLECTION)
+                .elementType(impact.getElementType())
+                .build();
+            // @TODO if there is already this Collection impact then do nothing
+            if (networkImpacts.contains(colImpact)) {
+                return null;
+            }
             // replace by Collection impact if necessarry
             // - remove impacts of this type
             networkImpacts.removeAll(typedNetworkImpacts);
             // - add collection impact
-            return CollectionElementImpact.builder()
-                .impactType(CollectionImpactType.COLLECTION)
-                .elementType(impact.getElementType())
-                .build();
+            return colImpact;
         }
         // otherwise return impact
         return impact;
