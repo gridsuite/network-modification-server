@@ -50,7 +50,6 @@ public class ShuntCompensatorCreation extends AbstractModification {
                             ? susceptancePerSection
                             : -susceptancePerSection);
         }
-        determinateSectionCount(modificationInfos);
         if (voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER) {
             ShuntCompensatorAdder shuntCompensatorAdder = createShuntAdderInNodeBreaker(voltageLevel, modificationInfos);
             var position = ModificationUtils.getInstance().getPosition(modificationInfos.getConnectionPosition(),
@@ -74,29 +73,12 @@ public class ShuntCompensatorCreation extends AbstractModification {
         }
     }
 
-    private void determinateSectionCount(ShuntCompensatorCreationInfos modificationInfos) {
-        if (modificationInfos.getSusceptancePerSection() != null) {
-            if (modificationInfos.getSusceptancePerSection() == 0) {
-                modificationInfos.setCurrentNumberOfSections(0);
-            } else {
-                modificationInfos.setCurrentNumberOfSections(1);
-            }
-        }
-        if (modificationInfos.getQAtNominalV() != null) {
-            if (modificationInfos.getQAtNominalV() == 0) {
-                modificationInfos.setCurrentNumberOfSections(0);
-            } else {
-                modificationInfos.setCurrentNumberOfSections(1);
-            }
-        }
-    }
-
     private ShuntCompensatorAdder createShuntAdderInNodeBreaker(VoltageLevel voltageLevel, ShuntCompensatorCreationInfos shuntCompensatorInfos) {
         // creating the shunt compensator
         ShuntCompensatorAdder shuntAdder = voltageLevel.newShuntCompensator()
                 .setId(shuntCompensatorInfos.getEquipmentId())
                 .setName(shuntCompensatorInfos.getEquipmentName())
-                .setSectionCount(ObjectUtils.defaultIfNull(shuntCompensatorInfos.getCurrentNumberOfSections(), 1));
+                .setSectionCount(determinateSectionCountModification(shuntCompensatorInfos));
 
         /* when we create non-linear shunt, this is where we branch ;) */
         shuntAdder.newLinearModel()
@@ -107,13 +89,17 @@ public class ShuntCompensatorCreation extends AbstractModification {
         return shuntAdder;
     }
 
+    private int determinateSectionCountModification(ShuntCompensatorCreationInfos shuntCompensatorInfos) {
+        return (shuntCompensatorInfos.getQAtNominalV() != null || shuntCompensatorInfos.getSusceptancePerSection() != null) ? (modificationInfos.getQAtNominalV() == 0 || modificationInfos.getSusceptancePerSection() == 0) ? 0 : 1 : 1;
+    }
+
     private void createShuntInBusBreaker(VoltageLevel voltageLevel, ShuntCompensatorCreationInfos shuntCompensatorInfos) {
         Bus bus = ModificationUtils.getInstance().getBusBreakerBus(voltageLevel, shuntCompensatorInfos.getBusOrBusbarSectionId());
         /* creating the shunt compensator */
         voltageLevel.newShuntCompensator()
             .setId(shuntCompensatorInfos.getEquipmentId())
             .setName(shuntCompensatorInfos.getEquipmentName())
-            .setSectionCount(ObjectUtils.defaultIfNull(shuntCompensatorInfos.getCurrentNumberOfSections(), 1))
+            .setSectionCount(determinateSectionCountModification(shuntCompensatorInfos))
             .setBus(bus.getId())
             .setConnectableBus(bus.getId())
             .newLinearModel()
