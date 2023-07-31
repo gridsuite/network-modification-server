@@ -117,8 +117,8 @@ public class ModificationRepositoryTest {
         return (DeleteVoltageLevelOnLineInfos) networkModificationRepository.getModificationInfo(modificationUuid);
     }
 
-    private TableEquipmentModificationInfos getTableEquipmentModification(UUID modificationUuid) {
-        return (TableEquipmentModificationInfos) networkModificationRepository.getModificationInfo(modificationUuid);
+    private VoltageInitModificationInfos getVoltageInitModification(UUID modificationUuid) {
+        return (VoltageInitModificationInfos) networkModificationRepository.getModificationInfo(modificationUuid);
     }
 
     @Test
@@ -1066,33 +1066,33 @@ public class ModificationRepositoryTest {
     }
 
     @Test
-    public void testTableEquipmentModification() {
-        var tableEquipmentModificationEntity = TableEquipmentModificationInfos.builder()
-            .modifications(List.of(
-                GeneratorModificationInfos.builder()
-                    .equipmentId("G1")
-                    .reactivePowerSetpoint(new AttributeModification<>(10., OperationType.SET))
+    public void testVoltageInitModification() {
+        var voltageInitModificationEntity = VoltageInitModificationInfos.builder()
+            .generators(List.of(
+                VoltageInitGeneratorModificationInfos.builder()
+                    .generatorId("G1")
+                    .reactivePowerSetpoint(10.)
                     .build(),
-                GeneratorModificationInfos.builder()
-                    .equipmentId("G2")
-                    .voltageSetpoint(new AttributeModification<>(226., OperationType.SET))
+                VoltageInitGeneratorModificationInfos.builder()
+                    .generatorId("G2")
+                    .voltageSetpoint(226.)
                     .build()))
             .build().toEntity();
 
-        networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(tableEquipmentModificationEntity));
-        assertRequestsCount(1, 9, 1, 0);
+        networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(voltageInitModificationEntity));
+        assertRequestsCount(1, 5, 1, 0);
 
         List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
         assertEquals(1, modificationInfos.size());
 
-        assertThat(getTableEquipmentModification(modificationInfos.get(0).getUuid()))
-            .recursivelyEquals(tableEquipmentModificationEntity.toModificationInfos());
+        assertThat(getVoltageInitModification(modificationInfos.get(0).getUuid()))
+            .recursivelyEquals(voltageInitModificationEntity.toModificationInfos());
 
         assertEquals(List.of(TEST_GROUP_ID), this.networkModificationRepository.getModificationGroupsUuids());
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(tableEquipmentModificationEntity.getId()));
-        assertRequestsCount(3, 0, 0, 9);
+        networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(voltageInitModificationEntity.getId()));
+        assertRequestsCount(2, 0, 0, 3);
 
         SQLStatementCountValidator.reset();
         assertEquals(0, networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).size());

@@ -17,9 +17,9 @@ import lombok.experimental.SuperBuilder;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
 import org.gridsuite.modification.server.entities.ModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.TableEquipmentModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.VoltageInitModificationEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
-import org.gridsuite.modification.server.modifications.TableEquipmentModification;
+import org.gridsuite.modification.server.modifications.VoltageInitModification;
 
 import java.util.List;
 
@@ -30,25 +30,25 @@ import java.util.List;
 @NoArgsConstructor
 @Getter
 @Setter
-@Schema(description = "Table equipment modification infos")
-@JsonTypeName("TABLE_EQUIPMENT_MODIFICATION")
-@ModificationErrorTypeName("TABLE_EQUIPMENT_MODIFICATION_ERROR")
-public class TableEquipmentModificationInfos extends ModificationInfos {
-    @Schema(description = "equipment modifications")
-    private List<ModificationInfos> modifications;
+@Schema(description = "Voltage init modification infos")
+@JsonTypeName("VOLTAGE_INIT_MODIFICATION")
+@ModificationErrorTypeName("VOLTAGE_INIT_MODIFICATION_ERROR")
+public class VoltageInitModificationInfos extends ModificationInfos {
+    @Schema(description = "generators modifications")
+    private List<VoltageInitGeneratorModificationInfos> generators;
 
     @Override
     public ModificationEntity toEntity() {
-        return new TableEquipmentModificationEntity(this);
+        return new VoltageInitModificationEntity(this);
     }
 
     @Override
     public AbstractModification toModification() {
-        return new TableEquipmentModification(this);
+        return new VoltageInitModification(this);
     }
 
     @Override
     public Reporter createSubReporter(ReporterModel reporter) {
-        return reporter.createSubReporter(ModificationType.TABLE_EQUIPMENT_MODIFICATION.name(), "Table equipment modification");
+        return reporter.createSubReporter(ModificationType.VOLTAGE_INIT_MODIFICATION.name(), "Voltage init modification");
     }
 }

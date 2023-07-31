@@ -252,7 +252,7 @@ public class NetworkModificationService {
         return Optional.empty();
     }
 
-    public UUID createTableEquipmentModification(@NonNull TableEquipmentModificationInfos modificationsInfos) {
+    public UUID createModificationInGroup(@NonNull ModificationInfos modificationsInfos) {
         UUID groupUuid = UUID.randomUUID();
         networkModificationRepository.saveModifications(groupUuid, List.of(modificationsInfos.toEntity()));
         return groupUuid;

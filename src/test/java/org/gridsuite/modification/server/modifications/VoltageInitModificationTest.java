@@ -12,11 +12,9 @@ import com.powsybl.iidm.network.SwitchKind;
 import com.powsybl.iidm.network.VoltageLevel;
 import com.powsybl.iidm.network.Generator;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
-import org.gridsuite.modification.server.dto.AttributeModification;
-import org.gridsuite.modification.server.dto.GeneratorModificationInfos;
-import org.gridsuite.modification.server.dto.TableEquipmentModificationInfos;
+import org.gridsuite.modification.server.dto.VoltageInitGeneratorModificationInfos;
+import org.gridsuite.modification.server.dto.VoltageInitModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.dto.OperationType;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 
@@ -31,7 +29,7 @@ import static org.junit.Assert.assertEquals;
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 @Tag("IntegrationTest")
-public class TableEquipmentModificationTest extends AbstractNetworkModificationTest {
+public class VoltageInitModificationTest extends AbstractNetworkModificationTest {
     @Override
     protected Network createNetwork(UUID networkUuid) {
         Network network = NetworkCreation.create(networkUuid, true);
@@ -50,30 +48,30 @@ public class TableEquipmentModificationTest extends AbstractNetworkModificationT
 
     @Override
     protected ModificationInfos buildModification() {
-        return TableEquipmentModificationInfos.builder()
-            .modifications(List.of(
-                GeneratorModificationInfos.builder()
-                    .equipmentId("idGenerator")
-                    .reactivePowerSetpoint(new AttributeModification<>(10., OperationType.SET))
+        return VoltageInitModificationInfos.builder()
+            .generators(List.of(
+                VoltageInitGeneratorModificationInfos.builder()
+                    .generatorId("idGenerator")
+                    .reactivePowerSetpoint(10.)
                     .build(),
-                GeneratorModificationInfos.builder()
-                    .equipmentId("newGen")
-                    .voltageSetpoint(new AttributeModification<>(226., OperationType.SET))
+                VoltageInitGeneratorModificationInfos.builder()
+                    .generatorId("newGen")
+                    .voltageSetpoint(226.)
                     .build()))
             .build();
     }
 
     @Override
     protected ModificationInfos buildModificationUpdate() {
-        return TableEquipmentModificationInfos.builder()
-            .modifications(List.of(
-                GeneratorModificationInfos.builder()
-                    .equipmentId("idGenerator")
-                    .voltageSetpoint(new AttributeModification<>(370., OperationType.SET))
+        return VoltageInitModificationInfos.builder()
+            .generators(List.of(
+                VoltageInitGeneratorModificationInfos.builder()
+                    .generatorId("idGenerator")
+                    .voltageSetpoint(370.)
                     .build(),
-                GeneratorModificationInfos.builder()
-                    .equipmentId("v5generator")
-                    .reactivePowerSetpoint(new AttributeModification<>(15., OperationType.SET))
+                VoltageInitGeneratorModificationInfos.builder()
+                    .generatorId("v5generator")
+                    .reactivePowerSetpoint(15.)
                     .build()))
             .build();
     }

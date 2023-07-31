@@ -1132,20 +1132,20 @@ public class ModificationControllerTest {
     }
 
     @Test
-    public void testCreateTableEquipmentModification() throws Exception {
+    public void testCreateVoltageInitModification() throws Exception {
         // Create the modification
-        TableEquipmentModificationInfos modificationsInfos1 = TableEquipmentModificationInfos.builder()
-                .modifications(List.of(
-                        GeneratorModificationInfos.builder()
-                                .equipmentId("G1")
-                                .reactivePowerSetpoint(new AttributeModification<>(10., OperationType.SET))
+        VoltageInitModificationInfos modificationsInfos1 = VoltageInitModificationInfos.builder()
+                .generators(List.of(
+                        VoltageInitGeneratorModificationInfos.builder()
+                                .generatorId("G1")
+                                .reactivePowerSetpoint(10.)
                                 .build(),
-                        GeneratorModificationInfos.builder()
-                                .equipmentId("G2")
-                                .voltageSetpoint(new AttributeModification<>(226., OperationType.SET))
+                        VoltageInitGeneratorModificationInfos.builder()
+                                .generatorId("G2")
+                                .voltageSetpoint(226.)
                                 .build())).build();
 
-        MvcResult mvcResult = mockMvc.perform(post("/v1/groups/table-equipment-modification")
+        MvcResult mvcResult = mockMvc.perform(post("/v1/groups/modification")
                         .content(objectWriter.writeValueAsString(modificationsInfos1))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -1157,7 +1157,7 @@ public class ModificationControllerTest {
                 status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
 
-        List<TableEquipmentModificationInfos> modificationsInfos2 = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        List<VoltageInitModificationInfos> modificationsInfos2 = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertEquals(1, modificationsInfos2.size());
         assertThat(modificationsInfos2.get(0)).recursivelyEquals(modificationsInfos1);
     }

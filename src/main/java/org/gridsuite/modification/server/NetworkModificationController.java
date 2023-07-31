@@ -194,11 +194,11 @@ public class NetworkModificationController {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping(value = "/groups/table-equipment-modification", consumes = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Create a group containing a table equipment modification")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The group with the table equipment modification has been created")})
-    public ResponseEntity<UUID> createTableEquipmentModificationInGroup(@RequestBody TableEquipmentModificationInfos modificationsInfos) {
-        return ResponseEntity.ok().body(networkModificationService.createTableEquipmentModification(modificationsInfos));
+    @PostMapping(value = "/groups/modification", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Create a group containing a modification")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The group with the modification has been created")})
+    public ResponseEntity<UUID> createModificationInGroup(@RequestBody ModificationInfos modificationsInfos) {
+        return ResponseEntity.ok().body(networkModificationService.createModificationInGroup(modificationsInfos));
     }
 
     @PutMapping(value = "/groups/{groupUuid}/duplications", produces = MediaType.APPLICATION_JSON_VALUE)
