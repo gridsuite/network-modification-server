@@ -379,7 +379,11 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
 
     private boolean commonTapChangerAttributesModified(TapChangerModificationInfos tapChangerModificationInfos) {
         return tapChangerModificationInfos != null && (
-                tapChangerModificationInfos.getRegulatingTerminalId() != null
+                tapChangerModificationInfos.getRegulationType() != null
+                && tapChangerModificationInfos.getRegulationType().getValue() != null
+                || tapChangerModificationInfos.getRegulationSide() != null
+                && tapChangerModificationInfos.getRegulationSide().getValue() != null
+                || tapChangerModificationInfos.getRegulatingTerminalId() != null
                 && tapChangerModificationInfos.getRegulatingTerminalId().getValue() != null
                 || tapChangerModificationInfos.getTargetDeadband() != null
                 && tapChangerModificationInfos.getTargetDeadband().getValue() != null
@@ -445,7 +449,7 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
     private void modifyPhaseTapRegulation(PhaseTapChangerModificationInfos phaseTapChangerInfos, PhaseTapChanger phaseTapChanger, PhaseTapChangerAdder phaseTapChangerAdder, List<Report> phaseTapChangerReporter, PhaseTapChanger.RegulationMode regulationMode) {
         phaseTapChangerAdder.setRegulating(true);
 
-        if (phaseTapChangerInfos.getRegulationValue() != null && phaseTapChangerInfos.getRegulationValue().getValue() != null) {
+        if (phaseTapChangerInfos.getRegulationValue() != null && phaseTapChangerInfos.getRegulationValue().getValue() != null && regulationMode != null) {
             Double oldRegulationValue = phaseTapChanger != null ? phaseTapChanger.getRegulationValue() : null;
             phaseTapChangerReporter.add(ModificationUtils.getInstance().buildModificationReportWithIndentation(oldRegulationValue,
                 phaseTapChangerInfos.getRegulationValue().getValue(), regulationMode.equals(PhaseTapChanger.RegulationMode.CURRENT_LIMITER) ? "Value" : "Flow set point", 2));
