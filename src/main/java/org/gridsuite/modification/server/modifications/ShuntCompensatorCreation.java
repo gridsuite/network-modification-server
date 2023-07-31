@@ -90,7 +90,13 @@ public class ShuntCompensatorCreation extends AbstractModification {
     }
 
     private int determinateSectionCountModification(ShuntCompensatorCreationInfos shuntCompensatorInfos) {
-        return (shuntCompensatorInfos.getQAtNominalV() != null || shuntCompensatorInfos.getSusceptancePerSection() != null) ? (modificationInfos.getQAtNominalV() == 0 || modificationInfos.getSusceptancePerSection() == 0) ? 0 : 1 : 1;
+        if (shuntCompensatorInfos.getSusceptancePerSection() != null) {
+            return modificationInfos.getSusceptancePerSection() == 0 ? 0 : 1;
+        }
+        if (shuntCompensatorInfos.getQAtNominalV() != null) {
+            return modificationInfos.getQAtNominalV() == 0 ? 0 : 1;
+        }
+        return 0;
     }
 
     private void createShuntInBusBreaker(VoltageLevel voltageLevel, ShuntCompensatorCreationInfos shuntCompensatorInfos) {
