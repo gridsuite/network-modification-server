@@ -145,11 +145,10 @@ public final class TestImpactUtils {
                                          String breakerId2, String disconnectorId2, String substationId2) throws JsonProcessingException {
         Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertTrue(networkModificationResult.isPresent());
-        List<SimpleElementImpact> impacts = createBranchImpacts(impactType, branchType, branchId, breakerId1, disconnectorId1, substationId1, breakerId2, disconnectorId2, substationId2);
         NetworkModificationResult resultExpected = NetworkModificationResult.builder()
             .applicationStatus(ApplicationStatus.ALL_OK)
             .lastGroupApplicationStatus(ApplicationStatus.ALL_OK)
-            .networkImpacts(impacts)
+            .networkImpacts(createBranchImpacts(impactType, branchType, branchId, breakerId1, disconnectorId1, substationId1, breakerId2, disconnectorId2, substationId2))
             .build();
         assertThat(networkModificationResult.get()).recursivelyEquals(resultExpected);
     }
