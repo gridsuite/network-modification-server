@@ -29,6 +29,12 @@ public class TapChangerModificationInfos {
     @Schema(description = "enabled")
     private AttributeModification<Boolean> enabled;
 
+    @Schema(description = "Regulation type")
+    private AttributeModification<VoltageRegulationType> regulationType;
+
+    @Schema(description = "Side")
+    private AttributeModification<RegulationSide> regulationSide;
+
     @Schema(description = "lowTapPosition")
     private AttributeModification<Integer> lowTapPosition;
 

@@ -435,7 +435,7 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
 
         assertThat(createdModification).recursivelyEquals(twoWindingsTransformerModificationInfos);
 
-        //unset regulating and modify target voltage
+        //unset regulating mode and modify regulation value
         twoWindingsTransformerModificationInfos.getPhaseTapChanger().setRegulationMode(null);
         twoWindingsTransformerModificationInfos.getPhaseTapChanger().setRegulationValue(new AttributeModification<>(250.0, OperationType.SET));
 

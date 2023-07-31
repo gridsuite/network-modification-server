@@ -163,7 +163,7 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
             } else {
                 addStepAttributeReport(tapChangerStepsReports, "newStepAlpha" + step.getAlpha(),
                                     "                Shift angle : ${alpha}", "alpha", String.valueOf(step.getAlpha()));
-                ((PhaseTapChangerAdder) adder).beginStep().setR(step.getR()).setX(step.getX()).setG(step.getG()).setB(step.getB()).setRho(step.getRho()).endStep();
+                ((PhaseTapChangerAdder) adder).beginStep().setR(step.getR()).setX(step.getX()).setG(step.getG()).setB(step.getB()).setRho(step.getRho()).setAlpha(step.getAlpha()).endStep();
             }
         }
     }
@@ -239,7 +239,7 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
         }
     }
 
-    private <T> void modifyRegulatingTerminal(TapChangerModificationInfos tapChangerModificationInfos, T adder, TapChanger<?, ?> tapChanger, List<Report> regulationReports, Network network) {
+    private <T> void modifyRegulatingTerminal(TapChangerModificationInfos tapChangerModificationInfos, T adder, TapChanger<?, ?> tapChanger, List<Report> regulationReports, Network network, Terminal terminal1, Terminal terminal2) {
         Terminal regulatingTerminal = tapChanger != null ? tapChanger.getRegulationTerminal() : null;
 
         String oldVoltageLevel = null;
@@ -249,6 +249,18 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
             oldVoltageLevel = regulatingTerminal.getVoltageLevel().getId();
             oldEquipment = regulatingTerminal.getConnectable().getType().name() + ":"
                     + regulatingTerminal.getConnectable().getId();
+        }
+
+        if (tapChangerModificationInfos.getRegulationType() != null && tapChangerModificationInfos.getRegulationType().getValue() == VoltageRegulationType.LOCAL) {
+            if (tapChangerModificationInfos.getRegulationSide() != null && tapChangerModificationInfos.getRegulationSide().getValue() == RegulationSide.SIDE1) {
+                tapChangerModificationInfos.setRegulatingTerminalVlId(new AttributeModification<>(terminal1.getVoltageLevel().getId(), OperationType.SET));
+                tapChangerModificationInfos.setRegulatingTerminalId(new AttributeModification<>(terminal1.getConnectable().getId(), OperationType.SET));
+                tapChangerModificationInfos.setRegulatingTerminalType(new AttributeModification<>(terminal1.getConnectable().getType().name(), OperationType.SET));
+            } else if (tapChangerModificationInfos.getRegulationSide() != null && tapChangerModificationInfos.getRegulationSide().getValue() == RegulationSide.SIDE2) {
+                tapChangerModificationInfos.setRegulatingTerminalVlId(new AttributeModification<>(terminal2.getVoltageLevel().getId(), OperationType.SET));
+                tapChangerModificationInfos.setRegulatingTerminalId(new AttributeModification<>(terminal2.getConnectable().getId(), OperationType.SET));
+                tapChangerModificationInfos.setRegulatingTerminalType(new AttributeModification<>(terminal2.getConnectable().getType().name(), OperationType.SET));
+            }
         }
         if (tapChangerModificationInfos.getRegulatingTerminalId() != null
                 && tapChangerModificationInfos.getRegulatingTerminalType() != null
@@ -279,8 +291,9 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
         }
     }
 
-    private void modifyRatioVoltageRegulation(RatioTapChangerModificationInfos ratioTapChangerInfos, RatioTapChanger ratioTapChanger, RatioTapChangerAdder ratioTapChangerAdder, Reporter ratioTapChangerReporter, Network network) {
+    private void modifyRatioVoltageRegulation(RatioTapChangerModificationInfos ratioTapChangerInfos, TwoWindingsTransformer twt, RatioTapChangerAdder ratioTapChangerAdder, Reporter ratioTapChangerReporter, Network network) {
         List<Report> voltageRegulationReports = new ArrayList<>();
+        RatioTapChanger ratioTapChanger = twt.getRatioTapChanger();
         if (ratioTapChangerInfos.getTargetV() != null && ratioTapChangerInfos.getTargetV().getValue() != null) {
             Double oldTargetV = ratioTapChanger != null ? ratioTapChanger.getTargetV() : null;
             voltageRegulationReports.add(ModificationUtils.getInstance().buildModificationReportWithIndentation(oldTargetV,
@@ -299,7 +312,7 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
             ratioTapChangerAdder.setTargetDeadband(ratioTapChanger.getTargetDeadband());
         }
 
-        modifyRegulatingTerminal(ratioTapChangerInfos, ratioTapChangerAdder, ratioTapChanger, voltageRegulationReports, network);
+        modifyRegulatingTerminal(ratioTapChangerInfos, ratioTapChangerAdder, ratioTapChanger, voltageRegulationReports, network, twt.getTerminal1(), twt.getTerminal2());
 
         if (!voltageRegulationReports.isEmpty()) {
             ModificationUtils.getInstance().reportModifications(ratioTapChangerReporter, voltageRegulationReports, "ratioTapChangerVoltageRegulationModification", "    Voltage regulation");
@@ -339,7 +352,7 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
         } else if (ratioTapChanger != null) {
             ratioTapChangerAdder.setRegulating(ratioTapChanger.isRegulating());
         }
-        modifyRatioVoltageRegulation(ratioTapChangerInfos, ratioTapChanger, ratioTapChangerAdder, ratioTapChangerReporter, network);
+        modifyRatioVoltageRegulation(ratioTapChangerInfos, twt, ratioTapChangerAdder, ratioTapChangerReporter, network);
         addTapChangerPositionsAndSteps(ratioTapChangerInfos, ratioTapChanger, ratioTapChangerAdder, ratioTapChangerReporter);
         ratioTapChangerAdder.add();
     }
@@ -352,13 +365,27 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
                 && ratioTapChangerModificationInfos.getRegulating().getValue() != null
                 || ratioTapChangerModificationInfos.getTargetV() != null
                 && ratioTapChangerModificationInfos.getTargetV().getValue() != null
-                || ratioTapChangerModificationInfos.getRegulatingTerminalId() != null
-                && ratioTapChangerModificationInfos.getRegulatingTerminalId().getValue() != null
-                || ratioTapChangerModificationInfos.getTargetDeadband() != null
-                && ratioTapChangerModificationInfos.getTargetDeadband().getValue() != null
-                || ratioTapChangerModificationInfos.getTapPosition() != null
-                && ratioTapChangerModificationInfos.getTapPosition().getValue() != null
-                || ratioTapChangerModificationInfos.getSteps() != null);
+                || commonTapChangerAttributesModified(ratioTapChangerModificationInfos));
+    }
+
+    private boolean phaseTapChangerModified(PhaseTapChangerModificationInfos phaseTapChangerModificationInfos) {
+        return phaseTapChangerModificationInfos != null && (
+                phaseTapChangerModificationInfos.getRegulationMode() != null
+                && phaseTapChangerModificationInfos.getRegulationMode().getValue() != null
+                || phaseTapChangerModificationInfos.getRegulationValue() != null
+                && phaseTapChangerModificationInfos.getRegulationValue().getValue() != null
+                || commonTapChangerAttributesModified(phaseTapChangerModificationInfos));
+    }
+
+    private boolean commonTapChangerAttributesModified(TapChangerModificationInfos tapChangerModificationInfos) {
+        return tapChangerModificationInfos != null && (
+                tapChangerModificationInfos.getRegulatingTerminalId() != null
+                && tapChangerModificationInfos.getRegulatingTerminalId().getValue() != null
+                || tapChangerModificationInfos.getTargetDeadband() != null
+                && tapChangerModificationInfos.getTargetDeadband().getValue() != null
+                || tapChangerModificationInfos.getTapPosition() != null
+                && tapChangerModificationInfos.getTapPosition().getValue() != null
+                || tapChangerModificationInfos.getSteps() != null);
     }
 
     @Override
@@ -377,21 +404,6 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
             && twoWindingsTransformerModificationInfos.getRatedS().getValue() != null;
     }
 
-    private boolean phaseTapChangerModified(PhaseTapChangerModificationInfos phaseTapChangerModificationInfos) {
-        return phaseTapChangerModificationInfos != null && (
-                phaseTapChangerModificationInfos.getRegulationMode() != null
-                && phaseTapChangerModificationInfos.getRegulationMode().getValue() != null
-                || phaseTapChangerModificationInfos.getRegulationValue() != null
-                && phaseTapChangerModificationInfos.getRegulationValue().getValue() != null
-                || phaseTapChangerModificationInfos.getRegulatingTerminalId() != null
-                && phaseTapChangerModificationInfos.getRegulatingTerminalId().getValue() != null
-                || phaseTapChangerModificationInfos.getTargetDeadband() != null
-                && phaseTapChangerModificationInfos.getTargetDeadband().getValue() != null
-                || phaseTapChangerModificationInfos.getTapPosition() != null
-                && phaseTapChangerModificationInfos.getTapPosition().getValue() != null
-                || phaseTapChangerModificationInfos.getSteps() != null);
-    }
-
     private void addPhaseTapChangersToTwoWindingsTransformer(Network network, TwoWindingsTransformerModificationInfos twoWindingsTransformerModificationInfos, TwoWindingsTransformer twt, Reporter subReporter) {
         PhaseTapChangerAdder phaseTapChangerAdder = twt.newPhaseTapChanger();
         PhaseTapChangerModificationInfos phaseTapChangerInfos = twoWindingsTransformerModificationInfos.getPhaseTapChanger();
@@ -404,7 +416,8 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
                     .withSeverity(TypedValue.INFO_SEVERITY)
                     .build());
         if (phaseTapChangerInfos.getRegulationMode() != null && phaseTapChangerInfos.getRegulationMode().getValue() != null) {
-            phaseTapChangerSubreporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(twt.getPhaseTapChanger().getRegulationMode(),
+            PhaseTapChanger.RegulationMode oldRegulationMode = phaseTapChanger != null ? phaseTapChanger.getRegulationMode() : null;
+            phaseTapChangerSubreporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(oldRegulationMode,
                 twoWindingsTransformerModificationInfos.getPhaseTapChanger().getRegulationMode().getValue(), "Regulation mode", 1));
             phaseTapChangerAdder.setRegulationMode(phaseTapChangerInfos.getRegulationMode().getValue());
         } else if (phaseTapChanger != null) {
@@ -418,9 +431,9 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
             regulationMode = phaseTapChanger.getRegulationMode();
         }
         if (!PhaseTapChanger.RegulationMode.FIXED_TAP.equals(regulationMode)) {
-            modifyPhaseTapRegulation(phaseTapChangerInfos, twt.getPhaseTapChanger(), phaseTapChangerAdder, regulationReports, regulationMode);
+            modifyPhaseTapRegulation(phaseTapChangerInfos, phaseTapChanger, phaseTapChangerAdder, regulationReports, regulationMode);
         }
-        modifyRegulatingTerminal(phaseTapChangerInfos, phaseTapChangerAdder, phaseTapChanger, regulationReports, network);
+        modifyRegulatingTerminal(phaseTapChangerInfos, phaseTapChangerAdder, phaseTapChanger, regulationReports, network, twt.getTerminal1(), twt.getTerminal2());
         if (!regulationReports.isEmpty()) {
             ModificationUtils.getInstance().reportModifications(phaseTapChangerSubreporter, regulationReports, regulationMode != null ? regulationMode.name() : null, ModificationUtils.getInstance().formatRegulationModeReport(regulationMode));
         }
@@ -433,18 +446,20 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
         phaseTapChangerAdder.setRegulating(true);
 
         if (phaseTapChangerInfos.getRegulationValue() != null && phaseTapChangerInfos.getRegulationValue().getValue() != null) {
-            phaseTapChangerReporter.add(ModificationUtils.getInstance().buildModificationReportWithIndentation(phaseTapChanger.getRegulationValue(),
+            Double oldRegulationValue = phaseTapChanger != null ? phaseTapChanger.getRegulationValue() : null;
+            phaseTapChangerReporter.add(ModificationUtils.getInstance().buildModificationReportWithIndentation(oldRegulationValue,
                 phaseTapChangerInfos.getRegulationValue().getValue(), regulationMode.equals(PhaseTapChanger.RegulationMode.CURRENT_LIMITER) ? "Value" : "Flow set point", 2));
             phaseTapChangerAdder.setRegulationValue(phaseTapChangerInfos.getRegulationValue().getValue());
-        } else {
+        } else if (phaseTapChanger != null) {
             phaseTapChangerAdder.setRegulationValue(phaseTapChanger.getRegulationValue());
         }
 
         if (phaseTapChangerInfos.getTargetDeadband() != null && phaseTapChangerInfos.getTargetDeadband().getValue() != null) {
-            phaseTapChangerReporter.add(ModificationUtils.getInstance().buildModificationReportWithIndentation(phaseTapChanger.getTargetDeadband(),
+            Double oldTargetDeadband = phaseTapChanger != null ? phaseTapChanger.getTargetDeadband() : null;
+            phaseTapChangerReporter.add(ModificationUtils.getInstance().buildModificationReportWithIndentation(oldTargetDeadband,
                 phaseTapChangerInfos.getTargetDeadband().getValue(), "Target deadband", 2));
             phaseTapChangerAdder.setTargetDeadband(phaseTapChangerInfos.getTargetDeadband().getValue());
-        } else {
+        } else if (phaseTapChanger != null) {
             phaseTapChangerAdder.setTargetDeadband(phaseTapChanger.getTargetDeadband());
         }
 
