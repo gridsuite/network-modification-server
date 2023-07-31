@@ -47,8 +47,8 @@ public class EquipmentDeletionEntity extends EquipmentModificationEntity {
 
     private void assignAttributes(EquipmentDeletionInfos equipmentDeletionInfos) {
         this.equipmentType = equipmentDeletionInfos.getEquipmentType();
-        equipmentInfos = equipmentDeletionInfos.getSpecificEquipmentInfos() != null ?
-            equipmentDeletionInfos.getSpecificEquipmentInfos().toEntity() : null;
+        equipmentInfos = equipmentDeletionInfos.getEquipmentInfos() != null ?
+            equipmentDeletionInfos.getEquipmentInfos().toEntity() : null;
     }
 
     @Override
@@ -60,7 +60,7 @@ public class EquipmentDeletionEntity extends EquipmentModificationEntity {
                 .equipmentId(getEquipmentId())
                 .equipmentType(getEquipmentType());
         if (equipmentInfos != null) {
-            builder.specificEquipmentInfos(equipmentInfos.toModificationInfos());
+            builder.equipmentInfos(equipmentInfos.toModificationInfos());
         }
         return builder.build();
     }
