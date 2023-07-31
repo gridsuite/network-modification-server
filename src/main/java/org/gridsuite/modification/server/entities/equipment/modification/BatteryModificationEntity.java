@@ -118,7 +118,7 @@ public class BatteryModificationEntity extends InjectionModificationEntity {
     }
 
     private BatteryModificationInfos.BatteryModificationInfosBuilder<?, ?> toBatteryModificationInfosBuilder() {
-        List<ReactiveCapabilityCurveModificationInfos> points;
+        List<ReactiveCapabilityCurveModificationInfos> points = null;
         if (getReactiveCapabilityCurvePoints() != null) {
             points = getReactiveCapabilityCurvePoints()
                     .stream()
@@ -126,8 +126,6 @@ public class BatteryModificationEntity extends InjectionModificationEntity {
                             value.getQmaxP(), value.getOldQmaxP(),
                             value.getP(), value.getOldP()))
                     .collect(Collectors.toList());
-        } else {
-            points = null;
         }
         return BatteryModificationInfos
                 .builder()
