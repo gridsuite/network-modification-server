@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.Impacts.TestImpactUtils.testElementCreationImpact;
+import static org.gridsuite.modification.server.Impacts.TestImpactUtils.testBranchCreationImpacts;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.BUS_NOT_FOUND;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.*;
@@ -384,7 +384,7 @@ public class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetwor
         String twoWindingsTransformerCreationInfosJson = mapper.writeValueAsString(twoWindingsTransformerCreationInfos);
         mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(twoWindingsTransformerCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
-        testElementCreationImpact(mapper, mvcResult.getResponse().getContentAsString(), IdentifiableType.TWO_WINDINGS_TRANSFORMER, twoWindingsTransformerCreationInfos.getEquipmentId(), Set.of("s1"));
+        testBranchCreationImpacts(mapper, mvcResult.getResponse().getContentAsString(), IdentifiableType.TWO_WINDINGS_TRANSFORMER, twoWindingsTransformerCreationInfos.getEquipmentId(), Set.of("s1"));
         assertNotNull(getNetwork().getTwoWindingsTransformer(transformerId));  // transformer was created
         testNetworkModificationsCount(getGroupId(), actualSize);
     }
