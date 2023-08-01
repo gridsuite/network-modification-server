@@ -1,0 +1,133 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-4.1.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
+    <changeSet author="marcelinhug (generated)" id="1688295291684-6">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="phasetapchangerenabled" type="boolean"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="marcelinhug (generated)" id="1688295291684-7">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="phasetapchangerenabled_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="marcelinhug (generated)" id="1688050991404-6">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="phasetapchangerlowtapposition" type="int4"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="marcelinhug (generated)" id="1688050991404-7">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="phasetapchangerlowtapposition_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="marcelinhug (generated)" id="1688050991404-10">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="phasetapchangerregulationmode" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="marcelinhug (generated)" id="1688050991404-11">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="phasetapchangerregulationmode_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="marcelinhug (generated)" id="1688050991404-12">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="phasetapchangerregulationvalue" type="float8"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="marcelinhug (generated)" id="1688050991404-13">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="phasetapchangerregulationvalue_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="marcelinhug (generated)" id="1688050991404-14">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="phasetapchangertapposition" type="int4"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="marcelinhug (generated)" id="1688050991404-15">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="phasetapchangertapposition_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="marcelinhug (generated)" id="1688050991404-16">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="phasetapchangertargetdeadband" type="float8"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="marcelinhug (generated)" id="1688050991404-17">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="phasetapchangertargetdeadband_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="marcelinhug (generated)" id="1688050991404-18">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="phasetapchangerterminalrefconnectableid" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="marcelinhug (generated)" id="1688050991404-19">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="phasetapchangerterminalrefconnectableid_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="marcelinhug (generated)" id="1688050991404-20">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="phasetapchangerterminalreftype" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="marcelinhug (generated)" id="1688050991404-21">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="phasetapchangerterminalreftype_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="marcelinhug (generated)" id="1688050991404-22">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="phasetapchangerterminalrefvoltagelevelid" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="marcelinhug (generated)" id="1688050991404-23">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="phasetapchangerterminalrefvoltagelevelid_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="labidiayo (generated)" id="1690296578524-5">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="phasetapchangerregulationside" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="labidiayo (generated)" id="1690296578524-6">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="phasetapchangerregulationside_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="labidiayo (generated)" id="1690296578524-7">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="phasetapchangerregulationtype" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="labidiayo (generated)" id="1690296578524-8">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="phasetapchangerregulationtype_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="labidiayo (generated)" id="1690296578524-9">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="ratiotapchangerregulationside" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="labidiayo (generated)" id="1690296578524-10">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="ratiotapchangerregulationside_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="labidiayo (generated)" id="1690296578524-11">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="ratiotapchangerregulationtype" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="labidiayo (generated)" id="1690296578524-12">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="ratiotapchangerregulationtype_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+</databaseChangeLog>
