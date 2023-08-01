@@ -6,24 +6,24 @@
  */
 package org.gridsuite.modification.server.dto;
 
+import com.powsybl.iidm.network.PhaseTapChanger;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 /**
- * @author Ayoub LABIDI <ayoub.labidi at rte-france.com>
+ * @author Hugo Marcellin <hugo.marcelin at rte-france.com>
  */
 @SuperBuilder
 @NoArgsConstructor
 @Getter
 @Setter
-@ToString(callSuper = true)
-@Schema(description = "RatioTapChanger attributes")
-public class RatioTapChangerModificationInfos extends TapChangerModificationInfos {
+@Schema(description = "PhaseTapChanger attributes")
+public class PhaseTapChangerModificationInfos extends TapChangerModificationInfos {
 
-    @Schema(description = "loadTapChangingCapabilities")
-    private AttributeModification<Boolean> loadTapChangingCapabilities;
+    @Schema(description = "regulationMode")
+    private AttributeModification<PhaseTapChanger.RegulationMode> regulationMode;
 
-    @Schema(description = "targetV")
-    private AttributeModification<Double> targetV;
+    @Schema(description = "regulationValue")
+    private AttributeModification<Double> regulationValue;
 }
