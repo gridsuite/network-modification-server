@@ -579,6 +579,20 @@ public final class ModificationUtils {
         subReporter.report(buildCreationReport(value, fieldName));
     }
 
+    public String formatRegulationModeReport(PhaseTapChanger.RegulationMode regulationMode) {
+        switch (regulationMode) {
+            case FIXED_TAP:
+                return "    Fixed tap";
+            case CURRENT_LIMITER :
+                return "    Current limiter";
+            case ACTIVE_POWER_CONTROL :
+                return "    Active power control";
+            default :
+                return "";
+
+        }
+    }
+
     public void modifyReactiveCapabilityCurvePoints(Collection<ReactiveCapabilityCurve.Point> points,
                                                     List<ReactiveCapabilityCurveModificationInfos> modificationPoints,
                                                     ReactiveCapabilityCurveAdder adder,
