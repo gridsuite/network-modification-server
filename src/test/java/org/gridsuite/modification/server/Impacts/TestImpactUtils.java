@@ -167,6 +167,9 @@ public final class TestImpactUtils {
             createElementImpact(impactType, IdentifiableType.SWITCH, breakerId2, Set.of(substationId2)),
             createElementImpact(impactType, IdentifiableType.SWITCH, disconnectorId2, Set.of(substationId2))
         );
+        if (impactType == SimpleImpactType.CREATION) {
+            impacts.add(createElementImpact(SimpleImpactType.MODIFICATION, branchType, branchId, new TreeSet<>(List.of(substationId1, substationId2)))); // case with newtapChanger
+        }
         if (impactType == SimpleImpactType.DELETION) {
             impacts.addAll(0, switchImpacts);
         } else {
