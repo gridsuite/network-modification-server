@@ -361,8 +361,6 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
         return ratioTapChangerModificationInfos != null && (
                 ratioTapChangerModificationInfos.getLoadTapChangingCapabilities() != null
                 && ratioTapChangerModificationInfos.getLoadTapChangingCapabilities().getValue() != null
-                || ratioTapChangerModificationInfos.getRegulating() != null
-                && ratioTapChangerModificationInfos.getRegulating().getValue() != null
                 || ratioTapChangerModificationInfos.getTargetV() != null
                 && ratioTapChangerModificationInfos.getTargetV().getValue() != null
                 || commonTapChangerAttributesModified(ratioTapChangerModificationInfos));
@@ -379,16 +377,24 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
 
     private boolean commonTapChangerAttributesModified(TapChangerModificationInfos tapChangerModificationInfos) {
         return tapChangerModificationInfos != null && (
-                tapChangerModificationInfos.getRegulationType() != null
+                tapChangerModificationInfos.getRegulating() != null
+                && tapChangerModificationInfos.getRegulating().getValue() != null
+                || tapChangerModificationInfos.getRegulationType() != null
                 && tapChangerModificationInfos.getRegulationType().getValue() != null
                 || tapChangerModificationInfos.getRegulationSide() != null
                 && tapChangerModificationInfos.getRegulationSide().getValue() != null
                 || tapChangerModificationInfos.getRegulatingTerminalId() != null
                 && tapChangerModificationInfos.getRegulatingTerminalId().getValue() != null
+                || tapChangerModificationInfos.getRegulatingTerminalType() != null
+                && tapChangerModificationInfos.getRegulatingTerminalType().getValue() != null
+                || tapChangerModificationInfos.getRegulatingTerminalVlId() != null
+                && tapChangerModificationInfos.getRegulatingTerminalVlId().getValue() != null
                 || tapChangerModificationInfos.getTargetDeadband() != null
                 && tapChangerModificationInfos.getTargetDeadband().getValue() != null
                 || tapChangerModificationInfos.getTapPosition() != null
                 && tapChangerModificationInfos.getTapPosition().getValue() != null
+                || tapChangerModificationInfos.getLowTapPosition() != null
+                && tapChangerModificationInfos.getLowTapPosition().getValue() != null
                 || tapChangerModificationInfos.getSteps() != null);
     }
 
