@@ -106,28 +106,28 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
     }
 
     private void addTapChangersToTwoWindingsTransformer(Network network, TwoWindingsTransformerModificationInfos twoWindingsTransformerModificationInfos, TwoWindingsTransformer twt, Reporter subReporter) {
-        if (twoWindingsTransformerModificationInfos.getRatioTapChanger() != null && twoWindingsTransformerModificationInfos.getRatioTapChanger().getEnabled().getValue()) {
-            if (ratioTapChangerModified(twoWindingsTransformerModificationInfos.getRatioTapChanger())) {
-                addRatioTapChangersToTwoWindingsTransformer(network, twoWindingsTransformerModificationInfos, twt, subReporter);
-            }
-        } else if (twt.hasRatioTapChanger()) {
+        if (twt.hasRatioTapChanger() && twoWindingsTransformerModificationInfos.getRatioTapChanger().getEnabled() != null && Boolean.FALSE.equals(twoWindingsTransformerModificationInfos.getRatioTapChanger().getEnabled().getValue())) {
             twt.getRatioTapChanger().remove();
             subReporter.report(Report.builder().withKey("RatioTapChangerRemoved")
                 .withDefaultMessage("The ratio tap changer has been removed")
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .build());
+        } else {
+            if (ratioTapChangerModified(twoWindingsTransformerModificationInfos.getRatioTapChanger())) {
+                addRatioTapChangersToTwoWindingsTransformer(network, twoWindingsTransformerModificationInfos, twt, subReporter);
+            }
         }
 
-        if (twoWindingsTransformerModificationInfos.getPhaseTapChanger() != null && twoWindingsTransformerModificationInfos.getPhaseTapChanger().getEnabled().getValue()) {
-            if (phaseTapChangerModified(twoWindingsTransformerModificationInfos.getPhaseTapChanger())) {
-                addPhaseTapChangersToTwoWindingsTransformer(network, twoWindingsTransformerModificationInfos, twt, subReporter);
-            }
-        } else if (twt.hasPhaseTapChanger()) {
+        if (twt.hasPhaseTapChanger() && twoWindingsTransformerModificationInfos.getPhaseTapChanger().getEnabled() != null && Boolean.FALSE.equals(twoWindingsTransformerModificationInfos.getPhaseTapChanger().getEnabled().getValue())) {
             twt.getPhaseTapChanger().remove();
             subReporter.report(Report.builder().withKey("PhaseTapChangerRemoved")
                 .withDefaultMessage("The phase tap changer has been removed")
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .build());
+        } else {
+            if (phaseTapChangerModified(twoWindingsTransformerModificationInfos.getPhaseTapChanger())) {
+                addPhaseTapChangersToTwoWindingsTransformer(network, twoWindingsTransformerModificationInfos, twt, subReporter);
+            }
         }
     }
 
@@ -439,6 +439,9 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
             regulationMode = phaseTapChangerInfos.getRegulationMode().getValue();
         } else if (phaseTapChanger != null) {
             regulationMode = phaseTapChanger.getRegulationMode();
+            if (!phaseTapChanger.isRegulating()) {
+                regulationMode = PhaseTapChanger.RegulationMode.FIXED_TAP;
+            }
         }
         if (!PhaseTapChanger.RegulationMode.FIXED_TAP.equals(regulationMode)) {
             modifyPhaseTapRegulation(phaseTapChangerInfos, phaseTapChanger, phaseTapChangerAdder, regulationReports, regulationMode);
