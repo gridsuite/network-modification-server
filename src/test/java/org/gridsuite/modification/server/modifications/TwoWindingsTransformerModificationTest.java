@@ -289,10 +289,11 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
                 .phaseTapChanger(PhaseTapChangerModificationInfos.builder()
                         .enabled(new AttributeModification<Boolean>(false, OperationType.SET))
                         .build())
+                .ratioTapChanger(RatioTapChangerModificationInfos.builder()
+                        .enabled(new AttributeModification<Boolean>(true, OperationType.SET))
+                        .regulating(new AttributeModification<Boolean>(true, OperationType.SET))
+                        .build())
                 .build();
-
-        //disable the tap changer
-        twoWindingsTransformerModificationInfos.setRatioTapChanger(RatioTapChangerModificationInfos.builder().enabled(new AttributeModification<>(false, OperationType.SET)).build());
 
         String modificationToCreateJson = mapper.writeValueAsString(twoWindingsTransformerModificationInfos);
 
@@ -300,19 +301,6 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
                 .andExpect(status().isOk()).andReturn();
 
         TwoWindingsTransformerModificationInfos createdModification = (TwoWindingsTransformerModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
-
-        assertThat(createdModification).recursivelyEquals(twoWindingsTransformerModificationInfos);
-
-        //enable the tap changer and set regulating
-        twoWindingsTransformerModificationInfos.getRatioTapChanger().setEnabled(new AttributeModification<>(true, OperationType.SET));
-        twoWindingsTransformerModificationInfos.getRatioTapChanger().setRegulating(new AttributeModification<>(true, OperationType.SET));
-
-        modificationToCreateJson = mapper.writeValueAsString(twoWindingsTransformerModificationInfos);
-
-        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
-
-        createdModification = (TwoWindingsTransformerModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(1);
 
         assertThat(createdModification).recursivelyEquals(twoWindingsTransformerModificationInfos);
 
@@ -325,7 +313,7 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
-        createdModification = (TwoWindingsTransformerModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(2);
+        createdModification = (TwoWindingsTransformerModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(1);
 
         assertThat(createdModification).recursivelyEquals(twoWindingsTransformerModificationInfos);
 
@@ -338,7 +326,7 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
-        createdModification = (TwoWindingsTransformerModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(3);
+        createdModification = (TwoWindingsTransformerModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(2);
 
         assertThat(createdModification).recursivelyEquals(twoWindingsTransformerModificationInfos);
 
@@ -351,7 +339,7 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
-        createdModification = (TwoWindingsTransformerModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(4);
+        createdModification = (TwoWindingsTransformerModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(3);
 
         assertThat(createdModification).recursivelyEquals(twoWindingsTransformerModificationInfos);
 
@@ -364,7 +352,7 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
-        createdModification = (TwoWindingsTransformerModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(5);
+        createdModification = (TwoWindingsTransformerModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(4);
 
         assertThat(createdModification).recursivelyEquals(twoWindingsTransformerModificationInfos);
 
@@ -393,6 +381,18 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
+        createdModification = (TwoWindingsTransformerModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(5);
+
+        assertThat(createdModification).recursivelyEquals(twoWindingsTransformerModificationInfos);
+
+        //disable the tap changer
+        twoWindingsTransformerModificationInfos.setRatioTapChanger(RatioTapChangerModificationInfos.builder().enabled(new AttributeModification<>(false, OperationType.SET)).build());
+
+        modificationToCreateJson = mapper.writeValueAsString(twoWindingsTransformerModificationInfos);
+
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+
         createdModification = (TwoWindingsTransformerModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(6);
 
         assertThat(createdModification).recursivelyEquals(twoWindingsTransformerModificationInfos);
@@ -406,10 +406,13 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
                 .ratioTapChanger(RatioTapChangerModificationInfos.builder()
                         .enabled(new AttributeModification<Boolean>(false, OperationType.SET))
                         .build())
+                .phaseTapChanger(PhaseTapChangerModificationInfos.builder()
+                        .enabled(new AttributeModification<Boolean>(true, OperationType.SET))
+                        .regulationMode(new AttributeModification<PhaseTapChanger.RegulationMode>(PhaseTapChanger.RegulationMode.CURRENT_LIMITER, OperationType.SET))
+                        .regulationValue(new AttributeModification<Double>(100.0, OperationType.SET))
+                        .targetDeadband(new AttributeModification<Double>(10.0, OperationType.SET))
+                        .build())
                 .build();
-
-        //disable the tap changer
-        twoWindingsTransformerModificationInfos.setPhaseTapChanger(PhaseTapChangerModificationInfos.builder().enabled(new AttributeModification<>(false, OperationType.SET)).build());
 
         String modificationToCreateJson = mapper.writeValueAsString(twoWindingsTransformerModificationInfos);
 
@@ -417,21 +420,6 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
                 .andExpect(status().isOk()).andReturn();
 
         TwoWindingsTransformerModificationInfos createdModification = (TwoWindingsTransformerModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
-
-        assertThat(createdModification).recursivelyEquals(twoWindingsTransformerModificationInfos);
-
-        //enable the tap changer and set regulating
-        twoWindingsTransformerModificationInfos.getPhaseTapChanger().setEnabled(new AttributeModification<>(true, OperationType.SET));
-        twoWindingsTransformerModificationInfos.getPhaseTapChanger().setRegulationMode(new AttributeModification<>(PhaseTapChanger.RegulationMode.CURRENT_LIMITER, OperationType.SET));
-        twoWindingsTransformerModificationInfos.getPhaseTapChanger().setRegulationValue(new AttributeModification<>(100.0, OperationType.SET));
-        twoWindingsTransformerModificationInfos.getPhaseTapChanger().setTargetDeadband(new AttributeModification<>(10.0, OperationType.SET));
-
-        modificationToCreateJson = mapper.writeValueAsString(twoWindingsTransformerModificationInfos);
-
-        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
-
-        createdModification = (TwoWindingsTransformerModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(1);
 
         assertThat(createdModification).recursivelyEquals(twoWindingsTransformerModificationInfos);
 
@@ -444,7 +432,7 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
-        createdModification = (TwoWindingsTransformerModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(2);
+        createdModification = (TwoWindingsTransformerModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(1);
 
         assertThat(createdModification).recursivelyEquals(twoWindingsTransformerModificationInfos);
 
@@ -457,7 +445,7 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
-        createdModification = (TwoWindingsTransformerModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(3);
+        createdModification = (TwoWindingsTransformerModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(2);
 
         assertThat(createdModification).recursivelyEquals(twoWindingsTransformerModificationInfos);
 
@@ -470,7 +458,7 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
-        createdModification = (TwoWindingsTransformerModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(4);
+        createdModification = (TwoWindingsTransformerModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(3);
 
         assertThat(createdModification).recursivelyEquals(twoWindingsTransformerModificationInfos);
 
@@ -483,7 +471,7 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
-        createdModification = (TwoWindingsTransformerModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(5);
+        createdModification = (TwoWindingsTransformerModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(4);
 
         assertThat(createdModification).recursivelyEquals(twoWindingsTransformerModificationInfos);
 
@@ -513,7 +501,7 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
-        createdModification = (TwoWindingsTransformerModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(6);
+        createdModification = (TwoWindingsTransformerModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(5);
 
         assertThat(createdModification).recursivelyEquals(twoWindingsTransformerModificationInfos);
 
@@ -527,7 +515,7 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
-        createdModification = (TwoWindingsTransformerModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(7);
+        createdModification = (TwoWindingsTransformerModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(6);
 
         assertThat(createdModification).recursivelyEquals(twoWindingsTransformerModificationInfos);
 
@@ -539,9 +527,21 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
+        createdModification = (TwoWindingsTransformerModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(7);
+
+        assertThat(createdModification).recursivelyEquals(twoWindingsTransformerModificationInfos);
+
+        //disable the tap changer
+        twoWindingsTransformerModificationInfos.setPhaseTapChanger(PhaseTapChangerModificationInfos.builder().enabled(new AttributeModification<>(false, OperationType.SET)).build());
+
+        modificationToCreateJson = mapper.writeValueAsString(twoWindingsTransformerModificationInfos);
+
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
+
         createdModification = (TwoWindingsTransformerModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(8);
 
         assertThat(createdModification).recursivelyEquals(twoWindingsTransformerModificationInfos);
+
     }
 }
 
