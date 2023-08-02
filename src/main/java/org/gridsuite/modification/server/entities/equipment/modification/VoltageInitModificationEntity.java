@@ -18,6 +18,8 @@ import org.gridsuite.modification.server.entities.ModificationEntity;
 import javax.persistence.CollectionTable;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.ForeignKey;
+import javax.persistence.Index;
 import javax.persistence.Table;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -33,7 +35,9 @@ import java.util.stream.Collectors;
 @Table(name = "voltageInitModification")
 public class VoltageInitModificationEntity extends ModificationEntity {
     @ElementCollection
-    @CollectionTable(name = "voltageInitGeneratorsModification")
+    @CollectionTable(name = "voltageInitGeneratorsModification",
+        indexes = {@Index(name = "VoltageInitModificationEntity_generators_idx1", columnList = "voltage_init_modification_entity_id")},
+        foreignKey = @ForeignKey(name = "VoltageInitModificationEntity_generators_fk1"))
     private List<VoltageInitGeneratorModificationEmbeddable> generators;
 
     public VoltageInitModificationEntity(VoltageInitModificationInfos voltageInitModificationInfos) {
