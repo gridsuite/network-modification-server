@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
@@ -73,6 +74,7 @@ public class BatteryModificationTest extends AbstractNetworkModificationTest {
     @Override
     protected void assertNetworkAfterCreation() {
         Battery modifiedBattery = getNetwork().getBattery("v3Battery");
+        BatteryModificationInfos batteryModificationInfos = (BatteryModificationInfos) buildModification();
         assertEquals("newV1Battery", modifiedBattery.getNameOrId());
         assertEquals(80.0, modifiedBattery.getTargetP());
         assertEquals(40.0, modifiedBattery.getTargetQ());
@@ -81,6 +83,17 @@ public class BatteryModificationTest extends AbstractNetworkModificationTest {
         assertEquals(0.1f, modifiedBattery.getExtension(ActivePowerControl.class).getDroop());
         assertEquals(true, modifiedBattery.getExtension(ActivePowerControl.class).isParticipate());
         assertEquals(ReactiveLimitsKind.CURVE, modifiedBattery.getReactiveLimits().getKind());
+        Collection<ReactiveCapabilityCurve.Point> points = modifiedBattery.getReactiveLimits(ReactiveCapabilityCurve.class).getPoints();
+        List<ReactiveCapabilityCurveModificationInfos> modificationPoints = batteryModificationInfos.getReactiveCapabilityCurvePoints();
+        if (!CollectionUtils.isEmpty(points)) {
+            IntStream.range(1, modificationPoints.size())
+                    .forEach(i -> {
+                        ReactiveCapabilityCurveModificationInfos point = modificationPoints.get(i);
+                        assertEquals(100., point.getQmaxP());
+                        assertEquals(0., point.getQminP());
+                        assertEquals(200.0, point.getP());
+                    });
+        }
     }
 
     @Override

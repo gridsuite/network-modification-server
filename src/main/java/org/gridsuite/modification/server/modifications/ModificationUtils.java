@@ -782,5 +782,35 @@ public final class ModificationUtils {
         reportModifications(subReporterSetpoints2, reports, "activePowerRegulationModified", "Active power regulation");
         return subReporterSetpoints2;
     }
+
+    public void checkMaxQGreaterThanMinQ(List<ReactiveCapabilityCurve.Point> equipmentPoints, List<ReactiveCapabilityCurveModificationInfos> modificationPoints,
+                                         NetworkModificationException.Type exceptionType, String errorMessage) {
+        IntStream.range(0, modificationPoints.size())
+                .forEach(i -> {
+                    ReactiveCapabilityCurve.Point oldPoint = equipmentPoints.get(i);
+                    ReactiveCapabilityCurveModificationInfos newPoint = modificationPoints.get(i);
+                    Double oldMaxQ = Double.NaN;
+                    Double oldMinQ = Double.NaN;
+                    if (oldPoint != null) {
+                        oldMaxQ = oldPoint.getMaxQ();
+                        oldMinQ = oldPoint.getMinQ();
+                    }
+                    var maxQ = newPoint.getQmaxP() != null ? newPoint.getQmaxP() : oldMaxQ;
+                    var minQ = newPoint.getQminP() != null ? newPoint.getQminP() : oldMinQ;
+                    if (maxQ < minQ) {
+                        throw new NetworkModificationException(exceptionType, errorMessage + "maximum reactive power " + maxQ + " is expected to be greater than or equal to minimum reactive power " + minQ);
+                    }
+                });
+    }
+
+    public void checkMaxReactivePowerGreaterThanMinReactivePower(MinMaxReactiveLimits minMaxReactiveLimits, AttributeModification<Double> minimumReactivePowerInfo, AttributeModification<Double> maximumReactivePowerInfo, NetworkModificationException.Type exceptionType, String errorMessage) {
+        Double previousMinimumReactivePower = minMaxReactiveLimits.getMinQ();
+        Double previousMaximumReactivePower = minMaxReactiveLimits.getMaxQ();
+        Double minReactivePower = minimumReactivePowerInfo != null ? minimumReactivePowerInfo.getValue() : previousMinimumReactivePower;
+        Double maxReactivePower = maximumReactivePowerInfo != null ? maximumReactivePowerInfo.getValue() : previousMaximumReactivePower;
+        if (minReactivePower > maxReactivePower) {
+            throw new NetworkModificationException(exceptionType, errorMessage + "maximum reactive power " + maxReactivePower + " is expected to be greater than or equal to minimum reactive power " + minReactivePower);
+        }
+    }
 }
 
