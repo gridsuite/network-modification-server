@@ -97,7 +97,8 @@ public class NetworkModificationException extends PowsyblException {
         DELETE_ATTACHING_LINE_NOT_FOUND(HttpStatus.NOT_FOUND),
         FILTERS_NOT_FOUND(HttpStatus.NOT_FOUND),
         GENERATION_DISPATCH_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
-        PRELOADING_STRATEGY_NOT_ALLOWED(HttpStatus.INTERNAL_SERVER_ERROR);
+        PRELOADING_STRATEGY_NOT_ALLOWED(HttpStatus.INTERNAL_SERVER_ERROR),
+        VOLTAGE_INIT_MODIFICATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR);
 
         public final HttpStatus status;
         private final String message;
