@@ -14,6 +14,7 @@ import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.AttributeModification;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.*;
+import org.springframework.util.CollectionUtils;
 
 import javax.persistence.*;
 import java.util.List;
@@ -215,30 +216,30 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
     }
 
     private void assignAttributes(GeneratorModificationInfos generatorModificationInfos) {
-        this.energySource = new EnumModificationEmbedded<>(generatorModificationInfos.getEnergySource());
-        this.minActivePower = new DoubleModificationEmbedded(generatorModificationInfos.getMinActivePower());
-        this.maxActivePower = new DoubleModificationEmbedded(generatorModificationInfos.getMaxActivePower());
-        this.ratedNominalPower = new DoubleModificationEmbedded(generatorModificationInfos.getRatedNominalPower());
-        this.activePowerSetpoint = new DoubleModificationEmbedded(generatorModificationInfos.getActivePowerSetpoint());
-        this.reactivePowerSetpoint = new DoubleModificationEmbedded(generatorModificationInfos.getReactivePowerSetpoint());
-        this.voltageRegulationOn = new BooleanModificationEmbedded(generatorModificationInfos.getVoltageRegulationOn());
-        this.voltageSetpoint = new DoubleModificationEmbedded(generatorModificationInfos.getVoltageSetpoint());
-        this.plannedActivePowerSetPoint = new DoubleModificationEmbedded(generatorModificationInfos.getPlannedActivePowerSetPoint());
-        this.marginalCost = new DoubleModificationEmbedded(generatorModificationInfos.getMarginalCost());
-        this.plannedOutageRate = new DoubleModificationEmbedded(generatorModificationInfos.getPlannedOutageRate());
-        this.forcedOutageRate = new DoubleModificationEmbedded(generatorModificationInfos.getForcedOutageRate());
-        this.minimumReactivePower = new DoubleModificationEmbedded(generatorModificationInfos.getMinimumReactivePower());
-        this.maximumReactivePower = new DoubleModificationEmbedded(generatorModificationInfos.getMaximumReactivePower());
-        this.participate = new BooleanModificationEmbedded(generatorModificationInfos.getParticipate());
-        this.droop = new FloatModificationEmbedded(generatorModificationInfos.getDroop());
-        this.transientReactance = new DoubleModificationEmbedded(generatorModificationInfos.getTransientReactance());
-        this.stepUpTransformerReactance = new DoubleModificationEmbedded(generatorModificationInfos.getStepUpTransformerReactance());
-        this.voltageRegulationType = new EnumModificationEmbedded<>(generatorModificationInfos.getVoltageRegulationType());
-        this.regulatingTerminalId = new StringModificationEmbedded(generatorModificationInfos.getRegulatingTerminalId());
-        this.regulatingTerminalType = new StringModificationEmbedded(generatorModificationInfos.getRegulatingTerminalType());
-        this.regulatingTerminalVlId = new StringModificationEmbedded(generatorModificationInfos.getRegulatingTerminalVlId());
-        this.qPercent = new DoubleModificationEmbedded(generatorModificationInfos.getQPercent());
-        this.reactiveCapabilityCurve = new BooleanModificationEmbedded(generatorModificationInfos.getReactiveCapabilityCurve());
+        this.energySource = generatorModificationInfos.getEnergySource() != null ? new EnumModificationEmbedded<>(generatorModificationInfos.getEnergySource()) : null;
+        this.minActivePower = generatorModificationInfos.getMinActivePower() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getMinActivePower()) : null;
+        this.maxActivePower = generatorModificationInfos.getMaxActivePower() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getMaxActivePower()) : null;
+        this.ratedNominalPower = generatorModificationInfos.getRatedNominalPower() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getRatedNominalPower()) : null;
+        this.activePowerSetpoint = generatorModificationInfos.getActivePowerSetpoint() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getActivePowerSetpoint()) : null;
+        this.reactivePowerSetpoint = generatorModificationInfos.getReactivePowerSetpoint() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getReactivePowerSetpoint()) : null;
+        this.voltageRegulationOn = generatorModificationInfos.getVoltageRegulationOn() != null ? new BooleanModificationEmbedded(generatorModificationInfos.getVoltageRegulationOn()) : null;
+        this.voltageSetpoint = generatorModificationInfos.getVoltageSetpoint() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getVoltageSetpoint()) : null;
+        this.plannedActivePowerSetPoint = generatorModificationInfos.getPlannedActivePowerSetPoint() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getPlannedActivePowerSetPoint()) : null;
+        this.marginalCost = generatorModificationInfos.getMarginalCost() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getMarginalCost()) : null;
+        this.plannedOutageRate = generatorModificationInfos.getPlannedOutageRate() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getPlannedOutageRate()) : null;
+        this.forcedOutageRate = generatorModificationInfos.getForcedOutageRate() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getForcedOutageRate()) : null;
+        this.minimumReactivePower = generatorModificationInfos.getMinimumReactivePower() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getMinimumReactivePower()) : null;
+        this.maximumReactivePower = generatorModificationInfos.getMaximumReactivePower() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getMaximumReactivePower()) : null;
+        this.participate = generatorModificationInfos.getParticipate() != null ? new BooleanModificationEmbedded(generatorModificationInfos.getParticipate()) : null;
+        this.droop = generatorModificationInfos.getDroop() != null ? new FloatModificationEmbedded(generatorModificationInfos.getDroop()) : null;
+        this.transientReactance = generatorModificationInfos.getTransientReactance() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getTransientReactance()) : null;
+        this.stepUpTransformerReactance = generatorModificationInfos.getStepUpTransformerReactance() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getStepUpTransformerReactance()) : null;
+        this.voltageRegulationType = generatorModificationInfos.getVoltageRegulationType() != null ? new EnumModificationEmbedded<>(generatorModificationInfos.getVoltageRegulationType()) : null;
+        this.regulatingTerminalId = generatorModificationInfos.getRegulatingTerminalId() != null ? new StringModificationEmbedded(generatorModificationInfos.getRegulatingTerminalId()) : null;
+        this.regulatingTerminalType = generatorModificationInfos.getRegulatingTerminalType() != null ? new StringModificationEmbedded(generatorModificationInfos.getRegulatingTerminalType()) : null;
+        this.regulatingTerminalVlId = generatorModificationInfos.getRegulatingTerminalVlId() != null ? new StringModificationEmbedded(generatorModificationInfos.getRegulatingTerminalVlId()) : null;
+        this.qPercent = generatorModificationInfos.getQPercent() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getQPercent()) : null;
+        this.reactiveCapabilityCurve = generatorModificationInfos.getReactiveCapabilityCurve() != null ? new BooleanModificationEmbedded(generatorModificationInfos.getReactiveCapabilityCurve()) : null;
         this.reactiveCapabilityCurvePoints = toEmbeddablePoints(generatorModificationInfos.getReactiveCapabilityCurvePoints());
     }
 
@@ -258,7 +259,7 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
     }
 
     private GeneratorModificationInfos.GeneratorModificationInfosBuilder<?, ?> toGeneratorModificationInfosBuilder() {
-        List<ReactiveCapabilityCurveModificationEmbeddable> pointsEmbeddable = getReactiveCapabilityCurvePoints();
+        List<ReactiveCapabilityCurveModificationEmbeddable> pointsEmbeddable = !CollectionUtils.isEmpty(reactiveCapabilityCurvePoints) ? reactiveCapabilityCurvePoints : null;
         List<ReactiveCapabilityCurveModificationInfos> points = pointsEmbeddable != null ? getReactiveCapabilityCurvePoints()
                 .stream()
                 .map(value -> new ReactiveCapabilityCurveModificationInfos(value.getQminP(), value.getOldQminP(),

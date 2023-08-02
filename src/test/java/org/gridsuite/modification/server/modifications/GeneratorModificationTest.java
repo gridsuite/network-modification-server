@@ -88,7 +88,6 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
                 .maxActivePower(new AttributeModification<>(102., OperationType.SET))
                 .ratedNominalPower(new AttributeModification<>(221., OperationType.SET))
                 .reactiveCapabilityCurve(new AttributeModification<>(false, OperationType.SET))
-                .reactiveCapabilityCurvePoints(List.of())
                 .voltageRegulationType(
                                 new AttributeModification<>(VoltageRegulationType.LOCAL, OperationType.SET))
                 .plannedActivePowerSetPoint(new AttributeModification<>(111., OperationType.SET))

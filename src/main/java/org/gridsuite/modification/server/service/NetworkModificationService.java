@@ -224,20 +224,17 @@ public class NetworkModificationService {
         }
     }
 
-    @Transactional
-    public Optional<NetworkModificationResult> duplicateModifications(UUID targetGroupUuid,
-                                                                      UUID networkUuid, String variantId,
-                                                                      ReportInfos reportInfos, List<UUID> modificationsUuids) {
-        List<ModificationEntity> modificationsEntities = networkModificationRepository.getModificationsEntities(modificationsUuids);
-        List<ModificationEntity> duplicatedModificationsEntities = modificationsEntities.stream().map(ModificationEntity::copy).collect(Collectors.toList());
-        if (!duplicatedModificationsEntities.isEmpty()) {
-            networkModificationRepository.saveModifications(targetGroupUuid, duplicatedModificationsEntities);
+    private Optional<NetworkModificationResult> saveAndApplyModifications(UUID targetGroupUuid,
+                                                                          UUID networkUuid, String variantId,
+                                                                          ReportInfos reportInfos, List<ModificationEntity> modificationEntities) {
+        if (!modificationEntities.isEmpty()) {
+            networkModificationRepository.saveModifications(targetGroupUuid, modificationEntities);
 
-            List<ModificationInfos> modificationInfos = duplicatedModificationsEntities.stream().map(ModificationEntity::toModificationInfos).collect(Collectors.toList());
+            List<ModificationInfos> modificationInfos = modificationEntities.stream().map(ModificationEntity::toModificationInfos).collect(Collectors.toList());
 
             PreloadingStrategy preloadingStrategy = modificationInfos.stream()
-                    .map(ModificationInfos::getType)
-                    .reduce(ModificationType::maxStrategy).map(ModificationType::getStrategy).orElse(PreloadingStrategy.NONE);
+                .map(ModificationInfos::getType)
+                .reduce(ModificationType::maxStrategy).map(ModificationType::getStrategy).orElse(PreloadingStrategy.NONE);
             NetworkInfos networkInfos = getNetworkInfos(networkUuid, variantId, preloadingStrategy);
 
             // try to apply the duplicated modifications (incremental mode)
@@ -250,5 +247,29 @@ public class NetworkModificationService {
             }
         }
         return Optional.empty();
+    }
+
+    @Transactional
+    public Optional<NetworkModificationResult> duplicateModifications(UUID targetGroupUuid,
+                                                                      UUID networkUuid, String variantId,
+                                                                      ReportInfos reportInfos, List<UUID> modificationsUuids) {
+        List<ModificationEntity> modificationsEntities = networkModificationRepository.getModificationsEntities(modificationsUuids);
+        List<ModificationEntity> duplicatedModificationsEntities = modificationsEntities.stream().map(ModificationEntity::copy).collect(Collectors.toList());
+        return saveAndApplyModifications(targetGroupUuid, networkUuid, variantId, reportInfos, duplicatedModificationsEntities);
+    }
+
+    public UUID createModificationInGroup(@NonNull ModificationInfos modificationsInfos) {
+        UUID groupUuid = UUID.randomUUID();
+        networkModificationRepository.saveModifications(groupUuid, List.of(modificationsInfos.toEntity()));
+        return groupUuid;
+    }
+
+    @Transactional
+    public Optional<NetworkModificationResult> duplicateModificationsInGroup(UUID targetGroupUuid,
+                                                                             UUID networkUuid, String variantId,
+                                                                             ReportInfos reportInfos,
+                                                                             UUID originGroupUuid) {
+        List<ModificationEntity> duplicatedModificationsEntities = networkModificationRepository.copyModificationsEntities(originGroupUuid);
+        return saveAndApplyModifications(targetGroupUuid, networkUuid, variantId, reportInfos, duplicatedModificationsEntities);
     }
 }
