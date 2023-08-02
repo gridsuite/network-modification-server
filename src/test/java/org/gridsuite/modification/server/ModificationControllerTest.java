@@ -430,6 +430,27 @@ public class ModificationControllerTest {
         // compare duplicates
         assertThat(newModificationListOtherGroup.get(1)).recursivelyEquals(modificationList.get(0));
         assertThat(newModificationListOtherGroup.get(2)).recursivelyEquals(modificationList.get(1));
+
+        // Duplicate all modifications in TEST_GROUP_ID, and append them at the end of otherGroupId
+        mockMvc.perform(
+                put("/v1/groups/" + otherGroupId + "/duplications"
+                    + "?networkUuid=" + TEST_NETWORK_ID
+                    + "&reportUuid=" + TEST_REPORT_ID
+                    + "&reporterId=" + UUID.randomUUID()
+                    + "&variantId=" + NetworkCreation.VARIANT_ID
+                    + "&duplicateFrom=" + TEST_GROUP_ID)
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
+
+        newModificationListOtherGroup = modificationRepository.getModifications(otherGroupId, true, true);
+        // now 8 modifications in new group: first 3 are still the same, 5 last are new duplicates from first group
+        assertEquals(8, newModificationListOtherGroup.size());
+
+        // compare duplicates
+        modificationList = modificationRepository.getModifications(TEST_GROUP_ID, true, true);
+        for (int i = 3; i < 8; ++i) {
+            assertThat(newModificationListOtherGroup.get(i)).recursivelyEquals(modificationList.get(i - 3));
+        }
     }
 
     @Test
@@ -1015,7 +1036,7 @@ public class ModificationControllerTest {
         var network2 = networkStoreService.getNetwork(TEST_NETWORK_MIXED_TOPOLOGY_ID, null);
         var vl = network.getVoltageLevel("v2");
         var vl2 = network2.getVoltageLevel("v2");
-        assertEquals(9, vl.getConnectableCount());
+        assertEquals(10, vl.getConnectableCount());
         assertEquals(0, vl2.getConnectableCount());
         assertNotNull(network.getBusbarSection("1B"));
         assertNotNull(network.getBusbarSection("1.1"));
@@ -1108,5 +1129,36 @@ public class ModificationControllerTest {
         emptyLineTypes = mapper.readValue(resultAsString, new TypeReference<>() {
         });
         assertEquals(0, emptyLineTypes.size());
+    }
+
+    @Test
+    public void testCreateVoltageInitModification() throws Exception {
+        // Create the modification
+        VoltageInitModificationInfos modificationsInfos1 = VoltageInitModificationInfos.builder()
+                .generators(List.of(
+                        VoltageInitGeneratorModificationInfos.builder()
+                                .generatorId("G1")
+                                .reactivePowerSetpoint(10.)
+                                .build(),
+                        VoltageInitGeneratorModificationInfos.builder()
+                                .generatorId("G2")
+                                .voltageSetpoint(226.)
+                                .build())).build();
+
+        MvcResult mvcResult = mockMvc.perform(post("/v1/groups/modification")
+                        .content(objectWriter.writeValueAsString(modificationsInfos1))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn();
+        UUID groupUuid = UUID.fromString(mapper.readValue(mvcResult.getResponse().getContentAsString(), String.class));
+
+        // Get the modifications
+        mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/modifications", groupUuid)).andExpectAll(
+                status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
+                .andReturn();
+
+        List<VoltageInitModificationInfos> modificationsInfos2 = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertEquals(1, modificationsInfos2.size());
+        assertThat(modificationsInfos2.get(0)).recursivelyEquals(modificationsInfos1);
     }
 }

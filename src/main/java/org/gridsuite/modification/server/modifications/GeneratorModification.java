@@ -406,8 +406,8 @@ public class GeneratorModification extends AbstractModification {
         if (modificationInfos.getParticipate() != null) {
             participate = modificationInfos.getParticipate().getValue();
             reports.add(ModificationUtils.getInstance().buildModificationReport(activePowerControl != null ? activePowerControl.isParticipate() : null,
-                    participate,
-                    "VoltageRegulationOn"));
+                    participate, "Participate"));
+
         } else if (modificationInfos.getDroop() != null) {
             participate = true;
         }
