@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.IntStream;
 
+import static org.gridsuite.modification.server.NetworkModificationException.Type.BATTERY_NOT_FOUND;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_BATTERY_ERROR;
 /**
  * @author Ghazwa Rehili <ghazwa.rehili at rte-france.com>
@@ -46,17 +47,18 @@ public class BatteryModification extends AbstractModification {
 
     @Override
     public void check(Network network) throws NetworkModificationException {
-        if (network.getBattery(modificationInfos.getEquipmentId()) != null) {
-            Battery battery = ModificationUtils.getInstance().getBattery(network, modificationInfos.getEquipmentId());
-            if (battery.getReactiveLimits().getKind() == ReactiveLimitsKind.MIN_MAX && (modificationInfos.getMinimumReactivePower() != null || modificationInfos.getMaximumReactivePower() != null)) {
-                checkMaxReactivePowerGreaterThanMinReactivePower(battery);
-            }
-            Collection<ReactiveCapabilityCurve.Point> points = battery.getReactiveLimits().getKind() == ReactiveLimitsKind.CURVE ? battery.getReactiveLimits(ReactiveCapabilityCurve.class).getPoints() : List.of();
-            List<ReactiveCapabilityCurve.Point> batteryPoints = new ArrayList<>(points);
-            List<ReactiveCapabilityCurveModificationInfos> modificationPoints = modificationInfos.getReactiveCapabilityCurvePoints();
-            if (!CollectionUtils.isEmpty(points) && modificationPoints != null) {
-                checkMaxQGreaterThanMinQ(batteryPoints, modificationPoints);
-            }
+        if (network.getBattery(modificationInfos.getEquipmentId()) == null) {
+            throw new NetworkModificationException(BATTERY_NOT_FOUND, modificationInfos.getEquipmentId());
+        }
+        Battery battery = network.getBattery(modificationInfos.getEquipmentId());
+        if (battery.getReactiveLimits().getKind() == ReactiveLimitsKind.MIN_MAX && (modificationInfos.getMinimumReactivePower() != null || modificationInfos.getMaximumReactivePower() != null)) {
+            checkMaxReactivePowerGreaterThanMinReactivePower(battery);
+        }
+        Collection<ReactiveCapabilityCurve.Point> points = battery.getReactiveLimits().getKind() == ReactiveLimitsKind.CURVE ? battery.getReactiveLimits(ReactiveCapabilityCurve.class).getPoints() : List.of();
+        List<ReactiveCapabilityCurve.Point> batteryPoints = new ArrayList<>(points);
+        List<ReactiveCapabilityCurveModificationInfos> modificationPoints = modificationInfos.getReactiveCapabilityCurvePoints();
+        if (!CollectionUtils.isEmpty(points) && modificationPoints != null) {
+            checkMaxQGreaterThanMinQ(batteryPoints, modificationPoints);
         }
     }
 

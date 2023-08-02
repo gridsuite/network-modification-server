@@ -90,15 +90,15 @@ public class BatteryModificationEntity extends InjectionModificationEntity {
     }
 
     private void assignAttributes(BatteryModificationInfos batteryModificationInfos) {
-        this.minActivePower = new DoubleModificationEmbedded(batteryModificationInfos.getMinActivePower());
-        this.maxActivePower = new DoubleModificationEmbedded(batteryModificationInfos.getMaxActivePower());
-        this.activePowerSetpoint = new DoubleModificationEmbedded(batteryModificationInfos.getActivePowerSetpoint());
-        this.reactivePowerSetpoint = new DoubleModificationEmbedded(batteryModificationInfos.getReactivePowerSetpoint());
-        this.minimumReactivePower = new DoubleModificationEmbedded(batteryModificationInfos.getMinimumReactivePower());
-        this.maximumReactivePower = new DoubleModificationEmbedded(batteryModificationInfos.getMaximumReactivePower());
-        this.participate = new BooleanModificationEmbedded(batteryModificationInfos.getParticipate());
-        this.droop = new FloatModificationEmbedded(batteryModificationInfos.getDroop());
-        this.reactiveCapabilityCurve = new BooleanModificationEmbedded(batteryModificationInfos.getReactiveCapabilityCurve());
+        this.minActivePower = batteryModificationInfos.getMinActivePower() != null ? new DoubleModificationEmbedded(batteryModificationInfos.getMinActivePower()) : null;
+        this.maxActivePower = batteryModificationInfos.getMaxActivePower() != null ? new DoubleModificationEmbedded(batteryModificationInfos.getMaxActivePower()) : null;
+        this.activePowerSetpoint = batteryModificationInfos.getActivePowerSetpoint() != null ? new DoubleModificationEmbedded(batteryModificationInfos.getActivePowerSetpoint()) : null;
+        this.reactivePowerSetpoint = batteryModificationInfos.getReactivePowerSetpoint() != null ? new DoubleModificationEmbedded(batteryModificationInfos.getReactivePowerSetpoint()) : null;
+        this.minimumReactivePower = batteryModificationInfos.getMinimumReactivePower() != null ? new DoubleModificationEmbedded(batteryModificationInfos.getMinimumReactivePower()) : null;
+        this.maximumReactivePower = batteryModificationInfos.getMaximumReactivePower() != null ? new DoubleModificationEmbedded(batteryModificationInfos.getMaximumReactivePower()) : null;
+        this.participate = batteryModificationInfos.getParticipate() != null ? new BooleanModificationEmbedded(batteryModificationInfos.getParticipate()) : null;
+        this.droop = batteryModificationInfos.getDroop() != null ? new FloatModificationEmbedded(batteryModificationInfos.getDroop()) : null;
+        this.reactiveCapabilityCurve = batteryModificationInfos.getReactiveCapabilityCurve() != null ? new BooleanModificationEmbedded(batteryModificationInfos.getReactiveCapabilityCurve()) : null;
         this.reactiveCapabilityCurvePoints = toEmbeddablePoints(batteryModificationInfos.getReactiveCapabilityCurvePoints());
     }
 

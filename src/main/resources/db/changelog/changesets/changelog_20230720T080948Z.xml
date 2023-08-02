@@ -49,9 +49,6 @@
         <addForeignKeyConstraint baseColumnNames="battery_modification_entity_id" baseTableName="battery_modification_entity_reactive_capability_curve_points" constraintName="FKi6v363gw4oy1mefvymcbdux56" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="battery_modification" validate="true"/>
     </changeSet>
     <changeSet author="rehiligha (generated)" id="1689840598074-8">
-        <addForeignKeyConstraint baseColumnNames="id" baseTableName="battery_creation" constraintName="batteryCreation_id_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
-    </changeSet>
-    <changeSet author="rehiligha (generated)" id="1689840598074-9">
         <addForeignKeyConstraint baseColumnNames="id" baseTableName="battery_modification" constraintName="batteryModification_id_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
     </changeSet>
 </databaseChangeLog>
