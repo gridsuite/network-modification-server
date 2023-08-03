@@ -50,16 +50,6 @@ public class BatteryModificationEntity extends InjectionModificationEntity {
     private DoubleModificationEmbedded reactivePowerSetpoint;
 
     @Embedded
-    @AttributeOverrides(value = {@AttributeOverride(name = "value", column = @Column(name = "minimumReactivePower")), @AttributeOverride(name = "opType", column = @Column(name = "minimumReactivePowerOp"))
-    })
-    private DoubleModificationEmbedded minimumReactivePower;
-
-    @Embedded
-    @AttributeOverrides(value = {@AttributeOverride(name = "value", column = @Column(name = "maximumReactivePower")), @AttributeOverride(name = "opType", column = @Column(name = "maximumReactivePowerOp"))
-    })
-    private DoubleModificationEmbedded maximumReactivePower;
-
-    @Embedded
     @AttributeOverrides(value = {@AttributeOverride(name = "value", column = @Column(name = "participate")), @AttributeOverride(name = "opType", column = @Column(name = "participateOp"))
     })
     private BooleanModificationEmbedded participate;
@@ -68,6 +58,16 @@ public class BatteryModificationEntity extends InjectionModificationEntity {
     @AttributeOverrides(value = {@AttributeOverride(name = "value", column = @Column(name = "droop")), @AttributeOverride(name = "opType", column = @Column(name = "droopOp"))
     })
     private FloatModificationEmbedded droop;
+
+    @Embedded
+    @AttributeOverrides(value = {@AttributeOverride(name = "value", column = @Column(name = "minimumReactivePower")), @AttributeOverride(name = "opType", column = @Column(name = "minimumReactivePowerOp"))
+    })
+    private DoubleModificationEmbedded minimumReactivePower;
+
+    @Embedded
+    @AttributeOverrides(value = {@AttributeOverride(name = "value", column = @Column(name = "maximumReactivePower")), @AttributeOverride(name = "opType", column = @Column(name = "maximumReactivePowerOp"))
+    })
+    private DoubleModificationEmbedded maximumReactivePower;
 
     @Embedded
     @AttributeOverrides(value = {@AttributeOverride(name = "value", column = @Column(name = "reactiveCapabilityCurve")), @AttributeOverride(name = "opType", column = @Column(name = "reactiveCapabilityCurveOp"))

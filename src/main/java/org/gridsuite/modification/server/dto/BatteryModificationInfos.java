@@ -46,6 +46,12 @@ public class BatteryModificationInfos extends InjectionModificationInfos {
     @Schema(description = "Reactive power set point")
     private AttributeModification<Double> reactivePowerSetpoint;
 
+    @Schema(description = "Participate")
+    private AttributeModification<Boolean> participate;
+
+    @Schema(description = "Droop")
+    private AttributeModification<Float> droop;
+
     @Schema(description = "Minimum reactive power")
     private AttributeModification<Double> minimumReactivePower;
 
@@ -54,12 +60,6 @@ public class BatteryModificationInfos extends InjectionModificationInfos {
 
     @Schema(description = "Reactive capability curve points")
     private List<ReactiveCapabilityCurveModificationInfos> reactiveCapabilityCurvePoints;
-
-    @Schema(description = "Participate")
-    private AttributeModification<Boolean> participate;
-
-    @Schema(description = "Droop")
-    private AttributeModification<Float> droop;
 
     @Schema(description = "Reactive capability curve")
     private AttributeModification<Boolean> reactiveCapabilityCurve;
