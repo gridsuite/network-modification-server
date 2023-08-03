@@ -306,6 +306,9 @@ public class BatteryCreation extends AbstractModification {
                         .withDroop(batteryCreationInfos.getDroop())
                         .add();
                 activePowerRegulationReports.add(ModificationUtils.getInstance().buildCreationReport(
+                        batteryCreationInfos.getParticipate(),
+                        "Participate"));
+                activePowerRegulationReports.add(ModificationUtils.getInstance().buildCreationReport(
                         batteryCreationInfos.getDroop(),
                         "Droop"));
             } catch (PowsyblException e) {
