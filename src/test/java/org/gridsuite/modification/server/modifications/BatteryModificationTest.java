@@ -21,7 +21,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
