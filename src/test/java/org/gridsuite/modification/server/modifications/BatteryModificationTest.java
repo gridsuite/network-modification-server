@@ -83,14 +83,16 @@ public class BatteryModificationTest extends AbstractNetworkModificationTest {
         assertEquals(true, modifiedBattery.getExtension(ActivePowerControl.class).isParticipate());
         assertEquals(ReactiveLimitsKind.CURVE, modifiedBattery.getReactiveLimits().getKind());
         Collection<ReactiveCapabilityCurve.Point> points = modifiedBattery.getReactiveLimits(ReactiveCapabilityCurve.class).getPoints();
+        List<ReactiveCapabilityCurve.Point> batteryPoints = new ArrayList<>(points);
         List<ReactiveCapabilityCurveModificationInfos> modificationPoints = batteryModificationInfos.getReactiveCapabilityCurvePoints();
         if (!CollectionUtils.isEmpty(points)) {
-            IntStream.range(1, modificationPoints.size())
+            IntStream.range(0, batteryPoints.size())
                     .forEach(i -> {
-                        ReactiveCapabilityCurveModificationInfos point = modificationPoints.get(i);
-                        assertEquals(100., point.getQmaxP());
-                        assertEquals(0., point.getQminP());
-                        assertEquals(200.0, point.getP());
+                        var point = batteryPoints.get(i);
+                        var modificationPoint = modificationPoints.get(i);
+                        assertEquals(modificationPoint.getQmaxP(), point.getMaxQ());
+                        assertEquals(modificationPoint.getQminP(), point.getMinQ());
+                        assertEquals(modificationPoint.getP(), point.getP());
                     });
         }
     }
