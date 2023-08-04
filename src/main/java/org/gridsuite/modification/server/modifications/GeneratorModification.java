@@ -378,7 +378,6 @@ public class GeneratorModification extends AbstractModification {
         } else {
             isVoltageRegulationOn = generator.isVoltageRegulatorOn();
         }
-
         if (reportVoltageSetpoint != null) {
             voltageRegulationReports.add(reportVoltageSetpoint);
         }
