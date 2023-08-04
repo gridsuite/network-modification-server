@@ -15,6 +15,7 @@ import com.powsybl.network.store.iidm.impl.MinMaxReactiveLimitsImpl;
 import com.powsybl.network.store.iidm.impl.extensions.CoordinatedReactiveControlAdderImpl;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.GeneratorModificationInfos;
+import org.gridsuite.modification.server.dto.OperationType;
 import org.gridsuite.modification.server.dto.ReactiveCapabilityCurveModificationInfos;
 import org.gridsuite.modification.server.dto.VoltageRegulationType;
 import org.springframework.util.CollectionUtils;
@@ -358,9 +359,6 @@ public class GeneratorModification extends AbstractModification {
     private Reporter modifyGeneratorVoltageRegulatorAttributes(GeneratorModificationInfos modificationInfos,
                                                                Generator generator, Reporter subReporter, Reporter subReporterSetpoints) {
         List<Report> voltageRegulationReports = new ArrayList<>();
-
-        Report reportVoltageSetpoint = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setTargetV, generator::getTargetV,
-            modificationInfos.getVoltageSetpoint(), "Voltage");
         // if no modification were done to VoltageRegulatorOn, we get the old value
         Boolean isVoltageRegulationOn = null;
         if (modificationInfos.getVoltageRegulationOn() != null) {
@@ -369,6 +367,17 @@ public class GeneratorModification extends AbstractModification {
                     modificationInfos.getVoltageRegulationOn(), "ON/OFF"));
         } else {
             isVoltageRegulationOn = generator.isVoltageRegulatorOn();
+        }
+
+        Report reportVoltageSetpoint = null;
+        if(modificationInfos.getVoltageSetpoint() != null) {
+            if (modificationInfos.getVoltageSetpoint().getOp() == OperationType.SET) {
+                reportVoltageSetpoint = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setTargetV, generator::getTargetV,
+                    modificationInfos.getVoltageSetpoint(), "Voltage");
+            } else {
+                reportVoltageSetpoint = ModificationUtils.getInstance().buildModificationReport(generator.getTargetV(), Double.NaN, "Voltage");
+                generator.setTargetV(Double.NaN);
+            }
         }
         if (reportVoltageSetpoint != null) {
             voltageRegulationReports.add(reportVoltageSetpoint);
@@ -409,7 +418,15 @@ public class GeneratorModification extends AbstractModification {
     private void modifyGeneratorSetpointsAttributes(GeneratorModificationInfos modificationInfos,
                                                     Generator generator, Reporter subReporter) {
         Report reportActivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setTargetP, generator::getTargetP, modificationInfos.getActivePowerSetpoint(), "Active power");
-        Report reportReactivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setTargetQ, generator::getTargetQ, modificationInfos.getReactivePowerSetpoint(), "Reactive power");
+        Report reportReactivePower = null;
+        if (modificationInfos.getReactivePowerSetpoint() != null) {
+            if (modificationInfos.getReactivePowerSetpoint().getOp() == OperationType.SET) {
+                reportReactivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setTargetQ, generator::getTargetQ, modificationInfos.getReactivePowerSetpoint(), "Reactive power");
+            } else {
+                reportReactivePower = ModificationUtils.getInstance().buildModificationReport(generator.getTargetQ(), Double.NaN, "Reactive power");
+                generator.setTargetQ(Double.NaN);
+            }
+        }
 
         Reporter subReporterSetpoints = null;
         if (reportActivePower != null || reportReactivePower != null) {
