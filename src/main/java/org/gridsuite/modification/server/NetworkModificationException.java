@@ -71,6 +71,7 @@ public class NetworkModificationException extends PowsyblException {
         LINE_ALREADY_EXISTS(HttpStatus.BAD_REQUEST),
         TWO_WINDINGS_TRANSFORMER_ALREADY_EXISTS(HttpStatus.BAD_REQUEST),
         CONNECTION_POSITION_ERROR(HttpStatus.BAD_REQUEST),
+        MODIFY_BATTERY_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         BRANCH_ACTION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         BRANCH_ACTION_TYPE_EMPTY(HttpStatus.BAD_REQUEST, "Empty branch action type"),
         BRANCH_ACTION_TYPE_UNKNOWN(HttpStatus.BAD_REQUEST),
