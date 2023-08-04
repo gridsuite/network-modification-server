@@ -176,17 +176,17 @@ public class GeneratorModification extends AbstractModification {
         if (reportMaxActivePower != null || reportMinActivePower != null || reportRatedNominalPower != null) {
             subReporterLimits = subReporter.createSubReporter(LIMITS, LIMITS);
             subReporterLimits.report(Report.builder()
-                .withKey(LIMITS)
-                .withDefaultMessage(LIMITS)
-                .withSeverity(TypedValue.INFO_SEVERITY)
-                .build());
+                    .withKey(LIMITS)
+                    .withDefaultMessage(LIMITS)
+                    .withSeverity(TypedValue.INFO_SEVERITY)
+                    .build());
 
             Reporter subReporterActiveLimits = subReporterLimits.createSubReporter(ACTIVE_LIMITS, ACTIVE_LIMITS);
             subReporterActiveLimits.report(Report.builder()
-                .withKey(ACTIVE_LIMITS)
-                .withDefaultMessage(ACTIVE_LIMITS)
-                .withSeverity(TypedValue.INFO_SEVERITY)
-                .build());
+                    .withKey(ACTIVE_LIMITS)
+                    .withDefaultMessage(ACTIVE_LIMITS)
+                    .withSeverity(TypedValue.INFO_SEVERITY)
+                    .build());
             if (reportMaxActivePower != null) {
                 subReporterActiveLimits.report(reportMaxActivePower);
             }
@@ -360,13 +360,13 @@ public class GeneratorModification extends AbstractModification {
         List<Report> voltageRegulationReports = new ArrayList<>();
 
         Report reportVoltageSetpoint = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setTargetV, generator::getTargetV,
-            modificationInfos.getVoltageSetpoint(), "Voltage");
+                modificationInfos.getVoltageSetpoint(), "Voltage");
         // if no modification were done to VoltageRegulatorOn, we get the old value
         Boolean isVoltageRegulationOn = null;
         if (modificationInfos.getVoltageRegulationOn() != null) {
             isVoltageRegulationOn = modificationInfos.getVoltageRegulationOn().getValue();
             voltageRegulationReports.add(ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setVoltageRegulatorOn, generator::isVoltageRegulatorOn,
-                    modificationInfos.getVoltageRegulationOn(), "ON/OFF"));
+                    modificationInfos.getVoltageRegulationOn(), "VoltageRegulationOn"));
         } else {
             isVoltageRegulationOn = generator.isVoltageRegulatorOn();
         }
@@ -397,10 +397,10 @@ public class GeneratorModification extends AbstractModification {
         if (subReporterSetpoints == null && !voltageRegulationReports.isEmpty()) {
             subReporterSetpoints2 = subReporter.createSubReporter(SETPOINTS, SETPOINTS);
             subReporterSetpoints2.report(Report.builder()
-                .withKey(SETPOINTS)
-                .withDefaultMessage(SETPOINTS)
-                .withSeverity(TypedValue.INFO_SEVERITY)
-                .build());
+                    .withKey(SETPOINTS)
+                    .withDefaultMessage(SETPOINTS)
+                    .withSeverity(TypedValue.INFO_SEVERITY)
+                    .build());
         }
         ModificationUtils.getInstance().reportModifications(subReporterSetpoints2, voltageRegulationReports, "voltageRegulationModified", "Voltage regulation");
         return subReporterSetpoints2;
@@ -415,10 +415,10 @@ public class GeneratorModification extends AbstractModification {
         if (reportActivePower != null || reportReactivePower != null) {
             subReporterSetpoints = subReporter.createSubReporter(SETPOINTS, SETPOINTS);
             subReporterSetpoints.report(Report.builder()
-                .withKey(SETPOINTS)
-                .withDefaultMessage(SETPOINTS)
-                .withSeverity(TypedValue.INFO_SEVERITY)
-                .build());
+                    .withKey(SETPOINTS)
+                    .withDefaultMessage(SETPOINTS)
+                    .withSeverity(TypedValue.INFO_SEVERITY)
+                    .build());
             if (reportActivePower != null) {
                 subReporterSetpoints.report(reportActivePower);
             }
