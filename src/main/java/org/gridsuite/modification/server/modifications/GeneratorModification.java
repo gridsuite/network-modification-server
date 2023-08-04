@@ -370,7 +370,7 @@ public class GeneratorModification extends AbstractModification {
         }
 
         Report reportVoltageSetpoint = null;
-        if(modificationInfos.getVoltageSetpoint() != null) {
+        if (modificationInfos.getVoltageSetpoint() != null) {
             if (modificationInfos.getVoltageSetpoint().getOp() == OperationType.SET) {
                 reportVoltageSetpoint = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setTargetV, generator::getTargetV,
                     modificationInfos.getVoltageSetpoint(), "Voltage");
