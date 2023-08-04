@@ -359,6 +359,16 @@ public class GeneratorModification extends AbstractModification {
     private Reporter modifyGeneratorVoltageRegulatorAttributes(GeneratorModificationInfos modificationInfos,
                                                                Generator generator, Reporter subReporter, Reporter subReporterSetpoints) {
         List<Report> voltageRegulationReports = new ArrayList<>();
+
+        Report reportVoltageSetpoint = null;
+        if (modificationInfos.getVoltageSetpoint() != null) {
+            if (modificationInfos.getVoltageSetpoint().getOp() == OperationType.SET) {
+                reportVoltageSetpoint = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setTargetV, generator::getTargetV,
+                    modificationInfos.getVoltageSetpoint(), "Voltage");
+            } else {
+                reportVoltageSetpoint = ModificationUtils.getInstance().buildModificationReport(generator.getTargetV(), Double.NaN, "Voltage");
+            }
+        }
         // if no modification were done to VoltageRegulatorOn, we get the old value
         Boolean isVoltageRegulationOn = null;
         if (modificationInfos.getVoltageRegulationOn() != null) {
@@ -369,16 +379,6 @@ public class GeneratorModification extends AbstractModification {
             isVoltageRegulationOn = generator.isVoltageRegulatorOn();
         }
 
-        Report reportVoltageSetpoint = null;
-        if (modificationInfos.getVoltageSetpoint() != null) {
-            if (modificationInfos.getVoltageSetpoint().getOp() == OperationType.SET) {
-                reportVoltageSetpoint = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setTargetV, generator::getTargetV,
-                    modificationInfos.getVoltageSetpoint(), "Voltage");
-            } else {
-                reportVoltageSetpoint = ModificationUtils.getInstance().buildModificationReport(generator.getTargetV(), Double.NaN, "Voltage");
-                generator.setTargetV(Double.NaN);
-            }
-        }
         if (reportVoltageSetpoint != null) {
             voltageRegulationReports.add(reportVoltageSetpoint);
         }
@@ -400,6 +400,15 @@ public class GeneratorModification extends AbstractModification {
                         oldQPercent,
                         modificationInfos.getQPercent().getValue(), "Reactive percentage"));
             }
+        }
+
+        //TargetQ and TargetV are unset after voltage regulation have been dealt with otherwise it can cause unwanted validations exceptions
+        if (modificationInfos.getVoltageSetpoint() != null && modificationInfos.getVoltageSetpoint().getOp() == OperationType.UNSET) {
+            generator.setTargetV(Double.NaN);
+        }
+
+        if (modificationInfos.getReactivePowerSetpoint() != null && modificationInfos.getReactivePowerSetpoint().getOp() == OperationType.UNSET) {
+            generator.setTargetQ(Double.NaN);
         }
 
         Reporter subReporterSetpoints2 = subReporterSetpoints;
@@ -424,7 +433,6 @@ public class GeneratorModification extends AbstractModification {
                 reportReactivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setTargetQ, generator::getTargetQ, modificationInfos.getReactivePowerSetpoint(), "Reactive power");
             } else {
                 reportReactivePower = ModificationUtils.getInstance().buildModificationReport(generator.getTargetQ(), Double.NaN, "Reactive power");
-                generator.setTargetQ(Double.NaN);
             }
         }
 
