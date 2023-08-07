@@ -24,6 +24,9 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
  */
 public class TwoWindingsTransformerModification extends AbstractBranchModification {
 
+    private static final String RATIO_TAP_CHANGER_SUBREPORTER_DEFAULT_MESSAGE = "Ratio tap changer";
+    private static final String PHASE_TAP_CHANGER_SUBREPORTER_DEFAULT_MESSAGE = "Phase tap changer";
+
     public TwoWindingsTransformerModification(TwoWindingsTransformerModificationInfos modificationInfos) {
         super(modificationInfos);
     }
@@ -341,7 +344,8 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
         List<Report> positionsAndStepsReports = new ArrayList<>();
         addTapChangerPositionsAndSteps(ratioTapChangerInfos, ratioTapChanger, ratioTapChangerAdder, positionsAndStepsReports);
 
-        // we need to remove the tap changer before adding the new one to avoid having two tap changers on the same transformer
+        // TODO : This is a workaround that needs to be removed when modifying tap changer steps will be possible
+        // workaround : we need to remove the tap changer before adding the new one to avoid having two tap changers on the same transformer
         // and we need to prepare a backup in case the addition fails
         RatioTapChangerAdder ratioTapChangerBackUp = null;
         if (ratioTapChanger != null) {
@@ -359,12 +363,12 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
         }
 
         if (!ratioTapChangerReports.isEmpty() || !voltageRegulationReports.isEmpty() || !positionsAndStepsReports.isEmpty()) {
-            Reporter ratioTapChangerReporter = ModificationUtils.getInstance().reportModifications(subReporter, ratioTapChangerReports, "ratioTapChangerModification", "Ratio tap changer");
+            Reporter ratioTapChangerReporter = ModificationUtils.getInstance().reportModifications(subReporter, ratioTapChangerReports, TapChangerType.RATIO.name(), RATIO_TAP_CHANGER_SUBREPORTER_DEFAULT_MESSAGE);
             if (ratioTapChangerReporter == null) {
-                ratioTapChangerReporter = subReporter.createSubReporter("ratioTapChangerModification", "Ratio tap changer");
+                ratioTapChangerReporter = subReporter.createSubReporter(TapChangerType.RATIO.name(), RATIO_TAP_CHANGER_SUBREPORTER_DEFAULT_MESSAGE);
                 ratioTapChangerReporter.report(Report.builder()
-                            .withKey("ratioTapChangerModification")
-                            .withDefaultMessage("Ratio tap changer")
+                            .withKey(TapChangerType.RATIO.name())
+                            .withDefaultMessage(RATIO_TAP_CHANGER_SUBREPORTER_DEFAULT_MESSAGE)
                             .withSeverity(TypedValue.INFO_SEVERITY)
                             .build());
             }
@@ -465,7 +469,8 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
         List<Report> positionsAndStepsReports = new ArrayList<>();
         addTapChangerPositionsAndSteps(phaseTapChangerInfos, phaseTapChanger, phaseTapChangerAdder, positionsAndStepsReports);
 
-        // we need to remove the tap changer before adding the new one to avoid having two tap changers on the same transformer
+        // TODO : This is a workaround that needs to be removed when modifying tap changer steps will be possible
+        // workaround : we need to remove the tap changer before adding the new one to avoid having two tap changers on the same transformer
         // and we need to prepare a backup in case the addition fails
         PhaseTapChangerAdder phaseTapChangerBackUp = null;
         if (phaseTapChanger != null) {
@@ -483,12 +488,12 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
         }
 
         if (!phaseTapChangerReports.isEmpty() || !regulationReports.isEmpty() || !positionsAndStepsReports.isEmpty()) {
-            Reporter phaseTapChangerSubreporter = ModificationUtils.getInstance().reportModifications(subReporter, phaseTapChangerReports, TapChangerType.PHASE.name(), "Phase tap changer");
+            Reporter phaseTapChangerSubreporter = ModificationUtils.getInstance().reportModifications(subReporter, phaseTapChangerReports, TapChangerType.PHASE.name(), PHASE_TAP_CHANGER_SUBREPORTER_DEFAULT_MESSAGE);
             if (phaseTapChangerSubreporter == null) {
-                phaseTapChangerSubreporter = subReporter.createSubReporter(TapChangerType.PHASE.name(), "Phase tap changer");
+                phaseTapChangerSubreporter = subReporter.createSubReporter(TapChangerType.PHASE.name(), PHASE_TAP_CHANGER_SUBREPORTER_DEFAULT_MESSAGE);
                 phaseTapChangerSubreporter.report(Report.builder()
                             .withKey(TapChangerType.PHASE.name())
-                            .withDefaultMessage("Phase tap changer")
+                            .withDefaultMessage(PHASE_TAP_CHANGER_SUBREPORTER_DEFAULT_MESSAGE)
                             .withSeverity(TypedValue.INFO_SEVERITY)
                             .build());
             }
