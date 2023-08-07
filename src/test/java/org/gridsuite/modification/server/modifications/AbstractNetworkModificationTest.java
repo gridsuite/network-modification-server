@@ -17,6 +17,7 @@ import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import com.powsybl.network.store.iidm.impl.NetworkImpl;
 import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.ReportService;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -41,6 +42,7 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
@@ -131,12 +133,16 @@ abstract class AbstractNetworkModificationTest {
 
     @Test
     public void testCreate() throws Exception {
-
+        MvcResult mvcResult;
+        Optional<NetworkModificationResult> networkModificationResult;
         ModificationInfos modificationToCreate = buildModification();
         String modificationToCreateJson = mapper.writeValueAsString(modificationToCreate);
 
-        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+        mvcResult =  mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
+        networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() {});
+        assertTrue(networkModificationResult.isPresent());
+        assertTrue(networkModificationResult.get().isApplicationStatusOk());
 
         ModificationInfos createdModification = modificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
 
@@ -147,13 +153,17 @@ abstract class AbstractNetworkModificationTest {
 
     @Test
     public void testRead() throws Exception {
-
+        MvcResult mvcResult;
+        Optional<NetworkModificationResult> networkModificationResult;
         ModificationInfos modificationToRead = buildModification();
 
         UUID modificationUuid = saveModification(modificationToRead);
 
-        MvcResult mvcResult = mockMvc.perform(get(URI_NETWORK_MODIF_GET_PUT + modificationUuid))
+        mvcResult = mockMvc.perform(get(URI_NETWORK_MODIF_GET_PUT + modificationUuid))
                 .andExpect(status().isOk()).andReturn();
+        networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() {});
+        assertTrue(networkModificationResult.isPresent());
+        assertTrue(networkModificationResult.get().isApplicationStatusOk());
         String resultAsString = mvcResult.getResponse().getContentAsString();
         ModificationInfos receivedModification = mapper.readValue(resultAsString, new TypeReference<>() {
         });
@@ -164,6 +174,10 @@ abstract class AbstractNetworkModificationTest {
     @Test
     public void testUpdate() throws Exception {
 
+        MvcResult mvcResult;
+
+        Optional<NetworkModificationResult> networkModificationResult;
+
         ModificationInfos modificationToUpdate = buildModification();
 
         UUID modificationUuid = saveModification(modificationToUpdate);
@@ -172,8 +186,11 @@ abstract class AbstractNetworkModificationTest {
 
         String modificationToUpdateJson = mapper.writeValueAsString(modificationToUpdate);
 
-        mockMvc.perform(put(URI_NETWORK_MODIF_GET_PUT + modificationUuid).content(modificationToUpdateJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        mvcResult = mockMvc.perform(put(URI_NETWORK_MODIF_GET_PUT + modificationUuid).content(modificationToUpdateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() {});
+        assertTrue(networkModificationResult.isPresent());
+        assertTrue(networkModificationResult.get().isApplicationStatusOk());
 
         // TODO Need a test for substations impacted
         //assertThat(bsmListResult.get(0)).recursivelyEquals(ModificationType.LOAD_CREATION, "idLoad1", Set.of("s1"));
@@ -187,14 +204,22 @@ abstract class AbstractNetworkModificationTest {
     @Test
     public void testDelete() throws Exception {
 
+        MvcResult mvcResult;
+
+        Optional<NetworkModificationResult> networkModificationResult;
+
         ModificationInfos modificationToDelete = buildModification();
 
         UUID modificationUuid = saveModification(modificationToDelete);
 
-        mockMvc.perform(delete(getNetworkModificationUri())
+        mvcResult = mockMvc.perform(delete(getNetworkModificationUri())
                         .queryParam("groupUuid", TEST_GROUP_ID.toString())
                         .queryParam("uuids", modificationUuid.toString()))
                 .andExpect(status().isOk()).andReturn();
+
+        networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() {});
+        assertTrue(networkModificationResult.isPresent());
+        assertTrue(networkModificationResult.get().isApplicationStatusOk());
 
         List<ModificationInfos> storedModifications = modificationRepository.getModifications(TEST_GROUP_ID, false, true);
 
@@ -205,14 +230,19 @@ abstract class AbstractNetworkModificationTest {
     @Test
     public void testCopy() throws Exception {
 
+        MvcResult mvcResult;
+        Optional<NetworkModificationResult> networkModificationResult;
         ModificationInfos modificationToCopy = buildModification();
 
         UUID modificationUuid = saveModification(modificationToCopy);
 
-        mockMvc.perform(put(URI_NETWORK_MODIF_COPY)
+        mvcResult = mockMvc.perform(put(URI_NETWORK_MODIF_COPY)
                         .content(mapper.writeValueAsString(List.of(modificationUuid)))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
+        networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() {});
+        assertTrue(networkModificationResult.isPresent());
+        assertTrue(networkModificationResult.get().isApplicationStatusOk());
 
         List<ModificationInfos> modifications = modificationRepository
                 .getModifications(TEST_GROUP_ID, false, true);
