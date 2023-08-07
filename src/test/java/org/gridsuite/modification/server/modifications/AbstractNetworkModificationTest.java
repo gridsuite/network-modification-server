@@ -148,7 +148,7 @@ abstract class AbstractNetworkModificationTest {
 
         assertThat(createdModification).recursivelyEquals(modificationToCreate);
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
-        assertNetworkAfterCreation();
+        assertAfterNetworkModificationCreation();
     }
 
     @Test
@@ -224,7 +224,7 @@ abstract class AbstractNetworkModificationTest {
         List<ModificationInfos> storedModifications = modificationRepository.getModifications(TEST_GROUP_ID, false, true);
 
         assertTrue(storedModifications.isEmpty());
-        assertNetworkAfterDeletion();
+        assertAfterNetworkModificationDeletion();
     }
 
     @Test
@@ -303,7 +303,7 @@ abstract class AbstractNetworkModificationTest {
 
     protected abstract ModificationInfos buildModificationUpdate();
 
-    protected abstract void assertNetworkAfterCreation();
+    protected abstract void assertAfterNetworkModificationCreation();
 
-    protected abstract void assertNetworkAfterDeletion();
+    protected abstract void assertAfterNetworkModificationDeletion();
 }

@@ -71,12 +71,12 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
     }
 
     @Override
-    protected void assertNetworkAfterCreation() {
+    protected void assertAfterNetworkModificationCreation() {
         assertNotNull(getNetwork().getShuntCompensator("shuntOneId"));
     }
 
     @Override
-    protected void assertNetworkAfterDeletion() {
+    protected void assertAfterNetworkModificationDeletion() {
         assertNull(getNetwork().getShuntCompensator("shuntOneId"));
     }
 

@@ -219,7 +219,7 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
     }
 
     @Override
-    protected void assertNetworkAfterCreation() {
+    protected void assertAfterNetworkModificationCreation() {
         TwoWindingsTransformer modifiedTwoWindingsTransformer = getNetwork().getTwoWindingsTransformer("trf1");
         assertNotNull(modifiedTwoWindingsTransformer);
         assertEquals("2wt modified name", modifiedTwoWindingsTransformer.getNameOrId());
@@ -250,7 +250,7 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
     }
 
     @Override
-    protected void assertNetworkAfterDeletion() {
+    protected void assertAfterNetworkModificationDeletion() {
         TwoWindingsTransformer modifiedTwoWindingsTransformer = getNetwork().getTwoWindingsTransformer("trf1");
         assertNotNull(modifiedTwoWindingsTransformer);
         assertEquals("trf1", modifiedTwoWindingsTransformer.getNameOrId());

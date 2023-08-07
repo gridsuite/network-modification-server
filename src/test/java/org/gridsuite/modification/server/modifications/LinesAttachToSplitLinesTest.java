@@ -66,7 +66,7 @@ public class LinesAttachToSplitLinesTest extends AbstractNetworkModificationTest
     }
 
     @Override
-    protected void assertNetworkAfterCreation() {
+    protected void assertAfterNetworkModificationCreation() {
         // 3 lines are gone
         assertNull(getNetwork().getLine("l1"));
         assertNull(getNetwork().getLine("l2"));
@@ -80,7 +80,7 @@ public class LinesAttachToSplitLinesTest extends AbstractNetworkModificationTest
     }
 
     @Override
-    protected void assertNetworkAfterDeletion() {
+    protected void assertAfterNetworkModificationDeletion() {
         assertNotNull(getNetwork().getLine("l1"));
         assertNotNull(getNetwork().getLine("l2"));
         assertNotNull(getNetwork().getLine("l3"));

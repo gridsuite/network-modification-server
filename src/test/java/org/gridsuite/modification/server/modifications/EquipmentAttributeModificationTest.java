@@ -176,12 +176,12 @@ public class EquipmentAttributeModificationTest extends AbstractNetworkModificat
     }
 
     @Override
-    protected void assertNetworkAfterCreation() {
+    protected void assertAfterNetworkModificationCreation() {
         assertTrue(getNetwork().getSwitch("v1b1").isOpen());
     }
 
     @Override
-    protected void assertNetworkAfterDeletion() {
+    protected void assertAfterNetworkModificationDeletion() {
         assertFalse(getNetwork().getSwitch("v1b1").isOpen());
     }
 }
