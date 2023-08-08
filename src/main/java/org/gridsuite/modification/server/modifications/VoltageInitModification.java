@@ -31,6 +31,10 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
 public class VoltageInitModification extends AbstractModification {
     private VoltageInitModificationInfos voltageInitModificationInfos;
 
+    private static final String GENERATOR_MSG = "Generator";
+    private static final String TWO_WINDINGS_TRANSFORMER_MSG = "2 windings transformer ";
+    private static final String THREE_WINDINGS_TRANSFORMER_MSG = "3 windings transformer ";
+
     public VoltageInitModification(VoltageInitModificationInfos voltageInitModificationInfos) {
         this.voltageInitModificationInfos = voltageInitModificationInfos;
     }
@@ -48,10 +52,10 @@ public class VoltageInitModification extends AbstractModification {
         voltageInitModificationInfos.getGenerators().forEach(m -> {
             Generator generator = network.getGenerator(m.getGeneratorId());
             if (generator == null) {
-                throw new NetworkModificationException(GENERATOR_NOT_FOUND, "Generator " + m.getGeneratorId() + " does not exist in network");
+                throw new NetworkModificationException(GENERATOR_NOT_FOUND, GENERATOR_MSG + m.getGeneratorId() + " does not exist in network");
             }
             if (m.getVoltageSetpoint() != null || m.getReactivePowerSetpoint() != null) {
-                Reporter genReporter = subReporter.createSubReporter("Generator " + m.getGeneratorId(), "Generator " + m.getGeneratorId());
+                Reporter genReporter = subReporter.createSubReporter(GENERATOR_MSG + m.getGeneratorId(), GENERATOR_MSG + m.getGeneratorId());
                 genReporter.report(Report.builder()
                     .withKey("generatorModification")
                     .withDefaultMessage("Generator with id=${id} modified :")
@@ -79,13 +83,13 @@ public class VoltageInitModification extends AbstractModification {
             if (t.getLegSide() != null) {
                 ThreeWindingsTransformer threeWindingsTransformer = network.getThreeWindingsTransformer(t.getTransformerId());
                 if (threeWindingsTransformer == null) {
-                    throw new NetworkModificationException(THREE_WINDINGS_TRANSFORMER_NOT_FOUND, "3 windings transformer " + t.getTransformerId() + " does not exist in network");
+                    throw new NetworkModificationException(THREE_WINDINGS_TRANSFORMER_NOT_FOUND, THREE_WINDINGS_TRANSFORMER_MSG + t.getTransformerId() + " does not exist in network");
                 }
                 if (threeWindingsTransformer.getLeg(t.getLegSide()).getRatioTapChanger() == null) {
-                    throw new NetworkModificationException(THREE_WINDINGS_TRANSFORMER_RATIO_TAP_CHANGER_NOT_FOUND, "3 windings transformer " + t.getTransformerId() + " : Ratio tap changer for leg " + t.getLegSide().name() + " does not exist in network");
+                    throw new NetworkModificationException(THREE_WINDINGS_TRANSFORMER_RATIO_TAP_CHANGER_NOT_FOUND, THREE_WINDINGS_TRANSFORMER_MSG + t.getTransformerId() + " : Ratio tap changer for leg " + t.getLegSide().name() + " does not exist in network");
                 }
 
-                Reporter transformerReporter = subReporter.createSubReporter("3 windings transformer " + t.getTransformerId(), "3 windings transformer " + t.getTransformerId());
+                Reporter transformerReporter = subReporter.createSubReporter(THREE_WINDINGS_TRANSFORMER_MSG + t.getTransformerId(), THREE_WINDINGS_TRANSFORMER_MSG + t.getTransformerId());
                 transformerReporter.report(Report.builder()
                     .withKey("3WindingsTransformerModification")
                     .withDefaultMessage("3 windings transformer with id=${id} modified :")
@@ -97,13 +101,13 @@ public class VoltageInitModification extends AbstractModification {
             } else {
                 TwoWindingsTransformer twoWindingsTransformer = network.getTwoWindingsTransformer(t.getTransformerId());
                 if (twoWindingsTransformer == null) {
-                    throw new NetworkModificationException(TWO_WINDINGS_TRANSFORMER_NOT_FOUND, "2 windings transformer " + t.getTransformerId() + " does not exist in network");
+                    throw new NetworkModificationException(TWO_WINDINGS_TRANSFORMER_NOT_FOUND, TWO_WINDINGS_TRANSFORMER_MSG + t.getTransformerId() + " does not exist in network");
                 }
                 if (twoWindingsTransformer.getRatioTapChanger() == null) {
-                    throw new NetworkModificationException(TWO_WINDINGS_TRANSFORMER_RATIO_TAP_CHANGER_NOT_FOUND, "2 windings transformer " + t.getTransformerId() + " : Ratio tap changer does not exist in network");
+                    throw new NetworkModificationException(TWO_WINDINGS_TRANSFORMER_RATIO_TAP_CHANGER_NOT_FOUND, TWO_WINDINGS_TRANSFORMER_MSG + t.getTransformerId() + " : Ratio tap changer does not exist in network");
                 }
 
-                Reporter transformerReporter = subReporter.createSubReporter("2 windings transformer " + t.getTransformerId(), "2 windings transformer " + t.getTransformerId());
+                Reporter transformerReporter = subReporter.createSubReporter(TWO_WINDINGS_TRANSFORMER_MSG + t.getTransformerId(), TWO_WINDINGS_TRANSFORMER_MSG + t.getTransformerId());
                 transformerReporter.report(Report.builder()
                     .withKey("2WindingsTransformerModification")
                     .withDefaultMessage("2 windings transformer with id=${id} modified :")
