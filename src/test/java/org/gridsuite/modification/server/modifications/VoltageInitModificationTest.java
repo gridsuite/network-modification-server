@@ -98,9 +98,11 @@ public class VoltageInitModificationTest extends AbstractNetworkModificationTest
                     .build(),
                 VoltageInitTransformerModificationInfos.builder()
                     .transformerId("trf2")
+                    .ratioTapChangerPosition(2)
                     .build(),
                 VoltageInitTransformerModificationInfos.builder()
                     .transformerId("2wtNotFound")
+                    .ratioTapChangerPosition(2)
                     .build(),
                 VoltageInitTransformerModificationInfos.builder()
                     .transformerId("trf6")
