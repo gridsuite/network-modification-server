@@ -1135,15 +1135,25 @@ public class ModificationControllerTest {
     public void testCreateVoltageInitModification() throws Exception {
         // Create the modification
         VoltageInitModificationInfos modificationsInfos1 = VoltageInitModificationInfos.builder()
-                .generators(List.of(
-                        VoltageInitGeneratorModificationInfos.builder()
-                                .generatorId("G1")
-                                .reactivePowerSetpoint(10.)
-                                .build(),
-                        VoltageInitGeneratorModificationInfos.builder()
-                                .generatorId("G2")
-                                .voltageSetpoint(226.)
-                                .build())).build();
+            .generators(List.of(
+                VoltageInitGeneratorModificationInfos.builder()
+                    .generatorId("G1")
+                    .reactivePowerSetpoint(10.)
+                    .build(),
+                VoltageInitGeneratorModificationInfos.builder()
+                    .generatorId("G2")
+                    .voltageSetpoint(226.)
+                    .build()))
+            .transformers(List.of(
+                VoltageInitTransformerModificationInfos.builder()
+                    .transformerId("2WT1")
+                    .ratioTapChangerPosition(3)
+                    .build(),
+                VoltageInitTransformerModificationInfos.builder()
+                    .transformerId("3WT1")
+                    .ratioTapChangerPosition(1)
+                    .legSide(ThreeWindingsTransformer.Side.TWO)
+                    .build())).build();
 
         MvcResult mvcResult = mockMvc.perform(post("/v1/groups/modification")
                         .content(objectWriter.writeValueAsString(modificationsInfos1))

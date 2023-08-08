@@ -9,12 +9,14 @@ package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.SwitchKind;
+import com.powsybl.iidm.network.ThreeWindingsTransformer;
 import com.powsybl.iidm.network.VoltageLevel;
 import com.powsybl.iidm.network.Generator;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import org.gridsuite.modification.server.dto.VoltageInitGeneratorModificationInfos;
 import org.gridsuite.modification.server.dto.VoltageInitModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.VoltageInitTransformerModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 
@@ -43,6 +45,37 @@ public class VoltageInitModificationTest extends AbstractNetworkModificationTest
         newGen.setTargetV(224.);
         newGen.setVoltageRegulatorOn(true);
 
+        ThreeWindingsTransformer transformer = network.getThreeWindingsTransformer("trf6");
+        transformer.getLeg2().newRatioTapChanger()
+            .setLowTapPosition(0)
+            .setTapPosition(1)
+            .setLoadTapChangingCapabilities(false)
+            .setRegulating(true)
+            .setTargetDeadband(1.0)
+            .setTargetV(220.0)
+            .beginStep()
+            .setR(39.78473)
+            .setX(39.784725)
+            .setG(0.0)
+            .setB(0.0)
+            .setRho(1.0)
+            .endStep()
+            .beginStep()
+            .setR(39.78474)
+            .setX(39.784726)
+            .setG(0.0)
+            .setB(0.0)
+            .setRho(1.0)
+            .endStep()
+            .beginStep()
+            .setR(39.78475)
+            .setX(39.784727)
+            .setG(0.0)
+            .setB(0.0)
+            .setRho(1.0)
+            .endStep()
+            .add();
+
         return network;
     }
 
@@ -58,6 +91,16 @@ public class VoltageInitModificationTest extends AbstractNetworkModificationTest
                     .generatorId("newGen")
                     .voltageSetpoint(226.)
                     .build()))
+            .transformers(List.of(
+                VoltageInitTransformerModificationInfos.builder()
+                    .transformerId("trf1")
+                    .ratioTapChangerPosition(2)
+                    .build(),
+                VoltageInitTransformerModificationInfos.builder()
+                    .transformerId("trf6")
+                    .ratioTapChangerPosition(3)
+                    .legSide(ThreeWindingsTransformer.Side.TWO)
+                    .build()))
             .build();
     }
 
@@ -72,6 +115,16 @@ public class VoltageInitModificationTest extends AbstractNetworkModificationTest
                 VoltageInitGeneratorModificationInfos.builder()
                     .generatorId("v5generator")
                     .reactivePowerSetpoint(15.)
+                    .build()))
+                        .transformers(List.of(
+                VoltageInitTransformerModificationInfos.builder()
+                    .transformerId("trf1")
+                    .ratioTapChangerPosition(1)
+                    .build(),
+                VoltageInitTransformerModificationInfos.builder()
+                    .transformerId("trf6")
+                    .ratioTapChangerPosition(2)
+                    .legSide(ThreeWindingsTransformer.Side.TWO)
                     .build()))
             .build();
     }

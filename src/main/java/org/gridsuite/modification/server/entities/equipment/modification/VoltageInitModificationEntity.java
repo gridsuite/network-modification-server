@@ -13,6 +13,7 @@ import lombok.Setter;
 import org.gridsuite.modification.server.dto.VoltageInitGeneratorModificationInfos;
 import org.gridsuite.modification.server.dto.VoltageInitModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.VoltageInitTransformerModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 
 import javax.persistence.CollectionTable;
@@ -40,6 +41,12 @@ public class VoltageInitModificationEntity extends ModificationEntity {
         foreignKey = @ForeignKey(name = "VoltageInitModificationEntity_generators_fk1"))
     private List<VoltageInitGeneratorModificationEmbeddable> generators;
 
+    @ElementCollection
+    @CollectionTable(name = "voltageInitTransformersModification",
+        indexes = {@Index(name = "VoltageInitModificationEntity_transformers_idx1", columnList = "voltage_init_modification_entity_id")},
+        foreignKey = @ForeignKey(name = "VoltageInitModificationEntity_transformers_fk1"))
+    private List<VoltageInitTransformerModificationEmbeddable> transformers;
+
     public VoltageInitModificationEntity(VoltageInitModificationInfos voltageInitModificationInfos) {
         super(voltageInitModificationInfos);
         assignAttributes(voltageInitModificationInfos);
@@ -53,6 +60,7 @@ public class VoltageInitModificationEntity extends ModificationEntity {
 
     private void assignAttributes(VoltageInitModificationInfos voltageInitModificationInfos) {
         generators = toEmbeddableVoltageInitGenerators(voltageInitModificationInfos.getGenerators());
+        transformers = toEmbeddableVoltageInitTransformers(voltageInitModificationInfos.getTransformers());
     }
 
     public static List<VoltageInitGeneratorModificationEmbeddable> toEmbeddableVoltageInitGenerators(List<VoltageInitGeneratorModificationInfos> generators) {
@@ -68,12 +76,26 @@ public class VoltageInitModificationEntity extends ModificationEntity {
             .collect(Collectors.toList()) : null;
     }
 
+    public static List<VoltageInitTransformerModificationEmbeddable> toEmbeddableVoltageInitTransformers(List<VoltageInitTransformerModificationInfos> transformers) {
+        return transformers == null ? null : transformers.stream()
+            .map(transformer -> new VoltageInitTransformerModificationEmbeddable(transformer.getTransformerId(), transformer.getRatioTapChangerPosition(), transformer.getLegSide()))
+            .collect(Collectors.toList());
+    }
+
+    private List<VoltageInitTransformerModificationInfos> toTransformersModification(List<VoltageInitTransformerModificationEmbeddable> transformers) {
+        return transformers != null ? transformers
+            .stream()
+            .map(transformer -> new VoltageInitTransformerModificationInfos(transformer.getTransformerId(), transformer.getRatioTapChangerPosition(), transformer.getLegSide()))
+            .collect(Collectors.toList()) : null;
+    }
+
     @Override
     public VoltageInitModificationInfos toModificationInfos() {
         return VoltageInitModificationInfos.builder()
-                .date(getDate())
-                .uuid(getId())
-                .generators(toGeneratorsModification(generators))
-                .build();
+            .date(getDate())
+            .uuid(getId())
+            .generators(toGeneratorsModification(generators))
+            .transformers(toTransformersModification(transformers))
+            .build();
     }
 }
