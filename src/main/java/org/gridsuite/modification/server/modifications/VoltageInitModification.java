@@ -17,11 +17,6 @@ import com.powsybl.iidm.network.TwoWindingsTransformer;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.VoltageInitModificationInfos;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.GENERATOR_NOT_FOUND;
-import static org.gridsuite.modification.server.NetworkModificationException.Type.THREE_WINDINGS_TRANSFORMER_NOT_FOUND;
-import static org.gridsuite.modification.server.NetworkModificationException.Type.THREE_WINDINGS_TRANSFORMER_RATIO_TAP_CHANGER_NOT_FOUND;
-import static org.gridsuite.modification.server.NetworkModificationException.Type.TWO_WINDINGS_TRANSFORMER_NOT_FOUND;
-import static org.gridsuite.modification.server.NetworkModificationException.Type.TWO_WINDINGS_TRANSFORMER_RATIO_TAP_CHANGER_NOT_FOUND;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.VOLTAGE_INIT_MODIFICATION_ERROR;
 
 /**
@@ -52,7 +47,14 @@ public class VoltageInitModification extends AbstractModification {
         voltageInitModificationInfos.getGenerators().forEach(m -> {
             Generator generator = network.getGenerator(m.getGeneratorId());
             if (generator == null) {
-                throw new NetworkModificationException(GENERATOR_NOT_FOUND, GENERATOR_MSG + m.getGeneratorId() + " does not exist in network");
+                Reporter genReporter = subReporter.createSubReporter(GENERATOR_MSG + m.getGeneratorId(), GENERATOR_MSG + m.getGeneratorId());
+                genReporter.report(Report.builder()
+                    .withKey("generatorNotFound")
+                    .withDefaultMessage("Generator with id=${id} not found")
+                    .withValue("id", m.getGeneratorId())
+                    .withSeverity(TypedValue.WARN_SEVERITY)
+                    .build());
+                return;
             }
             if (m.getVoltageSetpoint() != null || m.getReactivePowerSetpoint() != null) {
                 Reporter genReporter = subReporter.createSubReporter(GENERATOR_MSG + m.getGeneratorId(), GENERATOR_MSG + m.getGeneratorId());
@@ -83,10 +85,25 @@ public class VoltageInitModification extends AbstractModification {
             if (t.getLegSide() != null) {
                 ThreeWindingsTransformer threeWindingsTransformer = network.getThreeWindingsTransformer(t.getTransformerId());
                 if (threeWindingsTransformer == null) {
-                    throw new NetworkModificationException(THREE_WINDINGS_TRANSFORMER_NOT_FOUND, THREE_WINDINGS_TRANSFORMER_MSG + t.getTransformerId() + " does not exist in network");
+                    Reporter genReporter = subReporter.createSubReporter(THREE_WINDINGS_TRANSFORMER_MSG + t.getTransformerId(), THREE_WINDINGS_TRANSFORMER_MSG + t.getTransformerId());
+                    genReporter.report(Report.builder()
+                        .withKey("3WindingsTransformerNotFound")
+                        .withDefaultMessage("3 windings transformer with id=${id} not found")
+                        .withValue("id", t.getTransformerId())
+                        .withSeverity(TypedValue.WARN_SEVERITY)
+                        .build());
+                    return;
                 }
                 if (threeWindingsTransformer.getLeg(t.getLegSide()).getRatioTapChanger() == null) {
-                    throw new NetworkModificationException(THREE_WINDINGS_TRANSFORMER_RATIO_TAP_CHANGER_NOT_FOUND, THREE_WINDINGS_TRANSFORMER_MSG + t.getTransformerId() + " : Ratio tap changer for leg " + t.getLegSide().name() + " does not exist in network");
+                    Reporter genReporter = subReporter.createSubReporter(THREE_WINDINGS_TRANSFORMER_MSG + t.getTransformerId(), THREE_WINDINGS_TRANSFORMER_MSG + t.getTransformerId());
+                    genReporter.report(Report.builder()
+                        .withKey("3WindingsTransformerRatioTapChangerNotFound")
+                        .withDefaultMessage("3 windings transformer with id=${id} : Ratio tap changer for leg ${leg} not found")
+                        .withValue("id", t.getTransformerId())
+                        .withValue("leg", t.getLegSide().name())
+                        .withSeverity(TypedValue.WARN_SEVERITY)
+                        .build());
+                    return;
                 }
 
                 Reporter transformerReporter = subReporter.createSubReporter(THREE_WINDINGS_TRANSFORMER_MSG + t.getTransformerId(), THREE_WINDINGS_TRANSFORMER_MSG + t.getTransformerId());
@@ -101,10 +118,24 @@ public class VoltageInitModification extends AbstractModification {
             } else {
                 TwoWindingsTransformer twoWindingsTransformer = network.getTwoWindingsTransformer(t.getTransformerId());
                 if (twoWindingsTransformer == null) {
-                    throw new NetworkModificationException(TWO_WINDINGS_TRANSFORMER_NOT_FOUND, TWO_WINDINGS_TRANSFORMER_MSG + t.getTransformerId() + " does not exist in network");
+                    Reporter genReporter = subReporter.createSubReporter(TWO_WINDINGS_TRANSFORMER_MSG + t.getTransformerId(), TWO_WINDINGS_TRANSFORMER_MSG + t.getTransformerId());
+                    genReporter.report(Report.builder()
+                        .withKey("2WindingsTransformerNotFound")
+                        .withDefaultMessage("2 windings transformer with id=${id} not found")
+                        .withValue("id", t.getTransformerId())
+                        .withSeverity(TypedValue.WARN_SEVERITY)
+                        .build());
+                    return;
                 }
                 if (twoWindingsTransformer.getRatioTapChanger() == null) {
-                    throw new NetworkModificationException(TWO_WINDINGS_TRANSFORMER_RATIO_TAP_CHANGER_NOT_FOUND, TWO_WINDINGS_TRANSFORMER_MSG + t.getTransformerId() + " : Ratio tap changer does not exist in network");
+                    Reporter genReporter = subReporter.createSubReporter(TWO_WINDINGS_TRANSFORMER_MSG + t.getTransformerId(), TWO_WINDINGS_TRANSFORMER_MSG + t.getTransformerId());
+                    genReporter.report(Report.builder()
+                        .withKey("2WindingsTransformerRatioTapChangerNotFound")
+                        .withDefaultMessage("2 windings transformer with id=${id} : Ratio tap changer not found")
+                        .withValue("id", t.getTransformerId())
+                        .withSeverity(TypedValue.WARN_SEVERITY)
+                        .build());
+                    return;
                 }
 
                 Reporter transformerReporter = subReporter.createSubReporter(TWO_WINDINGS_TRANSFORMER_MSG + t.getTransformerId(), TWO_WINDINGS_TRANSFORMER_MSG + t.getTransformerId());
