@@ -97,13 +97,24 @@ public class VoltageInitModificationTest extends AbstractNetworkModificationTest
                     .ratioTapChangerPosition(2)
                     .build(),
                 VoltageInitTransformerModificationInfos.builder()
+                    .transformerId("trf2")
+                    .build(),
+                VoltageInitTransformerModificationInfos.builder()
+                    .transformerId("2wtNotFound")
+                    .build(),
+                VoltageInitTransformerModificationInfos.builder()
                     .transformerId("trf6")
                     .ratioTapChangerPosition(3)
                     .legSide(ThreeWindingsTransformer.Side.TWO)
                     .build(),
                 VoltageInitTransformerModificationInfos.builder()
-                    .transformerId("trf8")
+                    .transformerId("3wtNotFound")
                     .legSide(ThreeWindingsTransformer.Side.THREE)
+                    .build(),
+                VoltageInitTransformerModificationInfos.builder()
+                    .transformerId("3wtNotFound")
+                    .ratioTapChangerPosition(1)
+                    .legSide(ThreeWindingsTransformer.Side.ONE)
                     .build(),
                 VoltageInitTransformerModificationInfos.builder()
                     .transformerId("trf6")
