@@ -206,6 +206,18 @@ public class GenerationDispatch extends AbstractModification {
 
         List<String> generatorsToReturn = new ArrayList<>();
 
+        // log substations not found
+        if (!CollectionUtils.isEmpty(substationsGeneratorsOrderingInfos)) {
+            substationsGeneratorsOrderingInfos.forEach(sInfo ->
+                sInfo.getSubstationIds().forEach(sId -> {
+                    Substation substation = network.getSubstation(sId);
+                    if (substation == null) {
+                        report(reporter, Integer.toString(component.getNum()), "SubstationNotFound", "Substation ${substation} not found",
+                            Map.of(SUBSTATION, sId), TypedValue.WARN_SEVERITY);
+                    }
+                }));
+        }
+
         generatorsByMarginalCost.forEach((mCost, gList) -> {  // loop on generators of same cost
             if (!CollectionUtils.isEmpty(substationsGeneratorsOrderingInfos)) {  // substations hierarchy provided
                 // build mapGeneratorsBySubstationsList, that will contain all the generators with the same marginal cost as mCost contained in each list of substations
@@ -218,16 +230,13 @@ public class GenerationDispatch extends AbstractModification {
                     // get generators with marginal cost == mCost in all substations of the current list
                     sInfo.getSubstationIds().forEach(sId -> {
                         Substation substation = network.getSubstation(sId);
-                        if (substation == null) {
-                            report(reporter, Integer.toString(component.getNum()), "SubstationNotFound", "Substation ${substation} not found",
-                                Map.of(SUBSTATION, sId), TypedValue.INFO_SEVERITY);
-                            return;
+                        if (substation != null) {
+                            substation.getVoltageLevelStream().forEach(v ->
+                                v.getGeneratorStream().filter(g -> {
+                                    Double generatorCost = getGeneratorMarginalCost(g);
+                                    return generatorCost != null && generatorCost.equals(mCost);
+                                }).forEach(g -> mapGeneratorsBySubstationsList.get(i.get()).add(g.getId())));
                         }
-                        substation.getVoltageLevelStream().forEach(v ->
-                            v.getGeneratorStream().filter(g -> {
-                                Double generatorCost = getGeneratorMarginalCost(g);
-                                return generatorCost != null && generatorCost.equals(mCost);
-                            }).forEach(g -> mapGeneratorsBySubstationsList.get(i.get()).add(g.getId())));
                     });
 
                     i.incrementAndGet();
