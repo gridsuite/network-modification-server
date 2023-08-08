@@ -27,6 +27,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.OrderColumn;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -141,7 +142,7 @@ public class GenerationDispatchEntity extends ModificationEntity {
         List<GeneratorsOrderingEntity> substationsGeneratorsOrderingEntities = null;
         if (substations != null) {
             substationsGeneratorsOrderingEntities = substations.stream().map(substation ->
-                new GeneratorsOrderingEntity(substation.getSubstationIds())
+                new GeneratorsOrderingEntity(new ArrayList<>(substation.getSubstationIds()))
             ).collect(Collectors.toList());
         }
         return substationsGeneratorsOrderingEntities;
