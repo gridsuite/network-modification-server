@@ -746,7 +746,7 @@ public final class ModificationUtils {
             participate = participateInfo.getValue();
             reports.add(ModificationUtils.getInstance().buildModificationReport(activePowerControl != null ? activePowerControl.isParticipate() : null,
                     participate,
-                    "ON/OFF"));
+                    "Participate"));
         } else if (droopInfo != null) {
             participate = true;
         }
