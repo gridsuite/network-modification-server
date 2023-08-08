@@ -491,6 +491,7 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
             .generatorsWithoutOutage(List.of())
             .generatorsWithFixedSupply(List.of())
             .generatorsFrequencyReserve(List.of())
+            .substationsGeneratorsOrdering(List.of())
             .build();
     }
 
@@ -505,6 +506,7 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
                                                 .generatorsFilters(List.of(
                                                     GeneratorsFilterInfos.builder().id(UUID.randomUUID()).name("name3").build(),
                                                     GeneratorsFilterInfos.builder().id(UUID.randomUUID()).name("name4").build())).build()))
+            .substationsGeneratorsOrdering(List.of())
             .build();
     }
 

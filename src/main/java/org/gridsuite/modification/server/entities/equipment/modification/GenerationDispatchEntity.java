@@ -16,7 +16,6 @@ import org.gridsuite.modification.server.dto.GeneratorsFrequencyReserveInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.SubstationsGeneratorsOrderingInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
-import org.springframework.util.CollectionUtils;
 
 import javax.persistence.CascadeType;
 import javax.persistence.CollectionTable;
@@ -150,7 +149,7 @@ public class GenerationDispatchEntity extends ModificationEntity {
 
     private List<SubstationsGeneratorsOrderingInfos> toSubstationsGeneratorsOrderingInfos(List<GeneratorsOrderingEntity> generatorsOrdering) {
         List<SubstationsGeneratorsOrderingInfos> substationsGeneratorsOrderingInfos = null;
-        if (!CollectionUtils.isEmpty(generatorsOrdering)) {
+        if (generatorsOrdering != null) {
             substationsGeneratorsOrderingInfos = generatorsOrdering.stream()
                 .map(generator -> new SubstationsGeneratorsOrderingInfos(generator.getSubstationIds())).collect(Collectors.toList());
         }
