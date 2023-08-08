@@ -344,7 +344,7 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
 
         //unset deadband and modify tap position
         twoWindingsTransformerModificationInfos.getRatioTapChanger().setTargetDeadband(null);
-        twoWindingsTransformerModificationInfos.getRatioTapChanger().setTapPosition(new AttributeModification<>(2, OperationType.SET));
+        twoWindingsTransformerModificationInfos.getRatioTapChanger().setTapPosition(new AttributeModification<>(0, OperationType.SET));
 
         modificationToCreateJson = mapper.writeValueAsString(twoWindingsTransformerModificationInfos);
 
@@ -462,7 +462,7 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
 
         //unset deadband and modify tap position
         twoWindingsTransformerModificationInfos.getPhaseTapChanger().setTargetDeadband(null);
-        twoWindingsTransformerModificationInfos.getPhaseTapChanger().setTapPosition(new AttributeModification<>(2, OperationType.SET));
+        twoWindingsTransformerModificationInfos.getPhaseTapChanger().setTapPosition(new AttributeModification<>(0, OperationType.SET));
 
         modificationToCreateJson = mapper.writeValueAsString(twoWindingsTransformerModificationInfos);
 
