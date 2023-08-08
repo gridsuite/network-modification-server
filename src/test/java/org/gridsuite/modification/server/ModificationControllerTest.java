@@ -173,8 +173,8 @@ public class ModificationControllerTest {
     }
 
     @SneakyThrows
-    public void applicationStatusOK (MvcResult mvcResult) {
-        Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() {});
+    public void applicationStatusOK(MvcResult mvcResult) {
+        Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertTrue(networkModificationResult.isPresent());
         assertTrue(networkModificationResult.get().isApplicationStatusOk());
     }
@@ -691,7 +691,7 @@ public class ModificationControllerTest {
                 10.0, "AttPointId", "attPointName", null, "v4",
                 "1.A", attachmentLine, "nl1", "NewLine1", "nl2", "NewLine2");
 
-        mvcResult =  mockMvc.perform(
+        mvcResult = mockMvc.perform(
                 post(URI_NETWORK_MODIF)
                     .content(objectWriter.writeValueAsString(lineAttachToVL))
                     .contentType(MediaType.APPLICATION_JSON))

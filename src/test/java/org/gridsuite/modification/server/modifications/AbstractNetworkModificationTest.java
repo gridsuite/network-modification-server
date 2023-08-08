@@ -138,9 +138,9 @@ abstract class AbstractNetworkModificationTest {
         ModificationInfos modificationToCreate = buildModification();
         String modificationToCreateJson = mapper.writeValueAsString(modificationToCreate);
 
-        mvcResult =  mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+        mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
-        networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() {});
+        networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertTrue(networkModificationResult.isPresent());
         assertTrue(networkModificationResult.get().isApplicationStatusOk());
 
@@ -161,7 +161,7 @@ abstract class AbstractNetworkModificationTest {
 
         mvcResult = mockMvc.perform(get(URI_NETWORK_MODIF_GET_PUT + modificationUuid))
                 .andExpect(status().isOk()).andReturn();
-        networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() {});
+        networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertTrue(networkModificationResult.isPresent());
         assertTrue(networkModificationResult.get().isApplicationStatusOk());
         String resultAsString = mvcResult.getResponse().getContentAsString();
@@ -173,9 +173,7 @@ abstract class AbstractNetworkModificationTest {
 
     @Test
     public void testUpdate() throws Exception {
-
         MvcResult mvcResult;
-
         Optional<NetworkModificationResult> networkModificationResult;
 
         ModificationInfos modificationToUpdate = buildModification();
@@ -188,7 +186,7 @@ abstract class AbstractNetworkModificationTest {
 
         mvcResult = mockMvc.perform(put(URI_NETWORK_MODIF_GET_PUT + modificationUuid).content(modificationToUpdateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
-        networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() {});
+        networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertTrue(networkModificationResult.isPresent());
         assertTrue(networkModificationResult.get().isApplicationStatusOk());
 
@@ -216,8 +214,7 @@ abstract class AbstractNetworkModificationTest {
                         .queryParam("groupUuid", TEST_GROUP_ID.toString())
                         .queryParam("uuids", modificationUuid.toString()))
                 .andExpect(status().isOk()).andReturn();
-
-        networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() {});
+        networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertTrue(networkModificationResult.isPresent());
         assertTrue(networkModificationResult.get().isApplicationStatusOk());
 
@@ -240,7 +237,7 @@ abstract class AbstractNetworkModificationTest {
                         .content(mapper.writeValueAsString(List.of(modificationUuid)))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
-        networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() {});
+        networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertTrue(networkModificationResult.isPresent());
         assertTrue(networkModificationResult.get().isApplicationStatusOk());
 
