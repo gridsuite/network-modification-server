@@ -298,36 +298,35 @@ public class GeneratorCreation extends AbstractModification {
     }
 
     private void createGeneratorVoltageRegulation(GeneratorCreationInfos generatorCreationInfos, Generator generator, VoltageLevel voltageLevel, Reporter subReporter) {
-        if (generatorCreationInfos.isVoltageRegulationOn()) {
-            List<Report> voltageReports = new ArrayList<>();
-            voltageReports.add(ModificationUtils.getInstance().buildCreationReport(generatorCreationInfos.getVoltageSetpoint(), "Voltage"));
-            voltageReports.add(ModificationUtils.getInstance().buildCreationReport(generatorCreationInfos.isVoltageRegulationOn(), "VoltageRegulationOn"));
-            if (generatorCreationInfos.getRegulatingTerminalVlId() != null && generatorCreationInfos.getRegulatingTerminalId() != null &&
+        List<Report> voltageReports = new ArrayList<>();
+        voltageReports.add(ModificationUtils.getInstance().buildCreationReport(generatorCreationInfos.getVoltageSetpoint(), "Voltage"));
+        voltageReports.add(ModificationUtils.getInstance().buildCreationReport(generatorCreationInfos.isVoltageRegulationOn(), "VoltageRegulationOn"));
+        if (generatorCreationInfos.getRegulatingTerminalVlId() != null && generatorCreationInfos.getRegulatingTerminalId() != null &&
                 generatorCreationInfos.getRegulatingTerminalType() != null) {
-                Terminal terminal = ModificationUtils.getInstance().getTerminalFromIdentifiable(voltageLevel.getNetwork(),
+            Terminal terminal = ModificationUtils.getInstance().getTerminalFromIdentifiable(voltageLevel.getNetwork(),
                     generatorCreationInfos.getRegulatingTerminalId(),
                     generatorCreationInfos.getRegulatingTerminalType(),
                     generatorCreationInfos.getRegulatingTerminalVlId());
-                if (terminal != null) {
-                    updateGeneratorRegulatingTerminal(generatorCreationInfos, generator, terminal, voltageReports);
-                }
+            if (terminal != null) {
+                updateGeneratorRegulatingTerminal(generatorCreationInfos, generator, terminal, voltageReports);
             }
-            if (generatorCreationInfos.getQPercent() != null) {
-                try {
-                    generator.newExtension(CoordinatedReactiveControlAdderImpl.class)
+        }
+        if (generatorCreationInfos.getQPercent() != null) {
+            try {
+                generator.newExtension(CoordinatedReactiveControlAdderImpl.class)
                         .withQPercent(generatorCreationInfos.getQPercent()).add();
-                    voltageReports.add(ModificationUtils.getInstance().buildCreationReport(generatorCreationInfos.getQPercent(), "Reactive percentage"));
-                } catch (PowsyblException e) {
-                    voltageReports.add(Report.builder()
+                voltageReports.add(ModificationUtils.getInstance().buildCreationReport(generatorCreationInfos.getQPercent(), "Reactive percentage"));
+            } catch (PowsyblException e) {
+                voltageReports.add(Report.builder()
                         .withKey("ReactivePercentageError")
                         .withDefaultMessage("cannot add Coordinated reactive extension on generator with id=${id} :" + e.getMessage())
                         .withValue("id", generatorCreationInfos.getEquipmentId())
                         .withSeverity(TypedValue.ERROR_SEVERITY)
                         .build());
-                }
             }
-            ModificationUtils.getInstance().reportModifications(subReporter, voltageReports, "VoltageRegulationCreated", "Voltage regulation");
         }
+        ModificationUtils.getInstance().reportModifications(subReporter, voltageReports, "VoltageRegulationCreated", "Voltage regulation");
+
     }
 
     private void updateGeneratorRegulatingTerminal(GeneratorCreationInfos generatorCreationInfos, Generator generator,
