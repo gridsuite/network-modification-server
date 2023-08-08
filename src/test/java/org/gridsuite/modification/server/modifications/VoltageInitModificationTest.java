@@ -100,6 +100,15 @@ public class VoltageInitModificationTest extends AbstractNetworkModificationTest
                     .transformerId("trf6")
                     .ratioTapChangerPosition(3)
                     .legSide(ThreeWindingsTransformer.Side.TWO)
+                    .build(),
+                VoltageInitTransformerModificationInfos.builder()
+                    .transformerId("trf6")
+                    .ratioTapChangerPosition(1)
+                    .legSide(ThreeWindingsTransformer.Side.ONE)
+                    .build(),
+                VoltageInitTransformerModificationInfos.builder()
+                    .transformerId("trf8")
+                    .legSide(ThreeWindingsTransformer.Side.THREE)
                     .build()))
             .build();
     }
