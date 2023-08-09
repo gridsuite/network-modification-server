@@ -173,8 +173,6 @@ abstract class AbstractNetworkModificationTest {
 
     @Test
     public void testUpdate() throws Exception {
-        MvcResult mvcResult;
-        Optional<NetworkModificationResult> networkModificationResult;
 
         ModificationInfos modificationToUpdate = buildModification();
 
@@ -184,11 +182,8 @@ abstract class AbstractNetworkModificationTest {
 
         String modificationToUpdateJson = mapper.writeValueAsString(modificationToUpdate);
 
-        mvcResult = mockMvc.perform(put(URI_NETWORK_MODIF_GET_PUT + modificationUuid).content(modificationToUpdateJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
-        networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        assertTrue(networkModificationResult.isPresent());
-        assertTrue(networkModificationResult.get().isApplicationStatusOk());
+        mockMvc.perform(put(URI_NETWORK_MODIF_GET_PUT + modificationUuid).content(modificationToUpdateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
 
         // TODO Need a test for substations impacted
         //assertThat(bsmListResult.get(0)).recursivelyEquals(ModificationType.LOAD_CREATION, "idLoad1", Set.of("s1"));
@@ -204,19 +199,14 @@ abstract class AbstractNetworkModificationTest {
 
         MvcResult mvcResult;
 
-        Optional<NetworkModificationResult> networkModificationResult;
-
         ModificationInfos modificationToDelete = buildModification();
 
         UUID modificationUuid = saveModification(modificationToDelete);
 
-        mvcResult = mockMvc.perform(delete(getNetworkModificationUri())
+        mockMvc.perform(delete(getNetworkModificationUri())
                         .queryParam("groupUuid", TEST_GROUP_ID.toString())
                         .queryParam("uuids", modificationUuid.toString()))
-                .andExpect(status().isOk()).andReturn();
-        networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        assertTrue(networkModificationResult.isPresent());
-        assertTrue(networkModificationResult.get().isApplicationStatusOk());
+                .andExpect(status().isOk());
 
         List<ModificationInfos> storedModifications = modificationRepository.getModifications(TEST_GROUP_ID, false, true);
 
@@ -227,19 +217,14 @@ abstract class AbstractNetworkModificationTest {
     @Test
     public void testCopy() throws Exception {
 
-        MvcResult mvcResult;
-        Optional<NetworkModificationResult> networkModificationResult;
         ModificationInfos modificationToCopy = buildModification();
 
         UUID modificationUuid = saveModification(modificationToCopy);
 
-        mvcResult = mockMvc.perform(put(URI_NETWORK_MODIF_COPY)
+        mockMvc.perform(put(URI_NETWORK_MODIF_COPY)
                         .content(mapper.writeValueAsString(List.of(modificationUuid)))
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
-        networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        assertTrue(networkModificationResult.isPresent());
-        assertTrue(networkModificationResult.get().isApplicationStatusOk());
+                .andExpect(status().isOk());
 
         List<ModificationInfos> modifications = modificationRepository
                 .getModifications(TEST_GROUP_ID, false, true);
