@@ -369,13 +369,7 @@ public class GeneratorModification extends AbstractModification {
                 reportVoltageSetpoint = ModificationUtils.getInstance().buildModificationReport(generator.getTargetV(), Double.NaN, "Voltage");
             }
         }
-        // if no modification were done to VoltageRegulatorOn, we get the old value
-        Boolean isVoltageRegulationOn = null;
-        if (modificationInfos.getVoltageRegulationOn() != null) {
-            isVoltageRegulationOn = modificationInfos.getVoltageRegulationOn().getValue();
-        } else {
-            isVoltageRegulationOn = generator.isVoltageRegulatorOn();
-        }
+
         voltageRegulationReports.add(ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setVoltageRegulatorOn, generator::isVoltageRegulatorOn,
                 modificationInfos.getVoltageRegulationOn(), "VoltageRegulationOn"));
         if (reportVoltageSetpoint != null) {
@@ -384,6 +378,7 @@ public class GeneratorModification extends AbstractModification {
 
         // We apply modifications to regulatingTerminal and QPercent
         // we apply modifications to the reactivepower setpoint
+        modifyGeneratorRegulatingTerminal(modificationInfos, generator, voltageRegulationReports);
         if (modificationInfos.getQPercent() != null) {
             CoordinatedReactiveControl coordinatedReactiveControl = generator
                     .getExtension(CoordinatedReactiveControl.class);
