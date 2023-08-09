@@ -62,7 +62,7 @@ public class LineSplitWithNewVoltageLevelTest extends AbstractNetworkModificatio
                 .busbarCount(2)
                 .sectionCount(2)
                 .switchKinds(Arrays.asList(SwitchKind.BREAKER))
-                .couplingDevices(Arrays.asList(CouplingDeviceInfos.builder().busbarSectionId1("bbs.nw").busbarSectionId2("bbs.ne").build()))
+                .couplingDevices(Arrays.asList(CouplingDeviceInfos.builder().busbarSectionId1("1A").busbarSectionId2("1B").build()))
                 .build();
 
         return LineSplitWithVoltageLevelInfos.builder()
