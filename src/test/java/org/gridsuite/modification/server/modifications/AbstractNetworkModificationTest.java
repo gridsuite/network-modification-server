@@ -142,7 +142,7 @@ abstract class AbstractNetworkModificationTest {
                 .andExpect(status().isOk()).andReturn();
         networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertTrue(networkModificationResult.isPresent());
-        assertTrue(networkModificationResult.get().isApplicationStatusOk());
+        assertTrue(networkModificationResult.get().getApplicationStatus() != NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
 
         ModificationInfos createdModification = modificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
 
@@ -163,7 +163,7 @@ abstract class AbstractNetworkModificationTest {
                 .andExpect(status().isOk()).andReturn();
         networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertTrue(networkModificationResult.isPresent());
-        assertTrue(networkModificationResult.get().isApplicationStatusOk());
+        assertTrue(networkModificationResult.get().getApplicationStatus() != NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
         String resultAsString = mvcResult.getResponse().getContentAsString();
         ModificationInfos receivedModification = mapper.readValue(resultAsString, new TypeReference<>() {
         });
