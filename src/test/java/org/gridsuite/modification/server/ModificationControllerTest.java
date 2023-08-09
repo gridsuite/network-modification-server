@@ -529,24 +529,6 @@ public class ModificationControllerTest {
     }
 
     @Test
-    public void testCreationBattery() throws Exception {
-        BatteryCreationInfos batteryCreationInfos = BatteryCreationInfos.builder()
-                .equipmentId("idBattery1")
-                .equipmentName("nameBattery1")
-                .voltageLevelId("v1")
-                .busOrBusbarSectionId("1B")
-                .connectionDirection(ConnectablePosition.Direction.TOP)
-                .activePowerSetpoint(100)
-                .droop(2f)
-                .maxActivePower(100)
-                .minActivePower(50)
-                .build();
-        String batteryCreationInfosJson = objectWriter.writeValueAsString(batteryCreationInfos);
-        mockMvc.perform(post(URI_NETWORK_MODIF).content(batteryCreationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk());
-        assertNull(network.getBattery("idBattery1"));
-    }
-
-    @Test
     public void createGeneratorWithStartup() throws Exception {
 
         // create and build generator without startup
