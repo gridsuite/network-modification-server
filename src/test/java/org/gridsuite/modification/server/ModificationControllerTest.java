@@ -1170,7 +1170,26 @@ public class ModificationControllerTest {
                     .transformerId("3WT1")
                     .ratioTapChangerPosition(1)
                     .legSide(ThreeWindingsTransformer.Side.TWO)
-                    .build())).build();
+                    .build()))
+            .staticVarCompensators(List.of(
+                VoltageInitStaticVarCompensatorModificationInfos.builder()
+                    .staticVarCompensatorId("SVC1")
+                    .reactivePowerSetpoint(50.)
+                    .build(),
+                VoltageInitStaticVarCompensatorModificationInfos.builder()
+                    .staticVarCompensatorId("SVC2")
+                    .voltageSetpoint(374.)
+                    .build()))
+            .vscConverterStations(List.of(
+                VoltageInitVscConverterStationModificationInfos.builder()
+                    .vscConverterStationId("VSC1")
+                    .reactivePowerSetpoint(40.)
+                    .build(),
+                VoltageInitVscConverterStationModificationInfos.builder()
+                    .vscConverterStationId("VSC2")
+                    .voltageSetpoint(224.)
+                    .build()))
+            .build();
 
         MvcResult mvcResult = mockMvc.perform(post("/v1/groups/modification")
                         .content(objectWriter.writeValueAsString(modificationsInfos1))
