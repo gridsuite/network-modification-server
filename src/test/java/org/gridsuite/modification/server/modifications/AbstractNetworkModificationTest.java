@@ -17,6 +17,7 @@ import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import com.powsybl.network.store.iidm.impl.NetworkImpl;
 import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.ReportService;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -41,12 +42,12 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
@@ -131,29 +132,36 @@ abstract class AbstractNetworkModificationTest {
 
     @Test
     public void testCreate() throws Exception {
-
+        MvcResult mvcResult;
+        Optional<NetworkModificationResult> networkModificationResult;
         ModificationInfos modificationToCreate = buildModification();
         String modificationToCreateJson = mapper.writeValueAsString(modificationToCreate);
 
-        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+        mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
-
+        networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertTrue(networkModificationResult.isPresent());
+        assertNotEquals(NetworkModificationResult.ApplicationStatus.WITH_ERRORS, networkModificationResult.get().getApplicationStatus());
         ModificationInfos createdModification = modificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
 
         assertThat(createdModification).recursivelyEquals(modificationToCreate);
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
-        assertNetworkAfterCreation();
+        assertAfterNetworkModificationCreation();
     }
 
     @Test
     public void testRead() throws Exception {
-
+        MvcResult mvcResult;
+        Optional<NetworkModificationResult> networkModificationResult;
         ModificationInfos modificationToRead = buildModification();
 
         UUID modificationUuid = saveModification(modificationToRead);
 
-        MvcResult mvcResult = mockMvc.perform(get(URI_NETWORK_MODIF_GET_PUT + modificationUuid))
+        mvcResult = mockMvc.perform(get(URI_NETWORK_MODIF_GET_PUT + modificationUuid))
                 .andExpect(status().isOk()).andReturn();
+        networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertTrue(networkModificationResult.isPresent());
+        assertNotEquals(NetworkModificationResult.ApplicationStatus.WITH_ERRORS, networkModificationResult.get().getApplicationStatus());
         String resultAsString = mvcResult.getResponse().getContentAsString();
         ModificationInfos receivedModification = mapper.readValue(resultAsString, new TypeReference<>() {
         });
@@ -194,12 +202,12 @@ abstract class AbstractNetworkModificationTest {
         mockMvc.perform(delete(getNetworkModificationUri())
                         .queryParam("groupUuid", TEST_GROUP_ID.toString())
                         .queryParam("uuids", modificationUuid.toString()))
-                .andExpect(status().isOk()).andReturn();
+                .andExpect(status().isOk());
 
         List<ModificationInfos> storedModifications = modificationRepository.getModifications(TEST_GROUP_ID, false, true);
 
         assertTrue(storedModifications.isEmpty());
-        assertNetworkAfterDeletion();
+        assertAfterNetworkModificationDeletion();
     }
 
     @Test
@@ -212,7 +220,7 @@ abstract class AbstractNetworkModificationTest {
         mockMvc.perform(put(URI_NETWORK_MODIF_COPY)
                         .content(mapper.writeValueAsString(List.of(modificationUuid)))
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
+                .andExpect(status().isOk());
 
         List<ModificationInfos> modifications = modificationRepository
                 .getModifications(TEST_GROUP_ID, false, true);
@@ -273,7 +281,7 @@ abstract class AbstractNetworkModificationTest {
 
     protected abstract ModificationInfos buildModificationUpdate();
 
-    protected abstract void assertNetworkAfterCreation();
+    protected abstract void assertAfterNetworkModificationCreation();
 
-    protected abstract void assertNetworkAfterDeletion();
+    protected abstract void assertAfterNetworkModificationDeletion();
 }

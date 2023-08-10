@@ -285,12 +285,12 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
     }
 
     @Override
-    protected void assertNetworkAfterCreation() {
+    protected void assertAfterNetworkModificationCreation() {
         assertNotNull(getNetwork().getLine("idLine"));
     }
 
     @Override
-    protected void assertNetworkAfterDeletion() {
+    protected void assertAfterNetworkModificationDeletion() {
         assertNull(getNetwork().getLine("idLine"));
     }
 }

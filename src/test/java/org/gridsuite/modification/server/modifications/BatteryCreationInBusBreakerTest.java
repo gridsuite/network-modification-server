@@ -81,14 +81,14 @@ public class BatteryCreationInBusBreakerTest extends AbstractNetworkModification
     }
 
     @Override
-    protected void assertNetworkAfterCreation() {
+    protected void assertAfterNetworkModificationCreation() {
         assertNotNull(getNetwork().getBattery("idBattery2"));
         assertEquals(1, getNetwork().getVoltageLevel("v1").getBatteryStream()
                 .filter(transformer -> transformer.getId().equals("idBattery2")).count());
     }
 
     @Override
-    protected void assertNetworkAfterDeletion() {
+    protected void assertAfterNetworkModificationDeletion() {
         assertNull(getNetwork().getBattery("idBattery2"));
         assertEquals(0, getNetwork().getVoltageLevel("v1").getBatteryStream()
                 .filter(transformer -> transformer.getId().equals("idBattery2")).count());
