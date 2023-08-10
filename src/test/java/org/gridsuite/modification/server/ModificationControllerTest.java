@@ -718,7 +718,7 @@ public class ModificationControllerTest {
                                 .content(objectWriter.writeValueAsString(linesAttachToSplitLinesInfos))
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
-        applicationStatusOK(mvcResult);
+        assertApplicationStatusOK(mvcResult);
 
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
 
@@ -870,7 +870,7 @@ public class ModificationControllerTest {
         equipmentDeletionInfosJson = objectWriter.writeValueAsString(equipmentDeletionInfos);
         mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
-        applicationStatusOK(mvcResult);
+        assertApplicationStatusOK(mvcResult);
         testConnectableDeletionImpacts(mvcResult.getResponse().getContentAsString(), IdentifiableType.DANGLING_LINE, "v2Dangling", "v2bdangling", "v2ddangling", "s1");
         testNetworkModificationsCount(TEST_GROUP_ID, 10);
 
