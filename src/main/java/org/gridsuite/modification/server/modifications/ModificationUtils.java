@@ -740,36 +740,38 @@ public final class ModificationUtils {
                                                        Reporter subReporter,
                                                        Reporter subReporterSetpoints) {
         List<Report> reports = new ArrayList<>();
-        double oldDroop = activePowerControl != null ? activePowerControl.getDroop() : Double.NaN;
-        Boolean participate = null;
+        double oldDroop = Double.NaN;
+        boolean oldParticipate = false;
+        double droop = Double.NaN;
+        if (activePowerControl != null) {
+            oldDroop = activePowerControl.getDroop();
+            oldParticipate = activePowerControl.isParticipate();
+        }
+
         if (participateInfo != null) {
-            participate = participateInfo.getValue();
+            activePowerControlAdder
+                    .withParticipate(participateInfo.getValue());
             reports.add(ModificationUtils.getInstance().buildModificationReport(activePowerControl != null ? activePowerControl.isParticipate() : null,
-                    participate,
+                    oldParticipate,
                     "Participate"));
-        } else if (droopInfo != null) {
-            participate = true;
+        } else {
+            activePowerControlAdder
+                    .withParticipate(oldParticipate);
         }
-        if (participate != null) {
-            if (Boolean.TRUE.equals(participate)) {
-                if (droopInfo != null) {
-                    activePowerControlAdder
-                            .withParticipate(true)
-                            .withDroop(droopInfo.getValue())
-                            .add();
-                    reports.add(ModificationUtils.getInstance().buildModificationReport(oldDroop,
-                            droopInfo.getValue(),
-                            "Droop"));
-                } else {
-                    activePowerControlAdder
-                            .withParticipate(true).withDroop(oldDroop)
-                            .add();
-                }
-            } else {
-                activePowerControlAdder
-                        .withParticipate(participate).add();
-            }
+
+        if (droopInfo != null) {
+            activePowerControlAdder
+                    .withDroop(droopInfo.getValue());
+            reports.add(ModificationUtils.getInstance().buildModificationReport(oldDroop,
+                    droop,
+                    "Droop"));
+        } else {
+            activePowerControlAdder
+                    .withDroop(oldDroop);
         }
+        activePowerControlAdder
+                .add();
+
         Reporter subReporterSetpoints2 = subReporterSetpoints;
         if (subReporterSetpoints == null && !reports.isEmpty()) {
             subReporterSetpoints2 = subReporter.createSubReporter(SETPOINTS, SETPOINTS);

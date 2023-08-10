@@ -369,36 +369,27 @@ public class GeneratorModification extends AbstractModification {
                 reportVoltageSetpoint = ModificationUtils.getInstance().buildModificationReport(generator.getTargetV(), Double.NaN, "Voltage");
             }
         }
-        // if no modification were done to VoltageRegulatorOn, we get the old value
-        Boolean isVoltageRegulationOn = null;
-        if (modificationInfos.getVoltageRegulationOn() != null) {
-            isVoltageRegulationOn = modificationInfos.getVoltageRegulationOn().getValue();
-            voltageRegulationReports.add(ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setVoltageRegulatorOn, generator::isVoltageRegulatorOn,
-                    modificationInfos.getVoltageRegulationOn(), "VoltageRegulationOn"));
-        } else {
-            isVoltageRegulationOn = generator.isVoltageRegulatorOn();
-        }
+
+        voltageRegulationReports.add(ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setVoltageRegulatorOn, generator::isVoltageRegulatorOn,
+                modificationInfos.getVoltageRegulationOn(), "VoltageRegulationOn"));
         if (reportVoltageSetpoint != null) {
             voltageRegulationReports.add(reportVoltageSetpoint);
         }
 
-        // if voltageRegulationOn is true, we apply modifications to regulatingTerminal
-        // and QPercent
-        // otherwise we apply modifications to the reactivepower setpoint
-        if (Boolean.TRUE.equals(isVoltageRegulationOn)) {
-            modifyGeneratorRegulatingTerminal(modificationInfos, generator, voltageRegulationReports);
-            if (modificationInfos.getQPercent() != null) {
-                CoordinatedReactiveControl coordinatedReactiveControl = generator
-                        .getExtension(CoordinatedReactiveControl.class);
-                Double oldQPercent = coordinatedReactiveControl != null ? coordinatedReactiveControl.getQPercent()
-                        : Double.NaN;
-                generator.newExtension(CoordinatedReactiveControlAdderImpl.class)
-                        .withQPercent(modificationInfos.getQPercent().getValue())
-                        .add();
-                voltageRegulationReports.add(ModificationUtils.getInstance().buildModificationReport(
-                        oldQPercent,
-                        modificationInfos.getQPercent().getValue(), "Reactive percentage"));
-            }
+        // We apply modifications to regulatingTerminal and QPercent
+        // we apply modifications to the reactivepower setpoint
+        modifyGeneratorRegulatingTerminal(modificationInfos, generator, voltageRegulationReports);
+        if (modificationInfos.getQPercent() != null) {
+            CoordinatedReactiveControl coordinatedReactiveControl = generator
+                    .getExtension(CoordinatedReactiveControl.class);
+            Double oldQPercent = coordinatedReactiveControl != null ? coordinatedReactiveControl.getQPercent()
+                    : Double.NaN;
+            generator.newExtension(CoordinatedReactiveControlAdderImpl.class)
+                    .withQPercent(modificationInfos.getQPercent().getValue())
+                    .add();
+            voltageRegulationReports.add(ModificationUtils.getInstance().buildModificationReport(
+                    oldQPercent,
+                    modificationInfos.getQPercent().getValue(), "Reactive percentage"));
         }
 
         //TargetQ and TargetV are unset after voltage regulation have been dealt with otherwise it can cause unwanted validations exceptions
