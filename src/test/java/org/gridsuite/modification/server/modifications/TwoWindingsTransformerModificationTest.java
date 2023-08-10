@@ -71,7 +71,7 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
                 .ratioTapChanger(RatioTapChangerModificationInfos.builder()
                         .enabled(new AttributeModification<>(true, OperationType.SET))
                         .loadTapChangingCapabilities(new AttributeModification<>(true, OperationType.SET))
-                        .regulating(new AttributeModification<>(true, OperationType.SET))
+                        .regulating(new AttributeModification<>(false, OperationType.SET))
                         .targetV(new AttributeModification<>(100., OperationType.SET))
                         .targetDeadband(new AttributeModification<>(100., OperationType.SET))
                         .lowTapPosition(new AttributeModification<>(1, OperationType.SET))
@@ -160,7 +160,7 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
                 .ratioTapChanger(RatioTapChangerModificationInfos.builder()
                         .enabled(new AttributeModification<>(true, OperationType.SET))
                         .loadTapChangingCapabilities(new AttributeModification<>(true, OperationType.SET))
-                        .regulating(new AttributeModification<>(true, OperationType.SET))
+                        .regulating(new AttributeModification<>(false, OperationType.SET))
                         .targetV(new AttributeModification<>(100., OperationType.SET))
                         .targetDeadband(new AttributeModification<>(100., OperationType.SET))
                         .lowTapPosition(new AttributeModification<>(1, OperationType.SET))
@@ -219,7 +219,7 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
     }
 
     @Override
-    protected void assertNetworkAfterCreation() {
+    protected void assertAfterNetworkModificationCreation() {
         TwoWindingsTransformer modifiedTwoWindingsTransformer = getNetwork().getTwoWindingsTransformer("trf1");
         assertNotNull(modifiedTwoWindingsTransformer);
         assertEquals("2wt modified name", modifiedTwoWindingsTransformer.getNameOrId());
@@ -250,7 +250,7 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
     }
 
     @Override
-    protected void assertNetworkAfterDeletion() {
+    protected void assertAfterNetworkModificationDeletion() {
         TwoWindingsTransformer modifiedTwoWindingsTransformer = getNetwork().getTwoWindingsTransformer("trf1");
         assertNotNull(modifiedTwoWindingsTransformer);
         assertEquals("trf1", modifiedTwoWindingsTransformer.getNameOrId());

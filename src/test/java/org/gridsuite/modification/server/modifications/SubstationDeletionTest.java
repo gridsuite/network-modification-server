@@ -42,7 +42,7 @@ public class SubstationDeletionTest extends AbstractNetworkModificationTest {
     }
 
     @Override
-    protected void assertNetworkAfterCreation() {
+    protected void assertAfterNetworkModificationCreation() {
         assertNull(getNetwork().getSubstation("s1"));
         assertNull(getNetwork().getVoltageLevel("v1"));
         assertNull(getNetwork().getVoltageLevel("v2"));
@@ -54,7 +54,7 @@ public class SubstationDeletionTest extends AbstractNetworkModificationTest {
     }
 
     @Override
-    protected void assertNetworkAfterDeletion() {
+    protected void assertAfterNetworkModificationDeletion() {
         assertNotNull(getNetwork().getSubstation("s1"));
     }
 }

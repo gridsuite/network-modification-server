@@ -71,7 +71,7 @@ public class BatteryModificationTest extends AbstractNetworkModificationTest {
     }
 
     @Override
-    protected void assertNetworkAfterCreation() {
+    protected void assertAfterNetworkModificationCreation() {
         Battery modifiedBattery = getNetwork().getBattery("v3Battery");
         BatteryModificationInfos batteryModificationInfos = (BatteryModificationInfos) buildModification();
         assertEquals("newV1Battery", modifiedBattery.getNameOrId());
@@ -98,7 +98,7 @@ public class BatteryModificationTest extends AbstractNetworkModificationTest {
     }
 
     @Override
-    protected void assertNetworkAfterDeletion() {
+    protected void assertAfterNetworkModificationDeletion() {
         Battery battery = getNetwork().getBattery("v3Battery");
         assertEquals("v3Battery", battery.getNameOrId());
         assertEquals(1.0, battery.getTargetP());

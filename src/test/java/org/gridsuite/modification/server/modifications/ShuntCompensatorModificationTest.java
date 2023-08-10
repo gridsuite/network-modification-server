@@ -196,7 +196,7 @@ public class ShuntCompensatorModificationTest extends AbstractNetworkModificatio
     }
 
     @Override
-    protected void assertNetworkAfterCreation() {
+    protected void assertAfterNetworkModificationCreation() {
         var shuntCompensator = getNetwork().getShuntCompensator("v7shunt");
         var model = shuntCompensator.getModel(ShuntCompensatorLinearModel.class);
         assertNotNull(model);
@@ -204,7 +204,7 @@ public class ShuntCompensatorModificationTest extends AbstractNetworkModificatio
     }
 
     @Override
-    protected void assertNetworkAfterDeletion() {
+    protected void assertAfterNetworkModificationDeletion() {
         var shuntCompensator = getNetwork().getShuntCompensator("v2shunt");
         var model = shuntCompensator.getModel(ShuntCompensatorLinearModel.class);
         assertNotNull(model);

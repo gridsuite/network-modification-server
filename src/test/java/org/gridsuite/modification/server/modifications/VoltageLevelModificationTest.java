@@ -62,7 +62,7 @@ public class VoltageLevelModificationTest extends AbstractNetworkModificationTes
     }
 
     @Override
-    protected void assertNetworkAfterCreation() {
+    protected void assertAfterNetworkModificationCreation() {
         VoltageLevel voltageLevel = getNetwork().getVoltageLevel("v1");
         IdentifiableShortCircuit<VoltageLevel> identifiableShortCircuit = voltageLevel.getExtension(IdentifiableShortCircuit.class);
         assertNotNull(identifiableShortCircuit);
@@ -76,7 +76,7 @@ public class VoltageLevelModificationTest extends AbstractNetworkModificationTes
     }
 
     @Override
-    protected void assertNetworkAfterDeletion() {
+    protected void assertAfterNetworkModificationDeletion() {
         VoltageLevel voltageLevel = getNetwork().getVoltageLevel("v1");
         IdentifiableShortCircuit<VoltageLevel> identifiableShortCircuit = voltageLevel.getExtension(IdentifiableShortCircuit.class);
         assertNull(identifiableShortCircuit);

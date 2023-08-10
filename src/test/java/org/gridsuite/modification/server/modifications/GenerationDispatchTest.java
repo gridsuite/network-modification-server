@@ -526,12 +526,12 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
     }
 
     @Override
-    protected void assertNetworkAfterCreation() {
+    protected void assertAfterNetworkModificationCreation() {
         assertNetworkAfterCreationWithStandardLossCoefficient();
     }
 
     @Override
-    protected void assertNetworkAfterDeletion() {
+    protected void assertAfterNetworkModificationDeletion() {
         assertEquals(85.357, getNetwork().getGenerator(GH1_ID).getTargetP(), 0.001);
         assertEquals(50., getNetwork().getGenerator(GH2_ID).getTargetP(), 0.001);
         assertEquals(100., getNetwork().getGenerator(GH3_ID).getTargetP(), 0.001);
