@@ -47,8 +47,7 @@ import java.util.UUID;
 
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
@@ -142,7 +141,7 @@ abstract class AbstractNetworkModificationTest {
                 .andExpect(status().isOk()).andReturn();
         networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertTrue(networkModificationResult.isPresent());
-        assertTrue(networkModificationResult.get().getApplicationStatus() != NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
+        assertFalse(networkModificationResult.get().getApplicationStatus() == NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
 
         ModificationInfos createdModification = modificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
 
@@ -163,7 +162,7 @@ abstract class AbstractNetworkModificationTest {
                 .andExpect(status().isOk()).andReturn();
         networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertTrue(networkModificationResult.isPresent());
-        assertTrue(networkModificationResult.get().getApplicationStatus() != NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
+        assertFalse(networkModificationResult.get().getApplicationStatus() == NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
         String resultAsString = mvcResult.getResponse().getContentAsString();
         ModificationInfos receivedModification = mapper.readValue(resultAsString, new TypeReference<>() {
         });

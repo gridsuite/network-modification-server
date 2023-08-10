@@ -176,7 +176,7 @@ public class ModificationControllerTest {
     public void applicationStatusOK(MvcResult mvcResult) {
         Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertTrue(networkModificationResult.isPresent());
-        assertTrue(networkModificationResult.get().getApplicationStatus() != NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
+        assertFalse(networkModificationResult.get().getApplicationStatus() == NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
     }
 
     @Test
