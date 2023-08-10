@@ -197,8 +197,6 @@ abstract class AbstractNetworkModificationTest {
     @Test
     public void testDelete() throws Exception {
 
-        MvcResult mvcResult;
-
         ModificationInfos modificationToDelete = buildModification();
 
         UUID modificationUuid = saveModification(modificationToDelete);
