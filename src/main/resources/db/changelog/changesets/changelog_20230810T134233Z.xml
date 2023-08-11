@@ -6,7 +6,7 @@
     <changeSet author="lecuyerfra (generated)" id="1">
         <dropPrimaryKey tableName="generation_dispatch_generators_frequency_reserve"/>
     </changeSet>
-    <changeSet author="lecuyerfra (generated)" id="">
+    <changeSet author="lecuyerfra (generated)" id="2">
         <preConditions onFail="MARK_RAN">
             <not>
                 <columnExists tableName="generation_dispatch_generators_frequency_reserve"
@@ -19,11 +19,11 @@
             </column>
         </addColumn>
     </changeSet>
-    <changeSet author="lecuyerfra (generated)" id="2">
+    <changeSet author="lecuyerfra (generated)" id="3">
         <addPrimaryKey columnNames="generation_dispatch_entity_id, pos_generators_frequency"
                        tableName="generation_dispatch_generators_frequency_reserve"/>
     </changeSet>
-    <changeSet author="lecuyerfra (generated)" id="3">
+    <changeSet author="lecuyerfra (generated)" id="4">
         <preConditions onFail="MARK_RAN">
             <not>
                 <foreignKeyConstraintExists foreignKeyTableName="generators_ordering_substations" foreignKeyName="FK9m0xd66qnjywwmrmedpu8ls62"/>
@@ -35,7 +35,7 @@
                                  initiallyDeferred="false" referencedColumnNames="id"
                                  referencedTableName="generators_ordering" validate="true"/>
     </changeSet>
-    <changeSet author="lecuyerfra (generated)" id="4">
+    <changeSet author="lecuyerfra (generated)" id="5">
         <preConditions onFail="MARK_RAN">
             <not>
                 <foreignKeyConstraintExists foreignKeyTableName="generation_dispatch_generators_ordering" foreignKeyName="FKfd1q3og83pvfo5gx1vs7w3kuj"/>
@@ -47,7 +47,7 @@
                                  initiallyDeferred="false" referencedColumnNames="id"
                                  referencedTableName="generators_ordering" validate="true"/>
     </changeSet>
-    <changeSet author="lecuyerfra (generated)" id="5">
+    <changeSet author="lecuyerfra (generated)" id="6">
         <preConditions onFail="MARK_RAN">
             <not>
                 <foreignKeyConstraintExists foreignKeyTableName="generation_dispatch_generators_ordering" foreignKeyName="FKqa8ndc4fmo0jsv81ts3b8mpod"/>
@@ -60,7 +60,7 @@
                                  initiallyDeferred="false" referencedColumnNames="id"
                                  referencedTableName="generation_dispatch" validate="true"/>
     </changeSet>
-    <changeSet author="lecuyerfra (generated)" id="6">
+    <changeSet author="lecuyerfra (generated)" id="7">
         <dropUniqueConstraint tableName="generation_dispatch_generators_ordering"
                               constraintName="UK_tjq2qrrcph3puk6hsdu00g2gy"/>
         <addUniqueConstraint columnNames="generators_ordering_id" constraintName="UK_tjq2qrrcph3puk6hsdu00g2gy"
