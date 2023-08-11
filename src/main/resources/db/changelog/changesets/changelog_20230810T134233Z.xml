@@ -33,7 +33,7 @@
     </changeSet>
     <changeSet author="lecuyerfra (generated)" id="1691156577326-8">
         <addColumn tableName="generation_dispatch_generators_frequency_reserve">
-            <column name="pos_generators_frequency" type="int4">
+            <column name="pos_generators_frequency" type="int4" defaultValue="0">
                 <constraints nullable="false"/>
             </column>
         </addColumn>

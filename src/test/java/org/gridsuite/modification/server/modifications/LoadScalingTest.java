@@ -381,7 +381,7 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
 
     //TODO update values after PowSyBl release
     @Override
-    protected void assertNetworkAfterCreation() {
+    protected void assertAfterNetworkModificationCreation() {
         assertEquals(108.33, getNetwork().getLoad(LOAD_ID_1).getP0(), 0.01D);
         assertEquals(216.66, getNetwork().getLoad(LOAD_ID_2).getP0(), 0.01D);
         assertEquals(225.0, getNetwork().getLoad(LOAD_ID_3).getP0(), 0.01D);
@@ -395,7 +395,7 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
     }
 
     @Override
-    protected void assertNetworkAfterDeletion() {
+    protected void assertAfterNetworkModificationDeletion() {
         assertEquals(100.0, getNetwork().getLoad(LOAD_ID_1).getP0(), 0);
         assertEquals(200.0, getNetwork().getLoad(LOAD_ID_2).getP0(), 0);
         assertEquals(200.0, getNetwork().getLoad(LOAD_ID_3).getP0(), 0);

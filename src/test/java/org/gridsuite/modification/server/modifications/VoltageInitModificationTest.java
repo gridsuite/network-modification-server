@@ -152,13 +152,13 @@ public class VoltageInitModificationTest extends AbstractNetworkModificationTest
     }
 
     @Override
-    protected void assertNetworkAfterCreation() {
+    protected void assertAfterNetworkModificationCreation() {
         assertEquals(10., getNetwork().getGenerator("idGenerator").getTargetQ(), 0.001);
         assertEquals(226., getNetwork().getGenerator("newGen").getTargetV(), 0.001);
     }
 
     @Override
-    protected void assertNetworkAfterDeletion() {
+    protected void assertAfterNetworkModificationDeletion() {
         assertEquals(1., getNetwork().getGenerator("idGenerator").getTargetQ(), 0.001);
         assertEquals(224., getNetwork().getGenerator("newGen").getTargetV(), 0.001);
     }

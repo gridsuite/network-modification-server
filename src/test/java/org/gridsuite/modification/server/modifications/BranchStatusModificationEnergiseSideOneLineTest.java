@@ -57,7 +57,7 @@ public class BranchStatusModificationEnergiseSideOneLineTest extends AbstractNet
     }
 
     @Override
-    protected void assertNetworkAfterCreation() {
+    protected void assertAfterNetworkModificationCreation() {
         // terminal1 is now connected, terminal2 is now disconnected
         Line line = getNetwork().getLine(TARGET_LINE_ID);
         assertNotNull(line);
@@ -66,7 +66,7 @@ public class BranchStatusModificationEnergiseSideOneLineTest extends AbstractNet
     }
 
     @Override
-    protected void assertNetworkAfterDeletion() {
+    protected void assertAfterNetworkModificationDeletion() {
         // back to init state
         Line line = getNetwork().getLine(TARGET_LINE_ID);
         assertNotNull(line);
