@@ -64,13 +64,6 @@ public abstract class AbstractScaling extends AbstractModification {
                 .filter(e -> !CollectionUtils.isEmpty(e.getValue().getNotFoundEquipments()))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
-        // check if all exported filters contain equipments with wrong ids
-        if (filterWithWrongEquipmentsIds.size() == exportFilters.size()) {
-            String errorMsg = "All filters contains equipments with wrong ids";
-            createReport(subReporter, "invalidFilters", errorMsg, TypedValue.ERROR_SEVERITY);
-            throw new NetworkModificationException(scalingInfos.getErrorType(), errorMsg);
-        }
-
         // create report for each wrong filter
         filterWithWrongEquipmentsIds.values().forEach(f -> {
             var equipmentIds = String.join(", ", f.getNotFoundEquipments());
