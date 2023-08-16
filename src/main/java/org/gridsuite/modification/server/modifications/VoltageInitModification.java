@@ -41,9 +41,7 @@ public class VoltageInitModification extends AbstractModification {
         }
     }
 
-    @Override
-    public void apply(Network network, Reporter subReporter) {
-        // apply generators modifications
+    private void applyGeneratorModification(Network network, Reporter subReporter) {
         voltageInitModificationInfos.getGenerators().forEach(m -> {
             Generator generator = network.getGenerator(m.getGeneratorId());
             if (generator == null) {
@@ -75,8 +73,9 @@ public class VoltageInitModification extends AbstractModification {
                 }
             }
         });
+    }
 
-        // apply transformers modifications
+    private void applyTransformerModification(Network network, Reporter subReporter) {
         voltageInitModificationInfos.getTransformers().forEach(t -> {
             if (t.getRatioTapChangerPosition() == null) {
                 return;
@@ -149,5 +148,14 @@ public class VoltageInitModification extends AbstractModification {
                 twoWindingsTransformer.getRatioTapChanger().setTapPosition(t.getRatioTapChangerPosition());
             }
         });
+    }
+
+    @Override
+    public void apply(Network network, Reporter subReporter) {
+        // apply generators modifications
+        applyGeneratorModification(network, subReporter);
+
+        // apply transformers modifications
+        applyTransformerModification(network, subReporter);
     }
 }
