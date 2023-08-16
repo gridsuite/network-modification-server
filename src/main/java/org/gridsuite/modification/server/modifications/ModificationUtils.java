@@ -742,7 +742,7 @@ public final class ModificationUtils {
         List<Report> reports = new ArrayList<>();
         double oldDroop = Double.NaN;
         boolean oldParticipate = false;
-        double droop = Double.NaN;
+        double droop = droopInfo != null ? droopInfo.getValue() : Double.NaN;
         if (activePowerControl != null) {
             oldDroop = activePowerControl.getDroop();
             oldParticipate = activePowerControl.isParticipate();
@@ -752,7 +752,7 @@ public final class ModificationUtils {
             activePowerControlAdder
                     .withParticipate(participateInfo.getValue());
             reports.add(ModificationUtils.getInstance().buildModificationReport(activePowerControl != null ? activePowerControl.isParticipate() : null,
-                    oldParticipate,
+                    participateInfo.getValue(),
                     "Participate"));
         } else {
             activePowerControlAdder
@@ -761,7 +761,7 @@ public final class ModificationUtils {
 
         if (droopInfo != null) {
             activePowerControlAdder
-                    .withDroop(droopInfo.getValue());
+                    .withDroop(droop);
             reports.add(ModificationUtils.getInstance().buildModificationReport(oldDroop,
                     droop,
                     "Droop"));
