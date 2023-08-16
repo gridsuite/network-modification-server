@@ -1,0 +1,68 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-4.1.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
+    <changeSet author="labidiayo" id="create_battery_creation_entity_id_index">
+        <createIndex indexName="battery_creation_entity_id_index" tableName="battery_creation_entity_reactive_capability_curve_points">
+            <column name="battery_creation_entity_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="labidiayo" id="create_battery_modification_entity_id_index">
+        <createIndex indexName="battery_modification_entity_id_index" tableName="battery_modification_entity_reactive_capability_curve_points">
+            <column name="battery_modification_entity_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="labidiayo" id="create_current_temporary_limits_id_index">
+        <createIndex indexName="current_temporary_limits_id_index" tableName="current_temporary_limits">
+            <column name="id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="labidiayo" id="create_current_temporary_limits_modification_id_index">
+        <createIndex indexName="current_temporary_limits_modification_id_index" tableName="current_temporary_limits_modification">
+            <column name="id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="labidiayo" id="create_generator_creation_entity_id_index">
+        <createIndex indexName="generator_creation_entity_id_index" tableName="generator_creation_entity_reactive_capability_curve_points">
+            <column name="generator_creation_entity_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="labidiayo" id="create_generator_modification_entity_id_index">
+        <createIndex indexName="generator_modification_entity_id_index" tableName="generator_modification_entity_reactive_capability_curve_points">
+            <column name="generator_modification_entity_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="labidiayo" id="create_generators_frequency_reserve_entity_id_index">
+        <createIndex indexName="generators_frequency_reserve_entity_id_index" tableName="generators_frequency_reserve_filters">
+            <column name="generators_frequency_reserve_entity_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="labidiayo" id="create_generation_dispatch_with_fixed_supply_entity_id_index">
+        <createIndex indexName="generation_dispatch_with_fixed_supply_entity_id_index" tableName="generators_with_fixed_supply">
+            <column name="generation_dispatch_entity_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="labidiayo" id="create_generation_dispatch_without_outage_entity_id_index">
+        <createIndex indexName="generation_dispatch_without_outage_entity_id_index" tableName="generators_without_outage">
+            <column name="generation_dispatch_entity_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="labidiayo" id="create_tap_changer_step_creation_modification_id_index">
+        <createIndex indexName="tap_changer_step_creation_modification_id_index" tableName="tap_changer_step_creation">
+            <column name="modification_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="labidiayo" id="create_tap_changer_step_modification_id_index">
+        <createIndex indexName="tap_changer_step_modification_id_index" tableName="tap_changer_step_modification">
+            <column name="modification_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="labidiayo" id="create_voltage_level_creation_coupling_devices_entity_id_index">
+        <createIndex indexName="voltage_level_creation_coupling_devices_entity_id_index" tableName="voltage_level_creation_entity_coupling_devices">
+            <column name="voltage_level_creation_entity_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="labidiayo" id="create_voltage_level_creation_switch_kinds_entity_id_index">
+        <createIndex indexName="voltage_level_creation_switch_kinds_entity_id_index" tableName="voltage_level_creation_entity_switch_kinds">
+            <column name="voltage_level_creation_entity_id"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>
