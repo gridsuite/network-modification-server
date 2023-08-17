@@ -420,9 +420,7 @@ public class BuildTest {
             .voltageLevelId("v2")
             .busOrBusbarSectionId("1A")
             .maximumNumberOfSections(2)
-            .currentNumberOfSections(2)
             .susceptancePerSection(1.)
-            .isIdenticalSection(true)
             .connectionDirection(ConnectablePosition.Direction.UNDEFINED)
             .connectionName("shunt9")
             .build().toEntity());
@@ -815,13 +813,13 @@ public class BuildTest {
         // Building mode : No error send with exception
         NetworkModificationResult networkModificationResult = networkModificationApplicator.applyModifications(List.of(loadCreationInfos), new NetworkInfos(network, TEST_NETWORK_ID, true), new ReportInfos(reportUuid, reporterId));
         assertNotNull(networkModificationResult);
-        testEmptyImpactsWithErrors(mapper, networkModificationResult);
+        testEmptyImpactsWithErrors(networkModificationResult);
         assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches(String.format("/v1/reports/%s", reportUuid))));
 
         // Incremental mode : No error send with exception
         Optional<NetworkModificationResult> networkModificationResult2 = networkModificationService.createNetworkModification(TEST_NETWORK_ID, variantId, groupUuid, new ReportInfos(reportUuid, reporterId), loadCreationInfos);
         assertTrue(networkModificationResult2.isPresent());
-        testEmptyImpactsWithErrors(mapper, networkModificationResult);
+        testEmptyImpactsWithErrors(networkModificationResult);
         assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches(String.format("/v1/reports/%s", reportUuid))));
         testNetworkModificationsCount(groupUuid, 1);
 
@@ -845,7 +843,7 @@ public class BuildTest {
         //Global application status should be in error and last application status should be OK
         NetworkModificationResult networkModificationResult = networkModificationApplicator.applyModifications(modificationInfosGroups, new NetworkInfos(network, TEST_NETWORK_ID, true), reportUuid);
         assertNotNull(networkModificationResult);
-        testEmptyImpactsWithErrorsLastOK(mapper, networkModificationResult);
+        testEmptyImpactsWithErrorsLastOK(networkModificationResult);
         assertTrue(TestUtils.getRequestsDone(2, server).stream().anyMatch(r -> r.matches(String.format("/v1/reports/%s", reportUuid))));
     }
 
