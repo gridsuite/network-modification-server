@@ -22,7 +22,7 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 @Getter
 @Setter
-@Schema(description = "Voltage init transformer modfication infos")
+@Schema(description = "Voltage init transformer modification infos")
 public class VoltageInitTransformerModificationInfos {
     @Schema(description = "Transformer id")
     private String transformerId;

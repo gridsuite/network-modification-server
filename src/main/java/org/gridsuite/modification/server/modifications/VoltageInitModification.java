@@ -31,11 +31,13 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
 public class VoltageInitModification extends AbstractModification {
     private VoltageInitModificationInfos voltageInitModificationInfos;
 
-    private static final String GENERATOR_MSG = "Generator";
+    private static final String GENERATOR_MSG = "Generator ";
     private static final String TWO_WINDINGS_TRANSFORMER_MSG = "2 windings transformer ";
     private static final String THREE_WINDINGS_TRANSFORMER_MSG = "3 windings transformer ";
     private static final String STATIC_VAR_COMPENSATOR_MSG = "Static var compensator ";
     private static final String VSC_CONVERTER_STATION_MSG = "Vsc converter station ";
+    private static final String VOLTAGE_SET_POINT = "Voltage set point";
+    private static final String REACTIVE_POWER_SET_POINT = "Reactive power set point";
 
     public VoltageInitModification(VoltageInitModificationInfos voltageInitModificationInfos) {
         this.voltageInitModificationInfos = voltageInitModificationInfos;
@@ -59,9 +61,7 @@ public class VoltageInitModification extends AbstractModification {
         reporter.report(builder.build());
     }
 
-    @Override
-    public void apply(Network network, Reporter subReporter) {
-        // apply generators modifications
+    private void applyGeneratorModification(Network network, Reporter subReporter) {
         voltageInitModificationInfos.getGenerators().forEach(m -> {
             Generator generator = network.getGenerator(m.getGeneratorId());
             if (generator == null) {
@@ -75,17 +75,18 @@ public class VoltageInitModification extends AbstractModification {
                 if (m.getVoltageSetpoint() != null) {
                     double oldTargetV = generator.getTargetV();
                     generator.setTargetV(m.getVoltageSetpoint());
-                    reporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(oldTargetV, m.getVoltageSetpoint(), "Voltage set point", 1));
+                    reporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(oldTargetV, m.getVoltageSetpoint(), VOLTAGE_SET_POINT, 1));
                 }
                 if (m.getReactivePowerSetpoint() != null) {
                     double oldTargetQ = generator.getTargetQ();
                     generator.setTargetQ(m.getReactivePowerSetpoint());
-                    reporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(oldTargetQ, m.getReactivePowerSetpoint(), "Reactive power set point", 1));
+                    reporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(oldTargetQ, m.getReactivePowerSetpoint(), REACTIVE_POWER_SET_POINT, 1));
                 }
             }
         });
+    }
 
-        // apply transformers modifications
+    private void applyTransformerModification(Network network, Reporter subReporter) {
         voltageInitModificationInfos.getTransformers().forEach(t -> {
             if (t.getRatioTapChangerPosition() == null) {
                 return;
@@ -131,8 +132,9 @@ public class VoltageInitModification extends AbstractModification {
                 reporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(oldTapPosition, t.getRatioTapChangerPosition(), "Ratio tap changer position", 1));
             }
         });
+    }
 
-        // apply static var compenstors modifications
+    private void applyStaticVarCompensatorModification(Network network, Reporter subReporter) {
         voltageInitModificationInfos.getStaticVarCompensators().forEach(s -> {
             StaticVarCompensator staticVarCompensator = network.getStaticVarCompensator(s.getStaticVarCompensatorId());
             if (staticVarCompensator == null) {
@@ -146,16 +148,18 @@ public class VoltageInitModification extends AbstractModification {
                 if (s.getVoltageSetpoint() != null) {
                     double oldTargetV = staticVarCompensator.getVoltageSetpoint();
                     staticVarCompensator.setVoltageSetpoint(s.getVoltageSetpoint());
-                    reporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(oldTargetV, s.getVoltageSetpoint(), "Voltage set point", 1));
+                    reporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(oldTargetV, s.getVoltageSetpoint(), VOLTAGE_SET_POINT, 1));
                 }
                 if (s.getReactivePowerSetpoint() != null) {
                     double oldTargetQ = staticVarCompensator.getReactivePowerSetpoint();
                     staticVarCompensator.setReactivePowerSetpoint(s.getReactivePowerSetpoint());
-                    reporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(oldTargetQ, s.getReactivePowerSetpoint(), "Reactive power set point", 1));
+                    reporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(oldTargetQ, s.getReactivePowerSetpoint(), REACTIVE_POWER_SET_POINT, 1));
                 }
             }
         });
+    }
 
+    private void applyVscConverterStationModification(Network network, Reporter subReporter) {
         // apply vsc converter stations modifications
         voltageInitModificationInfos.getVscConverterStations().forEach(v -> {
             VscConverterStation vscConverterStation = network.getVscConverterStation(v.getVscConverterStationId());
@@ -170,14 +174,29 @@ public class VoltageInitModification extends AbstractModification {
                 if (v.getVoltageSetpoint() != null) {
                     double oldTargetV = vscConverterStation.getVoltageSetpoint();
                     vscConverterStation.setVoltageSetpoint(v.getVoltageSetpoint());
-                    reporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(oldTargetV, v.getVoltageSetpoint(), "Voltage set point", 1));
+                    reporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(oldTargetV, v.getVoltageSetpoint(), VOLTAGE_SET_POINT, 1));
                 }
                 if (v.getReactivePowerSetpoint() != null) {
                     double oldTargetQ = vscConverterStation.getReactivePowerSetpoint();
                     vscConverterStation.setReactivePowerSetpoint(v.getReactivePowerSetpoint());
-                    reporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(oldTargetQ, v.getReactivePowerSetpoint(), "Reactive power set point", 1));
+                    reporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(oldTargetQ, v.getReactivePowerSetpoint(), REACTIVE_POWER_SET_POINT, 1));
                 }
             }
         });
+    }
+
+    @Override
+    public void apply(Network network, Reporter subReporter) {
+        // apply generators modifications
+        applyGeneratorModification(network, subReporter);
+
+        // apply transformers modifications
+        applyTransformerModification(network, subReporter);
+
+        // apply static var compensators modifications
+        applyStaticVarCompensatorModification(network, subReporter);
+
+        // apply vsc converter stations modifications
+        applyVscConverterStationModification(network, subReporter);
     }
 }
