@@ -37,6 +37,9 @@ public class VoltageInitModificationInfos extends ModificationInfos {
     @Schema(description = "generators modifications")
     private List<VoltageInitGeneratorModificationInfos> generators;
 
+    @Schema(description = "transformers modifications")
+    private List<VoltageInitTransformerModificationInfos> transformers;
+
     @Override
     public ModificationEntity toEntity() {
         return new VoltageInitModificationEntity(this);
