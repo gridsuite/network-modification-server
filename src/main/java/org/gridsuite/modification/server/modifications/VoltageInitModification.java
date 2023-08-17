@@ -26,7 +26,7 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
 public class VoltageInitModification extends AbstractModification {
     private VoltageInitModificationInfos voltageInitModificationInfos;
 
-    private static final String GENERATOR_MSG = "Generator";
+    private static final String GENERATOR_MSG = "Generator ";
     private static final String TWO_WINDINGS_TRANSFORMER_MSG = "2 windings transformer ";
     private static final String THREE_WINDINGS_TRANSFORMER_MSG = "3 windings transformer ";
 
