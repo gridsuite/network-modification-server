@@ -65,4 +65,16 @@
             <column name="voltage_level_creation_entity_id"/>
         </createIndex>
     </changeSet>
+    <changeSet author="labidiayo" id="dropUniqueConstraint_UK_9lu63p3qb820hkpqidugkg1w9_index">
+        <dropUniqueConstraint constraintName="UK_9lu63p3qb820hkpqidugkg1w9" tableName="generator_scaling_variations" uniqueColumns="variations_id"/>
+    </changeSet>
+    <changeSet author="labidiayo" id="addUniqueConstraint_generator_scaling_variations_id_index">
+        <addUniqueConstraint columnNames="variations_id" constraintName="generator_scaling_variations_id_index" tableName="generator_scaling_variations"/>
+    </changeSet>
+    <changeSet author="labidiayo" id="dropUniqueConstraint_UK_j7lwgf59hux07bl6bpdii0ky9_index">
+        <dropUniqueConstraint constraintName="UK_j7lwgf59hux07bl6bpdii0ky9" tableName="scaling_variation_filters" uniqueColumns="filter_id"/>
+    </changeSet>
+    <changeSet author="labidiayo" id="addUniqueConstraint_scaling_variation_filter_id_index">
+        <addUniqueConstraint columnNames="filter_id" constraintName="scaling_variation_filter_id_index" tableName="scaling_variation_filters"/>
+    </changeSet>
 </databaseChangeLog>
