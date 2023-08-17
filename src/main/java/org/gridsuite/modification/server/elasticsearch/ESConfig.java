@@ -41,7 +41,8 @@ public class ESConfig extends ElasticsearchConfiguration {
     @Value("${spring.data.elasticsearch.password:#{null}}")
     private Optional<String> password;
 
-    @Bean
+    //It should be detected without specifying the name, but it isn't. To investigate.
+    @Bean(name = "elasticsearchClientConfiguration")
     @Override
     @SuppressWarnings("squid:S2095")
     @Nonnull

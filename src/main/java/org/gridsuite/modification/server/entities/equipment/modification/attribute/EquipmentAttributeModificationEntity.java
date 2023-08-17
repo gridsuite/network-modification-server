@@ -32,7 +32,7 @@ public class EquipmentAttributeModificationEntity<T> extends EquipmentModificati
     @Column(name = "attributeValue")
     private T attributeValue;
 
-    @Column(name = "equipmentType")
+    @Column(name = "equipmentType", columnDefinition = "varchar(255)")
     @Enumerated(EnumType.STRING)
     private IdentifiableType equipmentType;
 
