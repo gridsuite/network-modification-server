@@ -143,7 +143,7 @@ public class VoltageInitModification extends AbstractModification {
                 return;
             }
             if (s.getVoltageSetpoint() != null || s.getReactivePowerSetpoint() != null) {
-                Reporter reporter = subReporter.createSubReporter(STATIC_VAR_COMPENSATOR_MSG + s.getStaticVarCompensatorId(), GENERATOR_MSG + s.getStaticVarCompensatorId());
+                Reporter reporter = subReporter.createSubReporter(STATIC_VAR_COMPENSATOR_MSG + s.getStaticVarCompensatorId(), STATIC_VAR_COMPENSATOR_MSG + s.getStaticVarCompensatorId());
                 report(reporter, "staticVarCompensatorModification", "Static var compensator with id=${id} modified :", Map.of("id", s.getStaticVarCompensatorId()), TypedValue.INFO_SEVERITY);
                 if (s.getVoltageSetpoint() != null) {
                     double oldTargetV = staticVarCompensator.getVoltageSetpoint();
