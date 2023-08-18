@@ -29,6 +29,7 @@ import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -129,6 +130,7 @@ public class GenerationDispatchEntity extends ModificationEntity {
         List<GeneratorsFrequencyReserveInfos> generatorsFrequencyReserveInfos = null;
         if (generatorsFrequencyReserve != null) {
             generatorsFrequencyReserveInfos = generatorsFrequencyReserve.stream()
+                .filter(Objects::nonNull)
                 .map(generator -> {
                     List<GeneratorsFilterInfos> generatorsFilterInfos = generator.getGeneratorsFilters().stream().map(filter ->
                         new GeneratorsFilterInfos(filter.getId(), filter.getName())).collect(Collectors.toList());
