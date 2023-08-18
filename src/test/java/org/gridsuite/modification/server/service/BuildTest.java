@@ -289,7 +289,6 @@ public class BuildTest {
                                 .content(mapper.writeValueAsString(buildInfos)))
                 .andExpect(status().isOk());
 
-        assertNotNull(output.receive(TIMEOUT, consumeBuildDestination));
         Message<byte[]> resultMessage = output.receive(TIMEOUT, buildResultDestination);
         assertNotNull(resultMessage);
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
@@ -305,7 +304,6 @@ public class BuildTest {
                                 .content(mapper.writeValueAsString(newBuildInfos)))
                 .andExpect(status().isOk());
 
-        assertNotNull(output.receive(TIMEOUT, consumeBuildDestination));
         resultMessage = output.receive(TIMEOUT, buildResultDestination);
         assertNotNull(resultMessage);
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
@@ -334,7 +332,6 @@ public class BuildTest {
         assertNotNull(request);
         assertEquals(expectedBody, request.getBody().readUtf8());
 
-        assertNotNull(output.receive(TIMEOUT, consumeBuildDestination));
         assertNotNull(output.receive(TIMEOUT, buildResultDestination));
 
         // Group is empty
@@ -552,7 +549,6 @@ public class BuildTest {
         mockMvc.perform(post(uriString, TEST_NETWORK_ID).contentType(MediaType.APPLICATION_JSON).content(buildInfosJson))
             .andExpect(status().isOk());
 
-        assertNotNull(output.receive(TIMEOUT, consumeBuildDestination));
         Message<byte[]> resultMessage = output.receive(TIMEOUT, buildResultDestination);
         assertNotNull(resultMessage);
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
@@ -644,7 +640,6 @@ public class BuildTest {
         buildInfosJson = objectWriter.writeValueAsString(newBuildInfos);
         mockMvc.perform(post(uriString, TEST_NETWORK_ID).contentType(MediaType.APPLICATION_JSON).content(buildInfosJson)).andExpect(status().isOk());
 
-        assertNotNull(output.receive(TIMEOUT, consumeBuildDestination));
         resultMessage = output.receive(TIMEOUT, buildResultDestination);
         assertNotNull(resultMessage);
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
@@ -693,7 +688,6 @@ public class BuildTest {
         mockMvc.perform(post(uriString, TEST_NETWORK_ID).content(buildInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
 
-        assertNotNull(output.receive(TIMEOUT, consumeBuildDestination));
         resultMessage = output.receive(TIMEOUT, buildResultDestination);
         assertNotNull(resultMessage);
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
@@ -765,9 +759,7 @@ public class BuildTest {
 
         // stop build
         waitStartBuild.await();
-        assertNotNull(output.receive(TIMEOUT, consumeBuildDestination));
         mockMvc.perform(put("/v1/build/stop?receiver=me")).andExpect(status().isOk());
-        assertNotNull(output.receive(TIMEOUT, cancelBuildDestination));
 
         Message<byte[]> message = output.receive(TIMEOUT, buildStoppedDestination);
         assertNotNull(message);
@@ -794,7 +786,6 @@ public class BuildTest {
 
         assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches("/v1/reports/.*")));
 
-        assertNotNull(output.receive(TIMEOUT, consumeBuildDestination));
         assertNull(output.receive(TIMEOUT, buildResultDestination));
         Message<byte[]> message = output.receive(TIMEOUT * 3, buildFailedDestination);
         assertEquals("me", message.getHeaders().get("receiver"));
