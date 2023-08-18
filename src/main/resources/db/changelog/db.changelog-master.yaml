@@ -186,5 +186,3 @@ databaseChangeLog:
   - include:
       file: changesets/changelog_20230810T134233Z.xml
       relativeToChangelogFile: true
-
-
