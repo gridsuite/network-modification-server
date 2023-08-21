@@ -77,4 +77,22 @@
     <changeSet author="labidiayo" id="addUniqueConstraint_scaling_variation_filter_id_index">
         <addUniqueConstraint columnNames="filter_id" constraintName="scaling_variation_filter_id_index" tableName="scaling_variation_filters"/>
     </changeSet>
+    <changeSet author="labidiayo" id="dropUniqueConstraint_UK_qsdphctot5lvye9dxd908nxqe_index">
+        <dropUniqueConstraint constraintName="UK_qsdphctot5lvye9dxd908nxqe" tableName="generation_dispatch_generators_frequency_reserve" uniqueColumns="generators_frequency_reserve_id"/>
+    </changeSet>
+    <changeSet author="labidiayo" id="addUniqueConstraint_generators_frequency_reserve_id_index">
+        <addUniqueConstraint columnNames="generators_frequency_reserve_id" constraintName="generators_frequency_reserve_id_index" tableName="generation_dispatch_generators_frequency_reserve"/>
+    </changeSet>
+    <changeSet author="labidiayo" id="dropUniqueConstraint_UK_tjq2qrrcph3puk6hsdu00g2gy_index">
+        <dropUniqueConstraint constraintName="UK_tjq2qrrcph3puk6hsdu00g2gy" tableName="generation_dispatch_generators_ordering" uniqueColumns="generators_ordering_id"/>
+    </changeSet>
+    <changeSet author="labidiayo" id="addUniqueConstraint_generators_ordering_id_index">
+        <addUniqueConstraint columnNames="generators_ordering_id" constraintName="generators_ordering_id_index" tableName="generation_dispatch_generators_ordering"/>
+    </changeSet>
+    <changeSet author="labidiayo" id="dropUniqueConstraint_UK_1oqy7rx258vwcet98eclj09sq_index">
+        <dropUniqueConstraint constraintName="UK_1oqy7rx258vwcet98eclj09sq" tableName="load_scaling_variations" uniqueColumns="variations_id"/>
+    </changeSet>
+    <changeSet author="labidiayo" id="addUniqueConstraint_load_scaling_variations_id_index">
+        <addUniqueConstraint columnNames="variations_id" constraintName="load_scaling_variations_id_index" tableName="load_scaling_variations"/>
+    </changeSet>
 </databaseChangeLog>
