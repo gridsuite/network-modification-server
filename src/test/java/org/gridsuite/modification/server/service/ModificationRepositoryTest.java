@@ -1077,10 +1077,38 @@ public class ModificationRepositoryTest {
                     .generatorId("G2")
                     .voltageSetpoint(226.)
                     .build()))
+            .transformers(List.of(
+                VoltageInitTransformerModificationInfos.builder()
+                    .transformerId("2WT1")
+                    .ratioTapChangerPosition(3)
+                    .build(),
+                VoltageInitTransformerModificationInfos.builder()
+                    .transformerId("3WT1")
+                    .ratioTapChangerPosition(1)
+                    .legSide(ThreeWindingsTransformer.Side.TWO)
+                    .build()))
+            .staticVarCompensators(List.of(
+                VoltageInitStaticVarCompensatorModificationInfos.builder()
+                    .staticVarCompensatorId("SVC1")
+                    .reactivePowerSetpoint(50.)
+                    .build(),
+                VoltageInitStaticVarCompensatorModificationInfos.builder()
+                    .staticVarCompensatorId("SVC2")
+                    .voltageSetpoint(374.)
+                    .build()))
+            .vscConverterStations(List.of(
+                VoltageInitVscConverterStationModificationInfos.builder()
+                    .vscConverterStationId("VSC1")
+                    .reactivePowerSetpoint(40.)
+                    .build(),
+                VoltageInitVscConverterStationModificationInfos.builder()
+                    .vscConverterStationId("VSC2")
+                    .voltageSetpoint(224.)
+                    .build()))
             .build().toEntity();
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(voltageInitModificationEntity));
-        assertRequestsCount(1, 5, 1, 0);
+        assertRequestsCount(1, 11, 1, 0);
 
         List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
         assertEquals(1, modificationInfos.size());
@@ -1092,7 +1120,7 @@ public class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(voltageInitModificationEntity.getId()));
-        assertRequestsCount(2, 0, 0, 3);
+        assertRequestsCount(2, 0, 0, 6);
 
         SQLStatementCountValidator.reset();
         assertEquals(0, networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
