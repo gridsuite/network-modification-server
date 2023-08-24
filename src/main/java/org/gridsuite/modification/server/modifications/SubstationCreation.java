@@ -36,5 +36,19 @@ public class SubstationCreation extends AbstractModification {
                 .withValue("id", modificationInfos.getEquipmentId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .build());
+
+        // name and country
+        ModificationUtils.getInstance()
+                .reportElementaryCreation(subReporter, modificationInfos.getEquipmentName(), "Name");
+        ModificationUtils.getInstance()
+                .reportElementaryCreation(subReporter, modificationInfos.getSubstationCountry(), "Country");
+        // properties
+        modificationInfos.getProperties().forEach((key, value) -> subReporter.report(Report.builder()
+                .withKey("propertyAdded")
+                .withDefaultMessage("    Property ${name} added with value ${value}")
+                .withValue("name", key)
+                .withValue("value", value)
+                .withSeverity(TypedValue.INFO_SEVERITY)
+                .build()));
     }
 }
