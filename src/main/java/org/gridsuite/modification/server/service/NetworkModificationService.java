@@ -108,8 +108,8 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public void undoRestoreNetworkModifications(@NonNull List<UUID> modificationUuids) {
-        networkModificationRepository.undoRestoreNetworkModifications(modificationUuids);
+    public void putNetworkModificationsIntoTrash(@NonNull List<UUID> modificationUuids) {
+        networkModificationRepository.putNetworkModificationsIntoTrash(modificationUuids);
     }
     @Transactional
     public void restoreNetworkModifications(@NonNull List<UUID> modificationUuids) {

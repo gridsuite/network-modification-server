@@ -244,14 +244,12 @@ public class NetworkModificationRepository {
     }
 
     @Transactional
-    public void undoRestoreNetworkModifications(@NonNull List<UUID> modificationUuids) {
+    public void putNetworkModificationsIntoTrash(@NonNull List<UUID> modificationUuids) {
         for (UUID modificationUuid : modificationUuids) {
             ModificationEntity modificationEntity = this.modificationRepository
                     .findById(modificationUuid)
-                    .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, "Modification not found"));
-            // Set the isRestored attribute to true
+                    .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format("Modification (%s) not found", modificationUuid)));
             modificationEntity.setIsRestored(true);
-            // Update the modification entity in the database
             this.modificationRepository.save(modificationEntity);
         }
     }
@@ -261,10 +259,8 @@ public class NetworkModificationRepository {
         for (UUID modificationUuid : modificationUuids) {
             ModificationEntity modificationEntity = this.modificationRepository
                     .findById(modificationUuid)
-                    .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, "Modification not found"));
-            // Set the isRestored attribute to true
+                    .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format("Modification (%s) not found", modificationUuid)));
             modificationEntity.setIsRestored(false);
-            // Update the modification entity in the database
             this.modificationRepository.save(modificationEntity);
         }
     }

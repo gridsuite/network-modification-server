@@ -58,7 +58,7 @@ public class NetworkModificationController {
 
     @GetMapping(value = "/groups/{groupUuid}/modifications-restore", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Get modifications list of a group")
-    @ApiResponse(responseCode = "200", description = "List of modifications of the group")
+    @ApiResponse(responseCode = "200", description = "List of modifications to restore of the group")
     public ResponseEntity<List<ModificationInfos>> getNetworkModificationsToRestore(@Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid,
                                                                            @Parameter(description = "Only metadata") @RequestParam(name = "onlyMetadata", required = false, defaultValue = "false") Boolean onlyMetadata,
                                                                            @Parameter(description = "Return 404 if group is not found or an empty list") @RequestParam(name = "errorOnGroupNotFound", required = false, defaultValue = "true") Boolean errorOnGroupNotFound) {
@@ -149,7 +149,6 @@ public class NetworkModificationController {
     @ApiResponse(responseCode = "200", description = "The network modifications were returned")
     public ResponseEntity<ModificationInfos> getNetworkModification(
             @Parameter(description = "Network modification UUID") @PathVariable("uuid") UUID networkModificationUuid) {
-        System.out.println("hna fema mochkla");
         return ResponseEntity.ok().body(networkModificationService.getNetworkModification(networkModificationUuid));
     }
 
@@ -212,12 +211,12 @@ public class NetworkModificationController {
     }
 
     @PutMapping(value = "/network-modifications", produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "UndoRestore network modifications")
+    @Operation(summary = "put network modifications into trash")
     @ApiResponse(responseCode = "200", description = "The network modifications were deleted")
     public ResponseEntity<Void> updateNetworkModifications(
             @Parameter(description = "Network modification UUIDs") @RequestParam("uuids") List<UUID> networkModificationUuids,
             @Parameter(description = "Group UUID") @RequestParam("groupUuid") UUID groupUuid) {
-        networkModificationService.undoRestoreNetworkModifications(networkModificationUuids);
+        networkModificationService.putNetworkModificationsIntoTrash(networkModificationUuids);
         return ResponseEntity.ok().build();
     }
 
