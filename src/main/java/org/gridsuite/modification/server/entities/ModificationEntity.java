@@ -46,6 +46,9 @@ public class ModificationEntity {
     @Setter
     private ModificationGroupEntity group;
 
+    @Column(name = "isRestored")
+    private Boolean isRestored;
+
     protected ModificationEntity(ModificationInfos modificationInfos) {
         if (modificationInfos == null) {
             throw new NetworkModificationException(MISSING_MODIFICATION_DESCRIPTION, "Missing network modification description");

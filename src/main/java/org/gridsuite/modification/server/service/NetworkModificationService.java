@@ -71,10 +71,15 @@ public class NetworkModificationService {
     }
 
     @Transactional(readOnly = true)
+    // Need a transaction for collections lazy loading
+    public List<ModificationInfos> getNetworkModificationsToRestore(UUID groupUuid, boolean onlyMetadata, boolean errorOnGroupNotFound) {
+        return networkModificationRepository.getModificationsToRestore(groupUuid, onlyMetadata, errorOnGroupNotFound);
+    }
+
+    @Transactional(readOnly = true)
     public ModificationInfos getNetworkModification(UUID networkModificationUuid) {
         return networkModificationRepository.getModificationInfo(networkModificationUuid);
     }
-
     public void deleteModificationGroup(UUID groupUuid, boolean errorOnGroupNotFound) {
         networkModificationRepository.deleteModificationGroup(groupUuid, errorOnGroupNotFound);
     }
@@ -100,6 +105,15 @@ public class NetworkModificationService {
     @Transactional
     public void updateNetworkModification(@NonNull UUID modificationUuid, @NonNull ModificationInfos modificationInfos) {
         networkModificationRepository.updateModification(modificationUuid, modificationInfos);
+    }
+
+    @Transactional
+    public void undoRestoreNetworkModifications(@NonNull List<UUID> modificationUuids) {
+        networkModificationRepository.undoRestoreNetworkModifications(modificationUuids);
+    }
+    @Transactional
+    public void restoreNetworkModifications(@NonNull List<UUID> modificationUuids) {
+        networkModificationRepository.restoreNetworkModifications(modificationUuids);
     }
 
     // No transactional because we need to save modification in DB also in case of error

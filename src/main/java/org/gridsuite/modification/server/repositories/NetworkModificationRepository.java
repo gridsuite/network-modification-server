@@ -121,26 +121,69 @@ public class NetworkModificationRepository {
             throw e;
         }
     }
+    @Transactional(readOnly = true)
+    public List<ModificationInfos> getModificationsToRestore(UUID groupUuid, boolean onlyMetadata, boolean errorOnGroupNotFound) {
+        try {
+            return onlyMetadata ? getModificationsToRestoreMetadata(groupUuid) : getModificationsToRestoreInfos(List.of(groupUuid));
+        } catch (NetworkModificationException e) {
+            if (e.getType() == MODIFICATION_GROUP_NOT_FOUND && !errorOnGroupNotFound) {
+                return List.of();
+            }
+            throw e;
+        }
+    }
 
     private List<ModificationInfos> getModificationsMetadata(UUID groupUuid) {
         return modificationRepository
-            .findAllBaseByGroupId(getModificationGroup(groupUuid).getId())
-            .stream()
-            .map(ModificationEntity::toModificationInfos)
-            .collect(Collectors.toList());
+                .findAllBaseByGroupId(getModificationGroup(groupUuid).getId())
+                .stream()
+                .filter(m->!m.getIsRestored())
+                .map(ModificationEntity::toModificationInfos)
+                .collect(Collectors.toList());
+    }
+    private List<ModificationInfos> getModificationsToRestoreMetadata(UUID groupUuid) {
+        return modificationRepository
+                .findAllBaseByGroupId(getModificationGroup(groupUuid).getId())
+                .stream()
+                .filter(m->m.getIsRestored())
+                .map(ModificationEntity::toModificationInfos)
+                .collect(Collectors.toList());
     }
 
     public List<ModificationInfos> getModificationsInfos(List<UUID> groupUuids) {
-        return groupUuids.stream().flatMap(this::getModificationEntityStream).map(ModificationEntity::toModificationInfos)
-            .collect(Collectors.toList());
+        return groupUuids.stream().flatMap(this::getModificationEntityStream).filter(m->!m.getIsRestored()).map(ModificationEntity::toModificationInfos)
+                .collect(Collectors.toList());
+    }
+
+    public List<ModificationInfos> getModificationsToRestoreInfos(List<UUID> groupUuids) {
+        return groupUuids.stream().flatMap(this::getModificationEntityStream).filter(m->m.getIsRestored()).map(ModificationEntity::toModificationInfos)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public ModificationInfos getModificationInfoToRestore(UUID modificationUuid) {
+        return modificationRepository
+                .findById(modificationUuid)
+                .filter(m -> m.getIsRestored())
+                .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString()))
+                .toModificationInfos();
     }
 
     @Transactional(readOnly = true)
     public ModificationInfos getModificationInfo(UUID modificationUuid) {
         return modificationRepository
-            .findById(modificationUuid)
-            .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString()))
-            .toModificationInfos();
+                .findById(modificationUuid)
+                .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString()))
+                .toModificationInfos();
+    }
+
+    @Transactional(readOnly = true)
+    public ModificationInfos getNodeModificationInfo(UUID modificationUuid) {
+        return modificationRepository
+                .findById(modificationUuid)
+                .filter(m -> !m.getIsRestored())
+                .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString()))
+                .toModificationInfos();
     }
 
     @Transactional // To have the 2 delete in the same transaction (atomic)
@@ -201,10 +244,36 @@ public class NetworkModificationRepository {
     }
 
     @Transactional
+    public void undoRestoreNetworkModifications(@NonNull List<UUID> modificationUuids) {
+        for (UUID modificationUuid : modificationUuids) {
+            ModificationEntity modificationEntity = this.modificationRepository
+                    .findById(modificationUuid)
+                    .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, "Modification not found"));
+            // Set the isRestored attribute to true
+            modificationEntity.setIsRestored(true);
+            // Update the modification entity in the database
+            this.modificationRepository.save(modificationEntity);
+        }
+    }
+
+    @Transactional
+    public void restoreNetworkModifications(@NonNull List<UUID> modificationUuids) {
+        for (UUID modificationUuid : modificationUuids) {
+            ModificationEntity modificationEntity = this.modificationRepository
+                    .findById(modificationUuid)
+                    .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, "Modification not found"));
+            // Set the isRestored attribute to true
+            modificationEntity.setIsRestored(false);
+            // Update the modification entity in the database
+            this.modificationRepository.save(modificationEntity);
+        }
+    }
+
+    @Transactional
     public void updateModification(@NonNull UUID modificationUuid, @NonNull ModificationInfos modificationInfos) {
         this.modificationRepository
-            .findById(modificationUuid)
-            .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format("Modification (%s) not found", modificationUuid)))
-            .update(modificationInfos);
+                .findById(modificationUuid)
+                .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format("Modification (%s) not found", modificationUuid)))
+                .update(modificationInfos);
     }
 }
