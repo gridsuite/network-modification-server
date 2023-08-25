@@ -80,6 +80,7 @@ public class NetworkModificationService {
     public ModificationInfos getNetworkModification(UUID networkModificationUuid) {
         return networkModificationRepository.getModificationInfo(networkModificationUuid);
     }
+
     public void deleteModificationGroup(UUID groupUuid, boolean errorOnGroupNotFound) {
         networkModificationRepository.deleteModificationGroup(groupUuid, errorOnGroupNotFound);
     }
@@ -111,6 +112,7 @@ public class NetworkModificationService {
     public void putNetworkModificationsIntoTrash(@NonNull List<UUID> modificationUuids) {
         networkModificationRepository.putNetworkModificationsIntoTrash(modificationUuids);
     }
+
     @Transactional
     public void restoreNetworkModifications(@NonNull List<UUID> modificationUuids) {
         networkModificationRepository.restoreNetworkModifications(modificationUuids);

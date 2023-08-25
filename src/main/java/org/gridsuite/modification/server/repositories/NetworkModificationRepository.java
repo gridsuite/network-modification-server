@@ -121,6 +121,7 @@ public class NetworkModificationRepository {
             throw e;
         }
     }
+
     @Transactional(readOnly = true)
     public List<ModificationInfos> getModificationsToRestore(UUID groupUuid, boolean onlyMetadata, boolean errorOnGroupNotFound) {
         try {
@@ -137,51 +138,34 @@ public class NetworkModificationRepository {
         return modificationRepository
                 .findAllBaseByGroupId(getModificationGroup(groupUuid).getId())
                 .stream()
-                .filter(m->!m.getIsRestored())
+                .filter(m -> !m.getIsRestored())
                 .map(ModificationEntity::toModificationInfos)
                 .collect(Collectors.toList());
     }
+
     private List<ModificationInfos> getModificationsToRestoreMetadata(UUID groupUuid) {
         return modificationRepository
                 .findAllBaseByGroupId(getModificationGroup(groupUuid).getId())
                 .stream()
-                .filter(m->m.getIsRestored())
+                .filter(m -> m.getIsRestored())
                 .map(ModificationEntity::toModificationInfos)
                 .collect(Collectors.toList());
     }
 
     public List<ModificationInfos> getModificationsInfos(List<UUID> groupUuids) {
-        return groupUuids.stream().flatMap(this::getModificationEntityStream).filter(m->!m.getIsRestored()).map(ModificationEntity::toModificationInfos)
+        return groupUuids.stream().flatMap(this::getModificationEntityStream).filter(m -> !m.getIsRestored()).map(ModificationEntity::toModificationInfos)
                 .collect(Collectors.toList());
     }
 
     public List<ModificationInfos> getModificationsToRestoreInfos(List<UUID> groupUuids) {
-        return groupUuids.stream().flatMap(this::getModificationEntityStream).filter(m->m.getIsRestored()).map(ModificationEntity::toModificationInfos)
+        return groupUuids.stream().flatMap(this::getModificationEntityStream).filter(m -> m.getIsRestored()).map(ModificationEntity::toModificationInfos)
                 .collect(Collectors.toList());
-    }
-
-    @Transactional(readOnly = true)
-    public ModificationInfos getModificationInfoToRestore(UUID modificationUuid) {
-        return modificationRepository
-                .findById(modificationUuid)
-                .filter(m -> m.getIsRestored())
-                .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString()))
-                .toModificationInfos();
     }
 
     @Transactional(readOnly = true)
     public ModificationInfos getModificationInfo(UUID modificationUuid) {
         return modificationRepository
                 .findById(modificationUuid)
-                .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString()))
-                .toModificationInfos();
-    }
-
-    @Transactional(readOnly = true)
-    public ModificationInfos getNodeModificationInfo(UUID modificationUuid) {
-        return modificationRepository
-                .findById(modificationUuid)
-                .filter(m -> !m.getIsRestored())
                 .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString()))
                 .toModificationInfos();
     }
