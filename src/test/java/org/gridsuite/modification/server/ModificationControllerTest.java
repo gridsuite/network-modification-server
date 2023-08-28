@@ -308,8 +308,6 @@ public class ModificationControllerTest {
                         .queryParam("uuids", uuidString))
                 .andExpect(status().isOk());
         assertEquals(0, modificationRepository.getModificationsToRestore(TEST_GROUP_ID, false, true).size());
-
-
     }
 
     @Test
