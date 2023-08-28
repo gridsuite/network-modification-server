@@ -38,6 +38,11 @@
             </column>
         </addColumn>
     </changeSet>
+    <changeSet author="lecuyerfra (generated)" id="1691156577326-20">
+        <update tableName="generation_dispatch_generators_frequency_reserve">
+            <column name="pos_generators_frequency" valueComputed="FLOOR(RANDOM()*1000000)+1"/>
+        </update>
+    </changeSet>
     <changeSet author="lecuyerfra (generated)" id="1691156577326-9">
         <addPrimaryKey columnNames="generation_dispatch_entity_id, pos_generators_frequency" tableName="generation_dispatch_generators_frequency_reserve"/>
     </changeSet>
