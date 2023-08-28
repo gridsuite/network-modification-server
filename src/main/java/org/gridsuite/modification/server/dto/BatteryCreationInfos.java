@@ -11,8 +11,6 @@ import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -74,7 +72,6 @@ public class BatteryCreationInfos extends InjectionCreationInfos {
     private String connectionName;
 
     @Schema(description = "Connection Direction")
-    @Enumerated(EnumType.ORDINAL)
     private ConnectablePosition.Direction connectionDirection;
 
     @Schema(description = "Connection Position")
