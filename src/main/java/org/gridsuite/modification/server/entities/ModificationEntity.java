@@ -61,6 +61,7 @@ public class ModificationEntity {
         return ModificationInfos.builder()
                 .uuid(this.id)
                 .date(this.date)
+                .isRestored(this.isRestored)
                 .build();
     }
 

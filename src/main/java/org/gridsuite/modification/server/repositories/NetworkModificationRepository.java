@@ -138,7 +138,7 @@ public class NetworkModificationRepository {
         return modificationRepository
                 .findAllBaseByGroupId(getModificationGroup(groupUuid).getId())
                 .stream()
-                .filter(m -> !m.getIsRestored())
+                .filter(m -> m.getIsRestored())
                 .map(ModificationEntity::toModificationInfos)
                 .collect(Collectors.toList());
     }
@@ -147,18 +147,19 @@ public class NetworkModificationRepository {
         return modificationRepository
                 .findAllBaseByGroupId(getModificationGroup(groupUuid).getId())
                 .stream()
-                .filter(m -> m.getIsRestored())
+                .filter(m -> !m.getIsRestored())
                 .map(ModificationEntity::toModificationInfos)
                 .collect(Collectors.toList());
     }
 
     public List<ModificationInfos> getModificationsInfos(List<UUID> groupUuids) {
-        return groupUuids.stream().flatMap(this::getModificationEntityStream).filter(m -> !m.getIsRestored()).map(ModificationEntity::toModificationInfos)
+        return groupUuids.stream().flatMap(this::getModificationEntityStream).filter(m -> m.getIsRestored()).map(ModificationEntity::toModificationInfos)
                 .collect(Collectors.toList());
     }
 
     public List<ModificationInfos> getModificationsToRestoreInfos(List<UUID> groupUuids) {
-        return groupUuids.stream().flatMap(this::getModificationEntityStream).filter(m -> m.getIsRestored()).map(ModificationEntity::toModificationInfos)
+        return groupUuids.stream().flatMap(this::getModificationEntityStream)    .filter(m ->!m.getIsRestored() || m.getIsRestored() == null)
+                .map(ModificationEntity::toModificationInfos)
                 .collect(Collectors.toList());
     }
 
@@ -233,7 +234,7 @@ public class NetworkModificationRepository {
             ModificationEntity modificationEntity = this.modificationRepository
                     .findById(modificationUuid)
                     .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format("Modification (%s) not found", modificationUuid)));
-            modificationEntity.setIsRestored(true);
+            modificationEntity.setIsRestored(false);
             this.modificationRepository.save(modificationEntity);
         }
     }
@@ -244,7 +245,7 @@ public class NetworkModificationRepository {
             ModificationEntity modificationEntity = this.modificationRepository
                     .findById(modificationUuid)
                     .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format("Modification (%s) not found", modificationUuid)));
-            modificationEntity.setIsRestored(false);
+            modificationEntity.setIsRestored(true);
             this.modificationRepository.save(modificationEntity);
         }
     }

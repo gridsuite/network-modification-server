@@ -213,7 +213,7 @@ public class NetworkModificationController {
     @PutMapping(value = "/network-modifications", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "put network modifications into trash")
     @ApiResponse(responseCode = "200", description = "The network modifications were deleted")
-    public ResponseEntity<Void> updateNetworkModifications(
+    public ResponseEntity<Void> putNetworkModificationsIntoTrash(
             @Parameter(description = "Network modification UUIDs") @RequestParam("uuids") List<UUID> networkModificationUuids,
             @Parameter(description = "Group UUID") @RequestParam("groupUuid") UUID groupUuid) {
         networkModificationService.putNetworkModificationsIntoTrash(networkModificationUuids);

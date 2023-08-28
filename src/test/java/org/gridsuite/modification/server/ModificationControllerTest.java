@@ -89,6 +89,7 @@ public class ModificationControllerTest {
     private static final UUID TEST_REPORT_ID = UUID.randomUUID();
 
     private static final String URI_NETWORK_MODIF_BASE = "/v1/network-modifications";
+    private static final String URI_RESTORE_NETWORK_MODIF_BASE = "/v1/restore-network-modifications";
     private static final String URI_NETWORK_MODIF_PARAMS = "&groupUuid=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
     private static final String URI_NETWORK_MODIF = URI_NETWORK_MODIF_BASE + "?networkUuid=" + TEST_NETWORK_ID + URI_NETWORK_MODIF_PARAMS;
     private static final String URI_NETWORK_MODIF_BUS_BREAKER = URI_NETWORK_MODIF_BASE + "?networkUuid=" + TEST_NETWORK_BUS_BREAKER_ID + URI_NETWORK_MODIF_PARAMS;
@@ -276,7 +277,59 @@ public class ModificationControllerTest {
         List<ModificationInfos> bsicListModificationInfos = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertEquals(bsicListModificationInfos, List.of());
     }
+    @Test
+    public void testRestoreNetworkModifications() throws Exception {
+        MvcResult mvcResult;
+        EquipmentAttributeModificationInfos switchStatusModificationInfos = EquipmentAttributeModificationInfos.builder()
+                .equipmentType(IdentifiableType.SWITCH)
+                .equipmentAttributeName("open")
+                .equipmentAttributeValue(true)
+                .equipmentId("v1b1")
+                .isRestored(false)
+                .build();
+        String switchStatusModificationInfosJson = objectWriter.writeValueAsString(switchStatusModificationInfos);
 
+        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
+        assertApplicationStatusOK(mvcResult);
+        testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), IdentifiableType.SWITCH, "v1b1", Set.of("s1"));
+
+        List<ModificationInfos> modifications = modificationRepository.getModifications(TEST_GROUP_ID, false, true);
+        assertEquals(1, modifications.size());
+
+        String uuidString = modifications.get(0).getUuid().toString();
+        mockMvc.perform(put(URI_RESTORE_NETWORK_MODIF_BASE)
+                        .queryParam("groupUuid", TEST_GROUP_ID.toString())
+                        .queryParam("uuids", uuidString))
+                .andExpect(status().isOk());
+        assertEquals(0, modificationRepository.getModificationsToRestore(TEST_GROUP_ID, false, true).size());
+
+
+    }
+    @Test
+    public void testPutNetworkModificationsIntoTrash() throws Exception {
+        MvcResult mvcResult;
+        EquipmentAttributeModificationInfos switchStatusModificationInfos = EquipmentAttributeModificationInfos.builder()
+                .equipmentType(IdentifiableType.SWITCH)
+                .equipmentAttributeName("open")
+                .equipmentAttributeValue(true)
+                .equipmentId("v1b1")
+                .isRestored(true)
+                .build();
+        String switchStatusModificationInfosJson = objectWriter.writeValueAsString(switchStatusModificationInfos);
+
+        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
+        assertApplicationStatusOK(mvcResult);
+        testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), IdentifiableType.SWITCH, "v1b1", Set.of("s1"));
+
+        List<ModificationInfos> modifications = modificationRepository.getModifications(TEST_GROUP_ID, false, true);
+        assertEquals(1, modifications.size());
+        String uuidString = modifications.get(0).getUuid().toString();
+        mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
+                        .queryParam("groupUuid", TEST_GROUP_ID.toString())
+                        .queryParam("uuids", uuidString))
+                .andExpect(status().isOk());
+        assertEquals(0, modificationRepository.getModifications(TEST_GROUP_ID, false, true).size());
+    }
     @Test
     public void testDeleteModification() throws Exception {
         MvcResult mvcResult;

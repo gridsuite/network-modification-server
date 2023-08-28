@@ -78,6 +78,9 @@ public class ModificationInfos {
     @Schema(description = "Modification date")
     private ZonedDateTime date;
 
+    @Schema(description = "Modification flag")
+    private Boolean isRestored;
+
     @JsonIgnore
     public ModificationEntity toEntity() {
         throw new UnsupportedOperationException("TODO");
