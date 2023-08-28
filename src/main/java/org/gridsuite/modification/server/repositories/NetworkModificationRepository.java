@@ -158,7 +158,7 @@ public class NetworkModificationRepository {
     }
 
     public List<ModificationInfos> getModificationsToRestoreInfos(List<UUID> groupUuids) {
-        return groupUuids.stream().flatMap(this::getModificationEntityStream)    .filter(m ->!m.getIsRestored() || m.getIsRestored() == null)
+        return groupUuids.stream().flatMap(this::getModificationEntityStream).filter(m -> !m.getIsRestored() || m.getIsRestored() == null)
                 .map(ModificationEntity::toModificationInfos)
                 .collect(Collectors.toList());
     }
