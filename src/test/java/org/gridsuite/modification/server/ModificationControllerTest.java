@@ -298,7 +298,7 @@ public class ModificationControllerTest {
         assertApplicationStatusOK(mvcResult);
         testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), IdentifiableType.SWITCH, "v1b1", Set.of("s1"));
 
-        List<ModificationInfos> modifications = modificationRepository.getModifications(TEST_GROUP_ID, false, true);
+        List<ModificationInfos> modifications = modificationRepository.getModifications(TEST_GROUP_ID, true, true);
         assertEquals(1, modifications.size());
 
         String uuidString = modifications.get(0).getUuid().toString();
@@ -306,7 +306,7 @@ public class ModificationControllerTest {
                         .queryParam("groupUuid", TEST_GROUP_ID.toString())
                         .queryParam("uuids", uuidString))
                 .andExpect(status().isOk());
-        assertEquals(0, modificationRepository.getModificationsToRestore(TEST_GROUP_ID, false, true).size());
+        assertEquals(0, modificationRepository.getModificationsToRestore(TEST_GROUP_ID, true, true).size());
     }
 
     @Test
@@ -407,7 +407,7 @@ public class ModificationControllerTest {
         testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), IdentifiableType.SWITCH, "v1b1", Set.of("s1"));
 
         // put into trash
-        List<ModificationInfos> modifications = modificationRepository.getModifications(TEST_GROUP_ID, false, true);
+        List<ModificationInfos> modifications = modificationRepository.getModifications(TEST_GROUP_ID, true, true);
         assertEquals(1, modifications.size());
         String uuidString = modifications.get(0).getUuid().toString();
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
@@ -418,8 +418,8 @@ public class ModificationControllerTest {
         //get modifications to restore
         testNetworkModificationsToRestoreCount(TEST_GROUP_ID, 1);
 
-        assertEquals(0, modificationRepository.getModifications(TEST_GROUP_ID, false, true).size());
-        assertEquals(1, modificationRepository.getModificationsToRestore(TEST_GROUP_ID, false, true).size());
+        assertEquals(0, modificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
+        assertEquals(1, modificationRepository.getModificationsToRestore(TEST_GROUP_ID, true, true).size());
 
         //test restore modification endpoint
         mockMvc.perform(put(URI_RESTORE_NETWORK_MODIF_BASE)
@@ -427,7 +427,7 @@ public class ModificationControllerTest {
                         .queryParam("uuids", uuidString))
                 .andExpect(status().isOk());
 
-        List<ModificationInfos> restoredModifications = modificationRepository.getModifications(TEST_GROUP_ID, false, true);
+        List<ModificationInfos> restoredModifications = modificationRepository.getModifications(TEST_GROUP_ID, true, true);
 
         testNetworkModificationsToRestoreCount(TEST_GROUP_ID, 0);
         assertEquals(1, restoredModifications.size());
@@ -1155,8 +1155,12 @@ public class ModificationControllerTest {
     private void testNetworkModificationsToRestoreCount(UUID groupUuid, int actualSize) throws Exception {
         MvcResult mvcResult;
         String resultAsString;
+
+        // case of groupUUID not found
+        mockMvc.perform(get("/v1/groups/{groupUuid}/modifications-restore?onlyMetadata=true", UUID.randomUUID().toString()).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
         // get all modifications for the given group of a network
-        mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/modifications-restore?onlyMetadata=false", groupUuid).contentType(MediaType.APPLICATION_JSON))
+        mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/modifications-restore?onlyMetadata=true", groupUuid).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<ModificationInfos> modificationsTestGroupId = mapper.readValue(resultAsString, new TypeReference<>() {
