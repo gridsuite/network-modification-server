@@ -77,6 +77,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Tag("IntegrationTest")
 public class ModificationControllerTest {
 
+    public static final String VARIANT_NOT_EXISTING_ID = "variant_not_existing";
     private static final UUID TEST_NETWORK_ID = UUID.fromString("7928181c-7977-4592-ba19-88027e4254e4");
     private static final UUID TEST_NETWORK_ID_2 = UUID.fromString("7928181e-7977-4592-ba19-88027e4254e4");
     private static final UUID TEST_NETWORK_WITH_TEE_POINT_ID = UUID.fromString("1928181e-7974-4592-ba19-88027e4254e4");
@@ -85,17 +86,15 @@ public class ModificationControllerTest {
     private static final UUID TEST_GROUP_ID = UUID.randomUUID();
     private static final UUID TEST_NETWORK_BUS_BREAKER_ID = UUID.fromString("11111111-7977-4592-ba19-88027e4254e4");
     private static final UUID TEST_NETWORK_MIXED_TOPOLOGY_ID = UUID.fromString("22222222-7977-4592-ba19-88027e4254e4");
-    public static final String VARIANT_NOT_EXISTING_ID = "variant_not_existing";
     private static final UUID TEST_REPORT_ID = UUID.randomUUID();
 
     private static final String URI_NETWORK_MODIF_BASE = "/v1/network-modifications";
     private static final String URI_RESTORE_NETWORK_MODIF_BASE = "/v1/restore-network-modifications";
     private static final String URI_NETWORK_MODIF_PARAMS = "&groupUuid=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
     private static final String URI_NETWORK_MODIF = URI_NETWORK_MODIF_BASE + "?networkUuid=" + TEST_NETWORK_ID + URI_NETWORK_MODIF_PARAMS;
+    private static final String URI_NETWORK_MODIF_BAD_VARIANT = URI_NETWORK_MODIF + "&variantId=" + VARIANT_NOT_EXISTING_ID;
     private static final String URI_NETWORK_MODIF_BUS_BREAKER = URI_NETWORK_MODIF_BASE + "?networkUuid=" + TEST_NETWORK_BUS_BREAKER_ID + URI_NETWORK_MODIF_PARAMS;
     private static final String URI_NETWORK_MODIF_BAD_NETWORK = URI_NETWORK_MODIF_BASE + "?networkUuid=" + NOT_FOUND_NETWORK_ID + URI_NETWORK_MODIF_PARAMS;
-    private static final String URI_NETWORK_MODIF_BAD_VARIANT = URI_NETWORK_MODIF + "&variantId=" + VARIANT_NOT_EXISTING_ID;
-
     private static final String URI_NETWORK_WITH_TEE_POINT_MODIF = URI_NETWORK_MODIF_BASE + "?networkUuid=" + TEST_NETWORK_WITH_TEE_POINT_ID + URI_NETWORK_MODIF_PARAMS;
 
     private static final String URI_LINE_CATALOG = URI_NETWORK_MODIF_BASE + "/catalog/line_types";
@@ -175,7 +174,8 @@ public class ModificationControllerTest {
 
     @SneakyThrows
     private void assertApplicationStatusOK(MvcResult mvcResult) {
-        Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() {
+        });
         assertTrue(networkModificationResult.isPresent());
         assertNotEquals(NetworkModificationResult.ApplicationStatus.WITH_ERRORS, networkModificationResult.get().getApplicationStatus());
     }
@@ -233,7 +233,8 @@ public class ModificationControllerTest {
         // no groups
         mvcResult = mockMvc.perform(get("/v1/groups")).andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON)).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
-        List<UUID> bsicListResult = mapper.readValue(resultAsString, new TypeReference<>() { });
+        List<UUID> bsicListResult = mapper.readValue(resultAsString, new TypeReference<>() {
+        });
         assertEquals(bsicListResult, List.of());
         mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
         assertApplicationStatusOK(mvcResult);
@@ -245,20 +246,23 @@ public class ModificationControllerTest {
                         content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
-        List<UUID> bsicListResultUUID = mapper.readValue(resultAsString, new TypeReference<>() { });
+        List<UUID> bsicListResultUUID = mapper.readValue(resultAsString, new TypeReference<>() {
+        });
         assertEquals(bsicListResultUUID, List.of(TEST_GROUP_ID));
         mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/modifications", TEST_GROUP_ID)).andExpectAll(
                         status().isOk(),
                         content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
-        List<ModificationInfos> bsicListResulModifInfos = mapper.readValue(resultAsString, new TypeReference<>() { });
+        List<ModificationInfos> bsicListResulModifInfos = mapper.readValue(resultAsString, new TypeReference<>() {
+        });
         assertEquals(1, bsicListResulModifInfos.size());
         mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/modifications?onlyMetadata=true", TEST_GROUP_ID))
                 .andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
-        List<ModificationInfos> bsicListResultInfos = mapper.readValue(resultAsString, new TypeReference<>() { });
+        List<ModificationInfos> bsicListResultInfos = mapper.readValue(resultAsString, new TypeReference<>() {
+        });
         assertEquals(1, bsicListResultInfos.size());
 
         // delete the default modification group of a network
@@ -273,7 +277,8 @@ public class ModificationControllerTest {
                         content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
-        List<ModificationInfos> bsicListModificationInfos = mapper.readValue(resultAsString, new TypeReference<>() { });
+        List<ModificationInfos> bsicListModificationInfos = mapper.readValue(resultAsString, new TypeReference<>() {
+        });
         assertEquals(bsicListModificationInfos, List.of());
     }
 
@@ -382,6 +387,51 @@ public class ModificationControllerTest {
         mockMvc.perform(post(uriString).content(groovyScriptInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().is5xxServerError());
 
         assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID, true, false).size());
+    }
+
+    @Test
+    public void testRestoreModifications() throws Exception {
+        //create modification
+        MvcResult mvcResult;
+        EquipmentAttributeModificationInfos switchStatusModificationInfos = EquipmentAttributeModificationInfos.builder()
+                .equipmentType(IdentifiableType.SWITCH)
+                .equipmentAttributeName("open")
+                .equipmentAttributeValue(true)
+                .equipmentId("v1b1")
+                .isRestored(true)
+                .build();
+        String switchStatusModificationInfosJson = objectWriter.writeValueAsString(switchStatusModificationInfos);
+
+        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
+        assertApplicationStatusOK(mvcResult);
+        testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), IdentifiableType.SWITCH, "v1b1", Set.of("s1"));
+
+        // put into trash
+        List<ModificationInfos> modifications = modificationRepository.getModifications(TEST_GROUP_ID, false, true);
+        assertEquals(1, modifications.size());
+        String uuidString = modifications.get(0).getUuid().toString();
+        mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
+                        .queryParam("groupUuid", TEST_GROUP_ID.toString())
+                        .queryParam("uuids", uuidString))
+                .andExpect(status().isOk());
+
+        //get modifications to restore
+        testNetworkModificationsToRestoreCount(TEST_GROUP_ID, 1);
+
+        assertEquals(0, modificationRepository.getModifications(TEST_GROUP_ID, false, true).size());
+        assertEquals(1, modificationRepository.getModificationsToRestore(TEST_GROUP_ID, false, true).size());
+
+        //test restore modification endpoint
+        mockMvc.perform(put(URI_RESTORE_NETWORK_MODIF_BASE)
+                        .queryParam("groupUuid", TEST_GROUP_ID.toString())
+                        .queryParam("uuids", uuidString))
+                .andExpect(status().isOk());
+
+        List<ModificationInfos> restoredModifications = modificationRepository.getModifications(TEST_GROUP_ID, false, true);
+
+        testNetworkModificationsToRestoreCount(TEST_GROUP_ID, 0);
+        assertEquals(1, restoredModifications.size());
+        testNetworkModificationsCount(TEST_GROUP_ID, 1);
     }
 
     @Test
@@ -842,7 +892,8 @@ public class ModificationControllerTest {
         equipmentDeletionInfosJson = objectWriter.writeValueAsString(equipmentDeletionInfos);
         mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF_BAD_VARIANT).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
-        Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() {
+        });
         assertTrue(networkModificationResult.isEmpty());  // no modification apply
         assertNotNull(network.getLoad("v3load"));  // load was not deleted
         testNetworkModificationsCount(TEST_GROUP_ID, 2);  // new modification stored in the database
@@ -1096,7 +1147,20 @@ public class ModificationControllerTest {
         mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/modifications?onlyMetadata=true", groupUuid).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
-        List<ModificationInfos> modificationsTestGroupId = mapper.readValue(resultAsString, new TypeReference<>() { });
+        List<ModificationInfos> modificationsTestGroupId = mapper.readValue(resultAsString, new TypeReference<>() {
+        });
+        assertEquals(actualSize, modificationsTestGroupId.size());
+    }
+
+    private void testNetworkModificationsToRestoreCount(UUID groupUuid, int actualSize) throws Exception {
+        MvcResult mvcResult;
+        String resultAsString;
+        // get all modifications for the given group of a network
+        mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/modifications-restore?onlyMetadata=false", groupUuid).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        resultAsString = mvcResult.getResponse().getContentAsString();
+        List<ModificationInfos> modificationsTestGroupId = mapper.readValue(resultAsString, new TypeReference<>() {
+        });
         assertEquals(actualSize, modificationsTestGroupId.size());
     }
 
@@ -1256,7 +1320,8 @@ public class ModificationControllerTest {
                         status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
 
-        List<VoltageInitModificationInfos> modificationsInfos2 = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        List<VoltageInitModificationInfos> modificationsInfos2 = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() {
+        });
         assertEquals(1, modificationsInfos2.size());
         assertThat(modificationsInfos2.get(0)).recursivelyEquals(modificationsInfos1);
     }
