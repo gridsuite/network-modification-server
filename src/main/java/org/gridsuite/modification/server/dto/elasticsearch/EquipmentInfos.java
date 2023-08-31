@@ -90,25 +90,32 @@ public class EquipmentInfos extends BasicEquipmentInfos {
     }
 
     public static Set<SubstationInfos> getSubstations(@NonNull Identifiable<?> identifiable) {
-        if (identifiable instanceof Substation substation) {
+        if (identifiable instanceof Substation) {
+            Substation substation = (Substation) identifiable;
             return Set.of(SubstationInfos.builder().id(substation.getId()).name(substation.getNameOrId()).build());
-        } else if (identifiable instanceof VoltageLevel voltageLevel) {
+        } else if (identifiable instanceof VoltageLevel) {
+            VoltageLevel voltageLevel = (VoltageLevel) identifiable;
             return Set.of(SubstationInfos.builder().id(voltageLevel.getSubstation().map(Substation::getId).orElse(null)).name(voltageLevel.getSubstation().map(Substation::getNameOrId).orElse(null)).build());
-        } else if (identifiable instanceof Switch switchEquipment) {
+        } else if (identifiable instanceof Switch) {
+            Switch switchEquipment = (Switch) identifiable;
             return Set.of(SubstationInfos.builder().id(switchEquipment.getVoltageLevel().getSubstation().map(Substation::getId).orElse(null)).name(switchEquipment.getVoltageLevel().getSubstation().map(Substation::getNameOrId).orElse(null)).build());
-        } else if (identifiable instanceof Injection<?> injection) {
+        } else if (identifiable instanceof Injection<?>) {
+            Injection<?> injection = (Injection<?>) identifiable;
             return Set.of(SubstationInfos.builder().id(injection.getTerminal().getVoltageLevel().getSubstation().map(Substation::getId).orElse(null)).name(injection.getTerminal().getVoltageLevel().getSubstation().map(Substation::getNameOrId).orElse(null)).build());
-        } else if (identifiable instanceof Bus bus) {
+        } else if (identifiable instanceof Bus) {
+            Bus bus = (Bus) identifiable;
             return Set.of(SubstationInfos.builder().id(bus.getVoltageLevel().getSubstation().map(Substation::getId).orElse(null)).name(bus.getVoltageLevel().getSubstation().map(Substation::getNameOrId).orElse(null)).build());
-        } else if (identifiable instanceof HvdcLine hvdcLine) {
+        } else if (identifiable instanceof HvdcLine) {
+            HvdcLine hvdcLine = (HvdcLine) identifiable;
             Substation substation1 = hvdcLine.getConverterStation1().getTerminal().getVoltageLevel().getSubstation().orElse(null);
             Substation substation2 = hvdcLine.getConverterStation2().getTerminal().getVoltageLevel().getSubstation().orElse(null);
             return Stream.of(
-                    SubstationInfos.builder().id(substation1 != null ? substation1.getId() : null).name(substation1 != null ? substation1.getNameOrId() : null).build(),
-                    SubstationInfos.builder().id(substation2 != null ? substation2.getId() : null).name(substation2 != null ? substation2.getNameOrId() : null).build()
-                )
-                .collect(Collectors.toSet());
-        } else if (identifiable instanceof Branch branch) {
+                            SubstationInfos.builder().id(substation1 != null ? substation1.getId() : null).name(substation1 != null ? substation1.getNameOrId() : null).build(),
+                            SubstationInfos.builder().id(substation2 != null ? substation2.getId() : null).name(substation2 != null ? substation2.getNameOrId() : null).build()
+                    )
+                    .collect(Collectors.toSet());
+        } else if (identifiable instanceof Branch<?>) {
+            Branch<?> branch = (Branch<?>) identifiable;
             Substation substation1 = branch.getTerminal1().getVoltageLevel().getSubstation().orElse(null);
             Substation substation2 = branch.getTerminal2().getVoltageLevel().getSubstation().orElse(null);
             return Stream.of(
@@ -116,14 +123,15 @@ public class EquipmentInfos extends BasicEquipmentInfos {
                             SubstationInfos.builder().id(substation2 != null ? substation2.getId() : null).name(substation2 != null ? substation2.getNameOrId() : null).build()
                     )
                     .collect(Collectors.toSet());
-        } else if (identifiable instanceof ThreeWindingsTransformer w3t) {
+        } else if (identifiable instanceof ThreeWindingsTransformer) {
+            ThreeWindingsTransformer w3t = (ThreeWindingsTransformer) identifiable;
             Substation substation1 = w3t.getTerminal(ThreeWindingsTransformer.Side.ONE).getVoltageLevel().getSubstation().orElse(null);
             Substation substation2 = w3t.getTerminal(ThreeWindingsTransformer.Side.TWO).getVoltageLevel().getSubstation().orElse(null);
             Substation substation3 = w3t.getTerminal(ThreeWindingsTransformer.Side.THREE).getVoltageLevel().getSubstation().orElse(null);
             return Stream.of(
-                SubstationInfos.builder().id(substation1 != null ? substation1.getId() : null).name(substation1 != null ? substation1.getNameOrId() : null).build(),
-                SubstationInfos.builder().id(substation2 != null ? substation2.getId() : null).name(substation2 != null ? substation2.getNameOrId() : null).build(),
-                SubstationInfos.builder().id(substation3 != null ? substation3.getId() : null).name(substation3 != null ? substation3.getNameOrId() : null).build()
+                    SubstationInfos.builder().id(substation1 != null ? substation1.getId() : null).name(substation1 != null ? substation1.getNameOrId() : null).build(),
+                    SubstationInfos.builder().id(substation2 != null ? substation2.getId() : null).name(substation2 != null ? substation2.getNameOrId() : null).build(),
+                    SubstationInfos.builder().id(substation3 != null ? substation3.getId() : null).name(substation3 != null ? substation3.getNameOrId() : null).build()
             ).collect(Collectors.toSet());
         }
         throw NetworkModificationException.createEquipmentTypeUnknown(identifiable.getClass().getSimpleName());
