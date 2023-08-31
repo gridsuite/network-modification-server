@@ -209,8 +209,7 @@ public class NetworkModificationService {
                                                                  UUID before, UUID networkUuid, String variantId,
                                                                  ReportInfos reportInfos, List<UUID> modificationsToMove,
                                                                  boolean canBuildNode) {
-        List<ModificationInfos> movedModifications = networkModificationRepository.moveModifications(groupUuid, originGroupUuid, modificationsToMove, before)
-            .stream()
+        List<ModificationInfos> movedModifications = networkModificationRepository.moveModifications(groupUuid, originGroupUuid, modificationsToMove, before).stream().filter(m -> m.getIsRestored())
             .map(ModificationEntity::toModificationInfos)
             .collect(Collectors.toList());
 
