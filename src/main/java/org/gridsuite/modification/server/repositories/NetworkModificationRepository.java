@@ -209,7 +209,7 @@ public class NetworkModificationRepository {
     }
 
     @Transactional
-    public void putNetworkModificationsIntoTrash(@NonNull List<UUID> modificationUuids) {
+    public void stashNetworkModifications(@NonNull List<UUID> modificationUuids) {
         for (UUID modificationUuid : modificationUuids) {
             ModificationEntity modificationEntity = this.modificationRepository
                     .findById(modificationUuid)

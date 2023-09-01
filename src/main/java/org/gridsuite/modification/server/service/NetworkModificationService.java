@@ -109,8 +109,8 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public void putNetworkModificationsIntoTrash(@NonNull List<UUID> modificationUuids) {
-        networkModificationRepository.putNetworkModificationsIntoTrash(modificationUuids);
+    public void stashNetworkModifications(@NonNull List<UUID> modificationUuids) {
+        networkModificationRepository.stashNetworkModifications(modificationUuids);
     }
 
     @Transactional

@@ -203,12 +203,12 @@ public class NetworkModificationController {
     }
 
     @PostMapping(value = "/network-modifications/stash", produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "put network modifications into trash")
+    @Operation(summary = "stash network modifications")
     @ApiResponse(responseCode = "200", description = "The network modifications were stashed")
-    public ResponseEntity<Void> putNetworkModificationsIntoTrash(
+    public ResponseEntity<Void> stashNetworkModifications(
             @Parameter(description = "Network modification UUIDs") @RequestParam("uuids") List<UUID> networkModificationUuids,
             @Parameter(description = "Group UUID") @RequestParam("groupUuid") UUID groupUuid) {
-        networkModificationService.putNetworkModificationsIntoTrash(networkModificationUuids);
+        networkModificationService.stashNetworkModifications(networkModificationUuids);
         return ResponseEntity.ok().build();
     }
 

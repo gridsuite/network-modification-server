@@ -306,7 +306,7 @@ public class ModificationControllerTest {
     }
 
     @Test
-    public void testPutNetworkModificationsIntoTrash() throws Exception {
+    public void testStashNetworkModifications() throws Exception {
         MvcResult mvcResult;
         EquipmentAttributeModificationInfos switchStatusModificationInfos = EquipmentAttributeModificationInfos.builder()
                 .equipmentType(IdentifiableType.SWITCH)
