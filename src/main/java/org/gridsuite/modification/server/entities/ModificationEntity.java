@@ -46,8 +46,8 @@ public class ModificationEntity {
     @Setter
     private ModificationGroupEntity group;
 
-    @Column(name = "isRestored")
-    private Boolean isRestored;
+    @Column(name = "stashed")
+    private Boolean stashed;
 
     protected ModificationEntity(ModificationInfos modificationInfos) {
         if (modificationInfos == null) {
@@ -61,7 +61,7 @@ public class ModificationEntity {
         return ModificationInfos.builder()
                 .uuid(this.id)
                 .date(this.date)
-                .isRestored(this.isRestored)
+                .stashed(this.stashed)
                 .build();
     }
 

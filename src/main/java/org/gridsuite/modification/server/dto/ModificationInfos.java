@@ -31,39 +31,39 @@ import java.util.UUID;
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
 @JsonTypeInfo(
-        use = JsonTypeInfo.Id.NAME,
-        property = "type"
+    use = JsonTypeInfo.Id.NAME,
+    property = "type"
 )
 @JsonSubTypes({
-        @JsonSubTypes.Type(value = GroovyScriptInfos.class),
-        @JsonSubTypes.Type(value = BatteryCreationInfos.class),
-        @JsonSubTypes.Type(value = BatteryModificationInfos.class),
-        @JsonSubTypes.Type(value = LoadCreationInfos.class),
-        @JsonSubTypes.Type(value = LoadModificationInfos.class),
-        @JsonSubTypes.Type(value = GeneratorCreationInfos.class),
-        @JsonSubTypes.Type(value = GeneratorModificationInfos.class),
-        @JsonSubTypes.Type(value = LineCreationInfos.class),
-        @JsonSubTypes.Type(value = LineModificationInfos.class),
-        @JsonSubTypes.Type(value = SubstationCreationInfos.class),
-        @JsonSubTypes.Type(value = SubstationModificationInfos.class),
-        @JsonSubTypes.Type(value = VoltageLevelCreationInfos.class),
-        @JsonSubTypes.Type(value = VoltageLevelModificationInfos.class),
-        @JsonSubTypes.Type(value = ShuntCompensatorCreationInfos.class),
-        @JsonSubTypes.Type(value = ShuntCompensatorModificationInfos.class),
-        @JsonSubTypes.Type(value = TwoWindingsTransformerCreationInfos.class),
-        @JsonSubTypes.Type(value = TwoWindingsTransformerModificationInfos.class),
-        @JsonSubTypes.Type(value = EquipmentDeletionInfos.class),
-        @JsonSubTypes.Type(value = LineSplitWithVoltageLevelInfos.class),
-        @JsonSubTypes.Type(value = LineAttachToVoltageLevelInfos.class),
-        @JsonSubTypes.Type(value = LinesAttachToSplitLinesInfos.class),
-        @JsonSubTypes.Type(value = BranchStatusModificationInfos.class),
-        @JsonSubTypes.Type(value = EquipmentAttributeModificationInfos.class),
-        @JsonSubTypes.Type(value = GeneratorScalingInfos.class),
-        @JsonSubTypes.Type(value = LoadScalingInfos.class),
-        @JsonSubTypes.Type(value = DeleteVoltageLevelOnLineInfos.class),
-        @JsonSubTypes.Type(value = DeleteAttachingLineInfos.class),
-        @JsonSubTypes.Type(value = GenerationDispatchInfos.class),
-        @JsonSubTypes.Type(value = VoltageInitModificationInfos.class)
+    @JsonSubTypes.Type(value = GroovyScriptInfos.class),
+    @JsonSubTypes.Type(value = BatteryCreationInfos.class),
+    @JsonSubTypes.Type(value = BatteryModificationInfos.class),
+    @JsonSubTypes.Type(value = LoadCreationInfos.class),
+    @JsonSubTypes.Type(value = LoadModificationInfos.class),
+    @JsonSubTypes.Type(value = GeneratorCreationInfos.class),
+    @JsonSubTypes.Type(value = GeneratorModificationInfos.class),
+    @JsonSubTypes.Type(value = LineCreationInfos.class),
+    @JsonSubTypes.Type(value = LineModificationInfos.class),
+    @JsonSubTypes.Type(value = SubstationCreationInfos.class),
+    @JsonSubTypes.Type(value = SubstationModificationInfos.class),
+    @JsonSubTypes.Type(value = VoltageLevelCreationInfos.class),
+    @JsonSubTypes.Type(value = VoltageLevelModificationInfos.class),
+    @JsonSubTypes.Type(value = ShuntCompensatorCreationInfos.class),
+    @JsonSubTypes.Type(value = ShuntCompensatorModificationInfos.class),
+    @JsonSubTypes.Type(value = TwoWindingsTransformerCreationInfos.class),
+    @JsonSubTypes.Type(value = TwoWindingsTransformerModificationInfos.class),
+    @JsonSubTypes.Type(value = EquipmentDeletionInfos.class),
+    @JsonSubTypes.Type(value = LineSplitWithVoltageLevelInfos.class),
+    @JsonSubTypes.Type(value = LineAttachToVoltageLevelInfos.class),
+    @JsonSubTypes.Type(value = LinesAttachToSplitLinesInfos.class),
+    @JsonSubTypes.Type(value = BranchStatusModificationInfos.class),
+    @JsonSubTypes.Type(value = EquipmentAttributeModificationInfos.class),
+    @JsonSubTypes.Type(value = GeneratorScalingInfos.class),
+    @JsonSubTypes.Type(value = LoadScalingInfos.class),
+    @JsonSubTypes.Type(value = DeleteVoltageLevelOnLineInfos.class),
+    @JsonSubTypes.Type(value = DeleteAttachingLineInfos.class),
+    @JsonSubTypes.Type(value = GenerationDispatchInfos.class),
+    @JsonSubTypes.Type(value = VoltageInitModificationInfos.class)
 })
 @SuperBuilder
 @NoArgsConstructor
@@ -79,7 +79,7 @@ public class ModificationInfos {
     private ZonedDateTime date;
 
     @Schema(description = "Modification flag")
-    private Boolean isRestored;
+    private Boolean stashed;
 
     @JsonIgnore
     public ModificationEntity toEntity() {

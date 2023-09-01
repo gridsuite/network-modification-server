@@ -66,14 +66,14 @@ public class NetworkModificationService {
 
     @Transactional(readOnly = true)
     // Need a transaction for collections lazy loading
-    public List<ModificationInfos> getNetworkModifications(UUID groupUuid, boolean onlyMetadata, boolean errorOnGroupNotFound) {
-        return networkModificationRepository.getModifications(groupUuid, onlyMetadata, errorOnGroupNotFound);
+    public List<ModificationInfos> getNetworkModifications(UUID groupUuid, boolean onlyMetadata, boolean errorOnGroupNotFound, boolean stashedModifications) {
+        return networkModificationRepository.getModifications(groupUuid, onlyMetadata, errorOnGroupNotFound, stashedModifications);
     }
 
     @Transactional(readOnly = true)
     // Need a transaction for collections lazy loading
-    public List<ModificationInfos> getNetworkModificationsToRestore(UUID groupUuid, boolean onlyMetadata, boolean errorOnGroupNotFound) {
-        return networkModificationRepository.getModificationsToRestore(groupUuid, onlyMetadata, errorOnGroupNotFound);
+    public List<ModificationInfos> getNetworkModifications(UUID groupUuid, boolean onlyMetadata, boolean errorOnGroupNotFound) {
+        return getNetworkModifications(groupUuid, onlyMetadata, errorOnGroupNotFound, false);
     }
 
     @Transactional(readOnly = true)
@@ -163,7 +163,7 @@ public class NetworkModificationService {
             (groupUuid, reporterId) -> {
                 List<ModificationInfos> modificationsByGroup = List.of();
                 try {
-                    modificationsByGroup = networkModificationRepository.getModificationsInfos(List.of(groupUuid));
+                    modificationsByGroup = networkModificationRepository.getModificationsInfos(List.of(groupUuid), false);
                 } catch (NetworkModificationException e) {
                     if (e.getType() != MODIFICATION_GROUP_NOT_FOUND) { // May not exist
                         throw e;
@@ -209,7 +209,9 @@ public class NetworkModificationService {
                                                                  UUID before, UUID networkUuid, String variantId,
                                                                  ReportInfos reportInfos, List<UUID> modificationsToMove,
                                                                  boolean canBuildNode) {
-        List<ModificationInfos> movedModifications = networkModificationRepository.moveModifications(groupUuid, originGroupUuid, modificationsToMove, before).stream().filter(m -> m.getIsRestored())
+        List<ModificationInfos> movedModifications = networkModificationRepository.moveModifications(groupUuid, originGroupUuid, modificationsToMove, before)
+            .stream()
+            .filter(m -> !m.getStashed())
             .map(ModificationEntity::toModificationInfos)
             .collect(Collectors.toList());
 

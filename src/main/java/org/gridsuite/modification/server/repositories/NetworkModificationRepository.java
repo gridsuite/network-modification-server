@@ -112,20 +112,13 @@ public class NetworkModificationRepository {
 
     @Transactional(readOnly = true)
     public List<ModificationInfos> getModifications(UUID groupUuid, boolean onlyMetadata, boolean errorOnGroupNotFound) {
-        try {
-            return onlyMetadata ? getModificationsMetadata(groupUuid) : getModificationsInfos(List.of(groupUuid));
-        } catch (NetworkModificationException e) {
-            if (e.getType() == MODIFICATION_GROUP_NOT_FOUND && !errorOnGroupNotFound) {
-                return List.of();
-            }
-            throw e;
-        }
+        return getModifications(groupUuid, onlyMetadata, errorOnGroupNotFound, false);
     }
 
     @Transactional(readOnly = true)
-    public List<ModificationInfos> getModificationsToRestore(UUID groupUuid, boolean onlyMetadata, boolean errorOnGroupNotFound) {
+    public List<ModificationInfos> getModifications(UUID groupUuid, boolean onlyMetadata, boolean errorOnGroupNotFound, boolean stashedModifications) {
         try {
-            return onlyMetadata ? getModificationsToRestoreMetadata(groupUuid) : getModificationsToRestoreInfos(List.of(groupUuid));
+            return onlyMetadata ? getModificationsMetadata(groupUuid, stashedModifications) : getModificationsInfos(List.of(groupUuid), stashedModifications);
         } catch (NetworkModificationException e) {
             if (e.getType() == MODIFICATION_GROUP_NOT_FOUND && !errorOnGroupNotFound) {
                 return List.of();
@@ -134,31 +127,18 @@ public class NetworkModificationRepository {
         }
     }
 
-    private List<ModificationInfos> getModificationsMetadata(UUID groupUuid) {
+    private List<ModificationInfos> getModificationsMetadata(UUID groupUuid, boolean stashedModifications) {
         return modificationRepository
                 .findAllBaseByGroupId(getModificationGroup(groupUuid).getId())
                 .stream()
-                .filter(m -> m.getIsRestored())
+                .filter(stashedModifications ? m -> m.getStashed() : m -> !m.getStashed() || m.getStashed() == null)
                 .map(ModificationEntity::toModificationInfos)
                 .collect(Collectors.toList());
     }
 
-    private List<ModificationInfos> getModificationsToRestoreMetadata(UUID groupUuid) {
-        return modificationRepository
-                .findAllBaseByGroupId(getModificationGroup(groupUuid).getId())
-                .stream()
-                .filter(m -> !m.getIsRestored())
-                .map(ModificationEntity::toModificationInfos)
-                .collect(Collectors.toList());
-    }
-
-    public List<ModificationInfos> getModificationsInfos(List<UUID> groupUuids) {
-        return groupUuids.stream().flatMap(this::getModificationEntityStream).filter(m -> m.getIsRestored()).map(ModificationEntity::toModificationInfos)
-                .collect(Collectors.toList());
-    }
-
-    public List<ModificationInfos> getModificationsToRestoreInfos(List<UUID> groupUuids) {
-        return groupUuids.stream().flatMap(this::getModificationEntityStream).filter(m -> !m.getIsRestored() || m.getIsRestored() == null)
+    public List<ModificationInfos> getModificationsInfos(List<UUID> groupUuids, boolean stashedModifications) {
+        return groupUuids.stream().flatMap(this::getModificationEntityStream)
+                .filter(stashedModifications ? m -> m.getStashed() : m -> !m.getStashed() || m.getStashed() == null)
                 .map(ModificationEntity::toModificationInfos)
                 .collect(Collectors.toList());
     }
@@ -166,9 +146,9 @@ public class NetworkModificationRepository {
     @Transactional(readOnly = true)
     public ModificationInfos getModificationInfo(UUID modificationUuid) {
         return modificationRepository
-                .findById(modificationUuid)
-                .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString()))
-                .toModificationInfos();
+            .findById(modificationUuid)
+            .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString()))
+            .toModificationInfos();
     }
 
     @Transactional // To have the 2 delete in the same transaction (atomic)
@@ -234,7 +214,7 @@ public class NetworkModificationRepository {
             ModificationEntity modificationEntity = this.modificationRepository
                     .findById(modificationUuid)
                     .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format("Modification (%s) not found", modificationUuid)));
-            modificationEntity.setIsRestored(false);
+            modificationEntity.setStashed(true);
             this.modificationRepository.save(modificationEntity);
         }
     }
@@ -245,7 +225,7 @@ public class NetworkModificationRepository {
             ModificationEntity modificationEntity = this.modificationRepository
                     .findById(modificationUuid)
                     .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format("Modification (%s) not found", modificationUuid)));
-            modificationEntity.setIsRestored(true);
+            modificationEntity.setStashed(false);
             this.modificationRepository.save(modificationEntity);
         }
     }
@@ -253,8 +233,8 @@ public class NetworkModificationRepository {
     @Transactional
     public void updateModification(@NonNull UUID modificationUuid, @NonNull ModificationInfos modificationInfos) {
         this.modificationRepository
-                .findById(modificationUuid)
-                .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format("Modification (%s) not found", modificationUuid)))
-                .update(modificationInfos);
+            .findById(modificationUuid)
+            .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format("Modification (%s) not found", modificationUuid)))
+            .update(modificationInfos);
     }
 }
