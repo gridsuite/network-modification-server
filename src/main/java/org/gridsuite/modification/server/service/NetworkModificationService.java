@@ -66,8 +66,14 @@ public class NetworkModificationService {
 
     @Transactional(readOnly = true)
     // Need a transaction for collections lazy loading
+    public List<ModificationInfos> getNetworkModifications(UUID groupUuid, boolean onlyMetadata, boolean errorOnGroupNotFound, boolean stashedModifications) {
+        return networkModificationRepository.getModifications(groupUuid, onlyMetadata, errorOnGroupNotFound, stashedModifications);
+    }
+
+    @Transactional(readOnly = true)
+    // Need a transaction for collections lazy loading
     public List<ModificationInfos> getNetworkModifications(UUID groupUuid, boolean onlyMetadata, boolean errorOnGroupNotFound) {
-        return networkModificationRepository.getModifications(groupUuid, onlyMetadata, errorOnGroupNotFound);
+        return getNetworkModifications(groupUuid, onlyMetadata, errorOnGroupNotFound, false);
     }
 
     @Transactional(readOnly = true)
@@ -100,6 +106,16 @@ public class NetworkModificationService {
     @Transactional
     public void updateNetworkModification(@NonNull UUID modificationUuid, @NonNull ModificationInfos modificationInfos) {
         networkModificationRepository.updateModification(modificationUuid, modificationInfos);
+    }
+
+    @Transactional
+    public void stashNetworkModifications(@NonNull List<UUID> modificationUuids) {
+        networkModificationRepository.stashNetworkModifications(modificationUuids);
+    }
+
+    @Transactional
+    public void restoreNetworkModifications(@NonNull List<UUID> modificationUuids) {
+        networkModificationRepository.restoreNetworkModifications(modificationUuids);
     }
 
     // No transactional because we need to save modification in DB also in case of error
@@ -147,7 +163,7 @@ public class NetworkModificationService {
             (groupUuid, reporterId) -> {
                 List<ModificationInfos> modificationsByGroup = List.of();
                 try {
-                    modificationsByGroup = networkModificationRepository.getModificationsInfos(List.of(groupUuid));
+                    modificationsByGroup = networkModificationRepository.getModificationsInfos(List.of(groupUuid), false);
                 } catch (NetworkModificationException e) {
                     if (e.getType() != MODIFICATION_GROUP_NOT_FOUND) { // May not exist
                         throw e;
@@ -195,6 +211,7 @@ public class NetworkModificationService {
                                                                  boolean canBuildNode) {
         List<ModificationInfos> movedModifications = networkModificationRepository.moveModifications(groupUuid, originGroupUuid, modificationsToMove, before)
             .stream()
+            .filter(m -> !m.getStashed())
             .map(ModificationEntity::toModificationInfos)
             .collect(Collectors.toList());
 
