@@ -12,11 +12,7 @@ import com.powsybl.iidm.modification.scalable.Scalable;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.iidm.impl.NetworkImpl;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.FilterEquipments;
-import org.gridsuite.modification.server.dto.FilterInfos;
-import org.gridsuite.modification.server.dto.IdentifiableAttributes;
-import org.gridsuite.modification.server.dto.ScalingInfos;
-import org.gridsuite.modification.server.dto.ScalingVariationInfos;
+import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.service.FilterService;
 import org.springframework.context.ApplicationContext;
 import org.springframework.util.CollectionUtils;
@@ -63,6 +59,16 @@ public abstract class AbstractScaling extends AbstractModification {
         Map<UUID, FilterEquipments> filterWithWrongEquipmentsIds = exportFilters.entrySet().stream()
                 .filter(e -> !CollectionUtils.isEmpty(e.getValue().getNotFoundEquipments()))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+        boolean onlyWrongEquipments = exportFilters.values().stream()
+                .allMatch(filterEquipments -> filterEquipments.getIdentifiableAttributes().size() == filterEquipments.getNotFoundEquipments().size());
+
+        // check if all exported filters contain only equipments with wrong ids
+        if (onlyWrongEquipments) {
+            String errorMsg = "All filters contains only equipments with wrong ids";
+            createReport(subReporter, "invalidFilters", errorMsg, TypedValue.ERROR_SEVERITY);
+            throw new NetworkModificationException(scalingInfos.getErrorType(), errorMsg);
+        }
 
         // create report for each wrong filter
         filterWithWrongEquipmentsIds.values().forEach(f -> {
