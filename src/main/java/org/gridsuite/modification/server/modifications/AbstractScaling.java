@@ -60,8 +60,8 @@ public abstract class AbstractScaling extends AbstractModification {
                 .filter(e -> !CollectionUtils.isEmpty(e.getValue().getNotFoundEquipments()))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
-        boolean noValidEquipmentId = exportFilters.values().stream()
-                .allMatch(filterEquipments -> filterEquipments.getIdentifiableAttributes().size() == 0);
+        Boolean noValidEquipmentId = exportFilters.values().stream()
+                .allMatch(filterEquipments -> filterEquipments.getIdentifiableAttributes().isEmpty());
 
         if (noValidEquipmentId) {
             String errorMsg = "There is no valid equipment ID among the provided filter(s)";
