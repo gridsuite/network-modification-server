@@ -184,11 +184,7 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
 
     @Test
     public void testFilterWithWrongIds() throws Exception {
-
-        IdentifiableAttributes genWrongId1 = getIdentifiableAttributes(GENERATOR_WRONG_ID_1, 2.0);
-        IdentifiableAttributes genWrongId2 = getIdentifiableAttributes(GENERATOR_WRONG_ID_2, 3.0);
-
-        FilterEquipments wrongIdFilter1 = getFilterEquipments(FILTER_WRONG_ID_1, "wrongIdFilter1", List.of(genWrongId1, genWrongId2), List.of(GENERATOR_WRONG_ID_1, GENERATOR_WRONG_ID_2));
+        FilterEquipments wrongIdFilter1 = getFilterEquipments(FILTER_WRONG_ID_1, "wrongIdFilter1", List.of(), List.of(GENERATOR_WRONG_ID_1, GENERATOR_WRONG_ID_2));
         UUID subWrongId = wireMockServer.stubFor(WireMock.get(getPath(getNetworkUuid(), false) + FILTER_WRONG_ID_1)
                 .willReturn(WireMock.ok()
                 .withBody(mapper.writeValueAsString(List.of(wrongIdFilter1)))
