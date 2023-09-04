@@ -30,6 +30,7 @@ public class NetworkModificationRepository {
     private final ModificationGroupRepository modificationGroupRepository;
 
     private final ModificationRepository modificationRepository;
+    private static final String MODIFICATION_NOT_FOUND_MESSAGE = "Modification (%s) not found";
 
     public NetworkModificationRepository(ModificationGroupRepository modificationGroupRepository, ModificationRepository modificationRepository) {
         this.modificationGroupRepository = modificationGroupRepository;
@@ -131,14 +132,14 @@ public class NetworkModificationRepository {
         return modificationRepository
                 .findAllBaseByGroupId(getModificationGroup(groupUuid).getId())
                 .stream()
-                .filter(stashedModifications ? m -> m.getStashed() : m -> !m.getStashed() || m.getStashed() == null)
+                .filter(m -> m.getStashed() == stashedModifications)
                 .map(ModificationEntity::toModificationInfos)
                 .collect(Collectors.toList());
     }
 
     public List<ModificationInfos> getModificationsInfos(List<UUID> groupUuids, boolean stashedModifications) {
         return groupUuids.stream().flatMap(this::getModificationEntityStream)
-                .filter(stashedModifications ? m -> m.getStashed() : m -> !m.getStashed() || m.getStashed() == null)
+                .filter(m -> m.getStashed() == stashedModifications)
                 .map(ModificationEntity::toModificationInfos)
                 .collect(Collectors.toList());
     }
@@ -213,7 +214,7 @@ public class NetworkModificationRepository {
         for (UUID modificationUuid : modificationUuids) {
             ModificationEntity modificationEntity = this.modificationRepository
                     .findById(modificationUuid)
-                    .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format("Modification (%s) not found", modificationUuid)));
+                    .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationUuid)));
             modificationEntity.setStashed(true);
             this.modificationRepository.save(modificationEntity);
         }
@@ -224,7 +225,7 @@ public class NetworkModificationRepository {
         for (UUID modificationUuid : modificationUuids) {
             ModificationEntity modificationEntity = this.modificationRepository
                     .findById(modificationUuid)
-                    .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format("Modification (%s) not found", modificationUuid)));
+                    .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationUuid)));
             modificationEntity.setStashed(false);
             this.modificationRepository.save(modificationEntity);
         }
@@ -234,7 +235,7 @@ public class NetworkModificationRepository {
     public void updateModification(@NonNull UUID modificationUuid, @NonNull ModificationInfos modificationInfos) {
         this.modificationRepository
             .findById(modificationUuid)
-            .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format("Modification (%s) not found", modificationUuid)))
+            .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationUuid)))
             .update(modificationInfos);
     }
 }
