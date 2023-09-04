@@ -210,7 +210,7 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
 
         mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(generatorScalingInfo)).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage(new NetworkModificationException(GENERATOR_SCALING_ERROR, "All filters contains only equipments with wrong ids").getMessage(),
+        assertLogMessage(new NetworkModificationException(GENERATOR_SCALING_ERROR, "There is no valid equipment ID among the provided filter(s)").getMessage(),
                 generatorScalingInfo.getErrorType().name(), reportService);
         wireMockUtils.verifyGetRequest(subWrongId, PATH, handleQueryParams(getNetworkUuid(), FILTER_WRONG_ID_1), false);
     }
