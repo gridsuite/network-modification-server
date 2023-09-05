@@ -66,9 +66,11 @@ public abstract class AbstractScaling extends AbstractModification {
                 .filter(e -> !CollectionUtils.isEmpty(e.getValue().getNotFoundEquipments()))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
-        // check if all exported filters contain equipments with wrong ids
-        if (filterWithWrongEquipmentsIds.size() == exportFilters.size()) {
-            String errorMsg = "All filters contains equipments with wrong ids";
+        Boolean noValidEquipmentId = exportFilters.values().stream()
+                .allMatch(filterEquipments -> filterEquipments.getIdentifiableAttributes().isEmpty());
+
+        if (noValidEquipmentId) {
+            String errorMsg = "There is no valid equipment ID among the provided filter(s)";
             createReport(subReporter, "invalidFilters", errorMsg, TypedValue.ERROR_SEVERITY);
             throw new NetworkModificationException(scalingInfos.getErrorType(), errorMsg);
         }

@@ -198,9 +198,7 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
 
     @Test
     public void testFilterWithWrongIds() throws Exception {
-        IdentifiableAttributes loadWrongId1 = getIdentifiableAttributes(LOAD_WRONG_ID_1, 2.0);
-        IdentifiableAttributes loadWrongId2 = getIdentifiableAttributes(LOAD_WRONG_ID_2, 3.0);
-        FilterEquipments wrongIdFilter1 = getFilterEquipments(FILTER_WRONG_ID_1, "wrongIdFilter1", List.of(loadWrongId1, loadWrongId2), List.of(LOAD_WRONG_ID_1, LOAD_WRONG_ID_2));
+        FilterEquipments wrongIdFilter1 = getFilterEquipments(FILTER_WRONG_ID_1, "wrongIdFilter1", List.of(), List.of(LOAD_WRONG_ID_1, LOAD_WRONG_ID_2));
 
         FilterInfos filter = FilterInfos.builder()
             .name("filter")
@@ -227,7 +225,7 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
                 .content(mapper.writeValueAsString(loadScalingInfo))
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage(new NetworkModificationException(LOAD_SCALING_ERROR, "All filters contains equipments with wrong ids").getMessage(),
+        assertLogMessage(new NetworkModificationException(LOAD_SCALING_ERROR, "There is no valid equipment ID among the provided filter(s)").getMessage(),
                 loadScalingInfo.getErrorType().name(), reportService);
         wireMockUtils.verifyGetRequest(stubWithWrongId, PATH, handleQueryParams(getNetworkUuid(), FILTER_WRONG_ID_1), false);
     }
