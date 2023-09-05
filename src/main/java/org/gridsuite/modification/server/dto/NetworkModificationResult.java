@@ -39,8 +39,11 @@ public class NetworkModificationResult {
         }
     }
 
-    @Schema(description = "Application status")
-    ApplicationStatus applicationStatus;
+    @Schema(description = "Global application status")
+    private ApplicationStatus applicationStatus;
+
+    @Schema(description = "Last group application status")
+    private ApplicationStatus lastGroupApplicationStatus;
 
     @Schema(description = "Network modification impacts")
     @Builder.Default
@@ -49,4 +52,5 @@ public class NetworkModificationResult {
     public Set<String> getImpactedSubstationsIds() {
         return networkImpacts.stream().flatMap(impact -> impact.getSubstationIds().stream()).collect(Collectors.toCollection(TreeSet::new));
     }
+
 }

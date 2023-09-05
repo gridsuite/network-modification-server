@@ -8,47 +8,46 @@ package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
-import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.EquipmentAttributeModificationInfos;
-import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.utils.MatcherModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
+import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Set;
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.Impacts.TestImpactUtils.testElementModificationImpact;
 import static org.gridsuite.modification.server.Impacts.TestImpactUtils.testEmptyImpacts;
-import static org.gridsuite.modification.server.utils.MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@Tag("IntegrationTest")
 public class EquipmentAttributeModificationTest extends AbstractNetworkModificationTest {
 
-    @SneakyThrows
     @Test
-    public void testEquipmentAttributeModificationInfos() {
+    public void testEquipmentAttributeModificationInfos() throws Exception {
         MvcResult mvcResult;
         UUID modificationUuid = UUID.randomUUID();
+        //We need to limit the precision to avoid database precision storage limit issue (postgres has a precision of 6 digits while h2 can go to 9)
         EquipmentAttributeModificationInfos modificationInfos = EquipmentAttributeModificationInfos.builder()
             .uuid(modificationUuid)
-            .date(ZonedDateTime.of(2021, 2, 19, 0, 0, 0, 0, ZoneOffset.UTC))
+            .date(ZonedDateTime.of(2021, 2, 19, 0, 0, 0, 0, ZoneOffset.UTC).truncatedTo(ChronoUnit.MICROS))
             .equipmentId("equipmentId")
             .equipmentAttributeName("equipmentAttributeName")
             .equipmentAttributeValue("equipmentAttributeValue")
             .equipmentType(IdentifiableType.VOLTAGE_LEVEL)
             .build();
-        assertEquals(String.format("EquipmentAttributeModificationInfos(super=EquipmentModificationInfos(super=ModificationInfos(uuid=%s, date=2021-02-19T00:00Z), equipmentId=equipmentId), equipmentAttributeName=equipmentAttributeName, equipmentAttributeValue=equipmentAttributeValue, equipmentType=VOLTAGE_LEVEL)", modificationUuid), modificationInfos.toString());
+        assertEquals(String.format("EquipmentAttributeModificationInfos(super=EquipmentModificationInfos(super=ModificationInfos(uuid=%s, date=2021-02-19T00:00Z, stashed=null), equipmentId=equipmentId), equipmentAttributeName=equipmentAttributeName, equipmentAttributeValue=equipmentAttributeValue, equipmentType=VOLTAGE_LEVEL)", modificationUuid), modificationInfos.toString());
 
         EquipmentAttributeModificationInfos switchStatusModificationInfos = EquipmentAttributeModificationInfos.builder()
             .equipmentType(IdentifiableType.SWITCH)
@@ -72,7 +71,7 @@ public class EquipmentAttributeModificationTest extends AbstractNetworkModificat
     }
 
     @Test
-    public void testSwitch() {
+    public void testSwitch() throws Exception {
         // switches modifications on initial variant
         switchModifications("", "v1b1", "disc1Variant", "v2b1", "v3b1", Set.of("s1"), Set.of("s2"), 5);
 
@@ -80,10 +79,9 @@ public class EquipmentAttributeModificationTest extends AbstractNetworkModificat
         switchModifications("&variantId=" + NetworkCreation.VARIANT_ID, "break1Variant", "notFound", "disc1Variant", "break2Variant", Set.of("s1Variant"), Set.of("s2Variant"), 10);
     }
 
-    @SneakyThrows
     private void switchModifications(String extraParams, String switchId1, String switchNotFoundId, String switchId2, String switchId3,
                                      Set<String> substationsIds, Set<String> otherSubstationsIds,
-                                     int modificationsCount) {
+                                     int modificationsCount) throws Exception {
         MvcResult mvcResult;
 
         EquipmentAttributeModificationInfos switchStatusModificationInfos = buildModification();
@@ -126,9 +124,8 @@ public class EquipmentAttributeModificationTest extends AbstractNetworkModificat
         testNetworkModificationsCount(getGroupId(), modificationsCount);
     }
 
-    @SneakyThrows
     @Test
-    public void testWithErrors() {
+    public void testWithErrors() throws Exception {
         // bad equipment attribute name
         EquipmentAttributeModificationInfos switchStatusModificationInfos = EquipmentAttributeModificationInfos.builder()
             .equipmentType(IdentifiableType.SWITCH)
@@ -179,17 +176,12 @@ public class EquipmentAttributeModificationTest extends AbstractNetworkModificat
     }
 
     @Override
-    protected MatcherModificationInfos createMatcher(ModificationInfos modificationInfos) {
-        return createMatcherEquipmentAttributeModificationInfos((EquipmentAttributeModificationInfos) modificationInfos);
-    }
-
-    @Override
-    protected void assertNetworkAfterCreation() {
+    protected void assertAfterNetworkModificationCreation() {
         assertTrue(getNetwork().getSwitch("v1b1").isOpen());
     }
 
     @Override
-    protected void assertNetworkAfterDeletion() {
+    protected void assertAfterNetworkModificationDeletion() {
         assertFalse(getNetwork().getSwitch("v1b1").isOpen());
     }
 }

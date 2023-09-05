@@ -7,13 +7,12 @@
 package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.iidm.network.Network;
-import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.DeleteVoltageLevelOnLineInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.utils.MatcherModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
+import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
@@ -21,7 +20,6 @@ import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_ALREADY_EXISTS;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_NOT_FOUND;
-import static org.gridsuite.modification.server.utils.MatcherDeleteVoltageLevelOnLineInfos.createMatcherDeleteVoltageLevelOnLineInfos;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -31,6 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * @author bendaamerahm <ahmed.bendaamer at rte-france.com>
  */
+@Tag("IntegrationTest")
 public class DeleteVoltageLevelOnLineTest extends AbstractNetworkModificationTest {
 
     @Override
@@ -59,12 +58,7 @@ public class DeleteVoltageLevelOnLineTest extends AbstractNetworkModificationTes
     }
 
     @Override
-    protected MatcherModificationInfos createMatcher(ModificationInfos modificationInfos) {
-        return createMatcherDeleteVoltageLevelOnLineInfos((DeleteVoltageLevelOnLineInfos) modificationInfos);
-    }
-
-    @Override
-    protected void assertNetworkAfterCreation() {
+    protected void assertAfterNetworkModificationCreation() {
         assertNull(getNetwork().getVoltageLevel("v1"));
         assertNull(getNetwork().getSubstation("s1"));
         assertNull(getNetwork().getLine("l1"));
@@ -73,7 +67,7 @@ public class DeleteVoltageLevelOnLineTest extends AbstractNetworkModificationTes
     }
 
     @Override
-    protected void assertNetworkAfterDeletion() {
+    protected void assertAfterNetworkModificationDeletion() {
         assertNotNull(getNetwork().getVoltageLevel("v1"));
         assertNotNull(getNetwork().getSubstation("s1"));
         assertNotNull(getNetwork().getLine("l1"));
@@ -81,9 +75,8 @@ public class DeleteVoltageLevelOnLineTest extends AbstractNetworkModificationTes
         assertNull(getNetwork().getLine("replacementLineId"));
     }
 
-    @SneakyThrows
     @Test
-    public void createWithInvalidLineIdTest() {
+    public void createWithInvalidLineIdTest() throws Exception {
         // test create with incorrect line id
         DeleteVoltageLevelOnLineInfos deleteVoltageLevelOnLineInfos = DeleteVoltageLevelOnLineInfos.builder()
                 .lineToAttachTo1Id("l1")
@@ -98,9 +91,8 @@ public class DeleteVoltageLevelOnLineTest extends AbstractNetworkModificationTes
                 deleteVoltageLevelOnLineInfos.getErrorType().name(), reportService);
     }
 
-    @SneakyThrows
     @Test
-    public void createNewLineWithExistingIdTest() {
+    public void createNewLineWithExistingIdTest() throws Exception {
         // try to create an already existing line
         DeleteVoltageLevelOnLineInfos deleteVoltageLevelOnLineInfos = (DeleteVoltageLevelOnLineInfos) buildModification();
         deleteVoltageLevelOnLineInfos.setReplacingLine1Id("l2");

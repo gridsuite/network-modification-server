@@ -1,0 +1,21 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-4.1.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
+    <changeSet author="lecuyerfra (generated)" id="1691402011373-5">
+        <createTable tableName="voltage_init_transformers_modification">
+            <column name="voltage_init_modification_entity_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="leg_side" type="VARCHAR(255)"/>
+            <column name="ratio_tap_changer_position" type="INT"/>
+            <column name="transformer_id" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="lecuyerfra (generated)" id="1691402011373-6">
+        <createIndex indexName="VoltageInitModificationEntity_transformers_idx1" tableName="voltage_init_transformers_modification">
+            <column name="voltage_init_modification_entity_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="lecuyerfra (generated)" id="1691402011373-7">
+        <addForeignKeyConstraint baseColumnNames="voltage_init_modification_entity_id" baseTableName="voltage_init_transformers_modification" constraintName="VoltageInitModificationEntity_transformers_fk1" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="voltage_init_modification" validate="true"/>
+    </changeSet>
+</databaseChangeLog>

@@ -23,8 +23,8 @@ import java.util.Objects;
 @ToString(callSuper = true)
 @Schema(description = "Attribute modification")
 public class AttributeModification<T> {
-    T value;
-    OperationType op;
+    private T value;
+    private OperationType op;
 
     public static <V> AttributeModification<V> toAttributeModification(IAttributeModificationEmbeddable<V> modificationEmbeddable) {
         return modificationEmbeddable != null ? toAttributeModification(modificationEmbeddable.getValue(), modificationEmbeddable.getOpType()) : null;

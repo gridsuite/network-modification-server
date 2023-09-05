@@ -7,20 +7,18 @@
 package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.iidm.network.Network;
-import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.LinesAttachToSplitLinesInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.utils.MatcherModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkWithTeePoint;
 import org.junit.Test;
+import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_ALREADY_EXISTS;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_NOT_FOUND;
-import static org.gridsuite.modification.server.utils.MatcherLinesAttachToSplitLinesInfos.createMatcherLinesAttachToSplitLinesInfos;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -29,6 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * @author David Braquart <david.braquart at rte-france.com>
  */
+@Tag("IntegrationTest")
 public class LinesAttachToSplitLinesTest extends AbstractNetworkModificationTest {
 
     @Override
@@ -43,7 +42,7 @@ public class LinesAttachToSplitLinesTest extends AbstractNetworkModificationTest
                 .lineToAttachTo2Id("l2")
                 .attachedLineId("l3")
                 .voltageLevelId("v4")
-                .bbsBusId("bbs2")
+                .bbsBusId("bbs4")
                 .replacingLine1Id("nl1")
                 .replacingLine1Name("NewLine1")
                 .replacingLine2Id("nl2")
@@ -67,12 +66,7 @@ public class LinesAttachToSplitLinesTest extends AbstractNetworkModificationTest
     }
 
     @Override
-    protected MatcherModificationInfos createMatcher(ModificationInfos modificationInfos) {
-        return createMatcherLinesAttachToSplitLinesInfos((LinesAttachToSplitLinesInfos) modificationInfos);
-    }
-
-    @Override
-    protected void assertNetworkAfterCreation() {
+    protected void assertAfterNetworkModificationCreation() {
         // 3 lines are gone
         assertNull(getNetwork().getLine("l1"));
         assertNull(getNetwork().getLine("l2"));
@@ -86,7 +80,7 @@ public class LinesAttachToSplitLinesTest extends AbstractNetworkModificationTest
     }
 
     @Override
-    protected void assertNetworkAfterDeletion() {
+    protected void assertAfterNetworkModificationDeletion() {
         assertNotNull(getNetwork().getLine("l1"));
         assertNotNull(getNetwork().getLine("l2"));
         assertNotNull(getNetwork().getLine("l3"));
@@ -96,9 +90,8 @@ public class LinesAttachToSplitLinesTest extends AbstractNetworkModificationTest
         assertNull(getNetwork().getLine("nl2"));
     }
 
-    @SneakyThrows
     @Test
-    public void testCreateWithErrors() {
+    public void testCreateWithErrors() throws Exception {
         // use an unexisting line
         LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos = (LinesAttachToSplitLinesInfos) buildModification();
         linesAttachToSplitLinesInfos.setLineToAttachTo1Id("absent_line_id");

@@ -10,12 +10,11 @@ package org.gridsuite.modification.server.modifications;
 import com.powsybl.iidm.network.Country;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.Substation;
-import lombok.SneakyThrows;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.SubstationCreationInfos;
-import org.gridsuite.modification.server.utils.MatcherSubstationCreationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
+import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 
 import java.util.Map;
@@ -26,6 +25,7 @@ import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@Tag("IntegrationTest")
 public class SubstationCreationTest extends AbstractNetworkModificationTest {
 
     @Override
@@ -54,25 +54,19 @@ public class SubstationCreationTest extends AbstractNetworkModificationTest {
     }
 
     @Override
-    protected MatcherSubstationCreationInfos createMatcher(ModificationInfos modificationInfos) {
-        return MatcherSubstationCreationInfos.createMatcherSubstationCreationInfos((SubstationCreationInfos) modificationInfos);
-    }
-
-    @Override
-    protected void assertNetworkAfterCreation() {
+    protected void assertAfterNetworkModificationCreation() {
         Substation substation = getNetwork().getSubstation("SubstationId");
         assertNotNull(substation);
         assertEquals("DemoC", substation.getProperty("DEMO"));
     }
 
     @Override
-    protected void assertNetworkAfterDeletion() {
+    protected void assertAfterNetworkModificationDeletion() {
         assertNull(getNetwork().getSubstation("SubstationId"));
     }
 
-    @SneakyThrows
     @Test
-    public void testCreateWithErrors() {
+    public void testCreateWithErrors() throws Exception {
         SubstationCreationInfos substationCreationInfos = (SubstationCreationInfos) buildModification();
         substationCreationInfos.setEquipmentId("");
         String substationCreationInfosJson = mapper.writeValueAsString(substationCreationInfos);

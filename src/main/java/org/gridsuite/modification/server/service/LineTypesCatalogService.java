@@ -6,11 +6,7 @@
  */
 package org.gridsuite.modification.server.service;
 
-import org.gridsuite.modification.server.NetworkModificationException;
-import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_TYPE_CATEGORY_MISMATCH;
-
-import org.gridsuite.modification.server.dto.catalog.LineTypeCategory;
-import org.gridsuite.modification.server.dto.catalog.LineType;
+import org.gridsuite.modification.server.dto.catalog.LineTypeInfos;
 import org.gridsuite.modification.server.entities.catalog.LineTypeEntity;
 import org.gridsuite.modification.server.repositories.LineTypesCatalogRepository;
 import org.springframework.stereotype.Service;
@@ -31,20 +27,7 @@ public class LineTypesCatalogService {
     }
 
     @Transactional(readOnly = true)
-    public List<LineType> getLineTypesCatalog(LineTypeCategory category) {
-        switch (category) {
-            case AERIAL:
-            case UNDERGROUND:
-                return lineTypesCatalogRepository.findAllByCategory(category).stream()
-                .map(LineTypeEntity::toDto)
-                .collect(Collectors.toList());
-            default:
-                throw new NetworkModificationException(LINE_TYPE_CATEGORY_MISMATCH);
-        }
-    }
-
-    @Transactional(readOnly = true)
-    public List<LineType> getAllLineTypesCatalog() {
+    public List<LineTypeInfos> getAllLineTypes() {
         return lineTypesCatalogRepository.findAll().stream()
             .map(LineTypeEntity::toDto)
             .collect(Collectors.toList());
@@ -54,14 +37,14 @@ public class LineTypesCatalogService {
         lineTypesCatalogRepository.deleteAll();
     }
 
-    public void resetLineTypesCatalog(List<LineType> lineTypesCatalog) {
-        lineTypesCatalogRepository.deleteAll();
+    public void resetLineTypes(List<LineTypeInfos> lineTypes) {
+        deleteLineTypesCatalog();
         // remove duplicates in file
-        Set<LineType> lineTypesCatalogSet = lineTypesCatalog.stream().collect(Collectors.toSet());
+        Set<LineTypeInfos> lineTypesSet = lineTypes.stream().collect(Collectors.toSet());
 
-        List<LineTypeEntity> lineTypesEntityCatalog = lineTypesCatalogSet.stream()
-            .map(LineType::toEntity)
+        List<LineTypeEntity> lineTypesEntities = lineTypesSet.stream()
+            .map(LineTypeInfos::toEntity)
             .collect(Collectors.toList());
-        lineTypesCatalogRepository.saveAll(lineTypesEntityCatalog);
+        lineTypesCatalogRepository.saveAll(lineTypesEntities);
     }
 }

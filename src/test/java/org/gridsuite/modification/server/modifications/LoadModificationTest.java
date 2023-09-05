@@ -10,14 +10,13 @@ package org.gridsuite.modification.server.modifications;
 import com.powsybl.iidm.network.Load;
 import com.powsybl.iidm.network.LoadType;
 import com.powsybl.iidm.network.Network;
-import lombok.SneakyThrows;
 import org.gridsuite.modification.server.dto.AttributeModification;
 import org.gridsuite.modification.server.dto.LoadModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.OperationType;
-import org.gridsuite.modification.server.utils.MatcherLoadModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
+import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 
 import java.util.UUID;
@@ -28,6 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@Tag("IntegrationTest")
 public class LoadModificationTest extends AbstractNetworkModificationTest {
 
     @Override
@@ -58,12 +58,7 @@ public class LoadModificationTest extends AbstractNetworkModificationTest {
     }
 
     @Override
-    protected MatcherLoadModificationInfos createMatcher(ModificationInfos modificationInfos) {
-        return MatcherLoadModificationInfos.createMatcherLoadModificationInfos((LoadModificationInfos) modificationInfos);
-    }
-
-    @Override
-    protected void assertNetworkAfterCreation() {
+    protected void assertAfterNetworkModificationCreation() {
         Load modifiedLoad = getNetwork().getLoad("v1load");
         assertNotNull(modifiedLoad);
         assertEquals(LoadType.FICTITIOUS, modifiedLoad.getLoadType());
@@ -73,7 +68,7 @@ public class LoadModificationTest extends AbstractNetworkModificationTest {
     }
 
     @Override
-    protected void assertNetworkAfterDeletion() {
+    protected void assertAfterNetworkModificationDeletion() {
         Load modifiedLoad = getNetwork().getLoad("v1load");
         assertNotNull(modifiedLoad);
         assertEquals(LoadType.UNDEFINED, modifiedLoad.getLoadType());
@@ -82,9 +77,8 @@ public class LoadModificationTest extends AbstractNetworkModificationTest {
         assertEquals("v1load", modifiedLoad.getNameOrId());
     }
 
-    @SneakyThrows
     @Test
-    public void testCreateWithErrors() {
+    public void testCreateWithErrors() throws Exception {
         // Unset an attribute that should not be null
         LoadModificationInfos loadModificationInfos = LoadModificationInfos.builder()
                 .equipmentId("v1load")

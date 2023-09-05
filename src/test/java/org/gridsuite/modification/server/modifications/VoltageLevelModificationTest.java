@@ -10,29 +10,25 @@ package org.gridsuite.modification.server.modifications;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VoltageLevel;
 import com.powsybl.iidm.network.extensions.IdentifiableShortCircuit;
-import lombok.SneakyThrows;
 import org.gridsuite.modification.server.dto.AttributeModification;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.OperationType;
 import org.gridsuite.modification.server.dto.VoltageLevelModificationInfos;
-import org.gridsuite.modification.server.utils.MatcherVoltageLevelModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
+import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.utils.MatcherVoltageLevelModificationInfos.createMatcherVoltageLevelModificationInfos;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
  */
-
+@Tag("IntegrationTest")
 public class VoltageLevelModificationTest extends AbstractNetworkModificationTest {
     @Override
     protected Network createNetwork(UUID networkUuid) {
@@ -66,12 +62,7 @@ public class VoltageLevelModificationTest extends AbstractNetworkModificationTes
     }
 
     @Override
-    protected MatcherVoltageLevelModificationInfos createMatcher(ModificationInfos modificationInfos) {
-        return createMatcherVoltageLevelModificationInfos((VoltageLevelModificationInfos) modificationInfos);
-    }
-
-    @Override
-    protected void assertNetworkAfterCreation() {
+    protected void assertAfterNetworkModificationCreation() {
         VoltageLevel voltageLevel = getNetwork().getVoltageLevel("v1");
         IdentifiableShortCircuit<VoltageLevel> identifiableShortCircuit = voltageLevel.getExtension(IdentifiableShortCircuit.class);
         assertNotNull(identifiableShortCircuit);
@@ -85,7 +76,7 @@ public class VoltageLevelModificationTest extends AbstractNetworkModificationTes
     }
 
     @Override
-    protected void assertNetworkAfterDeletion() {
+    protected void assertAfterNetworkModificationDeletion() {
         VoltageLevel voltageLevel = getNetwork().getVoltageLevel("v1");
         IdentifiableShortCircuit<VoltageLevel> identifiableShortCircuit = voltageLevel.getExtension(IdentifiableShortCircuit.class);
         assertNull(identifiableShortCircuit);
@@ -95,9 +86,8 @@ public class VoltageLevelModificationTest extends AbstractNetworkModificationTes
         assertEquals(Double.NaN, voltageLevel.getHighVoltageLimit(), 0);
     }
 
-    @SneakyThrows
     @Test
-    public void testModifyShortCircuitExtension() {
+    public void testModifyShortCircuitExtension() throws Exception {
         VoltageLevelModificationInfos infos = (VoltageLevelModificationInfos) buildModification();
         applyModification(infos);
 
@@ -124,8 +114,7 @@ public class VoltageLevelModificationTest extends AbstractNetworkModificationTes
         assertEquals(0.2, identifiableShortCircuit2.getIpMin(), 0);
     }
 
-    @SneakyThrows
-    private void applyModification(VoltageLevelModificationInfos infos) {
+    private void applyModification(VoltageLevelModificationInfos infos) throws Exception {
         mockMvc.perform(post(getNetworkModificationUri())
                         .content(mapper.writeValueAsString(infos))
                         .contentType(MediaType.APPLICATION_JSON))

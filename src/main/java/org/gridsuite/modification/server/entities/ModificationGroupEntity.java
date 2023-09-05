@@ -31,7 +31,6 @@ public class ModificationGroupEntity extends AbstractManuallyAssignedIdentifierE
             mappedBy = "group",
             cascade = CascadeType.ALL
     )
-
     @OrderColumn
     private List<ModificationEntity> modifications = new ArrayList<>();
 
@@ -41,6 +40,7 @@ public class ModificationGroupEntity extends AbstractManuallyAssignedIdentifierE
 
     public void addModification(ModificationEntity modification) {
         modifications.add(modification);
+        modification.setStashed(false);
         modification.setGroup(this);
     }
 

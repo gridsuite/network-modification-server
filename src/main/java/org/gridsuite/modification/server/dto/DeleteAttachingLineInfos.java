@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.dto;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -15,8 +16,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
-import org.gridsuite.modification.server.ModificationType;
-import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
 import org.gridsuite.modification.server.entities.equipment.modification.DeleteAttachingLineEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.DeleteAttachingLine;
@@ -31,6 +31,8 @@ import org.gridsuite.modification.server.modifications.DeleteAttachingLine;
 @Setter
 @ToString(callSuper = true)
 @Schema(description = "Delete attaching line infos")
+@JsonTypeName("DELETE_ATTACHING_LINE")
+@ModificationErrorTypeName("DELETE_ATTACHING_LINE_ERROR")
 public class DeleteAttachingLineInfos extends ModificationInfos {
 
     @Schema(description = "line 1 id")
@@ -59,12 +61,7 @@ public class DeleteAttachingLineInfos extends ModificationInfos {
     }
 
     @Override
-    public NetworkModificationException.Type getErrorType() {
-        return NetworkModificationException.Type.DELETE_ATTACHING_LINE_ERROR;
-    }
-
-    @Override
     public Reporter createSubReporter(ReporterModel reporter) {
-        return reporter.createSubReporter(ModificationType.DELETE_ATTACHING_LINE.name(), "Delete attaching line");
+        return reporter.createSubReporter(getType().name(), "Delete attaching line");
     }
 }

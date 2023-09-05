@@ -10,16 +10,16 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.BranchStatus;
 import org.gridsuite.modification.server.dto.BranchStatusModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.utils.MatcherModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.gridsuite.modification.server.utils.TestUtils;
+import org.junit.jupiter.api.Tag;
 
 import java.util.UUID;
 
 import static com.powsybl.iidm.network.extensions.BranchStatus.Status.FORCED_OUTAGE;
 import static com.powsybl.iidm.network.extensions.BranchStatus.Status.PLANNED_OUTAGE;
-import static org.gridsuite.modification.server.utils.MatcherBranchStatusModificationInfos.createMatcherBranchStatusModificationInfos;
 
+@Tag("IntegrationTest")
 public class BranchStatusModificationTripLineTest extends AbstractNetworkModificationTest {
 
     private static final String TARGET_LINE_ID = "line2";
@@ -50,17 +50,12 @@ public class BranchStatusModificationTripLineTest extends AbstractNetworkModific
     }
 
     @Override
-    protected MatcherModificationInfos createMatcher(ModificationInfos modificationInfos) {
-        return createMatcherBranchStatusModificationInfos((BranchStatusModificationInfos) modificationInfos);
-    }
-
-    @Override
-    protected void assertNetworkAfterCreation() {
+    protected void assertAfterNetworkModificationCreation() {
         TestUtils.assertBranchStatus(getNetwork(), TARGET_LINE_ID, TARGET_BRANCH_STATUS);
     }
 
     @Override
-    protected void assertNetworkAfterDeletion() {
+    protected void assertAfterNetworkModificationDeletion() {
         // back to init status
         TestUtils.assertBranchStatus(getNetwork(), TARGET_LINE_ID, OTHER_BRANCH_STATUS);
     }

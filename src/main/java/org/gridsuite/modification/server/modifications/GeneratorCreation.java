@@ -298,35 +298,35 @@ public class GeneratorCreation extends AbstractModification {
     }
 
     private void createGeneratorVoltageRegulation(GeneratorCreationInfos generatorCreationInfos, Generator generator, VoltageLevel voltageLevel, Reporter subReporter) {
-        if (generatorCreationInfos.isVoltageRegulationOn()) {
-            List<Report> voltageReports = new ArrayList<>();
-            voltageReports.add(ModificationUtils.getInstance().buildCreationReport(generatorCreationInfos.getVoltageSetpoint(), "Voltage"));
-            if (generatorCreationInfos.getRegulatingTerminalVlId() != null && generatorCreationInfos.getRegulatingTerminalId() != null &&
+        List<Report> voltageReports = new ArrayList<>();
+        voltageReports.add(ModificationUtils.getInstance().buildCreationReport(generatorCreationInfos.getVoltageSetpoint(), "Voltage"));
+        voltageReports.add(ModificationUtils.getInstance().buildCreationReport(generatorCreationInfos.isVoltageRegulationOn(), "VoltageRegulationOn"));
+        if (generatorCreationInfos.getRegulatingTerminalVlId() != null && generatorCreationInfos.getRegulatingTerminalId() != null &&
                 generatorCreationInfos.getRegulatingTerminalType() != null) {
-                Terminal terminal = ModificationUtils.getInstance().getTerminalFromIdentifiable(voltageLevel.getNetwork(),
+            Terminal terminal = ModificationUtils.getInstance().getTerminalFromIdentifiable(voltageLevel.getNetwork(),
                     generatorCreationInfos.getRegulatingTerminalId(),
                     generatorCreationInfos.getRegulatingTerminalType(),
                     generatorCreationInfos.getRegulatingTerminalVlId());
-                if (terminal != null) {
-                    updateGeneratorRegulatingTerminal(generatorCreationInfos, generator, terminal, voltageReports);
-                }
+            if (terminal != null) {
+                updateGeneratorRegulatingTerminal(generatorCreationInfos, generator, terminal, voltageReports);
             }
-            if (generatorCreationInfos.getQPercent() != null) {
-                try {
-                    generator.newExtension(CoordinatedReactiveControlAdderImpl.class)
+        }
+        if (generatorCreationInfos.getQPercent() != null) {
+            try {
+                generator.newExtension(CoordinatedReactiveControlAdderImpl.class)
                         .withQPercent(generatorCreationInfos.getQPercent()).add();
-                    voltageReports.add(ModificationUtils.getInstance().buildCreationReport(generatorCreationInfos.getQPercent(), "Reactive percentage"));
-                } catch (PowsyblException e) {
-                    voltageReports.add(Report.builder()
+                voltageReports.add(ModificationUtils.getInstance().buildCreationReport(generatorCreationInfos.getQPercent(), "Reactive percentage"));
+            } catch (PowsyblException e) {
+                voltageReports.add(Report.builder()
                         .withKey("ReactivePercentageError")
                         .withDefaultMessage("cannot add Coordinated reactive extension on generator with id=${id} :" + e.getMessage())
                         .withValue("id", generatorCreationInfos.getEquipmentId())
                         .withSeverity(TypedValue.ERROR_SEVERITY)
                         .build());
-                }
             }
-            ModificationUtils.getInstance().reportModifications(subReporter, voltageReports, "VoltageRegulationCreated", "Voltage regulation");
         }
+        ModificationUtils.getInstance().reportModifications(subReporter, voltageReports, "VoltageRegulationCreated", "Voltage regulation");
+
     }
 
     private void updateGeneratorRegulatingTerminal(GeneratorCreationInfos generatorCreationInfos, Generator generator,
@@ -401,6 +401,9 @@ public class GeneratorCreation extends AbstractModification {
                         .withDroop(generatorCreationInfos.getDroop())
                         .add();
                 activePowerRegulationReports.add(ModificationUtils.getInstance().buildCreationReport(
+                        generatorCreationInfos.getParticipate(),
+                        "Participate"));
+                activePowerRegulationReports.add(ModificationUtils.getInstance().buildCreationReport(
                         generatorCreationInfos.getDroop(),
                         "Droop"));
             } catch (PowsyblException e) {
@@ -443,7 +446,6 @@ public class GeneratorCreation extends AbstractModification {
 
     private void createGeneratorStartUp(GeneratorCreationInfos generatorCreationInfos, Generator generator, Reporter subReporter) {
         if (generatorCreationInfos.getPlannedActivePowerSetPoint() != null
-                || generatorCreationInfos.getStartupCost() != null
                 || generatorCreationInfos.getMarginalCost() != null
                 || generatorCreationInfos.getPlannedOutageRate() != null
                 || generatorCreationInfos.getForcedOutageRate() != null) {
@@ -451,7 +453,6 @@ public class GeneratorCreation extends AbstractModification {
             try {
                 generator.newExtension(GeneratorStartupAdderImpl.class)
                         .withPlannedActivePowerSetpoint(nanIfNull(generatorCreationInfos.getPlannedActivePowerSetPoint()))
-                        .withStartupCost(nanIfNull(generatorCreationInfos.getStartupCost()))
                         .withMarginalCost(nanIfNull(generatorCreationInfos.getMarginalCost()))
                         .withPlannedOutageRate(nanIfNull(generatorCreationInfos.getPlannedOutageRate()))
                         .withForcedOutageRate(nanIfNull(generatorCreationInfos.getForcedOutageRate()))
@@ -459,10 +460,6 @@ public class GeneratorCreation extends AbstractModification {
                 if (generatorCreationInfos.getPlannedActivePowerSetPoint() != null) {
                     startupReports.add(ModificationUtils.getInstance().buildCreationReport(
                         generatorCreationInfos.getPlannedActivePowerSetPoint(), "Planning active power set point"));
-                }
-                if (generatorCreationInfos.getStartupCost() != null) {
-                    startupReports.add(ModificationUtils.getInstance().buildCreationReport(
-                        generatorCreationInfos.getStartupCost(), "Startup cost"));
                 }
                 if (generatorCreationInfos.getMarginalCost() != null) {
                     startupReports.add(ModificationUtils.getInstance().buildCreationReport(

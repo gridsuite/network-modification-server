@@ -8,24 +8,23 @@ package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.iidm.network.Line;
 import com.powsybl.iidm.network.Network;
-import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.BranchStatusModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.utils.MatcherModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
+import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.BRANCH_ACTION_ERROR;
-import static org.gridsuite.modification.server.utils.MatcherBranchStatusModificationInfos.createMatcherBranchStatusModificationInfos;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@Tag("IntegrationTest")
 public class BranchStatusModificationEnergiseSideOneLineTest extends AbstractNetworkModificationTest {
 
     private static final String TARGET_LINE_ID = "line2";
@@ -45,6 +44,7 @@ public class BranchStatusModificationEnergiseSideOneLineTest extends AbstractNet
     protected ModificationInfos buildModification() {
         return BranchStatusModificationInfos.builder()
                 .equipmentId(TARGET_LINE_ID)
+                .energizedVoltageLevelId("vl1")
                 .action(BranchStatusModificationInfos.ActionType.ENERGISE_END_ONE).build();
     }
 
@@ -52,16 +52,12 @@ public class BranchStatusModificationEnergiseSideOneLineTest extends AbstractNet
     protected ModificationInfos buildModificationUpdate() {
         return BranchStatusModificationInfos.builder()
                 .equipmentId("line1")
+                .energizedVoltageLevelId("vl1_bis")
                 .action(BranchStatusModificationInfos.ActionType.TRIP).build();
     }
 
     @Override
-    protected MatcherModificationInfos createMatcher(ModificationInfos modificationInfos) {
-        return createMatcherBranchStatusModificationInfos((BranchStatusModificationInfos) modificationInfos);
-    }
-
-    @Override
-    protected void assertNetworkAfterCreation() {
+    protected void assertAfterNetworkModificationCreation() {
         // terminal1 is now connected, terminal2 is now disconnected
         Line line = getNetwork().getLine(TARGET_LINE_ID);
         assertNotNull(line);
@@ -70,7 +66,7 @@ public class BranchStatusModificationEnergiseSideOneLineTest extends AbstractNet
     }
 
     @Override
-    protected void assertNetworkAfterDeletion() {
+    protected void assertAfterNetworkModificationDeletion() {
         // back to init state
         Line line = getNetwork().getLine(TARGET_LINE_ID);
         assertNotNull(line);
@@ -78,9 +74,8 @@ public class BranchStatusModificationEnergiseSideOneLineTest extends AbstractNet
         assertTrue(line.getTerminal2().isConnected());
     }
 
-    @SneakyThrows
     @Test
-    public void testCreateWithErrors() {
+    public void testCreateWithErrors() throws Exception {
         // line not existing
         BranchStatusModificationInfos modificationInfos = (BranchStatusModificationInfos) buildModification();
         // disconnection error

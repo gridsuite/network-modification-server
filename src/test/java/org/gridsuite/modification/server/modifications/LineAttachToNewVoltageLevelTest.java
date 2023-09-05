@@ -8,22 +8,20 @@ package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.SwitchKind;
-
 import org.gridsuite.modification.server.dto.*;
-import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.utils.MatcherModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
+import org.junit.jupiter.api.Tag;
 
 import java.util.Arrays;
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.utils.MatcherLineAttachToVoltageLevelInfos.createMatcherLineAttachToVoltageLevelInfos;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 /**
  * @author David Braquart <david.braquart at rte-france.com>
  */
+@Tag("IntegrationTest")
 public class LineAttachToNewVoltageLevelTest extends AbstractNetworkModificationTest {
 
     private LineCreationInfos getAttachmentLine() {
@@ -47,7 +45,7 @@ public class LineAttachToNewVoltageLevelTest extends AbstractNetworkModification
                 .busbarCount(2)
                 .sectionCount(2)
                 .switchKinds(Arrays.asList(SwitchKind.BREAKER))
-                .couplingDevices(Arrays.asList(CouplingDeviceInfos.builder().busbarSectionId1("bbs.nw").busbarSectionId2("bbs.ne").build()))
+                .couplingDevices(Arrays.asList(CouplingDeviceInfos.builder().busbarSectionId1("1A").busbarSectionId2("1B").build()))
                 .build();
     }
 
@@ -93,12 +91,7 @@ public class LineAttachToNewVoltageLevelTest extends AbstractNetworkModification
     }
 
     @Override
-    protected MatcherModificationInfos createMatcher(ModificationInfos modificationInfos) {
-        return createMatcherLineAttachToVoltageLevelInfos((LineAttachToVoltageLevelInfos) modificationInfos);
-    }
-
-    @Override
-    protected void assertNetworkAfterCreation() {
+    protected void assertAfterNetworkModificationCreation() {
         // new equipments in the network:
         assertNotNull(getNetwork().getLine("attachmentLine"));
         assertNotNull(getNetwork().getLine("nl1"));
@@ -110,7 +103,7 @@ public class LineAttachToNewVoltageLevelTest extends AbstractNetworkModification
     }
 
     @Override
-    protected void assertNetworkAfterDeletion() {
+    protected void assertAfterNetworkModificationDeletion() {
         assertNull(getNetwork().getLine("attachmentLine"));
         assertNull(getNetwork().getLine("nl1"));
         assertNull(getNetwork().getLine("nl2"));

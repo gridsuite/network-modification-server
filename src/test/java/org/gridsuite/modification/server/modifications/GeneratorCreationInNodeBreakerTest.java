@@ -11,15 +11,14 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.EnergySource;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
-import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.GeneratorCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.ReactiveCapabilityCurveCreationInfos;
-import org.gridsuite.modification.server.utils.MatcherGeneratorCreationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
+import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -33,6 +32,7 @@ import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@Tag("IntegrationTest")
 public class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
     @Override
     protected Network createNetwork(UUID networkUuid) {
@@ -60,7 +60,6 @@ public class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificat
                 .minimumReactivePower(20.0)
                 .maximumReactivePower(25.0)
                 .plannedActivePowerSetPoint(111.)
-                .startupCost(201.)
                 .marginalCost(0.40)
                 .plannedOutageRate(.45)
                 .forcedOutageRate(.66)
@@ -98,7 +97,6 @@ public class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificat
                 .minimumReactivePower(23.0)
                 .maximumReactivePower(26.0)
                 .plannedActivePowerSetPoint(222.)
-                .startupCost(301.)
                 .marginalCost(0.50)
                 .plannedOutageRate(.85)
                 .forcedOutageRate(.96)
@@ -117,27 +115,21 @@ public class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificat
     }
 
     @Override
-    protected MatcherGeneratorCreationInfos createMatcher(ModificationInfos modificationInfos) {
-        return MatcherGeneratorCreationInfos.createMatcherGeneratorCreationInfos((GeneratorCreationInfos) modificationInfos);
-    }
-
-    @Override
-    protected void assertNetworkAfterCreation() {
+    protected void assertAfterNetworkModificationCreation() {
         assertNotNull(getNetwork().getGenerator("idGenerator1"));
         assertEquals(1, getNetwork().getVoltageLevel("v2").getGeneratorStream()
                 .filter(transformer -> transformer.getId().equals("idGenerator1")).count());
     }
 
     @Override
-    protected void assertNetworkAfterDeletion() {
+    protected void assertAfterNetworkModificationDeletion() {
         assertNull(getNetwork().getGenerator("idGenerator1"));
         assertEquals(0, getNetwork().getVoltageLevel("v2").getGeneratorStream()
                 .filter(transformer -> transformer.getId().equals("idGenerator1")).count());
     }
 
-    @SneakyThrows
     @Test
-    public void testCreateWithErrors() {
+    public void testCreateWithErrors() throws Exception {
         // invalid Generator id
         GeneratorCreationInfos generatorCreationInfos = (GeneratorCreationInfos) buildModification();
         generatorCreationInfos.setEquipmentId("");
@@ -241,9 +233,8 @@ public class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificat
         testNetworkModificationsCount(getGroupId(), 10);  // new modification stored in the database
     }
 
-    @SneakyThrows
     @Test
-    public void testCreateWithShortCircuitErrors() {
+    public void testCreateWithShortCircuitErrors() throws Exception {
         // invalid short circuit transient reactance
         GeneratorCreationInfos generatorCreationInfos = (GeneratorCreationInfos) buildModification();
         generatorCreationInfos.setTransientReactance(Double.NaN);

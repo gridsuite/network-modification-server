@@ -19,31 +19,23 @@ import javax.persistence.*;
 /**
  * @author Jacques Borsenberger <jacques.borsenberger at rte-france.com>
  */
-
 @NoArgsConstructor
 @Getter
 @Entity
 @Table
 @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "shuntCompensatorCreation_id_fk_constraint"))
 public class ShuntCompensatorCreationEntity extends InjectionCreationEntity {
+    @Column
+    private int maximumNumberOfSections;
 
     @Column
-    int maximumNumberOfSections;
+    private Double susceptancePerSection;
 
     @Column
-    int currentNumberOfSections;
-
-    @Column
-    Double susceptancePerSection;
-
-    @Column
-    Double qAtNominalV;
+    private Double qAtNominalV;
 
     @Column
     private ShuntCompensatorType shuntCompensatorType;
-
-    @Column
-    boolean isIdenticalSections;
 
     @Column
     private String connectionName;
@@ -56,12 +48,10 @@ public class ShuntCompensatorCreationEntity extends InjectionCreationEntity {
 
     public ShuntCompensatorCreationEntity(ShuntCompensatorCreationInfos creationInfos) {
         super(creationInfos);
-        maximumNumberOfSections = creationInfos.getMaximumNumberOfSections();
-        currentNumberOfSections = creationInfos.getCurrentNumberOfSections();
+        maximumNumberOfSections = creationInfos.getMaximumNumberOfSections() != null ? creationInfos.getMaximumNumberOfSections() : 1;
         susceptancePerSection = creationInfos.getSusceptancePerSection();
         qAtNominalV = creationInfos.getQAtNominalV();
         shuntCompensatorType = creationInfos.getShuntCompensatorType();
-        isIdenticalSections = creationInfos.getIsIdenticalSection();
         connectionName = creationInfos.getConnectionName();
         connectionDirection = creationInfos.getConnectionDirection();
         connectionPosition = creationInfos.getConnectionPosition();
@@ -71,12 +61,10 @@ public class ShuntCompensatorCreationEntity extends InjectionCreationEntity {
     public void update(ModificationInfos modificationInfos) {
         super.update(modificationInfos);
         ShuntCompensatorCreationInfos shuntCompensatorCreationInfos = (ShuntCompensatorCreationInfos) modificationInfos;
-        maximumNumberOfSections = shuntCompensatorCreationInfos.getMaximumNumberOfSections();
-        currentNumberOfSections = shuntCompensatorCreationInfos.getCurrentNumberOfSections();
+        maximumNumberOfSections = shuntCompensatorCreationInfos.getMaximumNumberOfSections() != null ? shuntCompensatorCreationInfos.getMaximumNumberOfSections() : 1;
         susceptancePerSection = shuntCompensatorCreationInfos.getSusceptancePerSection();
         qAtNominalV = shuntCompensatorCreationInfos.getQAtNominalV();
         shuntCompensatorType = shuntCompensatorCreationInfos.getShuntCompensatorType();
-        isIdenticalSections = shuntCompensatorCreationInfos.getIsIdenticalSection();
         connectionName = shuntCompensatorCreationInfos.getConnectionName();
         connectionDirection = shuntCompensatorCreationInfos.getConnectionDirection();
         connectionPosition = shuntCompensatorCreationInfos.getConnectionPosition();
@@ -96,8 +84,6 @@ public class ShuntCompensatorCreationEntity extends InjectionCreationEntity {
             .equipmentName(getEquipmentName())
             .voltageLevelId(getVoltageLevelId())
             .busOrBusbarSectionId(getBusOrBusbarSectionId())
-            .isIdenticalSection(isIdenticalSections())
-            .currentNumberOfSections(getCurrentNumberOfSections())
             .maximumNumberOfSections(getMaximumNumberOfSections())
             .susceptancePerSection(getSusceptancePerSection())
             .qAtNominalV(getQAtNominalV())
@@ -106,5 +92,4 @@ public class ShuntCompensatorCreationEntity extends InjectionCreationEntity {
             .connectionDirection(getConnectionDirection())
             .connectionPosition(getConnectionPosition());
     }
-
 }

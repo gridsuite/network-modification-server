@@ -1,7 +1,7 @@
 [
     {
-        "type": "TEST1 123AB",
         "category": "AERIAL",
+        "type": "TEST1 123AB",
         "voltage": 63,
         "conductorType": "AL - Aluminium",
         "section": 27.5,
@@ -13,8 +13,8 @@
         "linearCapacity": 0.00000000727
     },
     {
-        "type": "TEST1 123AB",
         "category": "AERIAL",
+        "type": "TEST1 123AB",
         "voltage": 45,
         "conductorType": "AL - Aluminium",
         "section": 27.5,
@@ -26,8 +26,8 @@
         "linearCapacity": 0.00000000922
     },
     {
-        "type": "TEST2 456CD",
         "category": "AERIAL",
+        "type": "TEST2 456CD",
         "voltage": 90,
         "conductorType": "CU - Cuivre",
         "section": 1700,
@@ -39,8 +39,8 @@
         "linearCapacity": 0.00000000815
     },
     {
-        "type": "TEST3 789EF",
         "category": "AERIAL",
+        "type": "TEST3 789EF",
         "voltage": 225,
         "conductorType": "CU - Cuivre",
         "section": 15,
@@ -52,8 +52,8 @@
         "linearCapacity": 0.000000009
     },
     {
-        "type": "TEST3 789EF",
         "category": "AERIAL",
+        "type": "TEST3 789EF",
         "voltage": 225,
         "conductorType": "AL - Aluminium",
         "section": 15,
@@ -65,8 +65,8 @@
         "linearCapacity": 0.00000000877
     },
     {
-        "type": "TEST3 789EF",
         "category": "AERIAL",
+        "type": "TEST3 789EF",
         "voltage": 225,
         "conductorType": "AL - Aluminium",
         "section": 15,
@@ -78,17 +78,52 @@
         "linearCapacity": 0.00000000877
     },
     {
-        "type": "TEST4 UNDERGROUND",
         "category": "UNDERGROUND",
+        "type": "CS1 123AB",
+        "voltage": 400,
+        "conductorType": "Aluminium",
+        "section": 24,
+        "insulator": "AB",
+        "screen": "Aluminium",
+        "linearResistance": 0.010,
+        "linearReactance": 0.120,
+        "linearCapacity": 0.000000123
+    },
+    {
+        "category": "UNDERGROUND",
+        "type": "CS2 456CD",
         "voltage": 225,
-        "conductorType": "AL - Aluminium",
-        "section": 16,
-        "conductorsNumber": 8,
-        "circuitsNumber": 2,
-        "groundWiresNumber": 4,
-        "linearResistance": 0.00007,
-        "linearReactance": 0.000515,
-        "linearCapacity": 0.00000000879
+        "conductorType": "Cuivre",
+        "section": 25,
+        "insulator": "CD",
+        "screen": "Alu v2",
+        "linearResistance": 0.017,
+        "linearReactance": 0.150,
+        "linearCapacity": 0.000000456
+    },
+    {
+        "category": "UNDERGROUND",
+        "type": "CS2 789EF",
+        "voltage": 400,
+        "conductorType": "Aluminium",
+        "section": 26,
+        "insulator": "CD",
+        "screen": "Alu v2",
+        "linearResistance": 0.020,
+        "linearReactance": 0.100,
+        "linearCapacity": 0.000000789
+    },
+    {
+        "category": "UNDERGROUND",
+        "type": "CS2 789EF",
+        "voltage": 400,
+        "conductorType": "Aluminium",
+        "section": 26,
+        "insulator": "CD",
+        "screen": "Alu v2",
+        "linearResistance": 0.020,
+        "linearReactance": 0.100,
+        "linearCapacity": 0.000000789
     }
 ]
 

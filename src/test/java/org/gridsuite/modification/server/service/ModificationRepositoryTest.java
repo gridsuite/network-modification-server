@@ -9,11 +9,8 @@ package org.gridsuite.modification.server.service;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import com.vladmihalcea.sql.SQLStatementCountValidator;
-import nl.jqno.equalsverifier.EqualsVerifier;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
-import org.gridsuite.modification.server.dto.AttributeModification;
-import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationGroupEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.VoltageLevelCreationEntity;
@@ -25,26 +22,22 @@ import org.gridsuite.modification.server.entities.equipment.modification.attribu
 import org.gridsuite.modification.server.repositories.ModificationGroupRepository;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
-import org.gridsuite.modification.server.utils.*;
 import org.gridsuite.modification.server.utils.elasticsearch.DisableElasticsearch;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.jupiter.api.Tag;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_GROUP_NOT_FOUND;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_NOT_FOUND;
-import static org.gridsuite.modification.server.utils.MatcherDeleteVoltageLevelOnLineInfos.createMatcherDeleteVoltageLevelOnLineInfos;
 import static org.gridsuite.modification.server.utils.TestUtils.assertRequestsCount;
-import static org.hamcrest.MatcherAssert.assertThat;
+import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
 import static org.junit.Assert.*;
 
 
@@ -54,6 +47,7 @@ import static org.junit.Assert.*;
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @DisableElasticsearch
+@Tag("IntegrationTest")
 public class ModificationRepositoryTest {
     private static final UUID TEST_GROUP_ID = UUID.fromString("7928181c-7977-4592-ba19-88027e4254e4");
     private static final UUID TEST_GROUP_ID_2 = UUID.fromString("5809dabf-60f8-46e5-9e58-57b03d6b1818");
@@ -123,6 +117,10 @@ public class ModificationRepositoryTest {
         return (DeleteVoltageLevelOnLineInfos) networkModificationRepository.getModificationInfo(modificationUuid);
     }
 
+    private VoltageInitModificationInfos getVoltageInitModification(UUID modificationUuid) {
+        return (VoltageInitModificationInfos) networkModificationRepository.getModificationInfo(modificationUuid);
+    }
+
     @Test
     public void test() {
         assertEquals(List.of(), this.networkModificationRepository.getModificationGroupsUuids());
@@ -145,20 +143,20 @@ public class ModificationRepositoryTest {
         assertEquals(7, modificationEntities.size());
 
         // Order is also checked
-        assertThat(getEquipmentAttributeModification(modificationEntities.get(0).getUuid()),
-            MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos(nullModifEntity.toModificationInfos()));
-        assertThat(getEquipmentAttributeModification(modificationEntities.get(1).getUuid()),
-            MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos(stringModifEntity.toModificationInfos()));
-        assertThat(getEquipmentAttributeModification(modificationEntities.get(2).getUuid()),
-            MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos(boolModifEntity.toModificationInfos()));
-        assertThat(getEquipmentAttributeModification(modificationEntities.get(3).getUuid()),
-            MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos(intModifEntity.toModificationInfos()));
-        assertThat(getEquipmentAttributeModification(modificationEntities.get(4).getUuid()),
-            MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos(floatModifEntity.toModificationInfos()));
-        assertThat(getEquipmentAttributeModification(modificationEntities.get(5).getUuid()),
-            MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos(doubleModifEntity.toModificationInfos()));
-        assertThat(getEquipmentAttributeModification(modificationEntities.get(6).getUuid()),
-            MatcherEquipmentAttributeModificationInfos.createMatcherEquipmentAttributeModificationInfos(enumModifEntity.toModificationInfos()));
+        assertThat(getEquipmentAttributeModification(modificationEntities.get(0).getUuid()))
+            .recursivelyEquals(nullModifEntity.toModificationInfos());
+        assertThat(getEquipmentAttributeModification(modificationEntities.get(1).getUuid()))
+            .recursivelyEquals(stringModifEntity.toModificationInfos());
+        assertThat(getEquipmentAttributeModification(modificationEntities.get(2).getUuid()))
+            .recursivelyEquals(boolModifEntity.toModificationInfos());
+        assertThat(getEquipmentAttributeModification(modificationEntities.get(3).getUuid()))
+            .recursivelyEquals(intModifEntity.toModificationInfos());
+        assertThat(getEquipmentAttributeModification(modificationEntities.get(4).getUuid()))
+            .recursivelyEquals(floatModifEntity.toModificationInfos());
+        assertThat(getEquipmentAttributeModification(modificationEntities.get(5).getUuid()))
+            .recursivelyEquals(doubleModifEntity.toModificationInfos());
+        assertThat(getEquipmentAttributeModification(modificationEntities.get(6).getUuid()))
+            .recursivelyEquals(enumModifEntity.toModificationInfos());
 
         assertEquals(List.of(TEST_GROUP_ID), this.networkModificationRepository.getModificationGroupsUuids());
 
@@ -248,12 +246,12 @@ public class ModificationRepositoryTest {
         List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
         assertEquals(3, modificationInfos.size());
 
-        assertThat(getLoadCreationModification(modificationInfos.get(0).getUuid()),
-            MatcherLoadCreationInfos.createMatcherLoadCreationInfos(createLoadEntity1.toModificationInfos()));
-        assertThat(getLoadCreationModification(modificationInfos.get(1).getUuid()),
-            MatcherLoadCreationInfos.createMatcherLoadCreationInfos(createLoadEntity2.toModificationInfos()));
-        assertThat(getLoadCreationModification(modificationInfos.get(2).getUuid()),
-            MatcherLoadCreationInfos.createMatcherLoadCreationInfos(createLoadEntity3.toModificationInfos()));
+        assertThat(getLoadCreationModification(modificationInfos.get(0).getUuid()))
+            .recursivelyEquals(createLoadEntity1.toModificationInfos());
+        assertThat(getLoadCreationModification(modificationInfos.get(1).getUuid()))
+            .recursivelyEquals(createLoadEntity2.toModificationInfos());
+        assertThat(getLoadCreationModification(modificationInfos.get(2).getUuid()))
+            .recursivelyEquals(createLoadEntity3.toModificationInfos());
 
         assertEquals(3, networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
         assertEquals(List.of(TEST_GROUP_ID), this.networkModificationRepository.getModificationGroupsUuids());
@@ -285,7 +283,7 @@ public class ModificationRepositoryTest {
                 .activePowerSetpoint(500).reactivePowerSetpoint(50.)
                 .voltageRegulationOn(true).voltageSetpoint(225.)
                 .plannedActivePowerSetPoint(20.)
-                .startupCost(20.).marginalCost(20.)
+                .marginalCost(20.)
                 .plannedOutageRate(20.).forcedOutageRate(20.)
                 .minimumReactivePower(30.).maximumReactivePower(50.)
                 .participate(true).droop(8f).transientReactance(37.)
@@ -302,7 +300,7 @@ public class ModificationRepositoryTest {
                 .activePowerSetpoint(150).reactivePowerSetpoint(30.)
                 .voltageRegulationOn(false).voltageSetpoint(380.)
                 .plannedActivePowerSetPoint(30.)
-                .startupCost(30.).marginalCost(30.)
+                .marginalCost(30.)
                 .plannedOutageRate(30.).forcedOutageRate(30.)
                 .participate(false).droop(null).transientReactance(37.)
                 .stepUpTransformerReactance(46.).regulatingTerminalId(null)
@@ -330,12 +328,12 @@ public class ModificationRepositoryTest {
         List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
         assertEquals(3, modificationInfos.size());
 
-        assertThat(getGeneratorCreationModification(modificationInfos.get(0).getUuid()),
-            MatcherGeneratorCreationInfos.createMatcherGeneratorCreationInfos(createGeneratorEntity1.toModificationInfos()));
-        assertThat(getGeneratorCreationModification(modificationInfos.get(1).getUuid()),
-            MatcherGeneratorCreationInfos.createMatcherGeneratorCreationInfos(createGeneratorEntity2.toModificationInfos()));
-        assertThat(getGeneratorCreationModification(modificationInfos.get(2).getUuid()),
-            MatcherGeneratorCreationInfos.createMatcherGeneratorCreationInfos(createGeneratorEntity3.toModificationInfos()));
+        assertThat(getGeneratorCreationModification(modificationInfos.get(0).getUuid()))
+            .recursivelyEquals(createGeneratorEntity1.toModificationInfos());
+        assertThat(getGeneratorCreationModification(modificationInfos.get(1).getUuid()))
+            .recursivelyEquals(createGeneratorEntity2.toModificationInfos());
+        assertThat(getGeneratorCreationModification(modificationInfos.get(2).getUuid()))
+            .recursivelyEquals(createGeneratorEntity3.toModificationInfos());
 
         assertEquals(3, networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
         assertEquals(List.of(TEST_GROUP_ID), this.networkModificationRepository.getModificationGroupsUuids());
@@ -361,14 +359,14 @@ public class ModificationRepositoryTest {
     public void testShuntCompensatorCreation() {
         var shunt1 = ShuntCompensatorCreationInfos.builder()
             .equipmentId("shunt1").equipmentName("nameOne")
-            .currentNumberOfSections(1).maximumNumberOfSections(2)
-            .susceptancePerSection(1.).isIdenticalSection(true)
+            .maximumNumberOfSections(2)
+            .susceptancePerSection(1.)
             .voltageLevelId("vlId1").busOrBusbarSectionId("busId1")
             .build();
         var shunt2 = ShuntCompensatorCreationInfos.builder()
             .equipmentId("shunt2").equipmentName("notNameOne")
-            .currentNumberOfSections(1).maximumNumberOfSections(2)
-            .susceptancePerSection(1.).isIdenticalSection(true)
+            .maximumNumberOfSections(2)
+            .susceptancePerSection(1.)
             .voltageLevelId("vlId1").busOrBusbarSectionId("busId1")
             .build();
 
@@ -381,10 +379,10 @@ public class ModificationRepositoryTest {
         List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
         assertEquals(2, modificationInfos.size());
 
-        assertThat(getShuntCompensatorCreationModification(modificationInfos.get(0).getUuid()),
-            MatcherShuntCompensatorCreationInfos.createMatcher(createShuntCompensatorEntity1.toModificationInfos()));
-        assertThat(getShuntCompensatorCreationModification(modificationInfos.get(1).getUuid()),
-            MatcherShuntCompensatorCreationInfos.createMatcher(createShuntCompensatorEntity2.toModificationInfos()));
+        assertThat(getShuntCompensatorCreationModification(modificationInfos.get(0).getUuid()))
+            .recursivelyEquals(createShuntCompensatorEntity1.toModificationInfos());
+        assertThat(getShuntCompensatorCreationModification(modificationInfos.get(1).getUuid()))
+            .recursivelyEquals(createShuntCompensatorEntity2.toModificationInfos());
 
         assertEquals(2, networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
         assertEquals(List.of(TEST_GROUP_ID), this.networkModificationRepository.getModificationGroupsUuids());
@@ -409,9 +407,9 @@ public class ModificationRepositoryTest {
     @Test
     public void testLineCreation() {
         var createLineEntity1 = LineCreationInfos.builder().equipmentId("idLine1").equipmentName("nameLine1").seriesResistance(1.0).seriesReactance(1.1).shuntConductance1(10.0).shuntSusceptance1(11.0).shuntConductance2(100.0).shuntSusceptance2(100.1).voltageLevelId1("vlId11").busOrBusbarSectionId1("busId11").voltageLevelId2("vlId12").busOrBusbarSectionId2("busId12").connectionName1("cn11").connectionDirection1(ConnectablePosition.Direction.TOP).connectionName2("cn22").connectionDirection2(ConnectablePosition.Direction.TOP).build().toEntity();
-        var createLineEntity2 = LineCreationInfos.builder().equipmentId("idLine2").equipmentName("nameLine2").seriesResistance(2.0).seriesReactance(2.2).shuntConductance1(20.0).shuntSusceptance1(22.0).shuntConductance2(200.0).shuntSusceptance2(200.2).voltageLevelId1("vlId21").busOrBusbarSectionId1("busId21").voltageLevelId2("vlId22").busOrBusbarSectionId2("busId22").connectionName1("cn33").connectionDirection1(ConnectablePosition.Direction.TOP).connectionName2("cn44").connectionDirection2(ConnectablePosition.Direction.BOTTOM).currentLimits2(CurrentLimitsInfos.builder().permanentLimit(5.0).build()).build().toEntity();
-        var createLineEntity3 = LineCreationInfos.builder().equipmentId("idLine3").equipmentName("nameLine3").seriesResistance(3.0).seriesReactance(3.3).shuntConductance1(30.0).shuntSusceptance1(33.0).shuntConductance2(300.0).shuntSusceptance2(300.3).voltageLevelId1("vlId31").busOrBusbarSectionId1("busId31").voltageLevelId2("vlId32").busOrBusbarSectionId2("busId32").connectionName1("cn55").connectionDirection1(ConnectablePosition.Direction.TOP).connectionName2("cn66").connectionDirection2(ConnectablePosition.Direction.TOP).currentLimits1(CurrentLimitsInfos.builder().permanentLimit(5.0).build()).build().toEntity();
-        var createLineEntity4 = LineCreationInfos.builder().equipmentId("idLine4").equipmentName("nameLine4").seriesResistance(3.0).seriesReactance(3.3).shuntConductance1(null).shuntSusceptance1(null).shuntConductance2(null).shuntSusceptance2(null).voltageLevelId1("vlId41").busOrBusbarSectionId1("busId41").voltageLevelId2("vlId42").busOrBusbarSectionId2("busId42").connectionName1("cn77").connectionDirection1(ConnectablePosition.Direction.TOP).connectionName2("cn88").connectionDirection2(ConnectablePosition.Direction.BOTTOM).currentLimits1(CurrentLimitsInfos.builder().permanentLimit(5.0).build()).currentLimits2(CurrentLimitsInfos.builder().permanentLimit(4.0).build()).build().toEntity();
+        var createLineEntity2 = LineCreationInfos.builder().equipmentId("idLine2").equipmentName("nameLine2").seriesResistance(2.0).seriesReactance(2.2).shuntConductance1(20.0).shuntSusceptance1(22.0).shuntConductance2(200.0).shuntSusceptance2(200.2).voltageLevelId1("vlId21").busOrBusbarSectionId1("busId21").voltageLevelId2("vlId22").busOrBusbarSectionId2("busId22").connectionName1("cn33").connectionDirection1(ConnectablePosition.Direction.TOP).connectionName2("cn44").connectionDirection2(ConnectablePosition.Direction.BOTTOM).currentLimits2(CurrentLimitsInfos.builder().permanentLimit(5.0).temporaryLimits(Collections.emptyList()).build()).build().toEntity();
+        var createLineEntity3 = LineCreationInfos.builder().equipmentId("idLine3").equipmentName("nameLine3").seriesResistance(3.0).seriesReactance(3.3).shuntConductance1(30.0).shuntSusceptance1(33.0).shuntConductance2(300.0).shuntSusceptance2(300.3).voltageLevelId1("vlId31").busOrBusbarSectionId1("busId31").voltageLevelId2("vlId32").busOrBusbarSectionId2("busId32").connectionName1("cn55").connectionDirection1(ConnectablePosition.Direction.TOP).connectionName2("cn66").connectionDirection2(ConnectablePosition.Direction.TOP).currentLimits1(CurrentLimitsInfos.builder().permanentLimit(5.0).temporaryLimits(Collections.emptyList()).build()).build().toEntity();
+        var createLineEntity4 = LineCreationInfos.builder().equipmentId("idLine4").equipmentName("nameLine4").seriesResistance(3.0).seriesReactance(3.3).shuntConductance1(null).shuntSusceptance1(null).shuntConductance2(null).shuntSusceptance2(null).voltageLevelId1("vlId41").busOrBusbarSectionId1("busId41").voltageLevelId2("vlId42").busOrBusbarSectionId2("busId42").connectionName1("cn77").connectionDirection1(ConnectablePosition.Direction.TOP).connectionName2("cn88").connectionDirection2(ConnectablePosition.Direction.BOTTOM).currentLimits1(CurrentLimitsInfos.builder().permanentLimit(5.0).temporaryLimits(Collections.emptyList()).build()).currentLimits2(CurrentLimitsInfos.builder().permanentLimit(4.0).temporaryLimits(Collections.emptyList()).build()).build().toEntity();
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(createLineEntity1, createLineEntity2, createLineEntity3, createLineEntity4));
         assertRequestsCount(1, 13, 4, 0);
@@ -419,14 +417,14 @@ public class ModificationRepositoryTest {
         List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
         assertEquals(4, modificationInfos.size());
 
-        assertThat(getLineCreationModification(modificationInfos.get(0).getUuid()),
-            MatcherLineCreationInfos.createMatcherLineCreationInfos(createLineEntity1.toModificationInfos()));
-        assertThat(getLineCreationModification(modificationInfos.get(1).getUuid()),
-            MatcherLineCreationInfos.createMatcherLineCreationInfos(createLineEntity2.toModificationInfos()));
-        assertThat(getLineCreationModification(modificationInfos.get(2).getUuid()),
-            MatcherLineCreationInfos.createMatcherLineCreationInfos(createLineEntity3.toModificationInfos()));
-        assertThat(getLineCreationModification(modificationInfos.get(3).getUuid()),
-            MatcherLineCreationInfos.createMatcherLineCreationInfos(createLineEntity4.toModificationInfos()));
+        assertThat(getLineCreationModification(modificationInfos.get(0).getUuid()))
+            .recursivelyEquals(createLineEntity1.toModificationInfos());
+        assertThat(getLineCreationModification(modificationInfos.get(1).getUuid()))
+            .recursivelyEquals(createLineEntity2.toModificationInfos());
+        assertThat(getLineCreationModification(modificationInfos.get(2).getUuid()))
+            .recursivelyEquals(createLineEntity3.toModificationInfos());
+        assertThat(getLineCreationModification(modificationInfos.get(3).getUuid()))
+            .recursivelyEquals(createLineEntity4.toModificationInfos());
 
         assertEquals(4, networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
         assertEquals(List.of(TEST_GROUP_ID), this.networkModificationRepository.getModificationGroupsUuids());
@@ -634,12 +632,12 @@ public class ModificationRepositoryTest {
         List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
         assertEquals(3, modificationInfos.size());
 
-        assertThat(getGroovyScript(modificationInfos.get(0).getUuid()),
-            MatcherGroovyScriptInfos.createMatcherGroovyScriptInfos(groovyScriptEntity1.toModificationInfos()));
-        assertThat(getGroovyScript(modificationInfos.get(1).getUuid()),
-            MatcherGroovyScriptInfos.createMatcherGroovyScriptInfos(groovyScriptEntity2.toModificationInfos()));
-        assertThat(getGroovyScript(modificationInfos.get(2).getUuid()),
-            MatcherGroovyScriptInfos.createMatcherGroovyScriptInfos(groovyScriptEntity3.toModificationInfos()));
+        assertThat(getGroovyScript(modificationInfos.get(0).getUuid()))
+            .recursivelyEquals(groovyScriptEntity1.toModificationInfos());
+        assertThat(getGroovyScript(modificationInfos.get(1).getUuid()))
+            .recursivelyEquals(groovyScriptEntity2.toModificationInfos());
+        assertThat(getGroovyScript(modificationInfos.get(2).getUuid()))
+            .recursivelyEquals(groovyScriptEntity3.toModificationInfos());
 
         assertEquals(3, networkModificationRepository.getModifications(TEST_GROUP_ID, false, true).size());
         assertEquals(List.of(TEST_GROUP_ID), this.networkModificationRepository.getModificationGroupsUuids());
@@ -689,12 +687,12 @@ public class ModificationRepositoryTest {
         List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
         assertEquals(3, modificationInfos.size());
 
-        assertThat(getSubstationCreationModification(modificationInfos.get(0).getUuid()),
-            MatcherSubstationCreationInfos.createMatcherSubstationCreationInfos(createSubstationEntity1.toSubstationCreationInfos()));
-        assertThat(getSubstationCreationModification(modificationInfos.get(1).getUuid()),
-            MatcherSubstationCreationInfos.createMatcherSubstationCreationInfos(createSubstationEntity2.toSubstationCreationInfos()));
-        assertThat(getSubstationCreationModification(modificationInfos.get(2).getUuid()),
-            MatcherSubstationCreationInfos.createMatcherSubstationCreationInfos(createSubstationEntity3.toSubstationCreationInfos()));
+        assertThat(getSubstationCreationModification(modificationInfos.get(0).getUuid()))
+            .recursivelyEquals(createSubstationEntity1.toSubstationCreationInfos());
+        assertThat(getSubstationCreationModification(modificationInfos.get(1).getUuid()))
+            .recursivelyEquals(createSubstationEntity2.toSubstationCreationInfos());
+        assertThat(getSubstationCreationModification(modificationInfos.get(2).getUuid()))
+            .recursivelyEquals(createSubstationEntity3.toSubstationCreationInfos());
 
         assertEquals(3, networkModificationRepository.getModifications(TEST_GROUP_ID, false, true).size());
         assertEquals(List.of(TEST_GROUP_ID), this.networkModificationRepository.getModificationGroupsUuids());
@@ -737,8 +735,8 @@ public class ModificationRepositoryTest {
         List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
         assertEquals(1, modificationInfos.size());
 
-        assertThat(getVoltageLevelCreationModification(modificationInfos.get(0).getUuid()),
-            MatcherVoltageLevelCreationInfos.createMatcherVoltageLevelCreationInfos(createVoltLvlEntity1.toVoltageLevelCreationInfos()));
+        assertThat(getVoltageLevelCreationModification(modificationInfos.get(0).getUuid()))
+            .recursivelyEquals(createVoltLvlEntity1.toVoltageLevelCreationInfos());
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(createVoltLvlEntity1.getId()));
@@ -790,16 +788,16 @@ public class ModificationRepositoryTest {
             .collect(Collectors.toList());
         assertEquals(5, modificationInfos.size());
 
-        assertThat(modificationInfos.get(0),
-            MatcherBranchStatusModificationInfos.createMatcherBranchStatusModificationInfos((BranchStatusModificationInfos) entities.get(0).toModificationInfos()));
-        assertThat(modificationInfos.get(1),
-            MatcherBranchStatusModificationInfos.createMatcherBranchStatusModificationInfos((BranchStatusModificationInfos) entities.get(1).toModificationInfos()));
-        assertThat(modificationInfos.get(2),
-            MatcherBranchStatusModificationInfos.createMatcherBranchStatusModificationInfos((BranchStatusModificationInfos) entities.get(2).toModificationInfos()));
-        assertThat(modificationInfos.get(3),
-            MatcherBranchStatusModificationInfos.createMatcherBranchStatusModificationInfos((BranchStatusModificationInfos) entities.get(3).toModificationInfos()));
-        assertThat(modificationInfos.get(4),
-            MatcherBranchStatusModificationInfos.createMatcherBranchStatusModificationInfos((BranchStatusModificationInfos) entities.get(4).toModificationInfos()));
+        assertThat(modificationInfos.get(0))
+            .recursivelyEquals((BranchStatusModificationInfos) entities.get(0).toModificationInfos());
+        assertThat(modificationInfos.get(1))
+            .recursivelyEquals((BranchStatusModificationInfos) entities.get(1).toModificationInfos());
+        assertThat(modificationInfos.get(2))
+            .recursivelyEquals((BranchStatusModificationInfos) entities.get(2).toModificationInfos());
+        assertThat(modificationInfos.get(3))
+            .recursivelyEquals((BranchStatusModificationInfos) entities.get(3).toModificationInfos());
+        assertThat(modificationInfos.get(4))
+            .recursivelyEquals((BranchStatusModificationInfos) entities.get(4).toModificationInfos());
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
@@ -837,13 +835,11 @@ public class ModificationRepositoryTest {
         List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
         assertEquals(3, modificationInfos.size());
 
-        assertThat(getLineSplitWithVoltageLevelModification(modificationInfos.get(0).getUuid()),
-                MatcherLineSplitWithVoltageLevelInfos.createMatcherLineSplitWithVoltageLevelInfos(
-                        lineSplitEntity1.toModificationInfos()));
+        assertThat(getLineSplitWithVoltageLevelModification(modificationInfos.get(0).getUuid()))
+                .recursivelyEquals(lineSplitEntity1.toModificationInfos());
 
-        assertThat(getLineSplitWithVoltageLevelModification(modificationInfos.get(2).getUuid()),
-                MatcherLineSplitWithVoltageLevelInfos.createMatcherLineSplitWithVoltageLevelInfos(
-                        lineSplitEntity2.toModificationInfos()));
+        assertThat(getLineSplitWithVoltageLevelModification(modificationInfos.get(2).getUuid()))
+                .recursivelyEquals(lineSplitEntity2.toModificationInfos());
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(lineSplitEntity1.getId(),
@@ -904,13 +900,13 @@ public class ModificationRepositoryTest {
         List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
         assertEquals(2, modificationInfos.size());
 
-        assertThat(getLineAttachToVoltageLevelModification(modificationInfos.get(0).getUuid()),
-                MatcherLineAttachToVoltageLevelInfos.createMatcherLineAttachToVoltageLevelInfos(
-                        lineAttachToEntity1.toModificationInfos()));
+        assertThat(getLineAttachToVoltageLevelModification(modificationInfos.get(0).getUuid()))
+                .recursivelyEquals(
+                        lineAttachToEntity1.toModificationInfos());
 
-        assertThat(getLineAttachToVoltageLevelModification(modificationInfos.get(1).getUuid()),
-                MatcherLineAttachToVoltageLevelInfos.createMatcherLineAttachToVoltageLevelInfos(
-                        lineAttachToEntity2.toModificationInfos()));
+        assertThat(getLineAttachToVoltageLevelModification(modificationInfos.get(1).getUuid()))
+                .recursivelyEquals(
+                        lineAttachToEntity2.toModificationInfos());
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(lineAttachToEntity1.getId(),
@@ -955,13 +951,13 @@ public class ModificationRepositoryTest {
         List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
         assertEquals(2, modificationInfos.size());
 
-        assertThat(getLinesAttachToSplitLinesModification(modificationInfos.get(0).getUuid()),
-                MatcherLinesAttachToSplitLinesInfos.createMatcherLinesAttachToSplitLinesInfos(
-                        linesAttachToEntity1.toModificationInfos()));
+        assertThat(getLinesAttachToSplitLinesModification(modificationInfos.get(0).getUuid()))
+                .recursivelyEquals(
+                        linesAttachToEntity1.toModificationInfos());
 
-        assertThat(getLinesAttachToSplitLinesModification(modificationInfos.get(1).getUuid()),
-                MatcherLinesAttachToSplitLinesInfos.createMatcherLinesAttachToSplitLinesInfos(
-                        linesAttachToEntity2.toModificationInfos()));
+        assertThat(getLinesAttachToSplitLinesModification(modificationInfos.get(1).getUuid()))
+                .recursivelyEquals(
+                        linesAttachToEntity2.toModificationInfos());
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(linesAttachToEntity1.getId(),
@@ -1035,13 +1031,13 @@ public class ModificationRepositoryTest {
         List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
         assertEquals(2, modificationInfos.size());
 
-        assertThat(getDeleteVoltageLevelOnLineModification(modificationInfos.get(0).getUuid()),
-                createMatcherDeleteVoltageLevelOnLineInfos(
-                        deleteVoltageLevelOnLineToEntity1.toModificationInfos()));
+        assertThat(getDeleteVoltageLevelOnLineModification(modificationInfos.get(0).getUuid()))
+               .recursivelyEquals(
+                        deleteVoltageLevelOnLineToEntity1.toModificationInfos());
 
-        assertThat(getDeleteVoltageLevelOnLineModification(modificationInfos.get(1).getUuid()),
-                createMatcherDeleteVoltageLevelOnLineInfos(
-                        deleteVoltageLevelOnLineToEntity2.toModificationInfos()));
+        assertThat(getDeleteVoltageLevelOnLineModification(modificationInfos.get(1).getUuid()))
+               .recursivelyEquals(
+                        deleteVoltageLevelOnLineToEntity2.toModificationInfos());
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(deleteVoltageLevelOnLineToEntity1.getId(),
@@ -1060,7 +1056,6 @@ public class ModificationRepositoryTest {
     private <T> void testModificationEmbedded(IAttributeModificationEmbeddable<T> modification, T val) {
         assertEquals(val, modification.getValue());
         assertEquals(OperationType.SET, modification.getOpType());
-        EqualsVerifier.simple().forClass(modification.getClass()).verify();
     }
 
     @Test
@@ -1068,5 +1063,67 @@ public class ModificationRepositoryTest {
         testModificationEmbedded(new DoubleModificationEmbedded(new AttributeModification<>(10., OperationType.SET)), 10.);
         testModificationEmbedded(new EnumModificationEmbedded<>(new AttributeModification<>(OperationType.SET, OperationType.SET)), OperationType.SET);
         testModificationEmbedded(new BooleanModificationEmbedded(new AttributeModification<>(true, OperationType.SET)), true);
+    }
+
+    @Test
+    public void testVoltageInitModification() {
+        var voltageInitModificationEntity = VoltageInitModificationInfos.builder()
+            .generators(List.of(
+                VoltageInitGeneratorModificationInfos.builder()
+                    .generatorId("G1")
+                    .reactivePowerSetpoint(10.)
+                    .build(),
+                VoltageInitGeneratorModificationInfos.builder()
+                    .generatorId("G2")
+                    .voltageSetpoint(226.)
+                    .build()))
+            .transformers(List.of(
+                VoltageInitTransformerModificationInfos.builder()
+                    .transformerId("2WT1")
+                    .ratioTapChangerPosition(3)
+                    .build(),
+                VoltageInitTransformerModificationInfos.builder()
+                    .transformerId("3WT1")
+                    .ratioTapChangerPosition(1)
+                    .legSide(ThreeWindingsTransformer.Side.TWO)
+                    .build()))
+            .staticVarCompensators(List.of(
+                VoltageInitStaticVarCompensatorModificationInfos.builder()
+                    .staticVarCompensatorId("SVC1")
+                    .reactivePowerSetpoint(50.)
+                    .build(),
+                VoltageInitStaticVarCompensatorModificationInfos.builder()
+                    .staticVarCompensatorId("SVC2")
+                    .voltageSetpoint(374.)
+                    .build()))
+            .vscConverterStations(List.of(
+                VoltageInitVscConverterStationModificationInfos.builder()
+                    .vscConverterStationId("VSC1")
+                    .reactivePowerSetpoint(40.)
+                    .build(),
+                VoltageInitVscConverterStationModificationInfos.builder()
+                    .vscConverterStationId("VSC2")
+                    .voltageSetpoint(224.)
+                    .build()))
+            .build().toEntity();
+
+        networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(voltageInitModificationEntity));
+        assertRequestsCount(1, 11, 1, 0);
+
+        List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
+        assertEquals(1, modificationInfos.size());
+
+        assertThat(getVoltageInitModification(modificationInfos.get(0).getUuid()))
+            .recursivelyEquals(voltageInitModificationEntity.toModificationInfos());
+
+        assertEquals(List.of(TEST_GROUP_ID), this.networkModificationRepository.getModificationGroupsUuids());
+
+        SQLStatementCountValidator.reset();
+        networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(voltageInitModificationEntity.getId()));
+        assertRequestsCount(2, 0, 0, 6);
+
+        SQLStatementCountValidator.reset();
+        assertEquals(0, networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
+        assertRequestsCount(2, 0, 0, 0);
     }
 }

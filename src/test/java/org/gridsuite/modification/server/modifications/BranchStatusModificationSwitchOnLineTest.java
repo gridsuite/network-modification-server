@@ -11,15 +11,15 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.Terminal;
 import org.gridsuite.modification.server.dto.BranchStatusModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.utils.MatcherModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
+import org.junit.jupiter.api.Tag;
 
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.utils.MatcherBranchStatusModificationInfos.createMatcherBranchStatusModificationInfos;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+@Tag("IntegrationTest")
 public class BranchStatusModificationSwitchOnLineTest extends AbstractNetworkModificationTest {
 
     private static final String TARGET_LINE_ID = "line2";
@@ -49,12 +49,7 @@ public class BranchStatusModificationSwitchOnLineTest extends AbstractNetworkMod
     }
 
     @Override
-    protected MatcherModificationInfos createMatcher(ModificationInfos modificationInfos) {
-        return createMatcherBranchStatusModificationInfos((BranchStatusModificationInfos) modificationInfos);
-    }
-
-    @Override
-    protected void assertNetworkAfterCreation() {
+    protected void assertAfterNetworkModificationCreation() {
         // terminals are now all connected
         Line line = getNetwork().getLine(TARGET_LINE_ID);
         assertNotNull(line);
@@ -62,7 +57,7 @@ public class BranchStatusModificationSwitchOnLineTest extends AbstractNetworkMod
     }
 
     @Override
-    protected void assertNetworkAfterDeletion() {
+    protected void assertAfterNetworkModificationDeletion() {
         // back to init state : no more connected terminals
         Line line = getNetwork().getLine(TARGET_LINE_ID);
         assertNotNull(line);

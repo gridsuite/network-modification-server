@@ -9,16 +9,16 @@ package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
-import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.ShuntCompensatorCreationInfos;
-import org.gridsuite.modification.server.utils.MatcherShuntCompensatorCreationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
+import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 
 import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.BUS_NOT_FOUND;
@@ -28,22 +28,14 @@ import static org.junit.Assert.assertNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@Tag("IntegrationTest")
 public class ShuntCompensatorCreationInBusBreakerTest extends AbstractNetworkModificationTest {
 
-    @SneakyThrows
     @Test
-    public void testCreateWithErrors() {
+    public void testCreateWithErrors() throws Exception {
         ShuntCompensatorCreationInfos shunt = (ShuntCompensatorCreationInfos) buildModification();
-        shunt.setCurrentNumberOfSections(6);
-        shunt.setMaximumNumberOfSections(2);
-        String shuntJson = mapper.writeValueAsString(shunt);
-        mockMvc.perform(post(getNetworkModificationUri()).content(shuntJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
-        assertLogMessage(String.format("Shunt compensator '%s': the current number (%s) of section should be lesser than the maximum number of section (%s)", shunt.getEquipmentId(), 6, 2),
-                shunt.getErrorType().name(), reportService);
-
         shunt.setBusOrBusbarSectionId("notFoundBus");
-        shuntJson = mapper.writeValueAsString(shunt);
+        String shuntJson = mapper.writeValueAsString(shunt);
         mockMvc.perform(post(getNetworkModificationUri()).content(shuntJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(BUS_NOT_FOUND, "notFoundBus").getMessage(),
@@ -58,13 +50,11 @@ public class ShuntCompensatorCreationInBusBreakerTest extends AbstractNetworkMod
     @Override
     protected ModificationInfos buildModification() {
         return ShuntCompensatorCreationInfos.builder()
-            .date(ZonedDateTime.now())
+            .date(ZonedDateTime.now().truncatedTo(ChronoUnit.MICROS))
             .equipmentId("shuntOneId")
             .equipmentName("hopOne")
-            .currentNumberOfSections(4)
-            .maximumNumberOfSections(9)
-            .susceptancePerSection(1.)
-            .isIdenticalSection(true)
+            .maximumNumberOfSections(1)
+            .susceptancePerSection(0.)
             .voltageLevelId("v2")
             .busOrBusbarSectionId("bus2")
             .connectionName("cn2")
@@ -75,13 +65,11 @@ public class ShuntCompensatorCreationInBusBreakerTest extends AbstractNetworkMod
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return ShuntCompensatorCreationInfos.builder()
-                .date(ZonedDateTime.now())
+                .date(ZonedDateTime.now().truncatedTo(ChronoUnit.MICROS))
                 .equipmentId("shuntOneIdEdited")
                 .equipmentName("hopEdited")
-                .currentNumberOfSections(6)
-                .maximumNumberOfSections(12)
+                .maximumNumberOfSections(1)
                 .susceptancePerSection(1.)
-                .isIdenticalSection(false)
                 .voltageLevelId("v4")
                 .busOrBusbarSectionId("bus3")
                 .connectionName("cnEdited")
@@ -90,17 +78,12 @@ public class ShuntCompensatorCreationInBusBreakerTest extends AbstractNetworkMod
     }
 
     @Override
-    protected MatcherShuntCompensatorCreationInfos createMatcher(ModificationInfos modificationInfos) {
-        return MatcherShuntCompensatorCreationInfos.createMatcher((ShuntCompensatorCreationInfos) modificationInfos);
-    }
-
-    @Override
-    protected void assertNetworkAfterCreation() {
+    protected void assertAfterNetworkModificationCreation() {
         assertNotNull(getNetwork().getShuntCompensator("shuntOneId"));
     }
 
     @Override
-    protected void assertNetworkAfterDeletion() {
+    protected void assertAfterNetworkModificationDeletion() {
         assertNull(getNetwork().getShuntCompensator("shuntOneId"));
     }
 

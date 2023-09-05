@@ -27,14 +27,27 @@ import org.springframework.cloud.stream.binder.test.OutputDestination;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static com.vladmihalcea.sql.SQLStatementCountValidator.*;
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static com.vladmihalcea.sql.SQLStatementCountValidator.assertDeleteCount;
+import static com.vladmihalcea.sql.SQLStatementCountValidator.assertInsertCount;
+import static com.vladmihalcea.sql.SQLStatementCountValidator.assertSelectCount;
+import static com.vladmihalcea.sql.SQLStatementCountValidator.assertUpdateCount;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.atLeast;
+import static org.mockito.Mockito.verify;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -97,6 +110,7 @@ public final class TestUtils {
         assertDeleteCount(delete);
     }
 
+    @SuppressWarnings("unchecked")
     public static void assertBranchStatus(Network network, String branchName, BranchStatus.Status status) {
         assertNotNull(network);
         Branch<?> branch = network.getBranch(branchName);
@@ -106,6 +120,7 @@ public final class TestUtils {
         assertEquals(status, branchStatus.getStatus());
     }
 
+    @SuppressWarnings("unchecked")
     public static void setBranchStatus(Network network, String branchName, BranchStatus.Status status) {
         Branch<?> branch = network.getBranch(branchName);
         assertNotNull(branch);

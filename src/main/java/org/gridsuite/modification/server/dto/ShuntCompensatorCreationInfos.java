@@ -7,6 +7,7 @@
 package org.gridsuite.modification.server.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
@@ -16,8 +17,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
-import org.gridsuite.modification.server.ModificationType;
-import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
 import org.gridsuite.modification.server.entities.equipment.creation.ShuntCompensatorCreationEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.ShuntCompensatorCreation;
@@ -32,12 +32,11 @@ import org.gridsuite.modification.server.modifications.ShuntCompensatorCreation;
 @Setter
 @ToString(callSuper = true)
 @Schema(description = "Shunt compensator creation")
+@JsonTypeName("SHUNT_COMPENSATOR_CREATION")
+@ModificationErrorTypeName("CREATE_SHUNT_COMPENSATOR_ERROR")
 public class ShuntCompensatorCreationInfos extends InjectionCreationInfos {
     @Schema(description = "Maximum number of sections")
     private Integer maximumNumberOfSections;
-
-    @Schema(description = "Current number of sections")
-    private Integer currentNumberOfSections;
 
     @Schema(description = "Susceptance per section")
     private Double susceptancePerSection;
@@ -48,9 +47,6 @@ public class ShuntCompensatorCreationInfos extends InjectionCreationInfos {
 
     @Schema(description = "Shunt Compensator Type")
     private ShuntCompensatorType shuntCompensatorType;
-
-    @Schema(description = "Identical sections")
-    private Boolean isIdenticalSection;
 
     @Schema(description = "Connection Name")
     private String connectionName;
@@ -72,12 +68,7 @@ public class ShuntCompensatorCreationInfos extends InjectionCreationInfos {
     }
 
     @Override
-    public NetworkModificationException.Type getErrorType() {
-        return NetworkModificationException.Type.CREATE_SHUNT_COMPENSATOR_ERROR;
-    }
-
-    @Override
     public Reporter createSubReporter(ReporterModel reporter) {
-        return reporter.createSubReporter(ModificationType.SHUNT_COMPENSATOR_CREATION.name(), "Creation of shunt compensator " + getEquipmentId());
+        return reporter.createSubReporter(getType().name(), "Shunt compensator creation ${shuntCompensatorId}", "shuntCompensatorId", this.getEquipmentId());
     }
 }

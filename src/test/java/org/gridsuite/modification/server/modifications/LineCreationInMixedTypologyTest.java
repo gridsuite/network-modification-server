@@ -11,15 +11,15 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import org.gridsuite.modification.server.dto.LineCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.utils.MatcherLineCreationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
+import org.junit.jupiter.api.Tag;
 
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.utils.MatcherLineCreationInfos.createMatcherLineCreationInfos;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
+@Tag("IntegrationTest")
 public class LineCreationInMixedTypologyTest extends AbstractNetworkModificationTest {
 
     @Override
@@ -79,17 +79,12 @@ public class LineCreationInMixedTypologyTest extends AbstractNetworkModification
     }
 
     @Override
-    protected MatcherLineCreationInfos createMatcher(ModificationInfos modificationInfos) {
-        return createMatcherLineCreationInfos((LineCreationInfos) modificationInfos);
-    }
-
-    @Override
-    protected void assertNetworkAfterCreation() {
+    protected void assertAfterNetworkModificationCreation() {
         assertNotNull(getNetwork().getLine("idLine1"));
     }
 
     @Override
-    protected void assertNetworkAfterDeletion() {
+    protected void assertAfterNetworkModificationDeletion() {
         assertNull(getNetwork().getLine("idLine1"));
     }
 }

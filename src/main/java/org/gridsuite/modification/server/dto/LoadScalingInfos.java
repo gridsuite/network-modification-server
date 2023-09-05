@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.dto;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -14,8 +15,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
-import org.gridsuite.modification.server.ModificationType;
-import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
 import org.gridsuite.modification.server.entities.equipment.modification.LoadScalingEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.LoadScaling;
@@ -29,6 +29,8 @@ import org.gridsuite.modification.server.modifications.LoadScaling;
 @Setter
 @ToString(callSuper = true)
 @Schema(description = "Load scaling creation")
+@JsonTypeName("LOAD_SCALING")
+@ModificationErrorTypeName("LOAD_SCALING_ERROR")
 public class LoadScalingInfos extends ScalingInfos {
 
     @Override
@@ -42,12 +44,7 @@ public class LoadScalingInfos extends ScalingInfos {
     }
 
     @Override
-    public NetworkModificationException.Type getErrorType() {
-        return NetworkModificationException.Type.LOAD_SCALING_ERROR;
-    }
-
-    @Override
     public Reporter createSubReporter(ReporterModel reporter) {
-        return reporter.createSubReporter(ModificationType.LOAD_SCALING.name(), "Load Scaling");
+        return reporter.createSubReporter(getType().name(), "Load Scaling");
     }
 }
