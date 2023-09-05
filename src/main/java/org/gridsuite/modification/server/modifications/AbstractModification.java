@@ -21,11 +21,11 @@ public abstract class AbstractModification extends AbstractNetworkModification {
         apply(network, reporter);
     }
 
-    public void apply(Network network, Reporter reporter, NetworkModificationApplicator applicator) {
-        apply(network, reporter);
-    }
-
     public void check(Network network) throws NetworkModificationException {
         // To perform input data check before hypothesis apply. Nothing to check here
+    }
+
+    public void initApplicationContext(NetworkModificationApplicator modificationApplicator) {
+        // To add some specific information
     }
 }

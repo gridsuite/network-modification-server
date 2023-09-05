@@ -20,6 +20,7 @@ import lombok.Builder;
 import lombok.Getter;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.server.service.FilterService;
 import org.springframework.util.CollectionUtils;
 
 import java.util.*;
@@ -48,6 +49,8 @@ public class GenerationDispatch extends AbstractModification {
     private static final double EPSILON = 0.001;
 
     private final GenerationDispatchInfos generationDispatchInfos;
+
+    protected FilterService filterService;
 
     public GenerationDispatch(GenerationDispatchInfos generationDispatchInfos) {
         this.generationDispatchInfos = generationDispatchInfos;
@@ -122,10 +125,10 @@ public class GenerationDispatch extends AbstractModification {
                     HvdcConverterStation<?> station1 = hvdcLine.getConverterStation1();
                     HvdcConverterStation<?> station2 = hvdcLine.getConverterStation2();
 
-                    if ((station1.getId().equals(station.getId()) &&
-                        hvdcLine.getConvertersMode() == HvdcLine.ConvertersMode.SIDE_1_RECTIFIER_SIDE_2_INVERTER) ||
-                        (station2.getId().equals(station.getId()) &&
-                            hvdcLine.getConvertersMode() == HvdcLine.ConvertersMode.SIDE_1_INVERTER_SIDE_2_RECTIFIER)) {
+                    if (station1.getId().equals(station.getId()) &&
+                        hvdcLine.getConvertersMode() == HvdcLine.ConvertersMode.SIDE_1_RECTIFIER_SIDE_2_INVERTER ||
+                        station2.getId().equals(station.getId()) &&
+                            hvdcLine.getConvertersMode() == HvdcLine.ConvertersMode.SIDE_1_INVERTER_SIDE_2_RECTIFIER) {
                         return -hvdcLine.getActivePowerSetpoint();
                     } else {
                         return hvdcLine.getActivePowerSetpoint();
@@ -278,6 +281,11 @@ public class GenerationDispatch extends AbstractModification {
     }
 
     @Override
+    public void initApplicationContext(NetworkModificationApplicator modificationApplicator) {
+        filterService = modificationApplicator.getFilterService();
+    }
+
+    @Override
     public void check(Network network) throws NetworkModificationException {
         double lossCoefficient = generationDispatchInfos.getLossCoefficient();
         if (lossCoefficient < 0. || lossCoefficient > 100.) {
@@ -289,8 +297,7 @@ public class GenerationDispatch extends AbstractModification {
         }
     }
 
-    private static List<String> exportFilters(List<GeneratorsFilterInfos> generatorsFilters,
-                                              Network network, Reporter subReporter, NetworkModificationApplicator applicator) {
+    private List<String> exportFilters(List<GeneratorsFilterInfos> generatorsFilters, Network network, Reporter subReporter) {
         if (CollectionUtils.isEmpty(generatorsFilters)) {
             return List.of();
         }
@@ -299,7 +306,7 @@ public class GenerationDispatch extends AbstractModification {
         // export filters
         String workingVariantId = network.getVariantManager().getWorkingVariantId();
         UUID uuid = ((NetworkImpl) network).getUuid();
-        Map<UUID, FilterEquipments> exportedGenerators = applicator.getFilterService()
+        Map<UUID, FilterEquipments> exportedGenerators = filterService
             .exportFilters(new ArrayList<>(filters.keySet()), uuid, workingVariantId).stream()
             // keep only generators filters
             .filter(filterEquipments -> !CollectionUtils.isEmpty(filterEquipments.getIdentifiableAttributes()) &&
@@ -327,17 +334,17 @@ public class GenerationDispatch extends AbstractModification {
             .collect(Collectors.toList());
     }
 
-    private List<String> collectGeneratorsWithoutOutage(Network network, Reporter subReporter, NetworkModificationApplicator applicator) {
-        return exportFilters(generationDispatchInfos.getGeneratorsWithoutOutage(), network, subReporter, applicator);
+    private List<String> collectGeneratorsWithoutOutage(Network network, Reporter subReporter) {
+        return exportFilters(generationDispatchInfos.getGeneratorsWithoutOutage(), network, subReporter);
     }
 
-    private List<String> collectGeneratorsWithFixedSupply(Network network, Reporter subReporter, NetworkModificationApplicator applicator) {
-        return exportFilters(generationDispatchInfos.getGeneratorsWithFixedSupply(), network, subReporter, applicator);
+    private List<String> collectGeneratorsWithFixedSupply(Network network, Reporter subReporter) {
+        return exportFilters(generationDispatchInfos.getGeneratorsWithFixedSupply(), network, subReporter);
     }
 
-    private List<GeneratorsFrequencyReserve> collectGeneratorsWithFrequencyReserve(Network network, Reporter subReporter, NetworkModificationApplicator applicator) {
+    private List<GeneratorsFrequencyReserve> collectGeneratorsWithFrequencyReserve(Network network, Reporter subReporter) {
         return generationDispatchInfos.getGeneratorsFrequencyReserve().stream().map(g -> {
-            List<String> generators = exportFilters(g.getGeneratorsFilters(), network, subReporter, applicator);
+            List<String> generators = exportFilters(g.getGeneratorsFilters(), network, subReporter);
             return GeneratorsFrequencyReserve.builder().generators(generators).frequencyReserve(g.getFrequencyReserve()).build();
         }).collect(Collectors.toList());
     }
@@ -372,20 +379,20 @@ public class GenerationDispatch extends AbstractModification {
     }
 
     @Override
-    public void apply(Network network, Reporter subReporter, NetworkModificationApplicator applicator) {
+    public void apply(Network network, Reporter subReporter) {
         Collection<Component> synchronousComponents = network.getBusView().getBusStream()
             .filter(Bus::isInMainConnectedComponent)
             .map(Bus::getSynchronousComponent)
             .collect(collectingAndThen(toCollection(() -> new TreeSet<>(comparingInt(Component::getNum))), ArrayList::new));
 
         // get generators for which there will be no reduction of maximal power
-        List<String> generatorsWithoutOutage = collectGeneratorsWithoutOutage(network, subReporter, applicator);
+        List<String> generatorsWithoutOutage = collectGeneratorsWithoutOutage(network, subReporter);
 
         // get generators with fixed supply
-        List<String> generatorsWithFixedSupply = collectGeneratorsWithFixedSupply(network, subReporter, applicator);
+        List<String> generatorsWithFixedSupply = collectGeneratorsWithFixedSupply(network, subReporter);
 
         // get generators with frequency reserve
-        List<GeneratorsFrequencyReserve> generatorsWithFrequencyReserve = collectGeneratorsWithFrequencyReserve(network, subReporter, applicator);
+        List<GeneratorsFrequencyReserve> generatorsWithFrequencyReserve = collectGeneratorsWithFrequencyReserve(network, subReporter);
 
         for (Component component : synchronousComponents) {
             int componentNum = component.getNum();

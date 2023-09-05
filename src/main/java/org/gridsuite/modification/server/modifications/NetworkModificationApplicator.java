@@ -103,8 +103,12 @@ public class NetworkModificationApplicator {
         try {
             // check input data but don't change the network
             modification.check(network);
+
+            // init application context
+            modification.initApplicationContext(this);
+
             // apply all changes on the network
-            modification.apply(network, subReporter, this);
+            modification.apply(network, subReporter);
         } catch (Error e) {
             // TODO remove this catch with powsybl 5.2.0
             // Powsybl can raise Error
