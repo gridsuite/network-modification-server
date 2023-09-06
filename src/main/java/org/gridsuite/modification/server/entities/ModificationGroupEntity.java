@@ -40,6 +40,7 @@ public class ModificationGroupEntity extends AbstractManuallyAssignedIdentifierE
 
     public void addModification(ModificationEntity modification) {
         modifications.add(modification);
+        modification.setStashed(false);
         modification.setGroup(this);
     }
 

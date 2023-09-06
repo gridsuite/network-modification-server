@@ -46,6 +46,9 @@ public class ModificationEntity {
     @Setter
     private ModificationGroupEntity group;
 
+    @Column(name = "stashed")
+    private Boolean stashed;
+
     protected ModificationEntity(ModificationInfos modificationInfos) {
         if (modificationInfos == null) {
             throw new NetworkModificationException(MISSING_MODIFICATION_DESCRIPTION, "Missing network modification description");
@@ -58,6 +61,7 @@ public class ModificationEntity {
         return ModificationInfos.builder()
                 .uuid(this.id)
                 .date(this.date)
+                .stashed(this.stashed)
                 .build();
     }
 
