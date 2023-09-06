@@ -240,6 +240,25 @@ public class EquipmentInfosServiceTests {
     }
 
     @Test
+    public void testSubstations() {
+        Network network = NetworkCreation.create(NETWORK_UUID, true);
+        assertEquals(Set.of(SubstationInfos.builder().id("s1").name("s1").build()), EquipmentInfos.getSubstations(network.getSubstation("s1")));
+        assertEquals(Set.of(SubstationInfos.builder().id("s1").name("s1").build()), EquipmentInfos.getSubstations(network.getVoltageLevel("v1")));
+        assertEquals(Set.of(SubstationInfos.builder().id("s1").name("s1").build()), EquipmentInfos.getSubstations(network.getSwitch("v1b1")));
+        assertEquals(Set.of(SubstationInfos.builder().id("s1").name("s1").build()), EquipmentInfos.getSubstations(network.getLoad("v1load")));
+        assertEquals(Set.of(SubstationInfos.builder().id("s1").name("s1").build()), EquipmentInfos.getSubstations(network.getHvdcLine("hvdcLine")));
+        assertEquals(Set.of(SubstationInfos.builder().id("s1").name("s1").build(), SubstationInfos.builder().id("s2").name("s2").build()), EquipmentInfos.getSubstations(network.getLine("line1")));
+        assertEquals(Set.of(SubstationInfos.builder().id("s1").name("s1").build()), EquipmentInfos.getSubstations(network.getTwoWindingsTransformer("trf1")));
+        assertEquals(Set.of(SubstationInfos.builder().id("s1").name("s1").build()), EquipmentInfos.getSubstations(network.getThreeWindingsTransformer("trf6")));
+
+        network = NetworkCreation.createBusBreaker(NETWORK_UUID);
+        assertEquals(Set.of(SubstationInfos.builder().id("s1").name("s1").build()), EquipmentInfos.getSubstations(network.getSubstation("s1")));
+        assertEquals(Set.of(SubstationInfos.builder().id("s1").name("s1").build()), EquipmentInfos.getSubstations(network.getVoltageLevel("v1")));
+        assertEquals(Set.of(SubstationInfos.builder().id("s1").name("s1").build()), EquipmentInfos.getSubstations(network.getBusBreakerView().getBus("bus1")));
+        assertEquals(Set.of(SubstationInfos.builder().id("s1").name("s1").build()), EquipmentInfos.getSubstations(network.getGenerator("idGenerator1")));
+    }
+
+    @Test
     public void testBadType() {
         Identifiable<Network> network = new NetworkFactoryImpl().createNetwork("test", "test");
 
@@ -247,6 +266,9 @@ public class EquipmentInfosServiceTests {
         assertTrue(errorMessage.contains(String.format("The equipment type : %s is unknown", NetworkImpl.class.getSimpleName())));
 
         errorMessage = assertThrows(NetworkModificationException.class, () -> EquipmentInfos.getSubstationsInfos(network)).getMessage();
+        assertTrue(errorMessage.contains(String.format("The equipment type : %s is unknown", NetworkImpl.class.getSimpleName())));
+
+        errorMessage = assertThrows(NetworkModificationException.class, () -> EquipmentInfos.getSubstations(network)).getMessage();
         assertTrue(errorMessage.contains(String.format("The equipment type : %s is unknown", NetworkImpl.class.getSimpleName())));
     }
 
