@@ -11,7 +11,6 @@ import com.powsybl.computation.ComputationManager;
 import com.powsybl.iidm.modification.AbstractNetworkModification;
 import com.powsybl.iidm.network.Network;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.springframework.context.ApplicationContext;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -22,11 +21,11 @@ public abstract class AbstractModification extends AbstractNetworkModification {
         apply(network, reporter);
     }
 
-    public void apply(Network network, Reporter reporter, ApplicationContext context) {
-        apply(network, reporter);
-    }
-
     public void check(Network network) throws NetworkModificationException {
         // To perform input data check before hypothesis apply. Nothing to check here
+    }
+
+    public void initApplicationContext(NetworkModificationApplicator modificationApplicator) {
+        // To add some specific information
     }
 }

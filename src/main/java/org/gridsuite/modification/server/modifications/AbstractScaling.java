@@ -12,13 +12,8 @@ import com.powsybl.iidm.modification.scalable.Scalable;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.iidm.impl.NetworkImpl;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.FilterEquipments;
-import org.gridsuite.modification.server.dto.FilterInfos;
-import org.gridsuite.modification.server.dto.IdentifiableAttributes;
-import org.gridsuite.modification.server.dto.ScalingInfos;
-import org.gridsuite.modification.server.dto.ScalingVariationInfos;
+import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.service.FilterService;
-import org.springframework.context.ApplicationContext;
 import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
@@ -38,12 +33,19 @@ import static org.gridsuite.modification.server.modifications.ModificationUtils.
 public abstract class AbstractScaling extends AbstractModification {
     protected final ScalingInfos scalingInfos;
 
+    protected FilterService filterService;
+
     protected AbstractScaling(ScalingInfos scalingInfos) {
         this.scalingInfos = scalingInfos;
     }
 
     @Override
-    public void apply(Network network, Reporter subReporter, ApplicationContext context) {
+    public void initApplicationContext(NetworkModificationApplicator modificationApplicator) {
+        filterService = modificationApplicator.getFilterService();
+    }
+
+    @Override
+    public void apply(Network network, Reporter subReporter) {
         // collect all filters from all variations
         var filters = scalingInfos.getVariations().stream()
                 .flatMap(v -> v.getFilters().stream())
@@ -53,7 +55,7 @@ public abstract class AbstractScaling extends AbstractModification {
         // export filters from filter server
         String workingVariantId = network.getVariantManager().getWorkingVariantId();
         UUID uuid = ((NetworkImpl) network).getUuid();
-        Map<UUID, FilterEquipments> exportFilters = context.getBean(FilterService.class)
+        Map<UUID, FilterEquipments> exportFilters = filterService
                 .exportFilters(new ArrayList<>(filters.keySet()), uuid, workingVariantId)
                 .stream()
                 .peek(t -> t.setFilterName(filters.get(t.getFilterId())))
@@ -64,9 +66,11 @@ public abstract class AbstractScaling extends AbstractModification {
                 .filter(e -> !CollectionUtils.isEmpty(e.getValue().getNotFoundEquipments()))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
-        // check if all exported filters contain equipments with wrong ids
-        if (filterWithWrongEquipmentsIds.size() == exportFilters.size()) {
-            String errorMsg = "All filters contains equipments with wrong ids";
+        Boolean noValidEquipmentId = exportFilters.values().stream()
+                .allMatch(filterEquipments -> filterEquipments.getIdentifiableAttributes().isEmpty());
+
+        if (noValidEquipmentId) {
+            String errorMsg = "There is no valid equipment ID among the provided filter(s)";
             createReport(subReporter, "invalidFilters", errorMsg, TypedValue.ERROR_SEVERITY);
             throw new NetworkModificationException(scalingInfos.getErrorType(), errorMsg);
         }
