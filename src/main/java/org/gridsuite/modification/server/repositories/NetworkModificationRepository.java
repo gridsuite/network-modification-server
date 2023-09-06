@@ -128,7 +128,7 @@ public class NetworkModificationRepository {
         }
     }
 
-    private List<ModificationInfos> getModificationsMetadata(UUID groupUuid, boolean stashedModifications) {
+    public List<ModificationInfos> getModificationsMetadata(UUID groupUuid, boolean stashedModifications) {
         return modificationRepository
                 .findAllBaseByGroupId(getModificationGroup(groupUuid).getId())
                 .stream()
