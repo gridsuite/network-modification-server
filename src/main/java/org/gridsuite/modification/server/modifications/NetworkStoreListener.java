@@ -143,7 +143,7 @@ public class NetworkStoreListener implements NetworkListener {
             .id(identifiable.getId())
             .name(identifiable.getNameOrId())
             .type(identifiable.getType().name())
-            .voltageLevels(EquipmentInfos.getVoltageLevels(identifiable))
+            .voltageLevels(EquipmentInfos.getVoltageLevelsInfos(identifiable))
             .build());
         networkImpacts.add(
             SimpleElementImpact.builder()
