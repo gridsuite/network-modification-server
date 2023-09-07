@@ -766,8 +766,8 @@ public class ModificationControllerTest {
                         .queryParam("groupUuid", TEST_GROUP_ID.toString())
                         .queryParam("uuids", uuidString))
                 .andExpect(status().isOk());
-        List<ModificationInfos> stashedModifications = modificationRepository.getModificationsMetadata(TEST_GROUP_ID,true);
-        List<ModificationInfos> modificationAfterStash = modificationRepository.getModificationsMetadata(TEST_GROUP_ID,false);
+        List<ModificationInfos> stashedModifications = modificationRepository.getModificationsMetadata(TEST_GROUP_ID, true);
+        List<ModificationInfos> modificationAfterStash = modificationRepository.getModificationsMetadata(TEST_GROUP_ID, false);
         assertEquals(1, stashedModifications.size());
         assertEquals(4, modificationAfterStash.size());
 
@@ -775,8 +775,8 @@ public class ModificationControllerTest {
         UUID newGroupUuid = UUID.randomUUID();
         String uriStringGroups = "/v1/groups?groupUuid=" + newGroupUuid + "&duplicateFrom=" + TEST_GROUP_ID + "&reportUuid=" + UUID.randomUUID();
         mockMvc.perform(post(uriStringGroups)).andExpect(status().isOk());
-        List<ModificationInfos> stashedCopiedModifications = modificationRepository.getModificationsMetadata(newGroupUuid,true);
-        List<ModificationInfos> copiedModifications = modificationRepository.getModificationsMetadata(newGroupUuid,false);
+        List<ModificationInfos> stashedCopiedModifications = modificationRepository.getModificationsMetadata(newGroupUuid, true);
+        List<ModificationInfos> copiedModifications = modificationRepository.getModificationsMetadata(newGroupUuid, false);
         assertEquals(0, stashedCopiedModifications.size());
         assertEquals(4, copiedModifications.size());
         testNetworkModificationsCount(newGroupUuid, 4);
