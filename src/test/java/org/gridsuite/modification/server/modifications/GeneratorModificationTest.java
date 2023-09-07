@@ -88,7 +88,6 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
                 .maxActivePower(new AttributeModification<>(102., OperationType.SET))
                 .ratedNominalPower(new AttributeModification<>(221., OperationType.SET))
                 .reactiveCapabilityCurve(new AttributeModification<>(false, OperationType.SET))
-                .reactiveCapabilityCurvePoints(List.of())
                 .voltageRegulationType(
                                 new AttributeModification<>(VoltageRegulationType.LOCAL, OperationType.SET))
                 .plannedActivePowerSetPoint(new AttributeModification<>(111., OperationType.SET))
@@ -99,7 +98,7 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
     }
 
     @Override
-    protected void assertNetworkAfterCreation() {
+    protected void assertAfterNetworkModificationCreation() {
         Generator modifiedGenerator = getNetwork().getGenerator("idGenerator");
         assertEquals("newV1Generator", modifiedGenerator.getNameOrId());
         assertEquals(EnergySource.SOLAR, modifiedGenerator.getEnergySource());
@@ -122,7 +121,7 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
     }
 
     @Override
-    protected void assertNetworkAfterDeletion() {
+    protected void assertAfterNetworkModificationDeletion() {
         Generator generator = getNetwork().getGenerator("idGenerator");
         assertEquals("idGenerator", generator.getNameOrId());
         assertEquals(EnergySource.OTHER, generator.getEnergySource());
@@ -389,5 +388,28 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
                 .andExpect(status().isOk()).andReturn();
         assertLogMessage("MODIFY_GENERATOR_ERROR : Generator '" + "idGenerator" + "' : maximum reactive power " + maxQ.get() + " is expected to be greater than or equal to minimum reactive power " + minQ.get(),
                 generatorModificationInfos.getErrorType().name(), reportService);
+    }
+
+    @Test
+    public void testUnsetAttributes() throws Exception {
+        GeneratorModificationInfos generatorModificationInfos = (GeneratorModificationInfos) buildModification();
+
+        // Unset TargetV
+        generatorModificationInfos.setVoltageSetpoint(new AttributeModification<>(null, OperationType.UNSET));
+
+        String generatorModificationInfosJson = mapper.writeValueAsString(generatorModificationInfos);
+        mockMvc.perform(post(getNetworkModificationUri()).content(generatorModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
+        assertEquals(Double.NaN, getNetwork().getGenerator("idGenerator").getTargetV());
+
+        //Unset TargetQ (voltage regulation needs to be turned on and voltage setpoint to have a value)
+        generatorModificationInfos.setVoltageRegulationOn(new AttributeModification<>(true, OperationType.SET));
+        generatorModificationInfos.setVoltageSetpoint(new AttributeModification<>(44.0, OperationType.SET));
+        generatorModificationInfos.setReactivePowerSetpoint(new AttributeModification<>(null, OperationType.UNSET));
+        generatorModificationInfosJson = mapper.writeValueAsString(generatorModificationInfos);
+        mockMvc.perform(post(getNetworkModificationUri()).content(generatorModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
+        assertEquals(Double.NaN, getNetwork().getGenerator("idGenerator").getTargetQ());
+
     }
 }

@@ -52,4 +52,5 @@ public class NetworkModificationResult {
     public Set<String> getImpactedSubstationsIds() {
         return networkImpacts.stream().flatMap(impact -> impact.getSubstationIds().stream()).collect(Collectors.toCollection(TreeSet::new));
     }
+
 }

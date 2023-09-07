@@ -1,0 +1,54 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-4.1.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
+    <changeSet author="rehiligha (generated)" id="1689840598074-5">
+        <createTable tableName="battery_modification">
+            <column name="equipment_id" type="VARCHAR(255)"/>
+            <column name="equipment_name_op" type="VARCHAR(255)"/>
+            <column name="equipment_name_value" type="VARCHAR(255)"/>
+            <column name="bus_or_busbar_section_id_op" type="VARCHAR(255)"/>
+            <column name="bus_or_busbar_section_id_value" type="VARCHAR(255)"/>
+            <column name="voltage_level_id_op" type="VARCHAR(255)"/>
+            <column name="voltage_level_id_value" type="VARCHAR(255)"/>
+            <column name="active_power_setpoint_op" type="VARCHAR(255)"/>
+            <column name="active_power_setpoint" type="FLOAT8"/>
+            <column name="droop_op" type="VARCHAR(255)"/>
+            <column name="droop" type="FLOAT4"/>
+            <column name="max_active_power_op" type="VARCHAR(255)"/>
+            <column name="max_active_power" type="FLOAT8"/>
+            <column name="maximum_reactive_power_op" type="VARCHAR(255)"/>
+            <column name="maximum_reactive_power" type="FLOAT8"/>
+            <column name="min_active_power_op" type="VARCHAR(255)"/>
+            <column name="min_active_power" type="FLOAT8"/>
+            <column name="minimum_reactive_power_op" type="VARCHAR(255)"/>
+            <column name="minimum_reactive_power" type="FLOAT8"/>
+            <column name="participate_op" type="VARCHAR(255)"/>
+            <column name="participate" type="BOOLEAN"/>
+            <column name="reactive_capability_curve_op" type="VARCHAR(255)"/>
+            <column name="reactive_capability_curve" type="BOOLEAN"/>
+            <column name="reactive_power_setpoint_op" type="VARCHAR(255)"/>
+            <column name="reactive_power_setpoint" type="FLOAT8"/>
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="battery_modificationPK"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1689840598074-6">
+        <createTable tableName="battery_modification_entity_reactive_capability_curve_points">
+            <column name="battery_modification_entity_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="oldp" type="FLOAT8"/>
+            <column name="old_qmaxp" type="FLOAT8"/>
+            <column name="old_qminp" type="FLOAT8"/>
+            <column name="p" type="FLOAT8"/>
+            <column name="qmaxp" type="FLOAT8"/>
+            <column name="qminp" type="FLOAT8"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1689840598074-7">
+        <addForeignKeyConstraint baseColumnNames="battery_modification_entity_id" baseTableName="battery_modification_entity_reactive_capability_curve_points" constraintName="FKi6v363gw4oy1mefvymcbdux56" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="battery_modification" validate="true"/>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1689840598074-8">
+        <addForeignKeyConstraint baseColumnNames="id" baseTableName="battery_modification" constraintName="batteryModification_id_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
+    </changeSet>
+</databaseChangeLog>

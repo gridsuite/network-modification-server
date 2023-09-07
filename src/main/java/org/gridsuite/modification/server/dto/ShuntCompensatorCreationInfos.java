@@ -38,9 +38,6 @@ public class ShuntCompensatorCreationInfos extends InjectionCreationInfos {
     @Schema(description = "Maximum number of sections")
     private Integer maximumNumberOfSections;
 
-    @Schema(description = "Current number of sections")
-    private Integer currentNumberOfSections;
-
     @Schema(description = "Susceptance per section")
     private Double susceptancePerSection;
 
@@ -50,9 +47,6 @@ public class ShuntCompensatorCreationInfos extends InjectionCreationInfos {
 
     @Schema(description = "Shunt Compensator Type")
     private ShuntCompensatorType shuntCompensatorType;
-
-    @Schema(description = "Identical sections")
-    private Boolean isIdenticalSection;
 
     @Schema(description = "Connection Name")
     private String connectionName;

@@ -15,6 +15,7 @@ import com.powsybl.network.store.iidm.impl.MinMaxReactiveLimitsImpl;
 import com.powsybl.network.store.iidm.impl.extensions.CoordinatedReactiveControlAdderImpl;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.GeneratorModificationInfos;
+import org.gridsuite.modification.server.dto.OperationType;
 import org.gridsuite.modification.server.dto.ReactiveCapabilityCurveModificationInfos;
 import org.gridsuite.modification.server.dto.VoltageRegulationType;
 import org.springframework.util.CollectionUtils;
@@ -22,7 +23,6 @@ import org.springframework.util.CollectionUtils;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.IntStream;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_GENERATOR_ERROR;
 
@@ -31,10 +31,7 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
  */
 public class GeneratorModification extends AbstractModification {
 
-    private static final String MIN_REACTIVE_POWER_FIELDNAME = "Minimum reactive power";
-    private static final String MAX_REACTIVE_POWER_FIELDNAME = "Maximum reactive power";
     private static final String LIMITS = "Limits";
-    private static final String REACTIVE_LIMITS = "Reactive limits";
     private static final String ACTIVE_LIMITS = "Active limits";
     private static final String SETPOINTS = "Setpoints";
 
@@ -44,24 +41,22 @@ public class GeneratorModification extends AbstractModification {
         this.modificationInfos = modificationInfos;
     }
 
-    private static NetworkModificationException makeGeneratorException(String generatorId, String msgSuffix) {
-        return new NetworkModificationException(MODIFY_GENERATOR_ERROR, "Generator '" + generatorId + "' : " + msgSuffix);
-    }
-
     @Override
     public void check(Network network) throws NetworkModificationException {
         if (network.getGenerator(modificationInfos.getEquipmentId()) != null) {
             Generator generator = ModificationUtils.getInstance().getGenerator(network, modificationInfos.getEquipmentId());
             // check min max reactive limits
+            String errorMessage = "Generator '" + modificationInfos.getEquipmentId() + "' : ";
             if (generator.getReactiveLimits().getKind() == ReactiveLimitsKind.MIN_MAX && (modificationInfos.getMinimumReactivePower() != null || modificationInfos.getMaximumReactivePower() != null)) {
-                checkMaxReactivePowerGreaterThanMinReactivePower(generator);
+                MinMaxReactiveLimits minMaxReactiveLimits = generator.getReactiveLimits(MinMaxReactiveLimits.class);
+                ModificationUtils.getInstance().checkMaxReactivePowerGreaterThanMinReactivePower(minMaxReactiveLimits, modificationInfos.getMinimumReactivePower(), modificationInfos.getMaximumReactivePower(), MODIFY_GENERATOR_ERROR, errorMessage);
             }
             // check reactive capability curve limits
             Collection<ReactiveCapabilityCurve.Point> points = generator.getReactiveLimits().getKind() == ReactiveLimitsKind.CURVE ? generator.getReactiveLimits(ReactiveCapabilityCurve.class).getPoints() : List.of();
             List<ReactiveCapabilityCurve.Point> generatorPoints = new ArrayList<>(points);
             List<ReactiveCapabilityCurveModificationInfos> modificationPoints = modificationInfos.getReactiveCapabilityCurvePoints();
             if (!CollectionUtils.isEmpty(points) && modificationPoints != null) {
-                checkMaxQGreaterThanMinQ(generatorPoints, modificationPoints);
+                ModificationUtils.getInstance().checkMaxQGreaterThanMinQ(generatorPoints, modificationPoints, MODIFY_GENERATOR_ERROR, errorMessage);
             }
             // check regulated terminal
             if (modificationInfos.getRegulatingTerminalId() != null && modificationInfos.getRegulatingTerminalType() != null &&
@@ -73,37 +68,6 @@ public class GeneratorModification extends AbstractModification {
                         modificationInfos.getRegulatingTerminalVlId().getValue());
             }
         }
-    }
-
-    private void checkMaxReactivePowerGreaterThanMinReactivePower(Generator generator) {
-        MinMaxReactiveLimits minMaxReactiveLimits = generator.getReactiveLimits(MinMaxReactiveLimits.class);
-        Double previousMinimumReactivePower = minMaxReactiveLimits.getMinQ();
-        Double previousMaximumReactivePower = minMaxReactiveLimits.getMaxQ();
-        Double minReactivePower = modificationInfos.getMinimumReactivePower() != null ? modificationInfos.getMinimumReactivePower().getValue() : previousMinimumReactivePower;
-        Double maxReactivePower = modificationInfos.getMaximumReactivePower() != null ? modificationInfos.getMaximumReactivePower().getValue() : previousMaximumReactivePower;
-        if (minReactivePower > maxReactivePower) {
-            throw makeGeneratorException(modificationInfos.getEquipmentId(), "maximum reactive power " + maxReactivePower + " is expected to be greater than or equal to minimum reactive power " + minReactivePower);
-        }
-    }
-
-    private void checkMaxQGreaterThanMinQ(List<ReactiveCapabilityCurve.Point> generatorPoints, List<ReactiveCapabilityCurveModificationInfos> modificationPoints) {
-        IntStream.range(0, modificationPoints.size())
-                .forEach(i -> {
-                    ReactiveCapabilityCurve.Point oldPoint = generatorPoints.get(i);
-                    ReactiveCapabilityCurveModificationInfos newPoint = modificationPoints.get(i);
-                    Double oldMaxQ = Double.NaN;
-                    Double oldMinQ = Double.NaN;
-                    if (oldPoint != null) {
-                        oldMaxQ = oldPoint.getMaxQ();
-                        oldMinQ = oldPoint.getMinQ();
-                    }
-                    var maxQ = newPoint.getQmaxP() != null ? newPoint.getQmaxP() : oldMaxQ;
-                    var minQ = newPoint.getQminP() != null ? newPoint.getQminP() : oldMinQ;
-                    if (maxQ < minQ) {
-                        throw makeGeneratorException(modificationInfos.getEquipmentId(),
-                                "maximum reactive power " + maxQ + " is expected to be greater than or equal to minimum reactive power " + minQ);
-                    }
-                });
     }
 
     @Override
@@ -180,166 +144,27 @@ public class GeneratorModification extends AbstractModification {
 
     private void modifyGeneratorMinMaxReactiveLimits(GeneratorModificationInfos modificationInfos, Generator generator,
                                                      Reporter subReporter, Reporter subReporterLimits) {
-        List<Report> reports = new ArrayList<>();
-        // we get previous min max values if they exist
         MinMaxReactiveLimits minMaxReactiveLimits = null;
         ReactiveLimits reactiveLimits = generator.getReactiveLimits();
+        MinMaxReactiveLimitsAdder newMinMaxReactiveLimitsAdder = generator.newMinMaxReactiveLimits();
         if (reactiveLimits != null) {
             ReactiveLimitsKind limitsKind = reactiveLimits.getKind();
             if (limitsKind == ReactiveLimitsKind.MIN_MAX) {
                 minMaxReactiveLimits = generator.getReactiveLimits(MinMaxReactiveLimitsImpl.class);
             }
         }
-
-        // (if the min and max reactive limits are null and there is no previous min max
-        // limits set we set them to Double max and Double min values)
-        // The user can change the value of MinimumReactivePower, MaximumReactivePower or both
-        if (modificationInfos.getMinimumReactivePower() != null
-                && modificationInfos.getMaximumReactivePower() != null) {
-            generator.newMinMaxReactiveLimits().setMinQ(modificationInfos.getMinimumReactivePower().getValue())
-                    .setMaxQ(modificationInfos.getMaximumReactivePower().getValue())
-                    .add();
-            reports.add(ModificationUtils.getInstance().buildModificationReport(minMaxReactiveLimits != null ? minMaxReactiveLimits.getMinQ() : Double.NaN,
-                    modificationInfos.getMinimumReactivePower().getValue(),
-                    MIN_REACTIVE_POWER_FIELDNAME));
-            reports.add(ModificationUtils.getInstance().buildModificationReport(minMaxReactiveLimits != null ? minMaxReactiveLimits.getMaxQ() : Double.NaN,
-                    modificationInfos.getMaximumReactivePower().getValue(),
-                    MAX_REACTIVE_POWER_FIELDNAME));
-        } else if (modificationInfos.getMinimumReactivePower() != null) {
-            generator.newMinMaxReactiveLimits().setMinQ(modificationInfos.getMinimumReactivePower().getValue())
-                    .setMaxQ(minMaxReactiveLimits != null ? minMaxReactiveLimits.getMaxQ() : Double.MAX_VALUE)
-                    .add();
-            reports.add(ModificationUtils.getInstance().buildModificationReport(minMaxReactiveLimits != null ? minMaxReactiveLimits.getMinQ() : Double.NaN,
-                    modificationInfos.getMinimumReactivePower().getValue(),
-                    MIN_REACTIVE_POWER_FIELDNAME));
-        } else if (modificationInfos.getMaximumReactivePower() != null) {
-            generator.newMinMaxReactiveLimits()
-                    .setMinQ(minMaxReactiveLimits != null ? minMaxReactiveLimits.getMinQ() : -Double.MAX_VALUE)
-                    .setMaxQ(modificationInfos.getMaximumReactivePower().getValue())
-                    .add();
-            reports.add(ModificationUtils.getInstance().buildModificationReport(minMaxReactiveLimits != null ? minMaxReactiveLimits.getMaxQ() : Double.NaN,
-                    modificationInfos.getMaximumReactivePower().getValue(),
-                    MAX_REACTIVE_POWER_FIELDNAME));
-        } else if (minMaxReactiveLimits == null) {
-            generator.newMinMaxReactiveLimits().setMinQ(-Double.MAX_VALUE)
-                    .setMaxQ(Double.MAX_VALUE)
-                    .add();
-            reports.add(ModificationUtils.getInstance().buildModificationReport(Double.NaN,
-                    -Double.MAX_VALUE,
-                    MIN_REACTIVE_POWER_FIELDNAME));
-            reports.add(ModificationUtils.getInstance().buildModificationReport(Double.NaN,
-                    Double.MAX_VALUE,
-                    MAX_REACTIVE_POWER_FIELDNAME));
-        }
-
-        Reporter subReporterReactiveLimits = null;
-        Reporter subReporterLimits2 = subReporterLimits;
-        if (subReporterLimits == null && !reports.isEmpty()) {
-            subReporterLimits2 = subReporter.createSubReporter(LIMITS, LIMITS);
-            subReporterLimits2.report(Report.builder()
-                .withKey(LIMITS)
-                .withDefaultMessage(LIMITS)
-                .withSeverity(TypedValue.INFO_SEVERITY)
-                .build());
-        }
-        if (subReporterLimits2 != null && !reports.isEmpty()) {
-            subReporterReactiveLimits = subReporterLimits2.createSubReporter(REACTIVE_LIMITS, REACTIVE_LIMITS);
-            subReporterReactiveLimits.report(Report.builder()
-                .withKey(REACTIVE_LIMITS)
-                .withDefaultMessage(REACTIVE_LIMITS)
-                .withSeverity(TypedValue.INFO_SEVERITY)
-                .build());
-        }
-        ModificationUtils.getInstance().reportModifications(subReporterReactiveLimits, reports, "minMaxReactiveLimitsModified", "By range");
+        ModificationUtils.getInstance().modifyMinMaxReactiveLimits(minMaxReactiveLimits,
+                newMinMaxReactiveLimitsAdder, subReporter, subReporterLimits,
+                modificationInfos.getMinimumReactivePower(),
+                modificationInfos.getMaximumReactivePower());
     }
 
     private void modifyGeneratorReactiveCapabilityCurvePoints(GeneratorModificationInfos modificationInfos,
                                                               Generator generator, Reporter subReporter, Reporter subReporterLimits) {
-        List<Report> reports = new ArrayList<>();
         ReactiveCapabilityCurveAdder adder = generator.newReactiveCapabilityCurve();
-
         List<ReactiveCapabilityCurveModificationInfos> modificationPoints = modificationInfos.getReactiveCapabilityCurvePoints();
-
         Collection<ReactiveCapabilityCurve.Point> points = generator.getReactiveLimits().getKind() == ReactiveLimitsKind.CURVE ? generator.getReactiveLimits(ReactiveCapabilityCurve.class).getPoints() : List.of();
-        List<ReactiveCapabilityCurve.Point> generatorPoints = new ArrayList<>(points);
-
-        IntStream.range(0, modificationPoints.size())
-                .forEach(i -> {
-                    String fieldSuffix;
-                    ReactiveCapabilityCurve.Point oldPoint = i < generatorPoints.size() - 1 ? generatorPoints.get(i) : null;
-                    ReactiveCapabilityCurveModificationInfos newPoint = modificationPoints.get(i);
-                    if (i == 0) {
-                        fieldSuffix = "min";
-                    } else if (i == (modificationPoints.size() - 1)) {
-                        fieldSuffix = "max";
-                        if (!CollectionUtils.isEmpty(generatorPoints)) {
-                            oldPoint = generatorPoints.get(generatorPoints.size() - 1);
-                        }
-                    } else {
-                        fieldSuffix = Integer.toString(i);
-                    }
-
-                    createReactiveCapabilityCurvePoint(adder, newPoint, oldPoint, reports, fieldSuffix);
-                });
-        adder.add();
-
-        Reporter subReporterReactiveLimits = null;
-        Reporter subReporterLimits2 = subReporterLimits;
-        if (subReporterLimits == null && !reports.isEmpty()) {
-            subReporterLimits2 = subReporter.createSubReporter(LIMITS, LIMITS);
-            subReporterLimits2.report(Report.builder()
-                .withKey(LIMITS)
-                .withDefaultMessage(LIMITS)
-                .withSeverity(TypedValue.INFO_SEVERITY)
-                .build());
-        }
-        if (subReporterLimits2 != null && !reports.isEmpty()) {
-            subReporterReactiveLimits = subReporterLimits2.createSubReporter(REACTIVE_LIMITS, REACTIVE_LIMITS);
-            subReporterReactiveLimits.report(Report.builder()
-                .withKey(REACTIVE_LIMITS)
-                .withDefaultMessage(REACTIVE_LIMITS)
-                .withSeverity(TypedValue.INFO_SEVERITY)
-                .build());
-        }
-        ModificationUtils.getInstance().reportModifications(subReporterReactiveLimits, reports, "curveReactiveLimitsModified", "By diagram");
-    }
-
-    private void createReactiveCapabilityCurvePoint(ReactiveCapabilityCurveAdder adder,
-                                                    ReactiveCapabilityCurveModificationInfos newPoint,
-                                                    ReactiveCapabilityCurve.Point oldPoint,
-                                                    List<Report> reports,
-                                                    String fieldSuffix) {
-        Double oldMaxQ = Double.NaN;
-        Double oldMinQ = Double.NaN;
-        Double oldP = Double.NaN;
-
-        if (oldPoint != null) {
-            oldMaxQ = oldPoint.getMaxQ();
-            oldMinQ = oldPoint.getMinQ();
-            oldP = oldPoint.getP();
-        }
-
-        var maxQ = newPoint.getQmaxP() != null ? newPoint.getQmaxP() : oldMaxQ;
-        var minQ = newPoint.getQminP() != null ? newPoint.getQminP() : oldMinQ;
-        var p = newPoint.getP() != null ? newPoint.getP() : oldP;
-
-        adder.beginPoint()
-                .setMaxQ(maxQ)
-                .setMinQ(minQ)
-                .setP(p)
-                .endPoint();
-
-        addToReports(reports, p, oldP, "P" + fieldSuffix);
-        addToReports(reports, minQ, oldMinQ, "QminP" + fieldSuffix);
-        addToReports(reports, maxQ, oldMaxQ, "QmaxP" + fieldSuffix);
-    }
-
-    private void addToReports(List<Report> reports, Double newValue, Double oldValue, String fieldName) {
-        if (newValue != null) {
-            reports.add(ModificationUtils.getInstance().buildModificationReport(oldValue,
-                    newValue,
-                    fieldName));
-        }
+        ModificationUtils.getInstance().modifyReactiveCapabilityCurvePoints(points, modificationPoints, adder, subReporter, subReporterLimits);
     }
 
     private Reporter modifyGeneratorActiveLimitsAttributes(GeneratorModificationInfos modificationInfos,
@@ -352,17 +177,17 @@ public class GeneratorModification extends AbstractModification {
         if (reportMaxActivePower != null || reportMinActivePower != null || reportRatedNominalPower != null) {
             subReporterLimits = subReporter.createSubReporter(LIMITS, LIMITS);
             subReporterLimits.report(Report.builder()
-                .withKey(LIMITS)
-                .withDefaultMessage(LIMITS)
-                .withSeverity(TypedValue.INFO_SEVERITY)
-                .build());
+                    .withKey(LIMITS)
+                    .withDefaultMessage(LIMITS)
+                    .withSeverity(TypedValue.INFO_SEVERITY)
+                    .build());
 
             Reporter subReporterActiveLimits = subReporterLimits.createSubReporter(ACTIVE_LIMITS, ACTIVE_LIMITS);
             subReporterActiveLimits.report(Report.builder()
-                .withKey(ACTIVE_LIMITS)
-                .withDefaultMessage(ACTIVE_LIMITS)
-                .withSeverity(TypedValue.INFO_SEVERITY)
-                .build());
+                    .withKey(ACTIVE_LIMITS)
+                    .withDefaultMessage(ACTIVE_LIMITS)
+                    .withSeverity(TypedValue.INFO_SEVERITY)
+                    .build());
             if (reportMaxActivePower != null) {
                 subReporterActiveLimits.report(reportMaxActivePower);
             }
@@ -396,55 +221,9 @@ public class GeneratorModification extends AbstractModification {
 
     private Reporter modifyGeneratorActivePowerControlAttributes(GeneratorModificationInfos modificationInfos,
                                                                  Generator generator, Reporter subReporter, Reporter subReporterSetpoints) {
-        List<Report> reports = new ArrayList<>();
-
         ActivePowerControl<Generator> activePowerControl = generator.getExtension(ActivePowerControl.class);
-        double oldDroop = activePowerControl != null ? activePowerControl.getDroop() : Double.NaN;
-        Boolean participate = null;
-        // if participate is null and droop was modified, we consider that participate
-        // is true
-        if (modificationInfos.getParticipate() != null) {
-            participate = modificationInfos.getParticipate().getValue();
-            reports.add(ModificationUtils.getInstance().buildModificationReport(activePowerControl != null ? activePowerControl.isParticipate() : null,
-                    participate,
-                    "ON/OFF"));
-        } else if (modificationInfos.getDroop() != null) {
-            participate = true;
-        }
-        // if no modification were done to ActivePowerControl or if neither the old nor the new droop values are valid,
-        // we don't apply modifications
-        if (participate != null) {
-            if (Boolean.TRUE.equals(participate)) {
-                if (modificationInfos.getDroop() != null) {
-                    generator.newExtension(ActivePowerControlAdder.class)
-                            .withParticipate(true)
-                            .withDroop(modificationInfos.getDroop().getValue())
-                            .add();
-                    reports.add(ModificationUtils.getInstance().buildModificationReport(oldDroop,
-                            modificationInfos.getDroop().getValue(),
-                            "Droop"));
-                } else {
-                    generator.newExtension(ActivePowerControlAdder.class)
-                            .withParticipate(true).withDroop(oldDroop)
-                            .add();
-                }
-            } else {
-                generator.newExtension(ActivePowerControlAdder.class)
-                        .withParticipate(participate).add();
-            }
-        }
-        Reporter subReporterSetpoints2 = subReporterSetpoints;
-        if (subReporterSetpoints == null && !reports.isEmpty()) {
-            subReporterSetpoints2 = subReporter.createSubReporter(SETPOINTS, SETPOINTS);
-            subReporterSetpoints2.report(Report.builder()
-                .withKey(SETPOINTS)
-                .withDefaultMessage(SETPOINTS)
-                .withSeverity(TypedValue.INFO_SEVERITY)
-                .build());
-        }
-
-        ModificationUtils.getInstance().reportModifications(subReporterSetpoints2, reports, "activePowerRegulationModified", "Active power regulation");
-        return subReporterSetpoints2;
+        ActivePowerControlAdder<Generator> activePowerControlAdder = generator.newExtension(ActivePowerControlAdder.class);
+        return ModificationUtils.getInstance().modifyActivePowerControlAttributes(activePowerControl, activePowerControlAdder, modificationInfos.getParticipate(), modificationInfos.getDroop(), subReporter, subReporterSetpoints);
     }
 
     private void modifyGeneratorStartUpAttributes(GeneratorModificationInfos modificationInfos, Generator generator,
@@ -581,48 +360,55 @@ public class GeneratorModification extends AbstractModification {
                                                                Generator generator, Reporter subReporter, Reporter subReporterSetpoints) {
         List<Report> voltageRegulationReports = new ArrayList<>();
 
-        Report reportVoltageSetpoint = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setTargetV, generator::getTargetV,
-            modificationInfos.getVoltageSetpoint(), "Voltage");
-        // if no modification were done to VoltageRegulatorOn, we get the old value
-        Boolean isVoltageRegulationOn = null;
-        if (modificationInfos.getVoltageRegulationOn() != null) {
-            isVoltageRegulationOn = modificationInfos.getVoltageRegulationOn().getValue();
-            voltageRegulationReports.add(ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setVoltageRegulatorOn, generator::isVoltageRegulatorOn,
-                    modificationInfos.getVoltageRegulationOn(), "ON/OFF"));
-        } else {
-            isVoltageRegulationOn = generator.isVoltageRegulatorOn();
+        Report reportVoltageSetpoint = null;
+        if (modificationInfos.getVoltageSetpoint() != null) {
+            if (modificationInfos.getVoltageSetpoint().getOp() == OperationType.SET) {
+                reportVoltageSetpoint = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setTargetV, generator::getTargetV,
+                    modificationInfos.getVoltageSetpoint(), "Voltage");
+            } else {
+                reportVoltageSetpoint = ModificationUtils.getInstance().buildModificationReport(generator.getTargetV(), Double.NaN, "Voltage");
+            }
         }
+
+        voltageRegulationReports.add(ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setVoltageRegulatorOn, generator::isVoltageRegulatorOn,
+                modificationInfos.getVoltageRegulationOn(), "VoltageRegulationOn"));
         if (reportVoltageSetpoint != null) {
             voltageRegulationReports.add(reportVoltageSetpoint);
         }
 
-        // if voltageRegulationOn is true, we apply modifications to regulatingTerminal
-        // and QPercent
-        // otherwise we apply modifications to the reactivepower setpoint
-        if (Boolean.TRUE.equals(isVoltageRegulationOn)) {
-            modifyGeneratorRegulatingTerminal(modificationInfos, generator, voltageRegulationReports);
-            if (modificationInfos.getQPercent() != null) {
-                CoordinatedReactiveControl coordinatedReactiveControl = generator
-                        .getExtension(CoordinatedReactiveControl.class);
-                Double oldQPercent = coordinatedReactiveControl != null ? coordinatedReactiveControl.getQPercent()
-                        : Double.NaN;
-                generator.newExtension(CoordinatedReactiveControlAdderImpl.class)
-                        .withQPercent(modificationInfos.getQPercent().getValue())
-                        .add();
-                voltageRegulationReports.add(ModificationUtils.getInstance().buildModificationReport(
-                        oldQPercent,
-                        modificationInfos.getQPercent().getValue(), "Reactive percentage"));
-            }
+        // We apply modifications to regulatingTerminal and QPercent
+        // we apply modifications to the reactivepower setpoint
+        modifyGeneratorRegulatingTerminal(modificationInfos, generator, voltageRegulationReports);
+        if (modificationInfos.getQPercent() != null) {
+            CoordinatedReactiveControl coordinatedReactiveControl = generator
+                    .getExtension(CoordinatedReactiveControl.class);
+            Double oldQPercent = coordinatedReactiveControl != null ? coordinatedReactiveControl.getQPercent()
+                    : Double.NaN;
+            generator.newExtension(CoordinatedReactiveControlAdderImpl.class)
+                    .withQPercent(modificationInfos.getQPercent().getValue())
+                    .add();
+            voltageRegulationReports.add(ModificationUtils.getInstance().buildModificationReport(
+                    oldQPercent,
+                    modificationInfos.getQPercent().getValue(), "Reactive percentage"));
+        }
+
+        //TargetQ and TargetV are unset after voltage regulation have been dealt with otherwise it can cause unwanted validations exceptions
+        if (modificationInfos.getVoltageSetpoint() != null && modificationInfos.getVoltageSetpoint().getOp() == OperationType.UNSET) {
+            generator.setTargetV(Double.NaN);
+        }
+
+        if (modificationInfos.getReactivePowerSetpoint() != null && modificationInfos.getReactivePowerSetpoint().getOp() == OperationType.UNSET) {
+            generator.setTargetQ(Double.NaN);
         }
 
         Reporter subReporterSetpoints2 = subReporterSetpoints;
         if (subReporterSetpoints == null && !voltageRegulationReports.isEmpty()) {
             subReporterSetpoints2 = subReporter.createSubReporter(SETPOINTS, SETPOINTS);
             subReporterSetpoints2.report(Report.builder()
-                .withKey(SETPOINTS)
-                .withDefaultMessage(SETPOINTS)
-                .withSeverity(TypedValue.INFO_SEVERITY)
-                .build());
+                    .withKey(SETPOINTS)
+                    .withDefaultMessage(SETPOINTS)
+                    .withSeverity(TypedValue.INFO_SEVERITY)
+                    .build());
         }
         ModificationUtils.getInstance().reportModifications(subReporterSetpoints2, voltageRegulationReports, "voltageRegulationModified", "Voltage regulation");
         return subReporterSetpoints2;
@@ -631,16 +417,23 @@ public class GeneratorModification extends AbstractModification {
     private void modifyGeneratorSetpointsAttributes(GeneratorModificationInfos modificationInfos,
                                                     Generator generator, Reporter subReporter) {
         Report reportActivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setTargetP, generator::getTargetP, modificationInfos.getActivePowerSetpoint(), "Active power");
-        Report reportReactivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setTargetQ, generator::getTargetQ, modificationInfos.getReactivePowerSetpoint(), "Reactive power");
+        Report reportReactivePower = null;
+        if (modificationInfos.getReactivePowerSetpoint() != null) {
+            if (modificationInfos.getReactivePowerSetpoint().getOp() == OperationType.SET) {
+                reportReactivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setTargetQ, generator::getTargetQ, modificationInfos.getReactivePowerSetpoint(), "Reactive power");
+            } else {
+                reportReactivePower = ModificationUtils.getInstance().buildModificationReport(generator.getTargetQ(), Double.NaN, "Reactive power");
+            }
+        }
 
         Reporter subReporterSetpoints = null;
         if (reportActivePower != null || reportReactivePower != null) {
             subReporterSetpoints = subReporter.createSubReporter(SETPOINTS, SETPOINTS);
             subReporterSetpoints.report(Report.builder()
-                .withKey(SETPOINTS)
-                .withDefaultMessage(SETPOINTS)
-                .withSeverity(TypedValue.INFO_SEVERITY)
-                .build());
+                    .withKey(SETPOINTS)
+                    .withDefaultMessage(SETPOINTS)
+                    .withSeverity(TypedValue.INFO_SEVERITY)
+                    .build());
             if (reportActivePower != null) {
                 subReporterSetpoints.report(reportActivePower);
             }

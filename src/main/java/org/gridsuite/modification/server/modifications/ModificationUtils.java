@@ -13,12 +13,15 @@ import com.powsybl.iidm.modification.topology.CreateCouplingDeviceBuilder;
 import com.powsybl.iidm.modification.topology.CreateVoltageLevelTopologyBuilder;
 import com.powsybl.iidm.modification.topology.TopologyModificationUtils;
 import com.powsybl.iidm.network.*;
+import com.powsybl.iidm.network.extensions.ActivePowerControl;
+import com.powsybl.iidm.network.extensions.ActivePowerControlAdder;
 import com.powsybl.iidm.network.extensions.BusbarSectionPosition;
 import com.powsybl.iidm.network.extensions.IdentifiableShortCircuitAdder;
 
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.AttributeModification;
+import org.springframework.util.CollectionUtils;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -26,7 +29,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 
@@ -41,6 +44,11 @@ public final class ModificationUtils {
     public static final String BREAKER = "breaker_";
     public static final String BUS_BAR_SECTION_ID = "busbarSectionId";
     public static final String NO_VALUE = "No value";
+    public static final String LIMITS = "Limits";
+    public static final String REACTIVE_LIMITS = "Reactive limits";
+    private static final String SETPOINTS = "Setpoints";
+    private static final String MIN_REACTIVE_POWER_FIELDNAME = "Minimum reactive power";
+    private static final String MAX_REACTIVE_POWER_FIELDNAME = "Maximum reactive power";
 
     private ModificationUtils() {
     }
@@ -423,10 +431,10 @@ public final class ModificationUtils {
     }
 
     public Reporter reportModifications(Reporter subReporter, List<Report> reports, String subReporterKey,
-            String subReporterDefaultMessage) {
-        List<Report> validReports = reports.stream().filter(Objects::nonNull).collect(Collectors.toList());
+                                        String subReporterDefaultMessage) {
+        List<Report> validReports = reports.stream().filter(Objects::nonNull).toList();
         Reporter modificationSubreporter = null;
-        if (!validReports.isEmpty()) {
+        if (!validReports.isEmpty() && subReporter != null) {
             modificationSubreporter = subReporter.createSubReporter(subReporterKey, subReporterDefaultMessage);
             modificationSubreporter.report(Report.builder()
                     .withKey(subReporterKey)
@@ -569,6 +577,242 @@ public final class ModificationUtils {
 
     public <T> void reportElementaryCreation(Reporter subReporter, T value, String fieldName) {
         subReporter.report(buildCreationReport(value, fieldName));
+    }
+
+    public String formatRegulationModeReport(PhaseTapChanger.RegulationMode regulationMode) {
+        switch (regulationMode) {
+            case FIXED_TAP:
+                return "    Fixed tap";
+            case CURRENT_LIMITER :
+                return "    Current limiter";
+            case ACTIVE_POWER_CONTROL :
+                return "    Active power control";
+            default :
+                return "";
+
+        }
+    }
+
+    public void modifyReactiveCapabilityCurvePoints(Collection<ReactiveCapabilityCurve.Point> points,
+                                                    List<ReactiveCapabilityCurveModificationInfos> modificationPoints,
+                                                    ReactiveCapabilityCurveAdder adder,
+                                                    Reporter subReporter, Reporter subReporterLimits) {
+        List<Report> reports = new ArrayList<>();
+        List<ReactiveCapabilityCurve.Point> equipementIdPoints = new ArrayList<>(points);
+        IntStream.range(0, modificationPoints.size())
+                .forEach(i -> {
+                    String fieldSuffix;
+                    ReactiveCapabilityCurve.Point oldPoint = i < equipementIdPoints.size() - 1 ? equipementIdPoints.get(i) : null;
+                    ReactiveCapabilityCurveModificationInfos newPoint = modificationPoints.get(i);
+                    if (i == 0) {
+                        fieldSuffix = "min";
+                    } else if (i == (modificationPoints.size() - 1)) {
+                        fieldSuffix = "max";
+                        if (!CollectionUtils.isEmpty(equipementIdPoints)) {
+                            oldPoint = equipementIdPoints.get(equipementIdPoints.size() - 1);
+                        }
+                    } else {
+                        fieldSuffix = Integer.toString(i);
+                    }
+                    createReactiveCapabilityCurvePoint(adder, newPoint, oldPoint, reports, fieldSuffix);
+                });
+        adder.add();
+        Reporter subReporterReactiveLimits = null;
+        Reporter subReporterLimits2 = subReporterLimits;
+        if (subReporterLimits == null && !reports.isEmpty()) {
+            subReporterLimits2 = subReporter.createSubReporter(LIMITS, LIMITS);
+            subReporterLimits2.report(Report.builder()
+                    .withKey(LIMITS)
+                    .withDefaultMessage(LIMITS)
+                    .withSeverity(TypedValue.INFO_SEVERITY)
+                    .build());
+        }
+        if (subReporterLimits2 != null && !reports.isEmpty()) {
+            subReporterReactiveLimits = subReporterLimits2.createSubReporter(REACTIVE_LIMITS, REACTIVE_LIMITS);
+            subReporterReactiveLimits.report(Report.builder()
+                    .withKey(REACTIVE_LIMITS)
+                    .withDefaultMessage(REACTIVE_LIMITS)
+                    .withSeverity(TypedValue.INFO_SEVERITY)
+                    .build());
+        }
+        reportModifications(subReporterReactiveLimits, reports, "curveReactiveLimitsModified", "By diagram");
+    }
+
+    public void createReactiveCapabilityCurvePoint(ReactiveCapabilityCurveAdder adder,
+                                                    ReactiveCapabilityCurveModificationInfos newPoint,
+                                                    ReactiveCapabilityCurve.Point oldPoint,
+                                                    List<Report> reports,
+                                                    String fieldSuffix) {
+        Double oldMaxQ = Double.NaN;
+        Double oldMinQ = Double.NaN;
+        Double oldP = Double.NaN;
+        if (oldPoint != null) {
+            oldMaxQ = oldPoint.getMaxQ();
+            oldMinQ = oldPoint.getMinQ();
+            oldP = oldPoint.getP();
+        }
+        var maxQ = newPoint.getQmaxP() != null ? newPoint.getQmaxP() : oldMaxQ;
+        var minQ = newPoint.getQminP() != null ? newPoint.getQminP() : oldMinQ;
+        var p = newPoint.getP() != null ? newPoint.getP() : oldP;
+
+        adder.beginPoint()
+                .setMaxQ(maxQ)
+                .setMinQ(minQ)
+                .setP(p)
+                .endPoint();
+        addToReports(reports, p, oldP, "P" + fieldSuffix);
+        addToReports(reports, minQ, oldMinQ, "QminP" + fieldSuffix);
+        addToReports(reports, maxQ, oldMaxQ, "QmaxP" + fieldSuffix);
+    }
+
+    public void addToReports(List<Report> reports, Double newValue, Double oldValue, String fieldName) {
+        if (newValue != null) {
+            reports.add(buildModificationReport(oldValue, newValue, fieldName));
+        }
+    }
+
+    public void modifyMinMaxReactiveLimits(MinMaxReactiveLimits minMaxReactiveLimits, MinMaxReactiveLimitsAdder newMinMaxReactiveLimits,
+                                            Reporter subReporter, Reporter subReporterLimits, AttributeModification<Double> minimumReactivePower, AttributeModification<Double> maximumReactivePower) {
+        List<Report> reports = new ArrayList<>();
+
+        if (minimumReactivePower != null
+                && maximumReactivePower != null) {
+            newMinMaxReactiveLimits.setMinQ(minimumReactivePower.getValue())
+                    .setMaxQ(maximumReactivePower.getValue())
+                    .add();
+            reports.add(ModificationUtils.getInstance().buildModificationReport(minMaxReactiveLimits != null ? minMaxReactiveLimits.getMinQ() : Double.NaN,
+                    minimumReactivePower.getValue(),
+                    MIN_REACTIVE_POWER_FIELDNAME));
+            reports.add(ModificationUtils.getInstance().buildModificationReport(minMaxReactiveLimits != null ? minMaxReactiveLimits.getMaxQ() : Double.NaN,
+                    maximumReactivePower.getValue(),
+                    MAX_REACTIVE_POWER_FIELDNAME));
+        } else if (minimumReactivePower != null) {
+            newMinMaxReactiveLimits.setMinQ(minimumReactivePower.getValue())
+                    .setMaxQ(minMaxReactiveLimits != null ? minMaxReactiveLimits.getMaxQ() : Double.MAX_VALUE)
+                    .add();
+            reports.add(ModificationUtils.getInstance().buildModificationReport(minMaxReactiveLimits != null ? minMaxReactiveLimits.getMinQ() : Double.NaN,
+                    minimumReactivePower.getValue(),
+                    MIN_REACTIVE_POWER_FIELDNAME));
+        } else if (maximumReactivePower != null) {
+            newMinMaxReactiveLimits
+                    .setMinQ(minMaxReactiveLimits != null ? minMaxReactiveLimits.getMinQ() : -Double.MAX_VALUE)
+                    .setMaxQ(maximumReactivePower.getValue())
+                    .add();
+            reports.add(ModificationUtils.getInstance().buildModificationReport(minMaxReactiveLimits != null ? minMaxReactiveLimits.getMaxQ() : Double.NaN,
+                    maximumReactivePower.getValue(),
+                    MAX_REACTIVE_POWER_FIELDNAME));
+        } else if (minMaxReactiveLimits == null) {
+            newMinMaxReactiveLimits.setMinQ(-Double.MAX_VALUE)
+                    .setMaxQ(Double.MAX_VALUE)
+                    .add();
+            reports.add(ModificationUtils.getInstance().buildModificationReport(Double.NaN,
+                    -Double.MAX_VALUE,
+                    MIN_REACTIVE_POWER_FIELDNAME));
+            reports.add(ModificationUtils.getInstance().buildModificationReport(Double.NaN,
+                    Double.MAX_VALUE,
+                    MAX_REACTIVE_POWER_FIELDNAME));
+        }
+        Reporter subReporterReactiveLimits = null;
+        Reporter subReporterLimits2 = subReporterLimits;
+        if (subReporterLimits == null && !reports.isEmpty()) {
+            subReporterLimits2 = subReporter.createSubReporter(LIMITS, LIMITS);
+            subReporterLimits2.report(Report.builder()
+                    .withKey(LIMITS)
+                    .withDefaultMessage(LIMITS)
+                    .withSeverity(TypedValue.INFO_SEVERITY)
+                    .build());
+        }
+        if (subReporterLimits2 != null && !reports.isEmpty()) {
+            subReporterReactiveLimits = subReporterLimits2.createSubReporter(REACTIVE_LIMITS, REACTIVE_LIMITS);
+            subReporterReactiveLimits.report(Report.builder()
+                    .withKey(REACTIVE_LIMITS)
+                    .withDefaultMessage(REACTIVE_LIMITS)
+                    .withSeverity(TypedValue.INFO_SEVERITY)
+                    .build());
+        }
+        reportModifications(subReporterReactiveLimits, reports, "minMaxReactiveLimitsModified", "By range");
+    }
+
+    public Reporter modifyActivePowerControlAttributes(ActivePowerControl<?> activePowerControl,
+                                                       ActivePowerControlAdder<?> activePowerControlAdder,
+                                                       AttributeModification<Boolean> participateInfo,
+                                                       AttributeModification<Float> droopInfo,
+                                                       Reporter subReporter,
+                                                       Reporter subReporterSetpoints) {
+        List<Report> reports = new ArrayList<>();
+        double oldDroop = Double.NaN;
+        boolean oldParticipate = false;
+        double droop = droopInfo != null ? droopInfo.getValue() : Double.NaN;
+        if (activePowerControl != null) {
+            oldDroop = activePowerControl.getDroop();
+            oldParticipate = activePowerControl.isParticipate();
+        }
+
+        if (participateInfo != null) {
+            activePowerControlAdder
+                    .withParticipate(participateInfo.getValue());
+            reports.add(ModificationUtils.getInstance().buildModificationReport(activePowerControl != null ? activePowerControl.isParticipate() : null,
+                    participateInfo.getValue(),
+                    "Participate"));
+        } else {
+            activePowerControlAdder
+                    .withParticipate(oldParticipate);
+        }
+
+        if (droopInfo != null) {
+            activePowerControlAdder
+                    .withDroop(droop);
+            reports.add(ModificationUtils.getInstance().buildModificationReport(oldDroop,
+                    droop,
+                    "Droop"));
+        } else {
+            activePowerControlAdder
+                    .withDroop(oldDroop);
+        }
+        activePowerControlAdder
+                .add();
+
+        Reporter subReporterSetpoints2 = subReporterSetpoints;
+        if (subReporterSetpoints == null && !reports.isEmpty()) {
+            subReporterSetpoints2 = subReporter.createSubReporter(SETPOINTS, SETPOINTS);
+            subReporterSetpoints2.report(Report.builder()
+                    .withKey(SETPOINTS)
+                    .withDefaultMessage(SETPOINTS)
+                    .withSeverity(TypedValue.INFO_SEVERITY)
+                    .build());
+        }
+        reportModifications(subReporterSetpoints2, reports, "activePowerRegulationModified", "Active power regulation");
+        return subReporterSetpoints2;
+    }
+
+    public void checkMaxQGreaterThanMinQ(List<ReactiveCapabilityCurve.Point> equipmentPoints, List<ReactiveCapabilityCurveModificationInfos> modificationPoints,
+                                         NetworkModificationException.Type exceptionType, String errorMessage) {
+        IntStream.range(0, modificationPoints.size())
+                .forEach(i -> {
+                    ReactiveCapabilityCurve.Point oldPoint = equipmentPoints.get(i);
+                    ReactiveCapabilityCurveModificationInfos newPoint = modificationPoints.get(i);
+                    Double oldMaxQ = Double.NaN;
+                    Double oldMinQ = Double.NaN;
+                    if (oldPoint != null) {
+                        oldMaxQ = oldPoint.getMaxQ();
+                        oldMinQ = oldPoint.getMinQ();
+                    }
+                    var maxQ = newPoint.getQmaxP() != null ? newPoint.getQmaxP() : oldMaxQ;
+                    var minQ = newPoint.getQminP() != null ? newPoint.getQminP() : oldMinQ;
+                    if (maxQ < minQ) {
+                        throw new NetworkModificationException(exceptionType, errorMessage + "maximum reactive power " + maxQ + " is expected to be greater than or equal to minimum reactive power " + minQ);
+                    }
+                });
+    }
+
+    public void checkMaxReactivePowerGreaterThanMinReactivePower(MinMaxReactiveLimits minMaxReactiveLimits, AttributeModification<Double> minimumReactivePowerInfo, AttributeModification<Double> maximumReactivePowerInfo, NetworkModificationException.Type exceptionType, String errorMessage) {
+        Double previousMinimumReactivePower = minMaxReactiveLimits.getMinQ();
+        Double previousMaximumReactivePower = minMaxReactiveLimits.getMaxQ();
+        Double minReactivePower = minimumReactivePowerInfo != null ? minimumReactivePowerInfo.getValue() : previousMinimumReactivePower;
+        Double maxReactivePower = maximumReactivePowerInfo != null ? maximumReactivePowerInfo.getValue() : previousMaximumReactivePower;
+        if (minReactivePower > maxReactivePower) {
+            throw new NetworkModificationException(exceptionType, errorMessage + "maximum reactive power " + maxReactivePower + " is expected to be greater than or equal to minimum reactive power " + minReactivePower);
+        }
     }
 }
 

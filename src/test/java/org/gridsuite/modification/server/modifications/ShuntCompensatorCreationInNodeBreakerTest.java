@@ -71,12 +71,12 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
     }
 
     @Override
-    protected void assertNetworkAfterCreation() {
+    protected void assertAfterNetworkModificationCreation() {
         assertNotNull(getNetwork().getShuntCompensator("shuntOneId"));
     }
 
     @Override
-    protected void assertNetworkAfterDeletion() {
+    protected void assertAfterNetworkModificationDeletion() {
         assertNull(getNetwork().getShuntCompensator("shuntOneId"));
     }
 
@@ -125,21 +125,5 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
             .andExpect(status().isOk()).andReturn();
         createdModification = (ShuntCompensatorCreationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(1);
         assertThat(createdModification).recursivelyEquals(dto);
-    }
-
-    @Test
-    public void testCreateToAssignSectionCount() throws Exception {
-        ShuntCompensatorCreationInfos dto = (ShuntCompensatorCreationInfos) buildModification();
-        dto.setQAtNominalV(0.);
-        String modificationToCreateJson = mapper.writeValueAsString(dto);
-        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
-        ShuntCompensatorCreationInfos createdModification = (ShuntCompensatorCreationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
-        assertNull(createdModification.getCurrentNumberOfSections());
-        modificationToCreateJson = mapper.writeValueAsString(dto);
-        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
-        createdModification = (ShuntCompensatorCreationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
-        assertNull(createdModification.getCurrentNumberOfSections());
     }
 }

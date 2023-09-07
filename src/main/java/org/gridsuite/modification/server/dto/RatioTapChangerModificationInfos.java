@@ -21,9 +21,6 @@ import lombok.experimental.SuperBuilder;
 @Schema(description = "RatioTapChanger attributes")
 public class RatioTapChangerModificationInfos extends TapChangerModificationInfos {
 
-    @Schema(description = "enabled")
-    private AttributeModification<Boolean> enabled;
-
     @Schema(description = "loadTapChangingCapabilities")
     private AttributeModification<Boolean> loadTapChangingCapabilities;
 

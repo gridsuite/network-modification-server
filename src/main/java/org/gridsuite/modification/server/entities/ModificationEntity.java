@@ -44,6 +44,9 @@ public class ModificationEntity {
     @Setter
     private ModificationGroupEntity group;
 
+    @Column(name = "stashed")
+    private Boolean stashed;
+
     @Column(name = "modifications_order")
     private int modificationsOrder;
 
@@ -64,6 +67,7 @@ public class ModificationEntity {
         return ModificationInfos.builder()
                 .uuid(this.id)
                 .date(this.date)
+                .stashed(this.stashed)
                 .build();
     }
 

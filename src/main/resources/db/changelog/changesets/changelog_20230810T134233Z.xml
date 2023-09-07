@@ -1,0 +1,61 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-4.1.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
+    <changeSet author="lecuyerfra (generated)" id="1691156577326-5">
+        <createTable tableName="generation_dispatch_generators_ordering">
+            <column name="generation_dispatch_entity_id" type="UUID">
+                <constraints nullable="false" primaryKey="true"/>
+            </column>
+            <column name="generators_ordering_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="pos_generators_ordering" type="INT">
+                <constraints nullable="false" primaryKey="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="lecuyerfra (generated)" id="1691156577326-6">
+        <createTable tableName="generators_ordering">
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="generators_orderingPK"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="lecuyerfra (generated)" id="1691156577326-7">
+        <createTable tableName="generators_ordering_substations">
+            <column name="generators_ordering_entity_id" type="UUID">
+                <constraints nullable="false" primaryKey="true"/>
+            </column>
+            <column name="substation_ids" type="VARCHAR(255)"/>
+            <column name="pos_substations" type="INT">
+                <constraints nullable="false" primaryKey="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="lecuyerfra (generated)" id="1691156577326-8">
+        <addColumn tableName="generation_dispatch_generators_frequency_reserve">
+            <column name="pos_generators_frequency" type="int4" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+    <changeSet author="lecuyerfra (generated)" id="1691156577326-20">
+        <update tableName="generation_dispatch_generators_frequency_reserve">
+            <column name="pos_generators_frequency" valueComputed="FLOOR(RANDOM()*1000000)+1"/>
+        </update>
+    </changeSet>
+    <changeSet author="lecuyerfra (generated)" id="1691156577326-9">
+        <addPrimaryKey columnNames="generation_dispatch_entity_id, pos_generators_frequency" tableName="generation_dispatch_generators_frequency_reserve"/>
+    </changeSet>
+    <changeSet author="lecuyerfra (generated)" id="1691156577326-10">
+        <addUniqueConstraint columnNames="generators_ordering_id" constraintName="UK_tjq2qrrcph3puk6hsdu00g2gy" tableName="generation_dispatch_generators_ordering"/>
+    </changeSet>
+    <changeSet author="lecuyerfra (generated)" id="1691156577326-11">
+        <addForeignKeyConstraint baseColumnNames="generators_ordering_entity_id" baseTableName="generators_ordering_substations" constraintName="FK9m0xd66qnjywwmrmedpu8ls62" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="generators_ordering" validate="true"/>
+    </changeSet>
+    <changeSet author="lecuyerfra (generated)" id="1691156577326-12">
+        <addForeignKeyConstraint baseColumnNames="generators_ordering_id" baseTableName="generation_dispatch_generators_ordering" constraintName="FKfd1q3og83pvfo5gx1vs7w3kuj" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="generators_ordering" validate="true"/>
+    </changeSet>
+    <changeSet author="lecuyerfra (generated)" id="1691156577326-13">
+        <addForeignKeyConstraint baseColumnNames="generation_dispatch_entity_id" baseTableName="generation_dispatch_generators_ordering" constraintName="FKqa8ndc4fmo0jsv81ts3b8mpod" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="generation_dispatch" validate="true"/>
+    </changeSet>
+</databaseChangeLog>

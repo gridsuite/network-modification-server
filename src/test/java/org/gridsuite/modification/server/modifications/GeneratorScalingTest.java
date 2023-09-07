@@ -122,7 +122,7 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
         wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(getNetworkUuid(), filters.stream().map(FilterEquipments::getFilterId).collect(Collectors.toList())), false);
 
         assertEquals(
-            String.format("ScalingInfos(super=ModificationInfos(uuid=null, date=null), variations=[ScalingVariationInfos(id=null, filters=[FilterInfos(id=%s, name=filter1)], variationMode=PROPORTIONAL_TO_PMAX, variationValue=50.0, reactiveVariationMode=null), ScalingVariationInfos(id=null, filters=[FilterInfos(id=%s, name=filter2)], variationMode=REGULAR_DISTRIBUTION, variationValue=50.0, reactiveVariationMode=null), ScalingVariationInfos(id=null, filters=[FilterInfos(id=%s, name=filter3)], variationMode=STACKING_UP, variationValue=50.0, reactiveVariationMode=null), ScalingVariationInfos(id=null, filters=[FilterInfos(id=%s, name=filter4)], variationMode=VENTILATION, variationValue=50.0, reactiveVariationMode=null), ScalingVariationInfos(id=null, filters=[FilterInfos(id=%s, name=filter1), FilterInfos(id=%s, name=filter5)], variationMode=PROPORTIONAL, variationValue=50.0, reactiveVariationMode=null)], variationType=DELTA_P)",
+            String.format("ScalingInfos(super=ModificationInfos(uuid=null, date=null, stashed=null), variations=[ScalingVariationInfos(id=null, filters=[FilterInfos(id=%s, name=filter1)], variationMode=PROPORTIONAL_TO_PMAX, variationValue=50.0, reactiveVariationMode=null), ScalingVariationInfos(id=null, filters=[FilterInfos(id=%s, name=filter2)], variationMode=REGULAR_DISTRIBUTION, variationValue=50.0, reactiveVariationMode=null), ScalingVariationInfos(id=null, filters=[FilterInfos(id=%s, name=filter3)], variationMode=STACKING_UP, variationValue=50.0, reactiveVariationMode=null), ScalingVariationInfos(id=null, filters=[FilterInfos(id=%s, name=filter4)], variationMode=VENTILATION, variationValue=50.0, reactiveVariationMode=null), ScalingVariationInfos(id=null, filters=[FilterInfos(id=%s, name=filter1), FilterInfos(id=%s, name=filter5)], variationMode=PROPORTIONAL, variationValue=50.0, reactiveVariationMode=null)], variationType=DELTA_P)",
                 FILTER_ID_1, FILTER_ID_2, FILTER_ID_3, FILTER_ID_4, FILTER_ID_1, FILTER_ID_5),
             buildModification().toString()
         );
@@ -184,11 +184,7 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
 
     @Test
     public void testFilterWithWrongIds() throws Exception {
-
-        IdentifiableAttributes genWrongId1 = getIdentifiableAttributes(GENERATOR_WRONG_ID_1, 2.0);
-        IdentifiableAttributes genWrongId2 = getIdentifiableAttributes(GENERATOR_WRONG_ID_2, 3.0);
-
-        FilterEquipments wrongIdFilter1 = getFilterEquipments(FILTER_WRONG_ID_1, "wrongIdFilter1", List.of(genWrongId1, genWrongId2), List.of(GENERATOR_WRONG_ID_1, GENERATOR_WRONG_ID_2));
+        FilterEquipments wrongIdFilter1 = getFilterEquipments(FILTER_WRONG_ID_1, "wrongIdFilter1", List.of(), List.of(GENERATOR_WRONG_ID_1, GENERATOR_WRONG_ID_2));
         UUID subWrongId = wireMockServer.stubFor(WireMock.get(getPath(getNetworkUuid(), false) + FILTER_WRONG_ID_1)
                 .willReturn(WireMock.ok()
                 .withBody(mapper.writeValueAsString(List.of(wrongIdFilter1)))
@@ -210,7 +206,7 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
 
         mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(generatorScalingInfo)).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage(new NetworkModificationException(GENERATOR_SCALING_ERROR, "All filters contains equipments with wrong ids").getMessage(),
+        assertLogMessage(new NetworkModificationException(GENERATOR_SCALING_ERROR, "There is no valid equipment ID among the provided filter(s)").getMessage(),
                 generatorScalingInfo.getErrorType().name(), reportService);
         wireMockUtils.verifyGetRequest(subWrongId, PATH, handleQueryParams(getNetworkUuid(), FILTER_WRONG_ID_1), false);
     }
@@ -356,7 +352,7 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
     }
 
     @Override
-    protected void assertNetworkAfterCreation() {
+    protected void assertAfterNetworkModificationCreation() {
         assertEquals(118.46, getNetwork().getGenerator(GENERATOR_ID_1).getTargetP(), 0.01D);
         assertEquals(258.46, getNetwork().getGenerator(GENERATOR_ID_2).getTargetP(), 0.01D);
         assertEquals(225, getNetwork().getGenerator(GENERATOR_ID_3).getTargetP(), 0.01D);
@@ -370,7 +366,7 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
     }
 
     @Override
-    protected void assertNetworkAfterDeletion() {
+    protected void assertAfterNetworkModificationDeletion() {
         assertEquals(100, getNetwork().getGenerator(GENERATOR_ID_1).getTargetP(), 0);
         assertEquals(200, getNetwork().getGenerator(GENERATOR_ID_2).getTargetP(), 0);
         assertEquals(200, getNetwork().getGenerator(GENERATOR_ID_3).getTargetP(), 0);
