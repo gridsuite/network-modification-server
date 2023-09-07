@@ -1261,6 +1261,22 @@ public class ModificationControllerTest {
                     .vscConverterStationId("VSC2")
                     .voltageSetpoint(224.)
                     .build()))
+            .shuntCompensators(List.of(
+                VoltageInitShuntCompensatorModificationInfos.builder()
+                    .shuntCompensatorId("v2shunt")
+                    .sectionCount(1)
+                    .connect(true)
+                    .build(),
+                VoltageInitShuntCompensatorModificationInfos.builder()
+                    .shuntCompensatorId("v5shunt")
+                    .sectionCount(0)
+                    .connect(false)
+                    .build(),
+                VoltageInitShuntCompensatorModificationInfos.builder()
+                    .shuntCompensatorId("v6shunt")
+                    .sectionCount(1)
+                    .connect(false)
+                    .build()))
             .build();
 
         MvcResult mvcResult = mockMvc.perform(post("/v1/groups/modification")

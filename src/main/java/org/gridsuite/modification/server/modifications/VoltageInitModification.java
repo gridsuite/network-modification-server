@@ -13,7 +13,9 @@ import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.iidm.network.Generator;
 import com.powsybl.iidm.network.Network;
+import com.powsybl.iidm.network.ShuntCompensator;
 import com.powsybl.iidm.network.StaticVarCompensator;
+import com.powsybl.iidm.network.Terminal;
 import com.powsybl.iidm.network.ThreeWindingsTransformer;
 import com.powsybl.iidm.network.TwoWindingsTransformer;
 import com.powsybl.iidm.network.VscConverterStation;
@@ -38,6 +40,8 @@ public class VoltageInitModification extends AbstractModification {
     private static final String VSC_CONVERTER_STATION_MSG = "Vsc converter station ";
     private static final String VOLTAGE_SET_POINT = "Voltage set point";
     private static final String REACTIVE_POWER_SET_POINT = "Reactive power set point";
+    private static final String SHUNT_COMPENSATOR_MSG = "Shunt compensator ";
+    private static final String SECTION_COUNT = "Section count";
 
     public VoltageInitModification(VoltageInitModificationInfos voltageInitModificationInfos) {
         this.voltageInitModificationInfos = voltageInitModificationInfos;
@@ -185,6 +189,84 @@ public class VoltageInitModification extends AbstractModification {
         });
     }
 
+    private void applyShuntCompensatorModification(Network network, Reporter subReporter) {
+        voltageInitModificationInfos.getShuntCompensators().forEach(m -> {
+            ShuntCompensator shuntCompensator = network.getShuntCompensator(m.getShuntCompensatorId());
+            if (shuntCompensator == null) {
+                Reporter reporter = subReporter.createSubReporter(SHUNT_COMPENSATOR_MSG + m.getShuntCompensatorId(), SHUNT_COMPENSATOR_MSG + m.getShuntCompensatorId());
+                report(reporter, "shuntCompensatorNotFound", "Shunt compensator with id=${id} not found", Map.of("id", m.getShuntCompensatorId()), TypedValue.WARN_SEVERITY);
+                return;
+            }
+            if (m.getSectionCount() != null || m.getConnect() != null) {
+                Reporter reporter = subReporter.createSubReporter(SHUNT_COMPENSATOR_MSG + m.getShuntCompensatorId(), SHUNT_COMPENSATOR_MSG + m.getShuntCompensatorId());
+                report(reporter, "shuntCompensatorModification", "Shunt compensator with id=${id} modified :", Map.of("id", m.getShuntCompensatorId()), TypedValue.INFO_SEVERITY);
+
+                double currentSectionCount = shuntCompensator.getSectionCount();
+
+                Terminal shuntCompensatorTerminal = shuntCompensator.getTerminal();
+                if (shuntCompensatorTerminal.isConnected()) {  // shunt compensator is connected
+                    if (m.getSectionCount() == null) {
+                        report(reporter, "shuntCompensatorSectionCountUndefined", "Section count value is undefined", Map.of(), TypedValue.WARN_SEVERITY);
+                    } else {
+                        if (currentSectionCount == 0) {
+                            if (m.getSectionCount() == 0) {
+                                shuntCompensatorTerminal.disconnect();
+                                report(reporter, "shuntCompensatorDisconnected", "Shunt compensator disconnected", Map.of(), TypedValue.INFO_SEVERITY);
+                            } else if (m.getSectionCount() == 1) {
+                                shuntCompensator.setSectionCount(1);
+                                reporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(currentSectionCount, shuntCompensator.getSectionCount(), SECTION_COUNT, 1));
+                            } else {
+                                report(reporter, "shuntCompensatorSectionCountValueIgnored", "Section count value ${value} cannot be applied : it should be 0 or 1", Map.of("value", m.getSectionCount()), TypedValue.WARN_SEVERITY);
+                            }
+                        } else if (currentSectionCount == 1) {
+                            if (m.getSectionCount() == 0) {
+                                shuntCompensatorTerminal.disconnect();
+                                report(reporter, "shuntCompensatorDisconnected", "Shunt compensator disconnected", Map.of(), TypedValue.INFO_SEVERITY);
+                                shuntCompensator.setSectionCount(0);
+                                reporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(currentSectionCount, shuntCompensator.getSectionCount(), SECTION_COUNT, 1));
+                            } else if (m.getSectionCount() > 1) {
+                                report(reporter, "shuntCompensatorSectionCountValueIgnored", "Section count value ${value} cannot be applied : it should be 0 or 1", Map.of("value", m.getSectionCount()), TypedValue.WARN_SEVERITY);
+                            }
+                        } else {
+                            report(reporter, "shuntCompensatorCurrentSectionCountValueIgnored", "Current section count value ${value} should be 0 or 1", Map.of("value", currentSectionCount), TypedValue.WARN_SEVERITY);
+                        }
+                    }
+                } else {  // shunt compensator is disconnected
+                    if (m.getConnect() == null) {
+                        report(reporter, "shuntCompensatorConnectUndefined", "Connect value is undefined", Map.of(), TypedValue.WARN_SEVERITY);
+                    } else {
+                        if (currentSectionCount == 0) {
+                            if (m.getSectionCount() == 1) {
+                                if (Boolean.TRUE.equals(m.getConnect())) {
+                                    shuntCompensatorTerminal.connect();
+                                    report(reporter, "shuntCompensatorReconnected", "Shunt compensator reconnected", Map.of(), TypedValue.INFO_SEVERITY);
+                                }
+                                shuntCompensator.setSectionCount(1);
+                                reporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(currentSectionCount, shuntCompensator.getSectionCount(), SECTION_COUNT, 1));
+                            } else if (m.getSectionCount() > 1) {
+                                report(reporter, "shuntCompensatorSectionCountValueIgnored", "Section count value ${value} cannot be applied : it should be 0 or 1", Map.of("value", m.getSectionCount()), TypedValue.WARN_SEVERITY);
+                            }
+                        } else if (currentSectionCount == 1) {
+                            if (m.getSectionCount() == 0) {
+                                shuntCompensator.setSectionCount(0);
+                                reporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(currentSectionCount, shuntCompensator.getSectionCount(), SECTION_COUNT, 1));
+                            } else if (m.getSectionCount() == 1) {
+                                if (Boolean.TRUE.equals(m.getConnect())) {
+                                    shuntCompensatorTerminal.connect();
+                                    report(reporter, "shuntCompensatorReconnected", "Shunt compensator reconnected", Map.of(), TypedValue.INFO_SEVERITY);
+                                }
+                            } else if (m.getSectionCount() > 1) {
+                                report(reporter, "shuntCompensatorSectionCountValueIgnored", "Section count value ${value} cannot be applied : it should be 0 or 1", Map.of("value", m.getSectionCount()), TypedValue.WARN_SEVERITY);
+                            }
+                        } else {
+                            report(reporter, "shuntCompensatorCurrentSectionCountValueIgnored", "Current section count value ${value} should be 0 or 1", Map.of("value", currentSectionCount), TypedValue.WARN_SEVERITY);
+                        }
+                    }
+                }
+            }
+        });
+    }
+
     @Override
     public void apply(Network network, Reporter subReporter) {
         // apply generators modifications
@@ -198,5 +280,8 @@ public class VoltageInitModification extends AbstractModification {
 
         // apply vsc converter stations modifications
         applyVscConverterStationModification(network, subReporter);
+
+        // apply shunt compensators modifications
+        applyShuntCompensatorModification(network, subReporter);
     }
 }
