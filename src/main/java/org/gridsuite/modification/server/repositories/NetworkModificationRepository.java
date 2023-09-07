@@ -128,7 +128,7 @@ public class NetworkModificationRepository {
         }
     }
 
-    private List<ModificationInfos> getModificationsMetadata(UUID groupUuid, boolean stashedModifications) {
+    public List<ModificationInfos> getModificationsMetadata(UUID groupUuid, boolean stashedModifications) {
         return modificationRepository
                 .findAllBaseByGroupId(getModificationGroup(groupUuid).getId())
                 .stream()
@@ -206,7 +206,7 @@ public class NetworkModificationRepository {
 
     @Transactional(readOnly = true)
     public List<ModificationEntity> copyModificationsEntities(@NonNull UUID groupUuid) {
-        return getModificationEntityStream(groupUuid).map(ModificationEntity::copy).collect(Collectors.toList());
+        return getModificationEntityStream(groupUuid).filter(m -> !m.getStashed()).map(ModificationEntity::copy).collect(Collectors.toList());
     }
 
     @Transactional
