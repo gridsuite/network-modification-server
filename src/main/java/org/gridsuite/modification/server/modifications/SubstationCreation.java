@@ -8,6 +8,7 @@ import com.powsybl.iidm.network.Substation;
 import org.gridsuite.modification.server.dto.SubstationCreationInfos;
 
 import java.util.Map;
+import java.util.Optional;
 
 public class SubstationCreation extends AbstractModification {
 
@@ -47,12 +48,15 @@ public class SubstationCreation extends AbstractModification {
                     .reportElementaryCreation(subReporter, modificationInfos.getSubstationCountry(), "Country");
         }
         // properties
-        modificationInfos.getProperties().forEach((key, value) -> subReporter.report(Report.builder()
-                .withKey("propertyAdded")
-                .withDefaultMessage("    Property ${name} added with value ${value}")
-                .withValue("name", key)
-                .withValue("value", value)
-                .withSeverity(TypedValue.INFO_SEVERITY)
-                .build()));
+        Optional.ofNullable(modificationInfos.getProperties())
+                .filter(propertie -> !properties.isEmpty())
+                .ifPresent(propertie -> properties.forEach((key, value) -> subReporter.report(Report.builder()
+                        .withKey("propertyAdded")
+                        .withDefaultMessage("    Property ${name} added with value ${value}")
+                        .withValue("name", key)
+                        .withValue("value", value)
+                        .withSeverity(TypedValue.INFO_SEVERITY)
+                        .build())));
+
     }
 }
