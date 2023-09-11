@@ -6,7 +6,6 @@
  */
 package org.gridsuite.modification.server.entities.equipment.creation;
 
-import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
@@ -14,7 +13,13 @@ import org.gridsuite.modification.server.dto.BatteryCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.ReactiveCapabilityCurveCreationInfos;
 
-import javax.persistence.*;
+import javax.persistence.CollectionTable;
+import javax.persistence.Column;
+import javax.persistence.ElementCollection;
+import javax.persistence.Entity;
+import javax.persistence.ForeignKey;
+import javax.persistence.PrimaryKeyJoinColumn;
+import javax.persistence.Table;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,16 +32,6 @@ import java.util.stream.Collectors;
 @Table(name = "batteryCreation")
 @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "batteryCreation_id_fk_constraint"))
 public class BatteryCreationEntity extends InjectionCreationEntity {
-
-    @Column(name = "connectionName")
-    private String connectionName;
-
-    @Column(name = "connectionDirection")
-    private ConnectablePosition.Direction connectionDirection;
-
-    @Column(name = "connectionPosition")
-    private Integer connectionPosition;
-
     @Column(name = "minActivePower")
     private double minActivePower;
 
@@ -80,9 +75,6 @@ public class BatteryCreationEntity extends InjectionCreationEntity {
     }
 
     private void assignAttributes(BatteryCreationInfos batteryCreationInfos) {
-        this.connectionName = batteryCreationInfos.getConnectionName();
-        this.connectionDirection = batteryCreationInfos.getConnectionDirection();
-        this.connectionPosition = batteryCreationInfos.getConnectionPosition();
         this.minActivePower = batteryCreationInfos.getMinActivePower();
         this.maxActivePower = batteryCreationInfos.getMaxActivePower();
         this.reactiveCapabilityCurve = batteryCreationInfos.getReactiveCapabilityCurve();

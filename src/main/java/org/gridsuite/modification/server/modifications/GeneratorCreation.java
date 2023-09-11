@@ -7,13 +7,6 @@
 package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.commons.PowsyblException;
-import org.apache.commons.collections4.CollectionUtils;
-import org.gridsuite.modification.server.NetworkModificationException;
-import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
-import static org.gridsuite.modification.server.modifications.ModificationUtils.nanIfNull;
-
-import org.gridsuite.modification.server.dto.GeneratorCreationInfos;
-
 import com.powsybl.commons.reporter.Report;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.TypedValue;
@@ -23,7 +16,6 @@ import com.powsybl.iidm.network.Bus;
 import com.powsybl.iidm.network.Generator;
 import com.powsybl.iidm.network.GeneratorAdder;
 import com.powsybl.iidm.network.Network;
-import com.powsybl.iidm.network.ReactiveCapabilityCurveAdder;
 import com.powsybl.iidm.network.Terminal;
 import com.powsybl.iidm.network.TopologyKind;
 import com.powsybl.iidm.network.VoltageLevel;
@@ -31,11 +23,16 @@ import com.powsybl.iidm.network.extensions.ActivePowerControlAdder;
 import com.powsybl.iidm.network.extensions.GeneratorShortCircuitAdder;
 import com.powsybl.network.store.iidm.impl.extensions.CoordinatedReactiveControlAdderImpl;
 import com.powsybl.network.store.iidm.impl.extensions.GeneratorStartupAdderImpl;
-import org.gridsuite.modification.server.dto.ReactiveCapabilityCurveCreationInfos;
+import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.dto.GeneratorCreationInfos;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.IntStream;
+
+import static org.gridsuite.modification.server.NetworkModificationException.Type.CREATE_GENERATOR_ERROR;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.GENERATOR_ALREADY_EXISTS;
+import static org.gridsuite.modification.server.modifications.ModificationUtils.createReactiveLimits;
+import static org.gridsuite.modification.server.modifications.ModificationUtils.nanIfNull;
 
 /**
  * @author Ayoub Labidi <ayoub.labidi at rte-france.com>
@@ -66,35 +63,8 @@ public class GeneratorCreation extends AbstractModification {
         ModificationUtils.getInstance().controlConnectivity(network, modificationInfos.getVoltageLevelId(),
                 modificationInfos.getBusOrBusbarSectionId(), modificationInfos.getConnectionPosition());
 
-        // check min max reactive limits
-        if (modificationInfos.getMinimumReactivePower() != null && modificationInfos.getMaximumReactivePower() != null) {
-            if (Double.isNaN(modificationInfos.getMinimumReactivePower())) {
-                throw makeGeneratorException(modificationInfos.getEquipmentId(), "minimum reactive power is not set");
-            } else if (Double.isNaN(modificationInfos.getMaximumReactivePower())) {
-                throw makeGeneratorException(modificationInfos.getEquipmentId(), "maximum reactive power is not set");
-            } else if (modificationInfos.getMaximumReactivePower() < modificationInfos.getMinimumReactivePower()) {
-                throw makeGeneratorException(modificationInfos.getEquipmentId(), "maximum reactive power is expected to be greater than or equal to minimum reactive power");
-            }
-        }
-
-        // check reactive capability curve limits
-        List<ReactiveCapabilityCurveCreationInfos> points = modificationInfos.getReactiveCapabilityCurvePoints();
-        if (!CollectionUtils.isEmpty(points)) {
-            if (points.size() < 2) {
-                throw makeGeneratorException(modificationInfos.getEquipmentId(), "a reactive capability curve should have at least two points");
-            }
-            IntStream.range(0, points.size())
-                .forEach(i -> {
-                    ReactiveCapabilityCurveCreationInfos newPoint = points.get(i);
-                    if (Double.isNaN(newPoint.getP())) {
-                        throw makeGeneratorException(modificationInfos.getEquipmentId(), "P is not set in a reactive capability curve limits point");
-                    } else if (Double.isNaN(newPoint.getQminP())) {
-                        throw makeGeneratorException(modificationInfos.getEquipmentId(), "min Q is not set in a reactive capability curve limits point");
-                    } else if (Double.isNaN(newPoint.getQmaxP())) {
-                        throw makeGeneratorException(modificationInfos.getEquipmentId(), "max Q is not set in a reactive capability curve limits point");
-                    }
-                });
-        }
+        // check reactive limits
+        ModificationUtils.getInstance().checkReactiveLimitsCreation(modificationInfos, "Generator");
 
         // check regulated terminal
         VoltageLevel voltageLevel = ModificationUtils.getInstance().getVoltageLevel(network, modificationInfos.getVoltageLevelId());
@@ -174,7 +144,7 @@ public class GeneratorCreation extends AbstractModification {
         }
         reportGeneratorConnectivity(generatorCreationInfos, subReporter);
         Reporter subReporterLimits = reportGeneratorActiveLimits(generatorCreationInfos, subReporter);
-        createGeneratorReactiveLimits(generatorCreationInfos, generator, subReporterLimits);
+        createReactiveLimits(generatorCreationInfos, generator, subReporterLimits);
         Reporter subReporterSetpoints = reportGeneratorSetPoints(generatorCreationInfos, subReporter);
         createGeneratorVoltageRegulation(generatorCreationInfos, generator, voltageLevel, subReporterSetpoints);
         createGeneratorActivePowerControl(generatorCreationInfos, generator, subReporterSetpoints);
@@ -209,81 +179,6 @@ public class GeneratorCreation extends AbstractModification {
                 .withValue("id", modificationInfos.getEquipmentId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .build());
-    }
-
-    private void addToReports(List<Report> reports, Double newValue, String fieldName) {
-        if (newValue != null) {
-            reports.add(ModificationUtils.getInstance().buildCreationReport(newValue, fieldName));
-        }
-    }
-
-    private void createGeneratorReactiveLimits(GeneratorCreationInfos generatorCreationInfos, Generator generator, Reporter subReporter) {
-        if (Boolean.TRUE.equals(generatorCreationInfos.getReactiveCapabilityCurve())) {
-            createReactiveCapabilityCurve(generatorCreationInfos, generator, subReporter);
-        } else if (Boolean.FALSE.equals(generatorCreationInfos.getReactiveCapabilityCurve())) {
-            createMinMaxReactiveLimits(generatorCreationInfos, generator, subReporter);
-        }
-    }
-
-    private void createMinMaxReactiveLimits(GeneratorCreationInfos generatorCreationInfos, Generator generator, Reporter subReporter) {
-        List<Report> minMaxReactiveLimitsReports = new ArrayList<>();
-        if (generatorCreationInfos.getMinimumReactivePower() != null && generatorCreationInfos.getMaximumReactivePower() != null) {
-            generator.newMinMaxReactiveLimits().setMinQ(generatorCreationInfos.getMinimumReactivePower())
-                .setMaxQ(generatorCreationInfos.getMaximumReactivePower())
-                .add();
-            minMaxReactiveLimitsReports.add(ModificationUtils.getInstance().buildCreationReport(
-                generatorCreationInfos.getMinimumReactivePower(),
-                "Minimum reactive power"));
-            minMaxReactiveLimitsReports.add(ModificationUtils.getInstance().buildCreationReport(
-                generatorCreationInfos.getMaximumReactivePower(),
-                "Maximum reactive power"));
-            Reporter subReporterReactiveLimits = subReporter.createSubReporter(REACTIVE_LIMITS, REACTIVE_LIMITS);
-            subReporterReactiveLimits.report(Report.builder()
-                .withKey(REACTIVE_LIMITS)
-                .withDefaultMessage(REACTIVE_LIMITS)
-                .withSeverity(TypedValue.INFO_SEVERITY)
-                .build());
-            ModificationUtils.getInstance().reportModifications(subReporterReactiveLimits, minMaxReactiveLimitsReports, "minMaxReactiveLimitsCreated", "By range");
-        }
-    }
-
-    private void createReactiveCapabilityCurvePoint(ReactiveCapabilityCurveAdder adder, ReactiveCapabilityCurveCreationInfos point,
-                                                    List<Report> reports, String fieldSuffix) {
-        adder.beginPoint()
-            .setMaxQ(point.getQmaxP())
-            .setMinQ(point.getQminP())
-            .setP(point.getP())
-            .endPoint();
-        addToReports(reports, point.getP(), "P" + fieldSuffix);
-        addToReports(reports, point.getQminP(), "QminP" + fieldSuffix);
-        addToReports(reports, point.getQmaxP(), "QmaxP" + fieldSuffix);
-    }
-
-    private void createReactiveCapabilityCurve(GeneratorCreationInfos generatorCreationInfos, Generator generator, Reporter subReporter) {
-        List<Report> pointsReports = new ArrayList<>();
-        ReactiveCapabilityCurveAdder adder = generator.newReactiveCapabilityCurve();
-        List<ReactiveCapabilityCurveCreationInfos> points = generatorCreationInfos.getReactiveCapabilityCurvePoints();
-        IntStream.range(0, points.size())
-            .forEach(i -> {
-                String fieldSuffix;
-                ReactiveCapabilityCurveCreationInfos newPoint = points.get(i);
-                if (i == 0) {
-                    fieldSuffix = "min";
-                } else if (i == (points.size() - 1)) {
-                    fieldSuffix = "max";
-                } else {
-                    fieldSuffix = Integer.toString(i);
-                }
-                createReactiveCapabilityCurvePoint(adder, newPoint, pointsReports, fieldSuffix);
-            });
-        adder.add();
-        Reporter subReporterReactiveLimits = subReporter.createSubReporter(REACTIVE_LIMITS, REACTIVE_LIMITS);
-        subReporterReactiveLimits.report(Report.builder()
-            .withKey(REACTIVE_LIMITS)
-            .withDefaultMessage(REACTIVE_LIMITS)
-            .withSeverity(TypedValue.INFO_SEVERITY)
-            .build());
-        ModificationUtils.getInstance().reportModifications(subReporterReactiveLimits, pointsReports, "curveReactiveLimitsCreated", "By diagram");
     }
 
     private Reporter reportGeneratorSetPoints(GeneratorCreationInfos generatorCreationInfos, Reporter subReporter) {

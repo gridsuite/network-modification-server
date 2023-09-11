@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.entities.equipment.creation;
 
+import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.dto.InjectionCreationInfos;
@@ -27,6 +28,15 @@ public class InjectionCreationEntity extends EquipmentCreationEntity {
     @Column(name = "busOrBusbarSectionId")
     private String busOrBusbarSectionId;
 
+    @Column(name = "connectionName")
+    private String connectionName;
+
+    @Column(name = "connectionDirection")
+    private ConnectablePosition.Direction connectionDirection;
+
+    @Column(name = "connectionPosition")
+    private Integer connectionPosition;
+
     protected InjectionCreationEntity(InjectionCreationInfos injectionCreationInfos) {
         super(injectionCreationInfos);
         assignAttributes(injectionCreationInfos);
@@ -41,5 +51,8 @@ public class InjectionCreationEntity extends EquipmentCreationEntity {
     private void assignAttributes(InjectionCreationInfos injectionCreationInfos) {
         this.voltageLevelId = injectionCreationInfos.getVoltageLevelId();
         this.busOrBusbarSectionId = injectionCreationInfos.getBusOrBusbarSectionId();
+        this.connectionName = injectionCreationInfos.getConnectionName();
+        this.connectionDirection = injectionCreationInfos.getConnectionDirection();
+        this.connectionPosition = injectionCreationInfos.getConnectionPosition();
     }
 }

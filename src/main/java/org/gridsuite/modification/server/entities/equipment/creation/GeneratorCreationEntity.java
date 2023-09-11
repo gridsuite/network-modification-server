@@ -7,7 +7,6 @@
 package org.gridsuite.modification.server.entities.equipment.creation;
 
 import com.powsybl.iidm.network.EnergySource;
-import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
@@ -15,7 +14,13 @@ import org.gridsuite.modification.server.dto.GeneratorCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.ReactiveCapabilityCurveCreationInfos;
 
-import javax.persistence.*;
+import javax.persistence.CollectionTable;
+import javax.persistence.Column;
+import javax.persistence.ElementCollection;
+import javax.persistence.Entity;
+import javax.persistence.ForeignKey;
+import javax.persistence.PrimaryKeyJoinColumn;
+import javax.persistence.Table;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -97,15 +102,6 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
     @Column(name = "reactiveCapabilityCurve")
     private Boolean reactiveCapabilityCurve;
 
-    @Column(name = "connectionName")
-    private String connectionName;
-
-    @Column(name = "connectionDirection")
-    private ConnectablePosition.Direction connectionDirection;
-
-    @Column(name = "connectionPosition")
-    private Integer connectionPosition;
-
     @ElementCollection
     @CollectionTable
     private List<ReactiveCapabilityCurveCreationEmbeddable> reactiveCapabilityCurvePoints;
@@ -146,9 +142,6 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
         this.regulatingTerminalVlId = generatorCreationInfos.getRegulatingTerminalVlId();
         this.qPercent = generatorCreationInfos.getQPercent();
         this.reactiveCapabilityCurve = generatorCreationInfos.getReactiveCapabilityCurve();
-        this.connectionDirection = generatorCreationInfos.getConnectionDirection();
-        this.connectionName = generatorCreationInfos.getConnectionName();
-        this.connectionPosition = generatorCreationInfos.getConnectionPosition();
     }
 
     public static List<ReactiveCapabilityCurveCreationEmbeddable> toEmbeddablePoints(

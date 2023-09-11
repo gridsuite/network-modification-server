@@ -7,14 +7,17 @@
 
 package org.gridsuite.modification.server.entities.equipment.creation;
 
-import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.ShuntCompensatorCreationInfos;
 import org.gridsuite.modification.server.dto.ShuntCompensatorType;
 
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.ForeignKey;
+import javax.persistence.PrimaryKeyJoinColumn;
+import javax.persistence.Table;
 
 /**
  * @author Jacques Borsenberger <jacques.borsenberger at rte-france.com>
@@ -37,24 +40,12 @@ public class ShuntCompensatorCreationEntity extends InjectionCreationEntity {
     @Column
     private ShuntCompensatorType shuntCompensatorType;
 
-    @Column
-    private String connectionName;
-
-    @Column
-    private ConnectablePosition.Direction connectionDirection;
-
-    @Column(name = "connectionPosition")
-    private Integer connectionPosition;
-
     public ShuntCompensatorCreationEntity(ShuntCompensatorCreationInfos creationInfos) {
         super(creationInfos);
         maximumNumberOfSections = creationInfos.getMaximumNumberOfSections() != null ? creationInfos.getMaximumNumberOfSections() : 1;
         susceptancePerSection = creationInfos.getSusceptancePerSection();
         qAtNominalV = creationInfos.getQAtNominalV();
         shuntCompensatorType = creationInfos.getShuntCompensatorType();
-        connectionName = creationInfos.getConnectionName();
-        connectionDirection = creationInfos.getConnectionDirection();
-        connectionPosition = creationInfos.getConnectionPosition();
     }
 
     @Override
@@ -65,9 +56,6 @@ public class ShuntCompensatorCreationEntity extends InjectionCreationEntity {
         susceptancePerSection = shuntCompensatorCreationInfos.getSusceptancePerSection();
         qAtNominalV = shuntCompensatorCreationInfos.getQAtNominalV();
         shuntCompensatorType = shuntCompensatorCreationInfos.getShuntCompensatorType();
-        connectionName = shuntCompensatorCreationInfos.getConnectionName();
-        connectionDirection = shuntCompensatorCreationInfos.getConnectionDirection();
-        connectionPosition = shuntCompensatorCreationInfos.getConnectionPosition();
     }
 
     @Override

@@ -7,14 +7,17 @@
 package org.gridsuite.modification.server.entities.equipment.creation;
 
 import com.powsybl.iidm.network.LoadType;
-import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.gridsuite.modification.server.dto.LoadCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.ForeignKey;
+import javax.persistence.PrimaryKeyJoinColumn;
+import javax.persistence.Table;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -34,15 +37,6 @@ public class LoadCreationEntity extends InjectionCreationEntity {
     @Column(name = "reactivePower")
     private double reactivePower;
 
-    @Column(name = "connectionName")
-    private String connectionName;
-
-    @Column(name = "connectionDirection")
-    private ConnectablePosition.Direction connectionDirection;
-
-    @Column(name = "connectionPosition")
-    private Integer connectionPosition;
-
     public LoadCreationEntity(@NonNull LoadCreationInfos loadCreationInfos) {
         super(loadCreationInfos);
         assignAttributes(loadCreationInfos);
@@ -58,9 +52,6 @@ public class LoadCreationEntity extends InjectionCreationEntity {
         loadType = loadCreationInfos.getLoadType();
         activePower = loadCreationInfos.getActivePower();
         reactivePower = loadCreationInfos.getReactivePower();
-        connectionName = loadCreationInfos.getConnectionName();
-        connectionDirection = loadCreationInfos.getConnectionDirection();
-        connectionPosition = loadCreationInfos.getConnectionPosition();
     }
 
     @Override

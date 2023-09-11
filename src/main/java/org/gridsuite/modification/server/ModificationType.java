@@ -43,7 +43,8 @@ public enum ModificationType {
     DELETE_VOLTAGE_LEVEL_ON_LINE(PreloadingStrategy.NONE),
     DELETE_ATTACHING_LINE(PreloadingStrategy.NONE),
     GENERATION_DISPATCH(PreloadingStrategy.COLLECTION),
-    VOLTAGE_INIT_MODIFICATION(PreloadingStrategy.COLLECTION);
+    VOLTAGE_INIT_MODIFICATION(PreloadingStrategy.COLLECTION),
+    VSC_CREATION(PreloadingStrategy.NONE);
 
     private final PreloadingStrategy strategy;
 
