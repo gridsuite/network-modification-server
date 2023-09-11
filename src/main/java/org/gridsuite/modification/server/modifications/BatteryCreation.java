@@ -12,19 +12,21 @@ import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.iidm.modification.topology.CreateFeederBay;
 import com.powsybl.iidm.modification.topology.CreateFeederBayBuilder;
-import com.powsybl.iidm.network.*;
+import com.powsybl.iidm.network.Battery;
+import com.powsybl.iidm.network.BatteryAdder;
+import com.powsybl.iidm.network.Bus;
+import com.powsybl.iidm.network.Network;
+import com.powsybl.iidm.network.TopologyKind;
+import com.powsybl.iidm.network.VoltageLevel;
 import com.powsybl.iidm.network.extensions.ActivePowerControlAdder;
-import org.apache.commons.collections4.CollectionUtils;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.BatteryCreationInfos;
-import org.gridsuite.modification.server.dto.ReactiveCapabilityCurveCreationInfos;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.IntStream;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.CREATE_BATTERY_ERROR;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.BATTERY_ALREADY_EXISTS;
+import static org.gridsuite.modification.server.modifications.ModificationUtils.createReactiveLimits;
 import static org.gridsuite.modification.server.modifications.ModificationUtils.nanIfNull;
 
 /**
@@ -35,15 +37,10 @@ public class BatteryCreation extends AbstractModification {
     private final BatteryCreationInfos modificationInfos;
     private static final String LIMITS = "Limits";
     private static final String ACTIVE_LIMITS = "Active limits";
-    private static final String REACTIVE_LIMITS = "Reactive limits";
     private static final String CONNECTIVITY = "Connectivity";
 
     public BatteryCreation(BatteryCreationInfos modificationInfos) {
         this.modificationInfos = modificationInfos;
-    }
-
-    private static NetworkModificationException makeBatteryException(String batteryId, String msgSuffix) {
-        return new NetworkModificationException(CREATE_BATTERY_ERROR, "Battery '" + batteryId + "' : " + msgSuffix);
     }
 
     @Override
@@ -57,35 +54,8 @@ public class BatteryCreation extends AbstractModification {
                 .controlConnectivity(network, modificationInfos.getVoltageLevelId(),
                 modificationInfos.getBusOrBusbarSectionId(), modificationInfos.getConnectionPosition());
 
-        // check min max reactive limits
-        if (modificationInfos.getMinimumReactivePower() != null && modificationInfos.getMaximumReactivePower() != null) {
-            if (Double.isNaN(modificationInfos.getMinimumReactivePower())) {
-                throw makeBatteryException(modificationInfos.getEquipmentId(), "minimum reactive power is not set");
-            } else if (Double.isNaN(modificationInfos.getMaximumReactivePower())) {
-                throw makeBatteryException(modificationInfos.getEquipmentId(), "maximum reactive power is not set");
-            } else if (modificationInfos.getMaximumReactivePower() < modificationInfos.getMinimumReactivePower()) {
-                throw makeBatteryException(modificationInfos.getEquipmentId(), "maximum reactive power is expected to be greater than or equal to minimum reactive power");
-            }
-        }
-
-        // check reactive capability curve limits
-        List<ReactiveCapabilityCurveCreationInfos> points = modificationInfos.getReactiveCapabilityCurvePoints();
-        if (!CollectionUtils.isEmpty(points)) {
-            if (points.size() < 2) {
-                throw makeBatteryException(modificationInfos.getEquipmentId(), "a reactive capability curve should have at least two points");
-            }
-            IntStream.range(0, points.size())
-                    .forEach(i -> {
-                        ReactiveCapabilityCurveCreationInfos newPoint = points.get(i);
-                        if (Double.isNaN(newPoint.getP())) {
-                            throw makeBatteryException(modificationInfos.getEquipmentId(), "P is not set in a reactive capability curve limits point");
-                        } else if (Double.isNaN(newPoint.getQminP())) {
-                            throw makeBatteryException(modificationInfos.getEquipmentId(), "min Q is not set in a reactive capability curve limits point");
-                        } else if (Double.isNaN(newPoint.getQmaxP())) {
-                            throw makeBatteryException(modificationInfos.getEquipmentId(), "max Q is not set in a reactive capability curve limits point");
-                        }
-                    });
-        }
+        // check reactive limits
+        ModificationUtils.getInstance().checkReactiveLimitsCreation(modificationInfos, "Battery");
     }
 
     @Override
@@ -163,84 +133,9 @@ public class BatteryCreation extends AbstractModification {
         }
         reportBatteryConnectivity(batteryCreationInfos, subReporter);
         Reporter subReporterLimits = reportBatteryActiveLimits(batteryCreationInfos, subReporter);
-        createBatteryReactiveLimits(batteryCreationInfos, battery, subReporterLimits);
+        createReactiveLimits(batteryCreationInfos, battery, subReporterLimits);
         Reporter subReporterSetpoints = reportBatterySetPoints(batteryCreationInfos, subReporter);
         createBatteryActivePowerControl(batteryCreationInfos, battery, subReporterSetpoints);
-    }
-
-    private void addToReports(List<Report> reports, Double newValue, String fieldName) {
-        if (newValue != null) {
-            reports.add(ModificationUtils.getInstance().buildCreationReport(newValue, fieldName));
-        }
-    }
-
-    private void createBatteryReactiveLimits(BatteryCreationInfos batteryCreationInfos, Battery battery, Reporter subReporter) {
-        if (Boolean.TRUE.equals(batteryCreationInfos.getReactiveCapabilityCurve())) {
-            createReactiveCapabilityCurve(batteryCreationInfos, battery, subReporter);
-        } else if (Boolean.FALSE.equals(batteryCreationInfos.getReactiveCapabilityCurve())) {
-            createMinMaxReactiveLimits(batteryCreationInfos, battery, subReporter);
-        }
-    }
-
-    private void createMinMaxReactiveLimits(BatteryCreationInfos batteryCreationInfos, Battery battery, Reporter subReporter) {
-        List<Report> minMaxReactiveLimitsReports = new ArrayList<>();
-        if (batteryCreationInfos.getMinimumReactivePower() != null && batteryCreationInfos.getMaximumReactivePower() != null) {
-            battery.newMinMaxReactiveLimits().setMinQ(batteryCreationInfos.getMinimumReactivePower())
-                .setMaxQ(batteryCreationInfos.getMaximumReactivePower())
-                .add();
-            minMaxReactiveLimitsReports.add(ModificationUtils.getInstance().buildCreationReport(
-                batteryCreationInfos.getMinimumReactivePower(),
-                "Minimum reactive power"));
-            minMaxReactiveLimitsReports.add(ModificationUtils.getInstance().buildCreationReport(
-                batteryCreationInfos.getMaximumReactivePower(),
-                "Maximum reactive power"));
-            Reporter subReporterReactiveLimits = subReporter.createSubReporter(REACTIVE_LIMITS, REACTIVE_LIMITS);
-            subReporterReactiveLimits.report(Report.builder()
-                .withKey(REACTIVE_LIMITS)
-                .withDefaultMessage(REACTIVE_LIMITS)
-                .withSeverity(TypedValue.INFO_SEVERITY)
-                .build());
-            ModificationUtils.getInstance().reportModifications(subReporterReactiveLimits, minMaxReactiveLimitsReports, "minMaxReactiveLimitsCreated", "By range");
-        }
-    }
-
-    private void createReactiveCapabilityCurve(BatteryCreationInfos batteryCreationInfos, Battery battery, Reporter subReporter) {
-        List<Report> pointsReports = new ArrayList<>();
-        ReactiveCapabilityCurveAdder adder = battery.newReactiveCapabilityCurve();
-        List<ReactiveCapabilityCurveCreationInfos> points = batteryCreationInfos.getReactiveCapabilityCurvePoints();
-        IntStream.range(0, points.size())
-                .forEach(i -> {
-                    String fieldSuffix;
-                    ReactiveCapabilityCurveCreationInfos newPoint = points.get(i);
-                    if (i == 0) {
-                        fieldSuffix = "min";
-                    } else if (i == (points.size() - 1)) {
-                        fieldSuffix = "max";
-                    } else {
-                        fieldSuffix = Integer.toString(i);
-                    }
-                    createReactiveCapabilityCurvePoint(adder, newPoint, pointsReports, fieldSuffix);
-                });
-        adder.add();
-        Reporter subReporterReactiveLimits = subReporter.createSubReporter(REACTIVE_LIMITS, REACTIVE_LIMITS);
-        subReporterReactiveLimits.report(Report.builder()
-                .withKey(REACTIVE_LIMITS)
-                .withDefaultMessage(REACTIVE_LIMITS)
-                .withSeverity(TypedValue.INFO_SEVERITY)
-                .build());
-        ModificationUtils.getInstance().reportModifications(subReporterReactiveLimits, pointsReports, "curveReactiveLimitsCreated", "By diagram");
-    }
-
-    private void createReactiveCapabilityCurvePoint(ReactiveCapabilityCurveAdder adder, ReactiveCapabilityCurveCreationInfos point,
-                                                    List<Report> reports, String fieldSuffix) {
-        adder.beginPoint()
-                .setMaxQ(point.getQmaxP())
-                .setMinQ(point.getQminP())
-                .setP(point.getP())
-                .endPoint();
-        addToReports(reports, point.getP(), "P" + fieldSuffix);
-        addToReports(reports, point.getQminP(), "QminP" + fieldSuffix);
-        addToReports(reports, point.getQmaxP(), "QmaxP" + fieldSuffix);
     }
 
     private Reporter reportBatterySetPoints(BatteryCreationInfos batteryCreationInfos, Reporter subReporter) {
