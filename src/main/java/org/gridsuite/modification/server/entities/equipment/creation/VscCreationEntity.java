@@ -66,7 +66,7 @@ public class VscCreationEntity extends EquipmentCreationEntity {
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JoinColumn(
             name = "converter_station_1_id",
-            referencedColumnName = "converterStationId",
+            referencedColumnName = "id",
             foreignKey = @ForeignKey(
                     name = "converter_station_1_id_fk"
             ))
@@ -75,7 +75,7 @@ public class VscCreationEntity extends EquipmentCreationEntity {
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JoinColumn(
             name = "converter_station_2_id",
-            referencedColumnName = "converterStationId",
+            referencedColumnName = "id",
             foreignKey = @ForeignKey(
                     name = "converter_station_2_id_fk"
             ))

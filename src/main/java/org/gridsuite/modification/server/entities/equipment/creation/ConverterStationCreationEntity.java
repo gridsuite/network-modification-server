@@ -17,9 +17,12 @@ import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -30,10 +33,14 @@ import java.util.stream.Collectors;
 @NoArgsConstructor
 @Getter
 @Entity
-@Table(name = "vscCreation")
+@Table(name = "converterStationCreationEntity")
 public class ConverterStationCreationEntity {
-    @Column
     @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(name = "id")
+    private UUID id;
+
+    @Column
     private String converterStationId;
 
     @Column
@@ -58,10 +65,11 @@ public class ConverterStationCreationEntity {
     private Double voltage;
 
     @ElementCollection
-    @CollectionTable
+    @CollectionTable(name = "converter_station_creation_rcc_points")
     private List<ReactiveCapabilityCurveCreationEmbeddable> reactiveCapabilityCurvePoints;
 
     public ConverterStationCreationEntity(ConverterStationCreationInfos converterStationCreationInfos) {
+        this.id = UUID.randomUUID();
         assignAttributes(converterStationCreationInfos);
     }
 
