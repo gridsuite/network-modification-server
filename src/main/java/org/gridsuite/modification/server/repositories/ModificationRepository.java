@@ -19,6 +19,11 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public interface ModificationRepository extends JpaRepository<ModificationEntity, UUID> {
-    @Query(value = "SELECT new ModificationEntity(m.id, m.date) FROM ModificationEntity m WHERE m.group.id = ?1 order by m.modificationsOrder")
+
+    // select only the columns from the base class without any left join
+    //TODO This doesn't return a proper entity, it's actually just a DTO:
+    //See https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#projections.dtos
+    //TODO can we use the simpler interface based projections instead ? To avoid repeating the columns in @Query
+    @Query(value = "SELECT new ModificationEntity(m.id, m.date, m.stashed) FROM ModificationEntity m WHERE m.group.id = ?1 order by m.modificationsOrder")
     List<ModificationEntity> findAllBaseByGroupId(UUID uuid);
 }

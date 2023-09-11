@@ -50,9 +50,10 @@ public class ModificationEntity {
     @Column(name = "modifications_order")
     private int modificationsOrder;
 
-    public ModificationEntity(UUID id, ZonedDateTime date) {
+    public ModificationEntity(UUID id, ZonedDateTime date, Boolean stashed) {
         this.id = id;
         this.date = date;
+        this.stashed = stashed;
     }
 
     protected ModificationEntity(ModificationInfos modificationInfos) {
