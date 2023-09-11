@@ -29,7 +29,6 @@ import org.gridsuite.modification.server.dto.GeneratorCreationInfos;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.CREATE_GENERATOR_ERROR;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.GENERATOR_ALREADY_EXISTS;
 import static org.gridsuite.modification.server.modifications.ModificationUtils.createReactiveLimits;
 import static org.gridsuite.modification.server.modifications.ModificationUtils.nanIfNull;
