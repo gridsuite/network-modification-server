@@ -815,23 +815,26 @@ public final class ModificationUtils {
         }
     }
 
-    private static NetworkModificationException makeEquipmentException(InjectionCreationInfos modificationInfos,
+    private static NetworkModificationException makeEquipmentException(NetworkModificationException.Type errorType,
+                                                                       String equipmentId,
                                                                        String equipmentName,
                                                                        String msgSuffix) {
-        return new NetworkModificationException(modificationInfos.getErrorType(),
-                equipmentName + " '" + modificationInfos.getEquipmentId() + "' : " + msgSuffix);
+        return new NetworkModificationException(errorType,
+                equipmentName + " '" + equipmentId + "' : " + msgSuffix);
     }
 
-    public void checkReactiveLimitsCreation(InjectionWithReactiveLimitsCreationInfos modificationInfos,
+    public void checkReactiveLimitsCreation(ReactiveLimitsHolderInfos modificationInfos,
+                                            NetworkModificationException.Type errorType,
+                                            String equipmentId,
                                             String equipmentName) {
         // check min max reactive limits
         if (modificationInfos.getMinimumReactivePower() != null && modificationInfos.getMaximumReactivePower() != null) {
             if (Double.isNaN(modificationInfos.getMinimumReactivePower())) {
-                throw makeEquipmentException(modificationInfos, equipmentName, "minimum reactive power is not set");
+                throw makeEquipmentException(errorType, equipmentId, equipmentName, "minimum reactive power is not set");
             } else if (Double.isNaN(modificationInfos.getMaximumReactivePower())) {
-                throw makeEquipmentException(modificationInfos, equipmentName, "maximum reactive power is not set");
+                throw makeEquipmentException(errorType, equipmentId, equipmentName, "maximum reactive power is not set");
             } else if (modificationInfos.getMaximumReactivePower() < modificationInfos.getMinimumReactivePower()) {
-                throw makeEquipmentException(modificationInfos, equipmentName, "maximum reactive power is expected to be greater than or equal to minimum reactive power");
+                throw makeEquipmentException(errorType, equipmentId, equipmentName, "maximum reactive power is expected to be greater than or equal to minimum reactive power");
             }
         }
 
@@ -839,17 +842,17 @@ public final class ModificationUtils {
         List<ReactiveCapabilityCurveCreationInfos> points = modificationInfos.getReactiveCapabilityCurvePoints();
         if (!org.apache.commons.collections4.CollectionUtils.isEmpty(points)) {
             if (points.size() < 2) {
-                throw makeEquipmentException(modificationInfos, equipmentName, "a reactive capability curve should have at least two points");
+                throw makeEquipmentException(errorType, equipmentId, equipmentName, "a reactive capability curve should have at least two points");
             }
             IntStream.range(0, points.size())
                     .forEach(i -> {
                         ReactiveCapabilityCurveCreationInfos newPoint = points.get(i);
                         if (Double.isNaN(newPoint.getP())) {
-                            throw makeEquipmentException(modificationInfos, equipmentName, "P is not set in a reactive capability curve limits point");
+                            throw makeEquipmentException(errorType, equipmentId, equipmentName, "P is not set in a reactive capability curve limits point");
                         } else if (Double.isNaN(newPoint.getQminP())) {
-                            throw makeEquipmentException(modificationInfos, equipmentName, "min Q is not set in a reactive capability curve limits point");
+                            throw makeEquipmentException(errorType, equipmentId, equipmentName, "min Q is not set in a reactive capability curve limits point");
                         } else if (Double.isNaN(newPoint.getQmaxP())) {
-                            throw makeEquipmentException(modificationInfos, equipmentName, "max Q is not set in a reactive capability curve limits point");
+                            throw makeEquipmentException(errorType, equipmentId, equipmentName, "max Q is not set in a reactive capability curve limits point");
                         }
                     });
         }
@@ -861,7 +864,7 @@ public final class ModificationUtils {
         }
     }
 
-    public static void createReactiveLimits(InjectionWithReactiveLimitsCreationInfos creationInfos,
+    public static void createReactiveLimits(ReactiveLimitsHolderInfos creationInfos,
                                             ReactiveLimitsHolder reactiveLimitsHolder,
                                             Reporter subReporter) {
         if (Boolean.TRUE.equals(creationInfos.getReactiveCapabilityCurve())) {
@@ -871,7 +874,7 @@ public final class ModificationUtils {
         }
     }
 
-    public static void createMinMaxReactiveLimits(InjectionWithReactiveLimitsCreationInfos batteryCreationInfos,
+    public static void createMinMaxReactiveLimits(ReactiveLimitsHolderInfos batteryCreationInfos,
                                                   ReactiveLimitsHolder reactiveLimitsHolder,
                                                   Reporter subReporter) {
         List<Report> minMaxReactiveLimitsReports = new ArrayList<>();
@@ -901,7 +904,7 @@ public final class ModificationUtils {
         }
     }
 
-    public static void createReactiveCapabilityCurve(InjectionWithReactiveLimitsCreationInfos creationInfos,
+    public static void createReactiveCapabilityCurve(ReactiveLimitsHolderInfos creationInfos,
                                                      ReactiveLimitsHolder reactiveLimitsHolder,
                                                      Reporter subReporter) {
         List<Report> pointsReports = new ArrayList<>();

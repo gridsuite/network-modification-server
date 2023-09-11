@@ -55,7 +55,10 @@ public class BatteryCreation extends AbstractModification {
                 modificationInfos.getBusOrBusbarSectionId(), modificationInfos.getConnectionPosition());
 
         // check reactive limits
-        ModificationUtils.getInstance().checkReactiveLimitsCreation(modificationInfos, "Battery");
+        ModificationUtils.getInstance().checkReactiveLimitsCreation(modificationInfos,
+                modificationInfos.getErrorType(),
+                modificationInfos.getEquipmentId(),
+                "Battery");
     }
 
     @Override

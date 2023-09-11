@@ -58,7 +58,10 @@ public class GeneratorCreation extends AbstractModification {
                 modificationInfos.getBusOrBusbarSectionId(), modificationInfos.getConnectionPosition());
 
         // check reactive limits
-        ModificationUtils.getInstance().checkReactiveLimitsCreation(modificationInfos, "Generator");
+        ModificationUtils.getInstance().checkReactiveLimitsCreation(modificationInfos,
+                modificationInfos.getErrorType(),
+                modificationInfos.getEquipmentId(),
+                "Generator");
 
         // check regulated terminal
         VoltageLevel voltageLevel = ModificationUtils.getInstance().getVoltageLevel(network, modificationInfos.getVoltageLevelId());
