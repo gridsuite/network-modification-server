@@ -883,11 +883,11 @@ public final class ModificationUtils {
 
             minMaxReactiveLimitsReports.add(ModificationUtils.getInstance().buildCreationReport(
                     batteryCreationInfos.getMinimumReactivePower(),
-                    "Minimum reactive power"));
+                    MIN_REACTIVE_POWER_FIELDNAME));
 
             minMaxReactiveLimitsReports.add(ModificationUtils.getInstance().buildCreationReport(
                     batteryCreationInfos.getMaximumReactivePower(),
-                    "Maximum reactive power"));
+                    MAX_REACTIVE_POWER_FIELDNAME));
 
             Reporter subReporterReactiveLimits = subReporter.createSubReporter(REACTIVE_LIMITS, REACTIVE_LIMITS);
 
