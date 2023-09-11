@@ -139,7 +139,7 @@ public final class TestUtils {
         assertNotNull(reporterCaptor.getValue());
         Optional<String> message = getMessageFromReporter(reportKey, reporterCaptor.getValue());
         assertTrue(message.isPresent());
-        assertEquals(expectedMessage, message.get());
+        assertEquals(expectedMessage, message.get().trim());
     }
 
     private static Optional<String> getMessageFromReporter(String reportKey, ReporterModel reporterModel) {
