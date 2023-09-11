@@ -97,8 +97,7 @@ public class BatteryCreationEntity extends InjectionCreationEntity {
     }
 
     private BatteryCreationInfos.BatteryCreationInfosBuilder<?, ?> toBatteryCreationInfosBuilder() {
-        List<ReactiveCapabilityCurveCreationEmbeddable> pointsEmbeddable = getReactiveCapabilityCurvePoints();
-        List<ReactiveCapabilityCurveCreationInfos> points = pointsEmbeddable != null ? getReactiveCapabilityCurvePoints()
+        List<ReactiveCapabilityCurveCreationInfos> points = getReactiveCapabilityCurvePoints() != null ? getReactiveCapabilityCurvePoints()
                 .stream()
                 .map(value -> new ReactiveCapabilityCurveCreationInfos(value.getQminP(),
                         value.getQmaxP(),

@@ -23,6 +23,8 @@ import org.gridsuite.modification.server.entities.equipment.creation.GeneratorCr
 import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.GeneratorCreation;
 
+import java.util.List;
+
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
@@ -35,7 +37,7 @@ import org.gridsuite.modification.server.modifications.GeneratorCreation;
 @Schema(description = "Generator creation")
 @JsonTypeName("GENERATOR_CREATION")
 @ModificationErrorTypeName("CREATE_GENERATOR_ERROR")
-public class GeneratorCreationInfos extends InjectionWithReactiveLimitsCreationInfos {
+public class GeneratorCreationInfos extends InjectionCreationInfos implements ReactiveLimitsHolderInfos {
     @Schema(description = "Energy source")
     private EnergySource energySource;
 
@@ -72,6 +74,15 @@ public class GeneratorCreationInfos extends InjectionWithReactiveLimitsCreationI
     @Schema(description = "Forced outage rate")
     private Double forcedOutageRate;
 
+    @Schema(description = "Minimum reactive power")
+    private Double minimumReactivePower;
+
+    @Schema(description = "Maximum reactive power")
+    private Double maximumReactivePower;
+
+    @Schema(description = "Reactive capability curve points")
+    private List<ReactiveCapabilityCurveCreationInfos> reactiveCapabilityCurvePoints;
+
     @Schema(description = "Participate")
     private Boolean participate;
 
@@ -98,6 +109,9 @@ public class GeneratorCreationInfos extends InjectionWithReactiveLimitsCreationI
     @JsonProperty("qPercent")
     @Schema(description = "Q percent")
     private Double qPercent;
+
+    @Schema(description = "Reactive capability curve")
+    private Boolean reactiveCapabilityCurve;
 
     @Override
     public GeneratorCreationEntity toEntity() {

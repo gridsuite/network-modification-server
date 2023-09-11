@@ -21,6 +21,8 @@ import org.gridsuite.modification.server.entities.equipment.creation.BatteryCrea
 import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.BatteryCreation;
 
+import java.util.List;
+
 /**
  * @author Ghazwa Rehili <ghazwa.rehili at rte-france.com>
  */
@@ -33,13 +35,22 @@ import org.gridsuite.modification.server.modifications.BatteryCreation;
 @Schema(description = "Battery creation")
 @JsonTypeName("BATTERY_CREATION")
 @ModificationErrorTypeName("CREATE_BATTERY_ERROR")
-public class BatteryCreationInfos extends InjectionWithReactiveLimitsCreationInfos {
+public class BatteryCreationInfos extends InjectionCreationInfos implements ReactiveLimitsHolderInfos {
 
     @Schema(description = "Minimum active power")
     private double minActivePower;
 
     @Schema(description = "Maximum active power")
     private double maxActivePower;
+
+    @Schema(description = "Minimum reactive power")
+    private Double minimumReactivePower;
+
+    @Schema(description = "Maximum reactive power")
+    private Double maximumReactivePower;
+
+    @Schema(description = "Reactive capability curve points")
+    private List<ReactiveCapabilityCurveCreationInfos> reactiveCapabilityCurvePoints;
 
     @Schema(description = "Active power set point")
     private double activePowerSetpoint;
@@ -52,6 +63,9 @@ public class BatteryCreationInfos extends InjectionWithReactiveLimitsCreationInf
 
     @Schema(description = "Droop")
     private Float droop;
+
+    @Schema(description = "Reactive capability curve")
+    private Boolean reactiveCapabilityCurve;
 
     @Override
     public BatteryCreationEntity toEntity() {
