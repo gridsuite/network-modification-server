@@ -97,6 +97,14 @@ public final class ModificationUtils {
         return generator;
     }
 
+    VscConverterStation getVscConverterStation(Network network, String converterStationId) {
+        VscConverterStation vscConverterStation = network.getVscConverterStation(converterStationId);
+        if (vscConverterStation == null) {
+            throw new NetworkModificationException(VSC_CONVERTER_STATION_NOT_FOUND, "Vsc converter station  " + converterStationId + " does not exist in network");
+        }
+        return vscConverterStation;
+    }
+
     public void controlConnectivity(Network network, String voltageLevelId, String busOrBusbarSectionId, Integer connectionPosition) {
         VoltageLevel voltageLevel = getVoltageLevel(network, voltageLevelId);
         if (voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER) {
