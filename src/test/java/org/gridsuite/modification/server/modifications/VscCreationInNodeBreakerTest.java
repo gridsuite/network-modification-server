@@ -48,24 +48,29 @@ public class VscCreationInNodeBreakerTest extends AbstractNetworkModificationTes
                 .operatorActivePowerLimitSide1(6.0F)
                 .operatorActivePowerLimitSide2(8.7F)
                 .droop(1.1F)
+                .angleDroopActivePowerControl(false)
                 .converterStation1(buildConverterStationWithReactiveCapabilityCurve())
                 .converterStation2(buildConverterStationWithMinMaxReactiveLimits())
                 .build();
     }
 
     private ConverterStationCreationInfos buildConverterStationWithMinMaxReactiveLimits() {
+        var test = getNetwork().getVoltageLevelStream().toList();
         return ConverterStationCreationInfos.builder()
-                .equipmentId("stationId2")
-                .equipmentName("station2")
+                .converterStationId("stationId2")
+                .converterStationName("station2")
                 .voltageRegulationOn(false)
                 .reactivePower(23.)
                 .reactiveCapabilityCurve(false)
                 .maximumReactivePower(66.)
+                .lossFactor(4F)
                 .minimumReactivePower(55.)
-                .voltageLevelId("v1")
-                .busOrBusbarSectionId("bus1")
+                .voltageLevelId("v2")
+                .busOrBusbarSectionId("1.1")
                 .connectionName("top")
                 .connectionDirection(ConnectablePosition.Direction.TOP)
+                .reactiveCapabilityCurve(false)
+                .reactiveCapabilityCurvePoints(List.of())
                 .build();
     }
 
@@ -82,14 +87,15 @@ public class VscCreationInNodeBreakerTest extends AbstractNetworkModificationTes
                 .build();
 
         return ConverterStationCreationInfos.builder()
-                .equipmentId("stationId1")
-                .equipmentName("station1")
+                .converterStationId("stationId1")
+                .converterStationName("station1")
                 .voltageRegulationOn(true)
                 .voltage(66.)
+                .lossFactor(40F)
                 .reactiveCapabilityCurve(true)
                 .reactiveCapabilityCurvePoints(List.of(point1, point2))
                 .voltageLevelId("v1")
-                .busOrBusbarSectionId("bus1")
+                .busOrBusbarSectionId("1.1")
                 .connectionName("top")
                 .connectionDirection(ConnectablePosition.Direction.TOP)
                 .build();
@@ -109,6 +115,7 @@ public class VscCreationInNodeBreakerTest extends AbstractNetworkModificationTes
                 .activePower(7.)
                 .operatorActivePowerLimitSide1(6.1F)
                 .operatorActivePowerLimitSide2(8.3F)
+                .angleDroopActivePowerControl(true)
                 .droop(2.1F)
                 .converterStation1(buildConverterStationWithMinMaxReactiveLimits())
                 .converterStation2(buildConverterStationWithReactiveCapabilityCurve())
@@ -117,12 +124,13 @@ public class VscCreationInNodeBreakerTest extends AbstractNetworkModificationTes
 
     @Override
     protected void assertAfterNetworkModificationCreation() {
-        assertNotNull(getNetwork().getBattery("vsc1"));
+        var list = getNetwork().getHvdcLineStream().toList();
+        assertNotNull(getNetwork().getHvdcLine("vsc1"));
 
-        assertEquals(1, getNetwork().getVoltageLevel("v1").getBatteryStream()
+        assertEquals(1, getNetwork().getVoltageLevel("v1").getVscConverterStationStream()
                 .filter(transformer -> transformer.getId().equals("stationId1")).count());
 
-        assertEquals(1, getNetwork().getVoltageLevel("v1").getBatteryStream()
+        assertEquals(1, getNetwork().getVoltageLevel("v2").getVscConverterStationStream()
                 .filter(transformer -> transformer.getId().equals("stationId2")).count());
     }
 
@@ -133,7 +141,7 @@ public class VscCreationInNodeBreakerTest extends AbstractNetworkModificationTes
         assertEquals(0, getNetwork().getVoltageLevel("v1").getVscConverterStationStream()
                 .filter(transformer -> transformer.getId().equals("stationId1")).count());
 
-        assertEquals(0, getNetwork().getVoltageLevel("v1").getBatteryStream()
+        assertEquals(0, getNetwork().getVoltageLevel("v2").getVscConverterStationStream()
                 .filter(transformer -> transformer.getId().equals("stationId2")).count());
     }
 }

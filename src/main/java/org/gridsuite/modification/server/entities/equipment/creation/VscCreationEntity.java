@@ -103,8 +103,8 @@ public class VscCreationEntity extends EquipmentCreationEntity {
         this.operatorActivePowerLimitSide2 = vscCreationInfos.getOperatorActivePowerLimitSide2();
         this.maximumActivePower = vscCreationInfos.getMaximumActivePower();
         this.p0 = vscCreationInfos.getP0();
-        this.converterStation1 = new ConverterStationCreationEntity(vscCreationInfos.getConverterStation1());
-        this.converterStation2 = new ConverterStationCreationEntity(vscCreationInfos.getConverterStation2());
+        this.converterStation1 = vscCreationInfos.getConverterStation1().toEntity();
+        this.converterStation2 = vscCreationInfos.getConverterStation2().toEntity();
     }
 
     @Override
@@ -117,6 +117,10 @@ public class VscCreationEntity extends EquipmentCreationEntity {
         ConverterStationCreationInfos converterStation2 = getConverterStation2() == null ? null : getConverterStation2().toConverterStationInfos();
 
         return VscCreationInfos.builder()
+                .uuid(getId())
+                .date(getDate())
+                .equipmentId(getEquipmentId())
+                .equipmentName(getEquipmentName())
                 .activePower(getActivePower())
                 .angleDroopActivePowerControl(getAngleDroopActivePowerControl())
                 .droop(getDroop())

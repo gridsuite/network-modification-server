@@ -55,8 +55,8 @@ public class VscCreationInBusBreakerTest extends AbstractNetworkModificationTest
 
     private ConverterStationCreationInfos buildConverterStationWithMinMaxReactiveLimits() {
         return ConverterStationCreationInfos.builder()
-                .equipmentId("stationId2")
-                .equipmentName("station2")
+                .converterStationId("stationId2")
+                .converterStationName("station2")
                 .voltageRegulationOn(false)
                 .reactivePower(23.)
                 .reactiveCapabilityCurve(false)
@@ -82,8 +82,8 @@ public class VscCreationInBusBreakerTest extends AbstractNetworkModificationTest
                 .build();
 
         return ConverterStationCreationInfos.builder()
-                .equipmentId("stationId1")
-                .equipmentName("station1")
+                .converterStationId("stationId1")
+                .converterStationName("station1")
                 .voltageRegulationOn(true)
                 .voltage(66.)
                 .reactiveCapabilityCurve(true)

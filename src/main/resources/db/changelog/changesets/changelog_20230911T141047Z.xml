@@ -13,6 +13,12 @@
             <column name="reactive_power" type="FLOAT8"/>
             <column name="voltage" type="FLOAT8"/>
             <column name="voltage_regulation_on" type="BOOLEAN"/>
+            <column name="bus_or_busbar_section_id" type="VARCHAR(255)"/>
+            <column name="reactive_capability_curve" type="BOOLEAN"/>
+            <column name="connection_direction" type="INT"/>
+            <column name="connection_name" type="VARCHAR(255)"/>
+            <column name="connection_position" type="INT"/>
+            <column name="voltage_level_id" type="VARCHAR(255)"/>
         </createTable>
     </changeSet>
     <changeSet author="yenguised (generated)" id="1694441470319-8">
