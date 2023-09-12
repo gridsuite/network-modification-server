@@ -44,6 +44,9 @@ public class VoltageInitModification extends AbstractModification {
     private static final String REACTIVE_POWER_SET_POINT = "Reactive power set point";
     private static final String SHUNT_COMPENSATOR_MSG = "Shunt compensator ";
     private static final String SECTION_COUNT = "Section count";
+    private static final String SHUNT_SECTION_COUNT_VALUE_IGNORED_KEY = "shuntCompensatorSectionCountValueIgnored";
+    private static final String SHUNT_SECTION_COUNT_VALUE_CANNOT_BE_APPLIED = "Section count value ${value} cannot be applied : it should be 0 or 1";
+    private static final String VALUE = "value";
 
     public VoltageInitModification(VoltageInitModificationInfos voltageInitModificationInfos) {
         this.voltageInitModificationInfos = voltageInitModificationInfos;
@@ -222,7 +225,7 @@ public class VoltageInitModification extends AbstractModification {
                                 shuntCompensator.setSectionCount(1);
                                 reports.add(ModificationUtils.getInstance().buildModificationReportWithIndentation(currentSectionCount, shuntCompensator.getSectionCount(), SECTION_COUNT, 1));
                             } else {
-                                reports.add(createReport("shuntCompensatorSectionCountValueIgnored", "Section count value ${value} cannot be applied : it should be 0 or 1", Map.of("value", m.getSectionCount()), TypedValue.WARN_SEVERITY, 1));
+                                reports.add(createReport(SHUNT_SECTION_COUNT_VALUE_IGNORED_KEY, SHUNT_SECTION_COUNT_VALUE_CANNOT_BE_APPLIED, Map.of(VALUE, m.getSectionCount()), TypedValue.WARN_SEVERITY, 1));
                             }
                         } else if (currentSectionCount == 1) {
                             if (m.getSectionCount() == 0) {
@@ -231,10 +234,10 @@ public class VoltageInitModification extends AbstractModification {
                                 shuntCompensator.setSectionCount(0);
                                 reports.add(ModificationUtils.getInstance().buildModificationReportWithIndentation(currentSectionCount, shuntCompensator.getSectionCount(), SECTION_COUNT, 1));
                             } else if (m.getSectionCount() > 1) {
-                                reports.add(createReport("shuntCompensatorSectionCountValueIgnored", "Section count value ${value} cannot be applied : it should be 0 or 1", Map.of("value", m.getSectionCount()), TypedValue.WARN_SEVERITY, 1));
+                                reports.add(createReport(SHUNT_SECTION_COUNT_VALUE_IGNORED_KEY, SHUNT_SECTION_COUNT_VALUE_CANNOT_BE_APPLIED, Map.of(VALUE, m.getSectionCount()), TypedValue.WARN_SEVERITY, 1));
                             }
                         } else {
-                            reports.add(createReport("shuntCompensatorCurrentSectionCountValueIgnored", "Current section count value ${value} should be 0 or 1", Map.of("value", currentSectionCount), TypedValue.WARN_SEVERITY, 1));
+                            reports.add(createReport("shuntCompensatorCurrentSectionCountValueIgnored", "Current section count value ${value} should be 0 or 1", Map.of(VALUE, currentSectionCount), TypedValue.WARN_SEVERITY, 1));
                         }
                     }
                 } else {  // shunt compensator is disconnected
@@ -250,7 +253,7 @@ public class VoltageInitModification extends AbstractModification {
                                 shuntCompensator.setSectionCount(1);
                                 reports.add(ModificationUtils.getInstance().buildModificationReportWithIndentation(currentSectionCount, shuntCompensator.getSectionCount(), SECTION_COUNT, 1));
                             } else if (m.getSectionCount() > 1) {
-                                reports.add(createReport("shuntCompensatorSectionCountValueIgnored", "Section count value ${value} cannot be applied : it should be 0 or 1", Map.of("value", m.getSectionCount()), TypedValue.WARN_SEVERITY, 1));
+                                reports.add(createReport(SHUNT_SECTION_COUNT_VALUE_IGNORED_KEY, SHUNT_SECTION_COUNT_VALUE_CANNOT_BE_APPLIED, Map.of(VALUE, m.getSectionCount()), TypedValue.WARN_SEVERITY, 1));
                             }
                         } else if (currentSectionCount == 1) {
                             if (m.getSectionCount() == 0) {
@@ -262,10 +265,10 @@ public class VoltageInitModification extends AbstractModification {
                                     reports.add(createReport("shuntCompensatorReconnected", "Shunt compensator reconnected", Map.of(), TypedValue.INFO_SEVERITY, 1));
                                 }
                             } else if (m.getSectionCount() > 1) {
-                                reports.add(createReport("shuntCompensatorSectionCountValueIgnored", "Section count value ${value} cannot be applied : it should be 0 or 1", Map.of("value", m.getSectionCount()), TypedValue.WARN_SEVERITY, 1));
+                                reports.add(createReport(SHUNT_SECTION_COUNT_VALUE_IGNORED_KEY, SHUNT_SECTION_COUNT_VALUE_CANNOT_BE_APPLIED, Map.of(VALUE, m.getSectionCount()), TypedValue.WARN_SEVERITY, 1));
                             }
                         } else {
-                            reports.add(createReport("shuntCompensatorCurrentSectionCountValueIgnored", "Current section count value ${value} should be 0 or 1", Map.of("value", currentSectionCount), TypedValue.WARN_SEVERITY, 1));
+                            reports.add(createReport("shuntCompensatorCurrentSectionCountValueIgnored", "Current section count value ${value} should be 0 or 1", Map.of(VALUE, currentSectionCount), TypedValue.WARN_SEVERITY, 1));
                         }
                     }
                 }
