@@ -102,7 +102,7 @@ public class GenerationDispatch extends AbstractModification {
 
     private static boolean inDifferentSynchronousComponent(HvdcConverterStation<?> station, int componentNum) {
         Bus bus = station.getTerminal().getBusView().getBus();
-        return bus != null ? bus.getSynchronousComponent().getNum() != componentNum : false;
+        return bus != null && bus.getSynchronousComponent().getNum() != componentNum;
     }
 
     private static double computeHvdcBalance(Component component) {
