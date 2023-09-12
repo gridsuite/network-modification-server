@@ -72,15 +72,14 @@ public abstract class AbstractScaling extends AbstractModification {
         if (noValidEquipmentId) {
             String errorMsg = "There is no valid equipment ID among the provided filter(s)";
             createReport(subReporter, "invalidFilters", errorMsg, TypedValue.ERROR_SEVERITY);
-            throw new NetworkModificationException(scalingInfos.getErrorType(), errorMsg);
+            return;
         }
 
         // create report for each wrong filter
         filterWithWrongEquipmentsIds.values().forEach(f -> {
             var equipmentIds = String.join(", ", f.getNotFoundEquipments());
-
             createReport(subReporter,
-                    "filterEquipmentsNotFound",
+                    "filterEquipmentsNotFound_" + f.getFilterName(),
                     String.format("Cannot find the following equipments %s in filter %s", equipmentIds, filters.get(f.getFilterId())),
                     TypedValue.WARN_SEVERITY);
         });
