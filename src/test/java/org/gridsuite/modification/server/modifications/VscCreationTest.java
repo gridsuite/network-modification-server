@@ -27,7 +27,7 @@ import static org.junit.Assert.assertNull;
  * @author Seddik Yengui <seddik.yengui at rte-france.com>
  */
 
-public class VscCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
+public class VscCreationTest extends AbstractNetworkModificationTest {
     @Override
     protected Network createNetwork(UUID networkUuid) {
         return NetworkCreation.create(networkUuid, true);
