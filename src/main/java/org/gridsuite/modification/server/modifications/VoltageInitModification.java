@@ -216,59 +216,35 @@ public class VoltageInitModification extends AbstractModification {
                 if (shuntCompensatorTerminal.isConnected()) {  // shunt compensator is connected
                     if (m.getSectionCount() == null) {
                         reports.add(createReport("shuntCompensatorSectionCountUndefined", "Section count value is undefined", Map.of(), TypedValue.WARN_SEVERITY, 1));
+                    } else if (m.getSectionCount() > 1) {
+                        reports.add(createReport(SHUNT_SECTION_COUNT_VALUE_IGNORED_KEY, SHUNT_SECTION_COUNT_VALUE_CANNOT_BE_APPLIED, Map.of(VALUE, m.getSectionCount()), TypedValue.WARN_SEVERITY, 1));
+                    } else if (currentSectionCount > 1) {
+                        reports.add(createReport("shuntCompensatorCurrentSectionCountValueIgnored", "Current section count value ${value} should be 0 or 1", Map.of(VALUE, currentSectionCount), TypedValue.WARN_SEVERITY, 1));
                     } else {
-                        if (currentSectionCount == 0) {
-                            if (m.getSectionCount() == 0) {
-                                shuntCompensatorTerminal.disconnect();
-                                reports.add(createReport("shuntCompensatorDisconnected", "Shunt compensator disconnected", Map.of(), TypedValue.INFO_SEVERITY, 1));
-                            } else if (m.getSectionCount() == 1) {
-                                shuntCompensator.setSectionCount(1);
-                                reports.add(ModificationUtils.getInstance().buildModificationReportWithIndentation(currentSectionCount, shuntCompensator.getSectionCount(), SECTION_COUNT, 1));
-                            } else {
-                                reports.add(createReport(SHUNT_SECTION_COUNT_VALUE_IGNORED_KEY, SHUNT_SECTION_COUNT_VALUE_CANNOT_BE_APPLIED, Map.of(VALUE, m.getSectionCount()), TypedValue.WARN_SEVERITY, 1));
-                            }
-                        } else if (currentSectionCount == 1) {
-                            if (m.getSectionCount() == 0) {
-                                shuntCompensatorTerminal.disconnect();
-                                reports.add(createReport("shuntCompensatorDisconnected", "Shunt compensator disconnected", Map.of(), TypedValue.INFO_SEVERITY, 1));
-                                shuntCompensator.setSectionCount(0);
-                                reports.add(ModificationUtils.getInstance().buildModificationReportWithIndentation(currentSectionCount, shuntCompensator.getSectionCount(), SECTION_COUNT, 1));
-                            } else if (m.getSectionCount() > 1) {
-                                reports.add(createReport(SHUNT_SECTION_COUNT_VALUE_IGNORED_KEY, SHUNT_SECTION_COUNT_VALUE_CANNOT_BE_APPLIED, Map.of(VALUE, m.getSectionCount()), TypedValue.WARN_SEVERITY, 1));
-                            }
-                        } else {
-                            reports.add(createReport("shuntCompensatorCurrentSectionCountValueIgnored", "Current section count value ${value} should be 0 or 1", Map.of(VALUE, currentSectionCount), TypedValue.WARN_SEVERITY, 1));
+                        if (m.getSectionCount() == 0) {
+                            shuntCompensatorTerminal.disconnect();
+                            reports.add(createReport("shuntCompensatorDisconnected", "Shunt compensator disconnected", Map.of(), TypedValue.INFO_SEVERITY, 1));
+                        }
+                        if (m.getSectionCount() != currentSectionCount) {
+                            shuntCompensator.setSectionCount(m.getSectionCount());
+                            reports.add(ModificationUtils.getInstance().buildModificationReportWithIndentation(currentSectionCount, m.getSectionCount(), SECTION_COUNT, 1));
                         }
                     }
                 } else {  // shunt compensator is disconnected
                     if (m.getConnect() == null) {
                         reports.add(createReport("shuntCompensatorConnectUndefined", "Connect value is undefined", Map.of(), TypedValue.WARN_SEVERITY, 1));
+                    } else if (m.getSectionCount() > 1) {
+                        reports.add(createReport(SHUNT_SECTION_COUNT_VALUE_IGNORED_KEY, SHUNT_SECTION_COUNT_VALUE_CANNOT_BE_APPLIED, Map.of(VALUE, m.getSectionCount()), TypedValue.WARN_SEVERITY, 1));
+                    } else if (currentSectionCount > 1) {
+                        reports.add(createReport("shuntCompensatorCurrentSectionCountValueIgnored", "Current section count value ${value} should be 0 or 1", Map.of(VALUE, currentSectionCount), TypedValue.WARN_SEVERITY, 1));
                     } else {
-                        if (currentSectionCount == 0) {
-                            if (m.getSectionCount() == 1) {
-                                if (Boolean.TRUE.equals(m.getConnect())) {
-                                    shuntCompensatorTerminal.connect();
-                                    reports.add(createReport("shuntCompensatorReconnected", "Shunt compensator reconnected", Map.of(), TypedValue.INFO_SEVERITY, 1));
-                                }
-                                shuntCompensator.setSectionCount(1);
-                                reports.add(ModificationUtils.getInstance().buildModificationReportWithIndentation(currentSectionCount, shuntCompensator.getSectionCount(), SECTION_COUNT, 1));
-                            } else if (m.getSectionCount() > 1) {
-                                reports.add(createReport(SHUNT_SECTION_COUNT_VALUE_IGNORED_KEY, SHUNT_SECTION_COUNT_VALUE_CANNOT_BE_APPLIED, Map.of(VALUE, m.getSectionCount()), TypedValue.WARN_SEVERITY, 1));
-                            }
-                        } else if (currentSectionCount == 1) {
-                            if (m.getSectionCount() == 0) {
-                                shuntCompensator.setSectionCount(0);
-                                reports.add(ModificationUtils.getInstance().buildModificationReportWithIndentation(currentSectionCount, shuntCompensator.getSectionCount(), SECTION_COUNT, 1));
-                            } else if (m.getSectionCount() == 1) {
-                                if (Boolean.TRUE.equals(m.getConnect())) {
-                                    shuntCompensatorTerminal.connect();
-                                    reports.add(createReport("shuntCompensatorReconnected", "Shunt compensator reconnected", Map.of(), TypedValue.INFO_SEVERITY, 1));
-                                }
-                            } else if (m.getSectionCount() > 1) {
-                                reports.add(createReport(SHUNT_SECTION_COUNT_VALUE_IGNORED_KEY, SHUNT_SECTION_COUNT_VALUE_CANNOT_BE_APPLIED, Map.of(VALUE, m.getSectionCount()), TypedValue.WARN_SEVERITY, 1));
-                            }
-                        } else {
-                            reports.add(createReport("shuntCompensatorCurrentSectionCountValueIgnored", "Current section count value ${value} should be 0 or 1", Map.of(VALUE, currentSectionCount), TypedValue.WARN_SEVERITY, 1));
+                        if (Boolean.TRUE.equals(m.getConnect()) && m.getSectionCount() == 1) {
+                            shuntCompensatorTerminal.connect();
+                            reports.add(createReport("shuntCompensatorReconnected", "Shunt compensator reconnected", Map.of(), TypedValue.INFO_SEVERITY, 1));
+                        }
+                        if (m.getSectionCount() != currentSectionCount) {
+                            shuntCompensator.setSectionCount(m.getSectionCount());
+                            reports.add(ModificationUtils.getInstance().buildModificationReportWithIndentation(currentSectionCount, m.getSectionCount(), SECTION_COUNT, 1));
                         }
                     }
                 }
