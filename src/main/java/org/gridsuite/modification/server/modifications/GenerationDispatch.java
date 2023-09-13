@@ -375,7 +375,7 @@ public class GenerationDispatch extends AbstractModification {
             }
         }
         double genFrequencyReserve = computeGenFrequencyReserve(generator, generatorsFrequencyReserve);
-        return res * (1. - genFrequencyReserve / 100.);
+        return Math.max(generator.getMinP(), res * (1. - genFrequencyReserve / 100.));
     }
 
     @Override
