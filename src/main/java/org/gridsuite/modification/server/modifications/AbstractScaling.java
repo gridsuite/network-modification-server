@@ -70,7 +70,7 @@ public abstract class AbstractScaling extends AbstractModification {
                 .allMatch(filterEquipments -> filterEquipments.getIdentifiableAttributes().isEmpty());
 
         if (noValidEquipmentId) {
-            String errorMsg = "There is no valid equipment ID among the provided filter(s)";
+            String errorMsg = scalingInfos.getErrorType() + ": There is no valid equipment ID among the provided filter(s)";
             createReport(subReporter, "invalidFilters", errorMsg, TypedValue.ERROR_SEVERITY);
             return;
         }

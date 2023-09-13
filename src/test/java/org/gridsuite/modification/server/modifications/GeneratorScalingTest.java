@@ -29,8 +29,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.GENERATOR_SCALING_ERROR;
 import static org.gridsuite.modification.server.utils.NetworkUtil.createGenerator;
+import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -204,7 +204,8 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
 
         mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(generatorScalingInfo)).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertEquals(generatorScalingInfo.getErrorType().name(), GENERATOR_SCALING_ERROR.name());
+        assertLogMessage(generatorScalingInfo.getErrorType().name() + ": There is no valid equipment ID among the provided filter(s)",
+                "invalidFilters", reportService);
         wireMockUtils.verifyGetRequest(subWrongId, PATH, handleQueryParams(getNetworkUuid(), FILTER_WRONG_ID_1), false);
     }
 
