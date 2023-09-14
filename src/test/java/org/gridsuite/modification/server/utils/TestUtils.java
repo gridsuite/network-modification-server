@@ -133,29 +133,37 @@ public final class TestUtils {
         return StringUtils.replaceWhitespaceCharacters(content, "");
     }
 
-    public static void assertLogMessage(String expectedMessage, String reportKey, ReportService reportService) {
+    public static void assertLogNthMessage(String expectedMessage, String reportKey, ReportService reportService, int rank) {
         ArgumentCaptor<ReporterModel> reporterCaptor = ArgumentCaptor.forClass(ReporterModel.class);
         verify(reportService, atLeast(1)).sendReport(any(UUID.class), reporterCaptor.capture());
         assertNotNull(reporterCaptor.getValue());
-        Optional<String> message = getMessageFromReporter(reportKey, reporterCaptor.getValue());
+        Optional<String> message = getMessageFromReporter(reportKey, reporterCaptor.getValue(), rank);
         assertTrue(message.isPresent());
         assertEquals(expectedMessage, message.get().trim());
     }
 
-    private static Optional<String> getMessageFromReporter(String reportKey, ReporterModel reporterModel) {
+    public static void assertLogMessage(String expectedMessage, String reportKey, ReportService reportService) {
+        assertLogNthMessage(expectedMessage, reportKey, reportService, 1);
+    }
+
+    private static Optional<String> getMessageFromReporter(String reportKey, ReporterModel reporterModel, int rank) {
         Optional<String> message = Optional.empty();
 
         Iterator<Report> reportsIterator = reporterModel.getReports().iterator();
+        int nbTimes = 0;
         while (message.isEmpty() && reportsIterator.hasNext()) {
             Report report = reportsIterator.next();
             if (report.getReportKey().equals(reportKey)) {
-                message = Optional.of(formatReportMessage(report, reporterModel));
+                nbTimes++;
+                if (nbTimes == rank) {
+                    message = Optional.of(formatReportMessage(report, reporterModel));
+                }
             }
         }
 
         Iterator<ReporterModel> reportersIterator = reporterModel.getSubReporters().iterator();
         while (message.isEmpty() && reportersIterator.hasNext()) {
-            message = getMessageFromReporter(reportKey, reportersIterator.next());
+            message = getMessageFromReporter(reportKey, reportersIterator.next(), rank);
         }
 
         return message;
