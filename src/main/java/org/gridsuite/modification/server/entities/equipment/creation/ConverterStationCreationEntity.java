@@ -7,7 +7,6 @@
 
 package org.gridsuite.modification.server.entities.equipment.creation;
 
-import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -34,18 +33,12 @@ import java.util.stream.Collectors;
 @NoArgsConstructor
 @Getter
 @Entity
-@Table(name = "converterStationCreationEntity")
-public class ConverterStationCreationEntity {
+@Table(name = "converterStationCreation")
+public class ConverterStationCreationEntity extends InjectionCreationEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "id")
     private UUID id;
-
-    @Column
-    private String converterStationId;
-
-    @Column
-    private String converterStationName;
 
     @Column
     private Float lossFactor;
@@ -72,28 +65,12 @@ public class ConverterStationCreationEntity {
     @Column
     private Boolean reactiveCapabilityCurve;
 
-    @Column
-    private String voltageLevelId;
-
-    @Column
-    private String busOrBusbarSectionId;
-
-    @Column
-    private String connectionName;
-
-    @Column
-    private ConnectablePosition.Direction connectionDirection;
-
-    @Column
-    private Integer connectionPosition;
-
     public ConverterStationCreationEntity(ConverterStationCreationInfos converterStationCreationInfos) {
+        super(converterStationCreationInfos);
         assignAttributes(converterStationCreationInfos);
     }
 
     private void assignAttributes(ConverterStationCreationInfos converterStationCreationInfos) {
-        this.converterStationId = converterStationCreationInfos.getConverterStationId();
-        this.converterStationName = converterStationCreationInfos.getConverterStationName();
         this.lossFactor = converterStationCreationInfos.getLossFactor();
         this.minimumReactivePower = converterStationCreationInfos.getMinimumReactivePower();
         this.maximumReactivePower = converterStationCreationInfos.getMaximumReactivePower();
@@ -101,18 +78,13 @@ public class ConverterStationCreationEntity {
         this.voltageRegulationOn = converterStationCreationInfos.getVoltageRegulationOn();
         this.voltage = converterStationCreationInfos.getVoltage();
         this.reactiveCapabilityCurvePoints = toEmbeddablePoints(converterStationCreationInfos.getReactiveCapabilityCurvePoints());
-        this.voltageLevelId = converterStationCreationInfos.getVoltageLevelId();
-        this.busOrBusbarSectionId = converterStationCreationInfos.getBusOrBusbarSectionId();
-        this.connectionName = converterStationCreationInfos.getConnectionName();
-        this.connectionDirection = converterStationCreationInfos.getConnectionDirection();
-        this.connectionPosition = converterStationCreationInfos.getConnectionPosition();
         this.reactiveCapabilityCurve = converterStationCreationInfos.getReactiveCapabilityCurve();
     }
 
     public ConverterStationCreationInfos toConverterStationInfos() {
         return ConverterStationCreationInfos.builder()
-                .converterStationId(getConverterStationId())
-                .converterStationName(getConverterStationName())
+                .equipmentId(getEquipmentId())
+                .equipmentName(getEquipmentName())
                 .lossFactor(getLossFactor())
                 .minimumReactivePower(getMinimumReactivePower())
                 .maximumReactivePower(getMaximumReactivePower())

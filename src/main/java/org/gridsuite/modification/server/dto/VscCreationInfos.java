@@ -45,10 +45,10 @@ public class VscCreationInfos extends EquipmentCreationInfos {
     private Double maximumActivePower;
 
     @Schema(description = "Operator active power limit (Side1->Side2)")
-    private Float operatorActivePowerLimitSide1;
+    private Float operatorActivePowerLimitFromSide1ToSide2;
 
     @Schema(description = "Operator active power limit (Side2->Side1)")
-    private Float operatorActivePowerLimitSide2;
+    private Float operatorActivePowerLimitFromSide2ToSide1;
 
     @Schema(description = "Converters mode")
     private HvdcLine.ConvertersMode convertersMode;

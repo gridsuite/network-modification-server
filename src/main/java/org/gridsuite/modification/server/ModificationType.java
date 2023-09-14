@@ -44,7 +44,8 @@ public enum ModificationType {
     DELETE_ATTACHING_LINE(PreloadingStrategy.NONE),
     GENERATION_DISPATCH(PreloadingStrategy.COLLECTION),
     VOLTAGE_INIT_MODIFICATION(PreloadingStrategy.COLLECTION),
-    VSC_CREATION(PreloadingStrategy.NONE);
+    VSC_CREATION(PreloadingStrategy.NONE),
+    CONVERTER_STATION_CREATION(PreloadingStrategy.NONE);
 
     private final PreloadingStrategy strategy;
 

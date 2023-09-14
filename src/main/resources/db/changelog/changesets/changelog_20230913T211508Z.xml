@@ -1,27 +1,27 @@
 <?xml version="1.1" encoding="UTF-8" standalone="no"?>
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-4.1.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
-    <changeSet author="yenguised (generated)" id="1694441470319-7">
-        <createTable tableName="converter_station_creation_entity">
-            <column name="id" type="UUID">
-                <constraints nullable="false" primaryKey="true" primaryKeyName="converter_station_creation_entityPK"/>
-            </column>
-            <column name="converter_station_id" type="VARCHAR(255)"/>
-            <column name="converter_station_name" type="VARCHAR(255)"/>
-            <column name="loss_factor" type="FLOAT4"/>
-            <column name="maximum_reactive_power" type="FLOAT8"/>
-            <column name="minimum_reactive_power" type="FLOAT8"/>
-            <column name="reactive_power" type="FLOAT8"/>
-            <column name="voltage" type="FLOAT8"/>
-            <column name="voltage_regulation_on" type="BOOLEAN"/>
+    <changeSet author="yenguised (generated)" id="1694639728098-7">
+        <createTable tableName="converter_station_creation">
+            <column name="equipment_id" type="VARCHAR(255)"/>
+            <column name="equipment_name" type="VARCHAR(255)"/>
             <column name="bus_or_busbar_section_id" type="VARCHAR(255)"/>
-            <column name="reactive_capability_curve" type="BOOLEAN"/>
             <column name="connection_direction" type="INT"/>
             <column name="connection_name" type="VARCHAR(255)"/>
             <column name="connection_position" type="INT"/>
             <column name="voltage_level_id" type="VARCHAR(255)"/>
+            <column name="loss_factor" type="FLOAT4"/>
+            <column name="maximum_reactive_power" type="FLOAT8"/>
+            <column name="minimum_reactive_power" type="FLOAT8"/>
+            <column name="reactive_capability_curve" type="BOOLEAN"/>
+            <column name="reactive_power" type="FLOAT8"/>
+            <column name="voltage" type="FLOAT8"/>
+            <column name="voltage_regulation_on" type="BOOLEAN"/>
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="converter_station_creation_entityPK"/>
+            </column>
         </createTable>
     </changeSet>
-    <changeSet author="yenguised (generated)" id="1694441470319-8">
+    <changeSet author="yenguised (generated)" id="1694639728098-8">
         <createTable tableName="converter_station_creation_rcc_points">
             <column name="converter_station_creation_entity_id" type="UUID">
                 <constraints nullable="false"/>
@@ -31,7 +31,7 @@
             <column name="qminp" type="FLOAT8"/>
         </createTable>
     </changeSet>
-    <changeSet author="yenguised (generated)" id="1694441470319-9">
+    <changeSet author="yenguised (generated)" id="1694639728098-9">
         <createTable tableName="vsc_creation">
             <column name="equipment_id" type="VARCHAR(255)"/>
             <column name="equipment_name" type="VARCHAR(255)"/>
@@ -52,16 +52,19 @@
             <column name="converter_station_2_id" type="UUID"/>
         </createTable>
     </changeSet>
-    <changeSet author="yenguised (generated)" id="1694441470319-11">
+    <changeSet author="yenguised (generated)" id="1694639728098-11">
         <addForeignKeyConstraint baseColumnNames="id" baseTableName="vsc_creation" constraintName="FK1qj1egdcxan4tq5dow3sfgqj" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
     </changeSet>
-    <changeSet author="yenguised (generated)" id="1694441470319-12">
-        <addForeignKeyConstraint baseColumnNames="converter_station_creation_entity_id" baseTableName="converter_station_creation_rcc_points" constraintName="FKk0g5ehkw4suatryi3mt69r7kq" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="converter_station_creation_entity" validate="true"/>
+    <changeSet author="yenguised (generated)" id="1694639728098-12">
+        <addForeignKeyConstraint baseColumnNames="id" baseTableName="converter_station_creation_entity" constraintName="FKnalkevno0wuv80nj8uv8gy55o" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
     </changeSet>
-    <changeSet author="yenguised (generated)" id="1694441470319-14">
+    <changeSet author="yenguised (generated)" id="1694639728098-13">
+        <addForeignKeyConstraint baseColumnNames="converter_station_creation_entity_id" baseTableName="converter_station_creation_rcc_points" constraintName="FKsc3s7oj7ymwo053i23lqjm0so" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="converter_station_creation_entity" validate="true"/>
+    </changeSet>
+    <changeSet author="yenguised (generated)" id="1694639728098-15">
         <addForeignKeyConstraint baseColumnNames="converter_station_1_id" baseTableName="vsc_creation" constraintName="converter_station_1_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="converter_station_creation_entity" validate="true"/>
     </changeSet>
-    <changeSet author="yenguised (generated)" id="1694441470319-15">
+    <changeSet author="yenguised (generated)" id="1694639728098-16">
         <addForeignKeyConstraint baseColumnNames="converter_station_2_id" baseTableName="vsc_creation" constraintName="converter_station_2_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="converter_station_creation_entity" validate="true"/>
     </changeSet>
 </databaseChangeLog>

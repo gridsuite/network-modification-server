@@ -42,11 +42,11 @@ public class VscCreationTest extends AbstractNetworkModificationTest {
                 .dcResistance(4.)
                 .maximumActivePower(56.)
                 .p0(8.7F)
-                .operatorActivePowerLimitSide2(5.6F)
+                .operatorActivePowerLimitFromSide2ToSide1(5.6F)
                 .convertersMode(HvdcLine.ConvertersMode.SIDE_1_INVERTER_SIDE_2_RECTIFIER)
                 .activePower(5.)
-                .operatorActivePowerLimitSide1(6.0F)
-                .operatorActivePowerLimitSide2(8.7F)
+                .operatorActivePowerLimitFromSide1ToSide2(6.0F)
+                .operatorActivePowerLimitFromSide2ToSide1(8.7F)
                 .droop(1.1F)
                 .angleDroopActivePowerControl(false)
                 .converterStation1(buildConverterStationWithReactiveCapabilityCurve())
@@ -55,10 +55,9 @@ public class VscCreationTest extends AbstractNetworkModificationTest {
     }
 
     private ConverterStationCreationInfos buildConverterStationWithMinMaxReactiveLimits() {
-        var test = getNetwork().getVoltageLevelStream().toList();
         return ConverterStationCreationInfos.builder()
-                .converterStationId("stationId2")
-                .converterStationName("station2")
+                .equipmentId("stationId2")
+                .equipmentName("station2")
                 .voltageRegulationOn(false)
                 .reactivePower(23.)
                 .reactiveCapabilityCurve(false)
@@ -87,8 +86,8 @@ public class VscCreationTest extends AbstractNetworkModificationTest {
                 .build();
 
         return ConverterStationCreationInfos.builder()
-                .converterStationId("stationId1")
-                .converterStationName("station1")
+                .equipmentId("stationId1")
+                .equipmentName("station1")
                 .voltageRegulationOn(true)
                 .voltage(66.)
                 .lossFactor(40F)
@@ -110,11 +109,11 @@ public class VscCreationTest extends AbstractNetworkModificationTest {
                 .dcResistance(2.)
                 .maximumActivePower(77.)
                 .p0(8.3F)
-                .operatorActivePowerLimitSide2(5.2F)
+                .operatorActivePowerLimitFromSide2ToSide1(5.2F)
                 .convertersMode(HvdcLine.ConvertersMode.SIDE_1_RECTIFIER_SIDE_2_INVERTER)
                 .activePower(7.)
-                .operatorActivePowerLimitSide1(6.1F)
-                .operatorActivePowerLimitSide2(8.3F)
+                .operatorActivePowerLimitFromSide1ToSide2(6.1F)
+                .operatorActivePowerLimitFromSide2ToSide1(8.3F)
                 .angleDroopActivePowerControl(true)
                 .droop(2.1F)
                 .converterStation1(buildConverterStationWithMinMaxReactiveLimits())

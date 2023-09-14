@@ -99,8 +99,8 @@ public class VscCreationEntity extends EquipmentCreationEntity {
         this.convertersMode = vscCreationInfos.getConvertersMode();
         this.dcNominalVoltage = vscCreationInfos.getDcNominalVoltage();
         this.dcResistance = vscCreationInfos.getDcResistance();
-        this.operatorActivePowerLimitSide1 = vscCreationInfos.getOperatorActivePowerLimitSide1();
-        this.operatorActivePowerLimitSide2 = vscCreationInfos.getOperatorActivePowerLimitSide2();
+        this.operatorActivePowerLimitSide1 = vscCreationInfos.getOperatorActivePowerLimitFromSide1ToSide2();
+        this.operatorActivePowerLimitSide2 = vscCreationInfos.getOperatorActivePowerLimitFromSide2ToSide1();
         this.maximumActivePower = vscCreationInfos.getMaximumActivePower();
         this.p0 = vscCreationInfos.getP0();
         this.converterStation1 = vscCreationInfos.getConverterStation1().toEntity();
@@ -127,8 +127,8 @@ public class VscCreationEntity extends EquipmentCreationEntity {
                 .convertersMode(getConvertersMode())
                 .dcNominalVoltage(getDcNominalVoltage())
                 .dcResistance(getDcResistance())
-                .operatorActivePowerLimitSide1(getOperatorActivePowerLimitSide1())
-                .operatorActivePowerLimitSide2(getOperatorActivePowerLimitSide2())
+                .operatorActivePowerLimitFromSide1ToSide2(getOperatorActivePowerLimitSide1())
+                .operatorActivePowerLimitFromSide2ToSide1(getOperatorActivePowerLimitSide2())
                 .maximumActivePower(getMaximumActivePower())
                 .p0(getP0())
                 .converterStation1(converterStation1)

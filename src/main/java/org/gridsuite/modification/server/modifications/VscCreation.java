@@ -93,11 +93,11 @@ public class VscCreation extends AbstractModification {
                 .setConverterStationId2(converterStation2 != null ? converterStation2.getId() : null)
                 .add();
 
-        if (modificationInfos.getOperatorActivePowerLimitSide1() != null ||
-                modificationInfos.getOperatorActivePowerLimitSide2() != null) {
+        if (modificationInfos.getOperatorActivePowerLimitFromSide1ToSide2() != null ||
+                modificationInfos.getOperatorActivePowerLimitFromSide2ToSide1() != null) {
             hvdcLine.newExtension(HvdcOperatorActivePowerRangeAdder.class)
-                    .withOprFromCS1toCS2(modificationInfos.getOperatorActivePowerLimitSide1())
-                    .withOprFromCS2toCS1(modificationInfos.getOperatorActivePowerLimitSide2())
+                    .withOprFromCS1toCS2(modificationInfos.getOperatorActivePowerLimitFromSide1ToSide2())
+                    .withOprFromCS2toCS1(modificationInfos.getOperatorActivePowerLimitFromSide2ToSide1())
                     .add();
         }
 
@@ -140,8 +140,8 @@ public class VscCreation extends AbstractModification {
 
         List<Report> limitsReports = new ArrayList<>();
         Reporter limitsReport = subReporter.createSubReporter("vscLimits", "Limits");
-        limitsReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getOperatorActivePowerLimitSide1(), "Operator active power limit (Side1 -> Side 2)"));
-        limitsReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getOperatorActivePowerLimitSide2(), "Operator active power limit (Side2 -> Side 1)"));
+        limitsReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getOperatorActivePowerLimitFromSide1ToSide2(), "Operator active power limit (Side1 -> Side 2)"));
+        limitsReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getOperatorActivePowerLimitFromSide2ToSide1(), "Operator active power limit (Side2 -> Side 1)"));
         ModificationUtils.getInstance().reportModifications(limitsReport, limitsReports, "vscLimits", "Limits");
 
         List<Report> setPointsReports = new ArrayList<>();
@@ -171,17 +171,17 @@ public class VscCreation extends AbstractModification {
                                                      ConverterStationCreationInfos converterStationCreationInfos,
                                                      Reporter subReporter,
                                                      String logFieldName) {
-        Reporter converterStationReporter = subReporter.createSubReporter("converterStationCreated", logFieldName);
+        Reporter converterStationReporter = subReporter.createSubReporter("converterStationCreated" + logFieldName, logFieldName);
         List<Report> converterStationReports = new ArrayList<>();
         VoltageLevel voltageLevel = ModificationUtils.getInstance().getVoltageLevel(network, converterStationCreationInfos.getVoltageLevelId());
         VscConverterStation vscConverterStation = voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER ?
-                createConvertStationInNodeBreaker(network, voltageLevel, converterStationCreationInfos, converterStationReports, converterStationReporter) :
-                createConvertStationInBusBreaker(voltageLevel, converterStationCreationInfos, converterStationReports, converterStationReporter);
+                createConverterStationInNodeBreaker(network, voltageLevel, converterStationCreationInfos, converterStationReports, converterStationReporter) :
+                createConverterStationInBusBreaker(voltageLevel, converterStationCreationInfos, converterStationReports, converterStationReporter);
 
         converterStationReporter.report(Report.builder()
-                .withKey("converterStationCreated")
+                .withKey("converterStationCreated" + logFieldName)
                 .withDefaultMessage("New converter station with id=${id} created")
-                .withValue("id", converterStationCreationInfos.getConverterStationId())
+                .withValue("id", converterStationCreationInfos.getEquipmentId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .build());
         ModificationUtils.getInstance().reportModifications(converterStationReporter,
@@ -192,14 +192,14 @@ public class VscCreation extends AbstractModification {
         return vscConverterStation;
     }
 
-    private VscConverterStation createConvertStationInNodeBreaker(Network network,
-                                                                  VoltageLevel voltageLevel,
-                                                                  ConverterStationCreationInfos converterStationCreationInfos,
-                                                                  List<Report> converterStationReports,
-                                                                  Reporter subReporter) {
+    private VscConverterStation createConverterStationInNodeBreaker(Network network,
+                                                                    VoltageLevel voltageLevel,
+                                                                    ConverterStationCreationInfos converterStationCreationInfos,
+                                                                    List<Report> converterStationReports,
+                                                                    Reporter subReporter) {
         VscConverterStationAdder converterStationAdder = voltageLevel.newVscConverterStation()
-                .setId(converterStationCreationInfos.getConverterStationId())
-                .setName(converterStationCreationInfos.getConverterStationName())
+                .setId(converterStationCreationInfos.getEquipmentId())
+                .setName(converterStationCreationInfos.getEquipmentName())
                 .setVoltageRegulatorOn(converterStationCreationInfos.getVoltageRegulationOn());
 
         if (converterStationCreationInfos.getReactivePower() != null) {
@@ -223,14 +223,14 @@ public class VscCreation extends AbstractModification {
                 .withInjectionDirection(converterStationCreationInfos.getConnectionDirection())
                 .withInjectionFeederName(converterStationCreationInfos.getConnectionName() != null
                         ? converterStationCreationInfos.getConnectionName()
-                        : converterStationCreationInfos.getConverterStationId())
+                        : converterStationCreationInfos.getEquipmentId())
                 .withInjectionPositionOrder(position)
                 .withInjectionAdder(converterStationAdder)
                 .build();
 
         algo.apply(network, true, subReporter);
         VscConverterStation vscConverterStation = ModificationUtils.getInstance()
-                .getVscConverterStation(network, converterStationCreationInfos.getConverterStationId());
+                .getVscConverterStation(network, converterStationCreationInfos.getEquipmentId());
 
         addExtensions(vscConverterStation,
                 converterStationCreationInfos,
@@ -241,14 +241,14 @@ public class VscCreation extends AbstractModification {
 
     }
 
-    private VscConverterStation createConvertStationInBusBreaker(VoltageLevel voltageLevel,
-                                                                 ConverterStationCreationInfos converterStationCreationInfos,
-                                                                 List<Report> converterStationReports,
-                                                                 Reporter subReporter) {
+    private VscConverterStation createConverterStationInBusBreaker(VoltageLevel voltageLevel,
+                                                                   ConverterStationCreationInfos converterStationCreationInfos,
+                                                                   List<Report> converterStationReports,
+                                                                   Reporter subReporter) {
         Bus bus = ModificationUtils.getInstance().getBusBreakerBus(voltageLevel, converterStationCreationInfos.getBusOrBusbarSectionId());
         VscConverterStation vscConverterStation = voltageLevel.newVscConverterStation()
-                .setId(converterStationCreationInfos.getConverterStationId())
-                .setName(converterStationCreationInfos.getConverterStationName())
+                .setId(converterStationCreationInfos.getEquipmentId())
+                .setName(converterStationCreationInfos.getEquipmentName())
                 .setVoltageRegulatorOn(converterStationCreationInfos.getVoltageRegulationOn())
                 .setReactivePowerSetpoint(converterStationCreationInfos.getReactivePower())
                 .setBus(bus.getId())
