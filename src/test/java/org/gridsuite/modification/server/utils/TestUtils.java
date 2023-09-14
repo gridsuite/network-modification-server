@@ -154,7 +154,7 @@ public final class TestUtils {
         while (message.isEmpty() && reportsIterator.hasNext()) {
             Report report = reportsIterator.next();
             if (report.getReportKey().equals(reportKey)) {
-                nbTimes = nbTimes + 1;
+                nbTimes++;
                 if (nbTimes == rank) {
                     message = Optional.of(formatReportMessage(report, reporterModel));
                 }
