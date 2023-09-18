@@ -100,8 +100,9 @@ public class GenerationDispatch extends AbstractModification {
         return totalAmountFixedSupply;
     }
 
-    private static Component getSynchronousComponentFrom(HvdcConverterStation<?> station) {
-        return station.getTerminal().getBusView().getBus().getSynchronousComponent();
+    private static boolean inDifferentSynchronousComponent(HvdcConverterStation<?> station, int componentNum) {
+        Bus bus = station.getTerminal().getBusView().getBus();
+        return bus != null && bus.getSynchronousComponent().getNum() != componentNum;
     }
 
     private static double computeHvdcBalance(Component component) {
@@ -115,8 +116,8 @@ public class GenerationDispatch extends AbstractModification {
                     HvdcConverterStation<?> station1 = hvdcLine.getConverterStation1();
                     HvdcConverterStation<?> station2 = hvdcLine.getConverterStation2();
 
-                    boolean station2NotInComponent = station1.getId().equals(station.getId()) && getSynchronousComponentFrom(station2).getNum() != component.getNum();
-                    boolean station1NotInComponent = station2.getId().equals(station.getId()) && getSynchronousComponentFrom(station1).getNum() != component.getNum();
+                    boolean station2NotInComponent = station1.getId().equals(station.getId()) && inDifferentSynchronousComponent(station2, component.getNum());
+                    boolean station1NotInComponent = station2.getId().equals(station.getId()) && inDifferentSynchronousComponent(station1, component.getNum());
                     return station1NotInComponent || station2NotInComponent;
                 })
                 .mapToDouble(station -> {
@@ -375,7 +376,7 @@ public class GenerationDispatch extends AbstractModification {
             }
         }
         double genFrequencyReserve = computeGenFrequencyReserve(generator, generatorsFrequencyReserve);
-        return res * (1. - genFrequencyReserve / 100.);
+        return Math.max(generator.getMinP(), res * (1. - genFrequencyReserve / 100.));
     }
 
     @Override
