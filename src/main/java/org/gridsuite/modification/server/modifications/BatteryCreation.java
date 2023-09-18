@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.BATTERY_ALREADY_EXISTS;
-import static org.gridsuite.modification.server.modifications.ModificationUtils.createReactiveLimits;
 import static org.gridsuite.modification.server.modifications.ModificationUtils.nanIfNull;
 
 /**
@@ -136,7 +135,7 @@ public class BatteryCreation extends AbstractModification {
         }
         reportBatteryConnectivity(batteryCreationInfos, subReporter);
         Reporter subReporterLimits = reportBatteryActiveLimits(batteryCreationInfos, subReporter);
-        createReactiveLimits(batteryCreationInfos, battery, subReporterLimits);
+        ModificationUtils.getInstance().createReactiveLimits(batteryCreationInfos, battery, subReporterLimits);
         Reporter subReporterSetpoints = reportBatterySetPoints(batteryCreationInfos, subReporter);
         createBatteryActivePowerControl(batteryCreationInfos, battery, subReporterSetpoints);
     }

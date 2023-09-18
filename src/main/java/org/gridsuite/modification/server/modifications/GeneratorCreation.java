@@ -30,7 +30,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.GENERATOR_ALREADY_EXISTS;
-import static org.gridsuite.modification.server.modifications.ModificationUtils.createReactiveLimits;
 import static org.gridsuite.modification.server.modifications.ModificationUtils.nanIfNull;
 
 /**
@@ -141,7 +140,7 @@ public class GeneratorCreation extends AbstractModification {
         }
         reportGeneratorConnectivity(generatorCreationInfos, subReporter);
         Reporter subReporterLimits = reportGeneratorActiveLimits(generatorCreationInfos, subReporter);
-        createReactiveLimits(generatorCreationInfos, generator, subReporterLimits);
+        ModificationUtils.getInstance().createReactiveLimits(generatorCreationInfos, generator, subReporterLimits);
         Reporter subReporterSetpoints = reportGeneratorSetPoints(generatorCreationInfos, subReporter);
         createGeneratorVoltageRegulation(generatorCreationInfos, generator, voltageLevel, subReporterSetpoints);
         createGeneratorActivePowerControl(generatorCreationInfos, generator, subReporterSetpoints);
