@@ -143,10 +143,10 @@ public class VscCreationTest extends AbstractNetworkModificationTest {
         assertNotNull(getNetwork().getHvdcLine("vsc1"));
 
         assertEquals(1, getNetwork().getVoltageLevel("v1").getVscConverterStationStream()
-                .filter(transformer -> transformer.getId().equals("stationId1")).count());
+                .filter(converterStation -> converterStation.getId().equals("stationId1")).count());
 
         assertEquals(1, getNetwork().getVoltageLevel("v2").getVscConverterStationStream()
-                .filter(transformer -> transformer.getId().equals("stationId2")).count());
+                .filter(converterStation -> converterStation.getId().equals("stationId2")).count());
 
         HvdcLine hvdcLine = getNetwork().getHvdcLine("vsc1");
         assertNotNull(hvdcLine);
@@ -193,10 +193,10 @@ public class VscCreationTest extends AbstractNetworkModificationTest {
         assertNull(getNetwork().getHvdcLine("vsc1"));
 
         assertEquals(0, getNetwork().getVoltageLevel("v1").getVscConverterStationStream()
-                .filter(transformer -> transformer.getId().equals("stationId1")).count());
+                .filter(converterStation -> converterStation.getId().equals("stationId1")).count());
 
         assertEquals(0, getNetwork().getVoltageLevel("v2").getVscConverterStationStream()
-                .filter(transformer -> transformer.getId().equals("stationId2")).count());
+                .filter(converterStation -> converterStation.getId().equals("stationId2")).count());
     }
 
     @Test
