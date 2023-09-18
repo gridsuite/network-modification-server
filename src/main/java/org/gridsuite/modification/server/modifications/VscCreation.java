@@ -110,11 +110,6 @@ public class VscCreation extends AbstractModification {
 
             activePowerControlExtension.add();
         }
-
-        if (modificationInfos.getEquipmentName() != null) {
-            ModificationUtils.getInstance()
-                    .reportElementaryCreation(subReporter, modificationInfos.getEquipmentName(), "Name");
-        }
         reportHvdcLineInfos(subReporter);
 
         subReporter.report(Report.builder()
@@ -123,6 +118,11 @@ public class VscCreation extends AbstractModification {
                 .withValue("id", modificationInfos.getEquipmentId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .build());
+
+        if (modificationInfos.getEquipmentName() != null) {
+            ModificationUtils.getInstance()
+                    .reportElementaryCreation(subReporter, modificationInfos.getEquipmentName(), "Name");
+        }
     }
 
     private void reportHvdcLineInfos(Reporter subReporter) {
