@@ -72,9 +72,9 @@ public class VscCreation extends AbstractModification {
 
     @Override
     public void apply(Network network, Reporter subReporter) {
-        VscConverterStation converterStation1 = createConvertStation(network, modificationInfos.getConverterStation1(), subReporter, "Converter station 1");
+        VscConverterStation converterStation1 = createConverterStation(network, modificationInfos.getConverterStation1(), subReporter, "Converter station 1");
 
-        VscConverterStation converterStation2 = createConvertStation(network, modificationInfos.getConverterStation2(), subReporter, "Converter station 2");
+        VscConverterStation converterStation2 = createConverterStation(network, modificationInfos.getConverterStation2(), subReporter, "Converter station 2");
 
         HvdcLine hvdcLine = network.newHvdcLine()
                 .setId(modificationInfos.getEquipmentId())
@@ -162,10 +162,10 @@ public class VscCreation extends AbstractModification {
         ModificationUtils.getInstance().reportModifications(setPointsReporter, angleDroopActivePowerControlReports, "vscAngleDroop", "Angle droop active power control");
     }
 
-    private VscConverterStation createConvertStation(Network network,
-                                                     ConverterStationCreationInfos converterStationCreationInfos,
-                                                     Reporter subReporter,
-                                                     String logFieldName) {
+    private VscConverterStation createConverterStation(Network network,
+                                                       ConverterStationCreationInfos converterStationCreationInfos,
+                                                       Reporter subReporter,
+                                                       String logFieldName) {
         Reporter converterStationReporter = subReporter.createSubReporter("converterStationCreated" + logFieldName, logFieldName);
         List<Report> converterStationReports = new ArrayList<>();
         VoltageLevel voltageLevel = ModificationUtils.getInstance().getVoltageLevel(network, converterStationCreationInfos.getVoltageLevelId());

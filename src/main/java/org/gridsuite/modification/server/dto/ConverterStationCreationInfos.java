@@ -56,9 +56,6 @@ public class ConverterStationCreationInfos extends InjectionCreationInfos implem
     @Schema(description = "Reactive capability curve points")
     private List<ReactiveCapabilityCurveCreationInfos> reactiveCapabilityCurvePoints;
 
-    @Schema(description = "Connection Position")
-    private Integer connectionPosition;
-
     public ConverterStationCreationEntity toEntity() {
         return new ConverterStationCreationEntity(this);
     }
