@@ -872,7 +872,7 @@ public final class ModificationUtils {
         }
     }
 
-    public static void createReactiveLimits(ReactiveLimitsHolderInfos creationInfos,
+    public void createReactiveLimits(ReactiveLimitsHolderInfos creationInfos,
                                             ReactiveLimitsHolder reactiveLimitsHolder,
                                             Reporter subReporter) {
         if (Boolean.TRUE.equals(creationInfos.getReactiveCapabilityCurve())) {
@@ -882,7 +882,7 @@ public final class ModificationUtils {
         }
     }
 
-    public static void createMinMaxReactiveLimits(ReactiveLimitsHolderInfos batteryCreationInfos,
+    public void createMinMaxReactiveLimits(ReactiveLimitsHolderInfos batteryCreationInfos,
                                                   ReactiveLimitsHolder reactiveLimitsHolder,
                                                   Reporter subReporter) {
         List<Report> minMaxReactiveLimitsReports = new ArrayList<>();
@@ -912,7 +912,7 @@ public final class ModificationUtils {
         }
     }
 
-    public static void createReactiveCapabilityCurve(ReactiveLimitsHolderInfos creationInfos,
+    public void createReactiveCapabilityCurve(ReactiveLimitsHolderInfos creationInfos,
                                                      ReactiveLimitsHolder reactiveLimitsHolder,
                                                      Reporter subReporter) {
         List<Report> pointsReports = new ArrayList<>();
@@ -941,7 +941,7 @@ public final class ModificationUtils {
         ModificationUtils.getInstance().reportModifications(subReporterReactiveLimits, pointsReports, "curveReactiveLimitsCreated", "By diagram");
     }
 
-    private static void createReactiveCapabilityCurvePoint(ReactiveCapabilityCurveAdder adder,
+    private void createReactiveCapabilityCurvePoint(ReactiveCapabilityCurveAdder adder,
                                                            ReactiveCapabilityCurveCreationInfos point,
                                                            List<Report> reports,
                                                            String fieldSuffix) {

@@ -30,7 +30,6 @@ import java.util.List;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.CREATE_VSC_ERROR;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.HVDC_LINE_ALREADY_EXISTS;
-import static org.gridsuite.modification.server.modifications.ModificationUtils.createReactiveLimits;
 
 /**
  * @author Seddik Yengui <seddik.yengui at rte-france.com>
@@ -73,13 +72,9 @@ public class VscCreation extends AbstractModification {
 
     @Override
     public void apply(Network network, Reporter subReporter) {
-        VscConverterStation converterStation1 = modificationInfos.getConverterStation1() == null ?
-                null :
-                createConvertStation(network, modificationInfos.getConverterStation1(), subReporter, "Converter station 1");
+        VscConverterStation converterStation1 = createConvertStation(network, modificationInfos.getConverterStation1(), subReporter, "Converter station 1");
 
-        VscConverterStation converterStation2 = modificationInfos.getConverterStation1() == null ?
-                null :
-                createConvertStation(network, modificationInfos.getConverterStation2(), subReporter, "Converter station 2");
+        VscConverterStation converterStation2 = createConvertStation(network, modificationInfos.getConverterStation2(), subReporter, "Converter station 2");
 
         HvdcLine hvdcLine = network.newHvdcLine()
                 .setId(modificationInfos.getEquipmentId())
@@ -272,7 +267,7 @@ public class VscCreation extends AbstractModification {
                 "converterStationCharacteristics",
                 "Characteristics");
 
-        createReactiveLimits(converterStationCreationInfos, vscConverterStation, subReporter);
+        ModificationUtils.getInstance().createReactiveLimits(converterStationCreationInfos, vscConverterStation, subReporter);
 
         List<Report> setPointsReports = new ArrayList<>();
         setPointsReports.add(Report.builder().withKey("voltageRegulationOn")
