@@ -823,7 +823,7 @@ public final class ModificationUtils {
         }
     }
 
-    private static NetworkModificationException makeEquipmentException(NetworkModificationException.Type errorType,
+    private NetworkModificationException makeEquipmentException(NetworkModificationException.Type errorType,
                                                                        String equipmentId,
                                                                        String equipmentName,
                                                                        String msgSuffix) {
