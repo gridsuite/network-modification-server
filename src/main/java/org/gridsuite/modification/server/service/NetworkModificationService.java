@@ -289,4 +289,8 @@ public class NetworkModificationService {
         List<ModificationEntity> duplicatedModificationsEntities = networkModificationRepository.copyModificationsEntities(originGroupUuid);
         return saveAndApplyModifications(targetGroupUuid, networkUuid, variantId, reportInfos, duplicatedModificationsEntities);
     }
+
+    public void deleteStashedModificationGroup(UUID groupUuid, boolean errorOnGroupNotFound) {
+        networkModificationRepository.deleteStashedModificationGroup(groupUuid, errorOnGroupNotFound);
+    }
 }

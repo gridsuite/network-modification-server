@@ -233,4 +233,13 @@ public class NetworkModificationController {
                                                                                              @Parameter(description = "origin group UUID, from where modifications are copied") @RequestParam(value = "duplicateFrom") UUID originGroupUuid) {
         return ResponseEntity.ok().body(networkModificationService.duplicateModificationsInGroup(targetGroupUuid, networkUuid, variantId, new ReportInfos(reportUuid, reporterId.toString()), originGroupUuid));
     }
+
+    @DeleteMapping(value = "/groups/{groupUuid}/stashed-modifications")
+    @Operation(summary = "Delete the stashed modifications group")
+    @ApiResponse(responseCode = "200", description = "Stashed modifications group deleted")
+    public ResponseEntity<Void> deleteStashedModificationGroup(@Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid,
+                                                        @Parameter(description = "Return 404 if group is not found") @RequestParam(name = "errorOnGroupNotFound", required = false, defaultValue = "true") Boolean errorOnGroupNotFound) {
+        networkModificationService.deleteStashedModificationGroup(groupUuid, errorOnGroupNotFound);
+        return ResponseEntity.ok().build();
+    }
 }
