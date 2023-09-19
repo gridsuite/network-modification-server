@@ -244,7 +244,9 @@ public class NetworkModificationRepository {
         try {
             ModificationGroupEntity groupEntity = getModificationGroup(groupUuid);
             if (!groupEntity.getModifications().isEmpty()) {
-                modificationRepository.deleteAll(groupEntity.getModifications().stream().filter(modificationEntity -> modificationEntity.getStashed().equals(true)).collect(Collectors.toList()));
+                List<UUID> stashedModifications = groupEntity.getModifications().stream()
+                    .filter(modificationEntity -> modificationEntity.getStashed()).map(modification -> modification.getId()).collect(Collectors.toList());
+                deleteModifications(groupUuid, stashedModifications);
             }
         } catch (NetworkModificationException e) {
             if (e.getType() == MODIFICATION_GROUP_NOT_FOUND && !errorOnGroupNotFound) {
