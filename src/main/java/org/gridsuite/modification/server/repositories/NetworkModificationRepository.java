@@ -245,7 +245,7 @@ public class NetworkModificationRepository {
             ModificationGroupEntity groupEntity = getModificationGroup(groupUuid);
             if (!groupEntity.getModifications().isEmpty()) {
                 List<UUID> stashedModifications = groupEntity.getModifications().stream()
-                    .filter(modificationEntity -> modificationEntity.getStashed()).map(modification -> modification.getId()).collect(Collectors.toList());
+                    .filter(ModificationEntity::getStashed).map(ModificationEntity::getId).collect(Collectors.toList());
                 deleteModifications(groupUuid, stashedModifications);
             }
         } catch (NetworkModificationException e) {
