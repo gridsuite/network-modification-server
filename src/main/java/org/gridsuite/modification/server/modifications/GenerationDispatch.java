@@ -148,16 +148,8 @@ public class GenerationDispatch extends AbstractModification {
         return null;
     }
 
-    private static List<Generator> computeAdjustableGenerators(Network network, Component component, List<String> generatorsWithFixedSupply,
-                                                               List<SubstationsGeneratorsOrderingInfos> substationsGeneratorsOrderingInfos,
-                                                               Reporter reporter) {
-        List<String> generatorsToReturn = new ArrayList<>();
-
-        // get all connected generators in the component
-        List<Generator> generators = component.getBusStream().flatMap(Bus::getGeneratorStream).collect(Collectors.toList());
-
-        // remove generators with fixed supply
-        generators.removeIf(generator -> generatorsWithFixedSupply.contains(generator.getId()));
+    private static Map<Double, List<String>> getGeneratorsByMarginalCost(List<Generator> generators, Reporter reporter, String reporterSuffixKey) {
+        Map<Double, List<String>> generatorsByMarginalCost = new TreeMap<>();
 
         // set targetP to 0
         generators.forEach(generator -> generator.setTargetP(0.));
@@ -166,15 +158,15 @@ public class GenerationDispatch extends AbstractModification {
         List<Generator> generatorsWithMarginalCost = generators.stream().filter(generator -> {
             Double marginalCost = getGeneratorMarginalCost(generator);
             if (marginalCost == null) {
-                report(reporter, Integer.toString(component.getNum()), "MissingMarginalCostForGenerator", "The generator ${generator} does not have a marginal cost",
-                    Map.of(GENERATOR, generator.getId()), TypedValue.TRACE_SEVERITY);
+                report(reporter, reporterSuffixKey, "MissingMarginalCostForGenerator", "The generator ${generator} does not have a marginal cost",
+                        Map.of(GENERATOR, generator.getId()), TypedValue.TRACE_SEVERITY);
             }
             return marginalCost != null;
         }).collect(Collectors.toList());
 
         int nbNoCost = generators.size() - generatorsWithMarginalCost.size();
         if (nbNoCost > 0) {
-            report(reporter, Integer.toString(component.getNum()), "NbGeneratorsWithNoCost", "${nbNoCost} generator${isPlural} been discarded from generation dispatch because of missing marginal cost. Their active power set point has been set to 0",
+            report(reporter, reporterSuffixKey, "NbGeneratorsWithNoCost", "${nbNoCost} generator${isPlural} been discarded from generation dispatch because of missing marginal cost. Their active power set point has been set to 0",
                     Map.of("nbNoCost", nbNoCost,
                             "isPlural", nbNoCost > 1 ? "s have" : " has"),
                     TypedValue.WARN_SEVERITY);
@@ -182,25 +174,44 @@ public class GenerationDispatch extends AbstractModification {
 
         // build map of generators by marginal cost
         generatorsWithMarginalCost.sort(Comparator.comparing(GenerationDispatch::getGeneratorMarginalCost));
-        Map<Double, List<String>> generatorsByMarginalCost = new TreeMap<>();
         generatorsWithMarginalCost.forEach(g -> {
             Double marginalCost = getGeneratorMarginalCost(g);
             generatorsByMarginalCost.computeIfAbsent(marginalCost, k -> new ArrayList<>());
             generatorsByMarginalCost.get(marginalCost).add(g.getId());
         });
 
-        // log substations not found
+        return generatorsByMarginalCost;
+    }
+
+    private static void reportUnknownSubstations(Network network, List<SubstationsGeneratorsOrderingInfos> substationsGeneratorsOrderingInfos, Reporter reporter, String reporterSuffixKey) {
         if (!CollectionUtils.isEmpty(substationsGeneratorsOrderingInfos)) {
             substationsGeneratorsOrderingInfos.forEach(sInfo ->
-                sInfo.getSubstationIds().forEach(sId -> {
-                    Substation substation = network.getSubstation(sId);
-                    if (substation == null) {
-                        report(reporter, Integer.toString(component.getNum()), "SubstationNotFound", "Substation ${substation} not found",
-                            Map.of(SUBSTATION, sId), TypedValue.WARN_SEVERITY);
-                    }
-                }));
+                    sInfo.getSubstationIds().forEach(sId -> {
+                        Substation substation = network.getSubstation(sId);
+                        if (substation == null) {
+                            report(reporter, reporterSuffixKey, "SubstationNotFound", "Substation ${substation} not found",
+                                    Map.of(SUBSTATION, sId), TypedValue.WARN_SEVERITY);
+                        }
+                    }));
         }
+    }
 
+    private static List<Generator> computeAdjustableGenerators(Network network, Component component, List<String> generatorsWithFixedSupply,
+                                                               List<SubstationsGeneratorsOrderingInfos> substationsGeneratorsOrderingInfos,
+                                                               Reporter reporter) {
+        List<String> generatorsToReturn = new ArrayList<>();
+        String reporterSuffixKey = Integer.toString(component.getNum());
+
+        // log substations not found
+        reportUnknownSubstations(network, substationsGeneratorsOrderingInfos, reporter, reporterSuffixKey);
+
+        // get all connected generators in the component
+        List<Generator> generators = component.getBusStream().flatMap(Bus::getGeneratorStream).collect(Collectors.toList());
+
+        // remove generators with fixed supply
+        generators.removeIf(generator -> generatorsWithFixedSupply.contains(generator.getId()));
+
+        Map<Double, List<String>> generatorsByMarginalCost = getGeneratorsByMarginalCost(generators, reporter, reporterSuffixKey);
         generatorsByMarginalCost.forEach((mCost, gList) -> {  // loop on generators of same cost
             if (!CollectionUtils.isEmpty(substationsGeneratorsOrderingInfos)) {  // substations hierarchy provided
                 // build mapGeneratorsBySubstationsList, that will contain all the generators with the same marginal cost as mCost contained in each list of substations
@@ -253,7 +264,7 @@ public class GenerationDispatch extends AbstractModification {
         });
 
         if (generatorsToReturn.isEmpty()) {
-            report(reporter, Integer.toString(component.getNum()), "NoAvailableAdjustableGenerator", "There is no adjustable generator",
+            report(reporter, reporterSuffixKey, "NoAvailableAdjustableGenerator", "There is no adjustable generator",
                 Map.of(), TypedValue.WARN_SEVERITY);
         }
 
