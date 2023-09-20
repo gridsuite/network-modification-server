@@ -13,6 +13,7 @@ import lombok.Setter;
 import org.gridsuite.modification.server.dto.VoltageInitGeneratorModificationInfos;
 import org.gridsuite.modification.server.dto.VoltageInitModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.VoltageInitShuntCompensatorModificationInfos;
 import org.gridsuite.modification.server.dto.VoltageInitStaticVarCompensatorModificationInfos;
 import org.gridsuite.modification.server.dto.VoltageInitTransformerModificationInfos;
 import org.gridsuite.modification.server.dto.VoltageInitVscConverterStationModificationInfos;
@@ -61,6 +62,12 @@ public class VoltageInitModificationEntity extends ModificationEntity {
         foreignKey = @ForeignKey(name = "VoltageInitModificationEntity_vsc_converter_stations_fk1"))
     private List<VoltageInitVscConverterStationModificationEmbeddable> vscConverterStations;
 
+    @ElementCollection
+    @CollectionTable(name = "voltageInitShuntCompensatorsModification",
+        indexes = {@Index(name = "VoltageInitModificationEntity_shunt_compensators_idx1", columnList = "voltage_init_modification_entity_id")},
+        foreignKey = @ForeignKey(name = "VoltageInitModificationEntity_shunt_compensators_fk1"))
+    private List<VoltageInitShuntCompensatorModificationEmbeddable> shuntCompensators;
+
     public VoltageInitModificationEntity(VoltageInitModificationInfos voltageInitModificationInfos) {
         super(voltageInitModificationInfos);
         assignAttributes(voltageInitModificationInfos);
@@ -77,6 +84,7 @@ public class VoltageInitModificationEntity extends ModificationEntity {
         transformers = toEmbeddableVoltageInitTransformers(voltageInitModificationInfos.getTransformers());
         staticVarCompensators = toEmbeddableVoltageInitStaticVarCompensators(voltageInitModificationInfos.getStaticVarCompensators());
         vscConverterStations = toEmbeddableVoltageInitVscConverterStations(voltageInitModificationInfos.getVscConverterStations());
+        shuntCompensators = toEmbeddableVoltageInitShuntCompensators(voltageInitModificationInfos.getShuntCompensators());
     }
 
     public static List<VoltageInitGeneratorModificationEmbeddable> toEmbeddableVoltageInitGenerators(List<VoltageInitGeneratorModificationInfos> generators) {
@@ -131,6 +139,19 @@ public class VoltageInitModificationEntity extends ModificationEntity {
             .collect(Collectors.toList()) : null;
     }
 
+    public static List<VoltageInitShuntCompensatorModificationEmbeddable> toEmbeddableVoltageInitShuntCompensators(List<VoltageInitShuntCompensatorModificationInfos> shuntCompensators) {
+        return shuntCompensators == null ? null : shuntCompensators.stream()
+            .map(shuntCompensator -> new VoltageInitShuntCompensatorModificationEmbeddable(shuntCompensator.getShuntCompensatorId(), shuntCompensator.getSectionCount(), shuntCompensator.getConnect()))
+            .collect(Collectors.toList());
+    }
+
+    private List<VoltageInitShuntCompensatorModificationInfos> toShuntCompensatorsModification(List<VoltageInitShuntCompensatorModificationEmbeddable> shuntCompensators) {
+        return shuntCompensators != null ? shuntCompensators
+            .stream()
+            .map(shuntCompensator -> new VoltageInitShuntCompensatorModificationInfos(shuntCompensator.getShuntCompensatorId(), shuntCompensator.getSectionCount(), shuntCompensator.getConnect()))
+            .collect(Collectors.toList()) : null;
+    }
+
     @Override
     public VoltageInitModificationInfos toModificationInfos() {
         return VoltageInitModificationInfos.builder()
@@ -140,6 +161,7 @@ public class VoltageInitModificationEntity extends ModificationEntity {
             .transformers(toTransformersModification(transformers))
             .staticVarCompensators(toStaticVarCompensatorsModification(staticVarCompensators))
             .vscConverterStations(toVscConverterStationsModification(vscConverterStations))
+            .shuntCompensators(toShuntCompensatorsModification(shuntCompensators))
             .build();
     }
 }

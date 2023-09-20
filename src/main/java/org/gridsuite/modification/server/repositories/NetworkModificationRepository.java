@@ -238,4 +238,21 @@ public class NetworkModificationRepository {
             .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationUuid)))
             .update(modificationInfos);
     }
+
+    @Transactional
+    public void deleteStashedModificationInGroup(UUID groupUuid, boolean errorOnGroupNotFound) {
+        try {
+            ModificationGroupEntity groupEntity = getModificationGroup(groupUuid);
+            if (!groupEntity.getModifications().isEmpty()) {
+                List<UUID> stashedModifications = groupEntity.getModifications().stream()
+                    .filter(ModificationEntity::getStashed).map(ModificationEntity::getId).collect(Collectors.toList());
+                deleteModifications(groupUuid, stashedModifications);
+            }
+        } catch (NetworkModificationException e) {
+            if (e.getType() == MODIFICATION_GROUP_NOT_FOUND && !errorOnGroupNotFound) {
+                return;
+            }
+            throw e;
+        }
+    }
 }
