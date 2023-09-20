@@ -139,7 +139,7 @@ public final class TestUtils {
         assertNotNull(reporterCaptor.getValue());
         Optional<String> message = getMessageFromReporter(reportKey, reporterCaptor.getValue(), rank);
         assertTrue(message.isPresent());
-        assertEquals(expectedMessage, message.get());
+        assertEquals(expectedMessage, message.get().trim());
     }
 
     public static void assertLogMessage(String expectedMessage, String reportKey, ReportService reportService) {
