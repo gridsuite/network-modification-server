@@ -151,9 +151,9 @@ public class GenerationDispatch extends AbstractModification {
     private static List<Generator> computeAdjustableGenerators(Network network, Component component, List<String> generatorsWithFixedSupply,
                                                                List<SubstationsGeneratorsOrderingInfos> substationsGeneratorsOrderingInfos,
                                                                Reporter reporter) {
-        List<Generator> generatorsWithMarginalCost;
+        List<String> generatorsToReturn = new ArrayList<>();
 
-        // get all generators in the component
+        // get all connected generators in the component
         List<Generator> generators = component.getBusStream().flatMap(Bus::getGeneratorStream).collect(Collectors.toList());
 
         // remove generators with fixed supply
@@ -163,14 +163,22 @@ public class GenerationDispatch extends AbstractModification {
         generators.forEach(generator -> generator.setTargetP(0.));
 
         // get generators with marginal cost
-        generatorsWithMarginalCost = generators.stream().filter(generator -> {
+        List<Generator> generatorsWithMarginalCost = generators.stream().filter(generator -> {
             Double marginalCost = getGeneratorMarginalCost(generator);
             if (marginalCost == null) {
                 report(reporter, Integer.toString(component.getNum()), "MissingMarginalCostForGenerator", "The generator ${generator} does not have a marginal cost",
-                    Map.of(GENERATOR, generator.getId()), TypedValue.WARN_SEVERITY);
+                    Map.of(GENERATOR, generator.getId()), TypedValue.TRACE_SEVERITY);
             }
             return marginalCost != null;
         }).collect(Collectors.toList());
+
+        int nbNoCost = generators.size() - generatorsWithMarginalCost.size();
+        if (nbNoCost > 0) {
+            report(reporter, Integer.toString(component.getNum()), "NbGeneratorsWithNoCost", "${nbNoCost} generator${isPlural} been discarded from generation dispatch because of missing marginal cost. Their active power set point has been set to 0",
+                    Map.of("nbNoCost", nbNoCost,
+                            "isPlural", nbNoCost > 1 ? "s have" : " has"),
+                    TypedValue.WARN_SEVERITY);
+        }
 
         // build map of generators by marginal cost
         generatorsWithMarginalCost.sort(Comparator.comparing(GenerationDispatch::getGeneratorMarginalCost));
@@ -180,8 +188,6 @@ public class GenerationDispatch extends AbstractModification {
             generatorsByMarginalCost.computeIfAbsent(marginalCost, k -> new ArrayList<>());
             generatorsByMarginalCost.get(marginalCost).add(g.getId());
         });
-
-        List<String> generatorsToReturn = new ArrayList<>();
 
         // log substations not found
         if (!CollectionUtils.isEmpty(substationsGeneratorsOrderingInfos)) {
@@ -257,6 +263,7 @@ public class GenerationDispatch extends AbstractModification {
     private static class GeneratorTargetPListener extends DefaultNetworkListener {
         private final Reporter reporter;
         private final String suffixKey;
+        private final List<String> updatedGenerators = new ArrayList<>();
 
         GeneratorTargetPListener(Reporter reporter, String suffixKey) {
             this.reporter = reporter;
@@ -268,8 +275,25 @@ public class GenerationDispatch extends AbstractModification {
             if (identifiable.getType() == IdentifiableType.GENERATOR &&
                 attribute.equals("targetP") &&
                 Double.compare((double) oldValue, (double) newValue) != 0) {
-                report(reporter, suffixKey, "GeneratorSetTargetP", "Generator ${generator} targetP : ${oldValue} MW --> ${newValue} MW",
-                    Map.of(GENERATOR, identifiable.getId(), "oldValue", oldValue, "newValue", newValue), TypedValue.INFO_SEVERITY);
+                report(reporter, suffixKey, "GeneratorSetTargetP", "The active power set point of generator ${generator} has been set to ${newValue} MW",
+                    Map.of(GENERATOR, identifiable.getId(), "newValue", newValue), TypedValue.TRACE_SEVERITY);
+                updatedGenerators.add(identifiable.getId());
+            }
+        }
+
+        public void endReport(List<Generator> adjustableGenerators) {
+            report(reporter, suffixKey, "TotalGeneratorSetTargetP", "The active power set points of ${nbUpdatedGenerator} generator${isPlural} have been updated as a result of generation dispatch",
+                    Map.of("nbUpdatedGenerator", updatedGenerators.size(), "isPlural", updatedGenerators.size() > 1 ? "s" : ""), TypedValue.INFO_SEVERITY);
+            // what are unchanged generators ?
+            adjustableGenerators.stream()
+                .filter(g -> !updatedGenerators.contains(g.getId()))
+                .forEach(g -> report(reporter, suffixKey, "GeneratorUnchangedTargetP", "Generator ${generator} has not been selected by the merit order algorithm. Its active power set point has been set to 0",
+                        Map.of(GENERATOR, g.getId()), TypedValue.TRACE_SEVERITY));
+            int nbUnchangedGenerators = adjustableGenerators.size() - updatedGenerators.size();
+            if (nbUnchangedGenerators > 0) {
+                report(reporter, suffixKey, "TotalGeneratorUnchangedTargetP", "${nbUnchangedGenerator} eligible generator${isPlural} not been selected by the merit order algorithm. Their active power set point has been set to 0",
+                        Map.of("nbUnchangedGenerator", nbUnchangedGenerators,
+                                "isPlural", nbUnchangedGenerators > 1 ? "s have" : " has"), TypedValue.INFO_SEVERITY);
             }
         }
     }
@@ -379,12 +403,41 @@ public class GenerationDispatch extends AbstractModification {
         return Math.max(generator.getMinP(), res * (1. - genFrequencyReserve / 100.));
     }
 
+    private void reportDisconnectedGenerators(List<Generator> disconnectedGenerators, int componentNum, Reporter reporter) {
+        AtomicInteger disconnectedGeneratorCounter = new AtomicInteger(0);
+        disconnectedGenerators.stream()
+                .filter(g -> g.getTerminal().getBusView() != null && g.getTerminal().getBusView().getConnectableBus() != null &&
+                        g.getTerminal().getBusView().getConnectableBus().getSynchronousComponent().getNum() == componentNum)
+                .forEach(g -> {
+                    report(reporter, Integer.toString(componentNum), "DisconnectedGenerator", "Generator ${generator} has been discarded from generation dispatch because it is disconnected. Its active power set point remains unchanged",
+                            Map.of(GENERATOR, g.getId()), TypedValue.TRACE_SEVERITY);
+                    disconnectedGeneratorCounter.getAndIncrement();
+                });
+        if (disconnectedGeneratorCounter.get() > 0) {
+            report(reporter, Integer.toString(componentNum), "TotalDisconnectedGenerator", "${nbDisconnectedGenerator} generator${isPlural} been discarded from generation dispatch because their are disconnected. Their active power set point remains unchanged",
+                    Map.of("nbDisconnectedGenerator", disconnectedGeneratorCounter.get(),
+                            "isPlural", disconnectedGeneratorCounter.get() > 1 ? "s have" : " has"),
+                    TypedValue.INFO_SEVERITY);
+        }
+    }
+
     @Override
     public void apply(Network network, Reporter subReporter) {
         Collection<Component> synchronousComponents = network.getBusView().getBusStream()
             .filter(Bus::isInMainConnectedComponent)
             .map(Bus::getSynchronousComponent)
             .collect(collectingAndThen(toCollection(() -> new TreeSet<>(comparingInt(Component::getNum))), ArrayList::new));
+
+        report(subReporter, "", "NbSynchronousComponents", "Network has ${scNumber} synchronous component${isPlural}: ${scList}",
+                Map.of("scNumber", synchronousComponents.size(),
+                        "isPlural", synchronousComponents.size() > 1 ? "s" : "",
+                        "scList", synchronousComponents.stream().map(sc -> "SC" + sc.getNum()).collect(Collectors.joining(", "))),
+                TypedValue.INFO_SEVERITY);
+
+        // all disconnected generators at network level (for report purpose)
+        List<Generator> disconnectedGenerators = network.getGeneratorStream()
+                .filter(g -> !g.getTerminal().isConnected())
+                .toList();
 
         // get generators for which there will be no reduction of maximal power
         List<String> generatorsWithoutOutage = collectGeneratorsWithoutOutage(network, subReporter);
@@ -401,6 +454,9 @@ public class GenerationDispatch extends AbstractModification {
             Reporter componentReporter = subReporter.createSubReporter("Network CC0 " + SYNCHRONOUS_COMPONENT + componentNum, "Network CC0 " + SYNCHRONOUS_COMPONENT + componentNum);
 
             Reporter powerToDispatchReporter = componentReporter.createSubReporter(POWER_TO_DISPATCH, POWER_TO_DISPATCH);
+
+            // log disconnected generators attached to this synchronous component
+            reportDisconnectedGenerators(disconnectedGenerators, componentNum, powerToDispatchReporter);
 
             // get total value of connected loads in the connected component
             double totalDemand = computeTotalDemand(component, generationDispatchInfos.getLossCoefficient());
@@ -449,6 +505,7 @@ public class GenerationDispatch extends AbstractModification {
                 Scalable scalable = Scalable.stack(generatorsScalable.toArray(Scalable[]::new));
                 realized = scalable.scale(network, totalAmountSupplyToBeDispatched, new ScalingParameters().setAllowsGeneratorOutOfActivePowerLimits(true));
 
+                listener.endReport(adjustableGenerators);
                 network.removeListener(listener);
             }
 
