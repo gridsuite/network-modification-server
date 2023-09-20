@@ -27,7 +27,7 @@ spring:
           destination: ${powsybl-ws.rabbitmq.destination.prefix:}build.stopped
         publishFailedBuild-out-0:
           destination: ${powsybl-ws.rabbitmq.destination.prefix:}build.failed
-      output-bindings: publishBuild;publishResultBuild;publishCancelBuild;publishStoppedBuild;publishFailedBuild
+      output-bindings: publishBuild-out-0;publishResultBuild-out-0;publishCancelBuild-out-0;publishStoppedBuild-out-0;publishFailedBuild-out-0
 
 powsybl-ws:
   database:
