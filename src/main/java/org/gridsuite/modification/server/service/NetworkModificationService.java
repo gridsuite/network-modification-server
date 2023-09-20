@@ -290,7 +290,7 @@ public class NetworkModificationService {
         return saveAndApplyModifications(targetGroupUuid, networkUuid, variantId, reportInfos, duplicatedModificationsEntities);
     }
 
-    public void deleteStashedModificationGroup(UUID groupUuid, boolean errorOnGroupNotFound) {
-        networkModificationRepository.deleteStashedModificationGroup(groupUuid, errorOnGroupNotFound);
+    public void deleteStashedModificationInGroup(UUID groupUuid, boolean errorOnGroupNotFound) {
+        networkModificationRepository.deleteStashedModificationInGroup(groupUuid, errorOnGroupNotFound);
     }
 }

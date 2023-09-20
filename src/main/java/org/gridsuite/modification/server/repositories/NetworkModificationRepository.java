@@ -240,7 +240,7 @@ public class NetworkModificationRepository {
     }
 
     @Transactional
-    public void deleteStashedModificationGroup(UUID groupUuid, boolean errorOnGroupNotFound) {
+    public void deleteStashedModificationInGroup(UUID groupUuid, boolean errorOnGroupNotFound) {
         try {
             ModificationGroupEntity groupEntity = getModificationGroup(groupUuid);
             if (!groupEntity.getModifications().isEmpty()) {

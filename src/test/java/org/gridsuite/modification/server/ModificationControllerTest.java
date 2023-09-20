@@ -1303,5 +1303,6 @@ public class ModificationControllerTest {
         assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID, false, true, true).size());
         mockMvc.perform(delete("/v1/groups/" + TEST_GROUP_ID + "/stashed-modifications").queryParam("errorOnGroupNotFound", "false")).andExpect(status().isOk());
         assertEquals(0, modificationRepository.getModifications(TEST_GROUP_ID, false, true, true).size());
+        mockMvc.perform(delete("/v1/groups/" + UUID.randomUUID() + "/stashed-modifications").queryParam("errorOnGroupNotFound", "false")).andExpect(status().isOk());
     }
 }
