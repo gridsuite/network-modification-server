@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.dto;
 
+import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -28,4 +29,13 @@ public class InjectionCreationInfos extends EquipmentCreationInfos {
 
     @Schema(description = "Bus id")
     private String busOrBusbarSectionId;
+
+    @Schema(description = "Connection Name")
+    private String connectionName;
+
+    @Schema(description = "Connection Direction")
+    private ConnectablePosition.Direction connectionDirection;
+
+    @Schema(description = "Connection Position")
+    private Integer connectionPosition;
 }

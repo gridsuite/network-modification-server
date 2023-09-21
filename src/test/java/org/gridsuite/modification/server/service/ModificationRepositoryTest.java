@@ -1105,10 +1105,26 @@ public class ModificationRepositoryTest {
                     .vscConverterStationId("VSC2")
                     .voltageSetpoint(224.)
                     .build()))
+            .shuntCompensators(List.of(
+                VoltageInitShuntCompensatorModificationInfos.builder()
+                    .shuntCompensatorId("v2shunt")
+                    .sectionCount(1)
+                    .connect(true)
+                    .build(),
+                VoltageInitShuntCompensatorModificationInfos.builder()
+                    .shuntCompensatorId("v5shunt")
+                    .sectionCount(0)
+                    .connect(false)
+                    .build(),
+                VoltageInitShuntCompensatorModificationInfos.builder()
+                    .shuntCompensatorId("v6shunt")
+                    .sectionCount(1)
+                    .connect(false)
+                    .build()))
             .build().toEntity();
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(voltageInitModificationEntity));
-        assertRequestsCount(1, 11, 1, 0);
+        assertRequestsCount(1, 14, 1, 0);
 
         List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
         assertEquals(1, modificationInfos.size());
@@ -1120,7 +1136,7 @@ public class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(voltageInitModificationEntity.getId()));
-        assertRequestsCount(2, 0, 0, 6);
+        assertRequestsCount(2, 0, 0, 7);
 
         SQLStatementCountValidator.reset();
         assertEquals(0, networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).size());

@@ -7,7 +7,6 @@
 package org.gridsuite.modification.server.entities.equipment.creation;
 
 import com.powsybl.iidm.network.LoadType;
-import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
@@ -34,15 +33,6 @@ public class LoadCreationEntity extends InjectionCreationEntity {
     @Column(name = "reactivePower")
     private double reactivePower;
 
-    @Column(name = "connectionName")
-    private String connectionName;
-
-    @Column(name = "connectionDirection")
-    private ConnectablePosition.Direction connectionDirection;
-
-    @Column(name = "connectionPosition")
-    private Integer connectionPosition;
-
     public LoadCreationEntity(@NonNull LoadCreationInfos loadCreationInfos) {
         super(loadCreationInfos);
         assignAttributes(loadCreationInfos);
@@ -58,9 +48,6 @@ public class LoadCreationEntity extends InjectionCreationEntity {
         loadType = loadCreationInfos.getLoadType();
         activePower = loadCreationInfos.getActivePower();
         reactivePower = loadCreationInfos.getReactivePower();
-        connectionName = loadCreationInfos.getConnectionName();
-        connectionDirection = loadCreationInfos.getConnectionDirection();
-        connectionPosition = loadCreationInfos.getConnectionPosition();
     }
 
     @Override
