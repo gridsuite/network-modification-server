@@ -97,6 +97,14 @@ public final class ModificationUtils {
         return generator;
     }
 
+    VscConverterStation getVscConverterStation(Network network, String converterStationId) {
+        VscConverterStation vscConverterStation = network.getVscConverterStation(converterStationId);
+        if (vscConverterStation == null) {
+            throw new NetworkModificationException(VSC_CONVERTER_STATION_NOT_FOUND, "Vsc converter station  " + converterStationId + " does not exist in network");
+        }
+        return vscConverterStation;
+    }
+
     public void controlConnectivity(Network network, String voltageLevelId, String busOrBusbarSectionId, Integer connectionPosition) {
         VoltageLevel voltageLevel = getVoltageLevel(network, voltageLevelId);
         if (voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER) {
@@ -428,6 +436,13 @@ public final class ModificationUtils {
             return buildModificationReport(oldValue, newValue, fieldName);
         }
         return null;
+    }
+
+    public Report createEnabledDisabledReport(String key, boolean enabled) {
+        return Report.builder().withKey(key)
+                .withDefaultMessage(enabled ? "    Enabled" : "    Disables")
+                .withSeverity(TypedValue.INFO_SEVERITY)
+                .build();
     }
 
     public Reporter reportModifications(Reporter subReporter, List<Report> reports, String subReporterKey,
