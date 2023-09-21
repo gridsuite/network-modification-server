@@ -150,42 +150,42 @@ public class VscCreationTest extends AbstractNetworkModificationTest {
 
         HvdcLine hvdcLine = getNetwork().getHvdcLine("vsc1");
         assertNotNull(hvdcLine);
-        assertEquals(hvdcLine.getConvertersMode(), HvdcLine.ConvertersMode.SIDE_1_INVERTER_SIDE_2_RECTIFIER);
-        assertEquals(hvdcLine.getNominalV(), 39, 0);
-        assertEquals(hvdcLine.getR(), 4, 0);
-        assertEquals(hvdcLine.getActivePowerSetpoint(), 5, 0);
-        assertEquals(hvdcLine.getMaxP(), 56, 0);
+        assertEquals(HvdcLine.ConvertersMode.SIDE_1_INVERTER_SIDE_2_RECTIFIER, hvdcLine.getConvertersMode());
+        assertEquals(39, hvdcLine.getNominalV(), 0);
+        assertEquals(4, hvdcLine.getR(), 0);
+        assertEquals(5, hvdcLine.getActivePowerSetpoint(), 0);
+        assertEquals(56, hvdcLine.getMaxP(), 0);
 
         HvdcOperatorActivePowerRange hvdcOperatorActivePowerRange = hvdcLine.getExtension(HvdcOperatorActivePowerRange.class);
-        assertEquals(hvdcOperatorActivePowerRange.getOprFromCS1toCS2(), 6, 0);
-        assertEquals(hvdcOperatorActivePowerRange.getOprFromCS2toCS1(), 8, 0);
+        assertEquals(6, hvdcOperatorActivePowerRange.getOprFromCS1toCS2(), 0);
+        assertEquals(8, hvdcOperatorActivePowerRange.getOprFromCS2toCS1(), 0);
 
         HvdcAngleDroopActivePowerControl activePowerControl = hvdcLine.getExtension(HvdcAngleDroopActivePowerControl.class);
-        assertEquals(activePowerControl.getDroop(), 1, 0);
-        assertEquals(activePowerControl.getP0(), 5, 0);
+        assertEquals(1, activePowerControl.getDroop(), 0);
+        assertEquals(5, activePowerControl.getP0(), 0);
 
         VscConverterStation vscConverterStation1 = (VscConverterStation) hvdcLine.getConverterStation1();
         assertNotNull(vscConverterStation1);
-        assertEquals(vscConverterStation1.getReactivePowerSetpoint(), 44, 0);
-        assertEquals(vscConverterStation1.getLossFactor(), 40, 0);
-        assertEquals(vscConverterStation1.getReactiveLimits().getKind(), ReactiveLimitsKind.CURVE);
+        assertEquals(44, vscConverterStation1.getReactivePowerSetpoint(), 0);
+        assertEquals(40, vscConverterStation1.getLossFactor(), 0);
+        assertEquals(ReactiveLimitsKind.CURVE, vscConverterStation1.getReactiveLimits().getKind());
         ReactiveCapabilityCurve reactiveLimits1 = vscConverterStation1.getReactiveLimits(ReactiveCapabilityCurve.class);
-        assertEquals(reactiveLimits1.getPointCount(), 2);
-        assertEquals(reactiveLimits1.getMaxP(), 0.6, 0);
-        assertEquals(reactiveLimits1.getMinP(), 0.4, 0);
-        assertEquals(vscConverterStation1.getVoltageSetpoint(), 66, 0);
-        assertEquals(vscConverterStation1.getTerminal().getVoltageLevel().getId(), "v1");
+        assertEquals(2, reactiveLimits1.getPointCount());
+        assertEquals(0.6, reactiveLimits1.getMaxP(), 0);
+        assertEquals(0.4, reactiveLimits1.getMinP(), 0);
+        assertEquals(66, vscConverterStation1.getVoltageSetpoint(), 0);
+        assertEquals("v1", vscConverterStation1.getTerminal().getVoltageLevel().getId());
 
         VscConverterStation vscConverterStation2 = (VscConverterStation) hvdcLine.getConverterStation2();
         assertNotNull(vscConverterStation2);
-        assertEquals(vscConverterStation2.getReactivePowerSetpoint(), 23, 0);
-        assertEquals(vscConverterStation2.getLossFactor(), 4, 0);
-        assertEquals(vscConverterStation2.getReactiveLimits().getKind(), ReactiveLimitsKind.MIN_MAX);
+        assertEquals(23, vscConverterStation2.getReactivePowerSetpoint(), 0);
+        assertEquals(4, vscConverterStation2.getLossFactor(), 0);
+        assertEquals(ReactiveLimitsKind.MIN_MAX, vscConverterStation2.getReactiveLimits().getKind());
         MinMaxReactiveLimits reactiveLimits2 = vscConverterStation2.getReactiveLimits(MinMaxReactiveLimits.class);
-        assertEquals(reactiveLimits2.getMaxQ(), 66, 0);
-        assertEquals(reactiveLimits2.getMinQ(), 55, 0);
-        assertEquals(vscConverterStation2.getVoltageSetpoint(), 34, 0);
-        assertEquals(vscConverterStation2.getTerminal().getVoltageLevel().getId(), "v2");
+        assertEquals(66, reactiveLimits2.getMaxQ(), 0);
+        assertEquals(55, reactiveLimits2.getMinQ(), 0);
+        assertEquals(34, vscConverterStation2.getVoltageSetpoint(), 0);
+        assertEquals("v2", vscConverterStation2.getTerminal().getVoltageLevel().getId());
     }
 
     @Override

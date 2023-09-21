@@ -36,6 +36,8 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
  */
 
 public class VscCreation extends AbstractModification {
+    public static final String CHARACTERISTICS = "Characteristics";
+    public static final String SETPOINTS = "Setpoints";
     private final VscCreationInfos modificationInfos;
 
     public VscCreation(VscCreationInfos modificationInfos) {
@@ -127,11 +129,11 @@ public class VscCreation extends AbstractModification {
 
     private void reportHvdcLineInfos(Reporter subReporter) {
         List<Report> characteristicsReports = new ArrayList<>();
-        Reporter characteristicReport = subReporter.createSubReporter("vscCharacteristics", "Characteristics");
+        Reporter characteristicReport = subReporter.createSubReporter("vscCharacteristics", CHARACTERISTICS);
         characteristicsReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getDcNominalVoltage(), "DC nominal voltage"));
         characteristicsReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getDcResistance(), "DC resistance"));
         characteristicsReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getMaximumActivePower(), "Pmax"));
-        ModificationUtils.getInstance().reportModifications(characteristicReport, characteristicsReports, "vscCharacteristics", "Characteristics");
+        ModificationUtils.getInstance().reportModifications(characteristicReport, characteristicsReports, "vscCharacteristics", CHARACTERISTICS);
 
         List<Report> limitsReports = new ArrayList<>();
         Reporter limitsReport = subReporter.createSubReporter("vscLimits", "Limits");
@@ -140,11 +142,11 @@ public class VscCreation extends AbstractModification {
         ModificationUtils.getInstance().reportModifications(limitsReport, limitsReports, "vscLimits", "Limits");
 
         List<Report> setPointsReports = new ArrayList<>();
-        Reporter setPointsReporter = subReporter.createSubReporter("vscSetPoints", "Setpoints");
+        Reporter setPointsReporter = subReporter.createSubReporter("vscSetPoints", SETPOINTS);
         setPointsReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getConvertersMode(), "Converters mode"));
         setPointsReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getActivePower(), "Active power"));
         setPointsReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getMaximumActivePower(), "Pmax"));
-        ModificationUtils.getInstance().reportModifications(setPointsReporter, setPointsReports, "vscSetPoints", "Setpoints");
+        ModificationUtils.getInstance().reportModifications(setPointsReporter, setPointsReports, "vscSetPoints", SETPOINTS);
 
         List<Report> angleDroopActivePowerControlReports = new ArrayList<>();
         angleDroopActivePowerControlReports.add(ModificationUtils.getInstance()
@@ -255,7 +257,7 @@ public class VscCreation extends AbstractModification {
         ModificationUtils.getInstance().reportModifications(subReporter,
                 List.of(ModificationUtils.getInstance().buildCreationReport(converterStationCreationInfos.getLossFactor(), "Loss Factor")),
                 "converterStationCharacteristics",
-                "Characteristics");
+                CHARACTERISTICS);
 
         ModificationUtils.getInstance().createReactiveLimits(converterStationCreationInfos, vscConverterStation, subReporter);
 
@@ -263,10 +265,10 @@ public class VscCreation extends AbstractModification {
     }
 
     private void reportConverterStationSetPoints(ConverterStationCreationInfos converterStationCreationInfos, Reporter subReporter) {
-        Reporter setPointReporter = subReporter.createSubReporter("converterStationSetPoint", "Setpoints");
+        Reporter setPointReporter = subReporter.createSubReporter("converterStationSetPoint", SETPOINTS);
         setPointReporter.report(Report.builder()
-                .withKey("Setpoints")
-                .withDefaultMessage("Setpoints")
+                .withKey(SETPOINTS)
+                .withDefaultMessage(SETPOINTS)
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .build());
 

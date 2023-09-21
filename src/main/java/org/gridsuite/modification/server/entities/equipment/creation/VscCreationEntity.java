@@ -113,8 +113,8 @@ public class VscCreationEntity extends EquipmentCreationEntity {
     }
 
     private VscCreationInfos.VscCreationInfosBuilder<?, ?> toVscCreationInfosBuilder() {
-        ConverterStationCreationInfos converterStation1 = getConverterStation1() == null ? null : getConverterStation1().toConverterStationInfos();
-        ConverterStationCreationInfos converterStation2 = getConverterStation2() == null ? null : getConverterStation2().toConverterStationInfos();
+        ConverterStationCreationInfos converterStationCreationInfos1 = getConverterStation1() == null ? null : getConverterStation1().toConverterStationInfos();
+        ConverterStationCreationInfos converterStationCreationInfos2 = getConverterStation2() == null ? null : getConverterStation2().toConverterStationInfos();
 
         return VscCreationInfos.builder()
                 .uuid(getId())
@@ -131,7 +131,7 @@ public class VscCreationEntity extends EquipmentCreationEntity {
                 .operatorActivePowerLimitFromSide2ToSide1(getOperatorActivePowerLimitSide2())
                 .maximumActivePower(getMaximumActivePower())
                 .p0(getP0())
-                .converterStation1(converterStation1)
-                .converterStation2(converterStation2);
+                .converterStation1(converterStationCreationInfos1)
+                .converterStation2(converterStationCreationInfos2);
     }
 }
