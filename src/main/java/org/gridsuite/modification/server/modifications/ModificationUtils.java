@@ -438,6 +438,13 @@ public final class ModificationUtils {
         return null;
     }
 
+    public Report createEnabledDisabledReport(String key, boolean enabled) {
+        return Report.builder().withKey(key)
+                .withDefaultMessage(enabled ? "    Enabled" : "    Disables")
+                .withSeverity(TypedValue.INFO_SEVERITY)
+                .build();
+    }
+
     public Reporter reportModifications(Reporter subReporter, List<Report> reports, String subReporterKey,
                                         String subReporterDefaultMessage) {
         List<Report> validReports = reports.stream().filter(Objects::nonNull).toList();
