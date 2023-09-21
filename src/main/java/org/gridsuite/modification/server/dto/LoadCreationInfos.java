@@ -10,7 +10,6 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.iidm.network.LoadType;
-import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -43,15 +42,6 @@ public class LoadCreationInfos extends InjectionCreationInfos {
 
     @Schema(description = "Reactive power")
     private double reactivePower;
-
-    @Schema(description = "Connection Name")
-    private String connectionName;
-
-    @Schema(description = "Connection Direction")
-    private ConnectablePosition.Direction connectionDirection;
-
-    @Schema(description = "Connection Position")
-    private Integer connectionPosition;
 
     @Override
     public LoadCreationEntity toEntity() {

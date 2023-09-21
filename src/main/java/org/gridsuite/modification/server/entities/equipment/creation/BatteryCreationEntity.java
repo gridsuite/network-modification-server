@@ -6,7 +6,6 @@
  */
 package org.gridsuite.modification.server.entities.equipment.creation;
 
-import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
@@ -27,15 +26,6 @@ import java.util.stream.Collectors;
 @Table(name = "batteryCreation")
 @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "batteryCreation_id_fk_constraint"))
 public class BatteryCreationEntity extends InjectionCreationEntity {
-
-    @Column(name = "connectionName")
-    private String connectionName;
-
-    @Column(name = "connectionDirection")
-    private ConnectablePosition.Direction connectionDirection;
-
-    @Column(name = "connectionPosition")
-    private Integer connectionPosition;
 
     @Column(name = "minActivePower")
     private double minActivePower;
@@ -80,9 +70,6 @@ public class BatteryCreationEntity extends InjectionCreationEntity {
     }
 
     private void assignAttributes(BatteryCreationInfos batteryCreationInfos) {
-        this.connectionName = batteryCreationInfos.getConnectionName();
-        this.connectionDirection = batteryCreationInfos.getConnectionDirection();
-        this.connectionPosition = batteryCreationInfos.getConnectionPosition();
         this.minActivePower = batteryCreationInfos.getMinActivePower();
         this.maxActivePower = batteryCreationInfos.getMaxActivePower();
         this.reactiveCapabilityCurve = batteryCreationInfos.getReactiveCapabilityCurve();
@@ -110,8 +97,7 @@ public class BatteryCreationEntity extends InjectionCreationEntity {
     }
 
     private BatteryCreationInfos.BatteryCreationInfosBuilder<?, ?> toBatteryCreationInfosBuilder() {
-        List<ReactiveCapabilityCurveCreationEmbeddable> pointsEmbeddable = getReactiveCapabilityCurvePoints();
-        List<ReactiveCapabilityCurveCreationInfos> points = pointsEmbeddable != null ? getReactiveCapabilityCurvePoints()
+        List<ReactiveCapabilityCurveCreationInfos> points = getReactiveCapabilityCurvePoints() != null ? getReactiveCapabilityCurvePoints()
                 .stream()
                 .map(value -> new ReactiveCapabilityCurveCreationInfos(value.getQminP(),
                         value.getQmaxP(),
