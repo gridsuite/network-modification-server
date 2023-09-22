@@ -292,6 +292,9 @@ public class BuildTest {
         Message<byte[]> resultMessage = output.receive(TIMEOUT, buildResultDestination);
         assertNotNull(resultMessage);
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
+        Message<byte[]> buildMessage = output.receive(TIMEOUT, consumeBuildDestination);
+        assertNotNull(buildMessage);
+        assertEquals("me", buildMessage.getHeaders().get("receiver"));
 
         BuildInfos newBuildInfos = new BuildInfos(NetworkCreation.VARIANT_ID,
             VARIANT_ID_2,
@@ -307,6 +310,9 @@ public class BuildTest {
         resultMessage = output.receive(TIMEOUT, buildResultDestination);
         assertNotNull(resultMessage);
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
+        buildMessage = output.receive(TIMEOUT, consumeBuildDestination);
+        assertNotNull(buildMessage);
+        assertEquals("me", buildMessage.getHeaders().get("receiver"));
 
         testEmptyImpacts(mapper, new String(resultMessage.getPayload()));
 
@@ -333,6 +339,7 @@ public class BuildTest {
         assertEquals(expectedBody, request.getBody().readUtf8());
 
         assertNotNull(output.receive(TIMEOUT, buildResultDestination));
+        assertNotNull(output.receive(TIMEOUT, consumeBuildDestination));
 
         // Group is empty
         modificationGroupRepository.save(new ModificationGroupEntity(TEST_GROUP_ID));
@@ -553,6 +560,9 @@ public class BuildTest {
         assertNotNull(resultMessage);
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
         testElementImpacts(mapper, new String(resultMessage.getPayload()), 61, Set.of("newSubstation", "s1", "s2"));
+        Message<byte[]> buildMessage = output.receive(TIMEOUT, consumeBuildDestination);
+        assertNotNull(buildMessage);
+        assertEquals("me", buildMessage.getHeaders().get("receiver"));
 
         // test all modifications have been made on variant VARIANT_ID
         network.getVariantManager().setWorkingVariant(NetworkCreation.VARIANT_ID);
@@ -644,6 +654,9 @@ public class BuildTest {
         assertNotNull(resultMessage);
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
         testEmptyImpacts(mapper, new String(resultMessage.getPayload()));
+        buildMessage = output.receive(TIMEOUT, consumeBuildDestination);
+        assertNotNull(buildMessage);
+        assertEquals("me", buildMessage.getHeaders().get("receiver"));
 
         List<EquipmentInfos> eqVariant1 = equipmentInfosRepository.findAllByNetworkUuidAndVariantId(TEST_NETWORK_ID, NetworkCreation.VARIANT_ID);
         List<EquipmentInfos> eqVariant2 = equipmentInfosRepository.findAllByNetworkUuidAndVariantId(TEST_NETWORK_ID, VARIANT_ID_2);
@@ -692,6 +705,9 @@ public class BuildTest {
         assertNotNull(resultMessage);
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
         testElementImpacts(mapper, new String(resultMessage.getPayload()), 55, Set.of("newSubstation", "s1", "s2"));
+        buildMessage = output.receive(TIMEOUT, consumeBuildDestination);
+        assertNotNull(buildMessage);
+        assertEquals("me", buildMessage.getHeaders().get("receiver"));
 
         // test that only active modifications have been made on variant VARIANT_ID
         network.getVariantManager().setWorkingVariant(NetworkCreation.VARIANT_ID);
@@ -765,6 +781,12 @@ public class BuildTest {
         assertNotNull(message);
         assertEquals("me", message.getHeaders().get("receiver"));
         assertEquals(CANCEL_MESSAGE, message.getHeaders().get("message"));
+        Message<byte[]> buildMessage = output.receive(TIMEOUT, consumeBuildDestination);
+        assertNotNull(buildMessage);
+        assertEquals("me", buildMessage.getHeaders().get("receiver"));
+        Message<byte[]> cancelMessage = output.receive(TIMEOUT, cancelBuildDestination);
+        assertNotNull(cancelMessage);
+        assertEquals("me", cancelMessage.getHeaders().get("receiver"));
     }
 
     @Test
@@ -790,6 +812,9 @@ public class BuildTest {
         Message<byte[]> message = output.receive(TIMEOUT * 3, buildFailedDestination);
         assertEquals("me", message.getHeaders().get("receiver"));
         assertThat((String) message.getHeaders().get("message"), startsWith(FAIL_MESSAGE));
+        Message<byte[]> buildMessage = output.receive(TIMEOUT, consumeBuildDestination);
+        assertNotNull(buildMessage);
+        assertEquals("me", buildMessage.getHeaders().get("receiver"));
     }
 
     @Test
