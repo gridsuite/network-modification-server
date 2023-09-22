@@ -51,7 +51,7 @@
         <testcontainers.version>1.16.2</testcontainers.version>
         <liquibase-hibernate-package>org.gridsuite.modification.server</liquibase-hibernate-package>
         <assertj.version>3.24.2</assertj.version>
-         <powsybl-network-store.version>1.3.0</powsybl-network-store.version>
+        <powsybl-network-store.version>1.4.0</powsybl-network-store.version>
     </properties>
 
     <build>
