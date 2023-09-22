@@ -11,6 +11,6 @@ After you generated a changeset do not forget to add it to git and in src/resour
 
 The old way to automatically generate the sql schema file (directly using hibernate) can still be used for debugging. Use the following command:
 ```
-mvn package -DskipTests && rm -f src/main/resources/network-modification.sql && java -jar target/gridsuite-network-modification-server-1.0.0-SNAPSHOT-exec.jar --spring.jpa.properties.javax.persistence.schema-generation.scripts.action=create
+mvn package -DskipTests && rm -f src/main/resources/network-modification.sql && java -jar target/gridsuite-network-modification-server-1.0.0-SNAPSHOT-exec.jar --spring.jpa.properties.jakarta.persistence.schema-generation.scripts.action=create
 ```
 

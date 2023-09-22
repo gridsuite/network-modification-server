@@ -6,8 +6,8 @@
  */
 package org.gridsuite.modification.server.entities.equipment.creation;
 
-import javax.persistence.Column;
-import javax.persistence.Embeddable;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
 
 import com.powsybl.iidm.network.SwitchKind;
 import lombok.AllArgsConstructor;

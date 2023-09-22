@@ -15,7 +15,7 @@ import org.gridsuite.modification.server.dto.LoadModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.OperationType;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 /**
  * @author Nicolas Noir <nicolas.noir at rte-france.com>

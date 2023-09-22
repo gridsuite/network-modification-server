@@ -13,7 +13,7 @@ import lombok.NonNull;
 import org.springframework.util.CollectionUtils;
 import org.gridsuite.modification.server.dto.*;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.List;
 import java.util.stream.Collectors;
 

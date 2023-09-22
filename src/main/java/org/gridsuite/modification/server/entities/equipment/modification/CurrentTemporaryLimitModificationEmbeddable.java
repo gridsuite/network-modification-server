@@ -12,10 +12,10 @@ import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.dto.CurrentTemporaryLimitModificationInfos;
 import org.gridsuite.modification.server.dto.TemporaryLimitModificationType;
 
-import javax.persistence.Column;
-import javax.persistence.Embeddable;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 
 import java.util.List;
 import java.util.stream.Collectors;

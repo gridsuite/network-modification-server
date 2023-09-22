@@ -13,6 +13,6 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
 @Configuration
-@EnableJpaRepositories
+@EnableJpaRepositories(basePackageClasses = JPAConfig.class)
 public class JPAConfig {
 }

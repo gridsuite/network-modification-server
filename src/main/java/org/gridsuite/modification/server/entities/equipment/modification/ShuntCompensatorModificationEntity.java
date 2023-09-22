@@ -16,12 +16,12 @@ import org.gridsuite.modification.server.dto.ShuntCompensatorType;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.EnumModificationEmbedded;
 
-import javax.persistence.AttributeOverride;
-import javax.persistence.AttributeOverrides;
-import javax.persistence.Column;
-import javax.persistence.Embedded;
-import javax.persistence.Entity;
-import javax.persistence.Table;
+import jakarta.persistence.AttributeOverride;
+import jakarta.persistence.AttributeOverrides;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 
 import static org.gridsuite.modification.server.dto.AttributeModification.toAttributeModification;
 
@@ -39,22 +39,22 @@ public class ShuntCompensatorModificationEntity extends BasicEquipmentModificati
 
     @Embedded
     @AttributeOverrides(value = {
-            @AttributeOverride(name = "value", column = @Column(name = "susceptancePerSection")),
-            @AttributeOverride(name = "opType", column = @Column(name = "susceptancePerSectionOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "susceptancePerSection")),
+        @AttributeOverride(name = "opType", column = @Column(name = "susceptancePerSectionOp"))
     })
     private DoubleModificationEmbedded susceptancePerSection;
 
     @Embedded
     @AttributeOverrides(value = {
-            @AttributeOverride(name = "value", column = @Column(name = "qAtNominalV")),
-            @AttributeOverride(name = "opType", column = @Column(name = "qAtNominalVOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "qAtNominalV")),
+        @AttributeOverride(name = "opType", column = @Column(name = "qAtNominalVOp"))
     })
     private DoubleModificationEmbedded qAtNominalV;
 
     @Embedded
     @AttributeOverrides(value = {
-            @AttributeOverride(name = "value", column = @Column(name = "shuntCompensatorType")),
-            @AttributeOverride(name = "opType", column = @Column(name = "shuntCompensatorTypeOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "shuntCompensatorType")),
+        @AttributeOverride(name = "opType", column = @Column(name = "shuntCompensatorTypeOp"))
     })
     private EnumModificationEmbedded<ShuntCompensatorType> shuntCompensatorType;
 
