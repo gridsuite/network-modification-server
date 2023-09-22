@@ -8,6 +8,14 @@
         <modifyDataType columnName="connection_direction"
                         newDataType="tinyint"
                         schemaName="public"
+                        tableName="converter_station_creation"/>
+        <modifyDataType columnName="converters_mode"
+                        newDataType="tinyint"
+                        schemaName="public"
+                        tableName="vsc_creation"/>
+        <modifyDataType columnName="connection_direction"
+                        newDataType="tinyint"
+                        schemaName="public"
                         tableName="generator_creation"/>
         <modifyDataType columnName="energy_source"
                         newDataType="tinyint"
