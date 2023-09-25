@@ -14,6 +14,7 @@ import com.powsybl.iidm.modification.topology.CreateFeederBay;
 import com.powsybl.iidm.modification.topology.CreateFeederBayBuilder;
 import com.powsybl.iidm.network.Bus;
 import com.powsybl.iidm.network.HvdcLine;
+import com.powsybl.iidm.network.HvdcLineAdder;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.TopologyKind;
 import com.powsybl.iidm.network.VoltageLevel;
@@ -78,18 +79,21 @@ public class VscCreation extends AbstractModification {
 
         VscConverterStation converterStation2 = createConverterStation(network, modificationInfos.getConverterStation2(), subReporter, "Converter station 2");
 
-        HvdcLine hvdcLine = network.newHvdcLine()
+        HvdcLineAdder hvdcLineAdder = network.newHvdcLine()
                 .setId(modificationInfos.getEquipmentId())
                 .setName(modificationInfos.getEquipmentName())
                 .setNominalV(modificationInfos.getDcNominalVoltage())
                 .setR(modificationInfos.getDcResistance())
                 .setMaxP(modificationInfos.getMaximumActivePower())
-                .setActivePowerSetpoint(modificationInfos.getActivePower())
                 .setConvertersMode(modificationInfos.getConvertersMode())
                 .setConverterStationId1(converterStation1 != null ? converterStation1.getId() : null)
-                .setConverterStationId2(converterStation2 != null ? converterStation2.getId() : null)
-                .add();
+                .setConverterStationId2(converterStation2 != null ? converterStation2.getId() : null);
 
+        if (modificationInfos.getActivePower() != null) {
+            hvdcLineAdder.setActivePowerSetpoint(modificationInfos.getActivePower());
+        }
+
+        HvdcLine hvdcLine = hvdcLineAdder.add();
         if (modificationInfos.getOperatorActivePowerLimitFromSide1ToSide2() != null ||
                 modificationInfos.getOperatorActivePowerLimitFromSide2ToSide1() != null) {
             hvdcLine.newExtension(HvdcOperatorActivePowerRangeAdder.class)
