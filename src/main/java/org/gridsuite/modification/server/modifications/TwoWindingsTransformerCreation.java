@@ -139,11 +139,11 @@ public class TwoWindingsTransformerCreation extends AbstractModification {
                 phaseTapChangerInfos.getRegulatingTerminalId(),
                 phaseTapChangerInfos.getRegulatingTerminalType(),
                 phaseTapChangerInfos.getRegulatingTerminalVlId());
+        phaseTapChangerAdder.setRegulationTerminal(terminal);
 
         if (phaseTapChangerInfos.isRegulating()) {
             phaseTapChangerAdder.setRegulationValue(phaseTapChangerInfos.getRegulationValue())
-                    .setTargetDeadband(phaseTapChangerInfos.getTargetDeadband() != null ? phaseTapChangerInfos.getTargetDeadband() : 0.)
-                    .setRegulationTerminal(terminal);
+                    .setTargetDeadband(phaseTapChangerInfos.getTargetDeadband() != null ? phaseTapChangerInfos.getTargetDeadband() : 0.);
         }
 
         phaseTapChangerAdder.setRegulating(phaseTapChangerInfos.isRegulating())
