@@ -537,19 +537,19 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
         assertLogMessage("The total amount of fixed supply is : 0.0 MW", "TotalAmountFixedSupply" + firstSynchronousComponentNum, reportService);
         assertLogMessage("The HVDC balance is : 90.0 MW", "TotalOutwardHvdcFlow" + firstSynchronousComponentNum, reportService);
         assertLogMessage("The total amount of supply to be dispatched is : 438.0 MW", "TotalAmountSupplyToBeDispatched" + firstSynchronousComponentNum, reportService);
-        assertLogNthMessage("Generator TEST1 targetP : 0.0 MW --> 40.375 MW", "GeneratorSetTargetP" + firstSynchronousComponentNum, reportService, 1);
-        assertLogNthMessage("Generator GTH1 targetP : 0.0 MW --> 80.0 MW", "GeneratorSetTargetP" + firstSynchronousComponentNum, reportService, 2);
-        assertLogNthMessage("Generator GTH2 targetP : 0.0 MW --> 146.0 MW", "GeneratorSetTargetP" + firstSynchronousComponentNum, reportService, 3);
+        assertLogNthMessage("The active power set point of generator TEST1 has been set to 40.375 MW", "GeneratorSetTargetP" + firstSynchronousComponentNum, reportService, 1);
+        assertLogNthMessage("The active power set point of generator GTH1 has been set to 80.0 MW", "GeneratorSetTargetP" + firstSynchronousComponentNum, reportService, 2);
+        assertLogNthMessage("The active power set point of generator GTH2 has been set to 146.0 MW", "GeneratorSetTargetP" + firstSynchronousComponentNum, reportService, 3);
         assertLogMessage("The supply-demand balance could not be met : the remaining power imbalance is 171.625 MW", "SupplyDemandBalanceCouldNotBeMet" + firstSynchronousComponentNum, reportService);
         int secondSynchronousComponentNum = getNetwork().getGenerator(GH1_ID).getTerminal().getBusView().getBus().getSynchronousComponent().getNum(); // GH1 is in second synchronous component
         assertLogMessage("The total demand is : 240.0 MW", "TotalDemand" + secondSynchronousComponentNum, reportService);
         assertLogMessage("The total amount of fixed supply is : 0.0 MW", "TotalAmountFixedSupply" + secondSynchronousComponentNum, reportService);
         assertLogMessage("The HVDC balance is : -90.0 MW", "TotalOutwardHvdcFlow" + secondSynchronousComponentNum, reportService);
         assertLogMessage("The total amount of supply to be dispatched is : 330.0 MW", "TotalAmountSupplyToBeDispatched" + secondSynchronousComponentNum, reportService);
-        assertLogNthMessage("Generator GH1 targetP : 0.0 MW --> 80.0 MW", "GeneratorSetTargetP" + secondSynchronousComponentNum, reportService, 1);
-        assertLogNthMessage("Generator GH2 targetP : 0.0 MW --> 60.0 MW", "GeneratorSetTargetP" + secondSynchronousComponentNum, reportService, 2);
-        assertLogNthMessage("Generator GH3 targetP : 0.0 MW --> 126.1 MW", "GeneratorSetTargetP" + secondSynchronousComponentNum, reportService, 3);
-        assertLogNthMessage("Generator ABC targetP : 0.0 MW --> 63.900000000000006 MW", "GeneratorSetTargetP" + secondSynchronousComponentNum, reportService, 4);
+        assertLogNthMessage("The active power set point of generator GH1 has been set to 80.0 MW", "GeneratorSetTargetP" + secondSynchronousComponentNum, reportService, 1);
+        assertLogNthMessage("The active power set point of generator GH2 has been set to 60.0 MW", "GeneratorSetTargetP" + secondSynchronousComponentNum, reportService, 2);
+        assertLogNthMessage("The active power set point of generator GH3 has been set to 126.1 MW", "GeneratorSetTargetP" + secondSynchronousComponentNum, reportService, 3);
+        assertLogNthMessage("The active power set point of generator ABC has been set to 63.900000000000006 MW", "GeneratorSetTargetP" + secondSynchronousComponentNum, reportService, 4);
         assertLogMessage("The supply-demand balance could be met", "SupplyDemandBalanceCouldBeMet" + secondSynchronousComponentNum, reportService);
 
         wireMockUtils.verifyGetRequest(stubIdForPmaxReduction, PATH, handleQueryParams(getNetworkUuid(), getGeneratorsWithoutOutageFilters123().stream().map(FilterEquipments::getFilterId).collect(Collectors.toList())), false);
