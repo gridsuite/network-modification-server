@@ -15,7 +15,7 @@ import org.gridsuite.modification.server.dto.VoltageLevelCreationInfos;
 
 import com.powsybl.iidm.network.SwitchKind;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 import java.util.ArrayList;
 import java.util.List;

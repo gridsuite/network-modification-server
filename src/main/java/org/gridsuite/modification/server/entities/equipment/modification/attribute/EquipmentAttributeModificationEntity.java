@@ -13,10 +13,10 @@ import org.gridsuite.modification.server.dto.EquipmentAttributeModificationInfos
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
 
-import javax.persistence.Column;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.Column;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.MappedSuperclass;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -32,7 +32,7 @@ public class EquipmentAttributeModificationEntity<T> extends EquipmentModificati
     @Column(name = "attributeValue")
     private T attributeValue;
 
-    @Column(name = "equipmentType")
+    @Column(name = "equipmentType", columnDefinition = "varchar(255)")
     @Enumerated(EnumType.STRING)
     private IdentifiableType equipmentType;
 

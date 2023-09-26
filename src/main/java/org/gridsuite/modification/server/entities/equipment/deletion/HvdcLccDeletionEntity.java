@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.gridsuite.modification.server.dto.AbstractEquipmentDeletionInfos;
 import org.gridsuite.modification.server.dto.HvdcLccDeletionInfos;
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.List;
 
 /**

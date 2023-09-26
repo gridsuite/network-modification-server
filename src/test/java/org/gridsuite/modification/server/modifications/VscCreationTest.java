@@ -1,0 +1,285 @@
+/**
+ * Copyright (c) 2023, RTE (http://www.rte-france.com)
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
+package org.gridsuite.modification.server.modifications;
+
+import com.powsybl.iidm.network.HvdcLine;
+import com.powsybl.iidm.network.MinMaxReactiveLimits;
+import com.powsybl.iidm.network.Network;
+import com.powsybl.iidm.network.ReactiveCapabilityCurve;
+import com.powsybl.iidm.network.ReactiveLimitsKind;
+import com.powsybl.iidm.network.VscConverterStation;
+import com.powsybl.iidm.network.extensions.ConnectablePosition;
+import com.powsybl.iidm.network.extensions.HvdcAngleDroopActivePowerControl;
+import com.powsybl.iidm.network.extensions.HvdcOperatorActivePowerRange;
+import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.dto.ConverterStationCreationInfos;
+import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.ReactiveCapabilityCurveCreationInfos;
+import org.gridsuite.modification.server.dto.VscCreationInfos;
+import org.gridsuite.modification.server.utils.NetworkCreation;
+import org.junit.Test;
+import org.springframework.http.MediaType;
+
+import java.util.List;
+import java.util.UUID;
+
+import static org.gridsuite.modification.server.NetworkModificationException.Type.CREATE_VSC_ERROR;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.HVDC_LINE_ALREADY_EXISTS;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.VOLTAGE_LEVEL_NOT_FOUND;
+import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+/**
+ * @author Seddik Yengui <seddik.yengui at rte-france.com>
+ */
+
+public class VscCreationTest extends AbstractNetworkModificationTest {
+    @Override
+    protected Network createNetwork(UUID networkUuid) {
+        return NetworkCreation.create(networkUuid, true);
+    }
+
+    @Override
+    protected ModificationInfos buildModification() {
+        return VscCreationInfos.builder()
+                .equipmentId("vsc1")
+                .equipmentName("vsc1Name")
+                .dcNominalVoltage(39.)
+                .dcResistance(4.)
+                .maximumActivePower(56.)
+                .p0(5F)
+                .operatorActivePowerLimitFromSide2ToSide1(5.6F)
+                .convertersMode(HvdcLine.ConvertersMode.SIDE_1_INVERTER_SIDE_2_RECTIFIER)
+                .activePower(5.)
+                .operatorActivePowerLimitFromSide1ToSide2(6.0F)
+                .operatorActivePowerLimitFromSide2ToSide1(8F)
+                .droop(1F)
+                .angleDroopActivePowerControl(false)
+                .converterStation1(buildConverterStationWithReactiveCapabilityCurve())
+                .converterStation2(buildConverterStationWithMinMaxReactiveLimits())
+                .build();
+    }
+
+    private ConverterStationCreationInfos buildConverterStationWithMinMaxReactiveLimits() {
+        return ConverterStationCreationInfos.builder()
+                .equipmentId("stationId2")
+                .equipmentName("station2")
+                .voltageRegulationOn(false)
+                .reactivePower(23.)
+                .reactiveCapabilityCurve(false)
+                .maximumReactivePower(66.)
+                .lossFactor(4F)
+                .minimumReactivePower(55.)
+                .voltage(34.)
+                .voltageLevelId("v2")
+                .busOrBusbarSectionId("1.1")
+                .connectionName("top")
+                .connectionDirection(ConnectablePosition.Direction.TOP)
+                .reactiveCapabilityCurvePoints(List.of())
+                .reactiveCapabilityCurve(false)
+                .build();
+    }
+
+    private ConverterStationCreationInfos buildConverterStationWithReactiveCapabilityCurve() {
+        var point1 = ReactiveCapabilityCurveCreationInfos.builder()
+                .p(0.4)
+                .qmaxP(3.)
+                .qminP(0.)
+                .build();
+        var point2 = ReactiveCapabilityCurveCreationInfos.builder()
+                .p(0.6)
+                .qmaxP(2.)
+                .qminP(1.1)
+                .build();
+
+        return ConverterStationCreationInfos.builder()
+                .equipmentId("stationId1")
+                .equipmentName("station1")
+                .voltageRegulationOn(true)
+                .voltage(66.)
+                .reactivePower(44.)
+                .lossFactor(40F)
+                .reactiveCapabilityCurve(true)
+                .reactiveCapabilityCurvePoints(List.of(point1, point2))
+                .voltageLevelId("v1")
+                .busOrBusbarSectionId("1.1")
+                .connectionName("top")
+                .connectionDirection(ConnectablePosition.Direction.TOP)
+                .build();
+    }
+
+    @Override
+    protected ModificationInfos buildModificationUpdate() {
+        return VscCreationInfos.builder()
+                .equipmentId("vsc1")
+                .equipmentName("vsc2Name")
+                .dcNominalVoltage(53.)
+                .dcResistance(2.)
+                .maximumActivePower(77.)
+                .p0(8.3F)
+                .operatorActivePowerLimitFromSide2ToSide1(5.2F)
+                .convertersMode(HvdcLine.ConvertersMode.SIDE_1_RECTIFIER_SIDE_2_INVERTER)
+                .activePower(7.)
+                .operatorActivePowerLimitFromSide1ToSide2(6.1F)
+                .operatorActivePowerLimitFromSide2ToSide1(8.3F)
+                .angleDroopActivePowerControl(true)
+                .droop(2.1F)
+                .converterStation1(buildConverterStationWithMinMaxReactiveLimits())
+                .converterStation2(buildConverterStationWithReactiveCapabilityCurve())
+                .build();
+    }
+
+    @Override
+    protected void assertAfterNetworkModificationCreation() {
+        assertNotNull(getNetwork().getHvdcLine("vsc1"));
+
+        assertEquals(1, getNetwork().getVoltageLevel("v1").getVscConverterStationStream()
+                .filter(converterStation -> converterStation.getId().equals("stationId1")).count());
+
+        assertEquals(1, getNetwork().getVoltageLevel("v2").getVscConverterStationStream()
+                .filter(converterStation -> converterStation.getId().equals("stationId2")).count());
+
+        HvdcLine hvdcLine = getNetwork().getHvdcLine("vsc1");
+        assertNotNull(hvdcLine);
+        assertEquals(HvdcLine.ConvertersMode.SIDE_1_INVERTER_SIDE_2_RECTIFIER, hvdcLine.getConvertersMode());
+        assertEquals(39, hvdcLine.getNominalV(), 0);
+        assertEquals(4, hvdcLine.getR(), 0);
+        assertEquals(5, hvdcLine.getActivePowerSetpoint(), 0);
+        assertEquals(56, hvdcLine.getMaxP(), 0);
+
+        HvdcOperatorActivePowerRange hvdcOperatorActivePowerRange = hvdcLine.getExtension(HvdcOperatorActivePowerRange.class);
+        assertEquals(6, hvdcOperatorActivePowerRange.getOprFromCS1toCS2(), 0);
+        assertEquals(8, hvdcOperatorActivePowerRange.getOprFromCS2toCS1(), 0);
+
+        HvdcAngleDroopActivePowerControl activePowerControl = hvdcLine.getExtension(HvdcAngleDroopActivePowerControl.class);
+        assertEquals(1, activePowerControl.getDroop(), 0);
+        assertEquals(5, activePowerControl.getP0(), 0);
+
+        VscConverterStation vscConverterStation1 = (VscConverterStation) hvdcLine.getConverterStation1();
+        assertNotNull(vscConverterStation1);
+        assertEquals(44, vscConverterStation1.getReactivePowerSetpoint(), 0);
+        assertEquals(40, vscConverterStation1.getLossFactor(), 0);
+        assertEquals(ReactiveLimitsKind.CURVE, vscConverterStation1.getReactiveLimits().getKind());
+        ReactiveCapabilityCurve reactiveLimits1 = vscConverterStation1.getReactiveLimits(ReactiveCapabilityCurve.class);
+        assertEquals(2, reactiveLimits1.getPointCount());
+        assertEquals(0.6, reactiveLimits1.getMaxP(), 0);
+        assertEquals(0.4, reactiveLimits1.getMinP(), 0);
+        assertEquals(66, vscConverterStation1.getVoltageSetpoint(), 0);
+        assertEquals("v1", vscConverterStation1.getTerminal().getVoltageLevel().getId());
+
+        VscConverterStation vscConverterStation2 = (VscConverterStation) hvdcLine.getConverterStation2();
+        assertNotNull(vscConverterStation2);
+        assertEquals(23, vscConverterStation2.getReactivePowerSetpoint(), 0);
+        assertEquals(4, vscConverterStation2.getLossFactor(), 0);
+        assertEquals(ReactiveLimitsKind.MIN_MAX, vscConverterStation2.getReactiveLimits().getKind());
+        MinMaxReactiveLimits reactiveLimits2 = vscConverterStation2.getReactiveLimits(MinMaxReactiveLimits.class);
+        assertEquals(66, reactiveLimits2.getMaxQ(), 0);
+        assertEquals(55, reactiveLimits2.getMinQ(), 0);
+        assertEquals(34, vscConverterStation2.getVoltageSetpoint(), 0);
+        assertEquals("v2", vscConverterStation2.getTerminal().getVoltageLevel().getId());
+    }
+
+    @Override
+    protected void assertAfterNetworkModificationDeletion() {
+        assertNull(getNetwork().getHvdcLine("vsc1"));
+
+        assertEquals(0, getNetwork().getVoltageLevel("v1").getVscConverterStationStream()
+                .filter(converterStation -> converterStation.getId().equals("stationId1")).count());
+
+        assertEquals(0, getNetwork().getVoltageLevel("v2").getVscConverterStationStream()
+                .filter(converterStation -> converterStation.getId().equals("stationId2")).count());
+    }
+
+    @Test
+    public void testCreateWithErrors() throws Exception {
+        VscCreationInfos vscCreationInfos = (VscCreationInfos) buildModification();
+        vscCreationInfos.setEquipmentId("");
+        String vscCreationInfosJson = mapper.writeValueAsString(vscCreationInfos);
+        mockMvc.perform(post(getNetworkModificationUri()).content(vscCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        assertLogMessage("Invalid id ''", vscCreationInfos.getErrorType().name(), reportService);
+
+        // not found voltage level
+        vscCreationInfos.setEquipmentId("vscId");
+        ConverterStationCreationInfos converterStationCreationInfos = buildConverterStationWithMinMaxReactiveLimits();
+        converterStationCreationInfos.setVoltageLevelId("notFoundVoltageLevelId");
+        vscCreationInfos.setConverterStation2(converterStationCreationInfos);
+        vscCreationInfosJson = mapper.writeValueAsString(vscCreationInfos);
+        mockMvc.perform(post(getNetworkModificationUri()).content(vscCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        assertLogMessage(new NetworkModificationException(VOLTAGE_LEVEL_NOT_FOUND, "notFoundVoltageLevelId").getMessage(),
+                vscCreationInfos.getErrorType().name(), reportService);
+
+        // invalid min max reactive limit
+        vscCreationInfos = (VscCreationInfos) buildModification();
+        converterStationCreationInfos = buildConverterStationWithMinMaxReactiveLimits();
+        converterStationCreationInfos.setConnectionPosition(35);
+        converterStationCreationInfos.setReactiveCapabilityCurve(false);
+        converterStationCreationInfos.setMinimumReactivePower(Double.NaN);
+        vscCreationInfos.setConverterStation1(converterStationCreationInfos);
+
+        vscCreationInfosJson = mapper.writeValueAsString(vscCreationInfos);
+        mockMvc.perform(post(getNetworkModificationUri()).content(vscCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        assertLogMessage(new NetworkModificationException(CREATE_VSC_ERROR, "Vsc 'vsc1' : minimum reactive power is not set").getMessage(),
+                vscCreationInfos.getErrorType().name(), reportService);
+
+        vscCreationInfos = (VscCreationInfos) buildModification();
+        converterStationCreationInfos = buildConverterStationWithMinMaxReactiveLimits();
+        converterStationCreationInfos.setConnectionPosition(66);
+        converterStationCreationInfos.setReactiveCapabilityCurve(false);
+        converterStationCreationInfos.setMaximumReactivePower(Double.NaN);
+        vscCreationInfos.setConverterStation1(converterStationCreationInfos);
+
+        vscCreationInfosJson = mapper.writeValueAsString(vscCreationInfos);
+        mockMvc.perform(post(getNetworkModificationUri()).content(vscCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        assertLogMessage(new NetworkModificationException(CREATE_VSC_ERROR, "Vsc 'vsc1' : maximum reactive power is not set").getMessage(),
+                vscCreationInfos.getErrorType().name(), reportService);
+
+        vscCreationInfos = (VscCreationInfos) buildModification();
+        converterStationCreationInfos = buildConverterStationWithMinMaxReactiveLimits();
+        converterStationCreationInfos.setConnectionPosition(15);
+        converterStationCreationInfos.setReactiveCapabilityCurve(false);
+        converterStationCreationInfos.setMinimumReactivePower(200.);
+        converterStationCreationInfos.setMaximumReactivePower(100.);
+        vscCreationInfos.setConverterStation1(converterStationCreationInfos);
+
+        vscCreationInfosJson = mapper.writeValueAsString(vscCreationInfos);
+        mockMvc.perform(post(getNetworkModificationUri()).content(vscCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        assertLogMessage(new NetworkModificationException(CREATE_VSC_ERROR, "Vsc 'vsc1' : maximum reactive power is expected to be greater than or equal to minimum reactive power").getMessage(),
+                vscCreationInfos.getErrorType().name(), reportService);
+
+        // invalid reactive capability curve limit
+        vscCreationInfos = (VscCreationInfos) buildModification();
+        converterStationCreationInfos = buildConverterStationWithReactiveCapabilityCurve();
+        converterStationCreationInfos.setConnectionPosition(55);
+        converterStationCreationInfos.getReactiveCapabilityCurvePoints().get(0).setP(Double.NaN);
+        vscCreationInfos.setConverterStation1(converterStationCreationInfos);
+
+        vscCreationInfosJson = mapper.writeValueAsString(vscCreationInfos);
+        mockMvc.perform(post(getNetworkModificationUri()).content(vscCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        assertLogMessage(new NetworkModificationException(CREATE_VSC_ERROR, "Vsc 'vsc1' : P is not set in a reactive capability curve limits point").getMessage(),
+                vscCreationInfos.getErrorType().name(), reportService);
+
+        // try to create an existing vsc
+        vscCreationInfos = (VscCreationInfos) buildModification();
+        vscCreationInfos.setEquipmentId("hvdcLine");
+        vscCreationInfosJson = mapper.writeValueAsString(vscCreationInfos);
+        mockMvc.perform(post(getNetworkModificationUri()).content(vscCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        assertLogMessage(new NetworkModificationException(HVDC_LINE_ALREADY_EXISTS, "hvdcLine").getMessage(),
+                vscCreationInfos.getErrorType().name(), reportService);
+    }
+}

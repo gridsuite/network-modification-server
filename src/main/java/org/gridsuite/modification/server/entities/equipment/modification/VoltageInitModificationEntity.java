@@ -19,12 +19,12 @@ import org.gridsuite.modification.server.dto.VoltageInitTransformerModificationI
 import org.gridsuite.modification.server.dto.VoltageInitVscConverterStationModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 
-import javax.persistence.CollectionTable;
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.ForeignKey;
-import javax.persistence.Index;
-import javax.persistence.Table;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.Index;
+import jakarta.persistence.Table;
 import java.util.List;
 import java.util.stream.Collectors;
 

@@ -15,7 +15,7 @@ import org.gridsuite.modification.server.dto.CurrentLimitsModificationInfos;
 import java.util.List;
 import java.util.UUID;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 /**
  * @author Ayoub LABIDI <ayoub.labidi at rte-france.com>
