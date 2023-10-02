@@ -1,0 +1,63 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-4.1.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
+    <changeSet author="hedhiliabd" id="1689623201842-1">
+        <validCheckSum>8:7fd14e032dc177e25b1cedbb4b9b861f</validCheckSum>
+        <modifyDataType columnName="connection_direction"
+                        newDataType="tinyint"
+                        tableName="battery_creation"/>
+        <modifyDataType columnName="connection_direction"
+                        newDataType="tinyint"
+                        tableName="converter_station_creation"/>
+        <modifyDataType columnName="converters_mode"
+                        newDataType="tinyint"
+                        tableName="vsc_creation"/>
+        <modifyDataType columnName="connection_direction"
+                        newDataType="tinyint"
+                        tableName="generator_creation"/>
+        <modifyDataType columnName="energy_source"
+                        newDataType="tinyint"
+                        tableName="generator_creation"/>
+        <modifyDataType columnName="connection_direction"
+                        newDataType="tinyint"
+                        tableName="battery_creation"/>
+        <modifyDataType columnName="connection_direction1"
+                        newDataType="tinyint"
+                        tableName="line_creation"/>
+        <modifyDataType columnName="connection_direction2"
+                        newDataType="tinyint"
+                        tableName="line_creation"/>
+        <modifyDataType columnName="connection_direction"
+                        newDataType="tinyint"
+                        tableName="load_creation"/>
+        <modifyDataType columnName="load_type_value"
+                        newDataType="tinyint"
+                        tableName="load_modification"/>
+        <modifyDataType columnName="load_type"
+                        newDataType="tinyint"
+                        tableName="load_creation"/>
+        <modifyDataType columnName="reactive_variation_mode"
+                        newDataType="tinyint"
+                        tableName="scaling_variation"/>
+        <modifyDataType columnName="connection_direction"
+                        newDataType="tinyint"
+                        tableName="shunt_compensator_creation_entity"/>
+        <modifyDataType columnName="shunt_compensator_type"
+                        newDataType="tinyint"
+                        tableName="shunt_compensator_creation_entity"/>
+        <modifyDataType columnName="country"
+                        newDataType="smallint"
+                        tableName="substation_creation"/>
+        <modifyDataType columnName="substation_country_value"
+                        newDataType="smallint"
+                        tableName="substation_modification"/>
+        <modifyDataType columnName="connection_direction2"
+                        newDataType="tinyint"
+                        tableName="two_windings_transformer_creation"/>
+        <modifyDataType columnName="connection_direction1"
+                        newDataType="tinyint"
+                        tableName="two_windings_transformer_creation"/>
+        <modifyDataType columnName="switch_kinds"
+                        newDataType="tinyint"
+                        tableName="voltage_level_creation_entity_switch_kinds"/>
+    </changeSet>
+</databaseChangeLog>

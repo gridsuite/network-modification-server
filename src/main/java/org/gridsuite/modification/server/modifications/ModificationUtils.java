@@ -97,6 +97,14 @@ public final class ModificationUtils {
         return generator;
     }
 
+    VscConverterStation getVscConverterStation(Network network, String converterStationId) {
+        VscConverterStation vscConverterStation = network.getVscConverterStation(converterStationId);
+        if (vscConverterStation == null) {
+            throw new NetworkModificationException(VSC_CONVERTER_STATION_NOT_FOUND, "Vsc converter station  " + converterStationId + " does not exist in network");
+        }
+        return vscConverterStation;
+    }
+
     public void controlConnectivity(Network network, String voltageLevelId, String busOrBusbarSectionId, Integer connectionPosition) {
         VoltageLevel voltageLevel = getVoltageLevel(network, voltageLevelId);
         if (voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER) {
@@ -430,6 +438,13 @@ public final class ModificationUtils {
         return null;
     }
 
+    public Report createEnabledDisabledReport(String key, boolean enabled) {
+        return Report.builder().withKey(key)
+                .withDefaultMessage(enabled ? "    Enabled" : "    Disables")
+                .withSeverity(TypedValue.INFO_SEVERITY)
+                .build();
+    }
+
     public Reporter reportModifications(Reporter subReporter, List<Report> reports, String subReporterKey,
                                         String subReporterDefaultMessage) {
         List<Report> validReports = reports.stream().filter(Objects::nonNull).toList();
@@ -463,9 +478,9 @@ public final class ModificationUtils {
     }
 
     public <T> Report buildModificationReportWithIndentation(T oldValue, T newValue, String fieldName, int indentationLevel) {
-        boolean isOldValueDoubleNaN = (oldValue instanceof Double) && Double.isNaN((Double) oldValue);
+        boolean isOldValueDoubleNaN = oldValue instanceof Double && Double.isNaN((Double) oldValue);
         String oldValueString = (oldValue == null || isOldValueDoubleNaN) ? NO_VALUE : oldValue.toString();
-        boolean isNewValueDoubleNaN = (newValue instanceof Double) && Double.isNaN((Double) newValue);
+        boolean isNewValueDoubleNaN = newValue instanceof Double && Double.isNaN((Double) newValue);
         String newValueString = (newValue == null || isNewValueDoubleNaN) ? NO_VALUE : newValue.toString();
         StringBuilder indentation = new StringBuilder();
         for (int i = 0; i < indentationLevel; i++) {
@@ -813,6 +828,138 @@ public final class ModificationUtils {
         if (minReactivePower > maxReactivePower) {
             throw new NetworkModificationException(exceptionType, errorMessage + "maximum reactive power " + maxReactivePower + " is expected to be greater than or equal to minimum reactive power " + minReactivePower);
         }
+    }
+
+    private NetworkModificationException makeEquipmentException(NetworkModificationException.Type errorType,
+                                                                       String equipmentId,
+                                                                       String equipmentName,
+                                                                       String msgSuffix) {
+        return new NetworkModificationException(errorType,
+                equipmentName + " '" + equipmentId + "' : " + msgSuffix);
+    }
+
+    public void checkReactiveLimitsCreation(ReactiveLimitsHolderInfos modificationInfos,
+                                            NetworkModificationException.Type errorType,
+                                            String equipmentId,
+                                            String equipmentName) {
+        // check min max reactive limits
+        if (modificationInfos.getMinimumReactivePower() != null && modificationInfos.getMaximumReactivePower() != null) {
+            if (Double.isNaN(modificationInfos.getMinimumReactivePower())) {
+                throw makeEquipmentException(errorType, equipmentId, equipmentName, "minimum reactive power is not set");
+            } else if (Double.isNaN(modificationInfos.getMaximumReactivePower())) {
+                throw makeEquipmentException(errorType, equipmentId, equipmentName, "maximum reactive power is not set");
+            } else if (modificationInfos.getMaximumReactivePower() < modificationInfos.getMinimumReactivePower()) {
+                throw makeEquipmentException(errorType, equipmentId, equipmentName, "maximum reactive power is expected to be greater than or equal to minimum reactive power");
+            }
+        }
+
+        // check reactive capability curve limits
+        List<ReactiveCapabilityCurveCreationInfos> points = modificationInfos.getReactiveCapabilityCurvePoints();
+        if (!org.apache.commons.collections4.CollectionUtils.isEmpty(points)) {
+            if (points.size() < 2) {
+                throw makeEquipmentException(errorType, equipmentId, equipmentName, "a reactive capability curve should have at least two points");
+            }
+            IntStream.range(0, points.size())
+                    .forEach(i -> {
+                        ReactiveCapabilityCurveCreationInfos newPoint = points.get(i);
+                        if (Double.isNaN(newPoint.getP())) {
+                            throw makeEquipmentException(errorType, equipmentId, equipmentName, "P is not set in a reactive capability curve limits point");
+                        } else if (Double.isNaN(newPoint.getQminP())) {
+                            throw makeEquipmentException(errorType, equipmentId, equipmentName, "min Q is not set in a reactive capability curve limits point");
+                        } else if (Double.isNaN(newPoint.getQmaxP())) {
+                            throw makeEquipmentException(errorType, equipmentId, equipmentName, "max Q is not set in a reactive capability curve limits point");
+                        }
+                    });
+        }
+    }
+
+    public static void addToReports(List<Report> reports, Double newValue, String fieldName) {
+        if (newValue != null) {
+            reports.add(ModificationUtils.getInstance().buildCreationReport(newValue, fieldName));
+        }
+    }
+
+    public void createReactiveLimits(ReactiveLimitsHolderInfos creationInfos,
+                                            ReactiveLimitsHolder reactiveLimitsHolder,
+                                            Reporter subReporter) {
+        if (Boolean.TRUE.equals(creationInfos.getReactiveCapabilityCurve())) {
+            createReactiveCapabilityCurve(creationInfos, reactiveLimitsHolder, subReporter);
+        } else if (Boolean.FALSE.equals(creationInfos.getReactiveCapabilityCurve())) {
+            createMinMaxReactiveLimits(creationInfos, reactiveLimitsHolder, subReporter);
+        }
+    }
+
+    public void createMinMaxReactiveLimits(ReactiveLimitsHolderInfos batteryCreationInfos,
+                                                  ReactiveLimitsHolder reactiveLimitsHolder,
+                                                  Reporter subReporter) {
+        List<Report> minMaxReactiveLimitsReports = new ArrayList<>();
+        if (batteryCreationInfos.getMinimumReactivePower() != null && batteryCreationInfos.getMaximumReactivePower() != null) {
+            reactiveLimitsHolder.newMinMaxReactiveLimits()
+                    .setMinQ(batteryCreationInfos.getMinimumReactivePower())
+                    .setMaxQ(batteryCreationInfos.getMaximumReactivePower())
+                    .add();
+
+            minMaxReactiveLimitsReports.add(ModificationUtils.getInstance().buildCreationReport(
+                    batteryCreationInfos.getMinimumReactivePower(),
+                    MIN_REACTIVE_POWER_FIELDNAME));
+
+            minMaxReactiveLimitsReports.add(ModificationUtils.getInstance().buildCreationReport(
+                    batteryCreationInfos.getMaximumReactivePower(),
+                    MAX_REACTIVE_POWER_FIELDNAME));
+
+            Reporter subReporterReactiveLimits = subReporter.createSubReporter(REACTIVE_LIMITS, REACTIVE_LIMITS);
+
+            subReporterReactiveLimits.report(Report.builder()
+                    .withKey(REACTIVE_LIMITS)
+                    .withDefaultMessage(REACTIVE_LIMITS)
+                    .withSeverity(TypedValue.INFO_SEVERITY)
+                    .build());
+
+            ModificationUtils.getInstance().reportModifications(subReporterReactiveLimits, minMaxReactiveLimitsReports, "minMaxReactiveLimitsCreated", "By range");
+        }
+    }
+
+    public void createReactiveCapabilityCurve(ReactiveLimitsHolderInfos creationInfos,
+                                                     ReactiveLimitsHolder reactiveLimitsHolder,
+                                                     Reporter subReporter) {
+        List<Report> pointsReports = new ArrayList<>();
+        ReactiveCapabilityCurveAdder adder = reactiveLimitsHolder.newReactiveCapabilityCurve();
+        List<ReactiveCapabilityCurveCreationInfos> points = creationInfos.getReactiveCapabilityCurvePoints();
+        IntStream.range(0, points.size())
+                .forEach(i -> {
+                    String fieldSuffix;
+                    ReactiveCapabilityCurveCreationInfos newPoint = points.get(i);
+                    if (i == 0) {
+                        fieldSuffix = "min";
+                    } else if (i == (points.size() - 1)) {
+                        fieldSuffix = "max";
+                    } else {
+                        fieldSuffix = Integer.toString(i);
+                    }
+                    createReactiveCapabilityCurvePoint(adder, newPoint, pointsReports, fieldSuffix);
+                });
+        adder.add();
+        Reporter subReporterReactiveLimits = subReporter.createSubReporter(REACTIVE_LIMITS, REACTIVE_LIMITS);
+        subReporterReactiveLimits.report(Report.builder()
+                .withKey(REACTIVE_LIMITS)
+                .withDefaultMessage(REACTIVE_LIMITS)
+                .withSeverity(TypedValue.INFO_SEVERITY)
+                .build());
+        ModificationUtils.getInstance().reportModifications(subReporterReactiveLimits, pointsReports, "curveReactiveLimitsCreated", "By diagram");
+    }
+
+    private void createReactiveCapabilityCurvePoint(ReactiveCapabilityCurveAdder adder,
+                                                           ReactiveCapabilityCurveCreationInfos point,
+                                                           List<Report> reports,
+                                                           String fieldSuffix) {
+        adder.beginPoint()
+                .setMaxQ(point.getQmaxP())
+                .setMinQ(point.getQminP())
+                .setP(point.getP())
+                .endPoint();
+        addToReports(reports, point.getP(), "P" + fieldSuffix);
+        addToReports(reports, point.getQminP(), "QminP" + fieldSuffix);
+        addToReports(reports, point.getQmaxP(), "QmaxP" + fieldSuffix);
     }
 }
 

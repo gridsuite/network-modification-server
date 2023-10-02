@@ -756,12 +756,30 @@ public class ModificationControllerTest {
         assertApplicationStatusOK(mvcResult);
         testNetworkModificationsCount(TEST_GROUP_ID, 5);
 
-        //test copy group
+        // get list of modifications
+        List<ModificationInfos> modifications = modificationRepository.getModifications(TEST_GROUP_ID, true, true, false);
+        assertEquals(5, modifications.size());
+        //stash the first modification
+        String uuidString = modifications.get(0).getUuid().toString();
+
+        mockMvc.perform(post(URI_NETWORK_MODIF_BASE + "/stash")
+                        .queryParam("groupUuid", TEST_GROUP_ID.toString())
+                        .queryParam("uuids", uuidString))
+                .andExpect(status().isOk());
+        List<ModificationInfos> stashedModifications = modificationRepository.getModificationsMetadata(TEST_GROUP_ID, true);
+        List<ModificationInfos> modificationAfterStash = modificationRepository.getModificationsMetadata(TEST_GROUP_ID, false);
+        assertEquals(1, stashedModifications.size());
+        assertEquals(4, modificationAfterStash.size());
+
+        //test copy group with stashed modification
         UUID newGroupUuid = UUID.randomUUID();
         String uriStringGroups = "/v1/groups?groupUuid=" + newGroupUuid + "&duplicateFrom=" + TEST_GROUP_ID + "&reportUuid=" + UUID.randomUUID();
         mockMvc.perform(post(uriStringGroups)).andExpect(status().isOk());
-
-        testNetworkModificationsCount(newGroupUuid, 5);
+        List<ModificationInfos> stashedCopiedModifications = modificationRepository.getModificationsMetadata(newGroupUuid, true);
+        List<ModificationInfos> copiedModifications = modificationRepository.getModificationsMetadata(newGroupUuid, false);
+        assertEquals(0, stashedCopiedModifications.size());
+        assertEquals(4, copiedModifications.size());
+        testNetworkModificationsCount(newGroupUuid, 4);
     }
 
     @Test
@@ -1243,6 +1261,22 @@ public class ModificationControllerTest {
                     .vscConverterStationId("VSC2")
                     .voltageSetpoint(224.)
                     .build()))
+            .shuntCompensators(List.of(
+                VoltageInitShuntCompensatorModificationInfos.builder()
+                    .shuntCompensatorId("v2shunt")
+                    .sectionCount(1)
+                    .connect(true)
+                    .build(),
+                VoltageInitShuntCompensatorModificationInfos.builder()
+                    .shuntCompensatorId("v5shunt")
+                    .sectionCount(0)
+                    .connect(false)
+                    .build(),
+                VoltageInitShuntCompensatorModificationInfos.builder()
+                    .shuntCompensatorId("v6shunt")
+                    .sectionCount(1)
+                    .connect(false)
+                    .build()))
             .build();
 
         MvcResult mvcResult = mockMvc.perform(post("/v1/groups/modification")
@@ -1260,5 +1294,31 @@ public class ModificationControllerTest {
         List<VoltageInitModificationInfos> modificationsInfos2 = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertEquals(1, modificationsInfos2.size());
         assertThat(modificationsInfos2.get(0)).recursivelyEquals(modificationsInfos1);
+    }
+
+    @Test
+    public void testDeleteStashedNetworkModifications() throws Exception {
+        MvcResult mvcResult;
+        EquipmentAttributeModificationInfos loadModificationInfos = EquipmentAttributeModificationInfos.builder()
+                .equipmentType(IdentifiableType.LOAD)
+                .equipmentAttributeName("v1load")
+                .equipmentId("v1load")
+                .build();
+        String loadModificationInfosJson = objectWriter.writeValueAsString(loadModificationInfos);
+
+        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(loadModificationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
+        assertApplicationStatusOK(mvcResult);
+
+        List<ModificationInfos> modifications = modificationRepository.getModifications(TEST_GROUP_ID, false, true);
+        assertEquals(1, modifications.size());
+        String uuidString = modifications.get(0).getUuid().toString();
+        mockMvc.perform(post(URI_NETWORK_MODIF_BASE + "/stash")
+                        .queryParam("groupUuid", TEST_GROUP_ID.toString())
+                        .queryParam("uuids", uuidString))
+                .andExpect(status().isOk());
+        assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID, false, true, true).size());
+        mockMvc.perform(delete("/v1/groups/" + TEST_GROUP_ID + "/stashed-modifications").queryParam("errorOnGroupNotFound", "false")).andExpect(status().isOk());
+        assertEquals(0, modificationRepository.getModifications(TEST_GROUP_ID, false, true, true).size());
+        mockMvc.perform(delete("/v1/groups/" + UUID.randomUUID() + "/stashed-modifications").queryParam("errorOnGroupNotFound", "false")).andExpect(status().isOk());
     }
 }

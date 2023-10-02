@@ -12,7 +12,7 @@ import lombok.NonNull;
 import org.gridsuite.modification.server.dto.GroovyScriptInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>

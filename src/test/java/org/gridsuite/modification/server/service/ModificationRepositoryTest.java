@@ -699,15 +699,15 @@ public class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(createSubstationEntity2.getId(), createSubstationEntity3.getId()));
-        assertRequestsCount(5, 0, 1, 4);
+        assertRequestsCount(2, 0, 1, 4);
 
         SQLStatementCountValidator.reset();
         assertEquals(1, networkModificationRepository.getModifications(TEST_GROUP_ID, false, true).size());
-        assertRequestsCount(3, 0, 0, 0);
+        assertRequestsCount(2, 0, 0, 0);
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
-        assertRequestsCount(3, 0, 0, 3);
+        assertRequestsCount(2, 0, 0, 3);
 
         assertThrows(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage(),
             NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true)
@@ -1105,10 +1105,26 @@ public class ModificationRepositoryTest {
                     .vscConverterStationId("VSC2")
                     .voltageSetpoint(224.)
                     .build()))
+            .shuntCompensators(List.of(
+                VoltageInitShuntCompensatorModificationInfos.builder()
+                    .shuntCompensatorId("v2shunt")
+                    .sectionCount(1)
+                    .connect(true)
+                    .build(),
+                VoltageInitShuntCompensatorModificationInfos.builder()
+                    .shuntCompensatorId("v5shunt")
+                    .sectionCount(0)
+                    .connect(false)
+                    .build(),
+                VoltageInitShuntCompensatorModificationInfos.builder()
+                    .shuntCompensatorId("v6shunt")
+                    .sectionCount(1)
+                    .connect(false)
+                    .build()))
             .build().toEntity();
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(voltageInitModificationEntity));
-        assertRequestsCount(1, 11, 1, 0);
+        assertRequestsCount(1, 14, 1, 0);
 
         List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
         assertEquals(1, modificationInfos.size());
@@ -1120,7 +1136,7 @@ public class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(voltageInitModificationEntity.getId()));
-        assertRequestsCount(2, 0, 0, 6);
+        assertRequestsCount(2, 0, 0, 7);
 
         SQLStatementCountValidator.reset();
         assertEquals(0, networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).size());

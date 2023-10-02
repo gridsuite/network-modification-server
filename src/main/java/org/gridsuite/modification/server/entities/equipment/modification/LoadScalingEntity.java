@@ -12,8 +12,8 @@ import lombok.NonNull;
 import lombok.Setter;
 import org.gridsuite.modification.server.dto.LoadScalingInfos;
 
-import javax.persistence.Entity;
-import javax.persistence.Table;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 import java.util.stream.Collectors;
 
 /**

@@ -12,8 +12,8 @@ import org.gridsuite.modification.server.dto.EquipmentCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
 
-import javax.persistence.Column;
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.Column;
+import jakarta.persistence.MappedSuperclass;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>

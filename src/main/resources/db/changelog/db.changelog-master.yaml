@@ -166,7 +166,7 @@ databaseChangeLog:
       file: changesets/changelog_20230702T105416Z.xml
       relativeToChangelogFile: true
   - include:
-      file: changesets/changelog_20230629T150259Z.xml
+      file: changesets/changelog_20230728T141452Z.xml
       relativeToChangelogFile: true
   - include:
       file: changesets/changelog_20230629T150259Z.xml
@@ -188,4 +188,16 @@ databaseChangeLog:
       relativeToChangelogFile: true
   - include:
       file: changesets/changelog_20230901T101142Z.xml
+      relativeToChangelogFile: true
+  - include:
+      file: changesets/changelog_20230816T150718Z.xml
+      relativeToChangelogFile: true
+  - include:
+      file: changesets/changelog_20230907T121742Z.xml
+      relativeToChangelogFile: true
+  - include:
+      file: changesets/changelog_20230917T220327Z.xml
+      relativeToChangelogFile: true
+  - include:
+      file: changesets/changelog_20230801T194601Z.xml
       relativeToChangelogFile: true

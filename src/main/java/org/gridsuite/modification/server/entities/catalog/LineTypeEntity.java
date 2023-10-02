@@ -11,7 +11,7 @@ import lombok.Getter;
 
 import org.gridsuite.modification.server.dto.catalog.LineTypeInfos;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.UUID;
 
 /**

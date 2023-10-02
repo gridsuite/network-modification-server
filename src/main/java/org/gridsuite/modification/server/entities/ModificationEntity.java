@@ -6,14 +6,13 @@
  */
 package org.gridsuite.modification.server.entities;
 
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
@@ -28,7 +27,6 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
 @Getter
 @Setter
 @Entity
-@EqualsAndHashCode
 @Inheritance(strategy = InheritanceType.JOINED)
 @Table(name = "modification")
 public class ModificationEntity {
@@ -48,6 +46,15 @@ public class ModificationEntity {
 
     @Column(name = "stashed")
     private Boolean stashed;
+
+    @Column(name = "modifications_order")
+    private int modificationsOrder;
+
+    public ModificationEntity(UUID id, ZonedDateTime date, Boolean stashed) {
+        this.id = id;
+        this.date = date;
+        this.stashed = stashed;
+    }
 
     protected ModificationEntity(ModificationInfos modificationInfos) {
         if (modificationInfos == null) {
