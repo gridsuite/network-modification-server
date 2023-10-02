@@ -44,6 +44,11 @@ public class ModificationEntity {
     @Setter
     private ModificationGroupEntity group;
 
+    @JoinColumn(name = "tabularModificationId", foreignKey = @ForeignKey(name = "tabular_modification_id_fk_constraint"))
+    @ManyToOne(fetch = FetchType.LAZY)
+    @Setter
+    private TabularModificationEntity tabularModification;
+
     @Column(name = "stashed")
     private Boolean stashed;
 
