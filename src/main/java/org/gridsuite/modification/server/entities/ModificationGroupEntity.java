@@ -6,7 +6,7 @@
  */
 package org.gridsuite.modification.server.entities;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,6 +40,7 @@ public class ModificationGroupEntity extends AbstractManuallyAssignedIdentifierE
 
     public void addModification(ModificationEntity modification) {
         modifications.add(modification);
+        modification.setStashed(false);
         modification.setGroup(this);
     }
 

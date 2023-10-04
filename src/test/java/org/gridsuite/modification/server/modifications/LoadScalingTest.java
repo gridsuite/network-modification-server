@@ -12,7 +12,6 @@ import com.github.tomakehurst.wiremock.matching.StringValuePattern;
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
-import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.ReactiveVariationMode;
 import org.gridsuite.modification.server.VariationMode;
 import org.gridsuite.modification.server.VariationType;
@@ -32,7 +31,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.LOAD_SCALING_ERROR;
 import static org.gridsuite.modification.server.utils.NetworkUtil.createLoad;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.assertEquals;
@@ -198,9 +196,7 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
 
     @Test
     public void testFilterWithWrongIds() throws Exception {
-        IdentifiableAttributes loadWrongId1 = getIdentifiableAttributes(LOAD_WRONG_ID_1, 2.0);
-        IdentifiableAttributes loadWrongId2 = getIdentifiableAttributes(LOAD_WRONG_ID_2, 3.0);
-        FilterEquipments wrongIdFilter1 = getFilterEquipments(FILTER_WRONG_ID_1, "wrongIdFilter1", List.of(loadWrongId1, loadWrongId2), List.of(LOAD_WRONG_ID_1, LOAD_WRONG_ID_2));
+        FilterEquipments wrongIdFilter1 = getFilterEquipments(FILTER_WRONG_ID_1, "wrongIdFilter1", List.of(), List.of(LOAD_WRONG_ID_1, LOAD_WRONG_ID_2));
 
         FilterInfos filter = FilterInfos.builder()
             .name("filter")
@@ -227,8 +223,8 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
                 .content(mapper.writeValueAsString(loadScalingInfo))
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage(new NetworkModificationException(LOAD_SCALING_ERROR, "All filters contains equipments with wrong ids").getMessage(),
-                loadScalingInfo.getErrorType().name(), reportService);
+        assertLogMessage(loadScalingInfo.getErrorType().name() + ": There is no valid equipment ID among the provided filter(s)",
+                "invalidFilters", reportService);
         wireMockUtils.verifyGetRequest(stubWithWrongId, PATH, handleQueryParams(getNetworkUuid(), FILTER_WRONG_ID_1), false);
     }
 
@@ -381,7 +377,7 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
 
     //TODO update values after PowSyBl release
     @Override
-    protected void assertNetworkAfterCreation() {
+    protected void assertAfterNetworkModificationCreation() {
         assertEquals(108.33, getNetwork().getLoad(LOAD_ID_1).getP0(), 0.01D);
         assertEquals(216.66, getNetwork().getLoad(LOAD_ID_2).getP0(), 0.01D);
         assertEquals(225.0, getNetwork().getLoad(LOAD_ID_3).getP0(), 0.01D);
@@ -395,7 +391,7 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
     }
 
     @Override
-    protected void assertNetworkAfterDeletion() {
+    protected void assertAfterNetworkModificationDeletion() {
         assertEquals(100.0, getNetwork().getLoad(LOAD_ID_1).getP0(), 0);
         assertEquals(200.0, getNetwork().getLoad(LOAD_ID_2).getP0(), 0);
         assertEquals(200.0, getNetwork().getLoad(LOAD_ID_3).getP0(), 0);

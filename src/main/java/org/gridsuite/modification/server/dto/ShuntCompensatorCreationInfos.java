@@ -10,7 +10,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
-import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -38,9 +37,6 @@ public class ShuntCompensatorCreationInfos extends InjectionCreationInfos {
     @Schema(description = "Maximum number of sections")
     private Integer maximumNumberOfSections;
 
-    @Schema(description = "Current number of sections")
-    private Integer currentNumberOfSections;
-
     @Schema(description = "Susceptance per section")
     private Double susceptancePerSection;
 
@@ -50,18 +46,6 @@ public class ShuntCompensatorCreationInfos extends InjectionCreationInfos {
 
     @Schema(description = "Shunt Compensator Type")
     private ShuntCompensatorType shuntCompensatorType;
-
-    @Schema(description = "Identical sections")
-    private Boolean isIdenticalSection;
-
-    @Schema(description = "Connection Name")
-    private String connectionName;
-
-    @Schema(description = "Connection Direction")
-    private ConnectablePosition.Direction connectionDirection;
-
-    @Schema(description = "Connection Position")
-    private Integer connectionPosition;
 
     @Override
     public ShuntCompensatorCreationEntity toEntity() {

@@ -1,0 +1,389 @@
+/**
+ * Copyright (c) 2023, RTE (http://www.rte-france.com)
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
+package org.gridsuite.modification.server.modifications;
+
+import com.powsybl.iidm.network.Network;
+import com.powsybl.iidm.network.SwitchKind;
+import com.powsybl.iidm.network.ThreeWindingsTransformer;
+import com.powsybl.iidm.network.VoltageLevel;
+import com.powsybl.iidm.network.Generator;
+import com.powsybl.iidm.network.extensions.ConnectablePosition;
+import org.gridsuite.modification.server.dto.VoltageInitGeneratorModificationInfos;
+import org.gridsuite.modification.server.dto.VoltageInitModificationInfos;
+import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.VoltageInitShuntCompensatorModificationInfos;
+import org.gridsuite.modification.server.dto.VoltageInitStaticVarCompensatorModificationInfos;
+import org.gridsuite.modification.server.dto.VoltageInitTransformerModificationInfos;
+import org.gridsuite.modification.server.dto.VoltageInitVscConverterStationModificationInfos;
+import org.gridsuite.modification.server.utils.NetworkCreation;
+import org.junit.Test;
+import org.junit.jupiter.api.Tag;
+import org.springframework.http.MediaType;
+
+import java.util.List;
+import java.util.UUID;
+
+import static org.gridsuite.modification.server.utils.NetworkUtil.createGenerator;
+import static org.gridsuite.modification.server.utils.NetworkUtil.createSwitch;
+import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
+import static org.junit.Assert.assertEquals;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+/**
+ * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
+ */
+@Tag("IntegrationTest")
+public class VoltageInitModificationTest extends AbstractNetworkModificationTest {
+    @Override
+    protected Network createNetwork(UUID networkUuid) {
+        Network network = NetworkCreation.create(networkUuid, true);
+
+        VoltageLevel v2 = network.getVoltageLevel("v2");
+        createGenerator(v2, "newGen", 18, 45., 1.0, "feederNewGen", 50, ConnectablePosition.Direction.TOP);
+        createSwitch(v2, "dNewGen", null, SwitchKind.DISCONNECTOR, true, false, false, 0, 19);
+        createSwitch(v2, "brNewGen", null, SwitchKind.BREAKER, true, false, false, 18, 19);
+
+        Generator newGen = network.getGenerator("newGen");
+        newGen.setTargetV(224.);
+        newGen.setVoltageRegulatorOn(true);
+
+        ThreeWindingsTransformer transformer = network.getThreeWindingsTransformer("trf6");
+        transformer.getLeg2().newRatioTapChanger()
+            .setLowTapPosition(0)
+            .setTapPosition(1)
+            .setLoadTapChangingCapabilities(false)
+            .setRegulating(true)
+            .setTargetDeadband(1.0)
+            .setTargetV(220.0)
+            .beginStep()
+            .setR(39.78473)
+            .setX(39.784725)
+            .setG(0.0)
+            .setB(0.0)
+            .setRho(1.0)
+            .endStep()
+            .beginStep()
+            .setR(39.78474)
+            .setX(39.784726)
+            .setG(0.0)
+            .setB(0.0)
+            .setRho(1.0)
+            .endStep()
+            .beginStep()
+            .setR(39.78475)
+            .setX(39.784727)
+            .setG(0.0)
+            .setB(0.0)
+            .setRho(1.0)
+            .endStep()
+            .add();
+
+        network.getShuntCompensator("v2shunt").setSectionCount(1);
+        network.getShuntCompensator("v5shunt").setSectionCount(0);
+        network.getShuntCompensator("v6shunt").setSectionCount(0);
+
+        return network;
+    }
+
+    @Override
+    protected ModificationInfos buildModification() {
+        return VoltageInitModificationInfos.builder()
+            .generators(List.of(
+                VoltageInitGeneratorModificationInfos.builder()
+                    .generatorId("idGenerator")
+                    .reactivePowerSetpoint(10.)
+                    .build(),
+                VoltageInitGeneratorModificationInfos.builder()
+                    .generatorId("newGen")
+                    .voltageSetpoint(226.)
+                    .build()))
+            .transformers(List.of(
+                VoltageInitTransformerModificationInfos.builder()
+                    .transformerId("trf1")
+                    .ratioTapChangerPosition(2)
+                    .build(),
+                VoltageInitTransformerModificationInfos.builder()
+                    .transformerId("trf2")
+                    .ratioTapChangerPosition(2)
+                    .build(),
+                VoltageInitTransformerModificationInfos.builder()
+                    .transformerId("2wtNotFound")
+                    .ratioTapChangerPosition(2)
+                    .build(),
+                VoltageInitTransformerModificationInfos.builder()
+                    .transformerId("trf6")
+                    .ratioTapChangerPosition(2)
+                    .legSide(ThreeWindingsTransformer.Side.TWO)
+                    .build(),
+                VoltageInitTransformerModificationInfos.builder()
+                    .transformerId("3wtNotFound")
+                    .legSide(ThreeWindingsTransformer.Side.THREE)
+                    .build(),
+                VoltageInitTransformerModificationInfos.builder()
+                    .transformerId("3wtNotFound")
+                    .ratioTapChangerPosition(1)
+                    .legSide(ThreeWindingsTransformer.Side.ONE)
+                    .build(),
+                VoltageInitTransformerModificationInfos.builder()
+                    .transformerId("trf6")
+                    .ratioTapChangerPosition(1)
+                    .legSide(ThreeWindingsTransformer.Side.ONE)
+                    .build()))
+            .staticVarCompensators(List.of(
+                VoltageInitStaticVarCompensatorModificationInfos.builder()
+                    .staticVarCompensatorId("v5Compensator")
+                    .reactivePowerSetpoint(50.)
+                    .build(),
+                VoltageInitStaticVarCompensatorModificationInfos.builder()
+                    .staticVarCompensatorId("v6Compensator")
+                    .voltageSetpoint(372.)
+                    .build(),
+                VoltageInitStaticVarCompensatorModificationInfos.builder()
+                    .staticVarCompensatorId("svcNotFound")
+                    .voltageSetpoint(230.)
+                    .build()))
+            .vscConverterStations(List.of(
+                VoltageInitVscConverterStationModificationInfos.builder()
+                    .vscConverterStationId("v2vsc")
+                    .reactivePowerSetpoint(23.)
+                    .build(),
+                VoltageInitVscConverterStationModificationInfos.builder()
+                    .vscConverterStationId("v2vsc")
+                    .voltageSetpoint(560.)
+                    .build(),
+                VoltageInitVscConverterStationModificationInfos.builder()
+                    .vscConverterStationId("vscNotFound")
+                    .voltageSetpoint(218.)
+                    .build()))
+            .shuntCompensators(List.of(
+                VoltageInitShuntCompensatorModificationInfos.builder()
+                    .shuntCompensatorId("v2shunt")
+                    .sectionCount(1)
+                    .connect(true)
+                    .build(),
+                VoltageInitShuntCompensatorModificationInfos.builder()
+                    .shuntCompensatorId("v5shunt")
+                    .sectionCount(0)
+                    .connect(true)
+                    .build(),
+                VoltageInitShuntCompensatorModificationInfos.builder()
+                    .shuntCompensatorId("v6shunt")
+                    .sectionCount(1)
+                    .connect(false)
+                    .build(),
+                VoltageInitShuntCompensatorModificationInfos.builder()
+                    .shuntCompensatorId("shuntNotFound")
+                    .sectionCount(1)
+                    .connect(false)
+                    .build()))
+            .build();
+    }
+
+    @Override
+    protected ModificationInfos buildModificationUpdate() {
+        return VoltageInitModificationInfos.builder()
+            .generators(List.of(
+                VoltageInitGeneratorModificationInfos.builder()
+                    .generatorId("idGenerator")
+                    .voltageSetpoint(370.)
+                    .build(),
+                VoltageInitGeneratorModificationInfos.builder()
+                    .generatorId("v5generator")
+                    .reactivePowerSetpoint(15.)
+                    .build()))
+            .transformers(List.of(
+                VoltageInitTransformerModificationInfos.builder()
+                    .transformerId("trf1")
+                    .ratioTapChangerPosition(1)
+                    .build(),
+                VoltageInitTransformerModificationInfos.builder()
+                    .transformerId("trf6")
+                    .ratioTapChangerPosition(2)
+                    .legSide(ThreeWindingsTransformer.Side.TWO)
+                    .build()))
+            .staticVarCompensators(List.of(
+                VoltageInitStaticVarCompensatorModificationInfos.builder()
+                    .staticVarCompensatorId("v5Compensator")
+                    .voltageSetpoint(224.)
+                    .build(),
+                VoltageInitStaticVarCompensatorModificationInfos.builder()
+                    .staticVarCompensatorId("v6Compensator")
+                    .reactivePowerSetpoint(381.)
+                    .build()))
+            .vscConverterStations(List.of(
+                VoltageInitVscConverterStationModificationInfos.builder()
+                    .vscConverterStationId("v2vsc")
+                    .voltageSetpoint(181.)
+                    .build(),
+                VoltageInitVscConverterStationModificationInfos.builder()
+                    .vscConverterStationId("v2vsc")
+                    .reactivePowerSetpoint(46.)
+                    .build()))
+            .shuntCompensators(List.of(
+                VoltageInitShuntCompensatorModificationInfos.builder()
+                    .shuntCompensatorId("v2shunt")
+                    .sectionCount(0)
+                    .connect(false)
+                    .build(),
+                VoltageInitShuntCompensatorModificationInfos.builder()
+                    .shuntCompensatorId("v5shunt")
+                    .sectionCount(1)
+                    .connect(true)
+                    .build(),
+                VoltageInitShuntCompensatorModificationInfos.builder()
+                    .shuntCompensatorId("v6shunt")
+                    .sectionCount(0)
+                    .connect(false)
+                    .build()))
+            .build();
+    }
+
+    private void testVoltageInitShunt(String shuntCompensatorId, int currentSectionCount, Integer sectionCount, Boolean connect) throws Exception {
+        setNetwork(createNetwork(getNetworkId()));
+        getNetwork().getShuntCompensator(shuntCompensatorId).setSectionCount(currentSectionCount);
+
+        VoltageInitModificationInfos modification = VoltageInitModificationInfos.builder()
+            .generators(List.of())
+            .transformers(List.of())
+            .staticVarCompensators(List.of())
+            .vscConverterStations(List.of())
+            .shuntCompensators(List.of(
+                VoltageInitShuntCompensatorModificationInfos.builder()
+                    .shuntCompensatorId(shuntCompensatorId)
+                    .sectionCount(sectionCount)
+                    .connect(connect)
+                    .build()))
+            .build();
+
+        mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(modification)).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
+    }
+
+    @Test
+    public void testVoltageInitConnectedSectionCountNull() throws Exception {
+        testVoltageInitShunt("v2shunt", 0, null, false);
+        assertLogMessage("Section count value is undefined", "shuntCompensatorSectionCountUndefined", reportService);
+    }
+
+    @Test
+    public void testVoltageInitConnectedCurrentSection0Section0() throws Exception {
+        testVoltageInitShunt("v2shunt", 0, 0, false);
+        assertLogMessage("Shunt compensator disconnected", "shuntCompensatorDisconnected", reportService);
+    }
+
+    @Test
+    public void testVoltageInitConnectedCurrentSection0Section1() throws Exception {
+        testVoltageInitShunt("v2shunt", 0, 1, false);
+        assertEquals(1, getNetwork().getShuntCompensator("v2shunt").getSectionCount());
+    }
+
+    @Test
+    public void testVoltageInitConnectedCurrentSection0Section2() throws Exception {
+        testVoltageInitShunt("v2shunt", 0, 2, false);
+        assertLogMessage("Section count value 2 cannot be applied : it should be 0 or 1", "shuntCompensatorSectionCountValueIgnored", reportService);
+        assertEquals(0, getNetwork().getShuntCompensator("v2shunt").getSectionCount());
+    }
+
+    @Test
+    public void testVoltageInitConnectedCurrentSection1Section0() throws Exception {
+        testVoltageInitShunt("v2shunt", 1, 0, false);
+        assertLogMessage("Shunt compensator disconnected", "shuntCompensatorDisconnected", reportService);
+        assertEquals(0, getNetwork().getShuntCompensator("v2shunt").getSectionCount());
+    }
+
+    @Test
+    public void testVoltageInitConnectedCurrentSection1Section1() throws Exception {
+        testVoltageInitShunt("v2shunt", 1, 1, false);
+        assertEquals(1, getNetwork().getShuntCompensator("v2shunt").getSectionCount());
+    }
+
+    @Test
+    public void testVoltageInitConnectedCurrentSection1Section2() throws Exception {
+        testVoltageInitShunt("v2shunt", 1, 2, false);
+        assertLogMessage("Section count value 2 cannot be applied : it should be 0 or 1", "shuntCompensatorSectionCountValueIgnored", reportService);
+        assertEquals(1, getNetwork().getShuntCompensator("v2shunt").getSectionCount());
+    }
+
+    @Test
+    public void testVoltageInitDisconnectedConnectNull() throws Exception {
+        testVoltageInitShunt("v5shunt", 0, 0, null);
+        assertLogMessage("Connect value is undefined", "shuntCompensatorConnectUndefined", reportService);
+    }
+
+    @Test
+    public void testVoltageInitDisconnectedCurrentSection0Section0() throws Exception {
+        testVoltageInitShunt("v5shunt", 0, 0, true);
+        assertEquals(0, getNetwork().getShuntCompensator("v5shunt").getSectionCount());
+    }
+
+    @Test
+    public void testVoltageInitDisconnectedCurrentSection0Section1() throws Exception {
+        testVoltageInitShunt("v5shunt", 0, 1, true);
+        assertLogMessage("Shunt compensator reconnected", "shuntCompensatorReconnected", reportService);
+        assertEquals(1, getNetwork().getShuntCompensator("v5shunt").getSectionCount());
+    }
+
+    @Test
+    public void testVoltageInitDisconnectedCurrentSection0Section2() throws Exception {
+        testVoltageInitShunt("v5shunt", 0, 2, true);
+        assertLogMessage("Section count value 2 cannot be applied : it should be 0 or 1", "shuntCompensatorSectionCountValueIgnored", reportService);
+        assertEquals(0, getNetwork().getShuntCompensator("v5shunt").getSectionCount());
+    }
+
+    @Test
+    public void testVoltageInitDisconnectedCurrentSection1Section0() throws Exception {
+        testVoltageInitShunt("v5shunt", 1, 0, true);
+        assertEquals(0, getNetwork().getShuntCompensator("v5shunt").getSectionCount());
+    }
+
+    @Test
+    public void testVoltageInitDisconnectedCurrentSection1Section1() throws Exception {
+        testVoltageInitShunt("v5shunt", 1, 1, true);
+        assertLogMessage("Shunt compensator reconnected", "shuntCompensatorReconnected", reportService);
+        assertEquals(1, getNetwork().getShuntCompensator("v5shunt").getSectionCount());
+    }
+
+    @Test
+    public void testVoltageInitDisconnectedCurrentSection1Section2() throws Exception {
+        testVoltageInitShunt("v5shunt", 1, 2, true);
+        assertLogMessage("Section count value 2 cannot be applied : it should be 0 or 1", "shuntCompensatorSectionCountValueIgnored", reportService);
+        assertEquals(1, getNetwork().getShuntCompensator("v2shunt").getSectionCount());
+    }
+
+    @Override
+    protected void assertAfterNetworkModificationCreation() {
+        assertLogMessage("Shunt compensator with id=shuntNotFound not found", "shuntCompensatorNotFound", reportService);
+        assertEquals(10., getNetwork().getGenerator("idGenerator").getTargetQ(), 0.001);
+        assertEquals(226., getNetwork().getGenerator("newGen").getTargetV(), 0.001);
+        assertEquals(2, getNetwork().getTwoWindingsTransformer("trf1").getRatioTapChanger().getTapPosition());
+        assertEquals(2, getNetwork().getThreeWindingsTransformer("trf6").getLeg2().getRatioTapChanger().getTapPosition());
+        assertEquals(50., getNetwork().getStaticVarCompensator("v5Compensator").getReactivePowerSetpoint(), 0.001);
+        assertEquals(372., getNetwork().getStaticVarCompensator("v6Compensator").getVoltageSetpoint(), 0.001);
+        assertEquals(23., getNetwork().getVscConverterStation("v2vsc").getReactivePowerSetpoint(), 0.001);
+        assertEquals(560., getNetwork().getVscConverterStation("v2vsc").getVoltageSetpoint(), 0.001);
+        assertEquals(1, getNetwork().getShuntCompensator("v2shunt").getSectionCount());
+        assertEquals(0, getNetwork().getShuntCompensator("v5shunt").getSectionCount());
+        assertEquals(1, getNetwork().getShuntCompensator("v6shunt").getSectionCount());
+    }
+
+    @Override
+    protected void assertAfterNetworkModificationDeletion() {
+        assertEquals(1., getNetwork().getGenerator("idGenerator").getTargetQ(), 0.001);
+        assertEquals(224., getNetwork().getGenerator("newGen").getTargetV(), 0.001);
+        assertEquals(1, getNetwork().getTwoWindingsTransformer("trf1").getRatioTapChanger().getTapPosition());
+        assertEquals(1, getNetwork().getThreeWindingsTransformer("trf6").getLeg2().getRatioTapChanger().getTapPosition());
+        assertEquals(100., getNetwork().getStaticVarCompensator("v5Compensator").getReactivePowerSetpoint(), 0.001);
+        assertEquals(380., getNetwork().getStaticVarCompensator("v6Compensator").getVoltageSetpoint(), 0.001);
+        assertEquals(40., getNetwork().getVscConverterStation("v2vsc").getReactivePowerSetpoint(), 0.001);
+        assertEquals(150., getNetwork().getVscConverterStation("v2vsc").getVoltageSetpoint(), 0.001);
+        assertEquals(1, getNetwork().getShuntCompensator("v2shunt").getSectionCount());
+        assertEquals(0, getNetwork().getShuntCompensator("v5shunt").getSectionCount());
+        assertEquals(0, getNetwork().getShuntCompensator("v6shunt").getSectionCount());
+    }
+}

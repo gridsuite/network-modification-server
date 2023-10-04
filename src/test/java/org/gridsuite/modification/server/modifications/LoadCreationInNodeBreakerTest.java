@@ -128,12 +128,12 @@ public class LoadCreationInNodeBreakerTest extends AbstractNetworkModificationTe
     }
 
     @Override
-    protected void assertNetworkAfterCreation() {
+    protected void assertAfterNetworkModificationCreation() {
         assertNotNull(getNetwork().getLoad("idLoad1"));
     }
 
     @Override
-    protected void assertNetworkAfterDeletion() {
+    protected void assertAfterNetworkModificationDeletion() {
         assertNull(getNetwork().getLoad("idLoad1"));
     }
 }

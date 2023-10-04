@@ -47,7 +47,7 @@ public class EquipmentAttributeModificationTest extends AbstractNetworkModificat
             .equipmentAttributeValue("equipmentAttributeValue")
             .equipmentType(IdentifiableType.VOLTAGE_LEVEL)
             .build();
-        assertEquals(String.format("EquipmentAttributeModificationInfos(super=EquipmentModificationInfos(super=ModificationInfos(uuid=%s, date=2021-02-19T00:00Z), equipmentId=equipmentId), equipmentAttributeName=equipmentAttributeName, equipmentAttributeValue=equipmentAttributeValue, equipmentType=VOLTAGE_LEVEL)", modificationUuid), modificationInfos.toString());
+        assertEquals(String.format("EquipmentAttributeModificationInfos(super=EquipmentModificationInfos(super=ModificationInfos(uuid=%s, date=2021-02-19T00:00Z, stashed=null), equipmentId=equipmentId), equipmentAttributeName=equipmentAttributeName, equipmentAttributeValue=equipmentAttributeValue, equipmentType=VOLTAGE_LEVEL)", modificationUuid), modificationInfos.toString());
 
         EquipmentAttributeModificationInfos switchStatusModificationInfos = EquipmentAttributeModificationInfos.builder()
             .equipmentType(IdentifiableType.SWITCH)
@@ -176,12 +176,12 @@ public class EquipmentAttributeModificationTest extends AbstractNetworkModificat
     }
 
     @Override
-    protected void assertNetworkAfterCreation() {
+    protected void assertAfterNetworkModificationCreation() {
         assertTrue(getNetwork().getSwitch("v1b1").isOpen());
     }
 
     @Override
-    protected void assertNetworkAfterDeletion() {
+    protected void assertAfterNetworkModificationDeletion() {
         assertFalse(getNetwork().getSwitch("v1b1").isOpen());
     }
 }

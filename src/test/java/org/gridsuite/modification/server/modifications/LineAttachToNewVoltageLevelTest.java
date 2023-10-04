@@ -45,7 +45,7 @@ public class LineAttachToNewVoltageLevelTest extends AbstractNetworkModification
                 .busbarCount(2)
                 .sectionCount(2)
                 .switchKinds(Arrays.asList(SwitchKind.BREAKER))
-                .couplingDevices(Arrays.asList(CouplingDeviceInfos.builder().busbarSectionId1("bbs.nw").busbarSectionId2("bbs.ne").build()))
+                .couplingDevices(Arrays.asList(CouplingDeviceInfos.builder().busbarSectionId1("1A").busbarSectionId2("1B").build()))
                 .build();
     }
 
@@ -91,7 +91,7 @@ public class LineAttachToNewVoltageLevelTest extends AbstractNetworkModification
     }
 
     @Override
-    protected void assertNetworkAfterCreation() {
+    protected void assertAfterNetworkModificationCreation() {
         // new equipments in the network:
         assertNotNull(getNetwork().getLine("attachmentLine"));
         assertNotNull(getNetwork().getLine("nl1"));
@@ -103,7 +103,7 @@ public class LineAttachToNewVoltageLevelTest extends AbstractNetworkModification
     }
 
     @Override
-    protected void assertNetworkAfterDeletion() {
+    protected void assertAfterNetworkModificationDeletion() {
         assertNull(getNetwork().getLine("attachmentLine"));
         assertNull(getNetwork().getLine("nl1"));
         assertNull(getNetwork().getLine("nl2"));

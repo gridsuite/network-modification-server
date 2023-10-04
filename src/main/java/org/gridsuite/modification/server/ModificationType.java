@@ -19,6 +19,7 @@ public enum ModificationType {
     LOAD_CREATION(PreloadingStrategy.NONE),
     LOAD_MODIFICATION(PreloadingStrategy.NONE),
     BATTERY_CREATION(PreloadingStrategy.NONE),
+    BATTERY_MODIFICATION(PreloadingStrategy.NONE),
     GENERATOR_CREATION(PreloadingStrategy.NONE),
     GENERATOR_MODIFICATION(PreloadingStrategy.NONE),
     EQUIPMENT_DELETION(PreloadingStrategy.NONE),
@@ -41,7 +42,10 @@ public enum ModificationType {
     BRANCH_STATUS_MODIFICATION(PreloadingStrategy.NONE),
     DELETE_VOLTAGE_LEVEL_ON_LINE(PreloadingStrategy.NONE),
     DELETE_ATTACHING_LINE(PreloadingStrategy.NONE),
-    GENERATION_DISPATCH(PreloadingStrategy.COLLECTION);
+    GENERATION_DISPATCH(PreloadingStrategy.COLLECTION),
+    VOLTAGE_INIT_MODIFICATION(PreloadingStrategy.COLLECTION),
+    VSC_CREATION(PreloadingStrategy.NONE),
+    CONVERTER_STATION_CREATION(PreloadingStrategy.NONE);
 
     private final PreloadingStrategy strategy;
 

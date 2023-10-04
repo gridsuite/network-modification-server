@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.TapChangerType;
 import org.gridsuite.modification.server.dto.TapChangerStepCreationInfos;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.List;
 import java.util.stream.Collectors;
 

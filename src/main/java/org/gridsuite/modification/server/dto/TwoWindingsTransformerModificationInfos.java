@@ -51,6 +51,9 @@ public class TwoWindingsTransformerModificationInfos extends BranchModificationI
     @Schema(description = "Ratio tap changer")
     private RatioTapChangerModificationInfos ratioTapChanger;
 
+    @Schema(description = "Phase tap changer")
+    private PhaseTapChangerModificationInfos phaseTapChanger;
+
     @Override
     public TwoWindingsTransformerModificationEntity toEntity() {
         return new TwoWindingsTransformerModificationEntity(this);

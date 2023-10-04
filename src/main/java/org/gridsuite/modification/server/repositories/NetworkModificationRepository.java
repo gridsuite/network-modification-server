@@ -30,6 +30,7 @@ public class NetworkModificationRepository {
     private final ModificationGroupRepository modificationGroupRepository;
 
     private final ModificationRepository modificationRepository;
+    private static final String MODIFICATION_NOT_FOUND_MESSAGE = "Modification (%s) not found";
 
     public NetworkModificationRepository(ModificationGroupRepository modificationGroupRepository, ModificationRepository modificationRepository) {
         this.modificationGroupRepository = modificationGroupRepository;
@@ -112,8 +113,13 @@ public class NetworkModificationRepository {
 
     @Transactional(readOnly = true)
     public List<ModificationInfos> getModifications(UUID groupUuid, boolean onlyMetadata, boolean errorOnGroupNotFound) {
+        return getModifications(groupUuid, onlyMetadata, errorOnGroupNotFound, false);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ModificationInfos> getModifications(UUID groupUuid, boolean onlyMetadata, boolean errorOnGroupNotFound, boolean stashedModifications) {
         try {
-            return onlyMetadata ? getModificationsMetadata(groupUuid) : getModificationsInfos(List.of(groupUuid));
+            return onlyMetadata ? getModificationsMetadata(groupUuid, stashedModifications) : getModificationsInfos(List.of(groupUuid), stashedModifications);
         } catch (NetworkModificationException e) {
             if (e.getType() == MODIFICATION_GROUP_NOT_FOUND && !errorOnGroupNotFound) {
                 return List.of();
@@ -122,17 +128,20 @@ public class NetworkModificationRepository {
         }
     }
 
-    private List<ModificationInfos> getModificationsMetadata(UUID groupUuid) {
+    public List<ModificationInfos> getModificationsMetadata(UUID groupUuid, boolean stashedModifications) {
         return modificationRepository
-            .findAllBaseByGroupId(getModificationGroup(groupUuid).getId())
-            .stream()
-            .map(ModificationEntity::toModificationInfos)
-            .collect(Collectors.toList());
+                .findAllBaseByGroupId(getModificationGroup(groupUuid).getId())
+                .stream()
+                .filter(m -> m.getStashed() == stashedModifications)
+                .map(ModificationEntity::toModificationInfos)
+                .collect(Collectors.toList());
     }
 
-    public List<ModificationInfos> getModificationsInfos(List<UUID> groupUuids) {
-        return groupUuids.stream().flatMap(this::getModificationEntityStream).map(ModificationEntity::toModificationInfos)
-            .collect(Collectors.toList());
+    public List<ModificationInfos> getModificationsInfos(List<UUID> groupUuids, boolean stashedModifications) {
+        return groupUuids.stream().flatMap(this::getModificationEntityStream)
+                .filter(m -> m.getStashed() == stashedModifications)
+                .map(ModificationEntity::toModificationInfos)
+                .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
@@ -197,14 +206,53 @@ public class NetworkModificationRepository {
 
     @Transactional(readOnly = true)
     public List<ModificationEntity> copyModificationsEntities(@NonNull UUID groupUuid) {
-        return getModificationEntityStream(groupUuid).map(ModificationEntity::copy).collect(Collectors.toList());
+        return getModificationEntityStream(groupUuid).filter(m -> !m.getStashed()).map(ModificationEntity::copy).collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void stashNetworkModifications(@NonNull List<UUID> modificationUuids) {
+        for (UUID modificationUuid : modificationUuids) {
+            ModificationEntity modificationEntity = this.modificationRepository
+                    .findById(modificationUuid)
+                    .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationUuid)));
+            modificationEntity.setStashed(true);
+            this.modificationRepository.save(modificationEntity);
+        }
+    }
+
+    @Transactional
+    public void restoreNetworkModifications(@NonNull List<UUID> modificationUuids) {
+        for (UUID modificationUuid : modificationUuids) {
+            ModificationEntity modificationEntity = this.modificationRepository
+                    .findById(modificationUuid)
+                    .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationUuid)));
+            modificationEntity.setStashed(false);
+            this.modificationRepository.save(modificationEntity);
+        }
     }
 
     @Transactional
     public void updateModification(@NonNull UUID modificationUuid, @NonNull ModificationInfos modificationInfos) {
         this.modificationRepository
             .findById(modificationUuid)
-            .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format("Modification (%s) not found", modificationUuid)))
+            .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationUuid)))
             .update(modificationInfos);
+    }
+
+    @Transactional
+    public void deleteStashedModificationInGroup(UUID groupUuid, boolean errorOnGroupNotFound) {
+        try {
+            ModificationGroupEntity groupEntity = getModificationGroup(groupUuid);
+            if (!groupEntity.getModifications().isEmpty()) {
+                List<UUID> stashedModifications = groupEntity.getModifications().stream()
+                    .filter(ModificationEntity::getStashed).map(ModificationEntity::getId).collect(Collectors.toList());
+                deleteModifications(groupUuid, stashedModifications);
+            }
+        } catch (NetworkModificationException e) {
+            if (e.getType() == MODIFICATION_GROUP_NOT_FOUND && !errorOnGroupNotFound) {
+                return;
+            }
+            throw e;
+        }
     }
 }

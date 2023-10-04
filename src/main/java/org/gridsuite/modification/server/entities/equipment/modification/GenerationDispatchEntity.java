@@ -14,18 +14,22 @@ import org.gridsuite.modification.server.dto.GenerationDispatchInfos;
 import org.gridsuite.modification.server.dto.GeneratorsFilterInfos;
 import org.gridsuite.modification.server.dto.GeneratorsFrequencyReserveInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.SubstationsGeneratorsOrderingInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 
-import javax.persistence.CascadeType;
-import javax.persistence.CollectionTable;
-import javax.persistence.Column;
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
-import javax.validation.constraints.NotNull;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderColumn;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -52,7 +56,12 @@ public class GenerationDispatchEntity extends ModificationEntity {
     private List<GeneratorsFilterEmbeddable> generatorsWithFixedSupply;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OrderColumn(name = "pos_generators_frequency")
     private List<GeneratorsFrequencyReserveEntity> generatorsFrequencyReserve;
+
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OrderColumn(name = "pos_generators_ordering")
+    private List<GeneratorsOrderingEntity> generatorsOrdering;
 
     public GenerationDispatchEntity(@NotNull GenerationDispatchInfos generationDispatchInfos) {
         super(generationDispatchInfos);
@@ -70,11 +79,25 @@ public class GenerationDispatchEntity extends ModificationEntity {
         defaultOutageRate = generationDispatchInfos.getDefaultOutageRate();
         generatorsWithoutOutage = toEmbeddableGeneratorsFilters(generationDispatchInfos.getGeneratorsWithoutOutage());
         generatorsWithFixedSupply = toEmbeddableGeneratorsFilters(generationDispatchInfos.getGeneratorsWithFixedSupply());
+
+        List<GeneratorsFrequencyReserveEntity> frequencyReserveEntities = toEmbeddableGeneratorsFrequencyReserve(generationDispatchInfos.getGeneratorsFrequencyReserve());
         if (generatorsFrequencyReserve == null) {
-            generatorsFrequencyReserve = toEmbeddableGeneratorsFrequencyReserve(generationDispatchInfos.getGeneratorsFrequencyReserve());
+            generatorsFrequencyReserve = frequencyReserveEntities;
         } else {
             generatorsFrequencyReserve.clear();
-            generatorsFrequencyReserve.addAll(toEmbeddableGeneratorsFrequencyReserve(generationDispatchInfos.getGeneratorsFrequencyReserve()));
+            if (frequencyReserveEntities != null) {
+                generatorsFrequencyReserve.addAll(frequencyReserveEntities);
+            }
+        }
+
+        List<GeneratorsOrderingEntity> orderingEntities = toSubstationsGeneratorsOrdering(generationDispatchInfos.getSubstationsGeneratorsOrdering());
+        if (generatorsOrdering == null) {
+            generatorsOrdering = orderingEntities;
+        } else {
+            generatorsOrdering.clear();
+            if (orderingEntities != null) {
+                generatorsOrdering.addAll(orderingEntities);
+            }
         }
     }
 
@@ -107,6 +130,7 @@ public class GenerationDispatchEntity extends ModificationEntity {
         List<GeneratorsFrequencyReserveInfos> generatorsFrequencyReserveInfos = null;
         if (generatorsFrequencyReserve != null) {
             generatorsFrequencyReserveInfos = generatorsFrequencyReserve.stream()
+                .filter(Objects::nonNull)
                 .map(generator -> {
                     List<GeneratorsFilterInfos> generatorsFilterInfos = generator.getGeneratorsFilters().stream().map(filter ->
                         new GeneratorsFilterInfos(filter.getId(), filter.getName())).collect(Collectors.toList());
@@ -114,6 +138,25 @@ public class GenerationDispatchEntity extends ModificationEntity {
                 }).collect(Collectors.toList());
         }
         return generatorsFrequencyReserveInfos;
+    }
+
+    public static List<GeneratorsOrderingEntity> toSubstationsGeneratorsOrdering(List<SubstationsGeneratorsOrderingInfos> substations) {
+        List<GeneratorsOrderingEntity> substationsGeneratorsOrderingEntities = null;
+        if (substations != null) {
+            substationsGeneratorsOrderingEntities = substations.stream().map(substation ->
+                new GeneratorsOrderingEntity(new ArrayList<>(substation.getSubstationIds()))
+            ).collect(Collectors.toList());
+        }
+        return substationsGeneratorsOrderingEntities;
+    }
+
+    private List<SubstationsGeneratorsOrderingInfos> toSubstationsGeneratorsOrderingInfos(List<GeneratorsOrderingEntity> generatorsOrdering) {
+        List<SubstationsGeneratorsOrderingInfos> substationsGeneratorsOrderingInfos = null;
+        if (generatorsOrdering != null) {
+            substationsGeneratorsOrderingInfos = generatorsOrdering.stream()
+                .map(generator -> new SubstationsGeneratorsOrderingInfos(generator.getSubstationIds())).collect(Collectors.toList());
+        }
+        return substationsGeneratorsOrderingInfos;
     }
 
     @Override
@@ -126,6 +169,7 @@ public class GenerationDispatchEntity extends ModificationEntity {
                 .generatorsWithoutOutage(toGeneratorsFilters(generatorsWithoutOutage))
                 .generatorsWithFixedSupply(toGeneratorsFilters(generatorsWithFixedSupply))
                 .generatorsFrequencyReserve(toGeneratorsFrequencyReserve(generatorsFrequencyReserve))
+                .substationsGeneratorsOrdering(toSubstationsGeneratorsOrderingInfos(generatorsOrdering))
                 .build();
     }
 }

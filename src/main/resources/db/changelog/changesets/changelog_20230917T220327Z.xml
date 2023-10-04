@@ -1,0 +1,70 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-4.1.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
+    <changeSet author="yenguised (generated)" id="1694988227382-7">
+        <createTable tableName="converter_station_creation">
+            <column name="equipment_id" type="VARCHAR(255)"/>
+            <column name="equipment_name" type="VARCHAR(255)"/>
+            <column name="bus_or_busbar_section_id" type="VARCHAR(255)"/>
+            <column name="connection_direction" type="INT"/>
+            <column name="connection_name" type="VARCHAR(255)"/>
+            <column name="connection_position" type="INT"/>
+            <column name="voltage_level_id" type="VARCHAR(255)"/>
+            <column name="loss_factor" type="FLOAT4"/>
+            <column name="maximum_reactive_power" type="FLOAT8"/>
+            <column name="minimum_reactive_power" type="FLOAT8"/>
+            <column name="reactive_capability_curve" type="BOOLEAN"/>
+            <column name="reactive_power" type="FLOAT8"/>
+            <column name="voltage" type="FLOAT8"/>
+            <column name="voltage_regulation_on" type="BOOLEAN"/>
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="converter_station_creationPK"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="yenguised (generated)" id="1694988227382-8">
+        <createTable tableName="converter_station_creation_rcc_points">
+            <column name="converter_station_creation_entity_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="p" type="FLOAT8"/>
+            <column name="qmaxp" type="FLOAT8"/>
+            <column name="qminp" type="FLOAT8"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="yenguised (generated)" id="1694988227382-9">
+        <createTable tableName="vsc_creation">
+            <column name="equipment_id" type="VARCHAR(255)"/>
+            <column name="equipment_name" type="VARCHAR(255)"/>
+            <column name="active_power" type="FLOAT8"/>
+            <column name="angle_droop_active_power_control" type="BOOLEAN"/>
+            <column name="converters_mode" type="INT"/>
+            <column name="dc_nominal_voltage" type="FLOAT8"/>
+            <column name="dc_resistance" type="FLOAT8"/>
+            <column name="droop" type="FLOAT4"/>
+            <column name="maximum_active_power" type="FLOAT8"/>
+            <column name="operator_active_power_limit_side1" type="FLOAT4"/>
+            <column name="operator_active_power_limit_side2" type="FLOAT4"/>
+            <column name="p0" type="FLOAT4"/>
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="vsc_creationPK"/>
+            </column>
+            <column name="converter_station_1_id" type="UUID"/>
+            <column name="converter_station_2_id" type="UUID"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="yenguised (generated)" id="1694988227382-11">
+        <addForeignKeyConstraint baseColumnNames="id" baseTableName="vsc_creation" constraintName="FK1qj1egdcxan4tq5dow3sfgqj" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
+    </changeSet>
+    <changeSet author="yenguised (generated)" id="1694988227382-12">
+        <addForeignKeyConstraint baseColumnNames="converter_station_creation_entity_id" baseTableName="converter_station_creation_rcc_points" constraintName="FK9jyi7j3hgeryvn6kmpam4pso3" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="converter_station_creation" validate="true"/>
+    </changeSet>
+    <changeSet author="yenguised (generated)" id="1694988227382-13">
+        <addForeignKeyConstraint baseColumnNames="id" baseTableName="converter_station_creation" constraintName="FKqexukaj2oi61nq8dsvno7649k" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
+    </changeSet>
+    <changeSet author="yenguised (generated)" id="1694988227382-15">
+        <addForeignKeyConstraint baseColumnNames="converter_station_1_id" baseTableName="vsc_creation" constraintName="converter_station_1_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="converter_station_creation" validate="true"/>
+    </changeSet>
+    <changeSet author="yenguised (generated)" id="1694988227382-16">
+        <addForeignKeyConstraint baseColumnNames="converter_station_2_id" baseTableName="vsc_creation" constraintName="converter_station_2_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="converter_station_creation" validate="true"/>
+    </changeSet>
+</databaseChangeLog>
