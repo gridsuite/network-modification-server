@@ -250,12 +250,12 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
                     + regulatingTerminal.getConnectable().getId();
         }
 
-        if (tapChangerModificationInfos.getRegulationType() != null && tapChangerModificationInfos.getRegulationType().getValue() == VoltageRegulationType.LOCAL) {
-            if (tapChangerModificationInfos.getRegulationSide() != null && tapChangerModificationInfos.getRegulationSide().getValue() == RegulationSide.SIDE1) {
+        if (tapChangerModificationInfos.getRegulationSide() != null && tapChangerModificationInfos.getRegulationSide().getValue() != null) {
+            if (tapChangerModificationInfos.getRegulationSide().getValue() == RegulationSide.SIDE1) {
                 tapChangerModificationInfos.setRegulatingTerminalVlId(new AttributeModification<>(terminal1.getVoltageLevel().getId(), OperationType.SET));
                 tapChangerModificationInfos.setRegulatingTerminalId(new AttributeModification<>(terminal1.getConnectable().getId(), OperationType.SET));
                 tapChangerModificationInfos.setRegulatingTerminalType(new AttributeModification<>(terminal1.getConnectable().getType().name(), OperationType.SET));
-            } else if (tapChangerModificationInfos.getRegulationSide() != null && tapChangerModificationInfos.getRegulationSide().getValue() == RegulationSide.SIDE2) {
+            } else if (tapChangerModificationInfos.getRegulationSide().getValue() == RegulationSide.SIDE2) {
                 tapChangerModificationInfos.setRegulatingTerminalVlId(new AttributeModification<>(terminal2.getVoltageLevel().getId(), OperationType.SET));
                 tapChangerModificationInfos.setRegulatingTerminalId(new AttributeModification<>(terminal2.getConnectable().getId(), OperationType.SET));
                 tapChangerModificationInfos.setRegulatingTerminalType(new AttributeModification<>(terminal2.getConnectable().getType().name(), OperationType.SET));
