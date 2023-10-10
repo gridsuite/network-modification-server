@@ -934,7 +934,7 @@ public final class ModificationUtils {
                     } else if (i == (points.size() - 1)) {
                         fieldSuffix = "max";
                     } else {
-                        fieldSuffix = Integer.toString(i);
+                        fieldSuffix = Integer.toString(i - 1);
                     }
                     createReactiveCapabilityCurvePoint(adder, newPoint, pointsReports, fieldSuffix);
                 });
