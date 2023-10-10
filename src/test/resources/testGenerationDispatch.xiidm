@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <iidm:network xmlns:iidm="http://www.powsybl.org/schema/iidm/1_9" xmlns:gs="http://www.powsybl.org/schema/iidm/ext/generator_startup/1_1" id="fourSubstations" caseDate="2017-06-25T00:00:00.000Z" forecastDistance="0" sourceFormat="test" minimumValidationLevel="STEADY_STATE_HYPOTHESIS">
     <iidm:substation id="S3">
+        <iidm:property name="regionCvg" value="NORTH"/>
         <iidm:voltageLevel id="S3VL1" nominalV="400.0" lowVoltageLimit="390.0" highVoltageLimit="440.0" topologyKind="NODE_BREAKER">
             <iidm:nodeBreakerTopology>
                 <iidm:busbarSection id="S3VL1_BBS" name="S3VL1_BBS" node="0"/>
@@ -26,6 +27,7 @@
         </iidm:voltageLevel>
     </iidm:substation>
     <iidm:substation id="S4">
+        <iidm:property name="regionCvg" value="SOUTH"/>
         <iidm:voltageLevel id="S4VL1" nominalV="400.0" lowVoltageLimit="390.0" highVoltageLimit="440.0" topologyKind="NODE_BREAKER">
             <iidm:nodeBreakerTopology>
                 <iidm:busbarSection id="S4VL1_BBS" name="S4VL1_BBS" node="0"/>
