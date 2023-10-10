@@ -523,14 +523,12 @@ public class GenerationDispatch extends AbstractModification {
             Reporter resultReporter = componentReporter.createSubReporter(RESULT, RESULT);
 
             if (Math.abs(totalAmountSupplyToBeDispatched - realized) < EPSILON) {
-                Map<String, List<Generator>> generatorsByRegion = getGeneratorsByRegion(network, generationDispatchInfos.getSubstationsGeneratorsOrdering());
+                Map<String, List<Generator>> generatorsByRegion = getGeneratorsByRegion(network);
 
                 report(resultReporter, Integer.toString(componentNum), "SupplyDemandBalanceCouldBeMet", "The supply-demand balance could be met",
                     Map.of(), TypedValue.INFO_SEVERITY);
-                generatorsByRegion.forEach((k, v) -> {
-                    report(resultReporter, Integer.toString(componentNum), "SumGeneratorActivePower" + k, "Sum of generator active power setpoints in ${region} region: ${total} MW.",
-                            Map.of("region", k, "total", getSumActivePower(v)), TypedValue.INFO_SEVERITY);
-                });
+                generatorsByRegion.forEach((region, generators) -> report(resultReporter, Integer.toString(componentNum), "SumGeneratorActivePower" + region, "Sum of generator active power setpoints in ${region} region: ${sum} MW.",
+                        Map.of("region", region, "sum", getSumActivePower(generators)), TypedValue.INFO_SEVERITY));
             } else {
                 double remainingPowerImbalance = totalAmountSupplyToBeDispatched - realized;
                 report(resultReporter, Integer.toString(componentNum), "SupplyDemandBalanceCouldNotBeMet", "The supply-demand balance could not be met : the remaining power imbalance is ${remainingPower} MW",
@@ -539,29 +537,32 @@ public class GenerationDispatch extends AbstractModification {
         }
     }
 
-    private Map<String, List<Generator>> getGeneratorsByRegion(Network network, List<SubstationsGeneratorsOrderingInfos> substationsGeneratorsOrderingInfos) {
-        // get all substation with "regionCvg" property name
+    private Map<String, List<Generator>> getGeneratorsByRegion(Network network) {
+        // get all connected generators and the substationIds associated.
+        List<Generator> connectedGenerators = network.getGeneratorStream()
+                .filter(g -> g.getTerminal().isConnected())
+                .toList();
+        List<String> substationIds = connectedGenerators.stream()
+                .map(g -> g.getTerminal().getVoltageLevel().getSubstation().orElseThrow().getId())
+                .toList();
+        // get all substations with "regionCvg" property name
         Map<String, String> substationIdPropertiesMap = new HashMap<>();
-        if (!CollectionUtils.isEmpty(substationsGeneratorsOrderingInfos)) {
-            substationsGeneratorsOrderingInfos.forEach(sInfo ->
-                    sInfo.getSubstationIds().forEach(sId -> {
-                        Substation substation = network.getSubstation(sId);
-                        if (!substation.getPropertyNames().isEmpty() && hasRegionCvgPropertyName(substation.getPropertyNames())) {
-                            substation.getPropertyNames().forEach(property -> {
-                                if (REGION_CVG.equals(property)) {
-                                    substationIdPropertiesMap.put(substation.getId(), substation.getProperty(property));
-                                }
-                            });
+        if (!CollectionUtils.isEmpty(substationIds)) {
+            substationIds.forEach(sId -> {
+                Substation substation = network.getSubstation(sId);
+                if (!substation.getPropertyNames().isEmpty() && hasCvgPropertyName(substation.getPropertyNames())) {
+                    substation.getPropertyNames().forEach(property -> {
+                        if (REGION_CVG.equals(property)) {
+                            substationIdPropertiesMap.put(substation.getId(), substation.getProperty(property));
                         }
-                    }));
+                    });
+                }
+            });
         }
 
         // group substationIds by region
         Map<String, List<String>> groupedSubstationIds = substationIdPropertiesMap.keySet().stream().collect(Collectors.groupingBy(substationIdPropertiesMap::get));
-        // get all connected generators that have substations with regionCVG property name.
-        List<Generator> connectedGenerators = network.getGeneratorStream()
-                .filter(g -> g.getTerminal().isConnected())
-                .toList();
+
         // iterate over groupedSubstationIds and check for each substation list if it's related to the connected generators
         Map<String, List<Generator>> generatorsByRegion = new HashMap<>();
 
@@ -575,7 +576,7 @@ public class GenerationDispatch extends AbstractModification {
         return generatorsByRegion;
     }
 
-    private boolean hasRegionCvgPropertyName(Set<String> propertyNames) {
+    private boolean hasCvgPropertyName(Set<String> propertyNames) {
         return propertyNames.stream().anyMatch(REGION_CVG::equals);
     }
 
