@@ -12,10 +12,8 @@ import com.powsybl.commons.reporter.ReporterModel;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.TabularModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.VoltageInitModificationEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.TabularModification;
-import org.gridsuite.modification.server.modifications.VoltageInitModification;
 import org.springframework.lang.NonNull;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -35,9 +33,9 @@ import java.util.List;
 @Schema(description = "Tabular modification")
 @JsonTypeName("TABULAR_MODIFICATION")
 public class TabularModificationInfos extends ModificationInfos {
-//    @Schema(description = "Equipment type")
-//    @NonNull
-//    private String equipmentType;
+    @Schema(description = "Modification type")
+    @NonNull
+    private String modificationType;
 
     @Schema(description = "modifications")
     private List<EquipmentModificationInfos> modifications;

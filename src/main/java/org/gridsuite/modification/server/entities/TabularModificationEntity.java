@@ -9,10 +9,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.dto.TabularModificationInfos;
-import org.gridsuite.modification.server.dto.VoltageInitGeneratorModificationInfos;
-import org.gridsuite.modification.server.entities.equipment.modification.VoltageInitGeneratorModificationEmbeddable;
+import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.LoadModificationEntity;
 
 @NoArgsConstructor
 @Getter
@@ -20,6 +19,9 @@ import org.gridsuite.modification.server.entities.equipment.modification.Voltage
 @Entity
 @Table(name = "tabular_modification")
 public class TabularModificationEntity extends ModificationEntity {
+
+    @Column(name = "modificationType")
+    private String modificationType;
 
     @OneToMany(
             mappedBy = "tabularModification",
@@ -30,12 +32,38 @@ public class TabularModificationEntity extends ModificationEntity {
 
     public TabularModificationEntity(TabularModificationInfos tabularModificationInfos) {
         super(tabularModificationInfos);
-        modifications = toEmbeddableVoltageInitGenerators(tabularModificationInfos.getGenerators());
+        modificationType = tabularModificationInfos.getModificationType();
+        switch (modificationType) {
+            case "GENERATOR_MODIFICATION":
+                modifications = tabularModificationInfos.getModifications().stream().map(generatorModificationInfos -> new GeneratorModificationEntity((GeneratorModificationInfos) generatorModificationInfos, this)).collect(Collectors.toList());
+                break;
+            case "LOAD_MODIFICATION":
+                modifications = tabularModificationInfos.getModifications().stream().map(loadModificationInfos -> new LoadModificationEntity((LoadModificationInfos) loadModificationInfos, this)).collect(Collectors.toList());
+                break;
+            default:
+                break;
+        }
     }
 
-    public static List<VoltageInitGeneratorModificationEmbeddable> toEmbeddableVoltageInitGenerators(List<ModificationInfos> generators) {
-        return generators == null ? null : generators.stream()
-                .map(generator -> new VoltageInitGeneratorModificationEmbeddable(generator.getGeneratorId(), generator.getVoltageSetpoint(), generator.getReactivePowerSetpoint()))
-                .collect(Collectors.toList());
+    @Override
+    public TabularModificationInfos toModificationInfos() {
+        List<EquipmentModificationInfos> modificationsInfos = new ArrayList<>();
+        switch (modificationType) {
+            case "GENERATOR_MODIFICATION":
+                modificationsInfos = modifications.stream().map(generatorModificationEntity -> ((GeneratorModificationEntity) generatorModificationEntity).toModificationInfos()).collect(Collectors.toList());
+                break;
+            case "LOAD_MODIFICATION":
+                modificationsInfos = modifications.stream().map(loadModificationEntity -> ((LoadModificationEntity) loadModificationEntity).toModificationInfos()).collect(Collectors.toList());
+                break;
+            default:
+                break;
+        }
+
+        return TabularModificationInfos.builder()
+                .date(getDate())
+                .uuid(getId())
+                .modificationType(modificationType)
+                .modifications(modificationsInfos)
+                .build();
     }
 }

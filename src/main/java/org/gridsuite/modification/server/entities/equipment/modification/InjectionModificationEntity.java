@@ -16,6 +16,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.MappedSuperclass;
+import org.gridsuite.modification.server.entities.TabularModificationEntity;
 
 /**
  * @author Nicolas Noir <nicolas.noir at rte-france.com>
@@ -40,6 +41,11 @@ public class InjectionModificationEntity extends BasicEquipmentModificationEntit
 
     protected InjectionModificationEntity(InjectionModificationInfos modificationInfos) {
         super(modificationInfos);
+        assignAttributes(modificationInfos);
+    }
+
+    protected InjectionModificationEntity(InjectionModificationInfos modificationInfos, TabularModificationEntity tabularModificationEntity) {
+        super(modificationInfos, tabularModificationEntity);
         assignAttributes(modificationInfos);
     }
 

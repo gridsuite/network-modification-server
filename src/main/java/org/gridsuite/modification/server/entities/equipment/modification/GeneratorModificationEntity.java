@@ -13,6 +13,7 @@ import lombok.NonNull;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.AttributeModification;
 import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.entities.TabularModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.*;
 import org.springframework.util.CollectionUtils;
 
@@ -206,6 +207,11 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
 
     public GeneratorModificationEntity(@NonNull GeneratorModificationInfos generatorModificationInfos) {
         super(generatorModificationInfos);
+        assignAttributes(generatorModificationInfos);
+    }
+
+    public GeneratorModificationEntity(@NonNull GeneratorModificationInfos generatorModificationInfos, TabularModificationEntity tabularModificationEntity) {
+        super(generatorModificationInfos, tabularModificationEntity);
         assignAttributes(generatorModificationInfos);
     }
 

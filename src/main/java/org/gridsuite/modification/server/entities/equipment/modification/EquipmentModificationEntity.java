@@ -14,6 +14,7 @@ import org.gridsuite.modification.server.entities.ModificationEntity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
+import org.gridsuite.modification.server.entities.TabularModificationEntity;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -27,6 +28,11 @@ public class EquipmentModificationEntity extends ModificationEntity {
 
     protected EquipmentModificationEntity(EquipmentModificationInfos equipmentModificationInfos) {
         super(equipmentModificationInfos);
+        assignAttributes(equipmentModificationInfos);
+    }
+
+    protected EquipmentModificationEntity(EquipmentModificationInfos equipmentModificationInfos, TabularModificationEntity tabularModificationEntity) {
+        super(equipmentModificationInfos, tabularModificationEntity);
         assignAttributes(equipmentModificationInfos);
     }
 

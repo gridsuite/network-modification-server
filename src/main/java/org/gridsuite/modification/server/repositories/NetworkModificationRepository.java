@@ -11,6 +11,7 @@ import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationGroupEntity;
+import org.gridsuite.modification.server.entities.TabularModificationEntity;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -137,19 +138,38 @@ public class NetworkModificationRepository {
                 .collect(Collectors.toList());
     }
 
+    public TabularModificationEntity getFullTabularModificationEntity(ModificationEntity modificationEntity) {
+        TabularModificationEntity tabularModificationEntity = (TabularModificationEntity) modificationEntity;
+        if (tabularModificationEntity.getModificationType().equals("GENERATOR_MODIFICATION")) {
+            tabularModificationEntity = modificationRepository.findAllWithReactiveCapabilityCurvePointsById(modificationEntity.getId()).get();
+            modificationRepository.findAllReactiveCapabilityCurvePointsByIdIn(tabularModificationEntity.getModifications().stream().map(m -> m.getId()).toList());
+        }
+        return tabularModificationEntity;
+    }
+
     public List<ModificationInfos> getModificationsInfos(List<UUID> groupUuids, boolean stashedModifications) {
         return groupUuids.stream().flatMap(this::getModificationEntityStream)
                 .filter(m -> m.getStashed() == stashedModifications)
-                .map(ModificationEntity::toModificationInfos)
+                .map(modificationEntity -> {
+                    if (modificationEntity instanceof TabularModificationEntity) {
+                        return getFullTabularModificationEntity(modificationEntity).toModificationInfos();
+                    }
+                    return modificationEntity.toModificationInfos();
+                })
                 .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public ModificationInfos getModificationInfo(UUID modificationUuid) {
-        return modificationRepository
-            .findById(modificationUuid)
-            .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString()))
-            .toModificationInfos();
+        Optional<ModificationEntity> entityOptional = modificationRepository.findById(modificationUuid);
+        if (!entityOptional.isPresent()) {
+            throw new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString());
+        }
+        ModificationEntity entity = entityOptional.get();
+        if (entity instanceof TabularModificationEntity) {
+            entity = getFullTabularModificationEntity(entity);
+        }
+        return entity.toModificationInfos();
     }
 
     @Transactional // To have the 2 delete in the same transaction (atomic)
