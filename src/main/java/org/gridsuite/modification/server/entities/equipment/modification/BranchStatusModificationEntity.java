@@ -6,6 +6,8 @@
  */
 package org.gridsuite.modification.server.entities.equipment.modification;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
@@ -13,6 +15,10 @@ import org.gridsuite.modification.server.dto.BranchStatusModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 
 import jakarta.persistence.*;
+
+import java.io.UncheckedIOException;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -45,6 +51,21 @@ public class BranchStatusModificationEntity extends EquipmentModificationEntity 
     private void assignAttributes(BranchStatusModificationInfos branchStatusModificationInfos) {
         action = branchStatusModificationInfos.getAction();
         energizedVoltageLevelId = branchStatusModificationInfos.getEnergizedVoltageLevelId();
+    }
+
+    @Override
+    public void getAdditionalInfosForMetadata(ModificationInfos modificationInfos) {
+        super.getAdditionalInfosForMetadata(modificationInfos);
+        try {
+            Map<String, String> messageValuesMap = new HashMap<>();
+            messageValuesMap.put("action", ((BranchStatusModificationInfos) modificationInfos).getAction().name());
+            messageValuesMap.put("equipmentId", ((BranchStatusModificationInfos) modificationInfos).getEquipmentId());
+            messageValuesMap.put("energizedVoltageLevelId", ((BranchStatusModificationInfos) modificationInfos).getEnergizedVoltageLevelId());
+            ObjectMapper objectMapper = new ObjectMapper();
+            this.setMessageValues(objectMapper.writeValueAsString(messageValuesMap));
+        } catch (JsonProcessingException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 
     @Override

@@ -6,6 +6,8 @@
  */
 package org.gridsuite.modification.server.entities.equipment.modification.attribute;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.iidm.network.IdentifiableType;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,6 +19,9 @@ import jakarta.persistence.Column;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.MappedSuperclass;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -45,6 +50,21 @@ public class EquipmentAttributeModificationEntity<T> extends EquipmentModificati
     public void update(ModificationInfos modificationInfos) {
         super.update(modificationInfos);
         assignAttributes((EquipmentAttributeModificationInfos) modificationInfos);
+    }
+
+    @Override
+    public void getAdditionalInfosForMetadata(ModificationInfos modificationInfos) {
+        super.getAdditionalInfosForMetadata(modificationInfos);
+        try {
+            Map<String, String> messageValuesMap = new HashMap<>();
+            messageValuesMap.put("equipmentAttributeName", ((EquipmentAttributeModificationInfos) modificationInfos).getEquipmentAttributeName());
+            messageValuesMap.put("equipmentId", ((EquipmentAttributeModificationInfos) modificationInfos).getEquipmentId());
+            messageValuesMap.put("equipmentAttributeValue", ((EquipmentAttributeModificationInfos) modificationInfos).getEquipmentAttributeValue().toString());
+            ObjectMapper objectMapper = new ObjectMapper();
+            this.setMessageValues(objectMapper.writeValueAsString(messageValuesMap));
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
     }
 
     private void assignAttributes(EquipmentAttributeModificationInfos equipmentAttributeModificationInfos) {

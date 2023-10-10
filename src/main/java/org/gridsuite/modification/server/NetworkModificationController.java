@@ -54,7 +54,7 @@ public class NetworkModificationController {
                                                                            @Parameter(description = "Only metadata") @RequestParam(name = "onlyMetadata", required = false, defaultValue = "false") Boolean onlyMetadata,
                                                                         @Parameter(description = "Stashed modifications") @RequestParam(name = "stashed", required = false, defaultValue = "false") Boolean stashed,
                                                                            @Parameter(description = "Return 404 if group is not found or an empty list") @RequestParam(name = "errorOnGroupNotFound", required = false, defaultValue = "true") Boolean errorOnGroupNotFound) {
-        return ResponseEntity.ok().body(networkModificationService.getNetworkModifications(groupUuid, onlyMetadata, errorOnGroupNotFound, stashed));
+        return ResponseEntity.ok().body(networkModificationService.getNetworkModifications(groupUuid, true, errorOnGroupNotFound, stashed));
     }
 
     @PostMapping(value = "/groups")

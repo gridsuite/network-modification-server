@@ -83,6 +83,12 @@ public class ModificationInfos {
     @Schema(description = "Modification flag")
     private Boolean stashed;
 
+    @Schema(description = "Message type")
+    private String messageType;
+
+    @Schema(description = "Message values")
+    private String messageValues;
+
     @JsonIgnore
     public ModificationEntity toEntity() {
         throw new UnsupportedOperationException("TODO");

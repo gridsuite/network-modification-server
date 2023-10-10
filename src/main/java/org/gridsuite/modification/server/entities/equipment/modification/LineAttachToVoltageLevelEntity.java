@@ -6,6 +6,8 @@
  */
 package org.gridsuite.modification.server.entities.equipment.modification;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
@@ -17,6 +19,9 @@ import org.gridsuite.modification.server.entities.equipment.creation.LineCreatio
 import org.gridsuite.modification.server.entities.equipment.creation.VoltageLevelCreationEntity;
 
 import jakarta.persistence.*;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_ATTACH_DESCRIPTION_ERROR;
 
@@ -74,6 +79,19 @@ public class LineAttachToVoltageLevelEntity extends ModificationEntity {
     public void update(@NonNull ModificationInfos modificationInfos) {
         super.update(modificationInfos);
         assignAttributes((LineAttachToVoltageLevelInfos) modificationInfos);
+    }
+
+    @Override
+    public void getAdditionalInfosForMetadata(ModificationInfos modificationInfos) {
+        super.getAdditionalInfosForMetadata(modificationInfos);
+        try {
+            Map<String, String> messageValuesMap = new HashMap<>();
+            messageValuesMap.put("lineToAttachToId", ((LineAttachToVoltageLevelInfos) modificationInfos).getLineToAttachToId());
+            ObjectMapper objectMapper = new ObjectMapper();
+            this.setMessageValues(objectMapper.writeValueAsString(messageValuesMap));
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
     }
 
     private void assignAttributes(LineAttachToVoltageLevelInfos lineAttachToVoltageLevelInfos) {

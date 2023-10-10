@@ -7,6 +7,8 @@
 
 package org.gridsuite.modification.server.entities.equipment.modification;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
@@ -16,6 +18,9 @@ import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.VoltageLevelCreationEntity;
 
 import jakarta.persistence.*;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Laurent GARNIER <laurent.garnier at rte-france.com>
@@ -82,6 +87,19 @@ public class LineSplitWithVoltageLevelEntity extends ModificationEntity {
     @Override
     public LineSplitWithVoltageLevelInfos toModificationInfos() {
         return toLineSplitWithVoltageLevelInfosBuilder().build();
+    }
+
+    @Override
+    public void getAdditionalInfosForMetadata(ModificationInfos modificationInfos) {
+        super.getAdditionalInfosForMetadata(modificationInfos);
+        try {
+            Map<String, String> messageValuesMap = new HashMap<>();
+            messageValuesMap.put("lineToSplitId", ((LineSplitWithVoltageLevelInfos) modificationInfos).getLineToSplitId());
+            ObjectMapper objectMapper = new ObjectMapper();
+            this.setMessageValues(objectMapper.writeValueAsString(messageValuesMap));
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
     }
 
     private LineSplitWithVoltageLevelInfos.LineSplitWithVoltageLevelInfosBuilder<?, ?> toLineSplitWithVoltageLevelInfosBuilder() {
