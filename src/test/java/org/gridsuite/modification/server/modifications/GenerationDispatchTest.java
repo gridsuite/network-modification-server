@@ -248,7 +248,6 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
         assertLogMessage("The total amount of supply to be dispatched is : 330.0 MW", "TotalAmountSupplyToBeDispatched" + secondSynchronousComponentNum, reportService);
         assertLogMessage("The supply-demand balance could be met", "SupplyDemandBalanceCouldBeMet" + secondSynchronousComponentNum, reportService);
         assertLogMessage("Sum of generator active power setpoints in WEST region: 150.0 MW.", "SumGeneratorActivePowerWEST" + secondSynchronousComponentNum, reportService);
-        
         wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(getNetworkUuid(), filters.stream().map(FilterEquipments::getFilterId).collect(Collectors.toList())), false);
     }
 
