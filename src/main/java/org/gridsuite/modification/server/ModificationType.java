@@ -46,7 +46,7 @@ public enum ModificationType {
     VOLTAGE_INIT_MODIFICATION(PreloadingStrategy.COLLECTION),
     VSC_CREATION(PreloadingStrategy.NONE),
     CONVERTER_STATION_CREATION(PreloadingStrategy.NONE),
-    TABULAR_MODIFICATION(PreloadingStrategy.COLLECTION),;
+    TABULAR_MODIFICATION(PreloadingStrategy.COLLECTION);
 
     private final PreloadingStrategy strategy;
 

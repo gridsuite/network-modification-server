@@ -61,6 +61,10 @@ public class NetworkModificationRepository {
         Map<UUID, ModificationEntity> originModifications = getModificationsEntities(originGroupUuid).stream()
                 .collect(Collectors.toMap(ModificationEntity::getId, Function.identity(), (x, y) -> y, LinkedHashMap::new));
 
+
+//        Map<UUID, ModificationEntity> originModifications = modificationRepository
+//                .findAllBaseByGroupId(originModificationGroupEntity.getId()).stream()
+//                .collect(Collectors.toMap(ModificationEntity::getId, Function.identity(), (x, y) -> y, LinkedHashMap::new));
         List<UUID> modificationsToMoveUUID = modificationsUuid.stream().filter(originModifications::containsKey).collect(Collectors.toList());
 
         List<ModificationEntity> newDestinationModificationList = List.of();
