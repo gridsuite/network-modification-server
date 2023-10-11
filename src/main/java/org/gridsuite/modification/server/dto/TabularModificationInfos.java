@@ -38,7 +38,7 @@ public class TabularModificationInfos extends ModificationInfos {
     private String modificationType;
 
     @Schema(description = "modifications")
-    private List<EquipmentModificationInfos> modifications;
+    private List<ModificationInfos> modifications;
 
     @Override
     public ModificationEntity toEntity() {

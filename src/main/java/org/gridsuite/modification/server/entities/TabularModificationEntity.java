@@ -5,7 +5,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -23,22 +22,19 @@ public class TabularModificationEntity extends ModificationEntity {
     @Column(name = "modificationType")
     private String modificationType;
 
-    @OneToMany(
-            mappedBy = "tabularModification",
-            cascade = CascadeType.ALL
-    )
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderColumn
-    private List<ModificationEntity> modifications = new ArrayList<>();
+    private List<ModificationEntity> modifications;
 
     public TabularModificationEntity(TabularModificationInfos tabularModificationInfos) {
         super(tabularModificationInfos);
         modificationType = tabularModificationInfos.getModificationType();
         switch (modificationType) {
             case "GENERATOR_MODIFICATION":
-                modifications = tabularModificationInfos.getModifications().stream().map(generatorModificationInfos -> new GeneratorModificationEntity((GeneratorModificationInfos) generatorModificationInfos, this)).collect(Collectors.toList());
+                modifications = tabularModificationInfos.getModifications().stream().map(generatorModificationInfos -> new GeneratorModificationEntity((GeneratorModificationInfos) generatorModificationInfos)).collect(Collectors.toList());
                 break;
             case "LOAD_MODIFICATION":
-                modifications = tabularModificationInfos.getModifications().stream().map(loadModificationInfos -> new LoadModificationEntity((LoadModificationInfos) loadModificationInfos, this)).collect(Collectors.toList());
+                modifications = tabularModificationInfos.getModifications().stream().map(loadModificationInfos -> new LoadModificationEntity((LoadModificationInfos) loadModificationInfos)).collect(Collectors.toList());
                 break;
             default:
                 break;
@@ -47,18 +43,7 @@ public class TabularModificationEntity extends ModificationEntity {
 
     @Override
     public TabularModificationInfos toModificationInfos() {
-        List<EquipmentModificationInfos> modificationsInfos = new ArrayList<>();
-        switch (modificationType) {
-            case "GENERATOR_MODIFICATION":
-                modificationsInfos = modifications.stream().map(generatorModificationEntity -> ((GeneratorModificationEntity) generatorModificationEntity).toModificationInfos()).collect(Collectors.toList());
-                break;
-            case "LOAD_MODIFICATION":
-                modificationsInfos = modifications.stream().map(loadModificationEntity -> ((LoadModificationEntity) loadModificationEntity).toModificationInfos()).collect(Collectors.toList());
-                break;
-            default:
-                break;
-        }
-
+        List<ModificationInfos> modificationsInfos = modifications.stream().map(modificationEntity -> modificationEntity.toModificationInfos()).collect(Collectors.toList());
         return TabularModificationInfos.builder()
                 .date(getDate())
                 .uuid(getId())

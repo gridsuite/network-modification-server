@@ -44,11 +44,6 @@ public class ModificationEntity {
     @Setter
     private ModificationGroupEntity group;
 
-    @JoinColumn(name = "tabularModificationId", foreignKey = @ForeignKey(name = "tabular_modification_id_fk_constraint"))
-    @ManyToOne(fetch = FetchType.LAZY)
-    @Setter
-    private TabularModificationEntity tabularModification;
-
     @Column(name = "stashed")
     private Boolean stashed;
 
@@ -67,15 +62,6 @@ public class ModificationEntity {
         }
         //We need to limit the precision to avoid database precision storage limit issue (postgres has a precision of 6 digits while h2 can go to 9)
         this.date = ZonedDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.MICROS);
-    }
-
-    protected ModificationEntity(ModificationInfos modificationInfos, TabularModificationEntity tabularModification) {
-        if (modificationInfos == null) {
-            throw new NetworkModificationException(MISSING_MODIFICATION_DESCRIPTION, "Missing network modification description");
-        }
-        //We need to limit the precision to avoid database precision storage limit issue (postgres has a precision of 6 digits while h2 can go to 9)
-        this.date = ZonedDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.MICROS);
-        this.tabularModification = tabularModification;
     }
 
     public ModificationInfos toModificationInfos() {

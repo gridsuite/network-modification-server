@@ -31,6 +31,7 @@ public class NetworkModificationRepository {
     private final ModificationGroupRepository modificationGroupRepository;
 
     private final ModificationRepository modificationRepository;
+
     private static final String MODIFICATION_NOT_FOUND_MESSAGE = "Modification (%s) not found";
 
     public NetworkModificationRepository(ModificationGroupRepository modificationGroupRepository, ModificationRepository modificationRepository) {
@@ -60,7 +61,6 @@ public class NetworkModificationRepository {
 
         Map<UUID, ModificationEntity> originModifications = getModificationsEntities(originGroupUuid).stream()
                 .collect(Collectors.toMap(ModificationEntity::getId, Function.identity(), (x, y) -> y, LinkedHashMap::new));
-
 
 //        Map<UUID, ModificationEntity> originModifications = modificationRepository
 //                .findAllBaseByGroupId(originModificationGroupEntity.getId()).stream()
@@ -142,11 +142,14 @@ public class NetworkModificationRepository {
                 .collect(Collectors.toList());
     }
 
-    public TabularModificationEntity getFullTabularModificationEntity(ModificationEntity modificationEntity) {
+    private TabularModificationEntity getTabularModificationEntityWithSubEntities(ModificationEntity modificationEntity) {
         TabularModificationEntity tabularModificationEntity = (TabularModificationEntity) modificationEntity;
-        if (tabularModificationEntity.getModificationType().equals("GENERATOR_MODIFICATION")) {
-            tabularModificationEntity = modificationRepository.findAllWithReactiveCapabilityCurvePointsById(modificationEntity.getId()).get();
-            modificationRepository.findAllReactiveCapabilityCurvePointsByIdIn(tabularModificationEntity.getModifications().stream().map(m -> m.getId()).toList());
+        switch (tabularModificationEntity.getModificationType()) {
+            case "GENERATOR_MODIFICATION":
+                tabularModificationEntity = modificationRepository.findAllWithReactiveCapabilityCurvePointsById(modificationEntity.getId()).get();
+                modificationRepository.findAllReactiveCapabilityCurvePointsByIdIn(tabularModificationEntity.getModifications().stream().map(m -> m.getId()).toList());
+            default:
+                break;
         }
         return tabularModificationEntity;
     }
@@ -156,7 +159,7 @@ public class NetworkModificationRepository {
                 .filter(m -> m.getStashed() == stashedModifications)
                 .map(modificationEntity -> {
                     if (modificationEntity instanceof TabularModificationEntity) {
-                        return getFullTabularModificationEntity(modificationEntity).toModificationInfos();
+                        return getTabularModificationEntityWithSubEntities(modificationEntity).toModificationInfos();
                     }
                     return modificationEntity.toModificationInfos();
                 })
@@ -171,7 +174,7 @@ public class NetworkModificationRepository {
         }
         ModificationEntity entity = entityOptional.get();
         if (entity instanceof TabularModificationEntity) {
-            entity = getFullTabularModificationEntity(entity);
+            entity = getTabularModificationEntityWithSubEntities(entity);
         }
         return entity.toModificationInfos();
     }

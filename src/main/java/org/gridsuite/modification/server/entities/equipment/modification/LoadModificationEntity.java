@@ -16,7 +16,6 @@ import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.OperationType;
 
 import jakarta.persistence.*;
-import org.gridsuite.modification.server.entities.TabularModificationEntity;
 
 /**
  * @author Nicolas Noir <nicolas.noir at rte-france.com>
@@ -50,11 +49,6 @@ public class LoadModificationEntity extends InjectionModificationEntity {
 
     public LoadModificationEntity(@NonNull LoadModificationInfos loadModificationInfos) {
         super(loadModificationInfos);
-        assignAttributes(loadModificationInfos);
-    }
-
-    public LoadModificationEntity(@NonNull LoadModificationInfos loadModificationInfos, TabularModificationEntity tabularModificationEntity) {
-        super(loadModificationInfos, tabularModificationEntity);
         assignAttributes(loadModificationInfos);
     }
 
