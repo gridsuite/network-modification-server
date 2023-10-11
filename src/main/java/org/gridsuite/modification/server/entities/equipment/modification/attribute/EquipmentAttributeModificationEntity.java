@@ -57,9 +57,13 @@ public class EquipmentAttributeModificationEntity<T> extends EquipmentModificati
         super.getAdditionalInfosForMetadata(modificationInfos);
         try {
             Map<String, String> messageValuesMap = new HashMap<>();
-            messageValuesMap.put("equipmentAttributeName", ((EquipmentAttributeModificationInfos) modificationInfos).getEquipmentAttributeName());
+            attributeName = ((EquipmentAttributeModificationInfos) modificationInfos).getEquipmentAttributeName();
+            attributeValue = convertAttributeValue(((EquipmentAttributeModificationInfos) modificationInfos).getEquipmentAttributeValue());
+            messageValuesMap.put("equipmentAttributeName", attributeName);
             messageValuesMap.put("equipmentId", ((EquipmentAttributeModificationInfos) modificationInfos).getEquipmentId());
-            messageValuesMap.put("equipmentAttributeValue", ((EquipmentAttributeModificationInfos) modificationInfos).getEquipmentAttributeValue().toString());
+            if (attributeValue != null) {
+                messageValuesMap.put("equipmentAttributeValue", attributeValue.toString());
+            }
             ObjectMapper objectMapper = new ObjectMapper();
             this.setMessageValues(objectMapper.writeValueAsString(messageValuesMap));
         } catch (JsonProcessingException e) {
