@@ -523,7 +523,7 @@ public class GenerationDispatch extends AbstractModification {
             Reporter resultReporter = componentReporter.createSubReporter(RESULT, RESULT);
 
             if (Math.abs(totalAmountSupplyToBeDispatched - realized) < EPSILON) {
-                Map<String, List<Generator>> generatorsByRegion = getGeneratorsByRegion(network);
+                Map<String, List<Generator>> generatorsByRegion = getGeneratorsByRegion(network, component);
 
                 report(resultReporter, Integer.toString(componentNum), "SupplyDemandBalanceCouldBeMet", "The supply-demand balance could be met",
                     Map.of(), TypedValue.INFO_SEVERITY);
@@ -537,13 +537,14 @@ public class GenerationDispatch extends AbstractModification {
         }
     }
 
-    private Map<String, List<Generator>> getGeneratorsByRegion(Network network) {
-        // get all connected generators and the substationIds associated.
+    private Map<String, List<Generator>> getGeneratorsByRegion(Network network, Component component) {
+        // get all connected generators  that are inside the synchronous component and the substationIds associated.
         List<Generator> connectedGenerators = network.getGeneratorStream()
-                .filter(g -> g.getTerminal().isConnected())
+                .filter(g -> g.getTerminal().isConnected() && g.getTerminal().getBusView().getBus().getSynchronousComponent().getNum() == component.getNum())
                 .toList();
         List<String> substationIds = connectedGenerators.stream()
-                .map(g -> g.getTerminal().getVoltageLevel().getSubstation().orElseThrow().getId())
+                .map(g -> g.getTerminal().getVoltageLevel().getSubstation().map(Substation::getId).orElse(null))
+                .filter(Objects::nonNull)
                 .toList();
         // get all substations with "regionCvg" property name
         Map<String, String> substationIdPropertiesMap = new HashMap<>();
@@ -568,7 +569,7 @@ public class GenerationDispatch extends AbstractModification {
 
         groupedSubstationIds.forEach((region, substationList) -> {
             List<Generator> connectedGeneratorsWithSubstation = connectedGenerators.stream()
-                    .filter(g -> substationList.contains(g.getTerminal().getVoltageLevel().getSubstation().orElseThrow().getId()))
+                    .filter(g -> substationList.contains(g.getTerminal().getVoltageLevel().getSubstation().map(Substation::getId).orElse(null)))
                     .toList();
             generatorsByRegion.put(region, connectedGeneratorsWithSubstation);
         });
