@@ -56,8 +56,8 @@ public class DeleteVoltageLevelOnLineEntity extends ModificationEntity {
     }
 
     @Override
-    public void getAdditionalInfosForMetadata(ModificationInfos modificationInfos) { //getLabelValues a renommer
-        super.getAdditionalInfosForMetadata(modificationInfos);
+    public void getModificationMetadata(ModificationInfos modificationInfos) { //getLabelValues a renommer
+        super.getModificationMetadata(modificationInfos);
         try {
             Map<String, String> messageValuesMap = new HashMap<>();
             lineToAttachTo1Id = ((DeleteVoltageLevelOnLineInfos) modificationInfos).getLineToAttachTo1Id();

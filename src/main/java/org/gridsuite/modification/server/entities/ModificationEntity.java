@@ -76,7 +76,7 @@ public class ModificationEntity {
         }
         //We need to limit the precision to avoid database precision storage limit issue (postgres has a precision of 6 digits while h2 can go to 9)
         this.date = ZonedDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.MICROS);
-        getAdditionalInfosForMetadata(modificationInfos);
+        getModificationMetadata(modificationInfos);
 
     }
 
@@ -90,7 +90,7 @@ public class ModificationEntity {
                 .build();
     }
 
-    public void getAdditionalInfosForMetadata(ModificationInfos modificationInfos) {
+    public void getModificationMetadata(ModificationInfos modificationInfos) {
         if (modificationInfos == null) {
             throw new NullPointerException("Impossible to get label Infos from null DTO");
         }

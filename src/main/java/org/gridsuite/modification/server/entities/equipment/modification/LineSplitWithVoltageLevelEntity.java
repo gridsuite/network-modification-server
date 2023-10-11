@@ -91,8 +91,8 @@ public class LineSplitWithVoltageLevelEntity extends ModificationEntity {
     }
 
     @Override
-    public void getAdditionalInfosForMetadata(ModificationInfos modificationInfos) {
-        super.getAdditionalInfosForMetadata(modificationInfos);
+    public void getModificationMetadata(ModificationInfos modificationInfos) {
+        super.getModificationMetadata(modificationInfos);
         try {
             Map<String, String> messageValuesMap = new HashMap<>();
             messageValuesMap.put("lineToSplitId", ((LineSplitWithVoltageLevelInfos) modificationInfos).getLineToSplitId());

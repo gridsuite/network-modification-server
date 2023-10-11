@@ -54,8 +54,8 @@ public class BranchStatusModificationEntity extends EquipmentModificationEntity 
     }
 
     @Override
-    public void getAdditionalInfosForMetadata(ModificationInfos modificationInfos) {
-        super.getAdditionalInfosForMetadata(modificationInfos);
+    public void getModificationMetadata(ModificationInfos modificationInfos) {
+        super.getModificationMetadata(modificationInfos);
         try {
             Map<String, String> messageValuesMap = new HashMap<>();
             messageValuesMap.put("action", ((BranchStatusModificationInfos) modificationInfos).getAction().name());
