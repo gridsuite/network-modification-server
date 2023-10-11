@@ -148,6 +148,7 @@ public class NetworkModificationRepository {
             case "GENERATOR_MODIFICATION":
                 tabularModificationEntity = modificationRepository.findAllWithReactiveCapabilityCurvePointsById(modificationEntity.getId()).get();
                 modificationRepository.findAllReactiveCapabilityCurvePointsByIdIn(tabularModificationEntity.getModifications().stream().map(m -> m.getId()).toList());
+                break;
             default:
                 break;
         }

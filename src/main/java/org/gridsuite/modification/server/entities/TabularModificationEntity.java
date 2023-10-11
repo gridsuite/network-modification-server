@@ -43,7 +43,7 @@ public class TabularModificationEntity extends ModificationEntity {
 
     @Override
     public TabularModificationInfos toModificationInfos() {
-        List<ModificationInfos> modificationsInfos = modifications.stream().map(modificationEntity -> modificationEntity.toModificationInfos()).collect(Collectors.toList());
+        List<ModificationInfos> modificationsInfos = modifications.stream().map(ModificationEntity::toModificationInfos).collect(Collectors.toList());
         return TabularModificationInfos.builder()
                 .date(getDate())
                 .uuid(getId())

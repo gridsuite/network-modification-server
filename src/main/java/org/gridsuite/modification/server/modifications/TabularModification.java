@@ -23,9 +23,7 @@ public class TabularModification extends AbstractModification {
 
     @Override
     public void apply(Network network, Reporter subReporter) {
-        modificationInfos.getModifications().forEach(modificationInfos -> {
-            modificationInfos.toModification().apply(network);
-//            modificationInfos.toModification().apply(network, subReporter);
-        });
+        //TODO: add aggregated report
+        modificationInfos.getModifications().forEach(modification -> modification.toModification().apply(network));
     }
 }
