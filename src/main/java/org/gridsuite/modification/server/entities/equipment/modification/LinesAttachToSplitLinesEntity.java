@@ -19,6 +19,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 
+import java.io.UncheckedIOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -78,7 +79,7 @@ public class LinesAttachToSplitLinesEntity extends ModificationEntity {
             ObjectMapper objectMapper = new ObjectMapper();
             this.setMessageValues(objectMapper.writeValueAsString(messageValuesMap));
         } catch (JsonProcessingException e) {
-            e.printStackTrace();
+            throw new UncheckedIOException(e);
         }
     }
 

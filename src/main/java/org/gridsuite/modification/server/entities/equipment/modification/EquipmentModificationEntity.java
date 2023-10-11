@@ -17,6 +17,7 @@ import org.gridsuite.modification.server.entities.ModificationEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
 
+import java.io.UncheckedIOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -44,7 +45,7 @@ public class EquipmentModificationEntity extends ModificationEntity {
             ObjectMapper objectMapper = new ObjectMapper();
             this.setMessageValues(objectMapper.writeValueAsString(messageValuesMap));
         } catch (JsonProcessingException e) {
-            e.printStackTrace();
+            throw new UncheckedIOException(e);
         }
     }
 

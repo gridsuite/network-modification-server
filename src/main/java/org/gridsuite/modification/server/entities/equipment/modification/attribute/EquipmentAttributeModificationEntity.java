@@ -20,6 +20,7 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.MappedSuperclass;
 
+import java.io.UncheckedIOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -67,7 +68,7 @@ public class EquipmentAttributeModificationEntity<T> extends EquipmentModificati
             ObjectMapper objectMapper = new ObjectMapper();
             this.setMessageValues(objectMapper.writeValueAsString(messageValuesMap));
         } catch (JsonProcessingException e) {
-            e.printStackTrace();
+            throw new UncheckedIOException(e);
         }
     }
 
