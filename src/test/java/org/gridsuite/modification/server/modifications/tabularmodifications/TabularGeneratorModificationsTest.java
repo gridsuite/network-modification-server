@@ -5,10 +5,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package org.gridsuite.modification.server.modifications;
+package org.gridsuite.modification.server.modifications.tabularmodifications;
 
 import com.powsybl.iidm.network.Network;
 import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 
@@ -21,7 +22,7 @@ import static org.junit.Assert.assertEquals;
  * @author Etienne Homer <etienne.homer at rte-france.com>
  */
 @Tag("IntegrationTest")
-public class TabularModificationTest extends AbstractNetworkModificationTest {
+public class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest {
     @Override
     protected Network createNetwork(UUID networkUuid) {
         return NetworkCreation.create(networkUuid, true);
@@ -42,6 +43,7 @@ public class TabularModificationTest extends AbstractNetworkModificationTest {
 
     @Override
     protected ModificationInfos buildModificationUpdate() {
+        //TODO implement real test
         List<ModificationInfos> modifications = List.of(
                 GeneratorModificationInfos.builder().equipmentId("idGenerator").maxActivePower(new AttributeModification<Double>(500., OperationType.SET)).build(),
                 GeneratorModificationInfos.builder().equipmentId("v5generator").maxActivePower(new AttributeModification<Double>(500., OperationType.SET)).build(),
