@@ -414,8 +414,6 @@ public class BuildTest {
         networkModificationService.buildVariant(TEST_NETWORK_ID, buildInfos);
 
         // Check if added equipments are indexed in elasticsearch
-        var equipmentsInfos = equipmentInfosRepository.findAllByNetworkUuidAndVariantId(TEST_NETWORK_ID, NetworkCreation.VARIANT_ID);
-
         //check voltage level indexation
         var expectedEquipmentInfos = EquipmentInfos.builder()
                 .networkUuid(TEST_NETWORK_ID)
