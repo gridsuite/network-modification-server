@@ -138,16 +138,18 @@ public class NetworkModificationRepository {
                 .findAllBaseByGroupId(getModificationGroup(groupUuid).getId())
                 .stream()
                 .filter(m -> m.getStashed() == stashedModifications)
-                .map(ModificationEntity::toModificationInfos)
+                .map(modificationEntity -> getModificationInfos(modificationEntity))
                 .collect(Collectors.toList());
     }
 
-    private TabularModificationEntity getTabularModificationEntityWithSubEntities(ModificationEntity modificationEntity) {
+    public TabularModificationEntity loadTabularModificationSubEntities(ModificationEntity modificationEntity) {
         TabularModificationEntity tabularModificationEntity = (TabularModificationEntity) modificationEntity;
         switch (tabularModificationEntity.getModificationType()) {
             case "GENERATOR_MODIFICATION":
-                tabularModificationEntity = modificationRepository.findAllWithReactiveCapabilityCurvePointsById(modificationEntity.getId()).get();
-                modificationRepository.findAllReactiveCapabilityCurvePointsByIdIn(tabularModificationEntity.getModifications().stream().map(m -> m.getId()).toList());
+                tabularModificationEntity = modificationRepository.findAllWithReactiveCapabilityCurvePointsById(modificationEntity.getId()).orElseThrow(() ->
+                        new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationEntity.getId()))
+                );
+                modificationRepository.findAllReactiveCapabilityCurvePointsByIdIn(tabularModificationEntity.getModifications().stream().map(ModificationEntity::getId).toList());
                 break;
             default:
                 break;
@@ -155,29 +157,27 @@ public class NetworkModificationRepository {
         return tabularModificationEntity;
     }
 
+    public ModificationInfos getModificationInfos(ModificationEntity modificationEntity) {
+        if (modificationEntity instanceof TabularModificationEntity) {
+            return loadTabularModificationSubEntities(modificationEntity).toModificationInfos();
+        }
+        return modificationEntity.toModificationInfos();
+    }
+
     public List<ModificationInfos> getModificationsInfos(List<UUID> groupUuids, boolean stashedModifications) {
         return groupUuids.stream().flatMap(this::getModificationEntityStream)
                 .filter(m -> m.getStashed() == stashedModifications)
-                .map(modificationEntity -> {
-                    if (modificationEntity instanceof TabularModificationEntity) {
-                        return getTabularModificationEntityWithSubEntities(modificationEntity).toModificationInfos();
-                    }
-                    return modificationEntity.toModificationInfos();
-                })
+                .map(modificationEntity -> getModificationInfos(modificationEntity))
                 .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public ModificationInfos getModificationInfo(UUID modificationUuid) {
-        Optional<ModificationEntity> entityOptional = modificationRepository.findById(modificationUuid);
-        if (!entityOptional.isPresent()) {
+        Optional<ModificationEntity> optionalModificationEntity = modificationRepository.findById(modificationUuid);
+        if (!optionalModificationEntity.isPresent()) {
             throw new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString());
         }
-        ModificationEntity entity = entityOptional.get();
-        if (entity instanceof TabularModificationEntity) {
-            entity = getTabularModificationEntityWithSubEntities(entity);
-        }
-        return entity.toModificationInfos();
+        return getModificationInfos(optionalModificationEntity.get());
     }
 
     @Transactional // To have the 2 delete in the same transaction (atomic)
