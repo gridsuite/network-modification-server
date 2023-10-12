@@ -45,9 +45,9 @@ public class TabularLoadModificationsTest extends AbstractNetworkModificationTes
     protected ModificationInfos buildModificationUpdate() {
         //TODO implement real test
         List<ModificationInfos> modifications = List.of(
-                LoadModificationInfos.builder().equipmentId("v1load").reactivePower(new AttributeModification<>(300., OperationType.SET)).build(),
-                LoadModificationInfos.builder().equipmentId("v2load").reactivePower(new AttributeModification<>(300., OperationType.SET)).build(),
-                LoadModificationInfos.builder().equipmentId("v3load").reactivePower(new AttributeModification<>(300., OperationType.SET)).build()
+                LoadModificationInfos.builder().equipmentId("v1load").reactivePower(new AttributeModification<>(500., OperationType.SET)).build(),
+                LoadModificationInfos.builder().equipmentId("v2load").reactivePower(new AttributeModification<>(500., OperationType.SET)).build(),
+                LoadModificationInfos.builder().equipmentId("v3load").reactivePower(new AttributeModification<>(500., OperationType.SET)).build()
         );
         return TabularModificationInfos.builder()
                 .modificationType("LOAD_MODIFICATION")
