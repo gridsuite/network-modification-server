@@ -62,9 +62,6 @@ public class NetworkModificationRepository {
         Map<UUID, ModificationEntity> originModifications = getModificationsEntities(originGroupUuid).stream()
                 .collect(Collectors.toMap(ModificationEntity::getId, Function.identity(), (x, y) -> y, LinkedHashMap::new));
 
-//        Map<UUID, ModificationEntity> originModifications = modificationRepository
-//                .findAllBaseByGroupId(originModificationGroupEntity.getId()).stream()
-//                .collect(Collectors.toMap(ModificationEntity::getId, Function.identity(), (x, y) -> y, LinkedHashMap::new));
         List<UUID> modificationsToMoveUUID = modificationsUuid.stream().filter(originModifications::containsKey).collect(Collectors.toList());
 
         List<ModificationEntity> newDestinationModificationList = List.of();
@@ -138,7 +135,7 @@ public class NetworkModificationRepository {
                 .findAllBaseByGroupId(getModificationGroup(groupUuid).getId())
                 .stream()
                 .filter(m -> m.getStashed() == stashedModifications)
-                .map(modificationEntity -> getModificationInfos(modificationEntity))
+                .map(this::getModificationInfos)
                 .collect(Collectors.toList());
     }
 
@@ -167,7 +164,7 @@ public class NetworkModificationRepository {
     public List<ModificationInfos> getModificationsInfos(List<UUID> groupUuids, boolean stashedModifications) {
         return groupUuids.stream().flatMap(this::getModificationEntityStream)
                 .filter(m -> m.getStashed() == stashedModifications)
-                .map(modificationEntity -> getModificationInfos(modificationEntity))
+                .map(this::getModificationInfos)
                 .collect(Collectors.toList());
     }
 

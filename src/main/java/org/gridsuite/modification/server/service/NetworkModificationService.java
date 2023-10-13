@@ -212,7 +212,7 @@ public class NetworkModificationService {
         List<ModificationInfos> movedModifications = networkModificationRepository.moveModifications(groupUuid, originGroupUuid, modificationsToMove, before)
             .stream()
             .filter(m -> !m.getStashed())
-            .map(modificationEntity -> networkModificationRepository.getModificationInfos(modificationEntity))
+            .map(networkModificationRepository::getModificationInfos)
             .collect(Collectors.toList());
 
         PreloadingStrategy preloadingStrategy = movedModifications.stream()
