@@ -168,7 +168,7 @@ public class TwoWindingsTransformerCreation extends AbstractModification {
                 ratioTapChangerInfos.getRegulatingTerminalType(),
                 ratioTapChangerInfos.getRegulatingTerminalVlId());
 
-        ratioTapChangerAdder.setTargetV(ratioTapChangerInfos.getTargetV())
+        ratioTapChangerAdder.setTargetV(ratioTapChangerInfos.getTargetV() != null ? ratioTapChangerInfos.getTargetV() : Double.NaN)
                 .setTargetDeadband(ratioTapChangerInfos.getTargetDeadband() != null ? ratioTapChangerInfos.getTargetDeadband() : 0.)
                     .setRegulationTerminal(terminal);
 
