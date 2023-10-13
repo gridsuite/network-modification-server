@@ -43,7 +43,6 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
 
     @Override
     protected ModificationInfos buildModificationUpdate() {
-        //TODO implement real test
         List<ModificationInfos> modifications = List.of(
                 GeneratorModificationInfos.builder().equipmentId("idGenerator").maxActivePower(new AttributeModification<>(300., OperationType.SET)).build(),
                 GeneratorModificationInfos.builder().equipmentId("v5generator").maxActivePower(new AttributeModification<>(300., OperationType.SET)).build(),

@@ -247,7 +247,7 @@ public class NetworkModificationService {
         if (!modificationEntities.isEmpty()) {
             networkModificationRepository.saveModifications(targetGroupUuid, modificationEntities);
 
-            List<ModificationInfos> modificationInfos = modificationEntities.stream().map(modificationEntity -> networkModificationRepository.getModificationInfos(modificationEntity)).collect(Collectors.toList());
+            List<ModificationInfos> modificationInfos = modificationEntities.stream().map(ModificationEntity::toModificationInfos).collect(Collectors.toList());
 
             PreloadingStrategy preloadingStrategy = modificationInfos.stream()
                 .map(ModificationInfos::getType)
