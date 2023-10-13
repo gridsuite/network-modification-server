@@ -517,7 +517,8 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
 
         assertThat(createdModification).recursivelyEquals(twoWindingsTransformerModificationInfos);
 
-        // modify regulation side to side 2
+        // unset regulation type and modify regulation side to side 2
+        twoWindingsTransformerModificationInfos.getPhaseTapChanger().setRegulationType(null);
         twoWindingsTransformerModificationInfos.getPhaseTapChanger().setRegulationSide(new AttributeModification<>(RegulationSide.SIDE2, OperationType.SET));
 
         modificationToCreateJson = mapper.writeValueAsString(twoWindingsTransformerModificationInfos);
