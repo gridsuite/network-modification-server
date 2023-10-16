@@ -83,21 +83,35 @@ public class GenerationDispatch extends AbstractModification {
 
     private static double computeTotalAmountFixedSupply(Network network, Component component, List<String> generatorsWithFixedSupply, Reporter reporter) {
         double totalAmountFixedSupply = 0.;
-
+        AtomicInteger numGeneratorsWithoutSetpoint = new AtomicInteger(0);
+        List<Generator> generatorsWithoutSetpointList = new ArrayList<>();
         totalAmountFixedSupply += generatorsWithFixedSupply.stream().map(network::getGenerator)
-            .filter(generator -> generator != null && generator.getTerminal().isConnected() &&
-                generator.getTerminal().getBusView().getBus().getSynchronousComponent().getNum() == component.getNum())
-            .peek(generator -> {
-                GeneratorStartup startupExtension = generator.getExtension(GeneratorStartup.class);
-                if (startupExtension != null && !Double.isNaN(startupExtension.getPlannedActivePowerSetpoint())) {
-                    generator.setTargetP(startupExtension.getPlannedActivePowerSetpoint());
-                } else {
-                    generator.setTargetP(0.);
-                    report(reporter, Integer.toString(component.getNum()), "MissingPredefinedActivePowerSetpointForGenerator", "The generator ${generator} does not have a predefined active power set point",
-                        Map.of(GENERATOR, generator.getId()), TypedValue.WARN_SEVERITY);
-                }
-            })
-            .mapToDouble(Generator::getTargetP).sum();
+                .filter(generator -> generator != null && generator.getTerminal().isConnected() &&
+                        generator.getTerminal().getBusView().getBus().getSynchronousComponent().getNum() == component.getNum())
+                .peek(generator -> {
+                    GeneratorStartup startupExtension = generator.getExtension(GeneratorStartup.class);
+                    if (startupExtension != null && !Double.isNaN(startupExtension.getPlannedActivePowerSetpoint())) {
+                        generator.setTargetP(startupExtension.getPlannedActivePowerSetpoint());
+                    } else {
+                        generator.setTargetP(0.);
+                        numGeneratorsWithoutSetpoint.incrementAndGet();
+                        generatorsWithoutSetpointList.add(generator);
+
+                    }
+                })
+                .mapToDouble(Generator::getTargetP).sum();
+        if (numGeneratorsWithoutSetpoint.get() > 0) {
+            report(reporter, Integer.toString(component.getNum()), "GeneratorsWithoutPredefinedActivePowerSetpoint",
+                    "${numGeneratorsWithoutSetpoint} generator${isPlural} not have a predefined active power set point",
+                    Map.of("numGeneratorsWithoutSetpoint", numGeneratorsWithoutSetpoint,
+                            "isPlural", numGeneratorsWithoutSetpoint.get() > 1 ? "s do" : " does"), TypedValue.WARN_SEVERITY);
+        }
+        // Report details for each generator without a predefined setpoint
+        generatorsWithoutSetpointList.forEach(generator -> {
+            report(reporter, Integer.toString(component.getNum()), "MissingPredefinedActivePowerSetpointForGenerator",
+                    "The generator ${generator} does not have a predefined active power set point",
+                    Map.of("generator", generator.getId()), TypedValue.TRACE_SEVERITY);
+        });
         return totalAmountFixedSupply;
     }
 
@@ -164,7 +178,7 @@ public class GenerationDispatch extends AbstractModification {
             report(reporter, reporterSuffixKey, "NbGeneratorsWithNoCost", "${nbNoCost} generator${isPlural} been discarded from generation dispatch because of missing marginal cost. Their active power set point has been set to 0",
                     Map.of("nbNoCost", nbNoCost,
                             "isPlural", nbNoCost > 1 ? "s have" : " has"),
-                    TypedValue.WARN_SEVERITY);
+                    TypedValue.INFO_SEVERITY);
         }
         generators.stream()
             .filter(generator -> getGeneratorMarginalCost(generator) == null)
