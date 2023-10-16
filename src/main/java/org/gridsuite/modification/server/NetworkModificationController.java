@@ -47,14 +47,14 @@ public class NetworkModificationController {
         this.lineTypesCatalogService = lineTypesCatalogService;
     }
 
-    @GetMapping(value = "/groups/{groupUuid}/modifications", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/groups/{groupUuid}/network-modifications", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Get modifications list of a group")
     @ApiResponse(responseCode = "200", description = "List of modifications of the group")
     public ResponseEntity<List<ModificationInfos>> getNetworkModifications(@Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid,
                                                                            @Parameter(description = "Only metadata") @RequestParam(name = "onlyMetadata", required = false, defaultValue = "false") Boolean onlyMetadata,
-                                                                           @Parameter(description = "Stashed modifications") @RequestParam(name = "stashed", required = false, defaultValue = "false") Boolean stashed,
+                                                                           @Parameter(description = "Stashed modifications") @RequestParam(name = "onlyStashed", required = false, defaultValue = "false") Boolean onlyStashed,
                                                                            @Parameter(description = "Return 404 if group is not found or an empty list") @RequestParam(name = "errorOnGroupNotFound", required = false, defaultValue = "true") Boolean errorOnGroupNotFound) {
-        return ResponseEntity.ok().body(networkModificationService.getNetworkModifications(groupUuid, onlyMetadata, errorOnGroupNotFound, stashed));
+        return ResponseEntity.ok().body(networkModificationService.getNetworkModifications(groupUuid, onlyMetadata, errorOnGroupNotFound, onlyStashed));
     }
 
     @PostMapping(value = "/groups")
@@ -148,9 +148,15 @@ public class NetworkModificationController {
     @Operation(summary = "Delete network modifications")
     @ApiResponse(responseCode = "200", description = "The network modifications were deleted")
     public ResponseEntity<Void> deleteNetworkModifications(
-            @Parameter(description = "Network modification UUIDs") @RequestParam("uuids") List<UUID> networkModificationUuids,
-            @Parameter(description = "Group UUID") @RequestParam("groupUuid") UUID groupUuid) {
-        networkModificationService.deleteNetworkModifications(groupUuid, networkModificationUuids);
+            @Parameter(description = "Network modification UUIDs") @RequestParam(name = "uuids", required = false) List<UUID> networkModificationUuids,
+            @Parameter(description = "Group UUID") @RequestParam("groupUuid") UUID groupUuid,
+            @Parameter(description = "delete only stashed modifications") @RequestParam(name = "onlyStashed", required = false, defaultValue = "false") Boolean onlyStashed) {
+
+        if (networkModificationUuids == null || networkModificationUuids.isEmpty()) {
+            networkModificationService.deleteNetworkModifications(groupUuid, onlyStashed);
+        } else {
+            networkModificationService.deleteNetworkModifications(groupUuid, networkModificationUuids);
+        }
         return ResponseEntity.ok().build();
     }
 
@@ -202,23 +208,18 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.createModificationInGroup(modificationsInfos));
     }
 
-    @PostMapping(value = "/network-modifications/stash", produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "stash network modifications")
+    @PutMapping(value = "/network-modifications", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "stash or unstash network modifications")
     @ApiResponse(responseCode = "200", description = "The network modifications were stashed")
     public ResponseEntity<Void> stashNetworkModifications(
             @Parameter(description = "Network modification UUIDs") @RequestParam("uuids") List<UUID> networkModificationUuids,
-            @Parameter(description = "Group UUID") @RequestParam("groupUuid") UUID groupUuid) {
-        networkModificationService.stashNetworkModifications(networkModificationUuids);
-        return ResponseEntity.ok().build();
-    }
-
-    @PostMapping(value = "/network-modifications/restore", produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "restore network modifications")
-    @ApiResponse(responseCode = "200", description = "The network modifications were restored")
-    public ResponseEntity<Void> restoreNetworkModifications(
-            @Parameter(description = "Network modification UUIDs") @RequestParam("uuids") List<UUID> networkModificationUuids,
-            @Parameter(description = "Group UUID") @RequestParam("groupUuid") UUID groupUuid) {
-        networkModificationService.restoreNetworkModifications(networkModificationUuids);
+            @Parameter(description = "Group UUID") @RequestParam("groupUuid") UUID groupUuid,
+            @Parameter(description = "stash or unstash network modifications") @RequestParam(name = "stashed", required = true) Boolean stashed) {
+        if (stashed.booleanValue()) {
+            networkModificationService.stashNetworkModifications(networkModificationUuids);
+        } else {
+            networkModificationService.restoreNetworkModifications(networkModificationUuids);
+        }
         return ResponseEntity.ok().build();
     }
 
