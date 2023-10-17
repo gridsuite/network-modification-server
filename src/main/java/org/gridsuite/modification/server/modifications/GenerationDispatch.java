@@ -108,9 +108,9 @@ public class GenerationDispatch extends AbstractModification {
 
         // Report details for each generator without a predefined setpoint
         generatorsWithoutSetpointList.forEach(generator ->
-            report(reporter, Integer.toString(component.getNum()), "MissingPredefinedActivePowerSetpointForGenerator",
-                    "The generator ${generatorId} does not have a predefined active power set point",
-                    Map.of("generatorId", generator.getId()), TypedValue.TRACE_SEVERITY));
+                report(reporter, Integer.toString(component.getNum()), "MissingPredefinedActivePowerSetpointForGenerator",
+                        "The generator ${generatorId} does not have a predefined active power set point",
+                        Map.of("generatorId", generator.getId()), TypedValue.TRACE_SEVERITY));
         return totalAmountFixedSupply;
     }
 
