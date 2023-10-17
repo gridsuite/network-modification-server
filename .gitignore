@@ -11,4 +11,5 @@ target/
 /.idea
 *.iml
 
-derby.log
+# https://github.com/liquibase/liquibase/issues/2196
+/derby.log
