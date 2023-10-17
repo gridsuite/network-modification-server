@@ -83,7 +83,6 @@ public class GenerationDispatch extends AbstractModification {
 
     private static double computeTotalAmountFixedSupply(Network network, Component component, List<String> generatorsWithFixedSupply, Reporter reporter) {
         double totalAmountFixedSupply = 0.;
-        AtomicInteger numGeneratorsWithoutSetpoint = new AtomicInteger(0);
         List<Generator> generatorsWithoutSetpointList = new ArrayList<>();
         totalAmountFixedSupply += generatorsWithFixedSupply.stream().map(network::getGenerator)
                 .filter(generator -> generator != null && generator.getTerminal().isConnected() &&
@@ -94,18 +93,18 @@ public class GenerationDispatch extends AbstractModification {
                         generator.setTargetP(startupExtension.getPlannedActivePowerSetpoint());
                     } else {
                         generator.setTargetP(0.);
-                        numGeneratorsWithoutSetpoint.incrementAndGet();
                         generatorsWithoutSetpointList.add(generator);
 
                     }
                 })
                 .mapToDouble(Generator::getTargetP).sum();
-        if (numGeneratorsWithoutSetpoint.get() > 0) {
+        if (generatorsWithoutSetpointList.size() > 0) {
             report(reporter, Integer.toString(component.getNum()), "GeneratorsWithoutPredefinedActivePowerSetpoint",
                     "${numGeneratorsWithoutSetpoint} generator${isPlural} not have a predefined active power set point",
-                    Map.of("numGeneratorsWithoutSetpoint", numGeneratorsWithoutSetpoint,
-                            "isPlural", numGeneratorsWithoutSetpoint.get() > 1 ? "s do" : " does"), TypedValue.WARN_SEVERITY);
+                    Map.of("numGeneratorsWithoutSetpoint", generatorsWithoutSetpointList.size(),
+                            "isPlural", generatorsWithoutSetpointList.size() > 1 ? "s do" : " does"), TypedValue.WARN_SEVERITY);
         }
+
         // Report details for each generator without a predefined setpoint
         generatorsWithoutSetpointList.forEach(generator -> {
             report(reporter, Integer.toString(component.getNum()), "MissingPredefinedActivePowerSetpointForGenerator",
