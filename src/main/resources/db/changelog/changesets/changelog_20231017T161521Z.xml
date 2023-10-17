@@ -1,0 +1,54 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+                   xmlns:pro="http://www.liquibase.org/xml/ns/pro"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="chuinetri (base generated)" id="1697559360565-1">
+        <dropDefaultValue columnDataType="int" columnName="pos_generators_frequency" tableName="generation_dispatch_generators_frequency_reserve"/>
+        <dropDefaultValue columnDataType="int" columnName="pos_generators_frequency" tableName="generation_dispatch_generators_frequency_reserve"/>
+        <dropDefaultValue columnDataType="boolean" columnName="stashed" tableName="modification"/>
+        <dropDefaultValue columnDataType="boolean" columnName="stashed" tableName="modification"/>
+    </changeSet>
+
+    <!--<changeSet author="chuinetri (base generated)" id="1697559360565-2">
+        <dropUniqueConstraint constraintName="uc_line_attach_to_voltage_levelline_creation_id_col" tableName="line_attach_to_voltage_level"/>
+        <dropUniqueConstraint constraintName="uc_line_attach_to_voltage_levelmay_voltage_level_creation_id_col" tableName="line_attach_to_voltage_level"/>
+        <dropUniqueConstraint constraintName="uc_line_creationcurrent_limits_id2_col" tableName="line_creation"/>
+        <dropUniqueConstraint constraintName="uc_line_creationcurrent_limits_id1_col" tableName="line_creation"/>
+        <dropUniqueConstraint constraintName="uc_line_modificationcurrent_limits_modification_id2_col" tableName="line_modification"/>
+        <dropUniqueConstraint constraintName="uc_line_modificationcurrent_limits_modification_id1_col" tableName="line_modification"/>
+        <dropUniqueConstraint constraintName="uc_line_split_with_voltage_levelmay_voltage_level_creation_id_c" tableName="line_split_with_voltage_level"/>
+        <dropUniqueConstraint constraintName="uc_two_windings_transformer_creationcurrent_limits_id2_col" tableName="two_windings_transformer_creation"/>
+        <dropUniqueConstraint constraintName="uc_two_windings_transformer_creationcurrent_limits_id1_col" tableName="two_windings_transformer_creation"/>
+        <dropUniqueConstraint constraintName="uc_vsc_creationconverter_station_1_id_col" tableName="vsc_creation"/>
+        <dropUniqueConstraint constraintName="uc_vsc_creationconverter_station_2_id_col" tableName="vsc_creation"/>
+    </changeSet>-->
+    <changeSet author="chuinetri (base generated)" id="1697559360565-3">
+        <addUniqueConstraint columnNames="line_creation_id" constraintName="uc_line_attach_to_voltage_levelline_creation_id_col" tableName="line_attach_to_voltage_level"/>
+        <addUniqueConstraint columnNames="may_voltage_level_creation_id" constraintName="uc_line_attach_to_voltage_levelmay_voltage_level_creation_id_col" tableName="line_attach_to_voltage_level"/>
+        <addUniqueConstraint columnNames="current_limits_id2" constraintName="uc_line_creationcurrent_limits_id2_col" tableName="line_creation"/>
+        <addUniqueConstraint columnNames="current_limits_id1" constraintName="uc_line_creationcurrent_limits_id1_col" tableName="line_creation"/>
+        <addUniqueConstraint columnNames="current_limits_modification_id2" constraintName="uc_line_modificationcurrent_limits_modification_id2_col" tableName="line_modification"/>
+        <addUniqueConstraint columnNames="current_limits_modification_id1" constraintName="uc_line_modificationcurrent_limits_modification_id1_col" tableName="line_modification"/>
+        <addUniqueConstraint columnNames="may_voltage_level_creation_id" constraintName="uc_line_split_with_voltage_levelmay_voltage_level_creation_id_c" tableName="line_split_with_voltage_level"/>
+        <addUniqueConstraint columnNames="current_limits_id2" constraintName="uc_two_windings_transformer_creationcurrent_limits_id2_col" tableName="two_windings_transformer_creation"/>
+        <addUniqueConstraint columnNames="current_limits_id1" constraintName="uc_two_windings_transformer_creationcurrent_limits_id1_col" tableName="two_windings_transformer_creation"/>
+        <addUniqueConstraint columnNames="converter_station_1_id" constraintName="uc_vsc_creationconverter_station_1_id_col" tableName="vsc_creation"/>
+        <addUniqueConstraint columnNames="converter_station_2_id" constraintName="uc_vsc_creationconverter_station_2_id_col" tableName="vsc_creation"/>
+    </changeSet>
+
+    <changeSet author="chuinetri (base generated)" id="1697559360565-4">
+        <addUniqueConstraint columnNames="additional_equipment_deletion_entity_id" constraintName="uc_equipment_deletionAdditional_equipment_deletion_entity_id_col" tableName="equipment_deletion"/>
+        <addUniqueConstraint columnNames="current_limits_modification_id1" constraintName="uc_two_windings_transformer_modificationCurrent_limits_modifica" tableName="two_windings_transformer_modification"/>
+    </changeSet>
+
+    <changeSet author="chuinetri (base generated)" id="1697559360565-5">
+        <addForeignKeyConstraint baseColumnNames="id" baseTableName="battery_creation" constraintName="batteryCreation_id_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
+
+        <!-- if try to drop beforehand "Constraint "CURRENT_LIMITS_MODIFICATION_ID1_FK" not found"
+             and if try to add "Constraint "CURRENT_LIMITS_MODIFICATION_ID1_FK" already exists" ... -->
+        <!--<addForeignKeyConstraint baseColumnNames="current_limits_modification_id1" baseTableName="two_windings_transformer_modification" constraintName="current_limits_modification_id1_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="current_limits_modification" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="current_limits_modification_id2" baseTableName="two_windings_transformer_modification" constraintName="current_limits_modification_id2_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="current_limits_modification" validate="true"/>-->
+    </changeSet>
+</databaseChangeLog>
