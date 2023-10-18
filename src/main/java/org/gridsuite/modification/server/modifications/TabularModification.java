@@ -11,13 +11,7 @@ import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.iidm.network.Network;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.GeneratorModificationInfos;
-import org.gridsuite.modification.server.dto.LoadModificationInfos;
 import org.gridsuite.modification.server.dto.TabularModificationInfos;
-import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.LoadModificationEntity;
-
-import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.TABULAR_MODIFICATION_ERROR;
 
@@ -50,7 +44,7 @@ public class TabularModification extends AbstractModification {
                 defaultMessage = "loads have been modified.";
                 break;
             default:
-                defaultMessage = "unknown equipment modifications";
+                defaultMessage = "equipments of unknown type have been modified";
                 break;
         }
 
