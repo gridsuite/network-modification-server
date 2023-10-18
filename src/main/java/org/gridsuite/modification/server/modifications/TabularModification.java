@@ -6,10 +6,18 @@
  */
 package org.gridsuite.modification.server.modifications;
 
+import com.powsybl.commons.reporter.Report;
 import com.powsybl.commons.reporter.Reporter;
+import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.iidm.network.Network;
 import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.dto.GeneratorModificationInfos;
+import org.gridsuite.modification.server.dto.LoadModificationInfos;
 import org.gridsuite.modification.server.dto.TabularModificationInfos;
+import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.LoadModificationEntity;
+
+import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.TABULAR_MODIFICATION_ERROR;
 
@@ -32,7 +40,25 @@ public class TabularModification extends AbstractModification {
 
     @Override
     public void apply(Network network, Reporter subReporter) {
-        //TODO: add aggregated report
         modificationInfos.getModifications().forEach(modification -> modification.toModification().apply(network));
+        String defaultMessage;
+        switch (modificationInfos.getModificationType()) {
+            case "GENERATOR_MODIFICATION":
+                defaultMessage = "generators have been modified.";
+                break;
+            case "LOAD_MODIFICATION":
+                defaultMessage = "loads have been modified.";
+                break;
+            default:
+                defaultMessage = "unknown equipment modifications";
+                break;
+        }
+
+        subReporter.report(Report.builder()
+                .withKey("tabularModification")
+                .withDefaultMessage("Tabular modification: ${modificationsCount} " + defaultMessage)
+                .withValue("modificationsCount", modificationInfos.getModifications().size())
+                .withSeverity(TypedValue.INFO_SEVERITY)
+                .build());
     }
 }
