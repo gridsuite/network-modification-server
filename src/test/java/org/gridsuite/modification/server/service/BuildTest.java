@@ -36,6 +36,7 @@ import org.gridsuite.modification.server.repositories.ModificationGroupRepositor
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.gridsuite.modification.server.utils.TestUtils;
+import org.gridsuite.modification.server.utils.assertions.Assertions;
 import org.jetbrains.annotations.NotNull;
 import org.junit.After;
 import org.junit.Before;
@@ -425,7 +426,10 @@ public class BuildTest {
                 .substations(Set.of(SubstationInfos.builder().id("s1").name("s1").build()))
                 .build();
         var equipmentInfos = equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of("vl1"), TEST_NETWORK_ID, NetworkCreation.VARIANT_ID).get(0);
-        assertTrue(areEquipmentInfosEqual(expectedEquipmentInfos, equipmentInfos));
+        Assertions.assertThat(equipmentInfos)
+                .usingRecursiveComparison()
+                .ignoringFields("uniqueId")
+                .isEqualTo(expectedEquipmentInfos);
 
         //check load indexation
         expectedEquipmentInfos = EquipmentInfos.builder()
@@ -438,7 +442,10 @@ public class BuildTest {
                 .substations(Set.of(SubstationInfos.builder().id("s1").name("s1").build()))
                 .build();
         equipmentInfos = equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of("newLoad"), TEST_NETWORK_ID, NetworkCreation.VARIANT_ID).get(0);
-        assertTrue(areEquipmentInfosEqual(expectedEquipmentInfos, equipmentInfos));
+        Assertions.assertThat(equipmentInfos)
+                .usingRecursiveComparison()
+                .ignoringFields("uniqueId")
+                .isEqualTo(expectedEquipmentInfos);
 
         //check line indexation
         expectedEquipmentInfos = EquipmentInfos.builder()
@@ -451,19 +458,12 @@ public class BuildTest {
                 .substations(Set.of(SubstationInfos.builder().id("s1").name("s1").build()))
                 .build();
         equipmentInfos = equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of("newLine"), TEST_NETWORK_ID, NetworkCreation.VARIANT_ID).get(0);
-        assertTrue(areEquipmentInfosEqual(expectedEquipmentInfos, equipmentInfos));
+        Assertions.assertThat(equipmentInfos)
+                .usingRecursiveComparison()
+                .ignoringFields("uniqueId")
+                .isEqualTo(expectedEquipmentInfos);
 
         assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches("/v1/reports/.*")));
-    }
-
-    public static boolean areEquipmentInfosEqual(EquipmentInfos equipmentInfos1, EquipmentInfos equipmentInfos2) {
-        return equipmentInfos1.getNetworkUuid().equals(equipmentInfos2.getNetworkUuid()) &&
-                equipmentInfos1.getVariantId().equals(equipmentInfos2.getVariantId()) &&
-                equipmentInfos1.getId().equals(equipmentInfos2.getId()) &&
-                equipmentInfos1.getName().equals(equipmentInfos2.getName()) &&
-                equipmentInfos1.getType().equals(equipmentInfos2.getType()) &&
-                equipmentInfos1.getVoltageLevels().equals(equipmentInfos2.getVoltageLevels()) &&
-                equipmentInfos1.getSubstations().equals(equipmentInfos2.getSubstations());
     }
 
     @Test
