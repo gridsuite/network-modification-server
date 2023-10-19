@@ -82,7 +82,6 @@ public class VoltageLevelCreationEntity extends EquipmentCreationEntity {
 
     public VoltageLevelCreationInfos toVoltageLevelCreationInfos() {
         return toVoltageLevelCreationInfosBuilder()
-                .stashed(false)
                 .build();
     }
 
