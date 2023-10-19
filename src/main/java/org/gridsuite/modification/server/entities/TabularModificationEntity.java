@@ -79,4 +79,9 @@ public class TabularModificationEntity extends ModificationEntity {
                 break;
         }
     }
+
+    @Override
+    public boolean equals(Object o) {
+        return super.equals(o);
+    }
 }

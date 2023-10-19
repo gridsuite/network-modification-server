@@ -9,6 +9,7 @@ package org.gridsuite.modification.server.dto;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
+import lombok.*;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.TabularModificationEntity;
@@ -17,10 +18,6 @@ import org.gridsuite.modification.server.modifications.TabularModification;
 import org.springframework.lang.NonNull;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
 import java.util.List;
@@ -30,9 +27,7 @@ import java.util.List;
  */
 @SuperBuilder
 @NoArgsConstructor
-@Getter
-@Setter
-@ToString(callSuper = true)
+@Data
 @Schema(description = "Tabular modification")
 @JsonTypeName("TABULAR_MODIFICATION")
 public class TabularModificationInfos extends ModificationInfos {
