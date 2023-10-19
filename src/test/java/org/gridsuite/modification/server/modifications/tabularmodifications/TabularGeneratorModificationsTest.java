@@ -87,7 +87,7 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
         UUID modificationUuid = saveModification(modificationInfos);
         reset();
 
-        MvcResult result = mockMvc.perform(get("/v1/network-modifications/{uuid}", modificationUuid)).andExpectAll(
+        mockMvc.perform(get("/v1/network-modifications/{uuid}", modificationUuid)).andExpectAll(
                         status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
         assertSelectCount(3);
