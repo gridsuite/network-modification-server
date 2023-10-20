@@ -51,7 +51,13 @@ public class NetworkModificationRepository {
         var modificationGroupEntity = this.modificationGroupRepository
                 .findById(groupUuid)
                 .orElseGet(() -> modificationGroupRepository.save(new ModificationGroupEntity(groupUuid)));
-        modifications.forEach(modificationGroupEntity::addModification);
+        modifications.forEach(m -> {
+            modificationGroupEntity.addModification(m);
+            // We need here to call the save() method on the modification entity cause the id of the ModificationEntity's is used is further treatments in the same transaction.
+            // As we generate the id in Java with @GeneratedValue(strategy = GenerationType.AUTO), saving the entity in the JPA world is enough to generate the id (no need to flush it).
+            // Without the saving, the id generation would be done only at the flush() and wouldn't be available for the further treatments.
+            modificationRepository.save(m);
+        });
     }
 
     @Transactional
