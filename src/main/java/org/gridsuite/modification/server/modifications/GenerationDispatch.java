@@ -308,25 +308,14 @@ public class GenerationDispatch extends AbstractModification {
                                 Map.of(GENERATOR, g.getId()), TypedValue.TRACE_SEVERITY));
             }
             // report the max marginal cost used
-            Double maxUsedMarginalCost = getGeneratorsMarginalCost(updatedGenerators).stream()
-                    .mapToDouble(Double::doubleValue)
-                    .max()
-                    .getAsDouble();
+            Double maxUsedMarginalCost = updatedGenerators.stream()
+                    .map(GenerationDispatch::getGeneratorMarginalCost)
+                    .filter(Objects::nonNull)
+                    .mapToDouble(Double::doubleValue).max().orElseThrow();
 
             report(reporter, suffixKey, "MaxUsedMarginalCost", "Marginal cost: ${maxUsedMarginalCost}",
                     Map.of("maxUsedMarginalCost", maxUsedMarginalCost), TypedValue.INFO_SEVERITY);
         }
-    }
-
-    private static List<Double> getGeneratorsMarginalCost(List<Generator> generators) {
-        List<Double> marginalCosts = new ArrayList<>();
-        generators
-                .forEach(generator -> {
-                    if (getGeneratorMarginalCost(generator) != null) {
-                        marginalCosts.add(getGeneratorMarginalCost(generator));
-                    }
-                });
-        return marginalCosts;
     }
 
     @Builder
