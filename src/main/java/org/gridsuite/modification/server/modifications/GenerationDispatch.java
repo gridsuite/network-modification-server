@@ -320,6 +320,14 @@ public class GenerationDispatch extends AbstractModification {
                         .forEach(g -> report(reporter, suffixKey, "GeneratorUnchangedTargetP", "Generator ${generator} has not been selected by the merit order algorithm. Its active power set point has been set to 0",
                                 Map.of(GENERATOR, g.getId()), TypedValue.TRACE_SEVERITY));
             }
+            // report the max marginal cost used
+            Double maxUsedMarginalCost = updatedGenerators.stream()
+                    .map(GenerationDispatch::getGeneratorMarginalCost)
+                    .filter(Objects::nonNull)
+                    .mapToDouble(Double::doubleValue).max().orElseThrow();
+
+            report(reporter, suffixKey, "MaxUsedMarginalCost", "Marginal cost: ${maxUsedMarginalCost}",
+                    Map.of("maxUsedMarginalCost", maxUsedMarginalCost), TypedValue.INFO_SEVERITY);
         }
     }
 
