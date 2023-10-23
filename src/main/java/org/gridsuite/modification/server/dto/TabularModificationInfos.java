@@ -11,6 +11,7 @@ import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import lombok.*;
 import org.gridsuite.modification.server.ModificationType;
+import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.TabularModificationEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
@@ -30,6 +31,7 @@ import java.util.List;
 @Data
 @Schema(description = "Tabular modification")
 @JsonTypeName("TABULAR_MODIFICATION")
+@ModificationErrorTypeName("TABULAR_MODIFICATION_ERROR")
 public class TabularModificationInfos extends ModificationInfos {
     @Schema(description = "Modification type")
     @NonNull
