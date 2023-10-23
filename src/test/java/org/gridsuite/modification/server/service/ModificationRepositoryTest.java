@@ -554,8 +554,7 @@ public class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.moveModifications(TEST_GROUP_ID_2, TEST_GROUP_ID, List.of(groovyScriptEntity2.getId(), groovyScriptEntity3.getId()), groovyScriptEntity6.getId());
-        assertRequestsCount(4, 0, 2
-                , 0);
+        assertRequestsCount(4, 0, 2, 0);
 
         var modification1 = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
         var modification2 = networkModificationRepository.getModifications(TEST_GROUP_ID_2, true, true);
