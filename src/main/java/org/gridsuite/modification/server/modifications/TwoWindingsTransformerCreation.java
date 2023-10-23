@@ -17,7 +17,7 @@ import org.gridsuite.modification.server.dto.*;
 
 import java.util.Optional;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.TWO_WINDINGS_TRANSFORMER_ALREADY_EXISTS;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 
 public class TwoWindingsTransformerCreation extends AbstractModification {
 
@@ -97,7 +97,7 @@ public class TwoWindingsTransformerCreation extends AbstractModification {
         } else if (s2 != null) {
             branchAdder = s2.newTwoWindingsTransformer();
         } else {
-            branchAdder = network.newTwoWindingsTransformer();
+            throw new NetworkModificationException(TWO_WINDINGS_TRANSFORMER_CREATION_ERROR, "The two windings transformer should belong to a substation");
         }
         // common settings
         TwoWindingsTransformerAdder twoWindingsTransformerAdder = branchAdder.setId(twoWindingsTransformerCreationInfos.getEquipmentId())

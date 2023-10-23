@@ -323,7 +323,7 @@ public final class NetworkUtil {
             .setG(g)
             .setP0(p0)
             .setQ0(q0)
-            .setUcteXnodeCode(ucteXnodeCode)
+            .setPairingKey(ucteXnodeCode)
             .setNode(node)
             .add();
     }
