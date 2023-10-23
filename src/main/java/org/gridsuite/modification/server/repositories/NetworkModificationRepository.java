@@ -121,7 +121,7 @@ public class NetworkModificationRepository {
 
     @Transactional(readOnly = true)
     public List<ModificationInfos> getModifications(UUID groupUuid, boolean onlyMetadata, boolean errorOnGroupNotFound) {
-        return getModifications(groupUuid, onlyMetadata, errorOnGroupNotFound, false);
+        return this.getModifications(groupUuid, onlyMetadata, errorOnGroupNotFound, false);
     }
 
     @Transactional(readOnly = true)
@@ -277,7 +277,7 @@ public class NetworkModificationRepository {
             if (!groupEntity.getModifications().isEmpty()) {
                 List<UUID> stashedModifications = groupEntity.getModifications().stream()
                     .filter(ModificationEntity::getStashed).map(ModificationEntity::getId).collect(Collectors.toList());
-                deleteModifications(groupUuid, stashedModifications);
+                this.deleteModifications(groupUuid, stashedModifications);
             }
         } catch (NetworkModificationException e) {
             if (e.getType() == MODIFICATION_GROUP_NOT_FOUND && !errorOnGroupNotFound) {

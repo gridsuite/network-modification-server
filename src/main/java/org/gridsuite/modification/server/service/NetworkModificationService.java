@@ -73,7 +73,7 @@ public class NetworkModificationService {
     @Transactional(readOnly = true)
     // Need a transaction for collections lazy loading
     public List<ModificationInfos> getNetworkModifications(UUID groupUuid, boolean onlyMetadata, boolean errorOnGroupNotFound) {
-        return getNetworkModifications(groupUuid, onlyMetadata, errorOnGroupNotFound, false);
+        return this.getNetworkModifications(groupUuid, onlyMetadata, errorOnGroupNotFound, false);
     }
 
     @Transactional(readOnly = true)
