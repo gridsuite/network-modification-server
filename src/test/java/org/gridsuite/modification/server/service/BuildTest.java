@@ -540,8 +540,8 @@ public class BuildTest {
             .equipmentName("shunt9")
             .voltageLevelId("v2")
             .busOrBusbarSectionId("1A")
-            .maximumNumberOfSections(2)
-            .susceptancePerSection(1.)
+            .maximumSectionCount(2)
+            .maxSusceptance(1.)
             .connectionDirection(ConnectablePosition.Direction.UNDEFINED)
             .connectionName("shunt9")
             .build().toEntity());
