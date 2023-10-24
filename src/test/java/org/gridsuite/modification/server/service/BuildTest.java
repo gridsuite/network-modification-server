@@ -541,6 +541,7 @@ public class BuildTest {
             .voltageLevelId("v2")
             .busOrBusbarSectionId("1A")
             .maximumSectionCount(2)
+            .sectionCount(1)
             .maxSusceptance(1.)
             .connectionDirection(ConnectablePosition.Direction.UNDEFINED)
             .connectionName("shunt9")

@@ -360,12 +360,14 @@ public class ModificationRepositoryTest {
         var shunt1 = ShuntCompensatorCreationInfos.builder()
             .equipmentId("shunt1").equipmentName("nameOne")
             .maximumSectionCount(2)
+            .sectionCount(1)
             .maxSusceptance(1.)
             .voltageLevelId("vlId1").busOrBusbarSectionId("busId1")
             .build();
         var shunt2 = ShuntCompensatorCreationInfos.builder()
             .equipmentId("shunt2").equipmentName("notNameOne")
             .maximumSectionCount(2)
+            .sectionCount(0)
             .maxSusceptance(1.)
             .voltageLevelId("vlId1").busOrBusbarSectionId("busId1")
             .build();
