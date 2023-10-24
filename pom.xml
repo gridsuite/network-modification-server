@@ -146,10 +146,6 @@
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
-            <artifactId>powsybl-network-store-iidm-impl</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.powsybl</groupId>
             <artifactId>powsybl-ws-commons</artifactId>
         </dependency>
         <dependency>
