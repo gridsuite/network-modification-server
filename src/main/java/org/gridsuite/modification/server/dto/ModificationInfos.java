@@ -25,6 +25,7 @@ import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
 
 import java.time.ZonedDateTime;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -112,6 +113,11 @@ public class ModificationInfos {
     @JsonIgnore
     public final ModificationType getType() {
         return ModificationType.valueOf(this.getClass().getAnnotation(JsonTypeName.class).value());
+    }
+
+    @JsonIgnore
+    public Map<String, String> getMapMessageValues() {
+        return Map.of();
     }
 
     @JsonIgnore

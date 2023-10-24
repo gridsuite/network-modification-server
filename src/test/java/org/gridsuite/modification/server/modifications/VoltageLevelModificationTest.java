@@ -49,9 +49,21 @@ public class VoltageLevelModificationTest extends AbstractNetworkModificationTes
     }
 
     @Override
+    protected ModificationInfos buildModificationWithOnlyMetadata() {
+        ModificationInfos builtModificationInfos = buildModification();
+        builtModificationInfos.setStashed(false);
+        builtModificationInfos.setMessageType("VOLTAGE_LEVEL_MODIFICATION");
+        builtModificationInfos.setMessageValues("{\"equipmentId\":\"v1\"}");
+        return builtModificationInfos;
+    }
+
+    @Override
     protected ModificationInfos buildModificationUpdate() {
         return VoltageLevelModificationInfos.builder()
                 .equipmentId("v1")
+                .messageType("VOLTAGE_LEVEL_MODIFICATION")
+                .messageValues("{\"equipmentId\":\"v1\"}")
+                .stashed(false)
                 .equipmentName(new AttributeModification<>("test 2", OperationType.SET))
                 .nominalVoltage(new AttributeModification<>(450D, OperationType.SET))
                 .lowVoltageLimit(new AttributeModification<>(40D, OperationType.SET))

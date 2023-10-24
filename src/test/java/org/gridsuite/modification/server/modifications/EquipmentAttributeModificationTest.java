@@ -10,6 +10,7 @@ import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.EquipmentAttributeModificationInfos;
+import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
 import org.junit.jupiter.api.Tag;
@@ -172,7 +173,20 @@ public class EquipmentAttributeModificationTest extends AbstractNetworkModificat
             .equipmentAttributeName("open")
             .equipmentAttributeValue(false)
             .equipmentId("v1b1Edited")
+            .stashed(false)
+            .messageType("EQUIPMENT_ATTRIBUTE_MODIFICATION")
+            .messageValues("{\"equipmentAttributeName\":\"open\",\"equipmentId\":\"v1b1Edited\",\"equipmentAttributeValue\":\"false\"}")
             .build();
+    }
+
+    @Override
+    protected ModificationInfos buildModificationWithOnlyMetadata() {
+        ModificationInfos builtModificationInfos = buildModification();
+        builtModificationInfos.setStashed(false);
+        builtModificationInfos.setMessageType("EQUIPMENT_ATTRIBUTE_MODIFICATION");
+        builtModificationInfos.setMessageValues("{\"equipmentAttributeName\":\"open\",\"equipmentId\":\"v1b1\",\"equipmentAttributeValue\":\"true\"}");
+
+        return builtModificationInfos;
     }
 
     @Override

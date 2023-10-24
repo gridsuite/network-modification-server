@@ -78,6 +78,15 @@ public class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificat
     }
 
     @Override
+    protected ModificationInfos buildModificationWithOnlyMetadata() {
+        ModificationInfos builtModificationInfos = buildModification();
+        builtModificationInfos.setStashed(false);
+        builtModificationInfos.setMessageType("GENERATOR_CREATION");
+        builtModificationInfos.setMessageValues("{\"equipmentId\":\"idGenerator1\"}");
+        return builtModificationInfos;
+    }
+
+    @Override
     protected ModificationInfos buildModificationUpdate() {
         return GeneratorCreationInfos.builder()
                 .equipmentId("idGenerator2")
@@ -111,6 +120,9 @@ public class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificat
                         new ReactiveCapabilityCurveCreationInfos(6.6, 8.8, 11.8)))
                 .connectionName("top")
                 .connectionDirection(ConnectablePosition.Direction.TOP)
+                .stashed(false)
+                .messageType("GENERATOR_CREATION")
+                .messageValues("{\"equipmentId\":\"idGenerator2\"}")
                 .build();
     }
 

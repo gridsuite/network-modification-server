@@ -21,6 +21,9 @@ import org.gridsuite.modification.server.entities.equipment.modification.DeleteA
 import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.DeleteAttachingLine;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 /**
  * @author bendaamerahm <ahmed.bendaamer at rte-france.com>
  */
@@ -63,5 +66,14 @@ public class DeleteAttachingLineInfos extends ModificationInfos {
     @Override
     public Reporter createSubReporter(ReporterModel reporter) {
         return reporter.createSubReporter(getType().name(), "Delete attaching line");
+    }
+
+    @Override
+    public Map<String, String> getMapMessageValues() {
+        Map<String, String> mapMessageValues = new LinkedHashMap<>();
+        mapMessageValues.put("attachedLineId", getAttachedLineId());
+        mapMessageValues.put("lineToAttachTo1Id", getLineToAttachTo1Id());
+        mapMessageValues.put("lineToAttachTo2Id", getLineToAttachTo2Id());
+        return mapMessageValues;
     }
 }

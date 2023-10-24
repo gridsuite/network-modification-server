@@ -94,6 +94,9 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
                 .marginalCost(new AttributeModification<>(0.40, OperationType.SET))
                 .plannedOutageRate(new AttributeModification<>(.45, OperationType.SET))
                 .forcedOutageRate(new AttributeModification<>(.66, OperationType.SET))
+                .stashed(false)
+                .messageType("GENERATOR_MODIFICATION")
+                .messageValues("{\"equipmentId\":\"idGenerator\"}")
                 .build();
     }
 
@@ -118,6 +121,15 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
         assertEquals(0.1, modifiedGenerator.getExtension(GeneratorShortCircuit.class).getDirectTransX());
         assertEquals(0.1, modifiedGenerator.getExtension(GeneratorShortCircuit.class).getStepUpTransformerX());
         assertEquals(ReactiveLimitsKind.CURVE, modifiedGenerator.getReactiveLimits().getKind());
+    }
+
+    @Override
+    protected ModificationInfos buildModificationWithOnlyMetadata() {
+        ModificationInfos builtModificationInfos = buildModification();
+        builtModificationInfos.setStashed(false);
+        builtModificationInfos.setMessageType("GENERATOR_MODIFICATION");
+        builtModificationInfos.setMessageValues("{\"equipmentId\":\"idGenerator\"}");
+        return builtModificationInfos;
     }
 
     @Override

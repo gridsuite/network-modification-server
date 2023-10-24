@@ -79,6 +79,15 @@ public class LineSplitWithNewVoltageLevelTest extends AbstractNetworkModificatio
     }
 
     @Override
+    protected ModificationInfos buildModificationWithOnlyMetadata() {
+        ModificationInfos builtModificationInfos = buildModification();
+        builtModificationInfos.setStashed(false);
+        builtModificationInfos.setMessageType("LINE_SPLIT_WITH_VOLTAGE_LEVEL");
+        builtModificationInfos .setMessageValues("{\"lineToSplitId\":\"line2\"}");
+        return builtModificationInfos;
+    }
+
+    @Override
     protected ModificationInfos buildModificationUpdate() {
         return LineSplitWithVoltageLevelInfos.builder()
             .lineToSplitId("line2Edited")
@@ -90,6 +99,9 @@ public class LineSplitWithNewVoltageLevelTest extends AbstractNetworkModificatio
             .newLine1Name("NewLine1Edited")
             .newLine2Id("nl2vEdited")
             .newLine2Name("NewLine2Edited")
+            .stashed(false)
+            .messageType("LINE_SPLIT_WITH_VOLTAGE_LEVEL")
+            .messageValues("{\"lineToSplitId\":\"line2Edited\"}")
             .build();
     }
 

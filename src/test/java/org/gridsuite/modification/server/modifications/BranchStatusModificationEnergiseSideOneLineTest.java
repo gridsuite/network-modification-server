@@ -53,7 +53,20 @@ public class BranchStatusModificationEnergiseSideOneLineTest extends AbstractNet
         return BranchStatusModificationInfos.builder()
                 .equipmentId("line1")
                 .energizedVoltageLevelId("vl1_bis")
-                .action(BranchStatusModificationInfos.ActionType.TRIP).build();
+                .action(BranchStatusModificationInfos.ActionType.TRIP)
+                .stashed(false)
+                .messageType("BRANCH_STATUS_MODIFICATION")
+                .messageValues("{\"energizedVoltageLevelId\":\"vl1_bis\",\"action\":\"TRIP\",\"equipmentId\":\"line1\"}")
+                .build();
+    }
+
+    @Override
+    protected ModificationInfos buildModificationWithOnlyMetadata() {
+        ModificationInfos builtModificationInfos = buildModification();
+        builtModificationInfos.setStashed(false);
+        builtModificationInfos.setMessageType("BRANCH_STATUS_MODIFICATION");
+        builtModificationInfos.setMessageValues("{\"energizedVoltageLevelId\":\"vl1\",\"action\":\"ENERGISE_END_ONE\",\"equipmentId\":\"line2\"}");
+        return builtModificationInfos;
     }
 
     @Override

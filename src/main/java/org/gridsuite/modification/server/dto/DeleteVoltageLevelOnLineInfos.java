@@ -17,6 +17,9 @@ import org.gridsuite.modification.server.entities.equipment.modification.DeleteV
 import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.DeleteVoltageLevelOnLine;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 
 /**
  * @author bendaamerahm <ahmed.bendaamer at rte-france.com>
@@ -58,4 +61,13 @@ public class DeleteVoltageLevelOnLineInfos extends ModificationInfos {
     public Reporter createSubReporter(ReporterModel reporter) {
         return reporter.createSubReporter(getType().name(), "Delete voltage level on line");
     }
+
+    @Override
+    public Map<String, String> getMapMessageValues() {
+        Map<String, String> mapMessageValues = new LinkedHashMap<>();
+        mapMessageValues.put("lineToAttachTo1Id", getLineToAttachTo1Id());
+        mapMessageValues.put("lineToAttachTo2Id", getLineToAttachTo2Id());
+        return mapMessageValues;
+    }
+
 }

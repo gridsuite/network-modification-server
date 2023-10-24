@@ -7,8 +7,6 @@
 
 package org.gridsuite.modification.server.entities.equipment.modification;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
@@ -18,10 +16,6 @@ import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.VoltageLevelCreationEntity;
 
 import jakarta.persistence.*;
-
-import java.io.UncheckedIOException;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * @author Laurent GARNIER <laurent.garnier at rte-france.com>
@@ -90,24 +84,13 @@ public class LineSplitWithVoltageLevelEntity extends ModificationEntity {
         return toLineSplitWithVoltageLevelInfosBuilder().build();
     }
 
-    @Override
-    public void getModificationMetadata(ModificationInfos modificationInfos) {
-        super.getModificationMetadata(modificationInfos);
-        try {
-            Map<String, String> messageValuesMap = new HashMap<>();
-            messageValuesMap.put("lineToSplitId", ((LineSplitWithVoltageLevelInfos) modificationInfos).getLineToSplitId());
-            ObjectMapper objectMapper = new ObjectMapper();
-            this.setMessageValues(objectMapper.writeValueAsString(messageValuesMap));
-        } catch (JsonProcessingException e) {
-            throw new UncheckedIOException(e);
-        }
-    }
-
     private LineSplitWithVoltageLevelInfos.LineSplitWithVoltageLevelInfosBuilder<?, ?> toLineSplitWithVoltageLevelInfosBuilder() {
         return LineSplitWithVoltageLevelInfos
             .builder()
             .uuid(getId())
             .date(getDate())
+            .messageType(getMessageType())
+            .messageValues(getMessageValues())
             .lineToSplitId(getLineToSplitId())
             .percent(getPercent())
             .mayNewVoltageLevelInfos(mayVoltageLevelCreation == null ? null : mayVoltageLevelCreation.toVoltageLevelCreationInfos())

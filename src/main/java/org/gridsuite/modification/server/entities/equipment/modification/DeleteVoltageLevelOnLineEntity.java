@@ -6,8 +6,6 @@
 */
 package org.gridsuite.modification.server.entities.equipment.modification;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
@@ -18,10 +16,6 @@ import org.gridsuite.modification.server.entities.ModificationEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
-
-import java.io.UncheckedIOException;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
 * @author bendaamerahm <ahmed.bendaamer at rte-france.com>
@@ -56,22 +50,6 @@ public class DeleteVoltageLevelOnLineEntity extends ModificationEntity {
     }
 
     @Override
-    public void getModificationMetadata(ModificationInfos modificationInfos) { //getLabelValues a renommer
-        super.getModificationMetadata(modificationInfos);
-        try {
-            Map<String, String> messageValuesMap = new HashMap<>();
-            lineToAttachTo1Id = ((DeleteVoltageLevelOnLineInfos) modificationInfos).getLineToAttachTo1Id();
-            lineToAttachTo2Id = ((DeleteVoltageLevelOnLineInfos) modificationInfos).getLineToAttachTo2Id();
-            messageValuesMap.put("lineToAttachTo1Id", lineToAttachTo1Id);
-            messageValuesMap.put("lineToAttachTo2Id", lineToAttachTo2Id);
-            ObjectMapper objectMapper = new ObjectMapper();
-            this.setMessageValues(objectMapper.writeValueAsString(messageValuesMap));
-        } catch (JsonProcessingException e) {
-            throw new UncheckedIOException(e);
-        }
-    }
-
-    @Override
     public DeleteVoltageLevelOnLineInfos toModificationInfos() {
         return toDeleteVoltageLevelOnLineInfosBuilder().build();
     }
@@ -81,6 +59,8 @@ public class DeleteVoltageLevelOnLineEntity extends ModificationEntity {
                 .builder()
                 .uuid(getId())
                 .date(getDate())
+                .messageType(getMessageType())
+                .messageValues(getMessageValues())
                 .lineToAttachTo1Id(getLineToAttachTo1Id())
                 .lineToAttachTo2Id(getLineToAttachTo2Id())
                 .replacingLine1Id(getReplacingLine1Id())

@@ -49,11 +49,23 @@ public class DeleteAttachingLineTest extends AbstractNetworkModificationTest {
     }
 
     @Override
+    protected ModificationInfos buildModificationWithOnlyMetadata() {
+        ModificationInfos builtModificationInfos = buildModification();
+        builtModificationInfos.setStashed(false);
+        builtModificationInfos.setMessageType("DELETE_ATTACHING_LINE");
+        builtModificationInfos.setMessageValues("{\"attachedLineId\":\"l3\",\"lineToAttachTo1Id\":\"l1\",\"lineToAttachTo2Id\":\"l2\"}");
+        return builtModificationInfos;
+    }
+
+    @Override
     protected ModificationInfos buildModificationUpdate() {
         return DeleteAttachingLineInfos.builder()
                 .lineToAttachTo1Id("l1")
                 .lineToAttachTo2Id("l2")
                 .attachedLineId("l3")
+                .stashed(false)
+                .messageType("DELETE_ATTACHING_LINE")
+                .messageValues("{\"attachedLineId\":\"l3\",\"lineToAttachTo1Id\":\"l1\",\"lineToAttachTo2Id\":\"l2\"}")
                 .replacingLine1Id("replacingLineIdEdited")
                 .replacingLine1Name("replacingLine")
                 .build();

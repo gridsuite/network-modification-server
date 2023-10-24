@@ -6,8 +6,6 @@
  */
 package org.gridsuite.modification.server.entities.equipment.modification;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
@@ -19,10 +17,6 @@ import org.gridsuite.modification.server.entities.equipment.creation.LineCreatio
 import org.gridsuite.modification.server.entities.equipment.creation.VoltageLevelCreationEntity;
 
 import jakarta.persistence.*;
-
-import java.io.UncheckedIOException;
-import java.util.HashMap;
-import java.util.Map;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_ATTACH_DESCRIPTION_ERROR;
 
@@ -82,19 +76,6 @@ public class LineAttachToVoltageLevelEntity extends ModificationEntity {
         assignAttributes((LineAttachToVoltageLevelInfos) modificationInfos);
     }
 
-    @Override
-    public void getModificationMetadata(ModificationInfos modificationInfos) {
-        super.getModificationMetadata(modificationInfos);
-        try {
-            Map<String, String> messageValuesMap = new HashMap<>();
-            messageValuesMap.put("lineToAttachToId", ((LineAttachToVoltageLevelInfos) modificationInfos).getLineToAttachToId());
-            ObjectMapper objectMapper = new ObjectMapper();
-            this.setMessageValues(objectMapper.writeValueAsString(messageValuesMap));
-        } catch (JsonProcessingException e) {
-            throw new UncheckedIOException(e);
-        }
-    }
-
     private void assignAttributes(LineAttachToVoltageLevelInfos lineAttachToVoltageLevelInfos) {
         lineToAttachToId = lineAttachToVoltageLevelInfos.getLineToAttachToId();
         percent = lineAttachToVoltageLevelInfos.getPercent();
@@ -126,6 +107,8 @@ public class LineAttachToVoltageLevelEntity extends ModificationEntity {
                 .builder()
                 .uuid(getId())
                 .date(getDate())
+                .messageType(getMessageType())
+                .messageValues(getMessageValues())
                 .lineToAttachToId(getLineToAttachToId())
                 .percent(getPercent())
                 .attachmentPointId(getAttachmentPointId())

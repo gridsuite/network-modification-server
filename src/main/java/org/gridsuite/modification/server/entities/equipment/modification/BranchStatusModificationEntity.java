@@ -6,8 +6,6 @@
  */
 package org.gridsuite.modification.server.entities.equipment.modification;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
@@ -15,10 +13,6 @@ import org.gridsuite.modification.server.dto.BranchStatusModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 
 import jakarta.persistence.*;
-
-import java.io.UncheckedIOException;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -54,26 +48,13 @@ public class BranchStatusModificationEntity extends EquipmentModificationEntity 
     }
 
     @Override
-    public void getModificationMetadata(ModificationInfos modificationInfos) {
-        super.getModificationMetadata(modificationInfos);
-        try {
-            Map<String, String> messageValuesMap = new HashMap<>();
-            messageValuesMap.put("action", ((BranchStatusModificationInfos) modificationInfos).getAction().name());
-            messageValuesMap.put("equipmentId", ((BranchStatusModificationInfos) modificationInfos).getEquipmentId());
-            messageValuesMap.put("energizedVoltageLevelId", ((BranchStatusModificationInfos) modificationInfos).getEnergizedVoltageLevelId());
-            ObjectMapper objectMapper = new ObjectMapper();
-            this.setMessageValues(objectMapper.writeValueAsString(messageValuesMap));
-        } catch (JsonProcessingException e) {
-            throw new UncheckedIOException(e);
-        }
-    }
-
-    @Override
     public BranchStatusModificationInfos toModificationInfos() {
         return BranchStatusModificationInfos
             .builder()
             .uuid(getId())
             .date(getDate())
+            .messageType(getMessageType())
+            .messageValues(getMessageValues())
             .equipmentId(getEquipmentId())
             .action(getAction())
             .energizedVoltageLevelId(getEnergizedVoltageLevelId())

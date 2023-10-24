@@ -63,6 +63,15 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
     }
 
     @Override
+    protected ModificationInfos buildModificationWithOnlyMetadata() {
+        ModificationInfos builtModificationInfos = buildModification();
+        builtModificationInfos.setStashed(false);
+        builtModificationInfos.setMessageType("LINE_MODIFICATION");
+        builtModificationInfos.setMessageValues("{\"equipmentId\":\"line1\"}");
+        return builtModificationInfos;
+    }
+
+    @Override
     protected ModificationInfos buildModificationUpdate() {
         return LineModificationInfos.builder().equipmentId("line1")
                 .equipmentName(new AttributeModification<>("LineModified1", OperationType.SET))
@@ -88,6 +97,9 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
                                 .value(42.1)
                                 .build()))
                         .build())
+                .stashed(false)
+                .messageType("LINE_MODIFICATION")
+                .messageValues("{\"equipmentId\":\"line1\"}")
                 .build();
     }
 

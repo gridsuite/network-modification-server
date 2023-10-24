@@ -6,8 +6,6 @@
  */
 package org.gridsuite.modification.server.entities.equipment.modification.attribute;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.iidm.network.IdentifiableType;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -20,9 +18,6 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.MappedSuperclass;
 
-import java.io.UncheckedIOException;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -53,25 +48,6 @@ public class EquipmentAttributeModificationEntity<T> extends EquipmentModificati
         assignAttributes((EquipmentAttributeModificationInfos) modificationInfos);
     }
 
-    @Override
-    public void getModificationMetadata(ModificationInfos modificationInfos) {
-        super.getModificationMetadata(modificationInfos);
-        try {
-            Map<String, String> messageValuesMap = new HashMap<>();
-            attributeName = ((EquipmentAttributeModificationInfos) modificationInfos).getEquipmentAttributeName();
-            attributeValue = convertAttributeValue(((EquipmentAttributeModificationInfos) modificationInfos).getEquipmentAttributeValue());
-            messageValuesMap.put("equipmentAttributeName", attributeName);
-            messageValuesMap.put("equipmentId", ((EquipmentAttributeModificationInfos) modificationInfos).getEquipmentId());
-            if (attributeValue != null) {
-                messageValuesMap.put("equipmentAttributeValue", attributeValue.toString());
-            }
-            ObjectMapper objectMapper = new ObjectMapper();
-            this.setMessageValues(objectMapper.writeValueAsString(messageValuesMap));
-        } catch (JsonProcessingException e) {
-            throw new UncheckedIOException(e);
-        }
-    }
-
     private void assignAttributes(EquipmentAttributeModificationInfos equipmentAttributeModificationInfos) {
         attributeName = equipmentAttributeModificationInfos.getEquipmentAttributeName();
         attributeValue = convertAttributeValue(equipmentAttributeModificationInfos.getEquipmentAttributeValue());
@@ -93,6 +69,8 @@ public class EquipmentAttributeModificationEntity<T> extends EquipmentModificati
             .builder()
             .uuid(getId())
             .date(getDate())
+            .messageType(getMessageType())
+            .messageValues(getMessageValues())
             .equipmentId(getEquipmentId())
             .equipmentAttributeName(getAttributeName())
             .equipmentAttributeValue(getAttributeValue())

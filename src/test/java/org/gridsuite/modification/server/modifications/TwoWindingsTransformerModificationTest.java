@@ -131,6 +131,15 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
     }
 
     @Override
+    protected ModificationInfos buildModificationWithOnlyMetadata() {
+        ModificationInfos builtModificationInfos = buildModification();
+        builtModificationInfos.setStashed(false);
+        builtModificationInfos.setMessageType("TWO_WINDINGS_TRANSFORMER_MODIFICATION");
+        builtModificationInfos.setMessageValues("{\"equipmentId\":\"trf1\"}");
+        return builtModificationInfos;
+    }
+
+    @Override
     protected ModificationInfos buildModificationUpdate() {
         return TwoWindingsTransformerModificationInfos.builder().equipmentId("trf1")
                 .equipmentName(new AttributeModification<>("2wt modified name again", OperationType.SET))
@@ -215,6 +224,9 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
                             .alpha(1.3)
                             .build()
                     )).build())
+                .stashed(false)
+                .messageType("TWO_WINDINGS_TRANSFORMER_MODIFICATION")
+                .messageValues("{\"equipmentId\":\"trf1\"}")
                 .build();
     }
 

@@ -191,8 +191,20 @@ public class ShuntCompensatorModificationTest extends AbstractNetworkModificatio
         return ShuntCompensatorModificationInfos.builder()
                 .equipmentId("v2shunt")
                 .voltageLevelId("v2")
+                .messageType("SHUNT_COMPENSATOR_MODIFICATION")
+                .messageValues("{\"equipmentId\":\"v2shunt\"}")
+                .stashed(false)
                 .susceptancePerSection(new AttributeModification<>(0.5, OperationType.SET))
                 .build();
+    }
+
+    @Override
+    protected ModificationInfos buildModificationWithOnlyMetadata() {
+        ModificationInfos builtModificationInfos = buildModification();
+        builtModificationInfos.setStashed(false);
+        builtModificationInfos.setMessageType("SHUNT_COMPENSATOR_MODIFICATION");
+        builtModificationInfos.setMessageValues("{\"equipmentId\":\"v7shunt\"}");
+        return builtModificationInfos;
     }
 
     @Override

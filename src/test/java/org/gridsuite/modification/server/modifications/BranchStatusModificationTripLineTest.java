@@ -46,7 +46,19 @@ public class BranchStatusModificationTripLineTest extends AbstractNetworkModific
     protected ModificationInfos buildModificationUpdate() {
         return BranchStatusModificationInfos.builder()
                 .equipmentId(UPDATE_BRANCH_ID)
+                .stashed(false)
+                .messageType("BRANCH_STATUS_MODIFICATION")
+                .messageValues("{\"action\":\"SWITCH_ON\",\"equipmentId\":\"line1\"}")
                 .action(BranchStatusModificationInfos.ActionType.SWITCH_ON).build();
+    }
+
+    @Override
+    protected ModificationInfos buildModificationWithOnlyMetadata() {
+        ModificationInfos builtModificationInfos = buildModification();
+        builtModificationInfos.setStashed(false);
+        builtModificationInfos.setMessageType("BRANCH_STATUS_MODIFICATION");
+        builtModificationInfos.setMessageValues("{\"action\":\"TRIP\",\"equipmentId\":\"line2\"}");
+        return builtModificationInfos;
     }
 
     @Override

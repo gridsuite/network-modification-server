@@ -259,6 +259,15 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
     }
 
     @Override
+    protected ModificationInfos buildModificationWithOnlyMetadata() {
+        ModificationInfos builtModificationInfos = buildModification();
+        builtModificationInfos.setStashed(false);
+        builtModificationInfos.setMessageType("LINE_CREATION");
+        builtModificationInfos.setMessageValues("{\"equipmentId\":\"idLine\"}");
+        return builtModificationInfos;
+    }
+
+    @Override
     protected ModificationInfos buildModificationUpdate() {
         return LineCreationInfos.builder()
                 .equipmentId("idLineEdited")
@@ -281,6 +290,9 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
                 .connectionDirection2(ConnectablePosition.Direction.TOP)
                 .connectionPosition1(0)
                 .connectionPosition2(0)
+                .stashed(false)
+                .messageType("LINE_CREATION")
+                .messageValues("{\"equipmentId\":\"idLineEdited\"}")
                 .build();
     }
 

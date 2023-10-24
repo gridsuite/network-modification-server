@@ -69,6 +69,15 @@ public class VscCreationTest extends AbstractNetworkModificationTest {
                 .build();
     }
 
+    @Override
+    protected ModificationInfos buildModificationWithOnlyMetadata() {
+        ModificationInfos builtModificationInfos = buildModification();
+        builtModificationInfos.setStashed(false);
+        builtModificationInfos.setMessageType("VSC_CREATION");
+        builtModificationInfos.setMessageValues("{\"equipmentId\":\"vsc1\"}");
+        return builtModificationInfos;
+    }
+
     private ConverterStationCreationInfos buildConverterStationWithMinMaxReactiveLimits() {
         return ConverterStationCreationInfos.builder()
                 .equipmentId("stationId2")
@@ -122,6 +131,9 @@ public class VscCreationTest extends AbstractNetworkModificationTest {
         return VscCreationInfos.builder()
                 .equipmentId("vsc1")
                 .equipmentName("vsc2Name")
+                .stashed(false)
+                .messageType("VSC_CREATION")
+                .messageValues("{\"equipmentId\":\"vsc1\"}")
                 .dcNominalVoltage(53.)
                 .dcResistance(2.)
                 .maximumActivePower(77.)

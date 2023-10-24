@@ -57,10 +57,22 @@ public class BatteryModificationTest extends AbstractNetworkModificationTest {
     }
 
     @Override
+    protected ModificationInfos buildModificationWithOnlyMetadata() {
+        ModificationInfos builtModificationInfos = buildModification();
+        builtModificationInfos.setStashed(false);
+        builtModificationInfos.setMessageType("BATTERY_MODIFICATION");
+        builtModificationInfos.setMessageValues("{\"equipmentId\":\"v3Battery\"}");
+        return builtModificationInfos;
+    }
+
+    @Override
     protected ModificationInfos buildModificationUpdate() {
         return BatteryModificationInfos.builder()
                 .equipmentId("idBattery")
                 .equipmentName(new AttributeModification<>("newV1BatteryEdited", OperationType.SET))
+                .messageType("BATTERY_MODIFICATION")
+                .messageValues("{\"equipmentId\":\"idBattery\"}")
+                .stashed(false)
                 .activePowerSetpoint(new AttributeModification<>(81.0, OperationType.SET))
                 .reactivePowerSetpoint(new AttributeModification<>(41.0, OperationType.SET))
                 .minActivePower(new AttributeModification<>(1., OperationType.SET))

@@ -57,8 +57,20 @@ public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModificationUpdate() {
         return EquipmentDeletionInfos.builder()
                 .equipmentType("GENERATOR")
+                .stashed(false)
                 .equipmentId("idGenerator")
+                .messageType("EQUIPMENT_DELETION")
+                .messageValues("{\"equipmentId\":\"idGenerator\"}")
                 .build();
+    }
+
+    @Override
+    protected ModificationInfos buildModificationWithOnlyMetadata() {
+        ModificationInfos builtModificationInfos = buildModification();
+        builtModificationInfos.setStashed(false);
+        builtModificationInfos.setMessageType("EQUIPMENT_DELETION");
+        builtModificationInfos.setMessageValues("{\"equipmentId\":\"v1load\"}");
+        return builtModificationInfos;
     }
 
     @Override

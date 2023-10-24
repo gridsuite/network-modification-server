@@ -21,6 +21,7 @@ import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.GenerationDispatch;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -64,5 +65,10 @@ public class GenerationDispatchInfos extends ModificationInfos {
     @Override
     public Reporter createSubReporter(ReporterModel reporter) {
         return reporter.createSubReporter(getType().name(), "Generation dispatch");
+    }
+
+    @Override
+    public Map<String, String> getMapMessageValues() {
+        return Map.of();
     }
 }

@@ -15,6 +15,8 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
+import java.util.Map;
+
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -30,4 +32,9 @@ public class EquipmentModificationInfos extends ModificationInfos {
     @Schema(description = "Equipment ID")
     @NonNull
     private String equipmentId;
+
+    @Override
+    public Map<String, String> getMapMessageValues() {
+        return Map.of("equipmentId", getEquipmentId());
+    }
 }

@@ -56,6 +56,15 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
     }
 
     @Override
+    protected ModificationInfos buildModificationWithOnlyMetadata() {
+        ModificationInfos builtModificationInfos = buildModification();
+        builtModificationInfos.setStashed(false);
+        builtModificationInfos.setMessageType("SHUNT_COMPENSATOR_CREATION");
+        builtModificationInfos.setMessageValues("{\"equipmentId\":\"shuntOneId\"}");
+        return builtModificationInfos;
+    }
+
+    @Override
     protected ModificationInfos buildModificationUpdate() {
         return ShuntCompensatorCreationInfos.builder()
                 .date(ZonedDateTime.now().truncatedTo(ChronoUnit.MICROS))
@@ -67,6 +76,9 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
                 .busOrBusbarSectionId("1.A")
                 .connectionName("cnEdited")
                 .connectionDirection(ConnectablePosition.Direction.UNDEFINED)
+                .messageType("SHUNT_COMPENSATOR_CREATION")
+                .messageValues("{\"equipmentId\":\"shuntOneIdEdited\"}")
+                .stashed(false)
                 .build();
     }
 

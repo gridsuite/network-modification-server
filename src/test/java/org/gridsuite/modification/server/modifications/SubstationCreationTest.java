@@ -44,9 +44,21 @@ public class SubstationCreationTest extends AbstractNetworkModificationTest {
     }
 
     @Override
+    protected ModificationInfos buildModificationWithOnlyMetadata() {
+        ModificationInfos builtModificationInfos = buildModification();
+        builtModificationInfos.setStashed(false);
+        builtModificationInfos.setMessageType("SUBSTATION_CREATION");
+        builtModificationInfos.setMessageValues("{\"equipmentId\":\"SubstationId\"}");
+        return builtModificationInfos;
+    }
+
+    @Override
     protected ModificationInfos buildModificationUpdate() {
         return SubstationCreationInfos.builder()
                 .equipmentId("SubstationIdEdited")
+                .messageType("SUBSTATION_CREATION")
+                .messageValues("{\"equipmentId\":\"SubstationIdEdited\"}")
+                .stashed(false)
                 .equipmentName("SubstationNameEdited")
                 .substationCountry(Country.CI)
                 .properties(Map.of("DEMO", "DemoU"))

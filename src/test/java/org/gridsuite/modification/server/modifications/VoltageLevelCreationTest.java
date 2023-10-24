@@ -49,6 +49,9 @@ public class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
         return VoltageLevelCreationInfos.builder()
                 .equipmentId("VoltageLevelIdEdited")
                 .equipmentName("VoltageLevelEdited")
+                .messageType("VOLTAGE_LEVEL_CREATION")
+                .messageValues("{\"equipmentId\":\"VoltageLevelIdEdited\"}")
+                .stashed(false)
                 .substationId("s2")
                 .nominalVoltage(385)
                 .lowVoltageLimit(0.0)
@@ -60,6 +63,15 @@ public class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
                 .switchKinds(Arrays.asList(SwitchKind.BREAKER))
                 .couplingDevices(Arrays.asList(CouplingDeviceInfos.builder().busbarSectionId1("1A").busbarSectionId2("1.A").build()))
                 .build();
+    }
+
+    @Override
+    protected ModificationInfos buildModificationWithOnlyMetadata() {
+        ModificationInfos builtModificationInfos = buildModification();
+        builtModificationInfos.setStashed(false);
+        builtModificationInfos.setMessageType("VOLTAGE_LEVEL_CREATION");
+        builtModificationInfos.setMessageValues("{\"equipmentId\":\"vlId\"}");
+        return builtModificationInfos;
     }
 
     @Override

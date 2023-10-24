@@ -55,6 +55,15 @@ public class LineCreationInMixedTypologyTest extends AbstractNetworkModification
     }
 
     @Override
+    protected ModificationInfos buildModificationWithOnlyMetadata() {
+        ModificationInfos builtModificationInfos = buildModification();
+        builtModificationInfos.setStashed(false);
+        builtModificationInfos.setMessageType("LINE_CREATION");
+        builtModificationInfos.setMessageValues("{\"equipmentId\":\"idLine1\"}");
+        return builtModificationInfos;
+    }
+
+    @Override
     protected ModificationInfos buildModificationUpdate() {
         return LineCreationInfos.builder()
             .equipmentId("idLineEdited1")
@@ -75,6 +84,9 @@ public class LineCreationInMixedTypologyTest extends AbstractNetworkModification
             .connectionDirection2(ConnectablePosition.Direction.BOTTOM)
             .connectionPosition1(0)
             .connectionPosition2(0)
+            .stashed(false)
+            .messageType("LINE_CREATION")
+            .messageValues("{\"equipmentId\":\"idLineEdited1\"}")
             .build();
     }
 
