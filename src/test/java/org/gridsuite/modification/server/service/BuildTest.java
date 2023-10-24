@@ -400,6 +400,27 @@ public class BuildTest {
                 .connectionName2("cn22")
                 .connectionDirection2(ConnectablePosition.Direction.TOP)
                 .build().toEntity());
+
+        //add new Line with same voltage level
+        equipmentsToAdd.add(LineCreationInfos.builder()
+                .equipmentId("newLine2")
+                .equipmentName("newLine2")
+                .seriesResistance(1.0)
+                .seriesReactance(2.0)
+                .shuntConductance1(3.0)
+                .shuntSusceptance1(4.0)
+                .shuntConductance2(5.0)
+                .shuntSusceptance2(6.0)
+                .voltageLevelId1("v1")
+                .busOrBusbarSectionId1("1.1")
+                .voltageLevelId2("v1")
+                .busOrBusbarSectionId2("1.1")
+                .connectionName1("cn11")
+                .connectionDirection1(ConnectablePosition.Direction.TOP)
+                .connectionName2("cn11")
+                .connectionDirection2(ConnectablePosition.Direction.TOP)
+                .build().toEntity());
+
         // save modifications
         modificationRepository.saveModifications(TEST_GROUP_ID, equipmentsToAdd);
 
@@ -463,6 +484,21 @@ public class BuildTest {
                 .ignoringFields("uniqueId")
                 .isEqualTo(expectedEquipmentInfos);
 
+        //check line2 indexation
+        expectedEquipmentInfos = EquipmentInfos.builder()
+                .networkUuid(TEST_NETWORK_ID)
+                .variantId(NetworkCreation.VARIANT_ID)
+                .id("newLine2")
+                .name("newLine2")
+                .type(IdentifiableType.LINE.name())
+                .voltageLevels(Set.of(VoltageLevelInfos.builder().id("v1").name("v1").build()))
+                .substations(Set.of(SubstationInfos.builder().id("s1").name("s1").build()))
+                .build();
+        equipmentInfos = equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of("newLine2"), TEST_NETWORK_ID, NetworkCreation.VARIANT_ID).get(0);
+        Assertions.assertThat(equipmentInfos)
+                .usingRecursiveComparison()
+                .ignoringFields("uniqueId")
+                .isEqualTo(expectedEquipmentInfos);
         assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches("/v1/reports/.*")));
     }
 
