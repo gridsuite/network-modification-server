@@ -1,0 +1,33 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="chuinetri (generated)" id="1697564818890-9">
+        <addForeignKeyConstraint baseColumnNames="current_limits_modification_id1" baseTableName="two_windings_transformer_modification" constraintName="current_limits_modification_id1_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="current_limits_modification" validate="true"/>
+    </changeSet>
+    <changeSet author="chuinetri (generated)" id="1697564818890-10">
+        <addForeignKeyConstraint baseColumnNames="current_limits_modification_id2" baseTableName="two_windings_transformer_modification" constraintName="current_limits_modification_id2_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="current_limits_modification" validate="true"/>
+    </changeSet>
+    <changeSet author="chuinetri (generated)" id="1697564818890-1">
+        <dropUniqueConstraint constraintName="UC_LINE_CREATIONCURRENT_LIMITS_ID1_COL" tableName="line_creation"/>
+    </changeSet>
+    <changeSet author="chuinetri (generated)" id="1697564818890-2">
+        <addUniqueConstraint columnNames="current_limits_id1" constraintName="UC_LINE_CREATIONCURRENT_LIMITS_ID1_COL" tableName="line_creation"/>
+    </changeSet>
+    <changeSet author="chuinetri (generated)" id="1697564818890-3">
+        <dropUniqueConstraint constraintName="UC_LINE_SPLIT_WITH_VOLTAGE_LEVELMAY_VOLTAGE_LEVEL_CREATION_ID_C" tableName="line_split_with_voltage_level"/>
+    </changeSet>
+    <changeSet author="chuinetri (generated)" id="1697564818890-4">
+        <addUniqueConstraint columnNames="may_voltage_level_creation_id" constraintName="UC_LINE_SPLIT_WITH_VOLTAGE_LEVELMAY_VOLTAGE_LEVEL_CREATION_ID_C" tableName="line_split_with_voltage_level"/>
+    </changeSet>
+    <changeSet author="chuinetri (generated)" id="1697564818890-5">
+        <dropUniqueConstraint constraintName="UC_VSC_CREATIONCONVERTER_STATION_2_ID_COL" tableName="vsc_creation"/>
+    </changeSet>
+    <changeSet author="chuinetri (generated)" id="1697564818890-6">
+        <addUniqueConstraint columnNames="converter_station_2_id" constraintName="UC_VSC_CREATIONCONVERTER_STATION_2_ID_COL" tableName="vsc_creation"/>
+    </changeSet>
+    <changeSet author="chuinetri (generated)" id="1697564818890-7">
+        <dropUniqueConstraint constraintName="UC_VSC_CREATIONCONVERTER_STATION_1_ID_COL" tableName="vsc_creation"/>
+    </changeSet>
+    <changeSet author="chuinetri (generated)" id="1697564818890-8">
+        <addUniqueConstraint columnNames="converter_station_1_id" constraintName="UC_VSC_CREATIONCONVERTER_STATION_1_ID_COL" tableName="vsc_creation"/>
+    </changeSet>
+</databaseChangeLog>
