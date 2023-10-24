@@ -36,6 +36,7 @@ import org.gridsuite.modification.server.repositories.ModificationGroupRepositor
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.gridsuite.modification.server.utils.TestUtils;
+import org.gridsuite.modification.server.utils.assertions.Assertions;
 import org.jetbrains.annotations.NotNull;
 import org.junit.After;
 import org.junit.Before;
@@ -347,6 +348,158 @@ public class BuildTest {
         request = server.takeRequest(TIMEOUT, TimeUnit.MILLISECONDS);
         assertNotNull(request);
         assertEquals(expectedBody, request.getBody().readUtf8());
+    }
+
+    @Test
+    public void testIndexationAfterBuild() throws Exception {
+        List<ModificationEntity> equipmentsToAdd = new ArrayList<>();
+        // add new voltage level
+        equipmentsToAdd.add(VoltageLevelCreationInfos.builder()
+                .equipmentId("vl1")
+                .equipmentName("vl1")
+                .nominalVoltage(225)
+                .substationId("s1")
+                .lowVoltageLimit(0.0)
+                .highVoltageLimit(10.0)
+                .ipMin(0.0)
+                .ipMax(10.0)
+                .busbarCount(2)
+                .sectionCount(2)
+                .switchKinds(Arrays.asList(SwitchKind.BREAKER))
+                .couplingDevices(Arrays.asList(CouplingDeviceInfos.builder().busbarSectionId1("vl9_1_1").busbarSectionId2("vl9_2_1").build()))
+                .build().toEntity());
+        // add new Load
+        equipmentsToAdd.add(LoadCreationInfos.builder()
+                .equipmentId("newLoad")
+                .equipmentName("newLoad")
+                .loadType(LoadType.AUXILIARY)
+                .voltageLevelId("vl1")
+                .busOrBusbarSectionId("1.1")
+                .activePower(10.)
+                .reactivePower(20.)
+                .connectionName("vn")
+                .connectionDirection(ConnectablePosition.Direction.TOP)
+                .build().toEntity());
+
+        //add new Line
+        equipmentsToAdd.add(LineCreationInfos.builder()
+                .equipmentId("newLine")
+                .equipmentName("newLine")
+                .seriesResistance(1.0)
+                .seriesReactance(2.0)
+                .shuntConductance1(3.0)
+                .shuntSusceptance1(4.0)
+                .shuntConductance2(5.0)
+                .shuntSusceptance2(6.0)
+                .voltageLevelId1("v1")
+                .busOrBusbarSectionId1("1.1")
+                .voltageLevelId2("v2")
+                .busOrBusbarSectionId2("1B")
+                .connectionName1("cn11")
+                .connectionDirection1(ConnectablePosition.Direction.TOP)
+                .connectionName2("cn22")
+                .connectionDirection2(ConnectablePosition.Direction.TOP)
+                .build().toEntity());
+
+        //add new Line with same voltage level
+        equipmentsToAdd.add(LineCreationInfos.builder()
+                .equipmentId("newLine2")
+                .equipmentName("newLine2")
+                .seriesResistance(1.0)
+                .seriesReactance(2.0)
+                .shuntConductance1(3.0)
+                .shuntSusceptance1(4.0)
+                .shuntConductance2(5.0)
+                .shuntSusceptance2(6.0)
+                .voltageLevelId1("v1")
+                .busOrBusbarSectionId1("1.1")
+                .voltageLevelId2("v1")
+                .busOrBusbarSectionId2("1.1")
+                .connectionName1("cn11")
+                .connectionDirection1(ConnectablePosition.Direction.TOP)
+                .connectionName2("cn11")
+                .connectionDirection2(ConnectablePosition.Direction.TOP)
+                .build().toEntity());
+
+        // save modifications
+        modificationRepository.saveModifications(TEST_GROUP_ID, equipmentsToAdd);
+
+        // Create build infos
+        BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
+            NetworkCreation.VARIANT_ID,
+            TEST_REPORT_ID,
+            List.of(TEST_GROUP_ID),
+            List.of(TEST_SUB_REPORTER_ID_1),
+            new HashSet<>());
+
+        // Build variant
+        networkModificationService.buildVariant(TEST_NETWORK_ID, buildInfos);
+
+        // Check if added equipments are indexed in elasticsearch
+        //check voltage level indexation
+        var expectedEquipmentInfos = EquipmentInfos.builder()
+                .networkUuid(TEST_NETWORK_ID)
+                .variantId(NetworkCreation.VARIANT_ID)
+                .id("vl1")
+                .name("vl1")
+                .type(IdentifiableType.VOLTAGE_LEVEL.name())
+                .voltageLevels(Set.of(VoltageLevelInfos.builder().id("vl1").name("vl1").build()))
+                .substations(Set.of(SubstationInfos.builder().id("s1").name("s1").build()))
+                .build();
+        var equipmentInfos = equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of("vl1"), TEST_NETWORK_ID, NetworkCreation.VARIANT_ID).get(0);
+        Assertions.assertThat(equipmentInfos)
+                .usingRecursiveComparison()
+                .ignoringFields("uniqueId")
+                .isEqualTo(expectedEquipmentInfos);
+
+        //check load indexation
+        expectedEquipmentInfos = EquipmentInfos.builder()
+                .networkUuid(TEST_NETWORK_ID)
+                .variantId(NetworkCreation.VARIANT_ID)
+                .id("newLoad")
+                .name("newLoad")
+                .type(IdentifiableType.LOAD.name())
+                .voltageLevels(Set.of(VoltageLevelInfos.builder().id("vl1").name("vl1").build()))
+                .substations(Set.of(SubstationInfos.builder().id("s1").name("s1").build()))
+                .build();
+        equipmentInfos = equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of("newLoad"), TEST_NETWORK_ID, NetworkCreation.VARIANT_ID).get(0);
+        Assertions.assertThat(equipmentInfos)
+                .usingRecursiveComparison()
+                .ignoringFields("uniqueId")
+                .isEqualTo(expectedEquipmentInfos);
+
+        //check line indexation
+        expectedEquipmentInfos = EquipmentInfos.builder()
+                .networkUuid(TEST_NETWORK_ID)
+                .variantId(NetworkCreation.VARIANT_ID)
+                .id("newLine")
+                .name("newLine")
+                .type(IdentifiableType.LINE.name())
+                .voltageLevels(Set.of(VoltageLevelInfos.builder().id("v1").name("v1").build(), VoltageLevelInfos.builder().id("v2").name("v2").build()))
+                .substations(Set.of(SubstationInfos.builder().id("s1").name("s1").build()))
+                .build();
+        equipmentInfos = equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of("newLine"), TEST_NETWORK_ID, NetworkCreation.VARIANT_ID).get(0);
+        Assertions.assertThat(equipmentInfos)
+                .usingRecursiveComparison()
+                .ignoringFields("uniqueId")
+                .isEqualTo(expectedEquipmentInfos);
+
+        //check line2 indexation
+        expectedEquipmentInfos = EquipmentInfos.builder()
+                .networkUuid(TEST_NETWORK_ID)
+                .variantId(NetworkCreation.VARIANT_ID)
+                .id("newLine2")
+                .name("newLine2")
+                .type(IdentifiableType.LINE.name())
+                .voltageLevels(Set.of(VoltageLevelInfos.builder().id("v1").name("v1").build()))
+                .substations(Set.of(SubstationInfos.builder().id("s1").name("s1").build()))
+                .build();
+        equipmentInfos = equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of("newLine2"), TEST_NETWORK_ID, NetworkCreation.VARIANT_ID).get(0);
+        Assertions.assertThat(equipmentInfos)
+                .usingRecursiveComparison()
+                .ignoringFields("uniqueId")
+                .isEqualTo(expectedEquipmentInfos);
+        assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches("/v1/reports/.*")));
     }
 
     @Test
